@@ -1,3 +1,7 @@
+const chai = require('chai');
+//use default BigNumber
+chai.use(require('chai-bignumber')());
+
 const Gelato = artifacts.require('Gelato');
 
 // const EtherToken = contract(require('@gnosis.pm/util-contracts/build/contracts/EtherToken'))
@@ -19,11 +23,15 @@ module.exports = async () => {
     let actualSubOrder = await gelato._calcActualSubOrderSize(subOrderAmount)
 
     let oldSubOrderAmount = actualSubOrder.logs[0].args.subOrderAmount.toString()
+    let oldSubOrderAmountBN = actualSubOrder.logs[0].args.subOrderAmount
     let actualSubOrderAmount = actualSubOrder.logs[0].args.actualSubOrderAmount.toString()
+    let actualSubOrderAmountBN = actualSubOrder.logs[0].args.actualSubOrderAmount
     let fee = actualSubOrder.logs[0].args.fee.toString()
-
-    let fee2 = actualSubOrder.logs[0].args.fee.toFixed()
-    console.log(fee2)
+    let feeBN = actualSubOrder.logs[0].args.fee.toFixed()
+    
+    console.log(oldSubOrderAmountBN)
+    console.log(actualSubOrderAmountBN)
+    console.log(feeBN)
 
     console.log("----")
     console.log("Old SubOrder Size: ", oldSubOrderAmount)
