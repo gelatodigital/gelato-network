@@ -1,8 +1,5 @@
-const chai = require('chai');
-//use default BigNumber
-chai.use(require('chai-bignumber')());
-
 const Gelato = artifacts.require('Gelato');
+const BN = require('bignumber.js');
 
 // const EtherToken = contract(require('@gnosis.pm/util-contracts/build/contracts/EtherToken'))
 
@@ -16,29 +13,31 @@ module.exports = async () => {
     const block = await web3.eth.getBlockNumber()
     const blockDetails = await web3.eth.getBlock(block)
     const timestamp = blockDetails.timestamp
+    console.log("----")
     console.log("Current Timestamp:", timestamp)
+
+    console.log("----")
 
     console.log("Calculate actual subOrderSize of 10 WETH")
 
-    let actualSubOrder = await gelato._calcActualSubOrderSize(subOrderAmount)
+    const actualSubOrder = await gelato._calcActualSubOrderSize(subOrderAmount)
 
-    let oldSubOrderAmount = actualSubOrder.logs[0].args.subOrderAmount.toString()
-    let oldSubOrderAmountBN = actualSubOrder.logs[0].args.subOrderAmount
-    let actualSubOrderAmount = actualSubOrder.logs[0].args.actualSubOrderAmount.toString()
-    let actualSubOrderAmountBN = actualSubOrder.logs[0].args.actualSubOrderAmount
-    let fee = actualSubOrder.logs[0].args.fee.toString()
-    let feeBN = actualSubOrder.logs[0].args.fee.toFixed()
-    
-    console.log(oldSubOrderAmountBN)
-    console.log(actualSubOrderAmountBN)
-    console.log(feeBN)
+    const oldSubOrderAmount = actualSubOrder.logs[0].args.subOrderAmount.toString(10)
+    const oldSubOrderAmountBN = new BN(oldSubOrderAmount)
+
+    const actualSubOrderAmount = actualSubOrder.logs[0].args.actualSubOrderAmount.toString(10)
+    const actualSubOrderAmountBN = new BN(actualSubOrderAmount)
+
+    const fee = actualSubOrder.logs[0].args.fee.toString(10)
+    const feeBN = new BN(fee)
 
     console.log("----")
     console.log("Old SubOrder Size: ", oldSubOrderAmount)
     console.log("Actual SubOrder Size: ", actualSubOrderAmount)
     console.log("Applied Fee: ", fee)
-    console.log("Actual == Old - (Old*fee): ", parseInt(actualSubOrderAmount) == parseInt(oldSubOrderAmount) - parseInt(fee)) 
-    console.log(`Fee (in %): ${parseInt(fee) / parseInt(actualSubOrderAmount) * 100}%`)
+    console.log("----")
+    const feeCheck = oldSubOrderAmountBN.minus(feeBN)
+    console.log(`Check if (old - fee === new): ${feeCheck.eq(actualSubOrderAmountBN)}`)
     console.log("----")
     console.log("SubOrder successfully calculated")
 }
