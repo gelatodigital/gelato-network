@@ -18,6 +18,19 @@ module.exports = async () => {
 
     let actualSubOrder = await gelato._calcActualSubOrderSize(subOrderAmount)
 
-    console.log("Actual SubOrder Size: ", actualSubOrder)
+    let oldSubOrderAmount = actualSubOrder.logs[0].args.subOrderAmount.toString()
+    let actualSubOrderAmount = actualSubOrder.logs[0].args.actualSubOrderAmount.toString()
+    let fee = actualSubOrder.logs[0].args.fee.toString()
+
+    let fee2 = actualSubOrder.logs[0].args.fee.toFixed()
+    console.log(fee2)
+
+    console.log("----")
+    console.log("Old SubOrder Size: ", oldSubOrderAmount)
+    console.log("Actual SubOrder Size: ", actualSubOrderAmount)
+    console.log("Applied Fee: ", fee)
+    console.log("Actual == Old - (Old*fee): ", parseInt(actualSubOrderAmount) == parseInt(oldSubOrderAmount) - parseInt(fee)) 
+    console.log(`Fee (in %): ${parseInt(fee) / parseInt(actualSubOrderAmount) * 100}%`)
+    console.log("----")
     console.log("SubOrder successfully calculated")
 }

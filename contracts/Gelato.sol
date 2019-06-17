@@ -72,7 +72,9 @@ contract Gelato is Ownable() {
 
     event LogNumDen(uint indexed num, uint indexed dem);
 
-    event LogActualSubOrderAmount(uint indexed actualSubOrderAmount);
+    // event LogActualSubOrderAmount(uint indexed actualSubOrderAmount);
+
+    event LogActualSubOrderAmount(uint256 indexed subOrderAmount,uint256 indexed actualSubOrderAmount, uint256 indexed fee);
 
     // State Variables
     /*Mappings:
@@ -507,6 +509,8 @@ contract Gelato is Ownable() {
 
         uint actualSellAmount = _sellAmount - fee;
 
+        emit LogActualSubOrderAmount(_sellAmount, actualSellAmount, fee);
+
         return actualSellAmount;
 
         // Store fee amount in new state variable to call it in next sellOrders withdraw func
@@ -532,12 +536,11 @@ contract Gelato is Ownable() {
             _actualLastSubOrderSize.mul(num).div(den)
         );
 
-        emit LogActualSubOrderAmount(subOrderPayout);
+        // emit LogActualSubOrderAmount(subOrderPayout);
 
         return subOrderPayout;
     }
     
-
 }
 
 
