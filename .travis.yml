@@ -1,0 +1,47 @@
+sudo: required
+language: node_js
+node_js:
+- '8'
+services:
+- docker
+before_install:
+- docker pull trufflesuite/ganache-cli:v6.4.3
+- docker run -d -p 8545:8545 --net host trufflesuite/ganache-cli:v6.4.3 -d --mnemonic 'candy maple cake sugar pudding cream honey rich smooth crumble sweet treat' --defaultBalanceEther '500000000000000'
+install:
+  - docker build -t dx-services .
+script:
+  - docker run --mount source=app-contracts,destination=/usr/src/app/build
+    --mount source=dx-contracts,destination=/usr/src/app/node_modules/@gnosis.pm/dx-contracts/build
+    --mount type=tmpfs,destination=/usr/src/app/coverage
+    -e TRAVIS=$TRAVIS -e TRAVIS_JOB_ID=$TRAVIS_JOB_ID
+    --net host dx-services /bin/sh -c "yarn migrate; yarn test-coverage"
+after_success:
+- |
+  # Create Docker image if branch master or develop and not on pull requests
+  if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
+    docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
+
+    PACKAGE_VERSION=$(node -p -e "require('./package.json').version");
+    echo "Pushing to Docker-hub version $PACKAGE_VERSION, generated from branch $TRAVIS_BRANCH";
+
+    if [[ $PACKAGE_VERSION = *"-SNAPSHOT"* ]]; then
+      echo "Pushing image release...";
+      docker tag dx-services gnosispm/dx-services:release;
+      docker push gnosispm/dx-services:release;
+    elif [ "$TRAVIS_BRANCH" == "master" ]; then
+      echo "Pushing image staging...";
+      docker tag dx-services gnosispm/dx-services:staging;
+      docker push gnosispm/dx-services:staging;
+    elif [ "$TRAVIS_BRANCH" == "develop" ]; then
+      echo "Pushing image develop...";
+      docker tag dx-services gnosispm/dx-services:develop;
+      docker push gnosispm/dx-services:develop;
+    elif [[ $TRAVIS_TAG = $TRAVIS_BRANCH ]]; then
+      echo "Pushing image tag $TRAVIS_TAG...";
+      docker tag dx-services gnosispm/dx-services:$TRAVIS_TAG;
+      docker push gnosispm/dx-services:$TRAVIS_TAG;
+    fi
+    echo "The image has been pushed";
+  else
+    echo "There's no need to push the image to Docker-hub";
+  fi

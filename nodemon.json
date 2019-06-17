@@ -1,0 +1,15 @@
+{
+  "restartable": "rs",
+  "ignore": [
+    ".git",
+    "node_modules/**/node_modules",
+    "src/web/publicApi/static/**/*",
+    "src/web/bots/static/**/*"
+  ],
+  "verbose": true,
+  "watch": [
+    "src/",
+    "conf/"
+  ],
+  "ext": "js,json"
+}

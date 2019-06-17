@@ -1,0 +1,57 @@
+swagger: '2.0'
+info:
+  description: |-
+    Welcome to DutchX API docs.
+
+    In this documents you will find **information about the auctions running
+    on the DutchX smart contracts**.
+
+    Also we provice the **TRY** button, so the different endpoint can be tested
+    from the documentation web itself.
+
+    For aditional information and for reference, check out these resources:
+      * [Gnosis Blog](https://blog.gnosis.pm/tagged/dutchx): Learn about DutchX in
+      Gnosis Blog, were you will find a series of posts about it.
+      * [Github: dx-examples-api](https://github.com/gnosis/dx-examples-liquidity-bots):
+      Example and template for running bots that ensure market liquidity for a given list of token pairs.
+      * [DutchX - Gitter channel](https://gitter.im/gnosis/DutchX): Participate
+      in the gitter channel.
+      * [Github: dx-contracts](https://github.com/gnosis/dx-contracts): Smart
+      contracts of the Duch X
+      * [Github: dx-services](https://github.com/gnosis/dx-services): Services,
+      repositories and bots to interact with DX.
+      * [Github: dx-react](https://github.com/gnosis/dx-react): Front end web
+      application for the DutchX seller interface
+  version: 0.1-SNAPSHOT
+  title: DutchX Bots API
+  termsOfService: 'https://dutch.d.exchange/terms/'
+  contact:
+    name: DutchX Gitter channel
+    url: 'https://gitter.im/gnosis/DutchX'
+    
+  license:
+    name: MIT License
+    url: 'https://github.com/gnosis/dx-services/blob/master/LICENSE.md'
+
+basePath: /api/v1
+# tags:
+#   - name: markets
+#     description: Get market info
+    
+schemes:
+  - https
+paths:
+  /about:
+    get:
+      summary: Get information about the bots
+      description: Returns the addresses, versions and information about the ethereum node.
+      operationId: getTokens
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: successful operation
+ 
+externalDocs:
+  description: Find out more about the DutchX in our blog
+  url: 'https://blog.gnosis.pm/tagged/dutchx'

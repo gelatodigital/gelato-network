@@ -1,0 +1,79 @@
+version: '3.4'
+
+services:
+  setup:
+    command: npm run setup
+    # command: ./node_modules/.bin/truffle migrate --network ethereum
+    # command: ./node_modules/.bin/truffle migrate --network ethereum && cd node_modules/@josojo/dutch-exchange-smartcontracts && /usr/src/app/node_modules/.bin/truffle migrate --network ethereum && && npm start
+    build:
+      context: '.'
+    depends_on:
+      - ethereum
+    links:
+      - ethereum
+    environment:
+      ETHEREUM_RPC_URL: http://ethereum:8545
+    deploy:
+      restart_policy:
+        condition: on-failure
+    volumes:
+      - .:/usr/src/app
+    ports:
+      - "8080:8080"
+    networks:
+      - webnet
+
+  api:
+    command: npm run api
+    hostname: dx
+    build:
+      context: '.'
+    depends_on:
+      - setup
+      - ethereum
+    links:
+      - ethereum
+    environment:
+      ETHEREUM_RPC_URL: http://ethereum:8545
+    deploy:
+      restart_policy:
+        condition: on-failure
+    volumes:
+      - .:/usr/src/app
+    ports:
+      - "8080:8080"
+    networks:
+      - webnet
+
+  bots:
+    command: src/run-bots.sh
+    hostname: bots
+    build:
+      context: '.'
+    depends_on:
+      - setup
+      - ethereum
+    deploy:
+      restart_policy:
+        condition: on-failure
+    ports:
+      - "8081:8081"
+    volumes:
+      - .:/usr/src/app
+    networks:
+      - webnet
+
+  ethereum:
+    hostname: ethereum
+    image: trufflesuite/ganache-cli:latest
+    command: ganache-cli -d --mnemonic 'candy maple cake sugar pudding cream honey rich smooth crumble sweet treat' --defaultBalanceEther '500'
+    ports:
+      - "8545:8545"
+    networks:
+      - webnet
+networks:
+  # Define the webnet network
+  webnet:
+
+#    volumes::
+#      - .:/usr/src/app/

@@ -1,0 +1,34 @@
+# Config file
+#CONFIG_FILE=<path-to-config-file>
+
+# Network
+NETWORK=rinkeby
+#ETHEREUM_RPC_URL=https://rinkeby.infura.io
+
+# mnemonic or private key
+#MNEMONIC="your mnemonic"
+#PK=your-private-key
+
+# Debug
+#DEBUG=ERROR-*,WARN-*,INFO-*,DEBUG-*
+DEBUG=ERROR-*,WARN-*,INFO-*
+
+# Time Zone (for formating dates)
+TZ=Europe/Berlin
+
+# Gas price (fast, average or safeLow)
+DEFAULT_GAS_PRICE_USED=fast
+
+# API
+PUBLIC_API_PORT=9091
+
+# Markets
+#MARKETS=WETH-RDN,WETH-OMG,WETH-DAI,WETH-MKR,DAI-MKR,WETH-GNO
+MARKETS=WETH-RDN,WETH-OMG,WETH-GNO
+
+# Tokens
+RDN_TOKEN_ADDRESS=0x3615757011112560521536258c1e7325ae3b48ae
+OMG_TOKEN_ADDRESS=0x00df91984582e6e96288307e9c2f20b38c8fece9
+DAI_TOKEN_ADDRESS=0x62f25065ba60ca3a2044344955a3b2530e355111
+MKR_TOKEN_ADDRESS=0x2d9585690a724bfa29a212295a9e8c714ca694aa
+GNO_TOKEN_ADDRESS=0xd0dab4e640d95e9e8a47545598c33e31bdb53c7c

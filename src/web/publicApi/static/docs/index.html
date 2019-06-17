@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DutchX - API</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="favicon.png">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+
+    <!--[if lt IE 9]>
+    <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <!--style type="text/css"></style-->
+
+    <link href="swagger-jensoleg/css/index.css" rel="stylesheet"/>
+    <link href='swagger-jensoleg/css/standalone.css' rel='stylesheet'/>
+    <link href='swagger-jensoleg/css/api-explorer.css' rel='stylesheet' type='text/css'/>
+    <link href='swagger-jensoleg/css/screen.css' media='screen' rel='stylesheet' type='text/css'/>
+    <link href="swagger-jensoleg/css/custom.css" rel="stylesheet"/>
+
+    <style>
+      .api-disclaimer {
+        background: white;
+        padding: 1em 3em;
+        font-weight: bold;
+        font-size: 1.1em;
+      }
+    </style>
+
+    <script src='swagger-jensoleg/lib/jquery-1.8.0.min.js' type='text/javascript'></script>
+    <script src='swagger-jensoleg/lib/jquery.slideto.min.js' type='text/javascript'></script>
+    <script src='swagger-jensoleg/lib/jquery.wiggle.min.js' type='text/javascript'></script>
+    <script src='swagger-jensoleg/lib/jquery.ba-bbq.min.js' type='text/javascript'></script>
+    <script src='swagger-jensoleg/lib/handlebars-2.0.0.js' type='text/javascript'></script>
+    <script src='swagger-jensoleg/lib/underscore-min.js' type='text/javascript'></script>
+    <script src='swagger-jensoleg/lib/backbone-min.js' type='text/javascript'></script>
+    <script src='swagger-jensoleg/swagger-ui.js' type='text/javascript'></script>
+    <script src='swagger-jensoleg/lib/jsoneditor.js' type='text/javascript'></script>
+    <script src='swagger-jensoleg/lib/highlight.7.3.pack.js' type='text/javascript'></script>
+    <script src='swagger-jensoleg/lib/marked.js' type='text/javascript'></script>
+    <script src='swagger-jensoleg/lib/swagger-oauth.js' type='text/javascript'></script>
+    <script src='swagger-jensoleg/lib/bootstrap.min.js' type='text/javascript'></script>
+
+    <script type="text/javascript">
+        jQuery.browser = jQuery.browser || {};
+        (function () {
+            jQuery.browser.msie = jQuery.browser.msie || false;
+            jQuery.browser.version = jQuery.browser.version || 0;
+            if (navigator.userAgent.match(/MSIE ([0-9]+)\./)) {
+                jQuery.browser.msie = true;
+                jQuery.browser.version = RegExp.$1;
+            }
+        })();
+    </script>
+
+    <script type="text/javascript">
+        $(function () {
+            // var url = window.location.search.match(/url=([^&]+)/);
+            // if (url && url.length > 1) {
+            //     url = decodeURIComponent(url[1]);
+            // } else {
+            //     url = window.location.toString().replace(/\/*#?.*/, '/dx-public-api.json');
+            // }
+
+            window.swaggerUi = new SwaggerUi({
+                url: './dx-public-api.json',
+                dom_id: "swagger-ui-container",
+                supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch'],
+                onComplete: function (swaggerApi, swaggerUi) {
+                    if (typeof initOAuth == "function") {
+
+                        initOAuth({
+                            clientId: "ffe7748a-3a3f-4860-a02a-42ab08e4fde2",
+                            realm: "realm",
+                            appName: "Swagger"
+                        });
+
+                    }
+
+                    $('pre code').each(function (i, e) {
+                        hljs.highlightBlock(e)
+                    });
+
+                    if (swaggerUi.options.url) {
+                        $('#input_baseUrl').val(swaggerUi.options.url);
+                    }
+                    if (swaggerUi.options.apiKey) {
+                        $('#input_apiKey').val(swaggerUi.options.apiKey);
+                    }
+
+                    $("[data-toggle='tooltip']").tooltip();
+
+                    addApiKeyAuthorization();
+                },
+                onFailure: function (data) {
+                    log("Unable to Load SwaggerUI");
+                },
+                docExpansion: "none",
+                sorter: "alpha"
+            });
+
+            function addApiKeyAuthorization() {
+                var key = encodeURIComponent($('#input_apiKey')[0].value);
+                if (key && key.trim() != "") {
+                    var apiKeyAuth = new SwaggerClient.ApiKeyAuthorization("Authorization", "Bearer " + key, "header");
+                    window.swaggerUi.api.clientAuthorizations.add("key", apiKeyAuth);
+                    log("added key " + key);
+                }
+            }
+
+            $('#input_apiKey').change(addApiKeyAuthorization);
+            // if you have an apiKey you would like to pre-populate on the page for demonstration purposes...
+            /*
+             var apiKey = "myApiKeyXXXX123456789";
+             $('#input_apiKey').val(apiKey);
+             */
+
+            window.swaggerUi.load();
+
+            function log() {
+                if ('console' in window) {
+                    console.log.apply(console, arguments);
+                }
+            }
+        });
+    </script>
+
+    <script type="text/javascript">
+
+        $(function () {
+
+            $(window).scroll(function () {
+                var sticky = $(".sticky-nav");
+
+                i(sticky);
+                r(sticky);
+
+                function n() {
+                    return window.matchMedia("(min-width: 992px)").matches
+                }
+
+                function e() {
+                    n() ? sticky.parents(".sticky-nav-placeholder").removeAttr("style") : sticky.parents(".sticky-nav-placeholder").css("min-height", sticky.outerHeight())
+                }
+
+                function i(n) {
+                    n.hasClass("fixed") || (navOffset = n.offset().top);
+                    e();
+                    $(window).scrollTop() > navOffset ? $(".modal.in").length || n.addClass("fixed") : n.removeClass("fixed")
+                }
+
+                function r(e) {
+                    function i() {
+                        var i = $(window).scrollTop(), r = e.parents(".sticky-nav");
+                        return r.hasClass("fixed") && !n() && (i = i + r.outerHeight() + 40), i
+                    }
+
+                    function r(e) {
+                        var t = o.next("[data-endpoint]"), n = o.prev("[data-endpoint]");
+                        return "next" === e ? t.length ? t : o.parent().next().find("[data-endpoint]").first() : "prev" === e ? n.length ? n : o.parent().prev().find("[data-endpoint]").last() : []
+                    }
+
+                    var nav = e.find("[data-navigator]");
+                    if (nav.find("[data-endpoint][data-selected]").length) {
+                        var o = nav.find("[data-endpoint][data-selected]"),
+                            a = $("#" + o.attr("data-endpoint")),
+                            s = a.offset().top,
+                            l = (s + a.outerHeight(), r("next")),
+                            u = r("prev");
+                        if (l.length) {
+                            {
+                                var d = $("#" + l.attr("data-endpoint")), f = d.offset().top;
+                                f + d.outerHeight()
+                            }
+                            i() >= f && c(l)
+                        }
+                        if (u.length) {
+                            var p = $("#" + u.attr("data-endpoint")),
+                            g = u.offset().top;
+                            v = (g + p.outerHeight(), 100);
+                            i() < s - v && c(u)
+                        }
+                    }
+                }
+
+                function s() {
+                    var e = $(".sticky-nav [data-navigator]"),
+                        n = e.find("[data-endpoint]").first();
+                    n.attr("data-selected", "");
+                    u.find("[data-selected-value]").html(n.text())
+                }
+
+                function c(e) {
+                    {
+                        var n = $(".sticky-nav [data-navigator]");
+                        $("#" + e.attr("data-endpoint"))
+                    }
+                    n.find("[data-resource]").removeClass("active");
+                    n.find("[data-selected]").removeAttr("data-selected");
+                    e.closest("[data-resource]").addClass("active");
+                    e.attr("data-selected", "");
+                    sticky.find("[data-selected-value]").html(e.text())
+                }
+            });
+
+        });
+    </script>
+
+    <script type="text/javascript">
+        $(function () {
+            $("[data-toggle='tooltip']").tooltip();
+        });
+    </script>
+
+</head>
+
+<body class="page-docs" style="zoom: 1;">
+<header class="site-header">
+    <nav role="navigation" class="navbar navbar-default">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" data-toggle="collapse" data-target="#navbar-collapse" class="navbar-toggle"><span
+                        class="sr-only">Toggle navigation</span><span class="icon-bar"></span><span
+                        class="icon-bar"></span><span class="icon-bar"></span></button>
+                <h1 class="navbar-brand"><a href="/api"><span>DutchX - API</span></a></h1>
+            </div>
+            <div id="navbar-collapse" class="collapse navbar-collapse">
+                <ul class="nav navbar-nav navbar-left">
+                  <li class="li-why">
+                    <a href="/api" style="font-size: 25px; padding-left: 0px">DutchX - API<span id="networkContainer"></span>
+                    </br><span style="font-size: 12px;" id="contractsVersionContainer"></span></a>
+                  </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</header>
+
+<section class="content">
+    <div id="api2-explorer">
+        <div class="swagger-section page-docs" style="zoom: 1">
+            <div class="main-section">
+              <p class="api-disclaimer">
+                This API is provided for information purposes only and reads data from the DutchX trading protocol on the Ethereum Blockchain (see version at top). 
+                We have no control over the transactions executed, attempted to be executed or erroneously executed via the DutchX trading protocol, which is permissionless. 
+                We do not give any guarantee that any displayed information is accurate. No assessment or selection is conducted as to the display of the executed, falsely executed or attempted transactions on the DutchX trading protocol. 
+                It is possible that this API displays tokens or features that are not compatible with the DutchX trading protocol, because transactions or listings have been made in error. 
+                Accordingly, it is not advised to rely on the data displayed on this API to assess the compatibility of an intended transactions with the DutchX trading protocol 
+                We do not accept any liability to you or anyone else for any losses of any nature resulting from any transactions made or action taken in reliance on the information contained on this API. 
+                All and any such responsibility is expressly disclaimed.
+              </p>
+                <div id="swagger-ui-container" class="swagger-ui-wrap">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<script src="main.js"></script>
+</body>
+</html>

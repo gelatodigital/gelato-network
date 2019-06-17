@@ -1,0 +1,36 @@
+# Config file
+#CONFIG_FILE=<path-to-config-file>
+
+# Network
+NETWORK=mainnet
+#ETHEREUM_RPC_URL=https://mainnet.infura.io
+
+# mnemonic or private key
+#MNEMONIC="your mnemonic"
+#PK=your-private-key
+
+# Debug
+#DEBUG=ERROR-*,WARN-*,INFO-*,DEBUG-*
+DEBUG=ERROR-*,WARN-*,INFO-*
+
+# Time Zone (for formating dates)
+TZ=Europe/Berlin
+
+# Gas price (fast, average or safeLow)
+DEFAULT_GAS_PRICE_USED=fast
+
+# API
+PUBLIC_API_PORT=9093
+
+# Markets
+#MARKETS=RDN-WETH
+MARKETS=RDN-WETH,OMG-WETH,DAI-WETH,MKR-WETH,DAI-MKR,GEN-WETH,KNC-WETH,GNO-WETH
+
+# Token
+RDN_TOKEN_ADDRESS=0x255aa6df07540cb5d3d297f0d0d4d84cb52bc8e6
+OMG_TOKEN_ADDRESS=0xd26114cd6EE289AccF82350c8d8487fedB8A0C07
+DAI_TOKEN_ADDRESS=0x89d24a6b4ccb1b6faa2625fe562bdd9a23260359
+MKR_TOKEN_ADDRESS=0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2
+GEN_TOKEN_ADDRESS=0x543ff227f64aa17ea132bf9886cab5db55dcaddf
+KNC_TOKEN_ADDRESS=0xdd974d5c2e2928dea5f71b9825b8b646686bd200
+GNO_TOKEN_ADDRESS=0x6810e776880c02933d47db1b9fc05908e5386b96

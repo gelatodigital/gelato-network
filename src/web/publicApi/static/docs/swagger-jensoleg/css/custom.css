@@ -1,0 +1,29 @@
+header.site-header.site-header {
+    background: #024d90;
+}
+
+.swagger-section pre {
+    background: #2d3134;
+}
+
+@media (min-width: 992px)
+/* api-explorer.css:103 */
+.swagger-section .operation > .samples {
+    background: transparent;
+}
+
+.swagger-section .operations {
+    padding: 0;
+}
+
+.swagger-section #resources .operation .content {
+    padding-top: 20px;
+}
+
+.swagger-section .samples h4 {
+    background: #383f44;
+}
+
+.navbar-default .navbar-nav > li {
+    padding-left: 20px;
+}
