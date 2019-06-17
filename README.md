@@ -31,7 +31,7 @@ yarn cli withdraw 20 WETH 0x627306090abab3a6e1400e9345bc60c78a8bef57
 Create the first sellOrder using the sellers account:
 ```bash
 truffle console
-exec ./gelatoSetup1.js
+exec ./createSellOrder.js
 .exit
 ```
 
@@ -46,7 +46,7 @@ Check the current state, enter truffle console and execute the first subOrder in
 ```bash
 yarn cli state WETH-RDN  
 truffle console
-exec ./gelatoSetup2.js
+exec ./execSubOrder.js
 .exit
 ```
 Fund the corresponding RDN-WETH auction and check the state
