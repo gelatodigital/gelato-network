@@ -101,6 +101,7 @@
     "yargs": "^13.2.4"
   },
   "devDependencies": {
+    "chai-bignumber": "^3.0.0",
     "commander": "^2.20.0",
     "esdoc": "^1.1.0",
     "esdoc-standard-plugin": "^1.0.0",
