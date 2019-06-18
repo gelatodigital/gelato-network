@@ -6,7 +6,7 @@ const BN = require('bignumber.js');
 module.exports = async () => {
 
     const gelato = await Gelato.at(Gelato.address)
-    const subOrderAmount = web3.utils.toWei("10")
+    const subOrderAmount = web3.utils.toWei("1")
 
     console.log("...Starting calcSubOrder Script")
 
@@ -18,26 +18,41 @@ module.exports = async () => {
 
     console.log("----")
 
-    console.log("Calculate actual subOrderSize of 10 WETH")
-
     const actualSubOrder = await gelato._calcActualSubOrderSize(subOrderAmount)
 
-    const oldSubOrderAmount = actualSubOrder.logs[0].args.subOrderAmount.toString(10)
+    // console.log(actualSubOrder)
+    // Fetched liquidity contribution (num, den)
+    const num = actualSubOrder.logs[0].args['num'].toString(10)
+    const numBN = new BN(num)
+    const den = actualSubOrder.logs[0].args['den'].toString(10)
+    const denBN = new BN(den)
+    console.log(`Numerator ${num}`)
+    console.log(`Denominator ${den}`)
+
+    const oldSubOrderAmount = actualSubOrder.logs[1].args.subOrderAmount.toString(10)
     const oldSubOrderAmountBN = new BN(oldSubOrderAmount)
 
-    const actualSubOrderAmount = actualSubOrder.logs[0].args.actualSubOrderAmount.toString(10)
+    const actualSubOrderAmount = actualSubOrder.logs[1].args.actualSubOrderAmount.toString(10)
     const actualSubOrderAmountBN = new BN(actualSubOrderAmount)
 
-    const fee = actualSubOrder.logs[0].args.fee.toString(10)
+    const fee = actualSubOrder.logs[1].args.fee.toString(10)
     const feeBN = new BN(fee)
+
+
+    console.log("----")
+    console.log("Check if fee got calculated correctly")
+    const calculatedFee = oldSubOrderAmountBN.mul(numBN).div(denBN)
+    console.log(`Calculated BN fee: ${calculatedFee}`)
+    console.log(`Applied Fee:       ${fee}`)
+    console.log(`Both fees are identical: ${feeBN.eq(calculatedFee)}`)
 
     console.log("----")
     console.log("Old SubOrder Size: ", oldSubOrderAmount)
     console.log("Actual SubOrder Size: ", actualSubOrderAmount)
-    console.log("Applied Fee: ", fee)
     console.log("----")
     const feeCheck = oldSubOrderAmountBN.minus(feeBN)
     console.log(`Check if (old - fee === new): ${feeCheck.eq(actualSubOrderAmountBN)}`)
     console.log("----")
     console.log("SubOrder successfully calculated")
+
 }

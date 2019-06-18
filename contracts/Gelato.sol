@@ -70,7 +70,7 @@ contract Gelato is Ownable() {
                                address indexed executor
     );
 
-    event LogNumDen(uint indexed num, uint indexed dem);
+    event LogNumDen(uint indexed num, uint indexed den);
 
     // event LogActualSubOrderAmount(uint indexed actualSubOrderAmount);
 
@@ -165,7 +165,7 @@ contract Gelato is Ownable() {
         */
         SellOrder memory sellOrder = SellOrder(
             false,
-            false, 
+            false,
             false,
             seller,
             _sellToken,
@@ -214,7 +214,7 @@ contract Gelato is Ownable() {
         uint256 lastAuctionIndex = subOrder.lastAuctionIndex;
 
         // Fetches current auction index from DutchX
-        uint256 newAuctionIndex = DutchX.getAuctionIndex(subOrder.buyToken, subOrder.sellToken); 
+        uint256 newAuctionIndex = DutchX.getAuctionIndex(subOrder.buyToken, subOrder.sellToken);
 
         /* Basic Execution Logic
             * Require that seller has ERC20 balance
@@ -284,23 +284,23 @@ contract Gelato is Ownable() {
             // Last sold during waitingPeriod1, new CANNOT sell during waitingPeriod1.
             if (lastAuctionWasWaiting && newAuctionIsWaiting) {
                 revert("Last sold during waitingPeriod1, new CANNOT sell during waitingPeriod1");
-            } 
+            }
             // Last sold in Waiting period, new wants to sell afer auction started running
             else if (lastAuctionWasWaiting && !newAuctionIsWaiting) {
                 // Given new assumption of not wanting to sell in newAuction before lastAuction sold-into has finished, revert. Otherwise, holds true for not investing in same auction assupmtion
                 revert("Even though we dont't sell into the same auciton twice, we would sell before the preivuos auction we sold into has finished, hence revert");
-            } 
+            }
             // Last sold during running auction, new sells during last waiting period
             // Impossible
             else if (!lastAuctionWasWaiting && newAuctionIsWaiting) {
                 revert("Fatal error: auction index incrementation out of sync");
-            } 
+            }
             //Last sold during running auction1, new CANNOT sell during auction1
             else if (!lastAuctionWasWaiting && !newAuctionIsWaiting) {
                 revert("Failed: Selling twice into the same running auction is disallowed");
             }
         }
-        // CASE 3: 
+        // CASE 3:
         // We participated at previous auction index
         // Either we sold during previous waiting period, or during previous auction.
         else if (newAuctionIndex.sub(1) == lastAuctionIndex) {
@@ -314,10 +314,19 @@ contract Gelato is Ownable() {
                 subOrder.lastAuctionWasWaiting = newAuctionIsWaiting;
                 // @DEV: before selling, transfer the ERC20 tokens from the user to the gelato contract
                 ERC20(subOrder.sellToken).transferFrom(subOrder.seller, address(this), subOrder.subOrderSize);
-                // @DEV: before selling, store the acutal amount sold after fee deduction
+
+                // @DEV: before selling, approve the DutchX to extract the ERC20 Token from this contract
+                ERC20(subOrder.sellToken).approve(address(DutchX), subOrder.subOrderSize);
+
+                // @DEV: before selling, calc the acutal amount which will be sold after DutchX fee deduction to be later used in the withdraw pattern
+                uint256 newActualSubOrderSize = _calcActualSubOrderSize(subOrder.subOrderSize);
+
+                // Store the actually sold sub-order amount in the struct
+                subOrder.actualLastSubOrderSize = newActualSubOrderSize;
+
                 // Sell
                 _depositAndSell(subOrder.sellToken, subOrder.buyToken, subOrder.subOrderSize);
-            } 
+            }
             /* We sold during previous waiting period, our funds went into auction1, then
             auction1 ran, then auction1 cleared and the auction index was incremented,
             , then a waiting period passed, now we are selling during auction2, our funds
@@ -329,16 +338,25 @@ contract Gelato is Ownable() {
                 subOrder.lastAuctionWasWaiting = newAuctionIsWaiting;
                 // @DEV: before selling, transfer the ERC20 tokens from the user to the gelato contract
                 ERC20(subOrder.sellToken).transferFrom(subOrder.seller, address(this), subOrder.subOrderSize);
-                // @DEV: before selling, store the acutal amount sold after fee deduction
+
+                // @DEV: before selling, approve the DutchX to extract the ERC20 Token from this contract
+                ERC20(subOrder.sellToken).approve(address(DutchX), subOrder.subOrderSize);
+
+                // @DEV: before selling, calc the acutal amount which will be sold after DutchX fee deduction to be later used in the withdraw pattern
+                uint256 newActualSubOrderSize = _calcActualSubOrderSize(subOrder.subOrderSize);
+
+                // Store the actually sold sub-order amount in the struct
+                subOrder.actualLastSubOrderSize = newActualSubOrderSize;
+
                 // Sell
                 _depositAndSell(subOrder.sellToken, subOrder.buyToken, subOrder.subOrderSize);
-            } 
+            }
             /* We sold during auction1, our funds went into auction2, then auction1 cleared
             and the auction index was incremented, now we are NOT selling during the ensuing
             waiting period because our funds would also go into auction2 */
             else if (!lastAuctionWasWaiting && newAuctionIsWaiting) {
                 revert("Failed: Selling twice during auction and ensuing waiting period disallowed");
-            } 
+            }
             /* We sold during auction1, our funds went into auction2, then auction1 cleared
             and the auctionIndex got incremented, then a waiting period passed,
             we now sell during auction2, our funds will go to auction3 */
@@ -346,33 +364,31 @@ contract Gelato is Ownable() {
                 // Given new assumption of not wanting to sell in newAuction before lastAuction sold-into has finished, revert. Otherwise, holds true for not investing in same auction assupmtion
                 revert("Even though we dont't sell into the same auciton twice, we would sell before the preivuos auction we sold into has finished, hence revert");
             }
-        } 
-        // CASE 4: 
+        }
+        // CASE 4:
         // If we skipped at least one auction before trying to sell again: ALWAYS SELL
         else if (newAuctionIndex.sub(2) >= lastAuctionIndex) {
-            // require(subOrder.lastAuctionIndex == 0, "lastauctionindex != 0");
-
             // Change in Auction Index
-            // require(newAuctionIndex == 2, "AuctionIndex must be equal to 2");
             subOrder.lastAuctionIndex = newAuctionIndex;
-
-            // require(subOrder.lastAuctionIndex == newAuctionIndex, "lastauctionindex != newAuctionIndex");
 
             // Change in Auction State
             subOrder.lastAuctionWasWaiting = newAuctionIsWaiting;
 
-            // @DEV: before selling, store the acutal amount sold after fee deduction
-            // uint256 newActualSubOrderSize = _calcActualSubOrderSize(subOrder.subOrderSize);
-
             // @DEV: before selling, transfer the ERC20 tokens from the user to the gelato contract
             ERC20(subOrder.sellToken).transferFrom(subOrder.seller, address(this), subOrder.subOrderSize);
 
-            // @DEV: before selling, approve the DutchX to extrac the ERC20 Token
+            // @DEV: before selling, approve the DutchX to extract the ERC20 Token from this contract
             ERC20(subOrder.sellToken).approve(address(DutchX), subOrder.subOrderSize);
+
+            // @DEV: before selling, calc the acutal amount which will be sold after DutchX fee deduction to be later used in the withdraw pattern
+            uint256 newActualSubOrderSize = _calcActualSubOrderSize(subOrder.subOrderSize);
+
+            // Store the actually sold sub-order amount in the struct
+            subOrder.actualLastSubOrderSize = newActualSubOrderSize;
 
             // Sell
             _depositAndSell(subOrder.sellToken, subOrder.buyToken, subOrder.subOrderSize);
-            
+
         }
         // Case 5: Unforeseen stuff
         else {
@@ -438,7 +454,7 @@ contract Gelato is Ownable() {
              -> memory is volatile -> changes will be lost after stack
              gets dropped by EVM
              --> either need to use storage or access via []
-            
+
             subOrder.lastAuctionIndex = newAuctionIndex;
 
             // Transfer Tokens from Gelato to Seller
@@ -492,7 +508,7 @@ contract Gelato is Ownable() {
         return true;
     }
 
-    function _calcActualSubOrderSize(uint _sellAmount) 
+    function _calcActualSubOrderSize(uint _sellAmount)
         public
         returns(uint)
     {
@@ -503,11 +519,13 @@ contract Gelato is Ownable() {
         // Returns e.g. num = 1, den = 500 for 0.2% fee
         (num, den) = DutchX.getFeeRatio(address(this));
 
-        // Calc fee amount
-        // Q: Doesn't that make problems if amount * num is odd?
-        uint fee = _sellAmount * num / den;
+        emit LogNumDen(num, den);
 
-        uint actualSellAmount = _sellAmount - fee;
+        // Calc fee amount
+        uint fee = _sellAmount.mul(num) / den;
+
+        // Calc actual Sell Amount
+        uint actualSellAmount = _sellAmount.sub(fee);
 
         emit LogActualSubOrderAmount(_sellAmount, actualSellAmount, fee);
 
@@ -517,7 +535,7 @@ contract Gelato is Ownable() {
     }
 
     // @DEV Calculates amount withdrawable from past, cleared auction
-    function _calcSellerPayout(address _sellToken, address _buyToken, uint256 _lastAuctionIndex, uint _actualLastSubOrderSize) 
+    function _calcSellerPayout(address _sellToken, address _buyToken, uint256 _lastAuctionIndex, uint _actualLastSubOrderSize)
         public
         returns(uint)
     {
@@ -540,7 +558,7 @@ contract Gelato is Ownable() {
 
         return subOrderPayout;
     }
-    
+
 }
 
 
