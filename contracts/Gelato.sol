@@ -32,7 +32,7 @@ contract Gelato is Ownable() {
         uint256 freezeTime; // e.g. 86400 seconds (24h)
         uint256 lastAuctionIndex; // default 0
         uint256 executionReward; // e.g. 0.1 ETH
-        uint256 actualLastSubOrderSize;
+        uint256 actualLastSubOrderAmount;
         //address payable[] executors;  // dynamic array
     }
 
@@ -72,7 +72,7 @@ contract Gelato is Ownable() {
 
     event LogNumDen(uint indexed num, uint indexed den);
 
-    // event LogActualSubOrderAmount(uint indexed actualSubOrderAmount);
+    event LogWithdrawAmount(uint indexed withdrawAmount);
 
     event LogActualSubOrderAmount(uint256 indexed subOrderAmount,uint256 indexed actualSubOrderAmount, uint256 indexed fee);
 
@@ -177,7 +177,7 @@ contract Gelato is Ownable() {
             _freezeTime,
             lastAuctionIndex,
             _executionReward,
-            0 //default for actualLastSubOrderSize
+            0 //default for actualLastSubOrderAmount
         );
 
         // Hash the sellOrder Struct to get unique identifier for mapping
@@ -216,6 +216,8 @@ contract Gelato is Ownable() {
         // Fetches current auction index from DutchX
         uint256 newAuctionIndex = DutchX.getAuctionIndex(subOrder.buyToken, subOrder.sellToken);
 
+        uint256 actualLastSubOrderAmount = subOrder.actualLastSubOrderAmount;
+
         /* Basic Execution Logic
             * Require that seller has ERC20 balance
             * Require that Gelato has matching seller's ERC20 allowance
@@ -237,7 +239,7 @@ contract Gelato is Ownable() {
         require(
             // @DEV revisit adding execution reward based on payout logic
             ERC20(subOrder.sellToken).balanceOf(subOrder.seller) >= subOrder.subOrderSize,
-            "Failed: Seller balance must be greater than subOrderSize + executionReward"
+            "Failed: Seller balance must be greater than subOrderSize"
         );
 
         // Execute if: Gelato has the allowance.
@@ -322,7 +324,7 @@ contract Gelato is Ownable() {
                 uint256 newActualSubOrderSize = _calcActualSubOrderSize(subOrder.subOrderSize);
 
                 // Store the actually sold sub-order amount in the struct
-                subOrder.actualLastSubOrderSize = newActualSubOrderSize;
+                subOrder.actualLastSubOrderAmount = newActualSubOrderSize;
 
                 // Sell
                 _depositAndSell(subOrder.sellToken, subOrder.buyToken, subOrder.subOrderSize);
@@ -346,7 +348,7 @@ contract Gelato is Ownable() {
                 uint256 newActualSubOrderSize = _calcActualSubOrderSize(subOrder.subOrderSize);
 
                 // Store the actually sold sub-order amount in the struct
-                subOrder.actualLastSubOrderSize = newActualSubOrderSize;
+                subOrder.actualLastSubOrderAmount = newActualSubOrderSize;
 
                 // Sell
                 _depositAndSell(subOrder.sellToken, subOrder.buyToken, subOrder.subOrderSize);
@@ -384,7 +386,7 @@ contract Gelato is Ownable() {
             uint256 newActualSubOrderSize = _calcActualSubOrderSize(subOrder.subOrderSize);
 
             // Store the actually sold sub-order amount in the struct
-            subOrder.actualLastSubOrderSize = newActualSubOrderSize;
+            subOrder.actualLastSubOrderAmount = newActualSubOrderSize;
 
             // Sell
             _depositAndSell(subOrder.sellToken, subOrder.buyToken, subOrder.subOrderSize);
@@ -422,51 +424,32 @@ contract Gelato is Ownable() {
 
         // ********************** TO DO: IMPLEMENT executionReward LOGIC **********************
 
-                // @Hilmar: will do today.
-
         // ********************** TO DO: IMPLEMENT executionReward LOGIC END ******************
 
 
 
         // ********************** Withdraw from DutchX **********************
 
-        // Check if user has funds ready to be withdrawn
-        // Only valid after first sub-order sale
-        // WE SHOULD ONLY BE HERE IF WE ARE CERTAIN THAT THE LAST PARITICPATED AUCTION CLEARED
-        /*
-        if (subOrder.lastAuctionIndex != 0) {
+        // Only enter after first sub-order sale
+        // Only enter if last auction the seller participated in has cleared
+        // @DEV use memory value lastAuctionIndex as we already incremented storage value
+        if (lastAuctionIndex != 0) {
 
             // Calc how much the last auction the user paid into has yieled.
-            uint256 sellerPayout = _calcSellerPayout(subOrder.sellToken, subOrder.buyToken, lastAuctionIndex, subOrder.actualLastSubOrderSize);
-
-
-            // TAKE INTO ACCOUNT THAT A FEE IN MAGNOLIA WAS CHARGED
+            uint256 withdrawAmount = _calcWithdrawAmount(subOrder.sellToken, subOrder.buyToken, lastAuctionIndex, actualLastSubOrderAmount);
 
             // Call claim and withdraw function
+            // @DEV use memory value lastAuctionIndex as we already incremented storage value
             DutchX.claimAndWithdraw(subOrder.sellToken,
             subOrder.buyToken,
             address(this),
-            subOrder.lastAuctionIndex,
-            sellerPayout);
-
-            // Update lastAuctionIndex => reentrancy avoidance
-            /* @Hilmar: this will only update the sellOrder copy in memory
-             -> memory is volatile -> changes will be lost after stack
-             gets dropped by EVM
-             --> either need to use storage or access via []
-
-            subOrder.lastAuctionIndex = newAuctionIndex;
+            lastAuctionIndex,
+            withdrawAmount);
 
             // Transfer Tokens from Gelato to Seller
-            //ERC20.transfer(address recipient, uint256 amount)
-            ERC20(subOrder.buyToken).transfer(subOrder.seller, subOrder.subOrderSize);
+            // ERC20.transfer(address recipient, uint256 amount)
+            ERC20(subOrder.buyToken).transfer(subOrder.seller, withdrawAmount);
         }
-
-        else {
-            // In case of the first subOrder placement, we still have to change the lastAuctionIndex.
-            //subOrder.lastAuctionIndex = newAuctionIndex;
-        }
-        */
 
         // ********************** Withdraw from DutchX END **********************
 
@@ -522,7 +505,7 @@ contract Gelato is Ownable() {
         emit LogNumDen(num, den);
 
         // Calc fee amount
-        uint fee = _sellAmount.mul(num) / den;
+        uint fee = _sellAmount.mul(num).div(den);
 
         // Calc actual Sell Amount
         uint actualSellAmount = _sellAmount.sub(fee);
@@ -535,7 +518,7 @@ contract Gelato is Ownable() {
     }
 
     // @DEV Calculates amount withdrawable from past, cleared auction
-    function _calcSellerPayout(address _sellToken, address _buyToken, uint256 _lastAuctionIndex, uint _actualLastSubOrderSize)
+    function _calcWithdrawAmount(address _sellToken, address _buyToken, uint256 _lastAuctionIndex, uint _actualLastSubOrderAmount)
         public
         returns(uint)
     {
@@ -550,13 +533,13 @@ contract Gelato is Ownable() {
         emit LogNumDen(num, den);
 
         // For WETH / DAI we will get back e.g: 1/ 250
-        uint256 subOrderPayout = (
-            _actualLastSubOrderSize.mul(num).div(den)
+        uint256 withdrawAmount = (
+            _actualLastSubOrderAmount.mul(num).div(den)
         );
 
-        // emit LogActualSubOrderAmount(subOrderPayout);
+        emit LogWithdrawAmount(withdrawAmount);
 
-        return subOrderPayout;
+        return withdrawAmount;
     }
 
 }

@@ -8,7 +8,7 @@ module.exports = async () => {
     const gelato = await Gelato.at(Gelato.address)
     const subOrderAmount = web3.utils.toWei("1")
 
-    console.log("...Starting calcSubOrder Script")
+    console.log('...Starting calcSubOrder Script')
 
     const block = await web3.eth.getBlockNumber()
     const blockDetails = await web3.eth.getBlock(block)
@@ -48,11 +48,11 @@ module.exports = async () => {
 
     console.log("----")
     console.log("Old SubOrder Size: ", oldSubOrderAmount)
-    console.log("Actual SubOrder Size: ", actualSubOrderAmount)
-    console.log("----")
+    console.log('Actual SubOrder Size: ', actualSubOrderAmount)
+    console.log('----')
     const feeCheck = oldSubOrderAmountBN.minus(feeBN)
     console.log(`Check if (old - fee === new): ${feeCheck.eq(actualSubOrderAmountBN)}`)
-    console.log("----")
-    console.log("SubOrder successfully calculated")
+    console.log('----')
+    console.log('SubOrder successfully calculated')
 
 }

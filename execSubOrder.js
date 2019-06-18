@@ -1,29 +1,46 @@
+/* eslint-disable indent */
 const Gelato = artifacts.require('Gelato');
 const EtherToken = artifacts.require('EtherToken')
+const RDNToken = artifacts.require('TokenRDN')
 
 // const EtherToken = contract(require('@gnosis.pm/util-contracts/build/contracts/EtherToken'))
 
-module.exports = function() {
-   
-    async function test() {
+module.exports = async () => {
 
-        // Hard coded. If you changed values in gelatoSetup1, please change hash here as well
-        const sellOrderHash = '0x43e658e6525ad1a083dbc9bc64d86e0ccbc3cc336ae82076aebebc0651f2a9e8'
+    // Variables
+    const sellOrderHash = '0x7adec3968455b7f091fa3fe73a4ffa4a432625ec2e0ea251cb8cd0ad678d89c7'
+    // const seller = '0x627306090abab3a6e1400e9345bc60c78a8bef57'
+    const accounts = await web3.eth.getAccounts()
+    const seller = accounts[9]
+    const RDNaddress = RDNToken.address
+    const WETHaddress = EtherToken.address
+    const RDN = await RDNToken.at(RDNaddress)
+    const gelato = await Gelato.at(Gelato.address)
+    const executor = '0xf17f52151ebef6c7334fad080c5704d77216b732'
 
-        console.log("...Starting Gelato Setup 2 Script")
-        const block = await web3.eth.getBlockNumber()
-        const blockDetails = await web3.eth.getBlock(block)
-        const timestamp = blockDetails.timestamp
-        console.log("Current Timestamp:", timestamp)
-        
-        const gelato = await Gelato.at(Gelato.address)
+    console.log('...Starting execute sub-order script')
+    console.log('----')
+    const block = await web3.eth.getBlockNumber()
+    const blockDetails = await web3.eth.getBlock(block)
+    const timestamp = blockDetails.timestamp
+    console.log(`Current Timestamp:                  ${timestamp}`)
+    console.log('----')
+    let executeSubOrder = await gelato.executeSubOrder(sellOrderHash, { from: executor })
 
-        console.log("Execute 1st subOrder Tx Executor: 0xf17f52151ebef6c7334fad080c5704d77216b732")
+    console.log(`Seller:                             ${seller}`)
+    const RDNbalance = await RDN.balanceOf(seller)
+    console.log(`Sellers RDN balance before:         ${RDNbalance / (10 ** 18)}`)
 
-        let executeSubOrder = await gelato.executeSubOrder(sellOrderHash, {from: '0xf17f52151ebef6c7334fad080c5704d77216b732'})
+    console.log(`Execute 1st subOrder Tx Executor:   ${executor}`)
 
-        console.log(executeSubOrder)
-        console.log("1st SubOrder executed")
-    }
-    test();
+
+    console.log(`RDN balance after`)
+    const RDNbalance2 = await RDN.balanceOf(seller)
+    console.log(`Sellers RDN balance after:          ${RDNbalance2 / (10 ** 18)}`)
+    const difference = RDNbalance2 - RDNbalance
+    console.log(`Difference:                         ${difference / (10 ** 18)}`)
+
+    // console.log(executeSubOrder)
+    console.log('SubOrder successfully executed')
+
 }
