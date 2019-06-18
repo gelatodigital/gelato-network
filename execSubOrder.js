@@ -25,13 +25,13 @@ module.exports = async () => {
     const timestamp = blockDetails.timestamp
     console.log(`Current Timestamp:                  ${timestamp}`)
     console.log('----')
-    let executeSubOrder = await gelato.executeSubOrder(sellOrderHash, { from: executor })
 
     console.log(`Seller:                             ${seller}`)
     const RDNbalance = await RDN.balanceOf(seller)
     console.log(`Sellers RDN balance before:         ${RDNbalance / (10 ** 18)}`)
 
     console.log(`Execute 1st subOrder Tx Executor:   ${executor}`)
+    let executeSubOrder = await gelato.executeSubOrder(sellOrderHash, { from: executor })
 
 
     console.log(`RDN balance after`)

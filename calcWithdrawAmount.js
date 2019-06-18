@@ -7,8 +7,8 @@ const EtherToken = artifacts.require('EtherToken')
 module.exports = async () => {
 
     const gelato = await Gelato.at(Gelato.address)
-    const subOrderAmount = web3.utils.toWei("0.995")
-    const lastAuctionIndex = 1
+    const subOrderAmount = web3.utils.toWei("9.95")
+    const lastAuctionIndex = 2
     const WETH = EtherToken.address
     const RDN = '0x8ACEe021a27779d8E98B9650722676B850b25E11'
     const decimals = 18
