@@ -38,7 +38,7 @@ contract Gelato is Ownable() {
 
     /* Invariants
         * 1: subOrderSize is constant
-        * 2: numSubOrders == totalSellVolume / subOrderSize;
+        * 2: totalSellVolume === subOrderSize * numSubOrders;
     */
 
     // Events
@@ -147,7 +147,7 @@ contract Gelato is Ownable() {
         require(_subOrderSize != 0, "Empty sub order size");
 
         // Invariant checks
-        require(_numSubOrders == _totalSellVolume.div(_subOrderSize),
+        require(_totalSellVolume == _numSubOrders.mul(_subOrderSize),
             "Invariant numSubOrders failed totalSellVolume/subOrderSize"
         );
 
@@ -246,7 +246,7 @@ contract Gelato is Ownable() {
         require(
             ERC20(subOrder.sellToken)
             .allowance(subOrder.seller, address(this)) >= subOrder.subOrderSize,
-            "Failed: Gelato allowance must be greater than subOrderSize + executionReward"
+            "Failed: Gelato allowance must be greater than subOrderSize"
         );
 
         // ********************** Basic Execution Logic END **********************
@@ -269,8 +269,6 @@ contract Gelato is Ownable() {
         } else if (auctionStartTime < now) {
             newAuctionIsWaiting = false;
         }
-        // require(newAuctionIsWaiting == true, "newAuctionIsWaiting should  be true");
-        // require(auctionStartTime == 2, "AuctionStart should be equal to 2");
 
         // Assumpions:
         // #1 Don't sell in the same auction twice
