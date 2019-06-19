@@ -27,7 +27,7 @@ contract Gelato is Ownable() {
         address buyToken; // e.g. DAI address
         uint256 totalSellVolume; // eg. 100 WETH
         uint256 subOrderSize; // e.g. 10 WETH
-        uint256 numSubOrders; // e.g. 10
+        uint256 remainingSubOrders; // e.g. 10
         uint256 hammerTime; // e.g. 1559912739
         uint256 freezeTime; // e.g. 86400 seconds (24h)
         uint256 lastAuctionIndex; // default 0
@@ -38,7 +38,7 @@ contract Gelato is Ownable() {
 
     /* Invariants
         * 1: subOrderSize is constant
-        * 2: totalSellVolume === subOrderSize * numSubOrders;
+        * 2: totalSellVolume === subOrderSize * remainingSubOrders;
     */
 
     // Events
@@ -77,12 +77,17 @@ contract Gelato is Ownable() {
     event LogActualSubOrderAmount(uint256 indexed subOrderAmount,uint256 indexed actualSubOrderAmount, uint256 indexed fee);
 
     // State Variables
-    /*Mappings:
-        * Unique key-value mapping:
-            * key: sellOrderHash
-            * value: sellOrder (struct)
-    */
+    // Mappings:
+
+    // Find unique sellOrder with sellOrderHash
+    // key: sellOrderHash
+    // value: sellOrder (struct)
     mapping(bytes32 => SellOrder) public sellOrders;
+
+    // Find all sellOrder of one single seller
+    // key: sellers address
+    // value: sellOrderHash
+    mapping(address => bytes32 []) public sellOrdersBySeller;
 
     /* Interface to other contracts:
         * DutchX variables:
@@ -120,8 +125,8 @@ contract Gelato is Ownable() {
                 * a no-zero totalSellVolume
                 * a no-zero subOrderSize
                 * a hammerTime more than 10 minutes into the future
-                * a numSubOrders equal to totalSellVolume / subOrderSize
-                * an even numSubOrders
+                * a remainingSubOrders equal to totalSellVolume / subOrderSize
+                * an even remainingSubOrders
             * Emits LogNewSellOrder event.
             * Returns: unique sellOrderHash
     */
@@ -129,7 +134,7 @@ contract Gelato is Ownable() {
                              address _buyToken,
                              uint256 _totalSellVolume,
                              uint256 _subOrderSize,
-                             uint256 _numSubOrders,
+                             uint256 _remainingSubOrders,
                              uint256 _hammerTime,
                              uint256 _freezeTime,
                              uint256 _executionReward,
@@ -147,8 +152,8 @@ contract Gelato is Ownable() {
         require(_subOrderSize != 0, "Empty sub order size");
 
         // Invariant checks
-        require(_totalSellVolume == _numSubOrders.mul(_subOrderSize),
-            "Invariant numSubOrders failed totalSellVolume/subOrderSize"
+        require(_totalSellVolume == _remainingSubOrders.mul(_subOrderSize),
+            "Invariant remainingSubOrders failed totalSellVolume/subOrderSize"
         );
 
         // @ Hilmar: Readability over gas cost. - or no?
@@ -172,7 +177,7 @@ contract Gelato is Ownable() {
             _buyToken,
             _totalSellVolume,
             _subOrderSize,
-            _numSubOrders,
+            _remainingSubOrders,
             _hammerTime,
             _freezeTime,
             lastAuctionIndex,
@@ -182,14 +187,19 @@ contract Gelato is Ownable() {
 
         // Hash the sellOrder Struct to get unique identifier for mapping
         // @Hilmar: solidity returns sellOrderHash automatically for you
-        bytes32 sellOrderHash = keccak256(abi.encodePacked(seller, _sellToken, _buyToken, _totalSellVolume, _subOrderSize, _numSubOrders, _hammerTime, _freezeTime, lastAuctionIndex, _executionReward, _nonce));
+        bytes32 sellOrderHash = keccak256(abi.encodePacked(seller, _sellToken, _buyToken, _totalSellVolume, _subOrderSize, _remainingSubOrders, _hammerTime, _freezeTime, lastAuctionIndex, _executionReward, _nonce));
 
         // We cannot convert a struct to a bool, hence we need to check if any value is not equal to 0 to validate that it does indeed not exist
         if (sellOrders[sellOrderHash].seller != address(0)) {
             revert("Sell Order already registered");
         }
 
+        // Store new sell order in sellOrders mapping
         sellOrders[sellOrderHash] = sellOrder;
+
+        // Store new sellOrders in sellOrdersBySeller array by their hash
+        sellOrdersBySeller[msg.sender].push(sellOrderHash);
+
 
         //Emit event to notify executors that a new order was created
         emit LogNewSellOrderCreated(sellOrderHash, seller, _hammerTime);
@@ -253,6 +263,11 @@ contract Gelato is Ownable() {
 
 
         // ********************** Advanced Execution Logic **********************
+
+        // Check whether there are still remaining subOrders left to be executed
+        if (subOrder.remainingSubOrders != 0) {
+            // Only withdraw + give bounty to seller
+        }
 
         // Define if the new auction is in the Waiting period or not, defaulting to false
         bool newAuctionIsWaiting;
@@ -324,6 +339,9 @@ contract Gelato is Ownable() {
                 // Store the actually sold sub-order amount in the struct
                 subOrder.actualLastSubOrderAmount = newActualSubOrderSize;
 
+                // Decrease remainingSubOrders
+                subOrder.remainingSubOrders = subOrder.remainingSubOrders.sub(1);
+
                 // Sell
                 _depositAndSell(subOrder.sellToken, subOrder.buyToken, subOrder.subOrderSize);
             }
@@ -347,6 +365,9 @@ contract Gelato is Ownable() {
 
                 // Store the actually sold sub-order amount in the struct
                 subOrder.actualLastSubOrderAmount = newActualSubOrderSize;
+
+                // Decrease remainingSubOrders
+                subOrder.remainingSubOrders = subOrder.remainingSubOrders.sub(1);
 
                 // Sell
                 _depositAndSell(subOrder.sellToken, subOrder.buyToken, subOrder.subOrderSize);
@@ -386,6 +407,9 @@ contract Gelato is Ownable() {
             // Store the actually sold sub-order amount in the struct
             subOrder.actualLastSubOrderAmount = newActualSubOrderSize;
 
+            // Decrease remainingSubOrders
+            subOrder.remainingSubOrders = subOrder.remainingSubOrders.sub(1);
+
             // Sell
             _depositAndSell(subOrder.sellToken, subOrder.buyToken, subOrder.subOrderSize);
 
@@ -402,9 +426,6 @@ contract Gelato is Ownable() {
           @ Luis: reavaluate executor array logic maybe reinstate remainingSubOrders variable
         */
 
-        // @DEV, make work like this or with remainingAuction count
-        // bool lastExecutor = subOrder.executors.length == subOrder.numSubOrders.sub(1);
-
         // subOrder.executors.push(executor);
 
         // if (!lastExecutor) {
@@ -412,7 +433,7 @@ contract Gelato is Ownable() {
         //     emit LogNewHammerTime(sellOrderHash, subOrder.seller, subOrder.hammerTime);
         // }
         // else if (lastExecutor) {
-        //     assert(subOrder.executors.length == subOrder.numSubOrders);
+        //     assert(subOrder.executors.length == subOrder.remainingSubOrders);
         //     subOrder.complete = true;
         //     emit LogSellOrderComplete(sellOrderHash, subOrder.seller, executor);
         // }
