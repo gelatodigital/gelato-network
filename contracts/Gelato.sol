@@ -21,7 +21,7 @@ contract Gelato is Ownable() {
     struct SellOrder {
         bool lastAuctionWasWaiting;
         bool cancelled;  // Indicates if SellOrder is cancelled: default: false
-        bool complete;  // Indicates if SellOrder is complete: default: false
+        // bool complete;  // Indicates if SellOrder is complete: default: false
         address seller; // Seller
         address sellToken; // e.g. WETH address
         address buyToken; // e.g. DAI address
@@ -178,7 +178,7 @@ contract Gelato is Ownable() {
         SellOrder memory sellOrder = SellOrder(
             false,
             false,
-            false,
+            // false,
             seller,
             _sellToken,
             _buyToken,
@@ -255,10 +255,10 @@ contract Gelato is Ownable() {
         );
 
         // Execute only if at least one remaining Withdrawal exists, after that do not execute anymore
-        require(subOrder.remainingWithdrawals > 1, 'Failed: All subOrders executed and withdrawn');
+        require(subOrder.remainingWithdrawals >= 1, 'Failed: All subOrders executed and withdrawn');
 
         // Check whether there are still remaining subOrders left to be executed
-        if (subOrder.remainingSubOrders > 0) {
+        if (subOrder.remainingSubOrders >= 1) {
 
             // Execute if: Seller has the balance.
             // @DEV Revisit based on payout logic
@@ -345,10 +345,8 @@ contract Gelato is Ownable() {
                     ERC20(subOrder.sellToken).approve(address(DutchX), subOrder.subOrderSize);
 
                     // @DEV: before selling, calc the acutal amount which will be sold after DutchX fee deduction to be later used in the withdraw pattern
-                    uint256 newActualSubOrderSize = _calcActualSubOrderSize(subOrder.subOrderSize);
-
                     // Store the actually sold sub-order amount in the struct
-                    subOrder.actualLastSubOrderAmount = newActualSubOrderSize;
+                    subOrder.actualLastSubOrderAmount = _calcActualSubOrderSize(subOrder.subOrderSize);
 
                     // Decrease remainingSubOrders
                     subOrder.remainingSubOrders = subOrder.remainingSubOrders.sub(1);
@@ -372,10 +370,8 @@ contract Gelato is Ownable() {
                     ERC20(subOrder.sellToken).approve(address(DutchX), subOrder.subOrderSize);
 
                     // @DEV: before selling, calc the acutal amount which will be sold after DutchX fee deduction to be later used in the withdraw pattern
-                    uint256 newActualSubOrderSize = _calcActualSubOrderSize(subOrder.subOrderSize);
-
                     // Store the actually sold sub-order amount in the struct
-                    subOrder.actualLastSubOrderAmount = newActualSubOrderSize;
+                    subOrder.actualLastSubOrderAmount = _calcActualSubOrderSize(subOrder.subOrderSize);
 
                     // Decrease remainingSubOrders
                     subOrder.remainingSubOrders = subOrder.remainingSubOrders.sub(1);
@@ -413,10 +409,8 @@ contract Gelato is Ownable() {
                 ERC20(subOrder.sellToken).approve(address(DutchX), subOrder.subOrderSize);
 
                 // @DEV: before selling, calc the acutal amount which will be sold after DutchX fee deduction to be later used in the withdraw pattern
-                uint256 newActualSubOrderSize = _calcActualSubOrderSize(subOrder.subOrderSize);
-
                 // Store the actually sold sub-order amount in the struct
-                subOrder.actualLastSubOrderAmount = newActualSubOrderSize;
+                subOrder.actualLastSubOrderAmount = _calcActualSubOrderSize(subOrder.subOrderSize);
 
                 // Decrease remainingSubOrders
                 subOrder.remainingSubOrders = subOrder.remainingSubOrders.sub(1);
@@ -483,7 +477,7 @@ contract Gelato is Ownable() {
     function withdrawManually(bytes32 _sellOrderHash)
     public
     {
-        SellOrder storage subOrder = sellOrders[sellOrderHash];
+        SellOrder storage subOrder = sellOrders[_sellOrderHash];
 
         // Check if msg.sender is equal seller
         // @Kalbo: Do we really need that?
