@@ -31,7 +31,7 @@ module.exports = async () => {
     console.log(`Sellers RDN balance before:         ${RDNbalance / (10 ** 18)}`)
 
     console.log(`Execute 1st subOrder Tx Executor:   ${executor}`)
-    let executeSubOrder = await gelato.executeSubOrder(sellOrderHash, { from: executor })
+    let executeSubOrder = await gelato.executeSubOrderAndWithdraw(sellOrderHash, { from: executor })
 
 
     console.log(`RDN balance after`)
