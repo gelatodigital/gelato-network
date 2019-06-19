@@ -451,23 +451,10 @@ contract Gelato is Ownable() {
 
         // Only enter after first sub-order sale
         // Only enter if last auction the seller participated in has cleared
-        // @DEV use memory value lastAuctionIndex as we already incremented storage value
+        // @DEV use memory value lastAuctionIndex & actualLastSubOrderAmount as we already incremented storage values
         if (lastAuctionIndex != 0) {
 
-            // Calc how much the last auction the user paid into has yieled.
-            uint256 withdrawAmount = _calcWithdrawAmount(subOrder.sellToken, subOrder.buyToken, lastAuctionIndex, actualLastSubOrderAmount);
-
-            // Call claim and withdraw function
-            // @DEV use memory value lastAuctionIndex as we already incremented storage value
-            DutchX.claimAndWithdraw(subOrder.sellToken,
-            subOrder.buyToken,
-            address(this),
-            lastAuctionIndex,
-            withdrawAmount);
-
-            // Transfer Tokens from Gelato to Seller
-            // ERC20.transfer(address recipient, uint256 amount)
-            ERC20(subOrder.buyToken).transfer(subOrder.seller, withdrawAmount);
+            _withdrawLastSubOrder(subOrder.seller, subOrder.sellToken, subOrder.buyToken, lastAuctionIndex, actualLastSubOrderAmount);
         }
 
         // ********************** Withdraw from DutchX END **********************
@@ -475,6 +462,21 @@ contract Gelato is Ownable() {
         return true;
     }
 
+    function _withdrawLastSubOrder(address _seller, address _sellToken, address _buyToken, uint256 _lastAuctionIndex, uint256 _actualLastSubOrderAmount)
+        public
+    {
+        // Calc how much the last auction the user paid into has yieled.
+        uint256 withdrawAmount = _calcWithdrawAmount(_sellToken, _buyToken, _lastAuctionIndex, _actualLastSubOrderAmount);
+
+        // Withdraw funds from DutchX to Gelato
+        // @DEV use memory value lastAuctionIndex as we already incremented storage value
+        DutchX.claimAndWithdraw(_sellToken, _buyToken, address(this), _lastAuctionIndex, withdrawAmount);
+
+        // Transfer Tokens from Gelato to Seller
+        // ERC20.transfer(address recipient, uint256 amount)
+        ERC20(_buyToken).transfer(_seller, withdrawAmount);
+
+    }
 
     function cancelSellOrder(bytes32 sellOrderHash)
         public
