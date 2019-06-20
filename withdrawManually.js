@@ -31,7 +31,7 @@ module.exports = async () => {
     console.log(`Sellers RDN balance before:         ${RDNbalance / (10 ** 18)}`)
 
     console.log(`Withdraw Funds...`)
-    const withdrawManually = await gelato.withdrawManually(sellOrderHash, { from: seller })
+    const txReceipt = await gelato.withdrawManually(sellOrderHash, { from: seller })
 
 
     console.log(`RDN balance after`)
@@ -42,7 +42,18 @@ module.exports = async () => {
 
     // ####### TESTS
 
-    console.log(withdrawManually)
+    console.log(txReceipt)
+    // LogNumDen
+    const num = txReceipt.logs[0].args.num.toString(10)
+    const den = txReceipt.logs[0].args.den.toString(10)
+
+    // LogWithdrawAmount
+    const withdrawAmount = txReceipt.logs[1].args.withdrawAmount.toString(10)
+
+    // LogWithdrawAmount
+    const sellerLog = txReceipt.logs[2].args.seller
+    const withdrawAmount2 = txReceipt.logs[2].args.withdrawAmount.toString(10)
+    const token = txReceipt.logs[2].args.token.toString(10)
 
 
     // console.log(executeSubOrder)
