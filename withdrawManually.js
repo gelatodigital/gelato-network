@@ -31,7 +31,7 @@ module.exports = async () => {
     console.log(`Sellers RDN balance before:         ${RDNbalance / (10 ** 18)}`)
 
     console.log(`Withdraw Funds...`)
-    let withdrawManually = await gelato.withdrawManually(sellOrderHash, { from: seller })
+    const withdrawManually = await gelato.withdrawManually(sellOrderHash, { from: seller })
 
 
     console.log(`RDN balance after`)
@@ -39,6 +39,11 @@ module.exports = async () => {
     console.log(`Sellers RDN balance after:          ${RDNbalance2 / (10 ** 18)}`)
     const difference = RDNbalance2 - RDNbalance
     console.log(`Difference:                         ${difference / (10 ** 18)}`)
+
+    // ####### TESTS
+
+    console.log(withdrawManually)
+
 
     // console.log(executeSubOrder)
     console.log('Withdraw by seller successfully executed')

@@ -40,7 +40,14 @@ module.exports = async () => {
     const difference = RDNbalance2 - RDNbalance
     console.log(`Difference:                         ${difference / (10 ** 18)}`)
 
-    // console.log(executeSubOrder)
+    // ######################### LOGS
+
+    console.log(executeSubOrder.receipt.logs)
+
+    // Console.logs
+
+
+
     console.log('SubOrder successfully executed')
 
 }

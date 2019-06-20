@@ -25,6 +25,9 @@ module.exports = async () => {
 
     const txReceipt = await gelato._calcWithdrawAmount(WETH, RDN, lastAuctionIndex, subOrderAmount)
 
+    // console.log(txReceipt.receipt.logs[0].args.withdrawAmount.toString(10))
+    console.log(txReceipt.receipt.logs)
+
     const num = txReceipt.logs[0].args.num.toString(10)
     const den = txReceipt.logs[0].args.den.toString(10)
     const withdrawAmount = txReceipt.logs[1].args.withdrawAmount.toString(10)
