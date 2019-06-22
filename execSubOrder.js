@@ -55,7 +55,6 @@ module.exports = () => {
                   Sell Order on-chain
                   -------------------
         `)
-        console.log(sellOrder);
         console.log(`
         ==================================================
         `);
@@ -101,7 +100,7 @@ module.exports = () => {
         executorBalancePreExec = new BN(executorBalancePreExec);
         console.log(`executorBalancePreExec:             ${executorBalancePreExec}`);
 
-        // Fetch Seller Before balance
+        // Fetch Seller Before ERC20 BUY_TOKEN balance
         const buyBalanceBefore = await buyTokenContract.balanceOf(seller)
         console.log(`Sellers RDN balance before:         ${buyBalanceBefore / (10 ** 18)}`)
 
@@ -128,12 +127,6 @@ module.exports = () => {
 
         console.log(`
         ==================================================
-                Executor Account Info BEFORE subOrder execution:
-                ------------------------------------------------
-            Executor Account:         ${executor}
-            Executor Account Balance | =======================|
-                BEFORE execution: > ${web3.utils.fromWei(executorBalancePreExec, "finney")} finney |
-                                    | =======================|
         `);
 
         /* Calculate executor reward:
@@ -172,12 +165,22 @@ module.exports = () => {
 
         // Executor Profit and Loss Statement
         console.log(`
+                            Executor Account Info BEFORE subOrder execution:
+                            ------------------------------------------------
+            Executor Account:         ${executor}
+            Executor Account Balance | =======================|
+                BEFORE execution: > ${web3.utils.fromWei(executorBalancePreExec, "finney")} finney |
+                                     | =======================|
+
                             Executor Account Info AFTER subOrder execution:
                             -----------------------------------------------
             Executor Account:         ${executor}
             Executor Account Balance | ========================|
                 AFTER execution:  > ${web3.utils.fromWei(executorBalancePostExec, "finney")} finney |
                                      | ========================|
+
+        ==================================================
+
                             Executor Profit/Loss Statement:
                             --------------------------------
             Assumption: executor did not receive any ether from elsewhere since execution.
@@ -187,73 +190,196 @@ module.exports = () => {
             ------------------------------------------------------------------
             Executor trade profit/deficit:    ${web3.utils.fromWei(executorTradeBalance, "finney")} finney
                                             ------------------------------------
-                                            * note: gas cost must be wrong.
         ==================================================
         `);
 
         // ############## Seller variables ##############
+        // console.log(executionReceipt.logs)
 
-        console.log(executionReceipt.logs)
+        // ############## Withdraw variables ##############
+
         // Comparing the BUY_TOKEN Balance before and after
         const buyBalanceAfter = await buyTokenContract.balanceOf(seller);
+        const buyBalanceBeforeBN = new BN(buyBalanceBefore)
+        const buyBalanceAfterBN = new BN(buyBalanceAfter)
 
-        const buyBalanceDifference = buyBalanceAfter - buyBalanceBefore;
+        // Calculate the difference before and after the exection
+        const buyBalanceDifference = buyBalanceAfterBN.sub(buyBalanceBeforeBN);
 
-        // Fetched liquidity contribution (num, den)
-        const num = executionReceipt.logs[0].args['num'].toString(10)
-        const numBN = new BN(num)
-        const den = executionReceipt.logs[0].args['den'].toString(10)
-        const denBN = new BN(den)
-        console.log(`Numerator ${num}`)
-        console.log(`Denominator ${den}`)
+        // Variables to calculate the acutal subOrder amount that each seller will sell on the DutchX (subOrderAmount - fee)
+        let num;
+        let den;
+        let oldSubOrderAmount;
+        let actualSubOrderAmount;
+        let fee;
 
-        const oldSubOrderAmount = executionReceipt.logs[1].args.subOrderAmount.toString(10)
-        const oldSubOrderAmountBN = new BN(oldSubOrderAmount)
+        // Variables to calculate if the amount of RDN withdrawn is actually correctly calculated
+        let withdrawAmount;
+        let priceNum;
+        let priceDen;
 
-        const actualSubOrderAmount = executionReceipt.logs[1].args.actualSubOrderAmount.toString(10)
-        const actualSubOrderAmountBN = new BN(actualSubOrderAmount)
+        // Fetch State of the sell order again after all state changes occured
+        let sellOrder2 = await gelato.sellOrders(sellOrderHash);
 
-        const fee = executionReceipt.logs[1].args.fee.toString(10)
-        const feeBN = new BN(fee)
 
-        const calculatedFee = oldSubOrderAmountBN.mul(numBN).div(denBN)
+        // Check if we are at the last withdrawal (no subOrder sell execution left)
+        if (parseInt(sellOrder.remainingSubOrders) === 0) {
 
-        const feeCheck = oldSubOrderAmountBN.minus(feeBN)
+            // We are in the last withdrawal execution, do not check the actual withdraw amount because there is none
+            withdrawAmount = executionReceipt.logs[3].args['withdrawAmount'].toString(10)
+            priceNum = executionReceipt.logs[1].args['num'].toString(10)
+            priceDen = executionReceipt.logs[1].args['den'].toString(10)
+            let actualSubOrderAmount = sellOrder2.actualLastSubOrderAmount
 
-        console.log(`
-        )==================================================
-                Seller Buyer Token Comparison:
+            let withdrawAmountBN = new BN(withdrawAmount)
+            let priceNumBN = new BN(priceNum)
+            let priceDenBN = new BN(priceDen)
+            let actualSubOrderAmountBN = new BN(actualSubOrderAmount)
+            let calculatedWithdrawAmountBN = actualSubOrderAmountBN.mul(priceNumBN).div(priceDenBN)
+            let calculatedWithdrawAmount = calculatedWithdrawAmountBN.toString(10)
+            let wasWithdrawAmountCorrectlyCalculated = calculatedWithdrawAmountBN.eq(withdrawAmountBN)
+
+            console.log(`
+
+        ==================================================
+
+            Seller BUY_TOKEN balance comparison (before vs. after execution):
+            (Checking the Withdraw logic)
+            ------------------------------------------------
+            Seller Account:        ${seller}
+
+            BEFORE execution:    > ${web3.utils.fromWei(buyBalanceBefore, "ether")} RDN |
+                                    | =======================|
+            After execution:     > ${web3.utils.fromWei(buyBalanceAfter, "ether")} RDN |
+                                    | =======================|
+            Difference:          > ${web3.utils.fromWei(buyBalanceDifference, "ether")} RDN |
+                                    | =======================|
+                                    | =======================|
+                                    | =======================|
+
+            We just withdrew some RND!
+
+            Did we withdraw the correct amount based on actual SubOrder Size * DutchX Price of previous auction?
+            ------------------------------------------------
+
+            Amount withdrawn: (web3)            > ${web3.utils.fromWei(withdrawAmount, "ether")} RDN |
+                                | =======================|
+            What should be withdrawn (BN test)  > ${web3.utils.fromWei(calculatedWithdrawAmount, "ether")} RDN |
+                                | =======================|
+            Both amounts are identical:           ${wasWithdrawAmountCorrectlyCalculated}
+
+            #####################################
+
+            Sell Order completed!
+
+            `);
+
+        // After each execution except the last one where we only withdraw, get the actual withdraw amount
+        } else {
+            num = executionReceipt.logs[0].args['num'].toString(10)
+            den = executionReceipt.logs[0].args['den'].toString(10)
+            oldSubOrderAmount = executionReceipt.logs[1].args['subOrderAmount'].toString(10)
+            actualSubOrderAmount = executionReceipt.logs[1].args['actualSubOrderAmount'].toString(10)
+            fee = executionReceipt.logs[1].args['fee'].toString(10)
+
+            let numBN = new BN(num)
+            let denBN = new BN(den)
+            let oldSubOrderAmountBN = new BN(oldSubOrderAmount)
+            let actualSubOrderAmountBN = new BN(actualSubOrderAmount)
+            let feeBN = new BN(fee)
+            let calculatedFee = oldSubOrderAmountBN.mul(numBN).div(denBN)
+            let calculatedSubOrderAmount = oldSubOrderAmountBN.sub(feeBN)
+
+            console.log(`
+        ==================================================
+
+                Seller BUY_TOKEN balance comparison (before vs. after execution):
+                (Checking the Withdraw logic)
                 ------------------------------------------------
-            Seller Account:         ${seller}
-            Seller BUY Token Balance | =======================|
-                BEFORE execution:    > ${web3.utils.fromWei(buyBalanceBefore, "ether")} ether |
-                                     | =======================|
-                After execution:     > ${web3.utils.fromWei(buyBalanceAfter, "ether")} ether |
-                                     | =======================|
-                Difference:          > ${web3.utils.fromWei(buyBalanceDifference, "ether")} ether |
-                                     | =======================|
-                                     | =======================|
-                                     | =======================|
-                Check if fee got calculated correctly in SC:
+                Seller Account:        ${seller}
 
-                Calculated fee:      > ${web3.utils.fromWei(calculatedFee, "ether")} ether |
-                                     | =======================|
-                Fetched fee:         > ${web3.utils.fromWei(fee, "ether")} ether |
-                                     | =======================|
-                Both fees are identical: ${feeBN.eq(calculatedFee)}
-                                     | =======================|
-                                     | =======================|
-                                     | =======================|
+                BEFORE execution:    > ${web3.utils.fromWei(buyBalanceBefore, "ether")} RDN |
+                                        | =======================|
+                After execution:     > ${web3.utils.fromWei(buyBalanceAfter, "ether")} RDN |
+                                        | =======================|
+                Difference:          > ${web3.utils.fromWei(buyBalanceDifference, "ether")} RDN |
+                                        | =======================|
+                                        | =======================|
+                                        | =======================|
+
                 Show the acutal Sub Order amount that was sold on the DutchX (minus DutchX fee):
+                ------------------------------------------------
 
-                Initial SubOrderSize:> ${web3.utils.fromWei(oldSubOrderAmount, "ether")} ether |
-                                     | =======================|
-                Actual SubOrderSize: > ${web3.utils.fromWei(actualSubOrderAmount, "ether")} ether |
-                                     | =======================|
-                Initial - fee === actual: ${feeCheck.eq(actualSubOrderAmountBN)}
+                Initial SubOrderSize:   > ${web3.utils.fromWei(oldSubOrderAmount, "ether")} WETH |
+                                    | =======================|
+                Actual SubOrderSize:    > ${web3.utils.fromWei(actualSubOrderAmount, "ether")} WETH |
+                                    | =======================|
+                Initial - fee === actual: ${calculatedSubOrderAmount.eq(actualSubOrderAmountBN)}
+                                    | =======================|
+                                    | =======================|
+                                    | =======================|
 
-        `);
+                Check if fee got calculated correctly in SC:
+                ------------------------------------------------
 
+                Calculated fee (web3)    > ${web3.utils.fromWei(calculatedFee, "ether")} WETH |
+                                        | =======================|
+                Fetched fee:             > ${web3.utils.fromWei(fee, "ether")} WETH |
+                                        | =======================|
+                Both fees are identical:   ${feeBN.eq(calculatedFee)}
+                                        | =======================|
+                                        | =======================|
+                                        | =======================|
+            `);
+
+            // Only calc after first exexAndWithdrawSubOrder func has been executed
+            if (parseInt(buyBalanceAfter) > 0)
+            {
+                withdrawAmount = executionReceipt.logs[6].args['withdrawAmount'].toString(10)
+                priceNum = executionReceipt.logs[4].args['num'].toString(10)
+                priceDen = executionReceipt.logs[4].args['den'].toString(10)
+
+
+                let withdrawAmountBN = new BN(withdrawAmount)
+                let priceNumBN = new BN(priceNum)
+                let priceDenBN = new BN(priceDen)
+
+                let calculatedWithdrawAmountBN = actualSubOrderAmountBN.mul(priceNumBN).div(priceDenBN)
+                let calculatedWithdrawAmount = calculatedWithdrawAmountBN.toString(10)
+
+                let wasWithdrawAmountCorrectlyCalculated = calculatedWithdrawAmountBN.eq(withdrawAmountBN)
+
+                console.log(`
+
+        ==================================================
+
+                We just withdrew some RND!
+
+                Did we withdraw the correct amount based on actual SubOrder Size * DutchX Price of previous auction?
+                ------------------------------------------------
+
+                Amount withdrawn: (web3)            > ${web3.utils.fromWei(withdrawAmount, "ether")} RDN |
+                                    | =======================|
+                What should be withdrawn (BN test)  > ${web3.utils.fromWei(calculatedWithdrawAmount, "ether")} RDN |
+                                    | =======================|
+                Both amounts are identical:           ${wasWithdrawAmountCorrectlyCalculated}
+
+                `);
+            }
+
+        }
+
+        // ############## Withdraw variables END ##############
+
+        return (`
+
+        ==================================================
+
+            ExecuteSubOrder was successful!
+
+            Sub Order Executions left: ${sellOrder2.remainingSubOrders}
+            Withdraws left: ${sellOrder2.remainingWithdrawals}
+        `)
     }
 
     execSubOrder().then(result => { console.log(result) });

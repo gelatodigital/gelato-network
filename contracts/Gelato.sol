@@ -150,8 +150,8 @@ contract Gelato is Ownable() {
             "Invariant remainingSubOrders failed totalSellVolume/subOrderSize"
         );
 
-        // Invariants 2 & 3: Executor reward per subOrder and tx endowment checks
-        require(msg.value == _remainingSubOrders.mul(_executorRewardPerSubOrder),
+        // Invariants 2 & 3: Executor reward per subOrder + 1(last withdraw) and tx endowment checks
+        require(msg.value == (_remainingSubOrders + 1).mul(_executorRewardPerSubOrder),
             "Failed invariant Test2: msg.value ==  remainingSubOrders * executorRewardPerSubOrder"
         );
 
@@ -159,13 +159,14 @@ contract Gelato is Ownable() {
             "Failed invariant Test3: Msg.value (wei) must pass the executor reward per subOrder minimum (MIN_EXECUTOR_REWARD_PER_SUBORDER)"
         );
 
-
-
         // Local variables
         address seller = msg.sender;
 
         // Local variables
         uint256 lastAuctionIndex = 0;
+
+        // RemainingWithdrawals by default set to remainingSubOrders
+        uint256 remainingWithdrawals = _remainingSubOrders;
 
         // Create new sell order
         SellOrder memory sellOrder = SellOrder(
@@ -183,7 +184,7 @@ contract Gelato is Ownable() {
             0, //lastAuctionIndex
             _executorRewardPerSubOrder,
             0 /*default for actualLastSubOrderAmount*/,
-            _remainingSubOrders /* remainingWithdrawals == _remainingSubOrders */
+            remainingWithdrawals /* remainingWithdrawals == _remainingSubOrders */
         );
 
         // Hash the sellOrder Struct to get unique identifier for mapping
@@ -445,7 +446,6 @@ contract Gelato is Ownable() {
         }
         // If all subOrder have been executed, mark sell Order as complete
         else if ( remainingSubOrders == 0 )
-
         {
             subOrder.complete = true;
 
@@ -461,7 +461,7 @@ contract Gelato is Ownable() {
         // Only enter after first sub-order sale
         // Only enter if last auction the seller participated in has cleared
         // Only enter if seller has not called withdrawManually
-        if (lastAuctionIndex != 0 && remainingSubOrders == subOrder.remainingWithdrawals.sub(1))
+        if (lastAuctionIndex != 0 && subOrder.remainingWithdrawals == remainingSubOrders.add(1) )
         {
 
             // Mark withdraw as completed

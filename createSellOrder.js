@@ -15,7 +15,7 @@ const BuyToken = artifacts.require('TokenRDN')
 const BUY_TOKEN = BuyToken.address // RDN
 const SELL_TOKEN = SellToken.address // RDN
 const SUBORDER_SIZE = 10;
-const NUM_SUBORDERS = 4;
+const NUM_SUBORDERS = 2;
 const TOTAL_SELL_VOLUME = SUBORDER_SIZE * NUM_SUBORDERS;
 const TOTAL_SELL_VOLUME_UNIT = "ether";
 const SUBORDER_UNIT = "ether";
@@ -49,7 +49,7 @@ module.exports = () => {
             EXECUTOR_REWARD_PER_SUBORDER_UNIT
         );
 
-        let executorRewardTotal = SUBORDER_SIZE * NUM_SUBORDERS; // 10 finney
+        let executorRewardTotal = SUBORDER_SIZE * (NUM_SUBORDERS + 1); // 10 finney | plus 1 because we need an extra bounty for the last withdraw
 
         executorRewardTotal = web3.utils.toWei(
             executorRewardTotal.toString(),
@@ -83,7 +83,8 @@ module.exports = () => {
         buyToken:                  ${BUY_TOKEN}
         totalSellVolume:           ${totalSellVolume}
         subOrderSize:              ${subOrderSize}
-        numSubOrders:              ${NUM_SUBORDERS}
+        remainingSubOrders:        ${NUM_SUBORDERS}
+        remainingWithdrawals:      ${NUM_SUBORDERS}
         hammerTime:                ${new Date(hammerTime).toTimeString()}
         hammerTime Date:           ${new Date(hammerTime).toDateString()}
         freezeTime:                ${FREEZE_TIME}
@@ -118,7 +119,8 @@ module.exports = () => {
         complete:                  ${sellOrder.complete}
         totalSellVolume:           ${sellOrder.totalSellVolume}
         subOrderSize:              ${sellOrder.subOrderSize}
-        numSubOrders:              ${sellOrder.numSubOrders}
+        remainingSubOrders:        ${sellOrder.remainingSubOrders}
+        remainingWithdrawals:      ${sellOrder.remainingWithdrawals}
         hammerTime:                ${sellOrder.hammerTime}
         freezeTime:                ${sellOrder.freezeTime}
         executorRewardPerSubOrder: ${sellOrder.executorRewardPerSubOrder}
@@ -144,8 +146,7 @@ module.exports = () => {
                     Seller TX2-ERC20 check: Gelato's allowance for seller's ERC20
                     -------------------------------------------------------------
         Allowance:                 ${allowance}
-        Allowance is
-        sellOrder.totalSellVolume: ${allowance == parseInt(sellOrder.totalSellVolume)}
+        Allowance == sellOrder.totalSellVolume: ${allowance == parseInt(sellOrder.totalSellVolume)}
         ==================================================
         `);
 
