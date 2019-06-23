@@ -314,7 +314,7 @@ contract Gelato is Ownable() {
                     // Given new assumption of not wanting to sell in newAuction before lastAuction sold-into has finished, revert. Otherwise, holds true for not investing in same auction assupmtion
                     revert("Case2b: Selling again before the lastAuction participation cleared disallowed");
                 }
-                /* Case2: Last sold during running auction1, new tries to sell during waiting period
+                /* Case2c Last sold during running auction1, new tries to sell during waiting period
                 that preceded auction1 (impossible time-travel) or new tries to sell during waiting
                 period succeeding auction1 (impossible due to auction index incrementation ->
                 newAuctionIndex == lastAuctionIndex cannot be true - Gelato-DutchX indexing
