@@ -302,7 +302,7 @@ contract Gelato is Ownable() {
             // CASE 2:
             // Either we already sold during waitingPeriod OR during the auction that followed
             if (newAuctionIndex == lastAuctionIndex) {
-                // Last sold during waitingPeriod1, new CANNOT sell during waitingPeriod1.
+                // Case2a: Last sold during waitingPeriod1, new CANNOT sell during waitingPeriod1.
                 if (lastAuctionWasWaiting && newAuctionIsWaiting) {
                     revert("Last sold during waitingPeriod1, new CANNOT sell during waitingPeriod1");
                 }
