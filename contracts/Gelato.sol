@@ -321,7 +321,7 @@ contract Gelato is Ownable() {
                 else if (!lastAuctionWasWaiting && newAuctionIsWaiting) {
                     revert("Case2c: Fatal error: auction index incrementation out of sync");
                 }
-                // Case2d: Last sold during running auction1, new CANNOT sell during auction1.1
+                // Case2d: Last sold during running auction1, new CANNOT sell during auction1.
                 else if (!lastAuctionWasWaiting && !newAuctionIsWaiting) {
                     revert("Case2d: Selling twice into the same running auction is disallowed");
                 }
