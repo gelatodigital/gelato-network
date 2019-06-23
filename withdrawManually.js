@@ -3,12 +3,14 @@ const Gelato = artifacts.require('Gelato');
 const EtherToken = artifacts.require('EtherToken')
 const RDNToken = artifacts.require('TokenRDN')
 
+// Command line arguments
+const sellOrderHash = process.argv[4];
+
 // const EtherToken = contract(require('@gnosis.pm/util-contracts/build/contracts/EtherToken'))
 
 module.exports = async () => {
 
     // Variables
-    const sellOrderHash = '0x7adec3968455b7f091fa3fe73a4ffa4a432625ec2e0ea251cb8cd0ad678d89c7'
     // const seller = '0x627306090abab3a6e1400e9345bc60c78a8bef57'
     const accounts = await web3.eth.getAccounts()
     const seller = accounts[9]
@@ -16,7 +18,6 @@ module.exports = async () => {
     const WETHaddress = EtherToken.address
     const RDN = await RDNToken.at(RDNaddress)
     const gelato = await Gelato.at(Gelato.address)
-    const executor = '0xf17f52151ebef6c7334fad080c5704d77216b732'
 
     console.log('...Starting execute sub-order script')
     console.log('----')
@@ -24,7 +25,9 @@ module.exports = async () => {
     const blockDetails = await web3.eth.getBlock(block)
     const timestamp = blockDetails.timestamp
     console.log(`Current Timestamp:                  ${timestamp}`)
-    console.log('----')
+    console.log(`
+        ==================================================
+    `)
 
     console.log(`Seller:                             ${seller}`)
     const RDNbalance = await RDN.balanceOf(seller)
@@ -34,15 +37,16 @@ module.exports = async () => {
     const txReceipt = await gelato.withdrawManually(sellOrderHash, { from: seller })
 
 
-    console.log(`RDN balance after`)
     const RDNbalance2 = await RDN.balanceOf(seller)
     console.log(`Sellers RDN balance after:          ${RDNbalance2 / (10 ** 18)}`)
     const difference = RDNbalance2 - RDNbalance
+    console.log(`
+        ==================================================
+    `)
     console.log(`Difference:                         ${difference / (10 ** 18)}`)
 
     // ####### TESTS
 
-    console.log(txReceipt)
     // LogNumDen
     const num = txReceipt.logs[0].args.num.toString(10)
     const den = txReceipt.logs[0].args.den.toString(10)

@@ -124,6 +124,7 @@ module.exports = () => {
         hammerTime:                ${sellOrder.hammerTime}
         freezeTime:                ${sellOrder.freezeTime}
         executorRewardPerSubOrder: ${sellOrder.executorRewardPerSubOrder}
+
                     Further sell Order struct checks:
                     ---------------------------------
         hammerTime ready:          ${parseInt(sellOrder.hammerTime) <= timestamp}
@@ -153,12 +154,13 @@ module.exports = () => {
         return (`
                         Testing Complete
                         ----------------
-                Sell Order Hash: ${sellOrderHash}
-                Hammertime: ${new Date(parseInt(sellOrder.hammerTime)).toTimeString()}
-                Hammerdate: ${new Date(parseInt(sellOrder.hammerTime)).toDateString()}
-                Now:        ${new Date(Date.now()).toTimeString()}
-                Date:       ${new Date(Date.now()).toDateString()}
-                Pending subOrders left: ${sellOrder.pendingSubOrders}
+                Sell Order Hash:                 ${sellOrderHash}
+                Hammertime:                      ${new Date(parseInt(sellOrder.hammerTime)).toTimeString()}
+                Hammerdate:                      ${new Date(parseInt(sellOrder.hammerTime)).toDateString()}
+                Now:                             ${new Date(Date.now()).toTimeString()}
+                Date:                            ${new Date(Date.now()).toDateString()}
+                Remaining subOrders left:        ${sellOrder.remainingSubOrders}
+                Remaining Withdrawals left:      ${sellOrder.remainingWithdrawals}
                 First subOrder ready for execution: default false: due to auction1 behavior.
         =====================================================
                         !!!NEXT STEPS!!!

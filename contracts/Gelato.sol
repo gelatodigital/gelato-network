@@ -233,8 +233,10 @@ contract Gelato is Ownable() {
         // Fetches current auction index from DutchX
         uint256 newAuctionIndex = DutchX.getAuctionIndex(subOrder.buyToken, subOrder.sellToken);
 
+        // SubOrderAmount - fee paid to the DutchX of last executed subPrder
         uint256 actualLastSubOrderAmount = subOrder.actualLastSubOrderAmount;
 
+        // How many executions are left
         uint256 remainingSubOrders = subOrder.remainingSubOrders;
 
         /* Basic Execution Logic
@@ -249,8 +251,8 @@ contract Gelato is Ownable() {
         );
 
         // Execute only if at least one remaining Withdrawal exists, after that do not execute anymore
-        // @Luis, this acts as a "complete" bool
-        require(subOrder.remainingWithdrawals >= 1, 'Failed: All subOrders executed and withdrawn');
+        // @Luis, this acts as the "complete" bool
+        require(subOrder.remainingWithdrawals >= 1, 'Failed: Sell Order already completed. All subOrders executed and withdrawn');
 
         // Check whether there are still remaining subOrders left to be executed
         if (subOrder.remainingSubOrders >= 1) {
@@ -333,6 +335,8 @@ contract Gelato is Ownable() {
                 then auction1 ran, then auction1 cleared and the auctionIndex got incremented,
                 we now sell during the next waiting period, our funds will go to auction2 */
                 if (lastAuctionWasWaiting && newAuctionIsWaiting) {
+                    // ### EFFECTS ###
+
                     // Store change in Auction Index
                     subOrder.lastAuctionIndex = newAuctionIndex;
 
@@ -348,6 +352,8 @@ contract Gelato is Ownable() {
 
                     // Update hammerTime with freeze Time
                     subOrder.hammerTime = subOrder.hammerTime.add(subOrder.freezeTime);
+
+                    // ### EFFECTS END ###
 
                     emit LogNewHammerTime(sellOrderHash,
                                         subOrder.seller,
@@ -363,6 +369,8 @@ contract Gelato is Ownable() {
                 , then a waiting period passed, now we are selling during auction2, our funds
                 will go into auction3 */
                 else if (lastAuctionWasWaiting && !newAuctionIsWaiting) {
+                    // ### EFFECTS ###
+
                     // Store change in Auction Index
                     subOrder.lastAuctionIndex = newAuctionIndex;
 
@@ -378,6 +386,8 @@ contract Gelato is Ownable() {
 
                     // Update hammerTime with freeze Time
                     subOrder.hammerTime = subOrder.hammerTime.add(subOrder.freezeTime);
+
+                    // ### EFFECTS END ###
 
                     emit LogNewHammerTime(sellOrderHash,
                                         subOrder.seller,
@@ -407,6 +417,8 @@ contract Gelato is Ownable() {
             // CASE 4:
             // If we skipped at least one auction before trying to sell again: ALWAYS SELL
             else if (newAuctionIndex >= lastAuctionIndex.add(2)) {
+                // ### EFFECTS ###
+
                 // Store change in Auction Index
                 subOrder.lastAuctionIndex = newAuctionIndex;
 
@@ -423,6 +435,8 @@ contract Gelato is Ownable() {
                 // Update hammerTime with freeze Time
                 subOrder.hammerTime = subOrder.hammerTime.add(subOrder.freezeTime);
 
+                // ### EFFECTS END ###
+
                 emit LogNewHammerTime(sellOrderHash,
                                     subOrder.seller,
                                     subOrder.hammerTime,
@@ -438,10 +452,6 @@ contract Gelato is Ownable() {
                 revert("Case5: Fatal Error: Case5 unforeseen");
             }
             // ********************** Advanced Execution Logic END **********************
-
-            // ********************** TO DO: IMPLEMENT executionReward LOGIC **********************
-
-            // ********************** TO DO: IMPLEMENT executionReward LOGIC END ******************
 
         }
         // If all subOrder have been executed, mark sell Order as complete
@@ -468,7 +478,7 @@ contract Gelato is Ownable() {
             subOrder.remainingWithdrawals = subOrder.remainingWithdrawals.sub(1);
 
             // @DEV use memory value lastAuctionIndex & actualLastSubOrderAmount as we already incremented storage values
-            _withdrawLastSubOrder(subOrder.seller, subOrder.sellToken, subOrder.buyToken, lastAuctionIndex, actualLastSubOrderAmount);
+            _withdraw(subOrder.seller, subOrder.sellToken, subOrder.buyToken, lastAuctionIndex, actualLastSubOrderAmount);
         }
 
         // ********************** Withdraw from DutchX END **********************
@@ -488,13 +498,13 @@ contract Gelato is Ownable() {
         SellOrder storage subOrder = sellOrders[_sellOrderHash];
 
         // Check if msg.sender is equal seller
-        // @Kalbo: Do we really need that?
+        // @Kalbo: Do we really need that or should we make everyone be able to withdraw on behalf of a user?
         require(msg.sender == subOrder.seller, 'Only the seller of the sellOrder can call this function');
 
         // Check if tx executor hasnt already withdrawn the funds
         require(subOrder.remainingSubOrders == subOrder.remainingWithdrawals - 1, 'Tx executor already withdrew the payout to your address of the last auction you participated in');
 
-        // FETCH PRICE OF CLEARED ORDER WITH INDEX lastAuctionIndex
+        // Fetch price of last participated in and cleared auction using lastAuctionIndex
         uint num;
         uint den;
 
@@ -509,19 +519,19 @@ contract Gelato is Ownable() {
         subOrder.remainingWithdrawals = subOrder.remainingWithdrawals.sub(1);
 
         // Initiate withdraw
-        _withdrawLastSubOrder(subOrder.seller, subOrder.sellToken, subOrder.buyToken, subOrder.lastAuctionIndex, subOrder.actualLastSubOrderAmount);
+        _withdraw(subOrder.seller, subOrder.sellToken, subOrder.buyToken, subOrder.lastAuctionIndex, subOrder.actualLastSubOrderAmount);
     }
 
 
     // Internal func that withdraws funds from DutchX to the sellers account
-    function _withdrawLastSubOrder(address _seller, address _sellToken, address _buyToken, uint256 _lastAuctionIndex, uint256 _actualLastSubOrderAmount)
+    function _withdraw(address _seller, address _sellToken, address _buyToken, uint256 _lastAuctionIndex, uint256 _actualLastSubOrderAmount)
         public
     {
-        // Calc how much the last auction the user paid into has yieled.
+        // Calc how much the amount of buy_tokens received in the previously participated auction
         uint256 withdrawAmount = _calcWithdrawAmount(_sellToken, _buyToken, _lastAuctionIndex, _actualLastSubOrderAmount);
 
         // Withdraw funds from DutchX to Gelato
-        // @DEV use memory value lastAuctionIndex as we already incremented storage value
+        // @DEV uses memory value lastAuctionIndex in case execute func calls it as we already incremented storage value
         DutchX.claimAndWithdraw(_sellToken, _buyToken, address(this), _lastAuctionIndex, withdrawAmount);
 
         // Transfer Tokens from Gelato to Seller
@@ -580,7 +590,6 @@ contract Gelato is Ownable() {
 
         return actualSellAmount;
 
-        // Store fee amount in new state variable to call it in next sellOrders withdraw func
     }
 
     // @DEV Calculates amount withdrawable from past, cleared auction
@@ -598,15 +607,12 @@ contract Gelato is Ownable() {
 
         // Check if the last auction the seller participated in has cleared
         // @DEV Check line 442 in DutchX contract
-        // @DEV Test: Are there any other possibilities for den being 0 other than when the auction has not yet cleared
+        // @DEV Test: Are there any other possibilities for den being 0 other than when the auction has not yet cleared?
         require(den != 0, 'Last auction did not clear thus far, withdrawal cancelled');
 
         emit LogNumDen(num, den);
 
-        // For WETH / DAI we will get back e.g: 1/ 250
-        uint256 withdrawAmount = (
-            _actualLastSubOrderAmount.mul(num).div(den)
-        );
+        uint256 withdrawAmount = _actualLastSubOrderAmount.mul(num).div(den);
 
         emit LogWithdrawAmount(withdrawAmount);
 
@@ -637,8 +643,6 @@ contract Gelato is Ownable() {
 
     //     return true;
     // }
-
-
 
 }
 

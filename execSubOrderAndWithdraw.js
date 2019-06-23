@@ -106,7 +106,7 @@ module.exports = () => {
 
         // Starting the suborder execution phase
         console.log(`
-        .......executing 1st subOrder from ${executor}
+        .......executing subOrder from ${executor}
         ==================================================
         ||||||||||||||||||||||||||||||||||||||||||||||||||
         ||||||||||||✋Gelato requirements wall✋||||||||||||
@@ -150,8 +150,7 @@ module.exports = () => {
         console.log(`gasCost:                    ${gasCost}`);
         console.log(`gasCostFinney               ${web3.utils.fromWei(gasCost, "finney")} finney`);
         console.log(`note:
-        * gasCost based on yarn rpc gas price of: 20000000000 wei
-        However: This gas cost is not actually observed when testing.
+        * gasCost based on yarn rpc gas price of: 5000000000 wei
         `);
 
         console.log(`executorBalancePostExec:    ${executorBalancePostExec}`);
@@ -268,9 +267,12 @@ module.exports = () => {
                                 | =======================|
             Both amounts are identical:           ${wasWithdrawAmountCorrectlyCalculated}
 
+
             #####################################
 
-            Sell Order completed!
+            Sell Order completed!  ✅ ✅ ✅
+
+            #####################################
 
             `);
 
@@ -332,8 +334,8 @@ module.exports = () => {
                                         | =======================|
             `);
 
-            // Only calc after first exexAndWithdrawSubOrder func has been executed
-            if (parseInt(buyBalanceAfter) > 0)
+            // Only calc after first exexAndWithdrawSubOrder func has been executed and if manualWithdraw has not been executed
+            if (parseInt(sellOrder.remainingWithdrawals) === parseInt(sellOrder.remainingSubOrders) + 1)
             {
                 withdrawAmount = executionReceipt.logs[6].args['withdrawAmount'].toString(10)
                 priceNum = executionReceipt.logs[4].args['num'].toString(10)
