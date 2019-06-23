@@ -72,7 +72,6 @@ contract Gelato is Ownable() {
     event LogSellOrderComplete(bytes32 indexed sellOrderHash,
                                address indexed seller,
                                address indexed executor,
-                               uint256 aggregatedExecutionRewards
     );
 
     event LogNumDen(uint indexed num, uint indexed den
