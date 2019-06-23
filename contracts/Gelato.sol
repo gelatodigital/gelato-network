@@ -297,7 +297,7 @@ contract Gelato is Ownable() {
 
             // CASE 1:
             // Check case where lastAuctionIndex is greater than newAuctionIndex
-            require(newAuctionIndex >= lastAuctionIndex, "newAuctionIndex smaller than lastAuctionIndex");
+            require(newAuctionIndex >= lastAuctionIndex, "Fatal error: Gelato auction index ahead of DutchX auction index");
 
             // CASE 2:
             // Either we already sold during waitingPeriod OR during the auction that followed
