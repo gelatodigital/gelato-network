@@ -82,7 +82,7 @@ truffle exec ./withdrawManually.js "**** PLUG IN SELL ORDER HASH  ******"
 truffle exec ./execSubOrderAndWithdraw.js  "**** PLUG IN SELL ORDER HASH  ******"
 ```
 
-Check balance of seller (LOOP END)
+Check balance of seller (LOOP END - start from LOOP START)
 ```bash
 yarn cli balances --account 0x5AEDA56215b167893e80B4fE645BA6d5Bab767DE
 ```
