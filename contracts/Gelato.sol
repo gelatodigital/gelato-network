@@ -233,7 +233,7 @@ contract Gelato is Ownable() {
         // Fetches current auction index from DutchX
         uint256 newAuctionIndex = DutchX.getAuctionIndex(subOrder.buyToken, subOrder.sellToken);
 
-        // SubOrderAmount - fee paid to the DutchX of last executed subPrder
+        // SubOrderAmount - fee paid to the DutchX of last executed subOrder
         uint256 actualLastSubOrderAmount = subOrder.actualLastSubOrderAmount;
 
         // How many executions are left
