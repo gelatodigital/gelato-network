@@ -500,7 +500,7 @@ contract Gelato is Ownable() {
         require(msg.sender == subOrder.seller, 'Only the seller of the sellOrder can call this function');
 
         // Check if tx executor hasnt already withdrawn the funds
-        require(subOrder.remainingSubOrders == subOrder.remainingWithdrawals - 1, 'Tx executor already withdrew the payout to your address of the last auction you participated in');
+        require(subOrder.remainingSubOrders.add(1) == subOrder.remainingWithdrawals, 'Your funds from the last cleared auction you participated in were already withdrawn to your account');
 
         // Fetch price of last participated in and cleared auction using lastAuctionIndex
         uint num;
