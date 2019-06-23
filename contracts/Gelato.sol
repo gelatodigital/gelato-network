@@ -319,7 +319,7 @@ contract Gelato is Ownable() {
                 newAuctionIndex == lastAuctionIndex cannot be true - Gelato-DutchX indexing
                 must be out of sync) */
                 else if (!lastAuctionWasWaiting && newAuctionIsWaiting) {
-                    revert("Fatal error: auction index incrementation out of sync");
+                    revert("Case2c: Fatal error: auction index incrementation out of sync");
                 }
                 // Case2d: Last sold during running auction1, new CANNOT sell during auction1.1
                 else if (!lastAuctionWasWaiting && !newAuctionIsWaiting) {
