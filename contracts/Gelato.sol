@@ -200,7 +200,7 @@ contract Gelato is Ownable() {
         sellOrders[sellOrderHash] = sellOrder;
 
         // Store new sellOrders in sellOrdersBySeller array by their hash
-        sellOrdersBySeller[msg.sender].push(sellOrderHash);
+        sellOrdersBySeller[seller].push(sellOrderHash);
 
         //Emit event to notify executors that a new order was created
         emit LogNewSellOrderCreated(sellOrderHash, seller, _executorRewardPerSubOrder, _hammerTime);
