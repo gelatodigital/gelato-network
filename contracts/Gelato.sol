@@ -460,7 +460,7 @@ contract Gelato is Ownable() {
 
             emit LogSellOrderComplete(sellOrderHash,
                                       subOrder.seller,
-                                      executor,
+                                      executor
             );
         }
 
