@@ -67,7 +67,8 @@
     "swagger": "yaml2json src/web/publicApi/static/docs/dx-public-api.yml > src/web/publicApi/static/docs/dx-public-api.json ; yaml2json src/web/bots/static/docs/api/dx-bots-api.yml > src/web/bots/static/docs/api/dx-bots-api.json",
     "format": "prettier-standard 'src/**/*.js'",
     "create1": "./createSellOrder.sh",
-    "exec1": "./execSubOrderAndWithdraw.sh"
+    "close1": "./closeAuction.sh",
+    "endow1": "./endowSeller.sh"
   },
   "repository": {
     "type": "git",
