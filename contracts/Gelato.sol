@@ -71,7 +71,7 @@ contract Gelato is Ownable() {
 
     event LogSellOrderComplete(bytes32 indexed sellOrderHash,
                                address indexed seller,
-                               address indexed executor,
+                               address indexed executor
     );
 
     event LogNumDen(uint indexed num, uint indexed den
@@ -160,9 +160,6 @@ contract Gelato is Ownable() {
 
         // Local variables
         address seller = msg.sender;
-
-        // Local variables
-        uint256 lastAuctionIndex = 0;
 
         // RemainingWithdrawals by default set to remainingSubOrders
         uint256 remainingWithdrawals = _remainingSubOrders;
