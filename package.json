@@ -68,7 +68,9 @@
     "format": "prettier-standard 'src/**/*.js'",
     "create1": "./createSellOrder.sh",
     "close1": "./closeAuction.sh",
-    "endow1": "./endowSeller.sh"
+    "endow1": "./endowSeller.sh",
+    "skip6": "./skipSixHours.sh",
+    "stage1": "./stageOne.sh"
   },
   "repository": {
     "type": "git",
