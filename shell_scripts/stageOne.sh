@@ -3,11 +3,10 @@
 # Creating a sell order and closing the auction to get us to a state
 #  where we can run the first execSubOrderAndWithdraw.
 export DEFAULT_ACCOUNT="0x627306090abab3a6e1400e9345bc60c78a8bef57"
-export SECONDARY_ACCOUNT="0xf17f52151ebef6c7334fad080c5704d77216b732"
 export SELLER="0x5AEDA56215b167893e80B4fE645BA6d5Bab767DE"
-export SELL_AMOUNT="200"
 export SELL_TOKEN="WETH"
 export BUY_TOKEN="RDN"
+export SELL_AMOUNT="20"
 export BUY_AMOUNT="4000"
 export SKIP_TIME=6
 
@@ -27,7 +26,7 @@ echo "##########################################################################
 echo "\nDepositing ${SELL_AMOUNT} ${SELL_TOKEN} into ${DEFAULT_ACCOUNT}\n"
 echo "###############################################################################\n"
 
-DEPOSIT_OUTPUT=`yarn cli deposit ${SELL_AMOUNT} ${SELL_TOKEN} ${DEFAULT_ACCOUNT}`
+DEPOSIT_OUTPUT=`yarn cli deposit ${SELL_AMOUNT} ${SELL_TOKEN}`
 echo "\n{$DEPOSIT_OUTPUT}\n"
 
 
@@ -35,7 +34,7 @@ echo "##########################################################################
 echo "\nWithdrawing ${SELL_AMOUNT} ${SELL_TOKEN} from ${DEFAULT_ACCOUNT}\n"
 echo "###############################################################################\n"
 
-WITHDRAW_OUTPUT=`yarn cli withdraw ${SELL_AMOUNT} ${SELL_TOKEN} ${DEFAULT_ACCOUNT}`
+WITHDRAW_OUTPUT=`yarn cli withdraw ${SELL_AMOUNT} ${SELL_TOKEN}`
 echo "\n{$WITHDRAW_OUTPUT}\n"
 
 echo "###############################################################################\n"
@@ -123,23 +122,23 @@ echo "\n            CLOSING AUCTION 1 SCRIPT \n"
 echo "###############################################################################\n"
 
 echo "###############################################################################\n"
-echo "\nDepositing ${BUY_AMOUNT} ${BUY_TOKEN} into ${SECONDARY_ACCOUNT}\n"
+echo "\nDepositing ${BUY_AMOUNT} ${BUY_TOKEN} into ${DEFAULT_ACCOUNT}\n"
 echo "###############################################################################\n"
 
-DEPOSIT_OUTPUT=`yarn cli deposit ${BUY_AMOUNT} ${BUY_TOKEN} ${SECONDARY_ACCOUNT}`
+DEPOSIT_OUTPUT=`yarn cli deposit ${BUY_AMOUNT} ${BUY_TOKEN}`
 echo "\n{$DEPOSIT_OUTPUT}\n"
 
 echo "###############################################################################\n"
 echo "\nBuying ${BUY_AMOUNT} ${BUY_TOKEN} from running ${SELL_TOKEN}-${BUY_TOKEN} auction\n
-from buyer acount: ${SECONDARY_ACCOUNT}"
+from buyer acount: ${DEFAULT_ACCOUNT}"
 echo "###############################################################################\n"
 
-SEND_OUTPUT=`yarn cli buy ${BUY_AMOUNT} ${SELL_TOKEN}-${BUY_TOKEN} ${SECONDARY_ACCOUNT}`
+SEND_OUTPUT=`yarn cli buy ${BUY_AMOUNT} ${SELL_TOKEN}-${BUY_TOKEN}`
 echo "\n{$SEND_OUTPUT}\n"
 
 echo "###############################################################################\n"
 echo "\nState of ${SELL_TOKEN}-${BUY_TOKEN} AFTER closing
-   --> should be AUCTION_START_WAITING_FOR_FUNDING with auction index 2.\n"
+   --> should be WAITING_FOR_FUNDING with auction index 2.\n"
 echo "###############################################################################\n"
 
 STATE_AFTER=`yarn cli state ${SELL_TOKEN}-${BUY_TOKEN}`

@@ -109,7 +109,7 @@ module.exports = () => {
         .......executing subOrder from ${executor}
         ==================================================
         ||||||||||||||||||||||||||||||||||||||||||||||||||
-        ||||||||||||✋Gelato requirements wall✋||||||||||||
+        ||||||||||||✋Gelato requirements wall✋||||||||||
         ||||||||||||||||||||||||||||||||||||||||||||||||||
         ==================================================
         `);
@@ -121,8 +121,10 @@ module.exports = () => {
                     *** sub order executed ***
                     😎 😎 GREAT SUCCESS! 😎 😎
         ==================================================
+
                     executeSubOrder TX Receipt
                     -------------------------
+
         `);
 
         console.log(`
@@ -242,7 +244,7 @@ module.exports = () => {
 
         ==================================================
 
-            Seller BUY_TOKEN balance comparison (before vs. after execution):
+            Seller ${BUY_TOKEN} balance comparison (before vs. after execution):
             (Checking the Withdraw logic)
             ------------------------------------------------
             Seller Account:        ${seller}
@@ -256,7 +258,7 @@ module.exports = () => {
                                     | =======================|
                                     | =======================|
 
-            We just withdrew some RND!
+            We just withdrew some ${BUY_TOKEN}!
 
             Did we withdraw the correct amount based on actual SubOrder Size * DutchX Price of previous auction?
             ------------------------------------------------
