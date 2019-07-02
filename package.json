@@ -74,7 +74,7 @@
     "start1": "./shell_scripts/startAuction.sh",
     "close1": "./shell_scripts/closeAuction.sh",
     "stage2": "./shell_scripts/stageTwo.sh",
-    "withdraw1": "truffle exec ./withdrawManually.js"
+    "withdraw1": "truffle exec ./gelato_tests/withdrawManually.js"
   },
   "repository": {
     "type": "git",

@@ -1,9 +1,8 @@
 pragma solidity >=0.4.21 <0.6.0;
 
-//Imports:
-import './base/ERC20.sol';
-import './base/SafeMath.sol';
+// Imports:
 import './base/Ownable.sol';
+import './base/SafeMath.sol';
 
 contract GelatoCore is Ownable() {
 
@@ -21,11 +20,12 @@ contract GelatoCore is Ownable() {
     }
 
     // Events
-    event LogNewChildOrderCreated(bytes32 childOrderHash,
-                                  address indexed dappInterface,
-                                  address indexed trader,
-                                  uint256 indexed executionTime,
-                                  uint256 executorRewardPerChildOrder
+    event LogNewChildOrderCreated(address indexed dappInterface,  // IMPORTANT FILTER: executor's main choice
+                                  address trader,  // no filter: logic via parentOrderHash
+                                  bytes32 indexed parentOrderHash,  // filters for sell orders
+                                  bytes32 childOrderHash,  // no filter: can all be retrieved via parentOrderHash
+                                  uint256 indexed executionTime,  // filters for execution time
+                                  uint256 executorRewardPerChildOrder,  // no filter: logic via dappInterface
     );
     event LogChildOrderExecuted(bytes32 indexed childOrderHash,
                                 address indexed trader,
@@ -34,7 +34,7 @@ contract GelatoCore is Ownable() {
     );
     event LogExecutorPayout(bytes32 indexed childOrderHash,
                             address payable indexed executor,
-                            uint256 indexed executionReward
+                            uint256 indexed executorRewardPerChildOrder
     );
 
 
@@ -77,8 +77,10 @@ contract GelatoCore is Ownable() {
             * 1: childOrderSizes from one parent order are constant.
                 * totalOrderVolume == numChildOrders * childOrderSize.
             * 2: executorRewardPerChildOrder from one parent order is constant.
-                * msg.value == executorRewardPerChildOrder * (numChildOrders + 1)
+                * msg.value == numChildOrders * executorRewardPerChildOrder
         */
+
+        // @DEV: should cap the number of child orders possible after benchmarking gas usage
 
         // Invariant1: Constant childOrderSize
         require(_totalOrderVolume == _numChildOrders.mul(_childOrderSize),
@@ -107,18 +109,8 @@ contract GelatoCore is Ownable() {
                 _executorRewardPerChildOrder
             );
 
-            // calculate ChildOrder Hash
-            bytes32 childOrderHash = keccak256(abi.encodePacked(_orderHash,
-                                                                _trader,
-                                                                _sellToken,
-                                                                _buyToken,
-                                                                _totalOrderVolume,
-                                                                _numChildOrders,
-                                                                _childOrderSize,
-                                                                executionTime,  // Differs across siblings
-                                                                _intervalSpan,
-                                                                _executorRewardPerChildOrder)
-            );
+            // calculate ChildOrder Hash - the executionTime differs amongst the children of the parentOrder
+            bytes32 childOrderHash = keccak256(abi.encodePacked(_parentOrderHash, executionTime));
 
             // Prevent overwriting stored sub orders because of hash collisions
             if (childOrders[childOrderHash].trader != address(0)) {
@@ -132,11 +124,13 @@ contract GelatoCore is Ownable() {
             childOrdersByTrader[_trader].push(childOrderHash);
 
             // Emit event to notify executors that a new sub order was created
-            emit LogNewChildOrderCreated(childOrderHash,
-                                         msg.sender,  // == the calling interface
+            emit LogNewChildOrderCreated(msg.sender,  // == the calling interface
                                          _trader,
-                                         executionTime,  // Differs across siblings
-                                         _executorRewardPerChildOrder
+                                         _parentOrderHash,
+                                         childOrderHash,
+                                         _executorRewardPerChildOrder,
+                                         executionTime  // Differs across siblings
+
             );
 
             // Increment the execution time

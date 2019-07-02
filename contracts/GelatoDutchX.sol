@@ -1,13 +1,11 @@
 pragma solidity >=0.4.21 <0.6.0;
 
-//Imports:
+//  Imports:
 import './GelatoCore.sol';
 import './base/ERC20.sol';
 import './base/SafeMath.sol';
 import './base/Ownable.sol';
 import '@gnosis.pm/dx-contracts/contracts/DutchExchange.sol';
-// import '@gnosis.pm/dx-contracts/contracts/base/SafeTransfer.sol';
-// import "@gnosis.pm/util-contracts/contracts/Token.sol";
 
 contract GelatoDutchX is Ownable() {
 
@@ -15,24 +13,18 @@ contract GelatoDutchX is Ownable() {
     using SafeMath for uint256;
 
     struct SellOrder {
-        bool automaticWithdrawal;
         bool lastAuctionWasWaiting;
-        uint256 remainingSubOrders; // e.g. 10
-        uint256 lastAuctionIndex; // default 0
+        uint256 remainingSubOrders;
+        uint256 lastAuctionIndex;  // default: 0
         uint256 actualLastSubOrderAmount;
-        uint256 remainingWithdrawals;
     }
 
 
     // Events
     event LogNewSellOrderCreated(bytes32 indexed sellOrderHash,
-                          address indexed seller,
-                          uint256 executorRewardPerSubOrder,
-                          uint256 indexed executionTime
-    );
-    event LogSellOrderComplete(bytes32 indexed sellOrderHash,
-                               address indexed seller,
-                               address indexed executor
+                                 address indexed dappInterface,  // filtering for contract events possible on default?
+                                 address indexed seller,
+                                 uint256 executorRewardPerSubOrder
     );
     event LogNumDen(uint indexed num, uint indexed den);
 
@@ -44,22 +36,19 @@ contract GelatoDutchX is Ownable() {
 
     // **************************** State Variables ******************************
 
-    // Interface to other contracts:
+    // Interfaces to other contracts that are set during construction.
     GelatoCore public GelatoCore;
     DutchExchange public DutchX;
 
-
-    // Mappings:
     // Find unique sellOrder with sellOrderHash
     mapping(bytes32 => SellOrder) public sellOrders;
 
     // Find all sellOrders of one single seller
-    mapping(address => bytes32 []) public sellOrdersBySeller;
-
+    mapping(address => bytes32[]) public sellOrdersBySeller;
 
     // Constants that are set during contract construction
-    uint256 public AUCTION_START_WAITING_FOR_FUNDING;
-    uint256 public MIN_EXECUTOR_REWARD_PER_SUBORDER;
+    uint256 public auctionStartWaitingForFunding;
+    uint256 public executorRewardPerSubOrder;
 
     // **************************** State Variables END ******************************
 
@@ -69,118 +58,119 @@ contract GelatoDutchX is Ownable() {
         * connects the contract interfaces to deployed instances thereof.
         * sets the state variable constants
     */
-    constructor(address _GelatoCore, address _DutchX)
+    constructor(address _GelatoCoreProxy, address _DutchXProxy)
         public
     {
-        GelatoCore = GelatoCore(_GelatoCore);
-        DutchX = DutchExchange(_DutchX);
-        AUCTION_START_WAITING_FOR_FUNDING = 1;
-        MIN_EXECUTOR_REWARD_PER_SUBORDER = 10 finney;  // ca. 2.7 USD at 273$ per ETH
+        GelatoCore = GelatoCore(_GelatoCoreProxy);  // Upgradeability via Proxy
+        DutchX = DutchExchange(_DutchXProxy);  // Upgradeability via Proxy
+        auctionStartWaitingForFunding = 1;
+        executorRewardPerSubOrder = 10 finney;  // ca. 2.7 USD at 273$ per ETH
     }
 
 
-    /* Invariants
-        * 1: subOrderSize is constant inside one sell order.
-            * totalSellVolume == remainingSubOrder * subOrderSize.
-        * 2: executorRewardPerSubOrder is constant inside one sell order.
-            * msg.value / (remainingSubOrders + 1) == executorRewardPerSubOrder
-        * 3: executorRewardPerSubOrder surpasses the minimum
-            * executorRewardPerSubOrder >= MIN_EXECUTOR_REWARD_PER_SUBORDER
-        * 4: IF (sellOrder.complete)
-            * THEN remainingSubOrders == 0
-            * THEN remainingWithdrawals == 0
-            * THEN aggregatedExecutorReward == (numSubOrders + 1) * executorRewardPerSubOrder
-    */
+    // **************************** Updateability ******************************
+    function setAuctionStartWaitingForFunding(uint256 _auctionStartWaitingForFunding)
+        onlyOwner
+        external
+    {
+        auctionStartWaitingForFunding = _auctionStartWaitingForFunding;
+    }
+
+    function setExecutorRewardPerSubOrder(uint256 _executorRewardPerSubOrder)
+        onlyOwner
+        external
+    {
+        executorRewardPerSubOrder = _executorRewardPerSubOrder;
+    }
+    // **************************** Updateability END ******************************
 
 
-    // **************************** createSellOrder() ******************************
-    function createSellOrder(address _sellToken,
-                             address _buyToken,
-                             uint256 _totalSellVolume,
-                             uint256 _numSubOrders,
-                             uint256 _subOrderSize,
-                             uint256 _executionTime,
-                             uint256 _intervalSpan,
-                             uint256 _executorRewardPerSubOrder,
-                             bool automaticWithdrawal
+    // **************************** splitSellOrder() ******************************
+    function splitSellOrder(address _sellToken,
+                            address _buyToken,
+                            uint256 _totalSellVolume,
+                            uint256 _numSubOrders,
+                            uint256 _subOrderSize,
+                            uint256 _executionTime,
+                            uint256 _intervalSpan
     )
         public
         payable
-        returns (bytes32)
+        returns (bytes32 sellOrderHash)
 
     {
-        // Argument checks
-        require(msg.sender != address(0), "No zero addresses allowed");
-        require(_buyToken != address(0), "No zero addresses allowed");
-        require(_sellToken != address(0), "No zero addresses allowed");
-        require(_totalSellVolume != 0, "Empty sell volume");
-        require(_subOrderSize != 0, "Empty sub order size");
+        // Prevention of zero values is done in Gelato Core protocol
 
-        // Require so that seller cannot call execSubOrder for a sellOrder with remainingSubOrder == 0
-        require(_remainingSubOrders != 0, 'You need at least 1 subOrder per sellOrder');
-
-        // Invariant checks
-        // Invariant1: Constant subOrdersize in one sell order check
-        require(_totalSellVolume == _remainingSubOrders.mul(_subOrderSize),
-            "Invariant remainingSubOrders failed totalSellVolume/subOrderSize"
+        /* Step1: Invariant Requirements
+            * Handled by Core protocol:
+                * 1: subOrderSizes from one Sell Order are constant.
+                    * totalSellVolume == numSubOrders * subOrderSize.
+                * 2: executorRewardPerSubOrder from one Sell Order is constant.
+                    * msg.value == numSubOrders * executorRewardPerSubOrder
+            * Handled by Gelato-DutchX-Interface
+                * 3: executorRewardPerSubOrder meets threshold
+                    * executorRewardPerSubOrder == executorRewardPerSubOrder
+        */
+        require(msg.value == executorRewardPerSubOrder,
+            "Failed Invariant3: msg.value == executorRewardPerSubOrder"
         );
 
-        // Invariants 2 & 3: Executor reward per subOrder + 1(last withdraw) and tx endowment checks
-        require(msg.value >= (_remainingSubOrders.add(1)).mul(_executorRewardPerSubOrder),
-            "Failed invariant Test2: msg.value =>  (remainingSubOrders + 1) * executorRewardPerSubOrder"
-        );
-
-        require(_executorRewardPerSubOrder >= MIN_EXECUTOR_REWARD_PER_SUBORDER,
-            "Failed invariant Test3: Msg.value (wei) must pass the executor reward per subOrder minimum (MIN_EXECUTOR_REWARD_PER_SUBORDER)"
-        );
-
-        // Local variables
-        address seller = msg.sender;
-
-        // RemainingWithdrawals by default set to remainingSubOrders
-        uint256 remainingWithdrawals = _remainingSubOrders;
-
-        // Create new sell order
+        // Step2: Instantiate new DutchX-specific sell order
         SellOrder memory sellOrder = SellOrder(
-            false, // lastAuctionWasWaiting
-            false, // complete?
-            // false, // cancelled?
-            seller,
-            _sellToken,
-            _buyToken,
-            _totalSellVolume,
-            _subOrderSize,
-            _remainingSubOrders,
-            _executionTime,
-            _intervalSpan,
-            0, //lastAuctionIndex
-            _executorRewardPerSubOrder,
-            0 /*default for actualLastSubOrderAmount*/,
-            remainingWithdrawals /* remainingWithdrawals == _remainingSubOrders */
+            false,  // default: lastAuctionWasWaiting
+            _numSubOrders,  // default: remainingSubOrders
+            0,  // default: lastAuctionIndex
+            0  // default: actualLastSubOrderAmount
         );
 
-        // Hash the sellOrder Struct to get unique identifier for mapping
-        // @Hilmar: solidity returns sellOrderHash automatically for you
-        bytes32 sellOrderHash = keccak256(abi.encodePacked(seller, _sellToken, _buyToken, _totalSellVolume, _subOrderSize, _remainingSubOrders, _executionTime, _intervalSpan, _executorRewardPerSubOrder));
+        // Step3: hash sell order to yield core protocol's parentOrderHash
+        bytes32 sellOrderHash = keccak256(abi.encodePacked(seller,
+                                                           _sellToken,
+                                                           _buyToken,
+                                                           _totalSellVolume,
+                                                           _numSubOrders,
+                                                           _subOrderSize,
+                                                           _executionTime,
+                                                           _intervalSpan)
+        );
 
-        // We cannot convert a struct to a bool, hence we need to check if any value is not equal to 0 to validate that it does indeed not exist
+        // Prevent overwriting stored sub orders because of hash collisions
         if (sellOrders[sellOrderHash].seller != address(0)) {
             revert("Sell Order already registered. Identical sellOrders disallowed");
         }
 
+        // Step4: Write to GelatoDutchX storage
         // Store new sell order in sellOrders mapping
         sellOrders[sellOrderHash] = sellOrder;
 
         // Store new sellOrders in sellOrdersBySeller array by their hash
         sellOrdersBySeller[seller].push(sellOrderHash);
 
-        //Emit event to notify executors that a new order was created
-        emit LogNewSellOrderCreated(sellOrderHash, seller, _executorRewardPerSubOrder, _executionTime);
+        // Step5: call Gelato Core protocol's splitSchedule() function
+        //  ***** GELATO CORE PROTOCOL INTERACTION *****
+        GelatoCore.splitSchedule(sellOrderHash,
+                                 msg.sender,  // seller
+                                 _sellToken,
+                                 _buyToken,
+                                 _totalSellVolume,
+                                 _numSubOrders,
+                                 _subOrderSize,
+                                 _executionTime,
+                                 _intervalSpan
+        );
 
-        return sellOrderHash;
+        //  *** GELATO CORE PROTOCOL INTERACTION END ***
+
+        // Emit New Sell Order to link to its suborder constituents on the core protocol
+        emit LogNewSellOrderCreated(sellOrderHash,  // Link to core protocol suborders
+                                    address(this),  // embeds executors' decision-making
+                                    seller,         // filter for interface users
+                                    _executorRewardPerSubOrder
+        );
+
     }
 
-    // **************************** createSellOrder() END ******************************
+    // **************************** splitSellOrder() END ******************************
 
     // **************************** executeSubOrderAndWithdraw()  *********************************
 
@@ -257,7 +247,7 @@ contract GelatoDutchX is Ownable() {
 
             // Check if we are in a Waiting period or auction running period
             // @Dev, we need to account for latency here
-            if (auctionStartTime > now || auctionStartTime == AUCTION_START_WAITING_FOR_FUNDING) {
+            if (auctionStartTime > now || auctionStartTime == auctionStartWaitingForFunding) {
                 newAuctionIsWaiting = true;
             } else if (auctionStartTime < now) {
                 newAuctionIsWaiting = false;
