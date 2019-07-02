@@ -1,6 +1,7 @@
 pragma solidity >=0.4.21 <0.6.0;
 
 //Imports:
+import './GelatoCore.sol';
 import './base/ERC20.sol';
 import './base/SafeMath.sol';
 import './base/Ownable.sol';
@@ -8,28 +9,75 @@ import '@gnosis.pm/dx-contracts/contracts/DutchExchange.sol';
 // import '@gnosis.pm/dx-contracts/contracts/base/SafeTransfer.sol';
 // import "@gnosis.pm/util-contracts/contracts/Token.sol";
 
-contract Gelato is Ownable() {
+contract GelatoDutchX is Ownable() {
 
     // Libraries used:
     using SafeMath for uint256;
 
     struct SellOrder {
+        bool automaticWithdrawal;
         bool lastAuctionWasWaiting;
-        // bool cancelled;  // stack too deep: default: false
-        bool complete;  // default false
-        address seller; // Seller
-        address sellToken; // e.g. WETH address
-        address buyToken; // e.g. DAI address
-        uint256 totalSellVolume; // eg. 100 WETH
-        uint256 subOrderSize; // e.g. 10 WETH
         uint256 remainingSubOrders; // e.g. 10
-        uint256 hammerTime; // e.g. 1559912739
-        uint256 freezeTime; // e.g. 86400 seconds (24h)
         uint256 lastAuctionIndex; // default 0
-        uint256 executorRewardPerSubOrder; // must pass threshold
         uint256 actualLastSubOrderAmount;
         uint256 remainingWithdrawals;
     }
+
+
+    // Events
+    event LogNewSellOrderCreated(bytes32 indexed sellOrderHash,
+                          address indexed seller,
+                          uint256 executorRewardPerSubOrder,
+                          uint256 indexed executionTime
+    );
+    event LogSellOrderComplete(bytes32 indexed sellOrderHash,
+                               address indexed seller,
+                               address indexed executor
+    );
+    event LogNumDen(uint indexed num, uint indexed den);
+
+    event LogActualSubOrderAmount(uint256 indexed subOrderAmount,
+                                  uint256 indexed actualSubOrderAmount,
+                                  uint256 indexed fee
+    );
+
+
+    // **************************** State Variables ******************************
+
+    // Interface to other contracts:
+    GelatoCore public GelatoCore;
+    DutchExchange public DutchX;
+
+
+    // Mappings:
+    // Find unique sellOrder with sellOrderHash
+    mapping(bytes32 => SellOrder) public sellOrders;
+
+    // Find all sellOrders of one single seller
+    mapping(address => bytes32 []) public sellOrdersBySeller;
+
+
+    // Constants that are set during contract construction
+    uint256 public AUCTION_START_WAITING_FOR_FUNDING;
+    uint256 public MIN_EXECUTOR_REWARD_PER_SUBORDER;
+
+    // **************************** State Variables END ******************************
+
+
+    /* constructor():
+        * constructs Ownable base and sets msg.sender as owner.
+        * connects the contract interfaces to deployed instances thereof.
+        * sets the state variable constants
+    */
+    constructor(address _GelatoCore, address _DutchX)
+        public
+    {
+        GelatoCore = GelatoCore(_GelatoCore);
+        DutchX = DutchExchange(_DutchX);
+        AUCTION_START_WAITING_FOR_FUNDING = 1;
+        MIN_EXECUTOR_REWARD_PER_SUBORDER = 10 finney;  // ca. 2.7 USD at 273$ per ETH
+    }
+
 
     /* Invariants
         * 1: subOrderSize is constant inside one sell order.
@@ -44,89 +92,17 @@ contract Gelato is Ownable() {
             * THEN aggregatedExecutorReward == (numSubOrders + 1) * executorRewardPerSubOrder
     */
 
-    // Events
-
-    event LogNewSellOrderCreated(bytes32 indexed sellOrderHash,
-                          address indexed seller,
-                          uint256 executorRewardPerSubOrder,
-                          uint256 indexed hammerTime
-    );
-    event LogSubOrderExecuted(bytes32 indexed sellOrderHash,
-                              address indexed seller,
-                              address indexed executor,
-                              uint256 executorRewardPerSubOrder
-    );
-    event LogClaimedAndWithdrawn(bytes32 indexed sellOrderHash,
-                                 address indexed seller
-    );
-    event LogNewHammerTime(bytes32 indexed sellOrderHash,
-                           address indexed seller,
-                           uint256 indexed hammerTime,
-                           uint256 executorRewardPerSubOrder
-    );
-    event LogExecutorPayout(bytes32 indexed sellOrderHash,
-                            address payable indexed executor,
-                            uint256 indexed executionReward
-    );
-
-    event LogSellOrderComplete(bytes32 indexed sellOrderHash,
-                               address indexed seller,
-                               address indexed executor
-    );
-
-    event LogNumDen(uint indexed num, uint indexed den
-    );
-
-    event LogWithdrawAmount(uint indexed withdrawAmount
-    );
-
-    event LogWithdrawComplete(address indexed seller,
-                                uint256 indexed withdrawAmount, address indexed token
-    );
-
-    event LogActualSubOrderAmount(uint256 indexed subOrderAmount,
-                                uint256 indexed actualSubOrderAmount,uint256 indexed fee);
-
-    // **************************** State Variables ******************************
-    // Mappings:
-
-    // Find unique sellOrder with sellOrderHash
-    mapping(bytes32 => SellOrder) public sellOrders;
-
-    // Find all sellOrders of one single seller
-    mapping(address => bytes32 []) public sellOrdersBySeller;
-
-    // Interface to other contracts:
-    DutchExchange public DutchX;
-
-    // Constants that are set during contract construction
-    uint256 public AUCTION_START_WAITING_FOR_FUNDING;
-    uint256 public MIN_EXECUTOR_REWARD_PER_SUBORDER;
-
-    // **************************** State Variables END ******************************
-
-
-    /* constructor():
-        * makes upgradeability easy via redeployment.
-        * constructs Ownable base and sets msg.sender as owner.
-    */
-    constructor(address deployedAt)
-        public
-    {
-        DutchX = DutchExchange(deployedAt);
-        AUCTION_START_WAITING_FOR_FUNDING = 1;
-        MIN_EXECUTOR_REWARD_PER_SUBORDER = 10 finney;  // ca. 2.7 USD at 273$ per ETH
-    }
 
     // **************************** createSellOrder() ******************************
     function createSellOrder(address _sellToken,
                              address _buyToken,
                              uint256 _totalSellVolume,
+                             uint256 _numSubOrders,
                              uint256 _subOrderSize,
-                             uint256 _remainingSubOrders,
-                             uint256 _hammerTime,
-                             uint256 _freezeTime,
-                             uint256 _executorRewardPerSubOrder
+                             uint256 _executionTime,
+                             uint256 _intervalSpan,
+                             uint256 _executorRewardPerSubOrder,
+                             bool automaticWithdrawal
     )
         public
         payable
@@ -175,8 +151,8 @@ contract Gelato is Ownable() {
             _totalSellVolume,
             _subOrderSize,
             _remainingSubOrders,
-            _hammerTime,
-            _freezeTime,
+            _executionTime,
+            _intervalSpan,
             0, //lastAuctionIndex
             _executorRewardPerSubOrder,
             0 /*default for actualLastSubOrderAmount*/,
@@ -185,7 +161,7 @@ contract Gelato is Ownable() {
 
         // Hash the sellOrder Struct to get unique identifier for mapping
         // @Hilmar: solidity returns sellOrderHash automatically for you
-        bytes32 sellOrderHash = keccak256(abi.encodePacked(seller, _sellToken, _buyToken, _totalSellVolume, _subOrderSize, _remainingSubOrders, _hammerTime, _freezeTime, _executorRewardPerSubOrder));
+        bytes32 sellOrderHash = keccak256(abi.encodePacked(seller, _sellToken, _buyToken, _totalSellVolume, _subOrderSize, _remainingSubOrders, _executionTime, _intervalSpan, _executorRewardPerSubOrder));
 
         // We cannot convert a struct to a bool, hence we need to check if any value is not equal to 0 to validate that it does indeed not exist
         if (sellOrders[sellOrderHash].seller != address(0)) {
@@ -199,7 +175,7 @@ contract Gelato is Ownable() {
         sellOrdersBySeller[seller].push(sellOrderHash);
 
         //Emit event to notify executors that a new order was created
-        emit LogNewSellOrderCreated(sellOrderHash, seller, _executorRewardPerSubOrder, _hammerTime);
+        emit LogNewSellOrderCreated(sellOrderHash, seller, _executorRewardPerSubOrder, _executionTime);
 
         return sellOrderHash;
     }
@@ -241,8 +217,8 @@ contract Gelato is Ownable() {
             * Require that Gelato has matching seller's ERC20 allowance
         */
 
-        // Execute if: It's hammerTime !
-        require(subOrder.hammerTime <= now,
+        // Execute if: It's executionTime !
+        require(subOrder.executionTime <= now,
             "Failed: You called before scheduled execution time"
         );
 
@@ -346,14 +322,14 @@ contract Gelato is Ownable() {
                     // Store the actually sold sub-order amount in the struct
                     subOrder.actualLastSubOrderAmount = _calcActualSubOrderSize(subOrder.subOrderSize);
 
-                    // Update hammerTime with freeze Time
-                    subOrder.hammerTime = subOrder.hammerTime.add(subOrder.freezeTime);
+                    // Update executionTime with freeze Time
+                    subOrder.executionTime = subOrder.executionTime.add(subOrder.intervalSpan);
 
                     // ### EFFECTS END ###
 
                     emit LogNewHammerTime(sellOrderHash,
                                         subOrder.seller,
-                                        subOrder.hammerTime,
+                                        subOrder.executionTime,
                                         subOrder.executorRewardPerSubOrder
                     );
 
@@ -380,14 +356,14 @@ contract Gelato is Ownable() {
                     // Store the actually sold sub-order amount in the struct
                     subOrder.actualLastSubOrderAmount = _calcActualSubOrderSize(subOrder.subOrderSize);
 
-                    // Update hammerTime with freeze Time
-                    subOrder.hammerTime = subOrder.hammerTime.add(subOrder.freezeTime);
+                    // Update executionTime with freeze Time
+                    subOrder.executionTime = subOrder.executionTime.add(subOrder.intervalSpan);
 
                     // ### EFFECTS END ###
 
                     emit LogNewHammerTime(sellOrderHash,
                                         subOrder.seller,
-                                        subOrder.hammerTime,
+                                        subOrder.executionTime,
                                         subOrder.executorRewardPerSubOrder
                     );
 
@@ -428,14 +404,14 @@ contract Gelato is Ownable() {
                 // Store the actually sold sub-order amount in the struct
                 subOrder.actualLastSubOrderAmount = _calcActualSubOrderSize(subOrder.subOrderSize);
 
-                // Update hammerTime with freeze Time
-                subOrder.hammerTime = subOrder.hammerTime.add(subOrder.freezeTime);
+                // Update executionTime with freeze Time
+                subOrder.executionTime = subOrder.executionTime.add(subOrder.intervalSpan);
 
                 // ### EFFECTS END ###
 
                 emit LogNewHammerTime(sellOrderHash,
                                     subOrder.seller,
-                                    subOrder.hammerTime,
+                                    subOrder.executionTime,
                                     subOrder.executorRewardPerSubOrder
                 );
 
