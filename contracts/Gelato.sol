@@ -150,7 +150,7 @@ contract Gelato is Ownable() {
         );
 
         // Invariants 2 & 3: Executor reward per subOrder + 1(last withdraw) and tx endowment checks
-        require(msg.value >= (_remainingSubOrders.add(1)).mul(_executorRewardPerSubOrder),
+        require(msg.value == (_remainingSubOrders.add(1)).mul(_executorRewardPerSubOrder),
             "Failed invariant Test2: msg.value =>  (remainingSubOrders + 1) * executorRewardPerSubOrder"
         );
 
