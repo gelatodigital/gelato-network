@@ -4,164 +4,149 @@ pragma solidity >=0.4.21 <0.6.0;
 import './base/ERC20.sol';
 import './base/SafeMath.sol';
 import './base/Ownable.sol';
-import '@gnosis.pm/dx-contracts/contracts/DutchExchange.sol';
-// import '@gnosis.pm/dx-contracts/contracts/base/SafeTransfer.sol';
-// import "@gnosis.pm/util-contracts/contracts/Token.sol";
 
 contract GelatoCore is Ownable() {
 
     // Libraries used:
     using SafeMath for uint256;
 
-    struct SubOrder {
+    struct ChildOrder {
+        bytes32 parentOrderHash;
         address trader;
         address sellToken;
         address buyToken;
-        uint256 subOrderSize;
+        uint256 childOrderSize;
         uint256 executionTime;
-        uint256 intervalSpan;
-        uint256 executorRewardPerSubOrder;
+        uint256 executorRewardPerChildOrder;
     }
 
     // Events
-    event LogNewSubOrderCreated(bytes32 indexed subOrderHash,
+    event LogNewChildOrderCreated(bytes32 childOrderHash,
+                                  address indexed dappInterface,
+                                  address indexed trader,
+                                  uint256 indexed executionTime,
+                                  uint256 executorRewardPerChildOrder
+    );
+    event LogChildOrderExecuted(bytes32 indexed childOrderHash,
                                 address indexed trader,
-                                uint256 executorRewardPerSubOrder,
-                                uint256 indexed executionTime
+                                address indexed executor,
+                                uint256 executorRewardPerChildOrder
     );
-    event LogSubOrderExecuted(bytes32 indexed subOrderHash,
-                              address indexed trader,
-                              address indexed executor,
-                              uint256 executorRewardPerSubOrder
-    );
-
-    event LogExecutorPayout(bytes32 indexed subOrderHash,
+    event LogExecutorPayout(bytes32 indexed childOrderHash,
                             address payable indexed executor,
                             uint256 indexed executionReward
     );
 
 
-
     // **************************** State Variables ******************************
-    // Mappings:
 
-    // Find unique subOrders by their hash
-    mapping(bytes32 => SubOrder) public subOrders;
+    // childOrderHash => childOrder
+    mapping(bytes32 => ChildOrder) public childOrders;
 
-    // Find all subOrders of one single trader
-    mapping(address => bytes32[]) public subOrdersByTrader;
-
-    // Interface to other contracts:
-    // @Dev: need to find out how to link to deployed interfaces dynamically,
-    //  this should not be hardcoded.
-    GelatoDutchX public GelatoDutchX;
+    // trader => childOrders
+    mapping(address => bytes32[]) public childOrdersByTrader;
 
     // **************************** State Variables END ******************************
 
 
-    /* Invariants
-        * 1: subOrderSize is constant inside one Order.
-            * totalSellVolume == remainingSubOrder * subOrderSize.
-        * 2: executorRewardPerSubOrder is constant inside one sell order.
-            * msg.value / (remainingSubOrders + 1) == executorRewardPerSubOrder
-        * 3: executorRewardPerSubOrder surpasses the minimum
-            * executorRewardPerSubOrder >= MIN_EXECUTOR_REWARD_PER_SUBORDER
-        * 4: IF (sellOrder.complete)
-            * THEN remainingSubOrders == 0
-            * THEN remainingWithdrawals == 0
-            * THEN aggregatedExecutorReward == (numSubOrders + 1) * executorRewardPerSubOrder
-    */
-
-
-    // **************************** createSellOrder() ******************************
-    function createSubOrder(bytes32 _orderHash,
-                            address _trader,
-                            address _sellToken,
-                            address _buyToken,
-                            uint256 _totalSellVolume,
-                            uint256 _subOrderSize,
-                            uint256 _remainingSubOrders,
-                            uint256 _executionTime,
-                            uint256 _intervalSpan,
-                            uint256 _executorRewardPerSubOrder
+    // **************************** splitSchedule() ******************************
+    function splitSchedule(bytes32 _parentOrderHash,
+                           address _trader,
+                           address _sellToken,
+                           address _buyToken,
+                           uint256 _totalOrderVolume,
+                           uint256 _numChildOrders,
+                           uint256 _childOrderSize,
+                           uint256 _executionTime,
+                           uint256 _intervalSpan,
+                           uint256 _executorRewardPerChildOrder
     )
         public
         payable
-        returns (bytes32)
-
+        returns (bool)
     {
-        // Argument checks
-        require(msg.sender != address(0), "No zero addresses allowed");
-        require(_buyToken != address(0), "No zero addresses allowed");
-        require(_sellToken != address(0), "No zero addresses allowed");
-        require(_totalSellVolume != 0, "Empty sell volume");
-        require(_subOrderSize != 0, "Empty sub order size");
+        // Zero value preventions
+        require(_trader != address(0), "Trader: No zero addresses allowed");
+        require(_sellToken != address(0), "sellToken: No zero addresses allowed");
+        require(_buyToken != address(0), "buyToken: No zero addresses allowed");
+        require(_totalOrderVolume != 0, "totalOrderVolume cannot be 0");
+        require(_numChildOrders != 0, "numChildOrders cannot be 0");
+        require(_childOrderSize != 0, "childOrderSize cannot be 0");
 
-        // Require so that trader cannot call execSubOrder for a sellOrder with remainingSubOrder == 0
-        require(_remainingSubOrders != 0, 'You need at least 1 subOrder per sellOrder');
+        /* Invariants requirements
+            * 1: childOrderSizes from one parent order are constant.
+                * totalOrderVolume == numChildOrders * childOrderSize.
+            * 2: executorRewardPerChildOrder from one parent order is constant.
+                * msg.value == executorRewardPerChildOrder * (numChildOrders + 1)
+        */
 
-        // Invariant checks
-        // Invariant1: Constant subOrdersize in one sell order check
-        require(_totalSellVolume == _remainingSubOrders.mul(_subOrderSize),
-            "Invariant remainingSubOrders failed totalSellVolume/subOrderSize"
+        // Invariant1: Constant childOrderSize
+        require(_totalOrderVolume == _numChildOrders.mul(_childOrderSize),
+            "Failed Invariant1: totalOrderVolume = numChildOrders * childOrderSize"
         );
 
-        // Invariants 2 & 3: Executor reward per subOrder + 1(last withdraw) and tx endowment checks
-        require(msg.value >= (_remainingSubOrders.add(1)).mul(_executorRewardPerSubOrder),
-            "Failed invariant Test2: msg.value =>  (remainingSubOrders + 1) * executorRewardPerSubOrder"
+        // Invariants2: Executor reward per childOrder and tx endowment checks
+        require(msg.value == _numChildOrders.mul(_executorRewardPerChildOrder),
+            "Failed Invariant2: msg.value == numChildOrders * executorRewardPerChildOrder"
         );
 
-        require(_executorRewardPerSubOrder >= MIN_EXECUTOR_REWARD_PER_SUBORDER,
-            "Failed invariant Test3: Msg.value (wei) must pass the executor reward per subOrder minimum (MIN_EXECUTOR_REWARD_PER_SUBORDER)"
-        );
+        // Local variable for reassignments to the executionTimes of
+        //  sibling child orders because the former differ amongst the latter.
+        uint256 memory executionTime = _executionTime;
 
-        // Local variables
-        address trader = msg.sender;
+        // Create all childOrders
+        for (uint256 i = 0; i < _numChildOrders; i++) {
+            // Instantiate (in memory) each childOrder (with its own executionTime)
+            ChildOrder memory childOrder = ChildOrder(
+                _parentOrderHash,
+                _trader,
+                _sellToken,
+                _buyToken,
+                _childOrderSize,
+                executionTime,  // Differs across siblings
+                _executorRewardPerChildOrder
+            );
 
-        // RemainingWithdrawals by default set to remainingSubOrders
-        uint256 remainingWithdrawals = _remainingSubOrders;
+            // calculate ChildOrder Hash
+            bytes32 childOrderHash = keccak256(abi.encodePacked(_orderHash,
+                                                                _trader,
+                                                                _sellToken,
+                                                                _buyToken,
+                                                                _totalOrderVolume,
+                                                                _numChildOrders,
+                                                                _childOrderSize,
+                                                                executionTime,  // Differs across siblings
+                                                                _intervalSpan,
+                                                                _executorRewardPerChildOrder)
+            );
 
-        // Create new sell order
-        SellOrder memory sellOrder = SellOrder(
-            false, // lastAuctionWasWaiting
-            false, // complete?
-            // false, // cancelled?
-            trader,
-            _sellToken,
-            _buyToken,
-            _totalSellVolume,
-            _subOrderSize,
-            _remainingSubOrders,
-            _executionTime,
-            _intervalSpan,
-            0, //lastAuctionIndex
-            _executorRewardPerSubOrder,
-            0 /*default for actualLastSubOrderAmount*/,
-            remainingWithdrawals /* remainingWithdrawals == _remainingSubOrders */
-        );
+            // Prevent overwriting stored sub orders because of hash collisions
+            if (childOrders[childOrderHash].trader != address(0)) {
+                revert("childOrder already registered. Identical childOrders disallowed");
+            }
 
-        // Hash the sellOrder Struct to get unique identifier for mapping
-        // @Hilmar: solidity returns subOrderHash automatically for you
-        bytes32 subOrderHash = keccak256(abi.encodePacked(trader, _sellToken, _buyToken, _totalSellVolume, _subOrderSize, _remainingSubOrders, _executionTime, _intervalSpan, _executorRewardPerSubOrder));
+            // Store each childOrder in childOrders state variable mapping
+            childOrders[childOrderHash] = childOrder;
 
-        // We cannot convert a struct to a bool, hence we need to check if any value is not equal to 0 to validate that it does indeed not exist
-        if (sellOrders[subOrderHash].trader != address(0)) {
-            revert("Sell Order already registered. Identical sellOrders disallowed");
+            // Store each childOrder in childOrdersByTrader array by their hash
+            childOrdersByTrader[_trader].push(childOrderHash);
+
+            // Emit event to notify executors that a new sub order was created
+            emit LogNewChildOrderCreated(childOrderHash,
+                                         msg.sender,  // == the calling interface
+                                         _trader,
+                                         executionTime,  // Differs across siblings
+                                         _executorRewardPerChildOrder
+            );
+
+            // Increment the execution time
+            executionTime += _intervalSpan;
         }
 
-        // Store new sell order in sellOrders mapping
-        sellOrders[subOrderHash] = sellOrder;
-
-        // Store new sellOrders in sellOrdersBytrader array by their hash
-        sellOrdersBytrader[trader].push(subOrderHash);
-
-        //Emit event to notify executors that a new order was created
-        emit LogNewSellOrderCreated(subOrderHash, trader, _executorRewardPerSubOrder, _executionTime);
-
-        return subOrderHash;
+        // Return true to caller (dappInterface)
+        return true;
     }
-
-    // **************************** createSellOrder() END ******************************
+    // **************************** splitSchedule() END ******************************
 
 
 }
