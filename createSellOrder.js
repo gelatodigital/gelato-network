@@ -128,7 +128,7 @@ module.exports = () => {
                     Further sell Order struct checks:
                     ---------------------------------
         hammerTime ready:          ${parseInt(sellOrder.hammerTime) <= timestamp}
-        numSubOrders == tSV/sOS:   ${sellOrder.totalSellVolume / sellOrder.subOrderSize == sellOrder.numSubOrders}
+        numSubOrders == tSV/sOS:   ${sellOrder.totalSellVolume / sellOrder.subOrderSize == sellOrder.remainingSubOrders}
         executorRewardPerSubOrder
         is 10 finney:              ${sellOrder.executorRewardPerSubOrder == web3.utils.toWei("10", "finney")}
         ==================================================
@@ -144,12 +144,17 @@ module.exports = () => {
                     Seller TX2-ERC20: approves Gelato contract for 20 WETH
                     ------------------------------------------------------
         Approved:                  ${txApproval.logs[0].args.value}
+
                     Seller TX2-ERC20 check: Gelato's allowance for seller's ERC20
                     -------------------------------------------------------------
         Allowance:                 ${allowance}
         Allowance == sellOrder.totalSellVolume: ${allowance == parseInt(sellOrder.totalSellVolume)}
         ==================================================
         `);
+
+        // Write SELL_ORDER_HASH to tmp_file for parent process to read from
+
+
 
         return (`
                         Testing Complete
