@@ -128,7 +128,7 @@ module.exports = () => {
                     Further sell Order struct checks:
                     ---------------------------------
         hammerTime ready:          ${parseInt(sellOrder.hammerTime) <= timestamp}
-        numSubOrders == tSV/sOS:   ${sellOrder.totalSellVolume / sellOrder.subOrderSize == sellOrder.numSubOrders}
+        numSubOrders == tSV/sOS:   ${sellOrder.totalSellVolume / sellOrder.subOrderSize == sellOrder.remainingSubOrders}
         executorRewardPerSubOrder
         is 10 finney:              ${sellOrder.executorRewardPerSubOrder == web3.utils.toWei("10", "finney")}
         ==================================================
