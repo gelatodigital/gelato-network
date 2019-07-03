@@ -199,7 +199,7 @@ contract GelatoDutchX is Ownable() {
 
 
     // **************************** executeSubOrder()  *********************************
-    function executeSubOrder(bytes32 _subOrderHash)
+    function executeSubOrder(uint256 _tokenId)
         public
         returns (bool)
     {
@@ -211,7 +211,7 @@ contract GelatoDutchX is Ownable() {
             address buyToken,
             uint256 childOrderSize,
             uint256 executionTime
-        ) = Core.getChildOrder(_subOrderHash);
+        ) = Core.getChildOrder(_tokenId);
 
         bytes32 sellOrderHash = parentOrderHash;
 
@@ -416,14 +416,14 @@ contract GelatoDutchX is Ownable() {
         }
 
         // Event emissions
-        // emit LogSubOrderExecuted(_subOrderHash, trader, executorRewardPerSubOrder);
+        // emit LogSubOrderExecuted(_tokenId, trader, executorRewardPerSubOrder);
 
         // ********************** Step5: Advanced Execution Logic END **********************
 
 
         // ********************** Step6: ExecutorReward Transfer ********************
         executor.transfer(executorRewardPerSubOrder);
-        // emit LogExecutorPayout(_subOrderHash, executor, executorRewardPerSubOrder);
+        // emit LogExecutorPayout(_tokenId, executor, executorRewardPerSubOrder);
         // ********************** Step6: ExecutorReward Transfer END ****************
 
 

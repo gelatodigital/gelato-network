@@ -9,12 +9,15 @@ import './ERC721/ERC721.sol';
 contract GelatoCore is Ownable, ERC721 {
 
     // Libraries used:
+    // using Counters for Counters.Counter;
+
     // No need to add SafeMath, as we inherit it from ERC721
     // using SafeMath for uint256;
 
+    Counters.Counter private _tokenIds;
+
     struct ChildOrder {
         bytes32 parentOrderHash;
-        address trader;
         address sellToken;
         address buyToken;
         uint256 childOrderSize;
@@ -24,23 +27,19 @@ contract GelatoCore is Ownable, ERC721 {
     // Events
     event LogNewChildOrderCreated(address indexed dappInterface,  // IMPORTANT FILTER: executor's main choice
                                   address trader,  // no filter: logic via parentOrderHash
-                                  bytes32 indexed parentOrderHash,  // filters for sell orders
-                                  bytes32 childOrderHash  // no filter: can all be retrieved via parentOrderHash
+                                  uint256 indexed tokenId  // no filter: can all be retrieved via parentOrderHash
     );
 
 
     // **************************** State Variables **********************************
 
-    // childOrderHash => childOrder
-    mapping(bytes32 => ChildOrder) public childOrders;
+    // token ID => childOrder (rather than childOrderHash => childOrder)
+    mapping(uint256 => ChildOrder) public childOrders;
 
     // trader => childOrders
-    mapping(address => bytes32[]) public childOrdersByTrader;
+    mapping(address => uint256[]) public childOrdersByTrader;
 
-    // token ID => childOrder (rather than childOrderHash => childOrder)
-    mapping(uint256 => ChildOrder) public childOrders2;
-
-    // Inherited mappings from ERC721Full
+    // #### Inherited mappings from ERC721 ####
 
     // // Mapping from token ID to owner
     // mapping (uint256 => address) private _tokenOwner;
@@ -54,6 +53,8 @@ contract GelatoCore is Ownable, ERC721 {
     // // Mapping from owner to operator approvals
     // mapping (address => mapping (address => bool)) private _operatorApprovals;
 
+    // #### Inherited mappings from ERC721 END ####
+
     // **************************** State Variables END ******************************
 
     // **************************** ERC721 Constructor *******************************
@@ -62,7 +63,7 @@ contract GelatoCore is Ownable, ERC721 {
 
     // **************************** State Variable Getters ***************************
 
-    function getChildOrder(bytes32 _childOrderHash)
+    function getChildOrder(uint256 _tokenId)
         public
         view
         returns(
@@ -75,11 +76,11 @@ contract GelatoCore is Ownable, ERC721 {
 
         )
     {
-        ChildOrder memory childOrder = childOrders[_childOrderHash];
+        ChildOrder memory childOrder = childOrders[_tokenId];
         return
         (
             childOrder.parentOrderHash,
-            childOrder.trader,
+            ownerOf(_tokenId), // fetches owner of the claim token
             childOrder.sellToken,
             childOrder.buyToken,
             childOrder.childOrderSize,
@@ -135,32 +136,36 @@ contract GelatoCore is Ownable, ERC721 {
             // Instantiate (in memory) each childOrder (with its own executionTime)
             ChildOrder memory childOrder = ChildOrder(
                 _parentOrderHash,
-                _trader,
                 _sellToken,
                 _buyToken,
                 _childOrderSize,
                 executionTime  // Differs across siblings
             );
 
-            // calculate ChildOrder Hash - the executionTime differs amongst the children of the parentOrder
-            bytes32 childOrderHash = keccak256(abi.encodePacked(_parentOrderHash, executionTime));
+            // ### Mint new claim ERC721 token ###
 
-            // Prevent overwriting stored sub orders because of hash collisions
-            if (childOrders[childOrderHash].trader != address(0)) {
-                revert("childOrder already registered. Identical childOrders disallowed");
-            }
+            // Increment the current token id
+            Counters.increment(_tokenIds);
 
+            // Get a new, unique token id for the newly minted ERC721
+            uint256 tokenId = _tokenIds.current();
+
+            // Mint new ERC721 Token representing one childOrder
+            _mint(_trader, tokenId);
+
+            // ### Mint new claim ERC721 token END ###
+
+            // CONNECTION BETWEEN childOrder AND ERC721
             // Store each childOrder in childOrders state variable mapping
-            childOrders[childOrderHash] = childOrder;
+            childOrders[tokenId] = childOrder;
 
             // Store each childOrder in childOrdersByTrader array by their hash
-            childOrdersByTrader[_trader].push(childOrderHash);
+            childOrdersByTrader[_trader].push(tokenId);
 
             // Emit event to notify executors that a new sub order was created
             emit LogNewChildOrderCreated(msg.sender,  // == the calling interface
                                          _trader,
-                                         _parentOrderHash,
-                                         childOrderHash
+                                         tokenId
             );
 
             // Increment the execution time
