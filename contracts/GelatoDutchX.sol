@@ -82,12 +82,6 @@ contract GelatoDutchX is Ownable() {
     }
 
 
-    // Fallback function: reverts incoming ether payments not addressed to a payable function
-    function() external payable {
-        revert("Should not send ether to GelatoDutchX without calling one of its payable public functions");
-    }
-
-
     // **************************** State Variable Setters ******************************
     function setAuctionStartWaitingForFunding(uint256 _auctionStartWaitingForFunding)
         onlyOwner
@@ -173,7 +167,7 @@ contract GelatoDutchX is Ownable() {
         //  ***** GELATO CORE PROTOCOL INTERACTION *****
         // Step5: call Gelato Core protocol's splitSchedule() function transferring
         //  the total executor reward's worth of ether via msg.value
-        Core.splitSchedule(sellOrderHash,
+        Core.createClaims(sellOrderHash,
                                  msg.sender,  // seller
                                  _sellToken,
                                  _buyToken,
@@ -478,6 +472,12 @@ contract GelatoDutchX is Ownable() {
         DutchX.depositAndSell(_sellToken, _buyToken, _subOrderSize);
 
         return true;
+    }
+
+
+    // Fallback function: reverts incoming ether payments not addressed to a payable function
+    function() external payable {
+        revert("Should not send ether to GelatoDutchX without calling one of its payable public functions");
     }
 
 

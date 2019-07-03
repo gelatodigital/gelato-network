@@ -7,7 +7,8 @@
     * truffle exec ./createSellOrder.js
 */
 // Requires
-const Gelato = artifacts.require('Gelato');
+const GelatoCore = artifacts.require('GelatoCore');
+const GelatoDutchX = artifacts.require('GelatoDutchX');
 const SellToken = artifacts.require('EtherToken')
 const BuyToken = artifacts.require('TokenRDN')
 
@@ -25,47 +26,47 @@ const EXECUTOR_REWARD_PER_SUBORDER_UNIT = "finney";
 
 module.exports = () => {
 
-    async function testSellOrder() {
+  async function testSellOrder() {
 
-        const gelato = await Gelato.at(Gelato.address)
-        const sellTokenContract = await SellToken.at(SELL_TOKEN)
-        const accounts = await web3.eth.getAccounts()
-        const seller = accounts[9]
+    const gelato = await GelatoDutchX.at(GelatoDutchX.address)
+    const sellTokenContract = await SellToken.at(SELL_TOKEN)
+    const accounts = await web3.eth.getAccounts()
+    const seller = accounts[9]
 
-        // Selling a total of 2 WETH
-        // params of createSellOrder
-        const totalSellVolume = web3.utils.toWei(
-            TOTAL_SELL_VOLUME.toString(),
-            TOTAL_SELL_VOLUME_UNIT
-        );
+    // Selling a total of 2 WETH
+    // params of createSellOrder
+    const totalSellVolume = web3.utils.toWei(
+      TOTAL_SELL_VOLUME.toString(),
+      TOTAL_SELL_VOLUME_UNIT
+    );
 
-        const subOrderSize = web3.utils.toWei(
-            SUBORDER_SIZE.toString(),
-            SUBORDER_UNIT
-        );
+    const subOrderSize = web3.utils.toWei(
+      SUBORDER_SIZE.toString(),
+      SUBORDER_UNIT
+    );
 
-        const executorRewardPerSubOrder = web3.utils.toWei(
-            EXECUTOR_REWARD_PER_SUBORDER,
-            EXECUTOR_REWARD_PER_SUBORDER_UNIT
-        );
+    const executorRewardPerSubOrder = web3.utils.toWei(
+      EXECUTOR_REWARD_PER_SUBORDER,
+      EXECUTOR_REWARD_PER_SUBORDER_UNIT
+    );
 
-        let executorRewardTotal = SUBORDER_SIZE * (NUM_SUBORDERS + 1); // 10 finney | plus 1 because we need an extra bounty for the last withdraw
+    let executorRewardTotal = SUBORDER_SIZE * (NUM_SUBORDERS + 1); // 10 finney | plus 1 because we need an extra bounty for the last withdraw
 
-        executorRewardTotal = web3.utils.toWei(
-            executorRewardTotal.toString(),
-            "finney"
-        );
+    executorRewardTotal = web3.utils.toWei(
+      executorRewardTotal.toString(),
+      "finney"
+    );
 
-        console.log(`
+    console.log(`
                     Summon Gelato Sell Order
         ==================================================
         `);
 
-        const block = await web3.eth.getBlockNumber()
-        const blockDetails = await web3.eth.getBlock(block)
-        const timestamp = blockDetails.timestamp
-        const hammerTime = timestamp
-        console.log(`
+    const block = await web3.eth.getBlockNumber()
+    const blockDetails = await web3.eth.getBlock(block)
+    const timestamp = blockDetails.timestamp
+    const hammerTime = timestamp
+    console.log(`
                     Block info:
                     ----------
         Current Timestamp:      ${timestamp}
@@ -74,8 +75,8 @@ module.exports = () => {
         ==================================================
         `);
 
-        // User external TX 1
-        console.log(`
+    // User external TX 1
+    console.log(`
                     Create 1st Sell Order...
                     Parameters:
                     ----------
@@ -92,24 +93,24 @@ module.exports = () => {
         ==================================================
         `);
 
-        // Gelato contract call to createSellOrder
-        const txSellOrder = await gelato.createSellOrder(
-            SELL_TOKEN,
-            BUY_TOKEN,
-            totalSellVolume,
-            subOrderSize,
-            NUM_SUBORDERS,
-            hammerTime,
-            FREEZE_TIME,
-            executorRewardPerSubOrder,
-            { from: seller, value: executorRewardTotal }
-        );
+    // Gelato contract call to createSellOrder
+    const txSellOrder = await gelato.createSellOrder(
+      SELL_TOKEN,
+      BUY_TOKEN,
+      totalSellVolume,
+      subOrderSize,
+      NUM_SUBORDERS,
+      hammerTime,
+      FREEZE_TIME,
+      executorRewardPerSubOrder,
+      { from: seller, value: executorRewardTotal }
+    );
 
-        // TX 1 checks
-        const sellOrderHash = txSellOrder.logs[0].args.sellOrderHash;
-        const sellOrder = await gelato.sellOrders(sellOrderHash);
-        console.log(
-            `
+    // TX 1 checks
+    const sellOrderHash = txSellOrder.logs[0].args.sellOrderHash;
+    const sellOrder = await gelato.sellOrders(sellOrderHash);
+    console.log(
+      `
                     Seller TX1-createSellOrder on-chain struct check
                     -----------------------------------------------
         sellOrderHash: ${sellOrderHash}
@@ -134,13 +135,13 @@ module.exports = () => {
         ==================================================
         `);
 
-        // User external TX 2 and TX2 checks
-        const txApproval = await sellTokenContract.approve(Gelato.address, totalSellVolume, {
-            from: seller
-        });
-        const allowance = await sellTokenContract.allowance(seller, Gelato.address);
+    // User external TX 2 and TX2 checks
+    const txApproval = await sellTokenContract.approve(Gelato.address, totalSellVolume, {
+      from: seller
+    });
+    const allowance = await sellTokenContract.allowance(seller, Gelato.address);
 
-        console.log(`
+    console.log(`
                     Seller TX2-ERC20: approves Gelato contract for 20 WETH
                     ------------------------------------------------------
         Approved:                  ${txApproval.logs[0].args.value}
@@ -152,11 +153,11 @@ module.exports = () => {
         ==================================================
         `);
 
-        // Write SELL_ORDER_HASH to tmp_file for parent process to read from
+    // Write SELL_ORDER_HASH to tmp_file for parent process to read from
 
 
 
-        return (`
+    return (`
                         Testing Complete
                         ----------------
                 Sell Order Hash:                 ${sellOrderHash}
@@ -177,7 +178,7 @@ module.exports = () => {
         --------------------------------------------------
                 !!!! DO NOT FORGET THE " " around sellOrderHash !!!
         `);
-    }
+  }
 
-    testSellOrder().then(result => {console.log(result)});
+  testSellOrder().then(result => {console.log(result)});
 }

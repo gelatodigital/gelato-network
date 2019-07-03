@@ -31,6 +31,8 @@ contract GelatoCore is Ownable, ERC721 {
                                   uint256 indexed tokenId  // no filter: can all be retrieved via parentOrderHash
     );
 
+    event LogTokenBurned(uint256 indexed tokenId);
+
 
     // **************************** State Variables **********************************
 
@@ -95,7 +97,7 @@ contract GelatoCore is Ownable, ERC721 {
 
 
     // **************************** splitSchedule() ******************************
-    function splitSchedule(bytes32 _parentOrderHash,
+    function createClaims(bytes32 _parentOrderHash,
                            address _trader,
                            address _sellToken,
                            address _buyToken,
@@ -180,6 +182,15 @@ contract GelatoCore is Ownable, ERC721 {
         return true;
     }
     // **************************** splitSchedule() END ******************************
+
+    function burnClaim(uint256 tokenId)
+        public
+    {
+        _burn(tokenId);
+        emit LogTokenBurned(tokenId);
+    }
+
+
 
 }
 
