@@ -17,6 +17,7 @@ contract GelatoCore is Ownable, ERC721 {
     Counters.Counter private _tokenIds;
 
     struct ChildOrder {
+        address gelatoInterface;
         bytes32 parentOrderHash;
         address sellToken;
         address buyToken;
@@ -67,6 +68,7 @@ contract GelatoCore is Ownable, ERC721 {
         public
         view
         returns(
+            address gelatoInterface,
             bytes32 parentOrderHash,
             address trader,
             address sellToken,
@@ -79,6 +81,7 @@ contract GelatoCore is Ownable, ERC721 {
         ChildOrder memory childOrder = childOrders[_tokenId];
         return
         (
+            childOrder.gelatoInterface,
             childOrder.parentOrderHash,
             ownerOf(_tokenId), // fetches owner of the claim token
             childOrder.sellToken,
@@ -128,13 +131,14 @@ contract GelatoCore is Ownable, ERC721 {
 
 
         // Local variable for reassignments to the executionTimes of
-        //  sibling child orders because the former differ amongst the latter.
+        // sibling child orders because the former differ amongst the latter.
         uint256 executionTime = _executionTime;
 
         // Create all childOrders
         for (uint256 i = 0; i < _numChildOrders; i++) {
             // Instantiate (in memory) each childOrder (with its own executionTime)
             ChildOrder memory childOrder = ChildOrder(
+                msg.sender,
                 _parentOrderHash,
                 _sellToken,
                 _buyToken,

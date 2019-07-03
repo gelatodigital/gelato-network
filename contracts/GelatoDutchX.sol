@@ -205,6 +205,7 @@ contract GelatoDutchX is Ownable() {
     {
         // Step1: get subOrder to be executed from Gelato Core
         (
+            address gelatoInterface,
             bytes32 parentOrderHash,
             address trader,
             address sellToken,
@@ -213,12 +214,13 @@ contract GelatoDutchX is Ownable() {
             uint256 executionTime
         ) = Core.getChildOrder(_tokenId);
 
-        bytes32 sellOrderHash = parentOrderHash;
+        // require interface address to be the same as this addresss
+        require(gelatoInterface == address(this));
 
+        bytes32 sellOrderHash = parentOrderHash;
 
         // Step2: point to sellOrderState in storage. This gets updated later.
         SellOrderState storage sellOrderState = sellOrderStates[sellOrderHash];
-
 
         // Local variables for readability
         address payable executor = msg.sender;
