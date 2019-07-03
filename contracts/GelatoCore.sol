@@ -16,7 +16,6 @@ contract GelatoCore is Ownable() {
         address buyToken;
         uint256 childOrderSize;
         uint256 executionTime;
-        uint256 executorRewardPerChildOrder;
     }
 
     // Events
@@ -24,17 +23,7 @@ contract GelatoCore is Ownable() {
                                   address trader,  // no filter: logic via parentOrderHash
                                   bytes32 indexed parentOrderHash,  // filters for sell orders
                                   bytes32 childOrderHash,  // no filter: can all be retrieved via parentOrderHash
-                                  uint256 indexed executionTime,  // filters for execution time
-                                  uint256 executorRewardPerChildOrder,  // no filter: logic via dappInterface
-    );
-    event LogChildOrderExecuted(bytes32 indexed childOrderHash,
-                                address indexed trader,
-                                address indexed executor,
-                                uint256 executorRewardPerChildOrder
-    );
-    event LogExecutorPayout(bytes32 indexed childOrderHash,
-                            address payable indexed executor,
-                            uint256 indexed executorRewardPerChildOrder
+                                  uint256 indexed executionTime // filters for execution time
     );
 
 
@@ -49,6 +38,18 @@ contract GelatoCore is Ownable() {
     // **************************** State Variables END ******************************
 
 
+    // **************************** State Variable Getters ******************************
+
+    function getChildOrder(_childOrderHash)
+        public
+        returns(ChildOrder childOrder)
+    {
+        childOrder = childOrders[_childOrderHash];
+    }
+
+    // **************************** State Variable Getters END ******************************
+
+
     // **************************** splitSchedule() ******************************
     function splitSchedule(bytes32 _parentOrderHash,
                            address _trader,
@@ -58,11 +59,9 @@ contract GelatoCore is Ownable() {
                            uint256 _numChildOrders,
                            uint256 _childOrderSize,
                            uint256 _executionTime,
-                           uint256 _intervalSpan,
-                           uint256 _executorRewardPerChildOrder
+                           uint256 _intervalSpan
     )
-        public
-        payable
+        external
         returns (bool)
     {
         // Zero value preventions
@@ -76,21 +75,16 @@ contract GelatoCore is Ownable() {
         /* Invariants requirements
             * 1: childOrderSizes from one parent order are constant.
                 * totalOrderVolume == numChildOrders * childOrderSize.
-            * 2: executorRewardPerChildOrder from one parent order is constant.
-                * msg.value == numChildOrders * executorRewardPerChildOrder
         */
 
-        // @DEV: should cap the number of child orders possible after benchmarking gas usage
+        // @DEV: capping number of child orders should be done at Gelato Interface Level
+        //  after benchmarking by interface devs
 
         // Invariant1: Constant childOrderSize
         require(_totalOrderVolume == _numChildOrders.mul(_childOrderSize),
             "Failed Invariant1: totalOrderVolume = numChildOrders * childOrderSize"
         );
 
-        // Invariants2: Executor reward per childOrder and tx endowment checks
-        require(msg.value == _numChildOrders.mul(_executorRewardPerChildOrder),
-            "Failed Invariant2: msg.value == numChildOrders * executorRewardPerChildOrder"
-        );
 
         // Local variable for reassignments to the executionTimes of
         //  sibling child orders because the former differ amongst the latter.
@@ -105,8 +99,7 @@ contract GelatoCore is Ownable() {
                 _sellToken,
                 _buyToken,
                 _childOrderSize,
-                executionTime,  // Differs across siblings
-                _executorRewardPerChildOrder
+                executionTime  // Differs across siblings
             );
 
             // calculate ChildOrder Hash - the executionTime differs amongst the children of the parentOrder
@@ -128,7 +121,6 @@ contract GelatoCore is Ownable() {
                                          _trader,
                                          _parentOrderHash,
                                          childOrderHash,
-                                         _executorRewardPerChildOrder,
                                          executionTime  // Differs across siblings
 
             );
@@ -141,7 +133,6 @@ contract GelatoCore is Ownable() {
         return true;
     }
     // **************************** splitSchedule() END ******************************
-
 
 }
 

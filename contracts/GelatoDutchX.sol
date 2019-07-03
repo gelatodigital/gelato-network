@@ -12,25 +12,37 @@ contract GelatoDutchX is Ownable() {
     // Libraries used:
     using SafeMath for uint256;
 
-    struct SellOrder {
-        bool lastAuctionWasWaiting;
-        uint256 remainingSubOrders;
+    struct SellOrderState {
+        bool lastAuctionWasWaiting;  // default: false
         uint256 lastAuctionIndex;  // default: 0
-        uint256 actualLastSubOrderAmount;
+        uint256 remainingSubOrders;  // default: == numSubOrders
+        uint256 actualLastSubOrderAmount;  // default: 0
     }
 
 
     // Events
     event LogNewSellOrderCreated(bytes32 indexed sellOrderHash,
                                  address indexed dappInterface,  // filtering for contract events possible on default?
-                                 address indexed seller,
-                                 uint256 executorRewardPerSubOrder
+                                 address seller,
+                                 // so executors can search for lucrative interfaces:
+                                 uint256 indexed executorRewardPerSubOrder
     );
-    event LogNumDen(uint indexed num, uint indexed den);
-
+    event LogNumDen(uint256 indexed num, uint256 indexed den);
     event LogActualSubOrderAmount(uint256 indexed subOrderAmount,
                                   uint256 indexed actualSubOrderAmount,
                                   uint256 indexed fee
+    );
+    event LogSubOrderExecuted(bytes32 indexed subOrderHash,
+                              address indexed trader,
+                              address indexed executor,
+                              uint256 executorRewardPerSubOrder
+    );
+    event LogExecutorPayout(bytes32 indexed subOrderHash,
+                            address payable indexed executor,
+                            uint256 indexed executorRewardPerSubOrder
+    );
+    event LogExecutorRewardUpdate(uint256 indexed dappInterface,
+                                  uint256 indexed executorRewardPerSubOrder
     );
 
 
@@ -40,13 +52,13 @@ contract GelatoDutchX is Ownable() {
     GelatoCore public GelatoCore;
     DutchExchange public DutchX;
 
-    // Find unique sellOrder with sellOrderHash
-    mapping(bytes32 => SellOrder) public sellOrders;
+    // sellOrderHash => SellOrderState struct
+    mapping(bytes32 => SellOrderState) public sellOrderStates;
 
-    // Find all sellOrders of one single seller
+    // Seller => array of sellOrderHash(es)
     mapping(address => bytes32[]) public sellOrdersBySeller;
 
-    // Constants that are set during contract construction
+    // Constants that are set during contract construction and updateable via setters
     uint256 public auctionStartWaitingForFunding;
     uint256 public executorRewardPerSubOrder;
 
@@ -68,7 +80,13 @@ contract GelatoDutchX is Ownable() {
     }
 
 
-    // **************************** Updateability ******************************
+    // Fallback function: reverts incoming ether payments not addressed to a payable function
+    function() external payable {
+        revert("Should not send ether to GelatoDutchX without calling one of its payable public functions");
+    }
+
+
+    // **************************** State Variable Setters ******************************
     function setAuctionStartWaitingForFunding(uint256 _auctionStartWaitingForFunding)
         onlyOwner
         external
@@ -81,8 +99,10 @@ contract GelatoDutchX is Ownable() {
         external
     {
         executorRewardPerSubOrder = _executorRewardPerSubOrder;
+        emit LogExecutorRewardPerSubOrderUpdate(address(this), executorRewardPerSubOrder);
     }
-    // **************************** Updateability END ******************************
+    // **************************** State Variable Setters END ******************************
+
 
 
     // **************************** splitSellOrder() ******************************
@@ -94,37 +114,40 @@ contract GelatoDutchX is Ownable() {
                             uint256 _executionTime,
                             uint256 _intervalSpan
     )
-        public
+        external
         payable
         returns (bytes32 sellOrderHash)
 
     {
         // Prevention of zero values is done in Gelato Core protocol
 
+        // @DEV: capping number of sub orders should be done at Gelato Interface Level
+        //  after benchmarking by interface devs
         /* Step1: Invariant Requirements
             * Handled by Core protocol:
                 * 1: subOrderSizes from one Sell Order are constant.
                     * totalSellVolume == numSubOrders * subOrderSize.
-                * 2: executorRewardPerSubOrder from one Sell Order is constant.
-                    * msg.value == numSubOrders * executorRewardPerSubOrder
             * Handled by Gelato-DutchX-Interface
-                * 3: executorRewardPerSubOrder meets threshold
-                    * executorRewardPerSubOrder == executorRewardPerSubOrder
+                * 2: The caller transfers the correct amount of ether as reward endowment
+                    * msg.value == numSubOrders * executorRewardPerSubOrder
         */
-        require(msg.value == executorRewardPerSubOrder,
-            "Failed Invariant3: msg.value == executorRewardPerSubOrder"
+        // Invariants2: Executor reward per subOrder and tx endowment checks
+        require(msg.value == _numSubOrders.mul(executorRewardPerSubOrder),
+            "Failed Invariant2: msg.value == numSubOrders * executorRewardPerSubOrder"
         );
 
+
         // Step2: Instantiate new DutchX-specific sell order
-        SellOrder memory sellOrder = SellOrder(
+        SellOrderState memory sellOrderState = SellOrderState(
             false,  // default: lastAuctionWasWaiting
-            _numSubOrders,  // default: remainingSubOrders
             0,  // default: lastAuctionIndex
+            _numSubOrders,  // default: remainingSubOrders
             0  // default: actualLastSubOrderAmount
         );
 
-        // Step3: hash sell order to yield core protocol's parentOrderHash
-        bytes32 sellOrderHash = keccak256(abi.encodePacked(seller,
+
+        // Step3: hash sell order: yields core protocol's parentOrderHash
+        bytes32 sellOrderHash = keccak256(abi.encodePacked(msg.sender,  //seller
                                                            _sellToken,
                                                            _buyToken,
                                                            _totalSellVolume,
@@ -133,21 +156,20 @@ contract GelatoDutchX is Ownable() {
                                                            _executionTime,
                                                            _intervalSpan)
         );
-
         // Prevent overwriting stored sub orders because of hash collisions
-        if (sellOrders[sellOrderHash].seller != address(0)) {
+        if (sellOrderStates[sellOrderHash].seller != address(0)) {
             revert("Sell Order already registered. Identical sellOrders disallowed");
         }
 
-        // Step4: Write to GelatoDutchX storage
-        // Store new sell order in sellOrders mapping
-        sellOrders[sellOrderHash] = sellOrder;
 
-        // Store new sellOrders in sellOrdersBySeller array by their hash
-        sellOrdersBySeller[seller].push(sellOrderHash);
+        // Step4: Update GelatoDutchX state variables
+        sellOrderStates[sellOrderHash] = sellOrderState;
+        sellOrdersBySeller[msg.sender].push(sellOrderHash);
 
-        // Step5: call Gelato Core protocol's splitSchedule() function
+
         //  ***** GELATO CORE PROTOCOL INTERACTION *****
+        // Step5: call Gelato Core protocol's splitSchedule() function transferring
+        //  the total executor reward's worth of ether via msg.value
         GelatoCore.splitSchedule(sellOrderHash,
                                  msg.sender,  // seller
                                  _sellToken,
@@ -158,333 +180,325 @@ contract GelatoDutchX is Ownable() {
                                  _executionTime,
                                  _intervalSpan
         );
-
         //  *** GELATO CORE PROTOCOL INTERACTION END ***
 
-        // Emit New Sell Order to link to its suborder constituents on the core protocol
+
+        // Step6: Emit New Sell Order to link to its suborder constituents on the core protocol
         emit LogNewSellOrderCreated(sellOrderHash,  // Link to core protocol suborders
                                     address(this),  // embeds executors' decision-making
-                                    seller,         // filter for interface users
+                                    msg.sender,         // filter for sellers
                                     _executorRewardPerSubOrder
         );
-
     }
 
     // **************************** splitSellOrder() END ******************************
 
-    // **************************** executeSubOrderAndWithdraw()  *********************************
 
 
-    function executeSubOrderAndWithdraw(bytes32 sellOrderHash)
+    // **************************** executeSubOrder()  *********************************
+    function executeSubOrder(bytes32 _subOrderHash)
         public
-        returns (bool success)
+        returns (bool)
     {
-        SellOrder storage subOrder = sellOrders[sellOrderHash];
+        // Step1: get subOrder to be executed from Gelato Core
+        SubOrder memory subOrder = GelatoCore.getChildOrder(_subOrderHash);
+        bytes32 memory sellOrderHash = subOrder.parentOrderHash;
 
-        // Local variables
 
-        // Tx executor
-        address payable executor = msg.sender;
+        // Step2: point to sellOrderState in storage. This gets updated later.
+        SellOrderState storage sellOrderState = sellOrderStates[sellOrderHash];
 
-        // default: false
-        bool lastAuctionWasWaiting = subOrder.lastAuctionWasWaiting;
 
-        // Default to 0 for first execution;
-        uint256 lastAuctionIndex = subOrder.lastAuctionIndex;
+        // Local variables for readability
+        address payable memory executor = msg.sender;
+        bool memory lastAuctionWasWaiting = sellOrderState.lastAuctionWasWaiting;  // default: false
+        uint256 memory lastAuctionIndex = sellOrderState.lastAuctionIndex;  // default: 0
+        // SubOrderAmount - fee paid to the DutchX of last executed sellOrderState
+        uint256 memory actualLastSubOrderAmount = sellOrderState.actualLastSubOrderAmount;  // default: 0
 
-        // Fetches current auction index from DutchX
-        uint256 newAuctionIndex = DutchX.getAuctionIndex(subOrder.buyToken, subOrder.sellToken);
 
-        // SubOrderAmount - fee paid to the DutchX of last executed subOrder
-        uint256 actualLastSubOrderAmount = subOrder.actualLastSubOrderAmount;
-
-        // How many executions are left
-        uint256 remainingSubOrders = subOrder.remainingSubOrders;
-
-        /* Basic Execution Logic
-            * Require that subOrder is ready to be executed based on time
+        // ********************** Step3: Basic Execution Logic **********************
+        /* Step4: Basic Execution Logic
+            * Require that sellOrderState is ready to be executed based on time
             * Require that seller has ERC20 balance
             * Require that Gelato has matching seller's ERC20 allowance
         */
-
         // Execute if: It's executionTime !
         require(subOrder.executionTime <= now,
             "Failed: You called before scheduled execution time"
         );
-
-        // Execute only if at least one remaining Withdrawal exists, after that do not execute anymore
-        // @Luis, this acts as the "complete" bool
-        require(subOrder.remainingWithdrawals >= 1, 'Failed: Sell Order already completed. All subOrders executed and withdrawn');
-
-        // Check whether there are still remaining subOrders left to be executed
-        if (subOrder.remainingSubOrders >= 1) {
-
-            // Execute if: Seller has the balance.
-            // @DEV Revisit based on payout logic
-            require(
-                // @DEV revisit adding execution reward based on payout logic
-                ERC20(subOrder.sellToken).balanceOf(subOrder.seller) >= subOrder.subOrderSize,
-                "Failed ERC balance test: Seller balance must be greater than or equal to totalSellVolume"
-            );
-
-            // Execute if: Gelato has the allowance.
-            require(
-                ERC20(subOrder.sellToken)
-                .allowance(subOrder.seller, address(this)) >= subOrder.subOrderSize,
-                "Failed ERC allowance test: Gelato allowance must be greater than or equal to totalSellVolume"
-            );
-
-            // ********************** Basic Execution Logic END **********************
+        // Execute if: Seller has the balance.
+        require(
+            ERC20(subOrder.sellToken).balanceOf(subOrder.trader) >= subOrder.childOrderSize,
+            "Failed ERC balance test: Seller balance must be greater than or equal to subOrderSize"
+        );
+        // Execute if: Gelato has the allowance.
+        require(
+            ERC20(subOrder.sellToken)
+            .allowance(subOrder.trader, address(this)) >= subOrder.childOrderSize,
+            "Failed ERC allowance test: Gelato allowance must be greater than or equal to subOrderSize"
+        );
+        // ********************** Step3: Basic Execution Logic END **********************
 
 
-            // ********************** Advanced Execution Logic **********************
+        // ********************** Step4: Fetch data from DutchX **********************
+        uint256 memory newAuctionIndex = DutchX.getAuctionIndex(subOrder.buyToken, subOrder.sellToken);
+        uint256 memory auctionStartTime = DutchX.getAuctionStart(subOrder.sellToken, subOrder.buyToken);
+        // ********************** Step4: Fetch data from DutchX END **********************
 
-            // Define if the new auction is in the Waiting period or not, defaulting to false
-            bool newAuctionIsWaiting;
 
-            // Fetch DutchX auction start time
-            uint auctionStartTime = DutchX.getAuctionStart(subOrder.sellToken, subOrder.buyToken);
+        // ********************** Step5: Advanced Execution Logic **********************
+        // Define if the new auction is in the Waiting period or not, defaulting to false
+        bool memory newAuctionIsWaiting;
 
-            // Check if we are in a Waiting period or auction running period
-            // @Dev, we need to account for latency here
-            if (auctionStartTime > now || auctionStartTime == auctionStartWaitingForFunding) {
-                newAuctionIsWaiting = true;
-            } else if (auctionStartTime < now) {
-                newAuctionIsWaiting = false;
+        // Check if we are in a Waiting period or auction running period
+        // @Dev, we need to account for latency here
+        if (auctionStartTime > now || auctionStartTime == auctionStartWaitingForFunding) {
+            newAuctionIsWaiting = true;
+        } else if (auctionStartTime < now) {
+            newAuctionIsWaiting = false;
+        }
+
+        /* Assumptions:
+            * 1: Don't sell in the same auction twice
+            @ DEV: Need to Revisit #2
+            * 2: Don't sell into an auction before the prior auction you sold into
+                  has cleared so we can withdraw safely
+        */
+        // CASE 1:
+        // Check case where lastAuctionIndex is greater than newAuctionIndex
+        require(newAuctionIndex >= lastAuctionIndex,
+            "Fatal error: Gelato auction index ahead of DutchX auction index"
+        );
+
+        // CASE 2:
+        // Either we already sold during waitingPeriod OR during the auction that followed
+        if (newAuctionIndex == lastAuctionIndex) {
+            // Case2a: Last sold during waitingPeriod1, new CANNOT sell during waitingPeriod1.
+            if (lastAuctionWasWaiting && newAuctionIsWaiting) {
+                revert("Case2a: Last sold during waitingPeriod1, new CANNOT sell during waitingPeriod1");
             }
-
-            // Assumpions:
-            // #1 Don't sell in the same auction twice
-            // #2 Don't sell into an auction before the prior auction you sold into has cleared so we can withdraw safely
-
-            // CASE 1:
-            // Check case where lastAuctionIndex is greater than newAuctionIndex
-            require(newAuctionIndex >= lastAuctionIndex, "Fatal error: Gelato auction index ahead of DutchX auction index");
-
-            // CASE 2:
-            // Either we already sold during waitingPeriod OR during the auction that followed
-            if (newAuctionIndex == lastAuctionIndex) {
-                // Case2a: Last sold during waitingPeriod1, new CANNOT sell during waitingPeriod1.
-                if (lastAuctionWasWaiting && newAuctionIsWaiting) {
-                    revert("Case2a: Last sold during waitingPeriod1, new CANNOT sell during waitingPeriod1");
-                }
-                /* Case2b: We sold during waitingPeriod1, our funds went into auction1,
-                now auction1 is running, now we DO NOT sell again during auction1, even
-                though this time our funds would go into auction2. But we wait for
-                the auction index to be incremented */
-                else if (lastAuctionWasWaiting && !newAuctionIsWaiting) {
-                    // Given new assumption of not wanting to sell in newAuction before lastAuction sold-into has finished, revert. Otherwise, holds true for not investing in same auction assupmtion
-                    revert("Case2b: Selling again before the lastAuction participation cleared disallowed");
-                }
-                /* Case2c Last sold during running auction1, new tries to sell during waiting period
-                that preceded auction1 (impossible time-travel) or new tries to sell during waiting
-                period succeeding auction1 (impossible due to auction index incrementation ->
-                newAuctionIndex == lastAuctionIndex cannot be true - Gelato-DutchX indexing
-                must be out of sync) */
-                else if (!lastAuctionWasWaiting && newAuctionIsWaiting) {
-                    revert("Case2c: Fatal error: auction index incrementation out of sync");
-                }
-                // Case2d: Last sold during running auction1, new CANNOT sell during auction1.
-                else if (!lastAuctionWasWaiting && !newAuctionIsWaiting) {
-                    revert("Case2d: Selling twice into the same running auction is disallowed");
-                }
+            /* Case2b: We sold during waitingPeriod1, our funds went into auction1,
+            now auction1 is running, now we DO NOT sell again during auction1, even
+            though this time our funds would go into auction2. But we wait for
+            the auction index to be incremented */
+            else if (lastAuctionWasWaiting && !newAuctionIsWaiting) {
+                // Given new assumption of not wanting to sell in newAuction before lastAuction sold-into has finished, revert. Otherwise, holds true for not investing in same auction assupmtion
+                revert("Case2b: Selling again before the lastAuction participation cleared disallowed");
             }
-            // CASE 3:
-            // We participated at previous auction index
-            // Either we sold during previous waiting period, or during previous auction.
-            else if (newAuctionIndex == lastAuctionIndex.add(1)) {
-                /* Case3a: We sold during previous waiting period, our funds went into auction1,
-                then auction1 ran, then auction1 cleared and the auctionIndex got incremented,
-                we now sell during the next waiting period, our funds will go to auction2 */
-                if (lastAuctionWasWaiting && newAuctionIsWaiting) {
-                    // ### EFFECTS ###
-
-                    // Store change in Auction Index
-                    subOrder.lastAuctionIndex = newAuctionIndex;
-
-                    // Store change in subOrder.lastAuctionWasWaiting state
-                    subOrder.lastAuctionWasWaiting = newAuctionIsWaiting;
-
-                    // Decrease remainingSubOrders
-                    subOrder.remainingSubOrders = subOrder.remainingSubOrders.sub(1);
-
-                    // @DEV: before selling, calc the acutal amount which will be sold after DutchX fee deduction to be later used in the withdraw pattern
-                    // Store the actually sold sub-order amount in the struct
-                    subOrder.actualLastSubOrderAmount = _calcActualSubOrderSize(subOrder.subOrderSize);
-
-                    // Update executionTime with freeze Time
-                    subOrder.executionTime = subOrder.executionTime.add(subOrder.intervalSpan);
-
-                    // ### EFFECTS END ###
-
-                    emit LogNewHammerTime(sellOrderHash,
-                                        subOrder.seller,
-                                        subOrder.executionTime,
-                                        subOrder.executorRewardPerSubOrder
-                    );
-
-                    // Sell
-                    _depositAndSell(subOrder.sellToken, subOrder.buyToken, subOrder.subOrderSize, subOrder.seller, sellOrderHash, subOrder.executorRewardPerSubOrder);
-                }
-                /* Case3b: We sold during previous waiting period, our funds went into auction1, then
-                auction1 ran, then auction1 cleared and the auction index was incremented,
-                , then a waiting period passed, now we are selling during auction2, our funds
-                will go into auction3 */
-                else if (lastAuctionWasWaiting && !newAuctionIsWaiting) {
-                    // ### EFFECTS ###
-
-                    // Store change in Auction Index
-                    subOrder.lastAuctionIndex = newAuctionIndex;
-
-                    // Store change in subOrder.lastAuctionWasWaiting state
-                    subOrder.lastAuctionWasWaiting = newAuctionIsWaiting;
-
-                    // Decrease remainingSubOrders
-                    subOrder.remainingSubOrders = subOrder.remainingSubOrders.sub(1);
-
-                    // @DEV: before selling, calc the acutal amount which will be sold after DutchX fee deduction to be later used in the withdraw pattern
-                    // Store the actually sold sub-order amount in the struct
-                    subOrder.actualLastSubOrderAmount = _calcActualSubOrderSize(subOrder.subOrderSize);
-
-                    // Update executionTime with freeze Time
-                    subOrder.executionTime = subOrder.executionTime.add(subOrder.intervalSpan);
-
-                    // ### EFFECTS END ###
-
-                    emit LogNewHammerTime(sellOrderHash,
-                                        subOrder.seller,
-                                        subOrder.executionTime,
-                                        subOrder.executorRewardPerSubOrder
-                    );
-
-                    // Sell
-                    _depositAndSell(subOrder.sellToken, subOrder.buyToken, subOrder.subOrderSize, subOrder.seller, sellOrderHash, subOrder.executorRewardPerSubOrder);
-                }
-                /* Case3c: We sold during auction1, our funds went into auction2, then auction1 cleared
-                and the auction index was incremented, now we are NOT selling during the ensuing
-                waiting period because our funds would also go into auction2 */
-                else if (!lastAuctionWasWaiting && newAuctionIsWaiting) {
-                    revert("Case3c: Failed: Selling twice during auction and ensuing waiting period disallowed");
-                }
-                /* Case3d: We sold during auction1, our funds went into auction2, then auction1
-                cleared and the auctionIndex got incremented, then a waiting period passed, now
-                we DO NOT sell during the running auction2, even though our funds will go to
-                auction3 because we only sell after the last auction that we contributed to
-                , in this case auction2, has been cleared and its index incremented */
-                else if (!lastAuctionWasWaiting && !newAuctionIsWaiting) {
-                    // Given new assumption of not wanting to sell in newAuction before lastAuction sold-into has finished, revert. Otherwise, holds true for not investing in same auction assupmtion
-                    revert("Case 3d: Don't sell before last auction seller participated in has cleared");
-                }
+            /* Case2c Last sold during running auction1, new tries to sell during waiting period
+            that preceded auction1 (impossible time-travel) or new tries to sell during waiting
+            period succeeding auction1 (impossible due to auction index incrementation ->
+            newAuctionIndex == lastAuctionIndex cannot be true - Gelato-DutchX indexing
+            must be out of sync) */
+            else if (!lastAuctionWasWaiting && newAuctionIsWaiting) {
+                revert("Case2c: Fatal error: auction index incrementation out of sync");
             }
-            // CASE 4:
-            // If we skipped at least one auction before trying to sell again: ALWAYS SELL
-            else if (newAuctionIndex >= lastAuctionIndex.add(2)) {
+            // Case2d: Last sold during running auction1, new CANNOT sell during auction1.
+            else if (!lastAuctionWasWaiting && !newAuctionIsWaiting) {
+                revert("Case2d: Selling twice into the same running auction is disallowed");
+            }
+        }
+        // CASE 3:
+        // We participated at previous auction index
+        // Either we sold during previous waiting period, or during previous auction.
+        else if (newAuctionIndex == lastAuctionIndex.add(1)) {
+            /* Case3a: We sold during previous waiting period, our funds went into auction1,
+            then auction1 ran, then auction1 cleared and the auctionIndex got incremented,
+            we now sell during the next waiting period, our funds will go to auction2 */
+            if (lastAuctionWasWaiting && newAuctionIsWaiting) {
                 // ### EFFECTS ###
-
                 // Store change in Auction Index
-                subOrder.lastAuctionIndex = newAuctionIndex;
+                sellOrderState.lastAuctionIndex = newAuctionIndex;
 
-                // Store change in subOrder.lastAuctionWasWaiting state
-                subOrder.lastAuctionWasWaiting = newAuctionIsWaiting;
+                // Store change in sellOrderState.lastAuctionWasWaiting state
+                sellOrderState.lastAuctionWasWaiting = newAuctionIsWaiting;
 
                 // Decrease remainingSubOrders
-                subOrder.remainingSubOrders = subOrder.remainingSubOrders.sub(1);
+                sellOrderState.remainingSubOrders = sellOrderState.remainingSubOrders.sub(1);
 
                 // @DEV: before selling, calc the acutal amount which will be sold after DutchX fee deduction to be later used in the withdraw pattern
                 // Store the actually sold sub-order amount in the struct
-                subOrder.actualLastSubOrderAmount = _calcActualSubOrderSize(subOrder.subOrderSize);
-
-                // Update executionTime with freeze Time
-                subOrder.executionTime = subOrder.executionTime.add(subOrder.intervalSpan);
-
+                sellOrderState.actualLastSubOrderAmount = _calcActualSubOrderSize(subOrder.childOrderSize);
                 // ### EFFECTS END ###
 
-                emit LogNewHammerTime(sellOrderHash,
-                                    subOrder.seller,
-                                    subOrder.executionTime,
-                                    subOrder.executorRewardPerSubOrder
+                // INTERACTION: sell on DutchX
+                _depositAndSell(subOrder.trader,
+                                subOrder.sellToken,
+                                subOrder.buyToken,
+                                subOrder.childOrderSize
                 );
-
-                // Sell
-                _depositAndSell(subOrder.sellToken, subOrder.buyToken, subOrder.subOrderSize, subOrder.seller, sellOrderHash, subOrder.executorRewardPerSubOrder);
-
             }
-            // Case 5: Unforeseen stuff
-            else {
-                revert("Case5: Fatal Error: Case5 unforeseen");
-            }
-            // ********************** Advanced Execution Logic END **********************
+            /* Case3b: We sold during previous waiting period, our funds went into auction1, then
+            auction1 ran, then auction1 cleared and the auction index was incremented,
+            , then a waiting period passed, now we are selling during auction2, our funds
+            will go into auction3 */
+            else if (lastAuctionWasWaiting && !newAuctionIsWaiting) {
+                // ### EFFECTS ###
+                // Store change in Auction Index
+                sellOrderState.lastAuctionIndex = newAuctionIndex;
 
+                // Store change in sellOrderState.lastAuctionWasWaiting state
+                sellOrderState.lastAuctionWasWaiting = newAuctionIsWaiting;
+
+                // Decrease remainingSubOrders
+                sellOrderState.remainingSubOrders = sellOrderState.remainingSubOrders.sub(1);
+
+                // @DEV: before selling, calc the acutal amount which will be sold after DutchX fee deduction to be later used in the withdraw pattern
+                // Store the actually sold sub-order amount in the struct
+                sellOrderState.actualLastSubOrderAmount = _calcActualSubOrderSize(subOrder.childOrderSize);
+                // ### EFFECTS END ###
+
+                // INTERACTION: sell on DutchX
+                _depositAndSell(subOrder.trader,
+                                subOrder.sellToken,
+                                subOrder.buyToken,
+                                subOrder.childOrderSize
+                );
+            }
+            /* Case3c: We sold during auction1, our funds went into auction2, then auction1 cleared
+            and the auction index was incremented, now we are NOT selling during the ensuing
+            waiting period because our funds would also go into auction2 */
+            else if (!lastAuctionWasWaiting && newAuctionIsWaiting) {
+                revert("Case3c: Failed: Selling twice during auction and ensuing waiting period disallowed");
+            }
+            /* Case3d: We sold during auction1, our funds went into auction2, then auction1
+            cleared and the auctionIndex got incremented, then a waiting period passed, now
+            we DO NOT sell during the running auction2, even though our funds will go to
+            auction3 because we only sell after the last auction that we contributed to
+            , in this case auction2, has been cleared and its index incremented */
+            else if (!lastAuctionWasWaiting && !newAuctionIsWaiting) {
+                // Given new assumption of not wanting to sell in newAuction before lastAuction sold-into has finished, revert. Otherwise, holds true for not investing in same auction assupmtion
+                revert("Case 3d: Don't sell before last auction seller participated in has cleared");
+            }
         }
-        // If all subOrder have been executed, mark sell Order as complete
-        else if ( remainingSubOrders == 0 )
-        {
-            subOrder.complete = true;
+        // CASE 4:
+        // If we skipped at least one auction before trying to sell again: ALWAYS SELL
+        else if (newAuctionIndex >= lastAuctionIndex.add(2)) {
+            // ### EFFECTS ###
+            // Store change in Auction Index
+            sellOrderState.lastAuctionIndex = newAuctionIndex;
 
-            emit LogSellOrderComplete(sellOrderHash,
-                                      subOrder.seller,
-                                      executor
+            // Store change in sellOrderState.lastAuctionWasWaiting state
+            sellOrderState.lastAuctionWasWaiting = newAuctionIsWaiting;
+
+            // Decrease remainingSubOrders
+            sellOrderState.remainingSubOrders = sellOrderState.remainingSubOrders.sub(1);
+
+            // @DEV: before selling, calc the acutal amount which will be sold after DutchX fee deduction to be later used in the withdraw pattern
+            // Store the actually sold sub-order amount in the struct
+            sellOrderState.actualLastSubOrderAmount = _calcActualSubOrderSize(subOrder.childOrderSize);
+            // ### EFFECTS END ###
+
+            // INTERACTION: sell on DutchX
+            _depositAndSell(subOrder.trader,
+                            subOrder.sellToken,
+                            subOrder.buyToken,
+                            subOrder.childOrderSize
             );
         }
-
-        // ********************** Withdraw from DutchX **********************
-
-        // Only enter after first sub-order sale
-        // Only enter if last auction the seller participated in has cleared
-        // Only enter if seller has not called withdrawManually
-        if (lastAuctionIndex != 0 && subOrder.remainingWithdrawals == remainingSubOrders.add(1) )
-        {
-
-            // Mark withdraw as completed
-            subOrder.remainingWithdrawals = subOrder.remainingWithdrawals.sub(1);
-
-            // @DEV use memory value lastAuctionIndex & actualLastSubOrderAmount as we already incremented storage values
-            _withdraw(subOrder.seller, subOrder.sellToken, subOrder.buyToken, lastAuctionIndex, actualLastSubOrderAmount);
+        // Case 5: Unforeseen stuff
+        else {
+            revert("Case5: Fatal Error: Case5 unforeseen");
         }
 
-        // ********************** Withdraw from DutchX END **********************
+        // Event emissions
+        emit LogSubOrderExecuted(_subOrderHash, subOrder.trader, executor, executorRewardPerSubOrder);
 
-        // ********************** ExecutorReward Transfer ********************
+        // ********************** Step5: Advanced Execution Logic END **********************
 
-        executor.transfer(subOrder.executorRewardPerSubOrder);
 
-        // ********************** ExecutorReward Transfer END ****************
+        // ********************** Step6: ExecutorReward Transfer ********************
+        executor.transfer(executorRewardPerSubOrder);
+        emit LogExecutorPayout(_subOrderHash, executor, executorRewardPerSubOrder);
+        // ********************** Step6: ExecutorReward Transfer END ****************
+
+
+        // Step7: return success
+        return true;
+    }
+    // **************************** executeSubOrder() END *********************************
+
+
+    // Helper Functions
+    // Calculate sub order size accounting for current DutchX liquidity contribution fee.
+    function _calcActualSubOrderSize(uint256 _sellAmount)
+        public
+        returns(uint256 actualSellAmount)
+    {
+        // Get current fee ratio of Gelato contract
+        uint256 num;
+        uint256 den;
+
+        // Returns e.g. num = 1, den = 500 for 0.2% fee
+        (num, den) = DutchX.getFeeRatio(address(this));
+
+        // Calc fee amount
+        uint256 fee = _sellAmount.mul(num).div(den);
+
+        emit LogNumDen(num, den);
+
+        // Calc actual Sell Amount
+        uint256 actualSellAmount = _sellAmount.sub(fee);
+
+        emit LogActualSubOrderAmount(_sellAmount, actualSellAmount, fee);
+    }
+
+    // Deposit and sell on the DutchX
+    function _depositAndSell(address _seller,
+                             address _sellToken,
+                             address _buyToken,
+                             uint256 _subOrderSize
+    )
+        private
+        returns(bool)
+    {
+        // @DEV: before selling, transfer the ERC20 tokens from the user to the gelato contract
+        ERC20(_sellToken).transferFrom(_seller, address(this), _subOrderSize);
+
+        // @DEV: before selling, approve the DutchX to extract the ERC20 Token from this contract
+        ERC20(_sellToken).approve(address(DutchX), _subOrderSize);
+
+        // @DEV deposit and sell on the DutchX
+        DutchX.depositAndSell(_sellToken, _buyToken, _subOrderSize);
 
         return true;
     }
 
-    function withdrawManually(bytes32 _sellOrderHash)
-    public
+
+    // Deprecated Withdrawal functions
+    /*function withdrawManually(bytes32 _sellOrderHash)
+        public
     {
-        SellOrder storage subOrder = sellOrders[_sellOrderHash];
+        SellOrderState storage sellOrderState = sellOrders[_sellOrderHash];
 
         // Check if msg.sender is equal seller
         // @Kalbo: Do we really need that or should we make everyone be able to withdraw on behalf of a user?
-        require(msg.sender == subOrder.seller, 'Only the seller of the sellOrder can call this function');
+        require(msg.sender == subOrder.trader, 'Only the seller of the sellOrderState can call this function');
 
         // Check if tx executor hasnt already withdrawn the funds
-        require(subOrder.remainingSubOrders.add(1) == subOrder.remainingWithdrawals, 'Your funds from the last cleared auction you participated in were already withdrawn to your account');
+        require(sellOrderState.remainingSubOrders.add(1) == sellOrderState.remainingWithdrawals, 'Your funds from the last cleared auction you participated in were already withdrawn to your account');
 
         // Fetch price of last participated in and cleared auction using lastAuctionIndex
-        uint num;
-        uint den;
+        uint256 num;
+        uint256 den;
 
         // Ex: num = 1, den = 250
-        (num, den) = DutchX.closingPrices(subOrder.sellToken, subOrder.buyToken, subOrder.lastAuctionIndex);
+        (num, den) = DutchX.closingPrices(subOrder.sellToken, subOrder.buyToken, sellOrderState.lastAuctionIndex);
         // Check if the last auction the seller participated in has cleared
 
         // @DEV Check line 442 in DutchX contract
         require(den != 0, 'Last auction did not clear thus far, you have to wait');
 
         // Mark withdraw as completed
-        subOrder.remainingWithdrawals = subOrder.remainingWithdrawals.sub(1);
+        sellOrderState.remainingWithdrawals = sellOrderState.remainingWithdrawals.sub(1);
 
         // Initiate withdraw
-        _withdraw(subOrder.seller, subOrder.sellToken, subOrder.buyToken, subOrder.lastAuctionIndex, subOrder.actualLastSubOrderAmount);
-    }
+        _withdraw(subOrder.trader, subOrder.sellToken, subOrder.buyToken, sellOrderState.lastAuctionIndex, sellOrderState.actualLastSubOrderAmount);
+    }*/
 
 
-    // Internal func that withdraws funds from DutchX to the sellers account
+    /* Internal func that withdraws funds from DutchX to the sellers account
     function _withdraw(address _seller, address _sellToken, address _buyToken, uint256 _lastAuctionIndex, uint256 _actualLastSubOrderAmount)
         public
     {
@@ -501,62 +515,12 @@ contract GelatoDutchX is Ownable() {
 
         emit LogWithdrawComplete(_seller, withdrawAmount, _buyToken);
 
-    }
-
-    // Deposit and sell on the DutchX
-    function _depositAndSell(address _sellToken,
-                            address _buyToken,
-                            uint256 _subOrderSize,
-                            address _seller,
-                            bytes32 _sellOrderHash,
-                            uint256 _executorRewardPerSubOrder
-    )
-        private
-        returns(bool)
-    {
-        // @DEV: before selling, transfer the ERC20 tokens from the user to the gelato contract
-        ERC20(_sellToken).transferFrom(_seller, address(this), _subOrderSize);
-
-        // @DEV: before selling, approve the DutchX to extract the ERC20 Token from this contract
-        ERC20(_sellToken).approve(address(DutchX), _subOrderSize);
-
-        // @DEV deposit and sell on the DutchX
-        DutchX.depositAndSell(_sellToken, _buyToken, _subOrderSize);
-
-        emit LogSubOrderExecuted(_sellOrderHash, _seller, msg.sender, _executorRewardPerSubOrder);
-
-        return true;
-    }
-
-    function _calcActualSubOrderSize(uint _sellAmount)
-        public
-        returns(uint)
-    {
-        // Get current fee ratio of Gelato contract
-        uint num;
-        uint den;
-
-        // Returns e.g. num = 1, den = 500 for 0.2% fee
-        (num, den) = DutchX.getFeeRatio(address(this));
-
-        // Calc fee amount
-        uint fee = _sellAmount.mul(num).div(den);
-
-        emit LogNumDen(num, den);
-
-        // Calc actual Sell Amount
-        uint actualSellAmount = _sellAmount.sub(fee);
-
-        emit LogActualSubOrderAmount(_sellAmount, actualSellAmount, fee);
-
-        return actualSellAmount;
-
-    }
-
+    }*/
     // @DEV Calculates amount withdrawable from past, cleared auction
-    function _calcWithdrawAmount(address _sellToken, address _buyToken, uint256 _lastAuctionIndex, uint _actualLastSubOrderAmount)
+
+    /* function _calcWithdrawAmount(address _sellToken, address _buyToken, uint256 _lastAuctionIndex, uint256 _actualLastSubOrderAmount)
         public
-        returns(uint)
+        returns(uint256)
     {
         // Fetch numerator and denominator from DutchX
         uint256 num;
@@ -578,32 +542,30 @@ contract GelatoDutchX is Ownable() {
         emit LogWithdrawAmount(withdrawAmount);
 
         return withdrawAmount;
-    }
+    }*/
 
-    // Fallback function: reverts incoming ether payments not addressed to createSellOrder()
-    function() external payable {
-        revert("Should not send ether to Gelato contract without calling createSellOrder()");
-    }
 
-    // function cancelSellOrder(bytes32 sellOrderHash)
-    //     public
-    //     returns(bool)
-    // {
-    //     SellOrder storage sellOrder = sellOrders[sellOrderHash];
+    /* Deprecated cancel order function
+    function cancelSellOrder(bytes32 sellOrderHash)
+            public
+            returns(bool)
+        {
+            SellOrderState storage sellOrderState = sellOrderStates[sellOrderHash];
 
-    //     require(!sellOrder.cancelled,
-    //         "Sell order was cancelled already"
-    //     );
-    //     require(msg.sender == sellOrder.seller,
-    //         "Only seller can cancel the sell order"
-    //     );
+            require(!sellOrderState.cancelled,
+                "Sell order was cancelled already"
+            );
+            require(msg.sender == subOrder.trader,
+                "Only seller can cancel the sell order"
+            );
 
-    //     sellOrder.cancelled = true;
+            sellOrderState.cancelled = true;
 
-    //     emit LogSellOrderCancelled(sellOrderHash, sellOrder.seller);
+            emit LogSellOrderCancelled(sellOrderHash, subOrder.trader);
 
-    //     return true;
-    // }
+            return true;
+      }
+    */
 
 }
 
