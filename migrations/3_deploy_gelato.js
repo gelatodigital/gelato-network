@@ -19,5 +19,5 @@ module.exports = async function (deployer, network, accounts)
 
     await deployer.deploy(GelatoCore)
     const gelatoCore = await GelatoCore.deployed()
-    await deployer.deploy(GelatoDutchX, gelatoCore, dxProxy.address)
+    await deployer.deploy(GelatoDutchX, gelatoCore.address, dxProxy.address)
 }
