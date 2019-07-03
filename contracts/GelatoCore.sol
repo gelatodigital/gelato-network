@@ -3,11 +3,14 @@ pragma solidity >=0.4.21 <0.6.0;
 // Imports:
 import './base/Ownable.sol';
 import './base/SafeMath.sol';
+import './ERC721/ERC721.sol';
 
-contract GelatoCore is Ownable() {
+
+contract GelatoCore is Ownable, ERC721 {
 
     // Libraries used:
-    using SafeMath for uint256;
+    // No need to add SafeMath, as we inherit it from ERC721
+    // using SafeMath for uint256;
 
     struct ChildOrder {
         bytes32 parentOrderHash;
@@ -26,7 +29,7 @@ contract GelatoCore is Ownable() {
     );
 
 
-    // **************************** State Variables ******************************
+    // **************************** State Variables **********************************
 
     // childOrderHash => childOrder
     mapping(bytes32 => ChildOrder) public childOrders;
@@ -34,10 +37,30 @@ contract GelatoCore is Ownable() {
     // trader => childOrders
     mapping(address => bytes32[]) public childOrdersByTrader;
 
+    // token ID => childOrder (rather than childOrderHash => childOrder)
+    mapping(uint256 => ChildOrder) public childOrders2;
+
+    // Inherited mappings from ERC721Full
+
+    // // Mapping from token ID to owner
+    // mapping (uint256 => address) private _tokenOwner;
+
+    // // Mapping from token ID to approved address
+    // mapping (uint256 => address) private _tokenApprovals;
+
+    // // Mapping from owner to number of owned token
+    // mapping (address => Counters.Counter) private _ownedTokensCount;
+
+    // // Mapping from owner to operator approvals
+    // mapping (address => mapping (address => bool)) private _operatorApprovals;
+
     // **************************** State Variables END ******************************
 
+    // **************************** ERC721 Constructor *******************************
 
-    // **************************** State Variable Getters ******************************
+    // **************************** ERC721 Constructor END ***************************
+
+    // **************************** State Variable Getters ***************************
 
     function getChildOrder(bytes32 _childOrderHash)
         public
