@@ -3,10 +3,10 @@ pragma solidity >=0.4.21 <0.6.0;
 // Imports:
 import './base/Ownable.sol';
 import './base/SafeMath.sol';
-import './ERC721/ERC721.sol';
+import './ERC721/Claim.sol';
 
 
-contract GelatoCore is Ownable, ERC721 {
+contract GelatoCore is Ownable, Claim {
 
     // Libraries used:
     // using Counters for Counters.Counter;
@@ -16,12 +16,12 @@ contract GelatoCore is Ownable, ERC721 {
 
     Counters.Counter private _tokenIds;
 
-    struct ChildOrder {
+    struct Claim {
         address gelatoInterface;
         bytes32 parentOrderHash;
         address sellToken;
         address buyToken;
-        uint256 childOrderSize;
+        uint256 orderSize;
         uint256 executionTime;
     }
 
@@ -37,10 +37,10 @@ contract GelatoCore is Ownable, ERC721 {
     // **************************** State Variables **********************************
 
     // token ID => childOrder (rather than childOrderHash => childOrder)
-    mapping(uint256 => ChildOrder) public childOrders;
+    mapping(uint256 => Claim) public claims;
 
     // trader => childOrders
-    mapping(address => uint256[]) public childOrdersByTrader;
+    mapping(address => uint256[]) public claimsByTrader;
 
     // #### Inherited mappings from ERC721 ####
 
@@ -66,7 +66,7 @@ contract GelatoCore is Ownable, ERC721 {
 
     // **************************** State Variable Getters ***************************
 
-    function getChildOrder(uint256 _tokenId)
+    function getClaim(uint256 _tokenId)
         public
         view
         returns(
@@ -75,21 +75,21 @@ contract GelatoCore is Ownable, ERC721 {
             address trader,
             address sellToken,
             address buyToken,
-            uint256 childOrderSize,
+            uint256 orderSize,
             uint256 executionTime
 
         )
     {
-        ChildOrder memory childOrder = childOrders[_tokenId];
+        Claim memory claim = claims[_tokenId];
         return
         (
-            childOrder.gelatoInterface,
-            childOrder.parentOrderHash,
+            claim.gelatoInterface,
+            claim.parentOrderHash,
             ownerOf(_tokenId), // fetches owner of the claim token
-            childOrder.sellToken,
-            childOrder.buyToken,
-            childOrder.childOrderSize,
-            childOrder.executionTime
+            claim.sellToken,
+            claim.buyToken,
+            claim.orderSize,
+            claim.executionTime
         );
     }
 
@@ -103,7 +103,7 @@ contract GelatoCore is Ownable, ERC721 {
                            address _buyToken,
                            uint256 _totalOrderVolume,
                            uint256 _numChildOrders,
-                           uint256 _childOrderSize,
+                           uint256 _orderSize,
                            uint256 _executionTime,
                            uint256 _intervalSpan
     )
@@ -116,7 +116,7 @@ contract GelatoCore is Ownable, ERC721 {
         require(_buyToken != address(0), "buyToken: No zero addresses allowed");
         require(_totalOrderVolume != 0, "totalOrderVolume cannot be 0");
         require(_numChildOrders != 0, "numChildOrders cannot be 0");
-        require(_childOrderSize != 0, "childOrderSize cannot be 0");
+        require(_orderSize != 0, "childOrderSize cannot be 0");
 
         /* Invariants requirements
             * 1: childOrderSizes from one parent order are constant.
@@ -127,7 +127,7 @@ contract GelatoCore is Ownable, ERC721 {
         //  after benchmarking by interface devs
 
         // Invariant1: Constant childOrderSize
-        require(_totalOrderVolume == _numChildOrders.mul(_childOrderSize),
+        require(_totalOrderVolume == _numChildOrders.mul(_orderSize),
             "Failed Invariant1: totalOrderVolume = numChildOrders * childOrderSize"
         );
 
@@ -139,12 +139,12 @@ contract GelatoCore is Ownable, ERC721 {
         // Create all childOrders
         for (uint256 i = 0; i < _numChildOrders; i++) {
             // Instantiate (in memory) each childOrder (with its own executionTime)
-            ChildOrder memory childOrder = ChildOrder(
+            Claim memory claim = Claim(
                 msg.sender,
                 _parentOrderHash,
                 _sellToken,
                 _buyToken,
-                _childOrderSize,
+                _orderSize,
                 executionTime  // Differs across siblings
             );
 
@@ -161,12 +161,12 @@ contract GelatoCore is Ownable, ERC721 {
 
             // ### Mint new claim ERC721 token END ###
 
-            // CONNECTION BETWEEN childOrder AND ERC721
+            // CONNECTION BETWEEN claim AND ERC721
             // Store each childOrder in childOrders state variable mapping
-            childOrders[tokenId] = childOrder;
+            claims[tokenId] = claim;
 
             // Store each childOrder in childOrdersByTrader array by their hash
-            childOrdersByTrader[_trader].push(tokenId);
+            claimsByTrader[_trader].push(tokenId);
 
             // Emit event to notify executors that a new sub order was created
             emit LogNewChildOrderCreated(msg.sender,  // == the calling interface

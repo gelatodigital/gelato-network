@@ -204,9 +204,9 @@ contract GelatoDutchX is Ownable() {
             address trader,
             address sellToken,
             address buyToken,
-            uint256 childOrderSize,
+            uint256 orderSize,
             uint256 executionTime
-        ) = Core.getChildOrder(_tokenId);
+        ) = Core.getClaim(_tokenId);
 
         // require interface address to be the same as this addresss
         require(gelatoInterface == address(this));
@@ -238,13 +238,13 @@ contract GelatoDutchX is Ownable() {
         );
         // Execute if: Seller has the balance.
         require(
-            ERC20(sellToken).balanceOf(trader) >= childOrderSize,
+            ERC20(sellToken).balanceOf(trader) >= orderSize,
             "Failed ERC balance test: Seller balance must be greater than or equal to subOrderSize"
         );
         // Execute if: Gelato has the allowance.
         require(
             ERC20(sellToken)
-            .allowance(trader, address(this)) >= childOrderSize,
+            .allowance(trader, address(this)) >= orderSize,
             "Failed ERC allowance test: Gelato allowance must be greater than or equal to subOrderSize"
         );
         // ********************** Step3: Basic Execution Logic END **********************
@@ -328,14 +328,14 @@ contract GelatoDutchX is Ownable() {
 
                 // @DEV: before selling, calc the acutal amount which will be sold after DutchX fee deduction to be later used in the withdraw pattern
                 // Store the actually sold sub-order amount in the struct
-                sellOrderState.actualLastSubOrderAmount = _calcActualSubOrderSize(childOrderSize);
+                sellOrderState.actualLastSubOrderAmount = _calcActualSubOrderSize(orderSize);
                 // ### EFFECTS END ###
 
                 // INTERACTION: sell on DutchX
                 _depositAndSell(trader,
                                 sellToken,
                                 buyToken,
-                                childOrderSize
+                                orderSize
                 );
             }
             /* Case3b: We sold during previous waiting period, our funds went into auction1, then
@@ -355,14 +355,14 @@ contract GelatoDutchX is Ownable() {
 
                 // @DEV: before selling, calc the acutal amount which will be sold after DutchX fee deduction to be later used in the withdraw pattern
                 // Store the actually sold sub-order amount in the struct
-                sellOrderState.actualLastSubOrderAmount = _calcActualSubOrderSize(childOrderSize);
+                sellOrderState.actualLastSubOrderAmount = _calcActualSubOrderSize(orderSize);
                 // ### EFFECTS END ###
 
                 // INTERACTION: sell on DutchX
                 _depositAndSell(trader,
                                 sellToken,
                                 buyToken,
-                                childOrderSize
+                                orderSize
                 );
             }
             /* Case3c: We sold during auction1, our funds went into auction2, then auction1 cleared
@@ -396,14 +396,14 @@ contract GelatoDutchX is Ownable() {
 
             // @DEV: before selling, calc the acutal amount which will be sold after DutchX fee deduction to be later used in the withdraw pattern
             // Store the actually sold sub-order amount in the struct
-            sellOrderState.actualLastSubOrderAmount = _calcActualSubOrderSize(childOrderSize);
+            sellOrderState.actualLastSubOrderAmount = _calcActualSubOrderSize(orderSize);
             // ### EFFECTS END ###
 
             // INTERACTION: sell on DutchX
             _depositAndSell(trader,
                             sellToken,
                             buyToken,
-                            childOrderSize
+                            orderSize
             );
         }
         // Case 5: Unforeseen stuff
