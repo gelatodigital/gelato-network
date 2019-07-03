@@ -22,8 +22,7 @@ contract GelatoCore is Ownable() {
     event LogNewChildOrderCreated(address indexed dappInterface,  // IMPORTANT FILTER: executor's main choice
                                   address trader,  // no filter: logic via parentOrderHash
                                   bytes32 indexed parentOrderHash,  // filters for sell orders
-                                  bytes32 childOrderHash,  // no filter: can all be retrieved via parentOrderHash
-                                  uint256 indexed executionTime // filters for execution time
+                                  bytes32 childOrderHash  // no filter: can all be retrieved via parentOrderHash
     );
 
 
@@ -40,11 +39,29 @@ contract GelatoCore is Ownable() {
 
     // **************************** State Variable Getters ******************************
 
-    function getChildOrder(_childOrderHash)
+    function getChildOrder(bytes32 _childOrderHash)
         public
-        returns(ChildOrder childOrder)
+        view
+        returns(
+            bytes32 parentOrderHash,
+            address trader,
+            address sellToken,
+            address buyToken,
+            uint256 childOrderSize,
+            uint256 executionTime
+
+        )
     {
-        childOrder = childOrders[_childOrderHash];
+        ChildOrder memory childOrder = childOrders[_childOrderHash];
+        return
+        (
+            childOrder.parentOrderHash,
+            childOrder.trader,
+            childOrder.sellToken,
+            childOrder.buyToken,
+            childOrder.childOrderSize,
+            childOrder.executionTime
+        );
     }
 
     // **************************** State Variable Getters END ******************************
@@ -88,7 +105,7 @@ contract GelatoCore is Ownable() {
 
         // Local variable for reassignments to the executionTimes of
         //  sibling child orders because the former differ amongst the latter.
-        uint256 memory executionTime = _executionTime;
+        uint256 executionTime = _executionTime;
 
         // Create all childOrders
         for (uint256 i = 0; i < _numChildOrders; i++) {
@@ -120,9 +137,7 @@ contract GelatoCore is Ownable() {
             emit LogNewChildOrderCreated(msg.sender,  // == the calling interface
                                          _trader,
                                          _parentOrderHash,
-                                         childOrderHash,
-                                         executionTime  // Differs across siblings
-
+                                         childOrderHash
             );
 
             // Increment the execution time

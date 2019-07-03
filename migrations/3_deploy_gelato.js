@@ -2,10 +2,11 @@
 /* eslint no-undef: "error" */
 
 // Set Gelato Contract as truffle artifact
-const Gelato = artifacts.require('Gelato');
+const GelatoCore = artifacts.require('GelatoCore');
+const GelatoDutchX = artifacts.require('GelatoDutchX');
 const DutchExchangeProxy = artifacts.require('DutchExchangeProxy')
 
-module.exports = async function (deployer, network, accounts) 
+module.exports = async function (deployer, network, accounts)
 
 {
     const account = accounts[0]
@@ -15,5 +16,8 @@ module.exports = async function (deployer, network, accounts)
 
     // Deploy the Safe
     console.log('Deploying Gelato.sol with %s as the owner and %s as the DutchExchange contract', account, dxProxy.address)
-    await deployer.deploy(Gelato, dxProxy.address)
+
+    await deployer.deploy(GelatoCore)
+    const gelatoCore = await GelatoCore.deployed()
+    await deployer.deploy(GelatoDutchX, gelatoCore, dxProxy.address)
 }
