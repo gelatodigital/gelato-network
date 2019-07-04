@@ -14,7 +14,7 @@ const BuyToken = artifacts.require('TokenRDN')
 
 // @params constants: createSellOrder()
 const BUY_TOKEN = BuyToken.address // RDN
-const SELL_TOKEN = SellToken.address // RDN
+const SELL_TOKEN = SellToken.address // WETH
 const SUBORDER_SIZE = 10;
 const NUM_SUBORDERS = 2;
 const TOTAL_SELL_VOLUME = SUBORDER_SIZE * NUM_SUBORDERS;
@@ -128,27 +128,78 @@ module.exports = () => {
       tokenIds.push(tokenId)
     }
 
+    // ##############################
+    // ERC721 CRUD TESTS
+
+    console.log(`######## Testing the UPDATE FUNCION #######`)
+
+
     // Claim used for testing purposes
     const tokenId = tokenIds[0]
 
+    const claimBefore = await gelatoCore.getClaim(tokenId)
+    console.log(claimBefore)
+    console.log(`
+
+
+
+          OrderSize: ${claimBefore.orderSize.toString()}
+          Execution Time: ${claimBefore.executionTime.toString()}
+
+    `)
+
+    await gelatoCore.updateClaim(tokenId, 20, hammerTime + 99999)
+
+    const claimAfter = await gelatoCore.getClaim(tokenId)
+    console.log(`
+
+
+
+            OrderSize: ${claimAfter.orderSize.toString()}
+            Execution Time: ${claimAfter.executionTime.toString()}
+
+    `)
+
+    console.log(`######## Testing the UPDATE FUNCION END #######`)
+
+
     // Change ownership
-    console.log(`######## Swapping ownership from ${seller} to ${accounts[4]} #######`)
+    console.log(`########
+
+    Swapping ownership from ${seller} to ${accounts[4]} #######
+
+
+    `)
 
     const oldOwner = await gelatoCore.ownerOf(tokenId)
-    console.log(`Previous Owner of Token ${tokenId}: ${oldOwner}`)
+    console.log(`
+
+    Previous Owner of Token ${tokenId}: ${oldOwner}
+
+
+    `)
 
     const approval = await gelatoCore.approve(accounts[4], tokenId, { from: seller })
 
     const ownershipSwapReceipe = await gelatoCore.safeTransferFrom(seller, accounts[4], tokenId, { from: seller })
 
     const newOwner = await gelatoCore.ownerOf(tokenId)
-    console.log(`New Owner of Token ${tokenId}: ${newOwner}`)
+    console.log(`
+
+    New Owner of Token ${tokenId}: ${newOwner}
+
+
+    `)
 
     console.log(`######## Swapping ownership successful #######`)
 
     console.log(`######## Testing the BURN FUNCION #######`)
 
-    console.log(`Initiating burning of Token ${tokenId}`)
+    console.log(`
+
+    Initiating burning of Token ${tokenId}
+
+    `)
 
     const burnReceipt = await gelatoCore.burnClaim(tokenId)
 
@@ -161,7 +212,17 @@ module.exports = () => {
 
     const nullAddress = transfers[0].returnValues.to
 
-    console.log(`Token was burned: ${nullAddress === '0x0000000000000000000000000000000000000000'}`)
+    console.log(`
+
+    Token was burned: ${nullAddress === '0x0000000000000000000000000000000000000000'}
+
+    `)
+
+    console.log(`######## Testing the BURN FUNCION END #######`)
+
+    // ERC721 CRUD TESTS END
+    // ##############################
+
 
     /*
 
