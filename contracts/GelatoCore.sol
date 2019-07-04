@@ -26,7 +26,7 @@ contract GelatoCore is Ownable, Claim {
     }
 
     // Events
-    event LogNewChildOrderCreated(address indexed dappInterface,  // IMPORTANT FILTER: executor's main choice
+    event LogNewClaimCreated(address indexed dappInterface,  // IMPORTANT FILTER: executor's main choice
                                   address trader,  // no filter: logic via parentOrderHash
                                   uint256 indexed tokenId  // no filter: can all be retrieved via parentOrderHash
     );
@@ -169,7 +169,7 @@ contract GelatoCore is Ownable, Claim {
             claimsByTrader[_trader].push(tokenId);
 
             // Emit event to notify executors that a new sub order was created
-            emit LogNewChildOrderCreated(msg.sender,  // == the calling interface
+            emit LogNewClaimCreated(msg.sender,  // == the calling interface
                                          _trader,
                                          tokenId
             );

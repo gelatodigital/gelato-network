@@ -28,7 +28,8 @@ module.exports = () => {
 
   async function testSellOrder() {
 
-    const gelato = await GelatoDutchX.at(GelatoDutchX.address)
+    const gelatoDX = await GelatoDutchX.at(GelatoDutchX.address)
+    const gelatoCore = await GelatoCore.at(GelatoCore.address)
     const sellTokenContract = await SellToken.at(SELL_TOKEN)
     const accounts = await web3.eth.getAccounts()
     const seller = accounts[9]
@@ -94,21 +95,36 @@ module.exports = () => {
         `);
 
     // Gelato contract call to createSellOrder
-    const txSellOrder = await gelato.createSellOrder(
+    const txSellOrder = await gelatoDX.splitSellOrder(
       SELL_TOKEN,
       BUY_TOKEN,
       totalSellVolume,
-      subOrderSize,
       NUM_SUBORDERS,
+      subOrderSize,
       hammerTime,
       FREEZE_TIME,
-      executorRewardPerSubOrder,
       { from: seller, value: executorRewardTotal }
     );
 
+    console.log(txSellOrder)
     // TX 1 checks
+    // Fetch the newly created sell order with sellOrderHash
+
     const sellOrderHash = txSellOrder.logs[0].args.sellOrderHash;
-    const sellOrder = await gelato.sellOrders(sellOrderHash);
+
+    const sellOrder = await gelatoDX.sellOrders(sellOrderHash);
+
+    // Fetch claim in Gelato Core contract
+    const tokenId = txSellOrder.logs[0].args.tokenId;
+
+    const claim = await gelatoCore.getClaim(tokenId)
+
+    console.log("SellOrder")
+    console.log(sellOrder)
+
+    console.log("Claim")
+    console.log(claim)
+
     console.log(
       `
                     Seller TX1-createSellOrder on-chain struct check
