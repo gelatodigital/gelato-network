@@ -92,7 +92,7 @@ module.exports = () => {
         freezeTime:                ${FREEZE_TIME}
         executorRewardPerSubOrder: ${executorRewardPerSubOrder}
         ==================================================
-        `);
+    `);
 
     // Gelato contract call to createSellOrder
     const txSellOrder = await gelatoDX.splitSellOrder(
@@ -106,24 +106,65 @@ module.exports = () => {
       { from: seller, value: executorRewardTotal }
     );
 
-    console.log(txSellOrder)
-    // TX 1 checks
-    // Fetch the newly created sell order with sellOrderHash
+    const event = await gelatoDX.getPastEvents('LogNewSellOrderCreated')
 
-    const sellOrderHash = txSellOrder.logs[0].args.sellOrderHash;
+    const event2 = await gelatoCore.getPastEvents('LogNewClaimCreated')
 
-    const sellOrder = await gelatoDX.sellOrders(sellOrderHash);
 
-    // Fetch claim in Gelato Core contract
-    const tokenId = txSellOrder.logs[0].args.tokenId;
+    const claims = [];
+    const tokenIds = [];
+    const sellOrderHash = event[0].returnValues.sellOrderHash
 
-    const claim = await gelatoCore.getClaim(tokenId)
+    console.log(`SellOrderHash: ${sellOrderHash}`)
+    console.log("###########")
 
-    console.log("SellOrder")
-    console.log(sellOrder)
+    for (const event of event2) {
+      let tokenId = event.returnValues.tokenId
+      console.log("###########")
+      console.log(`TokenID: ${tokenId}`)
+      const claim = await gelatoCore.getClaim(tokenId)
+      console.log(`Owner: ${claim.trader}`)
+      claims.push(claim)
+      tokenIds.push(tokenId)
+    }
 
-    console.log("Claim")
-    console.log(claim)
+    // Claim used for testing purposes
+    const tokenId = tokenIds[0]
+
+    // Change ownership
+    console.log(`######## Swapping ownership from ${seller} to ${accounts[4]} #######`)
+
+    const oldOwner = await gelatoCore.ownerOf(tokenId)
+    console.log(`Previous Owner of Token ${tokenId}: ${oldOwner}`)
+
+    const approval = await gelatoCore.approve(accounts[4], tokenId, { from: seller })
+
+    const ownershipSwapReceipe = await gelatoCore.safeTransferFrom(seller, accounts[4], tokenId, { from: seller })
+
+    const newOwner = await gelatoCore.ownerOf(tokenId)
+    console.log(`New Owner of Token ${tokenId}: ${newOwner}`)
+
+    console.log(`######## Swapping ownership successful #######`)
+
+    console.log(`######## Testing the BURN FUNCION #######`)
+
+    console.log(`Initiating burning of Token ${tokenId}`)
+
+    const burnReceipt = await gelatoCore.burnClaim(tokenId)
+
+
+    console.log(`Burn completed`)
+
+    console.log(`Fetching new owner ...`)
+
+    const transfers = await gelatoCore.getPastEvents('Transfer')
+
+    const nullAddress = transfers[0].returnValues.to
+
+    console.log(`Token was burned: ${nullAddress === '0x0000000000000000000000000000000000000000'}`)
+
+    /*
+
 
     console.log(
       `
@@ -194,7 +235,10 @@ module.exports = () => {
         --------------------------------------------------
                 !!!! DO NOT FORGET THE " " around sellOrderHash !!!
         `);
+
+      */
+    return (`THE END`)
   }
 
-  testSellOrder().then(result => {console.log(result)});
+  testSellOrder().then(result => { console.log(result) });
 }

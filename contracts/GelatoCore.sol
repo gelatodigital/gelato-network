@@ -117,6 +117,8 @@ contract GelatoCore is Ownable, Claim {
         require(_buyToken != address(0), "buyToken: No zero addresses allowed");
         require(_orderSize != 0, "childOrderSize cannot be 0");
 
+        // REQUIRE, only whitelisted Interfaces can call this func
+
 
 
         // Instantiate (in memory) each childOrder (with its own executionTime)
@@ -178,6 +180,7 @@ contract GelatoCore is Ownable, Claim {
     function burnClaim(uint256 tokenId)
         public
     {
+        // REQUIRE, only whitelisted Interfaces can call this func
         _burn(tokenId);
         emit LogClaimBurned(tokenId);
     }
