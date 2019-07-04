@@ -132,6 +132,25 @@ contract GelatoDutchX is Ownable() {
             "Failed Invariant2: msg.value == numSubOrders * executorRewardPerSubOrder"
         );
 
+        require(_totalSellVolume != 0, "totalOrderVolume cannot be 0");
+        require(_numSubOrders != 0, "numChildOrders cannot be 0");
+
+        /* Invariants requirements
+            * 1: childOrderSizes from one parent order are constant.
+                * totalOrderVolume == numChildOrders * childOrderSize.
+        */
+
+        // @DEV: capping number of child orders should be done at Gelato Interface Level
+        //  after benchmarking by interface devs
+
+        // Invariant1: Constant childOrderSize
+        require(_totalSellVolume == _numSubOrders.mul(_subOrderSize),
+            "Failed Invariant1: totalOrderVolume = numChildOrders * childOrderSize"
+        );
+
+        // Local variable for reassignments to the executionTimes of
+        // sibling child orders because the former differ amongst the latter.
+        uint256 executionTime = _executionTime;
 
         // Step2: Instantiate new DutchX-specific sell order
         SellOrderState memory sellOrderState = SellOrderState(
@@ -149,8 +168,8 @@ contract GelatoDutchX is Ownable() {
                                                            _totalSellVolume,
                                                            _numSubOrders,
                                                            _subOrderSize,
-                                                           _executionTime,
-                                                           _intervalSpan)
+                                                           _executionTime
+                                                           )
         );
         // Prevent overwriting stored sub orders because of hash collisions
         // @DEV double check if that makes sense
@@ -163,29 +182,33 @@ contract GelatoDutchX is Ownable() {
         sellOrderStates[sellOrderHash] = sellOrderState;
         sellOrdersBySeller[msg.sender].push(sellOrderHash);
 
+        // Create all childOrders
+        for (uint256 i = 0; i < _numSubOrders; i++) {
 
-        //  ***** GELATO CORE PROTOCOL INTERACTION *****
-        // Step5: call Gelato Core protocol's splitSchedule() function transferring
-        //  the total executor reward's worth of ether via msg.value
-        Core.createClaims(sellOrderHash,
-                                 msg.sender,  // seller
-                                 _sellToken,
-                                 _buyToken,
-                                 _totalSellVolume,
-                                 _numSubOrders,
-                                 _subOrderSize,
-                                 _executionTime,
-                                 _intervalSpan
-        );
-        //  *** GELATO CORE PROTOCOL INTERACTION END ***
+            //  ***** GELATO CORE PROTOCOL INTERACTION *****
+            // Step5: call Gelato Core protocol's splitSchedule() function transferring
+            //  the total executor reward's worth of ether via msg.value
+            Core.createClaims(sellOrderHash,
+                                    msg.sender,  // seller
+                                    _sellToken,
+                                    _buyToken,
+                                    _subOrderSize,
+                                    _executionTime
+            );
+            //  *** GELATO CORE PROTOCOL INTERACTION END ***
 
 
-        // Step6: Emit New Sell Order to link to its suborder constituents on the core protocol
-        emit LogNewSellOrderCreated(sellOrderHash,  // Link to core protocol suborders
-                                    address(this),  // embeds executors' decision-making
-                                    msg.sender,         // filter for sellers
-                                    executorRewardPerSubOrder
-        );
+            // Step6: Emit New Sell Order to link to its suborder constituents on the core protocol
+            emit LogNewSellOrderCreated(sellOrderHash,  // Link to core protocol suborders
+                                        address(this),  // embeds executors' decision-making
+                                        msg.sender,         // filter for sellers
+                                        executorRewardPerSubOrder
+            );
+
+            // Increment the execution time
+            executionTime += _intervalSpan;
+
+        }
     }
 
     // **************************** splitSellOrder() END ******************************

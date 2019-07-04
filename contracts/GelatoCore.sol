@@ -105,11 +105,8 @@ contract GelatoCore is Ownable, Claim {
                            address _trader,
                            address _sellToken,
                            address _buyToken,
-                           uint256 _totalOrderVolume,
-                           uint256 _numChildOrders,
                            uint256 _orderSize,
-                           uint256 _executionTime,
-                           uint256 _intervalSpan
+                           uint256 _executionTime
     )
         external
         returns (bool)
@@ -118,69 +115,46 @@ contract GelatoCore is Ownable, Claim {
         require(_trader != address(0), "Trader: No zero addresses allowed");
         require(_sellToken != address(0), "sellToken: No zero addresses allowed");
         require(_buyToken != address(0), "buyToken: No zero addresses allowed");
-        require(_totalOrderVolume != 0, "totalOrderVolume cannot be 0");
-        require(_numChildOrders != 0, "numChildOrders cannot be 0");
         require(_orderSize != 0, "childOrderSize cannot be 0");
 
-        /* Invariants requirements
-            * 1: childOrderSizes from one parent order are constant.
-                * totalOrderVolume == numChildOrders * childOrderSize.
-        */
 
-        // @DEV: capping number of child orders should be done at Gelato Interface Level
-        //  after benchmarking by interface devs
 
-        // Invariant1: Constant childOrderSize
-        require(_totalOrderVolume == _numChildOrders.mul(_orderSize),
-            "Failed Invariant1: totalOrderVolume = numChildOrders * childOrderSize"
+        // Instantiate (in memory) each childOrder (with its own executionTime)
+        Claim memory claim = Claim(
+            msg.sender,
+            _parentOrderHash,
+            _sellToken,
+            _buyToken,
+            _orderSize,
+            _executionTime  // Differs across siblings
         );
 
+        // ### Mint new claim ERC721 token ###
 
-        // Local variable for reassignments to the executionTimes of
-        // sibling child orders because the former differ amongst the latter.
-        uint256 executionTime = _executionTime;
+        // Increment the current token id
+        Counters.increment(_tokenIds);
 
-        // Create all childOrders
-        for (uint256 i = 0; i < _numChildOrders; i++) {
-            // Instantiate (in memory) each childOrder (with its own executionTime)
-            Claim memory claim = Claim(
-                msg.sender,
-                _parentOrderHash,
-                _sellToken,
-                _buyToken,
-                _orderSize,
-                executionTime  // Differs across siblings
-            );
+        // Get a new, unique token id for the newly minted ERC721
+        uint256 tokenId = _tokenIds.current();
 
-            // ### Mint new claim ERC721 token ###
+        // Mint new ERC721 Token representing one childOrder
+        _mint(_trader, tokenId);
 
-            // Increment the current token id
-            Counters.increment(_tokenIds);
+        // ### Mint new claim ERC721 token END ###
 
-            // Get a new, unique token id for the newly minted ERC721
-            uint256 tokenId = _tokenIds.current();
+        // CONNECTION BETWEEN claim AND ERC721
+        // Store each childOrder in childOrders state variable mapping
+        claims[tokenId] = claim;
 
-            // Mint new ERC721 Token representing one childOrder
-            _mint(_trader, tokenId);
+        // Store each childOrder in childOrdersByTrader array by their hash
+        claimsByTrader[_trader].push(tokenId);
 
-            // ### Mint new claim ERC721 token END ###
+        // Emit event to notify executors that a new sub order was created
+        emit LogNewClaimCreated(msg.sender,  // == the calling interface
+                                        _trader,
+                                        tokenId
+        );
 
-            // CONNECTION BETWEEN claim AND ERC721
-            // Store each childOrder in childOrders state variable mapping
-            claims[tokenId] = claim;
-
-            // Store each childOrder in childOrdersByTrader array by their hash
-            claimsByTrader[_trader].push(tokenId);
-
-            // Emit event to notify executors that a new sub order was created
-            emit LogNewClaimCreated(msg.sender,  // == the calling interface
-                                         _trader,
-                                         tokenId
-            );
-
-            // Increment the execution time
-            executionTime += _intervalSpan;
-        }
 
         // Return true to caller (dappInterface)
         return true;
