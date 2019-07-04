@@ -298,7 +298,9 @@ module.exports = () => {
         `);
 
       */
-    return (`THE END`)
+    return (`
+    THE END
+    `)
   }
 
   testSellOrder().then(result => { console.log(result) });

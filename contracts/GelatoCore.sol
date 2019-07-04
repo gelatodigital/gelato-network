@@ -101,7 +101,7 @@ contract GelatoCore is Ownable, Claim {
 
     // **************************** splitSchedule() ******************************
     // CREATE
-    function createClaims(bytes32 _parentOrderHash,
+    function createClaim(bytes32 _parentOrderHash,
                            address _trader,
                            address _sellToken,
                            address _buyToken,
@@ -152,7 +152,8 @@ contract GelatoCore is Ownable, Claim {
         claimsByTrader[_trader].push(tokenId);
 
         // Emit event to notify executors that a new sub order was created
-        emit LogNewClaimCreated(msg.sender,  // == the calling interface
+        emit LogNewClaimCreated(
+                                        msg.sender,  // == the calling interface
                                         _trader,
                                         tokenId
         );
@@ -185,7 +186,14 @@ contract GelatoCore is Ownable, Claim {
         emit LogClaimBurned(tokenId);
     }
 
-
+    function payBounty(uint256 _bounty)
+        public
+    {
+        // Checks
+        // Check that bounty payment is greated than 0
+        require(_bounty >= 0);
+        msg.sender.transfer(_bounty);
+    }
 
 }
 

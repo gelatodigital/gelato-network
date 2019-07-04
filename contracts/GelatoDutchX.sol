@@ -196,7 +196,7 @@ contract GelatoDutchX is Ownable() {
             //  ***** GELATO CORE PROTOCOL INTERACTION *****
             // Step5: call Gelato Core protocol's splitSchedule() function transferring
             //  the total executor reward's worth of ether via msg.value
-            Core.createClaims(sellOrderHash,
+            Core.createClaim(sellOrderHash,
                                     msg.sender,  // seller
                                     _sellToken,
                                     _buyToken,
