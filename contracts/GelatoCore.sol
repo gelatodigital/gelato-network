@@ -31,7 +31,9 @@ contract GelatoCore is Ownable, Claim {
                                   uint256 indexed tokenId  // no filter: can all be retrieved via parentOrderHash
     );
 
-    event LogTokenBurned(uint256 indexed tokenId);
+    event LogClaimUpdated(uint256 indexed tokenId);
+
+    event LogClaimBurned(uint256 indexed tokenId);
 
 
     // **************************** State Variables **********************************
@@ -66,6 +68,7 @@ contract GelatoCore is Ownable, Claim {
 
     // **************************** State Variable Getters ***************************
 
+    // READ
     function getClaim(uint256 _tokenId)
         public
         view
@@ -97,6 +100,7 @@ contract GelatoCore is Ownable, Claim {
 
 
     // **************************** splitSchedule() ******************************
+    // CREATE
     function createClaims(bytes32 _parentOrderHash,
                            address _trader,
                            address _sellToken,
@@ -183,11 +187,25 @@ contract GelatoCore is Ownable, Claim {
     }
     // **************************** splitSchedule() END ******************************
 
+    // UPDATE
+    function updateClaim(uint256 tokenId,
+                         uint256 _orderSize,
+                         uint256 _executionTime
+    )
+        public
+    {
+        Claim storage claim = claims[tokenId];
+        claim.orderSize = _orderSize;
+        claim.executionTime = _executionTime;
+        emit LogClaimUpdated(tokenId);
+    }
+
+    // DELETE
     function burnClaim(uint256 tokenId)
         public
     {
         _burn(tokenId);
-        emit LogTokenBurned(tokenId);
+        emit LogClaimBurned(tokenId);
     }
 
 
