@@ -182,6 +182,14 @@ contract GelatoDutchX is Ownable() {
         sellOrderStates[sellOrderHash] = sellOrderState;
         sellOrdersBySeller[msg.sender].push(sellOrderHash);
 
+        // Step6: Emit New Sell Order to link to its suborder constituents on the core protocol
+        emit LogNewSellOrderCreated(sellOrderHash,  // Link to core protocol suborders
+                                    address(this),  // embeds executors' decision-making
+                                    msg.sender,         // filter for sellers
+                                    executorRewardPerSubOrder
+        );
+
+
         // Create all childOrders
         for (uint256 i = 0; i < _numSubOrders; i++) {
 
@@ -196,14 +204,6 @@ contract GelatoDutchX is Ownable() {
                                     _executionTime
             );
             //  *** GELATO CORE PROTOCOL INTERACTION END ***
-
-
-            // Step6: Emit New Sell Order to link to its suborder constituents on the core protocol
-            emit LogNewSellOrderCreated(sellOrderHash,  // Link to core protocol suborders
-                                        address(this),  // embeds executors' decision-making
-                                        msg.sender,         // filter for sellers
-                                        executorRewardPerSubOrder
-            );
 
             // Increment the execution time
             executionTime += _intervalSpan;

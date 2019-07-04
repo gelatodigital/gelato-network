@@ -51,7 +51,7 @@ module.exports = () => {
       EXECUTOR_REWARD_PER_SUBORDER_UNIT
     );
 
-    let executorRewardTotal = SUBORDER_SIZE * (NUM_SUBORDERS + 1); // 10 finney | plus 1 because we need an extra bounty for the last withdraw
+    let executorRewardTotal = SUBORDER_SIZE * NUM_SUBORDERS; // 10 finney
 
     executorRewardTotal = web3.utils.toWei(
       executorRewardTotal.toString(),
