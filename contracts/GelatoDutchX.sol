@@ -20,11 +20,9 @@ contract GelatoDutchX is Ownable() {
     }
 
 
-    // Events
+    // **************************** Events ******************************
     event LogNewSellOrderCreated(bytes32 indexed sellOrderHash,
-                                 address indexed dappInterface,  // filtering for contract events possible on default?
-                                 address seller,
-                                 // so executors can search for lucrative interfaces:
+                                 address indexed seller,
                                  uint256 indexed executorRewardPerSubOrder
     );
     event LogNumDen(uint256 indexed num, uint256 indexed den);
@@ -40,19 +38,15 @@ contract GelatoDutchX is Ownable() {
                             address payable indexed executor,
                             uint256 indexed executorRewardPerSubOrder
     );
-    event LogExecutorRewardUpdate(uint256 indexed dappInterface,
-                                  uint256 indexed executorRewardPerSubOrder
-    );
-
-    event LogExecutorRewardPerSubOrderUpdate(address gelatoDutchXInterface, uint256 bounty);
-
+    event LogExecutorRewardUpdate(uint256 indexed executorRewardPerSubOrder);
+    // **************************** Events END ******************************
 
 
     // **************************** State Variables ******************************
 
     // Interfaces to other contracts that are set during construction.
-    GelatoCore public Core;
-    DutchExchange public DutchX;
+    GelatoCore public gelatoCore;
+    DutchExchange public dutchExchange;
 
     // sellOrderHash => SellOrderState struct
     mapping(bytes32 => SellOrderState) public sellOrderStates;
@@ -75,8 +69,8 @@ contract GelatoDutchX is Ownable() {
     constructor(address _GelatoCoreProxy, address _DutchXProxy)
         public
     {
-        Core = GelatoCore(_GelatoCoreProxy);  // Upgradeability via Proxy
-        DutchX = DutchExchange(_DutchXProxy);  // Upgradeability via Proxy
+        gelatoCore = GelatoCore(_GelatoCoreProxy);  // Upgradeability via Proxy
+        dutchExchange = DutchExchange(_DutchXProxy);  // Upgradeability via Proxy
         auctionStartWaitingForFunding = 1;
         executorRewardPerSubOrder = 10 finney;  // ca. 2.7 USD at 273$ per ETH
     }
@@ -95,7 +89,7 @@ contract GelatoDutchX is Ownable() {
         external
     {
         executorRewardPerSubOrder = _executorRewardPerSubOrder;
-        emit LogExecutorRewardPerSubOrderUpdate(address(this), executorRewardPerSubOrder);
+        emit LogExecutorRewardPerSubOrderUpdate(executorRewardPerSubOrder);
     }
     // **************************** State Variable Setters END ******************************
 
@@ -112,47 +106,35 @@ contract GelatoDutchX is Ownable() {
     )
         external
         payable
-        returns (bytes32)
+        returns (bytes32 sellOrderHash)
 
     {
-        // Prevention of zero values is done in Gelato Core protocol
+        // Step1: 0 values prevention
+        // Further prevention of zero values is done in Gelato gelatoCore protocol
+        require(_totalSellVolume != 0, "totalSellVolume cannot be 0");
+        require(_numSubOrders != 0, "numSubOrders cannot be 0");
+        require(_intervalSpan > 0, "Interval Span cannot be 0");
+
 
         // @DEV: capping number of sub orders should be done at Gelato Interface Level
         //  after benchmarking by interface devs
-        /* Step1: Invariant Requirements
-            * Handled by Core protocol:
-                * 1: subOrderSizes from one Sell Order are constant.
-                    * totalSellVolume == numSubOrders * subOrderSize.
-            * Handled by Gelato-DutchX-Interface
-                * 2: The caller transfers the correct amount of ether as reward endowment
-                    * msg.value == numSubOrders * executorRewardPerSubOrder
+        /* Step2: Invariant Requirements
+            * 1: subOrderSizes from one Sell Order are constant.
+                * totalSellVolume == numSubOrders * subOrderSize.
+            * 2: The caller transfers the correct amount of ether as reward endowment
+                * msg.value == numSubOrders * executorRewardPerSubOrder
         */
+        // Invariant1: Constant childOrderSize
+        require(_totalSellVolume == _numSubOrders.mul(_subOrderSize),
+            "Failed Invariant1: totalOrderVolume = numChildOrders * childOrderSize"
+        );
         // Invariants2: Executor reward per subOrder and tx endowment checks
         require(msg.value == _numSubOrders.mul(executorRewardPerSubOrder),
             "Failed Invariant2: msg.value == numSubOrders * executorRewardPerSubOrder"
         );
 
-        require(_totalSellVolume != 0, "totalOrderVolume cannot be 0");
-        require(_numSubOrders != 0, "numChildOrders cannot be 0");
 
-        /* Invariants requirements
-            * 1: childOrderSizes from one parent order are constant.
-                * totalOrderVolume == numChildOrders * childOrderSize.
-        */
-
-        // @DEV: capping number of child orders should be done at Gelato Interface Level
-        //  after benchmarking by interface devs
-
-        // Invariant1: Constant childOrderSize
-        require(_totalSellVolume == _numSubOrders.mul(_subOrderSize),
-            "Failed Invariant1: totalOrderVolume = numChildOrders * childOrderSize"
-        );
-
-        // Local variable for reassignments to the executionTimes of
-        // sibling child orders because the former differ amongst the latter.
-        uint256 executionTime = _executionTime;
-
-        // Step2: Instantiate new DutchX-specific sell order
+        // Step3: Instantiate new dutchExchange-specific sell order state
         SellOrderState memory sellOrderState = SellOrderState(
             false,  // default: lastAuctionWasWaiting
             0,  // default: lastAuctionIndex
@@ -161,56 +143,55 @@ contract GelatoDutchX is Ownable() {
         );
 
 
-        // Step3: hash sell order: yields core protocol's parentOrderHash
+        // Step4: hash sell order: yields core protocol's parentOrderHash
         bytes32 sellOrderHash = keccak256(abi.encodePacked(msg.sender,  //seller
                                                            _sellToken,
                                                            _buyToken,
                                                            _totalSellVolume,
                                                            _numSubOrders,
                                                            _subOrderSize,
-                                                           _executionTime
-                                                           )
+                                                           _executionTime)
         );
         // Prevent overwriting stored sub orders because of hash collisions
         // @DEV double check if that makes sense
-        if (sellOrderStates[sellOrderHash].lastAuctionIndex != 0) {
+        if (sellOrderStates[sellOrderHash].remainingSubOrders == 0) {
             revert("Sell Order already registered. Identical sellOrders disallowed");
         }
 
 
-        // Step4: Update GelatoDutchX state variables
+        // Step5: Update GelatoDutchX state variables
         sellOrderStates[sellOrderHash] = sellOrderState;
         sellOrdersBySeller[msg.sender].push(sellOrderHash);
 
         // Step6: Emit New Sell Order to link to its suborder constituents on the core protocol
         emit LogNewSellOrderCreated(sellOrderHash,  // Link to core protocol suborders
-                                    address(this),  // embeds executors' decision-making
-                                    msg.sender,         // filter for sellers
+                                    msg.sender,  // filter for sellers
                                     executorRewardPerSubOrder
         );
 
 
-        // Create all childOrders
-        for (uint256 i = 0; i < _numSubOrders; i++) {
+        // Step 7: Create all subOrders
+        // Local variable for reassignments to the executionTimes of
+        // sibling child orders because the former differ amongst the latter.
+        uint256 executionTime = _executionTime;
 
+        for (uint256 i = 0; i < _numSubOrders; i++) {
             //  ***** GELATO CORE PROTOCOL INTERACTION *****
-            // Step5: call Gelato Core protocol's splitSchedule() function transferring
+            // Call Gelato gelatoCore protocol's mintClaim() function transferring
             //  the total executor reward's worth of ether via msg.value
-            Core.createClaims(sellOrderHash,
-                                    msg.sender,  // seller
-                                    _sellToken,
-                                    _buyToken,
-                                    _subOrderSize,
-                                    _executionTime
+            gelatoCore.mintClaim.value(msg.value)(sellOrderHash,
+                                                  msg.sender,  // seller
+                                                  _sellToken,
+                                                  _buyToken,
+                                                  _subOrderSize,
+                                                  _executionTime
             );
             //  *** GELATO CORE PROTOCOL INTERACTION END ***
 
             // Increment the execution time
             executionTime += _intervalSpan;
-
         }
     }
-
     // **************************** splitSellOrder() END ******************************
 
 
@@ -220,21 +201,19 @@ contract GelatoDutchX is Ownable() {
         public
         returns (bool)
     {
-        // Step1: get subOrder to be executed from Gelato Core
-        (
-            address gelatoInterface,
-            bytes32 parentOrderHash,
-            address trader,
-            address sellToken,
-            address buyToken,
-            uint256 orderSize,
-            uint256 executionTime
-        ) = Core.getClaim(_tokenId);
+        // Step1: get subOrder to be executed from gelatoCore
+        (address gelatoInterface,
+         bytes32 sellOrderHash,
+         address trader,
+         address sellToken,
+         address buyToken,
+         uint256 orderSize,
+         uint256 executionTime) = gelatoCore.getClaim(_tokenId);
+        // Ensure that the claim is linked to this interface
+        require(gelatoInterface == address(this),
+            "executeSubOrder: gelatoInterface != address(this)"
+        );
 
-        // require interface address to be the same as this addresss
-        require(gelatoInterface == address(this));
-
-        bytes32 sellOrderHash = parentOrderHash;
 
         // Step2: point to sellOrderState in storage. This gets updated later.
         SellOrderState storage sellOrderState = sellOrderStates[sellOrderHash];
@@ -243,7 +222,7 @@ contract GelatoDutchX is Ownable() {
         address payable executor = msg.sender;
         bool lastAuctionWasWaiting = sellOrderState.lastAuctionWasWaiting;  // default: false
         uint256 lastAuctionIndex = sellOrderState.lastAuctionIndex;  // default: 0
-        // SubOrderAmount - fee paid to the DutchX of last executed sellOrderState
+        // SubOrderAmount - fee paid to the dutchExchange of last executed sellOrderState
 
         // @DEV Unused as of now
         // uint256 actualLastSubOrderAmount = sellOrderState.actualLastSubOrderAmount;  // default: 0
@@ -273,10 +252,10 @@ contract GelatoDutchX is Ownable() {
         // ********************** Step3: Basic Execution Logic END **********************
 
 
-        // ********************** Step4: Fetch data from DutchX **********************
-        uint256 newAuctionIndex = DutchX.getAuctionIndex(buyToken, sellToken);
-        uint256 auctionStartTime = DutchX.getAuctionStart(sellToken, buyToken);
-        // ********************** Step4: Fetch data from DutchX END **********************
+        // ********************** Step4: Fetch data from dutchExchange **********************
+        uint256 newAuctionIndex = dutchExchange.getAuctionIndex(buyToken, sellToken);
+        uint256 auctionStartTime = dutchExchange.getAuctionStart(sellToken, buyToken);
+        // ********************** Step4: Fetch data from dutchExchange END **********************
 
 
         // ********************** Step5: Advanced Execution Logic **********************
@@ -300,7 +279,7 @@ contract GelatoDutchX is Ownable() {
         // CASE 1:
         // Check case where lastAuctionIndex is greater than newAuctionIndex
         require(newAuctionIndex >= lastAuctionIndex,
-            "Fatal error: Gelato auction index ahead of DutchX auction index"
+            "Fatal error: Gelato auction index ahead of dutchExchange auction index"
         );
 
         // CASE 2:
@@ -321,7 +300,7 @@ contract GelatoDutchX is Ownable() {
             /* Case2c Last sold during running auction1, new tries to sell during waiting period
             that preceded auction1 (impossible time-travel) or new tries to sell during waiting
             period succeeding auction1 (impossible due to auction index incrementation ->
-            newAuctionIndex == lastAuctionIndex cannot be true - Gelato-DutchX indexing
+            newAuctionIndex == lastAuctionIndex cannot be true - Gelato-dutchExchange indexing
             must be out of sync) */
             else if (!lastAuctionWasWaiting && newAuctionIsWaiting) {
                 revert("Case2c: Fatal error: auction index incrementation out of sync");
@@ -349,12 +328,12 @@ contract GelatoDutchX is Ownable() {
                 // Decrease remainingSubOrders
                 sellOrderState.remainingSubOrders = sellOrderState.remainingSubOrders.sub(1);
 
-                // @DEV: before selling, calc the acutal amount which will be sold after DutchX fee deduction to be later used in the withdraw pattern
+                // @DEV: before selling, calc the acutal amount which will be sold after dutchExchange fee deduction to be later used in the withdraw pattern
                 // Store the actually sold sub-order amount in the struct
                 sellOrderState.actualLastSubOrderAmount = _calcActualSubOrderSize(orderSize);
                 // ### EFFECTS END ###
 
-                // INTERACTION: sell on DutchX
+                // INTERACTION: sell on dutchExchange
                 _depositAndSell(trader,
                                 sellToken,
                                 buyToken,
@@ -376,12 +355,12 @@ contract GelatoDutchX is Ownable() {
                 // Decrease remainingSubOrders
                 sellOrderState.remainingSubOrders = sellOrderState.remainingSubOrders.sub(1);
 
-                // @DEV: before selling, calc the acutal amount which will be sold after DutchX fee deduction to be later used in the withdraw pattern
+                // @DEV: before selling, calc the acutal amount which will be sold after dutchExchange fee deduction to be later used in the withdraw pattern
                 // Store the actually sold sub-order amount in the struct
                 sellOrderState.actualLastSubOrderAmount = _calcActualSubOrderSize(orderSize);
                 // ### EFFECTS END ###
 
-                // INTERACTION: sell on DutchX
+                // INTERACTION: sell on dutchExchange
                 _depositAndSell(trader,
                                 sellToken,
                                 buyToken,
@@ -417,12 +396,12 @@ contract GelatoDutchX is Ownable() {
             // Decrease remainingSubOrders
             sellOrderState.remainingSubOrders = sellOrderState.remainingSubOrders.sub(1);
 
-            // @DEV: before selling, calc the acutal amount which will be sold after DutchX fee deduction to be later used in the withdraw pattern
+            // @DEV: before selling, calc the acutal amount which will be sold after dutchExchange fee deduction to be later used in the withdraw pattern
             // Store the actually sold sub-order amount in the struct
             sellOrderState.actualLastSubOrderAmount = _calcActualSubOrderSize(orderSize);
             // ### EFFECTS END ###
 
-            // INTERACTION: sell on DutchX
+            // INTERACTION: sell on dutchExchange
             _depositAndSell(trader,
                             sellToken,
                             buyToken,
@@ -453,7 +432,7 @@ contract GelatoDutchX is Ownable() {
 
 
     // Helper Functions
-    // Calculate sub order size accounting for current DutchX liquidity contribution fee.
+    // Calculate sub order size accounting for current dutchExchange liquidity contribution fee.
     function _calcActualSubOrderSize(uint256 _sellAmount)
         public
         returns(uint256)
@@ -463,7 +442,7 @@ contract GelatoDutchX is Ownable() {
         uint256 den;
 
         // Returns e.g. num = 1, den = 500 for 0.2% fee
-        (num, den) = DutchX.getFeeRatio(address(this));
+        (num, den) = dutchExchange.getFeeRatio(address(this));
 
         // Calc fee amount
         uint256 fee = _sellAmount.mul(num).div(den);
@@ -476,7 +455,7 @@ contract GelatoDutchX is Ownable() {
         emit LogActualSubOrderAmount(_sellAmount, actualSellAmount, fee);
     }
 
-    // Deposit and sell on the DutchX
+    // Deposit and sell on the dutchExchange
     function _depositAndSell(address _seller,
                              address _sellToken,
                              address _buyToken,
@@ -488,11 +467,11 @@ contract GelatoDutchX is Ownable() {
         // @DEV: before selling, transfer the ERC20 tokens from the user to the gelato contract
         ERC20(_sellToken).transferFrom(_seller, address(this), _subOrderSize);
 
-        // @DEV: before selling, approve the DutchX to extract the ERC20 Token from this contract
-        ERC20(_sellToken).approve(address(DutchX), _subOrderSize);
+        // @DEV: before selling, approve the dutchExchange to extract the ERC20 Token from this contract
+        ERC20(_sellToken).approve(address(dutchExchange), _subOrderSize);
 
-        // @DEV deposit and sell on the DutchX
-        DutchX.depositAndSell(_sellToken, _buyToken, _subOrderSize);
+        // @DEV deposit and sell on the dutchExchange
+        dutchExchange.depositAndSell(_sellToken, _buyToken, _subOrderSize);
 
         return true;
     }
@@ -522,10 +501,10 @@ contract GelatoDutchX is Ownable() {
         uint256 den;
 
         // Ex: num = 1, den = 250
-        (num, den) = DutchX.closingPrices(sellToken, buyToken, sellOrderState.lastAuctionIndex);
+        (num, den) = dutchExchange.closingPrices(sellToken, buyToken, sellOrderState.lastAuctionIndex);
         // Check if the last auction the seller participated in has cleared
 
-        // @DEV Check line 442 in DutchX contract
+        // @DEV Check line 442 in dutchExchange contract
         require(den != 0, 'Last auction did not clear thus far, you have to wait');
 
         // Mark withdraw as completed
@@ -536,16 +515,16 @@ contract GelatoDutchX is Ownable() {
     }*/
 
 
-    /* Internal func that withdraws funds from DutchX to the sellers account
+    /* Internal func that withdraws funds from dutchExchange to the sellers account
     function _withdraw(address _seller, address _sellToken, address _buyToken, uint256 _lastAuctionIndex, uint256 _actualLastSubOrderAmount)
         public
     {
         // Calc how much the amount of buy_tokens received in the previously participated auction
         uint256 withdrawAmount = _calcWithdrawAmount(_sellToken, _buyToken, _lastAuctionIndex, _actualLastSubOrderAmount);
 
-        // Withdraw funds from DutchX to Gelato
+        // Withdraw funds from dutchExchange to Gelato
         // @DEV uses memory value lastAuctionIndex in case execute func calls it as we already incremented storage value
-        DutchX.claimAndWithdraw(_sellToken, _buyToken, address(this), _lastAuctionIndex, withdrawAmount);
+        dutchExchange.claimAndWithdraw(_sellToken, _buyToken, address(this), _lastAuctionIndex, withdrawAmount);
 
         // Transfer Tokens from Gelato to Seller
         // ERC20.transfer(address recipient, uint256 amount)
@@ -560,16 +539,16 @@ contract GelatoDutchX is Ownable() {
         public
         returns(uint256)
     {
-        // Fetch numerator and denominator from DutchX
+        // Fetch numerator and denominator from dutchExchange
         uint256 num;
         uint256 den;
 
         // FETCH PRICE OF CLEARED ORDER WITH INDEX lastAuctionIndex
         // Ex: num = 1, den = 250
-        (num, den) = DutchX.closingPrices(_sellToken, _buyToken, _lastAuctionIndex);
+        (num, den) = dutchExchange.closingPrices(_sellToken, _buyToken, _lastAuctionIndex);
 
         // Check if the last auction the seller participated in has cleared
-        // @DEV Check line 442 in DutchX contract
+        // @DEV Check line 442 in dutchExchange contract
         // @DEV Test: Are there any other possibilities for den being 0 other than when the auction has not yet cleared?
         require(den != 0, 'Last auction did not clear thus far, withdrawal cancelled');
 

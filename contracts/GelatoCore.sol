@@ -14,10 +14,10 @@ contract GelatoCore is Ownable, Claim {
     // No need to add SafeMath, as we inherit it from ERC721
     // using SafeMath for uint256;
 
-    Counters.Counter private _tokenIds;
+    Counters.Counter private _claimIds;
 
     struct Claim {
-        address gelatoInterface;
+        address dappInterface;
         bytes32 parentOrderHash;
         address sellToken;
         address buyToken;
@@ -26,22 +26,22 @@ contract GelatoCore is Ownable, Claim {
     }
 
     // Events
-    event LogNewClaimCreated(address indexed dappInterface,  // IMPORTANT FILTER: executor's main choice
-                                  address trader,  // no filter: logic via parentOrderHash
-                                  uint256 indexed tokenId  // no filter: can all be retrieved via parentOrderHash
+    event LogNewClaimMinted(address indexed dappInterface,
+                            address indexed trader,
+                            uint256 indexed claimId
     );
 
-    event LogClaimUpdated(uint256 indexed tokenId);
+    event LogClaimUpdated(uint256 indexed claimId);
 
-    event LogClaimBurned(uint256 indexed tokenId);
+    event LogClaimBurned(uint256 indexed claimId);
 
 
     // **************************** State Variables **********************************
 
-    // token ID => childOrder (rather than childOrderHash => childOrder)
+    // claimID => Claim
     mapping(uint256 => Claim) public claims;
 
-    // trader => childOrders
+    // trader => ClaimIDs[]
     mapping(address => uint256[]) public claimsByTrader;
 
     // #### Inherited mappings from ERC721 ####
@@ -66,49 +66,18 @@ contract GelatoCore is Ownable, Claim {
 
     // **************************** ERC721 Constructor END ***************************
 
-    // **************************** State Variable Getters ***************************
 
-    // READ
-    function getClaim(uint256 _tokenId)
-        public
-        view
-        returns(
-            address gelatoInterface,
-            bytes32 parentOrderHash,
-            address trader,
-            address sellToken,
-            address buyToken,
-            uint256 orderSize,
-            uint256 executionTime
-
-        )
-    {
-        Claim memory claim = claims[_tokenId];
-        return
-        (
-            claim.gelatoInterface,
-            claim.parentOrderHash,
-            ownerOf(_tokenId), // fetches owner of the claim token
-            claim.sellToken,
-            claim.buyToken,
-            claim.orderSize,
-            claim.executionTime
-        );
-    }
-
-    // **************************** State Variable Getters END ******************************
-
-
-    // **************************** splitSchedule() ******************************
     // CREATE
-    function createClaims(bytes32 _parentOrderHash,
-                           address _trader,
-                           address _sellToken,
-                           address _buyToken,
-                           uint256 _orderSize,
-                           uint256 _executionTime
+    // **************************** mintClaim() ******************************
+    function mintClaim(bytes32 _parentOrderHash,
+                       address _trader,
+                       address _sellToken,
+                       address _buyToken,
+                       uint256 _orderSize,
+                       uint256 _executionTime
     )
         external
+        payable
         returns (bool)
     {
         // Zero value preventions
@@ -116,8 +85,7 @@ contract GelatoCore is Ownable, Claim {
         require(_sellToken != address(0), "sellToken: No zero addresses allowed");
         require(_buyToken != address(0), "buyToken: No zero addresses allowed");
         require(_orderSize != 0, "childOrderSize cannot be 0");
-
-
+        require(_executionTime >= now, "Failed test: _executionTime >= now");
 
         // Instantiate (in memory) each childOrder (with its own executionTime)
         Claim memory claim = Claim(
@@ -132,56 +100,89 @@ contract GelatoCore is Ownable, Claim {
         // ### Mint new claim ERC721 token ###
 
         // Increment the current token id
-        Counters.increment(_tokenIds);
+        Counters.increment(_claimIds);
 
         // Get a new, unique token id for the newly minted ERC721
-        uint256 tokenId = _tokenIds.current();
+        uint256 claimId = _claimIds.current();
 
         // Mint new ERC721 Token representing one childOrder
-        _mint(_trader, tokenId);
+        _mint(_trader, claimId);
 
         // ### Mint new claim ERC721 token END ###
 
         // CONNECTION BETWEEN claim AND ERC721
         // Store each childOrder in childOrders state variable mapping
-        claims[tokenId] = claim;
+        claims[claimId] = claim;
 
         // Store each childOrder in childOrdersByTrader array by their hash
-        claimsByTrader[_trader].push(tokenId);
+        claimsByTrader[_trader].push(claimId);
 
         // Emit event to notify executors that a new sub order was created
-        emit LogNewClaimCreated(msg.sender,  // == the calling interface
-                                        _trader,
-                                        tokenId
+        emit LogNewClaimMinted(msg.sender,  // == the calling interface
+                               _trader,
+                               claimId
         );
 
 
         // Return true to caller (dappInterface)
         return true;
     }
-    // **************************** splitSchedule() END ******************************
+    // **************************** mintClaim() END ******************************
+
+    // READ
+    // **************************** getClaim() ***************************
+    function getClaim(uint256 _claimId)
+        public
+        view
+        returns(address dappInterface,
+                bytes32 parentOrderHash,
+                address trader,
+                address sellToken,
+                address buyToken,
+                uint256 orderSize,
+                uint256 executionTime
+        )
+    {
+        Claim memory claim = claims[_claimId];
+
+        return (claim.dappInterface,
+                claim.parentOrderHash,
+                ownerOf(_claimId), // fetches owner of the claim token
+                claim.sellToken,
+                claim.buyToken,
+                claim.orderSize,
+                claim.executionTime
+        );
+    }
+
+    // **************************** getClaim() END ******************************
+
 
     // UPDATE
-    function updateClaim(uint256 tokenId,
+    // **************************** updateClaim() ***************************
+    function updateClaim(uint256 _claimId,
                          uint256 _orderSize,
                          uint256 _executionTime
     )
         public
     {
-        Claim storage claim = claims[tokenId];
+        Claim storage claim = claims[_claimId];
         claim.orderSize = _orderSize;
         claim.executionTime = _executionTime;
-        emit LogClaimUpdated(tokenId);
+        emit LogClaimUpdated(_claimId);
     }
+    // **************************** updateClaim() END ******************************
+
 
     // DELETE
-    function burnClaim(uint256 tokenId)
+    // **************************** burnClaim() ***************************
+    function burnClaim(uint256 _claimId)
         public
     {
-        _burn(tokenId);
-        emit LogClaimBurned(tokenId);
+        _burn(_claimId);
+        emit LogClaimBurned(_claimId);
     }
-
+    // **************************** burnClaim() END ***************************
 
 
 }
