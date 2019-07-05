@@ -31,14 +31,6 @@ contract GelatoDutchX is Ownable, SafeTransfer {
                                   uint256 indexed actualSubOrderAmount,
                                   uint256 indexed fee
     );
-    // event LogSubOrderExecuted(bytes32 indexed subOrderHash,
-    //                           address indexed trader,
-    //                           uint256 executorRewardPerSubOrder
-    // );
-    event LogExecutorPayout(bytes32 indexed subOrderHash,
-                            address payable indexed executor,
-                            uint256 indexed executorRewardPerSubOrder
-    );
     event LogExecutorRewardUpdate(uint256 indexed executorRewardPerSubOrder);
     // **************************** Events END ******************************
 
@@ -136,7 +128,8 @@ contract GelatoDutchX is Ownable, SafeTransfer {
         );
 
 
-        // Step3: Transfer the totalSellVolume to GelatoInterface
+        // Step3: Transfer the totalSellVolume from msg.sender(seller) to GelatoInterface
+        // this is hardcoded into safeTransfer.sol
         require(safeTransfer(_sellToken, address(this), _totalSellVolume, true),
             "splitSellOrder: The transfer of sellTokens must succeed"
         );
@@ -209,7 +202,7 @@ contract GelatoDutchX is Ownable, SafeTransfer {
 
 
     // **************************** executeSubOrder()  *********************************
-    function executeSubOrder(uint256 _tokenId)
+    function executeSubOrder(uint256 _claimId)
         public
         returns (bool)
     {
@@ -220,7 +213,7 @@ contract GelatoDutchX is Ownable, SafeTransfer {
          address sellToken,
          address buyToken,
          uint256 subOrderSize,
-         uint256 executionTime) = gelatoCore.getClaim(_tokenId);
+         uint256 executionTime) = gelatoCore.getClaim(_claimId);
         // Ensure that the claim is linked to this interface
         require(gelatoInterface == address(this),
             "executeSubOrder: gelatoInterface != address(this)"
@@ -408,15 +401,26 @@ contract GelatoDutchX is Ownable, SafeTransfer {
         }
 
         // Event emissions
-        // emit LogSubOrderExecuted(_tokenId, trader, executorRewardPerSubOrder);
+        // emit LogSubOrderExecuted(_claimId, trader, executorRewardPerSubOrder);
 
         // ********************** Step5: Advanced Execution Logic END **********************
 
 
-        // ********************** Step6: ExecutorReward Transfer ********************
-        executor.transfer(executorRewardPerSubOrder);
-        // emit LogExecutorPayout(_tokenId, executor, executorRewardPerSubOrder);
-        // ********************** Step6: ExecutorReward Transfer END ****************
+        // ********************** Step6: ExecutorReward Transfer and mint Withdrawal Claim ********************
+
+        // Unfinished - still need to take care of transfering executorReward ether for newly minted executable claim
+        gelatoCore.payExecutorAndMint(executor,
+                                      _claimId,
+                                      false,  // After withdrawal claim no more chained claims.
+                                      sellOrderHash,
+                                      trader,  // claim owner
+                                      sellToken,
+                                      buyToken,
+                                      subOrderSize,
+                                      (now + 24 hours),  // execution time: withdrawal unlocks after 24 hours (assumption)
+                                      executorRewardPerSubOrder  // executorReward for withdrawal
+        );
+        // ********************** Step6: ExecutorReward Transfer and mint Withdrawal Claim ****************
 
 
         // Step7: return success

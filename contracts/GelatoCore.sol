@@ -328,10 +328,11 @@ contract GelatoCore is Ownable, Claim {
     function payExecutor(address payable _executor, uint256 _claimId)
         onlyWhiteListedInterface(msg.sender)  // msg.sender == dappInterface
         external
+        returns(bool)
     {
         Claim memory claim = claims[_claimId];
 
-        // Checks:
+        // Checks: only dappInterface and unchained claims
         require(claim.dappInterface == msg.sender,
             "payExecutor: msg.sender must be the dappInterface to the executed Claim"
         );
@@ -339,11 +340,13 @@ contract GelatoCore is Ownable, Claim {
             "payExecutor: cannot execute chained claims"
         );
 
-        // Effects
+        // Effects: Burn the executed claim
         burnClaim(_claimId);
 
-        // Interactions
+        // Interactions: transfer ether reward to executor
         _executor.transfer(claim.executorReward);
+
+        return true;
     }
     // **************************** payExecutor() END ***************************
 
@@ -351,7 +354,7 @@ contract GelatoCore is Ownable, Claim {
     // **************************** payExecutorAndMint() ***************************
     // This should only be called for Chained Claims: Executor Payout and mint chained claim.
     // We pass all the parameters again to payExecutorAndMint, instead of using
-    //  e.g. claim._sellToken etc, to generalise and open up to all sorts of use cases.
+    //  e.g. claim.sellToken etc., to generalise and open up to all sorts of use cases.
     // The safety of this logic is thus NOT encoded into the core and needs to be
     //  audited on the interface level.
     // --> Trade-off: Sacrificing Core-enforced Security for broad interface usability.
@@ -369,10 +372,11 @@ contract GelatoCore is Ownable, Claim {
         onlyWhiteListedInterface(msg.sender)  // msg.sender == dappInterface
         payable
         external
+        returns(bool)
     {
         Claim memory claim = claims[_claimId];
 
-        // Checks:
+        // Checks: only dappInterface and chained claims
         require(claim.dappInterface == msg.sender,
             "payExecutorAndMint: msg.sender must be the dappInterface to the executed Claim"
         );
@@ -380,7 +384,7 @@ contract GelatoCore is Ownable, Claim {
             "payExecutorAndMint: only executes chained claims"
         );
 
-        // Effects
+        // Effects: burn executed claim and mint new executable claim
         burnClaim(_claimId);
         // Possible further effects: deleting claim from mappings?
         mintClaim(_chained,
@@ -393,8 +397,10 @@ contract GelatoCore is Ownable, Claim {
                   _executorReward
         );
 
-        // Interactions
+        // Interactions: transfer ether reward for executed claim to executor
         _executor.transfer(claim.executorReward);
+
+        return true;
     }
     // **************************** payExecutorAndMint() END ***************************
 
