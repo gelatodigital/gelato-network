@@ -98,7 +98,7 @@ contract GelatoDutchX is Ownable, SafeTransfer {
                             uint256 _intervalSpan,
                             uint256 _executorRewardPerSubOrder
     )
-        external
+        public
         payable
         returns (bytes32 sellOrderHash)
 
@@ -201,8 +201,8 @@ contract GelatoDutchX is Ownable, SafeTransfer {
 
 
 
-    // **************************** executeSubOrder()  *********************************
-    function executeSubOrder(uint256 _claimId)
+    // **************************** execPostSubOrder()  *********************************
+    function execPostSubOrder(uint256 _claimId)
         public
         returns (bool)
     {
@@ -409,24 +409,44 @@ contract GelatoDutchX is Ownable, SafeTransfer {
         // ********************** Step6: ExecutorReward Transfer and mint Withdrawal Claim ********************
 
         // Unfinished - still need to take care of transfering executorReward ether for newly minted executable claim
-        gelatoCore.payExecutorAndMint(executor,
-                                      _claimId,
-                                      false,  // After withdrawal claim no more chained claims.
-                                      sellOrderHash,
-                                      trader,  // claim owner
-                                      sellToken,
-                                      buyToken,
-                                      subOrderSize,
-                                      (now + 24 hours),  // execution time: withdrawal unlocks after 24 hours (assumption)
-                                      executorRewardPerSubOrder  // executorReward for withdrawal
+        gelatoCore.payExecutor(executor,
+                               _claimId,
+                               false,  // After withdrawal claim no more chained claims.
+                               sellOrderHash,
+                               trader,  // claim owner
+                               sellToken,
+                               buyToken,
+                               subOrderSize,
+                               (now + 24 hours),  // execution time: withdrawal unlocks after 24 hours (assumption)
+                               executorRewardPerSubOrder  // executorReward for withdrawal
         );
+        gelatoCore.mintClaim.value(this.)(sellOrderHash,
+                              msg.sender,  // seller
+                              _sellToken,
+                              _buyToken,
+                              _subOrderSize,
+                              _executionTime
+        );
+        gelatoCore.transfer(_executorRewardPerSubOrder);
+
         // ********************** Step6: ExecutorReward Transfer and mint Withdrawal Claim ****************
 
 
         // Step7: return success
         return true;
     }
-    // **************************** executeSubOrder() END *********************************
+    // **************************** execPostSubOrder() END *********************************
+
+
+    // **************************** execWithdrawSubOrder()  *********************************
+    function execWithdrawSubOrder(uint256 _claimId)
+        public
+        returns (bool)
+    {
+        // Logic for executing withdraw claim, burning the claim on core and paying the executor
+    }
+    // **************************** execWithdrawSubOrder() END *********************************
+
 
 
     // Helper Functions

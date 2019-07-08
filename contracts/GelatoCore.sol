@@ -114,30 +114,23 @@ contract GelatoCore is Ownable, Claim {
                        address _sellToken,
                        address _buyToken,
                        uint256 _orderSize,
-                       uint256 _executionTime,
-                       uint256 _executorReward
+                       uint256 _executionTime
     )
         onlyWhitelistedInterfaces(msg.sender)  // msg.sender==dappInterface
         payable
         public
         returns (bool)
     {
-        // Step1: Make sure interface endows Gelato Core with executorReward ether
-        require(msg.value == _executorReward,
-            "mintClaim: msg.value != executorReward"
-        );
-
-
-        // Step2.1: Zero value preventions
+        // Step1.1: Zero value preventions
         require(_owner != address(0), "Trader: No zero addresses allowed");
         require(_sellToken != address(0), "sellToken: No zero addresses allowed");
         require(_buyToken != address(0), "buyToken: No zero addresses allowed");
         require(_orderSize != 0, "childOrderSize cannot be 0");
-        // Step2.2: Valid execution Time check
+        // Step1.2: Valid execution Time check
         require(_executionTime >= now, "Failed test: _executionTime >= now");
 
 
-        // Step3: Instantiate claim (in memory)
+        // Step2: Instantiate claim (in memory)
         Claim memory claim = Claim(
             _chained,
             msg.sender,  // dappInterface
@@ -146,11 +139,11 @@ contract GelatoCore is Ownable, Claim {
             _buyToken,
             _orderSize,
             _executionTime,
-            _executorReward
+            msg.value  // executor Reward
         );
 
 
-        // ****** Step4: Mint new claim ERC721 token ******
+        // ****** Step3: Mint new claim ERC721 token ******
         // Increment the current token id
         Counters.increment(_claimIds);
         // Get a new, unique token id for the newly minted ERC721
@@ -160,22 +153,22 @@ contract GelatoCore is Ownable, Claim {
         // ****** Step4: Mint new claim ERC721 token END ******
 
 
-        // Step5: Claims tracking state variable update
+        // Step4: Claims tracking state variable update
         // ERC721(claimId) => Claim(struct)
         claims[claimId] = claim;
         // Trader => ERC721s(claimIds)
         claimsByOwner[_owner].push(claimId);
 
 
-        // Step6: Emit event to notify executors that a new sub order was created
+        // Step5: Emit event to notify executors that a new sub order was created
         emit LogNewClaimMinted(msg.sender,  // dappInterface
                                _owner,
                                claimId,
-                               _executorReward
+                               msg.value
         );
 
 
-        // Step7: Return true to caller (dappInterface)
+        // Step6: Return true to caller (dappInterface)
         return true;
     }
     // **************************** mintClaim() END ******************************
@@ -215,7 +208,7 @@ contract GelatoCore is Ownable, Claim {
 
     // UPDATE
     // **************************** Core Updateability ***************************
-    function listInterface(address _dappInterface)
+    function whitelistInterface(address _dappInterface)
         onlyOwner
         public
     {
@@ -231,18 +224,14 @@ contract GelatoCore is Ownable, Claim {
 
     // **************************** Claims Updateability ***************************
     // Only increase possible - decrease would entail Core -> User refund logic
-    function increaseExecutorReward(uint256 _claimId, uint256 _amount)
+    function increaseExecutorReward(uint256 _claimId)
         onlyClaimOwner(_claimId)
         payable
         external
     {
-        require(msg.value == _amount,
-            "increaseExecutorReward: msg.value != _amount"
-        );
-
         Claim storage claim = claims[_claimId];
 
-        claim.executorReward.add(_amount);
+        claim.executorReward.add(msg.value);
 
         emit LogClaimUpdated(msg.sender,  // msg.sender == interface
                              _owner,
@@ -336,9 +325,9 @@ contract GelatoCore is Ownable, Claim {
         require(claim.dappInterface == msg.sender,
             "payExecutor: msg.sender must be the dappInterface to the executed Claim"
         );
-        require(!claim.chained,
+        /*require(!claim.chained,
             "payExecutor: cannot execute chained claims"
-        );
+        );*/
 
         // Effects: Burn the executed claim
         burnClaim(_claimId);
@@ -394,11 +383,21 @@ contract GelatoCore is Ownable, Claim {
                   _buyToken,
                   _orderSize,
                   _executionTime,  // safe logic via interface only e.g. 24h freeze time == auction cleared
-                  _executorReward
+                  msg.value
+        );
+
+        // Emit event to notify executors that a new sub order was created
+        emit LogNewClaimMinted(msg.sender,  // dappInterface
+                               _owner,
+                               claimId,
+                               msg.value
         );
 
         // Interactions: transfer ether reward for executed claim to executor
         _executor.transfer(claim.executorReward);
+
+        // Delete struct
+        
 
         return true;
     }
