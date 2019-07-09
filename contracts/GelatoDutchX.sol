@@ -22,16 +22,12 @@ contract GelatoDutchX is Ownable, SafeTransfer {
 
 
     // **************************** Events ******************************
-    event LogNewSellOrderCreated(bytes32 indexed sellOrderHash,
-                                 address indexed seller,
-                                 uint256 indexed executorRewardPerSubOrder
-    );
+    event LogNewSellOrderCreated(bytes32 indexed sellOrderHash, address indexed seller);
     event LogNumDen(uint256 indexed num, uint256 indexed den);
     event LogActualSubOrderAmount(uint256 indexed subOrderAmount,
                                   uint256 indexed actualSubOrderAmount,
                                   uint256 indexed fee
     );
-    event LogExecutorRewardUpdate(uint256 indexed executorRewardPerSubOrder);
     // **************************** Events END ******************************
 
 
@@ -49,7 +45,6 @@ contract GelatoDutchX is Ownable, SafeTransfer {
 
     // Constants that are set during contract construction and updateable via setters
     uint256 public auctionStartWaitingForFunding;
-    uint256 public executorRewardPerSubOrder;
 
     // **************************** State Variables END ******************************
 
@@ -59,13 +54,12 @@ contract GelatoDutchX is Ownable, SafeTransfer {
         * connects the contract interfaces to deployed instances thereof.
         * sets the state variable constants
     */
-    constructor(address _GelatoCoreProxy, address _DutchXProxy)
+    constructor(address _GelatoCore, address _DutchExchange)
         public
     {
-        gelatoCore = GelatoCore(_GelatoCoreProxy);  // Upgradeability via Proxy
-        dutchExchange = DutchExchange(_DutchXProxy);  // Upgradeability via Proxy
+        gelatoCore = GelatoCore(_GelatoCore);  // Upgradeability via Proxy
+        dutchExchange = DutchExchange(_DutchExchange);  // Upgradeability via Proxy
         auctionStartWaitingForFunding = 1;
-        executorRewardPerSubOrder = 10 finney;  // ca. 2.7 USD at 273$ per ETH
     }
 
 
@@ -75,14 +69,6 @@ contract GelatoDutchX is Ownable, SafeTransfer {
         external
     {
         auctionStartWaitingForFunding = _auctionStartWaitingForFunding;
-    }
-
-    function setExecutorRewardPerSubOrder(uint256 _executorRewardPerSubOrder)
-        onlyOwner
-        external
-    {
-        executorRewardPerSubOrder = _executorRewardPerSubOrder;
-        emit LogExecutorRewardPerSubOrderUpdate(executorRewardPerSubOrder);
     }
     // **************************** State Variable Setters END ******************************
 
@@ -95,8 +81,7 @@ contract GelatoDutchX is Ownable, SafeTransfer {
                             uint256 _numSubOrders,
                             uint256 _subOrderSize,
                             uint256 _executionTime,
-                            uint256 _intervalSpan,
-                            uint256 _executorRewardPerSubOrder
+                            uint256 _intervalSpan
     )
         public
         payable
@@ -113,18 +98,16 @@ contract GelatoDutchX is Ownable, SafeTransfer {
         require(_intervalSpan != 0, "Interval Span cannot be 0");
 
         /* Step2: Invariant Requirements
+        Handled by dappInterface:
             * 1: subOrderSizes from one Sell Order are constant.
                 * totalSellVolume == numSubOrders * subOrderSize.
-            * 2: The caller transfers the correct amount of ether as reward endowment
-                * msg.value == numSubOrders * executorRewardPerSubOrder
+        Set off-chain (web3) and checked on core protocol:
+            * 2: The caller transfers the correct amount of ether as gelato fee endowment
+                * msg.value == numSubOrders * gelatoFeePerSubOrder
         */
         // Invariant1: Constant childOrderSize
         require(_totalSellVolume == _numSubOrders.mul(_subOrderSize),
-            "splitSellOrder: totalOrderVolume = numChildOrders * childOrderSize"
-        );
-        // Invariants2: Executor reward per subOrder and tx endowment checks
-        require(msg.value == _numSubOrders.mul(_executorRewardPerSubOrder),
-            "splitSellOrder: msg.value == numSubOrders * executorRewardPerSubOrder"
+            "splitSellOrder: totalOrderVolume != numChildOrders * childOrderSize"
         );
 
 
@@ -154,8 +137,7 @@ contract GelatoDutchX is Ownable, SafeTransfer {
                                                            _executionTime)
         );
         // Prevent overwriting stored sub orders because of hash collisions
-        // @DEV double check if that makes sense
-        if (sellOrderStates[sellOrderHash].remainingSubOrders == 0) {
+        if (sellOrderStates[sellOrderHash].remainingSubOrders != 0) {
             revert("splitSellOrder: Identical sellOrders disallowed");
         }
 
@@ -165,21 +147,27 @@ contract GelatoDutchX is Ownable, SafeTransfer {
         sellOrdersBySeller[msg.sender].push(sellOrderHash);
 
 
-        // Step7: Create all subOrders and transfer the executorRewardPerSubOrder
-        // Local variable for reassignments to the executionTimes of
-        // sibling child orders because the former differ amongst the latter.
+        // Step7: Fetch the gelatoFeePerSubOrder from the core protocol
+        //  ***** GELATO CORE PROTOCOL INTERACTION *****
+        uint256 gelatoFeePerSubOrder = gelatoCore.execPrepaidByInterfaceClaim(address(this),
+                                                                              0,
+        );
+        //  *** GELATO CORE PROTOCOL INTERACTION END ***
+
+
+        // Step8: Create all subOrders and transfer the gelatoFeePerSubOrder
         uint256 executionTime = _executionTime;
         for (uint256 i = 0; i < _numSubOrders; i++) {
             //  ***** GELATO CORE PROTOCOL INTERACTION *****
             // Call Gelato gelatoCore protocol's mintClaim() function transferring
-            //  the total executor reward's worth of ether via msg.value
-            gelatoCore.mintClaim.value(_executorRewardPerSubOrder)(sellOrderHash,
-                                                                   msg.sender,  // seller
-                                                                   _sellToken,
-                                                                   _buyToken,
-                                                                   _subOrderSize,
-                                                                   _executionTime,
-                                                                   _executorRewardPerSubOrder
+            //  the fee for claimType-0 for each suborder
+            gelatoCore.mintClaim.value(gelatoFeePerSubOrder)(sellOrderHash,
+                                                             msg.sender,  // seller/claimOwner
+                                                             _sellToken,
+                                                             _buyToken,
+                                                             _subOrderSize,
+                                                             _executionTime,
+                                                             0  // claimType-0: depositAndSell DutchX claim
             );
             //  *** GELATO CORE PROTOCOL INTERACTION END ***
 
@@ -188,14 +176,8 @@ contract GelatoDutchX is Ownable, SafeTransfer {
         }
 
 
-        // Step8: Emit New Sell Order to link to its suborder constituents on the core protocol
-        emit LogNewSellOrderCreated(sellOrderHash,  // Link to core protocol suborders
-                                    msg.sender,  // filter for sellers
-                                    executorRewardPerSubOrder
-        );
-
-
-
+        // Step9: Emit New Sell Order to find to its suborder constituents on the core protocol
+        emit LogNewSellOrderCreated(sellOrderHash, msg.sender);
     }
     // **************************** splitSellOrder() END ******************************
 

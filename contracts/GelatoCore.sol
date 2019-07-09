@@ -24,7 +24,8 @@ contract GelatoCore is Ownable, Claim {
         address buyToken;
         uint256 orderSize;
         uint256 executionTime;
-        uint256 executorReward;
+        uint256 executionGas;
+        uint256 executionPrepaid;
     }
 
     // **************************** Events **********************************
@@ -42,17 +43,20 @@ contract GelatoCore is Ownable, Claim {
 
     );
     event LogNewInterfaceListed(address indexed dappInterface);
+    event LogUpdatedInterfaceExecPrepaid(address indexed dappInterface);
+    event LogUpdatedInterfaceExecGas(address indexed dappInterface);
     event LogClaimBurned(address indexed dappInterface,
                          address indexed owner,
-                         uint256 indexed claimId,
-                         uint256 executorReward
+                         uint256 indexed claimId
     );
     event LogExecutorPayout(address indexed dappInterface,
                             address payable indexed executor,
+                            bool indexed gelatoDrip,
+                            uint256 executorReward
                             bytes32 parentOrderHash,
-                            uint256 indexed executorReward
     );
     // **************************** Events END **********************************
+
 
 
     // **************************** State Variables **********************************
@@ -65,26 +69,46 @@ contract GelatoCore is Ownable, Claim {
     // owner => ClaimIDs[]
     mapping(address => uint256[]) public claimsByOwner;
 
-    // #### Inherited mappings from ERC721 ####
+    //_____________ Gelato Core execution market logic ________________
+    /* The interface-specific execPrepaid:
+    execPrepaidByInterfaceClaim[dappInterface][claimTypeIndex]
+    should to pay for (lest we operate with losses):
+        1) The gas costs incurred by an executor:
+           executionGasByInterfaceClaim[dappInterface][claimTypeIndex] * gasPrice (from oracle)
+        2) The core protocol defined executorProfit
+        3) The core protocol executorRewardPoolContribution
+    */
+    // Set upon interface whitelisting:
+    // dappInterface => claimType => gelatoFee
+    mapping(address => mapping(uint256 => uint256)) public execPrepaidByInterfaceClaim;
+    // dappInterface => claimType => executionGas
+    mapping(address => mapping(uint256 => uint256)) public execGasByInterfaceClaim;
 
-    // // Mapping from token ID to owner
-    // mapping (uint256 => address) private _tokenOwner;
+    // The gas price oracle defined variable gas price
+    uint256 public gasPrice;
 
-    // // Mapping from token ID to approved address
-    // mapping (uint256 => address) private _tokenApprovals;
+    // The core protocol governance defined profit from executing any claim
+    uint256 public executorProfit;
 
-    // // Mapping from owner to number of owned token
-    // mapping (address => Counters.Counter) private _ownedTokensCount;
-
-    // // Mapping from owner to operator approvals
-    // mapping (address => mapping (address => bool)) private _operatorApprovals;
-
-    // #### Inherited mappings from ERC721 END ####
+    // The core protocol governance defined contribution to the protocols execution reward pool
+    // Payable by dapp interfaces
+    uint256 public executorRewardPoolContribution;
+    //_____________ Gelato Core execution market logic END ________________
     // **************************** State Variables END ******************************
 
 
-    // **************************** ERC721 Constructor *******************************
-    // **************************** ERC721 Constructor END ***************************
+
+    // **************************** Gelato Core constructor() ******************************
+    constructor(uint256 _gasPrice, uint256 _executorProfit, uint256 _executorRewardPoolContribution)
+        public
+    {
+        // Initialise declared-only state variables
+        gasPrice = _gasPrice;
+        executorProfit = _executorProfit;
+        executorRewardPoolContribution = _executorRewardPoolContribution;
+    }
+    // **************************** Gelato Core constructor() END *****************************
+
 
 
     // **************************** Modifiers ******************************
@@ -105,6 +129,8 @@ contract GelatoCore is Ownable, Claim {
     }
     // **************************** Modifiers END ******************************
 
+
+
     // CREATE
     // **************************** mintClaim() ******************************
     function mintClaim(bytes32 _parentOrderHash,
@@ -112,7 +138,8 @@ contract GelatoCore is Ownable, Claim {
                        address _sellToken,
                        address _buyToken,
                        uint256 _orderSize,
-                       uint256 _executionTime
+                       uint256 _executionTime,
+                       uint256 _claimType
     )
         onlyWhitelistedInterfaces(msg.sender)  // msg.sender==dappInterface
         payable
@@ -120,15 +147,19 @@ contract GelatoCore is Ownable, Claim {
         returns (bool)
     {
         // Step1.1: Zero value preventions
-        require(_claimOwner != address(0), "mintClaim: _claimOwner: No zero addresses allowed");
-        require(_sellToken != address(0), "mintClaim: _sellToken: No zero addresses allowed");
-        require(_buyToken != address(0), "mintClaim: _buyToken: No zero addresses allowed");
-        require(_orderSize != 0, "mintClaim: _orderSize cannot be 0");
+        require(_claimOwner != address(0), "GelatoCore.mintClaim: _claimOwner: No zero addresses allowed");
+        require(_sellToken != address(0), "GelatoCore.mintClaim: _sellToken: No zero addresses allowed");
+        require(_buyToken != address(0), "GelatoCore.mintClaim: _buyToken: No zero addresses allowed");
+        require(_orderSize != 0, "GelatoCore.mintClaim: _orderSize cannot be 0");
         // Step1.2: Valid execution Time check
-        require(_executionTime >= now, "mintClaim: Failed test: _executionTime >= now");
+        require(_executionTime >= now, "GelatoCore.mintClaim: Failed test: _executionTime >= now");
 
+        // Step2: Require that interface transfers the correct execution prepayment
+        require(msg.value == execPrepaidByInterfaceClaim[_claimType],
+            "GelatoCore.mintClaim: msg.value != execPrepaidByInterfaceClaim[_claimType]"
+        );
 
-        // Step2: Instantiate claim (in memory)
+        // Step3: Instantiate claim (in memory)
         Claim memory claim = Claim(
             msg.sender,  // dappInterface
             _parentOrderHash,
@@ -136,11 +167,12 @@ contract GelatoCore is Ownable, Claim {
             _buyToken,
             _orderSize,
             _executionTime,
-            msg.value  // executorReward
+            execGasByInterfaceClaim[_claimType],  // execution gasCost
+            msg.value  // execPrepaidByInterfaceClaim[_claimType]
         );
 
 
-        // ****** Step3: Mint new claim ERC721 token ******
+        // ****** Step4: Mint new claim ERC721 token ******
         // Increment the current token id
         Counters.increment(_claimIds);
         // Get a new, unique token id for the newly minted ERC721
@@ -150,14 +182,14 @@ contract GelatoCore is Ownable, Claim {
         // ****** Step4: Mint new claim ERC721 token END ******
 
 
-        // Step4: Claims tracking state variable update
+        // Step5: Claims tracking state variable update
         // ERC721(claimId) => Claim(struct)
         claims[claimId] = claim;
         // Trader => ERC721s(claimIds)
         claimsByOwner[_claimOwner].push(claimId);
 
 
-        // Step5: Emit event to notify executors that a new sub order was created
+        // Step6: Emit event to notify executors that a new sub order was created
         emit LogNewClaimMinted(msg.sender,  // dappInterface
                                _claimOwner,
                                claimId,
@@ -165,10 +197,12 @@ contract GelatoCore is Ownable, Claim {
         );
 
 
-        // Step6: Return true to caller (dappInterface)
+        // Step7: Return true to caller (dappInterface)
         return true;
     }
     // **************************** mintClaim() END ******************************
+
+
 
     // READ
     // **************************** getClaim() ***************************
@@ -182,7 +216,7 @@ contract GelatoCore is Ownable, Claim {
                 address buyToken,
                 uint256 orderSize,
                 uint256 executionTime,
-                uint256 executorReward
+                uint256 executionGas
         )
     {
         Claim memory claim = claims[_claimId];
@@ -194,16 +228,22 @@ contract GelatoCore is Ownable, Claim {
                 claim.buyToken,
                 claim.orderSize,
                 claim.executionTime,
-                claim.executorReward
+                claim.executionGas
         );
     }
 
     // **************************** getClaim() END ******************************
 
 
+
     // UPDATE
     // **************************** Core Updateability ***************************
-    function whitelistInterface(address _dappInterface)
+    // @Dev: we can separate Governance fns into a base contract and inherit from it
+    function registerInterface(address _dappInterface,
+                               uint256 _claimTypes,
+                               uint256[] _prepayments,
+                               uint256[] _executionGas
+    )
         onlyOwner
         public
     {
@@ -211,32 +251,56 @@ contract GelatoCore is Ownable, Claim {
             "listInterface: Dapp Interface already whitelisted"
         );
 
+        for (uint256 i = 0; i < _claimTypes; i++) {
+            // Set each of the interface's claim types execution prepayment
+            execPrepaidByInterfaceClaim[_dappInterface][i] = _prepayments[i];
+
+            // Set each of the claim types executionGas
+            execGasByInterfaceClaim[_dappInterface][i] = _executionGas[i];
+        }
+
+        // Whitelist the dappInterface
         interfaceWhitelist[_dappInterface] = true;
 
         emit LogNewInterfaceListed(_dappInterface);
     }
+
+    // Governance function to update the prepayments an interface needs to supply for its claims
+    function updateInterfaceExecPrepaid(address _dappInterface,
+                                        uint256[] _claimTypes,
+                                        uint256[] _prepayments
+    )
+        onlyOwner
+        public
+    {
+
+        for (uint256 i = 0; i < _claimTypes.length; i++) {
+            // Set each of the requested claim types execution prepayment
+            execPrepaidByInterfaceClaim[_dappInterface][_claimTypes[i]] = _prepayments[i];
+        }
+
+        emit LogUpdatedInterfaceExecPrepaid(_dappInterface, _claimTypes);
+    }
+
+    // Governance function to update the execution gasCost an interface needs to supply for its claims
+    function updateInterfaceExecGas(address _dappInterface,
+                                    uint256[] _claimTypes,
+                                    uint256[] _executionGas
+    )
+        onlyOwner
+        public
+    {
+
+        for (uint256 i = 0; i < _claimTypes.length; i++) {
+            // Set each of the requested claim types execution prepayment
+            execPrepaidByInterfaceClaim[_dappInterface][_claimTypes[i]] = _executionGas[i];
+        }
+
+        emit LogUpdatedInterfaceExecGas(_dappInterface);
+    }
     // **************************** Core Updateability END ******************************
 
     // **************************** Claims Updateability ***************************
-    // Only increase possible - decrease would entail Core -> User refund logic
-    function increaseExecutorReward(uint256 _claimId)
-        onlyClaimOwner(_claimId)
-        payable
-        external
-    {
-        Claim storage claim = claims[_claimId];
-
-        claim.executorReward.add(msg.value);
-
-        emit LogClaimUpdated(msg.sender,  // msg.sender == interface
-                             _claimOwner,
-                             claimId,
-                             claim.orderSize,
-                             claim.executionTime,
-                             claim.executorReward
-        );
-    }
-
     // Only increase because decrease would be like Order Cancellation
     function increaseOrderSize(uint256 _claimId, uint256 _amount)
         onlyClaimOwner(_claimId)
@@ -291,6 +355,7 @@ contract GelatoCore is Ownable, Claim {
     // **************************** Claims Updateability END ******************************
 
 
+
     // DELETE
     // **************************** burnClaim() ***************************
     function burnClaim(uint256 _claimId)
@@ -299,8 +364,7 @@ contract GelatoCore is Ownable, Claim {
         _burn(_claimId);
         emit LogClaimBurned(msg.sender,  // msg.sender == interface
                             ownerOf(_claimId),
-                            claimId,
-                            _executorReward
+                            claimId
         );
     }
     // **************************** burnClaim() END ***************************
@@ -323,10 +387,23 @@ contract GelatoCore is Ownable, Claim {
         // Effects: Burn the executed claim
         burnClaim(_claimId);
 
+        uint256 executorGasRefund = claim.executionGas.mul(gasPrice);
+        uint256 executorReward = executorGasRefund.add(executorProfit).sub(executorRewardPoolContribution);
         // Interactions: transfer ether reward to executor
-        _executor.transfer(claim.executorReward);
+        _executor.transfer(executorReward);
+
+        // gelatoDrip signals whether core protocol incurred a loss from the payout
+        bool gelatoDrip = executorReward > claim.executionPrepaid;
+        // Event emission
+        emit LogExecutorPayout(msg.sender,
+                               _executor,
+                               gelatoDrip,
+                               executorReward,
+                               claim.parentOrderHash
+        );
 
         // Possibly delete struct:
+
 
         return true;
     }
