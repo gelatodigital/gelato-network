@@ -144,7 +144,7 @@ contract GelatoCore is Ownable, Claim {
         require(_executionTime >= now, "GelatoCore.mintExecutionClaim: Failed test: _executionTime >= now");
 
         // Step2: Require that interface transfers the correct execution prepayment
-        require(msg.value == _calcPrepaidExecutionFee(_executionClaimType_),
+        require(msg.value == _calcPrepaidExecutionFee(_executionClaimType),
             "GelatoCore.mintExecutionClaim: msg.value != _calcPrepaidExecutionFee(_executionClaimType)"
         );
 
