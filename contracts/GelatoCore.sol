@@ -241,6 +241,7 @@ contract GelatoCore is Ownable, Claim {
     function registerInterface(address _dappInterface, uint256 _maxGas)
         onlyOwner
         public
+
     {
         require(interfaceWhitelist[_dappInterface] == false,
             "listInterface: Dapp Interface already whitelisted"
@@ -248,6 +249,7 @@ contract GelatoCore is Ownable, Claim {
 
         // Set the maxGas of the interface's Core ExecutionClaim
         maxGasByInterface[_dappInterface] = _maxGas;
+
 
         // Whitelist the dappInterface
         interfaceWhitelist[_dappInterface] = true;
@@ -293,6 +295,7 @@ contract GelatoCore is Ownable, Claim {
         // Only dapp Interfaces should be able to call this function
         require(executionClaim.dappInterface == msg.sender,
             "updateExecutionTime: msg.sender is not the dappInterface to the executionClaim"
+
         );
 
         executionClaim.executionTime = _executionTime;
@@ -338,6 +341,7 @@ contract GelatoCore is Ownable, Claim {
                             ownerOf(_executionClaimId),
                             _executionClaimId
         );
+
     }
     // **************************** burnExecutionClaim() END ***************************
 
