@@ -8,6 +8,14 @@ import './base/SafeMath.sol';
 import "./base/SafeTransfer.sol";
 import '@gnosis.pm/dx-contracts/contracts/DutchExchange.sol';
 
+
+/* @Notice: 1 "subOrder" = 1 bundled GelatoCore ExecutionClaim to:
+    * depositAndSell() on the DutchX
+    * claimAndWithdraw() from the DutchX
+To be executed by Gelato Execution Service on the end users behalf
+*/
+
+
 contract GelatoDutchX is Ownable, SafeTransfer {
 
     // Libraries used:
@@ -23,11 +31,13 @@ contract GelatoDutchX is Ownable, SafeTransfer {
 
     // **************************** Events ******************************
     event LogNewSellOrderCreated(bytes32 indexed sellOrderHash, address indexed seller);
-    event LogNumDen(uint256 indexed num, uint256 indexed den);
-    event LogActualSubOrderAmount(uint256 indexed subOrderAmount,
-                                  uint256 indexed actualSubOrderAmount,
-                                  uint256 indexed fee
+    event LogNumDen(uint256 indexed executionClaimId, uint256 num, uint256 den);
+    event LogActualSubOrderAmount(uint256 indexed executionClaimId,
+                                  uint256 subOrderAmount,
+                                  uint256 actualSubOrderAmount,
+                                  uint256 fee
     );
+    event LogExecution(uint256 indexed executionClaimId, address indexed executionClaimOwner);
     // **************************** Events END ******************************
 
 
@@ -57,8 +67,8 @@ contract GelatoDutchX is Ownable, SafeTransfer {
     constructor(address _GelatoCore, address _DutchExchange)
         public
     {
-        gelatoCore = GelatoCore(_GelatoCore);  // Upgradeability via Proxy
-        dutchExchange = DutchExchange(_DutchExchange);  // Upgradeability via Proxy
+        gelatoCore = GelatoCore(_GelatoCore);
+        dutchExchange = DutchExchange(_DutchExchange);
         auctionStartWaitingForFunding = 1;
     }
 
@@ -148,10 +158,9 @@ contract GelatoDutchX is Ownable, SafeTransfer {
 
 
         // Step7: Fetch the gelatoFeePerSubOrder from the core protocol
+        // The gelatoFeePerSubOrder is for the sellOrder posting on AND withdrawal from the DutchX
         //  ***** GELATO CORE PROTOCOL INTERACTION *****
-        uint256 gelatoFeePerSubOrder = gelatoCore.execPrepaidByInterfaceClaim(address(this),
-                                                                              0,
-        );
+        uint256 gelatoFeePerSubOrder = gelatoCore.calcPrepaidExecutionFee();
         //  *** GELATO CORE PROTOCOL INTERACTION END ***
 
 
@@ -166,8 +175,7 @@ contract GelatoDutchX is Ownable, SafeTransfer {
                                                              _sellToken,
                                                              _buyToken,
                                                              _subOrderSize,
-                                                             _executionTime,
-                                                             0  // claimType-0: depositAndSell DutchX claim
+                                                             _executionTime
             );
             //  *** GELATO CORE PROTOCOL INTERACTION END ***
 
@@ -184,22 +192,25 @@ contract GelatoDutchX is Ownable, SafeTransfer {
 
 
     // **************************** execPostSubOrder()  *********************************
-    function execPostSubOrder(uint256 _claimId)
+    function execPostSubOrder(uint256 _executionClaimId)
         public
         returns (bool)
     {
         // Step1: get subOrder to be executed from gelatoCore
         (address gelatoInterface,
+         bool pending,
          bytes32 sellOrderHash,
-         address trader,
+         address executionClaimOwner,
          address sellToken,
          address buyToken,
          uint256 subOrderSize,
-         uint256 executionTime) = gelatoCore.getClaim(_claimId);
-        // Ensure that the claim is linked to this interface
+         uint256 executionTime) = gelatoCore.getClaim(_executionClaimId);
+        // Ensure that the executionClaim is linked to this interface
         require(gelatoInterface == address(this),
             "executeSubOrder: gelatoInterface != address(this)"
         );
+        // Ensure that the executionClaim is pending
+        require(pending, "execPostSubOrder: executionClaim is not pending");
 
 
         // Step2: point to sellOrderState in storage. This gets updated later.
@@ -315,7 +326,7 @@ contract GelatoDutchX is Ownable, SafeTransfer {
                 // ### EFFECTS END ###
 
                 // INTERACTION: sell on dutchExchange
-                _depositAndSell(trader, sellToken, buyToken, subOrderSize);
+                _depositAndSell(executionClaimOwner, sellToken, buyToken, subOrderSize);
             }
             /* Case3b: We sold during previous waiting period, our funds went into auction1, then
             auction1 ran, then auction1 cleared and the auction index was incremented,
@@ -338,7 +349,7 @@ contract GelatoDutchX is Ownable, SafeTransfer {
                 // ### EFFECTS END ###
 
                 // INTERACTION: sell on dutchExchange
-                _depositAndSell(trader, sellToken, buyToken, subOrderSize);
+                _depositAndSell(executionClaimOwner, sellToken, buyToken, subOrderSize);
             }
             /* Case3c: We sold during auction1, our funds went into auction2, then auction1 cleared
             and the auction index was incremented, now we are NOT selling during the ensuing
@@ -375,43 +386,32 @@ contract GelatoDutchX is Ownable, SafeTransfer {
             // ### EFFECTS END ###
 
             // INTERACTION: sell on dutchExchange
-            _depositAndSell(trader, sellToken, buyToken, subOrderSize);
+            _depositAndSell(executionClaimOwner, sellToken, buyToken, subOrderSize);
         }
         // Case 5: Unforeseen stuff
         else {
             revert("Case5: Fatal Error: Case5 unforeseen");
         }
-
-        // Event emissions
-        // emit LogSubOrderExecuted(_claimId, trader, executorRewardPerSubOrder);
-
         // ********************** Step5: Advanced Execution Logic END **********************
 
 
-        // ********************** Step6: ExecutorReward Transfer and mint Withdrawal Claim ********************
+        //@Dev: because one ExecutionClaim of GelatoDutchX encapsulates 1 depositAndSell() and
+        //  1 claimAndWithdraw() execution, we DO NOT pay the executor out just yet.
+        // The executor receives its payout AFTER it has executed BOTH executable functions.
+        // The gelatoCore.payExecutor() function also sets the ExecutionClaim to not-pending (complete).
+        // Thus, for GelatoDutchX-type ExecutionClaims, we should only call gelato.payExecutor() AFTER
+        //  the withdrawal has been executed.
 
-        // Unfinished - still need to take care of transfering executorReward ether for newly minted executable claim
-        gelatoCore.payExecutor(executor,
-                               _claimId,
-                               false,  // After withdrawal claim no more chained claims.
-                               sellOrderHash,
-                               trader,  // claim owner
-                               sellToken,
-                               buyToken,
-                               subOrderSize,
-                               (now + 24 hours),  // execution time: withdrawal unlocks after 24 hours (assumption)
-                               executorRewardPerSubOrder  // executorReward for withdrawal
-        );
-        gelatoCore.mintClaim.value(this.)(sellOrderHash,
-                              msg.sender,  // seller
-                              _sellToken,
-                              _buyToken,
-                              _subOrderSize,
-                              _executionTime
-        );
-        gelatoCore.transfer(_executorRewardPerSubOrder);
+        // Thus the ExecutionClaim on GelatoCore remains pending after execPostSubOrder()
+        // And the (trusted) Gelato Execution Service can handle the logic, to execute the second
+        // executable function (withdrawal) and complete this GelatoDutchX-type ExecutionClaim, off-chain.
+        // E.g. this ExecutionClaim remains pending in the Executor Nodes database and the executor nodes
+        //  listen to the DutchX to determine when the auction for this ExecutionClaim has cleared and
+        //  thus execWithdrawSubOrder() can be executed.
 
-        // ********************** Step6: ExecutorReward Transfer and mint Withdrawal Claim ****************
+
+        // Step6: Event emissions execution function claim was executed
+        emit LogExecution(_executionClaimId, executionClaimOwner);
 
 
         // Step7: return success
@@ -420,12 +420,26 @@ contract GelatoDutchX is Ownable, SafeTransfer {
     // **************************** execPostSubOrder() END *********************************
 
 
+    // @DEV TO DO:
     // **************************** execWithdrawSubOrder()  *********************************
-    function execWithdrawSubOrder(uint256 _claimId)
+    function execWithdrawSubOrder(uint256 _executionClaimId)
         public
         returns (bool)
     {
-        // Logic for executing withdraw claim, burning the claim on core and paying the executor
+        address payable executor = msg.sender;
+
+
+        // @DEV: WE NEED TO PAYOUT EXECUTOR AFTER BOTH POST AND WITHDRAWAL HAVE BEEN EXECUTED
+        // Then the ExecutionClaim is set to not-pending (complete) on GelatoCore
+        // ********************** StepX-1: ExecutorReward Transfer  ********************
+        //  ***** GELATO CORE PROTOCOL INTERACTION *****
+        gelatoCore.payExecutor(executor, _executionClaimId);
+        //  ***** GELATO CORE PROTOCOL INTERACTION END *****
+        // ********************** StepX-1: ExecutorReward Transfer END ****************
+
+
+        // StepX
+        return true;
     }
     // **************************** execWithdrawSubOrder() END *********************************
 
@@ -433,7 +447,7 @@ contract GelatoDutchX is Ownable, SafeTransfer {
 
     // Helper Functions
     // Calculate sub order size accounting for current dutchExchange liquidity contribution fee.
-    function _calcActualSubOrderSize(uint256 _sellAmount)
+    function _calcActualSubOrderSize(uint256 _sellAmount, uint256 _executionClaimId)
         public
         returns(uint256)
     {
@@ -447,12 +461,12 @@ contract GelatoDutchX is Ownable, SafeTransfer {
         // Calc fee amount
         uint256 fee = _sellAmount.mul(num).div(den);
 
-        emit LogNumDen(num, den);
+        emit LogNumDen(_executionClaimId, num, den);
 
         // Calc actual Sell Amount
         uint256 actualSellAmount = _sellAmount.sub(fee);
 
-        emit LogActualSubOrderAmount(_sellAmount, actualSellAmount, fee);
+        emit LogActualSubOrderAmount(_executionClaimId, _sellAmount, actualSellAmount, fee);
     }
 
     // Deposit and sell on the dutchExchange
@@ -491,7 +505,7 @@ contract GelatoDutchX is Ownable, SafeTransfer {
 
         // Check if msg.sender is equal seller
         // @Kalbo: Do we really need that or should we make everyone be able to withdraw on behalf of a user?
-        require(msg.sender == trader, 'Only the seller of the sellOrderState can call this function');
+        require(msg.sender == executionClaimOwner, 'Only the seller of the sellOrderState can call this function');
 
         // Check if tx executor hasnt already withdrawn the funds
         require(sellOrderState.remainingSubOrders.add(1) == sellOrderState.remainingWithdrawals, 'Your funds from the last cleared auction you participated in were already withdrawn to your account');
@@ -511,7 +525,7 @@ contract GelatoDutchX is Ownable, SafeTransfer {
         sellOrderState.remainingWithdrawals = sellOrderState.remainingWithdrawals.sub(1);
 
         // Initiate withdraw
-        _withdraw(trader, sellToken, buyToken, sellOrderState.lastAuctionIndex, sellOrderState.actualLastSubOrderAmount);
+        _withdraw(executionClaimOwner, sellToken, buyToken, sellOrderState.lastAuctionIndex, sellOrderState.actualLastSubOrderAmount);
     }*/
 
 
@@ -535,9 +549,14 @@ contract GelatoDutchX is Ownable, SafeTransfer {
     }*/
     // @DEV Calculates amount withdrawable from past, cleared auction
 
-    /* function _calcWithdrawAmount(address _sellToken, address _buyToken, uint256 _lastAuctionIndex, uint256 _actualLastSubOrderAmount)
-        public
-        returns(uint256)
+    /* function _calcWithdrawAmount(uint256 _executionClaimId,
+                                    address _sellToken,
+                                    address _buyToken,
+                                    uint256 _lastAuctionIndex,
+                                    uint256 _actualLastSubOrderAmount
+        )
+            public
+            returns(uint256 withdrawAmount)
     {
         // Fetch numerator and denominator from dutchExchange
         uint256 num;
@@ -552,13 +571,12 @@ contract GelatoDutchX is Ownable, SafeTransfer {
         // @DEV Test: Are there any other possibilities for den being 0 other than when the auction has not yet cleared?
         require(den != 0, 'Last auction did not clear thus far, withdrawal cancelled');
 
-        emit LogNumDen(num, den);
+        emit LogNumDen(_executionClaimId, num, den);
 
         uint256 withdrawAmount = _actualLastSubOrderAmount.mul(num).div(den);
 
-        emit LogWithdrawAmount(withdrawAmount);
+        emit LogWithdrawAmount(_executionClaimId, withdrawAmount);
 
-        return withdrawAmount;
     }*/
 
 
@@ -572,13 +590,13 @@ contract GelatoDutchX is Ownable, SafeTransfer {
             require(!sellOrderState.cancelled,
                 "Sell order was cancelled already"
             );
-            require(msg.sender == trader,
+            require(msg.sender == executionClaimOwner,
                 "Only seller can cancel the sell order"
             );
 
             sellOrderState.cancelled = true;
 
-            emit LogSellOrderCancelled(sellOrderHash, trader);
+            emit LogSellOrderCancelled(sellOrderHash, executionClaimOwner);
 
             return true;
       }
