@@ -37,7 +37,9 @@ contract GelatoDutchX is Ownable, SafeTransfer {
                                   uint256 actualSubOrderAmount,
                                   uint256 fee
     );
-    event LogExecution(uint256 indexed executionClaimId, address indexed executionClaimOwner);
+    event LogPostSubOrderExecution(uint256 indexed executionClaimId,
+                       address indexed executionClaimOwner
+    );
     // **************************** Events END ******************************
 
 
@@ -409,9 +411,21 @@ contract GelatoDutchX is Ownable, SafeTransfer {
         //  listen to the DutchX to determine when the auction for this ExecutionClaim has cleared and
         //  thus execWithdrawSubOrder() can be executed.
 
+        // Optional Step: We could somehow also signal on GelatoCore that
+        //  the first part of the ExecutionClaim has been executed like so:
+        gelatoCore.updateExecutionTime(_executionClaimId, now + 1 minute);
+        // now + 1 minute is arbitrary. We could also try to approximate the
+        //  time at which the ExecutionClaim becomes withdrawable on the DutchX
+        //  and thus execWithdrawSubOrder can be executed.
+        // In any case, this fires the updateExecutionTime event on GelatoCore
+        //  which our ExecutionService could listen to on GelatoCore, filtering for the
+        //  GelatoDutchX interface, and use this event to update the pending Claim in
+        //  its database to status: awaiting withdrawal execution or the likes.
+        // Executor Nodes might similarly achieve this by listening to the LogPostSubOrderExecution
+        //  event on the GelatoDutchX interface directly.
 
         // Step6: Event emissions execution function claim was executed
-        emit LogExecution(_executionClaimId, executionClaimOwner);
+        emit LogPostSubOrderExecution(_executionClaimId, executionClaimOwner);
 
 
         // Step7: return success
