@@ -38,7 +38,7 @@ contract GelatoDutchX is Ownable, SafeTransfer {
                                   uint256 fee
     );
     event LogPostSubOrderExecution(uint256 indexed executionClaimId,
-                       address indexed executionClaimOwner
+                                   address indexed executionClaimOwner
     );
     // **************************** Events END ******************************
 
