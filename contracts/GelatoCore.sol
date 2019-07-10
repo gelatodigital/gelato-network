@@ -4,7 +4,6 @@ pragma solidity >=0.4.21 <0.6.0;
 import './base/ERC721/Claim.sol';
 import './base/Ownable.sol';
 import './base/SafeMath.sol';
-import './base/SafeTransfer.sol';
 
 
 contract GelatoCore is Ownable, Claim {
@@ -26,7 +25,7 @@ contract GelatoCore is Ownable, Claim {
     struct ExecutionClaim {
         address dappInterface;
         bool pending;  // covers all: pending (true), complete (false), cancelled (false)
-        bytes32 parentOrderHash;
+        uint256 parentOrderId;
         address sellToken;
         address buyToken;
         uint256 orderSize;
@@ -59,7 +58,7 @@ contract GelatoCore is Ownable, Claim {
     );
     event LogExecutorPayout(address indexed dappInterface,
                             address payable indexed executor,
-                            bytes32 indexed parentOrderHash,
+                            uint256 indexed parentOrderId,
                             uint256 executorPayout
 
     );
@@ -95,10 +94,11 @@ contract GelatoCore is Ownable, Claim {
     //  for minting a new execution executionClaim
     function calcPrepaidExecutionFee()
         public
+        view
         returns(uint256 prepayment)
     {
         // msg.sender == dappInterface
-        uint256 prepayment = maxGasByInterface[msg.sender].mul(gelatoGasPrice);
+        prepayment = maxGasByInterface[msg.sender].mul(gelatoGasPrice);
     }
     //_____________ Gelato Execution Service Business Logic END ________________
 
@@ -130,7 +130,7 @@ contract GelatoCore is Ownable, Claim {
 
     // CREATE
     // **************************** mintExecutionClaim() ******************************
-    function mintExecutionClaim(bytes32 _parentOrderHash,
+    function mintExecutionClaim(uint256 _parentOrderId,
                                 address _claimOwner,
                                 address _sellToken,
                                 address _buyToken,
@@ -159,7 +159,7 @@ contract GelatoCore is Ownable, Claim {
         ExecutionClaim memory executionClaim = ExecutionClaim(
             msg.sender,  // dappInterface
             true,  // pending
-            _parentOrderHash,
+            _parentOrderId,
             _sellToken,
             _buyToken,
             _orderSize,
@@ -207,7 +207,7 @@ contract GelatoCore is Ownable, Claim {
         view
         returns(address dappInterface,
                 bool pending,
-                bytes32 parentOrderHash,
+                uint256 parentOrderId,
                 address owner,
                 address sellToken,
                 address buyToken,
@@ -220,7 +220,7 @@ contract GelatoCore is Ownable, Claim {
 
         return (executionClaim.dappInterface,
                 executionClaim.pending,
-                executionClaim.parentOrderHash,
+                executionClaim.parentOrderId,
                 ownerOf(_executionClaimId), // fetches owner of the executionClaim token
                 executionClaim.sellToken,
                 executionClaim.buyToken,
@@ -242,7 +242,7 @@ contract GelatoCore is Ownable, Claim {
         onlyOwner
         public
     {
-        require(interfaceWhitelist[_dappInterface] == address(0),
+        require(interfaceWhitelist[_dappInterface] == false,
             "listInterface: Dapp Interface already whitelisted"
         );
 
@@ -336,7 +336,7 @@ contract GelatoCore is Ownable, Claim {
         _burn(_executionClaimId);
         emit LogExecutionClaimBurned(msg.sender,  // msg.sender == interface
                             ownerOf(_executionClaimId),
-                            executionClaimId
+                            _executionClaimId
         );
     }
     // **************************** burnExecutionClaim() END ***************************
@@ -349,7 +349,7 @@ contract GelatoCore is Ownable, Claim {
     //   AND the execWithdrawal() functions have been executed. This might be fine though.
     // **************************** payExecutor() ***************************
     function payExecutor(address payable _executor, uint256 _executionClaimId)
-        onlyWhiteListedInterface(msg.sender)  // msg.sender == dappInterface
+        onlyWhitelistedInterfaces(msg.sender)  // msg.sender == dappInterface
         external
         returns(bool)
     {
@@ -376,7 +376,7 @@ contract GelatoCore is Ownable, Claim {
         // Event emission
         emit LogExecutorPayout(msg.sender,  // dappInterface
                                _executor,
-                               executionClaim.parentOrderHash,
+                               executionClaim.parentOrderId,
                                executionClaim.prepaidExecutionFee  // executorPayout
         );
 

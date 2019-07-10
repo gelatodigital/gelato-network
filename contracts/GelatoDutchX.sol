@@ -2,10 +2,10 @@ pragma solidity >=0.4.21 <0.6.0;
 
 //  Imports:
 import './GelatoCore.sol';
+import './base/Counters.sol';
 import './base/ERC20.sol';
 import './base/Ownable.sol';
 import './base/SafeMath.sol';
-import "./base/SafeTransfer.sol";
 import '@gnosis.pm/dx-contracts/contracts/DutchExchange.sol';
 
 
@@ -20,6 +20,9 @@ contract GelatoDutchX is Ownable, SafeTransfer {
 
     // Libraries used:
     using SafeMath for uint256;
+    using Counters for Counters.Counter;
+
+    Counters.Counter private _sellOrderIds;
 
     struct SellOrderState {
         bool lastAuctionWasWaiting;  // default: false
@@ -30,16 +33,18 @@ contract GelatoDutchX is Ownable, SafeTransfer {
 
 
     // **************************** Events ******************************
-    event LogNewSellOrderCreated(bytes32 indexed sellOrderHash, address indexed seller);
-    event LogNumDen(uint256 indexed executionClaimId, uint256 num, uint256 den);
-    event LogActualSubOrderAmount(uint256 indexed executionClaimId,
-                                  uint256 subOrderAmount,
+    event LogNewSellOrderCreated(uint256 indexed sellOrderId, address indexed seller);
+    // We should also emit uint256 indexed executionClaimId BUT stackToDeep
+    event LogNumDen(uint256 num, uint256 den);
+    // We should also emit uint256 indexed executionClaimId BUT stackToDeep
+    event LogActualSubOrderAmount(uint256 subOrderAmount,
                                   uint256 actualSubOrderAmount,
                                   uint256 fee
     );
-    event LogPostSubOrderExecution(uint256 indexed executionClaimId,
+    // Stack too deep
+    /*event LogPostSubOrderExecution(uint256 indexed executionClaimId,
                                    address indexed executionClaimOwner
-    );
+    );*/
     // **************************** Events END ******************************
 
 
@@ -49,11 +54,11 @@ contract GelatoDutchX is Ownable, SafeTransfer {
     GelatoCore public gelatoCore;
     DutchExchange public dutchExchange;
 
-    // sellOrderHash => SellOrderState struct
-    mapping(bytes32 => SellOrderState) public sellOrderStates;
+    // sellOrderId => SellOrderState struct
+    mapping(uint256 => SellOrderState) public sellOrderStates;
 
-    // Seller => array of sellOrderHash(es)
-    mapping(address => bytes32[]) public sellOrdersBySeller;
+    // Seller => array of sellOrderId(s)
+    mapping(address => uint256[]) public sellOrdersBySeller;
 
     // Constants that are set during contract construction and updateable via setters
     uint256 public auctionStartWaitingForFunding;
@@ -97,7 +102,7 @@ contract GelatoDutchX is Ownable, SafeTransfer {
     )
         public
         payable
-        returns (bytes32 sellOrderHash)
+        returns (uint256 sellOrderId)
 
     {
         // @DEV: capping number of sub orders should be done at Gelato Interface Level
@@ -124,7 +129,7 @@ contract GelatoDutchX is Ownable, SafeTransfer {
 
 
         // Step3: Transfer the totalSellVolume from msg.sender(seller) to GelatoInterface
-        // this is hardcoded into safeTransfer.sol
+        // this is hardcoded into SafeTransfer.sol
         require(safeTransfer(_sellToken, address(this), _totalSellVolume, true),
             "splitSellOrder: The transfer of sellTokens must succeed"
         );
@@ -139,30 +144,28 @@ contract GelatoDutchX is Ownable, SafeTransfer {
         );
 
 
-        // Step5: hash sell order: yields core protocol's parentOrderHash
-        bytes32 sellOrderHash = keccak256(abi.encodePacked(msg.sender,  //seller
-                                                           _sellToken,
-                                                           _buyToken,
-                                                           _totalSellVolume,
-                                                           _numSubOrders,
-                                                           _subOrderSize,
-                                                           _executionTime)
-        );
+        // Step5: give sellOrderId: yields core protocol's parentOrderId
+        // Increment the current sellOrderId
+        Counters.increment(_sellOrderIds);
+        // Get a new, unique sellOrderId for the newly created Sell Order
+        sellOrderId = _sellOrderIds.current();
+
+
         // Prevent overwriting stored sub orders because of hash collisions
-        if (sellOrderStates[sellOrderHash].remainingSubOrders != 0) {
+        if (sellOrderStates[sellOrderId].remainingSubOrders != 0) {
             revert("splitSellOrder: Identical sellOrders disallowed");
         }
 
 
         // Step6: Update GelatoDutchX state variables
-        sellOrderStates[sellOrderHash] = sellOrderState;
-        sellOrdersBySeller[msg.sender].push(sellOrderHash);
+        sellOrderStates[sellOrderId] = sellOrderState;
+        sellOrdersBySeller[msg.sender].push(sellOrderId);
 
 
         // Step7: Fetch the gelatoFeePerSubOrder from the core protocol
         // The gelatoFeePerSubOrder is for the sellOrder posting on AND withdrawal from the DutchX
         //  ***** GELATO CORE PROTOCOL INTERACTION *****
-        uint256 gelatoFeePerSubOrder = gelatoCore.calcPrepaidExecutionFee();
+        // uint256 gelatoFeePerSubOrder = ;
         //  *** GELATO CORE PROTOCOL INTERACTION END ***
 
 
@@ -172,12 +175,12 @@ contract GelatoDutchX is Ownable, SafeTransfer {
             //  ***** GELATO CORE PROTOCOL INTERACTION *****
             // Call Gelato gelatoCore protocol's mintClaim() function transferring
             //  the fee for claimType-0 for each suborder
-            gelatoCore.mintClaim.value(gelatoFeePerSubOrder)(sellOrderHash,
-                                                             msg.sender,  // seller/claimOwner
-                                                             _sellToken,
-                                                             _buyToken,
-                                                             _subOrderSize,
-                                                             _executionTime
+            gelatoCore.mintExecutionClaim.value(gelatoCore.calcPrepaidExecutionFee())(sellOrderId,
+                                                                                      msg.sender,  // trader/claimOwner
+                                                                                      _sellToken,
+                                                                                      _buyToken,
+                                                                                      _subOrderSize,
+                                                                                      _executionTime
             );
             //  *** GELATO CORE PROTOCOL INTERACTION END ***
 
@@ -187,7 +190,7 @@ contract GelatoDutchX is Ownable, SafeTransfer {
 
 
         // Step9: Emit New Sell Order to find to its suborder constituents on the core protocol
-        emit LogNewSellOrderCreated(sellOrderHash, msg.sender);
+        emit LogNewSellOrderCreated(sellOrderId, msg.sender);
     }
     // **************************** splitSellOrder() END ******************************
 
@@ -196,17 +199,17 @@ contract GelatoDutchX is Ownable, SafeTransfer {
     // **************************** execPostSubOrder()  *********************************
     function execPostSubOrder(uint256 _executionClaimId)
         public
-        returns (bool)
     {
         // Step1: get subOrder to be executed from gelatoCore
         (address gelatoInterface,
          bool pending,
-         bytes32 sellOrderHash,
+         uint256 sellOrderId,
          address executionClaimOwner,
          address sellToken,
          address buyToken,
          uint256 subOrderSize,
-         uint256 executionTime) = gelatoCore.getClaim(_executionClaimId);
+         uint256 executionTime,
+         uint256 gelatoFeePerSubOrder) = gelatoCore.getExecutionClaim(_executionClaimId);
         // Ensure that the executionClaim is linked to this interface
         require(gelatoInterface == address(this),
             "executeSubOrder: gelatoInterface != address(this)"
@@ -216,7 +219,7 @@ contract GelatoDutchX is Ownable, SafeTransfer {
 
 
         // Step2: point to sellOrderState in storage. This gets updated later.
-        SellOrderState storage sellOrderState = sellOrderStates[sellOrderHash];
+        SellOrderState storage sellOrderState = sellOrderStates[sellOrderId];
 
         // Local variables for readability
         address payable executor = msg.sender;
@@ -411,10 +414,12 @@ contract GelatoDutchX is Ownable, SafeTransfer {
         //  listen to the DutchX to determine when the auction for this ExecutionClaim has cleared and
         //  thus execWithdrawSubOrder() can be executed.
 
-        // Optional Step: We could somehow also signal on GelatoCore that
+        // Optional Step-Stack too deep:: We could somehow also signal on GelatoCore that
         //  the first part of the ExecutionClaim has been executed like so:
-        gelatoCore.updateExecutionTime(_executionClaimId, now + 1 minute);
-        // now + 1 minute is arbitrary. We could also try to approximate the
+
+        // gelatoCore.updateExecutionTime(_executionClaimId, now + 1 minutes);
+
+        // now + 1 minutes is arbitrary. We could also try to approximate the
         //  time at which the ExecutionClaim becomes withdrawable on the DutchX
         //  and thus execWithdrawSubOrder can be executed.
         // In any case, this fires the updateExecutionTime event on GelatoCore
@@ -424,12 +429,12 @@ contract GelatoDutchX is Ownable, SafeTransfer {
         // Executor Nodes might similarly achieve this by listening to the LogPostSubOrderExecution
         //  event on the GelatoDutchX interface directly.
 
-        // Step6: Event emissions execution function claim was executed
-        emit LogPostSubOrderExecution(_executionClaimId, executionClaimOwner);
+        // Step6-Stack too deep: Event emissions execution function claim was executed
+        // emit LogPostSubOrderExecution(_executionClaimId, executionClaimOwner);
 
 
         // Step7: return success
-        return true;
+        // return true;
     }
     // **************************** execPostSubOrder() END *********************************
 
@@ -461,7 +466,7 @@ contract GelatoDutchX is Ownable, SafeTransfer {
 
     // Helper Functions
     // Calculate sub order size accounting for current dutchExchange liquidity contribution fee.
-    function _calcActualSubOrderSize(uint256 _sellAmount, uint256 _executionClaimId)
+    function _calcActualSubOrderSize(uint256 _sellAmount)
         public
         returns(uint256)
     {
@@ -475,12 +480,12 @@ contract GelatoDutchX is Ownable, SafeTransfer {
         // Calc fee amount
         uint256 fee = _sellAmount.mul(num).div(den);
 
-        emit LogNumDen(_executionClaimId, num, den);
+        emit LogNumDen(num, den);
 
         // Calc actual Sell Amount
         uint256 actualSellAmount = _sellAmount.sub(fee);
 
-        emit LogActualSubOrderAmount(_executionClaimId, _sellAmount, actualSellAmount, fee);
+        emit LogActualSubOrderAmount(_sellAmount, actualSellAmount, fee);
     }
 
     // Deposit and sell on the dutchExchange
@@ -512,10 +517,10 @@ contract GelatoDutchX is Ownable, SafeTransfer {
 
 
     // Deprecated Withdrawal functions
-    /*function withdrawManually(bytes32 _sellOrderHash)
+    /*function withdrawManually(bytes32 _sellOrderId)
         public
     {
-        SellOrderState storage sellOrderState = sellOrders[_sellOrderHash];
+        SellOrderState storage sellOrderState = sellOrders[_sellOrderId];
 
         // Check if msg.sender is equal seller
         // @Kalbo: Do we really need that or should we make everyone be able to withdraw on behalf of a user?
@@ -595,11 +600,11 @@ contract GelatoDutchX is Ownable, SafeTransfer {
 
 
     /* Deprecated cancel order function
-    function cancelSellOrder(bytes32 sellOrderHash)
+    function cancelSellOrder(bytes32 sellOrderId)
             public
             returns(bool)
         {
-            SellOrderState storage sellOrderState = sellOrderStates[sellOrderHash];
+            SellOrderState storage sellOrderState = sellOrderStates[sellOrderId];
 
             require(!sellOrderState.cancelled,
                 "Sell order was cancelled already"
@@ -610,7 +615,7 @@ contract GelatoDutchX is Ownable, SafeTransfer {
 
             sellOrderState.cancelled = true;
 
-            emit LogSellOrderCancelled(sellOrderHash, executionClaimOwner);
+            emit LogSellOrderCancelled(sellOrderId, executionClaimOwner);
 
             return true;
       }
