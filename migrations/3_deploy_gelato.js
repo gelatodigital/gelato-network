@@ -10,7 +10,7 @@ const DutchExchangeProxy = artifacts.require('DutchExchangeProxy');
 const GELATO_GAS_PRICE = web3.utils.toWei('5', 'gwei');
 
 module.exports = async function (deployer, network, accounts) {
-    const deployer = accounts[0];
+    const _deployer = accounts[0];
 
     // Make sure the proxy is deployed
     const dxProxy = await DutchExchangeProxy.deployed();
@@ -18,7 +18,7 @@ module.exports = async function (deployer, network, accounts) {
     // Deploy GelatoCore with gelatoGasPrice
     console.log(`
     Deploying GelatoCore.sol with
-    Owner: ${deployer}
+    Owner: ${_deployer}
     DutchXProxy: ${dxProxy.address}
     gelatoGasPrice: ${GELATO_GAS_PRICE}`
     );
@@ -28,7 +28,7 @@ module.exports = async function (deployer, network, accounts) {
     // Deploy GelatoDutchX interface
     console.log(`
     Deploying GelatoDutchX.sol with
-    Owner: ${deployer}
+    Owner: ${_deployer}
     GelatoCore: ${gelatoCore.address}
     DutchXProxy: ${dxProxy.address}`
     );
