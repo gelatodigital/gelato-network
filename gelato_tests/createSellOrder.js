@@ -7,13 +7,14 @@
     * truffle exec ./createSellOrder.js
 */
 // Requires
-const Gelato = artifacts.require('Gelato');
+const GelatoCore = artifacts.require('GelatoCore');
+const GelatoDutchX = artifacts.require('GelatoDutchX');
 const SellToken = artifacts.require('EtherToken')
 const BuyToken = artifacts.require('TokenRDN')
 
 // @params constants: createSellOrder()
 const BUY_TOKEN = BuyToken.address // RDN
-const SELL_TOKEN = SellToken.address // RDN
+const SELL_TOKEN = SellToken.address // WETH
 const SUBORDER_SIZE = 10;
 const NUM_SUBORDERS = 2;
 const TOTAL_SELL_VOLUME = SUBORDER_SIZE * NUM_SUBORDERS;
@@ -25,47 +26,48 @@ const EXECUTOR_REWARD_PER_SUBORDER_UNIT = "finney";
 
 module.exports = () => {
 
-    async function testSellOrder() {
+  async function testSellOrder() {
 
-        const gelato = await Gelato.at(Gelato.address)
-        const sellTokenContract = await SellToken.at(SELL_TOKEN)
-        const accounts = await web3.eth.getAccounts()
-        const seller = accounts[9]
+    const gelatoDX = await GelatoDutchX.at(GelatoDutchX.address)
+    const gelatoCore = await GelatoCore.at(GelatoCore.address)
+    const sellTokenContract = await SellToken.at(SELL_TOKEN)
+    const accounts = await web3.eth.getAccounts()
+    const seller = accounts[9]
 
-        // Selling a total of 2 WETH
-        // params of createSellOrder
-        const totalSellVolume = web3.utils.toWei(
-            TOTAL_SELL_VOLUME.toString(),
-            TOTAL_SELL_VOLUME_UNIT
-        );
+    // Selling a total of 2 WETH
+    // params of createSellOrder
+    const totalSellVolume = web3.utils.toWei(
+      TOTAL_SELL_VOLUME.toString(),
+      TOTAL_SELL_VOLUME_UNIT
+    );
 
-        const subOrderSize = web3.utils.toWei(
-            SUBORDER_SIZE.toString(),
-            SUBORDER_UNIT
-        );
+    const subOrderSize = web3.utils.toWei(
+      SUBORDER_SIZE.toString(),
+      SUBORDER_UNIT
+    );
 
-        const executorRewardPerSubOrder = web3.utils.toWei(
-            EXECUTOR_REWARD_PER_SUBORDER,
-            EXECUTOR_REWARD_PER_SUBORDER_UNIT
-        );
+    const executorRewardPerSubOrder = web3.utils.toWei(
+      EXECUTOR_REWARD_PER_SUBORDER,
+      EXECUTOR_REWARD_PER_SUBORDER_UNIT
+    );
 
-        let executorRewardTotal = SUBORDER_SIZE * (NUM_SUBORDERS + 1); // 10 finney | plus 1 because we need an extra bounty for the last withdraw
+    let executorRewardTotal = SUBORDER_SIZE * NUM_SUBORDERS; // 10 finney
 
-        executorRewardTotal = web3.utils.toWei(
-            executorRewardTotal.toString(),
-            "finney"
-        );
+    executorRewardTotal = web3.utils.toWei(
+      executorRewardTotal.toString(),
+      "finney"
+    );
 
-        console.log(`
+    console.log(`
                     Summon Gelato Sell Order
         ==================================================
         `);
 
-        const block = await web3.eth.getBlockNumber()
-        const blockDetails = await web3.eth.getBlock(block)
-        const timestamp = blockDetails.timestamp
-        const hammerTime = timestamp
-        console.log(`
+    const block = await web3.eth.getBlockNumber()
+    const blockDetails = await web3.eth.getBlock(block)
+    const timestamp = blockDetails.timestamp
+    const hammerTime = timestamp
+    console.log(`
                     Block info:
                     ----------
         Current Timestamp:      ${timestamp}
@@ -74,8 +76,8 @@ module.exports = () => {
         ==================================================
         `);
 
-        // User external TX 1
-        console.log(`
+    // User external TX 1
+    console.log(`
                     Create 1st Sell Order...
                     Parameters:
                     ----------
@@ -90,26 +92,143 @@ module.exports = () => {
         freezeTime:                ${FREEZE_TIME}
         executorRewardPerSubOrder: ${executorRewardPerSubOrder}
         ==================================================
-        `);
+    `);
 
-        // Gelato contract call to createSellOrder
-        const txSellOrder = await gelato.createSellOrder(
-            SELL_TOKEN,
-            BUY_TOKEN,
-            totalSellVolume,
-            subOrderSize,
-            NUM_SUBORDERS,
-            hammerTime,
-            FREEZE_TIME,
-            executorRewardPerSubOrder,
-            { from: seller, value: executorRewardTotal }
-        );
+    // Gelato contract call to createSellOrder
+    const txSellOrder = await gelatoDX.splitSellOrder(
+      SELL_TOKEN,
+      BUY_TOKEN,
+      totalSellVolume,
+      NUM_SUBORDERS,
+      subOrderSize,
+      hammerTime,
+      FREEZE_TIME,
+      { from: seller, value: executorRewardTotal }
+    );
 
-        // TX 1 checks
-        const sellOrderHash = txSellOrder.logs[0].args.sellOrderHash;
-        const sellOrder = await gelato.sellOrders(sellOrderHash);
-        console.log(
-            `
+    const event = await gelatoDX.getPastEvents('LogNewSellOrderCreated')
+
+    const event2 = await gelatoCore.getPastEvents('LogNewClaimCreated')
+
+
+    const claims = [];
+    const tokenIds = [];
+    const sellOrderHash = event[0].returnValues.sellOrderHash
+
+    console.log(`SellOrderHash: ${sellOrderHash}`)
+    console.log("###########")
+
+    for (const event of event2) {
+      let tokenId = event.returnValues.tokenId
+      console.log("###########")
+      console.log(`TokenID: ${tokenId}`)
+      const claim = await gelatoCore.getClaim(tokenId)
+      console.log(`Owner: ${claim.trader}`)
+      claims.push(claim)
+      tokenIds.push(tokenId)
+    }
+
+    // ##############################
+    // ERC721 CRUD TESTS
+
+    console.log(`######## Testing the UPDATE FUNCION #######`)
+
+
+    // Claim used for testing purposes
+    const tokenId = tokenIds[0]
+
+    const claimBefore = await gelatoCore.getClaim(tokenId)
+    console.log(claimBefore)
+    console.log(`
+
+
+
+          OrderSize: ${claimBefore.orderSize.toString()}
+          Execution Time: ${claimBefore.executionTime.toString()}
+
+    `)
+
+    await gelatoCore.updateClaim(tokenId, 20, hammerTime + 99999)
+
+    const claimAfter = await gelatoCore.getClaim(tokenId)
+    console.log(`
+
+
+
+            OrderSize: ${claimAfter.orderSize.toString()}
+            Execution Time: ${claimAfter.executionTime.toString()}
+
+    `)
+
+    console.log(`######## Testing the UPDATE FUNCION END #######`)
+
+
+    // Change ownership
+    console.log(`########
+
+    Swapping ownership from ${seller} to ${accounts[4]} #######
+
+
+    `)
+
+    const oldOwner = await gelatoCore.ownerOf(tokenId)
+    console.log(`
+
+    Previous Owner of Token ${tokenId}: ${oldOwner}
+
+
+    `)
+
+    const approval = await gelatoCore.approve(accounts[4], tokenId, { from: seller })
+
+    const ownershipSwapReceipe = await gelatoCore.safeTransferFrom(seller, accounts[4], tokenId, { from: seller })
+
+    const newOwner = await gelatoCore.ownerOf(tokenId)
+    console.log(`
+
+    New Owner of Token ${tokenId}: ${newOwner}
+
+
+    `)
+
+    console.log(`######## Swapping ownership successful #######`)
+
+    console.log(`######## Testing the BURN FUNCION #######`)
+
+    console.log(`
+
+    Initiating burning of Token ${tokenId}
+
+    `)
+
+    const burnReceipt = await gelatoCore.burnClaim(tokenId)
+
+
+    console.log(`Burn completed`)
+
+    console.log(`Fetching new owner ...`)
+
+    const transfers = await gelatoCore.getPastEvents('Transfer')
+
+    const nullAddress = transfers[0].returnValues.to
+
+    console.log(`
+
+    Token was burned: ${nullAddress === '0x0000000000000000000000000000000000000000'}
+
+    `)
+
+    console.log(`######## Testing the BURN FUNCION END #######`)
+
+    // ERC721 CRUD TESTS END
+    // ##############################
+
+
+    /*
+
+
+    console.log(
+      `
                     Seller TX1-createSellOrder on-chain struct check
                     -----------------------------------------------
         sellOrderHash: ${sellOrderHash}
@@ -134,13 +253,13 @@ module.exports = () => {
         ==================================================
         `);
 
-        // User external TX 2 and TX2 checks
-        const txApproval = await sellTokenContract.approve(Gelato.address, totalSellVolume, {
-            from: seller
-        });
-        const allowance = await sellTokenContract.allowance(seller, Gelato.address);
+    // User external TX 2 and TX2 checks
+    const txApproval = await sellTokenContract.approve(Gelato.address, totalSellVolume, {
+      from: seller
+    });
+    const allowance = await sellTokenContract.allowance(seller, Gelato.address);
 
-        console.log(`
+    console.log(`
                     Seller TX2-ERC20: approves Gelato contract for 20 WETH
                     ------------------------------------------------------
         Approved:                  ${txApproval.logs[0].args.value}
@@ -152,11 +271,11 @@ module.exports = () => {
         ==================================================
         `);
 
-        // Write SELL_ORDER_HASH to tmp_file for parent process to read from
+    // Write SELL_ORDER_HASH to tmp_file for parent process to read from
 
 
 
-        return (`
+    return (`
                         Testing Complete
                         ----------------
                 Sell Order Hash:                 ${sellOrderHash}
@@ -177,7 +296,12 @@ module.exports = () => {
         --------------------------------------------------
                 !!!! DO NOT FORGET THE " " around sellOrderHash !!!
         `);
-    }
 
-    testSellOrder().then(result => {console.log(result)});
+      */
+    return (`
+    THE END
+    `)
+  }
+
+  testSellOrder().then(result => { console.log(result) });
 }

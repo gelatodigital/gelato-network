@@ -27,7 +27,7 @@ echo "\n            Running execSubOrderAndWithdraw \n
 Sell Order Hash: ${SELL_ORDER_HASH}\n"
 echo "###############################################################################\n"
 
-EXEC_OUTPUT=`truffle exec ./execSubOrderAndWithdraw.js ${SELL_ORDER_HASH}`
+EXEC_OUTPUT=`truffle exec ../execSubOrderAndWithdraw.js ${SELL_ORDER_HASH}`
 echo "\n{$EXEC_OUTPUT}\n"
 
 echo "###############################################################################\n"

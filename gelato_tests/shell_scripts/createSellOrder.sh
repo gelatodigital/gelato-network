@@ -10,7 +10,7 @@ echo "\n\nBash script running createSellorder.sh | createSellOrder.js logic....\
 seller account: ${SELLER}\n"
 echo "###############################################################################\n"
 
-SELLORDER_OUTPUT=`truffle exec ./createSellOrder.js`
+SELLORDER_OUTPUT=`truffle exec ./gelato_tests/createSellOrder.js`
 echo "\n{$SELLORDER_OUTPUT}\n"
 
 echo "###############################################################################\n"
