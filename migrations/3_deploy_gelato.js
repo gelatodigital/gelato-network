@@ -4,20 +4,39 @@
 // Set Gelato Contract as truffle artifact
 const GelatoCore = artifacts.require('GelatoCore');
 const GelatoDutchX = artifacts.require('GelatoDutchX');
-const DutchExchangeProxy = artifacts.require('DutchExchangeProxy')
+const DutchExchangeProxy = artifacts.require('DutchExchangeProxy');
 
-module.exports = async function (deployer, network, accounts)
+// GelatoCore constructor params
+const GELATO_GAS_PRICE = web3.utils.toWei('5', 'gwei');
 
-{
-    const account = accounts[0]
+module.exports = async function (deployer, network, accounts) {
+    const _deployer = accounts[0];
 
     // Make sure the proxy is deployed
-    const dxProxy = await DutchExchangeProxy.deployed()
+    const dxProxy = await DutchExchangeProxy.deployed();
 
-    // Deploy the Safe
-    console.log('Deploying Gelato.sol with %s as the owner and %s as the DutchExchange contract', account, dxProxy.address)
+    // Deploy GelatoCore with gelatoGasPrice
+    console.log(`
+    Deploying GelatoCore.sol with
+    Owner: ${_deployer}
+    DutchXProxy: ${dxProxy.address}
+    gelatoGasPrice: ${GELATO_GAS_PRICE}`
+    );
+    await deployer.deploy(GelatoCore, GELATO_GAS_PRICE);
+    const gelatoCore = await GelatoCore.deployed();
 
-    await deployer.deploy(GelatoCore)
-    const gelatoCore = await GelatoCore.deployed()
-    await deployer.deploy(GelatoDutchX, gelatoCore.address, dxProxy.address)
+    // Deploy GelatoDutchX interface
+    console.log(`
+    Deploying GelatoDutchX.sol with
+    Owner: ${_deployer}
+    GelatoCore: ${gelatoCore.address}
+    DutchXProxy: ${dxProxy.address}`
+    );
+    await deployer.deploy(GelatoDutchX, gelatoCore.address, dxProxy.address);
+
+    const gelatoDutchX = await GelatoDutchX.deployed();
+    console.log(`
+    Deployed GelatoDutchX instance at:
+    ${gelatoDutchX.address}`
+    );
 }
