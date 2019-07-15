@@ -4,6 +4,7 @@ pragma solidity >=0.4.21 <0.6.0;
 import './GelatoCore.sol';
 import './base/Counters.sol';
 import './base/ERC20.sol';
+import './base/IGEI0.sol';
 import './base/Ownable.sol';
 import './base/SafeMath.sol';
 import '@gnosis.pm/dx-contracts/contracts/DutchExchange.sol';

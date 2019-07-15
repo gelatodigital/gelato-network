@@ -30,6 +30,7 @@ contract GelatoCore is Ownable, Claim {
     // Any ExecutionClaim that exists is always pending. If completed/cancelled it is deleted.
     struct ExecutionClaim {
         address dappInterface;
+        uint256 interfaceOrderId;
         address sellToken;
         address buyToken;
         uint256 sellAmount;  // you always sell something, in order to buy something
@@ -39,9 +40,10 @@ contract GelatoCore is Ownable, Claim {
 
     // **************************** Events **********************************
     event LogNewExecutionClaimMinted(address indexed dappInterface,
-                                     address indexed owner,
-                                     uint256 indexed executionClaimId,
-                                     uint256 prepaidExecutionFee
+                                     uint256 indexed interfaceOrderId,
+                                     address indexed executionClaimOwner,
+                                     uint256 executionClaimId,
+                                     uint256 gelatoCoreReceivable
     );
     event LogNewInterfaceListed(address indexed dappInterface);
     event LogInterfaceUnlisted(address indexed dappInterface);
@@ -49,22 +51,23 @@ contract GelatoCore is Ownable, Claim {
     event LogMaxGasUpdate(address indexed dappInterface);
     event LogClaimCancelled(address indexed dappInterface,
                             uint256 indexed executionClaimId,
-                            address payable indexed claimOwner,
-                            uint256 sellAmount
+                            uint256 indexed interfaceOrderId,
+                            address payable executionClaimOwner,
+                            uint256 gelatoCorePayable
     );
     event LogExecutionTimeUpdated(address indexed dappInterface,
                                   uint256 indexed executionClaimId,
-                                  address indexed owner,
+                                  address indexed executionClaimOwner,
                                   uint256 newExecutionTime
     );
     event LogExecutionClaimBurned(address indexed dappInterface,
-                                  address indexed owner,
+                                  address indexed executionClaimOwner,
                                   uint256 indexed executionClaimId
     );
     event LogClaimExecuted(address indexed dappInterface,
                            address payable indexed executor,
                            uint256 indexed executionClaimId,
-                           uint256 executorPayout
+                           uint256 gelatoCorePayable
 
     );
     // **************************** Events END **********************************
@@ -146,6 +149,7 @@ contract GelatoCore is Ownable, Claim {
     // CREATE
     // **************************** mintExecutionClaim() ******************************
     function mintExecutionClaim(address _claimOwner,
+                                uint256 _interfaceOrderId,
                                 address _sellToken,
                                 address _buyToken,
                                 uint256 _sellAmount,
@@ -172,6 +176,7 @@ contract GelatoCore is Ownable, Claim {
         // Step3: Instantiate executionClaim (in memory)
         ExecutionClaim memory executionClaim = ExecutionClaim(
             msg.sender,  // dappInterface
+            _interfaceOrderId,
             _sellToken,
             _buyToken,
             _sellAmount,
@@ -197,9 +202,10 @@ contract GelatoCore is Ownable, Claim {
 
         // Step6: Emit event to notify executors that a new sub order was created
         emit LogNewExecutionClaimMinted(msg.sender,  // dappInterface
+                                        _interfaceOrderId,
                                         _claimOwner,
                                         executionClaimId,
-                                        msg.value
+                                        msg.value  // prepaidExecutionFee
         );
 
 
@@ -218,6 +224,7 @@ contract GelatoCore is Ownable, Claim {
         view
         returns(address claimOwner,
                 address dappInterface,
+                uint256 interfaceOrderId,
                 address sellToken,
                 address buyToken,
                 uint256 sellAmount,
@@ -229,6 +236,7 @@ contract GelatoCore is Ownable, Claim {
 
         return (ownerOf(_executionClaimId), // fetches owner of the executionClaim token
                 executionClaim.dappInterface,
+                executionClaim.interfaceOrderId,
                 executionClaim.sellToken,
                 executionClaim.buyToken,
                 executionClaim.sellAmount,
@@ -242,27 +250,57 @@ contract GelatoCore is Ownable, Claim {
     function getClaimInterface(uint256 _executionClaimId)
         public
         view
-        returns(address dappInterface)
+        returns(address)
     {
         ExecutionClaim memory executionClaim = executionClaims[_executionClaimId];
 
         return executionClaim.dappInterface;
     }
 
+    function getInterfaceOrderId(uint256 _executionClaimId)
+        public
+        view
+        returns(uint256)
+    {
+        ExecutionClaim memory executionClaim = executionClaims[_executionClaimId];
+
+        return executionClaim.interfaceOrderId;
+    }
+
     function getClaimTokenPair(uint256 _executionClaimId)
         public
         view
-        returns(address sellToken, address buyToken)
+        returns(address, address)
     {
         ExecutionClaim memory executionClaim = executionClaims[_executionClaimId];
 
         return (executionClaim.sellToken, executionClaim.buyToken);
     }
 
+    function getClaimSellToken(uint256 _executionClaimId)
+        public
+        view
+        returns(address)
+    {
+        ExecutionClaim memory executionClaim = executionClaims[_executionClaimId];
+
+        return executionClaim.sellToken;
+    }
+
+    function getClaimBuyToken(uint256 _executionClaimId)
+        public
+        view
+        returns(address)
+    {
+        ExecutionClaim memory executionClaim = executionClaims[_executionClaimId];
+
+        return executionClaim.sellToken;
+    }
+
     function getClaimSellAmount(uint256 _executionClaimId)
         public
         view
-        returns(uint256 sellAmount)
+        returns(uint256)
     {
         ExecutionClaim memory executionClaim = executionClaims[_executionClaimId];
 
@@ -272,7 +310,7 @@ contract GelatoCore is Ownable, Claim {
     function getClaimExecutionTime(uint256 _executionClaimId)
         public
         view
-        returns(uint256 executionTime)
+        returns(uint256)
     {
         ExecutionClaim memory executionClaim = executionClaims[_executionClaimId];
 
@@ -282,7 +320,7 @@ contract GelatoCore is Ownable, Claim {
     function getClaimPrepaidFee(uint256 _executionClaimId)
         public
         view
-        returns(uint256 prepaidExecutionFee)
+        returns(uint256)
     {
         ExecutionClaim memory executionClaim = executionClaims[_executionClaimId];
 
@@ -369,8 +407,9 @@ contract GelatoCore is Ownable, Claim {
         // EFFECTS: emit event, then burn and delete the ExecutionClaim struct - possible gas refund to msg.sender?
         emit LogClaimCancelled(executionClaim.dappInterface,
                                _executionClaimId,
+                               executionClaim.interfaceOrderId,
                                executionClaimOwner,
-                               executionClaim.sellAmount
+                               refund
         );
         burnExecutionClaim(_executionClaimId);
         delete executionClaims[_executionClaimId];
@@ -379,33 +418,9 @@ contract GelatoCore is Ownable, Claim {
         executionClaimOwner.transfer(refund);
     }
 
-    // Updating (increasing/decreasing) the execution time
-    function updateExecutionTime(uint256 _executionClaimId, uint256 _executionTime)
-        external
-    {
-        require(now <= _executionTime,
-            "updateExecutionTime: now not <= executionTime"
-        );
-
-        ExecutionClaim storage executionClaim = executionClaims[_executionClaimId];
-
-        // Only dapp Interfaces should be able to call this function
-        require(executionClaim.dappInterface == msg.sender,
-            "updateExecutionTime: msg.sender is not the dappInterface to the executionClaim"
-
-        );
-
-        executionClaim.executionTime = _executionTime;
-
-        emit LogExecutionTimeUpdated(executionClaim.dappInterface,
-                                     _executionClaimId,
-                                     ownerOf(_executionClaimId),
-                                     executionClaim.executionTime
-        );
-    }
-
-    // We do not want to make the sellAmount updateable as this introduces
-    //  unwanted safety complexity. Sellers should cancel or place new orders instead.
+    // We do not want to make the executionTime, nor the sellAmount, updateable
+    //  as this introduces unwanted safety complexity e.g. bad gasPrice estimations.
+    // Sellers should cancel and/or place new orders instead.
 
     // **************************** ExecutionClaims Updateability END ******************************
 
@@ -445,9 +460,12 @@ contract GelatoCore is Ownable, Claim {
         // Local variable needed for Checks - Effects -> Interactions pattern
         uint256 executorPayout = executionClaim.prepaidExecutionFee;
 
-        // CHECKS: none needed because:
+        // CHECKS: executionTime
         // Anyone is allowed to be an executor and call this function.
         // All ExecutionClaims in existence are always in state pending/executable (else non-existant/deleted)
+        require(executionClaim.executionTime <= now,
+            "gelatoCore.execute: You called before scheduled execution time"
+        );
 
         // ******** EFFECTS ********
         // @Dev: if IGEI0() doesnt work due to Interface type use contract function selectors instead.
