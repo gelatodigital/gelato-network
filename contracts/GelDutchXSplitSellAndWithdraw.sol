@@ -46,6 +46,7 @@ contract GelDutchXSplitSellAndWithdraw is Ownable, IGEI0, SafeTransfer {
                               address buyToken,
                               uint256 withdrawAmount
     );
+    event LogOrderCompleted(uint256 indexed orderId);
     // **************************** Events END ******************************
 
 
@@ -148,7 +149,7 @@ contract GelDutchXSplitSellAndWithdraw is Ownable, IGEI0, SafeTransfer {
             false,  // default: lastAuctionWasWaiting
             0,  // default: lastAuctionIndex
             _numSubOrders,  // default: remainingSubOrders
-            0,  // default: sellAmountAfterFee
+            0,  // default: lastSellAmountAfterFee
             0  //  default: remainingWithdrawals
         );
 
@@ -210,14 +211,23 @@ contract GelDutchXSplitSellAndWithdraw is Ownable, IGEI0, SafeTransfer {
             "GelatoInterface.execute: gelatoCore.getClaimInterface(_executionClaimId) != address(this)"
         );
 
+        // Get storage pointer to read from and write to
+        OrderState storage orderState = orderStates[orderId];
+
         // ********************** Step2: Basic Execution Logic **********************
-        /* Step4: Basic Execution Logic
+        /* Step2: Basic Execution Logic
             * Handled by Gelato Core
                 * Require that order is ready to be executed based on time
             * Handled by this Gelato Interface
                 * Require that this Gelato Interface has the ERC20 to be sold
                    in its ERC20 balance.
         */
+        /**
+         *@dev: remove if stack too deep since should not come to here af
+         */
+        require(orderState.remainingWithdrawals != 0,
+            ""
+        );
         require(
             ERC20(sellToken).balanceOf(address(this)) >= subOrderSize,
             "GelatoInterface.execute: ERC20(sellToken).balanceOf(address(this)) !>= subOrderSize"
@@ -225,20 +235,19 @@ contract GelDutchXSplitSellAndWithdraw is Ownable, IGEI0, SafeTransfer {
         // ********************** Step2: Basic Execution Logic END **********************
 
 
-        // Step3: get multi-use variables
+        // Step3.1: load variables from storage and initialise them
+        // the last DutchX auctionIndex at which the orderId participated in
+        uint256 lastAuctionIndex = orderState.lastAuctionIndex;  // default: 0
+        // SubOrderAmount - DutchXFee of last executed subOrder
+        uint256 lastSellAmountAfterFee = orderState.lastSellAmountAfterFee;
+        // How many executions are left
+        uint256 remainingSubOrders = orderState.remainingSubOrders;
+
+        // Step3.2: fetch from gelatoCore and initialise multi-use variables
         address seller = gelatoCore.ownerOf(_executionClaimId);
         uint256 orderId = gelatoCore.getInterfaceOrderId(_executionClaimId);
         (address sellToken, address buyToken) = gelatoCore.getClaimTokenPair(_executionClaimId);
         uint256 sellAmount = gelatoCore.getClaimSellAmount(_executionClaimId);
-
-        // Get storage pointer to read from and write to
-        OrderState storage orderState = orderStates[orderId];
-
-        uint256 lastAuctionIndex = orderState.lastAuctionIndex;  // default: 0
-        // SubOrderAmount - fee paid to the DutchX of last executed subOrder
-        uint256 sellAmountAfterFee = orderState.sellAmountAfterFee;
-        // How many executions are left
-        uint256 remainingSubOrders = order.remainingSubOrders;
 
 
         // ********************** Step4: Fetch data from dutchExchange **********************
@@ -414,7 +423,7 @@ contract GelDutchXSplitSellAndWithdraw is Ownable, IGEI0, SafeTransfer {
         // ********************** Step5: Advanced Execution Logic END **********************
 
 
-        // ********************** Withdraw from DutchX **********************
+        // ********************** Step 6: Withdraw from DutchX **********************
         // Only enter after first sub-order sale
         // Only enter if last auction the seller participated in has cleared
         // Only enter if seller has not called withdrawManually
@@ -424,17 +433,34 @@ contract GelDutchXSplitSellAndWithdraw is Ownable, IGEI0, SafeTransfer {
             orderState.remainingWithdrawals = orderState.remainingWithdrawals.sub(1);
 
             // @DEV use memory value lastAuctionIndex & sellAmountAfterFee as we already updated storage values
-            _withdraw(seller, sellToken, buyToken, lastAuctionIndex, sellAmountAfterFee);
+            uint256 withdrawAmount = _withdraw(seller,
+                                               sellToken,
+                                               buyToken,
+                                               lastAuctionIndex,
+                                               lastSellAmountAfterFee
+            );
+
+            // Event emission
+            emit LogWithdrawComplete(_executionClaimId,
+                                     orderId,
+                                     seller,
+                                     buyToken,
+                                     withdrawAmount
+            );
+
+            // Delete OrderState struct when last withdrawal completed
+            if (orderState.remainingWithdrawals == 0) {
+                delete orderStates[orderId];
+                emit LogOrderCompleted(orderId);
+            }
         }
-        // ********************** Withdraw from DutchX END **********************
-
-
+        // ********************** Step 6: Withdraw from DutchX END **********************
     }
     // **************************** GEI0 execute(executionClaimId) END *********************************
 
 
 
-    // Helper Functions
+    // **************************** Helper functions *********************************
     // Calculate sub order size accounting for current dutchExchange liquidity contribution fee.
     function _calcActualSellAmount(uint256 _subOrderSize)
         public
@@ -472,22 +498,21 @@ contract GelDutchXSplitSellAndWithdraw is Ownable, IGEI0, SafeTransfer {
     }
 
     // Internal fn that withdraws funds from dutchExchange to the sellers account
-    function _withdraw(uint256 _executionClaimId,
-                       uint256 _orderId,
-                       address _seller,
+    function _withdraw(address _seller,
                        address _sellToken,
                        address _buyToken,
                        uint256 _lastAuctionIndex,
                        uint256 _sellAmountAfterFee
     )
         public
+        returns(uint256 withdrawAmount)
     {
         // Calc how much the amount of buy_tokens received in the previously participated auction
-        uint256 withdrawAmount = _calcWithdrawAmount(_executionClaimId,
-                                                     _sellToken,
-                                                     _buyToken,
-                                                     _lastAuctionIndex,
-                                                     _sellAmountAfterFee
+        withdrawAmount = _calcWithdrawAmount(_executionClaimId,
+                                             _sellToken,
+                                             _buyToken,
+                                             _lastAuctionIndex,
+                                             _sellAmountAfterFee
         );
 
         // Withdraw funds from dutchExchange to Gelato
@@ -500,21 +525,11 @@ contract GelDutchXSplitSellAndWithdraw is Ownable, IGEI0, SafeTransfer {
         );
 
         // Transfer Tokens from Gelato to Seller
-        // ERC20.transfer(address recipient, uint256 amount)
-        ERC20(_buyToken).transfer(_seller, withdrawAmount);
-
-        // Event
-        emit LogWithdrawComplete(_executionClaimId,
-                                 orderId,
-                                 _seller,
-                                 _buyToken,
-                                 withdrawAmount
-        );
+        safeTransfer(_buyToken, _seller, withdrawAmount, false);
     }
 
     // @DEV Calculates amount withdrawable from past, cleared auction
-    function _calcWithdrawAmount(uint256 _executionClaimId,
-                                 address _sellToken,
+    function _calcWithdrawAmount(address _sellToken,
                                  address _buyToken,
                                  uint256 _lastAuctionIndex,
                                  uint256 _sellAmountAfterFee
@@ -542,9 +557,11 @@ contract GelDutchXSplitSellAndWithdraw is Ownable, IGEI0, SafeTransfer {
 
         uint256 withdrawAmount = _sellAmountAfterFee.mul(num).div(den);
     }
+    // **************************** Helper functions END *********************************
 
 
-    // Additional extra functions
+
+    // **************************** Extra functions *********************************
     // Allows sellers to cancel their deployed orders
     function cancelOrder(uint256 _executionClaimId)
         public
@@ -589,8 +606,10 @@ contract GelDutchXSplitSellAndWithdraw is Ownable, IGEI0, SafeTransfer {
     //  because all remaining claims are still executable (do not throw revert as a result)
     //  since they still do postSellOrder. Actually they could now even be a bit cheaper
     //   to execute for the executor, as no withdrawal control flow is entered any more.
+    // withdrawManually only works up until the last withdrawal because the last withdrawal is its
+    //  own ExecutionClaim on the Core, and a manual withdrawal thereof would result in unwanted complexity.
     function withdrawManually(uint256 _executionClaimId)
-        public
+        external
         returns(bool)
     {
         // Fetch multi-use variables
@@ -601,6 +620,12 @@ contract GelDutchXSplitSellAndWithdraw is Ownable, IGEI0, SafeTransfer {
         OrderState storage orderState = orderStates[orderId];
 
         // **** CHECKS ****
+        // Do not allow if last withdrawal as corresponding ExecutionClaim
+        //  would need its own executionClaim to be passed in parameters, in order to be
+        //  cancelled, as uncancelled it will throw revert upon execution attempt by executor.
+        require(orderState.remainingWithdrawals != 1,
+            "withdrawManually: manually withdrawing last remaining withdrawal is disallowed."
+        );
         // Require that tx executor hasnt already withdrawn the funds
         require(orderState.remainingSubOrders.add(1) == orderState.remainingWithdrawals,
             "withdrawManually: Your funds from the last cleared auction you participated in were already withdrawn to your account"
@@ -618,23 +643,23 @@ contract GelDutchXSplitSellAndWithdraw is Ownable, IGEI0, SafeTransfer {
         );
         // **** CHECKS END ***
 
-        // EFFECTS: Mark withdraw as completed and emit event
+        // **** EFFECTS ****
+        // Mark withdraw as completed
         orderState.remainingWithdrawals = orderState.remainingWithdrawals.sub(1);
+        // **** EFFECTS END****
 
         // INTERACTIONS: Initiate withdraw
-        _withdraw(_executionClaimId,
-                  orderId,
-                  gelatoCore.ownerOf(_executionClaimId),  // seller
+        _withdraw(gelatoCore.ownerOf(_executionClaimId),  // seller
                   sellToken,
                   buyToken,
                   orderState.lastAuctionIndex,
-                  orderState.sellAmountAfterFee
+                  orderState.lastSellAmountAfterFee
         );
 
         // Success
         return true;
     }
-
+    // **************************** Extra functions END *********************************
 }
 
 
