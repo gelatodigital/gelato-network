@@ -2,6 +2,7 @@ pragma solidity >=0.4.21 <0.6.0;
 
 // Imports:
 import './base/ERC721/Claim.sol';
+import './base/IGEI0.sol';
 import './base/Ownable.sol';
 import './base/SafeMath.sol';
 
@@ -22,6 +23,10 @@ contract GelatoCore is Ownable, Claim {
     // The maxGas is set per interface executeSomething() function upon whitelisting.
     // The prepaidExecutionFee is calculated dynamically for each ExecutionClaim upon minting,
     //  and needs to be transferred to GelatoCore for an ExecutionClaim to be minted.
+
+    // Question: make Core handle both timed and price-conditioned ExecutionClaims?
+    // then make one struct for TimeExecutionClaim and one for PriceExecutionClaim and
+    // give them their respective mint functions.
     struct ExecutionClaim {
         address dappInterface;
         bool pending;  // covers all: pending (true), complete (false), cancelled (false)
