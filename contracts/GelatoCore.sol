@@ -9,10 +9,8 @@ import './base/IcedOut.sol';
 
 contract GelatoCore is Ownable, Claim {
 
-    /**
-     * @dev Libraries inherited from Claim:
-     * using Counters for Counters.Counter;
-     */
+    // Libraries inherited from Claim:
+    // using Counters for Counters.Counter;
 
     Counters.Counter private _executionClaimIds;
 
@@ -485,7 +483,7 @@ contract GelatoCore is Ownable, Claim {
         );
 
         // Delete the ExecutionClaim struct
-        // @dev: check if this delete operation results in a gas refund for the msg.sender/executor
+        // DEV: check if this delete operation results in a gas refund for the msg.sender/executor
         delete executionClaims[_executionClaimId];
         // ******** EFFECTS END ****
 
