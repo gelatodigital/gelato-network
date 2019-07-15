@@ -16,7 +16,7 @@ To be executed by Gelato Execution Service on the end users behalf
 */
 
 
-contract GelatoDutchX is Ownable, SafeTransfer {
+contract GelatoDutchX is Ownable, IGEI0, SafeTransfer {
 
     // Libraries used:
     using SafeMath for uint256;
