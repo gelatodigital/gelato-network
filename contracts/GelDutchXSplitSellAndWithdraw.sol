@@ -1,19 +1,18 @@
 pragma solidity >=0.4.21 <0.6.0;
 
 //  Imports:
+import '@gnosis.pm/dx-contracts/contracts/DutchExchange.sol';
 import './GelatoCore.sol';
 import './base/Counters.sol';
 import './base/ERC20.sol';
-import './base/IGEI0.sol';
+import './base/IcedOut.sol';
 import './base/Ownable.sol';
 import './base/SafeMath.sol';
-import '@gnosis.pm/dx-contracts/contracts/DutchExchange.sol';
 
 
-// Gelato DutchX Interface for splitting sell orders and automated withdrawals
-contract GelDutchXSplitSellAndWithdraw is Ownable, IGEI0, SafeTransfer {
-
-    // Libraries used:
+// Gelato IcedOut-compliant DutchX Interface for splitting sell orders and for automated withdrawals
+contract GelDutchXSplitSellAndWithdraw is IcedOut, Ownable, SafeTransfer {
+    // Libraries
     using SafeMath for uint256;
     using Counters for Counters.Counter;
 
@@ -46,7 +45,7 @@ contract GelDutchXSplitSellAndWithdraw is Ownable, IGEI0, SafeTransfer {
                               address buyToken,
                               uint256 withdrawAmount
     );
-    event LogOrderCompleted(uint256 indexed orderId);
+    event LogOrderCompletedAndDeleted(uint256 indexed orderId);
     // **************************** Events END ******************************
 
 
@@ -190,12 +189,12 @@ contract GelDutchXSplitSellAndWithdraw is Ownable, IGEI0, SafeTransfer {
 
 
 
-    // **************************** GEI0 execute(executionClaimId) *********************************
+    // **************************** IcedOut execute(executionClaimId) *********************************
     /**
-     * @dev: For the GelDutchXSplitSellAndWithdraw interface the GEI0 execute fn does this:
+     * @dev: For the GelDutchXSplitSellAndWithdraw interface the IcedOut execute fn does this:
      * First: it tries to post the subOrder on the DutchExchange via depositAndSell()
      * Then (depends on orderState): it attempts to claimAndWithdraw() previous subOrders from the DutchExchange
-     * Finally (depends on orderState): it deletes the orderState and OrderId from this Gelato Interface contract.
+     * Finally (depends on orderState): it deletes the orderState from this Gelato Interface contract.
      */
     function execute(uint256 _executionClaimId)
         external
@@ -211,8 +210,6 @@ contract GelDutchXSplitSellAndWithdraw is Ownable, IGEI0, SafeTransfer {
             "GelatoInterface.execute: gelatoCore.getClaimInterface(_executionClaimId) != address(this)"
         );
 
-        // Get storage pointer to read from and write to
-        OrderState storage orderState = orderStates[orderId];
 
         // ********************** Step2: Basic Execution Logic **********************
         /* Step2: Basic Execution Logic
@@ -223,13 +220,10 @@ contract GelDutchXSplitSellAndWithdraw is Ownable, IGEI0, SafeTransfer {
                    in its ERC20 balance.
         */
         /**
-         *@dev: remove if stack too deep since should not come to here af
+         *@dev: delete if stack too dep
          */
-        require(orderState.remainingWithdrawals != 0,
-            ""
-        );
         require(
-            ERC20(sellToken).balanceOf(address(this)) >= subOrderSize,
+            ERC20(sellToken).balanceOf(address(this)) >= gelatoCore.getClaimSellAmount(_executionClaimId),
             "GelatoInterface.execute: ERC20(sellToken).balanceOf(address(this)) !>= subOrderSize"
         );
         // ********************** Step2: Basic Execution Logic END **********************
@@ -237,6 +231,8 @@ contract GelDutchXSplitSellAndWithdraw is Ownable, IGEI0, SafeTransfer {
 
         // Step3.1: load variables from storage and initialise them
         // the last DutchX auctionIndex at which the orderId participated in
+        OrderState storage orderState = orderStates[orderId];
+
         uint256 lastAuctionIndex = orderState.lastAuctionIndex;  // default: 0
         // SubOrderAmount - DutchXFee of last executed subOrder
         uint256 lastSellAmountAfterFee = orderState.lastSellAmountAfterFee;
@@ -272,12 +268,13 @@ contract GelDutchXSplitSellAndWithdraw is Ownable, IGEI0, SafeTransfer {
             /* Assumptions:
                 * 1: Don't sell in the same auction twice
                 * 2: Don't sell into an auction before the prior auction you sold into
-                    has cleared so we can withdraw safely
+                      has cleared so we can withdraw safely without prematurely overwriting
+                      the OrderState values that must be shared between consecutive subOrders.
             */
             // CASE 1:
             // Check case where lastAuctionIndex is greater than newAuctionIndex
             require(newAuctionIndex >= lastAuctionIndex,
-                "Fatal error: Gelato auction index ahead of dutchExchange auction index"
+                "Case 1: Fatal error, Gelato auction index ahead of dutchExchange auction index"
             );
 
             // CASE 2:
@@ -317,25 +314,11 @@ contract GelDutchXSplitSellAndWithdraw is Ownable, IGEI0, SafeTransfer {
                 we now sell during the next waiting period, our funds will go to auction2 */
                 if (lastAuctionWasWaiting && newAuctionIsWaiting) {
                     // ### EFFECTS ###
-                    // Store change in Auction Index
-                    orderState.lastAuctionIndex = newAuctionIndex;
-
-                    // Store change in orderState.lastAuctionWasWaiting state
+                    // Update Order State
                     orderState.lastAuctionWasWaiting = newAuctionIsWaiting;
-
-                    // Decrease remainingSubOrders
+                    orderState.lastAuctionIndex = newAuctionIndex;
                     orderState.remainingSubOrders = orderState.remainingSubOrders.sub(1);
-
-                    // @DEV: before selling, calc the acutal amount which will be sold after dutchExchange fee deduction to be later used in the withdraw pattern
-                    // Store the actually sold sub-order amount in the struct
-                    orderState.sellAmountAfterFee = _calcActualSellAmount(subOrderSize);
-
-                    emit LogActualSellAmount(_executionClaimId,
-                                             orderId,
-                                             sellAmount,
-                                             orderState.sellAmountAfterFee,
-                                             fee
-                    );
+                    orderState.sellAmountAfterFee = _calcActualSubOrderSize(subOrderSize);
                     // ### EFFECTS END ###
 
                     // INTERACTION: sell on dutchExchange
@@ -347,25 +330,11 @@ contract GelDutchXSplitSellAndWithdraw is Ownable, IGEI0, SafeTransfer {
                 will go into auction3 */
                 else if (lastAuctionWasWaiting && !newAuctionIsWaiting) {
                     // ### EFFECTS ###
-                    // Store change in Auction Index
-                    orderState.lastAuctionIndex = newAuctionIndex;
-
-                    // Store change in orderState.lastAuctionWasWaiting state
+                    // Update Order State
                     orderState.lastAuctionWasWaiting = newAuctionIsWaiting;
-
-                    // Decrease remainingSubOrders
+                    orderState.lastAuctionIndex = newAuctionIndex;
                     orderState.remainingSubOrders = orderState.remainingSubOrders.sub(1);
-
-                    // @DEV: before selling, calc the acutal amount which will be sold after dutchExchange fee deduction to be later used in the withdraw pattern
-                    // Store the actually sold sub-order amount in the struct
                     orderState.sellAmountAfterFee = _calcActualSubOrderSize(subOrderSize);
-
-                    emit LogActualSellAmount(_executionClaimId,
-                                             orderId,
-                                             sellAmount,
-                                             orderState.sellAmountAfterFee,
-                                             fee
-                    );
                     // ### EFFECTS END ###
 
                     // INTERACTION: sell on dutchExchange
@@ -391,25 +360,11 @@ contract GelDutchXSplitSellAndWithdraw is Ownable, IGEI0, SafeTransfer {
             // If we skipped at least one auction before trying to sell again: ALWAYS SELL
             else if (newAuctionIndex >= lastAuctionIndex.add(2)) {
                 // ### EFFECTS ###
-                // Store change in Auction Index
-                orderState.lastAuctionIndex = newAuctionIndex;
-
-                // Store change in orderState.lastAuctionWasWaiting state
+                // Update Order State
                 orderState.lastAuctionWasWaiting = newAuctionIsWaiting;
-
-                // Decrease remainingSubOrders
+                orderState.lastAuctionIndex = newAuctionIndex;
                 orderState.remainingSubOrders = orderState.remainingSubOrders.sub(1);
-
-                // @DEV: before selling, calc the acutal amount which will be sold after dutchExchange fee deduction to be later used in the withdraw pattern
-                // Store the actually sold sub-order amount in the struct
                 orderState.sellAmountAfterFee = _calcActualSubOrderSize(subOrderSize);
-
-                emit LogActualSellAmount(_executionClaimId,
-                                            orderId,
-                                            sellAmount,
-                                            orderState.sellAmountAfterFee,
-                                            fee
-                );
                 // ### EFFECTS END ###
 
                 // INTERACTION: sell on dutchExchange
@@ -451,12 +406,12 @@ contract GelDutchXSplitSellAndWithdraw is Ownable, IGEI0, SafeTransfer {
             // Delete OrderState struct when last withdrawal completed
             if (orderState.remainingWithdrawals == 0) {
                 delete orderStates[orderId];
-                emit LogOrderCompleted(orderId);
+                emit LogOrderCompletedAndDeleted(orderId);
             }
         }
         // ********************** Step 6: Withdraw from DutchX END **********************
     }
-    // **************************** GEI0 execute(executionClaimId) END *********************************
+    // **************************** IcedOut execute(executionClaimId) END *********************************
 
 
 

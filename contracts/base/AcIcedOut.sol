@@ -1,10 +1,12 @@
 pragma solidity ^0.5.0;
 
+import './IcedOut.sol';
+
 /**
- * @dev Interface of the GelatoExecutionInterface (IGEI) standard version 0.
+ * @dev Implementation of the `IGEI0` interface.
  */
 
- interface IGEI0 {
+ contract AcIcedOut is IcedOut {
      /**
       @dev Exposes the execution functions of Gelato Interfaces.
       */

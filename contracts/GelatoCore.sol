@@ -2,9 +2,9 @@ pragma solidity >=0.4.21 <0.6.0;
 
 // Imports:
 import './base/ERC721/Claim.sol';
-import './base/IGEI0.sol';
 import './base/Ownable.sol';
 import './base/SafeMath.sol';
+import './base/IcedOut.sol';
 
 
 contract GelatoCore is Ownable, Claim {
@@ -64,11 +64,10 @@ contract GelatoCore is Ownable, Claim {
                                   address indexed executionClaimOwner,
                                   uint256 indexed executionClaimId
     );
-    event LogClaimExecuted(address indexed dappInterface,
-                           address payable indexed executor,
-                           uint256 indexed executionClaimId,
-                           uint256 gelatoCorePayable
-
+    event LogClaimExecutedAndDeleted(address indexed dappInterface,
+                                     address payable indexed executor,
+                                     uint256 indexed executionClaimId,
+                                     uint256 gelatoCorePayable
     );
     // **************************** Events END **********************************
 
@@ -472,17 +471,17 @@ contract GelatoCore is Ownable, Claim {
         // Execute the interface-specific execution logic, handled outside the Core on the Interface level.
         // All interfaces execute() functions are audited and thus no explicit checks are needed
         // ******* Gelato Interface Call *******
-        IGEI0(executionClaim.dappInterface).execute(_executionClaimId);
+        IcedOut(executionClaim.dappInterface).execute(_executionClaimId);
         // ******* Gelato Interface Call END *******
 
         // Burn the executed executionClaim
         burnExecutionClaim(_executionClaimId);
 
         // Emit event now before deletion of struct
-        emit LogClaimExecuted(executionClaim.dappInterface,
-                              msg.sender,  // executor
-                              _executionClaimId,
-                              executorPayout
+        emit LogClaimExecutedAndDeleted(executionClaim.dappInterface,
+                                        msg.sender,  // executor
+                                        _executionClaimId,
+                                        executorPayout
         );
 
         // Delete the ExecutionClaim struct
