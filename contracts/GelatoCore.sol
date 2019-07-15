@@ -16,13 +16,10 @@ contract GelatoCore is Ownable, Claim {
 
     Counters.Counter private _executionClaimIds;
 
-    // removed State.complete - instead: delete struct from executionClaims mapping
-    // Define the state of an Execution Claim
-    enum State {Pending, Cancelled}
+    // Removed Enum states - we delete cancelled/completed ExecutionClaims instead
 
-
-    // Behind each ExecutionClaim on GelatoCore is an executeSomething()
-    //  function on a whitelisted GelatoCore Interface.
+    // Behind each ExecutionClaim on GelatoCore is one execute() function on a whitelisted
+    //  GelatoCore Interface containing only one such execute function.
     // The maxGas is set per interface executeSomething() function upon whitelisting.
     // The prepaidExecutionFee is calculated dynamically for each ExecutionClaim upon minting,
     //  and needs to be transferred to GelatoCore for an ExecutionClaim to be minted.
@@ -30,12 +27,12 @@ contract GelatoCore is Ownable, Claim {
     // Question: make Core handle both timed and price-conditioned ExecutionClaims?
     // then make one struct for TimeExecutionClaim and one for PriceExecutionClaim and
     // give them their respective mint functions.
+    // Any ExecutionClaim that exists is always pending. If completed/cancelled it is deleted.
     struct ExecutionClaim {
         address dappInterface;
-        State state; // default to pending
         address sellToken;
         address buyToken;
-        uint256 sellAmount;
+        uint256 sellAmount;  // you always sell something, in order to buy something
         uint256 executionTime;
         uint256 prepaidExecutionFee;
     }
@@ -50,15 +47,15 @@ contract GelatoCore is Ownable, Claim {
     event LogInterfaceUnlisted(address indexed dappInterface);
     event LogGelatoGasPriceUpdate(uint256 newGasPrice);
     event LogMaxGasUpdate(address indexed dappInterface);
+    event LogClaimCancelled(address indexed dappInterface,
+                            uint256 indexed executionClaimId,
+                            address payable indexed claimOwner,
+                            uint256 sellAmount
+    );
     event LogExecutionTimeUpdated(address indexed dappInterface,
                                   uint256 indexed executionClaimId,
                                   address indexed owner,
                                   uint256 newExecutionTime
-    );
-    event LogSellAmountIncreased(address indexed dappInterface,
-                                uint256 indexed executionClaimId,
-                                address indexed owner,
-                                uint256 newSellAmount
     );
     event LogExecutionClaimBurned(address indexed dappInterface,
                                   address indexed owner,
@@ -69,11 +66,6 @@ contract GelatoCore is Ownable, Claim {
                            uint256 indexed executionClaimId,
                            uint256 executorPayout
 
-    );
-    event LogClaimCancelled(address indexed dappInterface,
-                            uint256 indexed executionClaimId,
-                            address payable indexed claimOwner,
-                            uint256 sellAmount
     );
     // **************************** Events END **********************************
 
@@ -125,20 +117,25 @@ contract GelatoCore is Ownable, Claim {
     // **************************** Gelato Core constructor() END *****************************
 
 
+    // Fallback function needed for arbitrary funding additions to Gelato Core's balance by owner
+    function() external payable {
+        require(isOwner(),
+            "fallback function: only the owner should send ether to Gelato Core without selecting a payable function."
+        );
+    }
+
 
     // **************************** Modifiers ******************************
-    modifier onlyPendingExecutionClaims(uint256 _executionClaimId) {
-        ExecutionClaim memory executionClaim = executionClaims[_executionClaimId];
-
-        require(executionClaim.state == State.Pending,
-            "modifier onlyPendingExecutionClaims: executionClaim.state != State.Pending"
+    modifier onlyExecutionClaimOwner(uint256 _executionClaimId) {
+        require(msg.sender == ownerOf(_executionClaimId),
+            "modifier onlyExecutionClaimOwner: msg.sender != ownerOf(executionClaimId)"
         );
         _;
     }
 
     modifier onlyWhitelistedInterfaces() {
         require(interfaceWhitelist[msg.sender],
-            "onlyWhitelistedInterfaces: The calling dappInterface is not whitelisted in Gelato Core"
+            "modifier onlyWhitelistedInterfaces: The calling dappInterface is not whitelisted in Gelato Core"
         );
         _;
     }
@@ -175,7 +172,6 @@ contract GelatoCore is Ownable, Claim {
         // Step3: Instantiate executionClaim (in memory)
         ExecutionClaim memory executionClaim = ExecutionClaim(
             msg.sender,  // dappInterface
-            State.Pending,
             _sellToken,
             _buyToken,
             _sellAmount,
@@ -197,8 +193,6 @@ contract GelatoCore is Ownable, Claim {
         // Step5: ExecutionClaims tracking state variable update
         // ERC721(executionClaimId) => ExecutionClaim(struct)
         executionClaims[executionClaimId] = executionClaim;
-        // Trader => ERC721s(executionClaimIds)
-        executionClaimsByOwner[_claimOwner].push(executionClaimId);
 
 
         // Step6: Emit event to notify executors that a new sub order was created
@@ -224,7 +218,6 @@ contract GelatoCore is Ownable, Claim {
         view
         returns(address claimOwner,
                 address dappInterface,
-                uint8 state,
                 address sellToken,
                 address buyToken,
                 uint256 sellAmount,
@@ -236,7 +229,6 @@ contract GelatoCore is Ownable, Claim {
 
         return (ownerOf(_executionClaimId), // fetches owner of the executionClaim token
                 executionClaim.dappInterface,
-                uint8(executionClaim.state),
                 executionClaim.sellToken,
                 executionClaim.buyToken,
                 executionClaim.sellAmount,
@@ -255,16 +247,6 @@ contract GelatoCore is Ownable, Claim {
         ExecutionClaim memory executionClaim = executionClaims[_executionClaimId];
 
         return executionClaim.dappInterface;
-    }
-
-    function getClaimState(uint256 _executionClaimId)
-        public
-        view
-        returns(uint8 state)
-    {
-        ExecutionClaim memory executionClaim = executionClaims[_executionClaimId];
-
-        return uint8(executionClaim.state);
     }
 
     function getClaimTokenPair(uint256 _executionClaimId)
@@ -373,24 +355,28 @@ contract GelatoCore is Ownable, Claim {
 
     // **************************** ExecutionClaims Updateability ***************************
     function cancelExecutionClaim(uint256 _executionClaimId)
-        onlyPendingExecutionClaims(_executionClaimId)
+        onlyExecutionClaimOwner(_executionClaimId)
         external
     {
-        ExecutionClaim storage executionClaim = executionClaims[_executionClaimId];
+        ExecutionClaim memory executionClaim = executionClaims[_executionClaimId];
 
-        // Casting non-payable address to payable
-        address payable owner = address(uint160(ownerOf(_executionClaimId)));
+        // Local variables needed for Checks, Effects -> Interactions pattern
+        address payable executionClaimOwner = address(uint160(ownerOf(_executionClaimId)));
+        uint256 refund = executionClaim.prepaidExecutionFee;
 
-        executionClaim.state = State.Cancelled;
+        // CHECKS: onlyExecutionClaimOwner modifier
 
-        // Refund fee
-        owner.transfer(executionClaim.prepaidExecutionFee);
-
+        // EFFECTS: emit event, then burn and delete the ExecutionClaim struct - possible gas refund to msg.sender?
         emit LogClaimCancelled(executionClaim.dappInterface,
-                                _executionClaimId,
-                                ownerOf(_executionClaimId),
-                                executionClaim.sellAmount
+                               _executionClaimId,
+                               executionClaimOwner,
+                               executionClaim.sellAmount
         );
+        burnExecutionClaim(_executionClaimId);
+        delete executionClaims[_executionClaimId];
+
+        // INTERACTIONS: Refund the prepaidFee to the ExecutionClaim owner
+        executionClaimOwner.transfer(refund);
     }
 
     // Updating (increasing/decreasing) the execution time
@@ -451,22 +437,20 @@ contract GelatoCore is Ownable, Claim {
     //  buggy interface.execute() code that leads to sunk gas costs reverts.
     // **************************** execute() ***************************
     function execute(uint256 _executionClaimId)
-        onlyPendingExecutionClaims(_executionClaimId)
         public
         returns (bool)
     {
-        // @Dev: removed State.complete - instead: delete struct from executionClaims mapping
         ExecutionClaim memory executionClaim = executionClaims[_executionClaimId];
 
-        // Local variable needed for Checks - Effects - Interactions pattern
+        // Local variable needed for Checks - Effects -> Interactions pattern
         uint256 executorPayout = executionClaim.prepaidExecutionFee;
 
-        // CHECKS:
-        // Anyone can be an executor and call this function
-        // ExecutionClaim should be pending: this is checked by onlyPending modifier
+        // CHECKS: none needed because:
+        // Anyone is allowed to be an executor and call this function.
+        // All ExecutionClaims in existence are always in state pending/executable (else non-existant/deleted)
 
         // ******** EFFECTS ********
-        // @Dev: if this doesnt work use function selectors instead
+        // @Dev: if IGEI0() doesnt work due to Interface type use contract function selectors instead.
         // Execute the interface-specific execution logic, handled outside the Core on the Interface level.
         // All interfaces execute() functions are audited and thus no explicit checks are needed
         // ******* Gelato Interface Call *******
@@ -476,7 +460,14 @@ contract GelatoCore is Ownable, Claim {
         // Burn the executed executionClaim
         burnExecutionClaim(_executionClaimId);
 
-        // Delete the ExecutionClaim struct (that's why we need local executorPayout)
+        // Emit event now before deletion of struct
+        emit LogClaimExecuted(executionClaim.dappInterface,
+                              msg.sender,  // executor
+                              _executionClaimId,
+                              executorPayout
+        );
+
+        // Delete the ExecutionClaim struct
         // @dev: check if this delete operation results in a gas refund for the msg.sender/executor
         delete executionClaims[_executionClaimId];
         // ******** EFFECTS END ****
@@ -484,13 +475,6 @@ contract GelatoCore is Ownable, Claim {
         // INTERACTIONS:
         // Transfer the prepaid fee to the executor as reward
         msg.sender.transfer(executorPayout);
-
-        // Emit event
-        emit LogClaimExecuted(executionClaim.dappInterface,
-                              msg.sender,  // executor
-                              _executionClaimId,
-                              executionClaim.prepaidExecutionFee  // executorPayout
-        );
 
         // Success
         return true;
