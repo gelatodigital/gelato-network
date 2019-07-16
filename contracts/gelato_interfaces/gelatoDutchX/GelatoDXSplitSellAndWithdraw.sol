@@ -2,12 +2,12 @@ pragma solidity >=0.4.21 <0.6.0;
 
 //  Imports:
 import '@gnosis.pm/dx-contracts/contracts/DutchExchange.sol';
-import './GelatoCore.sol';
-import './base/Counters.sol';
-import './base/ERC20.sol';
-import './base/IcedOut.sol';
-import './base/Ownable.sol';
-import './base/SafeMath.sol';
+import '../../GelatoCore.sol';
+import '../../base/Counters.sol';
+import '../../base/ERC20.sol';
+import '../../base/IcedOut.sol';
+import '../../base/Ownable.sol';
+import '../../base/SafeMath.sol';
 
 
 // Gelato IcedOut-compliant DutchX Interface for splitting sell orders and for automated withdrawals
