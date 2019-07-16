@@ -11,7 +11,7 @@ import './base/SafeMath.sol';
 
 
 // Gelato IcedOut-compliant DutchX Interface for splitting sell orders and for automated withdrawals
-contract GelDutchXSplitSellAndWithdraw is IcedOut, Ownable, SafeTransfer {
+contract GelatoDXSplitSellAndWithdraw is IcedOut, Ownable, SafeTransfer {
     // Libraries
     using SafeMath for uint256;
     using Counters for Counters.Counter;
@@ -219,14 +219,14 @@ contract GelDutchXSplitSellAndWithdraw is IcedOut, Ownable, SafeTransfer {
 
 
         // ********************** Step3: Basic Execution Logic **********************
-        /* Step2: Basic Execution Logic
+        /* Step3: Basic Execution Logic
             * Handled by Gelato Core
                 * Require that order is ready to be executed based on time
             * Handled by this Gelato Interface
                 * Require that this Gelato Interface has the ERC20 to be sold
                    in its ERC20 balance.
         */
-        // DEV: delete if stack too dep
+        // DEV: delete if stack too deep
         require(
             ERC20(sellToken).balanceOf(address(this)) >= gelatoCore.getClaimSellAmount(_executionClaimId),
             "GelatoInterface.execute: ERC20(sellToken).balanceOf(address(this)) !>= subOrderSize"

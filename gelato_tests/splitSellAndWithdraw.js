@@ -8,7 +8,7 @@
 */
 // Requires
 const GelatoCore = artifacts.require('GelatoCore');
-const GelatoDutchX = artifacts.require('GelatoDutchX');
+const GelatoDXSplitSellAndWithdraw = artifacts.require('GelatoDXSplitSellAndWithdraw');
 const SellToken = artifacts.require('EtherToken')
 const BuyToken = artifacts.require('TokenRDN')
 
@@ -28,7 +28,7 @@ module.exports = () => {
 
   async function testSellOrder() {
 
-    const gelatoDX = await GelatoDutchX.at(GelatoDutchX.address)
+    const gelatoDX = await GelatoDXSplitSellAndWithdraw.at(GelatoDXSplitSellAndWithdraw.address)
     const gelatoCore = await GelatoCore.at(GelatoCore.address)
     const sellTokenContract = await SellToken.at(SELL_TOKEN)
     const accounts = await web3.eth.getAccounts()
