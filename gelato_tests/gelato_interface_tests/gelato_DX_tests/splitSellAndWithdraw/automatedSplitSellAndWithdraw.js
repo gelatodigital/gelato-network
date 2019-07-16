@@ -4,7 +4,6 @@
 const assert = require('assert');
 
 // Truffle Artifacts
-const artifacts = require('truffle-artifactor');
 const GelatoCore = artifacts.require("GelatoCore");
 const GelatoDXSplitSellAndWithdraw = artifacts.require(
   "GelatoDXSplitSellAndWithdraw"
