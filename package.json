@@ -66,7 +66,7 @@
     "lint": "eslint .",
     "swagger": "yaml2json src/web/publicApi/static/docs/dx-public-api.yml > src/web/publicApi/static/docs/dx-public-api.json ; yaml2json src/web/bots/static/docs/api/dx-bots-api.yml > src/web/bots/static/docs/api/dx-bots-api.json",
     "format": "prettier-standard 'src/**/*.js'",
-    "test-gelatodx-splitsellandwithdraw": "truffle test gelato_tests/gelato_interface_tests/gelato_DX_tests/splitSellAndWithdraw/automatedSplitSellAndWithdraw.js",
+    "test-gelatodx-splitsellandwithdraw": "truffle test gelato_dx/gelato_dx_splitSellAndWithdraw/functionalTest_splitSellAndWithdraw.js",
     "endow1": "./gelato_tests/shell_scripts/endowSeller.sh",
     "create1": "./gelato_tests/shell_scripts/createSellOrder.sh",
     "skip6": "./gelato_tests/shell_scripts/skipSixHours.sh",
