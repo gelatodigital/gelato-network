@@ -340,11 +340,11 @@ contract GelatoCore is Ownable, Claim {
             "listInterface: Dapp Interface already whitelisted"
         );
 
-        // Set the maxGas of the interface's Core ExecutionClaim
-        maxGasByInterface[_dappInterface] = _maxGas;
-
         // Whitelist the dappInterface
         interfaceWhitelist[_dappInterface] = true;
+
+        // Set the maxGas of the interface's Core ExecutionClaim
+        maxGasByInterface[_dappInterface] = _maxGas;
 
         emit LogNewInterfaceListed(_dappInterface);
     }
@@ -358,8 +358,11 @@ contract GelatoCore is Ownable, Claim {
             "unlistInterface: Dapp Interface is not on the whitelist"
         );
 
-        // Whitelist the dappInterface
+        // Unlist the dappInterface and remove the MaxGas entry
         interfaceWhitelist[_dappInterface] = false;
+
+        // Remove the maxGas entry
+        delete maxGasByInterface[_dappInterface];
 
         emit LogInterfaceUnlisted(_dappInterface);
     }

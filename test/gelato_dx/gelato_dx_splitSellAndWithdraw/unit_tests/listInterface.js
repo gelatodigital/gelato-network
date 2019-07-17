@@ -1,7 +1,7 @@
-// Script to list the GelatoDXSplitSellAndWithdraw Interface on Gelato Core
-
-// imports
-const assert = require("assert");
+/** Automated tests for
+ * Gelato.listInterface(address _dappInterface, uint256 _maxGas)) onlyOwner
+ * Gelato.unlistInterface(address _dappInterface)) onlyOwner
+ * */
 
 // Constants
 MAXGAS = 400000; // 400.000
@@ -13,32 +13,25 @@ const GelatoDXSplitSellAndWithdraw = artifacts.require(
 );
 
 // State shared across the unit tests
-let accounts;
+// Deployed contract instances
 let gelatoCore;
 let gelatoDXSplitSellAndWithdraw;
+// Deployed instances owners
 let gelatoCoreOwner;
 let gelatoDXSplitSellAndWithdrawOwner;
 
-// suite root-level pre-hook: set the test suite variables to be shared among all tests
-before(async () => {
-  // Ethereum accounts
-  accounts = await web3.eth.getAccounts();
+// suite for contract instance setup
+contract("GelatoCore whitelist logic tests", async accounts => {
+  // suite root-level pre-hook: set the test suite variables to be shared among all tests
+  before(async () => {
+    gelatoCore = await GelatoCore.deployed();
+    gelatoDXSplitSellAndWithdraw = await GelatoDXSplitSellAndWithdraw.deployed();
+  });
 
-  // Deployed contract instances
-  gelatoCore = await GelatoCore.deployed();
-  gelatoDXSplitSellAndWithdraw = await GelatoDXSplitSellAndWithdraw.deployed();
-
-  // Contract owners
-  gelatoCoreOwner = accounts[0];
-  gelatoDXSplitSellAndWithdrawOwner = gelatoCoreOwner;
-});
-
-// suite
-describe("gelatoCore.listInterface(_dappInterface, _maxGas) onlyOwner", () => {
-  // tests
+  // tests for contract instance setup
   it("retrieves deployed GelatoCore and GelatoDXSplitSellAndWithdraw instances", async () => {
-    assert.ok(gelatoCore.address);
-    assert.ok(gelatoDXSplitSellAndWithdraw.address);
+    assert.isOk(gelatoCore.address);
+    assert.isOk(gelatoDXSplitSellAndWithdraw.address);
     assert.equal(gelatoCore.address, GelatoCore.address);
     assert.equal(
       gelatoDXSplitSellAndWithdraw.address,
@@ -59,7 +52,8 @@ describe("gelatoCore.listInterface(_dappInterface, _maxGas) onlyOwner", () => {
     );
   });
 
-  it("lets owner list GelatoDXSplitSellAndWithdraw on GelatoCore with the correct address and maxGas", async () => {
+  // listInterface tests
+  it("lets owner list GelatoDXSplitSellAndWithdraw on GelatoCore with its maxGas set", async () => {
     await gelatoCore.contract.methods
       .listInterface(gelatoDXSplitSellAndWithdraw.address, MAXGAS)
       .send({ from: gelatoCoreOwner });
@@ -71,7 +65,51 @@ describe("gelatoCore.listInterface(_dappInterface, _maxGas) onlyOwner", () => {
       .maxGasByInterface(gelatoDXSplitSellAndWithdraw.address)
       .call(); // uint256
 
-    assert(isWhitelisted);
+    assert.isTrue(isWhitelisted);
     assert.equal(MAXGAS, maxGas);
+  });
+
+  it("prevents non-owners from unlisting interfaces", async () => {
+    try {
+      await gelatoCore.contract.methods
+        .unlistInterface(gelatoDXSplitSellAndWithdraw.address)
+        .send({ from: accounts[1] });
+      // let it fail if call was successfull
+      assert.fail(
+        "GelatoCore bug: should not allow non-owners to unlist interfaces"
+      );
+    } catch (err) {
+      assert(err, `Expected error (not owner) - result: ${err}`);
+    }
+  });
+
+  it("lets owner unlist GelatoDXSplitSellAndWithdraw removing its MaxGas entry", async () => {
+    await gelatoCore.contract.methods
+      .unlistInterface(gelatoDXSplitSellAndWithdraw.address)
+      .send({ from: gelatoCoreOwner });
+
+    isWhitelisted = await gelatoCore.contract.methods
+      .interfaceWhitelist(gelatoDXSplitSellAndWithdraw.address)
+      .call();
+    maxGas = await gelatoCore.contract.methods
+      .maxGasByInterface(gelatoDXSplitSellAndWithdraw.address)
+      .call(); // uint256
+
+    assert.isFalse(isWhitelisted);
+    assert.equal(maxGas, 0);
+  });
+
+  it("prevents non-owners from listing interfaces", async () => {
+    try {
+      await gelatoCore.contract.methods
+        .listInterface(gelatoDXSplitSellAndWithdraw.address, MAXGAS)
+        .send({ from: accounts[1] });
+      // let it fail if call was successfull
+      assert.fail(
+        "GelatoCore bug: should not allow non-owners to list interfaces"
+      );
+    } catch (err) {
+      assert(err, `Expected error (not owner) - result: ${err}`);
+    }
   });
 });
