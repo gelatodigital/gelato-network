@@ -1,5 +1,8 @@
 // Script to list the GelatoDXSplitSellAndWithdraw Interface on Gelato Core
 
+// imports
+const assert = require("assert");
+
 // Constants
 MAXGAS = 400000; // 400.000
 
@@ -9,55 +12,66 @@ const GelatoDXSplitSellAndWithdraw = artifacts.require(
   "GelatoDXSplitSellAndWithdraw"
 );
 
-contract(
-  "gelatoCore.listInterface(_dappInterface, _maxGas) onlyOwner",
-  async accounts => {
-    it("retrieves deployed GelatoCore and GelatoDXSplitSellAndWithdraw instances", async () => {
-      let gelatoCore = await GelatoCore.at(GelatoCore.address);
-      let gelatoDXSplitSellAndWithdraw = await GelatoDXSplitSellAndWithdraw.at(
-        GelatoDXSplitSellAndWithdraw.address
-      );
-      assert.equal(gelatoCore.address, GelatoCore.address);
-      assert.equal(
-        gelatoDXSplitSellAndWithdraw.address,
-        GelatoDXSplitSellAndWithdraw.address
-      );
-      console.log(`GelatoCore.address: ${GelatoCore.address}`);
-      console.log(`gelatoCore.address: ${gelatoCore.address}`);
-      console.log(`gelatoDXSplitSellAndWithdraw.address: ${gelatoCore.address}`);
-      console.log(`gelatoDXSplitSellAndWithdraw.address: ${gelatoCore.address}`);
-    });
+// State shared across the unit tests
+let accounts;
+let gelatoCore;
+let gelatoDXSplitSellAndWithdraw;
+let gelatoCoreOwner;
+let gelatoDXSplitSellAndWithdrawOwner;
 
-    /*it("has accounts[0] as owners of Core and Interface", async () => {
-      let gelatoCore = await GelatoCore.at(GelatoCore.address);
-      let gelatoDXSplitSellAndWithdraw = await GelatoDXSplitSellAndWithdraw.at(
-        GelatoDXSplitSellAndWithdraw.address
-      );
-      let gelatoCoreOwner = await gelatoCore.methods.owner().call();
-      let gelatoDXSplitSellAndWithdrawOwner = await gelatoDXSplitSellAndWithdrawOwner.methods
-        .owner()
-        .call();
-      assert.equal(gelatoCoreOwner, gelatoDXSplitSellAndWithdrawOwner, accounts[0])
-    });*/
+// suite root-level pre-hook: set the test suite variables to be shared among all tests
+before(async () => {
+  // Ethereum accounts
+  accounts = await web3.eth.getAccounts();
 
-    /*it("lists GelatoDXSplitSellAndWithdraw on GelatoCore with the correct address and maxGas", async () => {
-      let gelatoCore = await GelatoCore.at(GelatoCore.address);
-      let gelatoDXSplitSellAndWithdraw = await GelatoDXSplitSellAndWithdraw.at(
-        GelatoDXSplitSellAndWithdraw.address
-      );
-      await gelatoCore.methods
-        .listInterface(gelatoDXSplitSellAndWithdraw.address, MAXGAS)
-        .send({ from: accounts[0] });
+  // Deployed contract instances
+  gelatoCore = await GelatoCore.deployed();
+  gelatoDXSplitSellAndWithdraw = await GelatoDXSplitSellAndWithdraw.deployed();
 
-      let isWhitelisted = await gelatoCore.methods
-        .interfaceWhitelist(gelatoDXSplitSellAndWithdraw.address)
-        .call();
-      let maxGas = await gelatoCore.methods
-        .maxGasByInterface(gelatoDXSplitSellAndWithdraw.address)
-        .call(); // uint256
+  // Contract owners
+  gelatoCoreOwner = accounts[0];
+  gelatoDXSplitSellAndWithdrawOwner = gelatoCoreOwner;
+});
 
-      assert(isWhitelisted);
-      assert.equal(MAXGAS, maxGas);
-    });*/
-  }
-);
+// suite
+describe("gelatoCore.listInterface(_dappInterface, _maxGas) onlyOwner", () => {
+  // tests
+  it("retrieves deployed GelatoCore and GelatoDXSplitSellAndWithdraw instances", async () => {
+    assert.ok(gelatoCore.address);
+    assert.ok(gelatoDXSplitSellAndWithdraw.address);
+    assert.equal(gelatoCore.address, GelatoCore.address);
+    assert.equal(
+      gelatoDXSplitSellAndWithdraw.address,
+      GelatoDXSplitSellAndWithdraw.address
+    );
+  });
+
+  it("has accounts[0] as owners of Core and Interface", async () => {
+    gelatoCoreOwner = await gelatoCore.contract.methods.owner().call();
+    gelatoDXSplitSellAndWithdrawOwner = await gelatoDXSplitSellAndWithdraw.contract.methods
+      .owner()
+      .call();
+
+    assert.equal(
+      gelatoCoreOwner,
+      gelatoDXSplitSellAndWithdrawOwner,
+      accounts[0]
+    );
+  });
+
+  it("lets owner list GelatoDXSplitSellAndWithdraw on GelatoCore with the correct address and maxGas", async () => {
+    await gelatoCore.contract.methods
+      .listInterface(gelatoDXSplitSellAndWithdraw.address, MAXGAS)
+      .send({ from: gelatoCoreOwner });
+
+    let isWhitelisted = await gelatoCore.contract.methods
+      .interfaceWhitelist(gelatoDXSplitSellAndWithdraw.address)
+      .call();
+    let maxGas = await gelatoCore.contract.methods
+      .maxGasByInterface(gelatoDXSplitSellAndWithdraw.address)
+      .call(); // uint256
+
+    assert(isWhitelisted);
+    assert.equal(MAXGAS, maxGas);
+  });
+});
