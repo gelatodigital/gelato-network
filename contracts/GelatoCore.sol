@@ -43,10 +43,10 @@ contract GelatoCore is Ownable, Claim {
                                      uint256 executionClaimId,
                                      uint256 gelatoCoreReceivable
     );
-    event LogNewInterfaceListed(address indexed dappInterface);
-    event LogInterfaceUnlisted(address indexed dappInterface);
-    event LogGelatoGasPriceUpdate(uint256 newGasPrice);
-    event LogMaxGasUpdate(address indexed dappInterface);
+    event LogNewInterfaceListed(address indexed dappInterface, uint256 maxGas);
+    event LogInterfaceUnlisted(address indexed dappInterface, uint256 noMaxGas);
+    event LogGelatoGasPriceUpdate(uint256 newGelatoGasPrice);
+    event LogMaxGasUpdate(address indexed dappInterface, uint256 newMaxGas);
     event LogClaimCancelled(address indexed dappInterface,
                             uint256 indexed executionClaimId,
                             uint256 indexed interfaceOrderId,
@@ -384,7 +384,7 @@ contract GelatoCore is Ownable, Claim {
         // Set the maxGas of the interface's Core ExecutionClaim
         maxGasByInterface[_dappInterface] = _maxGas;
 
-        emit LogNewInterfaceListed(_dappInterface);
+        emit LogNewInterfaceListed(_dappInterface, _maxGas);
     }
 
     // Removing interfaces from the whitelist
@@ -402,7 +402,7 @@ contract GelatoCore is Ownable, Claim {
         // Remove the maxGas entry
         delete maxGasByInterface[_dappInterface];
 
-        emit LogInterfaceUnlisted(_dappInterface);
+        emit LogInterfaceUnlisted(_dappInterface, maxGasByInterface[_dappInterface]);
     }
 
 
@@ -413,7 +413,7 @@ contract GelatoCore is Ownable, Claim {
     {
         maxGasByInterface[_dappInterface] = _maxGas;
 
-        emit LogMaxGasUpdate(_dappInterface);
+        emit LogMaxGasUpdate(_dappInterface, _maxGas);
     }
     // **************************** Core Updateability END ******************************
 
