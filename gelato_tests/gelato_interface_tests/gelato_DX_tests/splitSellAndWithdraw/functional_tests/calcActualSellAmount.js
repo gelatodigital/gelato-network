@@ -1,5 +1,5 @@
 const Gelato = artifacts.require('Gelato');
-const BN = require('./node_modules/bignumber.js.js.js');
+const BN = require('./node_modules/bignumber.js');
 
 // const EtherToken = contract(require('@gnosis.pm/util-contracts/build/contracts/EtherToken'))
 

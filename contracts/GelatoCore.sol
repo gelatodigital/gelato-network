@@ -73,10 +73,10 @@ contract GelatoCore is Ownable, Claim {
 
     // **************************** State Variables **********************************
     // Whitelist of Dapp Interfaces
-    mapping(address => bool) public interfaceWhitelist;
+    mapping(address => bool) private interfaceWhitelist;
 
     // executionClaimId => ExecutionClaim
-    mapping(uint256 => ExecutionClaim) public executionClaims;
+    mapping(uint256 => ExecutionClaim) private executionClaims;
 
 
     //_____________ Gelato Execution Service Business Logic ________________
@@ -85,11 +85,11 @@ contract GelatoCore is Ownable, Claim {
     // MaxGas is the maximum worst-case gase usage by an Interface execution function
     // The value of MaxGas should stay constant for an ExecutionClaim, unless e.g. EVM OpCodes are patched
     // dappInterface => maxGas
-    mapping(address => uint256) public maxGasByInterface;
+    mapping(address => uint256) private maxGasByInterface;
 
     // gelatoGasPrice is continually set by Gelato Core's centralised gelatoGasPrice oracle
     // The value is determined via a mathematical model and off-chain computations
-    uint256 public gelatoGasPrice;
+    uint256 private gelatoGasPrice;
     // **************************** State Variables END ******************************
 
     // Function to calculate the prepayment an interface needs to transfer to Gelato Core
@@ -214,6 +214,31 @@ contract GelatoCore is Ownable, Claim {
 
 
     // READ
+    // **************************** State Variables Getters ***************************
+    function getInterfaceWhitelist(address _dappInterface)
+        public
+        view
+        returns(bool whitelisted)
+    {
+        whitelisted = interfaceWhitelist[_dappInterface];
+    }
+
+    function getInterfaceMaxGas(address _dappInterface)
+        public
+        view
+        returns(uint256 maxGas)
+    {
+        maxGas = maxGasByInterface[_dappInterface];
+    }
+
+    function getGelatoGasPrice()
+        public
+        view
+        returns(uint256)
+    {
+        return gelatoGasPrice;
+    }
+
     // **************************** ExecutionClaim Getters ***************************
     // Getter for all ExecutionClaim fields
     function getExecutionClaim(uint256 _executionClaimId)
@@ -324,7 +349,7 @@ contract GelatoCore is Ownable, Claim {
         return executionClaim.prepaidExecutionFee;
     }
     // **************************** ExecutionClaim Getters END ******************************
-
+    // **************************** State Variabls Getters END ******************************
 
 
     // UPDATE
