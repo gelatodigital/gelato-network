@@ -117,8 +117,8 @@ contract GelatoDXSplitSellAndWithdraw is IcedOut, Ownable, SafeTransfer {
         // Further prevention of zero values is done in Gelato gelatoCore protocol
         require(_totalSellVolume != 0, "splitSellOrder: totalSellVolume cannot be 0");
         require(_numSubOrders != 0, "splitSellOrder: numSubOrders cannot be 0");
-        require(_intervalSpan >= 24 hours,
-            "splitSellOrder: _intervalSpan not above minimum of 24 hours"
+        require(_intervalSpan >= 6 hours,
+            "splitSellOrder: _intervalSpan not at/above minimum of 6 hours"
         );
 
 

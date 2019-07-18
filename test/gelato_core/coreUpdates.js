@@ -5,6 +5,7 @@
 //  This is a state variable that got deployed with truffle migrate
 //  and was set inside 3_deploy_gelato.js. We should import this variable
 //  instead of hardcoding it.
+//  It should match the truffle.js specified DEFAULT_GAS_PRICE_GWEI = 5
 const GELATO_GAS_PRICE = web3.utils.toWei("5", "gwei");
 const GELATO_GAS_PRICE_UPDATE = web3.utils.toWei("10", "gwei");
 
@@ -30,50 +31,62 @@ let gelatoInterfaceOwner;
 // Account used for non-ownership prevention tests
 let notOwner;
 
-// test suite for GelatoCore updateability
+// Default test suite
+contract(
+  "default test suite: correct deployed instances and owners",
+  async accounts => {
+    // suite root-level pre-hook: set the test suite variables to be shared among all tests
+    before(async () => {
+      gelatoCore = await GelatoCore.deployed();
+      gelatoInterface = await GelatoDXSplitSellAndWithdraw.deployed();
+    });
+
+    // ******** Default deployed instances tests ********
+    it("retrieves deployed GelatoCore and GelatoInterface instances", async () => {
+      assert.exists(gelatoCore.address);
+      assert.exists(gelatoInterface.address);
+      assert.equal(gelatoCore.address, GelatoCore.address);
+      assert.equal(
+        gelatoInterface.address,
+        GelatoDXSplitSellAndWithdraw.address
+      );
+    });
+    // ******** Default deployed instances tests END ********
+
+    // ******** Default ownership tests ********
+    it("has accounts[0] as owners of GelatoCore and GelatoInterface and accounts[1] is not owner", async () => {
+      gelatoCoreOwner = await gelatoCore.contract.methods.owner().call();
+      gelatoInterfaceOwner = await gelatoInterface.contract.methods
+        .owner()
+        .call();
+
+      assert.equal(gelatoCoreOwner, accounts[0]);
+      assert.equal(gelatoInterfaceOwner, accounts[0]);
+
+      assert.notEqual(
+        gelatoCoreOwner,
+        accounts[1],
+        "accounts[1] was expected not to be gelatoCoreOwner"
+      );
+      assert.notEqual(
+        gelatoInterfaceOwner,
+        accounts[1],
+        "accounts[1] was not expected to be gelatoInterfaceOwner"
+      );
+
+      notOwner = accounts[1];
+    });
+    // ******** Default ownership tests END ********
+  }
+);
+
+// Test suite for GelatoCore updateability
 contract("GelatoCore.sol Core Updateability tests", async accounts => {
   // suite root-level pre-hook: set the test suite variables to be shared among all tests
   before(async () => {
     gelatoCore = await GelatoCore.deployed();
     gelatoInterface = await GelatoDXSplitSellAndWithdraw.deployed();
   });
-
-  // ******** Default deployed instances tests ********
-  it("retrieves deployed GelatoCore and GelatoDXSplitSellAndWithdraw instances", async () => {
-    assert.exists(gelatoCore.address);
-    assert.exists(gelatoInterface.address);
-    assert.equal(gelatoCore.address, GelatoCore.address);
-    assert.equal(
-      gelatoInterface.address,
-      GelatoDXSplitSellAndWithdraw.address
-    );
-  });
-  // ******** Default deployed instances tests END ********
-
-  // ******** Default ownership tests ********
-  it("has accounts[0] as owners of Core and Interface and accounts[1] is not owner", async () => {
-    gelatoCoreOwner = await gelatoCore.contract.methods.owner().call();
-    gelatoInterfaceOwner = await gelatoInterface.contract.methods
-      .owner()
-      .call();
-
-    assert.equal(gelatoCoreOwner, accounts[0]);
-    assert.equal(gelatoInterfaceOwner, accounts[0]);
-
-    assert.notEqual(
-      gelatoCoreOwner,
-      accounts[1],
-      "accounts[1] was expected not to be gelatoCoreOwner"
-    );
-    assert.notEqual(
-      gelatoInterfaceOwner,
-      accounts[1],
-      "accounts[1] was not expected to be gelatoInterfaceOwner"
-    );
-
-    notOwner = accounts[1];
-  });
-  // ******** Default ownership tests END ********
 
   // ******** updateGelatoGasPrice tests ********
   it(`lets Core-owner update the gelatoGasPrice
