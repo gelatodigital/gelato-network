@@ -330,6 +330,19 @@ contract GelatoCore is Ownable, Claim {
     // UPDATE
     // **************************** Core Updateability ***************************
     // @Dev: we can separate Governance fns into a base contract and inherit from it
+    // Updating the gelatoGasPrice - this is called by the Core Execution Service oracle
+    function updateGelatoGasPrice(uint256 _gelatoGasPrice)
+        onlyOwner
+        external
+        returns(bool)
+    {
+        gelatoGasPrice = _gelatoGasPrice;
+
+        emit LogGelatoGasPriceUpdate(gelatoGasPrice);
+
+        return true;
+    }
+
 
     // Whitelisting new interfaces and setting their MaxGas for each executionClaim type
     function listInterface(address _dappInterface, uint256 _maxGas)
@@ -367,21 +380,9 @@ contract GelatoCore is Ownable, Claim {
         emit LogInterfaceUnlisted(_dappInterface);
     }
 
-    // Updating the gelatoGasPrice - this is called by the Core Execution Service oracle
-    function updateGelatoGasPrice(uint256 _gelatoGasPrice)
-        onlyOwner
-        external
-        returns(bool)
-    {
-        gelatoGasPrice = _gelatoGasPrice;
-
-        emit LogGelatoGasPriceUpdate(gelatoGasPrice);
-
-        return true;
-    }
 
     // Governance function to update the maxGas an interface needs to supply for its executionClaims
-    function updateMaxGasOfExecutionClaim(address _dappInterface, uint256 _maxGas)
+    function updateMaxGas(address _dappInterface, uint256 _maxGas)
         onlyOwner
         public
     {
