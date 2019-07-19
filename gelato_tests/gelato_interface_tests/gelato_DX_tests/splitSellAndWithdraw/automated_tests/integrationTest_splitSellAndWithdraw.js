@@ -28,6 +28,7 @@ const GelatoCore = artifacts.require("GelatoCore");
 //  instead of hardcoding it.
 //  It should match the truffle.js specified DEFAULT_GAS_PRICE_GWEI = 5
 const GELATO_GAS_PRICE_BN = new BN(web3.utils.toWei("5", "gwei"));
+// Gelato-Core specific END
 
 // GDXSSAW specific
 // Artifacts
@@ -37,27 +38,30 @@ const GelatoDXSplitSellAndWithdraw = artifacts.require(
 const SellToken = artifacts.require("EtherToken");
 const BuyToken = artifacts.require("TokenRDN");
 // Constants
-const GDXSSAW_MAXGAS = 400000;
-const SELL_TOKEN = "0xaa588d3737b611bafd7bd713445b314bd453a5c8"; // WETH
+const SELL_TOKEN = "0xAa588d3737B611baFD7bD713445b314BD453a5C8"; // WETH
 const BUY_TOKEN = "0x8ACEe021a27779d8E98B9650722676B850b25E11"; // RDN
 const TOTAL_SELL_VOLUME = 20; // 20 WETH
 const NUM_SUBORDERS = 2;
 const SUBORDER_SIZE = 10; // 10 WETH
 const INTERVAL_SPAN = 21600; // 6 hours
+const GDXSSAW_MAXGAS = 400000;
+
 // Big Number constants
 const GDXSSAW_MAXGAS_BN = new BN(GDXSSAW_MAXGAS.toString()); // 400.000 must be benchmarked
 const GELATO_PREPAID_FEE_BN = GDXSSAW_MAXGAS_BN.mul(GELATO_GAS_PRICE_BN); // wei
 const NUM_SUBORDERS_BN = new BN(NUM_SUBORDERS.toString());
 const MSG_VALUE = GELATO_PREPAID_FEE_BN.mul(NUM_SUBORDERS_BN).toString(); // wei
-
 // To be set variables
+let sellTokenContract;
+let buyTokenContract;
 let accounts;
-let seller; // account[2]
+let seller; // account[2]: 0xC5fdf4076b8F3A5357c5E395ab970B5B54098Fef
 let executionTime; // timestamp
 let estimatedGasUsedGDXSSAWSplitSellOrder;
 let acutalGasUsedGDXSSAWSplitSellOrder;
 let estimatedGasUsedGCoreExecute;
 let actualGasUsedGCoreExecute;
+// GDXSSAW specific END
 
 // State shared across the unit tests
 // Deployed contract instances
@@ -122,8 +126,8 @@ contract(
 describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()", () => {
   // suite root-level pre-hook: set the test suite variables to be shared among all tests
   before(async () => {
-    gelatoCore = await GelatoCore.deployed();
-    gelatoDXSplitSellAndWithdraw = await GelatoDXSplitSellAndWithdraw.deployed();
+    sellTokenContract = await SellToken.at(SELL_TOKEN);
+    buyTokenContract = await BuyToken.at(BUY_TOKEN);
 
     accounts = await web3.eth.getAccounts();
     seller = accounts[2];
@@ -133,17 +137,16 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
     const timestamp = blockDetails.timestamp;
 
     executionTime = timestamp;
-
-    console.log(`Seller:
-    expected: ${accounts[2]}
-    actual:   ${seller}`);
-    console.log(`SellToken:
-    expected: 0xaa588d3737b611bafd7bd713445b314bd453a5c8
-    actual:   ${SELL_TOKEN}`);
-    console.log(`BuyToken:
-    expected: 0x8ACEe021a27779d8E98B9650722676B850b25E11
-    actual:   ${BUY_TOKEN}`);
   });
+
+  // ******** GDXSSAW default deployed instances checks ********
+  it(`fetches the correct deployed sellToken and buyToken contracts`, async () => {
+    assert.exists(sellTokenContract.address);
+    assert.exists(buyTokenContract.address);
+    assert.equal(sellTokenContract.address, SELL_TOKEN);
+    assert.equal(buyTokenContract.address, BUY_TOKEN);
+  });
+  // ******** GDXSSAW default deployed instances checks END ********
 
   // ******** list GDXSSAW interface on Gelato Core and set its maxGas ********
   it(`lets Core-owner list gelatoDXSplitSellAndWithdraw on GelatoCore with its maxGas set
@@ -154,10 +157,10 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
       .listInterface(gelatoDXSplitSellAndWithdraw.address, GDXSSAW_MAXGAS)
       .send({ from: gelatoCoreOwner });
 
-    let isWhitelisted = await gelatoCore.contract.methods
+    const isWhitelisted = await gelatoCore.contract.methods
       .getInterfaceWhitelist(gelatoDXSplitSellAndWithdraw.address)
       .call();
-    let maxGas = await gelatoCore.contract.methods
+    const maxGas = await gelatoCore.contract.methods
       .getInterfaceMaxGas(gelatoDXSplitSellAndWithdraw.address)
       .call(); // uint256
 
@@ -166,8 +169,29 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
   });
   // ******** list GDXSSAW interface on Gelato Core and set its maxGas END ********
 
+  // ******** Seller ERC20 approves the GDXSSAW for TotalSellVolume ********
+  it(`seller approves GelatoDXSplitsellAndWithdraw for the totalSellVolume`, async () => {
+    await sellTokenContract.contract.methods
+      .approve(gelatoDXSplitSellAndWithdraw.address, TOTAL_SELL_VOLUME)
+      .send({ from: seller });
+
+    const allowance = await sellTokenContract.contract.methods
+      .allowance(seller, gelatoDXSplitSellAndWithdraw.address)
+      .call();
+
+    assert.equal(
+      allowance,
+      TOTAL_SELL_VOLUME,
+      `The ERC20 ${
+        sellTokenContract.address
+      } allowance for the GelatoDXSplitsellAndWithdraw should be at ${TOTAL_SELL_VOLUME}`
+    );
+  });
+  // ******** Seller ERC20 approves the GDXSSAW for TotalSellVolume END ********
+
   // ******** GDXSSAW.splitSellOrder() gasUsed estimates ********
-  it(`estimates GelatoDXSplitsellAndWithdraw.splitSellOrder() gasUsed`, async () => {
+  it(`estimates GelatoDXSplitsellAndWithdraw.splitSellOrder() gasUsed and logs gasLimit`, async () => {
+    // Get and log estimated gasUsed by splitSellOrder fn
     gelatoDXSplitSellAndWithdraw.contract.methods
       .splitSellOrder(
         SELL_TOKEN,
@@ -178,28 +202,42 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
         executionTime,
         INTERVAL_SPAN
       )
-      .estimateGas({ from: seller, value: MSG_VALUE }, (error, gasAmount) => {
-        if (error) {
-          console.log(error);
+      .estimateGas(
+        { from: seller, value: MSG_VALUE, gas: 400000 },
+        (error, gasAmount) => {
+          if (error) {
+            console.error;
+          } else {
+            estimatedGasUsedGDXSSAWSplitSellOrder = gasAmount;
+            console.log(
+              `Estimated gasUsed by GDXSSAW.splitSellOrder(): ${gasAmount}`
+            );
+          }
         }
-        estimatedGasUsedGDXSSAWSplitSellOrder = gasAmount;
-        console.log(
-          `Estimated gasUsed by GDXSSAW.splitSellOrder(): ${gasAmount}`
-        );
+      );
 
-        assert(true);
-      });
+    // Get and log gasLimit
+    await web3.eth.getBlock("latest", false, (error, result) => {
+      if (error) {
+        console.error;
+      } else {
+        console.log(`gasLimit: ${result.gasLimit}`);
+      }
+    });
+
+    assert(true);
   });
   // ******** GDXSSAW.splitSellOrder() gasUsed estimates END ********
 
   // ******** call GDXSSAW.splitSellOrder() and mint its execution claims on Core ********
-
-  // NEED TO BE APPROVED FIRST
   it(`lets seller/anyone execute GelatoDXSplitSellAndWithdraw.splitSellOrder()
   Event LogNewOrderCreated:
   expected indexed orderId:  1
   expected indexed seller:   ${seller}`, async () => {
-    txReceipt = await gelatoDXSplitSellAndWithdraw.contract.methods
+    // benchmarked gasUsed = 520109
+    let txHash;
+    let txReceipt;
+    await gelatoDXSplitSellAndWithdraw.contract.methods
       .splitSellOrder(
         SELL_TOKEN,
         BUY_TOKEN,
@@ -209,10 +247,33 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
         executionTime,
         INTERVAL_SPAN
       )
-      .send({ from: seller, value: MSG_VALUE });
+      .send({ from: seller, value: MSG_VALUE, gas: 1000000 })
+      .once("transactionHash", hash => {
+        txHash = hash;
+        console.log(`txHashSplitSellOrder:\n${hash}`);
+      })
+      .on("receipt", receipt => {
+        txReceipt = receipt;
+        console.log(
+          "txReceiptSplitSellOrder returned by transaction:\n",
+          receipt
+        );
+      })
+      .on("error", console.error);
 
-
-      console.log(`MSG_VALUE: ${MSG_VALUE} ${typeof MSG_VALUE}`);
+    const receipt = await web3.eth.getTransactionReceipt(
+      txHash,
+      (error, receipt) => {
+        if (error) {
+          console.error;
+        } else {
+          console.log(
+            "splitSellOrder receipt returned by web3.eth.getTransactionReceipt():\n",
+            receipt
+          );
+        }
+      }
+    );
 
     assert(true);
   });

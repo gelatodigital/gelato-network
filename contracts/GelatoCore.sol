@@ -163,7 +163,7 @@ contract GelatoCore is Ownable, Claim {
         require(_buyToken != address(0), "GelatoCore.mintExecutionClaim: _buyToken: No zero addresses allowed");
         require(_sellAmount != 0, "GelatoCore.mintExecutionClaim: _sellAmount cannot be 0");
         // Step1.2: Valid execution Time check
-        require(_executionTime >= now, "GelatoCore.mintExecutionClaim: Failed test: _executionTime >= now");
+        require(_executionTime <= now, "GelatoCore.mintExecutionClaim: Failed test: _executionTime >= now");
 
         // Step2: Require that interface transfers the correct execution prepayment
         require(msg.value == calcPrepaidExecutionFee(),  // calc for msg.sender==dappInterface
