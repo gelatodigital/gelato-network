@@ -41,8 +41,10 @@ const BuyToken = artifacts.require("TokenRDN");
 const SELL_TOKEN = "0xAa588d3737B611baFD7bD713445b314BD453a5C8"; // WETH
 const BUY_TOKEN = "0x8ACEe021a27779d8E98B9650722676B850b25E11"; // RDN
 const TOTAL_SELL_VOLUME = 20; // 20 WETH
+const TOTAL_SELL_VOLUME_UNIT = "ether";
 const NUM_SUBORDERS = 2;
 const SUBORDER_SIZE = 10; // 10 WETH
+const SUBORDER_UNIT = "ether";
 const INTERVAL_SPAN = 21600; // 6 hours
 const GDXSSAW_MAXGAS = 400000;
 
@@ -56,6 +58,8 @@ let sellTokenContract;
 let buyTokenContract;
 let accounts;
 let seller; // account[2]: 0xC5fdf4076b8F3A5357c5E395ab970B5B54098Fef
+let totalSellVolume;
+let subOrderSize;
 let executionTime; // timestamp
 let estimatedGasUsedGDXSSAWSplitSellOrder;
 let acutalGasUsedGDXSSAWSplitSellOrder;
@@ -72,6 +76,9 @@ let gelatoCoreOwner;
 let gelatoDXSplitSellAndWithdrawOwner;
 // Account used for non-ownership prevention tests
 let notOwner; // account[1]
+// tx hashes and receipts
+let txHash;
+let txReceipt;
 
 // Default test suite
 contract(
@@ -132,6 +139,13 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
     accounts = await web3.eth.getAccounts();
     seller = accounts[2];
 
+    totalSellVolume = web3.utils.toWei(
+      TOTAL_SELL_VOLUME.toString(),
+      TOTAL_SELL_VOLUME_UNIT
+    );
+
+    subOrderSize = web3.utils.toWei(SUBORDER_SIZE.toString(), SUBORDER_UNIT);
+
     const block = await web3.eth.getBlockNumber();
     const blockDetails = await web3.eth.getBlock(block);
     const timestamp = blockDetails.timestamp;
@@ -172,7 +186,7 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
   // ******** Seller ERC20 approves the GDXSSAW for TotalSellVolume ********
   it(`seller approves GelatoDXSplitsellAndWithdraw for the totalSellVolume`, async () => {
     await sellTokenContract.contract.methods
-      .approve(gelatoDXSplitSellAndWithdraw.address, TOTAL_SELL_VOLUME)
+      .approve(gelatoDXSplitSellAndWithdraw.address, totalSellVolume)
       .send({ from: seller });
 
     const allowance = await sellTokenContract.contract.methods
@@ -181,10 +195,10 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
 
     assert.equal(
       allowance,
-      TOTAL_SELL_VOLUME,
+      totalSellVolume,
       `The ERC20 ${
         sellTokenContract.address
-      } allowance for the GelatoDXSplitsellAndWithdraw should be at ${TOTAL_SELL_VOLUME}`
+      } allowance for the GelatoDXSplitsellAndWithdraw should be at ${totalSellVolume}`
     );
   });
   // ******** Seller ERC20 approves the GDXSSAW for TotalSellVolume END ********
@@ -196,9 +210,9 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
       .splitSellOrder(
         SELL_TOKEN,
         BUY_TOKEN,
-        TOTAL_SELL_VOLUME,
+        totalSellVolume,
         NUM_SUBORDERS,
-        SUBORDER_SIZE,
+        subOrderSize,
         executionTime,
         INTERVAL_SPAN
       )
@@ -217,11 +231,11 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
       );
 
     // Get and log gasLimit
-    await web3.eth.getBlock("latest", false, (error, result) => {
+    await web3.eth.getBlock("latest", false, (error, block) => {
       if (error) {
         console.error;
       } else {
-        console.log(`gasLimit: ${result.gasLimit}`);
+        console.log(`gasLimit: ${block.gasLimit}`);
       }
     });
 
@@ -233,17 +247,15 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
   it(`lets seller/anyone execute GelatoDXSplitSellAndWithdraw.splitSellOrder()
   Event LogNewOrderCreated:
   expected indexed orderId:  1
-  expected indexed seller:   ${seller}`, async () => {
+  expected indexed seller:   ${process.env.SELLER}`, async () => {
     // benchmarked gasUsed = 520109
-    let txHash;
-    let txReceipt;
     await gelatoDXSplitSellAndWithdraw.contract.methods
       .splitSellOrder(
         SELL_TOKEN,
         BUY_TOKEN,
-        TOTAL_SELL_VOLUME,
+        totalSellVolume,
         NUM_SUBORDERS,
-        SUBORDER_SIZE,
+        subOrderSize,
         executionTime,
         INTERVAL_SPAN
       )
@@ -252,7 +264,7 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
         txHash = hash;
         console.log(`txHashSplitSellOrder:\n${hash}`);
       })
-      .on("receipt", receipt => {
+      .once("receipt", receipt => {
         txReceipt = receipt;
         console.log(
           "txReceiptSplitSellOrder returned by transaction:\n",
@@ -261,21 +273,7 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
       })
       .on("error", console.error);
 
-    const receipt = await web3.eth.getTransactionReceipt(
-      txHash,
-      (error, receipt) => {
-        if (error) {
-          console.error;
-        } else {
-          console.log(
-            "splitSellOrder receipt returned by web3.eth.getTransactionReceipt():\n",
-            receipt
-          );
-        }
-      }
-    );
-
-    assert(true);
+    assert.exists(txReceipt.events.LogNewOrderCreated);
   });
   // ******** call GDXSSAW.splitSellOrder() and mint its execution claims on Core END********
 });

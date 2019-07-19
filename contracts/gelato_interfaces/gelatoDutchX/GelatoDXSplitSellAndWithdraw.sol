@@ -132,7 +132,7 @@ contract GelatoDXSplitSellAndWithdraw is IcedOut, Ownable, SafeTransfer {
         */
         // Invariant1: Constant childOrderSize
         require(_totalSellVolume == _numSubOrders.mul(_subOrderSize),
-            "splitSellOrder: totalOrderVolume != numChildOrders * childOrderSize"
+            "splitSellOrder: _totalSellVolume != _numSubOrders * _subOrderSize"
         );
 
 

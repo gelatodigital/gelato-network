@@ -11,13 +11,15 @@ echo "##########################################################################
 echo "\n                    TRUFFLE TEST  \n"
 echo "###############################################################################\n"
 
-TEST_OUTPUT=`truffle test gelato_tests/gelato_interface_tests/gelato_DX_tests/splitSellAndWithdraw/automated_tests/integrationTest_splitSellAndWithdraw.js --show-events`
+TEST_OUTPUT=`truffle test gelato_tests/gelato_interface_tests/gelato_DX_tests/splitSellAndWithdraw/automated_tests/integrationTest_splitSellAndWithdraw.js`
 echo "\n${TEST_OUTPUT}\n"
 
 echo "###############################################################################\n"
 echo "\n                    TRUFFLE TEST END \n"
 echo "###############################################################################\n"
 
+SELLER_BALANCES=`yarn cli balances --account ${SELLER}`
+echo "\n${SELLER_BALANCES}\n"
 
 echo "###############################################################################\n"
 echo "\n        GELATODX_SPLITSELLANDWITHDRAW AUTOMATED INTEGRATION TEST SCRIPT END \n"
