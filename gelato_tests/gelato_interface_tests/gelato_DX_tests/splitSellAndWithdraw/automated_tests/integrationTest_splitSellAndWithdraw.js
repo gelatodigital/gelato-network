@@ -69,6 +69,7 @@ let executionTime; // timestamp
 // Post GDXSSAW.splitSellOrder() tx
 let orderId;
 let orderState;
+let executionClaimIds = [];
 
 // Prior to GelatoCore.execute() tx
 
@@ -194,11 +195,15 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
   // ******** list GDXSSAW interface on Gelato Core and set its maxGas END ********
   // ******** Event on core LogNewInterfaceListed ********
   it(`emits correct LogNewInterfaceLised(dappInterface, maxGas) on gelatoCore`, async () => {
+    assert.exists(txReceipt.events.LogNewInterfaceListed);
     assert.equal(
-      txReceipt.events.LogNewInterfaceListed.dappInterface,
+      txReceipt.events.LogNewInterfaceListed.returnValues.dappInterface,
       gelatoDXSplitSellAndWithdraw.address
     );
-    assert.equal(txReceipt.events.LogNewInterfaceListed.maxGas, GDXSSAW_MAXGAS);
+    assert.equal(
+      txReceipt.events.LogNewInterfaceListed.returnValues.maxGas,
+      GDXSSAW_MAXGAS
+    );
   });
   // ******** Event on core LogNewInterfaceListed END ********
 
@@ -224,6 +229,11 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
 
   // ******** GDXSSAW.splitSellOrder() gasUsed estimates ********
   it(`estimates GelatoDXSplitsellAndWithdraw.splitSellOrder() gasUsed and logs gasLimit`, async () => {
+    // First set the executiontime
+    blockNumber = await web3.eth.getBlockNumber();
+    block = await web3.eth.getBlock(blockNumber);
+    timestamp = block.timestamp;
+    executionTime = timestamp;
     // Get and log estimated gasUsed by splitSellOrder fn
     gelatoDXSplitSellAndWithdraw.contract.methods
       .splitSellOrder(
@@ -263,11 +273,8 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
   });
   // ******** GDXSSAW.splitSellOrder() gasUsed estimates END ********
 
-  // ******** call GDXSSAW.splitSellOrder() and mint its execution claims on Core ********
-  it(`lets seller/anyone execute GelatoDXSplitSellAndWithdraw.splitSellOrder()
-  Event on GDXSSAW LogNewOrderCreated:
-  expected indexed orderId:  1 (because contract() redeploys (truffle cleanroom))
-  expected indexed SELLER:   ${SELLER}`, async () => {
+  // ******** call GDXSSAW.splitSellOrder() ********
+  it(`GDXSSAW.splitSellOrder() works with correct LogNewOrderCreated event`, async () => {
     // First set the executiontime
     blockNumber = await web3.eth.getBlockNumber();
     block = await web3.eth.getBlock(blockNumber);
@@ -314,11 +321,52 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
     assert.equal(orderState.remainingSubOrders, NUM_SUBORDERS);
     assert.equal(orderState.lastSellAmountAfterFee, 0);
     assert.equal(orderState.remainingWithdrawals, NUM_SUBORDERS);
-
-    console.log(
-      "Event LogNewOrderCreated\n",
-      txReceipt.events.LogNewOrderCreated.returnValues
-    );
   });
   // ******** call GDXSSAW.splitSellOrder() and mint its execution claims on Core END********
+  // ******** Events on gelatoCore ********
+  it(`emits correct LogNewExecutionClaimMinted events on gelatoCore`, async () => {
+    // Filter events emitted from gelatoCore
+    await gelatoCore.getPastEvents(
+      "LogNewExecutionClaimMinted",
+      {
+        filter: {
+          dappInterface: gelatoDXSplitSellAndWithdraw.address,
+          orderId: orderId
+        },
+        fromBlock: blockNumber
+      },
+      (error, events) => {
+        if (error) {
+          console.error;
+        } else {
+          console.log(events);
+
+          // correct number of LogNewExecutionClaimMinted events were emitted
+          assert.isEqual(events.length, NUM_SUBORDERS + 1); // +1=lastWithdrawal
+
+          // Further event data checks and fetching of executionClaimIds
+          for (event of events) {
+            assert.equal(event.event, "LogNewExecutionClaimMinted");
+            assert.equal(event.blockNumber, blockNumber);
+            assert.equal(
+              event.returnValues.dappInterface,
+              gelatoDXSplitSellAndWithdraw.address
+            );
+            assert.equal(event.returnValues.interfaceOrderId, orderId);
+            assert.equal(event.returnValues.executionClaimOwner, seller);
+            assert.equal(
+              event.returnValues.gelatoCoreReceivable,
+              GELATO_PREPAID_FEE_BN
+            );
+
+            // Save the executionClaimIds
+            executionClaimIds.push(event.returnValues.executionClaimId);
+          }
+        }
+      }
+    );
+  });
+  // ******** Events on gelatoCore END ********
+  // ******** Minted execution claims on Core ********
+  // ******** Minted execution claims on Core END ********
 });
