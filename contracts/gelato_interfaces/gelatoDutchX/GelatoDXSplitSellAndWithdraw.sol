@@ -149,7 +149,7 @@ contract GelatoDXSplitSellAndWithdraw is IcedOut, Ownable, SafeTransfer {
             0,  // default: lastAuctionIndex
             _numSubOrders,  // default: remainingSubOrders
             0,  // default: lastSellAmountAfterFee
-            0  //  default: remainingWithdrawals
+            _numSubOrders  //  default: remainingWithdrawals
         );
 
 
@@ -166,7 +166,7 @@ contract GelatoDXSplitSellAndWithdraw is IcedOut, Ownable, SafeTransfer {
 
         // Step7: Create all subOrders and transfer the gelatoFeePerSubOrder
         uint256 executionTime = _executionTime;
-        for (uint256 i = 0; i < _numSubOrders; i++) {
+        for (uint256 i = 0; i < _numSubOrders.add(1); i++) { //.add(1)=last withdrawal
             //  ***** GELATO CORE PROTOCOL INTERACTION *****
             // Call Gelato gelatoCore protocol's mintClaim() function transferring
             //  the prepaid fee for each minted Claim.
