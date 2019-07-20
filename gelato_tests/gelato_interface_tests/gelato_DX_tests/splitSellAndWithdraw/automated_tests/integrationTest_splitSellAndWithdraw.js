@@ -278,7 +278,7 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
     timestamp = block.timestamp;
     executionTime = timestamp;
 
-    // benchmarked gasUsed = 520109
+    // benchmarked gasUsed = 726,360 (for 2 subOrders + 1 lastWithdrawal)
     await gelatoDXSplitSellAndWithdraw.contract.methods
       .splitSellOrder(
         SELL_TOKEN,
@@ -329,6 +329,7 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
     blockNumber = txReceipt.blockNumber;
   });
   // ******** call GDXSSAW.splitSellOrder() and mint its execution claims on Core END********
+
   // ******** Events on gelatoCore ********
   it(`emits correct LogNewExecutionClaimMinted events on gelatoCore`, async () => {
     // Filter events emitted from gelatoCore
@@ -383,6 +384,32 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
     assert.exists(_events);
   });
   // ******** Events on gelatoCore END ********
+
   // ******** Minted execution claims on Core ********
+  it(`mints the correct ExecutionClaim structs on gelatoCore`, async () => {
+    // fetch each executionClaim from core and test it
+    let executionClaim;
+    let executionTimes = parseInt(executionTime);
+    for (executionClaimId of executionClaimIds) {
+      executionClaim = await gelatoCore.contract.methods
+        .getExecutionClaim(executionClaimId)
+        .call();
+      assert.strictEqual(executionClaim[0], SELLER);
+      assert.strictEqual(
+        executionClaim[1],
+        gelatoDXSplitSellAndWithdraw.address
+      );
+      assert.strictEqual(executionClaim[2], orderId);
+      assert.strictEqual(executionClaim[3], SELL_TOKEN);
+      assert.strictEqual(executionClaim[4], BUY_TOKEN);
+      assert.strictEqual(executionClaim[5], subOrderSize);
+      assert.strictEqual(executionClaim[6], executionTimes.toString());
+      assert.strictEqual(executionClaim[7], GELATO_PREPAID_FEE_BN.toString());
+
+      executionTimes += parseInt(INTERVAL_SPAN);
+    }
+    // do not pass if not exists
+    assert.exists(executionClaim.executionTime);
+  });
   // ******** Minted execution claims on Core END ********
 });
