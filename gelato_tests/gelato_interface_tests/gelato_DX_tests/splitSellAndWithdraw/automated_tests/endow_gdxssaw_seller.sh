@@ -5,7 +5,7 @@ export SELL_AMOUNT="20"
 export SELL_TOKEN="WETH"
 
 echo "###############################################################################\n"
-echo "\n            endow_gdxssaw_seller SCRIPT: \n
+echo "\n            ENDOW GDXSSAW SELLER: \n
             endowing seller with ${SELL_AMOUNT} ${SELL_TOKEN} \n"
 echo "###############################################################################\n"
 
@@ -54,6 +54,6 @@ SELLER_BALANCE_AFTER=`yarn cli balances --account ${SELLER}`
 echo "\n{$SELLER_BALANCE_AFTER}\n"
 
 echo "###############################################################################\n"
-echo "\n            endow_gdxssaw_seller: END \n"
+echo "\n            ENDOW GDXSSAW SELLER: END \n"
 echo "###############################################################################\n"
 

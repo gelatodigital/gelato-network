@@ -75,8 +75,9 @@
     "close1": "./gelato_tests/gelato_interface_tests/gelato_DX_tests/sh_gelatoDX/closeAuction.sh",
     "stage2": "./gelato_tests/gelato_interface_tests/gelato_DX_tests/sh_gelatoDX/stageTwo.sh",
     "withdraw1": "tuffle exec gelato_tests/gelato_interface_tests/gelato_DX_tests/sh_gelatoDX/withdrawManually.js",
-    "integration-test-gelatodx-splitsellandwithdraw-script": "SELLER='0xC5fdf4076b8F3A5357c5E395ab970B5B54098Fef' ./gelato_tests/gelato_interface_tests/gelato_DX_tests/splitSellAndWithdraw/automated_tests/integrationTest_splitSellAndWithdraw.sh",
-    "integration-test-gelatodx-splitsellandwithdraw": "SELLER='0xC5fdf4076b8F3A5357c5E395ab970B5B54098Fef' truffle test gelato_tests/gelato_interface_tests/gelato_DX_tests/splitSellAndWithdraw/automated_tests/integrationTest_splitSellAndWithdraw.js"
+    "es": "SELLER='0xC5fdf4076b8F3A5357c5E395ab970B5B54098Fef' ./gelato_tests/gelato_interface_tests/gelato_DX_tests/splitSellAndWithdraw/automated_tests/endow_gdxssaw_seller.sh",
+    "is": "SELLER='0xC5fdf4076b8F3A5357c5E395ab970B5B54098Fef' ./gelato_tests/gelato_interface_tests/gelato_DX_tests/splitSellAndWithdraw/automated_tests/integrationTest_splitSellAndWithdraw.sh",
+    "i": "SELLER='0xC5fdf4076b8F3A5357c5E395ab970B5B54098Fef' truffle test gelato_tests/gelato_interface_tests/gelato_DX_tests/splitSellAndWithdraw/automated_tests/integrationTest_splitSellAndWithdraw.js"
   },
   "repository": {
     "type": "git",

@@ -38,6 +38,7 @@ const GelatoDXSplitSellAndWithdraw = artifacts.require(
 const SellToken = artifacts.require("EtherToken");
 const BuyToken = artifacts.require("TokenRDN");
 // Constants
+const SELLER = "0xC5fdf4076b8F3A5357c5E395ab970B5B54098Fef" // account[2]:
 const SELL_TOKEN = "0xAa588d3737B611baFD7bD713445b314BD453a5C8"; // WETH
 const BUY_TOKEN = "0x8ACEe021a27779d8E98B9650722676B850b25E11"; // RDN
 const TOTAL_SELL_VOLUME = 20; // 20 WETH
@@ -57,7 +58,6 @@ const MSG_VALUE = GELATO_PREPAID_FEE_BN.mul(NUM_SUBORDERS_BN).toString(); // wei
 let sellTokenContract;
 let buyTokenContract;
 let accounts;
-let seller; // account[2]: 0xC5fdf4076b8F3A5357c5E395ab970B5B54098Fef
 let totalSellVolume;
 let subOrderSize;
 let executionTime; // timestamp
@@ -137,13 +137,11 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
     buyTokenContract = await BuyToken.at(BUY_TOKEN);
 
     accounts = await web3.eth.getAccounts();
-    seller = accounts[2];
 
     totalSellVolume = web3.utils.toWei(
       TOTAL_SELL_VOLUME.toString(),
       TOTAL_SELL_VOLUME_UNIT
     );
-
     subOrderSize = web3.utils.toWei(SUBORDER_SIZE.toString(), SUBORDER_UNIT);
 
     const block = await web3.eth.getBlockNumber();
@@ -161,6 +159,14 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
     assert.equal(buyTokenContract.address, BUY_TOKEN);
   });
   // ******** GDXSSAW default deployed instances checks END ********
+
+
+  // ******** GDXSSAW default SELLER account checks ********
+  it(`has accounts[2] set as the SELLER`, async () => {
+    assert.equal(SELLER, accounts[2]);
+  });
+  // ******** GDXSSAW default SELLER account checks END ********
+
 
   // ******** list GDXSSAW interface on Gelato Core and set its maxGas ********
   it(`lets Core-owner list gelatoDXSplitSellAndWithdraw on GelatoCore with its maxGas set
@@ -184,13 +190,13 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
   // ******** list GDXSSAW interface on Gelato Core and set its maxGas END ********
 
   // ******** Seller ERC20 approves the GDXSSAW for TotalSellVolume ********
-  it(`seller approves GelatoDXSplitsellAndWithdraw for the totalSellVolume`, async () => {
+  it(`SELLER approves GelatoDXSplitsellAndWithdraw for the totalSellVolume`, async () => {
     await sellTokenContract.contract.methods
       .approve(gelatoDXSplitSellAndWithdraw.address, totalSellVolume)
-      .send({ from: seller });
+      .send({ from: SELLER });
 
     const allowance = await sellTokenContract.contract.methods
-      .allowance(seller, gelatoDXSplitSellAndWithdraw.address)
+      .allowance(SELLER, gelatoDXSplitSellAndWithdraw.address)
       .call();
 
     assert.equal(
@@ -217,7 +223,7 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
         INTERVAL_SPAN
       )
       .estimateGas(
-        { from: seller, value: MSG_VALUE, gas: 400000 },
+        { from: SELLER, value: MSG_VALUE, gas: 1000000 }, // gas needed to prevent out of gas error
         (error, gasAmount) => {
           if (error) {
             console.error;
@@ -244,10 +250,10 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
   // ******** GDXSSAW.splitSellOrder() gasUsed estimates END ********
 
   // ******** call GDXSSAW.splitSellOrder() and mint its execution claims on Core ********
-  it(`lets seller/anyone execute GelatoDXSplitSellAndWithdraw.splitSellOrder()
+  it(`lets SELLER/anyone execute GelatoDXSplitSellAndWithdraw.splitSellOrder()
   Event LogNewOrderCreated:
   expected indexed orderId:  1
-  expected indexed seller:   ${process.env.SELLER}`, async () => {
+  expected indexed SELLER:   ${SELLER}`, async () => {
     // benchmarked gasUsed = 520109
     await gelatoDXSplitSellAndWithdraw.contract.methods
       .splitSellOrder(
@@ -259,15 +265,15 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
         executionTime,
         INTERVAL_SPAN
       )
-      .send({ from: seller, value: MSG_VALUE, gas: 1000000 })
+      .send({ from: SELLER, value: MSG_VALUE, gas: 1000000 }) // gas needed to prevent out of gas error
       .once("transactionHash", hash => {
         txHash = hash;
-        console.log(`txHashSplitSellOrder:\n${hash}`);
+        console.log(`\n\ntxHashSplitSellOrder:${hash}`);
       })
       .once("receipt", receipt => {
         txReceipt = receipt;
         console.log(
-          "txReceiptSplitSellOrder returned by transaction:\n",
+          "\ntxReceiptSplitSellOrder returned by transaction:\n",
           receipt
         );
       })
