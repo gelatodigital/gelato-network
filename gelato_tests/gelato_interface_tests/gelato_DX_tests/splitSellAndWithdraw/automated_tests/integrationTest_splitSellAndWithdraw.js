@@ -332,19 +332,24 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
   // ******** Events on gelatoCore ********
   it(`emits correct LogNewExecutionClaimMinted events on gelatoCore`, async () => {
     // Filter events emitted from gelatoCore
+    /*let filter = {
+      dappInterface: gelatoDXSplitSellAndWithdraw.address,
+      interfaceOrderId: orderId,
+      executionClaimOwner: SELLER
+    };*/ // @dev: cannot get filter to work (not needed tho)
+    let _events;
     await gelatoCore.getPastEvents(
       "LogNewExecutionClaimMinted",
+      // { filter, fromBlock: parseInt(blockNumber) },  // exercise: make this work
       (error, events) => {
         if (error) {
           console.error;
         } else {
-          console.log(events);
-
           // correct number of LogNewExecutionClaimMinted events were emitted
           assert.strictEqual(events.length, parseInt(NUM_SUBORDERS) + 1); // +1=lastWithdrawal
 
           // Further event data checks and fetching of executionClaimIds
-          i = 1;  // for the executionClaimId checking
+          i = 1; // for the executionClaimId checking
           for (event of events) {
             assert.strictEqual(event.event, "LogNewExecutionClaimMinted");
             assert.strictEqual(event.blockNumber, blockNumber);
@@ -359,15 +364,23 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
               GELATO_PREPAID_FEE_BN.toString()
             );
             // check the executionClaimIds
-            assert.strictEqual(event.returnValues.executionClaimId, i.toString());
+            assert.strictEqual(
+              event.returnValues.executionClaimId,
+              i.toString()
+            );
             i++;
 
             // Save the executionClaimIds
             executionClaimIds.push(event.returnValues.executionClaimId);
+
+            // Hold on to events for later assert.exists
+            _events = events;
           }
         }
       }
     );
+    // Make sure events were emitted
+    assert.exists(_events);
   });
   // ******** Events on gelatoCore END ********
   // ******** Minted execution claims on Core ********
