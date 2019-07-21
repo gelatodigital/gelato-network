@@ -6,6 +6,9 @@
  * -> GelatoCore.mintClaim()
  * -----------------------------------------------------
  *  */
+// To run shell scripts from inside node.js
+const exec = require('childe_process').exec, child;
+
 // Big Number stuff
 const BN = web3.utils.BN;
 
@@ -31,37 +34,15 @@ const BuyToken = artifacts.require("TokenRDN");
 const SELLER = "0xC5fdf4076b8F3A5357c5E395ab970B5B54098Fef"; // account[2]:
 const SELL_TOKEN = "0xAa588d3737B611baFD7bD713445b314BD453a5C8"; // WETH
 const BUY_TOKEN = "0x8ACEe021a27779d8E98B9650722676B850b25E11"; // RDN
-const TOTAL_SELL_VOLUME = "20"; // 20 WETH
-const TOTAL_SELL_VOLUME_UNIT = "ether";
-const NUM_SUBORDERS = "2";
-const SUBORDER_SIZE = "10"; // 10 WETH
-const SUBORDER_UNIT = "ether";
-const INTERVAL_SPAN = "21600"; // 6 hours
-const GDXSSAW_MAXGAS = "400000";
-// Big Number constants
-const GDXSSAW_MAXGAS_BN = new BN(GDXSSAW_MAXGAS.toString()); // 400.000 must be benchmarked
+const TOTAL_SELL_VOLUME = web3.utils.toWei("20", "ether"); // 20 WETH
+const NUM_SUBORDERS_BN = new BN("2");
+const SUBORDER_SIZE_BN = new BN(web3.utils.toWei("10", "ether")); // 10 WETH
+const INTERVAL_SPAN_BN = new BN("21600"); // 6 hours
+const GDXSSAW_MAXGAS_BN = new BN("400000"); // 400.000 must be benchmarked
 const GELATO_PREPAID_FEE_BN = GDXSSAW_MAXGAS_BN.mul(GELATO_GAS_PRICE_BN); // wei
-const NUM_SUBORDERS_BN = new BN(NUM_SUBORDERS.toString());
 // MSG_VALUE_BN needs .add(1) in GDXSSAW due to offset of last withdrawal executionClaim
 const MSG_VALUE_BN = GELATO_PREPAID_FEE_BN.mul(NUM_SUBORDERS_BN.add(new BN(1))); // wei
 // GDXSSAW specific END
-
-// To be set variables
-// Prior to GDXSSAW.splitSellOrder() tx
-let sellTokenContract;
-let buyTokenContract;
-let accounts;
-let totalSellVolume;
-let subOrderSize;
-let executionTime; // timestamp
-// Post GDXSSAW.splitSellOrder() tx
-let orderId;
-let orderState;
-let executionClaimIds = [];
-
-// Prior to GelatoCore.execute() tx
-
-// Post GelatoCore.execute() tx
 
 // State shared across the unit tests
 // Deployed contract instances
@@ -74,12 +55,26 @@ let gelatoDXSplitSellAndWithdrawOwner;
 let txHash;
 let txReceipt;
 let blockNumber;
-let from;
-let to;
-let gasUsed;
 // block data
 let block; // e.g. getBlock(blockNumber).timstamp
 let timestamp;
+
+// To be set variables
+// Prior to GDXSSAW.splitSellOrder() tx
+let sellTokenContract;
+let buyTokenContract;
+let accounts;
+let executionTime; // timestamp
+// Post GDXSSAW.splitSellOrder() tx
+let orderId;
+let orderState;
+let executionClaimIds = [];
+
+// Prior to GelatoCore.execute() tx
+let executor; // accounts[3]
+
+// Post GelatoCore.execute() tx
+
 
 // Default test suite
 contract(
@@ -128,20 +123,16 @@ contract(
   }
 );
 
+
+
 // Test suite to end-to-end test the creation of a GDXSSAW style claims
-describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()", () => {
+describe("Listing GDXSSAW", () => {
   // suite root-level pre-hook: set the test suite variables to be shared among all tests
   before(async () => {
     sellTokenContract = await SellToken.at(SELL_TOKEN);
     buyTokenContract = await BuyToken.at(BUY_TOKEN);
 
     accounts = await web3.eth.getAccounts();
-
-    totalSellVolume = web3.utils.toWei(
-      TOTAL_SELL_VOLUME,
-      TOTAL_SELL_VOLUME_UNIT
-    );
-    subOrderSize = web3.utils.toWei(SUBORDER_SIZE, SUBORDER_UNIT);
   });
 
   // ******** GDXSSAW default deployed instances checks ********
@@ -190,11 +181,16 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
     );
   });
   // ******** Event on core LogNewInterfaceListed END ********
+});
 
+
+
+// ********************* SPLITSELLORDER -> MINT_CLAIMS *********************
+describe("GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()", () => {
   // ******** Seller ERC20 approves the GDXSSAW for TotalSellVolume ********
-  it(`seller approves GelatoDXSplitsellAndWithdraw for the totalSellVolume`, async () => {
+  it(`seller approves GelatoDXSplitsellAndWithdraw for the TOTAL_SELL_VOLUME`, async () => {
     await sellTokenContract.contract.methods
-      .approve(gelatoDXSplitSellAndWithdraw.address, totalSellVolume)
+      .approve(gelatoDXSplitSellAndWithdraw.address, TOTAL_SELL_VOLUME)
       .send({ from: SELLER });
 
     const allowance = await sellTokenContract.contract.methods
@@ -203,10 +199,10 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
 
     assert.strictEqual(
       allowance,
-      totalSellVolume,
+      TOTAL_SELL_VOLUME,
       `The ERC20 ${
         sellTokenContract.address
-      } allowance for the GelatoDXSplitsellAndWithdraw should be at ${totalSellVolume}`
+      } allowance for the GelatoDXSplitsellAndWithdraw should be at ${TOTAL_SELL_VOLUME}`
     );
   });
   // ******** Seller ERC20 approves the GDXSSAW for TotalSellVolume END ********
@@ -224,11 +220,11 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
       .splitSellOrder(
         SELL_TOKEN,
         BUY_TOKEN,
-        totalSellVolume,
-        NUM_SUBORDERS,
-        subOrderSize,
+        TOTAL_SELL_VOLUME,
+        NUM_SUBORDERS_BN,
+        SUBORDER_SIZE_BN,
         executionTime,
-        INTERVAL_SPAN
+        INTERVAL_SPAN_BN
       )
       .estimateGas(
         { from: SELLER, value: MSG_VALUE_BN, gas: 1000000 }, // gas needed to prevent out of gas error
@@ -254,7 +250,7 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
   });
   // ******** GDXSSAW.splitSellOrder() gasUsed estimates END ********
 
-  // ******** call GDXSSAW.splitSellOrder() ********
+  // ******** seller calls GDXSSAW.splitSellOrder() ********
   it(`GDXSSAW.splitSellOrder() works with correct msg.value received on Core and LogNewOrderCreated event`, async () => {
     // First get gelatoCore's balance pre executionClaim minting
     let gelatoCoreBalancePre = new BN(
@@ -271,11 +267,11 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
       .splitSellOrder(
         SELL_TOKEN,
         BUY_TOKEN,
-        totalSellVolume,
-        NUM_SUBORDERS,
-        subOrderSize,
+        TOTAL_SELL_VOLUME,
+        NUM_SUBORDERS_BN,
+        SUBORDER_SIZE_BN,
         executionTime,
-        INTERVAL_SPAN
+        INTERVAL_SPAN_BN
       )
       .send({ from: SELLER, value: MSG_VALUE_BN, gas: 1000000 }) // gas needed to prevent out of gas error
       .once("transactionHash", hash => (txHash = hash))
@@ -315,9 +311,9 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
     // check the orderState
     assert.isFalse(orderState.lastAuctionWasWaiting);
     assert.strictEqual(orderState.lastAuctionIndex, "0");
-    assert.strictEqual(orderState.remainingSubOrders, NUM_SUBORDERS);
+    assert.strictEqual(orderState.remainingSubOrders, NUM_SUBORDERS_BN);
     assert.strictEqual(orderState.lastSellAmountAfterFee, "0");
-    assert.strictEqual(orderState.remainingWithdrawals, NUM_SUBORDERS);
+    assert.strictEqual(orderState.remainingWithdrawals, NUM_SUBORDERS_BN);
 
     // Log actual gasUsed
     console.log("\t\tactual gasUsed:     ", txReceipt.gasUsed);
@@ -325,7 +321,7 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
     // Save transactions blockNumber for next event emission test
     blockNumber = txReceipt.blockNumber;
   });
-  // ******** call GDXSSAW.splitSellOrder() and mint its execution claims on Core END********
+  // ******** seller calls GDXSSAW.splitSellOrder() and mint its execution claims on Core END********
 
   // ******** Events on gelatoCore ********
   it(`emits correct LogNewExecutionClaimMinted events on gelatoCore`, async () => {
@@ -344,7 +340,7 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
           console.error;
         } else {
           // correct number of LogNewExecutionClaimMinted events were emitted
-          assert.strictEqual(events.length, parseInt(NUM_SUBORDERS) + 1); // +1=lastWithdrawal
+          assert.strictEqual(events.length, parseInt(NUM_SUBORDERS_BN) + 1); // +1=lastWithdrawal
 
           // Further event data checks and fetching of executionClaimIds
           i = 1; // for the executionClaimId checking
@@ -384,7 +380,7 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
 
   // ******** Minted execution claims on Core ********
   it(`mints the correct ExecutionClaim structs on gelatoCore`, async () => {
-    let executionTimes = parseInt(executionTime);
+    let executionTimes = new BN(executionTime.toString());
     // fetch each executionClaim from core and test it
     for (executionClaimId of executionClaimIds) {
       let {
@@ -405,12 +401,186 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
       assert.strictEqual(interfaceOrderId, orderId);
       assert.strictEqual(sellToken, SELL_TOKEN);
       assert.strictEqual(buyToken, BUY_TOKEN);
-      assert.strictEqual(sellAmount, subOrderSize);
+      assert.strictEqual(sellAmount, SUBORDER_SIZE_BN);
       assert.strictEqual(executionTime, executionTimes.toString());
       assert.strictEqual(prepaidExecutionFee, GELATO_PREPAID_FEE_BN.toString());
 
-      executionTimes += parseInt(INTERVAL_SPAN);
+      executionTimes.add(INTERVAL_SPAN_BN);
     }
   });
   // ******** Minted execution claims on Core END ********
+});
+// ********************* SPLITSELLORDER -> MINT_CLAIMS END *********************
+
+
+
+// ********************* SHELL SCRIPTS -> DUTCHX MANIPULATION *********************
+// DutchX Auction Time Logic
+child = exec("yarn close-auction-1", async (error, stdout, stderr) => {
+  if (error) {
+    console.error;
+  } else {
+    console.log(`stdout: ${stdout}`);
+    console.log(`stderr: ${stderr}`);
+  }
+});
+// Run the close-auction-1 child process
+child();
+// ********************* SHELL SCRIPTS -> DUTCHX MANIPULATION END *********************
+
+
+
+// ********************* EXECUTE *********************
+// Test suite to end-to-end test the EXECUTION of a GDXSSAW style claim
+describe("gelatoCore.execute() -> GDXSSAW.execute() -> burnExecutionClaim and executorPayout", async () => {
+  // suite root-level pre-hook: set executor to accounts[3]
+  before(() => {
+    executor = accounts[3];
+  });
+
+  // ******** Make sure EXECUTIONCLAIM_ID env variable exists ********
+  it("has an EXECUTIONCLAIM_ID in its process.env", () => {
+    assert.exists(EXECUTIONCLAIM_ID);
+    console.log(`\t\tEXECUTIONCLAIM_ID: ${EXECUTIONCLAIM_ID}`);
+  });
+  // ******** Make sure EXECUTIONCLAIM_ID env variable exists END ********
+
+  // ********  Correct ownerOf(EXECUTIONCLAIM_ID) ********
+  it("has the correct ownerOf(executionClaimId)", async () => {
+    let executionClaimOwner = await gelatoCore.contract.methods.ownerOf(EXECUTIONCLAIM_ID).call();
+    assert.strictEqual(executionClaimOwner, EXECUTIONCLAIM_OWNER);
+    console.log(`\t\texecutionClaimOwner: ${executionClaimOwner}`);
+  });
+  // ********  Correct ownerOf(EXECUTIONCLAIM_ID) END ********
+
+  // ******** GelatoCore.execute() gasUsed estimates ********
+  it(`estimates GelatoCore.execute() gasUsed and logs gasLimit`, async () => {
+    // Get and log estimated gasUsed by splitSellOrder fn
+    gelatoCore.contract.methods.execute(EXECUTIONCLAIM_ID).estimateGas(
+      { from: executor, gas: 1000000 }, // gas needed to prevent out of gas error
+      async (error, estimatedGasUsed) => {
+        if (error) {
+          console.error;
+        } else {
+          // Get and log gasLimit
+          await web3.eth.getBlock("latest", false, (error, block) => {
+            if (error) {
+              console.error;
+            } else {
+              block = block;
+            }
+          });
+          console.log(`\t\tgasLimit:           ${block.gasLimit}`);
+          console.log(`\t\testimated gasUsed:   ${estimatedGasUsed}`);
+        }
+      }
+    );
+    // This test just tried to get and log the estimate
+    assert(true);
+  });
+  // ******** GelatoCore.execute() gasUsed estimates END ********
+
+  // ******** Executor calls GelatoCore.execute() and gets payout ********
+  it(`gelatoCore.execute() results in correct LogClaimExecutedAndDeleted and executor payout`, async () => {
+    // we fetch data from the executionClaim to be executed
+    let {
+      executionClaimOwner,
+      dappInterface,
+      interfaceOrderId,
+      sellToken,
+      buyToken,
+      sellAmount,
+      executionTime,
+      prepaidExecutionFee
+    } = await gelatoCore.contract.methods
+      .getExecutionClaim(EXECUTIONCLAIM_ID)
+      .call();
+
+    // Fetch current timestamp
+    blockNumber = await web3.eth.getBlockNumber();
+    block = await web3.eth.getBlock(blockNumber);
+    timestamp = block.timestamp;
+
+    // we check the fetched executionClaim data
+    assert.strictEqual(executionClaimOwner, EXECUTIONCLAIM_OWNER);
+    assert.strictEqual(executionClaimOwner, SELLER);
+    assert.strictEqual(dappInterface, gelatoDXSplitSellAndWithdraw.address);
+    assert.strictEqual(interfaceOrderId, INTERFACE_ORDER_ID);
+    assert.strictEqual(sellToken, SELL_TOKEN);
+    assert.strictEqual(buyToken, BUY_TOKEN);
+    assert.strictEqual(sellAmount, SELL_AMOUNT);
+    assert.isBelow(parseInt(executionTime), timestamp);
+    assert.strictEqual(prepaidExecutionFee, GELATO_PREPAID_FEE_BN);
+
+    console.log(
+      `\t\t typeOf prepaidExecutionFee: ${typeof prepaidExecutionFee}`
+    );
+
+    // get executor's balance pre executionClaim minting
+    let executorBalancePre = new BN(await web3.eth.getBalance(executor));
+
+    // executor calls gelatoCore.execute(executionClaimId)
+    // benchmarked gasUsed =
+    await gelatoCore.contract.methods
+      .execute(EXECUTIONCLAIM_ID)
+      .send({ from: executor, gas: 1000000 }) // gas needed to prevent out of gas error
+      .once("transactionHash", hash => (txHash = hash))
+      .once("receipt", receipt => (txReceipt = receipt))
+      .on("error", console.error);
+
+    // Check that executor's balance has gone up by prepaidExecutionFee
+    let executorBalancePost = new BN(await web3.eth.getBalance(executor));
+    assert.strictEqual(
+      executorBalancePost.toString(),
+      executorBalancePre.add(prepaidExecutionFee).toString()
+    );
+
+    // emitted event on GelatoCore: LogClaimExecutedAndDeleted(dappInterface, executor, executionClaimId, executorPayout)
+    assert.exists(txReceipt.events.LogClaimExecutedAndDeleted);
+
+    // check if event has correct return values
+    assert.strictEqual(
+      txReceipt.events.LogClaimExecutedAndDeleted.returnValues.dappInterface,
+      gelatoDXSplitSellAndWithdraw.address
+    );
+    assert.strictEqual(
+      txReceipt.events.LogClaimExecutedAndDeleted.returnValues.executor,
+      executor
+    );
+    assert.strictEqual(
+      txReceipt.events.LogClaimExecutedAndDeleted.returnValues.executionClaimId,
+      EXECUTIONCLAIM_ID
+    );
+    assert.strictEqual(
+      txReceipt.events.LogClaimExecutedAndDeleted.returnValues
+        .gelatoCorePayable,
+      prepaidExecutionFee
+    );
+
+    // save the executionClaimId
+    executionClaimId =
+      txReceipt.events.LogClaimExecutedAndDeleted.returnValues.executionClaimId;
+
+    // make sure executionClaim was burnt
+    /* orderState = await gelatoDXSplitSellAndWithdraw.contract.methods
+      .orderStates(orderId)
+      .call();
+
+    // check the orderState
+    assert.isFalse(orderState.lastAuctionWasWaiting);
+    assert.strictEqual(orderState.lastAuctionIndex, "0");
+    assert.strictEqual(orderState.remainingSubOrders, NUM_SUBORDERS_BN);
+    assert.strictEqual(orderState.lastSellAmountAfterFee, "0");
+    assert.strictEqual(orderState.remainingWithdrawals, NUM_SUBORDERS_BN);*/
+
+    // Log actual gasUsed
+    console.log("\t\tactual gasUsed:     ", txReceipt.gasUsed);
+
+    // Save transactions blockNumber for tests on GDXSSAW
+    blockNumber = txReceipt.blockNumber;
+  });
+  // ******** Executor calls gelatoCore.execute() and gets payout END ********
+
+  // ******** Execution Claim burned check  ********
+  // ******** Execution Claim burned check  END ********
 });

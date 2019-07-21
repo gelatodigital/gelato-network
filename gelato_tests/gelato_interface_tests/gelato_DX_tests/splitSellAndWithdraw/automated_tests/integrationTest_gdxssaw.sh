@@ -11,7 +11,7 @@ echo "##########################################################################
 echo "\n                    TRUFFLE TEST  \n"
 echo "###############################################################################\n"
 
-TEST_OUTPUT=`truffle test gelato_tests/gelato_interface_tests/gelato_DX_tests/splitSellAndWithdraw/automated_tests/integrationTest_gdxssaw_splitSellOrder.js`
+TEST_OUTPUT=`truffle test gelato_tests/gelato_interface_tests/gelato_DX_tests/splitSellAndWithdraw/automated_tests/integrationTest_gdxssaw.js`
 echo "\n${TEST_OUTPUT}\n"
 
 echo "###############################################################################\n"

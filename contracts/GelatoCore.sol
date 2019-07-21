@@ -145,7 +145,7 @@ contract GelatoCore is Ownable, Claim {
 
     // CREATE
     // **************************** mintExecutionClaim() ******************************
-    function mintExecutionClaim(address _claimOwner,
+    function mintExecutionClaim(address _executionClaimOwner,
                                 uint256 _interfaceOrderId,
                                 address _sellToken,
                                 address _buyToken,
@@ -158,7 +158,7 @@ contract GelatoCore is Ownable, Claim {
         returns (bool)
     {
         // Step1.1: Zero value preventions
-        require(_claimOwner != address(0), "GelatoCore.mintExecutionClaim: _claimOwner: No zero addresses allowed");
+        require(_executionClaimOwner != address(0), "GelatoCore.mintExecutionClaim: _executionClaimOwner: No zero addresses allowed");
         require(_sellToken != address(0), "GelatoCore.mintExecutionClaim: _sellToken: No zero addresses allowed");
         require(_buyToken != address(0), "GelatoCore.mintExecutionClaim: _buyToken: No zero addresses allowed");
         require(_sellAmount != 0, "GelatoCore.mintExecutionClaim: _sellAmount cannot be 0");
@@ -188,7 +188,7 @@ contract GelatoCore is Ownable, Claim {
         // Get a new, unique token id for the newly minted ERC721
         uint256 executionClaimId = _executionClaimIds.current();
         // Mint new ERC721 Token representing one childOrder
-        _mint(_claimOwner, executionClaimId);
+        _mint(_executionClaimOwner, executionClaimId);
         // ****** Step4: Mint new executionClaim ERC721 token END ******
 
 
@@ -200,7 +200,7 @@ contract GelatoCore is Ownable, Claim {
         // Step6: Emit event to notify executors that a new sub order was created
         emit LogNewExecutionClaimMinted(msg.sender,  // dappInterface
                                         _interfaceOrderId,
-                                        _claimOwner,
+                                        _executionClaimOwner,
                                         executionClaimId,
                                         msg.value  // prepaidExecutionFee
         );

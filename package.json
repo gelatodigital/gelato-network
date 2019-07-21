@@ -78,10 +78,11 @@
     "sb": "SELLER=0xC5fdf4076b8F3A5357c5E395ab970B5B54098Fef; yarn cli balances --account $SELLER",
     "es": "./gelato_tests/gelato_interface_tests/gelato_DX_tests/splitSellAndWithdraw/automated_tests/endow_gdxssaw_seller.sh",
     "is": "truffle test gelato_tests/gelato_interface_tests/gelato_DX_tests/splitSellAndWithdraw/automated_tests/integrationTest_gdxssaw_splitSellOrder.js",
-    "ie1": "export EXECUTIONCLAIM_ID=1; truffle test gelato_tests/gelato_interface_tests/gelato_DX_tests/splitSellAndWithdraw/automated_tests/integrationTest_gdxssaw_execute.js",
-    "ie2": "export EXECUTIONCLAIM_ID=2; truffle test gelato_tests/gelato_interface_tests/gelato_DX_tests/splitSellAndWithdraw/automated_tests/integrationTest_gdxssaw_execute.js",
-    "ie3": "export EXECUTIONCLAIM_ID=3; truffle test gelato_tests/gelato_interface_tests/gelato_DX_tests/splitSellAndWithdraw/automated_tests/integrationTest_gdxssaw_execute.js",
-    "ish": "./gelato_tests/gelato_interface_tests/gelato_DX_tests/splitSellAndWithdraw/automated_tests/integrationTest_gdxssaw.sh"
+    "ie1": "export EXECUTIONCLAIM_ID=1; truffle exec gelato_tests/gelato_interface_tests/gelato_DX_tests/splitSellAndWithdraw/automated_tests/integrationTest_gdxssaw_execute.js",
+    "ie2": "export EXECUTIONCLAIM_ID=2; truffle exec gelato_tests/gelato_interface_tests/gelato_DX_tests/splitSellAndWithdraw/automated_tests/integrationTest_gdxssaw_execute.js",
+    "ie3": "export EXECUTIONCLAIM_ID=3; truffle exec gelato_tests/gelato_interface_tests/gelato_DX_tests/splitSellAndWithdraw/automated_tests/integrationTest_gdxssaw_execute.js",
+    "ish": "./gelato_tests/gelato_interface_tests/gelato_DX_tests/splitSellAndWithdraw/automated_tests/integrationTest_gdxssaw.sh",
+    "close-auction-1": "./gelato_tests/gelato_interface_tests/gelato_DX_tests/splitSellAndWithdraw/automated_tests/closingAuction1.sh"
   },
   "repository": {
     "type": "git",
@@ -96,6 +97,7 @@
     "@gnosis.pm/safe-modules": "^0.1.0",
     "@gnosis.pm/util-contracts": "2.0.0",
     "@slack/client": "^4.11.0",
+    "chai": "^4.2.0",
     "cors": "^2.8.5",
     "coveralls": "^3.0.4",
     "debug": "^4.1.1",
