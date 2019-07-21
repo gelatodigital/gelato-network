@@ -70,8 +70,6 @@ let gelatoDXSplitSellAndWithdraw;
 // Deployed instances owners
 let gelatoCoreOwner;
 let gelatoDXSplitSellAndWithdrawOwner;
-// Account used for non-ownership prevention tests
-let notOwner; // account[1]
 // tx returned data
 let txHash;
 let txReceipt;
@@ -125,8 +123,6 @@ contract(
         accounts[1],
         "accounts[1] was not expected to be gelatoDXSplitSellAndWithdrawOwner"
       );
-
-      notOwner = accounts[1];
     });
     // ******** Default ownership tests END ********
   }

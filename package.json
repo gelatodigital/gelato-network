@@ -77,9 +77,11 @@
     "withdraw1": "tuffle exec gelato_tests/gelato_interface_tests/gelato_DX_tests/sh_gelatoDX/withdrawManually.js",
     "sb": "SELLER=0xC5fdf4076b8F3A5357c5E395ab970B5B54098Fef; yarn cli balances --account $SELLER",
     "es": "./gelato_tests/gelato_interface_tests/gelato_DX_tests/splitSellAndWithdraw/automated_tests/endow_gdxssaw_seller.sh",
-    "ish": "./gelato_tests/gelato_interface_tests/gelato_DX_tests/splitSellAndWithdraw/automated_tests/integrationTest_gdxssaw.sh",
     "is": "truffle test gelato_tests/gelato_interface_tests/gelato_DX_tests/splitSellAndWithdraw/automated_tests/integrationTest_gdxssaw_splitSellOrder.js",
-    "ie": "truffle test gelato_tests/gelato_interface_tests/gelato_DX_tests/splitSellAndWithdraw/automated_tests/integrationTest_gdxssaw_execute.js"
+    "ie1": "export EXECUTIONCLAIM_ID=1; truffle test gelato_tests/gelato_interface_tests/gelato_DX_tests/splitSellAndWithdraw/automated_tests/integrationTest_gdxssaw_execute.js",
+    "ie2": "export EXECUTIONCLAIM_ID=2; truffle test gelato_tests/gelato_interface_tests/gelato_DX_tests/splitSellAndWithdraw/automated_tests/integrationTest_gdxssaw_execute.js",
+    "ie3": "export EXECUTIONCLAIM_ID=3; truffle test gelato_tests/gelato_interface_tests/gelato_DX_tests/splitSellAndWithdraw/automated_tests/integrationTest_gdxssaw_execute.js",
+    "ish": "./gelato_tests/gelato_interface_tests/gelato_DX_tests/splitSellAndWithdraw/automated_tests/integrationTest_gdxssaw.sh"
   },
   "repository": {
     "type": "git",
