@@ -244,7 +244,7 @@ contract GelatoCore is Ownable, Claim {
     function getExecutionClaim(uint256 _executionClaimId)
         public
         view
-        returns(address claimOwner,
+        returns(address executionClaimOwner,
                 address dappInterface,
                 uint256 interfaceOrderId,
                 address sellToken,
