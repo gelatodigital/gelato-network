@@ -388,13 +388,8 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
   // ******** Minted execution claims on Core ********
   it(`mints the correct ExecutionClaim structs on gelatoCore`, async () => {
     let executionTimes = parseInt(executionTime);
-    let executionClaim;
     // fetch each executionClaim from core and test it
     for (executionClaimId of executionClaimIds) {
-      executionClaim = await gelatoCore.contract.methods
-        .getExecutionClaim(executionClaimId)
-        .call();
-      console.log(executionClaim);
       let {
         executionClaimOwner,
         dappInterface,
@@ -404,7 +399,9 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
         sellAmount,
         executionTime,
         prepaidExecutionFee
-      } = executionClaim;
+      } = await gelatoCore.contract.methods
+        .getExecutionClaim(executionClaimId)
+        .call();
 
       assert.strictEqual(executionClaimOwner, SELLER);
       assert.strictEqual(dappInterface, gelatoDXSplitSellAndWithdraw.address);
@@ -417,8 +414,8 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
 
       executionTimes += parseInt(INTERVAL_SPAN);
     }
-    // do not pass if not exists
-    assert.exists(executionClaim);
   });
   // ******** Minted execution claims on Core END ********
+
+  
 });
