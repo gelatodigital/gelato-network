@@ -4,17 +4,7 @@
  * GelatoDXSplitSellAndWithdraw.splitSellOrder() covers:
  * -----------------------------------------------------
  * -> GelatoCore.mintClaim()
- *
- *
  * -----------------------------------------------------
- *
- * GelatoCore.execute() covers:
- * -----------------------------------------------------------------
- * IcedOut(GelatoDXSplitSellAndWithdraw).execute()
- * -> GelatoDXSplitSellAndWithdraw.execute() test coverage:
- * automated withdrawals (on interface)
- * -> executore payout (on core)
- * -----------------------------------------------------------------
  *  */
 // Big Number stuff
 const BN = web3.utils.BN;
@@ -52,10 +42,8 @@ const GDXSSAW_MAXGAS = "400000";
 const GDXSSAW_MAXGAS_BN = new BN(GDXSSAW_MAXGAS.toString()); // 400.000 must be benchmarked
 const GELATO_PREPAID_FEE_BN = GDXSSAW_MAXGAS_BN.mul(GELATO_GAS_PRICE_BN); // wei
 const NUM_SUBORDERS_BN = new BN(NUM_SUBORDERS.toString());
-// MSG_VALUE needs .add(1) in GDXSSAW due to offset of last withdrawal executionClaim
-const MSG_VALUE = GELATO_PREPAID_FEE_BN.mul(
-  NUM_SUBORDERS_BN.add(new BN(1))
-).toString(); // wei
+// MSG_VALUE_BN needs .add(1) in GDXSSAW due to offset of last withdrawal executionClaim
+const MSG_VALUE_BN = GELATO_PREPAID_FEE_BN.mul(NUM_SUBORDERS_BN.add(new BN(1))); // wei
 // GDXSSAW specific END
 
 // To be set variables
@@ -247,7 +235,7 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
         INTERVAL_SPAN
       )
       .estimateGas(
-        { from: SELLER, value: MSG_VALUE, gas: 1000000 }, // gas needed to prevent out of gas error
+        { from: SELLER, value: MSG_VALUE_BN, gas: 1000000 }, // gas needed to prevent out of gas error
         async (error, estimatedGasUsed) => {
           if (error) {
             console.error;
@@ -271,8 +259,12 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
   // ******** GDXSSAW.splitSellOrder() gasUsed estimates END ********
 
   // ******** call GDXSSAW.splitSellOrder() ********
-  it(`GDXSSAW.splitSellOrder() works with correct LogNewOrderCreated event`, async () => {
-    // First set the executiontime
+  it(`GDXSSAW.splitSellOrder() works with correct msg.value received on Core and LogNewOrderCreated event`, async () => {
+    // First get gelatoCore's balance pre executionClaim minting
+    let gelatoCoreBalancePre = new BN(
+      await web3.eth.getBalance(gelatoCore.address)
+    );
+    // Second set the executiontime
     blockNumber = await web3.eth.getBlockNumber();
     block = await web3.eth.getBlock(blockNumber);
     timestamp = block.timestamp;
@@ -289,10 +281,19 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
         executionTime,
         INTERVAL_SPAN
       )
-      .send({ from: SELLER, value: MSG_VALUE, gas: 1000000 }) // gas needed to prevent out of gas error
+      .send({ from: SELLER, value: MSG_VALUE_BN, gas: 1000000 }) // gas needed to prevent out of gas error
       .once("transactionHash", hash => (txHash = hash))
       .once("receipt", receipt => (txReceipt = receipt))
       .on("error", console.error);
+
+    // Check that gelatoCore has received msg.value funds in its balance
+    let gelatoCoreBalancePost = new BN(
+      await web3.eth.getBalance(gelatoCore.address)
+    );
+    assert.strictEqual(
+      gelatoCoreBalancePost.toString(),
+      gelatoCoreBalancePre.add(MSG_VALUE_BN).toString()
+    );
 
     // emitted event on GDXSSAW: LogNewOrderCreated(orderId, seller)
     assert.exists(txReceipt.events.LogNewOrderCreated);
@@ -416,6 +417,4 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
     }
   });
   // ******** Minted execution claims on Core END ********
-
-
 });
