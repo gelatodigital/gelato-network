@@ -325,7 +325,7 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
     // Log actual gasUsed
     console.log("\t\tactual gasUsed:     ", txReceipt.gasUsed);
 
-    // Save transactions blockNumber
+    // Save transactions blockNumber for next event emission test
     blockNumber = txReceipt.blockNumber;
   });
   // ******** call GDXSSAW.splitSellOrder() and mint its execution claims on Core END********
@@ -417,5 +417,5 @@ describe("Listing GDXSSAW -> GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()"
   });
   // ******** Minted execution claims on Core END ********
 
-  
+
 });

@@ -18,8 +18,6 @@ echo "##########################################################################
 echo "\n                    TRUFFLE TEST END \n"
 echo "###############################################################################\n"
 
-SELLER_BALANCES=`yarn cli balances --account ${SELLER}`
-echo "\n${SELLER_BALANCES}\n"
 
 echo "###############################################################################\n"
 echo "\n        GELATODX_SPLITSELLANDWITHDRAW AUTOMATED INTEGRATION TEST SCRIPT END \n"
