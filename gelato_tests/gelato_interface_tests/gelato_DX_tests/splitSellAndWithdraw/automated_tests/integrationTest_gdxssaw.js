@@ -67,7 +67,9 @@ const SELL_AMOUNT_BN = SUBORDER_SIZE_BN;
 
 // State shared across the unit tests
 // Deployed contract instances
+const GELATO_CORE = "0xF08dF3eFDD854FEDE77Ed3b2E515090EEe765154";
 let gelatoCore;
+const GDXSSAW = "0x74e3FC764c2474f25369B9d021b7F92e8441A2Dc";
 let gelatoDXSplitSellAndWithdraw;
 let dutchExchange;
 // Deployed instances owners
@@ -98,54 +100,51 @@ let executor; // accounts[3]
 // Post GelatoCore.execute() tx
 
 // Default test suite
-contract(
-  "default test suite: correct deployed instances and owners",
-  async accounts => {
-    // suite root-level pre-hook: set the test suite variables to be shared among all tests
-    before(async () => {
-      gelatoCore = await GelatoCore.deployed();
-      gelatoDXSplitSellAndWithdraw = await GelatoDXSplitSellAndWithdraw.deployed();
-      dutchExchange = await DutchExchange.at(DUTCH_EXCHANGE);
-    });
+describe("default test suite: correct deployed instances and owners", () => {
+  // suite root-level pre-hook: set the test suite variables to be shared among all tests
+  before(async () => {
+    accounts = await web3.eth.getAccounts();
+    gelatoCore = await GelatoCore.at(GELATO_CORE);
+    gelatoDXSplitSellAndWithdraw = await GelatoDXSplitSellAndWithdraw.at(
+      GDXSSAW
+    );
+    dutchExchange = await DutchExchange.at(DUTCH_EXCHANGE);
+  });
 
-    // ******** Default deployed instances tests ********
-    it("retrieves deployed GelatoCore, GelatoDXSplitSellAndWithdraw, and DutchX instances", async () => {
-      assert.exists(gelatoCore.address);
-      assert.exists(gelatoDXSplitSellAndWithdraw.address);
-      assert.exists(dutchExchange.address);
-      assert.strictEqual(gelatoCore.address, GelatoCore.address);
-      assert.strictEqual(
-        gelatoDXSplitSellAndWithdraw.address,
-        GelatoDXSplitSellAndWithdraw.address
-      );
-      assert.strictEqual(dutchExchange.address, DUTCH_EXCHANGE);
-    });
-    // ******** Default deployed instances tests END ********
+  // ******** Default deployed instances tests ********
+  it("retrieves deployed GelatoCore, GelatoDXSplitSellAndWithdraw, and DutchX instances", async () => {
+    assert.exists(gelatoCore.address);
+    assert.exists(gelatoDXSplitSellAndWithdraw.address);
+    assert.exists(dutchExchange.address);
+    assert.strictEqual(gelatoCore.address, GELATO_CORE);
+    assert.strictEqual(gelatoDXSplitSellAndWithdraw.address, GDXSSAW);
+    assert.strictEqual(dutchExchange.address, DUTCH_EXCHANGE);
+  });
+  // ******** Default deployed instances tests END ********
 
-    // ******** Default ownership tests ********
-    it("has accounts[0] as owners of Core and Interface and accounts[1] is not owner", async () => {
-      gelatoCoreOwner = await gelatoCore.contract.methods.owner().call();
-      gelatoDXSplitSellAndWithdrawOwner = await gelatoDXSplitSellAndWithdraw.contract.methods
-        .owner()
-        .call();
+  // ******** Default ownership tests ********
+  it("has accounts[0] as owners of Core and Interface and accounts[1] is not owner", async () => {
+    gelatoCoreOwner = await gelatoCore.contract.methods.owner().call();
+    gelatoDXSplitSellAndWithdrawOwner = await gelatoDXSplitSellAndWithdraw.contract.methods
+      .owner()
+      .call();
 
-      assert.strictEqual(gelatoCoreOwner, accounts[0]);
-      assert.strictEqual(gelatoDXSplitSellAndWithdrawOwner, accounts[0]);
+    assert.strictEqual(gelatoCoreOwner, accounts[0]);
+    assert.strictEqual(gelatoDXSplitSellAndWithdrawOwner, accounts[0]);
 
-      assert.notEqual(
-        gelatoCoreOwner,
-        accounts[1],
-        "accounts[1] was expected not to be gelatoCoreOwner"
-      );
-      assert.notEqual(
-        gelatoDXSplitSellAndWithdrawOwner,
-        accounts[1],
-        "accounts[1] was not expected to be gelatoDXSplitSellAndWithdrawOwner"
-      );
-    });
-    // ******** Default ownership tests END ********
-  }
-);
+    assert.notEqual(
+      gelatoCoreOwner,
+      accounts[1],
+      "accounts[1] was expected not to be gelatoCoreOwner"
+    );
+    assert.notEqual(
+      gelatoDXSplitSellAndWithdrawOwner,
+      accounts[1],
+      "accounts[1] was not expected to be gelatoDXSplitSellAndWithdrawOwner"
+    );
+  });
+  // ******** Default ownership tests END ********
+});
 
 // Test suite to end-to-end test the creation of a GDXSSAW style claims
 describe("Listing GDXSSAW", () => {
@@ -153,8 +152,6 @@ describe("Listing GDXSSAW", () => {
   before(async () => {
     sellTokenContract = await SellToken.at(SELL_TOKEN);
     buyTokenContract = await BuyToken.at(BUY_TOKEN);
-
-    accounts = await web3.eth.getAccounts();
   });
 
   // ******** GDXSSAW default deployed instances checks ********
@@ -456,6 +453,13 @@ describe("Shell script to close Auction1", function() {
 // ********************* DUTCHX AUCTION STATE CHECKS *********************
 describe("Gelato's DutchX auction state checks", () => {
   it("dutchExchange auctionIndex is at 2", async () => {
+    console.log(
+      `
+       gelatoCore: ${gelatoCore.address}
+       gdxssaw:    ${gelatoDXSplitSellAndWithdraw.address}
+       dutchX:     ${dutchExchange.address}
+      `
+    )
     let auctionIndex = await dutchExchange.contract.methods
       .latestAuctionIndices(SELL_TOKEN, BUY_TOKEN)
       .call();
