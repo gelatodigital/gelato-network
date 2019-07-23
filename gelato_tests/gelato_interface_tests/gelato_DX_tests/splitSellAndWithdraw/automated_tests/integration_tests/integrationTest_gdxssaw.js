@@ -96,11 +96,11 @@ describe("default test suite: correct deployed instances and owners", () => {
     seller = accounts[2];
 
     // get Gelato instances
-    gelatoCore = await GelatoCore.at(GELATO_CORE);
-    gDXSSAW = await GelatoDXSplitSellAndWithdraw.at(GDXSSAW);
+    gelatoCore = await GelatoCore.deployed();
+    gDXSSAW = await GelatoDXSplitSellAndWithdraw.deployed();
 
     // get DutchX instances
-    dutchExchange = await DutchExchange.at(DUTCH_EXCHANGE);
+    dutchExchange = await DutchExchange.deployed();
     sellToken = await SellToken.at(SELL_TOKEN);
     buyToken = await BuyToken.at(BUY_TOKEN);
   });
@@ -114,11 +114,11 @@ describe("default test suite: correct deployed instances and owners", () => {
     assert.exists(buyToken.address);
 
     // Gelato
-    assert.strictEqual(gelatoCore.address, GELATO_CORE);
-    assert.strictEqual(gDXSSAW.address, GDXSSAW);
+    assert.strictEqual(gelatoCore.address, GelatoCore.address);
+    assert.strictEqual(gDXSSAW.address, GelatoDXSplitSellAndWithdraw.address);
 
     // DutchX
-    assert.strictEqual(dutchExchange.address, DUTCH_EXCHANGE);
+    assert.strictEqual(dutchExchange.address, DutchExchange.address);
     assert.strictEqual(sellToken.address, SELL_TOKEN);
     assert.strictEqual(buyToken.address, BUY_TOKEN);
   });
@@ -140,6 +140,18 @@ describe("default test suite: correct deployed instances and owners", () => {
   });
   // ******** GDXSSAW default SELLER account checks END ********
 });
+
+
+/* describe("Endowing seller with 20 WETH", function() {
+  this.timeout(30000);
+  it("endows seller with 20 WETH", async () => {
+    let output = await execShellCommand('yarn es');
+
+    assert.exists(output);
+    console.log("\n", output);
+  })
+})*/
+
 
 // Test suite to end-to-end test the creation of a GDXSSAW style claims
 describe("Listing GDXSSAW", () => {
@@ -182,10 +194,10 @@ describe("GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()", () => {
   it(`seller approves GelatoDXSplitsellAndWithdraw for the TOTAL_SELL_VOLUME`, async () => {
     await sellToken.contract.methods
       .approve(gDXSSAW.address, TOTAL_SELL_VOLUME)
-      .send({ from: SELLER });
+      .send({ from: seller });
 
     const allowance = await sellToken.contract.methods
-      .allowance(SELLER, gDXSSAW.address)
+      .allowance(seller, gDXSSAW.address)
       .call();
 
     assert.strictEqual(
@@ -406,6 +418,8 @@ describe("GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()", () => {
 });
 // ********************* SPLITSELLORDER -> MINT_CLAIMS END *********************
 
+
+
 // ********************* SHELL SCRIPTS -> DUTCHX MANIPULATION *********************
 // DutchX Auction Time Logic
 describe("Shell script to close Auction1", function() {
@@ -418,6 +432,8 @@ describe("Shell script to close Auction1", function() {
   });
 });
 // ********************* SHELL SCRIPTS -> DUTCHX MANIPULATION END *********************
+
+
 
 // ********************* DUTCHX AUCTION STATE CHECKS *********************
 describe("Gelato's DutchX auction state checks", () => {
