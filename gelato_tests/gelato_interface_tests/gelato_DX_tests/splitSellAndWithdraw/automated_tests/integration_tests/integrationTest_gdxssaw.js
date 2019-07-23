@@ -6,29 +6,41 @@
  * -> GelatoCore.mintClaim()
  * -----------------------------------------------------
  *  */
-// Wrapper function to run shell scripts from inside node.js
-/**
- * Executes a shell command and return it as a Promise.
- * @param cmd {string}
- * @return {Promise<string>}
- */
-function execShellCommand(cmd) {
-  const exec = require("child_process").exec;
-  return new Promise((resolve, reject) => {
-    exec(cmd, (error, stdout, stderr) => {
-      if (error) {
-        console.warn(error);
-      }
-      resolve(stdout ? stdout : stderr);
-    });
-  });
-}
+// ********** Truffle/web3 setup ********
+let accounts;
+const SELLER = "0xC5fdf4076b8F3A5357c5E395ab970B5B54098Fef"; // account[2]:
+let seller; // account[2]
+let executor; // accounts[3]
+// Deployed contract instances
+// Gelato
+const GelatoCore = artifacts.require("GelatoCore");
+const GELATO_CORE = "0x74e3FC764c2474f25369B9d021b7F92e8441A2Dc";
+let gelatoCore;
+
+const GelatoDXSplitSellAndWithdraw = artifacts.require(
+  "GelatoDXSplitSellAndWithdraw"
+);
+const GDXSSAW = "0x98d9f9e8DEbd4A632682ba207670d2a5ACD3c489";
+let gDXSSAW;
+
+// DutchX
+const DutchExchange = artifacts.require("DutchExchange");
+const DUTCH_EXCHANGE = "0x3d49d1eF2adE060a33c6E6Aa213513A7EE9a6241";
+let dutchExchange;
+
+const SellToken = artifacts.require("EtherToken");
+const SELL_TOKEN = "0xf204a4Ef082f5c04bB89F7D5E6568B796096735a"; // WETH
+let sellToken;
+
+const BuyToken = artifacts.require("TokenRDN");
+const BUY_TOKEN = "0xF328c11c4dF88d18FcBd30ad38d8B4714F4b33bF"; // RDN
+let buyToken;
+// ********** Truffle/web3 setup EN ********
 
 // Big Number stuff
 const BN = web3.utils.BN;
 
 // Gelato-Core specific
-const GelatoCore = artifacts.require("GelatoCore");
 // Constants
 // GELATO_GAS_PRICE:
 //  This is a state variable that got deployed with truffle migrate
@@ -36,22 +48,8 @@ const GelatoCore = artifacts.require("GelatoCore");
 //  instead of hardcoding it.
 //  It should match the truffle.js specified DEFAULT_GAS_PRICE_GWEI = 5
 const GELATO_GAS_PRICE_BN = new BN(web3.utils.toWei("5", "gwei"));
-// Gelato-Core specific END
 
 // GDXSSAW specific
-// Artifacts
-const GelatoDXSplitSellAndWithdraw = artifacts.require(
-  "GelatoDXSplitSellAndWithdraw"
-);
-const DutchExchange = artifacts.require("DutchExchange");
-const SellToken = artifacts.require("EtherToken");
-const BuyToken = artifacts.require("TokenRDN");
-// Constants
-// GDXSSAW specific END
-const DUTCH_EXCHANGE = "0xB529f14AA8096f943177c09Ca294Ad66d2E08b1f";
-const SELLER = "0xC5fdf4076b8F3A5357c5E395ab970B5B54098Fef"; // account[2]:
-const SELL_TOKEN = "0xAa588d3737B611baFD7bD713445b314BD453a5C8"; // WETH
-const BUY_TOKEN = "0x8ACEe021a27779d8E98B9650722676B850b25E11"; // RDN
 const TOTAL_SELL_VOLUME = web3.utils.toWei("20", "ether"); // 20 WETH
 const NUM_SUBORDERS_BN = new BN("2");
 const SUBORDER_SIZE_BN = new BN(web3.utils.toWei("10", "ether")); // 10 WETH
@@ -61,20 +59,7 @@ const GELATO_PREPAID_FEE_BN = GDXSSAW_MAXGAS_BN.mul(GELATO_GAS_PRICE_BN); // wei
 // MSG_VALUE_BN needs .add(1) in GDXSSAW due to offset of last withdrawal executionClaim
 const MSG_VALUE_BN = GELATO_PREPAID_FEE_BN.mul(NUM_SUBORDERS_BN.add(new BN(1))); // wei
 
-// GelatoCore Specific
-const EXECUTIONCLAIM_OWNER = SELLER;
-const SELL_AMOUNT_BN = SUBORDER_SIZE_BN;
-
 // State shared across the unit tests
-// Deployed contract instances
-const GELATO_CORE = "0xF08dF3eFDD854FEDE77Ed3b2E515090EEe765154";
-let gelatoCore;
-const GDXSSAW = "0x74e3FC764c2474f25369B9d021b7F92e8441A2Dc";
-let gelatoDXSplitSellAndWithdraw;
-let dutchExchange;
-// Deployed instances owners
-let gelatoCoreOwner;
-let gelatoDXSplitSellAndWithdrawOwner;
 // tx returned data
 let txHash;
 let txReceipt;
@@ -84,106 +69,92 @@ let block; // e.g. getBlock(blockNumber).timstamp
 let timestamp;
 
 // To be set variables
-// Prior to GDXSSAW.splitSellOrder() tx
-let sellTokenContract;
-let buyTokenContract;
-let accounts;
+// Prior to GelatoCore.listInterface:
+let gelatoCoreOwner; // accounts[0]
+let gDXSSAWOwner; // accounts[0]
+
+// Prior to GDXSSAW.splitSellOrder():
 let executionTime; // timestamp
-// Post GDXSSAW.splitSellOrder() tx
+
+// Post GDXSSAW.splitSellOrder():
 let orderId;
 let orderState;
 let executionClaimIds = [];
 
-// Prior to GelatoCore.execute() tx
-let executor; // accounts[3]
+// Prior to GelatoCore.execute():
 
-// Post GelatoCore.execute() tx
+// Post GelatoCore.execute():
+
+
 
 // Default test suite
 describe("default test suite: correct deployed instances and owners", () => {
   // suite root-level pre-hook: set the test suite variables to be shared among all tests
   before(async () => {
+    // accounts
     accounts = await web3.eth.getAccounts();
+    seller = accounts[2];
+
+    // get Gelato instances
     gelatoCore = await GelatoCore.at(GELATO_CORE);
-    gelatoDXSplitSellAndWithdraw = await GelatoDXSplitSellAndWithdraw.at(
-      GDXSSAW
-    );
+    gDXSSAW = await GelatoDXSplitSellAndWithdraw.at(GDXSSAW);
+
+    // get DutchX instances
     dutchExchange = await DutchExchange.at(DUTCH_EXCHANGE);
+    sellToken = await SellToken.at(SELL_TOKEN);
+    buyToken = await BuyToken.at(BUY_TOKEN);
   });
 
   // ******** Default deployed instances tests ********
-  it("retrieves deployed GelatoCore, GelatoDXSplitSellAndWithdraw, and DutchX instances", async () => {
+  it("retrieves deployed GelatoCore, GDXSSAW, DutchX, sell/buyToken instances", async () => {
     assert.exists(gelatoCore.address);
-    assert.exists(gelatoDXSplitSellAndWithdraw.address);
+    assert.exists(gDXSSAW.address);
     assert.exists(dutchExchange.address);
+    assert.exists(sellToken.address);
+    assert.exists(buyToken.address);
+
+    // Gelato
     assert.strictEqual(gelatoCore.address, GELATO_CORE);
-    assert.strictEqual(gelatoDXSplitSellAndWithdraw.address, GDXSSAW);
+    assert.strictEqual(gDXSSAW.address, GDXSSAW);
+
+    // DutchX
     assert.strictEqual(dutchExchange.address, DUTCH_EXCHANGE);
+    assert.strictEqual(sellToken.address, SELL_TOKEN);
+    assert.strictEqual(buyToken.address, BUY_TOKEN);
   });
   // ******** Default deployed instances tests END ********
 
   // ******** Default ownership tests ********
   it("has accounts[0] as owners of Core and Interface and accounts[1] is not owner", async () => {
     gelatoCoreOwner = await gelatoCore.contract.methods.owner().call();
-    gelatoDXSplitSellAndWithdrawOwner = await gelatoDXSplitSellAndWithdraw.contract.methods
-      .owner()
-      .call();
+    gDXSSAWOwner = await gDXSSAW.contract.methods.owner().call();
 
     assert.strictEqual(gelatoCoreOwner, accounts[0]);
-    assert.strictEqual(gelatoDXSplitSellAndWithdrawOwner, accounts[0]);
-
-    assert.notEqual(
-      gelatoCoreOwner,
-      accounts[1],
-      "accounts[1] was expected not to be gelatoCoreOwner"
-    );
-    assert.notEqual(
-      gelatoDXSplitSellAndWithdrawOwner,
-      accounts[1],
-      "accounts[1] was not expected to be gelatoDXSplitSellAndWithdrawOwner"
-    );
+    assert.strictEqual(gDXSSAWOwner, accounts[0]);
   });
   // ******** Default ownership tests END ********
+
+  // ******** GDXSSAW default SELLER account checks ********
+  it("has pre-specified SELLER set as the seller", async () => {
+    assert.strictEqual(seller, SELLER);
+  });
+  // ******** GDXSSAW default SELLER account checks END ********
 });
 
 // Test suite to end-to-end test the creation of a GDXSSAW style claims
 describe("Listing GDXSSAW", () => {
-  // suite root-level pre-hook: set the test suite variables to be shared among all tests
-  before(async () => {
-    sellTokenContract = await SellToken.at(SELL_TOKEN);
-    buyTokenContract = await BuyToken.at(BUY_TOKEN);
-  });
-
-  // ******** GDXSSAW default deployed instances checks ********
-  it(`fetches the correct deployed sellToken and buyToken contracts`, async () => {
-    assert.exists(sellTokenContract.address);
-    assert.exists(buyTokenContract.address);
-    assert.strictEqual(sellTokenContract.address, SELL_TOKEN);
-    assert.strictEqual(buyTokenContract.address, BUY_TOKEN);
-  });
-  // ******** GDXSSAW default deployed instances checks END ********
-
-  // ******** GDXSSAW default SELLER account checks ********
-  it(`has accounts[2] set as the SELLER`, async () => {
-    assert.strictEqual(SELLER, accounts[2]);
-  });
-  // ******** GDXSSAW default SELLER account checks END ********
-
   // ******** list GDXSSAW interface on Gelato Core and set its maxGas ********
-  it(`lets Core-owner list gelatoDXSplitSellAndWithdraw on GelatoCore with its maxGas set`, async () => {
+  it(`lets Core-owner list gDXSSAW on GelatoCore with its maxGas set`, async () => {
     await gelatoCore.contract.methods
-      .listInterface(
-        gelatoDXSplitSellAndWithdraw.address,
-        GDXSSAW_MAXGAS_BN.toString()
-      )
+      .listInterface(gDXSSAW.address, GDXSSAW_MAXGAS_BN.toString())
       .send({ from: gelatoCoreOwner })
       .then(receipt => (txReceipt = receipt));
 
     const isWhitelisted = await gelatoCore.contract.methods
-      .getInterfaceWhitelist(gelatoDXSplitSellAndWithdraw.address)
+      .getInterfaceWhitelist(gDXSSAW.address)
       .call();
     const maxGas = await gelatoCore.contract.methods
-      .getInterfaceMaxGas(gelatoDXSplitSellAndWithdraw.address)
+      .getInterfaceMaxGas(gDXSSAW.address)
       .call(); // uint256
 
     assert.isTrue(isWhitelisted);
@@ -195,7 +166,7 @@ describe("Listing GDXSSAW", () => {
     assert.exists(txReceipt.events.LogNewInterfaceListed);
     assert.strictEqual(
       txReceipt.events.LogNewInterfaceListed.returnValues.dappInterface,
-      gelatoDXSplitSellAndWithdraw.address
+      gDXSSAW.address
     );
     assert.strictEqual(
       txReceipt.events.LogNewInterfaceListed.returnValues.maxGas,
@@ -209,19 +180,19 @@ describe("Listing GDXSSAW", () => {
 describe("GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()", () => {
   // ******** Seller ERC20 approves the GDXSSAW for TotalSellVolume ********
   it(`seller approves GelatoDXSplitsellAndWithdraw for the TOTAL_SELL_VOLUME`, async () => {
-    await sellTokenContract.contract.methods
-      .approve(gelatoDXSplitSellAndWithdraw.address, TOTAL_SELL_VOLUME)
+    await sellToken.contract.methods
+      .approve(gDXSSAW.address, TOTAL_SELL_VOLUME)
       .send({ from: SELLER });
 
-    const allowance = await sellTokenContract.contract.methods
-      .allowance(SELLER, gelatoDXSplitSellAndWithdraw.address)
+    const allowance = await sellToken.contract.methods
+      .allowance(SELLER, gDXSSAW.address)
       .call();
 
     assert.strictEqual(
       allowance,
       TOTAL_SELL_VOLUME,
       `The ERC20 ${
-        sellTokenContract.address
+        sellToken.address
       } allowance for the GelatoDXSplitsellAndWithdraw should be at ${TOTAL_SELL_VOLUME}`
     );
   });
@@ -236,7 +207,7 @@ describe("GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()", () => {
     executionTime = timestamp + 15; // to account for latency
 
     // Get and log estimated gasUsed by splitSellOrder fn
-    gelatoDXSplitSellAndWithdraw.contract.methods
+    gDXSSAW.contract.methods
       .splitSellOrder(
         SELL_TOKEN,
         BUY_TOKEN,
@@ -283,7 +254,7 @@ describe("GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()", () => {
     executionTime = timestamp + 15; // to account for latency
 
     // benchmarked gasUsed = 726,360 (for 2 subOrders + 1 lastWithdrawal)
-    await gelatoDXSplitSellAndWithdraw.contract.methods
+    await gDXSSAW.contract.methods
       .splitSellOrder(
         SELL_TOKEN,
         BUY_TOKEN,
@@ -324,9 +295,7 @@ describe("GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()", () => {
     orderId = txReceipt.events.LogNewOrderCreated.returnValues.orderId;
 
     // fetch the newly created orderState on GDXSSAW
-    orderState = await gelatoDXSplitSellAndWithdraw.contract.methods
-      .orderStates(orderId)
-      .call();
+    orderState = await gDXSSAW.contract.methods.orderStates(orderId).call();
 
     // check the orderState
     assert.isFalse(orderState.lastAuctionWasWaiting);
@@ -353,7 +322,7 @@ describe("GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()", () => {
   it(`emits correct LogNewExecutionClaimMinted events on gelatoCore`, async () => {
     // Filter events emitted from gelatoCore
     /*let filter = {
-      dappInterface: gelatoDXSplitSellAndWithdraw.address,
+      dappInterface: gDXSSAW.address,
       interfaceOrderId: orderId,
       executionClaimOwner: SELLER
     };*/ // @dev: cannot get filter to work (not needed tho)
@@ -375,7 +344,7 @@ describe("GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()", () => {
             assert.strictEqual(event.blockNumber, blockNumber);
             assert.strictEqual(
               event.returnValues.dappInterface,
-              gelatoDXSplitSellAndWithdraw.address
+              gDXSSAW.address
             );
             assert.strictEqual(event.returnValues.interfaceOrderId, orderId);
             assert.strictEqual(event.returnValues.executionClaimOwner, SELLER);
@@ -422,7 +391,7 @@ describe("GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()", () => {
         .getExecutionClaim(executionClaimId)
         .call();
       assert.strictEqual(executionClaimOwner, SELLER);
-      assert.strictEqual(dappInterface, gelatoDXSplitSellAndWithdraw.address);
+      assert.strictEqual(dappInterface, gDXSSAW.address);
       assert.strictEqual(interfaceOrderId, orderId);
       assert.strictEqual(sellToken, SELL_TOKEN);
       assert.strictEqual(buyToken, BUY_TOKEN);
@@ -456,10 +425,10 @@ describe("Gelato's DutchX auction state checks", () => {
     console.log(
       `
        gelatoCore: ${gelatoCore.address}
-       gdxssaw:    ${gelatoDXSplitSellAndWithdraw.address}
+       gdxssaw:    ${gDXSSAW.address}
        dutchX:     ${dutchExchange.address}
       `
-    )
+    );
     let auctionIndex = await dutchExchange.contract.methods
       .latestAuctionIndices(SELL_TOKEN, BUY_TOKEN)
       .call();
@@ -470,9 +439,7 @@ describe("Gelato's DutchX auction state checks", () => {
     );
   });
   it(`GDXSSAW orderId: 1 has lastAuctionIndex at 0`, async () => {
-    let {
-      lastAuctionIndex
-    } = await gelatoDXSplitSellAndWithdraw.contract.methods
+    let { lastAuctionIndex } = await gDXSSAW.contract.methods
       .orderStates(orderId)
       .call();
     assert.strictEqual(lastAuctionIndex, "0");
@@ -537,13 +504,12 @@ describe("gelatoCore.execute() -> GDXSSAW.execute() -> burnExecutionClaim and ex
     timestamp = block.timestamp;
 
     // we check the fetched executionClaim data
-    assert.strictEqual(executionClaimOwner, EXECUTIONCLAIM_OWNER);
     assert.strictEqual(executionClaimOwner, SELLER);
-    assert.strictEqual(dappInterface, gelatoDXSplitSellAndWithdraw.address);
+    assert.strictEqual(dappInterface, gDXSSAW.address);
     assert.strictEqual(interfaceOrderId, orderId);
     assert.strictEqual(sellToken, SELL_TOKEN);
     assert.strictEqual(buyToken, BUY_TOKEN);
-    assert.strictEqual(sellAmount, SELL_AMOUNT_BN.toString());
+    assert.strictEqual(sellAmount, SUBORDER_SIZE_BN.toString());
     assert(parseInt(executionTime) <= timestamp);
     assert.strictEqual(prepaidExecutionFee, GELATO_PREPAID_FEE_BN.toString());
 
@@ -575,7 +541,7 @@ describe("gelatoCore.execute() -> GDXSSAW.execute() -> burnExecutionClaim and ex
     // check if event has correct return values
     assert.strictEqual(
       txReceipt.events.LogClaimExecutedAndDeleted.returnValues.dappInterface,
-      gelatoDXSplitSellAndWithdraw.address
+      gDXSSAW.address
     );
     assert.strictEqual(
       txReceipt.events.LogClaimExecutedAndDeleted.returnValues.executor,
@@ -596,7 +562,7 @@ describe("gelatoCore.execute() -> GDXSSAW.execute() -> burnExecutionClaim and ex
       txReceipt.events.LogClaimExecutedAndDeleted.returnValues.executionClaimId;
 
     // make sure executionClaim was burnt
-    /* orderState = await gelatoDXSplitSellAndWithdraw.contract.methods
+    /* orderState = await gDXSSAW.contract.methods
       .orderStates(orderId)
       .call();
 
@@ -618,3 +584,23 @@ describe("gelatoCore.execute() -> GDXSSAW.execute() -> burnExecutionClaim and ex
   // ******** Execution Claim burned check  ********
   // ******** Execution Claim burned check  END ********
 });
+
+
+// Helpers
+// Wrapper function to run shell scripts from inside node.js
+/**
+ * Executes a shell command and return it as a Promise.
+ * @param cmd {string}
+ * @return {Promise<string>}
+ */
+function execShellCommand(cmd) {
+  const exec = require("child_process").exec;
+  return new Promise((resolve, reject) => {
+    exec(cmd, (error, stdout, stderr) => {
+      if (error) {
+        reject(error);
+      }
+      resolve(stdout ? stdout : stderr);
+    });
+  });
+}
