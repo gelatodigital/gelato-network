@@ -28,47 +28,37 @@ const GelatoDXSplitSellAndWithdraw = artifacts.require(
 const SellToken = artifacts.require("EtherToken");
 const BuyToken = artifacts.require("TokenRDN");
 // Constants
-const SELLER = "0xC5fdf4076b8F3A5357c5E395ab970B5B54098Fef" // account[2]:
 const SELL_TOKEN = "0xAa588d3737B611baFD7bD713445b314BD453a5C8"; // WETH
 const BUY_TOKEN = "0x8ACEe021a27779d8E98B9650722676B850b25E11"; // RDN
 const TOTAL_SELL_VOLUME = 20; // 20 WETH
 const TOTAL_SELL_VOLUME_UNIT = "ether";
 const NUM_SUBORDERS = 2;
+const NUM_PLUS_ONE = NUM_SUBORDERS + 1
 const SUBORDER_SIZE = 10; // 10 WETH
 const SUBORDER_UNIT = "ether";
 const INTERVAL_SPAN = 21600; // 6 hours
 const GDXSSAW_MAXGAS = 400000;
-
 // Big Number constants
 const GDXSSAW_MAXGAS_BN = new BN(GDXSSAW_MAXGAS.toString()); // 400.000 must be benchmarked
 const GELATO_PREPAID_FEE_BN = GDXSSAW_MAXGAS_BN.mul(GELATO_GAS_PRICE_BN); // wei
 const NUM_SUBORDERS_BN = new BN(NUM_SUBORDERS.toString());
-const MSG_VALUE = GELATO_PREPAID_FEE_BN.mul(NUM_SUBORDERS_BN).toString(); // wei
-// To be set variables
-let sellTokenContract;
-let buyTokenContract;
-let accounts;
-let totalSellVolume;
-let subOrderSize;
-let executionTime; // timestamp
+// MSG_VALUE needs .add(1) in GDXSSAW due to offset of last withdrawal executionClaim
+const MSG_VALUE = GELATO_PREPAID_FEE_BN.mul(
+  NUM_SUBORDERS_BN.add(new BN(1)))
 // GDXSSAW specific END
 
-// State shared across the unit tests
-// Deployed contract instances
-let gelatoCore;
-let gelatoDXSplitSellAndWithdraw;
 
 
 module.exports = () => {
-  async function testSellOrder() {
+  async function testSplitSellOrder () {
     const gelatoDX = await GelatoDXSplitSellAndWithdraw.at(
       GelatoDXSplitSellAndWithdraw.address
     );
     const gelatoCore = await GelatoCore.at(GelatoCore.address);
     const sellTokenContract = await SellToken.at(SELL_TOKEN);
-    const accounts = await web3.eth.getAccounts();
-    const seller = accounts[9];
 
+    const accounts = await web3.eth.getAccounts();
+    const SELLER = accounts[2]
     // Selling a total of 2 WETH
     // params of createSellOrder
     const totalSellVolume = web3.utils.toWei(
@@ -79,18 +69,6 @@ module.exports = () => {
     const subOrderSize = web3.utils.toWei(
       SUBORDER_SIZE.toString(),
       SUBORDER_UNIT
-    );
-
-    const executorRewardPerSubOrder = web3.utils.toWei(
-      EXECUTOR_REWARD_PER_SUBORDER,
-      EXECUTOR_REWARD_PER_SUBORDER_UNIT
-    );
-
-    let executorRewardTotal = SUBORDER_SIZE * (NUM_SUBORDERS + 1); // 10 finney | plus 1 because we need an extra bounty for the last withdraw
-
-    executorRewardTotal = web3.utils.toWei(
-      executorRewardTotal.toString(),
-      "finney"
     );
 
     console.log(`
@@ -124,28 +102,164 @@ module.exports = () => {
         remainingWithdrawals:      ${NUM_SUBORDERS}
         hammerTime:                ${new Date(hammerTime).toTimeString()}
         hammerTime Date:           ${new Date(hammerTime).toDateString()}
-        freezeTime:                ${FREEZE_TIME}
-        executorRewardPerSubOrder: ${executorRewardPerSubOrder}
+        freezeTime:                ${INTERVAL_SPAN}
         ==================================================
         `);
 
-    // Gelato contract call to createSellOrder
-    const txSellOrder = await gelato.createSellOrder(
-      SELL_TOKEN,
-      BUY_TOKEN,
-      totalSellVolume,
-      subOrderSize,
-      NUM_SUBORDERS,
-      hammerTime,
-      FREEZE_TIME,
-      executorRewardPerSubOrder,
-      { from: seller, value: executorRewardTotal }
-    );
 
-    // TX 1 checks
-    const sellOrderHash = txSellOrder.logs[0].args.sellOrderHash;
-    const sellOrder = await gelato.sellOrders(sellOrderHash);
-    console.log(
+
+    // 1. Fetch core owner
+    const gelatoCoreOwner = await gelatoCore.owner();
+    console.log(`Gelato Core Owner: ${gelatoCoreOwner}`)
+
+    const gelatoDXSplitSellAndWithdrawOwner = await gelatoDX.owner();
+    console.log(`Gelato DX Interface Owner: ${gelatoDXSplitSellAndWithdrawOwner}`)
+
+    // 2. Add new interface and set max gas - Sender == geletoCoreOwner
+    // Only conduct the first time this script is executed
+    try {
+      await gelatoCore.contract.methods.listInterface(GelatoDXSplitSellAndWithdraw.address, GDXSSAW_MAXGAS)
+        .send({ from: gelatoCoreOwner })
+    } catch (err) {
+    }
+
+    // 3. Seller needs to approve GelatoDX
+    const txApproval = await sellTokenContract.approve(GelatoDXSplitSellAndWithdraw.address, totalSellVolume, { from: SELLER });
+    const allowance = await sellTokenContract.allowance(SELLER, GelatoDXSplitSellAndWithdraw.address);
+    console.log(`Allowance: ${allowance.toString(10)}`)
+
+    console.log(`Initiate Create Sell Order
+    `)
+
+    // Set exection time
+    const executionTime = timestamp
+    // Gelato contract call to createSellOrder
+    console.log(`
+      ${SELL_TOKEN}
+      ${BUY_TOKEN}
+      ${totalSellVolume}
+      ${NUM_SUBORDERS}
+      ${subOrderSize}
+      ${executionTime}
+      ${INTERVAL_SPAN}
+      ${SELLER}
+      ${MSG_VALUE}
+    `)
+
+    await gelatoDX.contract.methods
+      .splitSellOrder(
+        SELL_TOKEN,
+        BUY_TOKEN,
+        totalSellVolume,
+        NUM_SUBORDERS,
+        subOrderSize,
+        executionTime,
+        INTERVAL_SPAN
+      )
+      .send({ from: SELLER, value: MSG_VALUE, gas: 5000000 }) // gas needed to prevent out of gas error
+      // .once("transactionHash", hash => (console.log(hash)))
+      // .once("receipt", receipt => (console.log(receipt)))
+      .on("error", console.error)
+
+    console.log(`Creation Successful`)
+
+
+    const executionClaimIds = []
+    // Fetch events
+    await gelatoCore.getPastEvents('LogNewExecutionClaimMinted', (error, events) => console.log(error))
+      .then(events => {
+        events.forEach(event => {
+
+          executionClaimIds.push(event.returnValues['executionClaimId'])
+
+          console.log(`#####
+          `)
+          console.log(event.event)
+          console.log(event.returnValues)
+          console.log(`#####
+          `)
+        })
+      })
+
+    let interfaceOrderId;
+    await gelatoDX.getPastEvents('LogNewOrderCreated', (error, events) => console.log(error))
+      .then(events => {
+        events.forEach(event => {
+          interfaceOrderId = event.returnValues['orderId']
+
+          console.log(`#####
+          `)
+          console.log(event.event)
+          console.log(event.returnValues)
+          console.log(`#####
+          `)
+        })
+      })
+
+    console.log(`
+      First subOrder ready for execution: default false: due to auction1 behavior.
+      =====================================================
+                      !!!NEXT STEPS!!!
+                      ----------------
+              => See Readme.md for copy paste commands.
+      Then next run:`)
+
+    executionClaimIds.forEach(id => {
+      console.log(`
+      --------------------------------------------------
+      truffle exec ./execSubOrder.js "${id}"
+      --------------------------------------------------
+      `);
+    })
+
+    console.log(`
+      --------------------------------------------------
+      InterfaceOrderId "${interfaceOrderId}"
+      --------------------------------------------------
+      `);
+
+    return `
+                        CreateSellOrder Complete
+                        ----------------
+    `;
+  }
+
+  testSplitSellOrder().then(result => {
+    console.log(result);
+  });
+};
+
+
+/* OLD CONSOLE LOGS
+Sell Order Hash:                 ${sellOrderHash}
+Hammertime:                      ${new Date(
+                  parseInt(sellOrder.hammerTime)
+                  ).toTimeString()}
+                Hammerdate:                      ${new Date(
+                  parseInt(sellOrder.hammerTime)
+                ).toDateString()}
+                Now:                             ${new Date(
+                  Date.now()
+                ).toTimeString()}
+                Date:                            ${new Date(
+                  Date.now()
+                  ).toDateString()}
+                  Remaining subOrders left:        ${sellOrder.remainingSubOrders}
+                  Remaining Withdrawals left:      ${
+                    sellOrder.remainingWithdrawals
+                  }
+                  console.log(`
+                                  Seller TX2-ERC20: approves Gelato contract for 20 WETH
+                                  ------------------------------------------------------
+                      Approved:                  ${txApproval.logs[0].args.value}
+                                  Seller TX2-ERC20 check: Gelato's allowance for seller's ERC20
+                                  -------------------------------------------------------------
+                      Allowance:                 ${allowance}
+                      Allowance == sellOrder.totalSellVolume: ${allowance ==
+                        parseInt(sellOrder.totalSellVolume)}
+                      ==================================================
+                      `);
+                      console.log(
       `
                     Seller TX1-createSellOrder on-chain struct check
                     -----------------------------------------------
@@ -173,66 +287,5 @@ module.exports = () => {
           web3.utils.toWei("10", "finney")}
         ==================================================
         `
-    );
-
-    // User external TX 2 and TX2 checks
-    const txApproval = await sellTokenContract.approve(
-      Gelato.address,
-      totalSellVolume,
-      {
-        from: seller
-      }
-    );
-    const allowance = await sellTokenContract.allowance(seller, Gelato.address);
-
-    console.log(`
-                    Seller TX2-ERC20: approves Gelato contract for 20 WETH
-                    ------------------------------------------------------
-        Approved:                  ${txApproval.logs[0].args.value}
-                    Seller TX2-ERC20 check: Gelato's allowance for seller's ERC20
-                    -------------------------------------------------------------
-        Allowance:                 ${allowance}
-        Allowance == sellOrder.totalSellVolume: ${allowance ==
-          parseInt(sellOrder.totalSellVolume)}
-        ==================================================
-        `);
-
-    // Write SELL_ORDER_HASH to tmp_file for parent process to read from
-
-    return `
-                        Testing Complete
-                        ----------------
-                Sell Order Hash:                 ${sellOrderHash}
-                Hammertime:                      ${new Date(
-                  parseInt(sellOrder.hammerTime)
-                ).toTimeString()}
-                Hammerdate:                      ${new Date(
-                  parseInt(sellOrder.hammerTime)
-                ).toDateString()}
-                Now:                             ${new Date(
-                  Date.now()
-                ).toTimeString()}
-                Date:                            ${new Date(
-                  Date.now()
-                ).toDateString()}
-                Remaining subOrders left:        ${sellOrder.remainingSubOrders}
-                Remaining Withdrawals left:      ${
-                  sellOrder.remainingWithdrawals
-                }
-                First subOrder ready for execution: default false: due to auction1 behavior.
-        =====================================================
-                        !!!NEXT STEPS!!!
-                        ----------------
-                => See Readme.md for copy paste commands.
-        Then next run:
-        --------------------------------------------------
-        truffle exec ./execSubOrder.js "${sellOrderHash}"
-        --------------------------------------------------
-                !!!! DO NOT FORGET THE " " around sellOrderHash !!!
-        `;
-  }
-
-  testSplitSellOrder().then(result => {
-    console.log(result);
-  });
-};
+      );
+                  */

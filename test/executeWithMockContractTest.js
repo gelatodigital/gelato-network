@@ -5,7 +5,8 @@
 // XX5. Create a truffle test file which deploys a new instance of the gelatoDX interface with a new core and the mock contract instead of the dutchX
 // XX6. Create a bash script that endows the user before executing the new test file
 // XX7. Copy paste the tests which mint 3 execution claims
-// 8. You maybe have to edit the min. 6 hour interval func in order to skip forward in time. Otherwise research how we can skip time in truffle. If that does not work, use execution times that lie within the past
+// 8. XXYou maybe have to edit the min. 6 hour interval func in order to skip forward in time. Otherwise research how we can skip time in truffle. If that does not work, use execution times that lie within the past
+// 8x TEST EVERYTHING WITH THE MOCK CONTRACT FIRST, THEN REAL DUCTHC
 // 8a. Dont forget to call the appriveDutchX func beforehand
 // 8n. To truely test the transfer of the amounts, we have to give the Mock contract funds
 // 9. Implement the test specified in 1.
@@ -77,6 +78,10 @@ let gelatoCore;
 let gelatoCoreOwner;
 let orderId;
 let orderState;
+let executionTime;
+let interfaceOrderId;
+// Fetch the claim Ids
+const executionClaimIds = [];
 
 describe("deploy new dxInterface Contract and fetch address", () => {
   // ******** Deploy new instances Test ********
@@ -86,6 +91,7 @@ describe("deploy new dxInterface Contract and fetch address", () => {
       GelatoCore.address,
       mockExchangeContract.address
     );
+    // gelatoDutchXContract = await gelatoDutchX.deployed()
     gelatoCore = await GelatoCore.deployed();
     sellToken = await SellToken.deployed();
     buyToken = await BuyToken.deployed();
@@ -157,7 +163,9 @@ describe("deploy new dxInterface Contract and fetch address", () => {
     let blockNumber = await web3.eth.getBlockNumber();
     let block = await web3.eth.getBlock(blockNumber);
     let timestamp = block.timestamp;
-    let executionTime = timestamp + 15;
+    executionTime = timestamp + 15;
+
+    console.log(`Time before we create ${timestamp}`)
 
     // benchmarked gasUsed = 726,360 (for 2 subOrders + 1 lastWithdrawal)
     await gelatoDutchXContract.contract.methods
@@ -174,6 +182,28 @@ describe("deploy new dxInterface Contract and fetch address", () => {
       .once("transactionHash", hash => (txHash = hash))
       .once("receipt", receipt => (txReceipt = receipt))
       .on("error", console.error);
+
+    console.log(`WE SET EXECUTION TIME TO ${executionTime}`)
+    // Fetch events
+    await gelatoCore
+      .getPastEvents("LogNewExecutionClaimMinted", (error, events) =>
+        console.log(error)
+      )
+      .then(events => {
+        events.forEach(event => {
+          executionClaimIds.push(event.returnValues["executionClaimId"]);
+        });
+      });
+
+    await gelatoDutchXContract
+      .getPastEvents("LogNewOrderCreated", (error, events) =>
+        console.log(error)
+      )
+      .then(events => {
+        events.forEach(event => {
+          interfaceOrderId = event.returnValues["orderId"];
+        });
+      });
 
     // Check that gelatoCore has received msg.value funds in its balance
     let gelatoCoreBalancePost = new BN(
@@ -221,27 +251,92 @@ describe("deploy new dxInterface Contract and fetch address", () => {
     let block = await web3.eth.getBlock(blockNumber);
     let timestamp = block.timestamp;
 
-    let seconds = 21600 // 6 hours
+    let seconds = 21600; // 6 hours
     // fast forward 6h
-    await timeTravel.advanceTimeAndBlock()
+    await timeTravel.advanceTimeAndBlock(seconds);
 
     let blockNumber2 = await web3.eth.getBlockNumber();
-    let block2 = await web3.eth.getBlock(blockNumber);
-    let timestamp2 = block.timestamp
+    let block2 = await web3.eth.getBlock(blockNumber2);
+    let timestamp2 = block2.timestamp;
 
     let timestampBN = new BN(timestamp);
     let timestamp2BN = new BN(timestamp2);
-    let secondsBN = new BN(seconds)
-    let futureTimeBN = timestampBN.add(secondsBN)
+    let secondsBN = new BN(seconds);
+    let futureTimeBN = timestampBN.add(secondsBN);
+
+    console.log(`Time after Timetravel ${timestamp2}`)
 
     // BN assert
     // future time should be greater or equal to seconds + oldtimestamp
-    let timeTravelSuccess = futureTimeBN.gte(timestamp2BN)
+    let timeTravelSuccess = futureTimeBN.gte(timestamp2BN);
 
     assert.isTrue(
-        timeTravelSuccess,
-        `Network should have progressed to ${timestamp + seconds}, but is ${timestamp2}`
-      );
+      timeTravelSuccess,
+      `Network should have progressed to ${timestamp +
+        seconds}, but is ${timestamp2}`
+    );
   });
-  // ******** seller calls GDXSSAW.splitSellOrder() and mint its execution claims on Core END********
+
+  it("Test if first execution claim is executable", async () => {
+
+    let blockNumber = await web3.eth.getBlockNumber();
+    let block = await web3.eth.getBlock(blockNumber);
+    let now = block.timestamp;
+
+    console.log(`Before we execute ${now}`)
+
+    let claimsExecutionTime = await gelatoCore.getClaimExecutionTime(executionClaimIds[0])
+    // Check if execution claim is executable
+    // assert.equal(executionTime + 15, claimsExecutionTime.toString(), `${claimsExecutionTime} should be equal to the execution time we set + 15 seconds`)
+
+    let claimsExecutionTimeBN = new BN(claimsExecutionTime.toString())
+    let nowBN = new BN(now)
+    let claimIsExecutable = nowBN.gte(claimsExecutionTimeBN)
+    // Check if execution claim is executable
+    assert.isTrue(claimIsExecutable, `${now} should be greater than ${claimsExecutionTime.toString()}`)
+  })
+
+  it("Successfully execute the first claim", async () => {
+
+    let firstClaim = executionClaimIds[0]
+    // Execute first claim
+    await gelatoCore.execute(firstClaim, {gas: 1000000});
+
+    let dappInterface;
+    let executor;
+    let executionClaimId;
+    let executorPayout;
+
+    gelatoCore.getPastEvents("LogClaimExecutedAndDeleted")
+    .then(events => {
+        dappInterface = events.dappInterface;
+        executor = events.executor;
+        executionClaimId = events.executionCliaimId;
+        executorPayout = events.gelatoCorePayable;
+    })
+
+    assert.strictEqual(
+        dappInterface,
+        gelatoDutchXContract.address,
+        "Interface equal"
+    )
+
+    assert.strictEqual(
+        executor,
+        gelatoCoreOwner,
+        "Executor equal"
+    )
+
+    assert.strictEqual(
+        executionClaimId,
+        executionClaimIds[0],
+        "Execution Claim Id equal"
+    )
+
+    assert.strictEqual(
+        executorPayout,
+        GELATO_PREPAID_FEE_BN.toString(),
+        "Executor Payout equal"
+    )
+  });
 });

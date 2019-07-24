@@ -6,43 +6,43 @@ const migrateArbitrage = require('@gnosis.pm/dx-uniswap-arbitrage/src/migrations
 const mockExchange = artifacts.require("DutchXMock")
 
 function migrate (deployer, network, accounts) {
-  // const TokenRDN = artifacts.require('TokenRDN')
-  // const TokenOMG = artifacts.require('TokenOMG')
-  // const DxPriceOracle = artifacts.require('DutchXPriceOracle')
+  const TokenRDN = artifacts.require('TokenRDN')
+  const TokenOMG = artifacts.require('TokenOMG')
+  const DxPriceOracle = artifacts.require('DutchXPriceOracle')
 
-  // const deployParams = {
-  //   artifacts,
-  //   deployer,
-  //   network,
-  //   accounts,
-  //   web3,
-  //   initialTokenAmount: process.env.GNO_TOKEN_AMOUNT,
-  //   gnoLockPeriodInHours: process.env.GNO_LOCK_PERIOD_IN_HOURS,
-  //   thresholdNewTokenPairUsd: process.env.GNO_LOCK_PERIOD_IN_HOURS,
-  //   thresholdAuctionStartUsd: process.env.GNO_LOCK_PERIOD_IN_HOURS
-  // }
+  const deployParams = {
+    artifacts,
+    deployer,
+    network,
+    accounts,
+    web3,
+    initialTokenAmount: process.env.GNO_TOKEN_AMOUNT,
+    gnoLockPeriodInHours: process.env.GNO_LOCK_PERIOD_IN_HOURS,
+    thresholdNewTokenPairUsd: process.env.GNO_LOCK_PERIOD_IN_HOURS,
+    thresholdAuctionStartUsd: process.env.GNO_LOCK_PERIOD_IN_HOURS
+  }
 
-  // deployer
-  //   .then(() => migrationsDx(deployParams))
-  //   .then(() => deployer.deploy(TokenRDN, accounts[0]))
-  //   .then(() => deployer.deploy(TokenOMG, accounts[0]))
-  // // Get dependencies to deploy DutchXPriceOracle
-  // const {
-  //   EtherToken,
-  //   DutchExchangeProxy
-  // } = _getDependencies(artifacts, network, deployer)
+  deployer
+    .then(() => migrationsDx(deployParams))
+    .then(() => deployer.deploy(TokenRDN, accounts[0]))
+    .then(() => deployer.deploy(TokenOMG, accounts[0]))
+  // Get dependencies to deploy DutchXPriceOracle
+  const {
+    EtherToken,
+    DutchExchangeProxy
+  } = _getDependencies(artifacts, network, deployer)
 
-  // // Deploy DutchXPriceOracle
-  // deployer
-  //   .then(() => Promise.all([
-  //     EtherToken.deployed(),
-  //     DutchExchangeProxy.deployed()
-  //   ]))
-  //   .then(() => deployer.deploy(DxPriceOracle, DutchExchangeProxy.address, EtherToken.address))
-  //   .then(() => {
-  //     deployParams.DutchExchangeProxy = DutchExchangeProxy.address
-  //     return migrateArbitrage(deployParams)
-  //   })
+  // Deploy DutchXPriceOracle
+  deployer
+    .then(() => Promise.all([
+      EtherToken.deployed(),
+      DutchExchangeProxy.deployed()
+    ]))
+    .then(() => deployer.deploy(DxPriceOracle, DutchExchangeProxy.address, EtherToken.address))
+    .then(() => {
+      deployParams.DutchExchangeProxy = DutchExchangeProxy.address
+      return migrateArbitrage(deployParams)
+    })
 }
 
 function _getDependencies (artifacts, network, deployer) {
