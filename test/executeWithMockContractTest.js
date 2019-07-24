@@ -3,8 +3,8 @@
 // XX3. Write down which values should be returned from each function call
 // XX4. Write a Mock dutchX contract which has the same function names specified in 2) which returns the values specified in 3) and which employs setter to set new values
 // XX5. Create a truffle test file which deploys a new instance of the gelatoDX interface with a new core and the mock contract instead of the dutchX
-// 6. Create a bash script that endows the user before executing the new test file
-// 7. Copy paste the tests which mint 3 execution claims
+// XX6. Create a bash script that endows the user before executing the new test file
+// XX7. Copy paste the tests which mint 3 execution claims
 // 8. You maybe have to edit the min. 6 hour interval func in order to skip forward in time. Otherwise research how we can skip time in truffle. If that does not work, use execution times that lie within the past
 // 8a. Dont forget to call the appriveDutchX func beforehand
 // 8n. To truely test the transfer of the amounts, we have to give the Mock contract funds
@@ -49,12 +49,13 @@ const mockExchange = artifacts.require("DutchXMock");
 const SellToken = artifacts.require("EtherToken");
 const BuyToken = artifacts.require("TokenRDN");
 
+// Helper functions
+const timeTravel = require("./helpers/timeTravel.js");
 
 // Global variables
 const MAXGAS = 400000;
 const BN = web3.utils.BN;
 const GELATO_GAS_PRICE_BN = new BN(web3.utils.toWei("5", "gwei"));
-
 
 // Split Sell Order Details
 const TOTAL_SELL_VOLUME = web3.utils.toWei("20", "ether"); // 20 WETH
@@ -91,7 +92,6 @@ describe("deploy new dxInterface Contract and fetch address", () => {
     gelatoCoreOwner = await gelatoCore.contract.methods.owner().call();
     accounts = await web3.eth.getAccounts();
     seller = accounts[2]; // account[2]
-
   });
 
   // ******** MockConctract == DutchX in Interface ********
@@ -99,9 +99,9 @@ describe("deploy new dxInterface Contract and fetch address", () => {
     assert.exists(mockExchangeContract.address);
     assert.exists(gelatoDutchXContract.address);
     let mockExchangeAddress;
-    await gelatoDutchXContract.dutchExchange().then(
-      response => (mockExchangeAddress = response)
-    );
+    await gelatoDutchXContract
+      .dutchExchange()
+      .then(response => (mockExchangeAddress = response));
     assert.strictEqual(mockExchangeAddress, mockExchangeContract.address);
   });
 
@@ -111,7 +111,6 @@ describe("deploy new dxInterface Contract and fetch address", () => {
 
   // ******** listInterface tests ********
   it(`lets Core-owner list gelatoInterface on GelatoCore with its maxGas set`, async () => {
-
     await gelatoCore.contract.methods
       .listInterface(gelatoDutchXContract.address, MAXGAS)
       .send({ from: gelatoCoreOwner });
@@ -158,7 +157,7 @@ describe("deploy new dxInterface Contract and fetch address", () => {
     let blockNumber = await web3.eth.getBlockNumber();
     let block = await web3.eth.getBlock(blockNumber);
     let timestamp = block.timestamp;
-    let executionTime = timestamp
+    let executionTime = timestamp + 15;
 
     // benchmarked gasUsed = 726,360 (for 2 subOrders + 1 lastWithdrawal)
     await gelatoDutchXContract.contract.methods
@@ -192,7 +191,9 @@ describe("deploy new dxInterface Contract and fetch address", () => {
     orderId = txReceipt.events.LogNewOrderCreated.returnValues.orderId;
 
     // fetch the newly created orderState on GDXSSAW
-    orderState = await gelatoDutchXContract.contract.methods.orderStates(orderId).call();
+    orderState = await gelatoDutchXContract.contract.methods
+      .orderStates(orderId)
+      .call();
 
     // check the orderState
     assert.isFalse(orderState.lastAuctionWasWaiting);
@@ -213,8 +214,34 @@ describe("deploy new dxInterface Contract and fetch address", () => {
     // Save transactions blockNumber for next event emission test
     blockNumber = txReceipt.blockNumber;
   });
+
+  it("Successfully time travel 6 hours", async () => {
+    // Second set the executiontime
+    let blockNumber = await web3.eth.getBlockNumber();
+    let block = await web3.eth.getBlock(blockNumber);
+    let timestamp = block.timestamp;
+
+    let seconds = 21600 // 6 hours
+    // fast forward 6h
+    await timeTravel.advanceTimeAndBlock()
+
+    let blockNumber2 = await web3.eth.getBlockNumber();
+    let block2 = await web3.eth.getBlock(blockNumber);
+    let timestamp2 = block.timestamp
+
+    let timestampBN = new BN(timestamp);
+    let timestamp2BN = new BN(timestamp2);
+    let secondsBN = new BN(seconds)
+    let futureTimeBN = timestampBN.add(secondsBN)
+
+    // BN assert
+    // future time should be greater or equal to seconds + oldtimestamp
+    let timeTravelSuccess = futureTimeBN.gte(timestamp2BN)
+
+    assert.isTrue(
+        timeTravelSuccess,
+        `Network should have progressed to ${timestamp + seconds}, but is ${timestamp2}`
+      );
+  });
   // ******** seller calls GDXSSAW.splitSellOrder() and mint its execution claims on Core END********
-
-
-
 });
