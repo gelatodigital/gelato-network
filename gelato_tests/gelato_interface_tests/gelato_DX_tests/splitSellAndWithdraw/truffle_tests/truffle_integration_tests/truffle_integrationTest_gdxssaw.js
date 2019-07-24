@@ -1,4 +1,4 @@
-/** Automated integration test for GelatoDxSplitSellAndWithdraw
+/** Truffle Test (mocha-chai): automated integration test for GelatoDxSplitSellAndWithdraw
  * default test suite
  *
  * GelatoDXSplitSellAndWithdraw.splitSellOrder() covers:
@@ -85,8 +85,6 @@ let executionClaimIds = [];
 
 // Post GelatoCore.execute():
 
-
-
 // Default test suite
 describe("default test suite: correct deployed instances and owners", () => {
   // suite root-level pre-hook: set the test suite variables to be shared among all tests
@@ -141,7 +139,6 @@ describe("default test suite: correct deployed instances and owners", () => {
   // ******** GDXSSAW default SELLER account checks END ********
 });
 
-
 /* describe("Endowing seller with 20 WETH", function() {
   this.timeout(30000);
   it("endows seller with 20 WETH", async () => {
@@ -151,7 +148,6 @@ describe("default test suite: correct deployed instances and owners", () => {
     console.log("\n", output);
   })
 })*/
-
 
 // Test suite to end-to-end test the creation of a GDXSSAW style claims
 describe("Listing GDXSSAW", () => {
@@ -418,8 +414,6 @@ describe("GDXSSAW.splitSellOrder() -> GelatoCore.mintClaim()", () => {
 });
 // ********************* SPLITSELLORDER -> MINT_CLAIMS END *********************
 
-
-
 // ********************* SHELL SCRIPTS -> DUTCHX MANIPULATION *********************
 // DutchX Auction Time Logic
 describe("Shell script to close Auction1", function() {
@@ -432,8 +426,6 @@ describe("Shell script to close Auction1", function() {
   });
 });
 // ********************* SHELL SCRIPTS -> DUTCHX MANIPULATION END *********************
-
-
 
 // ********************* DUTCHX AUCTION STATE CHECKS *********************
 describe("Gelato's DutchX auction state checks", () => {
@@ -600,7 +592,6 @@ describe("gelatoCore.execute() -> GDXSSAW.execute() -> burnExecutionClaim and ex
   // ******** Execution Claim burned check  ********
   // ******** Execution Claim burned check  END ********
 });
-
 
 // Helpers
 // Wrapper function to run shell scripts from inside node.js

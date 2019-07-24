@@ -3,9 +3,7 @@
 
 // Set Gelato Contract as truffle artifact
 const GelatoCore = artifacts.require("GelatoCore");
-const GelatoDXSplitSellAndWithdraw = artifacts.require(
-  "GelatoDXSplitSellAndWithdraw"
-);
+const GelatoDutchX = artifacts.require("GelatoDutchX");
 const DutchExchangeProxy = artifacts.require("DutchExchangeProxy");
 
 // GelatoCore constructor params
@@ -34,20 +32,16 @@ module.exports = async function(deployer, network, accounts) {
 
   // Deploy GelatoDutchX interface
   console.log(`
-        Deploying GelatoDXSplitSellAndWithdraw.sol with
+        Deploying GelatoDutchX.sol with
         ================================================
         Owner: ${_deployer}
         GelatoCore: ${gelatoCore.address}
         DutchXProxy: ${dxProxy.address}`);
-  await deployer.deploy(
-    GelatoDXSplitSellAndWithdraw,
-    gelatoCore.address,
-    dxProxy.address
-  );
+  await deployer.deploy(GelatoDutchX, gelatoCore.address, dxProxy.address);
 
-  const gelatoDXSplitSellAndWithdraw = await GelatoDXSplitSellAndWithdraw.deployed();
+  const gelatoDutchX = await GelatoDutchX.deployed();
   console.log(`
-        Deployed GelatoDXSplitSellAndWithdraw instance at:
+        Deployed GelatoDutchX instance at:
         ==================================================
-        ${gelatoDXSplitSellAndWithdraw.address}`);
+        ${gelatoDutchX.address}`);
 };

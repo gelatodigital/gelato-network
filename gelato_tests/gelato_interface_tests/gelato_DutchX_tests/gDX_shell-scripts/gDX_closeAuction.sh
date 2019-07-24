@@ -52,6 +52,7 @@ echo "\n{$BUY_OUTPUT2}\n"
 
 echo "###############################################################################\n"
 echo "\n            State of ${PRIMARY_TOKEN}-${SECONDARY_TOKEN} AFTER closeAuction.sh\n
+
                     Caution: should be WAITING_FOR_FUNDING and index++\n"
 echo "###############################################################################\n"
 

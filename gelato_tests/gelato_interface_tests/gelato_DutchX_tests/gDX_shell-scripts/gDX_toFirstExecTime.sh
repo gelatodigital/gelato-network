@@ -3,7 +3,7 @@
 # Creating a sell order and closing the auction to get us to a state
 #  where we can run the first execSubOrderAndWithdraw.
 export DEFAULT_ACCOUNT="0x627306090abab3a6e1400e9345bc60c78a8bef57"
-export SELLER="0x5AEDA56215b167893e80B4fE645BA6d5Bab767DE"
+export SELLER=$SELLER
 export SELL_TOKEN="WETH"
 export BUY_TOKEN="RDN"
 export SELL_AMOUNT="20"
@@ -67,19 +67,19 @@ echo "##########################################################################
 
 
 echo "###############################################################################\n"
-echo "\n            CREATE SELL ORDER SCRIPT \n"
+echo "\n            SPLIT SELL ORDER and MINT EXECUTION CLAIMS \n"
 echo "###############################################################################\n"
 
 echo "###############################################################################\n"
-echo "\n\nBash script running createSellorder.sh | createSellOrder.js logic....\n
+echo "\n\nBash script running gDX_splitSellOrders.js ....\n
 seller account: ${SELLER}\n"
 echo "###############################################################################\n"
 
-SELLORDER_OUTPUT=`truffle exec ./gelato_tests/createSellOrder.js`
+SELLORDER_OUTPUT=`truffle exec gelato_tests/gelato_interface_tests/gelato_DutchX_tests/gDX_tests/gDX_integrationTest/gDX_splitSellOrder.js`
 echo "\n{$SELLORDER_OUTPUT}\n"
 
 echo "###############################################################################\n"
-echo "\n            CREATE SELL ORDER SCRIPT: END \n"
+echo "\n            SPLIT SELL ORDER and MINT EXECUTION CLAIMS END \n"
 echo "###############################################################################\n"
 
 

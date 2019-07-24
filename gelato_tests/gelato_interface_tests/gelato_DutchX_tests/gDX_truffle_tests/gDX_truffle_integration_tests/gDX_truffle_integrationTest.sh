@@ -1,17 +1,17 @@
 #!/bin/sh
 
 echo "###############################################################################\n"
-echo "\n        GELATODX_SPLITSELLANDWITHDRAW AUTOMATED INTEGRATION TEST SCRIPT \n"
+echo "\n        GELATODX_SPLITSELLANDWITHDRAW TRUFFLE INTEGRATION TEST SCRIPT \n"
 echo "###############################################################################\n"
 
-ENDOW_OUTPUT=`./gelato_tests/gelato_interface_tests/gelato_DX_tests/splitSellAndWithdraw/automated_tests/endow_gdxssaw_seller.sh`
+ENDOW_OUTPUT=`./gelato_tests/gelato_interface_tests/gelato_DutchX_tests/gDX_shell-scripts/gDX_endowSeller.sh`
 echo "\n${ENDOW_OUTPUT}\n"
 
 echo "###############################################################################\n"
 echo "\n                    TRUFFLE TEST  \n"
 echo "###############################################################################\n"
 
-TEST_OUTPUT=`truffle test gelato_tests/gelato_interface_tests/gelato_DX_tests/splitSellAndWithdraw/automated_tests/integration_tests/integrationTest_gdxssaw.js`
+TEST_OUTPUT=`truffle test gelato_tests/gelato_interface_tests/gelato_DutchX_tests/gDX_truffle_tests/gDX_truffle_integration_tests/gDX_truffle_integrationTest.js`
 echo "\n${TEST_OUTPUT}\n"
 
 echo "###############################################################################\n"
@@ -20,5 +20,5 @@ echo "##########################################################################
 
 
 echo "###############################################################################\n"
-echo "\n        GELATODX_SPLITSELLANDWITHDRAW AUTOMATED INTEGRATION TEST SCRIPT END \n"
+echo "\n        GELATODX_SPLITSELLANDWITHDRAW TRUFFLE INTEGRATION TEST SCRIPT END \n"
 echo "###############################################################################\n"

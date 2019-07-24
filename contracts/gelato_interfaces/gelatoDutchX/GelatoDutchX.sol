@@ -11,7 +11,7 @@ import '../../base/SafeMath.sol';
 
 
 // Gelato IcedOut-compliant DutchX Interface for splitting sell orders and for automated withdrawals
-contract GelatoDXSplitSellAndWithdraw is IcedOut, Ownable, SafeTransfer {
+contract GelatoDutchX is IcedOut, Ownable, SafeTransfer {
     // Libraries
     using SafeMath for uint256;
     using Counters for Counters.Counter;
@@ -318,7 +318,7 @@ contract GelatoDXSplitSellAndWithdraw is IcedOut, Ownable, SafeTransfer {
                     // ### EFFECTS END ###
 
                     // INTERACTION: sell on dutchExchange
-                    _depositAndSell(seller, sellToken, buyToken, sellAmount);
+                    _depositAndSell(sellToken, buyToken, sellAmount);
                 }
                 /* Case3b: We sold during previous waiting period, our funds went into auction1, then
                 auction1 ran, then auction1 cleared and the auction index was incremented,
@@ -334,7 +334,7 @@ contract GelatoDXSplitSellAndWithdraw is IcedOut, Ownable, SafeTransfer {
                     // ### EFFECTS END ###
 
                     // INTERACTION: sell on dutchExchange
-                    _depositAndSell(seller, sellToken, buyToken, sellAmount);
+                    _depositAndSell(sellToken, buyToken, sellAmount);
                 }
                 /* Case3c: We sold during auction1, our funds went into auction2, then auction1 cleared
                 and the auction index was incremented, now we are NOT selling during the ensuing
@@ -364,7 +364,7 @@ contract GelatoDXSplitSellAndWithdraw is IcedOut, Ownable, SafeTransfer {
                 // ### EFFECTS END ###
 
                 // INTERACTION: sell on dutchExchange
-                _depositAndSell(seller, sellToken, buyToken, sellAmount);
+                _depositAndSell(sellToken, buyToken, sellAmount);
             }
             // Case 5: Unforeseen stuff
             else {
@@ -432,16 +432,12 @@ contract GelatoDXSplitSellAndWithdraw is IcedOut, Ownable, SafeTransfer {
     }
 
     // Deposit and sell on the dutchExchange
-    function _depositAndSell(address _seller,
-                             address _sellToken,
+    function _depositAndSell(address _sellToken,
                              address _buyToken,
                              uint256 _sellAmount
     )
         private
     {
-        // DEV: before selling, transfer the ERC20 tokens from the user to the gelato contract
-        ERC20(_sellToken).transferFrom(_seller, address(this), _sellAmount);
-
         // DEV: before selling, approve the dutchExchange to extract the ERC20 Token from this contract
         ERC20(_sellToken).approve(address(dutchExchange), _sellAmount);
 
