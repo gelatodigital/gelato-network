@@ -61,6 +61,9 @@ contract GelatoDXSplitSellAndWithdraw is IcedOut, Ownable, SafeTransfer {
     // Constants that are set during contract construction and updateable via setters
     uint256 public auctionStartWaitingForFunding;
 
+    // To give unlimited allowance to the DutchX
+    uint256 constant UINT256_MAX = ~uint256(0);
+
     // **************************** State Variables END ******************************
 
 
@@ -431,6 +434,15 @@ contract GelatoDXSplitSellAndWithdraw is IcedOut, Ownable, SafeTransfer {
         actualSellAmount = _subOrderSize.sub(fee);
     }
 
+    function _approveDutchX(address _sellToken)
+        public
+        onlyOwner
+    {
+
+        // DEV: approve the dutchExchange to extract a given ERC20 Token from this contract
+        ERC20(_sellToken).approve(address(dutchExchange), UINT256_MAX);
+    }
+
     // Deposit and sell on the dutchExchange
     function _depositAndSell(address _seller,
                              address _sellToken,
@@ -439,9 +451,6 @@ contract GelatoDXSplitSellAndWithdraw is IcedOut, Ownable, SafeTransfer {
     )
         private
     {
-
-        // DEV: before selling, approve the dutchExchange to extract the ERC20 Token from this contract
-        ERC20(_sellToken).approve(address(dutchExchange), _sellAmount);
 
         // DEV deposit and sell on the dutchExchange
         dutchExchange.depositAndSell(_sellToken, _buyToken, _sellAmount);
@@ -492,7 +501,8 @@ contract GelatoDXSplitSellAndWithdraw is IcedOut, Ownable, SafeTransfer {
         uint256 den;
 
         // FETCH PRICE OF CLEARED ORDER WITH INDEX lastAuctionIndex
-        // Ex: num = 1, den = 250
+        // num: buyVolumeOpp || den: sellVolumeOpp
+        // Ex: num = 1000, den = 10 => 1WETH === 100RDN
         (num, den) = dutchExchange.closingPrices(_sellToken,
                                                  _buyToken,
                                                  _lastAuctionIndex
