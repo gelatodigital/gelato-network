@@ -439,8 +439,6 @@ contract GelatoDXSplitSellAndWithdraw is IcedOut, Ownable, SafeTransfer {
     )
         private
     {
-        // DEV: before selling, transfer the ERC20 tokens from the user to the gelato contract
-        ERC20(_sellToken).transferFrom(_seller, address(this), _sellAmount);
 
         // DEV: before selling, approve the dutchExchange to extract the ERC20 Token from this contract
         ERC20(_sellToken).approve(address(dutchExchange), _sellAmount);
