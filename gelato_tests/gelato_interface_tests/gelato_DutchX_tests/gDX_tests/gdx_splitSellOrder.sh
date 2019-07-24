@@ -1,18 +1,16 @@
 #!/bin/sh
-export SELLER="0x5AEDA56215b167893e80B4fE645BA6d5Bab767DE"
 
 echo "###############################################################################\n"
-echo "\n            CREATE SELL ORDER SCRIPT \n"
+echo "\n            SPLIT SELL ORDER SCRIPT \n"
 echo "###############################################################################\n"
 
 echo "###############################################################################\n"
-echo "\n\nBash script running createSellorder.sh | createSellOrder.js logic....\n
-seller account: ${SELLER}\n"
+echo "\n\nBash script running splitSellOrder.js logic....\n"
 echo "###############################################################################\n"
 
-SELLORDER_OUTPUT=`truffle exec ./gelato_tests/createSellOrder.js`
-echo "\n{$SELLORDER_OUTPUT}\n"
+SPLITSELLORDER_OUTPUT=`truffle exec gelato_tests/gelato_interface_tests/gelato_DutchX_tests/gDX_tests/gDX_integrationTest/gDX_splitSellOrder.js`
+echo "\n{$SPLITSELLORDER_OUTPUT}\n"
 
 echo "###############################################################################\n"
-echo "\n            CREATE SELL ORDER SCRIPT: END \n"
+echo "\n            SPLIT SELL ORDER: END \n"
 echo "###############################################################################\n"

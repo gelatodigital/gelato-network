@@ -76,9 +76,10 @@
     "gdx-endow-seller": "export SELLER=0xC5fdf4076b8F3A5357c5E395ab970B5B54098Fef; ./gelato_tests/gelato_interface_tests/gelato_DutchX_tests/gDX_shell-scripts/gDX_endowSeller.sh",
     "gdx-manual-withdraw": "tuffle exec gelato_tests/gelato_interface_tests/gelato_DutchX_tests/gDX_tests/gDX_functionalTests/gDX_withdrawManually.js",
     "gdx-splitsellorder": "truffle exec gelato_tests/gelato_interface_tests/gelato_DutchX_tests/gDX_tests/gDX_integrationTest/gDX_splitSellOrder.js",
+    "gdx-splitsellorder-lazy": "export SELLER=0xC5fdf4076b8F3A5357c5E395ab970B5B54098Fef; yarn gdx-endow-seller && truffle exec gelato_tests/gelato_interface_tests/gelato_DutchX_tests/gDX_tests/gDX_integrationTest/gDX_splitSellOrder.js",
     "gdx-exec": "",
     "gdx-truffle-integrationtest": "truffle test gelato_tests/gelato_interface_tests/gelato_DutchX_tests/gDX_truffle_tests/gDX_truffle_integration_tests/gDX_truffle_integrationTest.js",
-    "gdx-truffle-integrationtest-script": "export SELLER=0xC5fdf4076b8F3A5357c5E395ab970B5B54098Fef; ./gelato_tests/gelato_interface_tests/gelato_DutchX_tests/gDX_truffle_tests/gDX_truffle_integration_tests/gDX_truffle_integrationTest.sh"
+    "gdx-truffle-integrationtest-lazy": "export SELLER=0xC5fdf4076b8F3A5357c5E395ab970B5B54098Fef; yarn gdx-endow-seller && truffle test gelato_tests/gelato_interface_tests/gelato_DutchX_tests/gDX_truffle_tests/gDX_truffle_integration_tests/gDX_truffle_integrationTest.js"
   },
   "repository": {
     "type": "git",
