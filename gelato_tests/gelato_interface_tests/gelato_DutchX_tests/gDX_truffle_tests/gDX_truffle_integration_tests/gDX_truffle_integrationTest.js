@@ -27,11 +27,11 @@ const DUTCH_EXCHANGE = "0x3d49d1eF2adE060a33c6E6Aa213513A7EE9a6241";
 let dutchExchange;
 
 const SellToken = artifacts.require("EtherToken");
-const SELL_TOKEN = "0xf204a4Ef082f5c04bB89F7D5E6568B796096735a"; // WETH
+const SELL_TOKEN = "0xAa588d3737B611baFD7bD713445b314BD453a5C8"; // WETH
 let sellToken;
 
 const BuyToken = artifacts.require("TokenRDN");
-const BUY_TOKEN = "0xF328c11c4dF88d18FcBd30ad38d8B4714F4b33bF"; // RDN
+const BUY_TOKEN = "0x8ACEe021a27779d8E98B9650722676B850b25E11"; // RDN
 let buyToken;
 // ********** Truffle/web3 setup EN ********
 
@@ -46,16 +46,16 @@ const BN = web3.utils.BN;
 //  instead of hardcoding it.
 //  It should match the truffle.js specified DEFAULT_GAS_PRICE_GWEI = 5
 const GELATO_GAS_PRICE_BN = new BN(web3.utils.toWei("5", "gwei"));
+const GDX_MAXGAS_BN = new BN("400000"); // 400.000 must be benchmarked
+const GDX_PREPAID_FEE_BN = GDX_MAXGAS_BN.mul(GELATO_GAS_PRICE_BN); // wei
 
 // GELATO_DUTCHX specific
 const TOTAL_SELL_VOLUME = web3.utils.toWei("20", "ether"); // 20 WETH
 const NUM_SUBORDERS_BN = new BN("2");
 const SUBORDER_SIZE_BN = new BN(web3.utils.toWei("10", "ether")); // 10 WETH
 const INTERVAL_SPAN = 21600; // 6 hours
-const GDXSSAW_MAXGAS_BN = new BN("400000"); // 400.000 must be benchmarked
-const GELATO_PREPAID_FEE_BN = GDXSSAW_MAXGAS_BN.mul(GELATO_GAS_PRICE_BN); // wei
 // MSG_VALUE_BN needs .add(1) in GELATO_DUTCHX due to offset of last withdrawal executionClaim
-const MSG_VALUE_BN = GELATO_PREPAID_FEE_BN.mul(NUM_SUBORDERS_BN.add(new BN(1))); // wei
+const MSG_VALUE_BN = GDX_PREPAID_FEE_BN.mul(NUM_SUBORDERS_BN.add(new BN(1))); // wei
 
 // State shared across the unit tests
 // tx returned data
@@ -69,7 +69,7 @@ let timestamp;
 // To be set variables
 // Prior to GelatoCore.listInterface:
 let gelatoCoreOwner; // accounts[0]
-let gDXSSAWOwner; // accounts[0]
+let gelatoDXOwner; // accounts[0]
 
 // Prior to GELATO_DUTCHX.splitSellOrder():
 let executionTime; // timestamp
@@ -123,10 +123,10 @@ describe("default test suite: correct deployed instances and owners", () => {
   // ******** Default ownership tests ********
   it("has accounts[0] as owners of Core and Interface and accounts[1] is not owner", async () => {
     gelatoCoreOwner = await gelatoCore.contract.methods.owner().call();
-    gDXSSAWOwner = await gelatoDutchX.contract.methods.owner().call();
+    gelatoDXOwner = await gelatoDutchX.contract.methods.owner().call();
 
     assert.strictEqual(gelatoCoreOwner, accounts[0]);
-    assert.strictEqual(gDXSSAWOwner, accounts[0]);
+    assert.strictEqual(gelatoDXOwner, accounts[0]);
   });
   // ******** Default ownership tests END ********
 
@@ -152,7 +152,7 @@ describe("Listing GELATO_DUTCHX", () => {
   // ******** list GELATO_DUTCHX interface on Gelato Core and set its maxGas ********
   it(`lets Core-owner list gelatoDutchX on GelatoCore with its maxGas set`, async () => {
     await gelatoCore.contract.methods
-      .listInterface(gelatoDutchX.address, GDXSSAW_MAXGAS_BN.toString())
+      .listInterface(gelatoDutchX.address, GDX_MAXGAS_BN.toString())
       .send({ from: gelatoCoreOwner })
       .then(receipt => (txReceipt = receipt));
 
@@ -164,7 +164,7 @@ describe("Listing GELATO_DUTCHX", () => {
       .call(); // uint256
 
     assert.isTrue(isWhitelisted);
-    assert.strictEqual(maxGas, GDXSSAW_MAXGAS_BN.toString());
+    assert.strictEqual(maxGas, GDX_MAXGAS_BN.toString());
   });
   // ******** list GELATO_DUTCHX interface on Gelato Core and set its maxGas END ********
   // ******** Event on core LogNewInterfaceListed ********
@@ -176,7 +176,7 @@ describe("Listing GELATO_DUTCHX", () => {
     );
     assert.strictEqual(
       txReceipt.events.LogNewInterfaceListed.returnValues.maxGas,
-      GDXSSAW_MAXGAS_BN.toString()
+      GDX_MAXGAS_BN.toString()
     );
   });
   // ******** Event on core LogNewInterfaceListed END ********
@@ -358,7 +358,7 @@ describe("GELATO_DUTCHX.splitSellOrder() -> GelatoCore.mintClaim()", () => {
             assert.strictEqual(event.returnValues.executionClaimOwner, SELLER);
             assert.strictEqual(
               event.returnValues.gelatoCoreReceivable,
-              GELATO_PREPAID_FEE_BN.toString()
+              GDX_PREPAID_FEE_BN.toString()
             );
             // check the executionClaimIds
             assert.strictEqual(
@@ -405,7 +405,7 @@ describe("GELATO_DUTCHX.splitSellOrder() -> GelatoCore.mintClaim()", () => {
       assert.strictEqual(_buyToken, BUY_TOKEN);
       assert.strictEqual(sellAmount, SUBORDER_SIZE_BN.toString());
       assert.strictEqual(_executionTime, executionTimes.toString());
-      assert.strictEqual(prepaidExecutionFee, GELATO_PREPAID_FEE_BN.toString());
+      assert.strictEqual(prepaidExecutionFee, GDX_PREPAID_FEE_BN.toString());
 
       executionTimes += INTERVAL_SPAN;
     }
@@ -433,7 +433,7 @@ describe("Gelato's DutchX auction state checks", () => {
     console.log(
       `
        gelatoCore: ${gelatoCore.address}
-       gdxssaw:    ${gelatoDutchX.address}
+       gelatoDX:   ${gelatoDutchX.address}
        dutchX:     ${dutchExchange.address}
       `
     );
@@ -519,11 +519,7 @@ describe("gelatoCore.execute() -> GELATO_DUTCHX.execute() -> burnExecutionClaim 
     assert.strictEqual(buyToken, BUY_TOKEN);
     assert.strictEqual(sellAmount, SUBORDER_SIZE_BN.toString());
     assert(parseInt(executionTime) <= timestamp);
-    assert.strictEqual(prepaidExecutionFee, GELATO_PREPAID_FEE_BN.toString());
-
-    console.log(
-      `\t\t typeOf prepaidExecutionFee: ${typeof prepaidExecutionFee}`
-    );
+    assert.strictEqual(prepaidExecutionFee, GDX_PREPAID_FEE_BN.toString());
 
     // get executor's balance pre executionClaim minting
     let executorBalancePre = new BN(await web3.eth.getBalance(executor));

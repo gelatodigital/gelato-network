@@ -108,6 +108,12 @@ module.exports = () => {
     const dappInterface =
       txReceipt.events.LogNewInterfaceListed.returnValues.dappInterface;
 
+    // Log the event
+    console.log(
+      "LogNewInterfaceListed Event Return Values:\n",
+      txReceipt.events.LogNewInterfaceListed.returnValues
+    );
+
     return `
         listInterface() Complete
         -------------------------
