@@ -1,7 +1,7 @@
-// 1. Write down the test scenario
-// 2. List the order of calls we conduct within the execute function to the DutchX
-// 3. Write down which values should be returned from each function call
-// 4. Write a Mock dutchX contract which has the same function names specified in 2) which returns the values specified in 3) and which employs setter to set new values
+// XX1. Write down the test scenario
+// XX2. List the order of calls we conduct within the execute function to the DutchX
+// XX3. Write down which values should be returned from each function call
+// XX4. Write a Mock dutchX contract which has the same function names specified in 2) which returns the values specified in 3) and which employs setter to set new values
 // 5. Create a truffle test file which deploys a new instance of the gelatoDX interface with a new core and the mock contract instead of the dutchX
 // 6. Create a bash script that endows the user before executing the new test file
 // 7. Copy paste the tests which mint 3 execution claims
@@ -38,6 +38,42 @@
     4. dutchExchange.depositAndSell(_sellToken, _buyToken, _sellAmount) => true
     5. dutchExchange.closingPrices(_sellToken, _buyToken, _lastAuctionIndex) => num: 1000 amount RDN, den: 10 amount WETH => 10WETH should => 1000 RND WETH/RDN === 100RDN
     6. dutchExchange.claimAndWithdraw(_sellToken, _buyToken, address(this), _lastAuctionIndex,withdrawAmount) => true
-
-
 */
+
+// 5. Truffle test file for the splitSellOrder
+
+// Import Contracts
+const GelatoCore = artifacts.require("GelatoCore");
+const gelatoDutchX = artifacts.require("GelatoDXSplitSellAndWithdraw");
+const mockExchange = artifacts.require("DutchXMock");
+
+let mockExchangeContract;
+let gelatoDutchXContract;
+let gelatoCore;
+
+describe("deploy new dxInterface Contract and fetch address", async () => {
+  // Deploy new instances
+  before(async () => {
+    mockExchangeContract = await mockExchange.new();
+    gelatoDutchXContract = await gelatoDutchX.new(
+      GelatoCore.address,
+      mockExchange.address
+    );
+    gelatoCore = await GelatoCore.deployed();
+  });
+
+  it("Check if the Mock Contract is indeed listed as the dutchX on the gelatoDxInterface", async () => {
+    assert.exists(mockExchangeContract.address);
+    assert.exists(gelatoDutchXContract.address);
+    let mockExchangeAddress;
+    await gelatoDutchXContract.dutchExchange.then(
+      response => (mockExchangeAddress = response.address)
+    );
+    assert.strictEqual(mockExchangeAddress, mockExchangeContract.address);
+  });
+
+//   it("List dxInterface on gelatoCore", async () => {
+//     assert.exists(gelatoCore.address);
+//     assert.strictEqual(gelatoCoreOwner, accounts[0]);
+//   });
+});

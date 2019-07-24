@@ -126,7 +126,7 @@ contract DutchXMock is SafeTransfer {
         public
         returns (bool)
     {
-        require(safeTransfer(tokenAddress, msg.sender, amount, true), "The deposit transaction must succeed");
+        // require(safeTransfer(_sellToken, msg.sender, _sellAmount, true), "The deposit transaction must succeed");
         return true;
     }
 
