@@ -51,7 +51,7 @@ const GELATO_GAS_PRICE_BN = new BN(web3.utils.toWei("5", "gwei"));
 const TOTAL_SELL_VOLUME = web3.utils.toWei("20", "ether"); // 20 WETH
 const NUM_SUBORDERS_BN = new BN("2");
 const SUBORDER_SIZE_BN = new BN(web3.utils.toWei("10", "ether")); // 10 WETH
-const INTERVAL_SPAN = "21600"; // 6 hours
+const INTERVAL_SPAN = 21600; // 6 hours
 const GDXSSAW_MAXGAS_BN = new BN("400000"); // 400.000 must be benchmarked
 const GELATO_PREPAID_FEE_BN = GDXSSAW_MAXGAS_BN.mul(GELATO_GAS_PRICE_BN); // wei
 // MSG_VALUE_BN needs .add(1) in GELATO_DUTCHX due to offset of last withdrawal executionClaim
@@ -221,7 +221,7 @@ describe("GELATO_DUTCHX.splitSellOrder() -> GelatoCore.mintClaim()", () => {
         NUM_SUBORDERS_BN.toString(),
         SUBORDER_SIZE_BN.toString(),
         executionTime,
-        INTERVAL_SPAN.toString()
+        INTERVAL_SPAN
       )
       .estimateGas(
         { from: SELLER, value: MSG_VALUE_BN, gas: 1000000 }, // gas needed to prevent out of gas error
@@ -268,7 +268,7 @@ describe("GELATO_DUTCHX.splitSellOrder() -> GelatoCore.mintClaim()", () => {
         NUM_SUBORDERS_BN.toString(),
         SUBORDER_SIZE_BN.toString(),
         executionTime,
-        INTERVAL_SPAN.toString()
+        INTERVAL_SPAN
       )
       .send({ from: SELLER, value: MSG_VALUE_BN, gas: 1000000 }) // gas needed to prevent out of gas error
       .once("transactionHash", hash => (txHash = hash))
@@ -390,10 +390,10 @@ describe("GELATO_DUTCHX.splitSellOrder() -> GelatoCore.mintClaim()", () => {
         executionClaimOwner,
         dappInterface,
         interfaceOrderId,
-        sellToken,
-        buyToken,
+        sellToken: _sellToken,
+        buyToken: _buyToken,
         sellAmount,
-        executionTime,
+        executionTime: _executionTime,
         prepaidExecutionFee
       } = await gelatoCore.contract.methods
         .getExecutionClaim(executionClaimId)
@@ -401,13 +401,13 @@ describe("GELATO_DUTCHX.splitSellOrder() -> GelatoCore.mintClaim()", () => {
       assert.strictEqual(executionClaimOwner, SELLER);
       assert.strictEqual(dappInterface, gelatoDutchX.address);
       assert.strictEqual(interfaceOrderId, orderId);
-      assert.strictEqual(sellToken, SELL_TOKEN);
-      assert.strictEqual(buyToken, BUY_TOKEN);
+      assert.strictEqual(_sellToken, SELL_TOKEN);
+      assert.strictEqual(_buyToken, BUY_TOKEN);
       assert.strictEqual(sellAmount, SUBORDER_SIZE_BN.toString());
-      assert.strictEqual(executionTime, executionTimes.toString());
+      assert.strictEqual(_executionTime, executionTimes.toString());
       assert.strictEqual(prepaidExecutionFee, GELATO_PREPAID_FEE_BN.toString());
 
-      executionTimes += parseInt(INTERVAL_SPAN);
+      executionTimes += INTERVAL_SPAN;
     }
   });
   // ******** Minted execution claims on Core END ********

@@ -37,7 +37,7 @@ let buyToken;
 // ********** Truffle/web3 setup EN ********
 
 // For testing
-// const assert = require("//assert");
+const assert = require("assert");
 
 
 // Big Number stuff
@@ -56,7 +56,7 @@ const GELATO_GAS_PRICE_BN = new BN(web3.utils.toWei("5", "gwei"));
 const TOTAL_SELL_VOLUME = web3.utils.toWei("20", "ether"); // 20 WETH
 const NUM_SUBORDERS_BN = new BN("2");
 const SUBORDER_SIZE_BN = new BN(web3.utils.toWei("10", "ether")); // 10 WETH
-const INTERVAL_SPAN = "21600"; // 6 hours
+const INTERVAL_SPAN = 21600;  // 6 hours
 const GDXSSAW_MAXGAS_BN = new BN("400000"); // 400.000 must be benchmarked
 const GELATO_PREPAID_FEE_BN = GDXSSAW_MAXGAS_BN.mul(GELATO_GAS_PRICE_BN); // wei
 // MSG_VALUE_BN needs .add(1) in GELATO_DX due to offset of last withdrawal executionClaim
@@ -74,10 +74,6 @@ let block; // e.g. getBlock(blockNumber).timstamp
 let timestamp;
 
 // To be set variables
-// Prior to GelatoCore.listInterface:
-let gelatoCoreOwner; // accounts[0]
-let gDXSSAWOwner; // accounts[0]
-
 // Prior to GELATO_DX.splitSellOrder():
 let executionTime; // timestamp
 
@@ -87,11 +83,15 @@ let orderState;
 let executionClaimIds = [];
 let executionTimes = [];
 
+// Module exports for the GelatoCore.execute() test
+module.exports.executionClaimIds = executionClaimIds;
+module.exports.interfaceOrderId = orderId;
+module.exports.executionTimes = executionTimes;
+
 // Prior to GelatoCore.execute():
 
 // Post GelatoCore.execute():
 
-console.log("HERE");
 
 module.exports = () => {
   async function testSplitSellOrder() {
@@ -99,7 +99,7 @@ module.exports = () => {
     // accounts
     accounts = await web3.eth.getAccounts();
     seller = accounts[2];
-    //assert.strictEqual(seller, SELLER, "Seller account problem");
+    assert.strictEqual(seller, SELLER, "Seller account problem");
 
     // get Gelato instances
     gelatoCore = await GelatoCore.deployed();
@@ -108,16 +108,16 @@ module.exports = () => {
     // get DutchX instances
     dutchExchange = await DutchExchange.deployed();
     sellToken = await SellToken.deployed();
-    buyToken = await BuyToken.deployd();
+    buyToken = await BuyToken.deployed();
 
     // Gelato
-    //assert.strictEqual(gelatoCore.address, GelatoCore.address, "gelatoCore address problem");
-    //assert.strictEqual(gelatoDutchX.address, GelatoDutchX.address, "gelatoDutchX address problem");
+    assert.strictEqual(gelatoCore.address, GelatoCore.address, "gelatoCore address problem");
+    assert.strictEqual(gelatoDutchX.address, GelatoDutchX.address, "gelatoDutchX address problem");
 
     // DutchX
-    //assert.strictEqual(dutchExchange.address, DutchExchange.address, "dutchX address problem");
-    //assert.strictEqual(sellToken.address, SELL_TOKEN, "sellToken address problem");
-    //assert.strictEqual(buyToken.address, BUY_TOKEN, "buyToken address problem");
+    assert.strictEqual(dutchExchange.address, DutchExchange.address, "dutchX address problem");
+    assert.strictEqual(sellToken.address, SELL_TOKEN, "sellToken address problem");
+    assert.strictEqual(buyToken.address, BUY_TOKEN, "buyToken address problem");
     // ********* get deployed instances END ********
 
 
@@ -125,40 +125,9 @@ module.exports = () => {
     gelatoCoreOwner = await gelatoCore.contract.methods.owner().call();
     gDXSSAWOwner = await gelatoDutchX.contract.methods.owner().call();
 
-    //assert.strictEqual(gelatoCoreOwner, accounts[0], "gelatoCoreOwner problem");
-    //assert.strictEqual(gDXSSAWOwner, accounts[0], "gDXSSAWOwner problem");
+    assert.strictEqual(gelatoCoreOwner, accounts[0], "gelatoCoreOwner problem");
+    assert.strictEqual(gDXSSAWOwner, accounts[0], "gDXSSAWOwner problem");
     // ******** Default ownership tests END ********
-
-
-    // ******** list GELATO_DX interface on Gelato Core and set its maxGas ********
-    await gelatoCore.contract.methods
-      .listInterface(gelatoDutchX.address, GDXSSAW_MAXGAS_BN.toString())
-      .send({ from: gelatoCoreOwner })
-      .then(receipt => (txReceipt = receipt));
-
-    const isWhitelisted = await gelatoCore.contract.methods
-      .getInterfaceWhitelist(gelatoDutchX.address)
-      .call();
-    const maxGas = await gelatoCore.contract.methods
-      .getInterfaceMaxGas(gelatoDutchX.address)
-      .call(); // uint256
-
-    //assert.strictEqual(isWhitelisted, true, "gelatoDutchX whitelist problem");
-    //assert.strictEqual(maxGas, GDXSSAW_MAXGAS_BN.toString(), "gelatoDutchX maxGas problem");
-    // ******** list GELATO_DX interface on Gelato Core and set its maxGas END ********
-    // ******** Event on core LogNewInterfaceListed ********
-    //assert.ok(txReceipt.events.LogNewInterfaceListed, "LogNewInterfaceListed event not ok");
-    /*assert.strictEqual(
-      txReceipt.events.LogNewInterfaceListed.returnValues.dappInterface,
-      gelatoDutchX.address,
-      "LogNewInterfaceListed event dappInterface problem"
-    );*/
-    /*assert.strictEqual(
-      txReceipt.events.LogNewInterfaceListed.returnValues.maxGas,
-      GDXSSAW_MAXGAS_BN.toString(),
-      "LogNewInterfaceListed event maxGas problem"
-    );*/
-    // ******** Event on core LogNewInterfaceListed END ********
 
 
     // ********************* SPLITSELLORDER -> MINT_CLAIMS *********************
@@ -173,13 +142,13 @@ module.exports = () => {
       .allowance(seller, gelatoDutchX.address)
       .call();
 
-    /*assert.strictEqual(
+    assert.strictEqual(
       allowance,
       TOTAL_SELL_VOLUME,
       `The ERC20 ${
         sellToken.address
       } allowance for the GelatoDXSplitsellAndWithdraw should be at ${TOTAL_SELL_VOLUME}`
-    );*/
+    );
     // ******** Seller ERC20 approves the GELATO_DX for TotalSellVolume END ********
 
 
@@ -199,7 +168,7 @@ module.exports = () => {
         NUM_SUBORDERS_BN.toString(),
         SUBORDER_SIZE_BN.toString(),
         executionTime,
-        INTERVAL_SPAN.toString()
+        INTERVAL_SPAN
       )
       .estimateGas(
         { from: SELLER, value: MSG_VALUE_BN, gas: 1000000 }, // gas needed to prevent out of gas error
@@ -215,7 +184,7 @@ module.exports = () => {
                 block = block;
               }
             });
-            console.log(`\t\tgasLimit:           ${block.gasLimit}`);
+            console.log(`\t\tgasLimit:           ${parseInt(block.gasLimit)}`);
             console.log(`\t\testimated gasUsed:   ${estimatedGasUsed}`);
           }
         }
@@ -233,7 +202,6 @@ module.exports = () => {
     block = await web3.eth.getBlock(blockNumber);
     timestamp = block.timestamp;
     executionTime = timestamp + 15; // to account for latency
-    console.log(`\t\t\t TYPEOF executionTime: ${typeof executionTime}`)
 
     // Seller external TX2:
     // benchmarked gasUsed = 726,360 (for 2 subOrders + 1 lastWithdrawal)
@@ -245,7 +213,7 @@ module.exports = () => {
         NUM_SUBORDERS_BN.toString(),
         SUBORDER_SIZE_BN.toString(),
         executionTime,
-        INTERVAL_SPAN.toString()
+        INTERVAL_SPAN
       )
       .send({ from: SELLER, value: MSG_VALUE_BN, gas: 1000000 }) // gas needed to prevent out of gas error
       .once("transactionHash", hash => (txHash = hash))
@@ -256,48 +224,48 @@ module.exports = () => {
     let gelatoCoreBalancePost = new BN(
       await web3.eth.getBalance(gelatoCore.address)
     );
-    /*assert.strictEqual(
+    assert.strictEqual(
       gelatoCoreBalancePost.toString(),
       gelatoCoreBalancePre.add(MSG_VALUE_BN).toString(),
       "gelatoCore ether balance problem"
-    );*/
+    );
 
     // emitted event on GELATO_DX: LogNewOrderCreated(orderId, seller)
-    //assert.ok(txReceipt.events.LogNewOrderCreated, "LogNewOrderCreated event does not exist");
+    assert.ok(txReceipt.events.LogNewOrderCreated, "LogNewOrderCreated event does not exist");
 
     // check if event has correct return values
-    /*assert.strictEqual(
+    assert.strictEqual(
       txReceipt.events.LogNewOrderCreated.returnValues.seller,
       seller,
       "LogNewOrderCreated event seller problem"
-    );*/
+    );
 
     // save the orderId
     orderId = txReceipt.events.LogNewOrderCreated.returnValues.orderId;
 
-    /*assert.strictEqual(
+    assert.strictEqual(
       txReceipt.events.LogNewOrderCreated.returnValues.orderId,
       orderId,
       "LogNewOrderCreated orderId problem"
-    );*/
+    );
 
     // fetch the newly created orderState on GELATO_DX
     orderState = await gelatoDutchX.contract.methods.orderStates(orderId).call();
 
     // check the orderState
-    /*assert.isFalse(orderState.lastAuctionWasWaiting, "orderState.lastAuctionWasWaiting problem");
-    //assert.strictEqual(orderState.lastAuctionIndex, "0", "orderState.lastAuctionIndex problem");
-    //assert.strictEqual(
+    assert.strictEqual(orderState.lastAuctionWasWaiting, false, "orderState.lastAuctionWasWaiting problem");
+    assert.strictEqual(orderState.lastAuctionIndex, "0", "orderState.lastAuctionIndex problem");
+    assert.strictEqual(
       orderState.remainingSubOrders,
       NUM_SUBORDERS_BN.toString(),
       "orderState.remainingSubOrders problem"
     );
-    //assert.strictEqual(orderState.lastSellAmountAfterFee, "0");
-    //assert.strictEqual(
+    assert.strictEqual(orderState.lastSellAmountAfterFee, "0");
+    assert.strictEqual(
       orderState.remainingWithdrawals,
       NUM_SUBORDERS_BN.toString(),
       "orderState.remainingWithdrawals problem"
-    );*/
+    );
 
     // Log actual gasUsed
     console.log("\t\tactual gasUsed:     ", txReceipt.gasUsed);
@@ -339,137 +307,132 @@ module.exports = () => {
           console.error("errored during gelatoCore.getPastEvents()");
         } else {
           // correct number of LogNewExecutionClaimMinted events were emitted
-          //assert.strictEqual(events.length, parseInt(NUM_SUBORDERS_BN) + 1); // +1=lastWithdrawal
+          assert.strictEqual(events.length, parseInt(NUM_SUBORDERS_BN) + 1); // +1=lastWithdrawal
 
           // Further event data checks and fetching of executionClaimIds
-          i = 1; // for the executionClaimId checking
           for (event of events) {
-            //assert.strictEqual(event.event, "LogNewExecutionClaimMinted");
-            /*assert.strictEqual(
+            assert.strictEqual(event.event, "LogNewExecutionClaimMinted");
+            assert.strictEqual(
               event.blockNumber,
               blockNumber,
               "LogExecutionClaimMinted blocknumber problem");
-            //assert.strictEqual(
+            assert.strictEqual(
               event.returnValues.dappInterface,
               gelatoDutchX.address,
               "LogExecutionClaimMinted dappInterface problem"
             );
-            //assert.strictEqual(
+            assert.strictEqual(
               event.returnValues.interfaceOrderId,
               orderId,
               "LogExecutionClaimMinted interfaceOrderId problem"
             );
-            //assert.strictEqual(
+            assert.strictEqual(
               event.returnValues.executionClaimOwner,
               seller,
               "LogExecutionClaimMinted executionClaimOwner problem"
             );
-            //assert.strictEqual(
+            assert.strictEqual(
               event.returnValues.gelatoCoreReceivable,
               GELATO_PREPAID_FEE_BN.toString(),
               "LogExecutionClaimMinted gelatoCoreReceibable problem"
             );
-            // check the executionClaimIds
-            //assert.strictEqual(
-              event.returnValues.executionClaimId,
-              i.toString(),
-              "LogExecutionClaimMinted executionClaimId problem"
-            );
-            i++;*/
 
             // Save the executionClaimIds
             executionClaimIds.push(event.returnValues.executionClaimId);
 
-            // Hold on to events for next //assert.ok
+            // Hold on to events for next assert.ok
             _events = events;
           }
         }
       }
     );
     // Make sure events were emitted
-    //assert.ok(_events, "LogNewExecutionClaimMinted _events do not exist");
+    assert.ok(_events, "LogNewExecutionClaimMinted _events do not exist");
+
     // Make sure 3 events were emitted and 3 claims minted (2 subOrders + lastWithdrawal)
-    /*assert.strictEqual(
+    assert.strictEqual(
       executionClaimIds.length,
       NUM_EXECUTIONCLAIMS,
       "Problem with number of LogNewExecutionClaimMinted events"
-    );*/
+    );
     // ******** Event LogNewExecutionClaimMinted on gelatoCore END ********
 
     // ******** Minted execution claims on Core ********
-    let incrementedExecutionTimes = parseInt(executionTime);
+    let incrementedExecutionTimes = executionTime;
     // fetch each executionClaim from core and test it
     for (executionClaimId of executionClaimIds) {
       let {
         executionClaimOwner,
         dappInterface,
         interfaceOrderId,
-        sellToken,
-        buyToken,
+        sellToken: _sellToken,
+        buyToken: _buyToken,
         sellAmount,
-        executionTime,
+        executionTime: _executionTime,
         prepaidExecutionFee
       } = await gelatoCore.contract.methods
         .getExecutionClaim(executionClaimId)
         .call();
-      /*assert.strictEqual(executionClaimOwner, seller, "executionClaimOwner problem");
-      //assert.strictEqual(dappInterface, gelatoDutchX.address, "dappInterface problem");
-      //assert.strictEqual(interfaceOrderId, orderId, "interfaceOrderId problem");
-      //assert.strictEqual(sellToken, sellToken.address, "sellToken problem");
-      //assert.strictEqual(buyToken, buyToken.address, "buyToken problem");
-      //assert.strictEqual(sellAmount, SUBORDER_SIZE_BN.toString(), "sellAmount problem");
-      //assert.strictEqual(
-        executionTime,
+      assert.strictEqual(executionClaimOwner, seller, "executionClaimOwner problem");
+      assert.strictEqual(dappInterface, gelatoDutchX.address, "dappInterface problem");
+      assert.strictEqual(interfaceOrderId, orderId, "interfaceOrderId problem");
+      assert.strictEqual(_sellToken, sellToken.address, "sellToken problem");
+      assert.strictEqual(_buyToken, buyToken.address, "buyToken problem");
+      assert.strictEqual(sellAmount, SUBORDER_SIZE_BN.toString(), "sellAmount problem");
+      assert.strictEqual(
+        _executionTime,
         incrementedExecutionTimes.toString(),
         "executionTime problem"
       );
-      //assert.strictEqual(
+      assert.strictEqual(
         prepaidExecutionFee,
         GELATO_PREPAID_FEE_BN.toString(),
         "prepaidExecutionFee problem"
-      );*/
-
+      );
       // Save the executionTimes
-      executionTimes.push(executionTime);
-      console.log(`\t\t\t TYPEOF executionTime: ${typeof executionTime}`)
-      // make sure there are NUM_EXECUTIONCLAIMS many
-      /*assert.strictEqual(
-        executionTimes.length,
-        NUM_EXECUTIONCLAIMS,
-        "problem with number of executionTimes"
-      );*/
+      executionTimes.push(_executionTime);
 
-      incrementedExecutionTimes += parseInt(INTERVAL_SPAN);
+      incrementedExecutionTimes += INTERVAL_SPAN;
     }
+
+    // Make sure there are the right amount of execution times
+    assert.strictEqual(
+      executionTimes.length,
+      NUM_EXECUTIONCLAIMS,
+      "problem with number of executionTimes"
+    );
     // ******** Minted execution claims on Core END ********
 
-
+    let [executionTime1, executionTime2, executionTime3] = executionTimes;
     return (
       `
         SplitSellOrder() Complete
         -------------------------
         gelatoCoreAddress:                  ${gelatoCore.address}
-        dappInterfaceAddress(gelatoDutchX): ${GelatoDutchX.address}
+        dappInterfaceAddress(gelatoDutchX): ${gelatoDutchX.address}
         interfaceOrderId:                   ${orderId}
         executionClaimIds:                  ${executionClaimIds.toString()}
-        executionTimes:                     ${new Date(parseInt(exexutionTimes[0])).toTimeString()}
-                                            ${new Date(parseInt(exexutionTimes[0])).toDateString()}
-                                            ${new Date(parseInt(executionTimes[1])).toTimeString()}
-                                            ${new Date(parseInt(exexutionTimes[1])).toDateString()}
-                                            ${new Date(parseInt(executionTimes[2])).toTimeString()}
-                                            ${new Date(parseInt(exexutionTimes[2])).toDateString()}
 
-        Now:                                ${new Date(Date.now()).toTimeString()}
-        Date:                               ${new Date(Date.now()).toDateString()}
-        Remaining subOrders left:           ${sellOrder.remainingSubOrders}
-        Remaining Withdrawals left:         ${sellOrder.remainingWithdrawals}
+        executionTimes:                     ${executionTime1}
+                                            ${executionTime2}
+                                            ${executionTime3}
+
+                                            Below are Ganache fetched times: inaccurate
+                                            ${new Date(parseInt(executionTime1)).toTimeString()}
+                                            ${new Date(parseInt(executionTime1)).toDateString()}
+                                            ${new Date(parseInt(executionTime2)).toTimeString()}
+                                            ${new Date(parseInt(executionTime2)).toDateString()}
+                                            ${new Date(parseInt(executionTime3)).toTimeString()}
+                                            ${new Date(parseInt(executionTime3)).toDateString()}
+
       `
     );
 
     // ********************* SPLITSELLORDER -> MINT_CLAIMS END *********************
-
   }
 
   // run the test
   testSplitSellOrder().then(result => console.log(result));
-};
+}
+
+
