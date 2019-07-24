@@ -66,7 +66,7 @@ describe("deploy new dxInterface Contract and fetch address", async () => {
     assert.exists(mockExchangeContract.address);
     assert.exists(gelatoDutchXContract.address);
     let mockExchangeAddress;
-    await gelatoDutchXContract.dutchExchange.then(
+    await gelatoDutchXContract.dutchExchange().then(
       response => (mockExchangeAddress = response.address)
     );
     assert.strictEqual(mockExchangeAddress, mockExchangeContract.address);
