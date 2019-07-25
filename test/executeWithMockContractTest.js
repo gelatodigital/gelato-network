@@ -6,11 +6,9 @@
 // XX6. Create a bash script that endows the user before executing the new test file
 // XX7. Copy paste the tests which mint 3 execution claims
 // XX8. You maybe have to edit the min. 6 hour interval func in order to skip forward in time. Otherwise research how we can skip time in truffle. If that does not work, use execution times that lie within the past
-// 9. Update the mockTestDxInterface script so that we successfully execute all claims
-// 9. Dont forget to call the appriveDutchX func beforehand
-// . To truely test the transfer of the amounts, we have to give the Mock contract funds
+// 9. Update the mockTestDxInterface script so that we successfully execute 1st claims
+// 9. Update the mockTestDxInterface script so that we successfully execute 2nd claims
 // 9. Implement the test specified in 1.
-// 8x TEST EVERYTHING WITH THE MOCK CONTRACT FIRST, THEN REAL DUCTHC
 // 10. Implement the test which should result in a revert, such as selling in an auction twice.
 
 /*
@@ -96,15 +94,17 @@ describe("deploy new dxInterface Contract and fetch address", () => {
     //   GelatoCore.address,
     //   mockExchangeContract.address
     // );
+
     gelatoDutchXContract = await gelatoDutchX.deployed()
     dutchExchangeProxy = await DutchExchangeProxy.deployed()
-    dutchExchange = await DutchExchange.deployed();
+    dutchExchange = await DutchExchange.deployed()
     gelatoCore = await GelatoCore.deployed();
     sellToken = await SellToken.deployed();
     buyToken = await BuyToken.deployed();
     gelatoCoreOwner = await gelatoCore.contract.methods.owner().call();
     accounts = await web3.eth.getAccounts();
     seller = accounts[2]; // account[2]
+
   });
 
   /*
@@ -142,7 +142,7 @@ describe("deploy new dxInterface Contract and fetch address", () => {
 
 
   it("sellToken is sellToken", async () => {
-    assert.equal("0xf204a4Ef082f5c04bB89F7D5E6568B796096735a", sellToken.address, `0xf204a4Ef082f5c04bB89F7D5E6568B796096735a is not equal ${sellToken.address}`)
+    assert.equal("0xAa588d3737B611baFD7bD713445b314BD453a5C8", sellToken.address, `0xAa588d3737B611baFD7bD713445b314BD453a5C8 is not equal ${sellToken.address}`)
   })
 
   // ******** MINT CLAIMS - SPLIT SELL ORDER ********
@@ -307,16 +307,63 @@ describe("deploy new dxInterface Contract and fetch address", () => {
     assert.isTrue(claimIsExecutable, `${now} should be greater than ${claimsExecutionTime.toString()}`)
   })
 
-  it("Successfully execute the first claim", async () => {
+  it("Successfully execute the first claim", async function() {
 
     let firstClaim = executionClaimIds[0]
     // Execute first claim
-    await gelatoCore.execute(firstClaim, {gas: 4000000});
 
-    let dappInterface;
-    let executor;
-    let executionClaimId;
-    let executorPayout;
+    let gelatoDxBalance1 = await sellToken.balanceOf(gelatoDutchXContract.address);
+    let dutchExchangeBalance1 = await sellToken.balanceOf(dutchExchangeProxy.address);
+
+    function execute() {
+      return new Promise(async (resolve, reject) => {
+        await gelatoCore.contract.methods
+          .execute(firstClaim)
+          .send({ from: gelatoCoreOwner, gas: 1000000 }, (error, hash) => {
+            if (error) {
+              reject(error);
+            }
+            resolve(hash);
+          }); // gas needed to prevent out of gas error
+      });
+    }
+    // call execute() and get hash from callback
+    let executeTxHash = await execute();
+    console.log(`\tExecute TxHash: ${executeTxHash}\n`);
+
+    // Fetch Order State to check lastAuction Index
+    let orderState = await gelatoDutchXContract.contract.methods.orderStates(interfaceOrderId).call()
+
+    // console.log(orderState)
+
+    console.log(`Claim successfully executed
+
+    `)
+
+    let gelatoDxBalance = await sellToken.balanceOf(gelatoDutchXContract.address);
+    let dutchExchangeBalance = await sellToken.balanceOf(dutchExchangeProxy.address);
+
+
+    // this.timeout(5000);
+
+
+
+
+
+    console.log(`Before gelatoDX Balance: ${gelatoDxBalance1.toString()}`)
+    console.log(`Before gelatoDX Balance: ${dutchExchangeBalance1.toString()}`)
+
+
+    console.log(`After gelatoDX Balance: ${gelatoDxBalance.toString()}`)
+    console.log(`After gelatoDX Balance: ${dutchExchangeBalance.toString()}`)
+
+
+    // #########
+
+    // let dappInterface;
+    // let executor;
+    // let executionClaimId;
+    // let executorPayout;
 
     // gelatoCore.getPastEvents("LogClaimExecutedAndDeleted")
     // .then(events => {

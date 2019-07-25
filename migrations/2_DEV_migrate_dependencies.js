@@ -3,7 +3,6 @@
 
 const migrationsDx = require('@gnosis.pm/dx-contracts/src/migrations-truffle-5')
 const migrateArbitrage = require('@gnosis.pm/dx-uniswap-arbitrage/src/migrations-truffle-5/2_deploy_uniswap.js')
-const mockExchange = artifacts.require("DutchXMock")
 
 function migrate (deployer, network, accounts) {
   const TokenRDN = artifacts.require('TokenRDN')

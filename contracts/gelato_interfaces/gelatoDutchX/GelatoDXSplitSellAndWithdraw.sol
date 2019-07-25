@@ -222,10 +222,7 @@ contract GelatoDXSplitSellAndWithdraw is IcedOut, Ownable, SafeTransfer {
                    in its ERC20 balance.
         */
         // DEV: delete if stack too deep
-        require(
-            ERC20(sellToken).balanceOf(address(this)) >= gelatoCore.getClaimSellAmount(_executionClaimId),
-            "GelatoInterface.execute: ERC20(sellToken).balanceOf(address(this)) !>= subOrderSize"
-        );
+
         // ********************** Step3: Basic Execution Logic END **********************
 
 
@@ -251,6 +248,9 @@ contract GelatoDXSplitSellAndWithdraw is IcedOut, Ownable, SafeTransfer {
         // ********************** Step6: Advanced Execution Logic **********************
         // Only enter if there are remainingSubOrders to be executed
         if (remainingSubOrders >= 1) {
+            require(ERC20(sellToken).balanceOf(address(this)) >= gelatoCore.getClaimSellAmount(_executionClaimId),
+            "GelatoInterface.execute: ERC20(sellToken).balanceOf(address(this)) !>= subOrderSize");
+
             // Waiting Period variables needed to prevent double participation in DutchX auctions
             bool lastAuctionWasWaiting = orderState.lastAuctionWasWaiting;  // default: false
             bool newAuctionIsWaiting;
