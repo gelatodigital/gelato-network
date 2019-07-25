@@ -69,8 +69,6 @@ const GDX_PREPAID_FEE_BN = GDX_MAXGAS_BN.mul(GELATO_GAS_PRICE_BN); // wei
 
 // State shared across the unit tests
 // tx returned data
-let txHash;
-let txReceipt;
 let blockNumber;
 // block data
 let block; // e.g. getBlock(blockNumber).timstamp
@@ -83,7 +81,6 @@ let interfaceOrderId;
 let executedClaimId;
 let orderState;
 
-console.log("HEERE");
 
 module.exports = () => {
   async function testExecute() {
@@ -136,7 +133,6 @@ module.exports = () => {
     );
     // ********* get deployed instances END ********
 
-    console.log("HEEEREE 2");
 
     // ********************* DUTCHX AUCTION STATE CHECKS *********************
     let auctionIndex = await dutchExchange.contract.methods
@@ -219,24 +215,103 @@ module.exports = () => {
             if (error) {
               reject(error);
             }
-            txHash = hash;
-            resolve(hash)
-          }) // gas needed to prevent out of gas error
+            resolve(hash);
+          }); // gas needed to prevent out of gas error
       });
     }
-    let result = await execute();
-    console.log(`\tExecute TxHash: ${result}\n`);
+    // call execute() and get hash from callback
+    let executeTxHash = await execute();
+    console.log(`\tExecute TxHash: ${executeTxHash}\n`);
 
-    console.log("MARCOOOO");
+    // get executeTxReceipt with executeTx hash
+    let executeTxReceipt;
+    await web3.eth.getTransactionReceipt(executeTxHash, (error, result) => {
+      if (error) {
+        console.error;
+      }
+      executeTxReceipt = result;
+      console.log("call to getTransaction was successful:\n\t");
+    });
+
     // Log actual gasUsed
-    console.log(`\n\t\tactual gasUsed:     ${txReceipt.gasUsed}`);
+    console.log(
+      `\n\t\tactual gasUsed:     ${parseInt(executeTxReceipt.gasUsed)}`
+    );
+
+    // Save transactions blockNumber for next event emission test;
+    blockNumber = executeTxReceipt.blockNumber;
+
+    // ******** Event LogClaimExecutedBurnedAndDeleted on gelatoCore ********
+    // Filter event emitted from gelatoCore
+    let _event;
+    await gelatoCore.getPastevent(
+      "LogClaimExecutedBurnedAndDeleted",
+      (error, events) => {
+        if (error) {
+          console.error("errored during gelatoCore.getPastEvent()");
+        } else {
+          console.log("HEERE");
+          console.log(events);
+          // Event data checks
+          assert.strictEqual(events.event, "LogClaimExecutedBurnedAndDeleted");
+          assert.strictEqual(
+            event.blockNumber,
+            blockNumber,
+            "LogClaimExecutedBurnedAndDeleted blocknumber problem"
+          );
+          assert.strictEqual(
+            events.returnValues.dappInterface,
+            gelatoDutchX.address,
+            "LogClaimExecutedBurnedAndDeleted dappInterface problem"
+          );
+          assert.strictEqual(
+            events.returnValues.executor,
+            executor,
+            "LogClaimExecutedBurnedAndDeleted executor problem"
+          );
+          assert.strictEqual(
+            events.returnValues.executionClaimOwner,
+            EXECUTION_CLAIM_OWNER,
+            "LogClaimExecutedBurnedAndDeleted executionClaimOwner problem"
+          );
+          assert.strictEqual(
+            events.returnValues.gelatoCorePayable,
+            GDX_PREPAID_FEE_BN.toString(),
+            "LogClaimExecutedBurnedAndDeleted gelatoCorePayable problem"
+          );
+
+          // Log the event return values
+          console.log(
+            "\n\tLogClaimExecutedBurnedAndDeleted Event Return Values:\n\t",
+            events.returnValues,
+            "\n"
+          );
+          // Hold on to event for next assert.ok
+          _event = events;
+        }
+      }
+    );
+    // Make sure event were emitted
+    console.log("Marcooo");
+    assert.ok(_event, "LogClaimExecutedBurnedAndDeleted _event do not exist");
+    console.log("Polo");
+    // ******** Event LogClaimExecutedBurnedAndDeleted on gelatoCore END ********
 
     // Check that executor's balance has gone up by prepaidExecutionFee
     let executorBalancePost = new BN(await web3.eth.getBalance(executor));
+    console.log("Here");
+    /*console.log(
+      `\n\t\t Expected ExecutorBalancePost: ${executorBalancePre
+        .add(prepaidExecutionFee)
+        .sub(executeTxReceipt.gasUsed)}`
+    );
     assert.strictEqual(
       executorBalancePost.toString(),
-      executorBalancePre.add(prepaidExecutionFee).toString()
-    );
+      executorBalancePre
+        .add(prepaidExecutionFee)
+        .sub(executeTxReceipt.gasUsed)
+        .toString()
+    );*/
     console.log(
       `\n\t\t EXECUTOR BALANCE ETH PRE:  ${web3.utils.fromWei(
         executorBalancePre.toString(),
@@ -253,37 +328,40 @@ module.exports = () => {
 
     // ********** LogClaimExecutedAndDeleted Event Checks **********
     // emitted event on GelatoCore: LogClaimExecutedAndDeleted(dappInterface, executor, executionClaimId, executorPayout)
-    assert.ok(txReceipt.events.LogClaimExecutedAndDeleted);
+    assert.ok(executeTxReceipt.event.LogClaimExecutedAndDeleted);
 
-    // Log the events return values
+    // Log the event return values
     console.log(
       "\n\tLogClaimExecutedAndDeleted return values:\n\t",
-      txReceipt.events.LogClaimExecutedAndDeleted.returnValues,
+      executeTxReceipt.event.LogClaimExecutedAndDeleted.returnValues,
       "\n"
     );
 
     // check if event has correct return values
     assert.strictEqual(
-      txReceipt.events.LogClaimExecutedAndDeleted.returnValues.dappInterface,
+      executeTxReceipt.event.LogClaimExecutedAndDeleted.returnValues
+        .dappInterface,
       gelatoDutchX.address
     );
     assert.strictEqual(
-      txReceipt.events.LogClaimExecutedAndDeleted.returnValues.executor,
+      executeTxReceipt.event.LogClaimExecutedAndDeleted.returnValues.executor,
       executor
     );
     assert.strictEqual(
-      txReceipt.events.LogClaimExecutedAndDeleted.returnValues.executionClaimId,
+      executeTxReceipt.event.LogClaimExecutedAndDeleted.returnValues
+        .executionClaimId,
       EXECUTION_CLAIM_ID
     );
     assert.strictEqual(
-      txReceipt.events.LogClaimExecutedAndDeleted.returnValues
+      executeTxReceipt.event.LogClaimExecutedAndDeleted.returnValues
         .gelatoCorePayable,
       prepaidExecutionFee
     );
 
     // save the executedClaimId
     executedClaimId =
-      txReceipt.events.LogClaimExecutedAndDeleted.returnValues.executionClaimId;
+      executeTxReceipt.event.LogClaimExecutedAndDeleted.returnValues
+        .executionClaimId;
 
     console.log(
       `\n\t\t !!! We just executed executionClaimId: ${executedClaimId} !!! \n\n`
@@ -295,23 +373,26 @@ module.exports = () => {
 
     // ******** Execution Claim burned check  ********
     // emitted event on GelatoCore via Claim base: Transfer(owner, address(0), tokenId)
-    assert.ok(txReceipt.events.Transfer);
+    assert.ok(executeTxReceipt.event.Transfer);
 
-    // Log the events return values
+    // Log the event return values
     console.log(
       "\n\tGelatoCore.Claim.Transfer event return values:\n\t",
-      txReceipt.events.Transfer.returnValues,
+      executeTxReceipt.event.Transfer.returnValues,
       "\n"
     );
 
     // check if event has correct return values
     assert.strictEqual(
-      txReceipt.events.Transfer.returnValues.from,
+      executeTxReceipt.event.Transfer.returnValues.from,
       EXECUTION_CLAIM_OWNER
     );
-    assert.strictEqual(txReceipt.events.Transfer.returnValues.executor, "0");
     assert.strictEqual(
-      txReceipt.events.Transfer.returnValues.executionClaimId,
+      executeTxReceipt.event.Transfer.returnValues.executor,
+      "0"
+    );
+    assert.strictEqual(
+      executeTxReceipt.event.Transfer.returnValues.executionClaimId,
       executedClaimId
     );
 
@@ -343,7 +424,7 @@ module.exports = () => {
     assert.strictEqual(orderState.remainingWithdrawals, NUM_SUBORDERS_BN);
 
     // Save transactions blockNumber for tests on GELATO_DUTCHX
-    blockNumber = txReceipt.blockNumber; */
+    blockNumber = executeTxReceipt.blockNumber; */
 
     /*// ############## Withdraw variables ##############
 

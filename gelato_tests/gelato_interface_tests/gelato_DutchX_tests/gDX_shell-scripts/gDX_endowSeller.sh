@@ -1,7 +1,7 @@
 #!/bin/sh
 export DEFAULT_ACCOUNT="0x627306090abab3a6e1400e9345bc60c78a8bef57"  # ganache accounts[0]
 export SELLER=$SELLER  # ganache accounts[2]
-export SELL_AMOUNT="20"
+export SELL_AMOUNT="50"
 export SELL_TOKEN="WETH"
 
 echo "###############################################################################\n"

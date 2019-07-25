@@ -43,14 +43,14 @@ const GDX_MAXGAS_BN = new BN("400000"); // 400.000 must be benchmarked
 const GDX_PREPAID_FEE_BN = GDX_MAXGAS_BN.mul(GELATO_GAS_PRICE_BN); // wei
 
 // GELATO_DX specific
-const TOTAL_SELL_VOLUME = web3.utils.toWei("20", "ether"); // 20 WETH
-const NUM_SUBORDERS_BN = new BN("2");
+const TOTAL_SELL_VOLUME = web3.utils.toWei("50", "ether"); // 20 WETH
+const NUM_SUBORDERS_BN = new BN("5");
 const SUBORDER_SIZE_BN = new BN(web3.utils.toWei("10", "ether")); // 10 WETH
 const INTERVAL_SPAN = 21600; // 6 hours
 // MSG_VALUE_BN needs .add(1) in GELATO_DX due to offset of last withdrawal executionClaim
 const MSG_VALUE_BN = GDX_PREPAID_FEE_BN.mul(NUM_SUBORDERS_BN.add(new BN(1))); // wei
 // 3 claims minted due to 2 subOrders + lastWithdrawal (3 subOrders)
-const NUM_EXECUTIONCLAIMS = 3;
+const NUM_EXECUTIONCLAIMS = 6;
 
 // State shared across the unit tests
 // tx returned data
@@ -161,7 +161,7 @@ module.exports = () => {
         INTERVAL_SPAN
       )
       .estimateGas(
-        { from: SELLER, value: MSG_VALUE_BN, gas: 1000000 }, // gas needed to prevent out of gas error
+        { from: SELLER, value: MSG_VALUE_BN, gas: 2000000 }, // gas needed to prevent out of gas error
         async (error, estimatedGasUsed) => {
           if (error) {
             console.error("errored trying to estimate the gas");
@@ -204,7 +204,7 @@ module.exports = () => {
         executionTime,
         INTERVAL_SPAN
       )
-      .send({ from: SELLER, value: MSG_VALUE_BN, gas: 1000000 }) // gas needed to prevent out of gas error
+      .send({ from: SELLER, value: MSG_VALUE_BN, gas: 2000000 }) // gas needed to prevent out of gas error
       .once("transactionHash", hash => (txHash = hash))
       .once("receipt", receipt => (txReceipt = receipt))
       .on("error", console.error);
