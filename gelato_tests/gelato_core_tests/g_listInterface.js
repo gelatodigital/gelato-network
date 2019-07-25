@@ -110,16 +110,17 @@ module.exports = () => {
 
     // Log the event
     console.log(
-      "LogNewInterfaceListed Event Return Values:\n",
-      txReceipt.events.LogNewInterfaceListed.returnValues
+      "\n\tLogNewInterfaceListed Event Return Values:\t",
+      txReceipt.events.LogNewInterfaceListed.returnValues,
+      "\n"
     );
 
-    return `
+    return `\n
         listInterface() Complete
         -------------------------
         gelatoCoreAddress:                  ${gelatoCore.address}
         dappInterfaceAddress(gelatoDutchX): ${dappInterface}
-        maxGas:                             ${maxGas}
+        maxGas:                             ${maxGas}\n
       `;
   }
 

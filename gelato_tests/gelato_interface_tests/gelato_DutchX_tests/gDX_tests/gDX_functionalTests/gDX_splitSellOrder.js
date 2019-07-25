@@ -18,12 +18,10 @@ const GelatoDutchX = artifacts.require("GelatoDutchX");
 let gelatoDutchX;
 
 // DutchX
-const SellToken = artifacts.require("EtherToken");
-const SELL_TOKEN = "0xaa588d3737b611bafd7bd713445b314bd453a5c8"; // WETH
+const SellToken = artifacts.require("EtherToken"); // WETH
 let sellToken;
 
-const BuyToken = artifacts.require("TokenRDN");
-const BUY_TOKEN = "0x8ACEe021a27779d8E98B9650722676B850b25E11"; // RDN
+const BuyToken = artifacts.require("TokenRDN"); // RDN
 let buyToken;
 // ********** Truffle/web3 setup EN ********
 
@@ -98,7 +96,6 @@ module.exports = () => {
     sellToken = await SellToken.deployed();
     buyToken = await BuyToken.deployed();
 
-    console.log(sellToken.address);
     // Gelato
     assert.strictEqual(
       gelatoCore.address,
@@ -122,7 +119,6 @@ module.exports = () => {
       BuyToken.address,
       "buyToken address problem"
     );
-    console.log("HEERE");
     // ********* get deployed instances END ********
 
     // ********************* SPLITSELLORDER -> MINT_CLAIMS *********************
@@ -156,8 +152,8 @@ module.exports = () => {
     // Get and log estimated gasUsed by splitSellOrder fn
     gelatoDutchX.contract.methods
       .splitSellOrder(
-        SELL_TOKEN,
-        BUY_TOKEN,
+        sellToken.address,
+        buyToken.address,
         TOTAL_SELL_VOLUME,
         NUM_SUBORDERS_BN.toString(),
         SUBORDER_SIZE_BN.toString(),
@@ -171,11 +167,11 @@ module.exports = () => {
             console.error("errored trying to estimate the gas");
           } else {
             // Get and log gasLimit
-            await web3.eth.getBlock("latest", false, (error, block) => {
+            await web3.eth.getBlock("latest", false, (error, _block) => {
               if (error) {
                 console.error("errored trying to get the block");
               } else {
-                block = block;
+                block = _block;
               }
             });
             console.log(`\t\tgasLimit:           ${parseInt(block.gasLimit)}`);
@@ -200,8 +196,8 @@ module.exports = () => {
     // benchmarked gasUsed = 726,360 (for 2 subOrders + 1 lastWithdrawal)
     await gelatoDutchX.contract.methods
       .splitSellOrder(
-        SELL_TOKEN,
-        BUY_TOKEN,
+        sellToken.address,
+        buyToken.address,
         TOTAL_SELL_VOLUME,
         NUM_SUBORDERS_BN.toString(),
         SUBORDER_SIZE_BN.toString(),
@@ -247,8 +243,9 @@ module.exports = () => {
 
     // Log the event
     console.log(
-      "LogNewOrderCreated Event Return Values:\n",
-      txReceipt.events.LogNewOrderCreated.returnValues
+      "\n\tLogNewOrderCreated Event Return Values:\t",
+      txReceipt.events.LogNewOrderCreated.returnValues,
+      "\n"
     );
 
     // fetch the newly created orderState on GELATO_DX
@@ -354,8 +351,9 @@ module.exports = () => {
 
             // Log the events return values
             console.log(
-              "LogNewExecutionClaimMinted Event Return Values:\n\t\t\n",
-              event.returnValues
+              "\n\tLogNewExecutionClaimMinted Event Return Values:\t",
+              event.returnValues,
+              "\n"
             );
           }
           // Hold on to events for next assert.ok
@@ -433,7 +431,7 @@ module.exports = () => {
     // ******** Minted execution claims on Core END ********
 
     let [executionTime1, executionTime2, executionTime3] = executionTimes;
-    return `
+    return `\n
         SplitSellOrder() Complete
         -------------------------
         gelatoCoreAddress:                  ${gelatoCore.address}
@@ -442,7 +440,9 @@ module.exports = () => {
         executionClaimIds:                  ${executionClaimIds.toString()}
 
         executionTimes:                     ${executionTime1}
+        intervalSpan:                           +${INTERVAL_SPAN}
                                             ${executionTime2}
+        intervalSpan:                           +${INTERVAL_SPAN}
                                             ${executionTime3}
 
                                             Below are Ganache fetched times: inaccurate
@@ -463,7 +463,7 @@ module.exports = () => {
                                             ).toTimeString()}
                                             ${new Date(
                                               parseInt(executionTime3)
-                                            ).toDateString()}
+                                            ).toDateString()}\n
 
       `;
 

@@ -14,24 +14,19 @@ let executor; // accounts[3]
 // Deployed contract instances
 // Gelato
 const GelatoCore = artifacts.require("GelatoCore");
-const GELATO_CORE = "0x74e3FC764c2474f25369B9d021b7F92e8441A2Dc";
 let gelatoCore;
 
 const GelatoDutchX = artifacts.require("GelatoDutchX");
-const GELATO_DX = "0x98d9f9e8DEbd4A632682ba207670d2a5ACD3c489";
 let gelatoDutchX;
 
 // DutchX
 const DutchExchange = artifacts.require("DutchExchange");
-const DUTCH_EXCHANGE = "0x3d49d1eF2adE060a33c6E6Aa213513A7EE9a6241";
 let dutchExchange;
 
 const SellToken = artifacts.require("EtherToken");
-const SELL_TOKEN = "0xf204a4Ef082f5c04bB89F7D5E6568B796096735a"; // WETH
 let sellToken;
 
 const BuyToken = artifacts.require("TokenRDN");
-const BUY_TOKEN = "0xF328c11c4dF88d18FcBd30ad38d8B4714F4b33bF"; // RDN
 let buyToken;
 // ********** Truffle/web3 setup EN ********
 
@@ -128,24 +123,21 @@ module.exports = () => {
     );
     assert.strictEqual(
       sellToken.address,
-      SELL_TOKEN,
+      SellToken.address,
       "sellToken address problem"
     );
-    assert.strictEqual(buyToken.address, BUY_TOKEN, "buyToken address problem");
+    assert.strictEqual(
+      buyToken.address,
+      BuyToken.address,
+      "buyToken address problem"
+    );
     // ********* get deployed instances END ********
 
     // ********************* DUTCHX AUCTION STATE CHECKS *********************
-    console.log(
-      `
-            gelatoCore: ${gelatoCore.address}
-            gdxssaw:    ${gelatoDutchX.address}
-            dutchX:     ${dutchExchange.address}
-      `
-    );
     let auctionIndex = await dutchExchange.contract.methods
       .latestAuctionIndices(sellToken.address, buyToken.address)
       .call();
-    console.log(`\t\t DutchX auctionIndex is at: ${auctionIndex}`);
+    console.log(`\n\t\t DutchX auctionIndex is at: ${auctionIndex}\n`);
     // ********************* DUTCHX AUCTION STATE CHECKS *********************
 
     // ********************* EXECUTE *********************
@@ -155,14 +147,14 @@ module.exports = () => {
       { from: executor, gas: 1000000 }, // gas needed to prevent out of gas error
       async (error, estimatedGasUsed) => {
         if (error) {
-          console.error;
+          console.error(`.estimateGas error: ${error}`);
         } else {
           // Get and log gasLimit
-          await web3.eth.getBlock("latest", false, (error, block) => {
+          await web3.eth.getBlock("latest", false, (error, _block) => {
             if (error) {
-              console.error;
+              console.error(`getBlock error: ${error}`);
             } else {
-              block = block;
+              block = _block;
             }
           });
           console.log(`\t\tgasLimit:           ${parseInt(block.gasLimit)}`);
@@ -219,7 +211,7 @@ module.exports = () => {
       .on("error", console.error);
 
     // Log actual gasUsed
-    console.log("\t\tactual gasUsed:     ", txReceipt.gasUsed);
+    console.log(`\n\t\tactual gasUsed:     ${txReceipt.gasUsed}`);
 
     // Check that executor's balance has gone up by prepaidExecutionFee
     let executorBalancePost = new BN(await web3.eth.getBalance(executor));
@@ -244,7 +236,7 @@ module.exports = () => {
     // ********** LogClaimExecutedAndDeleted Event Checks **********
     // emitted event on GelatoCore: LogClaimExecutedAndDeleted(dappInterface, executor, executionClaimId, executorPayout)
     console.log(
-      "LogClaimExecutedAndDeleted:\n",
+      "\n\tLogClaimExecutedAndDeleted:\n",
       txReceipt.events.LogClaimExecutedAndDeleted
     );
     assert.ok(txReceipt.events.LogClaimExecutedAndDeleted);
