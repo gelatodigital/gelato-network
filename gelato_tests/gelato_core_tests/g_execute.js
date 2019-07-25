@@ -205,17 +205,27 @@ module.exports = () => {
     // get executor's balance pre executionClaim minting
     let executorBalancePre = new BN(await web3.eth.getBalance(executor));
 
-
     // executor calls gelatoCore.execute(executionClaimId)
-    console.log(`\n\t\t EXECUTING EXECUTION_CLAIM_ID: ${EXECUTION_CLAIM_ID}\n `);
+    console.log(
+      `\n\t\t EXECUTING EXECUTION_CLAIM_ID: ${EXECUTION_CLAIM_ID}\n `
+    );
 
     // benchmarked gasUsed =
-    await gelatoCore.contract.methods
-      .execute(EXECUTION_CLAIM_ID)
-      .send({ from: executor, gas: 1000000 }) // gas needed to prevent out of gas error
-      .once("transactionHash", hash => (txHash = hash))
-      .once("receipt", receipt => (txReceipt = receipt))
-      .on("error", console.error);
+    function execute() {
+      return new Promise(async (resolve, reject) => {
+        await gelatoCore.contract.methods
+          .execute(EXECUTION_CLAIM_ID)
+          .send({ from: executor, gas: 1000000 }, (error, hash) => {
+            if (error) {
+              reject(error);
+            }
+            txHash = hash;
+            resolve(hash)
+          }) // gas needed to prevent out of gas error
+      });
+    }
+    let result = await execute();
+    console.log(`\tExecute TxHash: ${result}\n`);
 
     console.log("MARCOOOO");
     // Log actual gasUsed
