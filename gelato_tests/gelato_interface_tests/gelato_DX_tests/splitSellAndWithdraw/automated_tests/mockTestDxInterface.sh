@@ -10,10 +10,18 @@ echo "\n            MOCKTESTDXINTERFACE.sh: \n"
 echo "###############################################################################\n"
 
 echo "###############################################################################\n"
-echo "\n            YARN SETUP: \n"
+echo "\n            YARN SETUP: START \n"
 YARN_SETUP=`yarn setup`
 echo "\n${YARN_SETUP}\n"
 echo "###############################################################################\n"
+echo "\n            YARN SETUP: END \n"
+
+echo "###############################################################################\n"
+echo "\n            CLOSE CURRENT AUCTION START\n"
+CLOSE_AUCTION=`yarn close1`
+echo "\n${CLOSE_AUCTION}\n"
+echo "###############################################################################\n"
+echo "\n            CLOSE CURRENT AUCTION END \n"
 
 echo "###############################################################################\n"
 echo "\n            ENDOW Gelato DX SELLER: \n
@@ -65,7 +73,7 @@ SELLER_BALANCE_AFTER=`yarn cli balances --account ${SELLER}`
 echo "\n{$SELLER_BALANCE_AFTER}\n"
 
 echo "###############################################################################\n"
-echo "\n            ENDOW GDXSSAW SELLER: END \n"
+echo "\n            ENDOW SELLER: END \n"
 echo "###############################################################################\n"
 
 echo "###############################################################################\n"

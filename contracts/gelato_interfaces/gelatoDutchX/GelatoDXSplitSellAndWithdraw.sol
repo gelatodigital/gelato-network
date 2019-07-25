@@ -61,9 +61,6 @@ contract GelatoDXSplitSellAndWithdraw is IcedOut, Ownable, SafeTransfer {
     // Constants that are set during contract construction and updateable via setters
     uint256 public auctionStartWaitingForFunding;
 
-    // To give unlimited allowance to the DutchX
-    uint256 constant UINT256_MAX = ~uint256(0);
-
     // **************************** State Variables END ******************************
 
 
@@ -434,15 +431,6 @@ contract GelatoDXSplitSellAndWithdraw is IcedOut, Ownable, SafeTransfer {
         actualSellAmount = _subOrderSize.sub(fee);
     }
 
-    function _approveDutchX(address _sellToken)
-        public
-        onlyOwner
-    {
-
-        // DEV: approve the dutchExchange to extract a given ERC20 Token from this contract
-        ERC20(_sellToken).approve(address(dutchExchange), UINT256_MAX);
-    }
-
     // Deposit and sell on the dutchExchange
     function _depositAndSell(address _seller,
                              address _sellToken,
@@ -451,6 +439,8 @@ contract GelatoDXSplitSellAndWithdraw is IcedOut, Ownable, SafeTransfer {
     )
         private
     {
+        // Approve DutchX to transfer the funds from gelatoInterface
+        ERC20(_sellToken).approve(address(dutchExchange), _sellAmount);
 
         // DEV deposit and sell on the dutchExchange
         dutchExchange.depositAndSell(_sellToken, _buyToken, _sellAmount);

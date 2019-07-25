@@ -457,9 +457,10 @@ contract GelatoCore is Ownable, Claim {
     function burnExecutionClaim(uint256 _executionClaimId)
         private
     {
+        address executionClaimOwner = ownerOf(_executionClaimId);
         _burn(_executionClaimId);
         emit LogExecutionClaimBurned(msg.sender,  // msg.sender == interface
-                                     ownerOf(_executionClaimId),
+                                     executionClaimOwner,
                                      _executionClaimId
         );
 
