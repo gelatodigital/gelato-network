@@ -17,11 +17,9 @@ let gDXSSAWOwner; // accounts[0]
 // Deployed contract instances
 // Gelato
 const GelatoCore = artifacts.require("GelatoCore");
-const GELATO_CORE = "0x74e3FC764c2474f25369B9d021b7F92e8441A2Dc";
 let gelatoCore;
 
 const GelatoDutchX = artifacts.require("GelatoDutchX");
-const GELATO_DX = "0x98d9f9e8DEbd4A632682ba207670d2a5ACD3c489";
 let gelatoDutchX;
 // ********** Truffle/web3 setup END ********
 
@@ -110,7 +108,7 @@ module.exports = () => {
 
     // Log the event
     console.log(
-      "\n\tLogNewInterfaceListed Event Return Values:\t",
+      "\n\tLogNewInterfaceListed Event Return Values:\n\t",
       txReceipt.events.LogNewInterfaceListed.returnValues,
       "\n"
     );

@@ -14,16 +14,13 @@ let executor; // accounts[3]
 // Deployed contract instances
 // Gelato
 const GelatoCore = artifacts.require("GelatoCore");
-const GELATO_CORE = "0x74e3FC764c2474f25369B9d021b7F92e8441A2Dc";
 let gelatoCore;
 
 const GelatoDutchX = artifacts.require("GelatoDutchX");
-const GELATO_DUTCHX = "0x98d9f9e8DEbd4A632682ba207670d2a5ACD3c489";
 let gelatoDutchX;
 
 // DutchX
 const DutchExchange = artifacts.require("DutchExchange");
-const DUTCH_EXCHANGE = "0x3d49d1eF2adE060a33c6E6Aa213513A7EE9a6241";
 let dutchExchange;
 
 const SellToken = artifacts.require("EtherToken");

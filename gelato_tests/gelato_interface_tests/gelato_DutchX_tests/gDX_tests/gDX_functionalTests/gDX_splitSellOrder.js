@@ -243,7 +243,7 @@ module.exports = () => {
 
     // Log the event
     console.log(
-      "\n\tLogNewOrderCreated Event Return Values:\t",
+      "\n\tLogNewOrderCreated Event Return Values:\n\t",
       txReceipt.events.LogNewOrderCreated.returnValues,
       "\n"
     );
@@ -351,7 +351,7 @@ module.exports = () => {
 
             // Log the events return values
             console.log(
-              "\n\tLogNewExecutionClaimMinted Event Return Values:\t",
+              "\n\tLogNewExecutionClaimMinted Event Return Values:\n\t",
               event.returnValues,
               "\n"
             );

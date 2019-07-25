@@ -58,14 +58,11 @@ contract GelatoCore is Ownable, Claim {
                                   address indexed executionClaimOwner,
                                   uint256 newExecutionTime
     );
-    event LogExecutionClaimBurned(address indexed dappInterface,
-                                  address indexed executionClaimOwner,
-                                  uint256 indexed executionClaimId
-    );
-    event LogClaimExecutedAndDeleted(address indexed dappInterface,
-                                     address payable indexed executor,
-                                     uint256 indexed executionClaimId,
-                                     uint256 gelatoCorePayable
+    event LogClaimExecutedBurnedAndDeleted(address indexed dappInterface,
+                                           address payable indexed executor,
+                                           address executionClaimOwner,
+                                           uint256 indexed executionClaimId,
+                                           uint256 gelatoCorePayable
     );
     // **************************** Events END **********************************
 
@@ -80,7 +77,7 @@ contract GelatoCore is Ownable, Claim {
 
 
     //_____________ Gelato Execution Service Business Logic ________________
-    // Every GelatoInterface has only 1 execute() function i.e. 1 MaxGas in accordance with the IGEI0 standard.
+    // Every GelatoInterface has only 1 execute() function i.e. 1 MaxGas in accordance with the IcedOut standard.
     // MaxGas is set upon interface whitelisting:
     // MaxGas is the maximum worst-case gase usage by an Interface execution function
     // The value of MaxGas should stay constant for an ExecutionClaim, unless e.g. EVM OpCodes are patched
@@ -437,7 +434,7 @@ contract GelatoCore is Ownable, Claim {
                                executionClaimOwner,
                                refund
         );
-        burnExecutionClaim(_executionClaimId);
+        _burn(_executionClaimId);
         delete executionClaims[_executionClaimId];
 
         // INTERACTIONS: Refund the prepaidFee to the ExecutionClaim owner
@@ -453,26 +450,11 @@ contract GelatoCore is Ownable, Claim {
 
 
     // DELETE
-    // **************************** burnExecutionClaim() ***************************
-    function burnExecutionClaim(uint256 _executionClaimId)
-        private
-    {
-        _burn(_executionClaimId);
-        emit LogExecutionClaimBurned(msg.sender,  // msg.sender == interface
-                                     ownerOf(_executionClaimId),
-                                     _executionClaimId
-        );
-
-    }
-    // **************************** burnExecutionClaim() END ***************************
-
-
-
-    // This function calls the IGEI0 defined execute(executionClaimId) function
-    //  that each Gelato IGEI0 compliant interface must have in its namespace.
+    // This function calls the IcedOut defined execute(executionClaimId) function
+    //  that each Gelato IcedOut compliant interface must have in its namespace.
     // Upon successfull execution of the interface-specific execution logic
     //  that is coded into their interface.execute() fns, this Core function
-    // makes a call to payExecutor().
+    //  transfers ether out of address(this).balance.
     // @notice: the interfaces need to be audited well here for bugs, so that
     //  there are no gasCosts incurred by executors on GelatoCore, due to
     //  buggy interface.execute() code that leads to sunk gas costs reverts.
@@ -494,21 +476,25 @@ contract GelatoCore is Ownable, Claim {
         );
 
         // ******** EFFECTS ********
-        // @Dev: if IGEI0() doesnt work due to Interface type use contract function selectors instead.
+        // @Dev: if IcedOut() doesnt work due to Interface type use contract function selectors instead.
         // Execute the interface-specific execution logic, handled outside the Core on the Interface level.
         // All interfaces execute() functions are audited and thus no explicit checks are needed
         // ******* Gelato Interface Call *******
         IcedOut(executionClaim.dappInterface).execute(_executionClaimId);
         // ******* Gelato Interface Call END *******
 
+        // Get the executionClaimOwner before burning
+        address executionClaimOwner = ownerOf(_executionClaimId);
+    
         // Burn the executed executionClaim
-        burnExecutionClaim(_executionClaimId);
+        _burn(_executionClaimId);
 
         // Emit event now before deletion of struct
-        emit LogClaimExecutedAndDeleted(executionClaim.dappInterface,
-                                        msg.sender,  // executor
-                                        _executionClaimId,
-                                        executorPayout
+        emit LogClaimExecutedBurnedAndDeleted(executionClaim.dappInterface,
+                                              msg.sender,  // executor
+                                              executionClaimOwner,
+                                              _executionClaimId,
+                                              executorPayout
         );
 
         // Delete the ExecutionClaim struct
@@ -524,6 +510,9 @@ contract GelatoCore is Ownable, Claim {
         return true;
     }
     // **************************** execute() END ***************************
+
+
+
 
 }
 
