@@ -3,6 +3,8 @@ export DEFAULT_ACCOUNT="0x627306090abab3a6e1400e9345bc60c78a8bef57"  # ganache a
 export SELLER="0xC5fdf4076b8F3A5357c5E395ab970B5B54098Fef"  # ganache accounts[2]
 export SELL_AMOUNT="20"
 export SELL_TOKEN="WETH"
+export EXECUTION_CLAIM="1"
+export CLAIM_STATE_ID="1"
 
 
 echo "###############################################################################\n"
@@ -54,9 +56,6 @@ echo "##########################################################################
 echo "\n             Take a look at seller balance of WETH\n"
 echo "###############################################################################\n"
 
-SELLER_BALANCE_BEFORE=`yarn cli balances --account ${SELLER}`
-echo "\n{$SELLER_BALANCE_BEFORE}\n"
-
 
 echo "###############################################################################\n"
 echo "\nSending ${SELL_AMOUNT} ${SELL_TOKEN} to seller (${SELLER})\n"
@@ -69,8 +68,6 @@ echo "##########################################################################
 echo "\n            Check if seller balance went up by ${SELL_AMOUNT} ${SELL_TOKEN}\n"
 echo "###############################################################################\n"
 
-SELLER_BALANCE_AFTER=`yarn cli balances --account ${SELLER}`
-echo "\n{$SELLER_BALANCE_AFTER}\n"
 
 echo "###############################################################################\n"
 echo "\n            ENDOW SELLER: END \n"
@@ -85,15 +82,32 @@ echo "\n${MOVE_OUT_M_1}\n \n${MOVE_OUT_M_2}\n \n${MOVE_OUT_M_3}\n"
 echo "###############################################################################\n"
 
 echo "###############################################################################\n"
-echo "\n            RUN TRUFFL TEST SCRIPT: EXECUTEWITHMOCKCONTRACTTEST.JS \n"
+echo "\n            RUN TRUFFL TEST SCRIPT: splitSellOrderTest.JS \n"
 echo "###############################################################################\n"
 
-TRUFFLE_TEST=`truffle test /Users/Hilmar/code/gelato/gelato/test/executeWithMockContractTest.js`
-echo "\n${TRUFFLE_TEST}\n"
+TRUFFLE_TEST_SPLIT=`truffle test ./test/splitSellOrderTest.js`
+echo "\n${TRUFFLE_TEST_SPLIT}\n"
 
 echo "###############################################################################\n"
-echo "\n            TRUFFLE TEST END \n"
+echo "\n            TRUFFLE TEST splitSellOrderTest END \n"
 echo "###############################################################################\n"
+
+echo "###############################################################################\n"
+echo "\n            Set EXECUTION_CLAIM to 1"
+echo "###############################################################################\n"
+
+
+echo "###############################################################################\n"
+echo "\n            RUN TRUFFL TEST SCRIPT: test/executeTest.js \n"
+echo "###############################################################################\n"
+
+TRUFFLE_TEST_EXEC=`truffle test ./test/executeTest.js`
+echo "\n${TRUFFLE_TEST_EXEC}\n"
+
+echo "###############################################################################\n"
+echo "\n            TRUFFLE TEST END test/executeTest.js \n"
+echo "###############################################################################\n"
+
 
 echo "###############################################################################\n"
 echo "\n            Move files back into migrations"

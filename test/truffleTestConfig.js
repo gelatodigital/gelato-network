@@ -5,9 +5,10 @@ const SellToken = artifacts.require("EtherToken");
 const BuyToken = artifacts.require("TokenRDN");
 const DutchExchangeProxy = artifacts.require("DutchExchangeProxy");
 const DutchExchange = artifacts.require("DutchExchange");
-
 // Helper functions
 const timeTravel = require("./helpers/timeTravel.js");
+const commandLine = require("./helpers/execShellCommand.js");
+
 
 // Global variables
 const MAXGAS = 400000;
@@ -15,8 +16,9 @@ const BN = web3.utils.BN;
 const GELATO_GAS_PRICE_BN = new BN(web3.utils.toWei("5", "gwei"));
 
 // Split Sell Order Details
+const numberOfSubOrders = "2"
+const NUM_SUBORDERS_BN = new BN(numberOfSubOrders);
 const TOTAL_SELL_VOLUME = web3.utils.toWei("20", "ether"); // 20 WETH
-const NUM_SUBORDERS_BN = new BN("2");
 const SUBORDER_SIZE_BN = new BN(web3.utils.toWei("10", "ether")); // 10 WETH
 const INTERVAL_SPAN = "21600"; // 6 hours
 const GDXSSAW_MAXGAS_BN = new BN("400000"); // 400.000 must be benchmarked
@@ -41,6 +43,32 @@ let interfaceOrderId;
 // Fetch the claim Ids
 const executionClaimIds = [];
 
+executeTestScript = async () => {
+    await commandLine.execShellCommand(`yarn setup`)
+    await commandLine.execShellCommand(`yarn close1`)
+    await commandLine.execShellCommand(`yarn close1`)
+    console.log("Command line over")
+}
+
+// Deployment script
+
+// Create Sub Order
+
+// Execute first claim
+
+// Skip + close auction
+
+// Manual withdraw
+
+// Execute Second Claim, no withdraw
+
+// Skip + close Auction
+
+// Execute last claim, withdraw
+
+// 
+
+
 module.exports = {
     GelatoCore,
     GelatoDutchX,
@@ -51,14 +79,13 @@ module.exports = {
     timeTravel,
     MAXGAS,
     BN,
+    NUM_SUBORDERS_BN,
     GELATO_GAS_PRICE_BN,
     TOTAL_SELL_VOLUME,
-    NUM_SUBORDERS_BN,
     SUBORDER_SIZE_BN,
     INTERVAL_SPAN,
     GDXSSAW_MAXGAS_BN,
     GELATO_PREPAID_FEE_BN,
-    MSG_VALUE_BN,
     dutchExchangeProxy,
     dutchExchange,
     seller,
@@ -72,5 +99,8 @@ module.exports = {
     orderState,
     executionTime,
     interfaceOrderId,
-    executionClaimIds
+    executionClaimIds,
+    MSG_VALUE_BN,
+    commandLine,
+    executeTestScript
 };
