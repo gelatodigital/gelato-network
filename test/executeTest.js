@@ -55,7 +55,6 @@ let {GelatoCore,
             // Execute first claim
             let executionClaim = copyEnv[0]
             let claimStateId = copyEnv[1]
-            console.log(executionClaim)
 
             let gelatoDxBalanceBefore = await sellToken.balanceOf(gelatoDutchXContract.address);
             let dutchExchangeBalanceBefore = await sellToken.balanceOf(dutchExchangeProxy.address);
@@ -149,6 +148,9 @@ let {GelatoCore,
                 }
                 }
             );
+
+            // Conduct tests to see if withdrawls were successful
+            
             
         });
     })

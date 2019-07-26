@@ -114,12 +114,23 @@ echo "\n${YARN_STAGE_2}\n"
 echo "###############################################################################\n"
 echo "\n            START AND CLOSE END \n"
 
+echo "###############################################################################\n"
+echo "\n            MANUAL WITHDRAW: ./manualWithdrawTest.js \n"
+echo "###############################################################################\n"
+
+export EXECUTION_CLAIM="2"
+TRUFFLE_TEST_WITHDRAW=`truffle test ./test/manualWithdrawTest.js`
+echo "\n${TRUFFLE_TEST_WITHDRAW}\n"
+
+echo "###############################################################################\n"
+echo "\n            MANUAL WITHDRAW: ./manualWithdrawTest.js \n"
+echo "###############################################################################\n"
+
 
 echo "###############################################################################\n"
 echo "\n            RUN TRUFFL TEST SCRIPT 2 : test/executeTest.js \n"
 echo "###############################################################################\n"
 
-export EXECUTION_CLAIM="2"
 TRUFFLE_TEST_EXEC=`truffle test ./test/executeTest.js`
 echo "\n${TRUFFLE_TEST_EXEC}\n"
 
@@ -136,7 +147,7 @@ echo "\n            START AND CLOSE END \n"
 
 
 echo "###############################################################################\n"
-echo "\n            RUN TRUFFL TEST SCRIPT 2 : test/executeTest.js \n"
+echo "\n            RUN TRUFFL TEST SCRIPT 3 : test/executeTest.js \n"
 echo "###############################################################################\n"
 
 export EXECUTION_CLAIM="3"
