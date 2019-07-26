@@ -102,6 +102,8 @@ let {GelatoCore,
             }
             });
 
+            assert.exists(txReceipt, "Execute() tx did not go through")
+
             let blockNumber = txReceipt.blockNumber;
 
             // this.timeout(5000);

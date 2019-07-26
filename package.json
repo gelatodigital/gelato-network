@@ -73,6 +73,7 @@
     "exec1": "./gelato_tests/gelato_interface_tests/gelato_DX_tests/splitSellAndWithdraw/functional_tests/sh_functional_tests/execSubOrderAndWithdraw.sh",
     "start1": "./gelato_tests/gelato_interface_tests/gelato_DX_tests/sh_gelatoDX/startAuction.sh",
     "close1": "./gelato_tests/gelato_interface_tests/gelato_DX_tests/sh_gelatoDX/closeAuction1.sh",
+    "closeX": "./gelato_tests/gelato_interface_tests/gelato_DX_tests/sh_gelatoDX/closeAuction.sh",
     "stage2": "./gelato_tests/gelato_interface_tests/gelato_DX_tests/sh_gelatoDX/stageTwo.sh",
     "withdraw1": "tuffle exec gelato_tests/gelato_interface_tests/gelato_DX_tests/sh_gelatoDX/withdrawManually.js",
     "sb": "SELLER=0xC5fdf4076b8F3A5357c5E395ab970B5B54098Fef; yarn cli balances --account $SELLER",
