@@ -1,100 +1,40 @@
-// XX1. Write down the test scenario
-// XX2. List the order of calls we conduct within the execute function to the DutchX
-// XX3. Write down which values should be returned from each function call
-// XX4. Write a Mock dutchX contract which has the same function names specified in 2) which returns the values specified in 3) and which employs setter to set new values
-// XX5. Create a truffle test file which deploys a new instance of the gelatoDX interface with a new core and the mock contract instead of the dutchX
-// XX6. Create a bash script that endows the user before executing the new test file
-// XX7. Copy paste the tests which mint 3 execution claims
-// XX8. You maybe have to edit the min. 6 hour interval func in order to skip forward in time. Otherwise research how we can skip time in truffle. If that does not work, use execution times that lie within the past
-// XX9. Update the mockTestDxInterface script so that we successfully execute 1st claims
-// 10. Make execute test modular so that we can call it again
-
-
-/*
-
-    // 1. Test scenario using Mock contract of the Execute() func
-
-    TEST SCENARIO
-    - User wants to sell 10 WETH for RDN on the DutchX twice, with an interval span of 6 hours. The execution time of the first tx is now.
-    - The DutchX has a WETH-RDN auction currently running, with:
-        - Auction Index 10
-        - Auction Start time: now - 6 hours => Auction is running and started roughly 6h ago
-        - Current price: 1WETH == 100 RND => Num === 100 && Den === 1
-        - Current Fee: 0.2% => Num === 1 && Den === 500
-    #1 The 1st execution should pass without a problem. Gelatos balance should be deducted by the sell amount. The claim should be burned.
-    #2 Executing the second claim right after that should result in the execution time reverting
-    #3 Skip ahead in time so we and test if we are at the right block
-    #4 Change the DutchXMockContract values and test if they were correctly incremented
-    #5 Test if the second claim can be successfully executed. The Gelato balance should be deducted by the sell amount. The users balance should be updated by the withdraw amount. The claim should be burned
-    #6 Repeat #3 && ä4
-    #7 Execute third tx and check if the user balance was successfully incremented
-
-    // // 2 / 3. List the order of calls we conduct within the execute function to the DutchX
-
-    1. dutchExchange.getAuctionIndex(buyToken, sellToken) => 10
-    2. dutchExchange.getAuctionStart(sellToken, buyToken) => now - 6 hours
-    3. dutchExchange.getFeeRatio(address(this)) => num: 1, den: 500 => 1 / 500 == 0,002. 10 WETH / 500 => 0,02 WETH === Fee
-    4. dutchExchange.depositAndSell(_sellToken, _buyToken, _sellAmount) => true
-    5. dutchExchange.closingPrices(_sellToken, _buyToken, _lastAuctionIndex) => num: 1000 amount RDN, den: 10 amount WETH => 10WETH should => 1000 RND WETH/RDN === 100RDN
-    6. dutchExchange.claimAndWithdraw(_sellToken, _buyToken, address(this), _lastAuctionIndex,withdrawAmount) => true
-*/
-
-// 5. Truffle test file for the splitSellOrder
-
-// Import Contracts
-const GelatoCore = artifacts.require("GelatoCore");
-const gelatoDutchX = artifacts.require("GelatoDXSplitSellAndWithdraw");
-const mockExchange = artifacts.require("DutchXMock");
-const SellToken = artifacts.require("EtherToken");
-const BuyToken = artifacts.require("TokenRDN");
-const DutchExchangeProxy = artifacts.require("DutchExchangeProxy");
-const DutchExchange = artifacts.require("DutchExchange");
-
-// Helper functions
-const timeTravel = require("./helpers/timeTravel.js");
-
-// Global variables
-const MAXGAS = 400000;
-const BN = web3.utils.BN;
-const GELATO_GAS_PRICE_BN = new BN(web3.utils.toWei("5", "gwei"));
-
-// Split Sell Order Details
-const TOTAL_SELL_VOLUME = web3.utils.toWei("20", "ether"); // 20 WETH
-const NUM_SUBORDERS_BN = new BN("2");
-const SUBORDER_SIZE_BN = new BN(web3.utils.toWei("10", "ether")); // 10 WETH
-const INTERVAL_SPAN = "21600"; // 6 hours
-const GDXSSAW_MAXGAS_BN = new BN("400000"); // 400.000 must be benchmarked
-const GELATO_PREPAID_FEE_BN = GDXSSAW_MAXGAS_BN.mul(GELATO_GAS_PRICE_BN); // wei
-// MSG_VALUE_BN needs .add(1) in GDXSSAW due to offset of last withdrawal executionClaim
-const MSG_VALUE_BN = GELATO_PREPAID_FEE_BN.mul(NUM_SUBORDERS_BN.add(new BN(1))); // wei
-
-let dutchExchangeProxy;
-let dutchExchange;
-let seller;
-let accounts;
-let sellToken;
-let buyToken;
-let mockExchangeContract;
-let gelatoDutchXContract;
-let gelatoCore;
-let gelatoCoreOwner;
-let orderId;
-let orderState;
-let executionTime;
-let interfaceOrderId;
-// Fetch the claim Ids
-const executionClaimIds = [];
+let {GelatoCore,
+    GelatoDutchX,
+    mockExchange,
+    SellToken,
+    BuyToken,
+    DutchExchangeProxy,
+    DutchExchange,
+    timeTravel,
+    MAXGAS,
+    BN,
+    GELATO_GAS_PRICE_BN,
+    TOTAL_SELL_VOLUME,
+    NUM_SUBORDERS_BN,
+    SUBORDER_SIZE_BN,
+    INTERVAL_SPAN,
+    GDXSSAW_MAXGAS_BN,
+    GELATO_PREPAID_FEE_BN,
+    MSG_VALUE_BN,
+    dutchExchangeProxy,
+    dutchExchange,
+    seller,
+    accounts,
+    sellToken,
+    buyToken,
+    gelatoDutchXContract,
+    gelatoCore,
+    gelatoCoreOwner,
+    orderId,
+    orderState,
+    executionTime,
+    interfaceOrderId,
+    executionClaimIds} = require('./truffleTestConfig.js')
 
 describe("deploy new dxInterface Contract and fetch address", () => {
   // ******** Deploy new instances Test ********
   before(async () => {
-    mockExchangeContract = await mockExchange.new();
-    // gelatoDutchXContract = await gelatoDutchX.new(
-    //   GelatoCore.address,
-    //   mockExchangeContract.address
-    // );
-
-    gelatoDutchXContract = await gelatoDutchX.deployed()
+    gelatoDutchXContract = await GelatoDutchX.deployed()
     dutchExchangeProxy = await DutchExchangeProxy.deployed()
     dutchExchange = await DutchExchange.deployed()
     gelatoCore = await GelatoCore.deployed();
@@ -106,18 +46,6 @@ describe("deploy new dxInterface Contract and fetch address", () => {
 
   });
 
-  /*
-  // ******** MockConctract == DutchX in Interface ********
-  it("Check if the Mock Contract is indeed listed as the dutchX on the gelatoDxInterface", async () => {
-    assert.exists(mockExchangeContract.address);
-    assert.exists(gelatoDutchXContract.address);
-    let mockExchangeAddress;
-    await gelatoDutchXContract
-      .dutchExchange()
-      .then(response => (mockExchangeAddress = response));
-    assert.strictEqual(mockExchangeAddress, mockExchangeContract.address);
-  });
-  */
   it("seller is 0xC5fdf4076b8F3A5357c5E395ab970B5B54098Fef", async () => {
     assert.strictEqual(seller, "0xC5fdf4076b8F3A5357c5E395ab970B5B54098Fef");
   });
@@ -166,7 +94,7 @@ describe("deploy new dxInterface Contract and fetch address", () => {
   });
 
   // ******** seller calls splitSellOrder() ********
-  it(`splitSellOrder() works`, async () => {
+  it(`successfully create a new splitSellOrder`, async () => {
     // First get gelatoCore's balance pre executionClaim minting
     let gelatoCoreBalancePre = new BN(
       await web3.eth.getBalance(gelatoCore.address)
@@ -289,7 +217,7 @@ describe("deploy new dxInterface Contract and fetch address", () => {
     );
   });
 
-  it("Test if first execution claim is executable based on its execution Time", async () => {
+  it("Execution claim is executable based on its execution Time", async () => {
 
     let blockNumber = await web3.eth.getBlockNumber();
     let block = await web3.eth.getBlock(blockNumber);
@@ -336,12 +264,6 @@ describe("deploy new dxInterface Contract and fetch address", () => {
     // Fetch Order State to check lastAuction Index
     let orderState = await gelatoDutchXContract.contract.methods.orderStates(interfaceOrderId).call()
 
-    // console.log(orderState)
-
-    console.log(`Claim successfully executed
-
-    `)
-
     let gelatoDxBalanceAfter = await sellToken.balanceOf(gelatoDutchXContract.address);
     let dutchExchangeBalanceAfter = await sellToken.balanceOf(dutchExchangeProxy.address);
 
@@ -355,8 +277,6 @@ describe("deploy new dxInterface Contract and fetch address", () => {
 
     assert.isTrue(gelatoDXGotFunds, `gelatoDX Interface should be less ${SUBORDER_SIZE_BN.toString()}`)
 
-    console.log("First Tets pass")
-
     // get executeTxReceipt with executeTx hash
     let txReceipt = await web3.eth.getTransactionReceipt(executeTxHash, (error, result) => {
       if (error) {
@@ -365,63 +285,56 @@ describe("deploy new dxInterface Contract and fetch address", () => {
     });
 
     let blockNumber = txReceipt.blockNumber;
+
     // this.timeout(5000);
 
-    // console.log(`Before gelatoDX Balance: ${gelatoDxBalance1.toString()}`)
-    // console.log(`Before gelatoDX Balance: ${dutchExchangeBalance1.toString()}`)
+    try {
+      await gelatoCore.getPastEvents(
+        "LogClaimExecutedAndDeleted",
+        (error, events) => {
+          if (error) {
+            console.error("errored during gelatoCore.getPastEvent()");
+          } else {
+            let event = events[0]
+            // Make sure event were emitted
+            assert.exists(event, "LogClaimExecutedAndDeleted _event do not exist");
+            // Event data checks
+            assert.strictEqual(event.event, "LogClaimExecutedAndDeleted");
+            assert.strictEqual(
+              event.blockNumber,
+              blockNumber,
+              "LogClaimExecutedAndDeleted blocknumber problem"
+            );
+            assert.strictEqual(
+              event.returnValues.dappInterface,
+              gelatoDutchXContract.address,
+              "LogClaimExecutedAndDeleted dappInterface problem"
+            );
+            assert.strictEqual(
+              event.returnValues.executor,
+              gelatoCoreOwner,
+              "LogClaimExecutedAndDeleted executor problem"
+            );
+            assert.strictEqual(
+              event.returnValues.gelatoCorePayable,
+              GELATO_PREPAID_FEE_BN.toString(),
+              "LogClaimExecutedAndDeleted gelatoCorePayable problem"
+            );
 
-    // console.log(`After gelatoDX Balance: ${gelatoDxBalance.toString()}`)
-    // console.log(`After gelatoDX Balance: ${dutchExchangeBalance.toString()}`)
-
-    let _event;
-    await gelatoCore.getPastEvents(
-      "LogClaimExecutedBurnedAndDeleted",
-      (error, events) => {
-        if (error) {
-          console.error("errored during gelatoCore.getPastEvent()");
-        } else {
-          // Event data checks
-          assert.strictEqual(events.event, "LogClaimExecutedBurnedAndDeleted");
-          assert.strictEqual(
-            events.blockNumber,
-            blockNumber,
-            "LogClaimExecutedBurnedAndDeleted blocknumber problem"
-          );
-          assert.strictEqual(
-            events.returnValues.dappInterface,
-            gelatoDutchXContract.address,
-            "LogClaimExecutedBurnedAndDeleted dappInterface problem"
-          );
-          assert.strictEqual(
-            events.returnValues.executor,
-            gelatoCoreOwner,
-            "LogClaimExecutedBurnedAndDeleted executor problem"
-          );
-          assert.strictEqual(
-            events.returnValues.executionClaimOwner,
-            seller,
-            "LogClaimExecutedBurnedAndDeleted executionClaimOwner problem"
-          );
-          assert.strictEqual(
-            events.returnValues.gelatoCorePayable,
-            GDX_PREPAID_FEE_BN.toString(),
-            "LogClaimExecutedBurnedAndDeleted gelatoCorePayable problem"
-          );
-
-          // Log the event return values
-          console.log(
-            "\n\tLogClaimExecutedBurnedAndDeleted Event Return Values:\n\t",
-            events.returnValues,
-            "\n"
-          );
-          // Hold on to event for next assert.ok
-          _event = events;
+            // Log the event return values
+            console.log(
+              "\n\LogClaimExecutedAndDeleted Event Return Values:\n\t",
+              event.returnValues,
+              "\n"
+            );
+          }
         }
-      }
-    );
-    // Make sure event were emitted
-    assert.exists(_event, "LogClaimExecutedBurnedAndDeleted _event do not exist");
-    // #########
+      );
+      // #########
+    } catch(err) {
+      console.log(error)
+    }
 
   });
 });
+
