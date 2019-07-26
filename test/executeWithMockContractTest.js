@@ -6,10 +6,9 @@
 // XX6. Create a bash script that endows the user before executing the new test file
 // XX7. Copy paste the tests which mint 3 execution claims
 // XX8. You maybe have to edit the min. 6 hour interval func in order to skip forward in time. Otherwise research how we can skip time in truffle. If that does not work, use execution times that lie within the past
-// 9. Update the mockTestDxInterface script so that we successfully execute 1st claims
-// 9. Update the mockTestDxInterface script so that we successfully execute 2nd claims
-// 9. Implement the test specified in 1.
-// 10. Implement the test which should result in a revert, such as selling in an auction twice.
+// XX9. Update the mockTestDxInterface script so that we successfully execute 1st claims
+// 10. Make execute test modular so that we can call it again
+
 
 /*
 
@@ -255,10 +254,10 @@ describe("deploy new dxInterface Contract and fetch address", () => {
     blockNumber = txReceipt.blockNumber;
   });
 
-  it("query auction index", async () => {
-    let auctionIndex = await dutchExchange.getAuctionIndex(sellToken.address, buyToken.address)
-    console.log(auctionIndex.toString());
-  })
+  // it("query auction index", async () => {
+  //   let auctionIndex = await dutchExchange.getAuctionIndex(sellToken.address, buyToken.address)
+  //   console.log(auctionIndex.toString());
+  // })
 
   it("Successfully time travel 6 hours", async () => {
     // Second set the executiontime
@@ -312,8 +311,11 @@ describe("deploy new dxInterface Contract and fetch address", () => {
     let firstClaim = executionClaimIds[0]
     // Execute first claim
 
-    let gelatoDxBalance1 = await sellToken.balanceOf(gelatoDutchXContract.address);
-    let dutchExchangeBalance1 = await sellToken.balanceOf(dutchExchangeProxy.address);
+    let gelatoDxBalanceBefore = await sellToken.balanceOf(gelatoDutchXContract.address);
+    let dutchExchangeBalanceBefore = await sellToken.balanceOf(dutchExchangeProxy.address);
+
+    let gelatoDxBalanceBeforeBN = new BN(gelatoDxBalanceBefore.toString())
+    let dutchExchangeBalanceBeforeBN = new BN(dutchExchangeBalanceBefore.toString())
 
     function execute() {
       return new Promise(async (resolve, reject) => {
@@ -340,61 +342,86 @@ describe("deploy new dxInterface Contract and fetch address", () => {
 
     `)
 
-    let gelatoDxBalance = await sellToken.balanceOf(gelatoDutchXContract.address);
-    let dutchExchangeBalance = await sellToken.balanceOf(dutchExchangeProxy.address);
+    let gelatoDxBalanceAfter = await sellToken.balanceOf(gelatoDutchXContract.address);
+    let dutchExchangeBalanceAfter = await sellToken.balanceOf(dutchExchangeProxy.address);
 
+    let gelatoDxBalanceAfterBN = new BN(gelatoDxBalanceAfter.toString())
+    let dutchExchangeBalanceAfterBN = new BN(dutchExchangeBalanceAfter.toString())
 
+    let dutchExchangeGotFunds = dutchExchangeBalanceAfterBN.eq(dutchExchangeBalanceBeforeBN.add(SUBORDER_SIZE_BN))
+    let gelatoDXGotFunds = gelatoDxBalanceAfterBN.eq(gelatoDxBalanceBeforeBN.sub(SUBORDER_SIZE_BN))
+
+    assert.isTrue(dutchExchangeGotFunds, `DutchX was ${dutchExchangeBalanceBeforeBN.toString()}, received ${SUBORDER_SIZE_BN.toString()}, but is now ${dutchExchangeBalanceAfterBN.toString()}`)
+
+    assert.isTrue(gelatoDXGotFunds, `gelatoDX Interface should be less ${SUBORDER_SIZE_BN.toString()}`)
+
+    console.log("First Tets pass")
+
+    // get executeTxReceipt with executeTx hash
+    let txReceipt = await web3.eth.getTransactionReceipt(executeTxHash, (error, result) => {
+      if (error) {
+        console.error;
+      }
+    });
+
+    let blockNumber = txReceipt.blockNumber;
     // this.timeout(5000);
 
+    // console.log(`Before gelatoDX Balance: ${gelatoDxBalance1.toString()}`)
+    // console.log(`Before gelatoDX Balance: ${dutchExchangeBalance1.toString()}`)
 
+    // console.log(`After gelatoDX Balance: ${gelatoDxBalance.toString()}`)
+    // console.log(`After gelatoDX Balance: ${dutchExchangeBalance.toString()}`)
 
+    let _event;
+    await gelatoCore.getPastEvents(
+      "LogClaimExecutedBurnedAndDeleted",
+      (error, events) => {
+        if (error) {
+          console.error("errored during gelatoCore.getPastEvent()");
+        } else {
+          // Event data checks
+          assert.strictEqual(events.event, "LogClaimExecutedBurnedAndDeleted");
+          assert.strictEqual(
+            events.blockNumber,
+            blockNumber,
+            "LogClaimExecutedBurnedAndDeleted blocknumber problem"
+          );
+          assert.strictEqual(
+            events.returnValues.dappInterface,
+            gelatoDutchXContract.address,
+            "LogClaimExecutedBurnedAndDeleted dappInterface problem"
+          );
+          assert.strictEqual(
+            events.returnValues.executor,
+            gelatoCoreOwner,
+            "LogClaimExecutedBurnedAndDeleted executor problem"
+          );
+          assert.strictEqual(
+            events.returnValues.executionClaimOwner,
+            seller,
+            "LogClaimExecutedBurnedAndDeleted executionClaimOwner problem"
+          );
+          assert.strictEqual(
+            events.returnValues.gelatoCorePayable,
+            GDX_PREPAID_FEE_BN.toString(),
+            "LogClaimExecutedBurnedAndDeleted gelatoCorePayable problem"
+          );
 
-
-    console.log(`Before gelatoDX Balance: ${gelatoDxBalance1.toString()}`)
-    console.log(`Before gelatoDX Balance: ${dutchExchangeBalance1.toString()}`)
-
-
-    console.log(`After gelatoDX Balance: ${gelatoDxBalance.toString()}`)
-    console.log(`After gelatoDX Balance: ${dutchExchangeBalance.toString()}`)
-
-
+          // Log the event return values
+          console.log(
+            "\n\tLogClaimExecutedBurnedAndDeleted Event Return Values:\n\t",
+            events.returnValues,
+            "\n"
+          );
+          // Hold on to event for next assert.ok
+          _event = events;
+        }
+      }
+    );
+    // Make sure event were emitted
+    assert.exists(_event, "LogClaimExecutedBurnedAndDeleted _event do not exist");
     // #########
 
-    // let dappInterface;
-    // let executor;
-    // let executionClaimId;
-    // let executorPayout;
-
-    // gelatoCore.getPastEvents("LogClaimExecutedAndDeleted")
-    // .then(events => {
-    //     dappInterface = events.dappInterface;
-    //     executor = events.executor;
-    //     executionClaimId = events.executionCliaimId;
-    //     executorPayout = events.gelatoCorePayable;
-    // })
-
-    // assert.strictEqual(
-    //     dappInterface,
-    //     gelatoDutchXContract.address,
-    //     "Interface equal"
-    // )
-
-    // assert.strictEqual(
-    //     executor,
-    //     gelatoCoreOwner,
-    //     "Executor equal"
-    // )
-
-    // assert.strictEqual(
-    //     executionClaimId,
-    //     executionClaimIds[0],
-    //     "Execution Claim Id equal"
-    // )
-
-    // assert.strictEqual(
-    //     executorPayout,
-    //     GELATO_PREPAID_FEE_BN.toString(),
-    //     "Executor Payout equal"
-    // )
   });
 });
