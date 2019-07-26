@@ -23,11 +23,11 @@ const EXECUTION_CLAIM_ID = process.argv[4];
 // Global scope
 let accounts;
 const SELLER = "0xC5fdf4076b8F3A5357c5E395ab970B5B54098Fef"; // accounts[2]:
+let seller; // account[2]
 const EXECUTION_CLAIM_OWNER = SELLER;
 const EXECUTOR = "0x821aEa9a577a9b44299B9c15c88cf3087F3b5544"; // accounts[3]
-let seller; // account[2]
-
 let executor; // accounts[3]
+
 // Deployed contract instances
 // Gelato
 const GelatoCore = artifacts.require("GelatoCore");
@@ -238,13 +238,45 @@ module.exports = () => {
       `\n\t\tactual gasUsed:     ${parseInt(executeTxReceipt.gasUsed)}`
     );
 
+
+    // Check that executor's balance has gone up by prepaidExecutionFee
+    let executorBalancePost = new BN(await web3.eth.getBalance(executor));
+    console.log("Here");
+    /*console.log(
+      `\n\t\t Expected ExecutorBalancePost: ${executorBalancePre
+        .add(prepaidExecutionFee)
+        .sub(executeTxReceipt.gasUsed)}`
+    );
+    assert.strictEqual(
+      executorBalancePost.toString(),
+      executorBalancePre
+        .add(prepaidExecutionFee)
+        .sub(executeTxReceipt.gasUsed)
+        .toString()
+    );*/
+    console.log(
+      `\n\t\t EXECUTOR BALANCE ETH PRE:  ${web3.utils.fromWei(
+        executorBalancePre.toString(),
+        "ether"
+      )}\n`
+    );
+    console.log(
+      `\n\t\t EXECUTOR BALANCE ETH POST: ${web3.utils.fromWei(
+        executorBalancePost.toString(),
+        "ether"
+      )}\n`
+    );
+    // ********** EXECUTE CALL and EXECUTOR PAYOUT Checks END **********
+
+    
     // Save transactions blockNumber for next event emission test;
     blockNumber = executeTxReceipt.blockNumber;
+
 
     // ******** Event LogClaimExecutedBurnedAndDeleted on gelatoCore ********
     // Filter event emitted from gelatoCore
     let _event;
-    await gelatoCore.getPastevent(
+    await gelatoCore.getPastEvents(
       "LogClaimExecutedBurnedAndDeleted",
       (error, events) => {
         if (error) {
@@ -297,79 +329,6 @@ module.exports = () => {
     console.log("Polo");
     // ******** Event LogClaimExecutedBurnedAndDeleted on gelatoCore END ********
 
-    // Check that executor's balance has gone up by prepaidExecutionFee
-    let executorBalancePost = new BN(await web3.eth.getBalance(executor));
-    console.log("Here");
-    /*console.log(
-      `\n\t\t Expected ExecutorBalancePost: ${executorBalancePre
-        .add(prepaidExecutionFee)
-        .sub(executeTxReceipt.gasUsed)}`
-    );
-    assert.strictEqual(
-      executorBalancePost.toString(),
-      executorBalancePre
-        .add(prepaidExecutionFee)
-        .sub(executeTxReceipt.gasUsed)
-        .toString()
-    );*/
-    console.log(
-      `\n\t\t EXECUTOR BALANCE ETH PRE:  ${web3.utils.fromWei(
-        executorBalancePre.toString(),
-        "ether"
-      )}\n`
-    );
-    console.log(
-      `\n\t\t EXECUTOR BALANCE ETH POST: ${web3.utils.fromWei(
-        executorBalancePost.toString(),
-        "ether"
-      )}\n`
-    );
-    // ********** EXECUTE CALL and EXECUTOR PAYOUT Checks END **********
-
-    // ********** LogClaimExecutedAndDeleted Event Checks **********
-    // emitted event on GelatoCore: LogClaimExecutedAndDeleted(dappInterface, executor, executionClaimId, executorPayout)
-    assert.ok(executeTxReceipt.event.LogClaimExecutedAndDeleted);
-
-    // Log the event return values
-    console.log(
-      "\n\tLogClaimExecutedAndDeleted return values:\n\t",
-      executeTxReceipt.event.LogClaimExecutedAndDeleted.returnValues,
-      "\n"
-    );
-
-    // check if event has correct return values
-    assert.strictEqual(
-      executeTxReceipt.event.LogClaimExecutedAndDeleted.returnValues
-        .dappInterface,
-      gelatoDutchX.address
-    );
-    assert.strictEqual(
-      executeTxReceipt.event.LogClaimExecutedAndDeleted.returnValues.executor,
-      executor
-    );
-    assert.strictEqual(
-      executeTxReceipt.event.LogClaimExecutedAndDeleted.returnValues
-        .executionClaimId,
-      EXECUTION_CLAIM_ID
-    );
-    assert.strictEqual(
-      executeTxReceipt.event.LogClaimExecutedAndDeleted.returnValues
-        .gelatoCorePayable,
-      prepaidExecutionFee
-    );
-
-    // save the executedClaimId
-    executedClaimId =
-      executeTxReceipt.event.LogClaimExecutedAndDeleted.returnValues
-        .executionClaimId;
-
-    console.log(
-      `\n\t\t !!! We just executed executionClaimId: ${executedClaimId} !!! \n\n`
-    );
-
-    // ********** LogClaimExecutedAndDeleted Event Checks END **********
-
-    console.log("HEERE 3");
 
     // ******** Execution Claim burned check  ********
     // emitted event on GelatoCore via Claim base: Transfer(owner, address(0), tokenId)
