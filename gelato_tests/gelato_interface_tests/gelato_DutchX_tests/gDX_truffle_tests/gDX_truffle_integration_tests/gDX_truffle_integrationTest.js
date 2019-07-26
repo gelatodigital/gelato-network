@@ -9,7 +9,6 @@
 
 // IMPORT CONFIG VARIABLES
 const gdxConfig = require("./gDX_configs_truffle_integration_tests.js");
-console.log("gdxConfig:", gdxConfig);
 
 // BigNumber stuff
 const BN = web3.utils.BN;
@@ -729,6 +728,7 @@ describe("gelatoCore.execute() -> GELATO_DUTCHX.execute() -> burnExecutionClaim 
   it("skips to next execution time", async function() {
     this.timeout(50000);
     let output = await execShellCommand("yarn gdx-to-next-exec-time");
+    output = await execShellCommand("yarn gdx-state");
 
     assert.exists(output);
     console.log("\n\n", output, "\n\n");

@@ -6,57 +6,51 @@
  * -> GelatoCore.mintClaim()
  * -----------------------------------------------------
  *  */
+// IMPORT CONFIG VARIABLES
+const gdxConfig = require("./gDX_configs_truffle_integration_tests.js");
+console.log("gdxConfig:", gdxConfig);
+
+// BigNumber stuff
+const BN = web3.utils.BN;
+
 // ********** Truffle/web3 setup ********
 let accounts;
-const SELLER = "0xC5fdf4076b8F3A5357c5E395ab970B5B54098Fef"; // accounts[2]:
+const SELLER = gdxConfig.EXECUTION_CLAIM_OWNER; // accounts[2]:
 let seller; // account[2]
-const EXECUTION_CLAIM_OWNER = SELLER;
-const EXECUTOR = "0x821aEa9a577a9b44299B9c15c88cf3087F3b5544"; // accounts[3]
+const EXECUTION_CLAIM_OWNER = gdxConfig.EXECUTION_CLAIM_OWNER;
+const EXECUTOR = gdxConfig.EXECUTOR; // accounts[3]
 let executor; // accounts[3]
 
 // Deployed contract instances
 // Gelato
-const GelatoCore = artifacts.require("GelatoCore");
+const GelatoCore = artifacts.require(`${gdxConfig.GELATO_CORE}`);
 let gelatoCore;
 
-const GelatoDutchX = artifacts.require("GelatoDutchX");
+const GelatoDutchX = artifacts.require(`${gdxConfig.GELATO_INTERFACE}`);
 let gelatoDutchX;
 
 // DutchX
-const DutchExchange = artifacts.require("DutchExchange");
+const DutchExchange = artifacts.require(`${gdxConfig.DUTCHX}`);
 let dutchExchange;
 
-const SellToken = artifacts.require("EtherToken");
-const SELL_TOKEN = "0xAa588d3737B611baFD7bD713445b314BD453a5C8"; // WETH
+const SellToken = artifacts.require(`${gdxConfig.SELL_TOKEN}`);
 let sellToken;
 
-const BuyToken = artifacts.require("TokenRDN");
-const BUY_TOKEN = "0x8ACEe021a27779d8E98B9650722676B850b25E11"; // RDN
+const BuyToken = artifacts.require(`${gdxConfig.BUY_TOKEN}`);
 let buyToken;
 // ********** Truffle/web3 setup EN ********
 
-// Big Number stuff
-const BN = web3.utils.BN;
-
-// Gelato-Core specific
-// Constants
-// GELATO_GAS_PRICE:
-//  This is a state variable that got deployed with truffle migrate
-//  and was set inside 3_deploy_gelato.js. We should import this variable
-//  instead of hardcoding it.
-//  It should match the truffle.js specified DEFAULT_GAS_PRICE_GWEI = 5
-const GELATO_GAS_PRICE_BN = new BN(web3.utils.toWei("5", "gwei"));
-const GDX_MAXGAS_BN = new BN("400000"); // 400.000 must be benchmarked
-const GDX_PREPAID_FEE_BN = GDX_MAXGAS_BN.mul(GELATO_GAS_PRICE_BN); // wei
-
 // GELATO_DUTCHX specific
-const TOTAL_SELL_VOLUME = web3.utils.toWei("20", "ether"); // 20 WETH
-const NUM_SUBORDERS_BN = new BN("2");
-const NUM_EXECUTIONCLAIMS_BN = new BN("3"); // NUM_SUBORDERS + lastWithdrawal
-const SUBORDER_SIZE_BN = new BN(web3.utils.toWei("10", "ether")); // 10 WETH
-const INTERVAL_SPAN = 21600; // 6 hours
-// PREPAYMENT_BN needs .add(1) in GELATO_DUTCHX due to offset of last withdrawal executionClaim
-const PREPAYMENT_BN = GDX_PREPAID_FEE_BN.mul(NUM_EXECUTIONCLAIMS_BN); // wei
+// MaxGas
+const GDX_MAXGAS_BN = gdxConfig.GDX_MAXGAS_BN;
+// PREPAID FEE per GDX execClaim and total PREPAYMENT
+const GDX_PREPAID_FEE_BN = gdxConfig.GDX_PREPAID_FEE_BN;
+const PREPAYMENT_BN = gdxConfig.PREPAYMENT_BN;
+const TOTAL_SELL_VOLUME = gdxConfig.TOTAL_SELL_VOLUME;
+const NUM_SUBORDERS_BN = gdxConfig.NUM_SUBORDERS_BN;
+const NUM_EXECUTIONCLAIMS_BN = gdxConfig.NUM_EXECUTIONCLAIMS_BN;
+const SUBORDER_SIZE_BN = gdxConfig.SUBORDER_SIZE_BN;
+const INTERVAL_SPAN = gdxConfig.INTERVAL_SPAN;
 
 // State shared across the unit tests
 // tx returned data
@@ -67,13 +61,6 @@ let blockNumber;
 let block; // e.g. getBlock(blockNumber).timstamp
 let timestamp;
 
-// To be set variables
-// Prior to GelatoCore.listInterface:
-let gelatoCoreOwner; // accounts[0]
-let gelatoDXOwner; // accounts[0]
-
-// Prior to GELATO_DUTCHX.splitSellOrder():
-let executionTime; // timestamp
 
 // Post GELATO_DUTCHX.splitSellOrder():
 let orderId;
@@ -84,6 +71,7 @@ let index = 0;
 // Pre GelatoCore.execute():
 
 // Post GelatoCore.execute():
+console.log(process.env.EXECUTION_CLAIM_ID);
 let executedClaimId;
 
 // Default test suite
@@ -125,27 +113,7 @@ describe("default test suite: correct deployed instances and owners", () => {
   });
   // ******** Default deployed instances tests END ********
 
-  // ******** Default ownership tests ********
-  it("has accounts[0] as owners of Core and Interface and accounts[1] is not owner", async () => {
-    gelatoCoreOwner = await gelatoCore.contract.methods.owner().call();
-    gelatoDXOwner = await gelatoDutchX.contract.methods.owner().call();
-
-    assert.strictEqual(gelatoCoreOwner, accounts[0]);
-    assert.strictEqual(gelatoDXOwner, accounts[0]);
-  });
-  // ******** Default ownership tests END ********
 });
-
-/* describe("Endowing seller with 20 WETH", function() {
-  this.timeout(30000);
-  it("endows seller with 20 WETH", async () => {
-    let output = await execShellCommand('yarn es');
-
-    assert.exists(output);
-    console.log("\n", output);
-  })
-})*/
-
 
 // ********************* EXECUTE *********************
 // Test suite to end-to-end test the EXECUTION of a GELATO_DUTCHX style claim
@@ -427,8 +395,9 @@ describe("gelatoCore.execute() -> GELATO_DUTCHX.execute() -> burnExecutionClaim 
   // ********************* SHELL SCRIPTS -> DUTCHX MANIPULATION *********************
   // DutchX Auction Time Logic
   it("skips to next execution time", async function() {
-    this.timeout(30000);
+    this.timeout(50000);
     let output = await execShellCommand("yarn gdx-to-next-exec-time");
+    output = await execShellCommand("yarn gdx-state");
 
     assert.exists(output);
     console.log("\n\n", output, "\n\n");
