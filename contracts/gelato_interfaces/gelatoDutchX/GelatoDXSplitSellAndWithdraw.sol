@@ -46,6 +46,8 @@ contract GelatoDXSplitSellAndWithdraw is IcedOut, Ownable, SafeTransfer {
                               uint256 withdrawAmount
     );
     event LogOrderCompletedAndDeleted(uint256 indexed orderId);
+
+    event LogWithdrawAmount(uint256 num, uint256 den, uint256 withdrawAmount);
     // **************************** Events END ******************************
 
 
@@ -483,7 +485,6 @@ contract GelatoDXSplitSellAndWithdraw is IcedOut, Ownable, SafeTransfer {
                                  uint256 _sellAmountAfterFee
     )
         public
-        view
         returns(uint256 withdrawAmount)
     {
         // Fetch numerator and denominator from dutchExchange
@@ -505,7 +506,10 @@ contract GelatoDXSplitSellAndWithdraw is IcedOut, Ownable, SafeTransfer {
             "withdrawManually: den != 0, Last auction did not clear thus far, you have to wait"
         );
 
+        emit LogWithdrawAmount(num, den, _sellAmountAfterFee.mul(num).div(den));
+
         withdrawAmount = _sellAmountAfterFee.mul(num).div(den);
+
     }
     // **************************** Helper functions END *********************************
 

@@ -5,6 +5,8 @@ const SellToken = artifacts.require("EtherToken");
 const BuyToken = artifacts.require("TokenRDN");
 const DutchExchangeProxy = artifacts.require("DutchExchangeProxy");
 const DutchExchange = artifacts.require("DutchExchange");
+const DxGetter = artifacts.require("DutchXGetter")
+
 // Helper functions
 const timeTravel = require("./helpers/timeTravel.js");
 const commandLine = require("./helpers/execShellCommand.js");
@@ -66,7 +68,7 @@ executeTestScript = async () => {
 
 // Execute last claim, withdraw
 
-// 
+//
 
 
 module.exports = {
@@ -102,5 +104,6 @@ module.exports = {
     executionClaimIds,
     MSG_VALUE_BN,
     commandLine,
-    executeTestScript
+    executeTestScript,
+    DxGetter
 };
