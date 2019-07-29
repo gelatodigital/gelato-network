@@ -15,19 +15,17 @@ const MAXGAS_UPDATE = 500000; // 500.000
 
 // Truffle Artifacts
 const GelatoCore = artifacts.require("GelatoCore");
-const GelatoDXSplitSellAndWithdraw = artifacts.require(
-  "GelatoDXSplitSellAndWithdraw"
-);
+const GelatoDutchX = artifacts.require("GelatoDutchX");
 
 // State shared across the unit tests
-const gelatoInterfaceAddress = GelatoDXSplitSellAndWithdraw.address;
+const gelatoInterfaceAddress = GelatoDutchX.address;
 
 // Deployed contract instances
 let gelatoCore;
-let gelatoInterface;
+let gelatoDutchX;
 // Deployed instances owners
 let gelatoCoreOwner;
-let gelatoInterfaceOwner;
+let gelatoDutchXOwner;
 // Account used for non-ownership prevention tests
 let notOwner;
 
@@ -38,30 +36,25 @@ contract(
     // suite root-level pre-hook: set the test suite variables to be shared among all tests
     before(async () => {
       gelatoCore = await GelatoCore.deployed();
-      gelatoInterface = await GelatoDXSplitSellAndWithdraw.deployed();
+      gelatoDutchX = await GelatoDutchX.deployed();
     });
 
     // ******** Default deployed instances tests ********
     it("retrieves deployed GelatoCore and GelatoInterface instances", async () => {
       assert.exists(gelatoCore.address);
-      assert.exists(gelatoInterface.address);
+      assert.exists(gelatoDutchX.address);
       assert.equal(gelatoCore.address, GelatoCore.address);
-      assert.equal(
-        gelatoInterface.address,
-        GelatoDXSplitSellAndWithdraw.address
-      );
+      assert.equal(gelatoDutchX.address, GelatoDutchX.address);
     });
     // ******** Default deployed instances tests END ********
 
     // ******** Default ownership tests ********
     it("has accounts[0] as owners of GelatoCore and GelatoInterface and accounts[1] is not owner", async () => {
       gelatoCoreOwner = await gelatoCore.contract.methods.owner().call();
-      gelatoInterfaceOwner = await gelatoInterface.contract.methods
-        .owner()
-        .call();
+      gelatoDutchXOwner = await gelatoDutchX.contract.methods.owner().call();
 
       assert.equal(gelatoCoreOwner, accounts[0]);
-      assert.equal(gelatoInterfaceOwner, accounts[0]);
+      assert.equal(gelatoDutchXOwner, accounts[0]);
 
       assert.notEqual(
         gelatoCoreOwner,
@@ -69,9 +62,9 @@ contract(
         "accounts[1] was expected not to be gelatoCoreOwner"
       );
       assert.notEqual(
-        gelatoInterfaceOwner,
+        gelatoDutchXOwner,
         accounts[1],
-        "accounts[1] was not expected to be gelatoInterfaceOwner"
+        "accounts[1] was not expected to be gelatoDutchXOwner"
       );
 
       notOwner = accounts[1];
@@ -85,7 +78,7 @@ contract("GelatoCore.sol Core Updateability tests", async accounts => {
   // suite root-level pre-hook: set the test suite variables to be shared among all tests
   before(async () => {
     gelatoCore = await GelatoCore.deployed();
-    gelatoInterface = await GelatoDXSplitSellAndWithdraw.deployed();
+    gelatoDutchX = await GelatoDutchX.deployed();
   });
 
   // ******** updateGelatoGasPrice tests ********
@@ -117,7 +110,7 @@ contract("GelatoCore.sol Core Updateability tests", async accounts => {
   it("prevents not-Core-owners from updating gelatoGasPrice", async () => {
     try {
       await gelatoCore.contract.methods
-        .updateGelatoGasPrice(gelatoInterface.address)
+        .updateGelatoGasPrice(gelatoDutchX.address)
         .send({ from: notOwner });
       // let it fail if call was successfull
       assert.fail(
@@ -130,19 +123,19 @@ contract("GelatoCore.sol Core Updateability tests", async accounts => {
   // ******** updateGelatoGasPrice tests END ********
 
   // ******** (un)listInterface tests ********
-  it(`lets Core-owner list gelatoInterface on GelatoCore with its maxGas set
+  it(`lets Core-owner list gelatoDutchX on GelatoCore with its maxGas set
   Event LogNewInterfaceListed:
   expected indexed address:  ${gelatoInterfaceAddress}
   expected interface maxGas: ${MAXGAS}`, async () => {
     await gelatoCore.contract.methods
-      .listInterface(gelatoInterface.address, MAXGAS)
+      .listInterface(gelatoDutchX.address, MAXGAS)
       .send({ from: gelatoCoreOwner });
 
     let isWhitelisted = await gelatoCore.contract.methods
-      .getInterfaceWhitelist(gelatoInterface.address)
+      .getInterfaceWhitelist(gelatoDutchX.address)
       .call();
     let maxGas = await gelatoCore.contract.methods
-      .getInterfaceMaxGas(gelatoInterface.address)
+      .getInterfaceMaxGas(gelatoDutchX.address)
       .call(); // uint256
 
     assert.isTrue(isWhitelisted);
@@ -152,7 +145,7 @@ contract("GelatoCore.sol Core Updateability tests", async accounts => {
   it("prevents not-Core-owners from unlisting interfaces", async () => {
     try {
       await gelatoCore.contract.methods
-        .unlistInterface(gelatoInterface.address)
+        .unlistInterface(gelatoDutchX.address)
         .send({ from: notOwner });
       // let it fail if call was successfull
       assert.fail(
@@ -170,17 +163,17 @@ contract("GelatoCore.sol Core Updateability tests", async accounts => {
   expected newMaxGas:       ${MAXGAS_UPDATE}`, async () => {
     // assumptions need to hold true for feasibility
     let maxGasBefore = await gelatoCore.contract.methods
-      .getInterfaceMaxGas(gelatoInterface.address)
+      .getInterfaceMaxGas(gelatoDutchX.address)
       .call();
     assert.equal(maxGasBefore, MAXGAS);
     assert.notEqual(maxGasBefore, MAXGAS_UPDATE);
 
     await gelatoCore.contract.methods
-      .updateMaxGas(gelatoInterface.address, MAXGAS_UPDATE)
+      .updateMaxGas(gelatoDutchX.address, MAXGAS_UPDATE)
       .send({ from: gelatoCoreOwner });
 
     let maxGasAfter = await gelatoCore.contract.methods
-      .getInterfaceMaxGas(gelatoInterface.address)
+      .getInterfaceMaxGas(gelatoDutchX.address)
       .call();
 
     assert.equal(maxGasAfter, MAXGAS_UPDATE);
@@ -189,7 +182,7 @@ contract("GelatoCore.sol Core Updateability tests", async accounts => {
   it("prevents not-Core-owners from updating the maxGas of an interface", async () => {
     try {
       await gelatoCore.contract.methods
-        .updateMaxGas(gelatoInterface.address, MAXGAS_UPDATE)
+        .updateMaxGas(gelatoDutchX.address, MAXGAS_UPDATE)
         .send({ from: notOwner });
       // let it fail if call was successfull
       assert.fail(
@@ -206,14 +199,14 @@ contract("GelatoCore.sol Core Updateability tests", async accounts => {
   expected indexed address: ${gelatoInterfaceAddress}
   expected value noMaxGas:  0`, async () => {
     await gelatoCore.contract.methods
-      .unlistInterface(gelatoInterface.address)
+      .unlistInterface(gelatoDutchX.address)
       .send({ from: gelatoCoreOwner });
 
     isWhitelisted = await gelatoCore.contract.methods
-      .getInterfaceWhitelist(gelatoInterface.address)
+      .getInterfaceWhitelist(gelatoDutchX.address)
       .call();
     maxGas = await gelatoCore.contract.methods
-      .getInterfaceMaxGas(gelatoInterface.address)
+      .getInterfaceMaxGas(gelatoDutchX.address)
       .call(); // uint256
 
     assert.isFalse(isWhitelisted);
@@ -223,7 +216,7 @@ contract("GelatoCore.sol Core Updateability tests", async accounts => {
   it("prevents not-Core-owners from listing interfaces", async () => {
     try {
       await gelatoCore.contract.methods
-        .listInterface(gelatoInterface.address, MAXGAS)
+        .listInterface(gelatoDutchX.address, MAXGAS)
         .send({ from: notOwner });
       // let it fail if call was successfull
       assert.fail(
