@@ -81,7 +81,7 @@
     "is": "truffle test gelato_tests/gelato_interface_tests/gelato_DX_tests/splitSellAndWithdraw/automated_tests/integration_tests/integrationTest_gdxssaw.js",
     "ish": "./gelato_tests/gelato_interface_tests/gelato_DX_tests/splitSellAndWithdraw/automated_tests/integration_tests/integrationTest_gdxssaw.sh",
     "close-auction-1": "./gelato_tests/gelato_interface_tests/gelato_DX_tests/splitSellAndWithdraw/automated_tests/closingAuction1.sh",
-    "mockTest": "./gelato_tests/gelato_interface_tests/gelato_DX_tests/splitSellAndWithdraw/automated_tests/mockTestDxInterface.sh"
+    "withdrawExecute": "./gelato_tests/gelato_interface_tests/gelato_DX_tests/splitSellAndWithdraw/automated_tests/executeWithdrawTruffelTest.sh"
   },
   "repository": {
     "type": "git",

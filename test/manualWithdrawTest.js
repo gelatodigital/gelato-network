@@ -36,7 +36,7 @@ let {
 } = require("./truffleTestConfig.js");
 require("dotenv").config();
 
-describe("successfully executes claim", () => {
+describe("successfully execute a manual withdraw", () => {
   // ******** Deploy new instances Test ********
   before(async () => {
     gelatoDutchXContract = await GelatoDutchX.deployed();

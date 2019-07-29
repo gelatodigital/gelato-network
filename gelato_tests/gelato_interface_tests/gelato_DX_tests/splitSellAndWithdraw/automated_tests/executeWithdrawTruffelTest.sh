@@ -1,4 +1,5 @@
 #!/bin/sh
+# SCRIPT THAT TESTS CALLING EXECUTE, WITHDRAW, EXECUTE, EXECUTE
 export DEFAULT_ACCOUNT="0x627306090abab3a6e1400e9345bc60c78a8bef57"  # ganache accounts[0]
 export SELLER="0xC5fdf4076b8F3A5357c5E395ab970B5B54098Fef"  # ganache accounts[2]
 export SELL_AMOUNT="20"
@@ -8,7 +9,7 @@ export CLAIM_STATE_ID="1"
 
 
 echo "###############################################################################\n"
-echo "\n            MOCKTESTDXINTERFACE.sh: \n"
+echo "\n            executeWithdrawTruffelTest.sh: \n"
 echo "###############################################################################\n"
 
 echo "###############################################################################\n"
@@ -123,7 +124,7 @@ TRUFFLE_TEST_WITHDRAW=`truffle test ./test/manualWithdrawTest.js`
 echo "\n${TRUFFLE_TEST_WITHDRAW}\n"
 
 echo "###############################################################################\n"
-echo "\n            MANUAL WITHDRAW: ./manualWithdrawTest.js \n"
+echo "\n            MANUAL WITHDRAW: ./manualWithdrawTest.js END \n"
 echo "###############################################################################\n"
 
 
