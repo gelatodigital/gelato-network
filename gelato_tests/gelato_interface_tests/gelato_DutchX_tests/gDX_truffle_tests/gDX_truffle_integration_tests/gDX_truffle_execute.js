@@ -39,12 +39,12 @@ const SellToken = artifacts.require(`${gdxConfig.SELL_TOKEN}`);
 let sellToken;
 
 const BuyToken = artifacts.require(`${gdxConfig.BUY_TOKEN}`);
+const BUY_TOKEN = gdxConfig.BUY_TOKEN_STRING;
 let buyToken;
 // ********** Truffle/web3 setup EN ********
 
 // NETWORK VARIABLES
 const GAS_PRICE = gdxConfig.GAS_PRICE;
-
 
 // GELATO_DUTCHX specific
 // MaxGas
@@ -64,7 +64,6 @@ let timestamp;
 
 // Pre GelatoCore.execute():
 let interfaceOrderId;
-let orderState;
 
 // Post GelatoCore.execute():
 
@@ -138,9 +137,10 @@ describe("gelatoCore.execute() -> GELATO_DUTCHX.execute() -> burnExecutionClaim 
   });
   // ******** GelatoCore.execute() gasUsed estimates END ********
 
+
   // ******** Recursive end-to-end GelatoCore.execute() test suite ********
   it(`gelatoCore.execute(ID) results in correct executor payout`, async () => {
-    // ********** EXECUTE CALL and EXECUTOR PAYOUT Checks **********
+    // ********** EXECUTE and PAYOUT CHECKS **********
     // we fetch data from the executionClaim to be executed
     let {
       executionClaimOwner,
@@ -172,8 +172,14 @@ describe("gelatoCore.execute() -> GELATO_DUTCHX.execute() -> burnExecutionClaim 
     assert(parseInt(_executionTime) <= timestamp);
     assert.strictEqual(prepaidExecutionFee, GDX_PREPAID_FEE_BN.toString());
 
-    // get executor's balance pre executionClaim minting
-    let executorBalancePre = new BN(await web3.eth.getBalance(executor));
+    // Fetch Executor Before balance
+    let executorBalancePreExec = await web3.eth.getBalance(executor);
+    executorBalancePreExec = new BN(executorBalancePreExec);
+
+    // Fetch Seller Before ERC20 BUY_TOKEN balance
+    let buyTokenBalanceBefore = await buyToken.contract.methods
+      .balanceOf(seller)
+      .call();
 
     // executor calls gelatoCore.execute(executionClaimId)
     // benchmarked gasUsed =
@@ -201,58 +207,87 @@ describe("gelatoCore.execute() -> GELATO_DUTCHX.execute() -> burnExecutionClaim 
     });
 
     // Get gasUsed and GasCost
-    let gasUsed = txReceipt.gasUsed;
-    let executorGasCost = parseInt(gasUsed) * parseInt(GAS_PRICE);
+    const gasUsed = new BN(txReceipt.gasUsed.toString());
+    const gasPriceBN = new BN(GAS_PRICE);
+    let gasCost = gasUsed.mul(gasPriceBN);
+
 
     // Log actual gasUsed
-    console.log(`\n\t\tactual gasUsed:      ${parseInt(gasUsed)}`);
+    console.log(`\t\tactual gasUsed:      ${gasUsed}`);
     // Log MaxGas
-    console.log(`\t\tGDX MaxGas:          ${parseInt(GDX_MAXGAS_BN)}`);
+    console.log(`\t\tGDX MaxGas:          ${GDX_MAXGAS_BN}`);
 
     // Log the txHash
-    console.log(`\tExecute TxHash: ${txHash}\n`);
+    console.log(`\n\tExecute TxHash: ${txHash}\n`);
 
     // Check that executor's balance has gone up by prepaidExecutionFee
-    let executorBalancePost = new BN(await web3.eth.getBalance(executor));
+    let executorBalancePostExec = await web3.eth.getBalance(executor);
+    executorBalancePostExec = new BN(executorBalancePostExec);
+    const executorTradeBalance = executorBalancePostExec.sub(executorBalancePreExec);
 
-    /*console.log(
-      `\n\t\t Expected ExecutorBalancePost: ${executorBalancePre
-        .add(prepaidExecutionFee)
-        .sub(txReceipt.gasUsed)}`
-    );
-    assert.strictEqual(
-      executorBalancePost.toString(),
-      executorBalancePre
-        .add(prepaidExecutionFee)
-        .sub(txReceipt.gasUsed)
-        .toString()
-    );*/
+    console.log(`gasUsed:                    ${gasUsed}`);
+    console.log(`gasPrice:                   ${GAS_PRICE}`);
+
+    console.log(`gasCost:                    ${gasCost}`);
+    console.log(`gasCostFinney               ${web3.utils.fromWei(gasCost, "finney")} finney`);
+
+    console.log(`executorBalancePostExec:    ${executorBalancePostExec}`);
+    console.log(`executorBalancePostExec:    ${web3.utils.fromWei(executorBalancePostExec, "finney")} finney`);
+    console.log(`executorBalancePreExec:     ${web3.utils.fromWei(executorBalancePreExec, "finney")} finney`);
+
+
+
+    console.log(`executorTradeBalance:       ${executorTradeBalance}`);
+    console.log(`executorTradeBalanceFinney: ${web3.utils.fromWei(executorTradeBalance, "finney")} finney`);
+
+    // Executor Profit and Loss Statement
+    console.log(`
+                        Executor Account Info BEFORE subOrder execution:
+                        ------------------------------------------------
+        Executor Account:         ${executor}
+        Executor Account Balance | =======================|
+            BEFORE execution: > ${web3.utils.fromWei(executorBalancePreExec, "finney")} finney |
+                                 | =======================|
+                        Executor Account Info AFTER subOrder execution:
+                        -----------------------------------------------
+        Executor Account:         ${executor}
+        Executor Account Balance | ========================|
+            AFTER execution:  > ${web3.utils.fromWei(executorBalancePostExec, "finney")} finney |
+                                 | ========================|
+    ==================================================
+                        Executor Profit/Loss Statement:
+                        --------------------------------
+        Assumption: executor did not receive any ether from elsewhere since execution.
+        Executor reward
+        per sub order:                  +${web3.utils.fromWei(prepaidExecutionFee, "finney")} finney
+        Executor gas cost:               -${web3.utils.fromWei(gasCost, "finney")} finney
+        ------------------------------------------------------------------
+        Executor trade profit/deficit:    ${web3.utils.fromWei(executorTradeBalance, "finney")} finney
+                                        ------------------------------------
+    ==================================================
+    `);
+
+
+    // ********* SELLER WITHDRAWAL CHECKS ***********
+    // Comparing the BUY_TOKEN Balance before and after
+    const buyTokenBalanceAfter = await buyTokenContract.balanceOf(seller);
+    const buyTokenBalanceBeforeBN = new BN(buyBalanceBefore)
+    const buyTokenBalanceAfterBN = new BN(buyTokenBalanceAfter)
+    // Calculate the difference before and after the exection
+    const buyTokenBalanceDifference = buyTokenBalanceAfterBN.sub(buyTokenBalanceBeforeBN);
 
     console.log(
-      `\n\t\t EXECUTOR BALANCE ETH PRE:  ${web3.utils.fromWei(
-        executorBalancePre.toString(),
-        "ether"
-      )} ETH`
+      `Sellers ${BUY_TOKEN} balance before:        ${buyTokenBalanceBefore / 10 ** 18}`
     );
     console.log(
-      `\t\t EXECUTOR GAS COST: \t\t\t ${web3.utils.fromWei(
-        executorGasCost.toString(),
-        "ether"
-      )} ETH`
+      `Sellers ${BUY_TOKEN} balance After:         ${buyTokenBalanceAfter / 10 ** 18}`
     );
     console.log(
-      `\t\t EXECUTOR PAYOUT: \t\t\t ${web3.utils.fromWei(
-        GDX_PREPAID_FEE_BN.toString(),
-        "ether"
-      )} ETH`
+      `Sellers ${BUY_TOKEN} balance Difference:    ${buyTokenBalanceDifference / 10 ** 18}`
     );
-    console.log(
-      `\t\t EXECUTOR BALANCE ETH POST: ${web3.utils.fromWei(
-        executorBalancePost.toString(),
-        "ether"
-      )} ETH \n`
-    );
-    // ********** EXECUTE CALL and EXECUTOR PAYOUT Checks END **********
+    // ********* SELLER WITHDRAWAL CHECKS END ***********
+
+    // ********** EXECUTE and PAYOUT CHECKS END **********
 
     // Save transactions blockNumber for next event emission test;
     blockNumber = txReceipt.blockNumber;
@@ -360,7 +395,7 @@ describe("gelatoCore.execute() -> GELATO_DUTCHX.execute() -> burnExecutionClaim 
   // ******** ERC721 Claim.sol burned check ********
   it(`gelatoCore.execute(ID) results in ERC721 burn on GelatoCore's Claim base contract`, async () => {
     try {
-      await GelatoCore.contract.methods.ownerOf(EXECUTIONCLAIM_ID).call();
+      await gelatoCore.contract.methods.ownerOf(EXECUTIONCLAIM_ID).call();
       // This test should fail
       assert.fail(
         "GelatoCore base contract (Claim.sol) bug: should not allow call to ownerOf with deleted executionClaimId"
@@ -374,32 +409,72 @@ describe("gelatoCore.execute() -> GELATO_DUTCHX.execute() -> burnExecutionClaim 
   // ******** Execution Claim struct deleted on Gelato Core  ********
   it(`gelatoCore.execute(ID) results in executionClaims(executionClaimId) struct deletion on GelatoCore`, async () => {
     try {
-      await GelatoCore.contract.methods
-        .getClaimInterface(EXECUTIONCLAIM_ID)
+      await gelatoCore.contract.methods
+        .getExecutionClaim(EXECUTIONCLAIM_ID)
         .call();
       // This test should fail
       assert.fail(
-        "GelatoCore bug: should not allow specific call deleted executionClaim struct"
+        "GelatoCore bug: should not allow call to deleted executionClaim struct"
       );
     } catch (err) {
-      console.log(`\n\t\tExecutionClaim with id ${EXECUTIONCLAIM_ID} deleted`);
       assert(err);
+      console.log(`\n\t\t ExecutionClaim with id ${EXECUTIONCLAIM_ID} deleted`);
     }
   });
   // ******** Execution Claim struct deleted on Gelato Core END ********
 
-  // make sure orderState was deleted on GelatoDutchX
-  /*it(`gelatoCore.execute(ID) results in orderStates(orderId) struct deletion on GelatoDutchX`, async () => {
-    orderState = await gelatoDutchX.contract.methods
-      .orderStates(orderId)
+  // ******** Order State struct deleted on Gelato Core with last execution ********
+  it(`the LAST gelatoCore.execute(ID) results in orderStates(orderId) struct deletion on GelatoDutchX`, async () => {
+    let orderState = await gelatoDutchX.contract.methods
+      .orderStates(interfaceOrderId)
       .call();
-    // check the orderState: should be zeroed out via solidity delete
-    assert.strictEqual(orderState.lastAuctionWasWaiting, "0");
-    assert.strictEqual(orderState.lastAuctionIndex, "0");
-    assert.strictEqual(orderState.remainingSubOrders, "0");
-    assert.strictEqual(orderState.lastSellAmountAfterFee, "0");
-    assert.strictEqual(orderState.remainingWithdrawals, "0");
-  });*/
+    // If 0 remainingWithdrawals -> orderState should have been deleted
+    if (!orderState.remainingWithdrawals) {
+      // Event LogOrderCompletedAndDeleted
+      let _event;
+      await gelatoDutchX.getPastEvents(
+        "LogOrderCompletedAndDeleted",
+        (error, events) => {
+          if (error) {
+            console.error(
+              "errored during gelatoDutchX.getPastEvent(LogOrderCompletedAndDeleted)"
+            );
+          } else {
+            // Event data checks
+            assert.strictEqual(events[0].event, "LogOrderCompletedAndDeleted");
+            assert.strictEqual(
+              events[0].blockNumber,
+              blockNumber,
+              "LogOrderCompletedAndDeleted blocknumber problem"
+            );
+            assert.strictEqual(
+              events[0].returnValues.orderId,
+              interfaceOrderId,
+              "LogOrderCompletedAndDeleted orderId problem"
+            );
+
+            // Log the event return values
+            console.log(
+              "\n\n\n\t\t LogOrderCompletedAndDeleted Event Return Values:\n",
+              events[0].returnValues,
+              "\n"
+            );
+            // Hold on to event for next assert.ok
+            _event = events[0];
+          }
+        }
+      );
+      // Make sure event were emitted
+      assert.exists(_event, "LogOrderCompletedAndDeleted _event do not exist");
+      console.log(
+        `\n\t\t OrderState struct with interfaceOrderId ${interfaceOrderId} deleted`
+      );
+    } else {
+      // Order State should always be non-zero unless deleted
+      assert(true);
+    }
+  });
+  // ******** Order State struct deleted on Gelato Core with last execution END ********
 }); // DESCRIBE BLOCK END
 
 // Helpers

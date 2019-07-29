@@ -39,8 +39,6 @@ let buyToken;
 // ********** Truffle/web3 setup EN ********
 
 // GELATO_DUTCHX specific
-// MaxGas
-const GDX_MAXGAS_BN = gdxConfig.GDX_MAXGAS_BN;
 // PREPAID FEE per GDX execClaim and total PREPAYMENT
 const GDX_PREPAID_FEE_BN = gdxConfig.GDX_PREPAID_FEE_BN;
 const PREPAYMENT_BN = gdxConfig.PREPAYMENT_BN;
@@ -60,10 +58,6 @@ let block; // e.g. getBlock(blockNumber).timstamp
 let timestamp;
 
 // To be set variables
-// Prior to GelatoCore.listInterface:
-let gelatoCoreOwner; // accounts[0]
-let gelatoDXOwner; // accounts[0]
-
 // Prior to GELATO_DUTCHX.splitSellOrder():
 let executionTime; // timestamp
 
@@ -71,10 +65,6 @@ let executionTime; // timestamp
 let orderId;
 let orderState;
 let executionClaimIds = [];
-
-// Pre GelatoCore.execute():
-
-// Post GelatoCore.execute():
 
 // Default test suite
 describe("default test suite: correct deployed instances and owners", () => {
@@ -112,51 +102,6 @@ describe("default test suite: correct deployed instances and owners", () => {
     assert.strictEqual(buyToken.address, BuyToken.address);
   });
   // ******** Default deployed instances tests END ********
-
-  // ******** Default ownership tests ********
-  it("has accounts[0] as owners of Core and Interface and accounts[1] is not owner", async () => {
-    gelatoCoreOwner = await gelatoCore.contract.methods.owner().call();
-    gelatoDXOwner = await gelatoDutchX.contract.methods.owner().call();
-
-    assert.strictEqual(gelatoCoreOwner, accounts[0]);
-    assert.strictEqual(gelatoDXOwner, accounts[0]);
-  });
-  // ******** Default ownership tests END ********
-});
-
-// Test suite to end-to-end test the creation of a GELATO_DUTCHX style claims
-describe("Listing GELATO_DUTCHX", () => {
-  // ******** list GELATO_DUTCHX interface on Gelato Core and set its maxGas ********
-  it(`lets Core-owner list gelatoDutchX on GelatoCore with its maxGas set`, async () => {
-    await gelatoCore.contract.methods
-      .listInterface(gelatoDutchX.address, GDX_MAXGAS_BN.toString())
-      .send({ from: gelatoCoreOwner })
-      .then(receipt => (txReceipt = receipt));
-
-    const isWhitelisted = await gelatoCore.contract.methods
-      .getInterfaceWhitelist(gelatoDutchX.address)
-      .call();
-    const maxGas = await gelatoCore.contract.methods
-      .getInterfaceMaxGas(gelatoDutchX.address)
-      .call(); // uint256
-
-    assert.isTrue(isWhitelisted);
-    assert.strictEqual(maxGas, GDX_MAXGAS_BN.toString());
-  });
-  // ******** list GELATO_DUTCHX interface on Gelato Core and set its maxGas END ********
-  // ******** Event on core LogNewInterfaceListed ********
-  it(`emits correct LogNewInterfaceLised(dappInterface, maxGas) on gelatoCore`, async () => {
-    assert.exists(txReceipt.events.LogNewInterfaceListed);
-    assert.strictEqual(
-      txReceipt.events.LogNewInterfaceListed.returnValues.dappInterface,
-      gelatoDutchX.address
-    );
-    assert.strictEqual(
-      txReceipt.events.LogNewInterfaceListed.returnValues.maxGas,
-      GDX_MAXGAS_BN.toString()
-    );
-  });
-  // ******** Event on core LogNewInterfaceListed END ********
 });
 
 // ******************** ENDOW SELLER ********************
@@ -331,6 +276,13 @@ describe("GELATO_DUTCHX.splitSellOrder() -> GelatoCore.mintClaim()", () => {
     // Log actual gasUsed
     console.log("\t\tactual gasUsed:     ", txReceipt.gasUsed);
 
+    // LogNewOrderCreated return values
+    console.log(
+      "\n\n\n\t\t LogNewOrderCreated Event Return Values:\n",
+      txReceipt.events.LogNewOrderCreated.returnValues,
+      "\n"
+    );
+
     // Save transactions blockNumber for next event emission test
     blockNumber = txReceipt.blockNumber;
   });
@@ -380,9 +332,16 @@ describe("GELATO_DUTCHX.splitSellOrder() -> GelatoCore.mintClaim()", () => {
             // Save the executionClaimIds
             executionClaimIds.push(event.returnValues.executionClaimId);
 
-            // Hold on to events for later assert.exists
-            _events = events;
-          }
+            // LogNewExecutionClaimMinted return values
+            console.log(
+              "\n\n\n\t\t LogNewExecutionClaimMinted Event Return Values:\n",
+              event.returnValues,
+              "\n"
+            );
+          } // END FOR LOOP
+
+          // Hold on to events for later assert.exists
+          _events = events;
         }
       }
     );

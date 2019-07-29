@@ -52,7 +52,7 @@
     "cli2-kovan": "ENV_PATH=env/kovan node tests/playground/cli/bot-cli.js",
     "cli2-debug": "DEBUG=* node tests/playground/cli/bot-cli.js",
     "data": "CACHE_ENABLED=false node tests/playground/cli/bot-cli.js --setup",
-    "rpc": "ganache-cli -d --mnemonic 'candy maple cake sugar pudding cream honey rich smooth crumble sweet treat' --defaultBalanceEther '500000000000'",
+    "rpc": "ganache-cli -d --mnemonic 'candy maple cake sugar pudding cream honey rich smooth crumble sweet treat' --defaultBalanceEther '100'",
     "truffle": "npx truffle",
     "migrate": "npx truffle migrate",
     "networks": "cd node_modules/@gnosis.pm/dx-contracts && npx truffle network",
@@ -85,8 +85,11 @@
     "gdx-lazy": "yarn setup && yarn gdx-to-first-exec-time && yarn gdx-exec 1",
     "gdx-truffle-mv-deploy": "mv migrations/2_DEV_migrate_dependencies.js migrations/3_deploy_gelato.js .",
     "gdx-truffle-mv-deploy-back": "mv 2_DEV_migrate_dependencies.js 3_deploy_gelato.js migrations",
-    "gdx-truffle-list-mint": "yarn gdx-truffle-mv-deploy; truffle test gelato_tests/gelato_interface_tests/gelato_DutchX_tests/gDX_truffle_tests/gDX_truffle_integration_tests/gDX_truffle_list_mint.js; yarn gdx-truffle-mv-deploy-back",
-    "gdx-truffle-execute": "yarn gdx-truffle-mv-deploy; truffle test gelato_tests/gelato_interface_tests/gelato_DutchX_tests/gDX_truffle_tests/gDX_truffle_integration_tests/gDX_truffle_execute.js; yarn gdx-truffle-mv-deploy-back"
+    "gdx-truffle-list": "yarn gdx-truffle-mv-deploy; truffle test gelato_tests/gelato_interface_tests/gelato_DutchX_tests/gDX_truffle_tests/gDX_truffle_integration_tests/gDX_truffle_list.js; yarn gdx-truffle-mv-deploy-back",
+    "gdx-truffle-mint": "yarn gdx-truffle-mv-deploy; truffle test gelato_tests/gelato_interface_tests/gelato_DutchX_tests/gDX_truffle_tests/gDX_truffle_integration_tests/gDX_truffle_mint.js; yarn gdx-truffle-mv-deploy-back",
+    "gdx-truffle-exec": "yarn gdx-truffle-mv-deploy; truffle test gelato_tests/gelato_interface_tests/gelato_DutchX_tests/gDX_truffle_tests/gDX_truffle_integration_tests/gDX_truffle_execute.js; yarn gdx-truffle-mv-deploy-back",
+    "gdx-truffle-integrationtest": "yarn gdx-truffle-list && yarn gdx-truffle-mint && yarn gdx-close-auction-1 && export ID=1 && yarn gdx-truffle-exec && yarn gdx-state",
+    "gdx-truffle-integrationtest-lazy": "yarn setup && yarn gdx-truffle-list && yarn gdx-truffle-mint && yarn gdx-close-auction-1 && export ID=1 && yarn gdx-truffle-exec && yarn gdx-state"
   },
   "repository": {
     "type": "git",
