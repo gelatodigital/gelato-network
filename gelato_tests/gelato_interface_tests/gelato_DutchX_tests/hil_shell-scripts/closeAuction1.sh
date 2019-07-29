@@ -9,9 +9,9 @@ echo "##########################################################################
 echo "\n            CLOSING AUCTION 1 SCRIPT \n"
 echo "###############################################################################\n"
 
-`yarn cli2 --time ${SKIP_TIME}`
-`yarn cli deposit ${BUY_AMOUNT} ${BUY_TOKEN}`
-`yarn cli buy ${BUY_AMOUNT} ${SELL_TOKEN}-${BUY_TOKEN}`
+echo `yarn cli2 --time ${SKIP_TIME}`
+echo `yarn cli deposit ${BUY_AMOUNT} ${BUY_TOKEN}`
+echo `yarn cli buy ${BUY_AMOUNT} ${SELL_TOKEN}-${BUY_TOKEN}`
 
 
 echo "###############################################################################\n"
