@@ -434,8 +434,7 @@ contract GelatoDutchX is IcedOut, Ownable, SafeTransfer {
     }
 
     // Deposit and sell on the dutchExchange
-    function _depositAndSell(address _seller,
-                             address _sellToken,
+    function _depositAndSell(address _sellToken,
                              address _buyToken,
                              uint256 _sellAmount
     )
