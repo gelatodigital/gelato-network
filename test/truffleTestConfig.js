@@ -1,6 +1,6 @@
 // Import Contracts
 const GelatoCore = artifacts.require("GelatoCore");
-const GelatoDutchX = artifacts.require("GelatoDXSplitSellAndWithdraw");
+const GelatoDutchX = artifacts.require("GelatoDutchX");
 const SellToken = artifacts.require("EtherToken");
 const BuyToken = artifacts.require("TokenRDN");
 const DutchExchangeProxy = artifacts.require("DutchExchangeProxy");
@@ -45,12 +45,6 @@ let interfaceOrderId;
 // Fetch the claim Ids
 const executionClaimIds = [];
 
-executeTestScript = async () => {
-    await commandLine.execShellCommand(`yarn setup`)
-    await commandLine.execShellCommand(`yarn close1`)
-    await commandLine.execShellCommand(`yarn close1`)
-    console.log("Command line over")
-}
 
 // Deployment script
 

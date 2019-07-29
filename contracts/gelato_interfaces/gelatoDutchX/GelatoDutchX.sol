@@ -11,7 +11,7 @@ import '../../base/SafeMath.sol';
 
 
 // Gelato IcedOut-compliant DutchX Interface for splitting sell orders and for automated withdrawals
-contract GelatoDXSplitSellAndWithdraw is IcedOut, Ownable, SafeTransfer {
+contract GelatoDutchX is IcedOut, Ownable, SafeTransfer {
     // Libraries
     using SafeMath for uint256;
     using Counters for Counters.Counter;
