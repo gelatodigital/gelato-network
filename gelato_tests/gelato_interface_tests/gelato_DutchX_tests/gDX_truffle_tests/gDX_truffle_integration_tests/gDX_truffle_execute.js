@@ -8,7 +8,9 @@
  *  */
 // IMPORT CONFIG VARIABLES
 const gdxConfig = require("./gDX_configs_truffle_integration_tests.js");
-console.log("gdxConfig:", gdxConfig);
+
+const EXECUTIONCLAIM_ID = process.env.ID;
+console.log("EXECUTIONCLAIM_ID: ", process.env.ID);
 
 // BigNumber stuff
 const BN = web3.utils.BN;
@@ -40,17 +42,16 @@ const BuyToken = artifacts.require(`${gdxConfig.BUY_TOKEN}`);
 let buyToken;
 // ********** Truffle/web3 setup EN ********
 
+// NETWORK VARIABLES
+const GAS_PRICE = gdxConfig.GAS_PRICE;
+
+
 // GELATO_DUTCHX specific
 // MaxGas
 const GDX_MAXGAS_BN = gdxConfig.GDX_MAXGAS_BN;
 // PREPAID FEE per GDX execClaim and total PREPAYMENT
 const GDX_PREPAID_FEE_BN = gdxConfig.GDX_PREPAID_FEE_BN;
-const PREPAYMENT_BN = gdxConfig.PREPAYMENT_BN;
-const TOTAL_SELL_VOLUME = gdxConfig.TOTAL_SELL_VOLUME;
-const NUM_SUBORDERS_BN = gdxConfig.NUM_SUBORDERS_BN;
-const NUM_EXECUTIONCLAIMS_BN = gdxConfig.NUM_EXECUTIONCLAIMS_BN;
 const SUBORDER_SIZE_BN = gdxConfig.SUBORDER_SIZE_BN;
-const INTERVAL_SPAN = gdxConfig.INTERVAL_SPAN;
 
 // State shared across the unit tests
 // tx returned data
@@ -61,18 +62,11 @@ let blockNumber;
 let block; // e.g. getBlock(blockNumber).timstamp
 let timestamp;
 
-
-// Post GELATO_DUTCHX.splitSellOrder():
-let orderId;
-let orderState;
-let executionClaimIds = [];
-let index = 0;
-
 // Pre GelatoCore.execute():
+let interfaceOrderId;
+let orderState;
 
 // Post GelatoCore.execute():
-console.log(process.env.EXECUTION_CLAIM_ID);
-let executedClaimId;
 
 // Default test suite
 describe("default test suite: correct deployed instances and owners", () => {
@@ -112,7 +106,6 @@ describe("default test suite: correct deployed instances and owners", () => {
     assert.strictEqual(buyToken.address, BuyToken.address);
   });
   // ******** Default deployed instances tests END ********
-
 });
 
 // ********************* EXECUTE *********************
@@ -121,18 +114,18 @@ describe("gelatoCore.execute() -> GELATO_DUTCHX.execute() -> burnExecutionClaim 
   // ******** GelatoCore.execute() gasUsed estimates ********
   it(`estimates GelatoCore.execute() gasUsed and logs gasLimit`, async () => {
     // Get and log estimated gasUsed by splitSellOrder fn
-    gelatoCore.contract.methods.execute(executionClaimIds[index]).estimateGas(
+    gelatoCore.contract.methods.execute(EXECUTIONCLAIM_ID).estimateGas(
       { from: executor, gas: 1000000 }, // gas needed to prevent out of gas error
       async (error, estimatedGasUsed) => {
         if (error) {
           console.error;
         } else {
           // Get and log gasLimit
-          await web3.eth.getBlock("latest", false, (error, block) => {
+          await web3.eth.getBlock("latest", false, (error, _block) => {
             if (error) {
               console.error;
             } else {
-              block = block;
+              block = _block;
             }
           });
           console.log(`\t\tgasLimit:           ${block.gasLimit}`);
@@ -146,21 +139,24 @@ describe("gelatoCore.execute() -> GELATO_DUTCHX.execute() -> burnExecutionClaim 
   // ******** GelatoCore.execute() gasUsed estimates END ********
 
   // ******** Recursive end-to-end GelatoCore.execute() test suite ********
-  it(`gelatoCore.execute(1) results in correct executor payout`, async () => {
+  it(`gelatoCore.execute(ID) results in correct executor payout`, async () => {
     // ********** EXECUTE CALL and EXECUTOR PAYOUT Checks **********
     // we fetch data from the executionClaim to be executed
     let {
       executionClaimOwner,
       dappInterface,
-      interfaceOrderId,
+      interfaceOrderId: _interfaceOrderId,
       sellToken: _sellToken,
       buyToken: _buyToken,
       sellAmount,
       executionTime: _executionTime,
       prepaidExecutionFee
     } = await gelatoCore.contract.methods
-      .getExecutionClaim(executionClaimIds[index])
+      .getExecutionClaim(EXECUTIONCLAIM_ID)
       .call();
+
+    // Save the interface Order Id
+    interfaceOrderId = _interfaceOrderId;
 
     // Fetch current timestamp
     blockNumber = await web3.eth.getBlockNumber();
@@ -170,7 +166,6 @@ describe("gelatoCore.execute() -> GELATO_DUTCHX.execute() -> burnExecutionClaim 
     // we check the fetched executionClaim data
     assert.strictEqual(executionClaimOwner, EXECUTION_CLAIM_OWNER);
     assert.strictEqual(dappInterface, gelatoDutchX.address);
-    assert.strictEqual(interfaceOrderId, orderId);
     assert.strictEqual(_sellToken, sellToken.address);
     assert.strictEqual(_buyToken, buyToken.address);
     assert.strictEqual(sellAmount, SUBORDER_SIZE_BN.toString());
@@ -185,7 +180,7 @@ describe("gelatoCore.execute() -> GELATO_DUTCHX.execute() -> burnExecutionClaim 
     function execute() {
       return new Promise(async (resolve, reject) => {
         await gelatoCore.contract.methods
-          .execute(executionClaimIds[index])
+          .execute(EXECUTIONCLAIM_ID)
           .send({ from: executor, gas: 1000000 }, (error, hash) => {
             if (error) {
               reject(error);
@@ -196,7 +191,6 @@ describe("gelatoCore.execute() -> GELATO_DUTCHX.execute() -> burnExecutionClaim 
     }
     // call execute() and get hash from callback
     txHash = await execute();
-
     // get txReceipt with executeTx hash
     txReceipt;
     await web3.eth.getTransactionReceipt(txHash, (error, result) => {
@@ -205,11 +199,17 @@ describe("gelatoCore.execute() -> GELATO_DUTCHX.execute() -> burnExecutionClaim 
       }
       txReceipt = result;
     });
+
+    // Get gasUsed and GasCost
+    let gasUsed = txReceipt.gasUsed;
+    let executorGasCost = parseInt(gasUsed) * parseInt(GAS_PRICE);
+
     // Log actual gasUsed
-    console.log(`\n\t\tactual gasUsed:     ${parseInt(txReceipt.gasUsed)}`);
-    console.log(
-      `\n\t\t EXECUTED EXECUTION_CLAIM_ID: ${executionClaimIds[index]}\n`
-    );
+    console.log(`\n\t\tactual gasUsed:      ${parseInt(gasUsed)}`);
+    // Log MaxGas
+    console.log(`\t\tGDX MaxGas:          ${parseInt(GDX_MAXGAS_BN)}`);
+
+    // Log the txHash
     console.log(`\tExecute TxHash: ${txHash}\n`);
 
     // Check that executor's balance has gone up by prepaidExecutionFee
@@ -232,16 +232,22 @@ describe("gelatoCore.execute() -> GELATO_DUTCHX.execute() -> burnExecutionClaim 
       `\n\t\t EXECUTOR BALANCE ETH PRE:  ${web3.utils.fromWei(
         executorBalancePre.toString(),
         "ether"
-      )} ETH\n`
+      )} ETH`
     );
     console.log(
-      `\n\t\t EXECUTOR PAYOUT: \t\t\t ${web3.utils.fromWei(
+      `\t\t EXECUTOR GAS COST: \t\t\t ${web3.utils.fromWei(
+        executorGasCost.toString(),
+        "ether"
+      )} ETH`
+    );
+    console.log(
+      `\t\t EXECUTOR PAYOUT: \t\t\t ${web3.utils.fromWei(
         GDX_PREPAID_FEE_BN.toString(),
         "ether"
-      )} ETH\n`
+      )} ETH`
     );
     console.log(
-      `\n\t\t EXECUTOR BALANCE ETH POST: ${web3.utils.fromWei(
+      `\t\t EXECUTOR BALANCE ETH POST: ${web3.utils.fromWei(
         executorBalancePost.toString(),
         "ether"
       )} ETH \n`
@@ -253,7 +259,7 @@ describe("gelatoCore.execute() -> GELATO_DUTCHX.execute() -> burnExecutionClaim 
   });
 
   // ******** Event LogClaimExecutedBurnedAndDeleted on gelatoCore ********
-  it(`gelatoCore.execute(1) results in correct LogClaimExecutedAndDeleted`, async () => {
+  it(`gelatoCore.execute(ID) results in correct LogClaimExecutedAndDeleted`, async () => {
     let _event;
     await gelatoCore.getPastEvents(
       "LogClaimExecutedBurnedAndDeleted",
@@ -296,7 +302,7 @@ describe("gelatoCore.execute() -> GELATO_DUTCHX.execute() -> burnExecutionClaim 
 
           // Log the event return values
           console.log(
-            "\n\tLogClaimExecutedBurnedAndDeleted Event Return Values:\n\t",
+            "\n\n\n\t\tLogClaimExecutedBurnedAndDeleted Event Return Values:\n",
             events[0].returnValues,
             "\n"
           );
@@ -314,7 +320,7 @@ describe("gelatoCore.execute() -> GELATO_DUTCHX.execute() -> burnExecutionClaim 
   // ******** Event LogClaimExecutedBurnedAndDeleted on gelatoCore END ********
 
   // ******** Event (Transfer) Execution Claim burned check  ********
-  it(`gelatoCore.execute(1) results in correct ExecutionClaim ERC721 burn Transfer event`, async () => {
+  it(`gelatoCore.execute(ID) results in correct ExecutionClaim ERC721 burn Transfer event`, async () => {
     // emitted event on GelatoCore via Claim base: Transfer(owner, address(0), tokenId)
     let _event;
     await gelatoCore.getPastEvents("Transfer", (error, events) => {
@@ -329,22 +335,16 @@ describe("gelatoCore.execute() -> GELATO_DUTCHX.execute() -> burnExecutionClaim 
           "Transfer blocknumber problem"
         );
         // check if event has correct return values
-        assert.strictEqual(
-          events[0].returnValues.from,
-          EXECUTION_CLAIM_OWNER
-        );
+        assert.strictEqual(events[0].returnValues.from, EXECUTION_CLAIM_OWNER);
         assert.strictEqual(
           events[0].returnValues.to,
           "0x0000000000000000000000000000000000000000"
         );
-        assert.strictEqual(
-          events[0].returnValues.tokenId,
-          executionClaimIds[index]
-        );
+        assert.strictEqual(events[0].returnValues.tokenId, EXECUTIONCLAIM_ID);
 
         // Log the event return values
         console.log(
-          "\nTransfer Event Return Values:\n\t",
+          "\n\n\n\t\tTransfer Event Return Values:\n",
           events[0].returnValues,
           "\n"
         );
@@ -358,11 +358,9 @@ describe("gelatoCore.execute() -> GELATO_DUTCHX.execute() -> burnExecutionClaim 
   // ******** Event (Transfer) Execution Claim burned check END ********
 
   // ******** ERC721 Claim.sol burned check ********
-  it(`gelatoCore.execute(1) results in ERC721 burn on GelatoCore's Claim base contract`, async () => {
+  it(`gelatoCore.execute(ID) results in ERC721 burn on GelatoCore's Claim base contract`, async () => {
     try {
-      await GelatoCore.contract.methods
-        .ownerOf(executionClaimIds[index])
-        .call();
+      await GelatoCore.contract.methods.ownerOf(EXECUTIONCLAIM_ID).call();
       // This test should fail
       assert.fail(
         "GelatoCore base contract (Claim.sol) bug: should not allow call to ownerOf with deleted executionClaimId"
@@ -374,39 +372,24 @@ describe("gelatoCore.execute() -> GELATO_DUTCHX.execute() -> burnExecutionClaim 
   // ******** ERC721 Claim.sol burned check END ********
 
   // ******** Execution Claim struct deleted on Gelato Core  ********
-  it(`gelatoCore.execute(1) results in executionClaims(executionClaimId) struct deletion on GelatoCore`, async () => {
+  it(`gelatoCore.execute(ID) results in executionClaims(executionClaimId) struct deletion on GelatoCore`, async () => {
     try {
       await GelatoCore.contract.methods
-        .getClaimInterface(executionClaimIds[index])
+        .getClaimInterface(EXECUTIONCLAIM_ID)
         .call();
       // This test should fail
       assert.fail(
         "GelatoCore bug: should not allow specific call deleted executionClaim struct"
       );
     } catch (err) {
-      console.log(
-        `ExecutionClaim with id ${executionClaimIds[index]} deleted`
-      );
+      console.log(`\n\t\tExecutionClaim with id ${EXECUTIONCLAIM_ID} deleted`);
       assert(err);
     }
   });
   // ******** Execution Claim struct deleted on Gelato Core END ********
 
-  // ********************* SHELL SCRIPTS -> DUTCHX MANIPULATION *********************
-  // DutchX Auction Time Logic
-  it("skips to next execution time", async function() {
-    this.timeout(50000);
-    let output = await execShellCommand("yarn gdx-to-next-exec-time");
-    output = await execShellCommand("yarn gdx-state");
-
-    assert.exists(output);
-    console.log("\n\n", output, "\n\n");
-  });
-  // ********************* SHELL SCRIPTS -> DUTCHX MANIPULATION END *********************
-
-
   // make sure orderState was deleted on GelatoDutchX
-  /*it(`gelatoCore.execute(1) results in orderStates(orderId) struct deletion on GelatoDutchX`, async () => {
+  /*it(`gelatoCore.execute(ID) results in orderStates(orderId) struct deletion on GelatoDutchX`, async () => {
     orderState = await gelatoDutchX.contract.methods
       .orderStates(orderId)
       .call();
@@ -417,8 +400,8 @@ describe("gelatoCore.execute() -> GELATO_DUTCHX.execute() -> burnExecutionClaim 
     assert.strictEqual(orderState.lastSellAmountAfterFee, "0");
     assert.strictEqual(orderState.remainingWithdrawals, "0");
   });*/
-
 }); // DESCRIBE BLOCK END
+
 // Helpers
 // Wrapper function to run shell scripts from inside node.js
 /**
@@ -438,6 +421,18 @@ function execShellCommand(cmd) {
   });
 }
 
+// Not used:
+// ********************* TO NEXT EXEC TIME *********************
+// DutchX Auction Time Logic
+/*it("skips to next execution time", async function() {
+    this.timeout(50000);
+    let output = await execShellCommand("yarn gdx-to-next-exec-time");
+    output = await execShellCommand("yarn gdx-state");
+
+    assert.exists(output);
+    console.log("\n\n", output, "\n\n");
+  });*/
+// ********************* TO NEXT EXEC TIM END *********************
 
 // Unexpected results
 // ********************* DUTCHX AUCTION STATE CHECKS *********************

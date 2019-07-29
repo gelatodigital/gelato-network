@@ -1,6 +1,9 @@
 // Big Numbers
 const BN = require('bignumber.js');
 
+// BLOCKCHAIN VARIABLES
+const GAS_PRICE = "5000000000"  // 5 gwei
+
 // Gelato general variables
 // Accounts
 const EXECUTION_CLAIM_OWNER = "0xC5fdf4076b8F3A5357c5E395ab970B5B54098Fef"; // accounts[2]:
@@ -18,9 +21,11 @@ const DUTCHX = "DutchExchange";
 const GDX_MAXGAS_BN = new BN("400000"); // 400.000 must be benchmarked
 const GDX_PREPAID_FEE_BN = GDX_MAXGAS_BN.mul(GELATO_GAS_PRICE_BN); // wei
 
-// Tokens and amounts for Gelato DutchX
+// Tokens and amounts for Gelato DutchX'
 const SELL_TOKEN = "EtherToken";
+const SELL_TOKEN_STRING = "WETH"
 const BUY_TOKEN = "TokenRDN";
+const BUY_TOKEN_STRING = "RDN";
 const TOTAL_SELL_VOLUME = "20000000000000000000"; // 20 WETH
 const NUM_SUBORDERS_BN = new BN("2");
 const NUM_EXECUTIONCLAIMS_BN = new BN("3"); // NUM_SUBORDERS + lastWithdrawal
@@ -31,6 +36,7 @@ const PREPAYMENT_BN = GDX_PREPAID_FEE_BN.mul(NUM_EXECUTIONCLAIMS_BN); // wei
 const INTERVAL_SPAN = 21600; // 6 hours
 
 module.exports = {
+  GAS_PRICE,
   EXECUTION_CLAIM_OWNER,
   EXECUTOR,
   GELATO_GAS_PRICE_BN,
@@ -41,7 +47,9 @@ module.exports = {
   GDX_PREPAID_FEE_BN,
   PREPAYMENT_BN,
   SELL_TOKEN,
+  SELL_TOKEN_STRING,
   BUY_TOKEN,
+  BUY_TOKEN_STRING,
   TOTAL_SELL_VOLUME,
   NUM_SUBORDERS_BN,
   NUM_EXECUTIONCLAIMS_BN,

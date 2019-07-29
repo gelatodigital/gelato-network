@@ -76,17 +76,17 @@
     "gdx-to-next-exec-time": "./gelato_tests/gelato_interface_tests/gelato_DutchX_tests/gDX_shell-scripts/gDX_toNextExecTime.sh",
     "gdx-seller-balance": "SELLER=0xC5fdf4076b8F3A5357c5E395ab970B5B54098Fef; yarn cli balances --account $SELLER",
     "gdx-executor-balance": "EXECUTOR=0x821aEa9a577a9b44299B9c15c88cf3087F3b5544; yarn cli balances --account $EXECUTOR",
-    "gdx-endow-seller": "export SELLER=0xC5fdf4076b8F3A5357c5E395ab970B5B54098Fef; ./gelato_tests/gelato_interface_tests/gelato_DutchX_tests/gDX_shell-scripts/gDX_endowSeller.sh",
+    "gdx-endow-seller": "./gelato_tests/gelato_interface_tests/gelato_DutchX_tests/gDX_shell-scripts/gDX_endowSeller.sh",
     "gdx-manual-withdraw": "tuffle exec gelato_tests/gelato_interface_tests/gelato_DutchX_tests/gDX_tests/gDX_functionalTests/gDX_withdrawManually.js",
     "gdx-splitsellorder": "truffle exec gelato_tests/gelato_interface_tests/gelato_DutchX_tests/gDX_tests/gDX_functionalTests/gDX_splitSellOrder.js",
     "gdx-splitsellorder-lazy": "export SELLER=0xC5fdf4076b8F3A5357c5E395ab970B5B54098Fef; yarn gdx-endow-seller && yarn gdx-splitsellorder",
     "gdx-list-splitsellorder-lazy": "export SELLER=0xC5fdf4076b8F3A5357c5E395ab970B5B54098Fef; yarn g-listinterface && yarn gdx-splitsellorder-lazy",
     "gdx-exec": "export EXECUTOR=0x821aEa9a577a9b44299B9c15c88cf3087F3b5544; truffle exec gelato_tests/gelato_core_tests/g_execute.js",
+    "gdx-lazy": "yarn setup && yarn gdx-to-first-exec-time && yarn gdx-exec 1",
     "gdx-truffle-mv-deploy": "mv migrations/2_DEV_migrate_dependencies.js migrations/3_deploy_gelato.js .",
     "gdx-truffle-mv-deploy-back": "mv 2_DEV_migrate_dependencies.js 3_deploy_gelato.js migrations",
-    "gdx-truffle-integrationtest": "yarn gdx-truffle-mv-deploy; truffle test gelato_tests/gelato_interface_tests/gelato_DutchX_tests/gDX_truffle_tests/gDX_truffle_integration_tests/gDX_truffle_integrationTest.js; yarn gdx-truffle-mv-deploy-back",
-    "gdx-truffle-integrationtest-lazy": "export SELLER=0xC5fdf4076b8F3A5357c5E395ab970B5B54098Fef; yarn gdx-endow-seller && yarn gdx-truffle-integrationtest",
-    "gdx-lazy": "yarn setup && yarn gdx-to-first-exec-time && yarn gdx-exec 1"
+    "gdx-truffle-list-mint": "yarn gdx-truffle-mv-deploy; truffle test gelato_tests/gelato_interface_tests/gelato_DutchX_tests/gDX_truffle_tests/gDX_truffle_integration_tests/gDX_truffle_list_mint.js; yarn gdx-truffle-mv-deploy-back",
+    "gdx-truffle-execute": "yarn gdx-truffle-mv-deploy; truffle test gelato_tests/gelato_interface_tests/gelato_DutchX_tests/gDX_truffle_tests/gDX_truffle_integration_tests/gDX_truffle_execute.js; yarn gdx-truffle-mv-deploy-back"
   },
   "repository": {
     "type": "git",
