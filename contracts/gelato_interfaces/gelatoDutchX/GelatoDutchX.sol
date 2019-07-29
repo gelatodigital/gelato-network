@@ -46,6 +46,8 @@ contract GelatoDutchX is IcedOut, Ownable, SafeTransfer {
                               uint256 withdrawAmount
     );
     event LogOrderCompletedAndDeleted(uint256 indexed orderId);
+
+    event LogWithdrawAmount(uint256 num, uint256 den, uint256 withdrawAmount);
     // **************************** Events END ******************************
 
 
@@ -143,7 +145,7 @@ contract GelatoDutchX is IcedOut, Ownable, SafeTransfer {
         );
 
 
-        // Step3: Instantiate new dutchExchange-specific sell order state
+        // Step4: Instantiate new dutchExchange-specific sell order state
         OrderState memory orderState = OrderState(
             false,  // default: lastAuctionWasWaiting
             0,  // default: lastAuctionIndex
@@ -153,14 +155,14 @@ contract GelatoDutchX is IcedOut, Ownable, SafeTransfer {
         );
 
 
-        // Step4: give OrderId: yields core protocol's parentOrderId
+        // Step5: give OrderId: yields core protocol's parentOrderId
         // Increment the current OrderId
         Counters.increment(_OrderIds);
         // Get a new, unique OrderId for the newly created Sell Order
         orderId = _OrderIds.current();
 
 
-        // Step5: Update GelatoDutchX state variables
+        // Step6: Update GelatoDutchX state variables
         orderStates[orderId] = orderState;
 
 
@@ -213,8 +215,21 @@ contract GelatoDutchX is IcedOut, Ownable, SafeTransfer {
         uint256 sellAmount = gelatoCore.getClaimSellAmount(_executionClaimId);
 
 
-        // ********************** Step3: Load variables from storage and initialise them **********************
-        // Step3:
+        // ********************** Step3: Basic Execution Logic **********************
+        /* Step3: Basic Execution Logic
+            * Handled by Gelato Core
+                * Require that order is ready to be executed based on time
+            * Handled by this Gelato Interface
+                * Require that this Gelato Interface has the ERC20 to be sold
+                   in its ERC20 balance.
+        */
+        // DEV: delete if stack too deep
+
+        // ********************** Step3: Basic Execution Logic END **********************
+
+
+        // ********************** Step4: Load variables from storage and initialise them **********************
+        // Step4:
         // the last DutchX auctionIndex at which the orderId participated in
         OrderState storage orderState = orderStates[orderId];
 
@@ -223,30 +238,20 @@ contract GelatoDutchX is IcedOut, Ownable, SafeTransfer {
         uint256 lastSellAmountAfterFee = orderState.lastSellAmountAfterFee;
         // How many executions are left
         uint256 remainingSubOrders = orderState.remainingSubOrders;
-        // ********************** Step3: Load variables from storage and initialise them END **********************
+        // ********************** Step4: Load variables from storage and initialise them END **********************
 
 
-        // ********************** Step4: Fetch data from dutchExchange **********************
+        // ********************** Step5: Fetch data from dutchExchange **********************
         uint256 newAuctionIndex = dutchExchange.getAuctionIndex(buyToken, sellToken);
         uint256 auctionStartTime = dutchExchange.getAuctionStart(sellToken, buyToken);
-        // ********************** Step4: Fetch data from dutchExchange END **********************
+        // ********************** Step5: Fetch data from dutchExchange END **********************
 
 
-        // ********************** Step5: Execution Logic **********************
+        // ********************** Step6: Advanced Execution Logic **********************
         // Only enter if there are remainingSubOrders to be executed
         if (remainingSubOrders >= 1) {
-            /* Basic Execution Logic
-                * Handled by Gelato Core
-                    * Require that order is ready to be executed based on time
-                * Handled by this Gelato Interface
-                    * Require that this Gelato Interface has the ERC20 to be sold
-                    in its ERC20 balance.
-            */
-            // DEV: delete if stack too deep
-            require(
-                ERC20(sellToken).balanceOf(address(this)) >= gelatoCore.getClaimSellAmount(_executionClaimId),
-                "GelatoInterface.execute: ERC20(sellToken).balanceOf(address(this)) !>= subOrderSize"
-            );
+            require(ERC20(sellToken).balanceOf(address(this)) >= gelatoCore.getClaimSellAmount(_executionClaimId),
+            "GelatoInterface.execute: ERC20(sellToken).balanceOf(address(this)) !>= subOrderSize");
 
             // Waiting Period variables needed to prevent double participation in DutchX auctions
             bool lastAuctionWasWaiting = orderState.lastAuctionWasWaiting;  // default: false
@@ -315,7 +320,7 @@ contract GelatoDutchX is IcedOut, Ownable, SafeTransfer {
                     // ### EFFECTS END ###
 
                     // INTERACTION: sell on dutchExchange
-                    _depositAndSell(sellToken, buyToken, sellAmount);
+                    _depositAndSell(seller, sellToken, buyToken, sellAmount);
                 }
                 /* Case3b: We sold during previous waiting period, our funds went into auction1, then
                 auction1 ran, then auction1 cleared and the auction index was incremented,
@@ -331,7 +336,7 @@ contract GelatoDutchX is IcedOut, Ownable, SafeTransfer {
                     // ### EFFECTS END ###
 
                     // INTERACTION: sell on dutchExchange
-                    _depositAndSell(sellToken, buyToken, sellAmount);
+                    _depositAndSell(seller, sellToken, buyToken, sellAmount);
                 }
                 /* Case3c: We sold during auction1, our funds went into auction2, then auction1 cleared
                 and the auction index was incremented, now we are NOT selling during the ensuing
@@ -361,17 +366,17 @@ contract GelatoDutchX is IcedOut, Ownable, SafeTransfer {
                 // ### EFFECTS END ###
 
                 // INTERACTION: sell on dutchExchange
-                _depositAndSell(sellToken, buyToken, sellAmount);
+                _depositAndSell(seller, sellToken, buyToken, sellAmount);
             }
             // Case 5: Unforeseen stuff
             else {
                 revert("Case5: Fatal Error: Case5 unforeseen");
             }
         }
-        // ********************** Step5: Advanced Execution Logic END **********************
+        // ********************** Step6: Advanced Execution Logic END **********************
 
 
-        // ********************** Step 6: Withdraw from DutchX **********************
+        // ********************** Step 7: Withdraw from DutchX **********************
         // Only enter after first sub-order sale
         // Only enter if last auction the seller participated in has cleared
         // Only enter if seller has not called withdrawManually
@@ -402,7 +407,7 @@ contract GelatoDutchX is IcedOut, Ownable, SafeTransfer {
                 emit LogOrderCompletedAndDeleted(orderId);
             }
         }
-        // ********************** Step 6: Withdraw from DutchX END **********************
+        // ********************** Step 7: Withdraw from DutchX END **********************
     }
     // **************************** IcedOut execute(executionClaimId) END *********************************
 
@@ -429,13 +434,14 @@ contract GelatoDutchX is IcedOut, Ownable, SafeTransfer {
     }
 
     // Deposit and sell on the dutchExchange
-    function _depositAndSell(address _sellToken,
+    function _depositAndSell(address _seller,
+                             address _sellToken,
                              address _buyToken,
                              uint256 _sellAmount
     )
         private
     {
-        // DEV: before selling, approve the dutchExchange to extract the ERC20 Token from this contract
+        // Approve DutchX to transfer the funds from gelatoInterface
         ERC20(_sellToken).approve(address(dutchExchange), _sellAmount);
 
         // DEV deposit and sell on the dutchExchange
@@ -479,7 +485,6 @@ contract GelatoDutchX is IcedOut, Ownable, SafeTransfer {
                                  uint256 _sellAmountAfterFee
     )
         public
-        view
         returns(uint256 withdrawAmount)
     {
         // Fetch numerator and denominator from dutchExchange
@@ -487,7 +492,8 @@ contract GelatoDutchX is IcedOut, Ownable, SafeTransfer {
         uint256 den;
 
         // FETCH PRICE OF CLEARED ORDER WITH INDEX lastAuctionIndex
-        // Ex: num = 1, den = 250
+        // num: buyVolumeOpp || den: sellVolumeOpp
+        // Ex: num = 1000, den = 10 => 1WETH === 100RDN
         (num, den) = dutchExchange.closingPrices(_sellToken,
                                                  _buyToken,
                                                  _lastAuctionIndex
@@ -500,7 +506,10 @@ contract GelatoDutchX is IcedOut, Ownable, SafeTransfer {
             "withdrawManually: den != 0, Last auction did not clear thus far, you have to wait"
         );
 
+        emit LogWithdrawAmount(num, den, _sellAmountAfterFee.mul(num).div(den));
+
         withdrawAmount = _sellAmountAfterFee.mul(num).div(den);
+
     }
     // **************************** Helper functions END *********************************
 
