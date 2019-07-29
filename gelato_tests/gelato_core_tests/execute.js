@@ -121,10 +121,8 @@ module.exports = () => {
                     *** sub order executed ***
                     😎 😎 GREAT SUCCESS! 😎 😎
         ==================================================
-
                     executeSubOrder TX Receipt
                     -------------------------
-
         `);
 
         console.log(`
@@ -172,16 +170,13 @@ module.exports = () => {
             Executor Account Balance | =======================|
                 BEFORE execution: > ${web3.utils.fromWei(executorBalancePreExec, "finney")} finney |
                                      | =======================|
-
                             Executor Account Info AFTER subOrder execution:
                             -----------------------------------------------
             Executor Account:         ${executor}
             Executor Account Balance | ========================|
                 AFTER execution:  > ${web3.utils.fromWei(executorBalancePostExec, "finney")} finney |
                                      | ========================|
-
         ==================================================
-
                             Executor Profit/Loss Statement:
                             --------------------------------
             Assumption: executor did not receive any ether from elsewhere since execution.
@@ -241,14 +236,11 @@ module.exports = () => {
             let wasWithdrawAmountCorrectlyCalculated = calculatedWithdrawAmountBN.eq(withdrawAmountBN)
 
             console.log(`
-
         ==================================================
-
             Seller ${BUY_TOKEN} balance comparison (before vs. after execution):
             (Checking the Withdraw logic)
             ------------------------------------------------
             Seller Account:        ${seller}
-
             BEFORE execution:    > ${web3.utils.fromWei(buyBalanceBefore, "ether")} RDN |
                                     | =======================|
             After execution:     > ${web3.utils.fromWei(buyBalanceAfter, "ether")} RDN |
@@ -257,25 +249,17 @@ module.exports = () => {
                                     | =======================|
                                     | =======================|
                                     | =======================|
-
             We just withdrew some ${BUY_TOKEN}!
-
             Did we withdraw the correct amount based on actual SubOrder Size * DutchX Price of previous auction?
             ------------------------------------------------
-
             Amount withdrawn: (web3)            > ${web3.utils.fromWei(withdrawAmount, "ether")} RDN |
                                 | =======================|
             What should be withdrawn (BN test)  > ${web3.utils.fromWei(calculatedWithdrawAmount, "ether")} RDN |
                                 | =======================|
             Both amounts are identical:           ${wasWithdrawAmountCorrectlyCalculated}
-
-
             #####################################
-
             Sell Order completed!  ✅ ✅ ✅
-
             #####################################
-
             `);
 
         // After each execution except the last one where we only withdraw, get the actual withdraw amount
@@ -296,12 +280,10 @@ module.exports = () => {
 
             console.log(`
         ==================================================
-
                 Seller BUY_TOKEN balance comparison (before vs. after execution):
                 (Checking the Withdraw logic)
                 ------------------------------------------------
                 Seller Account:        ${seller}
-
                 BEFORE execution:    > ${web3.utils.fromWei(buyBalanceBefore, "ether")} RDN |
                                         | =======================|
                 After execution:     > ${web3.utils.fromWei(buyBalanceAfter, "ether")} RDN |
@@ -310,10 +292,8 @@ module.exports = () => {
                                         | =======================|
                                         | =======================|
                                         | =======================|
-
                 Show the acutal Sub Order amount that was sold on the DutchX (minus DutchX fee):
                 ------------------------------------------------
-
                 Initial SubOrderSize:   > ${web3.utils.fromWei(oldSubOrderAmount, "ether")} WETH |
                                     | =======================|
                 Actual SubOrderSize:    > ${web3.utils.fromWei(actualSubOrderAmount, "ether")} WETH |
@@ -322,10 +302,8 @@ module.exports = () => {
                                     | =======================|
                                     | =======================|
                                     | =======================|
-
                 Check if fee got calculated correctly in SC:
                 ------------------------------------------------
-
                 Calculated fee (web3)    > ${web3.utils.fromWei(calculatedFee, "ether")} WETH |
                                         | =======================|
                 Fetched fee:             > ${web3.utils.fromWei(fee, "ether")} WETH |
@@ -354,20 +332,15 @@ module.exports = () => {
                 let wasWithdrawAmountCorrectlyCalculated = calculatedWithdrawAmountBN.eq(withdrawAmountBN)
 
                 console.log(`
-
         ==================================================
-
                 We just withdrew some RND!
-
                 Did we withdraw the correct amount based on actual SubOrder Size * DutchX Price of previous auction?
                 ------------------------------------------------
-
                 Amount withdrawn: (web3)            > ${web3.utils.fromWei(withdrawAmount, "ether")} RDN |
                                     | =======================|
                 What should be withdrawn (BN test)  > ${web3.utils.fromWei(calculatedWithdrawAmount, "ether")} RDN |
                                     | =======================|
                 Both amounts are identical:           ${wasWithdrawAmountCorrectlyCalculated}
-
                 `);
             }
 
@@ -376,11 +349,8 @@ module.exports = () => {
         // ############## Withdraw variables END ##############
 
         return (`
-
         ==================================================
-
             ExecuteSubOrder was successful!
-
             Sub Order Executions left: ${sellOrder2.remainingSubOrders}
             Withdraws left: ${sellOrder2.remainingWithdrawals}
         `)

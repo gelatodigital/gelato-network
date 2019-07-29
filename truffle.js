@@ -1,4 +1,4 @@
-const truffleConfig = require('@gnosis.pm/util-contracts/src/util/truffleConfig')
+const truffleConfig = require('./truffleConfig.js')
 
 const DEFAULT_GAS_PRICE_GWEI = 5
 const GAS_LIMIT = 6.5e6
@@ -41,3 +41,11 @@ module.exports = truffleConfig({
   solcUseDocker,
   solcVersion
 })
+
+// networks: {
+//   test: {
+//     host: 'localhost',
+//     port: 8545,
+//     network_id: 777 // Match any network id
+//   }
+// }

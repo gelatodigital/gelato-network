@@ -1,12 +1,12 @@
 const Gelato = artifacts.require('Gelato');
-const BN = require('bignumber.js');
+const BN = require('./node_modules/bignumber.js');
 
 // const EtherToken = contract(require('@gnosis.pm/util-contracts/build/contracts/EtherToken'))
 
 module.exports = async () => {
 
     const gelato = await Gelato.at(Gelato.address)
-    const subOrderAmount = web3.utils.toWei("1")
+    const orderSize = web3.utils.toWei("1")
 
     console.log('...Starting calcSubOrder Script')
 
@@ -18,7 +18,7 @@ module.exports = async () => {
 
     console.log("----")
 
-    const actualSubOrder = await gelato._calcActualSubOrderSize(subOrderAmount)
+    const actualSubOrder = await gelato._calcActualSellAmount(orderSize)
 
     // console.log(actualSubOrder)
     // Fetched liquidity contribution (num, den)
@@ -29,11 +29,11 @@ module.exports = async () => {
     console.log(`Numerator ${num}`)
     console.log(`Denominator ${den}`)
 
-    const oldSubOrderAmount = actualSubOrder.logs[1].args.subOrderAmount.toString(10)
-    const oldSubOrderAmountBN = new BN(oldSubOrderAmount)
+    const sellAmountPreFee = actualSubOrder.logs[1].args._subOrderSize.toString(10)
+    const sellAmountPreFeeBN = new BN(sellAmountPreFee)
 
-    const actualSubOrderAmount = actualSubOrder.logs[1].args.actualSubOrderAmount.toString(10)
-    const actualSubOrderAmountBN = new BN(actualSubOrderAmount)
+    const actualSellAmount = actualSubOrder.logs[1].args.actualSellAmount.toString(10)
+    const actualSellAmountBN = new BN(actualSellAmount)
 
     const fee = actualSubOrder.logs[1].args.fee.toString(10)
     const feeBN = new BN(fee)
@@ -41,17 +41,17 @@ module.exports = async () => {
 
     console.log("----")
     console.log("Check if fee got calculated correctly")
-    const calculatedFee = oldSubOrderAmountBN.mul(numBN).div(denBN)
+    const calculatedFee = sellAmountPreFeeBN.mul(numBN).div(denBN)
     console.log(`Calculated BN fee: ${calculatedFee}`)
     console.log(`Applied Fee:       ${fee}`)
     console.log(`Both fees are identical: ${feeBN.eq(calculatedFee)}`)
 
     console.log("----")
-    console.log("Old SubOrder Size: ", oldSubOrderAmount)
-    console.log('Actual SubOrder Size: ', actualSubOrderAmount)
+    console.log("Old SubOrder Size: ", sellAmountPreFee)
+    console.log('Actual SubOrder Size: ', actualSellAmount)
     console.log('----')
-    const feeCheck = oldSubOrderAmountBN.minus(feeBN)
-    console.log(`Check if (old - fee === new): ${feeCheck.eq(actualSubOrderAmountBN)}`)
+    const feeCheck = sellAmountPreFeeBN.minus(feeBN)
+    console.log(`Check if (old - fee === new): ${feeCheck.eq(actualSellAmountBN)}`)
     console.log('----')
     console.log('SubOrder successfully calculated')
 
