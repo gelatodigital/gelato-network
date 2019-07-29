@@ -320,7 +320,7 @@ contract GelatoDutchX is IcedOut, Ownable, SafeTransfer {
                     // ### EFFECTS END ###
 
                     // INTERACTION: sell on dutchExchange
-                    _depositAndSell(seller, sellToken, buyToken, sellAmount);
+                    _depositAndSell(sellToken, buyToken, sellAmount);
                 }
                 /* Case3b: We sold during previous waiting period, our funds went into auction1, then
                 auction1 ran, then auction1 cleared and the auction index was incremented,
@@ -336,7 +336,7 @@ contract GelatoDutchX is IcedOut, Ownable, SafeTransfer {
                     // ### EFFECTS END ###
 
                     // INTERACTION: sell on dutchExchange
-                    _depositAndSell(seller, sellToken, buyToken, sellAmount);
+                    _depositAndSell(sellToken, buyToken, sellAmount);
                 }
                 /* Case3c: We sold during auction1, our funds went into auction2, then auction1 cleared
                 and the auction index was incremented, now we are NOT selling during the ensuing
@@ -366,7 +366,7 @@ contract GelatoDutchX is IcedOut, Ownable, SafeTransfer {
                 // ### EFFECTS END ###
 
                 // INTERACTION: sell on dutchExchange
-                _depositAndSell(seller, sellToken, buyToken, sellAmount);
+                _depositAndSell(sellToken, buyToken, sellAmount);
             }
             // Case 5: Unforeseen stuff
             else {
@@ -434,8 +434,7 @@ contract GelatoDutchX is IcedOut, Ownable, SafeTransfer {
     }
 
     // Deposit and sell on the dutchExchange
-    function _depositAndSell(address _seller,
-                             address _sellToken,
+    function _depositAndSell(address _sellToken,
                              address _buyToken,
                              uint256 _sellAmount
     )
