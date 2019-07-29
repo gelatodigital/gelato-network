@@ -31,7 +31,6 @@ let {
   executionClaimIds,
   MSG_VALUE_BN,
   commandLine,
-  executeTestScript,
   DxGetter
 } = require("./truffleTestConfig.js");
 

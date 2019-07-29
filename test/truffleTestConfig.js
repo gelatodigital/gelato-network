@@ -98,6 +98,5 @@ module.exports = {
     executionClaimIds,
     MSG_VALUE_BN,
     commandLine,
-    executeTestScript,
     DxGetter
 };

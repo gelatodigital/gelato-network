@@ -78,7 +78,7 @@ echo "##########################################################################
 echo "\n            Move files out of migrations"
 MOVE_OUT_M_1=`mv ./migrations/2_DEV_migrate_dependencies.js ./2_DEV_migrate_dependencies.js`
 MOVE_OUT_M_2=`mv ./migrations/3_deploy_gelato.js ./3_deploy_gelato.js`
-MOVE_OUT_M_3=`mv ./migrations/4_deploy_mockExchange.js ./4_deploy_mockExchange.js`
+MOVE_OUT_M_3=`mv ./migrations/4_deploy_dxGetter.js ./4_deploy_dxGetter.js`
 echo "\n${MOVE_OUT_M_1}\n \n${MOVE_OUT_M_2}\n \n${MOVE_OUT_M_3}\n"
 echo "###############################################################################\n"
 
@@ -163,6 +163,6 @@ echo "##########################################################################
 echo "\n            Move files back into migrations"
 MOVE_IN_M_1=`mv ./2_DEV_migrate_dependencies.js ./migrations/2_DEV_migrate_dependencies.js`
 MOVE_IN_M_2=`mv ./3_deploy_gelato.js ./migrations/3_deploy_gelato.js`
-MOVE_IN_M_3=`mv ./4_deploy_mockExchange.js ./migrations/4_deploy_mockExchange.js`
+MOVE_IN_M_3=`mv ./4_deploy_dxGetter.js ./migrations/4_deploy_dxGetter.js`
 echo "\n${MOVE_IN_M_1}\n \n${MOVE_IN_M_2}\n \n${MOVE_IN_M_3}\n"
 echo "###############################################################################\n"
