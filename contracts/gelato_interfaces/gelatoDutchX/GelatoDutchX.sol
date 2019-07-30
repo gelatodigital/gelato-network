@@ -46,7 +46,6 @@ contract GelatoDutchX is IcedOut, Ownable, SafeTransfer {
                               uint256 withdrawAmount
     );
     event LogOrderCompletedAndDeleted(uint256 indexed orderId);
-
     event LogWithdrawAmount(uint256 num, uint256 den, uint256 withdrawAmount);
     // **************************** Events END ******************************
 
