@@ -30,8 +30,9 @@ let {
   interfaceOrderId,
   executionClaimIds,
   MSG_VALUE_BN,
-  commandLine,
-  DxGetter
+  execShellCommand,
+  DxGetter,
+  execShellCommandLog
 } = require("./truffleTestConfig.js");
 
 describe("deploy new dxInterface Contract and fetch address", () => {
@@ -72,9 +73,9 @@ describe("deploy new dxInterface Contract and fetch address", () => {
 
   it("sellToken is sellToken", async () => {
     assert.equal(
-      "0xAa588d3737B611baFD7bD713445b314BD453a5C8",
+      "0x75c35C980C0d37ef46DF04d31A140b65503c0eEd",
       sellToken.address,
-      `0xAa588d3737B611baFD7bD713445b314BD453a5C8 is not equal ${
+      `0x75c35C980C0d37ef46DF04d31A140b65503c0eEd is not equal ${
         sellToken.address
       }`
     );

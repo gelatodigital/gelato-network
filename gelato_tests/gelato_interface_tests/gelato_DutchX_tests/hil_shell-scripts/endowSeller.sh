@@ -1,8 +1,8 @@
 #!/bin/sh
-export DEFAULT_ACCOUNT="0x627306090abab3a6e1400e9345bc60c78a8bef57"
-export SELLER="0x5AEDA56215b167893e80B4fE645BA6d5Bab767DE"
-export SELL_AMOUNT="20"
-export SELL_TOKEN="WETH"
+# export DEFAULT_ACCOUNT="0x627306090abab3a6e1400e9345bc60c78a8bef57"
+# export SELLER="0x5AEDA56215b167893e80B4fE645BA6d5Bab767DE"
+# export SELL_AMOUNT="20"
+# export SELL_TOKEN="WETH"
 
 echo "###############################################################################\n"
 echo "\n            ENDOW SELLER SCRIPT: \n

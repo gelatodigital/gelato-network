@@ -30,7 +30,8 @@ let {
   interfaceOrderId,
   executionClaimIds,
   MSG_VALUE_BN,
-  commandLine,
+  execShellCommand,
+  execShellCommandLog
 } = require("./truffleTestConfig.js");
 
 describe("successfully executes claim", () => {

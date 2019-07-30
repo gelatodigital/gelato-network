@@ -30,8 +30,9 @@ let {
   interfaceOrderId,
   executionClaimIds,
   MSG_VALUE_BN,
-  commandLine,
-  DxGetter
+  execShellCommand,
+  DxGetter,
+  execShellCommandLog
 } = require("./truffleTestConfig.js");
 require("dotenv").config();
 

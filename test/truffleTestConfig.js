@@ -9,7 +9,7 @@ const DxGetter = artifacts.require("DutchXGetter")
 
 // Helper functions
 const timeTravel = require("./helpers/timeTravel.js");
-const commandLine = require("./helpers/execShellCommand.js");
+const {execShellCommand, execShellCommandLog} = require("./helpers/execShellCommand.js");
 
 
 // Global variables
@@ -97,6 +97,7 @@ module.exports = {
     interfaceOrderId,
     executionClaimIds,
     MSG_VALUE_BN,
-    commandLine,
-    DxGetter
+    execShellCommand,
+    DxGetter,
+    execShellCommandLog
 };
