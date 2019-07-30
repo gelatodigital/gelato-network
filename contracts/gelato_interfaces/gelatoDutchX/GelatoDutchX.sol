@@ -29,6 +29,7 @@ contract GelatoDutchX is IcedOut, Ownable, SafeTransfer {
 
     // **************************** Events ******************************
     event LogNewOrderCreated(uint256 indexed orderId, address indexed seller);
+    event LogFeeNumDen(uint256 num, uint256 den);
     event LogActualSellAmount(uint256 indexed executionClaimId,
                               uint256 indexed orderId,
                               uint256 subOrderAmount,
@@ -311,7 +312,15 @@ contract GelatoDutchX is IcedOut, Ownable, SafeTransfer {
                     orderState.lastAuctionWasWaiting = newAuctionIsWaiting;
                     orderState.lastAuctionIndex = newAuctionIndex;
                     orderState.remainingSubOrders = orderState.remainingSubOrders.sub(1);
-                    orderState.lastSellAmountAfterFee = _calcActualSellAmount(sellAmount);
+                    uint256 dutchXFee;
+                    (orderState.lastSellAmountAfterFee, dutchXFee) = _calcActualSellAmount(sellAmount);
+
+                    emit LogActualSellAmount(_executionClaimId,
+                                             orderId,
+                                             sellAmount,
+                                             orderState.lastSellAmountAfterFee,
+                                             dutchXFee
+                    );
                     // ### EFFECTS END ###
 
                     // INTERACTION: sell on dutchExchange
@@ -327,7 +336,15 @@ contract GelatoDutchX is IcedOut, Ownable, SafeTransfer {
                     orderState.lastAuctionWasWaiting = newAuctionIsWaiting;
                     orderState.lastAuctionIndex = newAuctionIndex;
                     orderState.remainingSubOrders = orderState.remainingSubOrders.sub(1);
-                    orderState.lastSellAmountAfterFee = _calcActualSellAmount(sellAmount);
+                    uint256 dutchXFee;
+                    (orderState.lastSellAmountAfterFee, dutchXFee) = _calcActualSellAmount(sellAmount);
+
+                    emit LogActualSellAmount(_executionClaimId,
+                                             orderId,
+                                             sellAmount,
+                                             orderState.lastSellAmountAfterFee,
+                                             dutchXFee
+                    );
                     // ### EFFECTS END ###
 
                     // INTERACTION: sell on dutchExchange
@@ -357,7 +374,15 @@ contract GelatoDutchX is IcedOut, Ownable, SafeTransfer {
                 orderState.lastAuctionWasWaiting = newAuctionIsWaiting;
                 orderState.lastAuctionIndex = newAuctionIndex;
                 orderState.remainingSubOrders = orderState.remainingSubOrders.sub(1);
-                orderState.lastSellAmountAfterFee = _calcActualSellAmount(sellAmount);
+                uint256 dutchXFee;
+                (orderState.lastSellAmountAfterFee, dutchXFee) = _calcActualSellAmount(sellAmount);
+
+                emit LogActualSellAmount(_executionClaimId,
+                                            orderId,
+                                            sellAmount,
+                                            orderState.lastSellAmountAfterFee,
+                                            dutchXFee
+                );
                 // ### EFFECTS END ###
 
                 // INTERACTION: sell on dutchExchange
@@ -412,8 +437,7 @@ contract GelatoDutchX is IcedOut, Ownable, SafeTransfer {
     // Calculate sub order size accounting for current dutchExchange liquidity contribution fee.
     function _calcActualSellAmount(uint256 _subOrderSize)
         public
-        view
-        returns(uint256 actualSellAmount)
+        returns(uint256 actualSellAmount, uint256 dutchXFee)
     {
         // Get current fee ratio of Gelato contract
         uint256 num;
@@ -421,11 +445,13 @@ contract GelatoDutchX is IcedOut, Ownable, SafeTransfer {
         // Returns e.g. num = 1, den = 500 for 0.2% fee
         (num, den) = dutchExchange.getFeeRatio(address(this));
 
+        emit LogFeeNumDen(num, den);
+
         // Calc fee amount
-        uint256 fee = _subOrderSize.mul(num).div(den);
+        dutchXFee = _subOrderSize.mul(num).div(den);
 
         // Calc actual Sell Amount
-        actualSellAmount = _subOrderSize.sub(fee);
+        actualSellAmount = _subOrderSize.sub(dutchXFee);
     }
 
     // Deposit and sell on the dutchExchange

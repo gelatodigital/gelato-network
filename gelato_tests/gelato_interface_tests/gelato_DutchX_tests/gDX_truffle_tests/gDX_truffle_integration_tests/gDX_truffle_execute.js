@@ -179,8 +179,12 @@ describe("gelatoCore.execute() -> GELATO_DUTCHX.execute() -> burnExecutionClaim 
       .balanceOf(seller)
       .call();
 
+
+    // Fetch the Order State prior to execution
+    let orderStatePre = await gelatoDutchX.contract.methods.orderStates(interfaceOrderId).call();
+
     // executor calls gelatoCore.execute(executionClaimId)
-    // benchmarked gasUsed =
+    // benchmarked gasUsed = 227,751
     function execute() {
       return new Promise(async (resolve, reject) => {
         await gelatoCore.contract.methods
@@ -284,12 +288,12 @@ describe("gelatoCore.execute() -> GELATO_DUTCHX.execute() -> burnExecutionClaim 
           gasCost,
           "finney"
         )} finney
-        -----------------------------------------------------
+        -------------------------------------------------
         Executor trade profit/deficit:    ${web3.utils.fromWei(
           executorTradeBalance,
           "finney"
         )} finney
-                                        ---------------------
+                                        -----------------
     ==================================================
     `);
 
@@ -306,28 +310,28 @@ describe("gelatoCore.execute() -> GELATO_DUTCHX.execute() -> burnExecutionClaim 
       buyTokenBalanceBeforeBN
     );
 
-    // Variables to calculate the acutal subOrder amount that each seller will sell on the DutchX (subOrderAmount - fee)
-    let num;
-    let den;
+    // Variables to calculate the acutal subOrder amount that each seller will sell on the DutchX (subOrderAmount - dutchXFee)
+    let feeNum;
+    let feeDen;
     let oldSubOrderAmount;
     let lastSellAmountAfterFee;
-    let fee;
+    let dutchXFee;
 
     // Variables to calculate if the amount of RDN withdrawn is actually correctly calculated
     let withdrawAmount;
     let priceNum;
     let priceDen;
 
-    // Fetch State of the sell order again after all state changes occured
-    orderState = await gelatoDutchX.contract.methods.orderStates(interfaceOrderId).call();
-
     // Save transactions blockNumber for next events emission tests;
     blockNumber = txReceipt.blockNumber;
     let logWithdrawAmount;
     let logActualSellAmount;
 
+    // Fetch the Order State prior to execution
+    let orderStatePost = await gelatoDutchX.contract.methods.orderStates(interfaceOrderId).call();
+
     // Check if we are at the last withdrawal (no subOrder sell execution left)
-    if (parseInt(orderState.remainingSubOrders) === 0) {
+    if (parseInt(orderStatePre.remainingSubOrders) === 0) {
       // Get data from LogWithdrawAmount event emitted on GelatoDutchX
       await gelatoDutchX.getPastEvents(
         "LogWithdrawAmount",
@@ -369,7 +373,7 @@ describe("gelatoCore.execute() -> GELATO_DUTCHX.execute() -> burnExecutionClaim 
       withdrawAmount = logWithdrawAmount.returnValues.withdrawAmount.toString(10)
       priceNum = logWithdrawAmount.returnValues.num.toString(10)
       priceDen = logWithdrawAmount.returnValues.den.toString(10)
-      let lastSellAmountAfterFee = orderState.lastSellAmountAfterFee
+      let lastSellAmountAfterFee = orderStatePost.lastSellAmountAfterFee
 
       let withdrawAmountBN = new BN(withdrawAmount)
       let priceNumBN = new BN(priceNum)
@@ -377,8 +381,13 @@ describe("gelatoCore.execute() -> GELATO_DUTCHX.execute() -> burnExecutionClaim 
       let lastSellAmountAfterFeeBN = new BN(lastSellAmountAfterFee)
       let calculatedWithdrawAmountBN = lastSellAmountAfterFeeBN.mul(priceNumBN).div(priceDenBN)
       let calculatedWithdrawAmount = calculatedWithdrawAmountBN.toString(10)
-      let wasWithdrawAmountCorrectlyCalculated = calculatedWithdrawAmountBN.eq(withdrawAmountBN)
 
+      // Test calculated withdraw amount
+      let wasWithdrawAmountCorrectlyCalculated = calculatedWithdrawAmountBN.eq(withdrawAmountBN);
+      assert(wasWithdrawAmountCorrectlyCalculated, "incorrect withdraw amount calc");
+
+
+      // Log test info to stdout
       console.log(`
         ==================================================
         Seller ${BUY_TOKEN} balance comparison (before vs. after execution):
@@ -402,7 +411,49 @@ describe("gelatoCore.execute() -> GELATO_DUTCHX.execute() -> burnExecutionClaim 
 
     // After each execution except the last one where we only withdraw, get the actual withdraw amount
     } else {
-        // Get data from LogWithdrawAmount event emitted on GelatoDutchX
+        // Get data from LogFeeNumDen event emitted on GelatoDutchX
+        let logFeeNumDen;
+        await gelatoDutchX.getPastEvents(
+          "LogFeeNumDen",
+          (error, events) => {
+            if (error) {
+              console.error(
+                "errored during gelatoCore.getPastEvent(LogFeeNumDen)"
+              );
+            } else {
+              // Event data checks
+              assert.strictEqual(
+                events[0].event,
+                "LogFeeNumDen"
+              );
+              assert.strictEqual(
+                events[0].blockNumber,
+                blockNumber,
+                "LogFeeNumDen blocknumber problem"
+              );
+
+              // Log the event return values
+              console.log(
+                "\n\n\n\t\t LogFeeNumDen Event Return Values:\n",
+                events[0].returnValues,
+                "\n"
+              );
+              // Hold on to event for next assert.ok
+              logFeeNumDen = events[0];
+            }
+          }
+        );
+        // Make sure event were emitted
+        assert.exists(
+          logFeeNumDen,
+          "LogFeeNumDen event does not exist"
+        );
+
+        // Get the feeNum feeDen
+        feeNum = logFeeNumDen.returnValues.num.toString(10)
+        feeDen = logFeeNumDen.returnValues.den.toString(10)
+
+        // Get data from LogActualSellAmount event emitted on GelatoDutchX
         await gelatoDutchX.getPastEvents(
           "LogActualSellAmount",
           (error, events) => {
@@ -411,7 +462,6 @@ describe("gelatoCore.execute() -> GELATO_DUTCHX.execute() -> burnExecutionClaim 
                 "errored during gelatoCore.getPastEvent(LogActualSellAmount)"
               );
             } else {
-              console.log(events);
               // Event data checks
               assert.strictEqual(
                 events[0].event,
@@ -425,12 +475,12 @@ describe("gelatoCore.execute() -> GELATO_DUTCHX.execute() -> burnExecutionClaim 
               assert.strictEqual(
                 events[0].returnValues.executionClaimId,
                 EXECUTIONCLAIM_ID,
-                "LogActualSellAmount blocknumber problem"
+                "LogActualSellAmount executionClaimId problem"
               );
               assert.strictEqual(
                 events[0].returnValues.orderId,
                 interfaceOrderId,
-                "LogActualSellAmount blocknumber problem"
+                "LogActualSellAmount interfaceOrderId problem"
               );
 
               // Log the event return values
@@ -447,24 +497,26 @@ describe("gelatoCore.execute() -> GELATO_DUTCHX.execute() -> burnExecutionClaim 
         // Make sure event were emitted
         assert.exists(
           logActualSellAmount,
-          "LogActualSellAmount _event does not exist"
+          "LogActualSellAmount event does not exist"
         );
 
         // We get the actual withdraw amount
-        num = logWithdrawAmount.returnValues.num.toString(10)
-        den = logWithdrawAmount.returnValues.den.toString(10)
         oldSubOrderAmount = logActualSellAmount.returnValues.subOrderAmount.toString(10)
         lastSellAmountAfterFee = logActualSellAmount.returnValues.actualSellAmount.toString(10)
-        fee = logActualSellAmount.returnValues.dutchXFee.toString(10)
+        dutchXFee = logActualSellAmount.returnValues.dutchXFee.toString(10)
 
-        let numBN = new BN(num)
-        let denBN = new BN(den)
+        let numBN = new BN(feeNum)
+        let denBN = new BN(feeDen)
         let oldSubOrderAmountBN = new BN(oldSubOrderAmount)
         let lastSellAmountAfterFeeBN = new BN(lastSellAmountAfterFee)
-        let feeBN = new BN(fee)
+        let feeBN = new BN(dutchXFee)
         let calculatedFee = oldSubOrderAmountBN.mul(numBN).div(denBN)
         let calculatedSubOrderAmount = oldSubOrderAmountBN.sub(feeBN)
 
+        // Test calculated Fee amount
+        // assert.strictEqual(feeBN.toString(), calculatedFee.toString());
+
+        // Log test info to stdout
         console.log(`
           ==================================================
           Seller BUY_TOKEN balance comparison (before vs. after execution):
@@ -475,51 +527,97 @@ describe("gelatoCore.execute() -> GELATO_DUTCHX.execute() -> burnExecutionClaim 
           After execution:     > ${web3.utils.fromWei(buyTokenBalanceAfter, "ether")} RDN |
           Difference:          > ${web3.utils.fromWei(buyTokenBalanceDifference, "ether")} RDN |
 
-          Show the acutal Sub Order amount that was sold on the DutchX (minus DutchX fee):
+          Show the acutal Sub Order amount that was sold on the DutchX (minus DutchX dutchXFee):
           ------------------------------------------------
-          Initial SubOrderSize:   > ${web3.utils.fromWei(oldSubOrderAmount, "ether")} WETH |
-          Actual SubOrderSize:    > ${web3.utils.fromWei(lastSellAmountAfterFee, "ether")} WETH |
-          Initial - fee === actual: ${calculatedSubOrderAmount.eq(lastSellAmountAfterFeeBN)}
+          Initial SubOrderSize:         > ${web3.utils.fromWei(oldSubOrderAmount, "ether")} WETH |
+          Actual SubOrderSize:          > ${web3.utils.fromWei(lastSellAmountAfterFee, "ether")} WETH |
+          Initial - dutchXFee === actual: ${calculatedSubOrderAmount.eq(lastSellAmountAfterFeeBN)}
 
-          Check if fee got calculated correctly in SC:
+          Check if dutchXFee got calculated correctly in SC:
           ------------------------------------------------
-          Calculated fee (web3)    > ${web3.utils.fromWei(calculatedFee, "ether")} WETH |
-          Fetched fee:             > ${web3.utils.fromWei(fee, "ether")} WETH |
-          Both fees are identical:   ${feeBN.eq(calculatedFee)}
+          Calculated dutchXFee (web3)    > ${web3.utils.fromWei(calculatedFee, "ether")} WETH |
+          Fetched dutchXFee:             > ${web3.utils.fromWei(dutchXFee, "ether")} WETH |
+          Both fees are identical:         ${feeBN.eq(calculatedFee)}
         `);
 
-          // Only calc after first exexAndWithdrawSubOrder func has been executed and if manualWithdraw has not been executed
-          if (parseInt(sellOrder.remainingWithdrawals) === parseInt(orderState.remainingSubOrders) + 1)
-          {
-              withdrawAmount = logWithdrawAmount.returnValues.withdrawAmount.toString(10)
-              priceNum = logWithdrawAmount.returnValues.num.toString(10)
-              priceDen = logWithdrawAmount.returnValues.den.toString(10)
+        // Only calc after first exexAndWithdrawSubOrder func has been executed and if manualWithdraw has not been executed
+        if (parseInt(orderStatePre.remainingWithdrawals) === parseInt(orderStatePre.remainingSubOrders) + 1)
+        {
+            // Get data from LogWithdrawAmount event emitted on GelatoDutchX
+            await gelatoDutchX.getPastEvents(
+              "LogWithdrawAmount",
+              (error, events) => {
+                if (error) {
+                  console.error(
+                    "errored during gelatoCore.getPastEvent(LogWithdrawAmount)"
+                  );
+                } else {
+                  // Event data checks
+                  assert.strictEqual(
+                    events[0].event,
+                    "LogWithdrawAmount"
+                  );
+                  assert.strictEqual(
+                    events[0].blockNumber,
+                    blockNumber,
+                    "LogWithdrawAmount blocknumber problem"
+                  );
+
+                  // Log the event return values
+                  console.log(
+                    "\n\n\n\t\t LogWithdrawAmount Event Return Values:\n",
+                    events[0].returnValues,
+                    "\n"
+                  );
+                  // Hold on to event for next assert.ok
+                  logWithdrawAmount = events[0];
+                }
+              }
+            );
+            // Make sure event were emitted
+            assert.exists(
+              logWithdrawAmount,
+              "LogWithdrawAmount _event does not exist"
+            );
+            // Save the event data
+            withdrawAmount = logWithdrawAmount.returnValues.withdrawAmount.toString(10)
+            priceNum = logWithdrawAmount.returnValues.num.toString(10)
+            priceDen = logWithdrawAmount.returnValues.den.toString(10)
 
 
-              let withdrawAmountBN = new BN(withdrawAmount)
-              let priceNumBN = new BN(priceNum)
-              let priceDenBN = new BN(priceDen)
+            let withdrawAmountBN = new BN(withdrawAmount)
+            let priceNumBN = new BN(priceNum)
+            let priceDenBN = new BN(priceDen)
 
-              let calculatedWithdrawAmountBN = lastSellAmountAfterFeeBN.mul(priceNumBN).div(priceDenBN)
-              let calculatedWithdrawAmount = calculatedWithdrawAmountBN.toString(10)
+            let calculatedWithdrawAmountBN = lastSellAmountAfterFeeBN.mul(priceNumBN).div(priceDenBN)
+            let calculatedWithdrawAmount = calculatedWithdrawAmountBN.toString(10)
 
-              let wasWithdrawAmountCorrectlyCalculated = calculatedWithdrawAmountBN.eq(withdrawAmountBN)
+            // Test calculated withdraw amount
+            let wasWithdrawAmountCorrectlyCalculated = calculatedWithdrawAmountBN.eq(withdrawAmountBN)
+            assert(wasWithdrawAmountCorrectlyCalculated);
 
-              console.log(`
-                ==================================================
-                We just withdrew some RND!
-                Did we withdraw the correct amount based on actual SubOrder Size * DutchX Price of previous auction?
-                ------------------------------------------------
-                Amount withdrawn: (web3)            > ${web3.utils.fromWei(withdrawAmount, "ether")} RDN |
-                                    | =======================|
-                What should be withdrawn (BN test)  > ${web3.utils.fromWei(calculatedWithdrawAmount, "ether")} RDN |
-                                    | =======================|
-                Both amounts are identical:           ${wasWithdrawAmountCorrectlyCalculated}
-              `);
-          }
-      } // else END
+            // Log test info to stdout
+            console.log(`
+              \t==================================================
+
+              \t !!! We just withdrew some RND !!!
+
+              Did we withdraw the correct amount based on actual SubOrder Size * DutchX Price of previous auction?
+              \t------------------------------------------------
+              \tAmount withdrawn: (web3)            > ${web3.utils.fromWei(withdrawAmount, "ether")} RDN |
+              \tWhat should be withdrawn (BN test)  > ${web3.utils.fromWei(calculatedWithdrawAmount, "ether")} RDN |
+              \tBoth amounts are identical:           ${wasWithdrawAmountCorrectlyCalculated}
+            `);
+        }
+    } // else END
     // ********* SELLER WITHDRAWAL CHECKS END ***********
-    
+    console.log(`
+      \n\t\t==================================================
+      \t\tExecute ExecutionClaim was successful!
+      \t\tSub Order Executions left: ${orderStatePost.remainingSubOrders}
+      \t\tWithdraws left:            ${orderStatePost.remainingWithdrawals}
+    `);
+
   });  // it block end
   // ********** EXECUTE and PAYOUT CHECKS END **********
 
