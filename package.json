@@ -80,7 +80,7 @@
     "withdrawExecute": "./gelato_tests/gelato_interface_tests/gelato_DutchX_tests/gDX_truffle_tests/automated_tests/executeWithdrawTruffelTest.sh",
     "g-listinterface": "truffle exec gelato_tests/gelato_core_tests/g_listInterface.js",
     "gdx-state": "yarn cli state WETH-RDN",
-    "gdx-skip6": "./gelato_tests/gelato_interface_tests/gelato_DutchX_tests/gDX_shell-scripts/gDX_skipSixHours.sh",
+    "gdx-skip": "./gelato_tests/gelato_interface_tests/gelato_DutchX_tests/gDX_shell-scripts/gDX_skipAhead.sh",
     "gdx-close-auction-1": "./gelato_tests/gelato_interface_tests/gelato_DutchX_tests/gDX_shell-scripts/gDX_closeAuction1.sh",
     "gdx-start-auction": "gelato_tests/gelato_interface_tests/gelato_DutchX_tests/gDX_shell-scripts/gDX_startAuction.sh",
     "gdx-close-auction": "./gelato_tests/gelato_interface_tests/gelato_DutchX_tests/gDX_shell-scripts/gDX_closeAuction.sh",

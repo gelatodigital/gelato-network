@@ -480,7 +480,6 @@ contract GelatoDutchX is IcedOut, Ownable, SafeTransfer {
                                  uint256 _sellAmountAfterFee
     )
         public
-        view
         returns(uint256 withdrawAmount)
     {
         // Fetch numerator and denominator from dutchExchange

@@ -139,7 +139,7 @@ describe("gelatoCore.execute() -> GELATO_DUTCHX.execute() -> burnExecutionClaim 
 
 
   // ******** Recursive end-to-end GelatoCore.execute() test suite ********
-  it(`gelatoCore.execute(ID) results in correct executor payout`, async () => {
+  it(`gelatoCore.execute(ID) results in correct seller and executor payouts`, async () => {
     // ********** EXECUTE and PAYOUT CHECKS **********
     // we fetch data from the executionClaim to be executed
     let {
@@ -221,7 +221,7 @@ describe("gelatoCore.execute() -> GELATO_DUTCHX.execute() -> burnExecutionClaim 
     console.log(`\n\tExecute TxHash: ${txHash}\n`);
 
     // Check that executor's balance has gone up by prepaidExecutionFee
-    /*let executorBalancePostExec = await web3.eth.getBalance(executor);
+    let executorBalancePostExec = await web3.eth.getBalance(executor);
     executorBalancePostExec = new BN(executorBalancePostExec);
     const executorTradeBalance = executorBalancePostExec.sub(executorBalancePreExec);
 
@@ -285,7 +285,7 @@ describe("gelatoCore.execute() -> GELATO_DUTCHX.execute() -> burnExecutionClaim 
     console.log(
       `Sellers ${BUY_TOKEN} balance Difference:    ${buyTokenBalanceDifference / 10 ** 18}`
     );
-    // ********* SELLER WITHDRAWAL CHECKS END *********** */
+    // ********* SELLER WITHDRAWAL CHECKS END ***********
 
     // ********** EXECUTE and PAYOUT CHECKS END **********
 
@@ -429,7 +429,7 @@ describe("gelatoCore.execute() -> GELATO_DUTCHX.execute() -> burnExecutionClaim 
       .orderStates(interfaceOrderId)
       .call();
     // If 0 remainingWithdrawals -> orderState should have been deleted
-    if (!orderState.remainingWithdrawals) {
+    if (orderState.remainingWithdrawals == "0") {
       // Event LogOrderCompletedAndDeleted
       let _event;
       await gelatoDutchX.getPastEvents(
@@ -467,7 +467,7 @@ describe("gelatoCore.execute() -> GELATO_DUTCHX.execute() -> burnExecutionClaim 
       // Make sure event were emitted
       assert.exists(_event, "LogOrderCompletedAndDeleted _event do not exist");
       console.log(
-        `\n\t\t OrderState struct with interfaceOrderId ${interfaceOrderId} deleted`
+        `\t\t OrderState struct with interfaceOrderId ${interfaceOrderId} deleted`
       );
     } else {
       // Order State should always be non-zero unless deleted
