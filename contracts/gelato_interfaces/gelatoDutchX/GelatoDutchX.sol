@@ -244,8 +244,10 @@ contract GelatoDutchX is IcedOut, Ownable, SafeTransfer {
                     in its ERC20 balance.
             */
             // DEV: delete if stack too deep
-            require(ERC20(sellToken).balanceOf(address(this)) >= gelatoCore.getClaimSellAmount(_executionClaimId),
-            "GelatoInterface.execute: ERC20(sellToken).balanceOf(address(this)) !>= subOrderSize");
+            require(
+                ERC20(sellToken).balanceOf(address(this)) >= gelatoCore.getClaimSellAmount(_executionClaimId),
+                "GelatoInterface.execute: ERC20(sellToken).balanceOf(address(this)) !>= subOrderSize"
+            );
 
             // Waiting Period variables needed to prevent double participation in DutchX auctions
             bool lastAuctionWasWaiting = orderState.lastAuctionWasWaiting;  // default: false
