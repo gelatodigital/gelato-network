@@ -137,7 +137,6 @@ describe("gelatoCore.execute() -> GELATO_DUTCHX.execute() -> burnExecutionClaim 
   });
   // ******** GelatoCore.execute() gasUsed estimates END ********
 
-
   // ******** Recursive end-to-end GelatoCore.execute() test suite ********
   it(`gelatoCore.execute(ID) results in correct seller and executor payouts`, async () => {
     // ********** EXECUTE and PAYOUT CHECKS **********
@@ -211,7 +210,6 @@ describe("gelatoCore.execute() -> GELATO_DUTCHX.execute() -> burnExecutionClaim 
     const gasPriceBN = new BN(GAS_PRICE);
     let gasCost = gasUsed.mul(gasPriceBN);
 
-
     // Log actual gasUsed
     console.log(`\t\tactual gasUsed:      ${gasUsed}`);
     // Log MaxGas
@@ -223,67 +221,102 @@ describe("gelatoCore.execute() -> GELATO_DUTCHX.execute() -> burnExecutionClaim 
     // Check that executor's balance has gone up by prepaidExecutionFee
     let executorBalancePostExec = await web3.eth.getBalance(executor);
     executorBalancePostExec = new BN(executorBalancePostExec);
-    const executorTradeBalance = executorBalancePostExec.sub(executorBalancePreExec);
+    const executorTradeBalance = executorBalancePostExec.sub(
+      executorBalancePreExec
+    );
 
     console.log(`gasUsed:                    ${gasUsed}`);
     console.log(`gasPrice:                   ${GAS_PRICE}`);
 
     console.log(`gasCost:                    ${gasCost}`);
-    console.log(`gasCostFinney               ${web3.utils.fromWei(gasCost, "finney")} finney`);
+    console.log(
+      `gasCostFinney               ${web3.utils.fromWei(
+        gasCost,
+        "finney"
+      )} finney`
+    );
 
     console.log(`executorBalancePostExec:    ${executorBalancePostExec}`);
-    console.log(`executorBalancePostExec:    ${web3.utils.fromWei(executorBalancePostExec, "finney")} finney`);
-    console.log(`executorBalancePreExec:     ${web3.utils.fromWei(executorBalancePreExec, "finney")} finney`);
-
-
+    console.log(
+      `executorBalancePostExec:    ${web3.utils.fromWei(
+        executorBalancePostExec,
+        "finney"
+      )} finney`
+    );
+    console.log(
+      `executorBalancePreExec:     ${web3.utils.fromWei(
+        executorBalancePreExec,
+        "finney"
+      )} finney`
+    );
 
     console.log(`executorTradeBalance:       ${executorTradeBalance}`);
-    console.log(`executorTradeBalanceFinney: ${web3.utils.fromWei(executorTradeBalance, "finney")} finney`);
+    console.log(
+      `executorTradeBalanceFinney: ${web3.utils.fromWei(
+        executorTradeBalance,
+        "finney"
+      )} finney`
+    );
 
     // Executor Profit and Loss Statement
     console.log(`
                         Executor Account Info BEFORE subOrder execution:
                         ------------------------------------------------
         Executor Account:         ${executor}
-        Executor Account Balance | =======================|
-            BEFORE execution: > ${web3.utils.fromWei(executorBalancePreExec, "finney")} finney |
-                                 | =======================|
-                        Executor Account Info AFTER subOrder execution:
-                        -----------------------------------------------
-        Executor Account:         ${executor}
-        Executor Account Balance | ========================|
-            AFTER execution:  > ${web3.utils.fromWei(executorBalancePostExec, "finney")} finney |
-                                 | ========================|
-    ==================================================
+        Executor Account Balance
+            BEFORE execution: > ${web3.utils.fromWei(
+              executorBalancePreExec,
+              "finney"
+            )} finney  |
+            AFTER execution:  > ${web3.utils.fromWei(
+              executorBalancePostExec,
+              "finney"
+            )} finney |
+
                         Executor Profit/Loss Statement:
                         --------------------------------
         Assumption: executor did not receive any ether from elsewhere since execution.
         Executor reward
-        per sub order:                  +${web3.utils.fromWei(prepaidExecutionFee, "finney")} finney
-        Executor gas cost:               -${web3.utils.fromWei(gasCost, "finney")} finney
-        ------------------------------------------------------------------
-        Executor trade profit/deficit:    ${web3.utils.fromWei(executorTradeBalance, "finney")} finney
-                                        ------------------------------------
+        per sub order:                   +${web3.utils.fromWei(
+          prepaidExecutionFee,
+          "finney"
+        )} finney
+        Executor gas cost:               -${web3.utils.fromWei(
+          gasCost,
+          "finney"
+        )} finney
+        -----------------------------------------------------
+        Executor trade profit/deficit:    ${web3.utils.fromWei(
+          executorTradeBalance,
+          "finney"
+        )} finney
+                                        ---------------------
     ==================================================
     `);
 
-
     // ********* SELLER WITHDRAWAL CHECKS ***********
     // Comparing the BUY_TOKEN Balance before and after
-    const buyTokenBalanceAfter = await buyTokenContract.balanceOf(seller);
-    const buyTokenBalanceBeforeBN = new BN(buyBalanceBefore)
-    const buyTokenBalanceAfterBN = new BN(buyTokenBalanceAfter)
+    const buyTokenBalanceAfter = await buyToken.contract.methods
+      .balanceOf(seller)
+      .call();
+    const buyTokenBalanceBeforeBN = new BN(buyTokenBalanceBefore);
+    const buyTokenBalanceAfterBN = new BN(buyTokenBalanceAfter);
     // Calculate the difference before and after the exection
-    const buyTokenBalanceDifference = buyTokenBalanceAfterBN.sub(buyTokenBalanceBeforeBN);
+    const buyTokenBalanceDifference = buyTokenBalanceAfterBN.sub(
+      buyTokenBalanceBeforeBN
+    );
 
     console.log(
-      `Sellers ${BUY_TOKEN} balance before:        ${buyTokenBalanceBefore / 10 ** 18}`
+      `Sellers ${BUY_TOKEN} balance before:        ${buyTokenBalanceBefore /
+        10 ** 18}`
     );
     console.log(
-      `Sellers ${BUY_TOKEN} balance After:         ${buyTokenBalanceAfter / 10 ** 18}`
+      `Sellers ${BUY_TOKEN} balance After:         ${buyTokenBalanceAfter /
+        10 ** 18}`
     );
     console.log(
-      `Sellers ${BUY_TOKEN} balance Difference:    ${buyTokenBalanceDifference / 10 ** 18}`
+      `Sellers ${BUY_TOKEN} balance Difference:    ${buyTokenBalanceDifference /
+        10 ** 18}`
     );
     // ********* SELLER WITHDRAWAL CHECKS END ***********
 
