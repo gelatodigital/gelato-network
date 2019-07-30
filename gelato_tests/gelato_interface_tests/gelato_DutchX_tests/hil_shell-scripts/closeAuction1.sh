@@ -1,9 +1,9 @@
 #!/bin/sh
-export SELL_TOKEN="WETH"
-export BUY_TOKEN="RDN"
-export SELL_AMOUNT="20"
-export BUY_AMOUNT="4000"
-export SKIP_TIME=6
+# export SELL_TOKEN="WETH"
+# export BUY_TOKEN="RDN"
+# export SELL_AMOUNT="20"
+# export BUY_AMOUNT="4000"
+# export SKIP_TIME=6
 
 echo "###############################################################################\n"
 echo "\n            CLOSING AUCTION 1 SCRIPT \n"
