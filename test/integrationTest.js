@@ -31,17 +31,17 @@ describe("Test possible intregration test architecture", () => {
         await commandLine.execShellCommandLog(`yarn endow1`)
         console.log("#########################################")
     })
-    it("test3 - Move migration files out", async function () {
+    it("test4 - Move migration files out", async function () {
         this.timeout(50000)
         await commandLine.execShellCommand(`mv ./migrations/2_DEV_migrate_dependencies.js ./2_DEV_migrate_dependencies.js; mv ./migrations/3_deploy_gelato.js ./3_deploy_gelato.js; mv ./migrations/4_deploy_dxGetter.js ./4_deploy_dxGetter.js`)
         console.log("#########################################")
     })
-    it("test4 - Mint execution claims", async function () {
+    it("test5 - Mint execution claims", async function () {
         this.timeout(50000)
         await commandLine.execShellCommandLog(`truffle test ./test/splitSellOrderTest.js`)
         console.log("#########################################")
     })
-    it("test5 - Execute Execution Claim", async function () {
+    it("test6 - Execute Execution Claim", async function () {
         this.timeout(50000)
         await commandLine.execShellCommandLog(`truffle test ./test/executeTest.js`)
         console.log("#########################################")
