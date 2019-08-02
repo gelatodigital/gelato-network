@@ -44,9 +44,7 @@ contract GelatoCore is Ownable, Claim {
     event LogMaxGasUpdate(address indexed dappInterface, uint256 newMaxGas);
     event LogClaimCancelled(address indexed dappInterface,
                             uint256 indexed executionClaimId,
-                            uint256 indexed interfaceOrderId,
-                            address payable executionClaimOwner,
-                            uint256 gelatoCorePayable
+                            address indexed executionClaimOwner
     );
     event LogExecutionTimeUpdated(address indexed dappInterface,
                                   uint256 indexed executionClaimId,
@@ -65,48 +63,40 @@ contract GelatoCore is Ownable, Claim {
 
 
     // **************************** State Variables **********************************
-    // Whitelist of Dapp Interfaces
-    mapping(address => bool) private interfaceWhitelist;
 
     // executionClaimId => ExecutionClaim
     mapping(uint256 => ExecutionClaim) private executionClaims;
 
-    // Balance of interfaces
+    // Balance of interfaces which pay for claim execution
     mapping(address => uint256) public interfaceBalances;
 
 
     //_____________ Gelato Execution Service Business Logic ________________
-    // Every GelatoInterface has only 1 execute() function i.e. 1 MaxGas in accordance with the IcedOut standard.
-    // MaxGas is set upon interface whitelisting:
-    // MaxGas is the maximum worst-case gase usage by an Interface execution function
-    // The value of MaxGas should stay constant for an ExecutionClaim, unless e.g. EVM OpCodes are patched
-    // dappInterface => maxGas
-    mapping(address => uint256) private maxGasByInterface;
-
     // gelatoGasPrice is continually set by Gelato Core's centralised gelatoGasPrice oracle
-    // The value is determined via a mathematical model and off-chain computations
+    // The value is determined off-chain
     uint256 private gelatoGasPrice;
 
-    // Gas cost of all relayCall() instructions before first gasleft() and after last gasleft()
+    // Gas cost of all execute() instructions before startGas and endGas
+    uint256 gasOverhead;
 
-    uint256 gasOverhead = 10;
+    // @DEV CHECK WHETHER THE GAS PRICE OF A TX IS RETURNED AS 50 for 50gwei or 50000000000
+    // Max Gas Price executors can receive. E.g. 50 == 50GWEI
+    uint256 gelatoMaxGasPrice;
 
-    uint256 gelatoMaxGasPrice = 50;
-
-    uint256 gelatoFee = 5;
+    // Fees in % paid to executors for their execution. E.g. 5 == 5%
+    uint256 gelatoFee;
     // **************************** State Variables END ******************************
 
     //_____________ Gelato Execution Service Business Logic END ________________
 
-
-
-
     // **************************** Gelato Core constructor() ******************************
-    constructor(uint256 _gelatoGasPrice)
+    constructor(uint256 _gelatoGasPrice, uint256 _gelatoMaxGasPrice, uint256 _gelatoFee)
         public
     {
         // Initialise gelatoGasPrice
         gelatoGasPrice = _gelatoGasPrice;
+        gelatoMaxGasPrice = _gelatoMaxGasPrice;
+        gelatoFee = _gelatoFee;
     }
     // **************************** Gelato Core constructor() END *****************************
 
@@ -126,13 +116,6 @@ contract GelatoCore is Ownable, Claim {
         );
         _;
     }
-
-    modifier onlyWhitelistedInterfaces() {
-        require(interfaceWhitelist[msg.sender],
-            "modifier onlyWhitelistedInterfaces: The calling dappInterface is not whitelisted in Gelato Core"
-        );
-        _;
-    }
     // **************************** Modifiers END ******************************
 
 
@@ -142,7 +125,6 @@ contract GelatoCore is Ownable, Claim {
     function mintExecutionClaim(bytes memory _functionSignature,
                                 address _executionClaimOwner
     )
-        onlyWhitelistedInterfaces  // msg.sender==dappInterface
         payable
         public
         returns (bool)
@@ -181,8 +163,6 @@ contract GelatoCore is Ownable, Claim {
     }
     // **************************** mintExecutionClaim() END ******************************
 
-
-
     // READ
     // **************************** State Variables Getters ***************************
 
@@ -195,21 +175,6 @@ contract GelatoCore is Ownable, Claim {
         return currentId;
     }
 
-    function getInterfaceWhitelist(address _dappInterface)
-        public
-        view
-        returns(bool whitelisted)
-    {
-        whitelisted = interfaceWhitelist[_dappInterface];
-    }
-
-    function getInterfaceMaxGas(address _dappInterface)
-        public
-        view
-        returns(uint256 maxGas)
-    {
-        maxGas = maxGasByInterface[_dappInterface];
-    }
 
     function getGelatoGasPrice()
         public
@@ -249,170 +214,29 @@ contract GelatoCore is Ownable, Claim {
         return executionClaim.dappInterface;
     }
 
-    // function getInterfaceOrderId(uint256 _executionClaimId)
-    //     public
-    //     view
-    //     returns(uint256)
-    // {
-    //     ExecutionClaim memory executionClaim = executionClaims[_executionClaimId];
 
-    //     return executionClaim.interfaceOrderId;
-    // }
-
-    // function getClaimTokenPair(uint256 _executionClaimId)
-    //     public
-    //     view
-    //     returns(address, address)
-    // {
-    //     ExecutionClaim memory executionClaim = executionClaims[_executionClaimId];
-
-    //     return (executionClaim.sellToken, executionClaim.buyToken);
-    // }
-
-    // function getClaimSellToken(uint256 _executionClaimId)
-    //     public
-    //     view
-    //     returns(address)
-    // {
-    //     ExecutionClaim memory executionClaim = executionClaims[_executionClaimId];
-
-    //     return executionClaim.sellToken;
-    // }
-
-    // function getClaimBuyToken(uint256 _executionClaimId)
-    //     public
-    //     view
-    //     returns(address)
-    // {
-    //     ExecutionClaim memory executionClaim = executionClaims[_executionClaimId];
-
-    //     return executionClaim.sellToken;
-    // }
-
-    // function getClaimSellAmount(uint256 _executionClaimId)
-    //     public
-    //     view
-    //     returns(uint256)
-    // {
-    //     ExecutionClaim memory executionClaim = executionClaims[_executionClaimId];
-
-    //     return executionClaim.sellAmount;
-    // }
-
-    // function getClaimExecutionTime(uint256 _executionClaimId)
-    //     public
-    //     view
-    //     returns(uint256)
-    // {
-    //     ExecutionClaim memory executionClaim = executionClaims[_executionClaimId];
-
-    //     return executionClaim.executionTime;
-    // }
-
-    // function getClaimPrepaidFee(uint256 _executionClaimId)
-    //     public
-    //     view
-    //     returns(uint256)
-    // {
-    //     ExecutionClaim memory executionClaim = executionClaims[_executionClaimId];
-
-    //     return executionClaim.prepaidExecutionFee;
-    // }
     // **************************** ExecutionClaim Getters END ******************************
-    // **************************** State Variabls Getters END ******************************
-
-
-    // UPDATE
-    // **************************** Core Updateability ***************************
-    // @Dev: we can separate Governance fns into a base contract and inherit from it
-    // Updating the gelatoGasPrice - this is called by the Core Execution Service oracle
-    function updateGelatoGasPrice(uint256 _gelatoGasPrice)
-        onlyOwner
-        external
-        returns(bool)
-    {
-        gelatoGasPrice = _gelatoGasPrice;
-
-        emit LogGelatoGasPriceUpdate(gelatoGasPrice);
-
-        return true;
-    }
-
-
-    // Whitelisting new interfaces and setting their MaxGas for each executionClaim type
-    function listInterface(address _dappInterface, uint256 _maxGas)
-        onlyOwner
-        public
-    {
-        require(interfaceWhitelist[_dappInterface] == false,
-            "listInterface: Dapp Interface already whitelisted"
-        );
-
-        // Whitelist the dappInterface
-        interfaceWhitelist[_dappInterface] = true;
-
-        // Set the maxGas of the interface's Core ExecutionClaim
-        maxGasByInterface[_dappInterface] = _maxGas;
-
-        emit LogNewInterfaceListed(_dappInterface, _maxGas);
-    }
-
-    // Removing interfaces from the whitelist
-    function unlistInterface(address _dappInterface)
-        onlyOwner
-        public
-    {
-        require(interfaceWhitelist[_dappInterface] == true,
-            "unlistInterface: Dapp Interface is not on the whitelist"
-        );
-
-        // Unlist the dappInterface and remove the MaxGas entry
-        interfaceWhitelist[_dappInterface] = false;
-
-        // Remove the maxGas entry
-        delete maxGasByInterface[_dappInterface];
-
-        emit LogInterfaceUnlisted(_dappInterface, maxGasByInterface[_dappInterface]);
-    }
-
-
-    // Governance function to update the maxGas an interface needs to supply for its executionClaims
-    function updateMaxGas(address _dappInterface, uint256 _maxGas)
-        onlyOwner
-        public
-    {
-        maxGasByInterface[_dappInterface] = _maxGas;
-
-        emit LogMaxGasUpdate(_dappInterface, _maxGas);
-    }
-    // **************************** Core Updateability END ******************************
 
     // **************************** ExecutionClaims Updateability ***************************
-    // function cancelExecutionClaim(uint256 _executionClaimId)
-    //     onlyExecutionClaimOwner(_executionClaimId)
-    //     external
-    // {
-    //     ExecutionClaim memory executionClaim = executionClaims[_executionClaimId];
+    function cancelExecutionClaim(uint256 _executionClaimId)
+        onlyExecutionClaimOwner(_executionClaimId)
+        external
+    {
+        ExecutionClaim memory executionClaim = executionClaims[_executionClaimId];
 
-    //     // Local variables needed for Checks, Effects -> Interactions pattern
-    //     address payable executionClaimOwner = address(uint160(ownerOf(_executionClaimId)));
-    //     uint256 refund = executionClaim.prepaidExecutionFee;
+        // Local variables needed for Checks, Effects -> Interactions pattern
+        address executionClaimOwner = ownerOf(_executionClaimId);
 
-    //     // CHECKS: onlyExecutionClaimOwner modifier
+        // CHECKS: onlyExecutionClaimOwner modifier
 
-    //     // EFFECTS: emit event, then burn and delete the ExecutionClaim struct - possible gas refund to msg.sender?
-    //     emit LogClaimCancelled(executionClaim.dappInterface,
-    //                            _executionClaimId,
-    //                            executionClaim.interfaceOrderId,
-    //                            executionClaimOwner,
-    //                            refund
-    //     );
-    //     _burn(_executionClaimId);
-    //     delete executionClaims[_executionClaimId];
-
-    //     // INTERACTIONS: Refund the prepaidFee to the ExecutionClaim owner
-    //     executionClaimOwner.transfer(refund);
-    // }
+        // EFFECTS: emit event, then burn and delete the ExecutionClaim struct - possible gas refund to msg.sender?
+        emit LogClaimCancelled(executionClaim.dappInterface,
+                               _executionClaimId,
+                               executionClaimOwner
+        );
+        _burn(_executionClaimId);
+        delete executionClaims[_executionClaimId];
+    }
 
     // We do not want to make the executionTime, nor the sellAmount, updateable
     //  as this introduces unwanted safety complexity e.g. bad gasPrice estimations.
@@ -472,7 +296,7 @@ contract GelatoCore is Ownable, Claim {
 
         // Calculate Executor Payout (including a fee set by GelatoCore.sol)
         // @🐮 .add not necessaryy as we set the numbers and they wont overflow
-        uint executorPayout= totalCost.mul(100 + gelatoFee).div(100);
+        uint256 executorPayout= totalCost.mul(100 + gelatoFee).div(100);
 
         // Log the costs of execution
         emit LogExecutionMetrics(totalGasUsed, usedGasPrice, executorPayout);
@@ -492,9 +316,7 @@ contract GelatoCore is Ownable, Claim {
         return (success, data);
     }
     // **************************** execute() END ***************************
-
-
-    // Setters for variables used in execute function
+    // **************************** Core Updateability ******************************
 
     // Set the global max gas price an executor can receive in the gelato system
     function setGelatoMaxGasPrice(uint256 _newGelatoMaxGasPrice)
@@ -532,6 +354,23 @@ contract GelatoCore is Ownable, Claim {
         interfaceBalances[msg.sender] = currentInterfaceBalance.sub(_withdrawAmount);
         msg.sender.transfer(_withdrawAmount);
     }
+
+    // UPDATE
+    // @Dev: we can separate Governance fns into a base contract and inherit from it
+    // Updating the gelatoGasPrice - this is called by the Core Execution Service oracle
+    function updateGelatoGasPrice(uint256 _gelatoGasPrice)
+        onlyOwner
+        external
+        returns(bool)
+    {
+        gelatoGasPrice = _gelatoGasPrice;
+
+        emit LogGelatoGasPriceUpdate(gelatoGasPrice);
+
+        return true;
+    }
+    // **************************** Core Updateability END ******************************
+
 }
 
 
