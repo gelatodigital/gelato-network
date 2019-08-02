@@ -4,7 +4,6 @@ pragma solidity >=0.4.21 <0.6.0;
 import './base/ERC721/Claim.sol';
 import './base/Ownable.sol';
 import './base/SafeMath.sol';
-import './base/IcedOut.sol';
 
 
 contract GelatoCore is Ownable, Claim {
@@ -60,12 +59,10 @@ contract GelatoCore is Ownable, Claim {
     event LogExecutionMetrics(uint256 indexed gasUsed, uint256 indexed gasPrice, uint256 indexed executorPayout);
     // **************************** Events END **********************************
 
-
-
     // **************************** State Variables **********************************
 
     // executionClaimId => ExecutionClaim
-    mapping(uint256 => ExecutionClaim) private executionClaims;
+    mapping(uint256 => ExecutionClaim) public executionClaims;
 
     // Balance of interfaces which pay for claim execution
     mapping(address => uint256) public interfaceBalances;
@@ -74,13 +71,12 @@ contract GelatoCore is Ownable, Claim {
     //_____________ Gelato Execution Service Business Logic ________________
     // gelatoGasPrice is continually set by Gelato Core's centralised gelatoGasPrice oracle
     // The value is determined off-chain
-    uint256 private gelatoGasPrice;
+    uint256 public gelatoGasPrice;
 
     // Gas cost of all execute() instructions before startGas and endGas
-    uint256 gasOverhead;
+    uint256 gasOverhead = 50000;
 
-    // @DEV CHECK WHETHER THE GAS PRICE OF A TX IS RETURNED AS 50 for 50gwei or 50000000000
-    // Max Gas Price executors can receive. E.g. 50 == 50GWEI
+    // Max Gas Price executors can receive. E.g. 50000000000 == 50GWEI
     uint256 gelatoMaxGasPrice;
 
     // Fees in % paid to executors for their execution. E.g. 5 == 5%
@@ -93,21 +89,13 @@ contract GelatoCore is Ownable, Claim {
     constructor(uint256 _gelatoGasPrice, uint256 _gelatoMaxGasPrice, uint256 _gelatoFee)
         public
     {
-        // Initialise gelatoGasPrice
+        // Initialise gelatoGasPrice, gelatoMaxGasPrice & gelatoFee
         gelatoGasPrice = _gelatoGasPrice;
+
         gelatoMaxGasPrice = _gelatoMaxGasPrice;
         gelatoFee = _gelatoFee;
     }
     // **************************** Gelato Core constructor() END *****************************
-
-
-    // Fallback function needed for arbitrary funding additions to Gelato Core's balance by owner
-    function() external payable {
-        require(isOwner(),
-            "fallback function: only the owner should send ether to Gelato Core without selecting a payable function."
-        );
-    }
-
 
     // **************************** Modifiers ******************************
     modifier onlyExecutionClaimOwner(uint256 _executionClaimId) {
@@ -118,8 +106,6 @@ contract GelatoCore is Ownable, Claim {
     }
     // **************************** Modifiers END ******************************
 
-
-
     // CREATE
     // **************************** mintExecutionClaim() ******************************
     function mintExecutionClaim(bytes memory _functionSignature,
@@ -129,7 +115,8 @@ contract GelatoCore is Ownable, Claim {
         public
         returns (bool)
     {
-
+        // CHECKS
+        // All checks are done interface side. If interface sets wrong _functionSignature, its not the coress fault. We could check that the bytes param is not == 0x, but this would require 2 costly keccak calls
 
         // Step1: Instantiate executionClaim (in memory)
         ExecutionClaim memory executionClaim = ExecutionClaim(
@@ -137,7 +124,7 @@ contract GelatoCore is Ownable, Claim {
             _functionSignature
         );
 
-        // ****** Step4: Mint new executionClaim ERC721 token ******
+        // ****** Step2: Mint new executionClaim ERC721 token ******
         // Increment the current token id
         Counters.increment(_executionClaimIds);
         // Get a new, unique token id for the newly minted ERC721
@@ -146,19 +133,19 @@ contract GelatoCore is Ownable, Claim {
         _mint(_executionClaimOwner, executionClaimId);
         // ****** Step4: Mint new executionClaim ERC721 token END ******
 
-        // Step5: ExecutionClaims tracking state variable update
+        // Step3: ExecutionClaims tracking state variable update
         // ERC721(executionClaimId) => ExecutionClaim(struct)
         executionClaims[executionClaimId] = executionClaim;
 
 
-        // Step6: Emit event to notify executors that a new sub order was created
+        // Step4: Emit event to notify executors that a new sub order was created
         emit LogNewExecutionClaimMinted(msg.sender,  // dappInterface
                                         _functionSignature,
                                         _executionClaimOwner  // prepaidExecutionFee
         );
 
 
-        // Step7: Return true to caller (dappInterface)
+        // Step5: Return true to caller (dappInterface)
         return true;
     }
     // **************************** mintExecutionClaim() END ******************************
@@ -184,6 +171,15 @@ contract GelatoCore is Ownable, Claim {
         return gelatoGasPrice;
     }
 
+
+    function getInterfaceBalance(address _dappInterface)
+        public
+        view
+        returns(uint256)
+    {
+        interfaceBalances[_dappInterface];
+    }
+
     // **************************** ExecutionClaim Getters ***************************
     // Getter for all ExecutionClaim fields
     function getExecutionClaim(uint256 _executionClaimId)
@@ -203,7 +199,7 @@ contract GelatoCore is Ownable, Claim {
     }
 
     // Getters for individual Execution Claim fields
-    // To get claimOwner we call GelatoCore.ownerOf(executionClaimId)
+    // To get claim interface
     function getClaimInterface(uint256 _executionClaimId)
         public
         view
@@ -214,10 +210,21 @@ contract GelatoCore is Ownable, Claim {
         return executionClaim.dappInterface;
     }
 
+    // To get claim functionSelector
+    function getClaimFunctionSignature(uint256 _executionClaimId)
+        public
+        view
+        returns(bytes memory)
+    {
+        ExecutionClaim memory executionClaim = executionClaims[_executionClaimId];
+
+        return executionClaim.functionSignature;
+    }
 
     // **************************** ExecutionClaim Getters END ******************************
 
-    // **************************** ExecutionClaims Updateability ***************************
+    // **************************** ExecutionClaim Updates  ******************************
+
     function cancelExecutionClaim(uint256 _executionClaimId)
         onlyExecutionClaimOwner(_executionClaimId)
         external
@@ -238,12 +245,7 @@ contract GelatoCore is Ownable, Claim {
         delete executionClaims[_executionClaimId];
     }
 
-    // We do not want to make the executionTime, nor the sellAmount, updateable
-    //  as this introduces unwanted safety complexity e.g. bad gasPrice estimations.
-    // Sellers should cancel and/or place new orders instead.
-
-    // **************************** ExecutionClaims Updateability END ******************************
-
+    // **************************** ExecutionClaim Updates END ******************************
 
 
     // Execute executionClaim
@@ -251,49 +253,49 @@ contract GelatoCore is Ownable, Claim {
         public
         returns (bool, bytes memory)
     {
+        // Step1: Fetch execution
         ExecutionClaim memory executionClaim = executionClaims[_executionClaimId];
 
-        // Calculate start GAS, set by the executor.
+        // // Step2: Calculate start GAS, set by the executor.
         uint256 startGas = gasleft();
 
+        // // Step3: Fetch execution claim variables
         // Interface Function signature
         bytes memory functionSignature = executionClaim.functionSignature;
-
         // Interface Address
         address dappInterface = executionClaim.dappInterface;
-
         // Get the executionClaimOwner before burning
         address executionClaimOwner = ownerOf(_executionClaimId);
 
+        // Step4: Determine usedGasPrice used to calculate the final executor payout
         // If tx Gas Price is higher than gelatoMaxGasPrice, use gelatoMaxGasPrice
         uint usedGasPrice;
         tx.gasprice > gelatoMaxGasPrice ? usedGasPrice = gelatoMaxGasPrice : usedGasPrice = tx.gasprice;
 
+        // Step5: Check if Interface has sufficient balance on core
         // Interface requires enough balance to payout exectutor
         require(gelatoMaxGasPrice.mul(usedGasPrice) >= interfaceBalances[dappInterface], "Interface does not have enough balance in core to cover gelatoMaxGas");
 
-        // ******** EFFECTS ********
+        // Step6: Call Interface
         // ******* Gelato Interface Call *******
         (bool success, bytes memory data) = dappInterface.call(functionSignature);
         // ******* Gelato Interface Call END *******
 
+        // Step7: Burn & delete
         // Burn the executed executionClaim
         _burn(_executionClaimId);
 
         // Delete the ExecutionClaim struct
-        // DEV: check if this delete operation results in a gas refund for the msg.sender/executor
         delete executionClaims[_executionClaimId];
         // ******** EFFECTS END ****
 
+        // Step8: Calc executor payout
         // How much gas we have left in this tx
         uint256 endGas = gasleft();
-
         // Calaculate how much gas we used up in this function
         uint256 totalGasUsed = startGas.sub(endGas).add(gasOverhead);
-
         // Calculate Total Cost
         uint256 totalCost = totalGasUsed.mul(usedGasPrice);
-
         // Calculate Executor Payout (including a fee set by GelatoCore.sol)
         // @🐮 .add not necessaryy as we set the numbers and they wont overflow
         uint256 executorPayout= totalCost.mul(100 + gelatoFee).div(100);
@@ -301,7 +303,7 @@ contract GelatoCore is Ownable, Claim {
         // Log the costs of execution
         emit LogExecutionMetrics(totalGasUsed, usedGasPrice, executorPayout);
 
-        // INTERACTIONS:
+        // // Step9: Conduct the payout to the executor
         // Transfer the prepaid fee to the executor as reward
         msg.sender.transfer(executorPayout);
 
@@ -316,10 +318,11 @@ contract GelatoCore is Ownable, Claim {
         return (success, data);
     }
     // **************************** execute() END ***************************
+
     // **************************** Core Updateability ******************************
 
     // Set the global max gas price an executor can receive in the gelato system
-    function setGelatoMaxGasPrice(uint256 _newGelatoMaxGasPrice)
+    function updateGelatoMaxGasPrice(uint256 _newGelatoMaxGasPrice)
         public
         onlyOwner
     {
@@ -327,12 +330,29 @@ contract GelatoCore is Ownable, Claim {
     }
 
     // Set the global fee an executor can receive in the gelato system
-    function setGelatoFee(uint256 _newGelatoFee)
+    function updateGelatoFee(uint256 _newGelatoFee)
         public
         onlyOwner
     {
         gelatoFee = _newGelatoFee;
     }
+
+    // @Dev: we can separate Governance fns into a base contract and inherit from it
+    // Updating the gelatoGasPrice - this is called by the Core Execution Service oracle
+    function updateGelatoGasPrice(uint256 _gelatoGasPrice)
+        onlyOwner
+        external
+        returns(bool)
+    {
+        gelatoGasPrice = _gelatoGasPrice;
+
+        emit LogGelatoGasPriceUpdate(gelatoGasPrice);
+
+        return true;
+    }
+    // **************************** Core Updateability END ******************************
+
+    // **************************** Interface Interactions ******************************
 
     // Enable interfaces to add a balance to Gelato to pay for transaction executions
     function addBalance()
@@ -355,22 +375,14 @@ contract GelatoCore is Ownable, Claim {
         msg.sender.transfer(_withdrawAmount);
     }
 
-    // UPDATE
-    // @Dev: we can separate Governance fns into a base contract and inherit from it
-    // Updating the gelatoGasPrice - this is called by the Core Execution Service oracle
-    function updateGelatoGasPrice(uint256 _gelatoGasPrice)
-        onlyOwner
-        external
-        returns(bool)
-    {
-        gelatoGasPrice = _gelatoGasPrice;
+    // **************************** Interface Interactions END ******************************
 
-        emit LogGelatoGasPriceUpdate(gelatoGasPrice);
-
-        return true;
+    // Fallback function needed for arbitrary funding additions to Gelato Core's balance by owner
+    function() external payable {
+        require(isOwner(),
+            "fallback function: only the owner should send ether to Gelato Core without selecting a payable function."
+        );
     }
-    // **************************** Core Updateability END ******************************
-
 }
 
 
