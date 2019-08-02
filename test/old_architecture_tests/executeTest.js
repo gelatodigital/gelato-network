@@ -32,7 +32,7 @@ let {
   MSG_VALUE_BN,
   execShellCommand,
   execShellCommandLog
-} = require("./truffleTestConfig.js");
+} = require("../truffleTestConfig.js/index.js");
 
 describe("successfully executes claim", () => {
   // ******** Deploy new instances Test ********

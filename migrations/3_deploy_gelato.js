@@ -8,6 +8,8 @@ const DutchExchangeProxy = artifacts.require("DutchExchangeProxy");
 
 // GelatoCore constructor params
 const GELATO_GAS_PRICE = web3.utils.toWei("5", "gwei");
+const GELATO_MAX_GAS_PRICE = web3.utils.toWei("50", "gwei");
+const GELATO_FEE = web3.utils.toWei("50", "gwei");
 
 module.exports = async function(deployer, network, accounts) {
   const _deployer = accounts[0];
@@ -22,7 +24,7 @@ module.exports = async function(deployer, network, accounts) {
         Owner: ${_deployer}
         DutchXProxy: ${dxProxy.address}
         gelatoGasPrice: ${GELATO_GAS_PRICE}`);
-  await deployer.deploy(GelatoCore, GELATO_GAS_PRICE);
+  await deployer.deploy(GelatoCore, GELATO_GAS_PRICE, GELATO_MAX_GAS_PRICE, GELATO_FEE);
 
   const gelatoCore = await GelatoCore.deployed();
   console.log(`

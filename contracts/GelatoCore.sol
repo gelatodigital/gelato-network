@@ -80,20 +80,19 @@ contract GelatoCore is Ownable, Claim {
     uint256 gelatoMaxGasPrice;
 
     // Fees in % paid to executors for their execution. E.g. 5 == 5%
-    uint256 gelatoFee;
+    uint256 gelatoExecutionMargin;
     // **************************** State Variables END ******************************
 
     //_____________ Gelato Execution Service Business Logic END ________________
 
     // **************************** Gelato Core constructor() ******************************
-    constructor(uint256 _gelatoGasPrice, uint256 _gelatoMaxGasPrice, uint256 _gelatoFee)
+    constructor(uint256 _gelatoGasPrice, uint256 _gelatoMaxGasPrice, uint256 _gelatoExecutionMargin)
         public
     {
-        // Initialise gelatoGasPrice, gelatoMaxGasPrice & gelatoFee
+        // Initialise gelatoGasPrice, gelatoMaxGasPrice & gelatoExecutionMargin
         gelatoGasPrice = _gelatoGasPrice;
-
         gelatoMaxGasPrice = _gelatoMaxGasPrice;
-        gelatoFee = _gelatoFee;
+        gelatoExecutionMargin = _gelatoExecutionMargin;
     }
     // **************************** Gelato Core constructor() END *****************************
 
@@ -298,7 +297,7 @@ contract GelatoCore is Ownable, Claim {
         uint256 totalCost = totalGasUsed.mul(usedGasPrice);
         // Calculate Executor Payout (including a fee set by GelatoCore.sol)
         // @🐮 .add not necessaryy as we set the numbers and they wont overflow
-        uint256 executorPayout= totalCost.mul(100 + gelatoFee).div(100);
+        uint256 executorPayout= totalCost.mul(100 + gelatoExecutionMargin).div(100);
 
         // Log the costs of execution
         emit LogExecutionMetrics(totalGasUsed, usedGasPrice, executorPayout);
@@ -330,11 +329,11 @@ contract GelatoCore is Ownable, Claim {
     }
 
     // Set the global fee an executor can receive in the gelato system
-    function updateGelatoFee(uint256 _newGelatoFee)
+    function updategelatoExecutionMargin(uint256 _newgelatoExecutionMargin)
         public
         onlyOwner
     {
-        gelatoFee = _newGelatoFee;
+        gelatoExecutionMargin = _newgelatoExecutionMargin;
     }
 
     // @Dev: we can separate Governance fns into a base contract and inherit from it

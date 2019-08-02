@@ -33,7 +33,7 @@ let {
   execShellCommand,
   DxGetter,
   execShellCommandLog
-} = require("./truffleTestConfig.js");
+} = require("../truffleTestConfig.js/index.js");
 require("dotenv").config();
 
 describe("successfully execute a manual withdraw", () => {

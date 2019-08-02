@@ -11,9 +11,10 @@ import '../../base/SafeMath.sol';
 
 
 // Gelato IcedOut-compliant DutchX Interface for splitting sell orders and for automated withdrawals
-contract GelatoDutchX is Ownable, SafeTransfer {
+contract GelatoDutchX is IcedOut, SafeTransfer {
+    // parent => Ownable => indirect use through IcedOut
     // Libraries
-    using SafeMath for uint256;
+    // using SafeMath for uint256; => indirect use through IcedOut
     using Counters for Counters.Counter;
 
     Counters.Counter private orderIds;
@@ -67,14 +68,13 @@ contract GelatoDutchX is Ownable, SafeTransfer {
     );
     event LogOrderCompletedAndDeleted(uint256 indexed orderId);
     event LogWithdrawAmount(uint256 num, uint256 den, uint256 withdrawAmount);
-    event LogAddedBalanceToGelato(uint256 indexed weiAmount, uint256 indexed newBalance);
     // **************************** Events END ******************************
 
 
     // **************************** State Variables ******************************
 
     // Interfaces to other contracts that are set during construction.
-    GelatoCore public gelatoCore;
+    // GelatoCore public gelatoCore;
     DutchExchange public dutchExchange;
 
     // One orderState struct can have many sellOrder structs as children
@@ -89,14 +89,14 @@ contract GelatoDutchX is Ownable, SafeTransfer {
     // Constants that are set during contract construction and updateable via setters
     uint256 public auctionStartWaitingForFunding;
 
-    // Max Gas for one execute + withdraw pair => fixed. To adjust prePayment, use gasPrice
-    uint256 public maxGas = 100000;
+    // // Max Gas for one execute + withdraw pair => fixed. To adjust prePayment, use gasPrice
+    // uint256 public maxGas = 500000;
+
+    // Gas price charged to users
+    uint256 public interfaceGasPrice;
 
     // Capping the number of sub Order that can be created in one tx
     uint256 public maxSellOrders;
-
-    // Gas price charged to users
-    uint256 public gasPrice;
 
     // **************************** State Variables END ******************************
 
@@ -106,13 +106,15 @@ contract GelatoDutchX is Ownable, SafeTransfer {
         * sets the state variable constants
     */
     constructor(address payable _GelatoCore, address _DutchExchange)
+        // Initialize gelatoCore address & maxGas in IcedOut parent
+        IcedOut(_GelatoCore, 500000)
         public
     {
-        gelatoCore = GelatoCore(_GelatoCore);
+        // gelatoCore = GelatoCore(_GelatoCore);
         dutchExchange = DutchExchange(_DutchExchange);
         auctionStartWaitingForFunding = 1;
         maxSellOrders = 6;
-        gasPrice = gelatoCore.getGelatoGasPrice();
+        interfaceGasPrice = gelatoCore.getGelatoGasPrice();
 
     }
 
@@ -128,15 +130,14 @@ contract GelatoDutchX is Ownable, SafeTransfer {
 
     // Function to calculate the prepayment an interface needs to transfer to Gelato Core
     //  for minting a new execution executionClaim
-    function calcPrepaidExecutionFee()
-        public
-        view
-        returns(uint256 prepayment)
-    {
-        // msg.sender == dappInterface
-        prepayment = maxGas.mul(gasPrice);
-        // prepayment = maxGas.mul(gelatoCore.getGelatoGasPrice());
-    }
+    // function calcInterfacePrepaidExecutionFee()
+    //     public
+    //     view
+    //     returns(uint256 prepayment)
+    // {
+    //     prepayment = maxGas.mul(gasPrice);
+    //     // prepayment = maxGas.mul(gelatoCore.getGelatoGasPrice());
+    // }
 
     // **************************** timeSellOrders() ******************************
     function timeSellOrders(address _sellToken,
@@ -170,7 +171,7 @@ contract GelatoDutchX is Ownable, SafeTransfer {
 
         // Step3: Invariant Requirements
         // Require that user transfers the correct prepayment amount. Charge 2x execute + Withdraw
-        uint256 prePaymentPerSellOrder = calcPrepaidExecutionFee();
+        uint256 prePaymentPerSellOrder = calcGelatoPrepaidExecutionFee();
         require(msg.value == prePaymentPerSellOrder.mul(_numSellOrders),  // calc for msg.sender==dappInterface
             "User ETH prepayment transfer is incorrect"
         );
@@ -216,14 +217,10 @@ contract GelatoDutchX is Ownable, SafeTransfer {
             );
 
             // For each sellOrder, mint one claim that call the execDepositAndSell function
-            uint256 executionClaimId = gelatoCore.getCurrentExecutionClaimId().add(1);
-            bytes memory execSignature = abi.encodeWithSignature("execDepositAndSell(uint256)", executionClaimId);
-            gelatoCore.mintExecutionClaim(execSignature, msg.sender);
+            (uint256 executionClaimId, ) = mintClaim("execDepositAndSell(uint256)", msg.sender);
 
             // For each sellOrder, mint one claim that call the execWithdraw function
-            uint256 executionClaimIdPlusOne = executionClaimId.add(1);
-            bytes memory withdrawSignature = abi.encodeWithSignature("execWithdraw(uint256)", executionClaimIdPlusOne);
-            gelatoCore.mintExecutionClaim(withdrawSignature, msg.sender);
+            (uint256 executionClaimIdPlusOne, ) = mintClaim("execWithdraw(uint256)", msg.sender);
 
             // Map both claims to the same Sell Order
             sellOrders[executionClaimId] = sellOrder;
@@ -265,9 +262,7 @@ contract GelatoDutchX is Ownable, SafeTransfer {
         OrderState storage orderState = orderStates[orderStateId];
 
         // Step3: Check the condition: Execution Time
-        require(sellOrder.executionTime <= now,
-            "gelatoCore.execute: You called before scheduled execution time"
-        );
+        checkTimeCondition(sellOrder.executionTime);
 
         // Step4: initialise multi-use variables
         // ********************** Load variables from storage and initialise them **********************
@@ -674,7 +669,7 @@ contract GelatoDutchX is Ownable, SafeTransfer {
 
         // ****** EFFECTS END ******
         // This deletes the withdraw struct as well as they both map to the same struct
-        sellOrders[_executionClaimId];
+        delete sellOrders[_executionClaimId];
 
         // INTERACTIONS: transfer sellAmount back from this contracts ERC20 balance to seller
         // REFUND USER!!!
@@ -720,8 +715,6 @@ contract GelatoDutchX is Ownable, SafeTransfer {
 
         OrderState memory orderState = orderStates[orderStateId];
 
-
-
         // Fetch price of last participated in and cleared auction using lastAuctionIndex
         uint256 num;
         uint256 den;
@@ -756,11 +749,11 @@ contract GelatoDutchX is Ownable, SafeTransfer {
     }
 
     // Set the global max gas price an executor can receive in the gelato system
-    function updateGasPrice(uint256 _gasPrice)
+    function updateGasPrice(uint256 _interfaceGasPrice)
         public
         onlyOwner
     {
-        gasPrice = _gasPrice;
+        interfaceGasPrice = _interfaceGasPrice;
     }
 
     // Set the global fee an executor can receive in the gelato system
@@ -771,23 +764,23 @@ contract GelatoDutchX is Ownable, SafeTransfer {
         maxSellOrders = _maxSellOrders;
     }
 
-    // UPDATE BALANCE ON GELATO CORE
-    // Add balance
-    function addBalanceToGelato()
-        public
-        payable
-        onlyOwner
-    {
-        gelatoCore.addBalance.value(msg.value)();
-        emit LogAddedBalanceToGelato(msg.value, gelatoCore.getInterfaceBalance(address(this)));
-    }
-    // Withdraw Balance
-    function withdrawBalanceFromGelato(uint256 _withdrawAmount)
-        public
-        onlyOwner
-    {
-        gelatoCore.withdrawBalance(_withdrawAmount);
-    }
+    // // UPDATE BALANCE ON GELATO CORE
+    // // Add balance
+    // function addBalanceToGelato()
+    //     public
+    //     payable
+    //     onlyOwner
+    // {
+    //     gelatoCore.addBalance.value(msg.value)();
+    //     emit LogAddedBalanceToGelato(msg.value, gelatoCore.getInterfaceBalance(address(this)));
+    // }
+    // // Withdraw Balance
+    // function withdrawBalanceFromGelato(uint256 _withdrawAmount)
+    //     public
+    //     onlyOwner
+    // {
+    //     gelatoCore.withdrawBalance(_withdrawAmount);
+    // }
 
 
     // Fallback function: reverts incoming ether payments not addressed to a payable function

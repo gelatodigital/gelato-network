@@ -1,4 +1,4 @@
-const commandLine = require("./helpers/execShellCommand.js");
+const commandLine = require("../helpers/execShellCommand.js");
 process.env.TEST="1"
 process.env.CLAIM_STATE_ID="1"
 process.env.EXECUTION_CLAIM="1"
