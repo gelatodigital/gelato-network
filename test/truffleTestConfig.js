@@ -13,9 +13,9 @@ const {execShellCommand, execShellCommandLog} = require("./helpers/execShellComm
 
 // Global variables
 const BN = web3.utils.BN;
-const GDX_GAS_PRICE = new BN(web3.utils.toWei("5", "gwei"));
+const GELATO_GAS_PRICE_BN = new BN(web3.utils.toWei("5", "gwei"));
 const GDX_MAXGAS_BN = new BN("500000"); // 500.000 must be benchmarked
-const GDX_PREPAID_FEE_BN = GDX_MAXGAS_BN.mul(GDX_GAS_PRICE); // wei
+const GDX_PREPAID_FEE_BN = GDX_MAXGAS_BN.mul(GELATO_GAS_PRICE_BN); // wei
 
 // Split Sell Order Details
 const numberOfSubOrders = "2"
@@ -51,7 +51,7 @@ module.exports = {
     timeTravel,
     BN,
     NUM_SUBORDERS_BN,
-    GDX_GAS_PRICE,
+    GELATO_GAS_PRICE_BN,
     TOTAL_SELL_VOLUME,
     SUBORDER_SIZE_BN,
     INTERVAL_SPAN,

@@ -102,7 +102,9 @@
     "gdx-truffle-exec": "yarn gdx-truffle-mv-deploy; truffle test gelato_tests/gelato_interface_tests/gelato_DutchX_tests/gDX_truffle_tests/gDX_truffle_integration_tests/gDX_truffle_execute.js; yarn gdx-truffle-mv-deploy-back",
     "gdx-truffle-integrationtest": "yarn gdx-truffle-list && yarn gdx-truffle-mint && yarn gdx-close-auction-1 && export ID=1 && yarn gdx-truffle-exec && yarn gdx-state",
     "gdx-truffle-integrationtest-lazy": "yarn setup && yarn gdx-truffle-list && yarn gdx-truffle-mint && yarn gdx-close-auction-1 && export ID=1 && yarn gdx-truffle-exec && yarn gdx-state",
-    "hilIntegrationTest": "mv ./migrations/2_DEV_migrate_dependencies.js ./2_DEV_migrate_dependencies.js; mv ./migrations/3_deploy_gelato.js ./3_deploy_gelato.js; mv ./migrations/4_deploy_dxGetter.js ./4_deploy_dxGetter.js && truffle test test/integrationTest.js && mv ./2_DEV_migrate_dependencies.js ./migrations/2_DEV_migrate_dependencies.js; mv ./3_deploy_gelato.js ./migrations/3_deploy_gelato.js; mv ./4_deploy_dxGetter.js ./migrations/4_deploy_dxGetter.js"
+    "oldArchIntegrationTest": "mv ./migrations/2_DEV_migrate_dependencies.js ./2_DEV_migrate_dependencies.js; mv ./migrations/3_deploy_gelato.js ./3_deploy_gelato.js; mv ./migrations/4_deploy_dxGetter.js ./4_deploy_dxGetter.js && truffle test test/integrationTest.js && mv ./2_DEV_migrate_dependencies.js ./migrations/2_DEV_migrate_dependencies.js; mv ./3_deploy_gelato.js ./migrations/3_deploy_gelato.js; mv ./4_deploy_dxGetter.js ./migrations/4_deploy_dxGetter.js",
+    "newIntegrationTest": "mv ./migrations/2_DEV_migrate_dependencies.js ./2_DEV_migrate_dependencies.js; mv ./migrations/3_deploy_gelato.js ./3_deploy_gelato.js; mv ./migrations/4_deploy_dxGetter.js ./4_deploy_dxGetter.js && truffle test test/newIntegrationTest.js && mv ./2_DEV_migrate_dependencies.js ./migrations/2_DEV_migrate_dependencies.js; mv ./3_deploy_gelato.js ./migrations/3_deploy_gelato.js; mv ./4_deploy_dxGetter.js ./migrations/4_deploy_dxGetter.js"
+
   },
   "repository": {
     "type": "git",

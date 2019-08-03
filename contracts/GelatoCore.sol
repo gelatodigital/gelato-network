@@ -34,8 +34,8 @@ contract GelatoCore is Ownable, Claim {
 
     // **************************** Events **********************************
     event LogNewExecutionClaimMinted(address indexed dappInterface,
-                                     bytes indexed functionSelector,
-                                     address indexed executionClaimOwner
+                                     bytes indexed functionSignature,
+                                     uint256 executionClaimId
     );
     event LogNewInterfaceListed(address indexed dappInterface, uint256 maxGas);
     event LogInterfaceUnlisted(address indexed dappInterface, uint256 noMaxGas);
@@ -57,6 +57,8 @@ contract GelatoCore is Ownable, Claim {
                                            uint256 gelatoCorePayable
     );
     event LogExecutionMetrics(uint256 indexed gasUsed, uint256 indexed gasPrice, uint256 indexed executorPayout);
+
+    event LogInterfaceBalanceAdded(address indexed dappInterface, uint256 indexed newBalance);
     // **************************** Events END **********************************
 
     // **************************** State Variables **********************************
@@ -77,10 +79,10 @@ contract GelatoCore is Ownable, Claim {
     uint256 gasOverhead = 50000;
 
     // Max Gas Price executors can receive. E.g. 50000000000 == 50GWEI
-    uint256 gelatoMaxGasPrice;
+    uint256 public gelatoMaxGasPrice;
 
     // Fees in % paid to executors for their execution. E.g. 5 == 5%
-    uint256 gelatoExecutionMargin;
+    uint256 public gelatoExecutionMargin;
     // **************************** State Variables END ******************************
 
     //_____________ Gelato Execution Service Business Logic END ________________
@@ -140,7 +142,7 @@ contract GelatoCore is Ownable, Claim {
         // Step4: Emit event to notify executors that a new sub order was created
         emit LogNewExecutionClaimMinted(msg.sender,  // dappInterface
                                         _functionSignature,
-                                        _executionClaimOwner  // prepaidExecutionFee
+                                        executionClaimId
         );
 
 
@@ -176,7 +178,7 @@ contract GelatoCore is Ownable, Claim {
         view
         returns(uint256)
     {
-        interfaceBalances[_dappInterface];
+        return interfaceBalances[_dappInterface];
     }
 
     // **************************** ExecutionClaim Getters ***************************
@@ -329,7 +331,7 @@ contract GelatoCore is Ownable, Claim {
     }
 
     // Set the global fee an executor can receive in the gelato system
-    function updategelatoExecutionMargin(uint256 _newgelatoExecutionMargin)
+    function updateGelatoExecutionMargin(uint256 _newgelatoExecutionMargin)
         public
         onlyOwner
     {
@@ -339,8 +341,8 @@ contract GelatoCore is Ownable, Claim {
     // @Dev: we can separate Governance fns into a base contract and inherit from it
     // Updating the gelatoGasPrice - this is called by the Core Execution Service oracle
     function updateGelatoGasPrice(uint256 _gelatoGasPrice)
-        onlyOwner
         external
+        onlyOwner
         returns(bool)
     {
         gelatoGasPrice = _gelatoGasPrice;
@@ -354,13 +356,15 @@ contract GelatoCore is Ownable, Claim {
     // **************************** Interface Interactions ******************************
 
     // Enable interfaces to add a balance to Gelato to pay for transaction executions
-    function addBalance()
+    function addBalance(address _dappInterface)
         public
         payable
     {
         require(msg.value > 0, "Msg.value must be greater than zero");
-        uint256 currentInterfaceBalance = interfaceBalances[msg.sender];
-        interfaceBalances[msg.sender] = currentInterfaceBalance.add(msg.value);
+        uint256 currentInterfaceBalance = interfaceBalances[_dappInterface];
+        uint256 newBalance = currentInterfaceBalance.add(msg.value);
+        interfaceBalances[_dappInterface] = newBalance;
+        emit LogInterfaceBalanceAdded(_dappInterface, newBalance);
     }
 
     // Enable interfaces to withdraw some of their added balances

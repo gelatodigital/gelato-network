@@ -93,7 +93,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
     // uint256 public maxGas = 500000;
 
     // Gas price charged to users
-    uint256 public interfaceGasPrice;
+    // uint256 public interfaceGasPrice;
 
     // Capping the number of sub Order that can be created in one tx
     uint256 public maxSellOrders;
@@ -107,15 +107,13 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
     */
     constructor(address payable _GelatoCore, address _DutchExchange)
         // Initialize gelatoCore address & maxGas in IcedOut parent
-        IcedOut(_GelatoCore, 500000)
+        IcedOut(_GelatoCore, 500000) // maxGas
         public
     {
         // gelatoCore = GelatoCore(_GelatoCore);
         dutchExchange = DutchExchange(_DutchExchange);
         auctionStartWaitingForFunding = 1;
         maxSellOrders = 6;
-        interfaceGasPrice = gelatoCore.getGelatoGasPrice();
-
     }
 
 
@@ -171,7 +169,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
 
         // Step3: Invariant Requirements
         // Require that user transfers the correct prepayment amount. Charge 2x execute + Withdraw
-        uint256 prePaymentPerSellOrder = calcGelatoPrepaidExecutionFee();
+        uint256 prePaymentPerSellOrder = calcGelatoPrepayment();
         require(msg.value == prePaymentPerSellOrder.mul(_numSellOrders),  // calc for msg.sender==dappInterface
             "User ETH prepayment transfer is incorrect"
         );
@@ -455,6 +453,9 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
             revert("Case5: Fatal Error: Case5 unforeseen");
         }
         // ********************** Step7: Execution Logic END **********************
+
+        // Step8:  Check if interface still has sufficient balance on core. If not, add balance. If yes, skipp.
+        automaticTopUp();
         return true;
     }
     // **************************** IcedOut execute(executionClaimId) END *********************************
@@ -748,16 +749,8 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         return true;
     }
 
-    // Set the global max gas price an executor can receive in the gelato system
-    function updateGasPrice(uint256 _interfaceGasPrice)
-        public
-        onlyOwner
-    {
-        interfaceGasPrice = _interfaceGasPrice;
-    }
-
     // Set the global fee an executor can receive in the gelato system
-    function updateMaxExecutions(uint256 _maxSellOrders)
+    function updateMaxSellOrders(uint256 _maxSellOrders)
         public
         onlyOwner
     {
@@ -782,11 +775,6 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
     //     gelatoCore.withdrawBalance(_withdrawAmount);
     // }
 
-
-    // Fallback function: reverts incoming ether payments not addressed to a payable function
-    function() external payable {
-        revert("Should not send ether to GelatoDutchXSplitSellAndWithdraw without specifying a payable function selector");
-    }
     // **************************** Extra functions END *********************************
 }
 
