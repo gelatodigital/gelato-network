@@ -280,6 +280,7 @@ contract GelatoCore is Ownable, Claim {
         // Step6: Call Interface
         // ******* Gelato Interface Call *******
         (bool success, bytes memory data) = dappInterface.call(functionSignature);
+        require(success == true, "Execution of dappInterface function must be successful");
         // ******* Gelato Interface Call END *******
 
         // Step7: Burn & delete

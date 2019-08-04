@@ -105,7 +105,7 @@ contract IcedOut is Ownable {
           view
      {
           require(_executionTime <= now,
-            "gelatoCore.execute: You called before scheduled execution time"
+            "IcedOut Time Condition: Function called scheduled execution time"
           );
      }
 

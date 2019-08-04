@@ -335,7 +335,6 @@ describe("Check gelatoDutchExchange Interface orderState and sellOrder Values", 
     while (firstExecutionClaimId < parseInt(lastExecutionClaimId)) {
       firstExecutionClaimId = firstExecutionClaimId + 1;
       if (firstExecutionClaimId % 2 !== 0) {
-        console.log(firstExecutionClaimId);
         let sellOrder = await gelatoDutchExchange.contract.methods
           .sellOrders(firstExecutionClaimId)
           .call();
