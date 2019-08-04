@@ -4,6 +4,7 @@
  */
 
 let {
+  numberOfSubOrders,
   GelatoCore,
   GelatoDutchX,
   SellToken,
@@ -37,7 +38,8 @@ let {
   MSG_VALUE_BN,
   execShellCommand,
   DxGetter,
-  execShellCommandLog
+  execShellCommandLog,
+  truffleAssert
 } = require("./truffleTestConfig.js");
 
 let txHash;

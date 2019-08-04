@@ -10,6 +10,8 @@ const DxGetter = artifacts.require("DutchXGetter")
 // Helper functions
 const timeTravel = require("./helpers/timeTravel.js");
 const {execShellCommand, execShellCommandLog} = require("./helpers/execShellCommand.js");
+const truffleAssert = require('truffle-assertions');
+
 
 // Global variables
 const BN = web3.utils.BN;
@@ -35,13 +37,14 @@ let buyToken;
 let gelatoDutchXContract;
 let gelatoCore;
 let gelatoCoreOwner;
-let orderId;
+let orderStateId;
 let orderState;
 let executionTime;
 let interfaceOrderId;
 const executionClaimIds = [];
 
 module.exports = {
+    numberOfSubOrders,
     GelatoCore,
     GelatoDutchX,
     SellToken,
@@ -66,7 +69,7 @@ module.exports = {
     gelatoDutchXContract,
     gelatoCore,
     gelatoCoreOwner,
-    orderId,
+    orderStateId,
     orderState,
     executionTime,
     interfaceOrderId,
@@ -74,5 +77,6 @@ module.exports = {
     MSG_VALUE_BN,
     execShellCommand,
     DxGetter,
-    execShellCommandLog
+    execShellCommandLog,
+    truffleAssert
 };

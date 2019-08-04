@@ -41,9 +41,14 @@ describe("Test possible intregration test architecture", () => {
         await commandLine.execShellCommandLog(`truffle test test/setupTest.js`)
         console.log("#########################################")
     })
-    it("test6 - Execute Execution Claim", async function () {
+    it("test6 - Mint 4 Execution Claims", async function () {
         this.timeout(50000)
         await commandLine.execShellCommandLog(`truffle test test/mintTest.js`)
+        console.log("#########################################")
+    })
+    it("test7 - Execute 1st Execution Claim - depositAndSell", async function () {
+        this.timeout(50000)
+        await commandLine.execShellCommandLog(`truffle test test/execTest.js`)
         console.log("#########################################")
     })
 

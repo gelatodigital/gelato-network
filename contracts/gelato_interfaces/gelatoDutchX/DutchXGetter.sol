@@ -37,4 +37,11 @@ contract DutchXGetter {
         (num, den) = dutchExchange.getFeeRatio(_dxInterface);
         return (den, num);
     }
+
+    function getAuctionIndex(address _sellToken, address _buyToken)
+        public
+        returns(uint256 auctionIndex)
+    {
+        auctionIndex = dutchExchange.getAuctionIndex(_sellToken, _buyToken);
+    }
 }

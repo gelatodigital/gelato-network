@@ -19,6 +19,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
 
     Counters.Counter private orderIds;
 
+    // One OrderState has many SellOrder
     struct OrderState {
         address sellToken; // token to sell
         address buyToken; // token to buy
@@ -27,6 +28,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         uint256 prePaymentPerSellOrder; // maxGas * gelatoGasPrice
     }
 
+    // One SellOrder has one parent OrderState
     struct SellOrder {
         uint256 orderStateId; // Link to parent OrderState
         uint256 executionTime; // Condition for execution
@@ -48,7 +50,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
     */
 
     // **************************** Events ******************************
-    event LogNewOrderCreated(uint256 indexed orderId, address indexed seller);
+    event LogNewOrderCreated(uint256 indexed orderStateId, address indexed seller);
     event LogFeeNumDen(uint256 num, uint256 den);
     event LogActualSellAmount(uint256 indexed executionClaimId,
                               uint256 indexed orderId,
@@ -209,8 +211,8 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         for (uint256 i = 0; i < _numSellOrders; i++) {
             SellOrder memory sellOrder = SellOrder(
                 orderStateId,
-                _sellOrderAmount,
                 _executionTime.add(_intervalSpan.mul(i)),
+                _sellOrderAmount,
                 false // not withdrawn yet
             );
 

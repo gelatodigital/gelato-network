@@ -103,8 +103,7 @@
     "gdx-truffle-integrationtest": "yarn gdx-truffle-list && yarn gdx-truffle-mint && yarn gdx-close-auction-1 && export ID=1 && yarn gdx-truffle-exec && yarn gdx-state",
     "gdx-truffle-integrationtest-lazy": "yarn setup && yarn gdx-truffle-list && yarn gdx-truffle-mint && yarn gdx-close-auction-1 && export ID=1 && yarn gdx-truffle-exec && yarn gdx-state",
     "oldArchIntegrationTest": "mv ./migrations/2_DEV_migrate_dependencies.js ./2_DEV_migrate_dependencies.js; mv ./migrations/3_deploy_gelato.js ./3_deploy_gelato.js; mv ./migrations/4_deploy_dxGetter.js ./4_deploy_dxGetter.js && truffle test test/integrationTest.js && mv ./2_DEV_migrate_dependencies.js ./migrations/2_DEV_migrate_dependencies.js; mv ./3_deploy_gelato.js ./migrations/3_deploy_gelato.js; mv ./4_deploy_dxGetter.js ./migrations/4_deploy_dxGetter.js",
-    "newIntegrationTest": "mv ./migrations/2_DEV_migrate_dependencies.js ./2_DEV_migrate_dependencies.js; mv ./migrations/3_deploy_gelato.js ./3_deploy_gelato.js; mv ./migrations/4_deploy_dxGetter.js ./4_deploy_dxGetter.js && truffle test test/newIntegrationTest.js && mv ./2_DEV_migrate_dependencies.js ./migrations/2_DEV_migrate_dependencies.js; mv ./3_deploy_gelato.js ./migrations/3_deploy_gelato.js; mv ./4_deploy_dxGetter.js ./migrations/4_deploy_dxGetter.js"
-
+    "newIntegrationTest": "mv ./migrations/2_DEV_migrate_dependencies.js ./2_DEV_migrate_dependencies.js; mv ./migrations/3_deploy_gelato.js ./3_deploy_gelato.js; mv ./migrations/4_deploy_dxGetter.js ./4_deploy_dxGetter.js && truffle test test/newIntegrationTest.js; mv ./2_DEV_migrate_dependencies.js ./migrations/2_DEV_migrate_dependencies.js; mv ./3_deploy_gelato.js ./migrations/3_deploy_gelato.js; mv ./4_deploy_dxGetter.js ./migrations/4_deploy_dxGetter.js"
   },
   "repository": {
     "type": "git",
@@ -140,6 +139,7 @@
     "yargs": "^13.2.4"
   },
   "devDependencies": {
+    "chai": "^4.2.0",
     "commander": "^2.20.0",
     "esdoc": "^1.1.0",
     "esdoc-standard-plugin": "^1.0.0",
@@ -153,6 +153,7 @@
     "ganache-cli": "^6.4.3",
     "nodemon": "^1.19.1",
     "prettier-standard": "^9.1.1",
+    "truffle-assertions": "^0.9.1",
     "yamljs": "^0.3.0"
   }
 }
