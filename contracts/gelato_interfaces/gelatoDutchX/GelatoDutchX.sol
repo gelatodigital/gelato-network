@@ -70,6 +70,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
     );
     event LogOrderCompletedAndDeleted(uint256 indexed orderId);
     event LogWithdrawAmount(uint256 num, uint256 den, uint256 withdrawAmount);
+    event LogGas(uint256 gas1, uint256 gas2);
     // **************************** Events END ******************************
 
 
@@ -109,7 +110,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
     */
     constructor(address payable _GelatoCore, address _DutchExchange)
         // Initialize gelatoCore address & maxGas in IcedOut parent
-        IcedOut(_GelatoCore, 500000) // maxGas
+        IcedOut(_GelatoCore, 500000) // maxGas 277317 for depsositAndSell
         public
     {
         // gelatoCore = GelatoCore(_GelatoCore);
@@ -246,6 +247,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         external
         returns (bool)
     {
+        uint256 gas1 = gasleft();
         // Step1: Checks for execution safety
         // Make sure that gelatoCore is the only allowed caller to this function.
         // Executors will call this execute function via the Core's execute function.
@@ -458,6 +460,10 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
 
         // Step8:  Check if interface still has sufficient balance on core. If not, add balance. If yes, skipp.
         automaticTopUp();
+
+        // To measure gas costs (inlcuding automatic Top up case)
+        uint256 gas2 = gasleft();
+        emit LogGas(gas1, gas2);
         return true;
     }
     // **************************** IcedOut execute(executionClaimId) END *********************************
@@ -475,7 +481,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
 
         // Step2: Create storage pointer for the individual sellOrder and the parent orderState
         // Fetch SellOrder
-        SellOrder storage sellOrder = sellOrders[_executionClaimId];
+        SellOrder memory sellOrder = sellOrders[_executionClaimId];
         address seller = gelatoCore.ownerOf(_executionClaimId);
 
         // Fetch OrderState

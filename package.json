@@ -68,7 +68,7 @@
     "format": "prettier-standard 'src/**/*.js'",
     "endow1": "./gelato_tests/gelato_interface_tests/gelato_DutchX_tests/hil_shell-scripts/endowSeller.sh",
     "create1": "./gelato_tests/gelato_interface_tests/gelato_DX_tests/splitSellAndWithdraw/functional_tests/sh_functional_tests/createSellOrder.sh",
-    "skip6": "gelato_tests/gelato_interface_tests/gelato_DutchX_tests/hil_shell-scripts/skipSixHours.sh",
+    "skip6": "./gelato_tests/gelato_interface_tests/gelato_DutchX_tests/hil_shell-scripts/skipSixHours.sh",
     "stage1": "./gelato_tests/gelato_interface_tests/gelato_DutchX_tests/hil_shell-scripts/stageOne.sh",
     "exec1": "./gelato_tests/gelato_interface_tests/gelato_DX_tests/splitSellAndWithdraw/functional_tests/sh_functional_tests/execSubOrderAndWithdraw.sh",
     "start1": "./gelato_tests/gelato_interface_tests/gelato_DutchX_tests/hil_shell-scripts/startAuction.sh",

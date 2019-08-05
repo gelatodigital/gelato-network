@@ -117,7 +117,7 @@ contract IcedOut is Ownable {
           // Fetch interface eth balance on gelato core
           uint256 interfaceGelatoBalance = gelatoCore.getInterfaceBalance(address(this));
           // If interface balance is less than 0.5 on core, topup the balance
-          if ( interfaceGelatoBalance < 0.5 ether )
+          if ( interfaceGelatoBalance < 1 ether )
           {
                // Fetch current interface eth balance
                uint256 interfaceEthBalance = address(this).balance;

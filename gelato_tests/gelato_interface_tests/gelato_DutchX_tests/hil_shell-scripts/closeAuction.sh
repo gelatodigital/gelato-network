@@ -1,7 +1,7 @@
 #!/bin/sh
 # export DEFAULT_ACCOUNT="0x627306090abab3a6e1400e9345bc60c78a8bef57"
 # export SELL_TOKEN="WETH"
-# export SELL_AMOUNT="10"
+# export SELL_AMOUNT="20"
 # export BUY_TOKEN="RDN"
 # export BUY_AMOUNT="10000"
 

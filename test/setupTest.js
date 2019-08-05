@@ -168,6 +168,71 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
     );
   });
 
+  it("Interface can add back 0.5 to balance", async () => {
+    let messageValue = web3.utils.toWei("0.5", "ether");
+    let messageValueBN = new BN(messageValue);
+    let coreOwnerBalanceBefore = await web3.eth.getBalance(gelatoCoreOwner);
+    let coreOwnerBalancePreBN = new BN(coreOwnerBalanceBefore.toString());
+
+    // Get gelatoDutchExchange's balance on core before adding a new balance
+    let gelatoDutchExchangeBalanceBefore = await gelatoCore.contract.methods
+      .getInterfaceBalance(gelatoDutchExchange.address)
+      .call();
+    let gelatoDutchExchangeBalanceBeforeBN = new BN(
+      gelatoDutchExchangeBalanceBefore
+    );
+
+    // Let gelatoDutchExchange increase its balance by 1 ETH
+    let txGasPrice = await web3.utils.toWei("5", "gwei");
+    await gelatoDutchExchange.contract.methods
+      .addBalanceToGelato()
+      .send({
+        from: gelatoCoreOwner,
+        value: messageValue,
+        gas: 500000,
+        gasPrice: txGasPrice
+      })
+      .once("transactionHash", hash => (txHash = hash))
+      .once("receipt", receipt => (txReceipt = receipt))
+      .on("error", console.error);
+
+    // Calc how much the core ower paid for the tx
+    let coreOwnerTxCost = txGasPrice * txReceipt.gasUsed;
+    let coreOwnerTxCostBN = new BN(coreOwnerTxCost);
+    // SET GAS PRICE
+
+    // CHECK that core owners ETH balance decreased by 1 ETH + tx fees
+    let coreOwnerBalanceAfter = await web3.eth.getBalance(gelatoCoreOwner);
+    let coreOwnerBalanceAfterBN = new BN(coreOwnerBalanceAfter.toString());
+    let coreOwnerBalanceChangedCorrectly = coreOwnerBalancePreBN
+      .sub(messageValueBN)
+      .sub(coreOwnerTxCostBN)
+      .eq(coreOwnerBalanceAfterBN);
+
+    assert.isTrue(
+      coreOwnerBalanceChangedCorrectly,
+      `Core Owner's balance must be reduced from ${coreOwnerBalancePreBN} by ${messageValue} to equal ${coreOwnerBalanceAfterBN}`
+    );
+
+    // Get gelatoDutchExchange's balance on core after adding a new balance
+    let gelatoDutchExchangeBalanceAfter = await gelatoCore.contract.methods
+      .getInterfaceBalance(gelatoDutchExchange.address)
+      .call();
+
+    let gelatoDutchExchangeBalanceAfterBN = new BN(
+      gelatoDutchExchangeBalanceAfter.toString()
+    );
+
+    // CHECK that gelatoDutchExchange balance on core has increased by 1ETH
+    let gelatoDutchExchangeBalanceChangedCorrectly = gelatoDutchExchangeBalanceBeforeBN
+      .add(messageValueBN)
+      .eq(gelatoDutchExchangeBalanceAfterBN);
+    assert.isTrue(
+      gelatoDutchExchangeBalanceChangedCorrectly,
+      `Gelato DutchExchange Interface's balance on GelatoCore must have increased from ${gelatoDutchExchangeBalanceBefore} by ${messageValue} to ${gelatoDutchExchangeBalanceAfter}`
+    );
+  });
+
   it("GelatoCore can update gelatoGasPrice", async () => {
     // Getter
     let gelatoGasPriceBefore = await gelatoCore.contract.methods

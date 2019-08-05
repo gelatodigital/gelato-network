@@ -40,6 +40,7 @@ contract DutchXGetter {
 
     function getAuctionIndex(address _sellToken, address _buyToken)
         public
+        view
         returns(uint256 auctionIndex)
     {
         auctionIndex = dutchExchange.getAuctionIndex(_sellToken, _buyToken);

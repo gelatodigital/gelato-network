@@ -56,9 +56,11 @@ contract GelatoCore is Ownable, Claim {
                                            uint256 indexed executionClaimId,
                                            uint256 gelatoCorePayable
     );
-    event LogExecutionMetrics(uint256 indexed gasUsed, uint256 indexed gasPrice, uint256 indexed executorPayout);
+    event LogExecutionMetrics(uint256 indexed totalGasUsed, uint256 indexed usedGasPrice, uint256 indexed executorPayout);
 
     event LogInterfaceBalanceAdded(address indexed dappInterface, uint256 indexed newBalance);
+
+    event LogminEthBalanceUpdated(uint256 minEthBalance);
     // **************************** Events END **********************************
 
     // **************************** State Variables **********************************
@@ -69,14 +71,23 @@ contract GelatoCore is Ownable, Claim {
     // Balance of interfaces which pay for claim execution
     mapping(address => uint256) public interfaceBalances;
 
+    // Minimum ether balance of interfaces
+    uint256 minEthBalance;
 
     //_____________ Gelato Execution Service Business Logic ________________
     // gelatoGasPrice is continually set by Gelato Core's centralised gelatoGasPrice oracle
     // The value is determined off-chain
     uint256 public gelatoGasPrice;
 
-    // Gas cost of all execute() instructions before startGas and endGas
-    uint256 gasOverhead = 50000;
+    // Gas cost of all execute() instructions after endGas => 13034
+    // Gas cost to initialize transaction = 21000
+    // Sum: 34034
+    uint256 gasOverhead = 34034;
+
+    // Minimum gas refunds given that we nullify 3 state variables in each execution
+    // @DEV We somehow get a greater refund, investigate
+    uint256 constant minGasRefunds = 30000;
+
 
     // Max Gas Price executors can receive. E.g. 50000000000 == 50GWEI
     uint256 public gelatoMaxGasPrice;
@@ -95,6 +106,7 @@ contract GelatoCore is Ownable, Claim {
         gelatoGasPrice = _gelatoGasPrice;
         gelatoMaxGasPrice = _gelatoMaxGasPrice;
         gelatoExecutionMargin = _gelatoExecutionMargin;
+        minEthBalance = 0.5 ether;
     }
     // **************************** Gelato Core constructor() END *****************************
 
@@ -254,11 +266,11 @@ contract GelatoCore is Ownable, Claim {
         public
         returns (bool, bytes memory)
     {
-        // Step1: Fetch execution
-        ExecutionClaim memory executionClaim = executionClaims[_executionClaimId];
-
-        // // Step2: Calculate start GAS, set by the executor.
+        // // Step1: Calculate start GAS, set by the executor.
         uint256 startGas = gasleft();
+
+        // Step2: Fetch execution
+        ExecutionClaim memory executionClaim = executionClaims[_executionClaimId];
 
         // // Step3: Fetch execution claim variables
         // Interface Function signature
@@ -273,44 +285,58 @@ contract GelatoCore is Ownable, Claim {
         uint usedGasPrice;
         tx.gasprice > gelatoMaxGasPrice ? usedGasPrice = gelatoMaxGasPrice : usedGasPrice = tx.gasprice;
 
+        // **** CHECKS ****
         // Step5: Check if Interface has sufficient balance on core
-        // Interface requires enough balance to payout exectutor
-        require(gelatoMaxGasPrice.mul(usedGasPrice) >= interfaceBalances[dappInterface], "Interface does not have enough balance in core to cover gelatoMaxGas");
+        // @DEV, minimum balance requirement for interfaces (e.g. 0.5 ETH). If it goes below that, we wont execute, hence interface devs simply have to make sure their value does not drop below that limit
+        require(interfaceBalances[dappInterface] >= minEthBalance, "Interface does not have enough balance in core, needs at least 0.5 ether");
+        // **** CHECKS END ****;
 
-        // Step6: Call Interface
+        // **** EFFECTS ****
+        // Step6: Delete
+        // Delete the ExecutionClaim struct
+        delete executionClaims[_executionClaimId];
+        // ******** EFFECTS END ****
+
+        // Interactions
+        // Step7: Call Interface
         // ******* Gelato Interface Call *******
         (bool success, bytes memory data) = dappInterface.call(functionSignature);
         require(success == true, "Execution of dappInterface function must be successful");
         // ******* Gelato Interface Call END *******
 
-        // Step7: Burn & delete
-        // Burn the executed executionClaim
+        // **** EFFECTS 2 ****
+        // Step6: Delete
+        // Burn Claim. Should be done here to we done have to store the claim Owner on the interface. Deleting the struct on the core should suffice, as an exeuctionClaim Token without the associated struct is worthless. => Discuss
         _burn(_executionClaimId);
+        // ******** EFFECTS 2 END ****
+        // Burn the executed executionClaim
 
-        // Delete the ExecutionClaim struct
-        delete executionClaims[_executionClaimId];
-        // ******** EFFECTS END ****
+
 
         // Step8: Calc executor payout
         // How much gas we have left in this tx
         uint256 endGas = gasleft();
-        // Calaculate how much gas we used up in this function
-        uint256 totalGasUsed = startGas.sub(endGas).add(gasOverhead);
+        // Calaculate how much gas we used up in this function. Subtract the certain gas refunds the executor will receive for nullifying values
+        // Gas Overhead corresponds to the actions occuring before and after the gasleft() calcs
+        uint256 totalGasUsed = startGas.sub(endGas).add(gasOverhead).sub(minGasRefunds);
         // Calculate Total Cost
         uint256 totalCost = totalGasUsed.mul(usedGasPrice);
         // Calculate Executor Payout (including a fee set by GelatoCore.sol)
-        // @🐮 .add not necessaryy as we set the numbers and they wont overflow
+        // @🐮 .add() not necessaryy as we set the numbers and they wont overflow. Saving some gas costs
         uint256 executorPayout= totalCost.mul(100 + gelatoExecutionMargin).div(100);
 
         // Log the costs of execution
         emit LogExecutionMetrics(totalGasUsed, usedGasPrice, executorPayout);
+
+        // Effects 2: Decrease interface balance
+        interfaceBalances[dappInterface] = interfaceBalances[dappInterface].sub(executorPayout);
 
         // // Step9: Conduct the payout to the executor
         // Transfer the prepaid fee to the executor as reward
         msg.sender.transfer(executorPayout);
 
         // Emit event now before deletion of struct
-        emit LogClaimExecutedBurnedAndDeleted(executionClaim.dappInterface,
+        emit LogClaimExecutedBurnedAndDeleted(dappInterface,
                                               msg.sender,  // executor
                                               executionClaimOwner,
                                               _executionClaimId,
@@ -352,6 +378,21 @@ contract GelatoCore is Ownable, Claim {
 
         return true;
     }
+
+    // Updating the min ether balance of interfaces
+    function updateMinEthBalance(uint256 _minEthBalance)
+        external
+        onlyOwner
+        returns(bool)
+    {
+        minEthBalance = _minEthBalance;
+
+        emit LogminEthBalanceUpdated(_minEthBalance);
+
+
+        return true;
+    }
+
     // **************************** Core Updateability END ******************************
 
     // **************************** Interface Interactions ******************************
