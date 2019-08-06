@@ -250,7 +250,6 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         external
         returns (bool)
     {
-        uint256 gas1 = gasleft();
         // Step1: Checks for execution safety
         // Make sure that gelatoCore is the only allowed caller to this function.
         // Executors will call this execute function via the Core's execute function.
@@ -464,9 +463,6 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         // Step8:  Check if interface still has sufficient balance on core. If not, add balance. If yes, skipp.
         automaticTopUp();
 
-        // To measure gas costs (inlcuding automatic Top up case)
-        uint256 gas2 = gasleft();
-        emit LogGas(gas1, gas2);
         return true;
     }
     // **************************** IcedOut execute(executionClaimId) END *********************************
@@ -637,17 +633,21 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         public
         returns(bool)
     {
-        // MAKE THAT MANUAL WITHDRAW CANCELS THE WITHDRAW CLAIM
-        // Fetch SellOrder
+        // Step1: Find out if claim id is for execDepositAndSell or execWithdraw
+        // Check if it is the former
         SellOrder memory sellOrder = sellOrders[_executionClaimId];
+
+        // #### CHECKS ####
+
+        // If the sold == true, we know it must be a withdrawClaim, which cannot be cancelled
+        require(sellOrder.sold == false, "Only executionClaims that havent been executed yet can be cancelled");
 
         address seller = gelatoCore.ownerOf(_executionClaimId);
 
         // Only Execution Claim Owner can cancel
         require(msg.sender == seller, "Only the executionClaim Owner can cancel the execution");
 
-        // Require that sold == False, as users can only cancel sell orders that havent been sold yet
-        require(sellOrder.sold == false, "User can only cancel sell orders that were not sold yet");
+        // #### CHECKS END ####
 
         // Fetch OrderState
         uint256 orderStateId = sellOrder.orderStateId;
@@ -658,42 +658,33 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         // ****** EFFECTS ******
         // Emit event before deletion/burning of relevant variables
         emit LogOrderCancelled(_executionClaimId, orderStateId, seller);
-        /**
-         *DEV: cancel the ExecutionClaim via gelatoCore.cancelExecutionClaim(executionClaimId)
-         * This has the following effects on the Core:
-         * 1) It burns the ExecutionClaim
-         * 2) It deletes the ExecutionClaim from the executionClaims mapping
-         * 3) It transfers ether as a refund to the executionClaimOwner
-         */
+        emit LogOrderCancelled(_executionClaimId.add(1), orderStateId, seller);
 
+        // Cancel both execution Claims on core
         // ** Gelato Core interactions **
         gelatoCore.cancelExecutionClaim(_executionClaimId);
+        gelatoCore.cancelExecutionClaim(_executionClaimId.add(1));
         // ** Gelato Core interactions END **
-
-        // Cancel the next Execution claim on Gelato Core as well
-        SellOrder memory sellOrderWithdraw = sellOrders[_executionClaimId.add(1)];
-
-        // If the next executionClaimId maps to the same sellOrder, also cancel it.
-        if (keccak256(abi.encode(sellOrder.executionTime, sellOrder.amount)) == keccak256(abi.encode(sellOrderWithdraw.executionTime, sellOrderWithdraw.amount)))
-        {
-            gelatoCore.cancelExecutionClaim(_executionClaimId.add(1));
-        }
 
         // Fetch variables needed before deletion
         address sellToken = orderState.sellToken;
         uint256 sellAmount = sellOrder.amount;
 
-        // ****** EFFECTS END ******
         // This deletes the withdraw struct as well as they both map to the same struct
         delete sellOrders[_executionClaimId];
+        delete sellOrderLink[_executionClaimId.add(1)];
+        // ****** EFFECTS END ******
 
-        // INTERACTIONS: transfer sellAmount back from this contracts ERC20 balance to seller
+        // ****** INTERACTIONS ******
+        // transfer sellAmount back from this contracts ERC20 balance to seller
         // REFUND USER!!!
         // In order to refund the exact amount the user prepaid, we need to store that information on-chain
         msg.sender.transfer(orderState.prePaymentPerSellOrder);
 
         // Transfer ERC20 Tokens back to seller
         safeTransfer(sellToken, msg.sender, sellAmount, false);
+
+        // ****** INTERACTIONS END ******
 
         // Success
         return true;
@@ -711,7 +702,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         returns(bool)
     {
         uint256 sellOrderExecutionClaimId = sellOrderLink[_executionClaimId];
-        // MAKE THAT MANUAL WITHDRAW CANCELS THE WITHDRAW CLAIm
+
         // Fetch owner of execution claim
         address seller = gelatoCore.ownerOf(_executionClaimId);
 
@@ -720,10 +711,11 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
 
         // DEV use memory value lastAuctionIndex & sellAmountAfterFee as we already updated storage values
         uint amount = sellOrder.amount;
+
         // Fetch OrderState
         uint256 orderStateId = sellOrder.orderStateId;
 
-        // CHECKS
+        // ******* CHECKS *******
         // If amount == 0, struct has already been deleted
         require(amount != 0, "Amount for manual withdraw cannot be zero");
         // Only Execution Claim Owner can withdraw manually
@@ -731,6 +723,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         // Check whether sold == true
         require(sellOrder.sold, "Sell Order must have been sold in order to withdraw");
 
+        // Fetch Order state
         OrderState memory orderState = orderStates[orderStateId];
 
         // Fetch price of last participated in and cleared auction using lastAuctionIndex
@@ -739,29 +732,42 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         (num, den) = dutchExchange.closingPrices(orderState.sellToken, orderState.buyToken, orderState.lastAuctionIndex);
 
         // Require that the last auction the seller participated in has cleared
-        // DEV Check line 442 in dutchExchange contract
         require(den != 0,
             "withdrawManually: den != 0, Last auction did not clear thus far, you have to wait"
         );
-        // **** CHECKS END ***
+        // ******* CHECKS END *******
 
-        // **** EFFECTS ****
+        // ******* EFFECTS *******
         // Delete sellOrder Struct
         delete sellOrders[sellOrderExecutionClaimId];
         delete sellOrderLink[_executionClaimId];
-        // **** EFFECTS END****
+        // ******* EFFECTS END*******
 
-        // INTERACTIONS: Initiate withdraw
+        // ******* INTERACTIONS *******
+
+        // Cancel execution claim on core
+        gelatoCore.cancelExecutionClaim(_executionClaimId);
+
+        // Initiate withdraw
         _withdraw(seller,  // seller
                   orderState.sellToken,
                   orderState.buyToken,
                   orderState.lastAuctionIndex,
                   amount
         );
+        // Refund user in case interface has sufficient balance on core or in its own contract
+        // If interface balance is greater than prePaymentAmount, refund with interface balance. Otherwise, refund with core balance. If also insufficien, dont do a refund.
+        if (address(this).balance >= orderState.prePaymentPerSellOrder)
+        {
+           msg.sender.transfer(orderState.prePaymentPerSellOrder);
+        }
+        else if (address(this).balance < orderState.prePaymentPerSellOrder && gelatoCore.getInterfaceBalance(address(this)) > orderState.prePaymentPerSellOrder)
+        {
+           gelatoCore.withdrawBalance(orderState.prePaymentPerSellOrder);
+           msg.sender.transfer(orderState.prePaymentPerSellOrder);
+        }
 
-        // REFUND USER!!!
-        // In order to refund the exact amount the user prepaid, we need to store that information on-chain
-        msg.sender.transfer(orderState.prePaymentPerSellOrder);
+        // ******* INTERACTIONS *******
 
         // Success
         return true;

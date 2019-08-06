@@ -396,10 +396,6 @@ describe("Check gelatoDutchExchange Interface orderState and sellOrder Values", 
       let sellOrder2 = await gelatoDutchExchange.contract.methods
         .sellOrders(sellOrderId.toString())
         .call();
-      console.log(`First execution Claim: ${firstExecutionClaimId}`)
-      console.log('Sell Order 1: ', sellOrder1)
-      console.log('Sell Order 2: ', sellOrder2)
-      console.log('Sell Order ID: ', sellOrder2)
       // skip to next depositAndSell id
       assert.strictEqual(
         sellOrder1.executionTime,
