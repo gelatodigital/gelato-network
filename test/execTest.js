@@ -48,6 +48,7 @@ let revertExecutor;
 let amountReceivedByExecutor;
 let amountDeductedfromInterface;
 let firstExecutionClaimId
+let sellOrderId;
 
 describe("Successfully execute first execution claim", () => {
   before(async () => {
@@ -91,20 +92,18 @@ describe("Successfully execute first execution claim", () => {
     console.log(`ExecutionClaimID: ${firstExecutionClaimId}`)
   })
 
-  it("Execution should revert() when function call to gelatoInterface returns success == false", async () => {
-    // Gas price to calc executor payout
-    let txGasPrice = await web3.utils.toWei("5", "gwei");
-    await truffleAssert.reverts(
-      gelatoCore.contract.methods
-        .execute(firstExecutionClaimId)
-        .send({ from: revertExecutor, gas: 1000000, gasPrice: txGasPrice }),
-      "Execution of dappInterface function must be successful"
-    ); // gas needed to prevent out of gas error
-  });
-
-  it("Fast forward and see if execution claim is executable based on its execution Time", async () => {
+  it("Check if execution claim is executable based on its execution Time, if not, test that execution reverts and fast forward", async () => {
     // Fetch executionTime from interface
-    let sellOrder = await gelatoDutchExchange.contract.methods.sellOrders(firstExecutionClaimId).call()
+    if (firstExecutionClaimId % 2 === 0) {
+      sellOrderId = await gelatoDutchExchange.contract.methods.sellOrderLink(firstExecutionClaimId).call();
+    }
+    else
+    {
+      sellOrderId = firstExecutionClaimId
+    }
+    console.log(`Sell Order ID: ${sellOrderId}`)
+    let sellOrder = await gelatoDutchExchange.contract.methods.sellOrders(sellOrderId.toString()).call()
+    console.log(`Sell Order: ${sellOrder}`)
     let sellOrderExecutionTime = sellOrder.executionTime
     console.log(`ExecutionTime: ${sellOrderExecutionTime}`);
 
@@ -120,6 +119,16 @@ describe("Successfully execute first execution claim", () => {
                  Difference: ${secondsUntilExecution}`);
     if(parseInt(secondsUntilExecution) > 0)
     {
+      // Execution should revert
+      // Gas price to calc executor payout
+      let txGasPrice = await web3.utils.toWei("5", "gwei");
+      await truffleAssert.reverts(
+        gelatoCore.contract.methods
+          .execute(firstExecutionClaimId)
+          .send({ from: revertExecutor, gas: 1000000, gasPrice: txGasPrice }),
+        "Execution of dappInterface function must be successful"
+      ); // gas needed to prevent out of gas error
+
       // fast forward
       await timeTravel.advanceTimeAndBlock(secondsUntilExecution);
 
@@ -166,6 +175,36 @@ describe("Successfully execute first execution claim", () => {
     // This test just tried to get and log the estimate
     assert(true);
   });
+
+  it("Check that seller is owner of execution Claim", async() => {
+    console.log(`Before Fetching seller: ExecutionClaimID: ${firstExecutionClaimId}`)
+    let fetchedSeller = await gelatoCore.contract.methods.ownerOf(firstExecutionClaimId).call()
+    console.log(`Fetched Seller? ${fetchedSeller.toString()}, seller: ${seller}`)
+    assert.equal(fetchedSeller.toString(), seller, "Execution Claim owner should be equal to predefined seller");
+  })
+
+  it("Check that, if we are calling withdraw, sellOrder.sold == true", async() => {
+    // Only check if exeuctionClaimId is even => Change to make it work with other tests
+    if (firstExecutionClaimId % 2 === 0) {
+      let sellOrderId = await gelatoDutchExchange.contract.methods.sellOrderLink(firstExecutionClaimId).call()
+      let sellOrder = await gelatoDutchExchange.contract.methods.sellOrders(sellOrderId).call()
+      let wasSold = sellOrder.sold;
+      console.log(`Was sold? ${wasSold}`)
+      assert.equal(wasSold, true, "Execution Claim owner should be equal to predefined seller");
+    }
+  })
+
+  it("Check that the past auction cleared and a price has been found", async() => {
+    let sellOrder = await gelatoDutchExchange.contract.methods.sellOrders(firstExecutionClaimId).call()
+    console.log(`SellOrder: ${sellOrder}`)
+    let orderStateId = sellOrder.orderStateId;
+    let orderState = await gelatoDutchExchange.contract.methods.orderStates(orderStateId).call()
+    let lastAuctionIndex = orderState.lastAuctionIndex;
+    // Check if auction cleared with DutchX Getter
+    let returnValue = await dxGetter.contract.methods.getClosingPrices(sellToken.address, buyToken.address, lastAuctionIndex).call();
+    console.log(returnValue)
+    // assert.isEqual(wasSold, true, "Execution Claim owner should be equal to predefined seller");
+  })
 
   it("Successfully execute first execution claim", async () => {
     // Fetch executor pre Balance
@@ -269,14 +308,14 @@ describe("Successfully execute first execution claim", () => {
       }
     );
 
-    // Get costs of dpositAndWithDrawFunc
-    await gelatoDutchExchange.getPastEvents("LogGas", (error, events) => {
-      let event = events[0]
-      let gas1 = event.returnValues.gas1
-      let gas2 = event.returnValues.gas2
-      console.log(`
-        Consumed Gas for depositAndSell in gdx: ${gas1 - gas2}`)
-    })
+    // // Get costs of dpositAndWithDrawFunc
+    // await gelatoDutchExchange.getPastEvents("LogGas", (error, events) => {
+    //   let event = events[0]
+    //   let gas1 = event.returnValues.gas1
+    //   let gas2 = event.returnValues.gas2
+    //   console.log(`
+    //     Consumed Gas for depositAndSell in gdx: ${gas1 - gas2}`)
+    // })
   });
 
   // Check that balance of interface was deducted by the same amount the executor received
