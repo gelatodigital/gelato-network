@@ -72,7 +72,7 @@ contract GelatoCore is Ownable, Claim {
     mapping(address => uint256) public interfaceBalances;
 
     // Minimum ether balance of interfaces
-    uint256 minEthBalance;
+    uint256 public minEthBalance;
 
     //_____________ Gelato Execution Service Business Logic ________________
     // gelatoGasPrice is continually set by Gelato Core's centralised gelatoGasPrice oracle
@@ -82,12 +82,11 @@ contract GelatoCore is Ownable, Claim {
     // Gas cost of all execute() instructions after endGas => 13034
     // Gas cost to initialize transaction = 21000
     // Sum: 34034
-    uint256 gasOverhead = 34034;
+    uint256 constant gasOverhead = 34034;
 
     // Minimum gas refunds given that we nullify 3 state variables in each execution
     // @DEV We somehow get a greater refund, investigate
     uint256 constant minGasRefunds = 30000;
-
 
     // Max Gas Price executors can receive. E.g. 50000000000 == 50GWEI
     uint256 public gelatoMaxGasPrice;
@@ -282,13 +281,13 @@ contract GelatoCore is Ownable, Claim {
 
         // Step4: Determine usedGasPrice used to calculate the final executor payout
         // If tx Gas Price is higher than gelatoMaxGasPrice, use gelatoMaxGasPrice
-        uint usedGasPrice;
+        uint256 usedGasPrice;
         tx.gasprice > gelatoMaxGasPrice ? usedGasPrice = gelatoMaxGasPrice : usedGasPrice = tx.gasprice;
 
         // **** CHECKS ****
         // Step5: Check if Interface has sufficient balance on core
         // @DEV, minimum balance requirement for interfaces (e.g. 0.5 ETH). If it goes below that, we wont execute, hence interface devs simply have to make sure their value does not drop below that limit
-        require(interfaceBalances[dappInterface] >= minEthBalance, "Interface does not have enough balance in core, needs at least 0.5 ether");
+        require(interfaceBalances[dappInterface] >= minEthBalance, "Interface does not have enough balance in core, needs at least minEthBalance");
         // **** CHECKS END ****;
 
         // **** EFFECTS ****
@@ -310,8 +309,6 @@ contract GelatoCore is Ownable, Claim {
         _burn(_executionClaimId);
         // ******** EFFECTS 2 END ****
         // Burn the executed executionClaim
-
-
 
         // Step8: Calc executor payout
         // How much gas we have left in this tx
