@@ -48,6 +48,7 @@ let {
 
 let txHash;
 let txReceipt;
+let totalPrepayment;
 
 describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () => {
   before(async () => {
@@ -116,6 +117,12 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
     executionTime = timestamp + 15; // must be >= now (latency)
 
     // Seller external TX2:
+
+    // Calculate Prepayment amount
+    let gelatoPrepayment = new BN(await gelatoDutchExchange.contract.methods.calcGelatoPrepayment().call())
+    totalPrepayment = new BN(gelatoPrepayment).mul(NUM_SUBORDERS_BN)
+    console.log(totalPrepayment.toString())
+
     // benchmarked gasUsed = 726,360 (for 2 subOrders + 1 lastWithdrawal)
     let txGasPrice = await web3.utils.toWei("5", "gwei");
     await gelatoDutchExchange.contract.methods
@@ -130,7 +137,7 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
       )
       .send({
         from: seller,
-        value: MSG_VALUE_BN,
+        value: totalPrepayment,
         gas: 2000000,
         gasPrice: txGasPrice
       }) // gas needed to prevent out of gas error
@@ -154,7 +161,7 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
 
     // calc seller ETH spent
     let sellerBalanceChangedCorrectly = sellerBalancePre
-      .sub(MSG_VALUE_BN)
+      .sub(totalPrepayment)
       .sub(sellerTxCostBN)
       .eq(sellerBalancePost);
 
@@ -165,7 +172,7 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
     // Check GDX ETH balance pre post
     assert.strictEqual(
       gelatoCoreBalancePost.toString(),
-      gelatoCoreBalancePre.add(MSG_VALUE_BN).toString(),
+      gelatoCoreBalancePre.add(totalPrepayment).toString(),
       "gelatoCore ether balance gelatoCoreproblem"
     );
 
@@ -277,7 +284,7 @@ describe("Should not be able to mint when tokens not traded on the dutchX", () =
         SUBORDER_SIZE_BN.toString(),
         testExecutionTime,
         INTERVAL_SPAN,
-        { from: seller, value: MSG_VALUE_BN, gas: 2000000 }
+        { from: seller, value: totalPrepayment, gas: 2000000 }
       ),
       "The selected tokens are not traded on the Dutch Exchange"
     );

@@ -263,7 +263,7 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
     );
 
     // Switch GasPrice back to 5
-    let oldGasPrice = web3.utils.toWei("5", "gwei");
+    let oldGasPrice = web3.utils.toWei("20", "gwei");
     await gelatoCore.contract.methods
       .updateGelatoGasPrice(oldGasPrice)
       .send({ from: gelatoCoreOwner, gas: 5000000 });
@@ -275,7 +275,7 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
       .gelatoExecutionMargin()
       .call();
     // Update
-    let newExecutionMargin = 10;
+    let newExecutionMargin = 1000000000000000; // 1 Finney
     await gelatoCore.contract.methods
       .updateGelatoExecutionMargin(newExecutionMargin)
       .send({ from: gelatoCoreOwner, gas: 5000000 });
@@ -328,7 +328,7 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
       .calcGelatoPrepayment()
       .call();
     // Update
-    let newGasPrice = await web3.utils.toWei("75", "gwei");
+    let newGasPrice = await web3.utils.toWei("70", "gwei");
     await gelatoDutchExchange.contract.methods
       .useIndividualGasPrice(newGasPrice)
       .send({ from: gelatoCoreOwner, gas: 5000000 });

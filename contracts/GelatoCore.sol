@@ -13,19 +13,6 @@ contract GelatoCore is Ownable, Claim {
 
     Counters.Counter private _executionClaimIds;
 
-    // Legacy Core Struct
-    /*
-    struct ExecutionClaim {
-        address dappInterface;
-        uint256 interfaceOrderId;
-        address sellToken;
-        address buyToken;
-        uint256 sellAmount;  // you always sell something, in order to buy something
-        uint256 executionTime;
-        uint256 prepaidExecutionFee;
-    }
-    */
-
     // New Core struct
     struct ExecutionClaim {
         address dappInterface;
@@ -238,10 +225,14 @@ contract GelatoCore is Ownable, Claim {
     // **************************** ExecutionClaim Updates  ******************************
 
     function cancelExecutionClaim(uint256 _executionClaimId)
-        onlyExecutionClaimOwner(_executionClaimId)
         external
     {
         ExecutionClaim memory executionClaim = executionClaims[_executionClaimId];
+
+        // Only the interface can cancel the executionClaim
+
+        address dappInterface = executionClaim.dappInterface;
+        require(dappInterface == msg.sender);
 
         // Local variables needed for Checks, Effects -> Interactions pattern
         address executionClaimOwner = ownerOf(_executionClaimId);
@@ -320,7 +311,8 @@ contract GelatoCore is Ownable, Claim {
         uint256 totalCost = totalGasUsed.mul(usedGasPrice);
         // Calculate Executor Payout (including a fee set by GelatoCore.sol)
         // @🐮 .add() not necessaryy as we set the numbers and they wont overflow. Saving some gas costs
-        uint256 executorPayout= totalCost.mul(100 + gelatoExecutionMargin).div(100);
+        // uint256 executorPayout= totalCost.mul(100 + gelatoExecutionMargin).div(100);
+        uint256 executorPayout= totalCost.add(gelatoExecutionMargin);
 
         // Log the costs of execution
         emit LogExecutionMetrics(totalGasUsed, usedGasPrice, executorPayout);
@@ -413,6 +405,7 @@ contract GelatoCore is Ownable, Claim {
         require(_withdrawAmount > 0, "WithdrawAmount must be greater than zero");
         uint256 currentInterfaceBalance = interfaceBalances[msg.sender];
         require(_withdrawAmount <= currentInterfaceBalance, "WithdrawAmount must be smaller or equal to the interfaces current balance");
+        // Would revert if insufficient balance
         interfaceBalances[msg.sender] = currentInterfaceBalance.sub(_withdrawAmount);
         msg.sender.transfer(_withdrawAmount);
     }

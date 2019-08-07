@@ -378,10 +378,18 @@ describe("Successfully execute first execution claim", () => {
       if (events[0] === undefined)
       {
         amountDeductedfromInterface = gdxGelatoBalanceBefore.sub(gdxGelatoBalanceAfter);
+        console.log(`
+      GelatoBalanceBefore: ${gdxGelatoBalanceBefore.toString()}
+      GelatoBalanceAfter: ${gdxGelatoBalanceAfter.toString()}`)
       }
       else
       {
-        amountDeductedfromInterface = gdxGelatoBalanceBefore.sub(gdxGelatoBalanceAfter).add(new BN(events[0].returnValues.interfaceEthBalance));
+        amountDeductedfromInterface = gdxGelatoBalanceBefore.sub(gdxGelatoBalanceAfter).add(new BN(events[0].returnValues.weiAmount));
+        console.log(`
+      GelatoBalanceBefore: ${gdxGelatoBalanceBefore.toString()}
+      GelatoBalanceAfter: ${gdxGelatoBalanceAfter.toString()}
+      InterfaceEthBalance: ${events[0].returnValues.weiAmount}`)
+
       }
     })
 
@@ -402,6 +410,9 @@ describe("Successfully execute first execution claim", () => {
   // Check that balance of interface was deducted by the same amount the executor received
   it("balance of interface was deducted by the same amount the executor received", async() => {
     let payoutWasEqual = amountReceivedByExecutor.eq(amountDeductedfromInterface)
+    console.log(`
+      Amount Received: ${amountReceivedByExecutor.toString()}
+      Amount Deducted interface: ${amountDeductedfromInterface.toString()}`)
     assert.isTrue(payoutWasEqual, "Payout to executor equals amount deducted from interface balance")
 
   })
