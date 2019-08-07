@@ -318,7 +318,7 @@ describe("Check gelatoDutchExchange Interface orderState and sellOrder Values", 
       .calcGelatoPrepayment()
       .call();
     assert.strictEqual(
-      orderState.prePaymentPerSellOrder,
+      orderState.prepaymentPerSellOrder,
       gdxPrepayment,
       "prePayment Problem"
     );
@@ -359,11 +359,11 @@ describe("Check gelatoDutchExchange Interface orderState and sellOrder Values", 
         let amountIsEqual = SUBORDER_SIZE_BN.eq(new BN(sellOrder.amount));
         assert.isTrue(amountIsEqual, "Amount Problem in sellOrder");
 
-        // Sold should be false by default
+        // Posted should be false by default
         assert.strictEqual(
-          sellOrder.sold,
+          sellOrder.posted,
           false,
-          "Sold (bool) Problem in sellOrder"
+          "Posted (bool) Problem in sellOrder"
         );
 
         // Account for next iteration

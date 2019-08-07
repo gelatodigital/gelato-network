@@ -34,7 +34,7 @@ contract IcedOut is Ownable {
      }
 
      // Function to calculate the prepayment an interface needs to transfer to Gelato Core
-     //  for minting a new execution executionClaim
+     // for minting a new execution executionClaim
      function calcGelatoPrepayment()
           public
           view

@@ -317,32 +317,6 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
     );
   });
 
-  it("GelatoDutchExchangeInterface can update maxExecutions", async () => {
-    // Getter
-    let gdxMaxSellOrdersBefore = await gelatoDutchExchange.contract.methods
-      .maxSellOrders()
-      .call();
-    // Update
-    let maxSellOrders = 4;
-    await gelatoDutchExchange.contract.methods
-      .updateMaxSellOrders(maxSellOrders)
-      .send({ from: gelatoCoreOwner, gas: 5000000 });
-    // Getter
-    let gdxMaxSellOrdersAfter = await gelatoDutchExchange.contract.methods
-      .maxSellOrders()
-      .call();
-
-    assert.notEqual(
-      gdxMaxSellOrdersBefore,
-      gdxMaxSellOrdersAfter,
-      "New Gas price should be differnt to old one"
-    );
-    assert.equal(
-      maxSellOrders,
-      gdxMaxSellOrdersAfter,
-      "GelatoMaxGasPrice should be updateable"
-    );
-  });
 
   it("GelatoDutchExchangeInterface can switch from using gelato Cores gasPrice to using its own", async () => {
     // Getter

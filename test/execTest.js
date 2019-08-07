@@ -184,14 +184,14 @@ describe("Successfully execute first execution claim", () => {
     assert.equal(fetchedSeller.toString(), seller, "Execution Claim owner should be equal to predefined seller");
   })
 
-  it("Check that, if we are calling withdraw, sellOrder.sold == true", async() => {
+  it("Check that, if we are calling withdraw, sellOrder.posted == true", async() => {
     // Only check if exeuctionClaimId is even => Change to make it work with other tests
     if (firstExecutionClaimId % 2 === 0) {
       let sellOrderId = await gelatoDutchExchange.contract.methods.sellOrderLink(firstExecutionClaimId).call()
       let sellOrder = await gelatoDutchExchange.contract.methods.sellOrders(sellOrderId).call()
-      let wasSold = sellOrder.sold;
-      console.log('Was sold? wasSold ', wasSold);
-      assert.equal(wasSold, true, "Execution Claim owner should be equal to predefined seller");
+      let wasPosted = sellOrder.posted;
+      console.log('Was posted? wasPosted ', wasPosted);
+      assert.equal(wasPosted, true, "Execution Claim owner should be equal to predefined seller");
     }
   })
 
@@ -204,7 +204,7 @@ describe("Successfully execute first execution claim", () => {
     // Check if auction cleared with DutchX Getter
     let returnValue = await dxGetter.contract.methods.getClosingPrices(sellToken.address, buyToken.address, lastAuctionIndex).call();
     console.log(returnValue)
-    // assert.isEqual(wasSold, true, "Execution Claim owner should be equal to predefined seller");
+    // assert.isEqual(wasPosted, true, "Execution Claim owner should be equal to predefined seller");
   })
 
   it("Successfully execute first execution claim", async () => {
@@ -297,7 +297,7 @@ describe("Successfully execute first execution claim", () => {
     let executorMadeProfit = executorBalancePost.gte(executorBalancePre)
     assert.isTrue(executorMadeProfit, "Executor should make a profit executing the transcation")
 
-    // #### CHECKS FOR BOTH FUNCTIONS END ####
+    // #### CHECKS FOR BOTH FUNCTIONS ####
 
 
     // Fetch past events of gelatoDutchExchange
