@@ -39,7 +39,11 @@ let {
   execShellCommand,
   DxGetter,
   execShellCommandLog,
-  truffleAssert
+  truffleAssert,
+  userEthBalance,
+  userSellTokenBalance,
+  userBuyTokenBalance,
+  executorEthBalance
 } = require("./truffleTestConfig.js");
 
 let txHash;
@@ -390,4 +394,6 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
     );
     // assert.equal(maxSellOrders, gdxMaxSellOrdersAfter, "GelatoMaxGasPrice should be updateable")
   });
+
+
 });

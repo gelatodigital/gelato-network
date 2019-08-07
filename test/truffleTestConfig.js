@@ -42,6 +42,10 @@ let orderState;
 let executionTime;
 let interfaceOrderId;
 const executionClaimIds = [];
+let userEthBalance;
+let userSellTokenBalance;
+let userBuyTokenBalance;
+let executorEthBalance;
 
 module.exports = {
     numberOfSubOrders,
@@ -78,5 +82,9 @@ module.exports = {
     execShellCommand,
     DxGetter,
     execShellCommandLog,
-    truffleAssert
+    truffleAssert,
+    userEthBalance,
+    userSellTokenBalance,
+    userBuyTokenBalance,
+    executorEthBalance
 };

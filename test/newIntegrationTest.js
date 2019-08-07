@@ -46,19 +46,9 @@ describe("Test possible intregration test architecture", () => {
         await commandLine.execShellCommandLog(`truffle test test/mintTest.js`)
         console.log("#########################################")
     })
-    it("test7 - Execute 1st Execution Claim - depositAndSell", async function () {
+    it("test8 - Execute 1st Execution Claim - depositAndSell", async function () {
         this.timeout(50000)
         await commandLine.execShellCommandLog(`truffle test test/execTest.js`)
-        console.log("#########################################")
-    })
-    it("test8 - To the next execution Time", async function () {
-        this.timeout(50000)
-        await commandLine.execShellCommandLog(`yarn gdx-to-next-exec-time`)
-        console.log("#########################################")
-    })
-    it("test9 - Start Auction 3", async function () {
-        this.timeout(50000)
-        await commandLine.execShellCommandLog(`yarn gdx-start-auction`)
         console.log("#########################################")
     })
     it("test10 - To the next execution Time", async function () {
@@ -66,12 +56,21 @@ describe("Test possible intregration test architecture", () => {
         await commandLine.execShellCommandLog(`yarn gdx-to-next-exec-time`)
         console.log("#########################################")
     })
-    it("test11 - Execute 2nd Execution Claim - execWithdraw", async function () {
+    it("test11 - Start Auction 3", async function () {
+        this.timeout(50000)
+        await commandLine.execShellCommandLog(`yarn gdx-start-auction`)
+        console.log("#########################################")
+    })
+    it("test12 - To the next execution Time", async function () {
+        this.timeout(50000)
+        await commandLine.execShellCommandLog(`yarn gdx-to-next-exec-time`)
+        console.log("#########################################")
+    })
+    it("test13 - Execute 2nd Execution Claim - execWithdraw", async function () {
         this.timeout(50000)
         await commandLine.execShellCommandLog(`truffle test test/execTest.js`)
         console.log("#########################################")
     })
-
 })
 
 execShellCommand

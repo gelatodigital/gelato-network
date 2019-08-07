@@ -87,10 +87,13 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
 
     // gelatoCore executionId => individual sellOrder struct
     // Note 2 executionIds will map to the same sellOrder struct (execDepositAndSell and withdraw)
-    mapping(uint256 => SellOrder) public sellOrders;
+    // mapping(uint256 => SellOrder) public sellOrders;
 
-    // Map execWithdraw claim to respective execDepositAndSellClaim
-    mapping(uint256 => uint256) public sellOrderLink;
+    // // Map execWithdraw claim to respective execDepositAndSellClaim
+    // mapping(uint256 => uint256) public sellOrderLink;
+
+    // withdraw execution claim => depositAndSell exeuctionClaim => sellOrder
+    mapping(uint256 => mapping(uint256 => SellOrder)) public sellOrders;
 
     // Constants that are set during contract construction and updateable via setters
     uint256 public auctionStartWaitingForFunding;
@@ -211,8 +214,12 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
 
             // Map first claims to the Sell Order and second claims to the first claim => BONDED Claims
             // @🐮Convert into Mapping of mapping
-            sellOrders[executionClaimId] = sellOrder;
-            sellOrderLink[executionClaimIdPlusOne] = executionClaimId;
+            // sellOrders[executionClaimId] = sellOrder;
+            // sellOrderLink[executionClaimIdPlusOne] = executionClaimId;
+            // withdraw execution claim => depositAndSell exeuctionClaim => sellOrder
+            sellOrders[executionClaimIdPlusOne][executionClaimId] = sellOrder;
+
+            // withdraw execution claim => depositAndSell exeuctionClaim => sellOrder
             //  *** GELATO CORE PROTOCOL INTERACTION END ***
         }
 
@@ -243,7 +250,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
 
         // Step2: Create storage pointer for the individual sellOrder and the parent orderState
         // Fetch SellOrder
-        SellOrder storage sellOrder = sellOrders[_executionClaimId];
+        SellOrder storage sellOrder = sellOrders[_executionClaimId + 1][_executionClaimId];
 
         // Fetch OrderState
         uint256 orderStateId = sellOrder.orderStateId;
@@ -466,9 +473,8 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         address seller = gelatoCore.ownerOf(_executionClaimId);
 
         // Step2: Create memory pointer for the individual sellOrder and the parent orderState
-        uint256 sellOrderExecutionClaimId = sellOrderLink[_executionClaimId];
         // Fetch SellOrder
-        SellOrder memory sellOrder = sellOrders[sellOrderExecutionClaimId];
+        SellOrder memory sellOrder = sellOrders[_executionClaimId][_executionClaimId - 1];
         // Fetch OrderState
         uint256 orderStateId = sellOrder.orderStateId;
         OrderState memory orderState = orderStates[orderStateId];
@@ -480,10 +486,11 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         // DEV use memory value lastAuctionIndex & sellAmountAfterFee as we already updated storage values
         uint256 amount = sellOrder.amount;
 
+        // delete sellOrders[sellOrderExecutionClaimId];
+        // // delete slink
+        // delete sellOrderLink[_executionClaimId];
         // delete sellOrder
-        delete sellOrders[sellOrderExecutionClaimId];
-        // delete slink
-        delete sellOrderLink[_executionClaimId];
+        delete sellOrders[_executionClaimId][_executionClaimId - 1];
 
         // Calculate withdraw amount
         uint256 withdrawAmount = _withdraw(seller,
@@ -621,7 +628,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
     {
         // Step1: Find out if claim id is for execDepositAndSell or execWithdraw
         // Check if it is the former
-        SellOrder memory sellOrder = sellOrders[_executionClaimId];
+        SellOrder memory sellOrder = sellOrders[_executionClaimId + 1][_executionClaimId];
 
         // #### CHECKS ####
 
@@ -658,8 +665,10 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         uint256 sellAmount = sellOrder.amount;
 
         // This deletes the withdraw struct as well as they both map to the same struct
-        delete sellOrders[_executionClaimId];
-        delete sellOrderLink[_executionClaimId.add(1)];
+        // delete sellOrders[_executionClaimId];
+        // delete sellOrderLink[_executionClaimId.add(1)];
+        // delete sellOrder
+        delete sellOrders[_executionClaimId + 1][_executionClaimId];
         // ****** EFFECTS END ******
 
         // ****** INTERACTIONS ******
@@ -689,13 +698,11 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         external
         returns(bool)
     {
-        uint256 sellOrderExecutionClaimId = sellOrderLink[_executionClaimId];
-
         // Fetch owner of execution claim
         address seller = gelatoCore.ownerOf(_executionClaimId);
 
         // Fetch SellOrder
-        SellOrder memory sellOrder = sellOrders[sellOrderExecutionClaimId];
+        SellOrder memory sellOrder = sellOrders[_executionClaimId + 1][_executionClaimId];
 
         // DEV use memory value lastAuctionIndex & sellAmountAfterFee as we already updated storage values
         uint256 amount = sellOrder.amount;
@@ -728,8 +735,9 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
 
         // ******* EFFECTS *******
         // Delete sellOrder Struct
-        delete sellOrders[sellOrderExecutionClaimId];
-        delete sellOrderLink[_executionClaimId];
+        // delete sellOrders[sellOrderExecutionClaimId];
+        // delete sellOrderLink[_executionClaimId];
+        delete sellOrders[_executionClaimId + 1][_executionClaimId];
         // ******* EFFECTS END*******
 
         // ******* INTERACTIONS *******

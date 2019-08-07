@@ -39,7 +39,11 @@ let {
   execShellCommand,
   DxGetter,
   execShellCommandLog,
-  truffleAssert
+  truffleAssert,
+  userEthBalance,
+  userSellTokenBalance,
+  userBuyTokenBalance,
+  executorEthBalance
 } = require("./truffleTestConfig.js");
 
 let txHash;
@@ -57,7 +61,23 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
     accounts = await web3.eth.getAccounts();
     gelatoCoreOwner = await gelatoCore.contract.methods.owner().call();
     seller = accounts[2]; // account[2]
+    executor = accounts[9];
   });
+
+  it("Fetch Before Balance?", async function() {
+    // Fetch User Ether Balance
+    userEthBalance = await web3.eth.getBalance(seller);
+    // Fetch User SellToken Balance
+    userSellTokenBalance = await sellToken.contract.methods
+      .balanceOf(seller)
+      .call();
+    // Fetch User BuyToken Balance
+    userBuyTokenBalance = await buyToken.contract.methods
+      .balanceOf(seller)
+      .call();
+    // Fetch Executor Ether Balance
+    executorEthBalance = await web3.eth.getBalance(executor);
+  })
 
   it("Seller approves GDX for TOTAL_SELL_AMOUNT", async () => {
     await sellToken.contract.methods
@@ -234,16 +254,9 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
 
 describe("Should not be able to mint when tokens not traded on the dutchX", () => {
   it("Check that timeSellOrders() reverts when a non existing token is chosen", async function() {
-    this.timeout(50000);
     let ERC20 = artifacts.require("ERC20");
     // Deploy 1 new ERC20
     let newBuyToken = await ERC20.new();
-
-    // Check current auction index on DX GETTER
-    // console.log(buyToken.address)
-    // console.log(newBuyToken.address)
-    // let index1 = await dxGetter.contract.methods.getAuctionIndex(sellToken.address, buyToken.address).call()
-    // let index2 = await dxGetter.contract.methods.getAuctionIndex(sellToken.address, newBuyToken.address).call()
 
     // Now set the executiontime
     blockNumber = await web3.eth.getBlockNumber();
@@ -336,7 +349,7 @@ describe("Check gelatoDutchExchange Interface orderState and sellOrder Values", 
       firstExecutionClaimId = firstExecutionClaimId + 1;
       if (firstExecutionClaimId % 2 !== 0) {
         let sellOrder = await gelatoDutchExchange.contract.methods
-          .sellOrders(firstExecutionClaimId)
+          .sellOrders(firstExecutionClaimId + 1, firstExecutionClaimId)
           .call();
         // OrderState Id must be correct
         assert.strictEqual(
@@ -373,43 +386,49 @@ describe("Check gelatoDutchExchange Interface orderState and sellOrder Values", 
       }
     }
   });
-  it("Pair Ids should map to the same sellOrderStruct", async () => {
-    let lastExecutionClaimId = await gelatoCore.contract.methods
-      .getCurrentExecutionClaimId()
+
+  it("What happened in this test?", async function() {
+
+    // Fetch User Ether Balance
+    userEthBalanceAfter = await web3.eth.getBalance(seller);
+    // Fetch User SellToken Balance
+    userSellTokenBalanceAfter = await sellToken.contract.methods
+      .balanceOf(seller)
       .call();
-    let firstExecutionClaimId =
-      parseInt(lastExecutionClaimId) - parseInt(numberOfSubOrders) * 2;
+    // Fetch User BuyToken Balance
+    userBuyTokenBalanceAfter = await buyToken.contract.methods
+      .balanceOf(seller)
+      .call();
+    // Fetch Executor Ether Balance
+    executorEthBalanceAfter = await web3.eth.getBalance(executor);
 
-    let assertExecutionTime = executionTime;
-    assertExecutionTimeBN = new BN(assertExecutionTime);
 
-    while (firstExecutionClaimId < parseInt(lastExecutionClaimId)) {
-      // skip zero id
-      firstExecutionClaimId = firstExecutionClaimId + 1;
-      // ExecDepositAndSell Id
-      let sellOrder1 = await gelatoDutchExchange.contract.methods
-        .sellOrders(firstExecutionClaimId)
-        .call();
-      // execWithdraw Id
-      // FETCH THE SELLORDER FIRST
-      let sellOrderId = await gelatoDutchExchange.contract.methods.sellOrderLink(firstExecutionClaimId + 1).call()
-      let sellOrder2 = await gelatoDutchExchange.contract.methods
-        .sellOrders(sellOrderId.toString())
-        .call();
-      // skip to next depositAndSell id
-      assert.strictEqual(
-        sellOrder1.executionTime,
-        sellOrder2.executionTime,
-        "Sell Orders executionTime must be equal"
-      );
+    console.log(`
+      ***************************************************+
 
-      assert.strictEqual(
-        sellOrder1.amount,
-        sellOrder2.amount,
-        "Sell Orders amount should be equal"
-      );
+      SELLER BALANCE:
+        ETH Balances Before:  ${userEthBalance / 10 ** 18} ETH
+        ETH Balances After:   ${userEthBalanceAfter / 10 ** 18} ETH
+        Difference:           ${(userEthBalanceAfter - userEthBalance) / 10 ** 18} ETH
 
-      firstExecutionClaimId = firstExecutionClaimId + 1;
-    }
+        WETH Balance Before:  ${userSellTokenBalance / 10 ** 18} WETH
+        WETH Balance After:   ${userSellTokenBalanceAfter / 10 ** 18} WETH
+        Difference:           ${(userSellTokenBalanceAfter - userSellTokenBalance) / 10 ** 18} WETH
+
+        ICE Balance Before:   ${userBuyTokenBalance / 10 ** 18} ICE
+        ICE Balance After:    ${userBuyTokenBalanceAfter / 10 ** 18} ICE
+        Difference:           ${(userBuyTokenBalanceAfter  - userBuyTokenBalance) / 10 ** 18} ICE
+
+      EXECUTOR BALANCE:
+        ETH Balance Before:   ${executorEthBalance / 10 ** 18} ETH
+        ETH Balance After:    ${executorEthBalanceAfter / 10 ** 18} ETH
+        Difference:           ${(executorEthBalanceAfter - executorEthBalance) / 10 ** 18} ETH
+
+      ***************************************************+
+
+    `);
+
+    assert.isTrue(true);
   });
+
 });
