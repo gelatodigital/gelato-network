@@ -409,19 +409,23 @@ describe("Check gelatoDutchExchange Interface orderState and sellOrder Values", 
       SELLER BALANCE:
         ETH Balances Before:  ${userEthBalance / 10 ** 18} ETH
         ETH Balances After:   ${userEthBalanceAfter / 10 ** 18} ETH
+        -----------
         Difference:           ${(userEthBalanceAfter - userEthBalance) / 10 ** 18} ETH
 
         WETH Balance Before:  ${userSellTokenBalance / 10 ** 18} WETH
         WETH Balance After:   ${userSellTokenBalanceAfter / 10 ** 18} WETH
+        -----------
         Difference:           ${(userSellTokenBalanceAfter - userSellTokenBalance) / 10 ** 18} WETH
 
         ICE Balance Before:   ${userBuyTokenBalance / 10 ** 18} ICE
         ICE Balance After:    ${userBuyTokenBalanceAfter / 10 ** 18} ICE
+        -----------
         Difference:           ${(userBuyTokenBalanceAfter  - userBuyTokenBalance) / 10 ** 18} ICE
 
       EXECUTOR BALANCE:
         ETH Balance Before:   ${executorEthBalance / 10 ** 18} ETH
         ETH Balance After:    ${executorEthBalanceAfter / 10 ** 18} ETH
+        -----------
         Difference:           ${(executorEthBalanceAfter - executorEthBalance) / 10 ** 18} ETH
 
       ***************************************************+

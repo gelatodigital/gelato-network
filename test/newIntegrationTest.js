@@ -46,7 +46,7 @@ describe("Test possible intregration test architecture", () => {
         await commandLine.execShellCommandLog(`truffle test test/mintTest.js`)
         console.log("#########################################")
     })
-    it("test8 - Execute 1st Execution Claim - depositAndSell", async function () {
+    it("test8 - Execute 1st Execution Claim - execDepositAndSell", async function () {
         this.timeout(50000)
         await commandLine.execShellCommandLog(`truffle test test/execTest.js`)
         console.log("#########################################")
@@ -67,6 +67,26 @@ describe("Test possible intregration test architecture", () => {
         console.log("#########################################")
     })
     it("test13 - Execute 2nd Execution Claim - execWithdraw", async function () {
+        this.timeout(50000)
+        await commandLine.execShellCommandLog(`truffle test test/execTest.js`)
+        console.log("#########################################")
+    })
+    it("test14 - Execute 3rd Execution Claim - execDepositAndSell", async function () {
+        this.timeout(50000)
+        await commandLine.execShellCommandLog(`truffle test test/execTest.js`)
+        console.log("#########################################")
+    })
+    it("test15 - Start Auction 4", async function () {
+        this.timeout(50000)
+        await commandLine.execShellCommandLog(`yarn gdx-start-auction`)
+        console.log("#########################################")
+    })
+    it("test16 - To the next execution Time", async function () {
+        this.timeout(50000)
+        await commandLine.execShellCommandLog(`yarn gdx-to-next-exec-time`)
+        console.log("#########################################")
+    })
+    it("test17 - Execute 4th Execution Claim - execWithdraw", async function () {
         this.timeout(50000)
         await commandLine.execShellCommandLog(`truffle test test/execTest.js`)
         console.log("#########################################")
