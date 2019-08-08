@@ -91,6 +91,7 @@ contract GelatoCore is Ownable, Claim {
         // Initialise gelatoGasPrice, gelatoMaxGasPrice & gelatoExecutionMargin
         gelatoGasPrice = _gelatoGasPrice;
         gelatoMaxGasPrice = _gelatoMaxGasPrice;
+        // Change to 1 finnex
         gelatoExecutionMargin = _gelatoExecutionMargin;
         minEthBalance = 0.5 ether;
     }
