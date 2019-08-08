@@ -11,7 +11,7 @@ process.env.BUY_AMOUNT="4000"
 process.env.SKIP_TIME=6
 
 describe("Test possible intregration test architecture", () => {
-    it("test0 - Move migration files in", async function () {
+    it("Move migration files in", async function () {
         this.timeout(50000)
         await commandLine.execShellCommand(`mv ./2_DEV_migrate_dependencies.js ./migrations/2_DEV_migrate_dependencies.js; mv ./3_deploy_gelato.js ./migrations/3_deploy_gelato.js; mv ./4_deploy_dxGetter.js ./migrations/4_deploy_dxGetter.js`)
         console.log("#########################################")
@@ -25,7 +25,7 @@ describe("Test possible intregration test architecture", () => {
            SELLING:
             Total Sell Amount: 20 WETH
             Buy Token: ICE🍦
-            Number of sell order: 2
+            Number of sell orders: 2
             Time between sell order: 6 hours
 
            SPECIAL ACTIONS?

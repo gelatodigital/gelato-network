@@ -149,9 +149,9 @@ describe("If withdrawable, call manual withdraw, otherwise test revert execution
           .withdrawManually(nextExecutionClaim)
           .send({ from: seller, gas: 1000000 })
       );
-      console.log(`
+      // console.log(`
 
-                *** Manual withdraw reverted ***`);
+      //           *** Manual withdraw reverted ***`);
     } else {
       // Manual withdtaw should execute
       result = await gelatoDutchExchange.contract.methods
@@ -170,9 +170,9 @@ describe("If withdrawable, call manual withdraw, otherwise test revert execution
         isEqual,
         `${buyTokenDiff.toString()} must === ${exepectedWithdraw.toString()}`
       );
-      console.log(`
+      // console.log(`
 
-                *** Withdrawing ${exepectedWithdraw.toString()} did sucessfully occur ***`);
+      //           *** Withdrawing ${exepectedWithdraw.toString()} did sucessfully occur ***`);
     }
   });
 

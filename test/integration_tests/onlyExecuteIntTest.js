@@ -16,6 +16,27 @@ describe("Test possible intregration test architecture", () => {
         await commandLine.execShellCommand(`mv ./2_DEV_migrate_dependencies.js ./migrations/2_DEV_migrate_dependencies.js; mv ./3_deploy_gelato.js ./migrations/3_deploy_gelato.js; mv ./4_deploy_dxGetter.js ./migrations/4_deploy_dxGetter.js`)
         console.log("#########################################")
     })
+    it("Test Overview", async function () {
+        console.log(`
+            ***************************************************+
+
+            TEST CASE
+
+            SELLING:
+             Total Sell Amount: 20 WETH
+             Buy Token: ICE🍦
+             Number of sell orders: 2
+             Time between sell order: 6 hours
+
+            SPECIAL ACTIONS?
+             - none, withdrawals and depositAndSells fully automated
+
+            ***************************************************+
+            ***************************************************+
+
+            LET'S GO 🍦🍦🍦🍦🍦🍦🍦🍦🍦🍦🍦🍦🍦🍦🍦🍦🍦🍦
+        `);
+    })
     it("test1 - Yarn Setup", async function () {
         this.timeout(50000)
         await commandLine.execShellCommand(`yarn setup`)
@@ -84,6 +105,11 @@ describe("Test possible intregration test architecture", () => {
     it("test14 - Execute 4th Execution Claim - execWithdraw", async function () {
         this.timeout(50000)
         await commandLine.execShellCommandLog(`truffle test test/execTest.js`)
+        console.log("#########################################")
+    })
+    it("test15 - Resume", async function () {
+        this.timeout(50000)
+        await commandLine.execShellCommandLog(`truffle test test/resumeTest.js`)
         console.log("#########################################")
     })
 })

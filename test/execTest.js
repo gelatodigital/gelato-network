@@ -410,9 +410,9 @@ describe("Successfully execute first execution claim", () => {
   // Check that balance of interface was deducted by the same amount the executor received
   it("balance of interface was deducted by the same amount the executor received", async() => {
     let payoutWasEqual = amountReceivedByExecutor.eq(amountDeductedfromInterface)
-    console.log(`
-      Amount Received: ${amountReceivedByExecutor.toString()}
-      Amount Deducted interface: ${amountDeductedfromInterface.toString()}`)
+    // console.log(`
+    //   Amount Received: ${amountReceivedByExecutor.toString()}
+    //   Amount Deducted interface: ${amountDeductedfromInterface.toString()}`)
     assert.isTrue(payoutWasEqual, "Payout to executor equals amount deducted from interface balance")
 
   })

@@ -286,7 +286,7 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
     assert.notEqual(
       gelatoExecutionMarginBefore,
       gelatoExecutionMarginAfter,
-      "New Gas price should be differnt to old one"
+      "New Execution Marginn should be differnt to old one"
     );
     assert.equal(
       newExecutionMargin,

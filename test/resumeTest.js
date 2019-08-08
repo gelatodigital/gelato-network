@@ -54,6 +54,8 @@ let sellOrder;
 describe("TEST RESUME", () => {
   it("END - RESUME", async function() {
     accounts = await web3.eth.getAccounts();
+    sellToken = await SellToken.deployed();
+    buyToken = await BuyToken.deployed();
     seller = accounts[2];
     executor = accounts[9];
     // Fetch User Ether Balance
