@@ -447,10 +447,10 @@ describe("Successfully execute first execution claim", () => {
         -----------
         Difference:           ${(userSellTokenBalanceAfter - userSellTokenBalance) / 10 ** 18} WETH
 
-        ICE Balance Before:   ${userBuyTokenBalance / 10 ** 18} ICE
-        ICE Balance After:    ${userBuyTokenBalanceAfter / 10 ** 18} ICE
+        ICE Balance Before:   ${userBuyTokenBalance / 10 ** 18} ICE🍦
+        ICE Balance After:    ${userBuyTokenBalanceAfter / 10 ** 18} ICE🍦
         -----------
-        Difference:           ${(userBuyTokenBalanceAfter  - userBuyTokenBalance) / 10 ** 18} ICE
+        Difference:           ${(userBuyTokenBalanceAfter  - userBuyTokenBalance) / 10 ** 18} ICE🍦
 
       EXECUTOR BALANCE:
         ETH Balance Before:   ${executorEthBalance / 10 ** 18} ETH
