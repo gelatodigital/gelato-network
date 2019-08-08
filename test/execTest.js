@@ -378,17 +378,17 @@ describe("Successfully execute first execution claim", () => {
       if (events[0] === undefined)
       {
         amountDeductedfromInterface = gdxGelatoBalanceBefore.sub(gdxGelatoBalanceAfter);
-        console.log(`
-      GelatoBalanceBefore: ${gdxGelatoBalanceBefore.toString()}
-      GelatoBalanceAfter: ${gdxGelatoBalanceAfter.toString()}`)
+      //   console.log(`
+      // GelatoBalanceBefore: ${gdxGelatoBalanceBefore.toString()}
+      // GelatoBalanceAfter: ${gdxGelatoBalanceAfter.toString()}`)
       }
       else
       {
         amountDeductedfromInterface = gdxGelatoBalanceBefore.sub(gdxGelatoBalanceAfter).add(new BN(events[0].returnValues.weiAmount));
-        console.log(`
-      GelatoBalanceBefore: ${gdxGelatoBalanceBefore.toString()}
-      GelatoBalanceAfter: ${gdxGelatoBalanceAfter.toString()}
-      InterfaceEthBalance: ${events[0].returnValues.weiAmount}`)
+      //   console.log(`
+      // GelatoBalanceBefore: ${gdxGelatoBalanceBefore.toString()}
+      // GelatoBalanceAfter: ${gdxGelatoBalanceAfter.toString()}
+      // InterfaceEthBalance: ${events[0].returnValues.weiAmount}`)
 
       }
     })

@@ -64,6 +64,8 @@ describe("If withdrawable, call manual withdraw, otherwise test revert execution
     accounts = await web3.eth.getAccounts();
     gelatoCoreOwner = await gelatoCore.contract.methods.owner().call();
     seller = accounts[2]; // account[2]
+    revertExecutor = accounts[8]
+    executor = accounts[9];
   });
 
   it("Fetch Before Balance", async function() {
@@ -74,9 +76,9 @@ describe("If withdrawable, call manual withdraw, otherwise test revert execution
       .balanceOf(seller)
       .call();
     // Fetch User BuyToken Balance
-    userBuyTokenBalance = await buyToken.contract.methods
+    userBuyTokenBalance = new BN(await buyToken.contract.methods
       .balanceOf(seller)
-      .call();
+      .call());
     // Fetch Executor Ether Balance
     executorEthBalance = await web3.eth.getBalance(executor);
   });
@@ -122,7 +124,7 @@ describe("If withdrawable, call manual withdraw, otherwise test revert execution
     assert.isTrue(true);
   });
 
-  it("Manual withdraw should revert", async () => {
+  it("If withdrawable, execute manuallyWithdraw by seller, else expect revert", async () => {
     sellOrder = await gelatoDutchExchange.contract.methods
       .sellOrders(withdrawClaim, depositAndSellClaim)
       .call();
@@ -136,7 +138,6 @@ describe("If withdrawable, call manual withdraw, otherwise test revert execution
     let returnValue = await dxGetter.contract.methods
       .getClosingPrices(sellToken.address, buyToken.address, lastAuctionIndex)
       .call();
-    console.log("LastAuctionPrice, returnValue", returnValue);
     let num = returnValue[0];
     let den = returnValue[1];
     let denInt = parseInt(returnValue[1].toString());
@@ -146,7 +147,7 @@ describe("If withdrawable, call manual withdraw, otherwise test revert execution
       result = await truffleAssert.reverts(
         gelatoDutchExchange.contract.methods
           .withdrawManually(nextExecutionClaim)
-          .send({ from: seller, gas: 100000 })
+          .send({ from: seller, gas: 1000000 })
       );
       console.log(`
 

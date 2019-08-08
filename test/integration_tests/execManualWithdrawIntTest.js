@@ -61,7 +61,7 @@ describe("Test possible intregration test architecture", () => {
         await commandLine.execShellCommandLog(`yarn gdx-to-next-exec-time`)
         console.log("#########################################")
     })
-    it("test10 - Seller Calls Manual Withdraw with 2nd Execution Claim", async function () {
+    it("test10 - Withdraw 2nd Execution Claim - execManualWithdraw", async function () {
         this.timeout(50000)
         await commandLine.execShellCommandLog(`truffle test test/manualWithdrawTest.js`)
         console.log("#########################################")
@@ -81,9 +81,9 @@ describe("Test possible intregration test architecture", () => {
         await commandLine.execShellCommandLog(`yarn gdx-to-next-exec-time`)
         console.log("#########################################")
     })
-    it("test14 - Execute 4th Execution Claim - execWithdraw", async function () {
+    it("test14 - Execute 4th Execution Claim - execManualWithdraw", async function () {
         this.timeout(50000)
-        await commandLine.execShellCommandLog(`truffle test test/execTest.js`)
+        await commandLine.execShellCommandLog(`truffle test test/manualWithdrawTest.js`)
         console.log("#########################################")
     })
 })
