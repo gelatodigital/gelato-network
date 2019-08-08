@@ -702,7 +702,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         address seller = gelatoCore.ownerOf(_executionClaimId);
 
         // Fetch SellOrder
-        SellOrder memory sellOrder = sellOrders[_executionClaimId + 1][_executionClaimId];
+        SellOrder memory sellOrder = sellOrders[_executionClaimId][_executionClaimId - 1];
 
         // DEV use memory value lastAuctionIndex & sellAmountAfterFee as we already updated storage values
         uint256 amount = sellOrder.amount;
@@ -737,7 +737,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         // Delete sellOrder Struct
         // delete sellOrders[sellOrderExecutionClaimId];
         // delete sellOrderLink[_executionClaimId];
-        delete sellOrders[_executionClaimId + 1][_executionClaimId];
+        delete sellOrders[_executionClaimId][_executionClaimId - 1];
         // ******* EFFECTS END*******
 
         // ******* INTERACTIONS *******

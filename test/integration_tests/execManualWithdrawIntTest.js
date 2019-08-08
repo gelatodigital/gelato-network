@@ -1,4 +1,4 @@
-const commandLine = require("./helpers/execShellCommand.js");
+const commandLine = require("../helpers/execShellCommand.js");
 process.env.TEST="1"
 process.env.CLAIM_STATE_ID="1"
 process.env.EXECUTION_CLAIM="1"
@@ -46,47 +46,42 @@ describe("Test possible intregration test architecture", () => {
         await commandLine.execShellCommandLog(`truffle test test/mintTest.js`)
         console.log("#########################################")
     })
-    it("test8 - Execute 1st Execution Claim - execDepositAndSell", async function () {
+    it("test7 - Execute 1st Execution Claim - execDepositAndSell", async function () {
         this.timeout(50000)
         await commandLine.execShellCommandLog(`truffle test test/execTest.js`)
         console.log("#########################################")
     })
-    it("test10 - To the next execution Time", async function () {
-        this.timeout(50000)
-        await commandLine.execShellCommandLog(`yarn gdx-to-next-exec-time`)
-        console.log("#########################################")
-    })
-    it("test11 - Start Auction 3", async function () {
+    it("test8 - Start Auction 3", async function () {
         this.timeout(50000)
         await commandLine.execShellCommandLog(`yarn gdx-start-auction`)
         console.log("#########################################")
     })
-    it("test12 - To the next execution Time", async function () {
+    it("test9 - To the next execution Time", async function () {
         this.timeout(50000)
         await commandLine.execShellCommandLog(`yarn gdx-to-next-exec-time`)
         console.log("#########################################")
     })
-    it("test13 - Execute 2nd Execution Claim - execWithdraw", async function () {
+    it("test10 - Seller Calls Manual Withdraw with 2nd Execution Claim", async function () {
+        this.timeout(50000)
+        await commandLine.execShellCommandLog(`truffle test test/manualWithdrawTest.js`)
+        console.log("#########################################")
+    })
+    it("test11 - Execute 3rd Execution Claim - execDepositAndSell", async function () {
         this.timeout(50000)
         await commandLine.execShellCommandLog(`truffle test test/execTest.js`)
         console.log("#########################################")
     })
-    it("test14 - Execute 3rd Execution Claim - execDepositAndSell", async function () {
-        this.timeout(50000)
-        await commandLine.execShellCommandLog(`truffle test test/execTest.js`)
-        console.log("#########################################")
-    })
-    it("test15 - Start Auction 4", async function () {
+    it("test12 - Start Auction 4", async function () {
         this.timeout(50000)
         await commandLine.execShellCommandLog(`yarn gdx-start-auction`)
         console.log("#########################################")
     })
-    it("test16 - To the next execution Time", async function () {
+    it("test13 - To the next execution Time", async function () {
         this.timeout(50000)
         await commandLine.execShellCommandLog(`yarn gdx-to-next-exec-time`)
         console.log("#########################################")
     })
-    it("test17 - Execute 4th Execution Claim - execWithdraw", async function () {
+    it("test14 - Execute 4th Execution Claim - execWithdraw", async function () {
         this.timeout(50000)
         await commandLine.execShellCommandLog(`truffle test test/execTest.js`)
         console.log("#########################################")

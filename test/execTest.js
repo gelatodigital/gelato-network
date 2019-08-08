@@ -72,7 +72,7 @@ describe("Successfully execute first execution claim", () => {
     executor = accounts[9];
   });
 
-  it("Fetch Before Balance?", async function() {
+  it("Fetch Before Balance of seller and executor", async function() {
     // Fetch User Ether Balance
     userEthBalance = await web3.eth.getBalance(seller);
     // Fetch User SellToken Balance
