@@ -126,6 +126,13 @@ describe("Cancel outstanding execution claims", () => {
         assert.isTrue(true);
     });
 
+    it("Cancel Action from someone other than the seller should revert", async () => {
+        // Cancel executionClaim
+        txReceipt = await truffleAssert.reverts(gelatoDutchExchange.contract.methods.cancelOrder(nextExecutionClaim)
+        .send( {from: revertExecutor, gas: 300000} ));
+
+    })
+
     it("Cancel Claim pair", async () => {
         sellOrder = await gelatoDutchExchange.contract.methods
         .sellOrders(withdrawClaim, depositAndSellClaim)
@@ -155,8 +162,10 @@ describe("Cancel outstanding execution claims", () => {
         console.log(userSellTokenBalanceAfter.toString())
         console.log(SUBORDER_SIZE_BN.toString())
 
+        let amountsAreEqual = userSellTokenBalanceAfterBN.eq(SUBORDER_SIZE_BN)
+
         // CHECK: userSellTokenBalanceAfter must equal subOrderSizeBN
-        assert.strictEqual(userSellTokenBalanceAfterBN, SUBORDER_SIZE_BN)
+        assert.isTrue(amountsAreEqual, "Withdraw amount should equal SubOrderSize")
 
 
 
