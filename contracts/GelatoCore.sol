@@ -312,7 +312,7 @@ contract GelatoCore is Ownable, Claim {
         _burn(_executionClaimId);
 
         // Decrement interface execution claim count
-        _interfaceClaimCount[msg.sender].decrement();
+        _interfaceClaimCount[dappInterface].decrement();
         // ******** EFFECTS 2 END ****
         // Burn the executed executionClaim
 

@@ -678,7 +678,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         msg.sender.transfer(orderState.prepaymentPerSellOrder);
 
         // Transfer ERC20 Tokens back to seller
-        safeTransfer(sellToken, msg.sender, sellAmount, true);
+        safeTransfer(sellToken, msg.sender, sellAmount, false);
 
         // ****** INTERACTIONS END ******
 

@@ -140,6 +140,12 @@ describe("Cancel outstanding execution claims", () => {
         txReceipt = await gelatoDutchExchange.contract.methods.cancelOrder(nextExecutionClaim)
         .send( {from: seller, gas: 300000} );
 
+        console.log(txReceipt)
+
+        await gelatoDutchExchange.getPastEvents("LogOrderCancelled", (error, events) => {
+            console.log(events)
+        })
+
         // Fetch User SellToken Balance
         userSellTokenBalanceAfter = await sellToken.contract.methods
         .balanceOf(seller)
