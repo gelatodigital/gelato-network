@@ -43,7 +43,7 @@ contract IcedOut is Ownable {
           // msg.sender == dappInterface
           uint256 usedGasPrice;
           // If interfaceGasPrice is set to zero, query gasPrice from core, otherwise use manually setted interfaceGasPrice
-          interfaceGasPrice == 0 ? usedGasPrice = gelatoCore.getGelatoGasPrice() : usedGasPrice = interfaceGasPrice;
+          interfaceGasPrice == 0 ? usedGasPrice = gelatoCore.gelatoGasPrice() : usedGasPrice = interfaceGasPrice;
           prepayment = interfaceMaxGas.mul(usedGasPrice);
      }
 

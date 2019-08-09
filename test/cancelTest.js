@@ -147,8 +147,6 @@ describe("Cancel outstanding execution claims", () => {
         txReceipt = await gelatoDutchExchange.contract.methods.cancelOrder(nextExecutionClaim)
         .send( {from: seller, gas: 300000} );
 
-        console.log(txReceipt)
-
         await gelatoDutchExchange.getPastEvents("LogOrderCancelled", (error, events) => {
             console.log(events)
         })
@@ -159,9 +157,6 @@ describe("Cancel outstanding execution claims", () => {
         .call();
 
         let userSellTokenBalanceAfterBN = new BN(userSellTokenBalanceAfter.toString())
-        console.log(userSellTokenBalanceAfter.toString())
-        console.log(SUBORDER_SIZE_BN.toString())
-
         let amountsAreEqual = userSellTokenBalanceAfterBN.eq(SUBORDER_SIZE_BN)
 
         // CHECK: userSellTokenBalanceAfter must equal subOrderSizeBN

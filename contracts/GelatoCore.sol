@@ -25,8 +25,6 @@ contract GelatoCore is Ownable, Claim {
                                      bytes indexed functionSignature,
                                      uint256 executionClaimId
     );
-    event LogNewInterfaceListed(address indexed dappInterface, uint256 maxGas);
-    event LogInterfaceUnlisted(address indexed dappInterface, uint256 noMaxGas);
     event LogGelatoGasPriceUpdate(uint256 newGelatoGasPrice);
     event LogMaxGasUpdate(address indexed dappInterface, uint256 newMaxGas);
     event LogClaimCancelled(address indexed dappInterface,
@@ -55,9 +53,6 @@ contract GelatoCore is Ownable, Claim {
 
     // executionClaimId => ExecutionClaim
     mapping(uint256 => ExecutionClaim) public executionClaims;
-
-    // Counter for execution Claims
-    mapping (address => Counters.Counter) private _interfaceClaimCount;
 
     // Balance of interfaces which pay for claim execution
     mapping(address => uint256) public interfaceBalances;
@@ -101,22 +96,13 @@ contract GelatoCore is Ownable, Claim {
     }
     // **************************** Gelato Core constructor() END *****************************
 
-    // **************************** Modifiers ******************************
-    modifier onlyExecutionClaimOwner(uint256 _executionClaimId) {
-        require(msg.sender == ownerOf(_executionClaimId),
-            "modifier onlyExecutionClaimOwner: msg.sender != ownerOf(executionClaimId)"
-        );
-        _;
-    }
-    // **************************** Modifiers END ******************************
-
     // CREATE
     // **************************** mintExecutionClaim() ******************************
-    function mintExecutionClaim(bytes memory _functionSignature,
+    function mintExecutionClaim(bytes calldata _functionSignature,
                                 address _executionClaimOwner
     )
         payable
-        public
+        external
         returns (bool)
     {
         // CHECKS
@@ -141,16 +127,11 @@ contract GelatoCore is Ownable, Claim {
         // ERC721(executionClaimId) => ExecutionClaim(struct)
         executionClaims[executionClaimId] = executionClaim;
 
-        // Step4: Increment interface execution claim count
-        _interfaceClaimCount[msg.sender].increment();
-
-
         // Step4: Emit event to notify executors that a new sub order was created
         emit LogNewExecutionClaimMinted(msg.sender,  // dappInterface
                                         _functionSignature,
                                         executionClaimId
         );
-
 
         // Step5: Return true to caller (dappInterface)
         return true;
@@ -169,16 +150,6 @@ contract GelatoCore is Ownable, Claim {
         return currentId;
     }
 
-
-    function getGelatoGasPrice()
-        public
-        view
-        returns(uint256)
-    {
-        return gelatoGasPrice;
-    }
-
-
     function getInterfaceBalance(address _dappInterface)
         public
         view
@@ -188,22 +159,7 @@ contract GelatoCore is Ownable, Claim {
     }
 
     // **************************** ExecutionClaim Getters ***************************
-    // Getter for all ExecutionClaim fields
-    function getExecutionClaim(uint256 _executionClaimId)
-        public
-        view
-        returns(address dappInterface,
-                bytes memory functionSelector,
-                address executionClaimOwner
-        )
-    {
-        ExecutionClaim memory executionClaim = executionClaims[_executionClaimId];
-
-        return (executionClaim.dappInterface,
-                executionClaim.functionSignature,
-                ownerOf(_executionClaimId) // fetches owner of the executionClaim token
-        );
-    }
+    // Getter for all ExecutionClaim fields );
 
     // Getters for individual Execution Claim fields
     // To get claim interface
@@ -245,17 +201,12 @@ contract GelatoCore is Ownable, Claim {
         // Local variables needed for Checks, Effects -> Interactions pattern
         address executionClaimOwner = ownerOf(_executionClaimId);
 
-        // CHECKS: onlyExecutionClaimOwner modifier
-
         // EFFECTS: emit event, then burn and delete the ExecutionClaim struct - possible gas refund to msg.sender?
         emit LogClaimCancelled(executionClaim.dappInterface,
                                _executionClaimId,
                                executionClaimOwner
         );
         _burn(_executionClaimId);
-
-        // Decrement interface execution claim count
-        _interfaceClaimCount[msg.sender].decrement();
 
         delete executionClaims[_executionClaimId];
     }
@@ -265,7 +216,7 @@ contract GelatoCore is Ownable, Claim {
 
     // Execute executionClaim
     function execute(uint256 _executionClaimId)
-        public
+        external
         returns (bool, bytes memory)
     {
         // // Step1: Calculate start GAS, set by the executor.
@@ -311,8 +262,6 @@ contract GelatoCore is Ownable, Claim {
         // Burn Claim. Should be done here to we done have to store the claim Owner on the interface. Deleting the struct on the core should suffice, as an exeuctionClaim Token without the associated struct is worthless. => Discuss
         _burn(_executionClaimId);
 
-        // Decrement interface execution claim count
-        _interfaceClaimCount[dappInterface].decrement();
         // ******** EFFECTS 2 END ****
         // Burn the executed executionClaim
 
@@ -355,7 +304,7 @@ contract GelatoCore is Ownable, Claim {
 
     // Set the global max gas price an executor can receive in the gelato system
     function updateGelatoMaxGasPrice(uint256 _newGelatoMaxGasPrice)
-        public
+        external
         onlyOwner
     {
         gelatoMaxGasPrice = _newGelatoMaxGasPrice;
@@ -363,7 +312,7 @@ contract GelatoCore is Ownable, Claim {
 
     // Set the global fee an executor can receive in the gelato system
     function updateGelatoExecutionMargin(uint256 _newgelatoExecutionMargin)
-        public
+        external
         onlyOwner
     {
         gelatoExecutionMargin = _newgelatoExecutionMargin;
@@ -374,27 +323,21 @@ contract GelatoCore is Ownable, Claim {
     function updateGelatoGasPrice(uint256 _gelatoGasPrice)
         external
         onlyOwner
-        returns(bool)
     {
         gelatoGasPrice = _gelatoGasPrice;
 
         emit LogGelatoGasPriceUpdate(gelatoGasPrice);
 
-        return true;
     }
 
     // Updating the min ether balance of interfaces
     function updateMinEthBalance(uint256 _minEthBalance)
         external
         onlyOwner
-        returns(bool)
     {
         minEthBalance = _minEthBalance;
 
         emit LogminEthBalanceUpdated(_minEthBalance);
-
-
-        return true;
     }
 
     // **************************** Core Updateability END ******************************
@@ -403,7 +346,7 @@ contract GelatoCore is Ownable, Claim {
 
     // Enable interfaces to add a balance to Gelato to pay for transaction executions
     function addBalance(address _dappInterface)
-        public
+        external
         payable
     {
         require(msg.value > 0, "Msg.value must be greater than zero");
@@ -415,9 +358,8 @@ contract GelatoCore is Ownable, Claim {
 
     // Enable interfaces to withdraw some of their added balances
     function withdrawBalance(uint256 _withdrawAmount)
-        public
+        external
     {
-        require(_interfaceClaimCount[msg.sender].current() == 0, "Interface must not have any outstanding execution claims left");
         require(_withdrawAmount > 0, "WithdrawAmount must be greater than zero");
         uint256 currentInterfaceBalance = interfaceBalances[msg.sender];
         require(_withdrawAmount <= currentInterfaceBalance, "WithdrawAmount must be smaller or equal to the interfaces current balance");
