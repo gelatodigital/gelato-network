@@ -11,6 +11,7 @@ contract GelatoCore is Ownable, Claim {
     // Libraries inherited from Claim:
     // using Counters for Counters.Counter;
 
+    // Counter for execution Claims
     Counters.Counter private _executionClaimIds;
 
     // New Core struct
@@ -54,6 +55,9 @@ contract GelatoCore is Ownable, Claim {
 
     // executionClaimId => ExecutionClaim
     mapping(uint256 => ExecutionClaim) public executionClaims;
+
+    // Counter for execution Claims
+    mapping (address => Counters.Counter) private _interfaceClaimCount;
 
     // Balance of interfaces which pay for claim execution
     mapping(address => uint256) public interfaceBalances;
@@ -136,6 +140,9 @@ contract GelatoCore is Ownable, Claim {
         // Step3: ExecutionClaims tracking state variable update
         // ERC721(executionClaimId) => ExecutionClaim(struct)
         executionClaims[executionClaimId] = executionClaim;
+
+        // Step4: Increment interface execution claim count
+        _interfaceClaimCount[msg.sender].increment();
 
 
         // Step4: Emit event to notify executors that a new sub order was created
@@ -246,6 +253,10 @@ contract GelatoCore is Ownable, Claim {
                                executionClaimOwner
         );
         _burn(_executionClaimId);
+
+        // Decrement interface execution claim count
+        _interfaceClaimCount[msg.sender].increment();
+
         delete executionClaims[_executionClaimId];
     }
 
@@ -299,6 +310,9 @@ contract GelatoCore is Ownable, Claim {
         // Step6: Delete
         // Burn Claim. Should be done here to we done have to store the claim Owner on the interface. Deleting the struct on the core should suffice, as an exeuctionClaim Token without the associated struct is worthless. => Discuss
         _burn(_executionClaimId);
+
+        // Decrement interface execution claim count
+        _interfaceClaimCount[msg.sender].increment();
         // ******** EFFECTS 2 END ****
         // Burn the executed executionClaim
 
@@ -403,6 +417,7 @@ contract GelatoCore is Ownable, Claim {
     function withdrawBalance(uint256 _withdrawAmount)
         public
     {
+        require(_interfaceClaimCount[msg.sender].current() == 0, "Interface must not have any outstanding execution claims left");
         require(_withdrawAmount > 0, "WithdrawAmount must be greater than zero");
         uint256 currentInterfaceBalance = interfaceBalances[msg.sender];
         require(_withdrawAmount <= currentInterfaceBalance, "WithdrawAmount must be smaller or equal to the interfaces current balance");

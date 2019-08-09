@@ -51,7 +51,7 @@ let {
   let withdrawClaim;
   let sellOrder;
 
-describe("If withdrawable, call manual withdraw, otherwise test revert execution", () => {
+describe("Cancel outstanding execution claims", () => {
     // ******** Deploy new instances Test ********
     before(async () => {
         gelatoDutchExchange = await GelatoDutchX.deployed();
@@ -137,7 +137,21 @@ describe("If withdrawable, call manual withdraw, otherwise test revert execution
         .call();
 
         // Cancel executionClaim
-        txReceipt = await gelatoDutchExchange.contract.methods.cancelOrder(nextExecutionClaim);
+        txReceipt = await gelatoDutchExchange.contract.methods.cancelOrder(nextExecutionClaim)
+        .send( {from: seller, gas: 300000} );
+
+        // Fetch User SellToken Balance
+        userSellTokenBalanceAfter = await sellToken.contract.methods
+        .balanceOf(seller)
+        .call();
+
+        let userSellTokenBalanceAfterBN = new BN(userSellTokenBalanceAfter.toString())
+        console.log(userSellTokenBalanceAfter.toString())
+        console.log(SUBORDER_SIZE_BN.toString())
+
+        // CHECK: userSellTokenBalanceAfter must equal subOrderSizeBN
+        assert.strictEqual(userSellTokenBalanceAfterBN, SUBORDER_SIZE_BN)
+
 
 
     });
@@ -146,10 +160,7 @@ describe("If withdrawable, call manual withdraw, otherwise test revert execution
 
         // Fetch User Ether Balance
         userEthBalanceAfter = await web3.eth.getBalance(seller);
-        // Fetch User SellToken Balance
-        userSellTokenBalanceAfter = await sellToken.contract.methods
-        .balanceOf(seller)
-        .call();
+
         // Fetch User BuyToken Balance
         userBuyTokenBalanceAfter = await buyToken.contract.methods
         .balanceOf(seller)

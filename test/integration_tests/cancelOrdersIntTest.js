@@ -29,7 +29,7 @@ describe("Test possible intregration test architecture", () => {
             Time between sell order: 6 hours
 
            SPECIAL ACTIONS?
-            - Manually withdraw twice instead of having automated withdraws
+            - Cancel the 3rd and 4th execution claim and get a refund
 
            ***************************************************+
            ***************************************************+
