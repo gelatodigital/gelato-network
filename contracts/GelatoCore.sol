@@ -17,12 +17,12 @@ contract GelatoCore is Ownable, Claim {
     // New Core struct
     struct ExecutionClaim {
         address dappInterface;
-        bytes functionSignature;
+        bytes payload;
     }
 
     // **************************** Events **********************************
     event LogNewExecutionClaimMinted(address indexed dappInterface,
-                                     bytes indexed functionSignature,
+                                     bytes indexed payload,
                                      uint256 executionClaimId
     );
     event LogGelatoGasPriceUpdate(uint256 newGelatoGasPrice);
@@ -50,6 +50,12 @@ contract GelatoCore is Ownable, Claim {
     // **************************** Events END **********************************
 
     // **************************** State Variables **********************************
+
+    // Gelato Version
+    string public version = "0.0.3";
+
+    // Gas stipends for acceptRelayedCall, preRelayedCall and postRelayedCall
+    uint256 constant private acceptRelayedCallMaxGas = 50000;
 
     // executionClaimId => ExecutionClaim
     mapping(uint256 => ExecutionClaim) public executionClaims;
@@ -98,7 +104,7 @@ contract GelatoCore is Ownable, Claim {
 
     // CREATE
     // **************************** mintExecutionClaim() ******************************
-    function mintExecutionClaim(bytes calldata _functionSignature,
+    function mintExecutionClaim(bytes calldata _payload,
                                 address _executionClaimOwner
     )
         payable
@@ -106,12 +112,12 @@ contract GelatoCore is Ownable, Claim {
         returns (bool)
     {
         // CHECKS
-        // All checks are done interface side. If interface sets wrong _functionSignature, its not the coress fault. We could check that the bytes param is not == 0x, but this would require 2 costly keccak calls
+        // All checks are done interface side. If interface sets wrong _payload, its not the coress fault. We could check that the bytes param is not == 0x, but this would require 2 costly keccak calls
 
         // Step1: Instantiate executionClaim (in memory)
         ExecutionClaim memory executionClaim = ExecutionClaim(
             msg.sender,  // dappInterface
-            _functionSignature
+            _payload
         );
 
         // ****** Step2: Mint new executionClaim ERC721 token ******
@@ -129,7 +135,7 @@ contract GelatoCore is Ownable, Claim {
 
         // Step4: Emit event to notify executors that a new sub order was created
         emit LogNewExecutionClaimMinted(msg.sender,  // dappInterface
-                                        _functionSignature,
+                                        _payload,
                                         executionClaimId
         );
 
@@ -174,14 +180,14 @@ contract GelatoCore is Ownable, Claim {
     }
 
     // To get claim functionSelector
-    function getClaimFunctionSignature(uint256 _executionClaimId)
+    function getClaimPayload(uint256 _executionClaimId)
         public
         view
         returns(bytes memory)
     {
         ExecutionClaim memory executionClaim = executionClaims[_executionClaimId];
 
-        return executionClaim.functionSignature;
+        return executionClaim.payload;
     }
 
     // **************************** ExecutionClaim Getters END ******************************
@@ -213,6 +219,40 @@ contract GelatoCore is Ownable, Claim {
 
     // **************************** ExecutionClaim Updates END ******************************
 
+    // Function for executors to verify that execution claim is executable
+    // Must return 0 in order to be seen as 'executable' by executor nodes
+    function canExecute(uint256 _executionClaimId)
+        external
+        view
+        returns (uint256)
+    {
+        //Fetch execution
+        ExecutionClaim memory executionClaim = executionClaims[_executionClaimId];
+
+        // Fetch execution claim variables
+
+        // Payload
+        bytes memory payload = executionClaim.payload;
+        // Interface Address
+        address dappInterface = executionClaim.dappInterface;
+
+        // Make static call to dappInterface
+        // @DEV canExecute should accept same payload as execute func, however we should call the canExecute func and not have the encoded func signature do weird shit
+        (bool success, bytes memory returndata) = dappInterface.staticcall.gas(acceptRelayedCallMaxGas)(payload);
+
+        // Check dappInterface return value
+        if (!success) {
+            // Return 1 in case of error
+            return 1;
+        }
+        else {
+            (uint256 status) = abi.decode(returndata, (uint256));
+            // Status should return 0 for the executor to deem execution claim executable
+            return status;
+        }
+
+    }
+
 
     // Execute executionClaim
     function execute(uint256 _executionClaimId)
@@ -227,7 +267,7 @@ contract GelatoCore is Ownable, Claim {
 
         // // Step3: Fetch execution claim variables
         // Interface Function signature
-        bytes memory functionSignature = executionClaim.functionSignature;
+        bytes memory payload = executionClaim.payload;
         // Interface Address
         address dappInterface = executionClaim.dappInterface;
         // Get the executionClaimOwner before burning
@@ -253,7 +293,7 @@ contract GelatoCore is Ownable, Claim {
         // Interactions
         // Step7: Call Interface
         // ******* Gelato Interface Call *******
-        (bool success, bytes memory data) = dappInterface.call(functionSignature);
+        (bool success, bytes memory data) = dappInterface.call(payload);
         require(success == true, "Execution of dappInterface function must be successful");
         // ******* Gelato Interface Call END *******
 

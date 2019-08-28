@@ -230,6 +230,13 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
     }
     // **************************** timeSellOrders() END ******************************
 
+    function canExecute(uint256 _executionClaimId)
+        external
+        view
+        returns (uint256)
+    {
+        return 0;
+    }
 
 
     // ****************************  execDepositAndSell(executionClaimId) *********************************

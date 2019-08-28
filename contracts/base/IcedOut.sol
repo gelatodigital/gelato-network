@@ -92,11 +92,11 @@ contract IcedOut is Ownable {
      // Create function signaure from canonical form and execution claim
      function mintClaim(string memory _function, address _user)
           public
-          returns (uint256 executionClaimId, bytes memory functionSignature)
+          returns (uint256 executionClaimId, bytes memory payload)
      {
           executionClaimId = gelatoCore.getCurrentExecutionClaimId().add(1);
-          functionSignature = abi.encodeWithSignature(_function, executionClaimId);
-          gelatoCore.mintExecutionClaim(functionSignature, _user);
+          payload = abi.encodeWithSignature(_function, executionClaimId);
+          gelatoCore.mintExecutionClaim(payload, _user);
      }
 
      // Check time condition
