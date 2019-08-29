@@ -2,8 +2,7 @@ const truffleConfig = require('./truffleConfig.js')
 
 const DEFAULT_GAS_PRICE_GWEI = 5
 const GAS_LIMIT = 6.5e6
-const DEFAULT_MNEMONIC =
-  'candy maple cake sugar pudding cream honey rich smooth crumble sweet treat'
+const DEFAULT_MNEMONIC = process.env.MNEMONIC;
 
 // Load env vars
 require('./src/helpers/loadEnv')
