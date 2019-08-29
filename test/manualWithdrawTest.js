@@ -90,7 +90,7 @@ describe("If withdrawable, call manual withdraw, otherwise test revert execution
       .call();
     // Get the first execution claim minted in by the mint test
     nextExecutionClaim =
-      parseInt(lastExecutionClaimId) - (parseInt(numberOfSubOrders) * 2 + 1);
+      parseInt(lastExecutionClaimId) - parseInt(numberOfSubOrders) * 2 + 1;
 
     // Fetch owner of executionClaim, if address(0) gets returned, we it already was executed and we try the next
     let mustNotBeZero = "0x0";
@@ -100,7 +100,6 @@ describe("If withdrawable, call manual withdraw, otherwise test revert execution
           .ownerOf(nextExecutionClaim)
           .call();
       } catch (err) {
-        assert(err);
         nextExecutionClaim = nextExecutionClaim + 1;
       }
     }
@@ -155,11 +154,10 @@ describe("If withdrawable, call manual withdraw, otherwise test revert execution
       //           *** Manual withdraw reverted ***`);
     } else {
       // Manual withdtaw should execute
-      console.log("\t\tHHHHHEEEERRREE")
       result = await gelatoDutchExchange.contract.methods
         .withdrawManually(nextExecutionClaim)
         .send({ from: seller, gas: 1000000 });
-      console.log("\t\tHHHHHEEEERRREE 2!")
+
       // Fetch User BuyToken Balance
       let userBuyTokenBalanceAfter = new BN(
         await buyToken.contract.methods.balanceOf(seller).call()
@@ -194,37 +192,31 @@ describe("If withdrawable, call manual withdraw, otherwise test revert execution
 
     console.log(`
       ***************************************************+
-
       SELLER BALANCE:
         ETH Balances Before:  ${userEthBalance / 10 ** 18} ETH
         ETH Balances After:   ${userEthBalanceAfter / 10 ** 18} ETH
         -----------
         Difference:           ${(userEthBalanceAfter - userEthBalance) /
           10 ** 18} ETH
-
         WETH Balance Before:  ${userSellTokenBalance / 10 ** 18} WETH
         WETH Balance After:   ${userSellTokenBalanceAfter / 10 ** 18} WETH
         -----------
         Difference:           ${(userSellTokenBalanceAfter -
           userSellTokenBalance) /
           10 ** 18} WETH
-
         ICE Balance Before:   ${userBuyTokenBalance / 10 ** 18} ICE
         ICE Balance After:    ${userBuyTokenBalanceAfter / 10 ** 18} ICE
         -----------
         Difference:           ${(userBuyTokenBalanceAfter -
           userBuyTokenBalance) /
           10 ** 18} ICE
-
       EXECUTOR BALANCE:
         ETH Balance Before:   ${executorEthBalance / 10 ** 18} ETH
         ETH Balance After:    ${executorEthBalanceAfter / 10 ** 18} ETH
         -----------
         Difference:           ${(executorEthBalanceAfter - executorEthBalance) /
           10 ** 18} ETH
-
       ***************************************************+
-
     `);
 
     assert.isTrue(true);

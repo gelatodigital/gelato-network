@@ -389,13 +389,12 @@ contract GelatoCore is Ownable, Claim {
         external
     {
         ExecutionClaim memory executionClaim = executionClaims[_executionClaimId];
-        _burn(_executionClaimId);
-        delete executionClaims[_executionClaimId];
         emit LogExecutionClaimCancelled(executionClaim.dappInterface,
                                         _executionClaimId,
                                         ownerOf(_executionClaimId)
         );
-
+        _burn(_executionClaimId);
+        delete executionClaims[_executionClaimId];
     }
     // **************************** cancelExecutionClaim() END ***************************
 }
