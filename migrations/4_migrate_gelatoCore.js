@@ -10,7 +10,7 @@ const EXECUTOR_PROFIT = web3.utils.toWei("2", "finney");
 const EXECUTOR_GAS_PRICE = web3.utils.toWei("5", "gwei");
 const EXEC_FN_GAS_OVERHEAD = 34034;
 const EXEC_FN_REFUNDED_GAS = 30000;
-const RECOMMENDED_GAS_PRICE_FOR_INTERFACES = web3.utils.toWei("100", "gwei");
+const RECOMMENDED_GAS_PRICE_FOR_INTERFACES = web3.utils.toWei("5", "gwei");
 
 module.exports = async function(deployer, network, accounts) {
   const coreDeployer = accounts[0];

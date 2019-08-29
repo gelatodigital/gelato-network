@@ -260,7 +260,7 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
 });
 
 describe("Should not be able to mint when tokens not traded on the dutchX", () => {
-  it("Check that timeSellOrders() reverts when a non existing token is chosen", async function() {
+  it("Check that timedSellOrders() reverts when a non existing token is chosen", async function() {
     let ERC20 = artifacts.require("ERC20");
     // Deploy 1 new ERC20
     let newBuyToken = await ERC20.new();
@@ -276,7 +276,7 @@ describe("Should not be able to mint when tokens not traded on the dutchX", () =
 
     // Call should revert
     await truffleAssert.reverts(
-      gelatoDutchExchange.timeSellOrders(
+      gelatoDutchExchange.timedSellOrders(
         sellToken.address,
         newBuyToken.address,
         TOTAL_SELL_VOLUME,
@@ -333,15 +333,6 @@ describe("Check gelatoDutchExchange Interface orderState and sellOrder Values", 
       "0",
       "orderState.lastAuctionIndex problem"
     );
-
-    let gdxPrepayment = await gelatoDutchExchange.contract.methods
-      .calcGelatoPrepayment()
-      .call();
-    assert.strictEqual(
-      orderState.prepaymentPerSellOrder,
-      gdxPrepayment,
-      "prePayment Problem"
-    );
   });
   it("Check sellOrder values", async () => {
     let lastExecutionClaimId = await gelatoCore.contract.methods
@@ -376,7 +367,7 @@ describe("Check gelatoDutchExchange Interface orderState and sellOrder Values", 
         );
 
         // Amount must be correct
-        let amountIsEqual = SUBORDER_SIZE_BN.eq(new BN(sellOrder.amount));
+        let amountIsEqual = SUBORDER_SIZE_BN.eq(new BN(sellOrder.sellAmount));
         assert.isTrue(amountIsEqual, "Amount Problem in sellOrder");
 
         // Posted should be false by default
@@ -384,6 +375,15 @@ describe("Check gelatoDutchExchange Interface orderState and sellOrder Values", 
           sellOrder.posted,
           false,
           "Posted (bool) Problem in sellOrder"
+        );
+
+        let gdxPrepayment = await gelatoDutchExchange.contract.methods
+          .calcGelatoPrepayment()
+          .call();
+        assert.strictEqual(
+          sellOrder.prepaymentPerSellOrder,
+          gdxPrepayment,
+          "prePayment Problem"
         );
 
         // Account for next iteration

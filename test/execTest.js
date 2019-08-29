@@ -51,9 +51,9 @@ let txReceipt;
 let revertExecutor;
 let amountReceivedByExecutor;
 let amountDeductedfromInterface;
-let nextExecutionClaim
-let depositAndSellClaim
-let withdrawClaim
+let nextExecutionClaim;
+let depositAndSellClaim;
+let withdrawClaim;
 let sellOrder;
 
 describe("Successfully execute first execution claim", () => {
@@ -68,7 +68,7 @@ describe("Successfully execute first execution claim", () => {
     accounts = await web3.eth.getAccounts();
     gelatoCoreOwner = await gelatoCore.contract.methods.owner().call();
     seller = accounts[2];
-    revertExecutor = accounts[8]
+    revertExecutor = accounts[8];
     executor = accounts[9];
   });
 
@@ -85,64 +85,61 @@ describe("Successfully execute first execution claim", () => {
       .call();
     // Fetch Executor Ether Balance
     executorEthBalance = await web3.eth.getBalance(executor);
-  })
+  });
 
-  it("fetch the correct executionClaimId to execute", async() => {
+  it("fetch the correct executionClaimId to execute", async () => {
     // Get the current execution claim on the core
     let lastExecutionClaimId = await gelatoCore.contract.methods
       .getCurrentExecutionClaimId()
       .call();
     // Get the first execution claim minted in by the mint test
     nextExecutionClaim =
-      parseInt(lastExecutionClaimId) - (parseInt(numberOfSubOrders) * 2) + 1;
+      parseInt(lastExecutionClaimId) - parseInt(numberOfSubOrders) * 2 + 1;
 
     // Fetch owner of executionClaim, if address(0) gets returned, we it already was executed and we try the next
     let mustNotBeZero = "0x0";
-    while (mustNotBeZero === "0x0")
-    {
-      try
-      {
-        mustNotBeZero = await gelatoCore.contract.methods.ownerOf(nextExecutionClaim).call()
+    while (mustNotBeZero === "0x0") {
+      try {
+        mustNotBeZero = await gelatoCore.contract.methods
+          .ownerOf(nextExecutionClaim)
+          .call();
+      } catch (err) {
+        nextExecutionClaim = nextExecutionClaim + 1;
       }
-      catch(err)
-      {
-        nextExecutionClaim = nextExecutionClaim + 1
-      }
-
     }
-    console.log(`ExecutionClaimID: ${nextExecutionClaim}`)
+    console.log(`ExecutionClaimID: ${nextExecutionClaim}`);
     assert.isTrue(true);
-  })
+  });
 
-  it("Set correct depositAndSell claim & withdraw claim", async() => {
+  it("Set correct depositAndSell claim & withdraw claim", async () => {
     // Get the current execution claim on the core
     // Assuming we get an depositAndSell claim
-    let sellOrderTest = await gelatoDutchExchange.contract.methods.sellOrders(nextExecutionClaim + 1, nextExecutionClaim).call()
+    let sellOrderTest = await gelatoDutchExchange.contract.methods
+      .sellOrders(nextExecutionClaim + 1, nextExecutionClaim)
+      .call();
     // It's a withdraw claim
-    if (sellOrderTest.amount === '0')
-    {
+    if (sellOrderTest.sellAmount === "0") {
       depositAndSellClaim = nextExecutionClaim - 1;
-      withdrawClaim  = nextExecutionClaim;
-    }
-    else
-    {
+      withdrawClaim = nextExecutionClaim;
+    } else {
       depositAndSellClaim = nextExecutionClaim;
-      withdrawClaim  = nextExecutionClaim + 1;
+      withdrawClaim = nextExecutionClaim + 1;
     }
     assert.isTrue(true);
-  })
+  });
 
   it("Check if execution claim is executable based on its execution Time, if not, test that execution reverts and fast forward", async () => {
-
-    sellOrder = await gelatoDutchExchange.contract.methods.sellOrders(withdrawClaim, depositAndSellClaim).call()
-    let sellOrderExecutionTime = sellOrder.executionTime
+    sellOrder = await gelatoDutchExchange.contract.methods
+      .sellOrders(withdrawClaim, depositAndSellClaim)
+      .call();
+    let sellOrderExecutionTime = sellOrder.executionTime;
 
     // Fetch time
     let blockNumber = await web3.eth.getBlockNumber();
     let block = await web3.eth.getBlock(blockNumber);
     let beforeTimeTravel = block.timestamp;
 
-    let secondsUntilExecution  = sellOrderExecutionTime - beforeTimeTravel
+    let secondsUntilExecution = sellOrderExecutionTime - beforeTimeTravel;
 
     // console.log(`
     //              Claim is executable at: ${sellOrderExecutionTime}.
@@ -150,8 +147,7 @@ describe("Successfully execute first execution claim", () => {
     //              Difference: ${secondsUntilExecution}`);
 
     // If execution Time of claim is in the future, we execute and expect a revert and then fast forward in time to the execution time
-    if(parseInt(secondsUntilExecution) > 0)
-    {
+    if (parseInt(secondsUntilExecution) > 0) {
       // Execution should revert
       // Gas price to calc executor payout
       let txGasPrice = await web3.utils.toWei("5", "gwei");
@@ -165,7 +161,6 @@ describe("Successfully execute first execution claim", () => {
       // fast forward
       await timeTravel.advanceTimeAndBlock(secondsUntilExecution);
       // console.log(`Time travelled ${secondsUntilExecution} seconds`)
-
     }
 
     // Fetch current time again, in case we fast forwarded in time
@@ -210,41 +205,63 @@ describe("Successfully execute first execution claim", () => {
     assert(true);
   });
 
-  it("Check that seller is owner of execution Claim", async() => {
-    let fetchedSeller = await gelatoCore.contract.methods.ownerOf(nextExecutionClaim).call()
-    assert.equal(fetchedSeller.toString(), seller, "Execution Claim owner should be equal to predefined seller");
-  })
+  it("Check that seller is owner of execution Claim", async () => {
+    let fetchedSeller = await gelatoCore.contract.methods
+      .ownerOf(nextExecutionClaim)
+      .call();
+    assert.equal(
+      fetchedSeller.toString(),
+      seller,
+      "Execution Claim owner should be equal to predefined seller"
+    );
+  });
 
-  it("Check that, if we are calling withdraw, sellOrder.posted == true, else posted == false", async() => {
+  it("Check that, if we are calling withdraw, sellOrder.posted == true, else posted == false", async () => {
     // Only check if exeuctionClaimId is even => Change to make it work with other tests
     if (nextExecutionClaim % 2 === 0) {
       let wasPosted = sellOrder.posted;
-      assert.equal(wasPosted, true, "Execution Claim owner should be equal to predefined seller");
-    }
-    else if (nextExecutionClaim % 2 !== 0)
-    {
+      assert.equal(
+        wasPosted,
+        true,
+        "Execution Claim owner should be equal to predefined seller"
+      );
+    } else if (nextExecutionClaim % 2 !== 0) {
       let wasPosted = sellOrder.posted;
-      assert.equal(wasPosted, false, "Execution Claim owner should be equal to predefined seller");
+      assert.equal(
+        wasPosted,
+        false,
+        "Execution Claim owner should be equal to predefined seller"
+      );
     }
-  })
+  });
 
-  it("Check that the past auction cleared and a price has been found", async() => {
+  it("Check that the past auction cleared and a price has been found", async () => {
     let orderStateId = sellOrder.orderStateId;
-    let orderState = await gelatoDutchExchange.contract.methods.orderStates(orderStateId).call()
+    let orderState = await gelatoDutchExchange.contract.methods
+      .orderStates(orderStateId)
+      .call();
     let lastAuctionIndex = orderState.lastAuctionIndex;
     // Check if auction cleared with DutchX Getter
-    let returnValue = await dxGetter.contract.methods.getClosingPrices(sellToken.address, buyToken.address, lastAuctionIndex).call();
+    let returnValue = await dxGetter.contract.methods
+      .getClosingPrices(sellToken.address, buyToken.address, lastAuctionIndex)
+      .call();
     // assert.isEqual(wasPosted, true, "Execution Claim owner should be equal to predefined seller");
-  })
+  });
 
   it("Successfully execute first execution claim", async () => {
     // Fetch executor pre Balance
     let executorBalancePre = new BN(await web3.eth.getBalance(executor));
 
     // Fetch ERCO balancebefore
-    let sellerTokenBalanceBeforeBN = new BN(await buyToken.contract.methods.balanceOf(seller).call())
+    let sellerTokenBalanceBeforeBN = new BN(
+      await buyToken.contract.methods.balanceOf(seller).call()
+    );
 
-    let gdxGelatoBalanceBefore = new BN(await gelatoCore.contract.methods.getInterfaceBalance(gelatoDutchExchange.address).call())
+    let gdxGelatoBalanceBefore = new BN(
+      await gelatoCore.contract.methods
+        .interfaceBalances(gelatoDutchExchange.address)
+        .call()
+    );
 
     // Gas price to calc executor payout
     let txGasPrice = await web3.utils.toWei("5", "gwei");
@@ -274,23 +291,30 @@ describe("Successfully execute first execution claim", () => {
       execTxReceipt = result;
     });
 
-    let gdxGelatoBalanceAfter = new BN(await gelatoCore.contract.methods.getInterfaceBalance(gelatoDutchExchange.address).call())
+    let gdxGelatoBalanceAfter = new BN(
+      await gelatoCore.contract.methods
+        .interfaceBalances(gelatoDutchExchange.address)
+        .call()
+    );
 
     // #### CHECKS FOR BOTH FUNCTIONS ####
 
-    let totalGasUsed
-    let usedGasPrice
-    let executorPayout
-    await gelatoCore.getPastEvents("LogExecutionMetrics", (error, events) => {
-      if (error) {console.error}
-      else
-      {
-        let event = events[0]
-        totalGasUsed = event.returnValues.totalGasUsed
-        usedGasPrice = event.returnValues.usedGasPrice
-        executorPayout = event.returnValues.executorPayout
+    let totalGasUsed;
+    let usedGasPrice;
+    let executorPayout;
+    await gelatoCore.getPastEvents(
+      "LogClaimExecutedBurnedAndDeleted",
+      (error, events) => {
+        if (error) {
+          console.error;
+        } else {
+          let event = events[0];
+          totalGasUsed = event.returnValues.gasUsedEstimate;
+          usedGasPrice = event.returnValues.cappedGasPriceUsed;
+          executorPayout = event.returnValues.executorPayout;
+        }
       }
-    })
+    );
 
     // console.log(`
     //   Total Gas returned from contract: ${totalGasUsed}
@@ -300,12 +324,10 @@ describe("Successfully execute first execution claim", () => {
     //   executorPayout: ${executorPayout}
     // `)
 
-
-    amountReceivedByExecutor = new BN(executorPayout)
+    amountReceivedByExecutor = new BN(executorPayout);
 
     let executorTxCost = txGasPrice * execTxReceipt.gasUsed;
     let executorTxCostBN = new BN(executorTxCost);
-
 
     // CHECK that core owners ETH balance decreased by 1 ETH + tx fees
     // Sellers ETH Balance post mint
@@ -319,11 +341,13 @@ describe("Successfully execute first execution claim", () => {
     // console.log(`Executor Post Balance: ${executorBalancePost}`);
 
     // Test that executor made a profit with executing the tx
-    let executorMadeProfit = executorBalancePost.gte(executorBalancePre)
-    assert.isTrue(executorMadeProfit, "Executor should make a profit executing the transcation")
+    let executorMadeProfit = executorBalancePost.gte(executorBalancePre);
+    assert.isTrue(
+      executorMadeProfit,
+      "Executor should make a profit executing the transcation"
+    );
 
     // #### CHECKS FOR BOTH FUNCTIONS ####
-
 
     // Fetch past events of gelatoDutchExchange
     await gelatoDutchExchange.getPastEvents(
@@ -335,32 +359,41 @@ describe("Successfully execute first execution claim", () => {
 
     // #### CHECKS FOR BOTH FUNCTIONS END ####
 
-
     // #### CHECKS FOR WHEN execWithdraw gets called ####
 
     // Check buyToken balance of user before vs after
 
-    let sellerTokenBalanceAfterBN = new BN(await buyToken.contract.methods.balanceOf(seller).call());
-    let receivedBuyTokens = sellerTokenBalanceAfterBN.sub(sellerTokenBalanceBeforeBN);
+    let sellerTokenBalanceAfterBN = new BN(
+      await buyToken.contract.methods.balanceOf(seller).call()
+    );
+    let receivedBuyTokens = sellerTokenBalanceAfterBN.sub(
+      sellerTokenBalanceBeforeBN
+    );
 
-    let sellAmount = sellOrder.amount;
+    let sellAmount = sellOrder.sellAmount;
 
     let orderStateId = sellOrder.orderStateId;
 
-    let orderState = await gelatoDutchExchange.contract.methods.orderStates(orderStateId).call()
+    let orderState = await gelatoDutchExchange.contract.methods
+      .orderStates(orderStateId)
+      .call();
 
     let lastAuctionIndex = orderState.lastAuctionIndex;
 
+    let closingPrice = await dxGetter.contract.methods
+      .getClosingPrices(sellToken.address, buyToken.address, lastAuctionIndex)
+      .call();
+    let num = new BN(closingPrice[0].toString());
+    let den = new BN(closingPrice[1].toString());
 
-    let closingPrice = await dxGetter.contract.methods.getClosingPrices(sellToken.address, buyToken.address, lastAuctionIndex).call()
-    let num = new BN(closingPrice[0].toString())
-    let den = new BN(closingPrice[1].toString())
+    let buyTokenReceivable = new BN(sellAmount).mul(num).div(den);
 
-    let buyTokenReceivable = new BN(sellAmount).mul(num).div(den)
+    let buyTokenAmountIsEqual = buyTokenReceivable.eq(receivedBuyTokens);
 
-    let buyTokenAmountIsEqual = buyTokenReceivable.eq(receivedBuyTokens)
-
-    assert.isTrue(buyTokenAmountIsEqual, `Buy Tokens received ${receivedBuyTokens.toString()} should == ${buyTokenReceivable.toString()}`)
+    assert.isTrue(
+      buyTokenAmountIsEqual,
+      `Buy Tokens received ${receivedBuyTokens.toString()} should == ${buyTokenReceivable.toString()}`
+    );
     // console.log('Closing Prices: num ', num);
     // console.log('Closing Prices: den ', den);
 
@@ -370,32 +403,32 @@ describe("Successfully execute first execution claim", () => {
 
     // #### CHECKS FOR WHEN execWithdraw gets called END ####
 
-
     // #### CHECKS FOR WHEN execDepositAndSell gets called ####
 
     // Check if we did an automated top up
-    await gelatoDutchExchange.getPastEvents("LogAddedBalanceToGelato", (error, events) => {
-      if (events[0] === undefined)
-      {
-        amountDeductedfromInterface = gdxGelatoBalanceBefore.sub(gdxGelatoBalanceAfter);
-      //   console.log(`
-      // GelatoBalanceBefore: ${gdxGelatoBalanceBefore.toString()}
-      // GelatoBalanceAfter: ${gdxGelatoBalanceAfter.toString()}`)
+    await gelatoDutchExchange.getPastEvents(
+      "LogGelatoBalanceAdded",
+      (error, events) => {
+        if (events[0] === undefined) {
+          amountDeductedfromInterface = gdxGelatoBalanceBefore.sub(
+            gdxGelatoBalanceAfter
+          );
+          //   console.log(`
+          // GelatoBalanceBefore: ${gdxGelatoBalanceBefore.toString()}
+          // GelatoBalanceAfter: ${gdxGelatoBalanceAfter.toString()}`)
+        } else {
+          amountDeductedfromInterface = gdxGelatoBalanceBefore
+            .sub(gdxGelatoBalanceAfter)
+            .add(new BN(events[0].returnValues.amount));
+          //   console.log(`
+          // GelatoBalanceBefore: ${gdxGelatoBalanceBefore.toString()}
+          // GelatoBalanceAfter: ${gdxGelatoBalanceAfter.toString()}
+          // InterfaceEthBalance: ${events[0].returnValues.weiAmount}`)
+        }
       }
-      else
-      {
-        amountDeductedfromInterface = gdxGelatoBalanceBefore.sub(gdxGelatoBalanceAfter).add(new BN(events[0].returnValues.weiAmount));
-      //   console.log(`
-      // GelatoBalanceBefore: ${gdxGelatoBalanceBefore.toString()}
-      // GelatoBalanceAfter: ${gdxGelatoBalanceAfter.toString()}
-      // InterfaceEthBalance: ${events[0].returnValues.weiAmount}`)
-
-      }
-    })
+    );
 
     // #### CHECKS FOR WHEN execDepositAndSell gets called END ####
-
-
 
     // // Get costs of dpositAndWithDrawFunc
     // await gelatoDutchExchange.getPastEvents("LogGas", (error, events) => {
@@ -408,17 +441,20 @@ describe("Successfully execute first execution claim", () => {
   });
 
   // Check that balance of interface was deducted by the same amount the executor received
-  it("balance of interface was deducted by the same amount the executor received", async() => {
-    let payoutWasEqual = amountReceivedByExecutor.eq(amountDeductedfromInterface)
+  it("balance of interface was deducted by the same amount the executor received", async () => {
+    let payoutWasEqual = amountReceivedByExecutor.eq(
+      amountDeductedfromInterface
+    );
     // console.log(`
     //   Amount Received: ${amountReceivedByExecutor.toString()}
     //   Amount Deducted interface: ${amountDeductedfromInterface.toString()}`)
-    assert.isTrue(payoutWasEqual, "Payout to executor equals amount deducted from interface balance")
-
-  })
+    assert.isTrue(
+      payoutWasEqual,
+      "Payout to executor equals amount deducted from interface balance"
+    );
+  });
 
   it("What happened in this test?", async function() {
-
     // Fetch User Ether Balance
     userEthBalanceAfter = await web3.eth.getBalance(seller);
     // Fetch User SellToken Balance
@@ -432,7 +468,6 @@ describe("Successfully execute first execution claim", () => {
     // Fetch Executor Ether Balance
     executorEthBalanceAfter = await web3.eth.getBalance(executor);
 
-
     console.log(`
       ***************************************************+
 
@@ -440,23 +475,29 @@ describe("Successfully execute first execution claim", () => {
         ETH Balances Before:  ${userEthBalance / 10 ** 18} ETH
         ETH Balances After:   ${userEthBalanceAfter / 10 ** 18} ETH
         -----------
-        Difference:           ${(userEthBalanceAfter - userEthBalance) / 10 ** 18} ETH
+        Difference:           ${(userEthBalanceAfter - userEthBalance) /
+          10 ** 18} ETH
 
         WETH Balance Before:  ${userSellTokenBalance / 10 ** 18} WETH
         WETH Balance After:   ${userSellTokenBalanceAfter / 10 ** 18} WETH
         -----------
-        Difference:           ${(userSellTokenBalanceAfter - userSellTokenBalance) / 10 ** 18} WETH
+        Difference:           ${(userSellTokenBalanceAfter -
+          userSellTokenBalance) /
+          10 ** 18} WETH
 
         ICE Balance Before:   ${userBuyTokenBalance / 10 ** 18} ICE🍦
         ICE Balance After:    ${userBuyTokenBalanceAfter / 10 ** 18} ICE🍦
         -----------
-        Difference:           ${(userBuyTokenBalanceAfter  - userBuyTokenBalance) / 10 ** 18} ICE🍦
+        Difference:           ${(userBuyTokenBalanceAfter -
+          userBuyTokenBalance) /
+          10 ** 18} ICE🍦
 
       EXECUTOR BALANCE:
         ETH Balance Before:   ${executorEthBalance / 10 ** 18} ETH
         ETH Balance After:    ${executorEthBalanceAfter / 10 ** 18} ETH
         -----------
-        Difference:           ${(executorEthBalanceAfter - executorEthBalance) / 10 ** 18} ETH
+        Difference:           ${(executorEthBalanceAfter - executorEthBalance) /
+          10 ** 18} ETH
 
       ***************************************************+
 
@@ -464,8 +505,6 @@ describe("Successfully execute first execution claim", () => {
 
     assert.isTrue(true);
   });
-
-
 
   // Check balance of gelatoDutchExchange pre vs post in eth in own SC
 

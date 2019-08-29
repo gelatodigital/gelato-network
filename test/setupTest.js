@@ -263,7 +263,7 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
     );
 
     // Switch GasPrice back to 5
-    let oldGasPrice = web3.utils.toWei("100", "gwei");
+    let oldGasPrice = web3.utils.toWei("5", "gwei");
     await gelatoCore.contract.methods
       .updateRecommendedGasPriceForInterfaces(oldGasPrice)
       .send({ from: gelatoCoreOwner, gas: 5000000 });

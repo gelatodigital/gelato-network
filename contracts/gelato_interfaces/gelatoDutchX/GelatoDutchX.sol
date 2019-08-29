@@ -459,9 +459,6 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         // DEV use memory value lastAuctionIndex & sellAmountAfterFee as we already updated storage values
         uint256 sellAmount = sellOrder.sellAmount;
 
-        // delete sellOrders[sellOrderExecutionClaimId];
-        // // delete slink
-        // delete sellOrderLink[_executionClaimId];
         // delete sellOrder
         delete sellOrders[_executionClaimId][_executionClaimId - 1];
 

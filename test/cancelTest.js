@@ -128,7 +128,7 @@ describe("Cancel outstanding execution claims", () => {
 
     it("Cancel Action from someone other than the seller should revert", async () => {
         // Cancel executionClaim
-        txReceipt = await truffleAssert.reverts(gelatoDutchExchange.contract.methods.cancelOrder(nextExecutionClaim)
+        txReceipt = await truffleAssert.reverts(gelatoDutchExchange.contract.methods.cancelExecutionClaim(nextExecutionClaim)
         .send( {from: revertExecutor, gas: 300000} ));
 
     })
@@ -144,7 +144,7 @@ describe("Cancel outstanding execution claims", () => {
         .call();
 
         // Cancel executionClaim
-        txReceipt = await gelatoDutchExchange.contract.methods.cancelOrder(nextExecutionClaim)
+        txReceipt = await gelatoDutchExchange.contract.methods.cancelExecutionClaim(nextExecutionClaim)
         .send( {from: seller, gas: 300000} );
 
         await gelatoDutchExchange.getPastEvents("LogOrderCancelled", (error, events) => {
