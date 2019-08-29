@@ -652,7 +652,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
                        uint256 _lastAuctionIndex,
                        uint256 _sellAmountAfterFee
     )
-        public
+        private
         returns(uint256 withdrawAmount)
     {
         // Calc how much the sellAmount of buy_tokens received in the previously participated auction
