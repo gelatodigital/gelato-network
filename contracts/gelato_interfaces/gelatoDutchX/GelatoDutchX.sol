@@ -231,12 +231,40 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
     // **************************** timeSellOrders() END ******************************
 
     // acceptExecutionRequest func that checks whether function is executable or not
-    // @DEV Problem related to having multiple functions (execute and withdraw). How can we differentiate which one gets passed in this function?
+    // @DEV Problem related to having multiple functions (execute and withdraw). How can we differentiate which one gets passed in this function? => Solution, add a function idenifier into the calldata that we check and then redirect to
     function acceptExecutionRequest(bytes calldata _payload)
         external
         pure
         returns (uint256)
     {
+        bytes memory testBytes = payload;
+        require(payload.length > 4);
+        bytes4 funcSelector;
+        assembly {
+            // Aim: We put the funcSelector on the stack to access it outside of assembly
+            // How: Get the pointer of the payload in memory (== testBytes) and add 32 bytes (==0x20 hex) to point to where the actual data of the function selector lies, skipping the length bit (always first 32 bytes).
+            // Bind this pointer to funcSelector, which when using it in solidity ignores the encoded data which comes directly after the first word (functionSelector == bytes4)
+            // In short: Read the first 32 bytes by loading the word that starts at memory location testBytes + 32 bytes (==0x20 hex) and bind to funcSelector
+            funcSelector := mload(add(0x20, testBytes))
+
+            // Aim: Get rid of the funcSelector Data
+            // How: Load the first word of the testBytes array (== length of the data) and subtract it by 4
+            // Then store this updated length which got rid of the first 4 bytes (== funcSelector) at memory location testBytes + 4
+            // Mstore: Store the word derived in the second parameter at the location specified by the first parameter
+            // Q: Does sub(mload(testBytes), 4) update the word that stores the length of the data, which automatically prunes the first 4 bytes of the part that stores the data?
+            mstore(
+                // At position testBytes + 4
+                add(testBytes, 4),
+                // Load the first word of the testBytes bytes array == length of the bytes and deduct it by 4
+                sub(mload(testBytes), 4)
+            )
+            // Skip the first 4 bytes (function signature)
+            // Overwrite testBytes by binding the memory pointer of testBytes + 4 to key testBytes
+            testBytes := add(testBytes, 4)
+
+        }
+
+        uint256 executionClaimId =  abi.decode(testBytes, (uint256));
         return 0;
     }
 

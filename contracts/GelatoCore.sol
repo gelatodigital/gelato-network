@@ -238,14 +238,13 @@ contract GelatoCore is Ownable, Claim {
         // Interface Address
         address dappInterface = executionClaim.dappInterface;
 
-        // Make static call to dappInterface
-        // @DEV canExecute should accept same payload as execute func, however we should call the canExecute func and not have the encoded func signature do weird shit
-        // (bool success, bytes memory returndata) = dappInterface.staticcall.gas(acceptRelayedCallMaxGas)(payload);
-
+        // Encode execution claim payload with 'acceptExecutionRequest' function selector
         bytes memory encodedPayload = abi.encodeWithSelector(IIcedOut(dappInterface).acceptExecutionRequest.selector,
             payload
         );
 
+        // Call 'acceptExecutionRequest' in interface contract
+        // @DEV when updated to solc0.5.10, apply gas restriction for static call
         (bool success, bytes memory returndata) = dappInterface.staticcall(encodedPayload);
 
 
