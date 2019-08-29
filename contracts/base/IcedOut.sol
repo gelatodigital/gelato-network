@@ -158,10 +158,15 @@ contract IcedOut is Ownable {
      }
 
      // Switch from using interface specific gasPrice to fetching it from gelato core
-     function useGelatoGasPrice()
+     function useRecommendedGasPrice()
           public
           onlyOwner
      {
           interfaceGasPrice = 0;
      }
+
+     // Fallback function: reverts incoming ether payments not addressed to a payable function
+     function() external payable {
+        require(msg.sender == address(gelatoCore), "Should not send ether to GelatoDutchX without specifying a payable function selector, except when coming from gelatoCore");
+    }
 }

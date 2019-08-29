@@ -203,7 +203,7 @@ contract GelatoCore is Ownable, Claim {
     }
 
     // Set the global fee an executor can receive in the gelato system
-    function updateGelatoExecutorProfit(uint256 _newExecutorProfit)
+    function updateExecutorProfit(uint256 _newExecutorProfit)
         public
         onlyOwner
     {
@@ -267,7 +267,7 @@ contract GelatoCore is Ownable, Claim {
 
     // Enable interfaces to withdraw some of their added balances
     function withdrawInterfaceBalance(uint256 _withdrawAmount)
-        public
+        external
     {
         require(_withdrawAmount > 0, "WithdrawAmount must be greater than zero");
         uint256 currentInterfaceBalance = interfaceBalances[msg.sender];

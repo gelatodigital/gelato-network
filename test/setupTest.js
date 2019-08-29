@@ -243,7 +243,7 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
       .recommendedGasPriceForInterfaces()
       .call();
     // Update
-    let newGasPrice = web3.utils.toWei("100", "gwei");
+    let newGasPrice = web3.utils.toWei("20", "gwei");
     await gelatoCore.contract.methods
       .updateRecommendedGasPriceForInterfaces(newGasPrice)
       .send({ from: gelatoCoreOwner, gas: 5000000 });
@@ -263,7 +263,7 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
     );
 
     // Switch GasPrice back to 5
-    let oldGasPrice = web3.utils.toWei("20", "gwei");
+    let oldGasPrice = web3.utils.toWei("100", "gwei");
     await gelatoCore.contract.methods
       .updateRecommendedGasPriceForInterfaces(oldGasPrice)
       .send({ from: gelatoCoreOwner, gas: 5000000 });
@@ -330,7 +330,7 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
     // Update
     let newGasPrice = await web3.utils.toWei("70", "gwei");
     await gelatoDutchExchange.contract.methods
-      .useIndividualGasPrice(newGasPrice)
+      .useInterfaceGasPrice(newGasPrice)
       .send({ from: gelatoCoreOwner, gas: 5000000 });
     // Getter
     let gdxGelatoPrepayment2 = await gelatoDutchExchange.contract.methods
@@ -364,7 +364,7 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
       .call();
     // Update
     await gelatoDutchExchange.contract.methods
-      .userecommendedGasPriceForInterfaces()
+      .useRecommendedGasPrice()
       .send({ from: gelatoCoreOwner, gas: 5000000 });
     // Getter
     let gdxGelatoPrepayment2 = await gelatoDutchExchange.contract.methods
