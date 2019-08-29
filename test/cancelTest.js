@@ -137,7 +137,7 @@ describe("Cancel outstanding execution claims", () => {
         sellOrder = await gelatoDutchExchange.contract.methods
         .sellOrders(withdrawClaim, depositAndSellClaim)
         .call();
-        let amount = sellOrder.amount;
+        let amount = sellOrder.sellAmount;
         let orderStateId = sellOrder.orderStateId;
         let orderState = await gelatoDutchExchange.contract.methods
         .orderStates(orderStateId)
