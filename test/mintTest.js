@@ -126,7 +126,7 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
     // benchmarked gasUsed = 726,360 (for 2 subOrders + 1 lastWithdrawal)
     let txGasPrice = await web3.utils.toWei("5", "gwei");
     await gelatoDutchExchange.contract.methods
-      .timeSellOrders(
+      .timedSellOrders(
         sellToken.address,
         buyToken.address,
         TOTAL_SELL_VOLUME,
