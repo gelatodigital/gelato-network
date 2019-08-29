@@ -13,7 +13,7 @@ const EXEC_FN_REFUNDED_GAS = 30000;
 const RECOMMENDED_GAS_PRICE_FOR_INTERFACES = web3.utils.toWei("5", "gwei");
 
 module.exports = async function(deployer, network, accounts) {
-  const coreDeployer = accounts[0];
+  // const coreDeployer = accounts[0];
   // const _interfaceDeployer = accounts[1];
 
   // Deploy GelatoCore with gelatoGasPrice
@@ -33,8 +33,8 @@ module.exports = async function(deployer, network, accounts) {
     EXECUTOR_GAS_PRICE,
     EXEC_FN_GAS_OVERHEAD,
     EXEC_FN_REFUNDED_GAS,
-    RECOMMENDED_GAS_PRICE_FOR_INTERFACES,
-    { from: coreDeployer }
+    RECOMMENDED_GAS_PRICE_FOR_INTERFACES
+    // { from: coreDeployer }
   );
 
   const gelatoCore = await GelatoCore.deployed();
