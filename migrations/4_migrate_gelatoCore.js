@@ -20,7 +20,7 @@ module.exports = async function(deployer, network, accounts) {
   console.log(`
         Deploying GelatoCore.sol with
         =============================
-        Owner: ${coreDeployer}
+        Owner: 0xb9ed66dc0BdD361c94ed83fBD0fBC761d260c1A4 (Luis Rinkeby)
         executorProfit:    ${EXECUTOR_PROFIT}
         executorGasPrice:  ${EXECUTOR_GAS_PRICE}
         execFNGasOverhead: ${EXEC_FN_GAS_OVERHEAD}

@@ -20,15 +20,15 @@ module.exports = async function(deployer, network, accounts) {
   console.log(`
         Deploying GelatoDutchX.sol with
         ================================================
-        Owner: ${interfaceDeployer}
+        Owner: 0xb9ed66dc0BdD361c94ed83fBD0fBC761d260c1A4 (Luis Rinkeby)
         GelatoCore: ${gelatoCore.address}
-        DutchXProxy: ${dxProxy.address}
+        DutchXProxy: 0xaAEb2035FF394fdB2C879190f95e7676f1A9444B
         interfaceMaxGas: ${INTERFACE_MAX_GAS}
         interfaceGasPrice: ${INTERFACE_GAS_PRICE} (0 = gelatoCore default)`);
   await deployer.deploy(
     GelatoDutchX,
     gelatoCore.address,
-    // dxProxy.address,
+    "0xaAEb2035FF394fdB2C879190f95e7676f1A9444B", // dxProxy.address
     INTERFACE_MAX_GAS,
     INTERFACE_GAS_PRICE
     /*{
