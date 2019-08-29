@@ -33,7 +33,9 @@ function truffleConfig({
     mnemonic || privateKey,
     "The mnemonic or privateKey has not been provided"
   );
-  console.log(`\n\n\t mnenomic Used: ${mnemonic} \n\n`);
+  console.log(`\n\n\t default mnenomic Used?: ${mnemonic == DEFAULT_MNEMONIC}`);
+  console.log(`\t mnenomic Used: ${mnemonic} \n\n`);
+  console.log(`\n\t CAUTION: COMMENT OUT CUSTOM MNENOMIC FROM .ENV for TRUFFLE TESTING \n\n`)
   debug(`Using gas limit: ${gas / 1000} K`);
   debug(`Using gas price: ${gasPriceGWei} Gwei`);
   debug(`Optimizer enabled: ${optimizedEnabled}`);
