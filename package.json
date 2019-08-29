@@ -12,8 +12,19 @@
     "dutchx-mainnet": "./src/cli/cli-mainnet.js"
   },
   "scripts": {
+    "console:dev": "npx truffle console --network development",
+    "console:rinkeby": "npx truffle console --network rinkeby",
+    "console:mainnet": "npx truffle console --network mainnet",
+    "migrate:dev": "npx truffle migrate --reset --network development",
+    "prep": "mv migrations/2_DEV_migrate_dependencies.js migrations/3_DEV_deploy_dxGetter.js .",
+    "post": "mv 2_DEV_migrate_dependencies.js 3_DEV_deploy_dxGetter.js migrations",
+    "migrate:rinkeby": "prep; npx truffle migrate --reset --network rinkeby; post",
+    "migrate:mainnet": "prep; npx truffle migrate --reset --network mainnet; post",
     "mv-migrations": "mv migrations/* .",
     "mv-migrations-back": "mv *_migrate_* migrations/",
+    "onlyExecIntTest": "yarn mv-migrations; truffle test test/integration_tests/onlyExecuteIntTest.js; yarn mv-migrations-back",
+    "withdrawExecIntTest": "yarn mv-migrations; truffle test test/integration_tests/execManualWithdrawIntTest.js; yarn mv-migrations-back",
+    "cancelIntTest": "yarn mv-migrations; truffle test test/integration_tests/cancelOrdersIntTest.js; yarn mv-migrations-back",
     "install": "cd $INIT_CWD && npm explore truffle -- npm install solc@0.5.2",
     "start": "npm run api",
     "api": "node src/runPublicApi.js",
@@ -105,9 +116,6 @@
     "gdx-truffle-integrationtest": "yarn gdx-truffle-list && yarn gdx-truffle-mint && yarn gdx-close-auction-1 && export ID=1 && yarn gdx-truffle-exec && yarn gdx-state",
     "gdx-truffle-integrationtest-lazy": "yarn setup && yarn gdx-truffle-list && yarn gdx-truffle-mint && yarn gdx-close-auction-1 && export ID=1 && yarn gdx-truffle-exec && yarn gdx-state",
     "oldArchIntegrationTest": "mv ./migrations/2_DEV_migrate_dependencies.js ./2_DEV_migrate_dependencies.js; mv ./migrations/3_deploy_gelato.js ./3_deploy_gelato.js; mv ./migrations/4_deploy_dxGetter.js ./4_deploy_dxGetter.js && truffle test test/integrationTest.js && mv ./2_DEV_migrate_dependencies.js ./migrations/2_DEV_migrate_dependencies.js; mv ./3_deploy_gelato.js ./migrations/3_deploy_gelato.js; mv ./4_deploy_dxGetter.js ./migrations/4_deploy_dxGetter.js",
-    "onlyExecIntTest": "yarn mv-migrations; truffle test test/integration_tests/onlyExecuteIntTest.js; yarn mv-migrations-back",
-    "withdrawExecIntTest": "yarn mv-migrations; truffle test test/integration_tests/execManualWithdrawIntTest.js; yarn mv-migrations-back",
-    "cancelIntTest": "yarn mv-migrations; truffle test test/integration_tests/cancelOrdersIntTest.js; yarn mv-migrations-back"
   },
   "repository": {
     "type": "git",
