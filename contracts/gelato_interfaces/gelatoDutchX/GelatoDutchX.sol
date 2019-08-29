@@ -230,9 +230,11 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
     }
     // **************************** timeSellOrders() END ******************************
 
-    function canExecute(uint256 _executionClaimId)
+    // acceptExecutionRequest func that checks whether function is executable or not
+    // @DEV Problem related to having multiple functions (execute and withdraw). How can we differentiate which one gets passed in this function?
+    function acceptExecutionRequest(bytes calldata _payload)
         external
-        view
+        pure
         returns (uint256)
     {
         return 0;

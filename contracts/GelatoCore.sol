@@ -4,6 +4,7 @@ pragma solidity >=0.4.21 <0.6.0;
 import './base/ERC721/Claim.sol';
 import './base/Ownable.sol';
 import './base/SafeMath.sol';
+import './base/IIcedOut.sol';
 
 
 contract GelatoCore is Ownable, Claim {
@@ -221,6 +222,7 @@ contract GelatoCore is Ownable, Claim {
 
     // Function for executors to verify that execution claim is executable
     // Must return 0 in order to be seen as 'executable' by executor nodes
+
     function canExecute(uint256 _executionClaimId)
         external
         view
@@ -238,7 +240,14 @@ contract GelatoCore is Ownable, Claim {
 
         // Make static call to dappInterface
         // @DEV canExecute should accept same payload as execute func, however we should call the canExecute func and not have the encoded func signature do weird shit
-        (bool success, bytes memory returndata) = dappInterface.staticcall.gas(acceptRelayedCallMaxGas)(payload);
+        // (bool success, bytes memory returndata) = dappInterface.staticcall.gas(acceptRelayedCallMaxGas)(payload);
+
+        bytes memory encodedPayload = abi.encodeWithSelector(IIcedOut(dappInterface).acceptExecutionRequest.selector,
+            payload
+        );
+
+        (bool success, bytes memory returndata) = dappInterface.staticcall(encodedPayload);
+
 
         // Check dappInterface return value
         if (!success) {
@@ -247,7 +256,7 @@ contract GelatoCore is Ownable, Claim {
         }
         else {
             (uint256 status) = abi.decode(returndata, (uint256));
-            // Status should return 0 for the executor to deem execution claim executable
+            // Decoded returndata should return 0 for the executor to deem execution claim executable
             return status;
         }
 
