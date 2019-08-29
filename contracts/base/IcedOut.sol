@@ -1,36 +1,46 @@
 pragma solidity ^0.5.8;
 
 // Imports
-import './SafeMath.sol';
 import '../GelatoCore.sol';
 import './Ownable.sol';
+import './SafeMath.sol';
 
 /**
-* @dev Gelato Dapp Interface standard version 0.
+* @dev Gelato Dapp Interface Standard version 0.
 */
 
 contract IcedOut is Ownable {
 
      using SafeMath for uint256;
 
-     // Max Gas for one execute + withdraw pair => fixed. To adjust prePayment, use gasPrice
+     // Max Gas for one execute + withdraw pair => fixed.
      uint256 public interfaceMaxGas;
-
+     // To adjust prePayment, use gasPrice
      uint256 public interfaceGasPrice;
 
      // GelatoCore
      GelatoCore public gelatoCore;
 
      // Events
-     event LogAddedBalanceToGelato(uint256 indexed weiAmount, uint256 indexed newBalance);
+     event LogGelatoBalanceAdded(uint256 amount,
+                                 uint256 gelatoBalancePost,
+                                 uint256 interfaceBalancePost
+     );
+     event LogGelatoBalanceWithdrawn(uint256 amount,
+                                     uint256 gelatoBalancePost,
+                                     uint256 interfaceBalancePost
+     );
+     event LogBalanceWithdrawnToOwner(uint256 amount,
+                                      uint256 interfaceBalancePost,
+                                      uint256 ownerBalancePost
+     );
 
-
-     constructor(address payable _gelatoCore, uint256 _interfaceMaxGas)
+     constructor(address payable _gelatoCore, uint256 _interfaceMaxGas, uint256 _interfaceGasPrice)
           public
      {
           gelatoCore = GelatoCore(_gelatoCore);
           interfaceMaxGas = _interfaceMaxGas;
-          interfaceGasPrice = 0;
+          interfaceGasPrice = _interfaceGasPrice;
      }
 
      // Function to calculate the prepayment an interface needs to transfer to Gelato Core
@@ -42,8 +52,8 @@ contract IcedOut is Ownable {
      {
           // msg.sender == dappInterface
           uint256 usedGasPrice;
-          // If interfaceGasPrice is set to zero, query gasPrice from core, otherwise use manually setted interfaceGasPrice
-          interfaceGasPrice == 0 ? usedGasPrice = gelatoCore.gelatoGasPrice() : usedGasPrice = interfaceGasPrice;
+          // 0 flags default GelatoCore gasPrice configuration
+          interfaceGasPrice == 0 ? usedGasPrice = gelatoCore.recommendedGasPriceForInterfaces() : usedGasPrice = interfaceGasPrice;
           prepayment = interfaceMaxGas.mul(usedGasPrice);
      }
 
@@ -54,43 +64,48 @@ contract IcedOut is Ownable {
           payable
           onlyOwner
      {
-          gelatoCore.addBalance.value(msg.value)(address(this));
-          emit LogAddedBalanceToGelato(msg.value, gelatoCore.getInterfaceBalance(address(this)));
+          gelatoCore.addInterfaceBalance.value(msg.value)();
+          emit LogGelatoBalanceAdded(msg.value,
+                                     gelatoCore.interfaceBalances(address(this)),
+                                     address(this).balance
+          );
      }
 
      // Withdraw Balance from gelatoCore to interface
      function withdrawBalanceFromGelato(uint256 _withdrawAmount)
           public
           onlyOwner
-          returns(bool success)
      {
-          gelatoCore.withdrawBalance(_withdrawAmount);
-          success = true;
+          gelatoCore.withdrawInterfaceBalance(_withdrawAmount);
+          emit LogGelatoBalanceWithdrawn(_withdrawAmount,
+                                         gelatoCore.interfaceBalances(address(this)),
+                                         address(this).balance
+          );
      }
 
      // Withdraw funds from interface to owner
      function withdrawBalanceToOwner(uint256 _withdrawAmount)
           public
           onlyOwner
-          returns(bool success)
      {
           msg.sender.transfer(_withdrawAmount);
-          success = true;
+          emit LogBalanceWithdrawnToOwner(_withdrawAmount,
+                                          address(this).balance,
+                                          msg.sender.balance  // owner balance post
+          );
      }
 
      // Withdraw funds from interface to owner
      function withdrawBalanceFromGelatoToOwner(uint256 _withdrawAmount)
           public
           onlyOwner
-          returns(bool success)
      {
           withdrawBalanceFromGelato(_withdrawAmount);
           withdrawBalanceToOwner(_withdrawAmount);
-          success = true;
      }
 
-     // Create function signaure from canonical form and execution claim
-     function mintClaim(string memory _function, address _user)
+     // Create function signature from canonical form and execution claim
+     function mintExecutionClaim(string memory _function, address _user)
           public
           returns (uint256 executionClaimId, bytes memory functionSignature)
      {
@@ -105,38 +120,40 @@ contract IcedOut is Ownable {
           view
      {
           require(_executionTime <= now,
-            "IcedOut Time Condition: Function called scheduled execution time"
+            "IcedOut.checkTimeCondition: ExecutionTime must be >= now"
           );
      }
 
-     // IF interface balance is below 0.5 ETH on gelato Core, add all of the ETH in interface as new balance in gelato core
+     // IF interface balance is below 0.5 ETH on gelato Core,
+     //  add all of the ETH in interface as new balance in gelato core
      function automaticTopUp()
           internal
-          returns (bool addedBalance)
      {
           // Fetch interface eth balance on gelato core
-          uint256 interfaceGelatoBalance = gelatoCore.getInterfaceBalance(address(this));
-          // If interface balance is less than 0.5 on core, topup the balance
-          if ( interfaceGelatoBalance < 1 ether )
+          uint256 interfaceGelatoBalance = gelatoCore.interfaceBalances(address(this));
+          // If interface balance is less than minInterfaceBalance, topup the balance
+          if (interfaceGelatoBalance < gelatoCore.minInterfaceBalance())
           {
                // Fetch current interface eth balance
                uint256 interfaceEthBalance = address(this).balance;
                // Add this balance to gelatoCore
-               gelatoCore.addBalance.value(interfaceEthBalance)(address(this));
+               gelatoCore.addInterfaceBalance.value(interfaceEthBalance)();
                // Emit event
-               emit LogAddedBalanceToGelato(interfaceEthBalance, gelatoCore.getInterfaceBalance(address(this)));
-               // return success == true
-               return true;
+               emit LogGelatoBalanceAdded(interfaceEthBalance,
+                                          gelatoCore.interfaceBalances(address(this)),
+                                          address(this).balance
+               );
           }
-          return false;
      }
 
      // Switch from querying gelatoCore's gas price to using an interface specific one
-     function useIndividualGasPrice(uint256 _interfaceGasPrice)
+     function useInterfaceGasPrice(uint256 _interfaceGasPrice)
           public
           onlyOwner
      {
-          require(_interfaceGasPrice != 0, "New interface Gas Price must be non zero");
+          require(_interfaceGasPrice != 0,
+               "GelatoDutchX.useInterfaceGasPrice: New interface Gas Price must be non zero"
+          );
           interfaceGasPrice = _interfaceGasPrice;
      }
 
@@ -147,10 +164,4 @@ contract IcedOut is Ownable {
      {
           interfaceGasPrice = 0;
      }
-
-     // Fallback function: reverts incoming ether payments not addressed to a payable function
-     function() external payable {
-        require(msg.sender == address(gelatoCore), "Should not send ether to GelatoDutchX without specifying a payable function selector, except when coming from gelatoCore");
-    }
-
 }
