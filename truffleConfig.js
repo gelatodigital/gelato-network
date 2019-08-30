@@ -60,7 +60,7 @@ function truffleConfig({
     );
     _getProvider = url => {
       return () => {
-        return new HDWalletProvider({ mnemonic, url });
+        return new HDWalletProvider({ mnemonic, url, shareNonce: false });
       };
     };
   }

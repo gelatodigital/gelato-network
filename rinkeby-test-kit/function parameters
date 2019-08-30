@@ -12,4 +12,4 @@ numSellOrders:        2 (2)
 amountPerSellorder: 100 (100000000000000000000)
 executionTime:      get the unix timestamp of now
 intervalSpan:       24 hours in seconds (86400)
-
+msg.value:          numSellorders*calcGelatoPrepayment (5000000000000000)
