@@ -1,4 +1,3 @@
-.env
 node_modules
 build
 .vscode
@@ -9,3 +8,4 @@ coverage
 .history
 env/*
 !env/*.example
+.env
