@@ -7,7 +7,6 @@ const GelatoDutchX = artifacts.require("GelatoDutchX");
 const INTERFACE_MAX_GAS = 500000; // sell and withdraw claims benchmarking
 const INTERFACE_GAS_PRICE = 0; // defaults to gelatoCore.recommendedGasPriceForInterface
 // Rinkeby
-const RINKEBY_DEPLOYER = "0xb9ed66dc0BdD361c94ed83fBD0fBC761d260c1A4"; // Luis
 const DX_PROXY_RINKEBY_ADDRESS = "0xaAEb2035FF394fdB2C879190f95e7676f1A9444B";
 
 module.exports = async function(deployer, network, accounts) {
@@ -16,6 +15,7 @@ module.exports = async function(deployer, network, accounts) {
 
   // For development (ganache)
   if (network.startsWith("dev")) {
+    console.log("\n\tDeploying Gelato DutchX to Ganache\n")
     const ganacheInterfaceDeployer = accounts[0];
     // get the DutchXProxy
     const DutchExchangeProxy = artifacts.require("DutchExchangeProxy");
@@ -39,11 +39,12 @@ module.exports = async function(deployer, network, accounts) {
       }
     );
   } else if (network.startsWith("rinkeby")) {
+    console.log("\n\tDeploying Gelato DutchX to Rinkeby\n")
     // Log the GelatoDutchX constructor params
     console.log(`
           Deploying GelatoDutchX.sol with
           ================================================
-          Owner:       ${RINKEBY_DEPLOYER}
+          Owner:       ${accounts[0]}
           GelatoCore:  ${gelatoCore.address}
           DutchXProxy: ${DX_PROXY_RINKEBY_ADDRESS}
           interfaceMaxGas:   ${INTERFACE_MAX_GAS}
@@ -53,8 +54,7 @@ module.exports = async function(deployer, network, accounts) {
       gelatoCore.address,
       DX_PROXY_RINKEBY_ADDRESS,
       INTERFACE_MAX_GAS,
-      INTERFACE_GAS_PRICE,
-      { from: RINKEBY_DEPLOYER }
+      INTERFACE_GAS_PRICE
     );
   }
   // Log the address of deployed GelatoDutchX

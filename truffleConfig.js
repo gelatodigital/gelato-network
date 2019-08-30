@@ -6,7 +6,6 @@ const DEFAULT_GAS_PRICE_GWEI = 5;
 const GAS_LIMIT = 5e6;
 const DEFAULT_MNEMONIC =
   "candy maple cake sugar pudding cream honey rich smooth crumble sweet treat";
-const RINKEBY_MNEMONIC = process.env.RINKEBY_MNEMONIC;
 const RINKEBY_NODE = process.env.RINKEBY_INFURA;
 const ROPSTEN_NODE = process.env.ROPSTEN_INFURA;
 const MAINNET_NODE = process.env.MAINNET_INFURA;
@@ -34,7 +33,7 @@ function truffleConfig({
     mnemonic || privateKey,
     "The mnemonic or privateKey has not been provided"
   );
-  console.log(`\n\t CAUTION: For LOCAL (dev) testing use DEFAULT mnenomic`)
+  console.log(`\n\t CAUTION: For LOCAL (dev) testing use DEFAULT mnenomic`);
   console.log(`\t DEFAULT mnenomic Used?: ${mnemonic == DEFAULT_MNEMONIC}`);
   console.log(`\t mnenomic Used: ${mnemonic} \n\n`);
   debug(`Using gas limit: ${gas / 1000} K`);
@@ -44,7 +43,7 @@ function truffleConfig({
 
   let _getProvider;
   if (privateKey) {
-    debug("Using private key");
+    console.log("Using private key");
     _getProvider = url => {
       return () => {
         return new HDWalletProvider({
@@ -54,7 +53,7 @@ function truffleConfig({
       };
     };
   } else {
-    debug(
+    console.log(
       mnemonic === DEFAULT_MNEMONIC
         ? "Using default mnemonic"
         : "Using custom mnemonic"
@@ -88,9 +87,7 @@ function truffleConfig({
       gasPrice
     },
     rinkeby: {
-      provider: () => {
-        return new HDWalletProvider(RINKEBY_MNEMONIC, urlRinkeby)
-      },
+      provider: _getProvider(urlRinkeby),
       network_id: "4",
       gas,
       gasPrice

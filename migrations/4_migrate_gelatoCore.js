@@ -14,6 +14,7 @@ const RECOMMENDED_GAS_PRICE_FOR_INTERFACES = web3.utils.toWei("5", "gwei");
 
 module.exports = async function(deployer, network, accounts) {
   if (network.startsWith("dev")) {
+    console.log("\n\tDeploying Gelato Core to ganache\n")
     const ganacheCoreDeployer = accounts[0]; // Ganache account
     // Log constructor params to console
     console.log(`
@@ -39,6 +40,7 @@ module.exports = async function(deployer, network, accounts) {
       { from: ganacheCoreDeployer }
     );
   } else {
+    console.log("\n\tDeploying Gelato Core to live net\n")
     // Deploy GelatoCore with gelatoGasPrice
     console.log(`
           Deploying GelatoCore.sol with

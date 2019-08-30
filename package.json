@@ -18,7 +18,7 @@
     "migrate:dev": "npx truffle migrate --reset --network development",
     "prep": "mv migrations/2_DEV_migrate_dependencies.js migrations/3_DEV_migrate_dxGetter.js .",
     "post": "mv 2_DEV_migrate_dependencies.js 3_DEV_migrate_dxGetter.js migrations",
-    "migrate:rinkeby": "yarn prep; npx truffle migrate --reset --network rinkeby; yarn post",
+    "migrate:rinkeby": "yarn prep; export RINKEBY=RINKEBY; npx truffle migrate --reset --network rinkeby; yarn post",
     "migrate:mainnet": "yarn prep; npx truffle migrate --reset --network mainnet; yarn post",
     "mv-migrations": "mv migrations/* .",
     "mv-migrations-back": "mv *_migrate_* migrations/",
