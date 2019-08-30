@@ -6,6 +6,7 @@ const DEFAULT_GAS_PRICE_GWEI = 5;
 const GAS_LIMIT = 5e6;
 const DEFAULT_MNEMONIC =
   "candy maple cake sugar pudding cream honey rich smooth crumble sweet treat";
+const RINKEBY_MNEMONIC = process.env.RINKEBY_MNEMONIC;
 const RINKEBY_NODE = process.env.RINKEBY_INFURA;
 const ROPSTEN_NODE = process.env.ROPSTEN_INFURA;
 const MAINNET_NODE = process.env.MAINNET_INFURA;
@@ -33,9 +34,9 @@ function truffleConfig({
     mnemonic || privateKey,
     "The mnemonic or privateKey has not been provided"
   );
-  console.log(`\n\n\t default mnenomic Used?: ${mnemonic == DEFAULT_MNEMONIC}`);
+  console.log(`\n\t CAUTION: For LOCAL (dev) testing use DEFAULT mnenomic`)
+  console.log(`\t DEFAULT mnenomic Used?: ${mnemonic == DEFAULT_MNEMONIC}`);
   console.log(`\t mnenomic Used: ${mnemonic} \n\n`);
-  console.log(`\n\t CAUTION: COMMENT OUT CUSTOM MNENOMIC FROM .ENV for TRUFFLE TESTING \n\n`)
   debug(`Using gas limit: ${gas / 1000} K`);
   debug(`Using gas price: ${gasPriceGWei} Gwei`);
   debug(`Optimizer enabled: ${optimizedEnabled}`);
@@ -87,7 +88,9 @@ function truffleConfig({
       gasPrice
     },
     rinkeby: {
-      provider: _getProvider(urlRinkeby),
+      provider: () => {
+        return new HDWalletProvider(RINKEBY_MNEMONIC, urlRinkeby)
+      },
       network_id: "4",
       gas,
       gasPrice

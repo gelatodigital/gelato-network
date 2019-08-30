@@ -13,30 +13,54 @@ const EXEC_FN_REFUNDED_GAS = 30000;
 const RECOMMENDED_GAS_PRICE_FOR_INTERFACES = web3.utils.toWei("5", "gwei");
 
 module.exports = async function(deployer, network, accounts) {
-  // const coreDeployer = accounts[0];
-  // const _interfaceDeployer = accounts[1];
-
-  // Deploy GelatoCore with gelatoGasPrice
-  console.log(`
-        Deploying GelatoCore.sol with
-        =============================
-        Owner: 0xb9ed66dc0BdD361c94ed83fBD0fBC761d260c1A4 (Luis Rinkeby)
-        executorProfit:    ${EXECUTOR_PROFIT}
-        executorGasPrice:  ${EXECUTOR_GAS_PRICE}
-        execFNGasOverhead: ${EXEC_FN_GAS_OVERHEAD}
-        execFNRefundedGas: ${EXEC_FN_REFUNDED_GAS}
-        `)
-  await deployer.deploy(
-    GelatoCore,
-    MIN_INTERFACE_BALANCE,
-    EXECUTOR_PROFIT,
-    EXECUTOR_GAS_PRICE,
-    EXEC_FN_GAS_OVERHEAD,
-    EXEC_FN_REFUNDED_GAS,
-    RECOMMENDED_GAS_PRICE_FOR_INTERFACES
-    // { from: coreDeployer }
-  );
-
+  if (network.startsWith("dev")) {
+    const ganacheCoreDeployer = accounts[0]; // Ganache account
+    // Log constructor params to console
+    console.log(`
+          Deploying GelatoCore.sol with
+          =============================
+          Owner: ${ganacheCoreDeployer}
+          minInterfaceBalance: ${web3.utils.fromWei(MIN_INTERFACE_BALANCE, "ether")} ETH
+          executorProfit:      ${web3.utils.fromWei(EXECUTOR_PROFIT, "ether")} ETH
+          executorGasPrice:    ${web3.utils.fromWei(EXECUTOR_GAS_PRICE, "gwei")} gwei
+          execFNGasOverhead:   ${EXEC_FN_GAS_OVERHEAD} gas
+          execFNRefundedGas:   ${EXEC_FN_REFUNDED_GAS} gas
+          recommendedGasPrice: ${web3.utils.fromWei(RECOMMENDED_GAS_PRICE_FOR_INTERFACES, "gwei")} gwei
+          `);
+    // Deploy with constructor params
+    await deployer.deploy(
+      GelatoCore,
+      MIN_INTERFACE_BALANCE,
+      EXECUTOR_PROFIT,
+      EXECUTOR_GAS_PRICE,
+      EXEC_FN_GAS_OVERHEAD,
+      EXEC_FN_REFUNDED_GAS,
+      RECOMMENDED_GAS_PRICE_FOR_INTERFACES,
+      { from: ganacheCoreDeployer }
+    );
+  } else {
+    // Deploy GelatoCore with gelatoGasPrice
+    console.log(`
+          Deploying GelatoCore.sol with
+          =============================
+          minInterfaceBalance: ${web3.utils.fromWei(MIN_INTERFACE_BALANCE, "ether")} ETH
+          executorProfit:      ${web3.utils.fromWei(EXECUTOR_PROFIT, "ether")} ETH
+          executorGasPrice:    ${web3.utils.fromWei(EXECUTOR_GAS_PRICE, "gwei")} gwei
+          execFNGasOverhead:   ${EXEC_FN_GAS_OVERHEAD} gas
+          execFNRefundedGas:   ${EXEC_FN_REFUNDED_GAS} gas
+          recommendedGasPrice: ${web3.utils.fromWei(RECOMMENDED_GAS_PRICE_FOR_INTERFACES, "gwei")} gwei
+          `);
+    await deployer.deploy(
+      GelatoCore,
+      MIN_INTERFACE_BALANCE,
+      EXECUTOR_PROFIT,
+      EXECUTOR_GAS_PRICE,
+      EXEC_FN_GAS_OVERHEAD,
+      EXEC_FN_REFUNDED_GAS,
+      RECOMMENDED_GAS_PRICE_FOR_INTERFACES
+    );
+  }
+  // Print deployed contract address to console
   const gelatoCore = await GelatoCore.deployed();
   console.log(`
         Deployed GelatoCore instance at:
