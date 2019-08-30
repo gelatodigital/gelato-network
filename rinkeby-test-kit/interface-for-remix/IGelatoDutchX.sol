@@ -1,10 +1,10 @@
-pragma solidity >=0.4.21 <0.6.0;
+pragma solidity ^0.5.0;
 
 //  Imports:
-import '../../base/IcedOut.sol';
+import './IIcedOut.sol';
 
 // Gelato IcedOut-compliant DutchX Interface for splitting sell orders and for automated withdrawals
-contract IGelatoDutchX is IcedOut {
+contract IGelatoDutchX is IIcedOut {
     // **************************** Events ******************************
     event LogNewOrderCreated(uint256 indexed orderStateId, address indexed seller);
     event LogFeeNumDen(uint256 num, uint256 den);
