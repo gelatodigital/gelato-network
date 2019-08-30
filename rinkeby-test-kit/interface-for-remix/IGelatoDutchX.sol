@@ -1,10 +1,86 @@
 pragma solidity ^0.5.0;
 
-//  Imports:
-import './IIcedOut.sol';
 
 // Gelato IcedOut-compliant DutchX Interface for splitting sell orders and for automated withdrawals
-contract IGelatoDutchX is IIcedOut {
+interface IGelatoDutchX {
+    // IOwnable.sol
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+    /**
+     * @dev Returns the address of the current owner.
+     */
+    function owner() external view returns (address);
+
+    /**
+     * @dev Returns true if the caller is the current owner.
+     */
+    function isOwner() external view returns (bool);
+
+    /**
+     * @dev Leaves the contract without owner. It will not be possible to call
+     * `onlyOwner` functions anymore. Can only be called by the current owner.
+     *
+     * > Note: Renouncing ownership will leave the contract without an owner,
+     * thereby removing any functionality that is only available to the owner.
+     */
+    function renounceOwnership() external;
+
+    /**
+     * @dev Transfers ownership of the contract to a new account (`newOwner`).
+     * Can only be called by the current owner.
+     */
+    function transferOwnership(address newOwner) external;
+
+
+    // IIcedout.sol
+     // Max Gas for one execute + withdraw pair => fixed.
+     function interfaceMaxGas() external view returns(uint256);
+     // To adjust prePayment, use gasPrice
+     function interfaceGasPrice() external view returns(uint256);
+
+
+     // Events
+     event LogGelatoBalanceAdded(uint256 amount,
+                                 uint256 gelatoBalancePost,
+                                 uint256 interfaceBalancePost
+     );
+     event LogGelatoBalanceWithdrawn(uint256 amount,
+                                     uint256 gelatoBalancePost,
+                                     uint256 interfaceBalancePost
+     );
+     event LogBalanceWithdrawnToOwner(uint256 amount,
+                                      uint256 interfaceBalancePost,
+                                      uint256 ownerBalancePost
+     );
+
+
+     // Function to calculate the prepayment an interface needs to transfer to Gelato Core
+     // for minting a new execution executionClaim
+     function calcGelatoPrepayment() external view returns(uint256);
+
+     // UPDATE BALANCE ON GELATO CORE
+     // Add balance
+     function addBalanceToGelato() external payable;
+
+     // Withdraw Balance from gelatoCore to interface
+     function withdrawBalanceFromGelato(uint256 _withdrawAmount) external;
+     // Withdraw funds from interface to owner
+     function withdrawBalanceToOwner(uint256 _withdrawAmount) external;
+
+     // Withdraw funds from interface to owner
+     function withdrawBalanceFromGelatoToOwner(uint256 _withdrawAmount) external;
+
+
+     // Create function signature from canonical form and execution claim
+     function mintExecutionClaim(string calldata _function, address _user) external returns (uint256, bytes memory);
+
+     // Switch from querying gelatoCore's gas price to using an interface specific one
+     function useInterfaceGasPrice(uint256 _interfaceGasPrice) external;
+
+     // Switch from using interface specific gasPrice to fetching it from gelato core
+     function useRecommendedGasPrice() external;
+
+
+    // GELATO_DUTCHX.sol
     // **************************** Events ******************************
     event LogNewOrderCreated(uint256 indexed orderStateId, address indexed seller);
     event LogFeeNumDen(uint256 num, uint256 den);
@@ -58,13 +134,13 @@ contract IGelatoDutchX is IIcedOut {
     // One orderState struct can have many sellOrder structs as children
 
     // OrderId => parent orderState struct
-    // function orderStates(uint256 _orderId) public view returns(OrderState memory);
+    // function orderStates(uint256 _orderId) external view returns(OrderState memory);
 
     // withdraw execution claim => depositAndSell exeuctionClaim => sellOrder
-    // function sellOrders(uint256 _withdrawClaimId, uint256 _depositAndSellClaimId) public view returns(SellOrder memory);
+    // function sellOrders(uint256 _withdrawClaimId, uint256 _depositAndSellClaimId) external view returns(SellOrder memory);
 
     // Constants that are set during contract construction and updateable via setters
-    function auctionStartWaitingForFunding() public view returns(uint256);
+    function auctionStartWaitingForFunding() external view returns(uint256);
     // **************************** State Variables END ******************************
 
     // **************************** State Variable Setters ******************************
@@ -92,13 +168,13 @@ contract IGelatoDutchX is IIcedOut {
      * DEV: Called by the execute func in GelatoCore.sol
      * Aim: Post sellOrder on the DutchExchange via depositAndSell()
      */
-    function execDepositAndSell(uint256 _executionClaimId) public;
+    function execDepositAndSell(uint256 _executionClaimId) external;
     // **************************** IcedOut execute(executionClaimId) END *********************************
 
     // DELETE
     // ****************************  execWithdraw(executionClaimId) *********************************
     // Withdraw function executor will call
-    function execWithdraw(uint256 _executionClaimId) public;
+    function execWithdraw(uint256 _executionClaimId) external;
     // ****************************  execWithdraw(executionClaimId) END *********************************
 
 
@@ -106,19 +182,19 @@ contract IGelatoDutchX is IIcedOut {
     // Allows sellers to cancel their deployed orders
     // @🐮 create cancel heloer on IcedOut.sol
     // DELETE
-    function cancelOrder(uint256 _executionClaimId) public;
+    function cancelOrder(uint256 _executionClaimId) external;
 
     // Allows manual withdrawals on behalf of a seller from any calling address
     // @DEV: Gas Limit Change => Hardcode
     // DELETE
-    function withdrawManually(uint256 _executionClaimId) public;
+    function withdrawManually(uint256 _executionClaimId) external;
 
 
     // **************************** Helper functions *********************************
     // Calculate sub order size accounting for current dutchExchange liquidity contribution fee.
     function _calcActualSellAmount(uint256 _subOrderSize)
-        public
-        returns(uint256 actualSellAmount, uint256 dutchXFee);
+        external
+        returns(uint256, uint256);
 
 
     // DEV Calculates sellAmount withdrawable from past, cleared auction
@@ -127,8 +203,8 @@ contract IGelatoDutchX is IIcedOut {
                                  uint256 _lastAuctionIndex,
                                  uint256 _sellAmountAfterFee
     )
-        public
-        returns(uint256 withdrawAmount);
+        external
+        returns(uint256);
 }
 
 

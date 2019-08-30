@@ -13,7 +13,7 @@
   },
   "scripts": {
     "console:dev": "npx truffle console --network development",
-    "console:rinkeby": "npx truffle console --network rinkeby",
+    "console:rinkeby": "export RINKEBY=RINKEBY; npx truffle console --network rinkeby",
     "console:mainnet": "npx truffle console --network mainnet",
     "migrate:dev": "npx truffle migrate --reset --network development",
     "prep": "mv migrations/2_DEV_migrate_dependencies.js migrations/3_DEV_migrate_dxGetter.js .",

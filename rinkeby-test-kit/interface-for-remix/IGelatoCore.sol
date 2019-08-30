@@ -1,6 +1,35 @@
 pragma solidity ^0.5.0;
 
 interface IGelatoCore {
+    // IOwnable.sol
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+    /**
+     * @dev Returns the address of the current owner.
+     */
+    function owner() external view returns (address);
+
+    /**
+     * @dev Returns true if the caller is the current owner.
+     */
+    function isOwner() external view returns (bool);
+
+    /**
+     * @dev Leaves the contract without owner. It will not be possible to call
+     * `onlyOwner` functions anymore. Can only be called by the current owner.
+     *
+     * > Note: Renouncing ownership will leave the contract without an owner,
+     * thereby removing any functionality that is only available to the owner.
+     */
+    function renounceOwnership() external;
+
+    /**
+     * @dev Transfers ownership of the contract to a new account (`newOwner`).
+     * Can only be called by the current owner.
+     */
+    function transferOwnership(address newOwner) external;
+
+
+    // GELATO_CORE.sol
     // **************************** Events **********************************
     // Create
     event LogNewExecutionClaimMinted(address indexed dappInterface,
@@ -51,28 +80,28 @@ interface IGelatoCore {
 
     //_____________ Gelato Execution Economics ________________
     // Balance of interfaces which pay for claim execution
-    function interfaceBalances(address _dappInterface) external returns(uint256);
+    function interfaceBalances(address _dappInterface) external view returns(uint256);
 
     // Minimum ether balance of interfaces
-    function minInterfaceBalance() external returns(uint256);
+    function minInterfaceBalance() external view returns(uint256);
 
     // Fees in % paid to executors for their execution. E.g. 5 == 5%
-    function executorProfit() external returns(uint256);
+    function executorProfit() external view returns(uint256);
 
     // The gas price that executors must take - this must be continually set
-    function executorGasPrice() external returns(uint256);
+    function executorGasPrice() external view returns(uint256);
 
     // Gas cost of all execute() instructions after endGas => 13034
     // Gas cost to initialize transaction = 21000
     // Sum: 34034
-    function execFNGasOverhead() external returns(uint256);
+    function execFNGasOverhead() external view returns(uint256);
 
     // Minimum gas refunds given that we nullify 3 state variables in each execution
     // @DEV We somehow get a greater refund, investigate
-    function execFNRefundedGas() external returns(uint256);
+    function execFNRefundedGas() external view returns(uint256);
 
     // The gasPrice core provides as a default for interface as a basis to charge users
-    function recommendedGasPriceForInterfaces() external returns(uint256);
+    function recommendedGasPriceForInterfaces() external view  returns(uint256);
     // **************************** State Variables END ******************************
 
     //_____________ Gelato Execution Economics END ________________
