@@ -1,11 +1,18 @@
 pragma solidity ^0.5.0;
 
 interface IDutchExchange {
-    function latestAuctionIndices(address sellToken, address buyToken) external view returns(uint256);
+    function getAuctionIndex(address token1, address token2) external view returns (uint256);
 
-    function auctionStarts(address sellToken, address buyToken) external view returns(uint256);
+    function getAuctionStart(address token1, address token2) external view returns (uint256);
 
-    function clearingTimes(address sellToken, address buyToken, uint256 auctionIndex) external view returns(uint256);
+    function getClearingTime(
+        address token1,
+        address token2,
+        uint auctionIndex
+    )
+        external
+        view
+        returns (uint256);
 
     // Token => Token => auctionIndex => price
     function closingPrices(address sellToken, address buyToken, uint256 auctionIndex) external view returns(uint256);
@@ -27,4 +34,6 @@ interface IDutchExchange {
     function sellerBalances(address sellToken, address buyToken, uint256 auctionIndex, address user) external view returns(uint256);
     function buyerBalances(address sellToken, address buyToken, uint256 auctionIndex, address user) external view returns(uint256);
     function claimedAmounts(address sellToken, address buyToken, uint256 auctionIndex, address user) external view returns(uint256);
+
+    function depositAndSell(address sellToken, address buyToken, uint amount) external returns (uint256, uint256, uint256);
 }

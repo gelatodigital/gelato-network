@@ -129,9 +129,11 @@ interface IGelatoDutchX {
     // **************************** State Variables ******************************
 
     // Interfaces to other contracts that are set during construction.
-    // GelatoCore external gelatoCore;
+    function gelatoCore() external view returns(address);
 
     // One orderState struct can have many sellOrder structs as children
+
+    function dutchExchange() external view returns(address);
 
     // OrderId => parent orderState struct
     // function orderStates(uint256 _orderId) external view returns(OrderState memory);

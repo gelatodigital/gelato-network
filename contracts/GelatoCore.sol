@@ -254,7 +254,7 @@ contract GelatoCore is Ownable, Claim {
         public
         payable
     {
-        require(msg.value > 0, "addInterfaceBalance(): Msg.value must be greater than zero");
+        require(msg.value > 0, "GelatoCore.addInterfaceBalance(): Msg.value must be greater than zero");
         uint256 currentInterfaceBalance = interfaceBalances[msg.sender];
         uint256 newBalance = currentInterfaceBalance.add(msg.value);
         interfaceBalances[msg.sender] = newBalance;
@@ -272,7 +272,7 @@ contract GelatoCore is Ownable, Claim {
         require(_withdrawAmount > 0, "WithdrawAmount must be greater than zero");
         uint256 currentInterfaceBalance = interfaceBalances[msg.sender];
         require(_withdrawAmount <= currentInterfaceBalance,
-            "withdrawInterfaceBalance(): WithdrawAmount must be smaller or equal to the interfaces current balance"
+            "GelatoCore.withdrawInterfaceBalance(): WithdrawAmount must be smaller or equal to the interfaces current balance"
         );
         interfaceBalances[msg.sender] = currentInterfaceBalance.sub(_withdrawAmount);
         msg.sender.transfer(_withdrawAmount);
@@ -315,7 +315,7 @@ contract GelatoCore is Ownable, Claim {
         // Check if Interface has sufficient balance on core
         // @DEV, minimum balance requirement for interfaces (e.g. 0.5 ETH). If it goes below that, we wont execute, hence interface devs simply have to make sure their value does not drop below that limit
         require(interfaceBalances[dappInterface] >= minInterfaceBalance,
-            "execute(): Interface does not have enough balance in core, needs at least minInterfaceBalance"
+            "GelatoCore.execute(): Interface does not have enough balance in core, needs at least minInterfaceBalance"
         );
         // **** CHECKS END ****;
 
@@ -358,7 +358,7 @@ contract GelatoCore is Ownable, Claim {
         // Effects 2: Decrease interface balance
         // To ensure that executor does not get revert due to interfaceBalance
         require(executorPayout <= minInterfaceBalance,
-            "execute(): executorPayout should not be greater than minInterfaceBalance"
+            "GelatoCore.execute(): executorPayout should not be greater than minInterfaceBalance"
         );
         interfaceBalances[dappInterface] = interfaceBalances[dappInterface].sub(executorPayout);
 
