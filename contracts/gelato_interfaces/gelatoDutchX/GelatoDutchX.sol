@@ -524,6 +524,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
 
         // Fetch variables needed before deletion
         uint256 orderStateId = sellOrder.orderStateId;
+        uint256 prepaymentPerSellOrder = sellOrder.prepaymentPerSellOrder;
         address sellToken = sellOrder.sellToken;
         uint256 sellAmount = sellOrder.sellAmount;
 
@@ -540,7 +541,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         // transfer sellAmount back from this contracts ERC20 balance to seller
         // REFUND USER!!!
         // In order to refund the exact sellAmount the user prepaid, we need to store that information on-chain
-        msg.sender.transfer(sellOrder.prepaymentPerSellOrder);
+        msg.sender.transfer(prepaymentPerSellOrder);
 
         // Transfer ERC20 Tokens back to seller
         safeTransfer(sellToken, msg.sender, sellAmount, false);

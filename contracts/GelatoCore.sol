@@ -389,6 +389,9 @@ contract GelatoCore is Ownable, Claim {
         external
     {
         ExecutionClaim memory executionClaim = executionClaims[_executionClaimId];
+        require(msg.sender == executionClaim.dappInterface,
+            "gelatoCore.cancelExecutionClaim: msg.sender != dappInterface"
+        );
         emit LogExecutionClaimCancelled(executionClaim.dappInterface,
                                         _executionClaimId,
                                         ownerOf(_executionClaimId)
