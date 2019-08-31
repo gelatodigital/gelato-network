@@ -48,6 +48,8 @@ contract GelatoCore is Ownable, Claim {
     event LogInterfaceBalanceAdded(address indexed dappInterface, uint256 indexed newBalance);
 
     event LogminEthBalanceUpdated(uint256 minEthBalance);
+
+    event CanExecuteFailed(address indexed executor, uint256 indexed executionClaimId);
     // **************************** Events END **********************************
 
     // **************************** State Variables **********************************
@@ -57,6 +59,9 @@ contract GelatoCore is Ownable, Claim {
 
     // Gas stipends for acceptRelayedCall, preRelayedCall and postRelayedCall
     uint256 constant private acceptRelayedCallMaxGas = 50000;
+
+    // Execution claim is exeutable should always return 1
+    uint256 constant isNotExecutable = 1;
 
     // executionClaimId => ExecutionClaim
     mapping(uint256 => ExecutionClaim) public executionClaims;
@@ -86,6 +91,23 @@ contract GelatoCore is Ownable, Claim {
 
     // Fees in % paid to executors for their execution. E.g. 5 == 5%
     uint256 public gelatoExecutionMargin;
+
+    // Preconditions for execution, checked by canExecute and returned as an uint256 from interface
+    enum PreExecutionCheck {
+        IsExecutable,                         // All checks passed, the executionClaim can be executed
+        AcceptExecCallReverted,  // The interfaces reverted when calling acceptExecutionRequest
+        WrongReturnValue, // The Interface returned an error code and not 0 for is executable
+        InsufficientBalance // The interface has insufficient balance on gelato core
+    }
+
+    // Preconditions for execution, checked by canExecute and returned as an uint256 from interface
+    enum PostExecutionStatus {
+        Success, // Interface call succeeded
+        Failure,  // Interface call reverted
+        InterfaceBalanceChanged  // The transaction was relayed and reverted due to the recipient's balance changing
+
+    }
+
     // **************************** State Variables END ******************************
 
     //_____________ Gelato Execution Service Business Logic END ________________
@@ -225,7 +247,7 @@ contract GelatoCore is Ownable, Claim {
     function canExecute(uint256 _executionClaimId)
         external
         view
-        returns (uint256)
+        returns (uint256, address, bytes memory)
     {
         //Fetch execution
         ExecutionClaim memory executionClaim = executionClaims[_executionClaimId];
@@ -236,6 +258,15 @@ contract GelatoCore is Ownable, Claim {
         bytes memory payload = executionClaim.payload;
         // Interface Address
         address dappInterface = executionClaim.dappInterface;
+
+        // **** CHECKS ****
+        // Check if Interface has sufficient balance on core
+        // @DEV, Lets change to maxPossibleCharge calcs like in GSN
+        if (interfaceBalances[dappInterface] < minEthBalance)
+        {
+            return (uint256(PreExecutionCheck.InsufficientBalance), dappInterface, payload);
+        }
+        // **** CHECKS END ****;
 
         // Encode execution claim payload with 'acceptExecutionRequest' function selector
         bytes memory encodedPayload = abi.encodeWithSelector(IIcedOut(dappInterface).acceptExecutionRequest.selector,
@@ -250,33 +281,55 @@ contract GelatoCore is Ownable, Claim {
         // Check dappInterface return value
         if (!success) {
             // Return 1 in case of error
-            return 1;
+            return (uint256(PreExecutionCheck.AcceptExecCallReverted), dappInterface, payload);
         }
-        else {
+        else
+        {
+            // Decode return value from interface
             (uint256 status) = abi.decode(returndata, (uint256));
             // Decoded returndata should return 0 for the executor to deem execution claim executable
-            return status;
+            if (status == uint256(PreExecutionCheck.IsExecutable))
+            {
+                return (status, dappInterface, payload);
+            }
+            // If not 0, return 2 (internal error code)
+            else
+            {
+                return (uint256(PreExecutionCheck.WrongReturnValue), dappInterface, payload);
+            }
+
         }
 
     }
 
-
     // Execute executionClaim
     function execute(uint256 _executionClaimId)
         external
-        returns (bool, bytes memory)
+        returns (uint256)
     {
         // // Step1: Calculate start GAS, set by the executor.
         uint256 startGas = gasleft();
 
-        // Step2: Fetch execution
-        ExecutionClaim memory executionClaim = executionClaims[_executionClaimId];
+        // Check if function is executable & copy state variables to memory
+        // We now verify the legitimacy of the transaction (it must be signed by the sender, and not be replayed),
+        // and that the recpient will accept to be charged by it.
+        address dappInterface;
+        bytes memory payload;
+        {
+            uint256 canExecuteResult;
+            (canExecuteResult, dappInterface, payload) = this.canExecute(_executionClaimId);
 
-        // // Step3: Fetch execution claim variables
-        // Interface Function signature
-        bytes memory payload = executionClaim.payload;
-        // Interface Address
-        address dappInterface = executionClaim.dappInterface;
+            // if canExecuteResult is not equal 0, we return 1 or 2, based on the received preExecutionCheck value;
+            if (canExecuteResult != 0) {
+                emit CanExecuteFailed(msg.sender, _executionClaimId);
+                revert("canExec func did not return 0");
+                // return canExecuteResult;
+            }
+        }
+
+        // From this point on, this transaction SHOULD not revert nor run out of gas, and the recipient will be charged
+        // for the gas spent.
+
         // Get the executionClaimOwner before burning
         address executionClaimOwner = ownerOf(_executionClaimId);
 
@@ -285,11 +338,6 @@ contract GelatoCore is Ownable, Claim {
         uint256 usedGasPrice;
         tx.gasprice > gelatoMaxGasPrice ? usedGasPrice = gelatoMaxGasPrice : usedGasPrice = tx.gasprice;
 
-        // **** CHECKS ****
-        // Step5: Check if Interface has sufficient balance on core
-        // @DEV, minimum balance requirement for interfaces (e.g. 0.5 ETH). If it goes below that, we wont execute, hence interface devs simply have to make sure their value does not drop below that limit
-        require(interfaceBalances[dappInterface] >= minEthBalance, "Interface does not have enough balance in core, needs at least minEthBalance");
-        // **** CHECKS END ****;
 
         // **** EFFECTS ****
         // Step6: Delete
@@ -297,12 +345,11 @@ contract GelatoCore is Ownable, Claim {
         delete executionClaims[_executionClaimId];
         // ******** EFFECTS END ****
 
-        // Interactions
-        // Step7: Call Interface
-        // ******* Gelato Interface Call *******
-        (bool success, bytes memory data) = dappInterface.call(payload);
-        require(success == true, "Execution of dappInterface function must be successful");
-        // ******* Gelato Interface Call END *******
+        // Calls to the interface are performed atomically inside an inner transaction which may revert in case of
+        // errors in the interface contract or malicious behaviour. In either case (revert or regular execution) the return data encodes the
+        // RelayCallStatus value.
+        bytes memory payloadWithSelector = abi.encodeWithSelector(this.conductAtmoicCall.selector, dappInterface, payload);
+        (bool success,) = address(this).call(payloadWithSelector);
 
         // **** EFFECTS 2 ****
         // Step6: Delete
@@ -310,25 +357,26 @@ contract GelatoCore is Ownable, Claim {
         _burn(_executionClaimId);
 
         // ******** EFFECTS 2 END ****
-        // Burn the executed executionClaim
 
         // Step8: Calc executor payout
         // How much gas we have left in this tx
-        uint256 endGas = gasleft();
-        // Calaculate how much gas we used up in this function. Subtract the certain gas refunds the executor will receive for nullifying values
-        // Gas Overhead corresponds to the actions occuring before and after the gasleft() calcs
-        uint256 totalGasUsed = startGas.sub(endGas).add(gasOverhead).sub(minGasRefunds);
-        // Calculate Total Cost
-        uint256 totalCost = totalGasUsed.mul(usedGasPrice);
-        // Calculate Executor Payout (including a fee set by GelatoCore.sol)
-        // @🐮 .add() not necessaryy as we set the numbers and they wont overflow. Saving some gas costs
-        // uint256 executorPayout= totalCost.mul(100 + gelatoExecutionMargin).div(100);
-        uint256 executorPayout= totalCost.add(gelatoExecutionMargin);
+        uint256 executorPayout;
+        {
+            uint256 endGas = gasleft();
+            // Calaculate how much gas we used up in this function. Subtract the certain gas refunds the executor will receive for nullifying values
+            // Gas Overhead corresponds to the actions occuring before and after the gasleft() calcs
+            uint256 totalGasUsed = startGas.sub(endGas).add(gasOverhead).sub(minGasRefunds);
+            // Calculate Total Cost
+            uint256 totalCost = totalGasUsed.mul(usedGasPrice);
+            // Calculate Executor Payout (including a fee set by GelatoCore.sol)
+            // uint256 executorPayout= totalCost.mul(100 + gelatoExecutionMargin).div(100);
+            executorPayout= totalCost.add(gelatoExecutionMargin);
 
-        // Log the costs of execution
-        emit LogExecutionMetrics(totalGasUsed, usedGasPrice, executorPayout);
+            // Log the costs of execution
+            emit LogExecutionMetrics(totalGasUsed, usedGasPrice, executorPayout);
+        }
 
-        // Effects 2: Decrease interface balance
+        // Effects 2: Reduce interface balance by executorPayout
         interfaceBalances[dappInterface] = interfaceBalances[dappInterface].sub(executorPayout);
 
         // // Step9: Conduct the payout to the executor
@@ -343,8 +391,35 @@ contract GelatoCore is Ownable, Claim {
                                               executorPayout
         );
         // Success
-        return (success, data);
+        return success ? uint256(PostExecutionStatus.Success) : uint256(PostExecutionStatus.Failure);
     }
+
+
+    function conductAtmoicCall(address _dappInterface, bytes calldata _payload)
+        external
+        returns (uint256)
+    {
+        require(msg.sender == address(this), "Only Gelato Core can call this function");
+
+        // Interfaces are not allowed to withdraw their balance while an executionClaim is being executed. They can however increase their balance
+        uint256 interfaceBalanceBefore = interfaceBalances[_dappInterface];
+
+        // Interactions
+        // Step7: Call Interface
+        // ******* Gelato Interface Call *******
+        (bool executedClaimStatus,) = _dappInterface.call(_payload);
+
+        // Fetch interface balance post call
+        uint256 interfaceBalanceAfter = interfaceBalances[_dappInterface];
+
+        // If interface withdrew some balance, revert transaction
+        require(interfaceBalanceAfter >= interfaceBalanceBefore, "Interface withdrew some balance within the transaction");
+
+        // return if .call succeeded or failed
+        return executedClaimStatus ? uint256(PostExecutionStatus.Success) : uint256(PostExecutionStatus.Failure);
+        // ******* Gelato Interface Call END *******
+    }
+
     // **************************** execute() END ***************************
 
     // **************************** Core Updateability ******************************

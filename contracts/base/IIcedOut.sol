@@ -24,7 +24,7 @@ contract IIcedOut {
         )
         external
         view
-        returns (uint256, bytes memory);
+        returns (uint256);
 
      // Function to calculate the prepayment an interface needs to transfer to Gelato Core
      // for minting a new execution executionClaim

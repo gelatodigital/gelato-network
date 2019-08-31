@@ -99,9 +99,89 @@ let {
         assert.isTrue(true);
     })
 
-    it("Check if first two execution claims are executable calling canExec in core", async () => {
+    it("Set correct depositAndSell claim & withdraw claim", async() => {
+      // Get the current execution claim on the core
+      // Assuming we get an depositAndSell claim
+      let sellOrderTest = await gelatoDutchExchange.contract.methods.sellOrders(nextExecutionClaim + 1, nextExecutionClaim).call()
+      // It's a withdraw claim
+      if (sellOrderTest.amount === '0')
+      {
+        depositAndSellClaim = nextExecutionClaim - 1;
+        withdrawClaim  = nextExecutionClaim;
+      }
+      else
+      {
+        depositAndSellClaim = nextExecutionClaim;
+        withdrawClaim  = nextExecutionClaim + 1;
+      }
+      assert.isTrue(true);
+    })
+
+    it("Check if execution claim is executable based on its execution Time, if not, test that execution reverts and fast forward", async () => {
+
+      sellOrder = await gelatoDutchExchange.contract.methods.sellOrders(withdrawClaim, depositAndSellClaim).call()
+      let sellOrderExecutionTime = sellOrder.executionTime
+
+      // Fetch time
+      let blockNumber = await web3.eth.getBlockNumber();
+      let block = await web3.eth.getBlock(blockNumber);
+      let beforeTimeTravel = block.timestamp;
+
+      let secondsUntilExecution  = sellOrderExecutionTime - beforeTimeTravel
+
+      // console.log(`
+      //              Claim is executable at: ${sellOrderExecutionTime}.
+      //              Current Time: ${beforeTimeTravel}
+      //              Difference: ${secondsUntilExecution}`);
+
+      // If execution Time of claim is in the future, we execute and expect a revert and then fast forward in time to the execution time
+      if(parseInt(secondsUntilExecution) > 0)
+      {
+
         let canExecuteReturn = await gelatoCore.contract.methods.canExecute(nextExecutionClaim).call()
-        console.log(`Return Value EC ${nextExecutionClaim}: ${canExecuteReturn.toString()}`)
-        assert.equal(parseInt(canExecuteReturn), 0);
+        let returnStatus = canExecuteReturn[0].toString(10)
+        let dappInterfaceAddress = canExecuteReturn[1].toString(10)
+        let payload = canExecuteReturn[2].toString(10)
+        console.log(`
+          Return Status: ${returnStatus}
+          dappInterfaceAddress: ${dappInterfaceAddress}
+          payload: ${payload}
+          `)
+        assert.equal(parseInt(returnStatus), 1);
+
+        // fast forward
+        await timeTravel.advanceTimeAndBlock(secondsUntilExecution);
+        // console.log(`Time travelled ${secondsUntilExecution} seconds`)
+
+      }
+
+      // Fetch current time again, in case we fast forwarded in time
+      let blockNumber2 = await web3.eth.getBlockNumber();
+      let block2 = await web3.eth.getBlock(blockNumber2);
+      let afterTimeTravel = block2.timestamp;
+
+      // Check if execution claim is executable
+      // assert.equal(executionTime + 15, claimsExecutionTime.toString(), `${claimsExecutionTime} should be equal to the execution time we set + 15 seconds`)
+      let claimsExecutionTimeBN = new BN(sellOrder.executionTime.toString());
+      let afterTimeTravelBN = new BN(afterTimeTravel);
+      let claimIsExecutable = afterTimeTravelBN.gte(claimsExecutionTimeBN);
+      // Check if execution claim is executable, i.e. lies in the past
+      assert.isTrue(
+        claimIsExecutable,
+        `${afterTimeTravel} should be greater than ${claimsExecutionTimeBN.toString()}`
+      );
+    });
+
+    it("Check if the execution claim is executable calling canExec in core", async () => {
+      let canExecuteReturn = await gelatoCore.contract.methods.canExecute(nextExecutionClaim).call()
+      let returnStatus = canExecuteReturn[0].toString(10)
+      let dappInterfaceAddress = canExecuteReturn[1].toString(10)
+      let payload = canExecuteReturn[2].toString(10)
+      console.log(`
+        Return Status: ${returnStatus}
+        dappInterfaceAddress: ${dappInterfaceAddress}
+        payload: ${payload}
+        `)
+      assert.equal(parseInt(returnStatus), 0);
     })
   });

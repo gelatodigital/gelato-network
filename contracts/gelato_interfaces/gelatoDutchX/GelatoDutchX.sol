@@ -227,7 +227,6 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
     // **************************** timeSellOrders() END ******************************
 
     // acceptExecutionRequest func that checks whether function is executable or not
-    // @DEV Problem related to having multiple functions (execute and withdraw). How can we differentiate which one gets passed in this function? => Solution, add a function idenifier into the calldata that we check and then redirect to
     function acceptExecutionRequest(bytes calldata _payload)
         external
         view
@@ -236,7 +235,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         // Make a memory copy of the payload (calldata)
         bytes memory testBytes = _payload;
         // Check that payload length is greater 4
-        require(_payload.length > 4);
+        require(_payload.length > 4, "Payload must be larger than 4 bytes");
         // Create bytes4 array to store the keccakHash of the funcSelector in
         bytes4 funcSelector;
         assembly {
@@ -262,15 +261,11 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
             testBytes := add(testBytes, 4)
 
         }
+
         // Decode Execution Claim Id
-        uint256 executionClaimId =  abi.decode(testBytes, (uint256));
+        uint256 executionClaimId = abi.decode(testBytes, (uint256));
 
         // CHECKS
-        // General
-        // Make sure that gelatoCore is the only allowed caller to this function.
-        require(msg.sender == address(gelatoCore),
-            "GelatoInterface.execute: msg.sender != gelatoCore instance address"
-        );
 
         // Check which function selector was passed
         if (funcSelector == bytes4(keccak256(bytes(execDepositAndSellString))))
@@ -302,17 +297,15 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
                 newAuctionIsWaiting = false;
             }
 
-            // CHECKS
-
             // Check the condition: Execution Time
             checkTimeCondition(sellOrder.executionTime);
 
-            // Check if interface has enough funds to sell on the Dutch Exchange
-            if (ERC20(sellToken).balanceOf(address(this)) < amount)
-            {
-                return 1;
-            }
 
+            // Step6: Check if interface has enough funds to sell on the Dutch Exchange
+            require(
+                ERC20(sellToken).balanceOf(address(this)) >= amount,
+                "GelatoInterface.execute: ERC20(sellToken).balanceOf(address(this)) !>= subOrderSize"
+            );
 
             if (newAuctionIndex == lastAuctionIndex) {
                 if (lastAuctionWasWaiting && !newAuctionIsWaiting) {
@@ -383,6 +376,9 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
             // All checks passed
             return 0;
 
+        }
+        else {
+            return 0;
         }
 
     }

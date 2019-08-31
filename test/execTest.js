@@ -56,7 +56,7 @@ let depositAndSellClaim
 let withdrawClaim
 let sellOrder;
 
-describe("Successfully execute first execution claim", () => {
+describe("Successfully execute execution claim", () => {
   before(async () => {
     gelatoDutchExchange = await GelatoDutchX.deployed();
     dutchExchangeProxy = await DutchExchangeProxy.deployed();
@@ -154,8 +154,15 @@ describe("Successfully execute first execution claim", () => {
     {
 
       let canExecuteReturn = await gelatoCore.contract.methods.canExecute(nextExecutionClaim).call()
-      console.log(`Return Value EC ${nextExecutionClaim}: ${canExecuteReturn.toString()}`)
-      assert.equal(parseInt(canExecuteReturn), 1);
+      let returnStatus = canExecuteReturn[0].toString(10)
+      let dappInterfaceAddress = canExecuteReturn[1].toString(10)
+      let payload = canExecuteReturn[2].toString(10)
+      console.log(`
+        Return Status: ${returnStatus}
+        dappInterfaceAddress: ${dappInterfaceAddress}
+        payload: ${payload}
+        `)
+      assert.equal(parseInt(returnStatus), 1);
 
       // Execution should revert
       // Gas price to calc executor payout
@@ -244,8 +251,15 @@ describe("Successfully execute first execution claim", () => {
 
   it("Check if the execution claim is executable calling canExec in core", async () => {
     let canExecuteReturn = await gelatoCore.contract.methods.canExecute(nextExecutionClaim).call()
-    console.log(`Return Value EC ${nextExecutionClaim}: ${canExecuteReturn.toString()}`)
-    assert.equal(parseInt(canExecuteReturn), 0);
+    let returnStatus = canExecuteReturn[0].toString(10)
+    let dappInterfaceAddress = canExecuteReturn[1].toString(10)
+    let payload = canExecuteReturn[2].toString(10)
+    console.log(`
+      Return Status: ${returnStatus}
+      dappInterfaceAddress: ${dappInterfaceAddress}
+      payload: ${payload}
+      `)
+    assert.equal(parseInt(returnStatus), 0);
   })
 
   it("Successfully execute first execution claim", async () => {
