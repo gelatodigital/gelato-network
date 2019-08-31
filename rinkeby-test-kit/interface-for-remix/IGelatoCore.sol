@@ -152,6 +152,9 @@ interface IGelatoCore {
 
 
     //_____________ Gelato Execution Economics ________________
+    // ExecutionClaim instructions
+    function executionClaims(uint256 executionClaimId) external view returns(address, bytes memory);
+
     // Balance of interfaces which pay for claim execution
     function interfaceBalances(address _dappInterface) external view returns(uint256);
 

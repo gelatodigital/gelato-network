@@ -522,29 +522,23 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         gelatoCore.cancelExecutionClaim(_executionClaimId.add(1));
         // ** Gelato Core interactions END **
 
-        // Fetch variables needed before deletion
-        uint256 orderStateId = sellOrder.orderStateId;
-        uint256 prepaymentPerSellOrder = sellOrder.prepaymentPerSellOrder;
-        address sellToken = sellOrder.sellToken;
-        uint256 sellAmount = sellOrder.sellAmount;
-
         // This deletes the withdraw struct as well as they both map to the same struct
         // delete sellOrder
         delete sellOrders[_executionClaimId + 1][_executionClaimId];
 
         // Emit cancellation event
-        emit LogOrderCancelled(_executionClaimId, orderStateId, seller);
-        emit LogOrderCancelled(_executionClaimId.add(1), orderStateId, seller);
+        emit LogOrderCancelled(_executionClaimId, sellOrder.orderStateId, seller);
+        emit LogOrderCancelled(_executionClaimId.add(1), sellOrder.orderStateId, seller);
         // ****** EFFECTS END ******
 
         // ****** INTERACTIONS ******
         // transfer sellAmount back from this contracts ERC20 balance to seller
         // REFUND USER!!!
         // In order to refund the exact sellAmount the user prepaid, we need to store that information on-chain
-        msg.sender.transfer(prepaymentPerSellOrder);
+        msg.sender.transfer(sellOrder.prepaymentPerSellOrder);
 
         // Transfer ERC20 Tokens back to seller
-        safeTransfer(sellToken, msg.sender, sellAmount, false);
+        safeTransfer(sellOrder.sellToken, msg.sender, sellOrder.sellAmount, false);
 
         // ****** INTERACTIONS END ******
     }

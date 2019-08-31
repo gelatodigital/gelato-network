@@ -167,8 +167,8 @@ contract IcedOut is Ownable {
 
      // Fallback function: reverts incoming ether payments not addressed to a payable function
      function() external payable {
-          require(msg.sender == address(gelatoCore),
-               "IcedOut.fallback: Should not send ether to IcedOut without specifying a payable function selector, except when coming from gelatoCore"
+          require(isOwner() || msg.sender == address(gelatoCore),
+               "IcedOut.fallback: Should not send ether to IcedOut without specifying a payable function selector, except when coming from owner or gelatoCore"
           );
     }
 }

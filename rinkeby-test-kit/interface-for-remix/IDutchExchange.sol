@@ -35,5 +35,13 @@ interface IDutchExchange {
     function buyerBalances(address sellToken, address buyToken, uint256 auctionIndex, address user) external view returns(uint256);
     function claimedAmounts(address sellToken, address buyToken, uint256 auctionIndex, address user) external view returns(uint256);
 
+    function deposit(address tokenAddress, uint amount) external returns (uint);
+    function withdraw(address tokenAddress, uint amount) external returns (uint);
+
     function depositAndSell(address sellToken, address buyToken, uint amount) external returns (uint256, uint256, uint256);
+
+    function postBuyOrder(address sellToken, address buyToken, uint auctionIndex, uint amount)
+        external
+        returns (uint);
+
 }
