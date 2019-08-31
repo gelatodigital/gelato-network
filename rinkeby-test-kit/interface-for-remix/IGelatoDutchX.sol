@@ -135,10 +135,14 @@ interface IGelatoDutchX {
     function dutchExchange() external view returns(address);
 
     // OrderId => parent orderState struct
-    // function orderStates(uint256 _orderId) external view returns(OrderState memory);
+    function orderStates(uint256 _orderId) external view returns(bool, uint256);
 
     // withdraw execution claim => depositAndSell exeuctionClaim => sellOrder
-    // function sellOrders(uint256 _withdrawClaimId, uint256 _depositAndSellClaimId) external view returns(SellOrder memory);
+    function sellOrders(uint256 _withdrawClaimId, uint256 _depositAndSellClaimId)
+        external
+        view
+        returns(bool, uint256, uint256, uint256, address, address, uint256);
+
 
     // Constants that are set during contract construction and updateable via setters
     function auctionStartWaitingForFunding() external view returns(uint256);

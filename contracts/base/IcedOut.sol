@@ -152,7 +152,7 @@ contract IcedOut is Ownable {
           onlyOwner
      {
           require(_interfaceGasPrice != 0,
-               "GelatoDutchX.useInterfaceGasPrice: New interface Gas Price must be non zero"
+               "IcedOut.useInterfaceGasPrice: New interface Gas Price must be non zero"
           );
           interfaceGasPrice = _interfaceGasPrice;
      }
@@ -167,6 +167,8 @@ contract IcedOut is Ownable {
 
      // Fallback function: reverts incoming ether payments not addressed to a payable function
      function() external payable {
-        require(msg.sender == address(gelatoCore), "Should not send ether to GelatoDutchX without specifying a payable function selector, except when coming from gelatoCore");
+          require(msg.sender == address(gelatoCore),
+               "IcedOut.fallback: Should not send ether to IcedOut without specifying a payable function selector, except when coming from gelatoCore"
+          );
     }
 }

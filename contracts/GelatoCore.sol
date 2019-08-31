@@ -115,7 +115,7 @@ contract GelatoCore is Ownable, Claim {
     // Fallback function needed for arbitrary funding additions to Gelato Core's balance by owner
     function() external payable {
         require(isOwner(),
-            "fallback function: only the owner should send ether to Gelato Core without selecting a payable function."
+            "GelatoCore.fallback function: only the owner should send ether to Gelato Core without selecting a payable function."
         );
     }
 
@@ -331,7 +331,7 @@ contract GelatoCore is Ownable, Claim {
         (bool success, ) = dappInterface.call(functionSignature);
         // @notice: Executor griefing via reverts prevention: call estimateGas before executing
         //  web3 estimateGas supposed to return gasLimit if tx would revert
-        require(success == true, "execute(): Execution of dappInterface function must be successful");
+        require(success == true, "GelatoCore.execute(): Execution of dappInterface function must be successful");
         // ******* Gelato Interface Call END *******
 
         // **** EFFECTS 2 ****
