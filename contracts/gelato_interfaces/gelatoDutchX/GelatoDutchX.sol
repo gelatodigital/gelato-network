@@ -230,7 +230,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
     // @DEV Problem related to having multiple functions (execute and withdraw). How can we differentiate which one gets passed in this function? => Solution, add a function idenifier into the calldata that we check and then redirect to
     function acceptExecutionRequest(bytes calldata _payload)
         external
-        pure
+        view
         returns (uint256)
     {
         // Make a memory copy of the payload (calldata)
@@ -264,16 +264,125 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         }
         // Decode Execution Claim Id
         uint256 executionClaimId =  abi.decode(testBytes, (uint256));
+
+        // CHECKS
+        // General
+        // Make sure that gelatoCore is the only allowed caller to this function.
+        require(msg.sender == address(gelatoCore),
+            "GelatoInterface.execute: msg.sender != gelatoCore instance address"
+        );
+
         // Check which function selector was passed
         if (funcSelector == bytes4(keccak256(bytes(execDepositAndSellString))))
         {
             // Test if execDepositAndSell is executable
-            return 0;
+
+            // Init state variables
+            SellOrder memory sellOrder = sellOrders[executionClaimId + 1][executionClaimId];
+            uint256 amount = sellOrder.amount;
+
+            // Fetch OrderState
+            uint256 orderStateId = sellOrder.orderStateId;
+            OrderState memory orderState = orderStates[orderStateId];
+
+            address sellToken = orderState.sellToken;
+            address buyToken = orderState.buyToken;
+            uint256 lastAuctionIndex = orderState.lastAuctionIndex;
+
+            uint256 newAuctionIndex = dutchExchange.getAuctionIndex(sellToken, buyToken);
+            uint256 auctionStartTime = dutchExchange.getAuctionStart(sellToken, buyToken);
+
+            // Waiting Period variables needed to prevent double participation in DutchX auctions
+            bool lastAuctionWasWaiting = orderState.lastAuctionWasWaiting;  // default: false
+            bool newAuctionIsWaiting;
+            // Check if we are in a Waiting period or auction running period
+            if (auctionStartTime > now || auctionStartTime == auctionStartWaitingForFunding) {
+                newAuctionIsWaiting = true;
+            } else if (auctionStartTime < now) {
+                newAuctionIsWaiting = false;
+            }
+
+            // CHECKS
+
+            // Check the condition: Execution Time
+            checkTimeCondition(sellOrder.executionTime);
+
+            // Check if interface has enough funds to sell on the Dutch Exchange
+            if (ERC20(sellToken).balanceOf(address(this)) < amount)
+            {
+                return 1;
+            }
+
+
+            if (newAuctionIndex == lastAuctionIndex) {
+                if (lastAuctionWasWaiting && !newAuctionIsWaiting) {
+                    return 0;
+                }
+                else {
+                    // Claim not executable
+                    return 1;
+                }
+            }
+            else if (newAuctionIndex == lastAuctionIndex.add(1)) {
+                if (lastAuctionWasWaiting && newAuctionIsWaiting || lastAuctionWasWaiting && !newAuctionIsWaiting) {
+                    return 0;
+                }
+                else {
+                    // Claim not executable
+                    return 1;
+                }
+
+            }
+            else if (newAuctionIndex >= lastAuctionIndex.add(2)) {
+                return 0;
+            }
+            else {
+                // Claim not executable
+                return 1;
+            }
+
         }
         else if (funcSelector == bytes4(keccak256(bytes(execWithdrawString))))
         {
             // Test if execWithdraw is executable
+
+            // Create memory pointer for the individual sellOrder and the parent orderState
+            // Fetch SellOrder
+            SellOrder memory sellOrder = sellOrders[executionClaimId][executionClaimId - 1];
+            // Fetch OrderState
+            uint256 orderStateId = sellOrder.orderStateId;
+            OrderState memory orderState = orderStates[orderStateId];
+            address sellToken = orderState.sellToken;
+            address buyToken = orderState.buyToken;
+            uint256 lastAuctionIndex = orderState.lastAuctionIndex;
+
+            // CHECKS
+            // Require that we actually posted the sellOrder prior to calling withdraw
+            if (sellOrder.posted == false)
+            {
+                // Claim not executable
+                return 1;
+            }
+
+            uint256 num;
+            uint256 den;
+            (num, den) = dutchExchange.closingPrices(sellToken,
+                                                 buyToken,
+                                                 lastAuctionIndex
+            );
+
+            // Check if the last auction the seller participated in has cleared
+            // DEV Check line 442 in dutchExchange contract
+            // DEV Test: Are there any other possibilities for den being 0 other than when the auction has not yet cleared?
+            if (den == 0)
+            {
+                // Claim not executable
+                return 1;
+            }
+
+            // All checks passed
             return 0;
+
         }
 
     }

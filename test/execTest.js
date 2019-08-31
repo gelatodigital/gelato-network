@@ -152,6 +152,11 @@ describe("Successfully execute first execution claim", () => {
     // If execution Time of claim is in the future, we execute and expect a revert and then fast forward in time to the execution time
     if(parseInt(secondsUntilExecution) > 0)
     {
+
+      let canExecuteReturn = await gelatoCore.contract.methods.canExecute(nextExecutionClaim).call()
+      console.log(`Return Value EC ${nextExecutionClaim}: ${canExecuteReturn.toString()}`)
+      assert.equal(parseInt(canExecuteReturn), 1);
+
       // Execution should revert
       // Gas price to calc executor payout
       let txGasPrice = await web3.utils.toWei("5", "gwei");
@@ -235,6 +240,12 @@ describe("Successfully execute first execution claim", () => {
     // Check if auction cleared with DutchX Getter
     let returnValue = await dxGetter.contract.methods.getClosingPrices(sellToken.address, buyToken.address, lastAuctionIndex).call();
     // assert.isEqual(wasPosted, true, "Execution Claim owner should be equal to predefined seller");
+  })
+
+  it("Check if the execution claim is executable calling canExec in core", async () => {
+    let canExecuteReturn = await gelatoCore.contract.methods.canExecute(nextExecutionClaim).call()
+    console.log(`Return Value EC ${nextExecutionClaim}: ${canExecuteReturn.toString()}`)
+    assert.equal(parseInt(canExecuteReturn), 0);
   })
 
   it("Successfully execute first execution claim", async () => {

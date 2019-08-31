@@ -101,10 +101,7 @@ let {
 
     it("Check if first two execution claims are executable calling canExec in core", async () => {
         let canExecuteReturn = await gelatoCore.contract.methods.canExecute(nextExecutionClaim).call()
-        console.log(`Return Value: ${canExecuteReturn.toString()}`)
+        console.log(`Return Value EC ${nextExecutionClaim}: ${canExecuteReturn.toString()}`)
         assert.equal(parseInt(canExecuteReturn), 0);
-        let canExecuteReturn2 = await gelatoCore.contract.methods.canExecute(nextExecutionClaim + 1).call()
-        console.log(`Return Value: ${canExecuteReturn2.toString()}`)
-        assert.equal(parseInt(canExecuteReturn2), 0);
     })
   });
