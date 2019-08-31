@@ -222,7 +222,6 @@ contract GelatoCore is Ownable, Claim {
 
     // Function for executors to verify that execution claim is executable
     // Must return 0 in order to be seen as 'executable' by executor nodes
-
     function canExecute(uint256 _executionClaimId)
         external
         view

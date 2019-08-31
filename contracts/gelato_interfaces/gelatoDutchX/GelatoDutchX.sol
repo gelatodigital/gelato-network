@@ -98,12 +98,8 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
     // Constants that are set during contract construction and updateable via setters
     uint256 public auctionStartWaitingForFunding;
 
-    // // Max Gas for one execute + withdraw pair => fixed. To adjust prePayment, use gasPrice
-    // uint256 public maxGas = 500000;
-
-    // Gas price charged to users
-    // uint256 public interfaceGasPrice;
-
+    string constant execDepositAndSellString = "execDepositAndSell(uint256)";
+    string constant execWithdrawString = "execWithdraw(uint256)";
 
     // **************************** State Variables END ******************************
 
@@ -237,8 +233,11 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         pure
         returns (uint256)
     {
-        bytes memory testBytes = payload;
-        require(payload.length > 4);
+        // Make a memory copy of the payload (calldata)
+        bytes memory testBytes = _payload;
+        // Check that payload length is greater 4
+        require(_payload.length > 4);
+        // Create bytes4 array to store the keccakHash of the funcSelector in
         bytes4 funcSelector;
         assembly {
             // Aim: We put the funcSelector on the stack to access it outside of assembly
@@ -263,9 +262,20 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
             testBytes := add(testBytes, 4)
 
         }
-
+        // Decode Execution Claim Id
         uint256 executionClaimId =  abi.decode(testBytes, (uint256));
-        return 0;
+        // Check which function selector was passed
+        if (funcSelector == bytes4(keccak256(bytes(execDepositAndSellString))))
+        {
+            // Test if execDepositAndSell is executable
+            return 0;
+        }
+        else if (funcSelector == bytes4(keccak256(bytes(execWithdrawString))))
+        {
+            // Test if execWithdraw is executable
+            return 0;
+        }
+
     }
 
 
