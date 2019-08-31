@@ -671,7 +671,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
                                        withdrawAmount
         );
 
-        // Transfer Tokens from Gelato to Seller
+        // Transfer Tokens from GelatoDutchX to Seller
         safeTransfer(_buyToken, _seller, withdrawAmount, false);
     }
 

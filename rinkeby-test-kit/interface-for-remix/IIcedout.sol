@@ -5,12 +5,13 @@ pragma solidity ^0.5.0;
 */
 
 interface IIcedOut {
-     
+
      // Max Gas for one execute + withdraw pair => fixed.
      function interfaceMaxGas() external view returns(uint256);
      // To adjust prePayment, use gasPrice
      function interfaceGasPrice() external view returns(uint256);
 
+     function gelatoCore() external view returns(address);
 
      // Events
      event LogGelatoBalanceAdded(uint256 amount,

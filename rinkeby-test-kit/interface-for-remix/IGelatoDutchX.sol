@@ -38,6 +38,9 @@ interface IGelatoDutchX {
      function interfaceGasPrice() external view returns(uint256);
 
 
+     function gelatoCore() external view returns(address);
+
+
      // Events
      event LogGelatoBalanceAdded(uint256 amount,
                                  uint256 gelatoBalancePost,
@@ -128,11 +131,7 @@ interface IGelatoDutchX {
 
     // **************************** State Variables ******************************
 
-    // Interfaces to other contracts that are set during construction.
-    function gelatoCore() external view returns(address);
-
     // One orderState struct can have many sellOrder structs as children
-
     function dutchExchange() external view returns(address);
 
     // OrderId => parent orderState struct
