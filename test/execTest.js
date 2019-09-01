@@ -171,7 +171,7 @@ describe("Successfully execute execution claim", () => {
         gelatoCore.contract.methods
           .execute(nextExecutionClaim)
           .send({ from: revertExecutor, gas: 1000000, gasPrice: txGasPrice }),
-        "Execution of dappInterface function must be successful"
+        "canExec func did not return 0"
       ); // gas needed to prevent out of gas error
 
       // fast forward
@@ -241,12 +241,17 @@ describe("Successfully execute execution claim", () => {
   })
 
   it("Check that the past auction cleared and a price has been found", async() => {
-    let orderStateId = sellOrder.orderStateId;
-    let orderState = await gelatoDutchExchange.contract.methods.orderStates(orderStateId).call()
-    let lastAuctionIndex = orderState.lastAuctionIndex;
-    // Check if auction cleared with DutchX Getter
-    let returnValue = await dxGetter.contract.methods.getClosingPrices(sellToken.address, buyToken.address, lastAuctionIndex).call();
-    // assert.isEqual(wasPosted, true, "Execution Claim owner should be equal to predefined seller");
+    if ( withdrawClaim === nextExecutionClaim )
+    {
+      let orderStateId = sellOrder.orderStateId;
+      let orderState = await gelatoDutchExchange.contract.methods.orderStates(orderStateId).call()
+      let lastAuctionIndex = orderState.lastAuctionIndex;
+      // Check if auction cleared with DutchX Getter
+      let returnValue = await dxGetter.contract.methods.getClosingPrices(sellToken.address, buyToken.address, lastAuctionIndex).call();
+      console.log(`Den: ${returnValue[1]}`)
+      let shouldNotBeZero = parseInt(returnValue[1]) !== 0
+      assert.isTrue(shouldNotBeZero);
+    }
   })
 
   it("Check if the execution claim is executable calling canExec in core", async () => {
@@ -259,7 +264,7 @@ describe("Successfully execute execution claim", () => {
       dappInterfaceAddress: ${dappInterfaceAddress}
       payload: ${payload}
       `)
-    assert.equal(parseInt(returnStatus), 0);
+    assert.equal(parseInt(returnStatus[0]), 0);
   })
 
   it("Successfully execute first execution claim", async () => {

@@ -209,9 +209,6 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
             (uint256 executionClaimIdPlusOne, ) = mintClaim("execWithdraw(uint256)", msg.sender);
 
             // Map first claims to the Sell Order and second claims to the first claim => BONDED Claims
-            // @🐮Convert into Mapping of mapping
-            // sellOrders[executionClaimId] = sellOrder;
-            // sellOrderLink[executionClaimIdPlusOne] = executionClaimId;
             // withdraw execution claim => depositAndSell exeuctionClaim => sellOrder
             sellOrders[executionClaimIdPlusOne][executionClaimId] = sellOrder;
 
@@ -265,122 +262,127 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         // Decode Execution Claim Id
         uint256 executionClaimId = abi.decode(testBytes, (uint256));
 
-        // CHECKS
-
         // Check which function selector was passed
         if (funcSelector == bytes4(keccak256(bytes(execDepositAndSellString))))
         {
-            // Test if execDepositAndSell is executable
-
-            // Init state variables
-            SellOrder memory sellOrder = sellOrders[executionClaimId + 1][executionClaimId];
-            uint256 amount = sellOrder.amount;
-
-            // Fetch OrderState
-            uint256 orderStateId = sellOrder.orderStateId;
-            OrderState memory orderState = orderStates[orderStateId];
-
-            address sellToken = orderState.sellToken;
-            address buyToken = orderState.buyToken;
-            uint256 lastAuctionIndex = orderState.lastAuctionIndex;
-
-            uint256 newAuctionIndex = dutchExchange.getAuctionIndex(sellToken, buyToken);
-            uint256 auctionStartTime = dutchExchange.getAuctionStart(sellToken, buyToken);
-
-            // Waiting Period variables needed to prevent double participation in DutchX auctions
-            bool lastAuctionWasWaiting = orderState.lastAuctionWasWaiting;  // default: false
-            bool newAuctionIsWaiting;
-            // Check if we are in a Waiting period or auction running period
-            if (auctionStartTime > now || auctionStartTime == auctionStartWaitingForFunding) {
-                newAuctionIsWaiting = true;
-            } else if (auctionStartTime < now) {
-                newAuctionIsWaiting = false;
-            }
-
-            // Check the condition: Execution Time
-            checkTimeCondition(sellOrder.executionTime);
-
-
-            // Step6: Check if interface has enough funds to sell on the Dutch Exchange
-            require(
-                ERC20(sellToken).balanceOf(address(this)) >= amount,
-                "GelatoInterface.execute: ERC20(sellToken).balanceOf(address(this)) !>= subOrderSize"
-            );
-
-            if (newAuctionIndex == lastAuctionIndex) {
-                if (lastAuctionWasWaiting && !newAuctionIsWaiting) {
-                    return 0;
-                }
-                else {
-                    // Claim not executable
-                    return 1;
-                }
-            }
-            else if (newAuctionIndex == lastAuctionIndex.add(1)) {
-                if (lastAuctionWasWaiting && newAuctionIsWaiting || lastAuctionWasWaiting && !newAuctionIsWaiting) {
-                    return 0;
-                }
-                else {
-                    // Claim not executable
-                    return 1;
-                }
-
-            }
-            else if (newAuctionIndex >= lastAuctionIndex.add(2)) {
-                return 0;
-            }
-            else {
-                // Claim not executable
-                return 1;
-            }
+            // If executable, should return 0
+            return execDepositAndSellCheck(executionClaimId);
 
         }
         else if (funcSelector == bytes4(keccak256(bytes(execWithdrawString))))
         {
-            // Test if execWithdraw is executable
-
-            // Create memory pointer for the individual sellOrder and the parent orderState
-            // Fetch SellOrder
-            SellOrder memory sellOrder = sellOrders[executionClaimId][executionClaimId - 1];
-            // Fetch OrderState
-            uint256 orderStateId = sellOrder.orderStateId;
-            OrderState memory orderState = orderStates[orderStateId];
-            address sellToken = orderState.sellToken;
-            address buyToken = orderState.buyToken;
-            uint256 lastAuctionIndex = orderState.lastAuctionIndex;
-
-            // CHECKS
-            // Require that we actually posted the sellOrder prior to calling withdraw
-            if (sellOrder.posted == false)
-            {
-                // Claim not executable
-                return 1;
-            }
-
-            uint256 num;
-            uint256 den;
-            (num, den) = dutchExchange.closingPrices(sellToken,
-                                                 buyToken,
-                                                 lastAuctionIndex
-            );
-
-            // Check if the last auction the seller participated in has cleared
-            // DEV Check line 442 in dutchExchange contract
-            // DEV Test: Are there any other possibilities for den being 0 other than when the auction has not yet cleared?
-            if (den == 0)
-            {
-                // Claim not executable
-                return 1;
-            }
-
-            // All checks passed
-            return 0;
-
+            // If executable, should return 0
+            return execWithdrawCheck(executionClaimId);
         }
         else {
-            return 0;
+            // Error in funcSelector
+            return 1;
         }
 
+    }
+
+    // Check if execDepositAndSell is executable
+    function execDepositAndSellCheck(uint256 _executionClaimId)
+        internal
+        view
+        returns (uint256)
+    {
+        // Test if execDepositAndSell is executable
+
+        // Init state variables
+        SellOrder memory sellOrder = sellOrders[_executionClaimId + 1][_executionClaimId];
+        uint256 amount = sellOrder.amount;
+
+        // Check the condition: Execution Time
+        checkTimeCondition(sellOrder.executionTime);
+
+        // Fetch OrderState
+        uint256 orderStateId = sellOrder.orderStateId;
+        OrderState memory orderState = orderStates[orderStateId];
+
+        address sellToken = orderState.sellToken;
+        address buyToken = orderState.buyToken;
+        uint256 lastAuctionIndex = orderState.lastAuctionIndex;
+
+        uint256 newAuctionIndex = dutchExchange.getAuctionIndex(sellToken, buyToken);
+        uint256 auctionStartTime = dutchExchange.getAuctionStart(sellToken, buyToken);
+
+        // Waiting Period variables needed to prevent double participation in DutchX auctions
+        bool lastAuctionWasWaiting = orderState.lastAuctionWasWaiting;  // default: false
+        bool newAuctionIsWaiting;
+        // Check if we are in a Waiting period or auction running period
+        if (auctionStartTime > now || auctionStartTime == auctionStartWaitingForFunding)
+        {
+            newAuctionIsWaiting = true;
+        }
+        else if (auctionStartTime < now)
+        {
+            newAuctionIsWaiting = false;
+        }
+
+        // Check if interface has enough funds to sell on the Dutch Exchange
+        require(
+            ERC20(sellToken).balanceOf(address(this)) >= amount,
+            "GelatoInterface.execute: ERC20(sellToken).balanceOf(address(this)) !>= subOrderSize"
+        );
+
+        if (newAuctionIndex == lastAuctionIndex)
+        {
+            require(lastAuctionWasWaiting && !newAuctionIsWaiting,
+            "newAuctionindex == lastAuctionIndex, but lastAuctionWasWaiting && !newAuctionIsWaiting == false");
+            return 0;
+        }
+        else if (newAuctionIndex == lastAuctionIndex.add(1))
+        {
+            require(lastAuctionWasWaiting && newAuctionIsWaiting || lastAuctionWasWaiting && !newAuctionIsWaiting,
+            "newAuctionIndex == lastAuctionIndex.add(1), but lastAuctionWasWaiting && newAuctionIsWaiting || lastAuctionWasWaiting && !newAuctionIsWaiting == false");
+            return 0;
+        }
+        else if (newAuctionIndex >= lastAuctionIndex.add(2))
+        {
+            return 0;
+        }
+        else
+        {
+            // Claim not executable
+            revert("Case5: Fatal Error: Case5 unforeseen");
+        }
+    }
+
+    // Test if execWithdraw is executable
+    function execWithdrawCheck(uint256 _executionClaimId)
+        internal
+        view
+        returns (uint256)
+    {
+        // Fetch sellOrder
+        SellOrder memory sellOrder = sellOrders[_executionClaimId][_executionClaimId - 1];
+        // Require that we actually posted the sellOrder prior to calling withdraw
+        require(sellOrder.posted, "Sell Order must have been posted in order to withdraw");
+
+        // Fetch OrderState
+        uint256 orderStateId = sellOrder.orderStateId;
+        OrderState memory orderState = orderStates[orderStateId];
+        address sellToken = orderState.sellToken;
+        address buyToken = orderState.buyToken;
+        uint256 lastAuctionIndex = orderState.lastAuctionIndex;
+
+        // Check if auction in DutchX closed
+        uint256 num;
+        uint256 den;
+        (num, den) = dutchExchange.closingPrices(sellToken,
+                                                buyToken,
+                                                lastAuctionIndex
+        );
+
+        // Check if the last auction the seller participated in has cleared
+        // DEV Test: Are there any other possibilities for den being 0 other than when the auction has not yet cleared?
+        require(den != 0,
+            "den != 0, Last auction did not clear thus far, you have to wait"
+        );
+
+        // All checks passed
+        return 0;
     }
 
 
@@ -408,16 +410,11 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         uint256 orderStateId = sellOrder.orderStateId;
         OrderState storage orderState = orderStates[orderStateId];
 
-        // Step3: Check the condition: Execution Time
-        checkTimeCondition(sellOrder.executionTime);
-
         // Step4: initialise multi-use variables
         // ********************** Load variables from storage and initialise them **********************
         address sellToken = orderState.sellToken;
         address buyToken = orderState.buyToken;
         uint256 amount = sellOrder.amount;
-        // the last DutchX auctionIndex at which the orderState participated in
-        uint256 lastAuctionIndex = orderState.lastAuctionIndex;  // default: 0
         // ********************** Load variables from storage and initialise them END **********************
 
         // Step5: Fetch auction specific data from Dutch Exchange
@@ -426,184 +423,46 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         uint256 auctionStartTime = dutchExchange.getAuctionStart(sellToken, buyToken);
         // ********************** Fetch data from dutchExchange END **********************
 
-        // Step6: Check if interface has enough funds to sell on the Dutch Exchange
-        require(
-            ERC20(sellToken).balanceOf(address(this)) >= amount,
-            "GelatoInterface.execute: ERC20(sellToken).balanceOf(address(this)) !>= subOrderSize"
-        );
-
         // Step7: Set the auction specific orderState variables
         // Waiting Period variables needed to prevent double participation in DutchX auctions
-        bool lastAuctionWasWaiting = orderState.lastAuctionWasWaiting;  // default: false
         bool newAuctionIsWaiting;
         // Check if we are in a Waiting period or auction running period
-        if (auctionStartTime > now || auctionStartTime == auctionStartWaitingForFunding) {
+        if (auctionStartTime > now || auctionStartTime == auctionStartWaitingForFunding)
+        {
             newAuctionIsWaiting = true;
-        } else if (auctionStartTime < now) {
+        }
+        else if (auctionStartTime < now)
+        {
             newAuctionIsWaiting = false;
         }
 
-        // Step7: Check auciton Index and call depositAndSell
-        /* Assumptions:
-            * 1: Don't sell in the same auction twice
-        */
-        // CASE 1:
-        // Check case where lastAuctionIndex is greater than newAuctionIndex
-        require(newAuctionIndex >= lastAuctionIndex,
-            "Case 1: Fatal error, Gelato auction index ahead of dutchExchange auction index"
+        // ### EFFECTS ###
+        // Update Order State
+        orderState.lastAuctionWasWaiting = newAuctionIsWaiting;
+        orderState.lastAuctionIndex = newAuctionIndex;
+        uint256 dutchXFee;
+
+        // Update sellOrder.amount so when an executor calls execWithdraw, the seller receives withdraws the correct amount given sellAmountMinusFee
+        (sellOrder.amount, dutchXFee) = _calcActualSellAmount(amount);
+
+        emit LogActualSellAmount(
+                                _executionClaimId,
+                                orderStateId,
+                                amount,
+                                sellOrder.amount,
+                                dutchXFee
         );
+        // Mark sellOrder as posted
+        sellOrder.posted = true;
+        // ### EFFECTS END ###
 
-        // CASE 2:
-        // Either we already posted during waitingPeriod OR during the auction that followed
-        if (newAuctionIndex == lastAuctionIndex) {
-            // Case2a: Last posted during waitingPeriod1, new CANNOT sell during waitingPeriod1.
-            if (lastAuctionWasWaiting && newAuctionIsWaiting) {
-                revert("Case2a: Last posted during waitingPeriod1, new CANNOT sell during waitingPeriod1");
-            }
-            /* Case2b: We posted during waitingPeriod1, our funds went into auction1,
-            now auction1 is running, now we sell again during auction1, as this time our funds would go into auction2. */
-            else if (lastAuctionWasWaiting && !newAuctionIsWaiting) {
-                // As execDepositAndSell and execWithdraw are decoupled, we can safely sell our funds into the new auction as the only assumption we still hold is not selling in the same auction twice
+        // INTERACTION: sell on dutchExchange
+        _depositAndSell(sellToken, buyToken, amount);
+        // INTERACTION: END
 
-                // ### EFFECTS ###
-                // Update Order State
-                orderState.lastAuctionWasWaiting = newAuctionIsWaiting;
-                orderState.lastAuctionIndex = newAuctionIndex;
-                uint256 dutchXFee;
-                // Update sellOrder.amount so when an executor calls execWithdraw, the seller receives withdraws the correct amount given sellAmountMinusFee
-                (sellOrder.amount, dutchXFee) = _calcActualSellAmount(amount);
-
-                emit LogActualSellAmount(_executionClaimId,
-                                            orderStateId,
-                                            amount,
-                                            sellOrder.amount,
-                                            dutchXFee
-                );
-                // Mark sellOrder as posted
-                sellOrder.posted = true;
-                // ### EFFECTS END ###
-
-                // INTERACTION: sell on dutchExchange
-                _depositAndSell(sellToken, buyToken, amount);
-            }
-            /* Case2c Last posted during running auction1, new tries to sell during waiting period
-            that preceded auction1 (impossible time-travel) or new tries to sell during waiting
-            period succeeding auction1 (impossible due to auction index incrementation ->
-            newAuctionIndex == lastAuctionIndex cannot be true - Gelato-dutchExchange indexing
-            must be out of sync) */
-            else if (!lastAuctionWasWaiting && newAuctionIsWaiting) {
-                revert("Case2c: Fatal error: auction index incrementation out of sync");
-            }
-            // Case2d: Last posted during running auction1, new CANNOT sell during auction1.
-            else if (!lastAuctionWasWaiting && !newAuctionIsWaiting) {
-                revert("Case2d: Selling twice into the same running auction is disallowed");
-            }
-        }
-        // CASE 3:
-        // We participated at previous auction index
-        // Either we posted during previous waiting period, or during previous auction.
-        else if (newAuctionIndex == lastAuctionIndex.add(1)) {
-            /* Case3a: We posted during previous waiting period, our funds went into auction1,
-            then auction1 ran, then auction1 cleared and the auctionIndex got incremented,
-            we now sell during the next waiting period, our funds will go to auction2 */
-            if (lastAuctionWasWaiting && newAuctionIsWaiting) {
-                // ### EFFECTS ###
-                // Update Order State
-                orderState.lastAuctionWasWaiting = newAuctionIsWaiting;
-                orderState.lastAuctionIndex = newAuctionIndex;
-                uint256 dutchXFee;
-                // Update sellOrder.amount so when an executor calls execWithdraw, the seller receives withdraws the correct amount given sellAmountMinusFee
-                (sellOrder.amount, dutchXFee) = _calcActualSellAmount(amount);
-
-                emit LogActualSellAmount(_executionClaimId,
-                                            orderStateId,
-                                            amount,
-                                            sellOrder.amount,
-                                            dutchXFee
-                );
-                // Mark sellOrder as posted
-                sellOrder.posted = true;
-                // ### EFFECTS END ###
-
-                // INTERACTION: sell on dutchExchange
-                _depositAndSell(sellToken, buyToken, amount);
-            }
-            /* Case3b: We posted during previous waiting period, our funds went into auction1, then
-            auction1 ran, then auction1 cleared and the auction index was incremented,
-            , then a waiting period passed, now we are selling during auction2, our funds
-            will go into auction3 */
-            else if (lastAuctionWasWaiting && !newAuctionIsWaiting) {
-                // ### EFFECTS ###
-                // Update Order State
-                orderState.lastAuctionWasWaiting = newAuctionIsWaiting;
-                orderState.lastAuctionIndex = newAuctionIndex;
-                uint256 dutchXFee;
-                // Update sellOrder.amount so when an executor calls execWithdraw, the seller receives withdraws the correct amount given sellAmountMinusFee
-                (sellOrder.amount, dutchXFee) = _calcActualSellAmount(amount);
-
-                emit LogActualSellAmount(_executionClaimId,
-                                            orderStateId,
-                                            amount,
-                                            sellOrder.amount,
-                                            dutchXFee
-                );
-
-                // Mark sellOrder as posted
-                sellOrder.posted = true;
-                // ### EFFECTS END ###
-
-                // INTERACTION: sell on dutchExchange
-                _depositAndSell(sellToken, buyToken, amount);
-            }
-            /* Case3c: We posted during auction1, our funds went into auction2, then auction1 cleared
-            and the auction index was incremented, now we are NOT selling during the ensuing
-            waiting period because our funds would also go into auction2 */
-            else if (!lastAuctionWasWaiting && newAuctionIsWaiting) {
-                revert("Case3c: Failed: Selling twice during auction and ensuing waiting period disallowed");
-            }
-            /* Case3d: We posted during auction1, our funds went into auction2, then auction1
-            cleared and the auctionIndex got incremented, then a waiting period passed, now
-            we DO NOT sell during the running auction2, even though our funds will go to
-            auction3 because we only sell after the last auction that we contributed to
-            , in this case auction2, has been cleared and its index incremented */
-            else if (!lastAuctionWasWaiting && !newAuctionIsWaiting) {
-                // Given new assumption of not wanting to sell in newAuction before lastAuction posted-into has finished, revert. Otherwise, holds true for not investing in same auction assupmtion
-                revert("Case 3d: Don't sell before last auction seller participated in has cleared");
-            }
-        }
-        // CASE 4:
-        // If we skipped at least one auction before trying to sell again: ALWAYS SELL
-        else if (newAuctionIndex >= lastAuctionIndex.add(2)) {
-            // ### EFFECTS ###
-            // Update Order State
-            orderState.lastAuctionWasWaiting = newAuctionIsWaiting;
-            orderState.lastAuctionIndex = newAuctionIndex;
-            uint256 dutchXFee;
-            // Update sellOrder.amount so when an executor calls execWithdraw, the seller receives withdraws the correct amount given sellAmountMinusFee
-            (sellOrder.amount, dutchXFee) = _calcActualSellAmount(amount);
-
-            emit LogActualSellAmount(_executionClaimId,
-                                        orderStateId,
-                                        amount,
-                                        sellOrder.amount,
-                                        dutchXFee
-            );
-
-            // Mark sellOrder as posted
-            sellOrder.posted = true;
-            // ### EFFECTS END ###
-
-
-            // INTERACTION: sell on dutchExchange
-            _depositAndSell(sellToken, buyToken, amount);
-        }
-        // Case 5: Unforeseen stuff
-        else {
-            revert("Case5: Fatal Error: Case5 unforeseen");
-        }
         // ********************** Step7: Execution Logic END **********************
 
-        // Step8:  Check if interface still has sufficient balance on core. If not, add balance. If yes, skipp.
+        // Step8:  Check if interface still has sufficient balance on core. If not, add balance. If yes, skip.
         automaticTopUp();
 
         return true;
@@ -631,17 +490,10 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         uint256 orderStateId = sellOrder.orderStateId;
         OrderState memory orderState = orderStates[orderStateId];
 
-        // CHECKS
-        // Require that we actually posted the sellOrder prior to calling withdraw
-        require(sellOrder.posted, "Sell Order must have been posted in order to withdraw");
-
         // DEV use memory value lastAuctionIndex & sellAmountAfterFee as we already updated storage values
         uint256 amount = sellOrder.amount;
 
-        // delete sellOrders[sellOrderExecutionClaimId];
-        // // delete slink
-        // delete sellOrderLink[_executionClaimId];
-        // delete sellOrder
+        // Delete sellOrder
         delete sellOrders[_executionClaimId][_executionClaimId - 1];
 
         // Calculate withdraw amount
@@ -659,12 +511,6 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
                                  orderState.buyToken,
                                  withdrawAmount
         );
-
-        // Delete OrderState struct when last withdrawal completed
-        // if (orderState.remainingWithdrawals == 0) {
-        //     delete orderStates[orderId];
-        //     emit LogOrderCompletedAndDeleted(orderId);
-        // }
     }
 
     // **************************** Helper functions *********************************

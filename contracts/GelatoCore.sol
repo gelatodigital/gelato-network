@@ -135,7 +135,7 @@ contract GelatoCore is Ownable, Claim {
         returns (bool)
     {
         // CHECKS
-        // All checks are done interface side. If interface sets wrong _payload, its not the coress fault. We could check that the bytes param is not == 0x, but this would require 2 costly keccak calls
+        // All checks are done interface side. If interface sets wrong _payload, its not the core's fault. We could check that the bytes param is not == 0x, but this would require 2 costly keccak calls
 
         // Step1: Instantiate executionClaim (in memory)
         ExecutionClaim memory executionClaim = ExecutionClaim(
@@ -256,6 +256,7 @@ contract GelatoCore is Ownable, Claim {
 
         // Payload
         bytes memory payload = executionClaim.payload;
+
         // Interface Address
         address dappInterface = executionClaim.dappInterface;
 
@@ -264,6 +265,7 @@ contract GelatoCore is Ownable, Claim {
         // @DEV, Lets change to maxPossibleCharge calcs like in GSN
         if (interfaceBalances[dappInterface] < minEthBalance)
         {
+            // If insufficient balance, return 3
             return (uint256(PreExecutionCheck.InsufficientBalance), dappInterface, payload);
         }
         // **** CHECKS END ****;
@@ -322,6 +324,7 @@ contract GelatoCore is Ownable, Claim {
             // if canExecuteResult is not equal 0, we return 1 or 2, based on the received preExecutionCheck value;
             if (canExecuteResult != 0) {
                 emit CanExecuteFailed(msg.sender, _executionClaimId);
+                // Change to returning error message instead of reverting
                 revert("canExec func did not return 0");
                 // return canExecuteResult;
             }
@@ -340,7 +343,6 @@ contract GelatoCore is Ownable, Claim {
 
 
         // **** EFFECTS ****
-        // Step6: Delete
         // Delete the ExecutionClaim struct
         delete executionClaims[_executionClaimId];
         // ******** EFFECTS END ****
@@ -352,7 +354,6 @@ contract GelatoCore is Ownable, Claim {
         (bool success,) = address(this).call(payloadWithSelector);
 
         // **** EFFECTS 2 ****
-        // Step6: Delete
         // Burn Claim. Should be done here to we done have to store the claim Owner on the interface. Deleting the struct on the core should suffice, as an exeuctionClaim Token without the associated struct is worthless. => Discuss
         _burn(_executionClaimId);
 
