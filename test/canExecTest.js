@@ -57,7 +57,6 @@ let {
   let sellOrder;
   let totalPrepayment;
   let decodedPayload;
-  let mintedClaims = [];
   let decodedPayloads = {}
   let definedExecutionTimeBN;
 
