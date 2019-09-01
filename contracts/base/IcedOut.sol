@@ -43,6 +43,28 @@ contract IcedOut is Ownable {
           interfaceGasPrice = _interfaceGasPrice;
      }
 
+     // Fallback function: reverts incoming ether payments not addressed to a payable function
+     function() external payable {
+          require(isOwner() || msg.sender == address(gelatoCore),
+               "IcedOut.fallback: Should not send ether to IcedOut without specifying a payable function selector, except when coming from owner or gelatoCore"
+          );
+    }
+
+     // Add ETH to the IcedOut gelatoInterface smart contract balance
+     function addBalance() external payable {}
+     // Withdraw ETH from IcedOut gelatoInterface smart contract balance to owner
+     function withdrawBalanceToOwner(uint256 _withdrawAmount)
+          public
+          onlyOwner
+     {
+          msg.sender.transfer(_withdrawAmount);
+          emit LogBalanceWithdrawnToOwner(_withdrawAmount,
+                                          address(this).balance,
+                                          msg.sender.balance  // owner balance post
+          );
+     }
+
+
      // Function to calculate the prepayment an interface needs to transfer to Gelato Core
      // for minting a new execution executionClaim
      function calcGelatoPrepayment()
@@ -80,18 +102,6 @@ contract IcedOut is Ownable {
           emit LogGelatoBalanceWithdrawn(_withdrawAmount,
                                          gelatoCore.interfaceBalances(address(this)),
                                          address(this).balance
-          );
-     }
-
-     // Withdraw funds from interface to owner
-     function withdrawBalanceToOwner(uint256 _withdrawAmount)
-          public
-          onlyOwner
-     {
-          msg.sender.transfer(_withdrawAmount);
-          emit LogBalanceWithdrawnToOwner(_withdrawAmount,
-                                          address(this).balance,
-                                          msg.sender.balance  // owner balance post
           );
      }
 
@@ -164,11 +174,4 @@ contract IcedOut is Ownable {
      {
           interfaceGasPrice = 0;
      }
-
-     // Fallback function: reverts incoming ether payments not addressed to a payable function
-     function() external payable {
-          require(isOwner() || msg.sender == address(gelatoCore),
-               "IcedOut.fallback: Should not send ether to IcedOut without specifying a payable function selector, except when coming from owner or gelatoCore"
-          );
-    }
 }

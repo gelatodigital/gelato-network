@@ -12,7 +12,6 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
     event LogNewOrderCreated(uint256 indexed orderStateId, address indexed seller);
     event LogFeeNumDen(uint256 num, uint256 den);
     event LogActualSellAmount(uint256 indexed executionClaimId,
-                              uint256 indexed orderId,
                               uint256 subOrderAmount,
                               uint256 actualSellAmount,
                               uint256 dutchXFee
@@ -246,7 +245,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
 
         // Step5: Fetch auction specific data from Dutch Exchange
         // ********************** Fetch data from dutchExchange **********************
-        uint256 newAuctionIndex = dutchExchange.getAuctionIndex(sellToken, buyToken);
+        uint256 currentAuctionIndex = dutchExchange.getAuctionIndex(sellToken, buyToken);
         uint256 auctionStartTime = dutchExchange.getAuctionStart(sellToken, buyToken);
         // ********************** Fetch data from dutchExchange END **********************
 
@@ -260,11 +259,17 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         // Waiting Period variables needed to prevent double participation in DutchX auctions
         bool lastAuctionWasWaiting = orderState.lastAuctionWasWaiting;  // default: false
         bool newAuctionIsWaiting;
+        // The index of the auction that the sellAmount will actually flow to
+        uint256 participationAuctionIndex;
         // Check if we are in a Waiting period or auction running period
         if (auctionStartTime > now || auctionStartTime == auctionStartWaitingForFunding) {
             newAuctionIsWaiting = true;
+            // We are in waiting period and the sellAmount will go into sellVolumesCurrent
+            participationAuctionIndex = currentAuctionIndex;
         } else if (auctionStartTime < now) {
             newAuctionIsWaiting = false;
+            // Auction is currently ongoing and sellAmount will go into sellVolumesNext
+            participationAuctionIndex = currentAuctionIndex.add(1);
         }
 
         // Step7: Check auciton Index and call depositAndSell
@@ -272,14 +277,14 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
             * 1: Don't sell in the same auction twice
         */
         // CASE 1:
-        // Check case where lastAuctionIndex is greater than newAuctionIndex
-        require(newAuctionIndex >= lastAuctionIndex,
+        // Check case where lastAuctionIndex is greater than currentAuctionIndex
+        require(currentAuctionIndex >= lastAuctionIndex,
             "GelatoDutchX.execDepositAndSell Case 1: Fatal error, Gelato auction index ahead of dutchExchange auction index"
         );
 
         // CASE 2:
         // Either we already posted during waitingPeriod OR during the auction that followed
-        if (newAuctionIndex == lastAuctionIndex) {
+        if (currentAuctionIndex == lastAuctionIndex) {
             // Case2a: Last posted during waitingPeriod1, new CANNOT sell during waitingPeriod1.
             if (lastAuctionWasWaiting && newAuctionIsWaiting) {
                 revert("GelatoDutchX.execDepositAndSellCase2a: Last posted during waitingPeriod1, new CANNOT sell during waitingPeriod1");
@@ -290,13 +295,12 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
                 // ### EFFECTS ###
                 // Update Order State
                 orderState.lastAuctionWasWaiting = newAuctionIsWaiting;
-                orderState.lastAuctionIndex = newAuctionIndex;
+                orderState.lastAuctionIndex = participationAuctionIndex;
                 uint256 dutchXFee;
                 // Update sellOrder.sellAmount so when an executor calls execWithdraw, the seller receives withdraws the correct sellAmount given sellAmountMinusFee
                 (sellOrder.sellAmount, dutchXFee) = _calcActualSellAmount(sellAmount);
 
                 emit LogActualSellAmount(_executionClaimId,
-                                         orderStateId,
                                          sellAmount,
                                          sellOrder.sellAmount,
                                          dutchXFee
@@ -311,7 +315,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
             /* Case2c Last posted during running auction1, new tries to sell during waiting period
             that preceded auction1 (impossible time-travel) or new tries to sell during waiting
             period succeeding auction1 (impossible due to auction index incrementation ->
-            newAuctionIndex == lastAuctionIndex cannot be true - Gelato-dutchExchange indexing
+            currentAuctionIndex == lastAuctionIndex cannot be true - Gelato-dutchExchange indexing
             must be out of sync) */
             else if (!lastAuctionWasWaiting && newAuctionIsWaiting) {
                 revert("GelatoDutchX.execDepositAndSellCase2b: Fatal error: auction index incrementation out of sync");
@@ -324,7 +328,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         // CASE 3:
         // We participated at previous auction index
         // Either we posted during previous waiting period, or during previous auction.
-        else if (newAuctionIndex == lastAuctionIndex.add(1)) {
+        else if (currentAuctionIndex == lastAuctionIndex.add(1)) {
             /* Case3a: We posted during previous waiting period, our funds went into auction1,
             then auction1 ran, then auction1 cleared and the auctionIndex got incremented,
             we now sell during the next waiting period, our funds will go to auction2 */
@@ -332,13 +336,12 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
                 // ### EFFECTS ###
                 // Update Order State
                 orderState.lastAuctionWasWaiting = newAuctionIsWaiting;
-                orderState.lastAuctionIndex = newAuctionIndex;
+                orderState.lastAuctionIndex = participationAuctionIndex;
                 uint256 dutchXFee;
                 // Update sellOrder.sellAmount so when an executor calls execWithdraw, the seller receives withdraws the correct sellAmount given sellAmountMinusFee
                 (sellOrder.sellAmount, dutchXFee) = _calcActualSellAmount(sellAmount);
 
                 emit LogActualSellAmount(_executionClaimId,
-                                         orderStateId,
                                          sellAmount,
                                          sellOrder.sellAmount,
                                          dutchXFee
@@ -358,13 +361,12 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
                 // ### EFFECTS ###
                 // Update Order State
                 orderState.lastAuctionWasWaiting = newAuctionIsWaiting;
-                orderState.lastAuctionIndex = newAuctionIndex;
+                orderState.lastAuctionIndex = participationAuctionIndex;
                 uint256 dutchXFee;
                 // Update sellOrder.sellAmount so when an executor calls execWithdraw, the seller receives withdraws the correct sellAmount given sellAmountMinusFee
                 (sellOrder.sellAmount, dutchXFee) = _calcActualSellAmount(sellAmount);
 
                 emit LogActualSellAmount(_executionClaimId,
-                                         orderStateId,
                                          sellAmount,
                                          sellOrder.sellAmount,
                                          dutchXFee
@@ -395,17 +397,16 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         }
         // CASE 4:
         // If we skipped at least one auction before trying to sell again: ALWAYS SELL
-        else if (newAuctionIndex >= lastAuctionIndex.add(2)) {
+        else if (currentAuctionIndex >= lastAuctionIndex.add(2)) {
             // ### EFFECTS ###
             // Update Order State
             orderState.lastAuctionWasWaiting = newAuctionIsWaiting;
-            orderState.lastAuctionIndex = newAuctionIndex;
+            orderState.lastAuctionIndex = participationAuctionIndex;
             uint256 dutchXFee;
             // Update sellOrder.sellAmount so when an executor calls execWithdraw, the seller receives withdraws the correct sellAmount given sellAmountMinusFee
             (sellOrder.sellAmount, dutchXFee) = _calcActualSellAmount(sellAmount);
 
             emit LogActualSellAmount(_executionClaimId,
-                                     orderStateId,
                                      sellAmount,
                                      sellOrder.sellAmount,
                                      dutchXFee

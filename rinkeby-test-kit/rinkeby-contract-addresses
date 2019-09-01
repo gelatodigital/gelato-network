@@ -4,7 +4,7 @@ LUIS RINKEBY
 
 GELATO CORE
 ===========
-AuctionIndex & cancelOrder bugs:
+AuctionIndex withdrawal bug:
 --------------------------------
 0xe4C021A60d34C6122872EB90D72f161c47E48282
 Owner: 0xb9ed66dc0BdD361c94ed83fBD0fBC761d260c1A4
@@ -17,7 +17,7 @@ Owner: 0xb9ed66dc0BdD361c94ed83fBD0fBC761d260c1A4
 
 GELATO DUTCHX
 =============
-AuctionIndex & cancelOrder bugs:
+AuctionIndex withdrawal bug:
 --------------------------------
 0x47076e3511E3d97FdBAF105F85a8eb314Ad79A66
 Owner: 0xb9ed66dc0BdD361c94ed83fBD0fBC761d260c1A4
