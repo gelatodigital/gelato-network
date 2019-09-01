@@ -101,20 +101,20 @@ let {
 
     it("Set correct depositAndSell claim & withdraw claim", async() => {
       // Get the current execution claim on the core
-      // Assuming we get an depositAndSell claim
-      let sellOrderTest = await gelatoDutchExchange.contract.methods.sellOrders(nextExecutionClaim + 1, nextExecutionClaim).call()
-      // It's a withdraw claim
-      if (sellOrderTest.amount === '0')
-      {
-        depositAndSellClaim = nextExecutionClaim - 1;
-        withdrawClaim  = nextExecutionClaim;
-      }
-      else
-      {
-        depositAndSellClaim = nextExecutionClaim;
-        withdrawClaim  = nextExecutionClaim + 1;
-      }
-      assert.isTrue(true);
+      // // Assuming we get an depositAndSell claim
+      // let sellOrderTest = await gelatoDutchExchange.contract.methods.sellOrders(nextExecutionClaim + 1, nextExecutionClaim).call()
+      // // It's a withdraw claim
+      // if (sellOrderTest.amount === '0')
+      // {
+      //   depositAndSellClaim = nextExecutionClaim - 1;
+      //   withdrawClaim  = nextExecutionClaim;
+      // }
+      // else
+      // {
+      //   depositAndSellClaim = nextExecutionClaim;
+      //   withdrawClaim  = nextExecutionClaim + 1;
+      // }
+      // assert.isTrue(true);
     })
 
     it("Check if execution claim is executable based on its execution Time, if not, test that execution reverts and fast forward", async () => {

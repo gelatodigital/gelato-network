@@ -21,17 +21,17 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
 
     // One OrderState has many SellOrder
     struct OrderState {
-        address sellToken; // token to sell
-        address buyToken; // token to buy
+        // address sellToken; // token to sell
+        // address buyToken; // token to buy
         bool lastAuctionWasWaiting;  // default: false
         uint256 lastAuctionIndex;  // default: 0
-        uint256 prepaymentPerSellOrder; // maxGas * gelatoGasPrice
+        // uint256 prepaymentPerSellOrder; // maxGas * gelatoGasPrice
     }
 
     // One SellOrder has one parent OrderState
     struct SellOrder {
-        uint256 orderStateId; // Link to parent OrderState
-        uint256 executionTime; // Condition for execution
+        // uint256 orderStateId; // Link to parent OrderState
+        // uint256 executionTime; // Condition for execution
         uint256 amount; // amount to be posted
         bool posted; // default: false => After execDepositAndSell => true
     }
@@ -83,7 +83,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
     // One orderState struct can have many sellOrder structs as children
 
     // OrderId => parent orderState struct
-    mapping(uint256 => OrderState) public orderStates;
+    // mapping(uint256 => OrderState) public orderStates;
 
     // gelatoCore executionId => individual sellOrder struct
     // Note 2 executionIds will map to the same sellOrder struct (execDepositAndSell and withdraw)
@@ -93,12 +93,13 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
     // mapping(uint256 => uint256) public sellOrderLink;
 
     // withdraw execution claim => depositAndSell exeuctionClaim => sellOrder
-    mapping(uint256 => mapping(uint256 => SellOrder)) public sellOrders;
+    // mapping(uint256 => mapping(uint256 => SellOrder)) public sellOrders;
+    mapping(uint256 => OrderState) public orderStates;
 
     // Constants that are set during contract construction and updateable via setters
     uint256 public auctionStartWaitingForFunding;
 
-    string constant execDepositAndSellString = "execDepositAndSell(uint256)";
+    string constant execDepositAndSellString = "execDepositAndSell(uint256,address,address,uint256,uint256,uint256)";
     string constant execWithdrawString = "execWithdraw(uint256)";
 
     // **************************** State Variables END ******************************
@@ -178,39 +179,46 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
 
         // Step5: Instantiate new dutchExchange-specific sell order state
         OrderState memory orderState = OrderState(
-            _sellToken,
-            _buyToken,
+            // _sellToken,
+            // _buyToken,
             false,  // default: lastAuctionWasWaiting
-            0,  // default: lastAuctionIndex
-            prepaymentPerSellOrder
+            0  // default: lastAuctionIndex
+            // prepaymentPerSellOrder
         );
 
-        // Step6: fetch new OrderStateId and store orderState in orderState mapping
-        // Increment the current OrderId
-        Counters.increment(orderIds);
-        // Get a new, unique OrderId for the newly created Sell Order
-        uint256 orderStateId = orderIds.current();
-        // Update GelatoDutchX state variables
-        orderStates[orderStateId] = orderState;
+        // // Step6: fetch new OrderStateId and store orderState in orderState mapping
+        // // Increment the current OrderId
+        // Counters.increment(orderIds);
+        // // Get a new, unique OrderId for the newly created Sell Order
+        // uint256 orderStateId = orderIds.current();
+        // // Update GelatoDutchX state variables
+        // orderStates[orderStateId] = orderState;
 
         // Step7: Create all sellOrders
         for (uint256 i = 0; i < _numSellOrders; i++) {
-            SellOrder memory sellOrder = SellOrder(
-                orderStateId,
-                _executionTime.add(_intervalSpan.mul(i)),
-                _sellOrderAmount,
-                false // not withdrawn yet
-            );
+            // SellOrder memory sellOrder = SellOrder(
+            //     orderStateId,
+            //     _executionTime.add(_intervalSpan.mul(i)),
+            //     _sellOrderAmount,
+            //     false // not withdrawn yet
+            // );
+
+            uint256 executionTime = _executionTime.add(_intervalSpan.mul(i));
+
+            uint256 nextExecutionClaimId = getNextExecutionClaimId();
+
+            // Payload: (funcSelector, uint256 executionClaimId, address sellToken, address buyToken, uint256 amount, uint256 executionTime, uint256 prepaymentPerSellOrder)
+            bytes memory payload = abi.encodeWithSignature(execDepositAndSellString, nextExecutionClaimId, _sellToken, _buyToken, _sellOrderAmount, executionTime, prepaymentPerSellOrder);
 
             // For each sellOrder, mint one claim that call the execDepositAndSell function
-            (uint256 executionClaimId, ) = mintClaim("execDepositAndSell(uint256)", msg.sender);
+            mintClaim(msg.sender, payload);
 
             // For each sellOrder, mint one claim that call the execWithdraw function
-            (uint256 executionClaimIdPlusOne, ) = mintClaim("execWithdraw(uint256)", msg.sender);
+            // (uint256 nextExecutionClaimIdPlusOne, ) = mintClaim("execWithdraw(uint256)", msg.sender);
 
             // Map first claims to the Sell Order and second claims to the first claim => BONDED Claims
             // withdraw execution claim => depositAndSell exeuctionClaim => sellOrder
-            sellOrders[executionClaimIdPlusOne][executionClaimId] = sellOrder;
+            orderStates[nextExecutionClaimId] = orderState;
 
             // withdraw execution claim => depositAndSell exeuctionClaim => sellOrder
             //  *** GELATO CORE PROTOCOL INTERACTION END ***
@@ -218,7 +226,6 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
 
 
         // Step8: Emit New Sell Order to find its suborder constituent claims on the Core
-        emit LogNewOrderCreated(orderStateId, msg.sender);
         return true;
     }
     // **************************** timeSellOrders() END ******************************
@@ -229,50 +236,50 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         view
         returns (uint256)
     {
-        // Make a memory copy of the payload (calldata)
-        bytes memory testBytes = _payload;
         // Check that payload length is greater 4
         require(_payload.length > 4, "Payload must be larger than 4 bytes");
+
+        // Make a memory copy of the payload (calldata)
+        bytes memory memPayload = _payload;
+
         // Create bytes4 array to store the keccakHash of the funcSelector in
         bytes4 funcSelector;
         assembly {
             // Aim: We put the funcSelector on the stack to access it outside of assembly
-            // How: Get the pointer of the payload in memory (== testBytes) and add 32 bytes (==0x20 hex) to point to where the actual data of the function selector lies, skipping the length bit (always first 32 bytes).
+            // How: Get the pointer of the payload in memory (== memPayload) and add 32 bytes (==0x20 hex) to point to where the actual data of the function selector lies, skipping the length bit (always first 32 bytes).
             // Bind this pointer to funcSelector, which when using it in solidity ignores the encoded data which comes directly after the first word (functionSelector == bytes4)
-            // In short: Read the first 32 bytes by loading the word that starts at memory location testBytes + 32 bytes (==0x20 hex) and bind to funcSelector
-            funcSelector := mload(add(0x20, testBytes))
+            // In short: Read the first 32 bytes by loading the word that starts at memory location memPayload + 32 bytes (==0x20 hex) and bind to funcSelector
+            funcSelector := mload(add(0x20, memPayload))
 
             // Aim: Get rid of the funcSelector Data
-            // How: Load the first word of the testBytes array (== length of the data) and subtract it by 4
-            // Then store this updated length which got rid of the first 4 bytes (== funcSelector) at memory location testBytes + 4
+            // How: Load the first word of the memPayload array (== length of the data) and subtract it by 4
+            // Then store this updated length which got rid of the first 4 bytes (== funcSelector) at memory location memPayload + 4
             // Mstore: Store the word derived in the second parameter at the location specified by the first parameter
-            // Q: Does sub(mload(testBytes), 4) update the word that stores the length of the data, which automatically prunes the first 4 bytes of the part that stores the data?
+            // Q: Does sub(mload(memPayload), 4) update the word that stores the length of the data, which automatically prunes the first 4 bytes of the part that stores the data?
             mstore(
-                // At position testBytes + 4
-                add(testBytes, 4),
-                // Load the first word of the testBytes bytes array == length of the bytes and deduct it by 4
-                sub(mload(testBytes), 4)
+                // At position memPayload + 4
+                add(memPayload, 4),
+                // Load the first word of the memPayload bytes array == length of the bytes and deduct it by 4
+                sub(mload(memPayload), 4)
             )
             // Skip the first 4 bytes (function signature)
-            // Overwrite testBytes by binding the memory pointer of testBytes + 4 to key testBytes
-            testBytes := add(testBytes, 4)
+            // Overwrite memPayload by binding the memory pointer of memPayload + 4 to key memPayload
+            memPayload := add(memPayload, 4)
 
         }
-
-        // Decode Execution Claim Id
-        uint256 executionClaimId = abi.decode(testBytes, (uint256));
 
         // Check which function selector was passed
         if (funcSelector == bytes4(keccak256(bytes(execDepositAndSellString))))
         {
             // If executable, should return 0
-            return execDepositAndSellCheck(executionClaimId);
+            return execDepositAndSellCheck(memPayload);
 
         }
         else if (funcSelector == bytes4(keccak256(bytes(execWithdrawString))))
         {
             // If executable, should return 0
-            return execWithdrawCheck(executionClaimId);
+            // return execWithdrawCheck(executionClaimId);
+            return 1;
         }
         else {
             // Error in funcSelector
@@ -282,33 +289,38 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
     }
 
     // Check if execDepositAndSell is executable
-    function execDepositAndSellCheck(uint256 _executionClaimId)
+    function execDepositAndSellCheck(bytes memory _memPayload)
         internal
         view
         returns (uint256)
     {
-        // Test if execDepositAndSell is executable
+        // Decode payload
+        (uint256 executionClaimId, address sellToken, address buyToken, uint256 amount, uint256 executionTime, uint256 prepaymentPerSellOrder) = abi.decode(_memPayload, (uint256, address, address, uint256, uint256, uint256));
 
         // Init state variables
-        SellOrder memory sellOrder = sellOrders[_executionClaimId + 1][_executionClaimId];
-        uint256 amount = sellOrder.amount;
+        // SellOrder memory sellOrder = sellOrders[_executionClaimId + 1][_executionClaimId];
+        // uint256 amount = sellOrder.amount;
 
         // Check the condition: Execution Time
-        checkTimeCondition(sellOrder.executionTime);
+        // checkTimeCondition(sellOrder.executionTime);
+        checkTimeCondition(executionTime);
 
         // Fetch OrderState
-        uint256 orderStateId = sellOrder.orderStateId;
-        OrderState memory orderState = orderStates[orderStateId];
+        OrderState memory orderState = orderStates[executionClaimId];
+        // uint256 orderStateId = sellOrder.orderStateId;
+        // OrderState memory orderState = orderStates[orderStateId];
 
-        address sellToken = orderState.sellToken;
-        address buyToken = orderState.buyToken;
+        // address sellToken = orderState.sellToken;
+        // address buyToken = orderState.buyToken;
+        // uint256 lastAuctionIndex = orderState.lastAuctionIndex;
+
         uint256 lastAuctionIndex = orderState.lastAuctionIndex;
+        bool lastAuctionWasWaiting = orderState.lastAuctionWasWaiting;  // default: false
 
         uint256 newAuctionIndex = dutchExchange.getAuctionIndex(sellToken, buyToken);
         uint256 auctionStartTime = dutchExchange.getAuctionStart(sellToken, buyToken);
 
         // Waiting Period variables needed to prevent double participation in DutchX auctions
-        bool lastAuctionWasWaiting = orderState.lastAuctionWasWaiting;  // default: false
         bool newAuctionIsWaiting;
         // Check if we are in a Waiting period or auction running period
         if (auctionStartTime > now || auctionStartTime == auctionStartWaitingForFunding)
@@ -350,38 +362,38 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
     }
 
     // Test if execWithdraw is executable
-    function execWithdrawCheck(uint256 _executionClaimId)
+    function execWithdrawCheck(bytes memory _memPayload)
         internal
         view
         returns (uint256)
     {
-        // Fetch sellOrder
-        SellOrder memory sellOrder = sellOrders[_executionClaimId][_executionClaimId - 1];
-        // Require that we actually posted the sellOrder prior to calling withdraw
-        require(sellOrder.posted, "Sell Order must have been posted in order to withdraw");
+        // // Fetch sellOrder
+        // SellOrder memory sellOrder = sellOrders[_executionClaimId][_executionClaimId - 1];
+        // // Require that we actually posted the sellOrder prior to calling withdraw
+        // require(sellOrder.posted, "Sell Order must have been posted in order to withdraw");
 
-        // Fetch OrderState
-        uint256 orderStateId = sellOrder.orderStateId;
-        OrderState memory orderState = orderStates[orderStateId];
-        address sellToken = orderState.sellToken;
-        address buyToken = orderState.buyToken;
-        uint256 lastAuctionIndex = orderState.lastAuctionIndex;
+        // // Fetch OrderState
+        // uint256 orderStateId = sellOrder.orderStateId;
+        // OrderState memory orderState = orderStates[orderStateId];
+        // address sellToken = orderState.sellToken;
+        // address buyToken = orderState.buyToken;
+        // uint256 lastAuctionIndex = orderState.lastAuctionIndex;
 
-        // Check if auction in DutchX closed
-        uint256 num;
-        uint256 den;
-        (num, den) = dutchExchange.closingPrices(sellToken,
-                                                buyToken,
-                                                lastAuctionIndex
-        );
+        // // Check if auction in DutchX closed
+        // uint256 num;
+        // uint256 den;
+        // (num, den) = dutchExchange.closingPrices(sellToken,
+        //                                         buyToken,
+        //                                         lastAuctionIndex
+        // );
 
-        // Check if the last auction the seller participated in has cleared
-        // DEV Test: Are there any other possibilities for den being 0 other than when the auction has not yet cleared?
-        require(den != 0,
-            "den != 0, Last auction did not clear thus far, you have to wait"
-        );
+        // // Check if the last auction the seller participated in has cleared
+        // // DEV Test: Are there any other possibilities for den being 0 other than when the auction has not yet cleared?
+        // require(den != 0,
+        //     "den != 0, Last auction did not clear thus far, you have to wait"
+        // );
 
-        // All checks passed
+        // // All checks passed
         return 0;
     }
 
@@ -391,7 +403,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
      * DEV: Called by the execute func in GelatoCore.sol
      * Aim: Post sellOrder on the DutchExchange via depositAndSell()
      */
-    function execDepositAndSell(uint256 _executionClaimId)
+    function execDepositAndSell(uint256 _executionClaimId, address _sellToken, address _buyToken, uint256 _amount, uint256 _executionTime, uint256 _prepaymentPerSellOrder)
         external
         returns (bool)
     {
@@ -404,23 +416,27 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
 
         // Step2: Create storage pointer for the individual sellOrder and the parent orderState
         // Fetch SellOrder
-        SellOrder storage sellOrder = sellOrders[_executionClaimId + 1][_executionClaimId];
+        // SellOrder storage sellOrder = sellOrders[_executionClaimId + 1][_executionClaimId];
 
         // Fetch OrderState
-        uint256 orderStateId = sellOrder.orderStateId;
-        OrderState storage orderState = orderStates[orderStateId];
+        // uint256 orderStateId = sellOrder.orderStateId;
+        // OrderState storage orderState = orderStates[orderStateId];
+
+        // Fetch owner of execution claim
+        address tokenOwner = gelatoCore.ownerOf(_executionClaimId);
+        OrderState storage orderState = orderStates[_executionClaimId];
 
         // Step4: initialise multi-use variables
         // ********************** Load variables from storage and initialise them **********************
-        address sellToken = orderState.sellToken;
-        address buyToken = orderState.buyToken;
-        uint256 amount = sellOrder.amount;
+        // address sellToken = orderState.sellToken;
+        // address buyToken = orderState.buyToken;
+        // uint256 amount = sellOrder.amount;
         // ********************** Load variables from storage and initialise them END **********************
 
         // Step5: Fetch auction specific data from Dutch Exchange
         // ********************** Fetch data from dutchExchange **********************
-        uint256 newAuctionIndex = dutchExchange.getAuctionIndex(sellToken, buyToken);
-        uint256 auctionStartTime = dutchExchange.getAuctionStart(sellToken, buyToken);
+        uint256 newAuctionIndex = dutchExchange.getAuctionIndex(_sellToken, _buyToken);
+        uint256 auctionStartTime = dutchExchange.getAuctionStart(_sellToken, _buyToken);
         // ********************** Fetch data from dutchExchange END **********************
 
         // Step7: Set the auction specific orderState variables
@@ -440,25 +456,39 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         // Update Order State
         orderState.lastAuctionWasWaiting = newAuctionIsWaiting;
         orderState.lastAuctionIndex = newAuctionIndex;
-        uint256 dutchXFee;
 
-        // Update sellOrder.amount so when an executor calls execWithdraw, the seller receives withdraws the correct amount given sellAmountMinusFee
-        (sellOrder.amount, dutchXFee) = _calcActualSellAmount(amount);
+        uint256 actualSellAmount;
+        {
+            uint256 dutchXFee;
+            // Update sellOrder.amount so when an executor calls execWithdraw, the seller receives withdraws the correct amount given sellAmountMinusFee
+            (actualSellAmount, dutchXFee) = _calcActualSellAmount(_amount);
 
-        emit LogActualSellAmount(
-                                _executionClaimId,
-                                orderStateId,
-                                amount,
-                                sellOrder.amount,
-                                dutchXFee
-        );
-        // Mark sellOrder as posted
-        sellOrder.posted = true;
-        // ### EFFECTS END ###
+            emit LogActualSellAmount(
+                                    _executionClaimId,
+                                    _executionClaimId,
+                                    _amount,
+                                    actualSellAmount,
+                                    dutchXFee
+            );
+            // ### EFFECTS END ###
 
-        // INTERACTION: sell on dutchExchange
-        _depositAndSell(sellToken, buyToken, amount);
-        // INTERACTION: END
+            // INTERACTION: sell on dutchExchange
+            _depositAndSell(_sellToken, _buyToken, _amount);
+            // INTERACTION: END
+        }
+
+        // Mint new token
+        {
+            // Fetch next executionClaimId
+            uint256 nextExecutionClaimId = getNextExecutionClaimId();
+
+            // Payload: (funcSelector, uint256 executionClaimId, address sellToken, address buyToken, uint256 amount, uint256 prepaymentPerSellOrder)
+            bytes memory payload = abi.encodeWithSignature(execWithdrawString, nextExecutionClaimId, _sellToken, _buyToken, actualSellAmount, _prepaymentPerSellOrder);
+
+            // Mint new withdraw token
+            mintClaim(tokenOwner, payload);
+
+        }
 
         // ********************** Step7: Execution Logic END **********************
 
@@ -473,44 +503,44 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
     function execWithdraw(uint256 _executionClaimId)
         public
     {
-        // Step1: Checks for execution safety
-        // Make sure that gelatoCore is the only allowed caller to this function.
-        // Executors will call this execute function via the Core's execute function.
-        require(msg.sender == address(gelatoCore),
-            "GelatoInterface.execute: msg.sender != gelatoCore instance address"
-        );
+        // // Step1: Checks for execution safety
+        // // Make sure that gelatoCore is the only allowed caller to this function.
+        // // Executors will call this execute function via the Core's execute function.
+        // require(msg.sender == address(gelatoCore),
+        //     "GelatoInterface.execute: msg.sender != gelatoCore instance address"
+        // );
 
-        // Fetch owner of execution claim
-        address seller = gelatoCore.ownerOf(_executionClaimId);
+        // // Fetch owner of execution claim
+        // address seller = gelatoCore.ownerOf(_executionClaimId);
 
-        // Step2: Create memory pointer for the individual sellOrder and the parent orderState
-        // Fetch SellOrder
-        SellOrder memory sellOrder = sellOrders[_executionClaimId][_executionClaimId - 1];
-        // Fetch OrderState
-        uint256 orderStateId = sellOrder.orderStateId;
-        OrderState memory orderState = orderStates[orderStateId];
+        // // Step2: Create memory pointer for the individual sellOrder and the parent orderState
+        // // Fetch SellOrder
+        // SellOrder memory sellOrder = sellOrders[_executionClaimId][_executionClaimId - 1];
+        // // Fetch OrderState
+        // uint256 orderStateId = sellOrder.orderStateId;
+        // OrderState memory orderState = orderStates[orderStateId];
 
-        // DEV use memory value lastAuctionIndex & sellAmountAfterFee as we already updated storage values
-        uint256 amount = sellOrder.amount;
+        // // DEV use memory value lastAuctionIndex & sellAmountAfterFee as we already updated storage values
+        // uint256 amount = sellOrder.amount;
 
-        // Delete sellOrder
-        delete sellOrders[_executionClaimId][_executionClaimId - 1];
+        // // Delete sellOrder
+        // delete sellOrders[_executionClaimId][_executionClaimId - 1];
 
-        // Calculate withdraw amount
-        uint256 withdrawAmount = _withdraw(seller,
-                                           orderState.sellToken,
-                                           orderState.buyToken,
-                                           orderState.lastAuctionIndex,
-                                           amount //Actual amount posted
-        );
+        // // Calculate withdraw amount
+        // uint256 withdrawAmount = _withdraw(seller,
+        //                                    orderState.sellToken,
+        //                                    orderState.buyToken,
+        //                                    orderState.lastAuctionIndex,
+        //                                    amount //Actual amount posted
+        // );
 
-        // Event emission
-        emit LogWithdrawComplete(_executionClaimId,
-                                 orderStateId,
-                                 seller,
-                                 orderState.buyToken,
-                                 withdrawAmount
-        );
+        // // Event emission
+        // emit LogWithdrawComplete(_executionClaimId,
+        //                          orderStateId,
+        //                          seller,
+        //                          orderState.buyToken,
+        //                          withdrawAmount
+        // );
     }
 
     // **************************** Helper functions *********************************
@@ -624,61 +654,61 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         public
         returns(bool)
     {
-        // Step1: Find out if claim id is for execDepositAndSell or execWithdraw
-        // Check if it is the former
-        SellOrder memory sellOrder = sellOrders[_executionClaimId + 1][_executionClaimId];
+        // // Step1: Find out if claim id is for execDepositAndSell or execWithdraw
+        // // Check if it is the former
+        // SellOrder memory sellOrder = sellOrders[_executionClaimId + 1][_executionClaimId];
 
-        // #### CHECKS ####
+        // // #### CHECKS ####
 
-        // If the posted == true, we know it must be a withdrawClaim, which cannot be cancelled
-        require(sellOrder.posted == false, "Only executionClaims that havent been executed yet can be cancelled");
-        require(sellOrder.amount != 0, "Only executionClaims that have a postive amount can be cancelled");
+        // // If the posted == true, we know it must be a withdrawClaim, which cannot be cancelled
+        // require(sellOrder.posted == false, "Only executionClaims that havent been executed yet can be cancelled");
+        // require(sellOrder.amount != 0, "Only executionClaims that have a postive amount can be cancelled");
 
-        address seller = gelatoCore.ownerOf(_executionClaimId);
+        // address seller = gelatoCore.ownerOf(_executionClaimId);
 
-        // Only Execution Claim Owner can cancel
-        require(msg.sender == seller, "Only the executionClaim Owner can cancel the execution");
+        // // Only Execution Claim Owner can cancel
+        // require(msg.sender == seller, "Only the executionClaim Owner can cancel the execution");
 
-        // #### CHECKS END ####
+        // // #### CHECKS END ####
 
-        // Fetch OrderState
-        uint256 orderStateId = sellOrder.orderStateId;
-        OrderState memory orderState = orderStates[orderStateId];
+        // // Fetch OrderState
+        // uint256 orderStateId = sellOrder.orderStateId;
+        // OrderState memory orderState = orderStates[orderStateId];
 
-        // CHECKS: msg.sender == executionClaimOwner is checked by Core
+        // // CHECKS: msg.sender == executionClaimOwner is checked by Core
 
-        // ****** EFFECTS ******
-        // Emit event before deletion/burning of relevant variables
-        emit LogOrderCancelled(_executionClaimId, orderStateId, seller);
-        emit LogOrderCancelled(_executionClaimId.add(1), orderStateId, seller);
+        // // ****** EFFECTS ******
+        // // Emit event before deletion/burning of relevant variables
+        // emit LogOrderCancelled(_executionClaimId, orderStateId, seller);
+        // emit LogOrderCancelled(_executionClaimId.add(1), orderStateId, seller);
 
-        // Cancel both execution Claims on core
-        // ** Gelato Core interactions **
-        gelatoCore.cancelExecutionClaim(_executionClaimId);
-        gelatoCore.cancelExecutionClaim(_executionClaimId.add(1));
-        // ** Gelato Core interactions END **
+        // // Cancel both execution Claims on core
+        // // ** Gelato Core interactions **
+        // gelatoCore.cancelExecutionClaim(_executionClaimId);
+        // gelatoCore.cancelExecutionClaim(_executionClaimId.add(1));
+        // // ** Gelato Core interactions END **
 
-        // Fetch variables needed before deletion
-        address sellToken = orderState.sellToken;
-        uint256 sellAmount = sellOrder.amount;
+        // // Fetch variables needed before deletion
+        // address sellToken = orderState.sellToken;
+        // uint256 sellAmount = sellOrder.amount;
 
-        // This deletes the withdraw struct as well as they both map to the same struct
-        // delete sellOrders[_executionClaimId];
-        // delete sellOrderLink[_executionClaimId.add(1)];
-        // delete sellOrder
-        delete sellOrders[_executionClaimId + 1][_executionClaimId];
-        // ****** EFFECTS END ******
+        // // This deletes the withdraw struct as well as they both map to the same struct
+        // // delete sellOrders[_executionClaimId];
+        // // delete sellOrderLink[_executionClaimId.add(1)];
+        // // delete sellOrder
+        // delete sellOrders[_executionClaimId + 1][_executionClaimId];
+        // // ****** EFFECTS END ******
 
-        // ****** INTERACTIONS ******
-        // transfer sellAmount back from this contracts ERC20 balance to seller
-        // REFUND USER!!!
-        // In order to refund the exact amount the user prepaid, we need to store that information on-chain
-        msg.sender.transfer(orderState.prepaymentPerSellOrder);
+        // // ****** INTERACTIONS ******
+        // // transfer sellAmount back from this contracts ERC20 balance to seller
+        // // REFUND USER!!!
+        // // In order to refund the exact amount the user prepaid, we need to store that information on-chain
+        // msg.sender.transfer(orderState.prepaymentPerSellOrder);
 
-        // Transfer ERC20 Tokens back to seller
-        safeTransfer(sellToken, msg.sender, sellAmount, false);
+        // // Transfer ERC20 Tokens back to seller
+        // safeTransfer(sellToken, msg.sender, sellAmount, false);
 
-        // ****** INTERACTIONS END ******
+        // // ****** INTERACTIONS END ******
 
         // Success
         return true;
@@ -696,64 +726,64 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         external
         returns(bool)
     {
-        // Fetch owner of execution claim
-        address seller = gelatoCore.ownerOf(_executionClaimId);
+        // // Fetch owner of execution claim
+        // address seller = gelatoCore.ownerOf(_executionClaimId);
 
-        // Fetch SellOrder
-        SellOrder memory sellOrder = sellOrders[_executionClaimId][_executionClaimId - 1];
+        // // Fetch SellOrder
+        // SellOrder memory sellOrder = sellOrders[_executionClaimId][_executionClaimId - 1];
 
-        // DEV use memory value lastAuctionIndex & sellAmountAfterFee as we already updated storage values
-        uint256 amount = sellOrder.amount;
+        // // DEV use memory value lastAuctionIndex & sellAmountAfterFee as we already updated storage values
+        // uint256 amount = sellOrder.amount;
 
-        // Fetch OrderState
-        uint256 orderStateId = sellOrder.orderStateId;
+        // // Fetch OrderState
+        // uint256 orderStateId = sellOrder.orderStateId;
 
-        OrderState memory orderState = orderStates[orderStateId];
+        // OrderState memory orderState = orderStates[orderStateId];
 
-        // ******* CHECKS *******
-        // If amount == 0, struct has already been deleted
-        require(amount != 0, "Amount for manual withdraw cannot be zero");
-        // Only Execution Claim Owner can withdraw manually
-        require(msg.sender == seller, "Only the executionClaim Owner can cancel the execution");
-        // Check whether posted == true
-        require(sellOrder.posted == true, "Sell Order must have been posted in order to withdraw");
+        // // ******* CHECKS *******
+        // // If amount == 0, struct has already been deleted
+        // require(amount != 0, "Amount for manual withdraw cannot be zero");
+        // // Only Execution Claim Owner can withdraw manually
+        // require(msg.sender == seller, "Only the executionClaim Owner can cancel the execution");
+        // // Check whether posted == true
+        // require(sellOrder.posted == true, "Sell Order must have been posted in order to withdraw");
 
-        // Fetch Order state
+        // // Fetch Order state
 
-        // Fetch price of last participated in and cleared auction using lastAuctionIndex
-        uint256 num;
-        uint256 den;
-        (num, den) = dutchExchange.closingPrices(orderState.sellToken, orderState.buyToken, orderState.lastAuctionIndex);
+        // // Fetch price of last participated in and cleared auction using lastAuctionIndex
+        // uint256 num;
+        // uint256 den;
+        // (num, den) = dutchExchange.closingPrices(orderState.sellToken, orderState.buyToken, orderState.lastAuctionIndex);
 
-        // Require that the last auction the seller participated in has cleared
-        require(den != 0,
-            "withdrawManually: den != 0, Last auction did not clear thus far, you have to wait"
-        );
-        // ******* CHECKS END *******
+        // // Require that the last auction the seller participated in has cleared
+        // require(den != 0,
+        //     "withdrawManually: den != 0, Last auction did not clear thus far, you have to wait"
+        // );
+        // // ******* CHECKS END *******
 
-        // ******* EFFECTS *******
-        // Delete sellOrder Struct
-        // delete sellOrders[sellOrderExecutionClaimId];
-        // delete sellOrderLink[_executionClaimId];
-        delete sellOrders[_executionClaimId][_executionClaimId - 1];
-        // ******* EFFECTS END*******
+        // // ******* EFFECTS *******
+        // // Delete sellOrder Struct
+        // // delete sellOrders[sellOrderExecutionClaimId];
+        // // delete sellOrderLink[_executionClaimId];
+        // delete sellOrders[_executionClaimId][_executionClaimId - 1];
+        // // ******* EFFECTS END*******
 
-        // ******* INTERACTIONS *******
+        // // ******* INTERACTIONS *******
 
-        // Cancel execution claim on core
-        gelatoCore.cancelExecutionClaim(_executionClaimId);
+        // // Cancel execution claim on core
+        // gelatoCore.cancelExecutionClaim(_executionClaimId);
 
-        // Initiate withdraw
-        _withdraw(seller,  // seller
-                  orderState.sellToken,
-                  orderState.buyToken,
-                  orderState.lastAuctionIndex,
-                  amount
-        );
+        // // Initiate withdraw
+        // _withdraw(seller,  // seller
+        //           orderState.sellToken,
+        //           orderState.buyToken,
+        //           orderState.lastAuctionIndex,
+        //           amount
+        // );
 
-        // ******* INTERACTIONS *******
+        // // ******* INTERACTIONS *******
 
-        // Success
+        // // Success
         return true;
     }
 

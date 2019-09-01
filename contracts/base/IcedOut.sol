@@ -89,14 +89,20 @@ contract IcedOut is Ownable {
           success = true;
      }
 
-     // Create function signaure from canonical form and execution claim
-     function mintClaim(string memory _function, address _user)
-          public
-          returns (uint256 executionClaimId, bytes memory payload)
+     // Mint new execution claims in core
+     function mintClaim(address _user, bytes memory payload)
+          internal
      {
-          executionClaimId = gelatoCore.getCurrentExecutionClaimId().add(1);
-          payload = abi.encodeWithSignature(_function, executionClaimId);
+          // executionClaimId = gelatoCore.getCurrentExecutionClaimId().add(1)
           gelatoCore.mintExecutionClaim(payload, _user);
+     }
+
+     function getNextExecutionClaimId()
+          internal
+          view
+          returns(uint256)
+     {
+          return gelatoCore.getCurrentExecutionClaimId().add(1);
      }
 
      // Check time condition

@@ -68,11 +68,16 @@ contract IIcedOut {
      }
 
      // Create function signaure from canonical form and execution claim
-     function mintClaim(string memory _function, address _user)
-          public
-          returns (uint256 executionClaimId, bytes memory payload)
+     function mintClaim(address _user, bytes memory payload)
+          internal
      {
+     }
 
+     function getNextExecutionClaimId()
+          internal
+          view
+          returns(uint256)
+     {
      }
 
      // Check time condition
