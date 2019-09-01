@@ -55,6 +55,11 @@ let {
   let depositAndSellClaim
   let withdrawClaim
   let sellOrder;
+  let totalPrepayment;
+  let decodedPayload;
+  let mintedClaims = [];
+  let decodedPayloads = {}
+  let definedExecutionTimeBN;
 
   describe("Successfully execute first execution claim", () => {
     before(async () => {
@@ -79,7 +84,7 @@ let {
           .call();
         // Get the first execution claim minted in by the mint test
         nextExecutionClaim =
-          parseInt(lastExecutionClaimId) - (parseInt(numberOfSubOrders) * 2) + 1;
+          parseInt(lastExecutionClaimId) - parseInt(numberOfSubOrders) + 1;
 
         // Fetch owner of executionClaim, if address(0) gets returned, we it already was executed and we try the next
         let mustNotBeZero = "0x0";
@@ -98,6 +103,75 @@ let {
         console.log(`ExecutionClaimID: ${nextExecutionClaim}`)
         assert.isTrue(true);
     })
+
+    it("fetch executionClaim payload", async() => {
+      let encodedPayload = await gelatoCore.contract.methods
+        .getClaimPayload(nextExecutionClaim)
+        .call();
+      let arrayPayload = [...encodedPayload];
+      let returnedPayloadSize = "";
+      let returnedFuncSelec = "";
+      let returnedDataPayload = "";
+      for (let i = 0; i < encodedPayload.length; i++) {
+        if (i < 10) {
+          returnedFuncSelec = returnedFuncSelec.concat(encodedPayload[i]);
+        } else {
+          returnedDataPayload = returnedDataPayload.concat(encodedPayload[i]);
+        }
+      }
+
+      console.log(`Returned Payload Size: ${returnedPayloadSize}`);
+      console.log(`Returned Payload Size: ${returnedPayloadSize.length}`);
+      console.log("---");
+      console.log(`Returned Func Selec: ${returnedFuncSelec}`);
+      console.log(`Returned Func Selec: ${returnedFuncSelec.length}`);
+      console.log("---");
+      console.log(`Returned Data Payload: ${returnedDataPayload}`);
+      console.log(
+        `Returned Data Payload Length: ${returnedDataPayload.length}`
+      );
+      console.log("---");
+      console.log(`Returned whole encoded payload: ${encodedPayload}`);
+      console.log(
+        `Returned whole encoded payload length: ${encodedPayload.length}`
+      );
+      decodedPayload = web3.eth.abi.decodeParameters(
+        [
+          {
+            type: "uint256",
+            name: "_executionClaimId"
+          },
+          {
+            type: "address",
+            name: "_sellToken"
+          },
+          {
+            type: "address",
+            name: "_buyToken"
+          },
+          {
+            type: "uint256",
+            name: "_amount"
+          },
+          {
+            type: "uint256",
+            name: "_executionTime"
+          },
+          {
+            type: "uint256",
+            name: "_prepaymentPerSellOrder"
+          }
+        ],
+        returnedDataPayload
+      );
+
+      console.log("Decoded Payload: decodedPayload ", decodedPayload);
+      decodedPayloads[nextExecutionClaim] = decodedPayload
+
+    })
+
+
+
 
     it("Set correct depositAndSell claim & withdraw claim", async() => {
       // Get the current execution claim on the core
@@ -119,8 +193,7 @@ let {
 
     it("Check if execution claim is executable based on its execution Time, if not, test that execution reverts and fast forward", async () => {
 
-      sellOrder = await gelatoDutchExchange.contract.methods.sellOrders(withdrawClaim, depositAndSellClaim).call()
-      let sellOrderExecutionTime = sellOrder.executionTime
+      let sellOrderExecutionTime = decodedPayload._executionTime
 
       // Fetch time
       let blockNumber = await web3.eth.getBlockNumber();
@@ -162,7 +235,7 @@ let {
 
       // Check if execution claim is executable
       // assert.equal(executionTime + 15, claimsExecutionTime.toString(), `${claimsExecutionTime} should be equal to the execution time we set + 15 seconds`)
-      let claimsExecutionTimeBN = new BN(sellOrder.executionTime.toString());
+      let claimsExecutionTimeBN = new BN(sellOrderExecutionTime.toString());
       let afterTimeTravelBN = new BN(afterTimeTravel);
       let claimIsExecutable = afterTimeTravelBN.gte(claimsExecutionTimeBN);
       // Check if execution claim is executable, i.e. lies in the past
