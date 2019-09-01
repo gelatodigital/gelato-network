@@ -12,15 +12,14 @@ let {
   DutchExchangeProxy,
   DutchExchange,
   timeTravel,
-  MAXGAS,
   BN,
   NUM_SUBORDERS_BN,
   GELATO_GAS_PRICE_BN,
   TOTAL_SELL_VOLUME,
   SUBORDER_SIZE_BN,
   INTERVAL_SPAN,
-  GDXSSAW_MAXGAS_BN,
-  GELATO_PREPAID_FEE_BN,
+  GDX_MAXGAS_BN,
+  GDX_PREPAID_FEE_BN,
   dutchExchangeProxy,
   dutchExchange,
   seller,
@@ -49,6 +48,10 @@ let {
 let txHash;
 let txReceipt;
 let totalPrepayment;
+let decodedPayload;
+let mintedClaims = [];
+let decodedPayloads = {}
+let definedExecutionTimeBN;
 
 describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () => {
   before(async () => {
@@ -78,7 +81,7 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
       .call();
     // Fetch Executor Ether Balance
     executorEthBalance = await web3.eth.getBalance(executor);
-  })
+  });
 
   it("Seller approves GDX for TOTAL_SELL_AMOUNT", async () => {
     await sellToken.contract.methods
@@ -92,14 +95,11 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
     assert.strictEqual(
       allowance,
       TOTAL_SELL_VOLUME,
-      `The ERC20 ${
-        sellToken.address
-      } allowance for the GelatoDXSplitsellAndWithdraw should be at ${TOTAL_SELL_VOLUME}`
+      `The ERC20 ${sellToken.address} allowance for the GelatoDXSplitsellAndWithdraw should be at ${TOTAL_SELL_VOLUME}`
     );
   });
 
   it("Mint 2 execution claims ( 2 sell orders ) on GDX while checking user & interface balance", async () => {
-
     // let encodedFuncSig = web3.eth.abi.encodeFunctionCall('execDepositAndSell(uint256,address,address,uint256,uint256,uint256)')
     // console.log(`Encoded func Sig ${encodedFuncSig}`)
 
@@ -123,8 +123,10 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
     // Seller external TX2:
 
     // Calculate Prepayment amount
-    let gelatoPrepayment = new BN(await gelatoDutchExchange.contract.methods.calcGelatoPrepayment().call())
-    totalPrepayment = new BN(gelatoPrepayment).mul(NUM_SUBORDERS_BN)
+    let gelatoPrepayment = new BN(
+      await gelatoDutchExchange.contract.methods.calcGelatoPrepayment().call()
+    );
+    totalPrepayment = new BN(gelatoPrepayment).mul(NUM_SUBORDERS_BN);
 
     // benchmarked gasUsed = 726,360 (for 2 subOrders + 1 lastWithdrawal)
     let txGasPrice = await web3.utils.toWei("5", "gwei");
@@ -197,15 +199,16 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
       .getCurrentExecutionClaimId()
       .call();
 
-    let mintedClaims = []
     // Fetch Event: LogNewExecutionClaimMinted
     let firstExecutionClaimId = lastExecutionClaimId - numberOfSubOrders;
     await gelatoCore.getPastEvents(
       "LogNewExecutionClaimMinted",
       (error, events) => {
-        if(error) {console.error};
+        if (error) {
+          console.error;
+        }
         events.forEach(async event => {
-          mintedClaims.push(event.returnValues.executionClaimId)
+          mintedClaims.push(event.returnValues.executionClaimId);
           // Fetch current executionClaimId
           firstExecutionClaimId = firstExecutionClaimId + 1;
           assert.strictEqual(
@@ -229,92 +232,99 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
             encodedFuncSig,
             "LogExecutionClaimMinted functionSignature problem"
           );
-
-        })
-          // } else {
-          //   assert.strictEqual(
-          //     returnedFuncSig,
-          //     await web3.eth.abi.encodeFunctionCall(
-          //       {
-          //         name: "execWithdraw",
-          //         type: "function",
-          //         inputs: [
-          //           {
-          //             type: "uint256",
-          //             name: "_executionClaimId"
-          //           }
-          //         ]
-          //       },
-          //       returnedFuncSig
-          //     ),
-          //     "LogExecutionClaimMinted functionSignature problem"
-          //   );
-          // }
         });
-
-    mintedClaims.forEach( async(claim) => {
-      // FETCH execution claim params
-      let encodedPayload = await gelatoCore.contract.methods.getClaimPayload(firstExecutionClaimId).call();
-      let arrayPayload = [...encodedPayload]
-      let returnedPayloadSize = "";
-      let returnedFuncSelec = "";
-      let returnedDataPayload = "";
-      for (let i = 0; i < encodedPayload.length; i++)
-      {
-        // if ( i < 32)
-        // {
-        //   returnedPayloadSize = returnedPayloadSize.concat(encodedPayload[i])
+        // } else {
+        //   assert.strictEqual(
+        //     returnedFuncSig,
+        //     await web3.eth.abi.encodeFunctionCall(
+        //       {
+        //         name: "execWithdraw",
+        //         type: "function",
+        //         inputs: [
+        //           {
+        //             type: "uint256",
+        //             name: "_executionClaimId"
+        //           }
+        //         ]
+        //       },
+        //       returnedFuncSig
+        //     ),
+        //     "LogExecutionClaimMinted functionSignature problem"
+        //   );
         // }
-        if ( i < 10)
-        {
-          returnedFuncSelec = returnedFuncSelec.concat(encodedPayload[i])
-
-        }
-        else
-        {
-          returnedDataPayload = returnedDataPayload.concat(encodedPayload[i])
-        }
       }
+    );
 
-      console.log(`Returned Payload Size: ${returnedPayloadSize}`)
-      console.log(`Returned Payload Size: ${returnedPayloadSize.length}`)
-      console.log("---")
-      console.log(`Returned Func Selec: ${returnedFuncSelec}`)
-      console.log(`Returned Func Selec: ${returnedFuncSelec.length}`)
-      console.log("---")
-      console.log(`Returned Data Payload: ${returnedDataPayload}`)
-      console.log(`Returned Data Payload Length: ${returnedDataPayload.length}`)
-      console.log("---")
-      console.log(`Returned whole encoded payload: ${encodedPayload}`)
-      console.log(`Returned whole encoded payload length: ${encodedPayload.length}`)
-      let decodedPayload = web3.eth.abi.decodeParameters(
-        [{
-          type: 'uint256',
-          name: '_executionClaimId'
-        },{
-          type: 'address',
-          name: '_sellToken'
-        },{
-          type: 'address',
-          name: '_buyToken'
-        },{
-          type: 'uint256',
-          name: '_amount'
-        },{
-          type: 'uint256',
-          name: '_executionTime'
-        },{
-          type: 'uint256',
-          name: '_prepaymentPerSellOrder'
-        }], returnedDataPayload);
-
-      console.log('Decoded Payload: decodedPayload ', decodedPayload);
-    })
 
   });
 
-  it("Check that params got encoded correctly", async() => {})
+  it("Check that params got encoded correctly", async () => {
+    mintedClaims.forEach(async claim => {
+      // FETCH execution claim params
+      let encodedPayload = await gelatoCore.contract.methods
+        .getClaimPayload(claim)
+        .call();
+      let arrayPayload = [...encodedPayload];
+      let returnedPayloadSize = "";
+      let returnedFuncSelec = "";
+      let returnedDataPayload = "";
+      for (let i = 0; i < encodedPayload.length; i++) {
+        if (i < 10) {
+          returnedFuncSelec = returnedFuncSelec.concat(encodedPayload[i]);
+        } else {
+          returnedDataPayload = returnedDataPayload.concat(encodedPayload[i]);
+        }
+      }
 
+      console.log(`Returned Payload Size: ${returnedPayloadSize}`);
+      console.log(`Returned Payload Size: ${returnedPayloadSize.length}`);
+      console.log("---");
+      console.log(`Returned Func Selec: ${returnedFuncSelec}`);
+      console.log(`Returned Func Selec: ${returnedFuncSelec.length}`);
+      console.log("---");
+      console.log(`Returned Data Payload: ${returnedDataPayload}`);
+      console.log(
+        `Returned Data Payload Length: ${returnedDataPayload.length}`
+      );
+      console.log("---");
+      console.log(`Returned whole encoded payload: ${encodedPayload}`);
+      console.log(
+        `Returned whole encoded payload length: ${encodedPayload.length}`
+      );
+      decodedPayload = web3.eth.abi.decodeParameters(
+        [
+          {
+            type: "uint256",
+            name: "_executionClaimId"
+          },
+          {
+            type: "address",
+            name: "_sellToken"
+          },
+          {
+            type: "address",
+            name: "_buyToken"
+          },
+          {
+            type: "uint256",
+            name: "_amount"
+          },
+          {
+            type: "uint256",
+            name: "_executionTime"
+          },
+          {
+            type: "uint256",
+            name: "_prepaymentPerSellOrder"
+          }
+        ],
+        returnedDataPayload
+      );
+
+      console.log("Decoded Payload: decodedPayload ", decodedPayload);
+      decodedPayloads[claim] = decodedPayload
+    });
+  });
 });
 
 describe("Should not be able to mint when tokens not traded on the dutchX", () => {
@@ -350,111 +360,83 @@ describe("Should not be able to mint when tokens not traded on the dutchX", () =
   });
 });
 
-describe("Check gelatoDutchExchange Interface orderState and sellOrder Values", () => {
-  it("Check orderState values", async () => {
-    // // emitted event on GELATO_DX: LogNewOrderCreated(orderId, seller)
-    // assert.ok(
-    //   txReceipt.events.LogNewOrderCreated,
-    //   "LogNewOrderCreated event does not exist"
-    // );
+describe("Check gelatoDutchExchange Interface payload values", () => {
+  it("Check payload values", async () => {
+    definedExecutionTimeBN = new BN(executionTime)
 
-    // // check if event has correct return values
-    // assert.strictEqual(
-    //   txReceipt.events.LogNewOrderCreated.returnValues.seller,
-    //   seller,
-    //   "LogNewOrderCreated event seller problem"
-    // );
+    mintedClaims.forEach(async claimId => {
+      let selectedPayload = decodedPayloads[claimId]
+      let payloadExecutionClaimId = selectedPayload._executionClaimId;
+      let payloadSellToken = selectedPayload._sellToken;
+      let payloadBuyToken = selectedPayload._buyToken;
+      let payloadAmount = selectedPayload._amount;
+      let payloadExecutionTime = selectedPayload._executionTime;
+      let payloadPrepaymentPerSellOrder = selectedPayload._prepaymentPerSellOrder;
 
-    // // save the orderId
-    // orderStateId =
-    //   txReceipt.events.LogNewOrderCreated.returnValues.orderStateId;
+      console.log(`
+        Execution Claim ID: ${payloadExecutionClaimId}
+        payloadSellToken: ${payloadSellToken}
+        payloadBuyToken: ${payloadBuyToken}
+        payloadAmount: ${payloadAmount}
+        payloadExecutionTime: ${payloadExecutionTime}
+        payloadPrepaymentPerSellOrder: ${payloadPrepaymentPerSellOrder}
 
-    // assert.strictEqual(
-    //   txReceipt.events.LogNewOrderCreated.returnValues.orderStateId,
-    //   orderStateId,
-    //   "LogNewOrderCreated orderStateId problem"
-    // );
+      `)
 
-    // fetch the newly created orderState on GELATO_DX
-    // orderState = await gelatoDutchExchange.contract.methods
-    //   .orderStates(lastExecutionClaimId)
-    //   .call();
+      orderState = await gelatoDutchExchange.contract.methods
+        .orderStates(claimId)
+        .call();
+      // fetch the newly created orderState on GELATO_DX
+      console.log(`Claim Id: ${claimId}`)
+      let payloadPrepaymentPerSellOrderBN = new BN(payloadPrepaymentPerSellOrder)
+      let prepaymentIsEqual = payloadPrepaymentPerSellOrderBN.eq(new BN(totalPrepayment).div(NUM_SUBORDERS_BN))
+      assert.isTrue(
+        prepaymentIsEqual,
+        "prePayment Problem"
+      );
 
-    // // check the orderState
-    // assert.strictEqual(
-    //   orderState.lastAuctionWasWaiting,
-    //   false,
-    //   "orderState.lastAuctionWasWaiting problem"
-    // );
-    // assert.strictEqual(
-    //   orderState.lastAuctionIndex,
-    //   "0",
-    //   "orderState.lastAuctionIndex problem"
-    // );
+        // check the orderState
+      assert.strictEqual(
+        orderState.lastAuctionWasWaiting,
+        false,
+        "orderState.lastAuctionWasWaiting problem"
+      );
+      assert.strictEqual(
+        orderState.lastAuctionIndex,
+        "0",
+        "orderState.lastAuctionIndex problem"
+      );
 
-    // let gdxPrepayment = await gelatoDutchExchange.contract.methods
-    //   .calcGelatoPrepayment()
-    //   .call();
-    // assert.strictEqual(
-    //   orderState.prepaymentPerSellOrder,
-    //   gdxPrepayment,
-    //   "prePayment Problem"
-    // );
-  });
+      // Execution Time must be correct
+      let payloadExecutionTimeBN = new BN(payloadExecutionTime);
+      console.log(`Payload Time:    ${payloadExecutionTime}`)
+      console.log(`Execution Time:  ${executionTime}`)
 
-  // it("Check sellOrder values", async () => {
-  //   let lastExecutionClaimId = await gelatoCore.contract.methods
-  //     .getCurrentExecutionClaimId()
-  //     .call();
-  //   let firstExecutionClaimId =
-  //     parseInt(lastExecutionClaimId) - parseInt(numberOfSubOrders);
-  //   let assertExecutionTime = executionTime;
-  //   assertExecutionTimeBN = new BN(assertExecutionTime);
 
-  //   while (firstExecutionClaimId < parseInt(lastExecutionClaimId)) {
-  //     firstExecutionClaimId = firstExecutionClaimId + 1;
-  //     if (firstExecutionClaimId % 2 !== 0) {
-  //       let sellOrder = await gelatoDutchExchange.contract.methods
-  //         .sellOrders(firstExecutionClaimId + 1, firstExecutionClaimId)
-  //         .call();
-  //       // OrderState Id must be correct
-  //       assert.strictEqual(
-  //         sellOrder.orderStateId,
-  //         orderStateId,
-  //         "Order State Id Problem in sellOrder"
-  //       );
 
-  //       // Execution Time must be correct
-  //       let fetchedExecutionTime = new BN(sellOrder.executionTime);
-  //       let executionTimeIsEqual = assertExecutionTimeBN.eq(
-  //         fetchedExecutionTime
-  //       );
-  //       assert.isTrue(
-  //         executionTimeIsEqual,
-  //         `ExecutionTime Problem: ${assertExecutionTimeBN.toString()}needs to be equal ${fetchedExecutionTime.toString()}`
-  //       );
+      let executionTimeIsEqual = definedExecutionTimeBN.eq(
+        payloadExecutionTimeBN
+      );
 
-  //       // Amount must be correct
-  //       let amountIsEqual = SUBORDER_SIZE_BN.eq(new BN(sellOrder.amount));
-  //       assert.isTrue(amountIsEqual, "Amount Problem in sellOrder");
+      assert.isTrue(
+        executionTimeIsEqual,
+        `ExecutionTime Problem: ${definedExecutionTimeBN.toString()}needs to be equal ${payloadExecutionTimeBN.toString()}`
+      );
 
-  //       // Posted should be false by default
-  //       assert.strictEqual(
-  //         sellOrder.posted,
-  //         false,
-  //         "Posted (bool) Problem in sellOrder"
-  //       );
+      // Amount must be correct
+      let amountIsEqual = SUBORDER_SIZE_BN.eq(new BN(payloadAmount));
+      assert.isTrue(amountIsEqual, "Amount Problem in sellOrder");
 
-  //       // Account for next iteration
-  //       assertExecutionTimeBN = assertExecutionTimeBN.add(
-  //         new BN(INTERVAL_SPAN)
-  //       );
-  //     }
-  //   }
-  // });
+      // Account for next iteration
+      definedExecutionTimeBN = definedExecutionTimeBN.add(
+        new BN(INTERVAL_SPAN)
+      );
+
+    })
+
+  })
 
   it("What happened in this test?", async function() {
-
     // Fetch User Ether Balance
     userEthBalanceAfter = await web3.eth.getBalance(seller);
     // Fetch User SellToken Balance
@@ -468,7 +450,6 @@ describe("Check gelatoDutchExchange Interface orderState and sellOrder Values", 
     // Fetch Executor Ether Balance
     executorEthBalanceAfter = await web3.eth.getBalance(executor);
 
-
     console.log(`
       ***************************************************+
 
@@ -476,23 +457,29 @@ describe("Check gelatoDutchExchange Interface orderState and sellOrder Values", 
         ETH Balances Before:  ${userEthBalance / 10 ** 18} ETH
         ETH Balances After:   ${userEthBalanceAfter / 10 ** 18} ETH
         -----------
-        Difference:           ${(userEthBalanceAfter - userEthBalance) / 10 ** 18} ETH
+        Difference:           ${(userEthBalanceAfter - userEthBalance) /
+          10 ** 18} ETH
 
         WETH Balance Before:  ${userSellTokenBalance / 10 ** 18} WETH
         WETH Balance After:   ${userSellTokenBalanceAfter / 10 ** 18} WETH
         -----------
-        Difference:           ${(userSellTokenBalanceAfter - userSellTokenBalance) / 10 ** 18} WETH
+        Difference:           ${(userSellTokenBalanceAfter -
+          userSellTokenBalance) /
+          10 ** 18} WETH
 
         ICE Balance Before:   ${userBuyTokenBalance / 10 ** 18} ICE🍦
         ICE Balance After:    ${userBuyTokenBalanceAfter / 10 ** 18} ICE🍦
         -----------
-        Difference:           ${(userBuyTokenBalanceAfter  - userBuyTokenBalance) / 10 ** 18} ICE🍦
+        Difference:           ${(userBuyTokenBalanceAfter -
+          userBuyTokenBalance) /
+          10 ** 18} ICE🍦
 
       EXECUTOR BALANCE:
         ETH Balance Before:   ${executorEthBalance / 10 ** 18} ETH
         ETH Balance After:    ${executorEthBalanceAfter / 10 ** 18} ETH
         -----------
-        Difference:           ${(executorEthBalanceAfter - executorEthBalance) / 10 ** 18} ETH
+        Difference:           ${(executorEthBalanceAfter - executorEthBalance) /
+          10 ** 18} ETH
 
       ***************************************************+
 
@@ -501,4 +488,6 @@ describe("Check gelatoDutchExchange Interface orderState and sellOrder Values", 
     assert.isTrue(true);
   });
 
+
 });
+
