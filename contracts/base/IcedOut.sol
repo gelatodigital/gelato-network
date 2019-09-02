@@ -2,8 +2,8 @@ pragma solidity ^0.5.8;
 
 // Imports
 import '../GelatoCore.sol';
-import './Ownable.sol';
-import './SafeMath.sol';
+import '@openzeppelin/contracts/ownership/Ownable.sol';
+import '@openzeppelin/contracts/math/SafeMath.sol';
 
 /**
 * @dev Gelato Dapp Interface Standard version 0.

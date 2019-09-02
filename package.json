@@ -129,6 +129,7 @@
     "@gnosis.pm/owl-token": "2.0.0",
     "@gnosis.pm/safe-modules": "^0.1.0",
     "@gnosis.pm/util-contracts": "2.0.0",
+    "@openzeppelin/contracts": "^2.3.0",
     "@slack/client": "^4.11.0",
     "cors": "^2.8.5",
     "coveralls": "^3.0.4",

@@ -1,13 +1,16 @@
 pragma solidity >=0.4.21 <0.6.0;
 
 //  Imports:
-import '@gnosis.pm/dx-contracts/contracts/DutchExchange.sol';
-import '../../base/Counters.sol';
-import '../../base/ERC20.sol';
 import '../../base/IcedOut.sol';
+import '@gnosis.pm/dx-contracts/contracts/DutchExchange.sol';
+import '@openzeppelin/contracts/drafts/Counters.sol';
+import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
+import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
+
+
 
 // Gelato IcedOut-compliant DutchX Interface for splitting sell orders and for automated withdrawals
-contract GelatoDutchX is IcedOut, SafeTransfer {
+contract GelatoDutchX is IcedOut {
     // **************************** Events ******************************
     event LogNewOrderCreated(uint256 indexed orderStateId, address indexed seller);
     event LogFeeNumDen(uint256 num, uint256 den);
@@ -42,6 +45,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
     // Libraries
     // using SafeMath for uint256; => indirect use through IcedOut
     using Counters for Counters.Counter;
+    using SafeERC20 for ERC20;
 
     // One OrderState to many SellOrder
     struct OrderState {
@@ -149,10 +153,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         );
 
         // Step4: Transfer the totalSellVolume from msg.sender(seller) to this contract
-        // this is hardcoded into SafeTransfer.sol
-        require(safeTransfer(_sellToken, address(this), _totalSellVolume, true),
-            "GelatoDutchX.timedSellOrders: The transfer of sellTokens from msg.sender to Gelato Interface must succeed"
-        );
+        ERC20(_sellToken).safeTransferFrom(msg.sender, address(this), _totalSellVolume);
 
         // Step5: Instantiate new dutchExchange-specific sell order state
         OrderState memory orderState = OrderState(
@@ -471,7 +472,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         // Refunds seller's eth prepayment for the two linked executionClaims
         msg.sender.transfer(sellOrder.prepaymentPerSellOrder.mul(2));
         // Transfer ERC20 Tokens back to seller
-        safeTransfer(sellOrder.sellToken, msg.sender, sellOrder.sellAmount, false);
+        ERC20(sellOrder.sellToken).safeTransfer(msg.sender, sellOrder.sellAmount);
         // ****** INTERACTIONS END ******
     }
 
@@ -598,7 +599,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         );
 
         // Transfer Tokens from GelatoDutchX to Seller
-        safeTransfer(_buyToken, _seller, withdrawAmount, false);
+        ERC20(_buyToken).safeTransfer(_seller, withdrawAmount);
     }
 
     // DEV Calculates sellAmount withdrawable from past, cleared auction

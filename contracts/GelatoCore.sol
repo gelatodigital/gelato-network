@@ -1,10 +1,11 @@
 pragma solidity >=0.4.21 <0.6.0;
 
 // Imports:
-import './base/ERC721/Claim.sol';
-import './base/Ownable.sol';
+import './base/GelatoClaim.sol';
+import "@openzeppelin/contracts/drafts/Counters.sol";
+import '@openzeppelin/contracts/ownership/Ownable.sol';
 
-contract GelatoCore is Ownable, Claim {
+contract GelatoCore is GelatoClaim, Ownable {
     // **************************** Events **********************************
     // Create
     event LogNewExecutionClaimMinted(address indexed dappInterface,
@@ -101,6 +102,7 @@ contract GelatoCore is Ownable, Claim {
                 uint256 _execFNRefundedGas,
                 uint256 _recommendedGasPriceForInterfaces
     )
+        GelatoClaim("gelato", "GEL")  // ERC721Metadata constructor(name, symbol)
         public
     {
         minInterfaceBalance = _newMinInterfaceBalance;
