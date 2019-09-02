@@ -240,7 +240,7 @@ describe("Successfully execute first execution claim", () => {
     let orderState = await gelatoDutchExchange.contract.methods
       .orderStates(orderStateId)
       .call();
-    let lastAuctionIndex = orderState.lastAuctionIndex;
+    let lastAuctionIndex = orderState.lastParticipatedAuctionIndex;
     // Check if auction cleared with DutchX Getter
     let returnValue = await dxGetter.contract.methods
       .getClosingPrices(sellToken.address, buyToken.address, lastAuctionIndex)
@@ -378,7 +378,7 @@ describe("Successfully execute first execution claim", () => {
       .orderStates(orderStateId)
       .call();
 
-    let lastAuctionIndex = orderState.lastAuctionIndex;
+    let lastAuctionIndex = orderState.lastParticipatedAuctionIndex;
 
     let closingPrice = await dxGetter.contract.methods
       .getClosingPrices(sellToken.address, buyToken.address, lastAuctionIndex)

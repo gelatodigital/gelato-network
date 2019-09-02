@@ -329,9 +329,9 @@ describe("Check gelatoDutchExchange Interface orderState and sellOrder Values", 
       "orderState.lastAuctionWasWaiting problem"
     );
     assert.strictEqual(
-      orderState.lastAuctionIndex,
+      orderState.lastParticipatedAuctionIndex,
       "0",
-      "orderState.lastAuctionIndex problem"
+      "orderState.lastParticipatedAuctionIndex problem"
     );
   });
   it("Check sellOrder values", async () => {
