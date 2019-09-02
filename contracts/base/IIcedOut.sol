@@ -18,6 +18,11 @@ contract IIcedOut {
 
      }
 
+     function decodeWithFunctionSignature(bytes memory _payload)
+        internal
+        pure
+        returns(bytes memory, bytes4) {}
+
 
     function acceptExecutionRequest(
             bytes calldata payload
