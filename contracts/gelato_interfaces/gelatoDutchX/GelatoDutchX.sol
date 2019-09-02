@@ -317,7 +317,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
             //  we have an auction index out of sync error.
             else
             {
-                revert("Case2b: seller's sellerBalances already exist at the current auction index OR ");
+                revert("Case2b: seller's sellerBalances already exist at the current auction index OR auction index sync error");
             }
 
         }
@@ -438,8 +438,9 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         require(sellOrder.posted == false,
             "GelatoDutchX.cancelOrder: Only executionClaims that havent been executed yet can be cancelled"
         );
+        // You cannot cancel standalone execWithdrawClaims - they have to be withdrawn Manually
         require(sellOrder.sellAmount != 0,
-            "GelatoDutchX.cancelOrder: Only executionClaims that have a postive sellAmount can be cancelled"
+            "GelatoDutchX.cancelOrder: Only execDepositAndSell executionClaims can be cancelled directly"
         );
 
         address seller = gelatoCore.ownerOf(_executionClaimId);
@@ -467,14 +468,10 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         // ****** EFFECTS END ******
 
         // ****** INTERACTIONS ******
-        // transfer sellAmount back from this contracts ERC20 balance to seller
-        // REFUND USER!!!
-        // In order to refund the exact sellAmount the user prepaid, we need to store that information on-chain
-        msg.sender.transfer(sellOrder.prepaymentPerSellOrder);
-
+        // Refunds seller's eth prepayment for the two linked executionClaims
+        msg.sender.transfer(sellOrder.prepaymentPerSellOrder.mul(2));
         // Transfer ERC20 Tokens back to seller
         safeTransfer(sellOrder.sellToken, msg.sender, sellOrder.sellAmount, false);
-
         // ****** INTERACTIONS END ******
     }
 
@@ -525,7 +522,6 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         // ******* EFFECTS END*******
 
         // ******* INTERACTIONS *******
-
         // Cancel execution claim on core
         gelatoCore.cancelExecutionClaim(_executionClaimId);
 
