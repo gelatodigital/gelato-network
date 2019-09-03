@@ -16,7 +16,7 @@ contract DutchXGetter {
         dutchExchange = DutchExchange(_dutchExchangeProxy);
     }
 
-    function getClosingPrices(address _sellToken, address _buyToken, uint256 _auctionIndex)
+    function getClosingPricesOne(address _sellToken, address _buyToken, uint256 _auctionIndex)
         public
         view
         returns( uint256, uint256)
@@ -26,6 +26,7 @@ contract DutchXGetter {
         (num, den) = dutchExchange.getCurrentAuctionPrice(_sellToken, _buyToken, _auctionIndex);
         return (num, den);
     }
+
 
     function getFeeRatio(address _dxInterface)
         public

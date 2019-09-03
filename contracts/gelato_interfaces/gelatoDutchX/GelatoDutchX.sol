@@ -96,6 +96,9 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
     // mapping(uint256 => mapping(uint256 => SellOrder)) public sellOrders;
     mapping(uint256 => OrderState) public orderStates;
 
+    // Withdraw executionClaimId => depositAndSell executionClaimId
+    mapping (uint256 => uint256) public executionClaimIdMapping;
+
     // Constants that are set during contract construction and updateable via setters
     uint256 public auctionStartWaitingForFunding;
 
@@ -461,6 +464,10 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
             // Mint new withdraw token
             mintClaim(tokenOwner, payload);
 
+            // Create storage mapping
+
+            executionClaimIdMapping[nextExecutionClaimId] = _executionClaimId;
+
         }
 
         // ********************** Step7: Execution Logic END **********************
@@ -486,8 +493,11 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         // Fetch owner of execution claim
         address seller = gelatoCore.ownerOf(_executionClaimId);
 
+        // Fetch order state
+        uint256 previousExecutionClaimId = executionClaimIdMapping[_executionClaimId];
+
         // Fetch OrderState
-        OrderState memory orderState = orderStates[_executionClaimId];
+        OrderState memory orderState = orderStates[previousExecutionClaimId];
 
         // Calculate withdraw amount
         uint256 withdrawAmount = _withdraw(seller,

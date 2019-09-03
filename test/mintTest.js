@@ -52,6 +52,8 @@ let decodedPayload;
 let mintedClaims = [];
 let decodedPayloads = {}
 let definedExecutionTimeBN;
+let execDepositAndSell
+let execWithdraw
 
 describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () => {
   before(async () => {
@@ -66,6 +68,8 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
     gelatoCoreOwner = await gelatoCore.contract.methods.owner().call();
     seller = accounts[2]; // account[2]
     executor = accounts[9];
+    execDepositAndSell = web3.eth.abi.encodeFunctionSignature('execDepositAndSell(uint256,address,address,uint256,uint256,uint256)')
+    execWithdraw = web3.eth.abi.encodeFunctionSignature('execWithdraw(uint256,address,address,uint256,uint256)')
   });
 
   it("Fetch Before Balance?", async function() {
@@ -100,7 +104,7 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
   });
 
   it("Mint 2 execution claims ( 2 sell orders ) on GDX while checking user & interface balance", async () => {
-    // let encodedFuncSig = web3.eth.abi.encodeFunctionCall('execDepositAndSell(uint256,address,address,uint256,uint256,uint256)')
+
     // console.log(`Encoded func Sig ${encodedFuncSig}`)
 
     // Getch gelatoDutchExchange balance
@@ -276,21 +280,21 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
         }
       }
 
-      console.log(`Returned Payload Size: ${returnedPayloadSize}`);
-      console.log(`Returned Payload Size: ${returnedPayloadSize.length}`);
-      console.log("---");
-      console.log(`Returned Func Selec: ${returnedFuncSelec}`);
-      console.log(`Returned Func Selec: ${returnedFuncSelec.length}`);
-      console.log("---");
-      console.log(`Returned Data Payload: ${returnedDataPayload}`);
-      console.log(
-        `Returned Data Payload Length: ${returnedDataPayload.length}`
-      );
-      console.log("---");
-      console.log(`Returned whole encoded payload: ${encodedPayload}`);
-      console.log(
-        `Returned whole encoded payload length: ${encodedPayload.length}`
-      );
+      // console.log(`Returned Payload Size: ${returnedPayloadSize}`);
+      // console.log(`Returned Payload Size: ${returnedPayloadSize.length}`);
+      // console.log("---");
+      // console.log(`Returned Func Selec: ${returnedFuncSelec}`);
+      // console.log(`Returned Func Selec: ${returnedFuncSelec.length}`);
+      // console.log("---");
+      // console.log(`Returned Data Payload: ${returnedDataPayload}`);
+      // console.log(
+      //   `Returned Data Payload Length: ${returnedDataPayload.length}`
+      // );
+      // console.log("---");
+      // console.log(`Returned whole encoded payload: ${encodedPayload}`);
+      // console.log(
+      //   `Returned whole encoded payload length: ${encodedPayload.length}`
+      // );
       decodedPayload = web3.eth.abi.decodeParameters(
         [
           {
@@ -364,6 +368,7 @@ describe("Check gelatoDutchExchange Interface payload values", () => {
   it("Check payload values", async () => {
     definedExecutionTimeBN = new BN(executionTime)
 
+    mintedClaims.sort();
     mintedClaims.forEach(async claimId => {
       let selectedPayload = decodedPayloads[claimId]
       let payloadExecutionClaimId = selectedPayload._executionClaimId;
@@ -407,10 +412,14 @@ describe("Check gelatoDutchExchange Interface payload values", () => {
         "orderState.lastAuctionIndex problem"
       );
 
+      // Amount must be correct
+      let amountIsEqual = SUBORDER_SIZE_BN.eq(new BN(payloadAmount));
+      assert.isTrue(amountIsEqual, "Amount Problem in sellOrder");
+
       // Execution Time must be correct
       let payloadExecutionTimeBN = new BN(payloadExecutionTime);
       console.log(`Payload Time:    ${payloadExecutionTime}`)
-      console.log(`Execution Time:  ${executionTime}`)
+      console.log(`Execution Time:  ${definedExecutionTimeBN.toString()}`)
 
 
 
@@ -422,10 +431,6 @@ describe("Check gelatoDutchExchange Interface payload values", () => {
         executionTimeIsEqual,
         `ExecutionTime Problem: ${definedExecutionTimeBN.toString()}needs to be equal ${payloadExecutionTimeBN.toString()}`
       );
-
-      // Amount must be correct
-      let amountIsEqual = SUBORDER_SIZE_BN.eq(new BN(payloadAmount));
-      assert.isTrue(amountIsEqual, "Amount Problem in sellOrder");
 
       // Account for next iteration
       definedExecutionTimeBN = definedExecutionTimeBN.add(

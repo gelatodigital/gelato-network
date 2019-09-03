@@ -59,6 +59,10 @@ let sellOrder;
 let decodedPayload;
 let decodedPayloads = {}
 let definedExecutionTimeBN;
+let lastExecutionClaimId;
+let execDepositAndSell;
+let execWithdraw;
+let isDepositAndSell;
 
 describe("Successfully execute execution claim", () => {
   before(async () => {
@@ -74,6 +78,8 @@ describe("Successfully execute execution claim", () => {
     seller = accounts[2];
     revertExecutor = accounts[8]
     executor = accounts[9];
+    execDepositAndSell = web3.eth.abi.encodeFunctionSignature('execDepositAndSell(uint256,address,address,uint256,uint256,uint256)')
+    execWithdraw = web3.eth.abi.encodeFunctionSignature('execWithdraw(uint256,address,address,uint256,uint256)')
   });
 
   it("Fetch Before Balance of seller and executor", async function() {
@@ -93,7 +99,7 @@ describe("Successfully execute execution claim", () => {
 
   it("fetch the correct executionClaimId to execute", async() => {
     // Get the current execution claim on the core
-    let lastExecutionClaimId = await gelatoCore.contract.methods
+    lastExecutionClaimId = await gelatoCore.contract.methods
       .getCurrentExecutionClaimId()
       .call();
     // Get the first execution claim minted in by the mint test
@@ -118,22 +124,21 @@ describe("Successfully execute execution claim", () => {
     assert.isTrue(true);
   })
 
-  it("Set correct depositAndSell claim & withdraw claim", async() => {
-    // // Get the current execution claim on the core
-    // // Assuming we get an depositAndSell claim
-    // let sellOrderTest = await gelatoDutchExchange.contract.methods.sellOrders(nextExecutionClaim + 1, nextExecutionClaim).call()
-    // // It's a withdraw claim
-    // if (sellOrderTest.amount === '0')
-    // {
-    //   depositAndSellClaim = nextExecutionClaim - 1;
-    //   withdrawClaim  = nextExecutionClaim;
-    // }
-    // else
-    // {
-    //   depositAndSellClaim = nextExecutionClaim;
-    //   withdrawClaim  = nextExecutionClaim + 1;
-    // }
-    // assert.isTrue(true);
+  it("Check what function the next executable claim is", async function() {
+    this.timeout(50000)
+    // Get the current execution claim on the core
+    for (let i = 1; i <= lastExecutionClaimId; i ++)
+    {
+      let canExecuteReturn = await gelatoCore.contract.methods.canExecute(i).call();
+      let shouldBeZero = canExecuteReturn[0];
+      if (parseInt(shouldBeZero) === 0)
+      {
+        nextExecutionClaim = i;
+      }
+
+    }
+    // Assuming we get an depositAndSell claim
+
   })
 
   it("fetch executionClaim payload", async() => {
@@ -152,52 +157,88 @@ describe("Successfully execute execution claim", () => {
       }
     }
 
-    console.log(`Returned Payload Size: ${returnedPayloadSize}`);
-    console.log(`Returned Payload Size: ${returnedPayloadSize.length}`);
-    console.log("---");
-    console.log(`Returned Func Selec: ${returnedFuncSelec}`);
-    console.log(`Returned Func Selec: ${returnedFuncSelec.length}`);
-    console.log("---");
-    console.log(`Returned Data Payload: ${returnedDataPayload}`);
-    console.log(
-      `Returned Data Payload Length: ${returnedDataPayload.length}`
-    );
-    console.log("---");
-    console.log(`Returned whole encoded payload: ${encodedPayload}`);
-    console.log(
-      `Returned whole encoded payload length: ${encodedPayload.length}`
-    );
-    decodedPayload = web3.eth.abi.decodeParameters(
-      [
-        {
-          type: "uint256",
-          name: "_executionClaimId"
-        },
-        {
-          type: "address",
-          name: "_sellToken"
-        },
-        {
-          type: "address",
-          name: "_buyToken"
-        },
-        {
-          type: "uint256",
-          name: "_amount"
-        },
-        {
-          type: "uint256",
-          name: "_executionTime"
-        },
-        {
-          type: "uint256",
-          name: "_prepaymentPerSellOrder"
-        }
-      ],
-      returnedDataPayload
-    );
+    // console.log(`Returned Payload Size: ${returnedPayloadSize}`);
+    // console.log(`Returned Payload Size: ${returnedPayloadSize.length}`);
+    // console.log("---");
+    // console.log(`Returned Func Selec: ${returnedFuncSelec}`);
+    // console.log(`Returned Func Selec: ${returnedFuncSelec.length}`);
+    // console.log("---");
+    // console.log(`Returned Data Payload: ${returnedDataPayload}`);
+    // console.log(
+    //   `Returned Data Payload Length: ${returnedDataPayload.length}`
+    // );
+    // console.log("---");
+    // console.log(`Returned whole encoded payload: ${encodedPayload}`);
+    // console.log(
+    //   `Returned whole encoded payload length: ${encodedPayload.length}`
+    // );
+    if (returnedFuncSelec === execDepositAndSell)
+    {
+      decodedPayload = web3.eth.abi.decodeParameters(
+        [
+          {
+            type: "uint256",
+            name: "_executionClaimId"
+          },
+          {
+            type: "address",
+            name: "_sellToken"
+          },
+          {
+            type: "address",
+            name: "_buyToken"
+          },
+          {
+            type: "uint256",
+            name: "_amount"
+          },
+          {
+            type: "uint256",
+            name: "_executionTime"
+          },
+          {
+            type: "uint256",
+            name: "_prepaymentPerSellOrder"
+          }
+        ],
+        returnedDataPayload
+      );
+      isDepositAndSell = true;
 
-    console.log("Decoded Payload: decodedPayload ", decodedPayload);
+      console.log("Decoded Payload: decodedPayload ", decodedPayload);
+
+    }
+    else if (returnedFuncSelec === execWithdraw)
+    {
+      decodedPayload = web3.eth.abi.decodeParameters(
+        [
+          {
+            type: "uint256",
+            name: "_executionClaimId"
+          },
+          {
+            type: "address",
+            name: "_sellToken"
+          },
+          {
+            type: "address",
+            name: "_buyToken"
+          },
+          {
+            type: "uint256",
+            name: "_amount"
+          },
+          {
+            type: "uint256",
+            name: "_prepaymentPerSellOrder"
+          }
+        ],
+        returnedDataPayload
+      );
+      isDepositAndSell = false
+
+      console.log("Decoded Payload: decodedPayload ", decodedPayload);
+    }
 
   })
 
@@ -353,6 +394,7 @@ describe("Successfully execute execution claim", () => {
     }
     // call execute() and get hash from callback
     txHash = await execute();
+
     // get txReceipt with executeTx hash
     let execTxReceipt;
     await web3.eth.getTransactionReceipt(txHash, (error, result) => {
@@ -414,12 +456,30 @@ describe("Successfully execute execution claim", () => {
 
 
     // Fetch past events of gelatoDutchExchange
+    // await gelatoDutchExchange.getPastEvents(
+    //   "LogActualSellAmount",
+    //   (error, events) => {
+    //     // console.log(events);
+    //   }
+    // );
+
+    // Fetch past events of gelatoDutchExchange
     await gelatoDutchExchange.getPastEvents(
-      "LogActualSellAmount",
+      "LogWithdrawAmount",
       (error, events) => {
-        // console.log(events);
+        console.log(events);
       }
     );
+
+    // Fetch past events of gelatoDutchExchange
+    // await buyToken.getPastEvents(
+    //   "Transfer",
+    //   (error, events) => {
+    //     console.log(events);
+    //   }
+    // );
+
+
 
     // #### CHECKS FOR BOTH FUNCTIONS END ####
 
@@ -431,22 +491,32 @@ describe("Successfully execute execution claim", () => {
     let sellerTokenBalanceAfterBN = new BN(await buyToken.contract.methods.balanceOf(seller).call());
     let receivedBuyTokens = sellerTokenBalanceAfterBN.sub(sellerTokenBalanceBeforeBN);
 
+
     let sellAmount = decodedPayload._amount;
 
     let orderState = await gelatoDutchExchange.contract.methods.orderStates(nextExecutionClaim).call()
 
     let lastAuctionIndex = orderState.lastAuctionIndex;
 
+    let closingPrice1 = await dxGetter.contract.methods.getClosingPricesOne(sellToken.address, buyToken.address, lastAuctionIndex).call()
 
-    let closingPrice = await dxGetter.contract.methods.getClosingPrices(sellToken.address, buyToken.address, lastAuctionIndex).call()
-    let num = new BN(closingPrice[0].toString())
-    let den = new BN(closingPrice[1].toString())
+    let num = new BN(closingPrice1[0].toString())
+    let den = new BN(closingPrice1[1].toString())
+    console.log(`
+    Num: ${closingPrice1[0].toString()}
+    Den: ${closingPrice1[1].toString()}
+    `)
 
     let buyTokenReceivable = new BN(sellAmount).mul(num).div(den)
-
+    console.log(`
+    Balance After: ${sellerTokenBalanceAfterBN.toString()}
+    Balance Accurate ${buyTokenReceivable.toString()}
+    `)
     let buyTokenAmountIsEqual = buyTokenReceivable.eq(receivedBuyTokens)
 
     assert.isTrue(buyTokenAmountIsEqual, `Buy Tokens received ${receivedBuyTokens.toString()} should == ${buyTokenReceivable.toString()}`)
+
+
     // console.log('Closing Prices: num ', num);
     // console.log('Closing Prices: den ', den);
 
