@@ -78,7 +78,7 @@ describe("Successfully execute execution claim", () => {
     seller = accounts[2];
     revertExecutor = accounts[8]
     executor = accounts[9];
-    execDepositAndSell = web3.eth.abi.encodeFunctionSignature('execDepositAndSell(uint256,address,address,uint256,uint256,uint256)')
+    execDepositAndSell = web3.eth.abi.encodeFunctionSignature('execDepositAndSell(uint256,address,address,uint256,uint256,uint256,uint256)')
     execWithdraw = web3.eth.abi.encodeFunctionSignature('execWithdraw(uint256,address,address,uint256,uint256,uint256)')
   });
 
@@ -199,13 +199,17 @@ describe("Successfully execute execution claim", () => {
           {
             type: "uint256",
             name: "_prepaymentPerSellOrder"
+          },
+          {
+            type: "uint256",
+            name: "_orderStateId"
           }
         ],
         returnedDataPayload
       );
       isDepositAndSell = true;
 
-      orderState = await gelatoDutchExchange.contract.methods.orderStates(nextExecutionClaim).call()
+      orderState = await gelatoDutchExchange.contract.methods.orderStates(decodedPayload._orderStateId).call()
 
       // console.log("Decoded Payload: decodedPayload ", decodedPayload);
 

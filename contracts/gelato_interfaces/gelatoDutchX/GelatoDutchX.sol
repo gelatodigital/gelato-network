@@ -12,9 +12,8 @@ import '../../base/SafeMath.sol';
 
 // Gelato IcedOut-compliant DutchX Interface for splitting sell orders and for automated withdrawals
 contract GelatoDutchX is IcedOut, SafeTransfer {
-    // parent => Ownable => indirect use through IcedOut
-    // Libraries
-    // using SafeMath for uint256; => indirect use through IcedOut
+
+    // **************************** State Variables ******************************
     using Counters for Counters.Counter;
 
     Counters.Counter private orderIds;
@@ -27,6 +26,21 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         uint256 lastAuctionIndex;  // default: 0
         // uint256 prepaymentPerSellOrder; // maxGas * gelatoGasPrice
     }
+
+
+    // Interfaces to other contracts that are set during construction.
+    // GelatoCore public gelatoCore;
+    DutchExchange public dutchExchange;
+
+    // mapping(orderStateId => orderState)
+    mapping(uint256 => OrderState) public orderStates;
+
+    // Constants that are set during contract construction and updateable via setters
+    uint256 public auctionStartWaitingForFunding;
+
+    string constant execDepositAndSellString = "execDepositAndSell(uint256,address,address,uint256,uint256,uint256,uint256)";
+    string constant execWithdrawString = "execWithdraw(uint256,address,address,uint256,uint256,uint256)";
+    // **************************** State Variables END ******************************
 
 
     // **************************** Events ******************************
@@ -54,35 +68,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
     // **************************** Events END ******************************
 
 
-    // **************************** State Variables ******************************
 
-    // Interfaces to other contracts that are set during construction.
-    // GelatoCore public gelatoCore;
-    DutchExchange public dutchExchange;
-
-    // One orderState struct can have many sellOrder structs as children
-
-    // OrderId => parent orderState struct
-    // mapping(uint256 => OrderState) public orderStates;
-
-    // gelatoCore executionId => individual sellOrder struct
-    // Note 2 executionIds will map to the same sellOrder struct (execDepositAndSell and withdraw)
-    // mapping(uint256 => SellOrder) public sellOrders;
-
-    // // Map execWithdraw claim to respective execDepositAndSellClaim
-    // mapping(uint256 => uint256) public sellOrderLink;
-
-    // withdraw execution claim => depositAndSell exeuctionClaim => sellOrder
-    // mapping(uint256 => mapping(uint256 => SellOrder)) public sellOrders;
-    mapping(uint256 => OrderState) public orderStates;
-
-    // Constants that are set during contract construction and updateable via setters
-    uint256 public auctionStartWaitingForFunding;
-
-    string constant execDepositAndSellString = "execDepositAndSell(uint256,address,address,uint256,uint256,uint256)";
-    string constant execWithdrawString = "execWithdraw(uint256,address,address,uint256,uint256,uint256)";
-
-    // **************************** State Variables END ******************************
 
     /* constructor():
         * constructs Ownable base and sets msg.sender as owner.
@@ -120,7 +106,6 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
     )
         public
         payable
-        returns (bool)
 
     {
         // Step1: Zero value preventions
@@ -166,13 +151,13 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
             // prepaymentPerSellOrder
         );
 
-        // // Step6: fetch new OrderStateId and store orderState in orderState mapping
-        // // Increment the current OrderId
-        // Counters.increment(orderIds);
-        // // Get a new, unique OrderId for the newly created Sell Order
-        // uint256 orderStateId = orderIds.current();
-        // // Update GelatoDutchX state variables
-        // orderStates[orderStateId] = orderState;
+        // Step6: fetch new OrderStateId and store orderState in orderState mapping
+        // Increment the current OrderId
+        Counters.increment(orderIds);
+        // Get a new, unique OrderId for the newly created Sell Order
+        uint256 orderStateId = orderIds.current();
+        // Update GelatoDutchX state variables
+        orderStates[orderStateId] = orderState;
 
         // Step7: Create all sellOrders
         for (uint256 i = 0; i < _numSellOrders; i++) {
@@ -187,26 +172,15 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
 
             uint256 nextExecutionClaimId = getNextExecutionClaimId();
 
-            // Payload: (funcSelector, uint256 executionClaimId, address sellToken, address buyToken, uint256 amount, uint256 executionTime, uint256 prepaymentPerSellOrder)
-            bytes memory payload = abi.encodeWithSignature(execDepositAndSellString, nextExecutionClaimId, _sellToken, _buyToken, _sellOrderAmount, executionTime, prepaymentPerSellOrder);
+            // Payload: (funcSelector, uint256 executionClaimId, address sellToken, address buyToken, uint256 amount, uint256 executionTime, uint256 prepaymentPerSellOrder, uint256 orderStateId)
+            bytes memory payload = abi.encodeWithSignature(execDepositAndSellString, nextExecutionClaimId, _sellToken, _buyToken, _sellOrderAmount, executionTime, prepaymentPerSellOrder, orderStateId);
 
             // For each sellOrder, mint one claim that call the execDepositAndSell function
             mintClaim(msg.sender, payload);
 
-            // For each sellOrder, mint one claim that call the execWithdraw function
-            // (uint256 nextExecutionClaimIdPlusOne, ) = mintClaim("execWithdraw(uint256)", msg.sender);
-
-            // Map first claims to the Sell Order and second claims to the first claim => BONDED Claims
-            // withdraw execution claim => depositAndSell exeuctionClaim => sellOrder
-            orderStates[nextExecutionClaimId] = orderState;
-
             // withdraw execution claim => depositAndSell exeuctionClaim => sellOrder
             //  *** GELATO CORE PROTOCOL INTERACTION END ***
         }
-
-
-        // Step8: Emit New Sell Order to find its suborder constituent claims on the Core
-        return true;
     }
     // **************************** timeSellOrders() END ******************************
 
@@ -252,7 +226,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         returns (uint256)
     {
         // Decode payload
-        (uint256 executionClaimId, address sellToken, address buyToken, uint256 amount, uint256 executionTime, uint256 prepaymentPerSellOrder) = abi.decode(_memPayload, (uint256, address, address, uint256, uint256, uint256));
+        (uint256 executionClaimId, address sellToken, address buyToken, uint256 amount, uint256 executionTime, uint256 prepaymentPerSellOrder, uint256 orderStateId) = abi.decode(_memPayload, (uint256, address, address, uint256, uint256, uint256, uint256));
 
         // Init state variables
         // SellOrder memory sellOrder = sellOrders[_executionClaimId + 1][_executionClaimId];
@@ -263,7 +237,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         checkTimeCondition(executionTime);
 
         // Fetch OrderState
-        OrderState memory orderState = orderStates[executionClaimId];
+        OrderState memory orderState = orderStates[orderStateId];
         // uint256 orderStateId = sellOrder.orderStateId;
         // OrderState memory orderState = orderStates[orderStateId];
 
@@ -345,15 +319,13 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         return 0;
     }
 
-
     // ****************************  execDepositAndSell(executionClaimId) *********************************
     /**
      * DEV: Called by the execute func in GelatoCore.sol
      * Aim: Post sellOrder on the DutchExchange via depositAndSell()
      */
-    function execDepositAndSell(uint256 _executionClaimId, address _sellToken, address _buyToken, uint256 _amount, uint256 _executionTime, uint256 _prepaymentPerSellOrder)
+    function execDepositAndSell(uint256 _executionClaimId, address _sellToken, address _buyToken, uint256 _amount, uint256 _executionTime, uint256 _prepaymentPerSellOrder, uint256 _orderStateId)
         external
-        returns (bool)
     {
         // Step1: Checks for execution safety
         // Make sure that gelatoCore is the only allowed caller to this function.
@@ -372,7 +344,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
 
         // Fetch owner of execution claim
         address tokenOwner = gelatoCore.ownerOf(_executionClaimId);
-        OrderState storage orderState = orderStates[_executionClaimId];
+        OrderState storage orderState = orderStates[_orderStateId];
 
         // Step4: initialise multi-use variables
         // ********************** Load variables from storage and initialise them **********************
@@ -413,7 +385,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
 
             emit LogActualSellAmount(
                                     _executionClaimId,
-                                    _executionClaimId,
+                                    _orderStateId,
                                     _amount,
                                     actualSellAmount,
                                     dutchXFee
@@ -443,13 +415,12 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         // Step8:  Check if interface still has sufficient balance on core. If not, add balance. If yes, skip.
         automaticTopUp();
 
-        return true;
     }
     // **************************** IcedOut execute(executionClaimId) END *********************************
 
     // Withdraw function executor will call
     function execWithdraw(uint256 _executionClaimId, address _sellToken, address _buyToken, uint256 _amount, uint256 _prepaymentPerSellOrder, uint256 lastAuctionIndex)
-        public
+        external
     {
         // Step1: Checks for execution safety
         // Make sure that gelatoCore is the only allowed caller to this function.
@@ -598,7 +569,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         // @DEV check that we are dealing with a execDepositAndSell claim
         require(funcSelector == bytes4(keccak256(bytes(execDepositAndSellString))), "Only claims that have not been sold yet can be cancelled");
 
-        (uint256 executionClaimId, address sellToken, , uint256 amount, , uint256 prepaymentPerSellOrder) = abi.decode(memPayload, (uint256, address, address, uint256, uint256, uint256));
+        (uint256 executionClaimId, address sellToken, , uint256 amount, , uint256 prepaymentPerSellOrder, uint256 orderStateId) = abi.decode(memPayload, (uint256, address, address, uint256, uint256, uint256, uint256));
 
         // address seller = gelatoCore.ownerOf(_executionClaimId);
         address tokenOwner = gelatoCore.ownerOf(_executionClaimId);

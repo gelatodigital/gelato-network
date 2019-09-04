@@ -68,7 +68,7 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
     gelatoCoreOwner = await gelatoCore.contract.methods.owner().call();
     seller = accounts[2]; // account[2]
     executor = accounts[9];
-    execDepositAndSell = web3.eth.abi.encodeFunctionSignature('execDepositAndSell(uint256,address,address,uint256,uint256,uint256)')
+    execDepositAndSell = web3.eth.abi.encodeFunctionSignature('execDepositAndSell(uint256,address,address,uint256,uint256,uint256, uint256)')
     execWithdraw = web3.eth.abi.encodeFunctionSignature('execWithdraw(uint256,address,address,uint256,uint256, uint256)')
   });
 
@@ -321,6 +321,11 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
             type: "uint256",
             name: "_prepaymentPerSellOrder"
           }
+          ,
+          {
+            type: "uint256",
+            name: "_orderStateId"
+          }
         ],
         returnedDataPayload
       );
@@ -389,7 +394,7 @@ describe("Check gelatoDutchExchange Interface payload values", () => {
       `)
 
       orderState = await gelatoDutchExchange.contract.methods
-        .orderStates(claimId)
+        .orderStates(decodedPayload._orderStateId)
         .call();
       // fetch the newly created orderState on GELATO_DX
       console.log(`Claim Id: ${claimId}`)
