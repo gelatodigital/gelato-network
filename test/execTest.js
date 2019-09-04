@@ -79,7 +79,7 @@ describe("Successfully execute execution claim", () => {
     revertExecutor = accounts[8]
     executor = accounts[9];
     execDepositAndSell = web3.eth.abi.encodeFunctionSignature('execDepositAndSell(uint256,address,address,uint256,uint256,uint256)')
-    execWithdraw = web3.eth.abi.encodeFunctionSignature('execWithdraw(uint256,address,address,uint256,uint256)')
+    execWithdraw = web3.eth.abi.encodeFunctionSignature('execWithdraw(uint256,address,address,uint256,uint256,uint256)')
   });
 
   it("Fetch Before Balance of seller and executor", async function() {
@@ -233,16 +233,17 @@ describe("Successfully execute execution claim", () => {
           {
             type: "uint256",
             name: "_prepaymentPerSellOrder"
+          },
+          {
+            type: "uint256",
+            name: "_lastAuctionIndex"
           }
         ],
         returnedDataPayload
       );
       isDepositAndSell = false
 
-      // Set order state
-      let executionClaimMappingId = await gelatoDutchExchange.contract.methods.executionClaimIdMapping(nextExecutionClaim).call();
-
-      orderState = await gelatoDutchExchange.contract.methods.orderStates(executionClaimMappingId).call()
+      orderState = false
 
       // console.log("Decoded Payload: decodedPayload ", decodedPayload);
     }
@@ -251,67 +252,70 @@ describe("Successfully execute execution claim", () => {
 
   it("Check if execution claim is executable based on its execution Time, if not, test that execution reverts and fast forward", async () => {
 
-
-    let sellOrderExecutionTime = decodedPayload._executionTime
-
-    // Fetch time
-    let blockNumber = await web3.eth.getBlockNumber();
-    let block = await web3.eth.getBlock(blockNumber);
-    let beforeTimeTravel = block.timestamp;
-
-    let secondsUntilExecution  = sellOrderExecutionTime - beforeTimeTravel
-
-    // console.log(`
-    //              Claim is executable at: ${sellOrderExecutionTime}.
-    //              Current Time: ${beforeTimeTravel}
-    //              Difference: ${secondsUntilExecution}`);
-
-    // If execution Time of claim is in the future, we execute and expect a revert and then fast forward in time to the execution time
-    if(parseInt(secondsUntilExecution) > 0)
+    if (isDepositAndSell)
     {
 
-      let canExecuteReturn = await gelatoCore.contract.methods.canExecute(nextExecutionClaim).call()
-      let returnStatus = canExecuteReturn[0].toString(10)
-      let dappInterfaceAddress = canExecuteReturn[1].toString(10)
-      let payload = canExecuteReturn[2].toString(10)
+      let sellOrderExecutionTime = decodedPayload._executionTime
+
+      // Fetch time
+      let blockNumber = await web3.eth.getBlockNumber();
+      let block = await web3.eth.getBlock(blockNumber);
+      let beforeTimeTravel = block.timestamp;
+
+      let secondsUntilExecution  = sellOrderExecutionTime - beforeTimeTravel
+
       // console.log(`
-      //   Return Status: ${returnStatus}
-      //   dappInterfaceAddress: ${dappInterfaceAddress}
-      //   payload: ${payload}
-      //   `)
-      assert.equal(parseInt(returnStatus), 1);
+      //              Claim is executable at: ${sellOrderExecutionTime}.
+      //              Current Time: ${beforeTimeTravel}
+      //              Difference: ${secondsUntilExecution}`);
 
-      // Execution should revert
-      // Gas price to calc executor payout
-      let txGasPrice = await web3.utils.toWei("5", "gwei");
-      await truffleAssert.reverts(
-        gelatoCore.contract.methods
-          .execute(nextExecutionClaim)
-          .send({ from: revertExecutor, gas: 1000000, gasPrice: txGasPrice }),
-        "canExec func did not return 0"
-      ); // gas needed to prevent out of gas error
+      // If execution Time of claim is in the future, we execute and expect a revert and then fast forward in time to the execution time
+      if(parseInt(secondsUntilExecution) > 0)
+      {
 
-      // fast forward
-      await timeTravel.advanceTimeAndBlock(secondsUntilExecution);
-      // console.log(`Time travelled ${secondsUntilExecution} seconds`)
+        let canExecuteReturn = await gelatoCore.contract.methods.canExecute(nextExecutionClaim).call()
+        let returnStatus = canExecuteReturn[0].toString(10)
+        let dappInterfaceAddress = canExecuteReturn[1].toString(10)
+        let payload = canExecuteReturn[2].toString(10)
+        // console.log(`
+        //   Return Status: ${returnStatus}
+        //   dappInterfaceAddress: ${dappInterfaceAddress}
+        //   payload: ${payload}
+        //   `)
+        assert.equal(parseInt(returnStatus), 1);
 
+        // Execution should revert
+        // Gas price to calc executor payout
+        let txGasPrice = await web3.utils.toWei("5", "gwei");
+        await truffleAssert.reverts(
+          gelatoCore.contract.methods
+            .execute(nextExecutionClaim)
+            .send({ from: revertExecutor, gas: 1000000, gasPrice: txGasPrice }),
+          "canExec func did not return 0"
+        ); // gas needed to prevent out of gas error
+
+        // fast forward
+        await timeTravel.advanceTimeAndBlock(secondsUntilExecution);
+        // console.log(`Time travelled ${secondsUntilExecution} seconds`)
+
+      }
+
+      // Fetch current time again, in case we fast forwarded in time
+      let blockNumber2 = await web3.eth.getBlockNumber();
+      let block2 = await web3.eth.getBlock(blockNumber2);
+      let afterTimeTravel = block2.timestamp;
+
+      // Check if execution claim is executable
+      // assert.equal(executionTime + 15, claimsExecutionTime.toString(), `${claimsExecutionTime} should be equal to the execution time we set + 15 seconds`)
+      let claimsExecutionTimeBN = new BN(sellOrderExecutionTime);
+      let afterTimeTravelBN = new BN(afterTimeTravel);
+      let claimIsExecutable = afterTimeTravelBN.gte(claimsExecutionTimeBN);
+      // Check if execution claim is executable, i.e. lies in the past
+      assert.isTrue(
+        claimIsExecutable,
+        `${afterTimeTravel} should be greater than ${claimsExecutionTimeBN.toString()}`
+      );
     }
-
-    // Fetch current time again, in case we fast forwarded in time
-    let blockNumber2 = await web3.eth.getBlockNumber();
-    let block2 = await web3.eth.getBlock(blockNumber2);
-    let afterTimeTravel = block2.timestamp;
-
-    // Check if execution claim is executable
-    // assert.equal(executionTime + 15, claimsExecutionTime.toString(), `${claimsExecutionTime} should be equal to the execution time we set + 15 seconds`)
-    let claimsExecutionTimeBN = new BN(sellOrderExecutionTime);
-    let afterTimeTravelBN = new BN(afterTimeTravel);
-    let claimIsExecutable = afterTimeTravelBN.gte(claimsExecutionTimeBN);
-    // Check if execution claim is executable, i.e. lies in the past
-    assert.isTrue(
-      claimIsExecutable,
-      `${afterTimeTravel} should be greater than ${claimsExecutionTimeBN.toString()}`
-    );
   });
 
   it(`estimates GelatoCore.execute() gasUsed and logs gasLimit`, async () => {
@@ -501,7 +505,16 @@ describe("Successfully execute execution claim", () => {
     let sellAmount = decodedPayload._amount;
 
     // Order state already fetched
-    let lastAuctionIndex = orderState.lastAuctionIndex;
+    let AuctionIndex;
+    if (isDepositAndSell)
+    {
+      lastAuctionIndex = orderState.lastAuctionIndex;
+    }
+    else
+    {
+      lastAuctionIndex = decodedPayload._lastAuctionIndex
+
+    }
 
     let closingPrice1 = await dxGetter.contract.methods.getClosingPricesOne(sellToken.address, buyToken.address, lastAuctionIndex).call()
 

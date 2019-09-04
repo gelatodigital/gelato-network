@@ -33,12 +33,11 @@ contract IcedOut is Ownable {
           interfaceGasPrice = 0;
      }
 
-     function decodeWithFunctionSignature(bytes memory _payload)
+     function decodeWithFunctionSignature(bytes memory _memPayload)
         internal
         pure
         returns(bytes memory, bytes4)
     {
-        bytes memory memPayload = _payload;
 
         // Create bytes4 array to store the keccakHash of the funcSelector in
         bytes4 funcSelector;
@@ -47,7 +46,7 @@ contract IcedOut is Ownable {
             // How: Get the pointer of the payload in memory (== memPayload) and add 32 bytes (==0x20 hex) to point to where the actual data of the function selector lies, skipping the length bit (always first 32 bytes).
             // Bind this pointer to funcSelector, which when using it in solidity ignores the encoded data which comes directly after the first word (functionSelector == bytes4)
             // In short: Read the first 32 bytes by loading the word that starts at memory location memPayload + 32 bytes (==0x20 hex) and bind to funcSelector
-            funcSelector := mload(add(0x20, memPayload))
+            funcSelector := mload(add(0x20, _memPayload))
 
             // Aim: Get rid of the funcSelector Data
             // How: Load the first word of the memPayload array (== length of the data) and subtract it by 4
@@ -56,16 +55,16 @@ contract IcedOut is Ownable {
             // Q: Does sub(mload(memPayload), 4) update the word that stores the length of the data, which automatically prunes the first 4 bytes of the part that stores the data?
             mstore(
                 // At position memPayload + 4
-                add(memPayload, 4),
+                add(_memPayload, 4),
                 // Load the first word of the memPayload bytes array == length of the bytes and deduct it by 4
-                sub(mload(memPayload), 4)
+                sub(mload(_memPayload), 4)
             )
             // Skip the first 4 bytes (function signature)
             // Overwrite memPayload by binding the memory pointer of memPayload + 4 to key memPayload
-            memPayload := add(memPayload, 4)
+            _memPayload := add(_memPayload, 4)
 
         }
-        return (memPayload, funcSelector);
+        return (_memPayload, funcSelector);
     }
 
      // Function to calculate the prepayment an interface needs to transfer to Gelato Core
