@@ -161,12 +161,6 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
 
         // Step7: Create all sellOrders
         for (uint256 i = 0; i < _numSellOrders; i++) {
-            // SellOrder memory sellOrder = SellOrder(
-            //     orderStateId,
-            //     _executionTime.add(_intervalSpan.mul(i)),
-            //     _sellOrderAmount,
-            //     false // not withdrawn yet
-            // );
 
             uint256 executionTime = _executionTime.add(_intervalSpan.mul(i));
 
@@ -226,7 +220,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         returns (uint256)
     {
         // Decode payload
-        (uint256 executionClaimId, address sellToken, address buyToken, uint256 amount, uint256 executionTime, uint256 prepaymentPerSellOrder, uint256 orderStateId) = abi.decode(_memPayload, (uint256, address, address, uint256, uint256, uint256, uint256));
+        (, address sellToken, address buyToken, uint256 amount, uint256 executionTime, , uint256 orderStateId) = abi.decode(_memPayload, (uint256, address, address, uint256, uint256, uint256, uint256));
 
         // Init state variables
         // SellOrder memory sellOrder = sellOrders[_executionClaimId + 1][_executionClaimId];
@@ -262,6 +256,8 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         {
             newAuctionIsWaiting = false;
         }
+
+        bytes memory interfaceContext = abi.
 
         // Check if interface has enough funds to sell on the Dutch Exchange
         require(
@@ -299,7 +295,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         returns (uint256)
     {
         // Decode payload
-        (uint256 executionClaimId, address sellToken, address buyToken, uint256 amount, uint256 prepaymentPerSellOrder, uint256 lastAuctionIndex) = abi.decode(_memPayload, (uint256, address, address, uint256, uint256, uint256));
+        (, address sellToken, address buyToken, , , uint256 lastAuctionIndex) = abi.decode(_memPayload, (uint256, address, address, uint256, uint256, uint256));
 
         // Check if auction in DutchX closed
         uint256 num;
@@ -569,7 +565,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         // @DEV check that we are dealing with a execDepositAndSell claim
         require(funcSelector == bytes4(keccak256(bytes(execDepositAndSellString))), "Only claims that have not been sold yet can be cancelled");
 
-        (uint256 executionClaimId, address sellToken, , uint256 amount, , uint256 prepaymentPerSellOrder, uint256 orderStateId) = abi.decode(memPayload, (uint256, address, address, uint256, uint256, uint256, uint256));
+        (uint256 executionClaimId, address sellToken, , uint256 amount, , uint256 prepaymentPerSellOrder, ) = abi.decode(memPayload, (uint256, address, address, uint256, uint256, uint256, uint256));
 
         // address seller = gelatoCore.ownerOf(_executionClaimId);
         address tokenOwner = gelatoCore.ownerOf(_executionClaimId);
@@ -632,7 +628,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         require(funcSelector == bytes4(keccak256(bytes(execWithdrawString))), "Only claims that have not been sold yet can be cancelled");
 
         // Decode payload
-        (uint256 executionClaimId, address sellToken, address buyToken, uint256 amount, uint256 prepaymentPerSellOrder, uint256 lastAuctionIndex) = abi.decode(memPayload, (uint256, address, address, uint256, uint256, uint256));
+        (, address sellToken, address buyToken, uint256 amount, , uint256 lastAuctionIndex) = abi.decode(memPayload, (uint256, address, address, uint256, uint256, uint256));
 
         // ******* CHECKS *******
         // If amount == 0, struct has already been deleted
