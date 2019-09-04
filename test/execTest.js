@@ -205,7 +205,9 @@ describe("Successfully execute execution claim", () => {
       );
       isDepositAndSell = true;
 
-      console.log("Decoded Payload: decodedPayload ", decodedPayload);
+      orderState = await gelatoDutchExchange.contract.methods.orderStates(nextExecutionClaim).call()
+
+      // console.log("Decoded Payload: decodedPayload ", decodedPayload);
 
     }
     else if (returnedFuncSelec === execWithdraw)
@@ -237,7 +239,12 @@ describe("Successfully execute execution claim", () => {
       );
       isDepositAndSell = false
 
-      console.log("Decoded Payload: decodedPayload ", decodedPayload);
+      // Set order state
+      let executionClaimMappingId = await gelatoDutchExchange.contract.methods.executionClaimIdMapping(nextExecutionClaim).call();
+
+      orderState = await gelatoDutchExchange.contract.methods.orderStates(executionClaimMappingId).call()
+
+      // console.log("Decoded Payload: decodedPayload ", decodedPayload);
     }
 
   })
@@ -267,11 +274,11 @@ describe("Successfully execute execution claim", () => {
       let returnStatus = canExecuteReturn[0].toString(10)
       let dappInterfaceAddress = canExecuteReturn[1].toString(10)
       let payload = canExecuteReturn[2].toString(10)
-      console.log(`
-        Return Status: ${returnStatus}
-        dappInterfaceAddress: ${dappInterfaceAddress}
-        payload: ${payload}
-        `)
+      // console.log(`
+      //   Return Status: ${returnStatus}
+      //   dappInterfaceAddress: ${dappInterfaceAddress}
+      //   payload: ${payload}
+      //   `)
       assert.equal(parseInt(returnStatus), 1);
 
       // Execution should revert
@@ -358,11 +365,11 @@ describe("Successfully execute execution claim", () => {
     let returnStatus = canExecuteReturn[0].toString(10)
     let dappInterfaceAddress = canExecuteReturn[1].toString(10)
     let payload = canExecuteReturn[2].toString(10)
-    console.log(`
-      Return Status: ${returnStatus}
-      dappInterfaceAddress: ${dappInterfaceAddress}
-      payload: ${payload}
-      `)
+    // console.log(`
+    //   Return Status: ${returnStatus}
+    //   dappInterfaceAddress: ${dappInterfaceAddress}
+    //   payload: ${payload}
+    //   `)
     assert.equal(parseInt(returnStatus[0]), 0);
   })
 
@@ -463,13 +470,13 @@ describe("Successfully execute execution claim", () => {
     //   }
     // );
 
-    // Fetch past events of gelatoDutchExchange
-    await gelatoDutchExchange.getPastEvents(
-      "LogWithdrawAmount",
-      (error, events) => {
-        console.log(events);
-      }
-    );
+    // // Fetch past events of gelatoDutchExchange
+    // await gelatoDutchExchange.getPastEvents(
+    //   "LogWithdrawAmount",
+    //   (error, events) => {
+    //     console.log(events);
+    //   }
+    // );
 
     // Fetch past events of gelatoDutchExchange
     // await buyToken.getPastEvents(
@@ -491,30 +498,34 @@ describe("Successfully execute execution claim", () => {
     let sellerTokenBalanceAfterBN = new BN(await buyToken.contract.methods.balanceOf(seller).call());
     let receivedBuyTokens = sellerTokenBalanceAfterBN.sub(sellerTokenBalanceBeforeBN);
 
-
     let sellAmount = decodedPayload._amount;
 
-    let orderState = await gelatoDutchExchange.contract.methods.orderStates(nextExecutionClaim).call()
-
+    // Order state already fetched
     let lastAuctionIndex = orderState.lastAuctionIndex;
 
     let closingPrice1 = await dxGetter.contract.methods.getClosingPricesOne(sellToken.address, buyToken.address, lastAuctionIndex).call()
 
     let num = new BN(closingPrice1[0].toString())
     let den = new BN(closingPrice1[1].toString())
-    console.log(`
-    Num: ${closingPrice1[0].toString()}
-    Den: ${closingPrice1[1].toString()}
-    `)
+    // console.log(`
+    // Num: ${closingPrice1[0].toString()}
+    // Den: ${closingPrice1[1].toString()}
+    // `)
 
     let buyTokenReceivable = new BN(sellAmount).mul(num).div(den)
-    console.log(`
-    Balance After: ${sellerTokenBalanceAfterBN.toString()}
-    Balance Accurate ${buyTokenReceivable.toString()}
-    `)
-    let buyTokenAmountIsEqual = buyTokenReceivable.eq(receivedBuyTokens)
+    // console.log(`
+    // Balance After: ${sellerTokenBalanceAfterBN.toString()}
+    // Balance Accurate ${buyTokenReceivable.toString()}
+    // `)
 
-    assert.isTrue(buyTokenAmountIsEqual, `Buy Tokens received ${receivedBuyTokens.toString()} should == ${buyTokenReceivable.toString()}`)
+    if (!isDepositAndSell)
+    {
+      let buyTokenAmountIsEqual = buyTokenReceivable.eq(receivedBuyTokens)
+
+      assert.isTrue(buyTokenAmountIsEqual, `Buy Tokens received ${receivedBuyTokens.toString()} should == ${buyTokenReceivable.toString()}`)
+
+    }
+
 
 
     // console.log('Closing Prices: num ', num);
