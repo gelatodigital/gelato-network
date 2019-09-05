@@ -78,8 +78,8 @@ describe("Successfully execute execution claim", () => {
     seller = accounts[2];
     revertExecutor = accounts[8]
     executor = accounts[9];
-    execDepositAndSell = web3.eth.abi.encodeFunctionSignature('execDepositAndSell(uint256,address,address,uint256,uint256,uint256,uint256)')
-    execWithdraw = web3.eth.abi.encodeFunctionSignature('execWithdraw(uint256,address,address,uint256,uint256,uint256)')
+    execDepositAndSell = web3.eth.abi.encodeFunctionSignature('execDepositAndSell(uint256,address,address,uint256,uint256,uint256,uint256,uint256,bool)')
+    execWithdraw = web3.eth.abi.encodeFunctionSignature('execWithdraw(uint256,address,address,uint256,uint256)')
   });
 
   it("Fetch Before Balance of seller and executor", async function() {
@@ -203,6 +203,14 @@ describe("Successfully execute execution claim", () => {
           {
             type: "uint256",
             name: "_orderStateId"
+          },
+          {
+            type: "uint256",
+            name: "_newAuctionIndex"
+          },
+          {
+            type: "bool",
+            name: "_AuctionIsWaiting"
           }
         ],
         returnedDataPayload
@@ -233,10 +241,6 @@ describe("Successfully execute execution claim", () => {
           {
             type: "uint256",
             name: "_amount"
-          },
-          {
-            type: "uint256",
-            name: "_prepaymentPerSellOrder"
           },
           {
             type: "uint256",
@@ -418,6 +422,7 @@ describe("Successfully execute execution claim", () => {
       }
       execTxReceipt = result;
     });
+    console.log(execTxReceipt)
 
     let gdxGelatoBalanceAfter = new BN(await gelatoCore.contract.methods.getInterfaceBalance(gelatoDutchExchange.address).call())
 
@@ -487,12 +492,20 @@ describe("Successfully execute execution claim", () => {
     // );
 
     // Fetch past events of gelatoDutchExchange
-    // await buyToken.getPastEvents(
-    //   "Transfer",
-    //   (error, events) => {
-    //     console.log(events);
-    //   }
-    // );
+    await gelatoCore.getPastEvents(
+      "CanExecuteFailed",
+      (error, events) => {
+        console.log(events);
+      }
+    );
+
+    // Fetch past events of gelatoDutchExchange
+    await buyToken.getPastEvents(
+      "Transfer",
+      (error, events) => {
+        console.log(events);
+      }
+    );
 
 
 

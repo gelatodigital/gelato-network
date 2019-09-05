@@ -288,7 +288,8 @@ contract GelatoCore is Ownable, Claim {
         else
         {
             // Decode return value from interface
-            (uint256 status) = abi.decode(returndata, (uint256));
+            uint256 status;
+            (status, payload) = abi.decode(returndata, (uint256, bytes));
             // Decoded returndata should return 0 for the executor to deem execution claim executable
             if (status == uint256(PreExecutionCheck.IsExecutable))
             {
