@@ -297,8 +297,12 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
             "den != 0, Last auction did not clear thus far, you have to wait"
         );
 
+        // Callculate withdraw amount
+        uint256 withdrawAmount = amount.mul(num).div(den);
+
         // // All checks passed
-        _memPayload = abi.encodeWithSignature(execWithdrawString, executionClaimId, sellToken, buyToken, amount, lastAuctionIndex);
+        _memPayload = abi.encodeWithSignature(execWithdrawString, executionClaimId, sellToken, buyToken, withdrawAmount, lastAuctionIndex);
+
         return (0, _memPayload);
     }
 
@@ -386,19 +390,14 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         address tokenOwner = gelatoCore.ownerOf(_executionClaimId);
 
         // Calculate withdraw amount
-        uint256 withdrawAmount = _withdraw(tokenOwner,
-                                           _sellToken,
-                                           _buyToken,
-                                           _lastAuctionIndex,
-                                           _amount //Actual amount posted
-        );
+        _withdraw(tokenOwner, _sellToken, _buyToken, _lastAuctionIndex, _amount);
 
         // Event emission
         emit LogWithdrawComplete(_executionClaimId,
                                  _executionClaimId,
                                  tokenOwner,
                                  _buyToken,
-                                 withdrawAmount
+                                 _amount
         );
     }
 
@@ -442,17 +441,10 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
                        address _sellToken,
                        address _buyToken,
                        uint256 _lastAuctionIndex,
-                       uint256 _sellAmountAfterFee
+                       uint256 _withdrawAmount
     )
         public
-        returns(uint256 withdrawAmount)
     {
-        // Calc how much the amount of buy_tokens received in the previously participated auction
-        withdrawAmount = _calcWithdrawAmount(_sellToken,
-                                             _buyToken,
-                                             _lastAuctionIndex,
-                                             _sellAmountAfterFee
-        );
 
         // Withdraw funds from dutchExchange to Gelato
         // DEV uses memory value lastAuctionIndex in case execute func calls it as we already incremented storage value
@@ -460,47 +452,14 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
                                        _buyToken,
                                        address(this),
                                        _lastAuctionIndex,
-                                       withdrawAmount
+                                       _withdrawAmount
         );
 
         // Transfer Tokens from Gelato to Seller
-        safeTransfer(_buyToken, _seller, withdrawAmount, false);
+        safeTransfer(_buyToken, _seller, _withdrawAmount, false);
     }
 
-    // DEV Calculates amount withdrawable from past, cleared auction
-    function _calcWithdrawAmount(address _sellToken,
-                                 address _buyToken,
-                                 uint256 _lastAuctionIndex,
-                                 uint256 _sellAmountAfterFee
-    )
-        public
-        returns(uint256 withdrawAmount)
-    {
-        // Fetch numerator and denominator from dutchExchange
-        uint256 num;
-        uint256 den;
 
-        // FETCH PRICE OF CLEARED ORDER WITH INDEX lastAuctionIndex
-        // num: buyVolumeOpp || den: sellVolumeOpp
-        // Ex: num = 1000, den = 10 => 1WETH === 100RDN
-        (num, den) = dutchExchange.closingPrices(_sellToken,
-                                                 _buyToken,
-                                                 _lastAuctionIndex
-        );
-
-        // Check if the last auction the seller participated in has cleared
-        // DEV Check line 442 in dutchExchange contract
-        // DEV Test: Are there any other possibilities for den being 0 other than when the auction has not yet cleared?
-        require(den != 0,
-            "withdrawManually: den != 0, Last auction did not clear thus far, you have to wait"
-        );
-
-        emit LogWithdrawAmount(num, den, _sellAmountAfterFee.mul(num).div(den));
-
-        // Callculate withdraw amount
-        withdrawAmount = _sellAmountAfterFee.mul(num).div(den);
-
-    }
     // **************************** Helper functions END *********************************
 
 
@@ -603,6 +562,9 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         require(den != 0,
             "withdrawManually: den != 0, Last auction did not clear thus far, you have to wait"
         );
+
+        uint256 withdrawAmount = amount.mul(num).div(den);
+
         // ******* CHECKS END *******
 
         // ******* INTERACTIONS *******
@@ -615,7 +577,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
                   sellToken,
                   buyToken,
                   lastAuctionIndex,
-                  amount
+                  withdrawAmount
         );
 
         // ******* INTERACTIONS *******

@@ -422,7 +422,7 @@ describe("Successfully execute execution claim", () => {
       }
       execTxReceipt = result;
     });
-    console.log(execTxReceipt)
+    // console.log(execTxReceipt)
 
     let gdxGelatoBalanceAfter = new BN(await gelatoCore.contract.methods.getInterfaceBalance(gelatoDutchExchange.address).call())
 
@@ -491,21 +491,21 @@ describe("Successfully execute execution claim", () => {
     //   }
     // );
 
-    // Fetch past events of gelatoDutchExchange
-    await gelatoCore.getPastEvents(
-      "CanExecuteFailed",
-      (error, events) => {
-        console.log(events);
-      }
-    );
+    // // Fetch past events of gelatoDutchExchange
+    // await gelatoCore.getPastEvents(
+    //   "CanExecuteFailed",
+    //   (error, events) => {
+    //     console.log(events);
+    //   }
+    // );
 
-    // Fetch past events of gelatoDutchExchange
-    await buyToken.getPastEvents(
-      "Transfer",
-      (error, events) => {
-        console.log(events);
-      }
-    );
+    // // Fetch past events of gelatoDutchExchange
+    // await buyToken.getPastEvents(
+    //   "Transfer",
+    //   (error, events) => {
+    //     console.log(events);
+    //   }
+    // );
 
 
 
