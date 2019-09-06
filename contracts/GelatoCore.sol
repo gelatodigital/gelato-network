@@ -432,8 +432,8 @@ contract GelatoCore is Ownable, Claim {
         // Current tx gas cost:
         // gelatoDutchX depositAnd sell: 465.597
         (bool executedClaimStatus,) = _dappInterface.call.gas(_executionGas)(_payload); // .gas(_executionGas)
-        emit ExecuteResult(executedClaimStatus, _executor, _executionClaimId, _executionGas);
         emit LogGasConsumption(gasleft());
+        emit ExecuteResult(executedClaimStatus, _executor, _executionClaimId, _executionGas);
 
         // Fetch interface balance post call
         uint256 interfaceBalanceAfter = interfaceBalances[_dappInterface];

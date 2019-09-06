@@ -379,13 +379,13 @@ describe("Should not be able to mint when tokens not traded on the dutchX", () =
 describe("Check gelatoDutchExchange Interface payload values", () => {
   it("Check payload values", async () => {
     definedExecutionTimeBN = new BN(executionTime)
-
     mintedClaims.sort();
+
     mintedClaims.forEach(async claimId => {
       let selectedPayload = decodedPayloads[claimId]
-      let payloadExecutionClaimId = selectedPayload._executionClaimId;
-      let payloadSellToken = selectedPayload._sellToken;
-      let payloadBuyToken = selectedPayload._buyToken;
+      // let payloadExecutionClaimId = selectedPayload._executionClaimId;
+      // let payloadSellToken = selectedPayload._sellToken;
+      // let payloadBuyToken = selectedPayload._buyToken;
       let payloadAmount = selectedPayload._amount;
       let payloadExecutionTime = selectedPayload._executionTime;
       let payloadPrepaymentPerSellOrder = selectedPayload._prepaymentPerSellOrder;

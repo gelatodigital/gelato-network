@@ -14,7 +14,7 @@ const GELATO_FEE = web3.utils.toWei("50", "gwei");
 module.exports = async function(deployer, network, accounts) {
   const _deployer = accounts[0];
   const depositAndSellGas = 500000;
-  const withdrawGas = 400000;
+  const withdrawGas = 200000;
 
   // Make sure the proxy is deployed
   const dxProxy = await DutchExchangeProxy.deployed();
