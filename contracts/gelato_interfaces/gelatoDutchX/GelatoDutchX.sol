@@ -39,7 +39,12 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
     uint256 public auctionStartWaitingForFunding;
 
     string constant execDepositAndSellString = "execDepositAndSell(uint256,address,address,uint256,uint256,uint256,uint256,uint256,bool)";
+
+    uint256 public execDepositAndSellGas;
+
     string constant execWithdrawString = "execWithdraw(uint256,address,address,uint256,uint256)";
+
+    uint256 public execWithdrawGas;
     // **************************** State Variables END ******************************
 
 
@@ -75,14 +80,16 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         * connects the contract interfaces to deployed instances thereof.
         * sets the state variable constants
     */
-    constructor(address payable _GelatoCore, address _DutchExchange)
+    constructor(address payable _GelatoCore, address _DutchExchange, uint256 _execDepositAndSellGas, uint256 _execWithdrawGas)
         // Initialize gelatoCore address & maxGas in IcedOut parent
-        IcedOut(_GelatoCore, 500000) // maxGas 277317 for depsositAndSell
+        IcedOut(_GelatoCore, _execDepositAndSellGas + _execWithdrawGas) // maxGas 277317 for depsositAndSell
         public
     {
         // gelatoCore = GelatoCore(_GelatoCore);
         dutchExchange = DutchExchange(_DutchExchange);
         auctionStartWaitingForFunding = 1;
+        execDepositAndSellGas = _execDepositAndSellGas;
+        execWithdrawGas = _execWithdrawGas;
     }
 
 
@@ -170,7 +177,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
             bytes memory payload = abi.encodeWithSignature(execDepositAndSellString, nextExecutionClaimId, _sellToken, _buyToken, _sellOrderAmount, executionTime, prepaymentPerSellOrder, orderStateId, 0, false);
 
             // For each sellOrder, mint one claim that call the execDepositAndSell function
-            mintClaim(msg.sender, payload);
+            mintClaim(msg.sender, payload, execDepositAndSellGas);
 
             // withdraw execution claim => depositAndSell exeuctionClaim => sellOrder
             //  *** GELATO CORE PROTOCOL INTERACTION END ***
@@ -362,7 +369,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
             bytes memory payload = abi.encodeWithSignature(execWithdrawString, nextExecutionClaimId, _sellToken, _buyToken, actualSellAmount, _newAuctionIndex);
 
             // Mint new withdraw token
-            mintClaim(tokenOwner, payload);
+            mintClaim(tokenOwner, payload, execWithdrawGas);
 
         }
 

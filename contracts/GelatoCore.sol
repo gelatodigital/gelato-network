@@ -19,6 +19,7 @@ contract GelatoCore is Ownable, Claim {
     struct ExecutionClaim {
         address dappInterface;
         bytes payload;
+        uint256 executionGas;
     }
 
     // **************************** Events **********************************
@@ -50,6 +51,10 @@ contract GelatoCore is Ownable, Claim {
     event LogminEthBalanceUpdated(uint256 minEthBalance);
 
     event CanExecuteFailed(address indexed executor, uint256 indexed executionClaimId);
+    event ExecuteResult(bool indexed status, address indexed executor, uint256 indexed executionClaimId, uint256 executionGas);
+    // DELETE LATER
+
+    event LogGasConsumption(uint256 indexed gasConsumed);
     // **************************** Events END **********************************
 
     // **************************** State Variables **********************************
@@ -58,7 +63,7 @@ contract GelatoCore is Ownable, Claim {
     string public version = "0.0.3";
 
     // Gas stipends for acceptRelayedCall, preRelayedCall and postRelayedCall
-    uint256 constant private acceptRelayedCallMaxGas = 50000;
+    uint256 constant acceptExecCallMaxGas = 50000;
 
     // Execution claim is exeutable should always return 1
     uint256 constant isNotExecutable = 1;
@@ -80,11 +85,7 @@ contract GelatoCore is Ownable, Claim {
     // Gas cost of all execute() instructions after endGas => 13034
     // Gas cost to initialize transaction = 21000
     // Sum: 34034
-    uint256 constant gasOverhead = 34034;
-
-    // Minimum gas refunds given that we nullify 3 state variables in each execution
-    // @DEV We somehow get a greater refund, investigate
-    uint256 constant minGasRefunds = 30000;
+    uint256 constant gasOverhead = 100000;
 
     // Max Gas Price executors can receive. E.g. 50000000000 == 50GWEI
     uint256 public gelatoMaxGasPrice;
@@ -128,7 +129,8 @@ contract GelatoCore is Ownable, Claim {
     // CREATE
     // **************************** mintExecutionClaim() ******************************
     function mintExecutionClaim(bytes calldata _payload,
-                                address _executionClaimOwner
+                                address _executionClaimOwner,
+                                uint256 _executionGas
     )
         payable
         external
@@ -140,7 +142,8 @@ contract GelatoCore is Ownable, Claim {
         // Step1: Instantiate executionClaim (in memory)
         ExecutionClaim memory executionClaim = ExecutionClaim(
             msg.sender,  // dappInterface
-            _payload
+            _payload,
+            _executionGas
         );
 
         // ****** Step2: Mint new executionClaim ERC721 token ******
@@ -247,7 +250,7 @@ contract GelatoCore is Ownable, Claim {
     function canExecute(uint256 _executionClaimId)
         external
         view
-        returns (uint256, address, bytes memory)
+        returns (uint256, address, bytes memory, uint256)
     {
         //Fetch execution
         ExecutionClaim memory executionClaim = executionClaims[_executionClaimId];
@@ -260,13 +263,16 @@ contract GelatoCore is Ownable, Claim {
         // Interface Address
         address dappInterface = executionClaim.dappInterface;
 
+        // Interface Address
+        uint256 executionGas = executionClaim.executionGas;
+
         // **** CHECKS ****
         // Check if Interface has sufficient balance on core
         // @DEV, Lets change to maxPossibleCharge calcs like in GSN
         if (interfaceBalances[dappInterface] < minEthBalance)
         {
             // If insufficient balance, return 3
-            return (uint256(PreExecutionCheck.InsufficientBalance), dappInterface, payload);
+            return (uint256(PreExecutionCheck.InsufficientBalance), dappInterface, payload, executionGas);
         }
         // **** CHECKS END ****;
 
@@ -277,13 +283,13 @@ contract GelatoCore is Ownable, Claim {
 
         // Call 'acceptExecutionRequest' in interface contract
         // @DEV when updated to solc0.5.10, apply gas restriction for static call
+        // Restrict to acceptExecCallMaxGas
         (bool success, bytes memory returndata) = dappInterface.staticcall(encodedPayload);
-
 
         // Check dappInterface return value
         if (!success) {
             // Return 1 in case of error
-            return (uint256(PreExecutionCheck.AcceptExecCallReverted), dappInterface, payload);
+            return (uint256(PreExecutionCheck.AcceptExecCallReverted), dappInterface, payload, executionGas);
         }
         else
         {
@@ -293,12 +299,12 @@ contract GelatoCore is Ownable, Claim {
             // Decoded returndata should return 0 for the executor to deem execution claim executable
             if (status == uint256(PreExecutionCheck.IsExecutable))
             {
-                return (status, dappInterface, payload);
+                return (status, dappInterface, payload, executionGas);
             }
             // If not 0, return 2 (internal error code)
             else
             {
-                return (uint256(PreExecutionCheck.WrongReturnValue), dappInterface, payload);
+                return (uint256(PreExecutionCheck.WrongReturnValue), dappInterface, payload, executionGas);
             }
 
         }
@@ -318,9 +324,10 @@ contract GelatoCore is Ownable, Claim {
         // and that the recpient will accept to be charged by it.
         address dappInterface;
         bytes memory payload;
+        uint256 executionGas;
         {
             uint256 canExecuteResult;
-            (canExecuteResult, dappInterface, payload) = this.canExecute(_executionClaimId);
+            (canExecuteResult, dappInterface, payload, executionGas) = this.canExecute(_executionClaimId);
 
             // if canExecuteResult is not equal 0, we return 1 or 2, based on the received preExecutionCheck value;
             if (canExecuteResult != 0) {
@@ -331,7 +338,16 @@ contract GelatoCore is Ownable, Claim {
             }
         }
 
-        // From this point on, this transaction SHOULD not revert nor run out of gas, and the recipient will be charged
+        // This transaction must have enough gas to forward the call to the interface with the requested amount, and not
+        // run out of gas later in this function.
+        // Fetch maxGas state variable
+        require(startGas >= executionGas.add(gasOverhead), "Insufficient gasleft()");
+
+        // We don't yet know how much gas will be used by the recipient, so we make sure there are enough funds to pay
+        // for the maximum possible charge.
+        // require(maxPossibleCharge(gasLimit, gasPrice, transactionFee) <= balances[recipient], "Recipient balance too low");
+
+        // !!! From this point on, this transaction SHOULD not revert nor run out of gas, and the recipient will be charged
         // for the gas spent.
 
         // Get the executionClaimOwner before burning
@@ -342,7 +358,6 @@ contract GelatoCore is Ownable, Claim {
         uint256 usedGasPrice;
         tx.gasprice > gelatoMaxGasPrice ? usedGasPrice = gelatoMaxGasPrice : usedGasPrice = tx.gasprice;
 
-
         // **** EFFECTS ****
         // Delete the ExecutionClaim struct
         delete executionClaims[_executionClaimId];
@@ -351,8 +366,12 @@ contract GelatoCore is Ownable, Claim {
         // Calls to the interface are performed atomically inside an inner transaction which may revert in case of
         // errors in the interface contract or malicious behaviour. In either case (revert or regular execution) the return data encodes the
         // RelayCallStatus value.
-        bytes memory payloadWithSelector = abi.encodeWithSelector(this.conductAtmoicCall.selector, dappInterface, payload);
-        (bool success,) = address(this).call(payloadWithSelector);
+        bool success;
+        {
+            bytes memory payloadWithSelector = abi.encodeWithSelector(this.conductAtmoicCall.selector, dappInterface, payload, executionGas, _executionClaimId, msg.sender);
+            // @DEV: ADD RETURN DATA FROM INTERNAL TX
+            (success,) = address(this).call(payloadWithSelector);
+        }
 
         // **** EFFECTS 2 ****
         // Burn Claim. Should be done here to we done have to store the claim Owner on the interface. Deleting the struct on the core should suffice, as an exeuctionClaim Token without the associated struct is worthless. => Discuss
@@ -367,7 +386,7 @@ contract GelatoCore is Ownable, Claim {
             uint256 endGas = gasleft();
             // Calaculate how much gas we used up in this function. Subtract the certain gas refunds the executor will receive for nullifying values
             // Gas Overhead corresponds to the actions occuring before and after the gasleft() calcs
-            uint256 totalGasUsed = startGas.sub(endGas).add(gasOverhead).sub(minGasRefunds);
+            uint256 totalGasUsed = startGas.sub(endGas).add(gasOverhead);
             // Calculate Total Cost
             uint256 totalCost = totalGasUsed.mul(usedGasPrice);
             // Calculate Executor Payout (including a fee set by GelatoCore.sol)
@@ -397,7 +416,7 @@ contract GelatoCore is Ownable, Claim {
     }
 
 
-    function conductAtmoicCall(address _dappInterface, bytes calldata _payload)
+    function conductAtmoicCall(address _dappInterface, bytes calldata _payload, uint256 _executionGas, uint256 _executionClaimId, address _executor)
         external
         returns (uint256)
     {
@@ -409,7 +428,12 @@ contract GelatoCore is Ownable, Claim {
         // Interactions
         // Step7: Call Interface
         // ******* Gelato Interface Call *******
-        (bool executedClaimStatus,) = _dappInterface.call(_payload);
+        emit LogGasConsumption(gasleft());
+        // Current tx gas cost:
+        // gelatoDutchX depositAnd sell: 465.597
+        (bool executedClaimStatus,) = _dappInterface.call.gas(_executionGas)(_payload); // .gas(_executionGas)
+        emit ExecuteResult(executedClaimStatus, _executor, _executionClaimId, _executionGas);
+        emit LogGasConsumption(gasleft());
 
         // Fetch interface balance post call
         uint256 interfaceBalanceAfter = interfaceBalances[_dappInterface];

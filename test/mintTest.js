@@ -3,8 +3,7 @@
 /*
  */
 
-let {
-  numberOfSubOrders,
+let {numberOfSubOrders,
   GelatoCore,
   GelatoDutchX,
   SellToken,
@@ -42,7 +41,8 @@ let {
   userEthBalance,
   userSellTokenBalance,
   userBuyTokenBalance,
-  executorEthBalance
+  executorEthBalance,
+  dutchXMaxGasBN
 } = require("./truffleTestConfig.js");
 
 let txHash;
@@ -337,7 +337,7 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
         returnedDataPayload
       );
 
-      console.log("Decoded Payload: decodedPayload ", decodedPayload);
+      // console.log("Decoded Payload: decodedPayload ", decodedPayload);
       decodedPayloads[claim] = decodedPayload
     });
   });
@@ -390,15 +390,15 @@ describe("Check gelatoDutchExchange Interface payload values", () => {
       let payloadExecutionTime = selectedPayload._executionTime;
       let payloadPrepaymentPerSellOrder = selectedPayload._prepaymentPerSellOrder;
 
-      console.log(`
-        Execution Claim ID: ${payloadExecutionClaimId}
-        payloadSellToken: ${payloadSellToken}
-        payloadBuyToken: ${payloadBuyToken}
-        payloadAmount: ${payloadAmount}
-        payloadExecutionTime: ${payloadExecutionTime}
-        payloadPrepaymentPerSellOrder: ${payloadPrepaymentPerSellOrder}
+      // console.log(`
+      //   Execution Claim ID: ${payloadExecutionClaimId}
+      //   payloadSellToken: ${payloadSellToken}
+      //   payloadBuyToken: ${payloadBuyToken}
+      //   payloadAmount: ${payloadAmount}
+      //   payloadExecutionTime: ${payloadExecutionTime}
+      //   payloadPrepaymentPerSellOrder: ${payloadPrepaymentPerSellOrder}
 
-      `)
+      // `)
 
       orderState = await gelatoDutchExchange.contract.methods
         .orderStates(decodedPayload._orderStateId)

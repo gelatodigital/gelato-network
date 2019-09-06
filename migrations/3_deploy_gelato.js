@@ -13,6 +13,8 @@ const GELATO_FEE = web3.utils.toWei("50", "gwei");
 
 module.exports = async function(deployer, network, accounts) {
   const _deployer = accounts[0];
+  const depositAndSellGas = 500000;
+  const withdrawGas = 400000;
 
   // Make sure the proxy is deployed
   const dxProxy = await DutchExchangeProxy.deployed();
@@ -39,7 +41,7 @@ module.exports = async function(deployer, network, accounts) {
         Owner: ${_deployer}
         GelatoCore: ${gelatoCore.address}
         DutchXProxy: ${dxProxy.address}`);
-  await deployer.deploy(GelatoDutchX, gelatoCore.address, dxProxy.address);
+  await deployer.deploy(GelatoDutchX, gelatoCore.address, dxProxy.address, depositAndSellGas, withdrawGas);
 
   const gelatoDutchX = await GelatoDutchX.deployed();
   console.log(`

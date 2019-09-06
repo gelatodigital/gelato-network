@@ -73,7 +73,7 @@ contract IIcedOut {
      }
 
      // Create function signaure from canonical form and execution claim
-     function mintClaim(address _user, bytes memory payload)
+     function mintClaim(address _user, bytes memory payload, uint256 _executionGas)
           internal
      {
      }

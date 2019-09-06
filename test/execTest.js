@@ -5,45 +5,45 @@
 
 let {
   numberOfSubOrders,
-  GelatoCore,
-  GelatoDutchX,
-  SellToken,
-  BuyToken,
-  DutchExchangeProxy,
-  DutchExchange,
-  timeTravel,
-  MAXGAS,
-  BN,
-  NUM_SUBORDERS_BN,
-  GELATO_GAS_PRICE_BN,
-  TOTAL_SELL_VOLUME,
-  SUBORDER_SIZE_BN,
-  INTERVAL_SPAN,
-  GDXSSAW_MAXGAS_BN,
-  GELATO_PREPAID_FEE_BN,
-  dutchExchangeProxy,
-  dutchExchange,
-  seller,
-  accounts,
-  sellToken,
-  buyToken,
-  gelatoDutchXContract,
-  gelatoCore,
-  gelatoCoreOwner,
-  orderStateId,
-  orderState,
-  executionTime,
-  interfaceOrderId,
-  executionClaimIds,
-  MSG_VALUE_BN,
-  execShellCommand,
-  DxGetter,
-  execShellCommandLog,
-  truffleAssert,
-  userEthBalance,
-  userSellTokenBalance,
-  userBuyTokenBalance,
-  executorEthBalance
+    GelatoCore,
+    GelatoDutchX,
+    SellToken,
+    BuyToken,
+    DutchExchangeProxy,
+    DutchExchange,
+    timeTravel,
+    BN,
+    NUM_SUBORDERS_BN,
+    GELATO_GAS_PRICE_BN,
+    TOTAL_SELL_VOLUME,
+    SUBORDER_SIZE_BN,
+    INTERVAL_SPAN,
+    GDX_MAXGAS_BN,
+    GDX_PREPAID_FEE_BN,
+    dutchExchangeProxy,
+    dutchExchange,
+    seller,
+    accounts,
+    sellToken,
+    buyToken,
+    gelatoDutchXContract,
+    gelatoCore,
+    gelatoCoreOwner,
+    orderStateId,
+    orderState,
+    executionTime,
+    interfaceOrderId,
+    executionClaimIds,
+    MSG_VALUE_BN,
+    execShellCommand,
+    DxGetter,
+    execShellCommandLog,
+    truffleAssert,
+    userEthBalance,
+    userSellTokenBalance,
+    userBuyTokenBalance,
+    executorEthBalance,
+    dutchXMaxGasBN
 } = require("./truffleTestConfig.js");
 
 let txHash;
@@ -120,7 +120,6 @@ describe("Successfully execute execution claim", () => {
       }
 
     }
-    console.log(`ExecutionClaimID: ${nextExecutionClaim}`)
     assert.isTrue(true);
   })
 
@@ -137,7 +136,7 @@ describe("Successfully execute execution claim", () => {
       }
 
     }
-    // Assuming we get an depositAndSell claim
+    console.log(`ExecutionClaimID: ${nextExecutionClaim}`)
 
   })
 
@@ -401,7 +400,7 @@ describe("Successfully execute execution claim", () => {
         await gelatoCore.contract.methods
           .execute(nextExecutionClaim)
           .send(
-            { from: executor, gas: 1000000, gasPrice: txGasPrice },
+            { from: executor, gas: 2000000, gasPrice: txGasPrice },
             (error, hash) => {
               if (error) {
                 reject(error);
@@ -474,15 +473,62 @@ describe("Successfully execute execution claim", () => {
 
     // #### CHECKS FOR BOTH FUNCTIONS ####
 
-
     // Fetch past events of gelatoDutchExchange
-    // await gelatoDutchExchange.getPastEvents(
-    //   "LogActualSellAmount",
+    await gelatoDutchExchange.getPastEvents(
+      "LogActualSellAmount",
+      (error, events) => {
+        // console.log(events);
+      }
+    );
+
+    let consumedGas1;
+    let consumedGas2;
+     // CHECK IF Execution failed or not
+     await gelatoCore.getPastEvents(
+      "LogGasConsumption",
+      (error, events) => {
+        consumedGas1 = events[0].returnValues.gasConsumed
+      }
+    );
+
+    console.log(`----------------
+
+    Was execution claim minted?
+
+    `)
+    // CHECK IF NEW EXECUTION CLAIM WAS MINTED
+    // await gelatoCore.getPastEvents(
+    //   "LogNewExecutionClaimMinted",
     //   (error, events) => {
-    //     // console.log(events);
+    //     console.log(events);
     //   }
     // );
 
+    console.log(`---------------
+      Check if execute resulted in true
+
+    `)
+    // CHECK IF Execution failed or not
+    // await gelatoCore.getPastEvents(
+    //   "ExecuteResult",
+    //   (error, events) => {
+    //     console.log(events);
+    //   }
+    // );
+
+
+    // CHECK IF Execution failed or not
+    await gelatoCore.getPastEvents(
+      "LogGasConsumption",
+      (error, events) => {
+        consumedGas2= events[1].returnValues.gasConsumed
+      }
+    );
+
+
+    console.log(`
+      Consumed Gas: ${consumedGas1 - consumedGas2}
+    `)
     // // Fetch past events of gelatoDutchExchange
     // await gelatoDutchExchange.getPastEvents(
     //   "LogWithdrawAmount",

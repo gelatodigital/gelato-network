@@ -124,11 +124,11 @@ contract IcedOut is Ownable {
      }
 
      // Mint new execution claims in core
-     function mintClaim(address _user, bytes memory payload)
+     function mintClaim(address _user, bytes memory payload, uint256 _executionGas)
           internal
      {
           // executionClaimId = gelatoCore.getCurrentExecutionClaimId().add(1)
-          gelatoCore.mintExecutionClaim(payload, _user);
+          gelatoCore.mintExecutionClaim(payload, _user, _executionGas);
      }
 
      function getNextExecutionClaimId()
