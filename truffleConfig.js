@@ -19,7 +19,7 @@ function truffleConfig ({
   urlDevelopment = 'localhost',
   portDevelopment = 8545,
   solcUseDocker = false,
-  solcVersion = '0.4.25',
+  solcVersion = '0.5.10',
   // Just a temporal flag to support truffle 4 config
   compatibilityTruffle4 = false,
   debug = () => { }

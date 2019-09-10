@@ -63,6 +63,8 @@ let lastExecutionClaimId;
 let execDepositAndSell;
 let execWithdraw;
 let isDepositAndSell;
+// Gas limit 1M
+let gasLimit = 1000000;
 
 describe("Successfully execute execution claim", () => {
   before(async () => {
@@ -126,14 +128,23 @@ describe("Successfully execute execution claim", () => {
   it("Check what function the next executable claim is", async function() {
     this.timeout(50000)
     // Get the current execution claim on the core
+    let shouldBeZero;
     for (let i = 1; i <= lastExecutionClaimId; i ++)
     {
-      let canExecuteReturn = await gelatoCore.contract.methods.canExecute(i).call();
-      let shouldBeZero = canExecuteReturn[0];
-      if (parseInt(shouldBeZero) === 0)
+      try
       {
-        nextExecutionClaim = i;
+        let canExecuteReturn = await gelatoCore.contract.methods.canExecute(i).call();
+        shouldBeZero = canExecuteReturn[0];
+        if (parseInt(shouldBeZero) === 0)
+        {
+          nextExecutionClaim = i;
+        }
       }
+       catch(e)
+      {
+
+      }
+
 
     }
     console.log(`ExecutionClaimID: ${nextExecutionClaim}`)
@@ -328,7 +339,7 @@ describe("Successfully execute execution claim", () => {
   it(`estimates GelatoCore.execute() gasUsed and logs gasLimit`, async () => {
     // Get and log estimated gasUsed by splitSellOrder fn
     gelatoCore.contract.methods.execute(nextExecutionClaim).estimateGas(
-      { from: executor, gas: 1000000 }, // gas needed to prevent out of gas error
+      { from: executor, gas: gasLimit }, // gas needed to prevent out of gas error
       async (error, estimatedGasUsed) => {
         if (error) {
           console.error;
@@ -400,7 +411,7 @@ describe("Successfully execute execution claim", () => {
         await gelatoCore.contract.methods
           .execute(nextExecutionClaim)
           .send(
-            { from: executor, gas: 2000000, gasPrice: txGasPrice },
+            { from: executor, gas: gasLimit, gasPrice: txGasPrice },
             (error, hash) => {
               if (error) {
                 reject(error);
@@ -414,6 +425,7 @@ describe("Successfully execute execution claim", () => {
     txHash = await execute();
 
     // get txReceipt with executeTx hash
+
     let execTxReceipt;
     await web3.eth.getTransactionReceipt(txHash, (error, result) => {
       if (error) {
@@ -422,6 +434,7 @@ describe("Successfully execute execution claim", () => {
       execTxReceipt = result;
     });
     // console.log(execTxReceipt)
+    // let one = execTxReceipt.gasLimit
 
     let gdxGelatoBalanceAfter = new BN(await gelatoCore.contract.methods.getInterfaceBalance(gelatoDutchExchange.address).call())
 
@@ -481,21 +494,11 @@ describe("Successfully execute execution claim", () => {
       }
     );
 
-    let consumedGas1;
-    let consumedGas2;
-     // CHECK IF Execution failed or not
-     await gelatoCore.getPastEvents(
-      "LogGasConsumption",
-      (error, events) => {
-        consumedGas1 = events[0].returnValues.gasConsumed
-      }
-    );
+    // console.log(`----------------
 
-    console.log(`----------------
+    // Was execution claim minted?
 
-    Was execution claim minted?
-
-    `)
+    // `)
     // CHECK IF NEW EXECUTION CLAIM WAS MINTED
     // await gelatoCore.getPastEvents(
     //   "LogNewExecutionClaimMinted",
@@ -504,10 +507,10 @@ describe("Successfully execute execution claim", () => {
     //   }
     // );
 
-    console.log(`---------------
-      Check if execute resulted in true
+    // console.log(`---------------
+    //   Check if execute resulted in true
 
-    `)
+    // `)
     // CHECK IF Execution failed or not
     // await gelatoCore.getPastEvents(
     //   "ExecuteResult",
@@ -516,19 +519,89 @@ describe("Successfully execute execution claim", () => {
     //   }
     // );
 
+    // let zero;
+    // let num0;
+    // let num1;
+    // let num2;
+    // let num3;
+    // let num4;
+    // let num5;
+    // let num6;
+    // let num7;
 
-    // CHECK IF Execution failed or not
-    await gelatoCore.getPastEvents(
-      "LogGasConsumption",
-      (error, events) => {
-        consumedGas2= events[1].returnValues.gasConsumed
-      }
-    );
+    // let one
+    // let two;
+    // let three;
+    // let four;
+    // let five;
+    // let six;
+    // let seven;
+
+    // // CHECK IF Execution failed or not
+    // await gelatoCore.getPastEvents(
+    //   "LogGasConsumption",
+    //   (error, events) => {
+    //     zero = events[0].returnValues.gasConsumed
+    //     num0 = events[0].returnValues.num
+    //     one = events[1].returnValues.gasConsumed
+    //     num1 = events[1].returnValues.num
+    //     two = events[2].returnValues.gasConsumed
+    //     num2 = events[2].returnValues.num
+    //     three = events[3].returnValues.gasConsumed
+    //     num3 = events[3].returnValues.num
+    //     four = events[4].returnValues.gasConsumed
+    //     num4 = events[4].returnValues.num
+    //     five = events[5].returnValues.gasConsumed
+    //     num5 = events[5].returnValues.num
+    //     six = events[6].returnValues.gasConsumed
+    //     num6 = events[6].returnValues.num
+    //     seven = events[7].returnValues.gasConsumed
+    //     num7 = events[7].returnValues.num
+    //   }
+    // );
+    // let gasOverhead = 41414;
+    // let firstOverhead = (gasLimit - zero)
+    // let inbetweenGasLeft = (zero - one) + (two - three) + (six - seven)
+    // let secondOverhead = six - seven
+    // let beforeCanExec = (gasLimit - zero)
+    // let canExec = (zero - one)
+    // let afterCanExec = (one - two)
+    // let conductAtmoicCall = (two - five)
+    // let externalAtomicCall = (three - four)
+    // let execEnd = (five - six)
+    // let executorPayoutCalc = zero - six + gasOverhead
+
+    // // let internalGasConsumption = firstInternal + secondInternal + thirdInternal + externalAtomicCall
+    // // let canExecuteCost = (zero - one)
+
+    // console.log(`
+    // -------------------
+
+    //   ${num2}: ${two}
+    //   ${num3}: ${three}
+    //   ${num4}: ${four}
+    //   ${num5}: ${five}
+
+    //   In between Gas Left:            ${inbetweenGasLeft}
+
+    //   -------------------
+    //   first Overhead                  ${firstOverhead}
+    //   second Overhead                 ${secondOverhead}
+    //   Total event based:              ${gasLimit - seven}
+    //   Calc Executor Payout Gas:       ${executorPayoutCalc}
+    //   -------------------
+    //   Diff:                           ${gasLimit - seven - executorPayoutCalc}
+
+    //   Total event based:              ${gasLimit - seven}
+    //   Total real:                     ${execTxReceipt.gasUsed}
+    //   -------------------
+    //   Diff:                           ${gasLimit - seven - execTxReceipt.gasUsed}
+    // `)
+
+    // Tests to test whether gas consumption of static parts of exec are the same
 
 
-    console.log(`
-      Consumed Gas: ${consumedGas1 - consumedGas2}
-    `)
+
     // // Fetch past events of gelatoDutchExchange
     // await gelatoDutchExchange.getPastEvents(
     //   "LogWithdrawAmount",
