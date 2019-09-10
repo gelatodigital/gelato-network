@@ -336,33 +336,37 @@ describe("Successfully execute execution claim", () => {
     }
   });
 
+  // TEST IS COMMENTED OUT AS TRUFFLE HAS A BUG THAT CRASHES GANACHE WHEN ESTIMATEGAS IS USED
   it(`estimates GelatoCore.execute() gasUsed and logs gasLimit`, async () => {
     // Get and log estimated gasUsed by splitSellOrder fn
-    gelatoCore.contract.methods.execute(nextExecutionClaim).estimateGas(
-      { from: executor, gas: gasLimit }, // gas needed to prevent out of gas error
-      async (error, estimatedGasUsed) => {
-        if (error) {
-          console.error;
-        } else {
-          // Get and log gasLimit
-          await web3.eth.getBlock("latest", false, (error, _block) => {
-            if (error) {
-              console.error;
-            } else {
-              block = _block;
-            }
-          });
-          // console.log(`\t\tgasLimit:           ${block.gasLimit}`);
-          // console.log(`\t\testimated gasUsed:   ${estimatedGasUsed}`);
-        }
-      }
-    );
+    // gelatoCore.contract.methods.execute(nextExecutionClaim).estimateGas(
+    //   { from: executor, gas: gasLimit }, // gas needed to prevent out of gas error
+    //   async (error, estimatedGasUsed) => {
+    //     if (error) {
+    //       console.error;
+    //     } else {
+    //       // Get and log gasLimit
+    //       await web3.eth.getBlock("latest", false, (error, _block) => {
+    //         if (error) {
+    //           console.error;
+    //         } else {
+    //           block = _block;
+    //         }
+    //       });
+    //       // console.log(`\t\tgasLimit:           ${block.gasLimit}`);
+    //       // console.log(`\t\testimated gasUsed:   ${estimatedGasUsed}`);
+    //     }
+    //   }
+    // );
+    // console.log("estimates GElatoCore.execute()")
     // This test just tried to get and log the estimate
     assert(true);
   });
 
   it("Check that seller is owner of execution Claim", async() => {
+    console.log("In Check that seller is owner")
     let fetchedSeller = await gelatoCore.contract.methods.ownerOf(nextExecutionClaim).call()
+    console.log(`Feched Seller: ${fetchedSeller}`)
     assert.equal(fetchedSeller.toString(), seller, "Execution Claim owner should be equal to predefined seller");
   })
 
@@ -383,6 +387,7 @@ describe("Successfully execute execution claim", () => {
   // })
 
   it("Check if the execution claim is executable calling canExec in core", async () => {
+    console.log("In Check if the ecetion claim is")
     let canExecuteReturn = await gelatoCore.contract.methods.canExecute(nextExecutionClaim).call()
     let returnStatus = canExecuteReturn[0].toString(10)
     let dappInterfaceAddress = canExecuteReturn[1].toString(10)

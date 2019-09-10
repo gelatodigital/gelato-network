@@ -19,7 +19,7 @@ function truffleConfig ({
   urlDevelopment = 'localhost',
   portDevelopment = 8545,
   solcUseDocker = false,
-  solcVersion = '0.5.10',
+  solcVersion = '0.4.2',
   // Just a temporal flag to support truffle 4 config
   compatibilityTruffle4 = false,
   debug = () => { }
@@ -107,6 +107,7 @@ function truffleConfig ({
   }
 
   if (compatibilityTruffle4) {
+    console.log("Compiling with Truffle 4")
     debug('Truffle 4')
     // Truffle 4
     truffleConfig.solc = {
@@ -114,7 +115,13 @@ function truffleConfig ({
         enabled: optimizedEnabled
       }
     }
+    truffleConfig.compilers = {
+      solc: {
+        version: "0.5.10",
+      }
+    }
   } else {
+    console.log("Compiling with Truffle 5")
     debug('Truffle 5 - solidity: %s, useDocker: %s', solcVersion, solcUseDocker)
     // Truffle 5
     truffleConfig.compilers = {

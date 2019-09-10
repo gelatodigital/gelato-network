@@ -301,10 +301,6 @@ contract GelatoCore is Ownable, Claim {
         );
 
         // Call 'acceptExecutionRequest' in interface contract
-        // @DEV when updated to solc0.5.10, apply gas restriction for static call
-        // Restrict to acceptExecCallMaxGas
-        // UNTIL HERE: 44351 for depositAndSell and 43058 for withdraw
-
         (bool success, bytes memory returndata) = dappInterface.staticcall.gas(canExecMaxGas)(encodedPayload);
 
 
@@ -380,7 +376,6 @@ contract GelatoCore is Ownable, Claim {
         // !!! From this point on, this transaction SHOULD not revert nor run out of gas, and the recipient will be charged
         // for the gas spent.
 
-
         // **** EFFECTS ****
         // Delete the ExecutionClaim struct
         delete executionClaims[_executionClaimId];
@@ -394,7 +389,8 @@ contract GelatoCore is Ownable, Claim {
         {
 
             bytes memory payloadWithSelector = abi.encodeWithSelector(this.conductAtmoicCall.selector, dappInterface, payload, executionGas, _executionClaimId, msg.sender);
-            // @DEV: ADD RETURN DATA FROM EXTERNAL TX
+
+            // Call conductAtomicCall func
             (, bytes memory returnData) = address(this).call(payloadWithSelector);
             atomicCallStatus = abi.decode(returnData, (uint256));
 
