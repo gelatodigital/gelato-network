@@ -38,11 +38,16 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
     // Constants that are set during contract construction and updateable via setters
     uint256 public auctionStartWaitingForFunding;
 
-    string constant execDepositAndSellString = "execDepositAndSell(uint256,address,address,uint256,uint256,uint256,uint256,uint256,bool)";
+    string constant execDepositAndSellActionString = "execDepositAndSellAction(uint256,address,address,uint256,uint256,uint256,uint256)";
+
+    string constant execDepositAndSellTriggerString = "execDepositAndSellTrigger(uint256,address,address,uint256,uint256,uint256)";
+
+    string constant execWithdrawActionString = "execWithdrawAction(uint256,address,address,uint256,uint256)";
+
+    string constant execWithdrawTriggerString = "execWithdrawTrigger(uint256,address,address,uint256,uint256)";
 
     uint256 public execDepositAndSellGas;
 
-    string constant execWithdrawString = "execWithdraw(uint256,address,address,uint256,uint256)";
 
     uint256 public execWithdrawGas;
     // **************************** State Variables END ******************************
@@ -105,7 +110,6 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
     // **************************** timeSellOrders() ******************************
     function timeSellOrders(address _sellToken,
                             address _buyToken,
-                            uint256 _totalSellVolume,
                             uint256 _numSellOrders,
                             uint256 _sellOrderAmount,
                             uint256 _executionTime,
@@ -119,7 +123,6 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         require(_sellToken != address(0), "GelatoCore.mintExecutionClaim: _sellToken: No zero addresses allowed");
         require(_buyToken != address(0), "GelatoCore.mintExecutionClaim: _buyToken: No zero addresses allowed");
         require(_sellOrderAmount != 0, "GelatoCore.mintExecutionClaim: _sellOrderAmount cannot be 0");
-        require(_totalSellVolume != 0, "splitSellOrder: totalSellVolume cannot be 0");
         require(_numSellOrders != 0, "splitSellOrder: numSubOrders cannot be 0");
 
         // Step2: Valid execution Time check
@@ -138,14 +141,10 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         );
         // Only tokens that are tradeable on the Dutch Exchange can be posted
         require(dutchExchange.getAuctionIndex(_sellToken, _buyToken) != 0, "The selected tokens are not traded on the Dutch Exchange");
-        // Total Sell Volume must equal individual sellOrderAmount * number of sellOrders
-        require(_totalSellVolume == _numSellOrders.mul(_sellOrderAmount),
-            "splitSellOrder: _totalSellVolume != _numSellOrders * _sellOrderAmount"
-        );
 
         // Step4: Transfer the totalSellVolume from msg.sender(seller) to this contract
         // this is hardcoded into SafeTransfer.sol
-        require(safeTransfer(_sellToken, address(this), _totalSellVolume, true),
+        require(safeTransfer(_sellToken, address(this), _numSellOrders.mul(_sellOrderAmount), true),
             "splitSellOrder: The transfer of sellTokens from msg.sender to Gelato Interface must succeed"
         );
 
@@ -174,10 +173,19 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
             uint256 nextExecutionClaimId = getNextExecutionClaimId();
 
             // Payload: (funcSelector, uint256 executionClaimId, address sellToken, address buyToken, uint256 amount, uint256 executionTime, uint256 prepaymentPerSellOrder, uint256 orderStateId)
-            bytes memory payload = abi.encodeWithSignature(execDepositAndSellString, nextExecutionClaimId, _sellToken, _buyToken, _sellOrderAmount, executionTime, prepaymentPerSellOrder, orderStateId, 0, false);
+            // bytes memory payload = abi.encodeWithSignature(execDepositAndSellString, nextExecutionClaimId, _sellToken, _buyToken, _sellOrderAmount, executionTime, prepaymentPerSellOrder, orderStateId, 0, false);
 
-            // For each sellOrder, mint one claim that call the execDepositAndSell function
-            mintClaim(msg.sender, payload, execDepositAndSellGas);
+            // Create Trigger Payload
+            bytes memory triggerPayload = abi.encodeWithSignature(execDepositAndSellTriggerString, nextExecutionClaimId, _sellToken, _buyToken, _sellOrderAmount, executionTime, orderStateId);
+
+            // Create Action Payload
+            bytes memory actionPayload = abi.encodeWithSignature(execDepositAndSellActionString, nextExecutionClaimId, _sellToken, _buyToken, _sellOrderAmount, executionTime, prepaymentPerSellOrder, orderStateId);
+
+            // mintClaim(address _triggerAddress, bytes memory _triggerPayload, address _actionAddress, bytes memory _actionPayload, uint256 _actionMaxGas, address _executionClaimOwner
+            mintClaim(address(this), triggerPayload, address(this), actionPayload, execDepositAndSellGas, msg.sender);
+
+            // old
+            // mintClaim(address(this), payload, execDepositAndSellGas);
 
             // withdraw execution claim => depositAndSell exeuctionClaim => sellOrder
             //  *** GELATO CORE PROTOCOL INTERACTION END ***
@@ -185,50 +193,14 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
     }
     // **************************** timeSellOrders() END ******************************
 
-    // acceptExecutionRequest func that checks whether function is executable or not
-    function acceptExecutionRequest(bytes calldata _payload)
-        external
-        view
-        returns (uint256, bytes memory)
-    {
-        // Check that payload length is greater 4
-        require(_payload.length > 4, "Payload must be larger than 4 bytes");
-
-        // Make a memory copy of the payload (calldata)
-        bytes memory memPayload = _payload;
-
-        bytes4 funcSelector;
-        (memPayload, funcSelector) = decodeWithFunctionSignature(memPayload);
-
-        // Check which function selector was passed
-        if (funcSelector == bytes4(keccak256(bytes(execDepositAndSellString))))
-        {
-            // If executable, should return 0
-            return execDepositAndSellCheck(memPayload);
-
-        }
-        else if (funcSelector == bytes4(keccak256(bytes(execWithdrawString))))
-        {
-            // If executable, should return 0
-            return execWithdrawCheck(memPayload);
-
-        }
-        else {
-            // Error in funcSelector
-            return (1, bytes("Haut sich nicht"));
-        }
-
-    }
-
     // Check if execDepositAndSell is executable
-    function execDepositAndSellCheck(bytes memory _memPayload)
+    function execDepositAndSellTrigger(uint256 _executionClaimId, address _sellToken, address _buyToken, uint256 _amount, uint256 _executionTime, uint256 _orderStateId)
         internal
         view
-        returns (uint256, bytes memory)
+        returns (bool)
     {
-        // Decode payload
-        // (, address sellToken, address buyToken, uint256 amount, uint256 executionTime, , uint256 orderStateId) = abi.decode(_memPayload, (uint256, address, address, uint256, uint256, uint256, uint256));
-        (uint256 executionClaimId, address sellToken, address buyToken, uint256 amount, uint256 executionTime, uint256 prepaymentPerSellOrder, uint256 orderStateId , , )  = abi.decode(_memPayload, (uint256, address, address, uint256, uint256, uint256, uint256, uint256, bool));
+
+        // (uint256 executionClaimId, address sellToken, address buyToken, uint256 amount, uint256 executionTime, uint256 prepaymentPerSellOrder, uint256 orderStateId , , )  = abi.decode(_memPayload, (uint256, address, address, uint256, uint256, uint256, uint256, uint256, bool));
 
 
         // Init state variables
@@ -237,65 +209,68 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
 
         // Check the condition: Execution Time
         // checkTimeCondition(sellOrder.executionTime);
-        checkTimeCondition(executionTime);
+        require(_executionTime <= now,
+            "IcedOut Time Condition: Function called scheduled execution time"
+        );
 
         // Check if interface has enough funds to sell on the Dutch Exchange
         require(
-            ERC20(sellToken).balanceOf(address(this)) >= amount,
+            ERC20(_sellToken).balanceOf(address(this)) >= _amount,
             "GelatoInterface.execute: ERC20(sellToken).balanceOf(address(this)) !>= subOrderSize"
         );
 
         // Fetch OrderState
-        OrderState memory orderState = orderStates[orderStateId];
+        OrderState memory orderState = orderStates[_orderStateId];
 
         // Fetch past auction values set in state
         uint256 lastAuctionIndex = orderState.lastAuctionIndex;
         bool lastAuctionWasWaiting = orderState.lastAuctionWasWaiting;  // default: false
 
         // Fetch current DutchX auction values to analyze past auction participation
-        (uint256 newAuctionIndex, bool newAuctionIsWaiting) = getAuctionValues(sellToken, buyToken);
-
-        // Second Payload encoding
-        bytes memory fusedPayload = abi.encodeWithSignature(execDepositAndSellString, executionClaimId, sellToken, buyToken, amount, executionTime, prepaymentPerSellOrder, orderStateId, newAuctionIndex, newAuctionIsWaiting);
+        (uint256 newAuctionIndex, bool newAuctionIsWaiting) = getAuctionValues(_sellToken, _buyToken);
 
         if (newAuctionIndex == lastAuctionIndex)
         {
             require(lastAuctionWasWaiting && !newAuctionIsWaiting,
             "newAuctionindex == lastAuctionIndex, but lastAuctionWasWaiting && !newAuctionIsWaiting == false");
-            return (0, fusedPayload);
+            return true;
         }
         else if (newAuctionIndex == lastAuctionIndex.add(1))
         {
             require(lastAuctionWasWaiting && newAuctionIsWaiting || lastAuctionWasWaiting && !newAuctionIsWaiting,
             "newAuctionIndex == lastAuctionIndex.add(1), but lastAuctionWasWaiting && newAuctionIsWaiting || lastAuctionWasWaiting && !newAuctionIsWaiting == false");
-            return (0, fusedPayload);
+            return true;
         }
         else if (newAuctionIndex >= lastAuctionIndex.add(2))
         {
-            return (0, fusedPayload);
+            return true;
         }
         else
         {
             // Claim not executable
-            revert("Case5: Fatal Error: Case5 unforeseen");
+            return false;
         }
     }
 
     // Test if execWithdraw is executable
-    function execWithdrawCheck(bytes memory _memPayload)
+    function execWithdrawTrigger(uint256 _executionClaimId,
+                               address _sellToken,
+                               address _buyToken,
+                               uint256 _amount,
+                               uint256 _lastAuctionIndex)
         internal
         view
-        returns (uint256, bytes memory)
+        returns (bool)
     {
         // Decode payload
-        (uint256 executionClaimId, address sellToken, address buyToken, uint256 amount, uint256 lastAuctionIndex) = abi.decode(_memPayload, (uint256, address, address, uint256, uint256));
+        // (uint256 executionClaimId, address sellToken, address buyToken, uint256 amount, uint256 lastAuctionIndex) = abi.decode(_memPayload, (uint256, address, address, uint256, uint256));
 
         // Check if auction in DutchX closed
         uint256 num;
         uint256 den;
-        (num, den) = dutchExchange.closingPrices(sellToken,
-                                                buyToken,
-                                                lastAuctionIndex
+        (num, den) = dutchExchange.closingPrices(_sellToken,
+                                                _buyToken,
+                                                _lastAuctionIndex
         );
 
         // Check if the last auction the seller participated in has cleared
@@ -305,12 +280,10 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         );
 
         // Callculate withdraw amount
-        uint256 withdrawAmount = amount.mul(num).div(den);
+        uint256 withdrawAmount = _amount.mul(num).div(den);
 
         // // All checks passed
-        _memPayload = abi.encodeWithSignature(execWithdrawString, executionClaimId, sellToken, buyToken, withdrawAmount, lastAuctionIndex);
-
-        return (0, _memPayload);
+        return (true);
     }
 
     // ****************************  execDepositAndSell(executionClaimId) *********************************
@@ -318,7 +291,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
      * DEV: Called by the execute func in GelatoCore.sol
      * Aim: Post sellOrder on the DutchExchange via depositAndSell()
      */
-    function execDepositAndSell(uint256 _executionClaimId, address _sellToken, address _buyToken, uint256 _amount, uint256 _executionTime, uint256 _prepaymentPerSellOrder, uint256 _orderStateId, uint256 _newAuctionIndex, bool _newAuctionIsWaiting)
+    function execDepositAndSellAction(uint256 _executionClaimId, address _sellToken, address _buyToken, uint256 _amount, uint256 _executionTime, uint256 _prepaymentPerSellOrder, uint256 _orderStateId)
         external
     {
         // Step1: Checks for execution safety
@@ -332,13 +305,14 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         address tokenOwner = gelatoCore.ownerOf(_executionClaimId);
         OrderState storage orderState = orderStates[_orderStateId];
 
-        // Fetch current DutchX auction values to set new state values
-        // (uint256 newAuctionIndex, bool newAuctionIsWaiting) = getAuctionValues(_sellToken, _buyToken);
+        // Fetch current DutchX auction values to analyze past auction participation
+        (uint256 newAuctionIndex, bool newAuctionIsWaiting) = getAuctionValues(_sellToken, _buyToken);
 
         // ### EFFECTS ###
         // Update Order State
-        orderState.lastAuctionWasWaiting = _newAuctionIsWaiting;
-        orderState.lastAuctionIndex = _newAuctionIndex;
+        orderState.lastAuctionWasWaiting = newAuctionIsWaiting;
+        orderState.lastAuctionIndex = newAuctionIndex;
+
 
         uint256 actualSellAmount;
         {
@@ -365,25 +339,26 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
             // Fetch next executionClaimId
             uint256 nextExecutionClaimId = getNextExecutionClaimId();
 
-            // Payload: (funcSelector, uint256 executionClaimId, address sellToken, address buyToken, uint256 amount, uint256 prepaymentPerSellOrder, uint256 lastAuctionIndex)
-            bytes memory payload = abi.encodeWithSignature(execWithdrawString, nextExecutionClaimId, _sellToken, _buyToken, actualSellAmount, _newAuctionIndex);
+            // bytes memory payload = abi.encodeWithSignature(execWithdrawString, nextExecutionClaimId, _sellToken, _buyToken, actualSellAmount, newAuctionIndex);
+
+            // Create Trigger Payload
+            bytes memory triggerPayload = abi.encodeWithSignature(execWithdrawTriggerString, nextExecutionClaimId, _sellToken, _buyToken, actualSellAmount, newAuctionIndex);
+
+            // Create Action Payload
+            bytes memory actionPayload = abi.encodeWithSignature(execWithdrawActionString, nextExecutionClaimId, _sellToken, _buyToken, actualSellAmount, newAuctionIndex);
 
             // Mint new withdraw token
-            mintClaim(tokenOwner, payload, execWithdrawGas);
+            mintClaim(address(this), triggerPayload, address(this), actionPayload, execWithdrawGas, tokenOwner);
 
         }
 
         // ********************** Step7: Execution Logic END **********************
 
-        // Step8:  Check if interface still has sufficient balance on core. If not, add balance. If yes, skip.
-        // @DEV Trade off: More code in production vs less management necessary
-        automaticTopUp();
-
     }
     // **************************** IcedOut execute(executionClaimId) END *********************************
 
     // Withdraw function executor will call
-    function execWithdraw(uint256 _executionClaimId, address _sellToken, address _buyToken, uint256 _amount, uint256 _lastAuctionIndex)
+    function execWithdrawAction(uint256 _executionClaimId, address _sellToken, address _buyToken, uint256 _amount, uint256 _lastAuctionIndex)
         external
     {
         // Step1: Checks for execution safety
@@ -475,56 +450,57 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
     // Allows sellers to cancel their deployed orders
     // @🐮 create cancel helper on IcedOut.sol
 
-    function cancelOrder(uint256 _executionClaimId)
-        public
-        returns(bool)
-    {
-        // Fetch calldata from gelato core and decode
-        bytes memory payload = gelatoCore.getClaimPayload(_executionClaimId);
+    // Front end has to save all necessary variables and input them automatically for user
+    // function cancelOrder(uint256 _executionClaimId)
+    //     public
+    //     returns(bool)
+    // {
+    //     // Fetch calldata from gelato core and decode
+    //     bytes memory payload = gelatoCore.getClaimPayload(_executionClaimId);
 
-        (bytes memory memPayload, bytes4 funcSelector) = decodeWithFunctionSignature(payload);
+    //     (bytes memory memPayload, bytes4 funcSelector) = decodeWithFunctionSignature(payload);
 
-        // #### CHECKS ####
-        // @DEV check that we are dealing with a execDepositAndSell claim
-        require(funcSelector == bytes4(keccak256(bytes(execDepositAndSellString))), "Only claims that have not been sold yet can be cancelled");
+    //     // #### CHECKS ####
+    //     // @DEV check that we are dealing with a execDepositAndSell claim
+    //     require(funcSelector == bytes4(keccak256(bytes(execDepositAndSellString))), "Only claims that have not been sold yet can be cancelled");
 
-        (uint256 executionClaimId, address sellToken, , uint256 amount, , uint256 prepaymentPerSellOrder, ) = abi.decode(memPayload, (uint256, address, address, uint256, uint256, uint256, uint256));
+    //     (uint256 executionClaimId, address sellToken, , uint256 amount, , uint256 prepaymentPerSellOrder, ) = abi.decode(memPayload, (uint256, address, address, uint256, uint256, uint256, uint256));
 
-        // address seller = gelatoCore.ownerOf(_executionClaimId);
-        address tokenOwner = gelatoCore.ownerOf(_executionClaimId);
+    //     // address seller = gelatoCore.ownerOf(_executionClaimId);
+    //     address tokenOwner = gelatoCore.ownerOf(_executionClaimId);
 
-        // Only Execution Claim Owner can cancel
-        //@DEV We could add that the interface owner can also cancel an execution claim to avoid having oustanding claims that might never get executed. Discuss
-        require(msg.sender == tokenOwner, "Only the executionClaim Owner can cancel the execution");
+    //     // Only Execution Claim Owner can cancel
+    //     //@DEV We could add that the interface owner can also cancel an execution claim to avoid having oustanding claims that might never get executed. Discuss
+    //     require(msg.sender == tokenOwner, "Only the executionClaim Owner can cancel the execution");
 
-        // // #### CHECKS END ####
+    //     // // #### CHECKS END ####
 
-        // CHECKS: msg.sender == executionClaimOwner is checked by Core
+    //     // CHECKS: msg.sender == executionClaimOwner is checked by Core
 
-        // ****** EFFECTS ******
-        // Emit event before deletion/burning of relevant variables
-        emit LogOrderCancelled(executionClaimId, executionClaimId, tokenOwner);
+    //     // ****** EFFECTS ******
+    //     // Emit event before deletion/burning of relevant variables
+    //     emit LogOrderCancelled(executionClaimId, executionClaimId, tokenOwner);
 
-        // Cancel both execution Claims on core
-        // ** Gelato Core interactions **
-        gelatoCore.cancelExecutionClaim(executionClaimId);
-        // ** Gelato Core interactions END **
+    //     // Cancel both execution Claims on core
+    //     // ** Gelato Core interactions **
+    //     gelatoCore.cancelExecutionClaim(executionClaimId);
+    //     // ** Gelato Core interactions END **
 
-        // ****** EFFECTS END ******
+    //     // ****** EFFECTS END ******
 
-        // ****** INTERACTIONS ******
-        // transfer sellAmount back from this contracts ERC20 balance to seller
-        // Refund user the given prepayment amount!!!
-        msg.sender.transfer(prepaymentPerSellOrder);
+    //     // ****** INTERACTIONS ******
+    //     // transfer sellAmount back from this contracts ERC20 balance to seller
+    //     // Refund user the given prepayment amount!!!
+    //     msg.sender.transfer(prepaymentPerSellOrder);
 
-        // Transfer ERC20 Tokens back to seller
-        safeTransfer(sellToken, msg.sender, amount, false);
+    //     // Transfer ERC20 Tokens back to seller
+    //     safeTransfer(sellToken, msg.sender, amount, false);
 
-        // // ****** INTERACTIONS END ******
+    //     // // ****** INTERACTIONS END ******
 
-        // Success
-        return true;
-    }
+    //     // Success
+    //     return true;
+    // }
 
     // Allows manual withdrawals on behalf of a seller from any calling address
     // This is allowed also on the GelatoDutchX Automated Withdrawal Interface
@@ -534,64 +510,64 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
     // withdrawManually only works up until the last withdrawal because the last withdrawal is its
     //  own ExecutionClaim on the Core, and a manual withdrawal thereof would result in unwanted complexity.
     // @DEV: Gas Limit Change => Hardcode
-    function withdrawManually(uint256 _executionClaimId)
-        external
-        returns(bool)
-    {
-        // Fetch owner of execution claim
-        address tokenOwner = gelatoCore.ownerOf(_executionClaimId);
+    // function withdrawManually(uint256 _executionClaimId)
+    //     external
+    //     returns(bool)
+    // {
+    //     // Fetch owner of execution claim
+    //     address tokenOwner = gelatoCore.ownerOf(_executionClaimId);
 
-         // Fetch calldata from gelato core and decode
-        bytes memory payload = gelatoCore.getClaimPayload(_executionClaimId);
+    //      // Fetch calldata from gelato core and decode
+    //     bytes memory payload = gelatoCore.getClaimPayload(_executionClaimId);
 
-        (bytes memory memPayload, bytes4 funcSelector) = decodeWithFunctionSignature(payload);
+    //     (bytes memory memPayload, bytes4 funcSelector) = decodeWithFunctionSignature(payload);
 
-        // #### CHECKS ####
-        // @DEV check that we are dealing with a execWithdraw claim
-        require(funcSelector == bytes4(keccak256(bytes(execWithdrawString))), "Only claims that have not been sold yet can be cancelled");
+    //     // #### CHECKS ####
+    //     // @DEV check that we are dealing with a execWithdraw claim
+    //     require(funcSelector == bytes4(keccak256(bytes(execWithdrawString))), "Only claims that have not been sold yet can be cancelled");
 
-        // Decode payload
-        (, address sellToken, address buyToken, uint256 amount, , uint256 lastAuctionIndex) = abi.decode(memPayload, (uint256, address, address, uint256, uint256, uint256));
+    //     // Decode payload
+    //     (, address sellToken, address buyToken, uint256 amount, , uint256 lastAuctionIndex) = abi.decode(memPayload, (uint256, address, address, uint256, uint256, uint256));
 
-        // ******* CHECKS *******
-        // If amount == 0, struct has already been deleted
-        require(amount != 0, "Amount for manual withdraw cannot be zero");
-        // Only Execution Claim Owner can withdraw manually
-        require(msg.sender == tokenOwner, "Only the executionClaim Owner can cancel the execution");
+    //     // ******* CHECKS *******
+    //     // If amount == 0, struct has already been deleted
+    //     require(amount != 0, "Amount for manual withdraw cannot be zero");
+    //     // Only Execution Claim Owner can withdraw manually
+    //     require(msg.sender == tokenOwner, "Only the executionClaim Owner can cancel the execution");
 
 
-        // Fetch price of last participated in and cleared auction using lastAuctionIndex
-        uint256 num;
-        uint256 den;
-        (num, den) = dutchExchange.closingPrices(sellToken, buyToken, lastAuctionIndex);
+    //     // Fetch price of last participated in and cleared auction using lastAuctionIndex
+    //     uint256 num;
+    //     uint256 den;
+    //     (num, den) = dutchExchange.closingPrices(sellToken, buyToken, lastAuctionIndex);
 
-        // Require that the last auction the seller participated in has cleared
-        require(den != 0,
-            "withdrawManually: den != 0, Last auction did not clear thus far, you have to wait"
-        );
+    //     // Require that the last auction the seller participated in has cleared
+    //     require(den != 0,
+    //         "withdrawManually: den != 0, Last auction did not clear thus far, you have to wait"
+    //     );
 
-        uint256 withdrawAmount = amount.mul(num).div(den);
+    //     uint256 withdrawAmount = amount.mul(num).div(den);
 
-        // ******* CHECKS END *******
+    //     // ******* CHECKS END *******
 
-        // ******* INTERACTIONS *******
+    //     // ******* INTERACTIONS *******
 
-        // Cancel execution claim on core
-        gelatoCore.cancelExecutionClaim(_executionClaimId);
+    //     // Cancel execution claim on core
+    //     gelatoCore.cancelExecutionClaim(_executionClaimId);
 
-        // Initiate withdraw
-        _withdraw(tokenOwner,  // seller
-                  sellToken,
-                  buyToken,
-                  lastAuctionIndex,
-                  withdrawAmount
-        );
+    //     // Initiate withdraw
+    //     _withdraw(tokenOwner,  // seller
+    //               sellToken,
+    //               buyToken,
+    //               lastAuctionIndex,
+    //               withdrawAmount
+    //     );
 
-        // ******* INTERACTIONS *******
+    //     // ******* INTERACTIONS *******
 
-        // Success
-        return true;
-    }
+    //     // Success
+    //     return true;
+    // }
 
     function getAuctionValues(address _sellToken, address _buyToken)
         internal
