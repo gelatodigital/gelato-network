@@ -1,38 +1,62 @@
 pragma solidity ^0.5.10;
 
 //  Imports:
-import '@gnosis.pm/dx-contracts/contracts/DutchExchange.sol';
-import '../../GelatoCore.sol';
-import '../../base/Counters.sol';
-import '../../base/ERC20.sol';
 import '../../base/IcedOut.sol';
-import '../../base/Ownable.sol';
-import '../../base/SafeMath.sol';
-
+import '@gnosis.pm/dx-contracts/contracts/DutchExchange.sol';
+import '@openzeppelin/contracts/drafts/Counters.sol';
+import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
+import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 
 // Gelato IcedOut-compliant DutchX Interface for splitting sell orders and for automated withdrawals
-contract GelatoDutchX is IcedOut, SafeTransfer {
+contract GelatoDutchX is IcedOut {
+    // **************************** Events ******************************
+    event LogNewOrderCreated(uint256 indexed orderStateId, address indexed seller);
+    event LogFeeNumDen(uint256 num, uint256 den);
+    event LogActualSellAmount(uint256 indexed executionClaimId,
+                              uint256 subOrderAmount,
+                              uint256 actualSellAmount,
+                              uint256 dutchXFee
+    );
+    event LogOrderCancelled(uint256 indexed executionClaimId,
+                            uint256 indexed orderID,
+                            address indexed seller
+    );
+    event LogWithdrawComplete(uint256 indexed executionClaimId,
+                              uint256 indexed orderStateId,
+                              address indexed seller,
+                              address buyToken,
+                              uint256 sellAmount,
+                              uint256 withdrawAmount
+    );
+    event LogOrderCompletedAndDeleted(uint256 indexed orderStateId);
+    event LogWithdrawAmount(address indexed sellToken,
+                            address indexed buyToken,
+                            uint256 indexed auctionIndex,
+                            uint256 num,
+                            uint256 den,
+                            uint256 withdrawAmount
+    );
+    event LogGas(uint256 gas1, uint256 gas2);
+    // **************************** Events END ******************************
 
-    // **************************** State Variables ******************************
+    // base contract => Ownable => indirect use through IcedOut
+    // Libraries
+    // using SafeMath for uint256; => indirect use through IcedOut
     using Counters for Counters.Counter;
+    using SafeERC20 for ERC20;
 
-    Counters.Counter private orderIds;
-
-    // One OrderState has many SellOrder
     struct OrderState {
-        // address sellToken; // token to sell
-        // address buyToken; // token to buy
         bool lastAuctionWasWaiting;  // default: false
-        uint256 lastAuctionIndex;  // default: 0
-        // uint256 prepaymentPerSellOrder; // maxGas * gelatoGasPrice
+        uint256 lastParticipatedAuctionIndex;  // default: 0
     }
 
-
+    // **************************** State Variables ******************************
     // Interfaces to other contracts that are set during construction.
     // GelatoCore public gelatoCore;
     DutchExchange public dutchExchange;
 
     // mapping(orderStateId => orderState)
+    Counters.Counter private orderIds;
     mapping(uint256 => OrderState) public orderStates;
 
     // Constants that are set during contract construction and updateable via setters
@@ -48,46 +72,20 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
 
     uint256 public execDepositAndSellGas;
 
-
     uint256 public execWithdrawGas;
+
+    // Constants that are set during contract construction and updateable via setters
+    uint256 public auctionStartWaitingForFunding;
     // **************************** State Variables END ******************************
 
-
-    // **************************** Events ******************************
-    event LogNewOrderCreated(uint256 indexed orderStateId, address indexed seller);
-    event LogFeeNumDen(uint256 num, uint256 den);
-    event LogActualSellAmount(uint256 indexed executionClaimId,
-                              uint256 indexed orderId,
-                              uint256 subOrderAmount,
-                              uint256 actualSellAmount,
-                              uint256 dutchXFee
-    );
-    event LogOrderCancelled(uint256 indexed executionClaimId,
-                            uint256 indexed orderID,
-                            address indexed seller
-    );
-    event LogWithdrawComplete(uint256 indexed executionClaimId,
-                              uint256 indexed orderId,
-                              address indexed seller,
-                              address buyToken,
-                              uint256 withdrawAmount
-    );
-    event LogOrderCompletedAndDeleted(uint256 indexed orderId);
-    event LogWithdrawAmount(uint256 num, uint256 den, uint256 withdrawAmount);
-    event LogGas(uint256 gas1, uint256 gas2);
-    // **************************** Events END ******************************
-
-
-
-
-    /* constructor():
-        * constructs Ownable base and sets msg.sender as owner.
-        * connects the contract interfaces to deployed instances thereof.
-        * sets the state variable constants
-    */
-    constructor(address payable _GelatoCore, address _DutchExchange, uint256 _execDepositAndSellGas, uint256 _execWithdrawGas)
-        // Initialize gelatoCore address & maxGas in IcedOut parent
-        IcedOut(_GelatoCore, _execDepositAndSellGas + _execWithdrawGas) // maxGas 277317 for depsositAndSell
+    // constructor():
+    constructor(address payable _GelatoCore,
+                address _DutchExchange,
+                uint256 _interfaceMaxGas,
+                uint256 _interfaceGasPrice
+    )
+        // Initialize gelatoCore address & interfaceMaxGas in IcedOut parent
+        IcedOut(_GelatoCore, _interfaceMaxGas, _interfaceGasPrice) // interfaceMaxGas 277317 for depsositAndSell
         public
     {
         // gelatoCore = GelatoCore(_GelatoCore);
@@ -107,54 +105,58 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
     }
     // **************************** State Variable Setters END ******************************
 
-    // **************************** timeSellOrders() ******************************
-    function timeSellOrders(address _sellToken,
-                            address _buyToken,
-                            uint256 _numSellOrders,
-                            uint256 _sellOrderAmount,
-                            uint256 _executionTime,
-                            uint256 _intervalSpan
+    // Create
+    // **************************** timedSellOrders() ******************************
+    function timedSellOrders(address _sellToken,
+                             address _buyToken,
+                             uint256 _totalSellVolume,
+                             uint256 _numSellOrders,
+                             uint256 _amountPerSellOrder,
+                             uint256 _executionTime,
+                             uint256 _intervalSpan
     )
         public
         payable
-
     {
         // Step1: Zero value preventions
         require(_sellToken != address(0), "GelatoCore.mintExecutionClaim: _sellToken: No zero addresses allowed");
         require(_buyToken != address(0), "GelatoCore.mintExecutionClaim: _buyToken: No zero addresses allowed");
-        require(_sellOrderAmount != 0, "GelatoCore.mintExecutionClaim: _sellOrderAmount cannot be 0");
-        require(_numSellOrders != 0, "splitSellOrder: numSubOrders cannot be 0");
+        require(_amountPerSellOrder != 0, "GelatoCore.mintExecutionClaim: _amountPerSellOrder cannot be 0");
+        require(_totalSellVolume != 0, "timedSellOrders: totalSellVolume cannot be 0");
+        require(_numSellOrders != 0, "timedSellOrders: numSubOrders cannot be 0");
 
         // Step2: Valid execution Time check
         // Check that executionTime is in the future (10 minute buffer given)
-        require(_executionTime.add(10 minutes) >= now, "GelatoCore.mintExecutionClaim: Failed test: Execution time must be in the future");
+        require(_executionTime.add(10 minutes) >= now,
+            "GelatoDutchX.timedSellOrders: Failed test: Execution time must be in the future"
+        );
         // Time between different selOrders needs to be at least 6 hours
         require(_intervalSpan >= 6 hours,
-            "splitSellOrder: _intervalSpan not at/above minimum of 6 hours"
+            "GelatoDutchX.timedSellOrders: _intervalSpan not at/above minimum of 6 hours"
         );
 
         // Step3: Invariant Requirements
-        // Require that user transfers the correct prepayment amount. Charge 2x execute + Withdraw
+        // Require that user transfers the correct prepayment sellAmount. Charge 2x execute + Withdraw
         uint256 prepaymentPerSellOrder = calcGelatoPrepayment();
         require(msg.value == prepaymentPerSellOrder.mul(_numSellOrders),  // calc for msg.sender==dappInterface
-            "User ETH prepayment transfer is incorrect"
+            "GelatoDutchX.timedSellOrders: User ETH prepayment transfer is incorrect"
         );
         // Only tokens that are tradeable on the Dutch Exchange can be posted
-        require(dutchExchange.getAuctionIndex(_sellToken, _buyToken) != 0, "The selected tokens are not traded on the Dutch Exchange");
+        require(dutchExchange.getAuctionIndex(_sellToken, _buyToken) != 0,
+            "GelatoDutchX.timedSellOrders: The selected tokens are not traded on the Dutch Exchange"
+        );
+        // Total Sell Volume must equal individual sellOrderAmount * number of sellOrders
+        require(_totalSellVolume == _numSellOrders.mul(_amountPerSellOrder),
+            "GelatoDutchX.timedSellOrders: _totalSellVolume != _numSellOrders * _amountPerSellOrder"
+        );
 
         // Step4: Transfer the totalSellVolume from msg.sender(seller) to this contract
-        // this is hardcoded into SafeTransfer.sol
-        require(safeTransfer(_sellToken, address(this), _numSellOrders.mul(_sellOrderAmount), true),
-            "splitSellOrder: The transfer of sellTokens from msg.sender to Gelato Interface must succeed"
-        );
+        ERC20(_sellToken).safeTransferFrom(msg.sender, address(this), _totalSellVolume);
 
         // Step5: Instantiate new dutchExchange-specific sell order state
         OrderState memory orderState = OrderState(
-            // _sellToken,
-            // _buyToken,
             false,  // default: lastAuctionWasWaiting
-            0  // default: lastAuctionIndex
-            // prepaymentPerSellOrder
+            0  // default:
         );
 
         // Step6: fetch new OrderStateId and store orderState in orderState mapping
@@ -176,13 +178,34 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
             // bytes memory payload = abi.encodeWithSignature(execDepositAndSellString, nextExecutionClaimId, _sellToken, _buyToken, _sellOrderAmount, executionTime, prepaymentPerSellOrder, orderStateId, 0, false);
 
             // Create Trigger Payload
-            bytes memory triggerPayload = abi.encodeWithSignature(execDepositAndSellTriggerString, nextExecutionClaimId, _sellToken, _buyToken, _sellOrderAmount, executionTime, orderStateId);
+            bytes memory triggerPayload = abi.encodeWithSignature(execDepositAndSellTriggerString,
+                                                                  nextExecutionClaimId,
+                                                                  _sellToken,
+                                                                  _buyToken,
+                                                                  _sellOrderAmount,
+                                                                  executionTime,
+                                                                  orderStateId
+            );
 
             // Create Action Payload
-            bytes memory actionPayload = abi.encodeWithSignature(execDepositAndSellActionString, nextExecutionClaimId, _sellToken, _buyToken, _sellOrderAmount, executionTime, prepaymentPerSellOrder, orderStateId);
+            bytes memory actionPayload = abi.encodeWithSignature(execDepositAndSellActionString,
+                                                                 nextExecutionClaimId,
+                                                                 _sellToken,
+                                                                 _buyToken,
+                                                                 _sellOrderAmount,
+                                                                 executionTime,
+                                                                 prepaymentPerSellOrder,
+                                                                 orderStateId
+            );
 
             // mintClaim(address _triggerAddress, bytes memory _triggerPayload, address _actionAddress, bytes memory _actionPayload, uint256 _actionMaxGas, address _executionClaimOwner
-            mintClaim(address(this), triggerPayload, address(this), actionPayload, execDepositAndSellGas, msg.sender);
+            mintClaim(address(this),
+                      triggerPayload,
+                      address(this),
+                      actionPayload,
+                      execDepositAndSellGas,
+                      msg.sender  // executionClaimOwner
+            );
 
             // old
             // mintClaim(address(this), payload, execDepositAndSellGas);
@@ -190,11 +213,20 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
             // withdraw execution claim => depositAndSell exeuctionClaim => sellOrder
             //  *** GELATO CORE PROTOCOL INTERACTION END ***
         }
+
+        // Step8: Emit New Sell Order
+        emit LogNewOrderCreated(orderStateId, msg.sender);
     }
     // **************************** timeSellOrders() END ******************************
 
     // Check if execDepositAndSell is executable
-    function execDepositAndSellTrigger(uint256 _executionClaimId, address _sellToken, address _buyToken, uint256 _amount, uint256 _executionTime, uint256 _orderStateId)
+    function execDepositAndSellTrigger(uint256 _executionClaimId,
+                                       address _sellToken,
+                                       address _buyToken,
+                                       uint256 _sellAmount,
+                                       uint256 _executionTime,
+                                       uint256 _orderStateId
+    )
         internal
         view
         returns (bool)
@@ -214,40 +246,52 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         );
 
         // Check if interface has enough funds to sell on the Dutch Exchange
-        require(
-            ERC20(_sellToken).balanceOf(address(this)) >= _amount,
+        require(ERC20(_sellToken).balanceOf(address(this)) >= _sellAmount,
             "GelatoInterface.execute: ERC20(sellToken).balanceOf(address(this)) !>= subOrderSize"
         );
 
         // Fetch OrderState
         OrderState memory orderState = orderStates[_orderStateId];
 
-        // Fetch past auction values set in state
-        uint256 lastAuctionIndex = orderState.lastAuctionIndex;
-        bool lastAuctionWasWaiting = orderState.lastAuctionWasWaiting;  // default: false
-
         // Fetch current DutchX auction values to analyze past auction participation
-        (uint256 newAuctionIndex, bool newAuctionIsWaiting) = getAuctionValues(_sellToken, _buyToken);
+        (uint256 newAuctionIndex, uint256 _, bool newAuctionIsWaiting) = getAuctionValues(_sellToken, _buyToken);
 
-        if (newAuctionIndex == lastAuctionIndex)
-        {
-            require(lastAuctionWasWaiting && !newAuctionIsWaiting,
-            "newAuctionindex == lastAuctionIndex, but lastAuctionWasWaiting && !newAuctionIsWaiting == false");
+        // Goal: prevent doubly participating in same auction
+        // CASE 1: DONT SELL - EDGE CASE: indices out of sync
+        // Ensure that currentAuctionIndex is at most 1 below lastParticipatedAuctionIndex
+        // The 'if' is to avoid an underflow for default 0 lastParticipatedAuctionIndex
+        if (orderState.lastParticipatedAuctionIndex > 0) {
+            require(currentAuctionIndex >= orderState.lastParticipatedAuctionIndex.sub(1),
+                "GelatoDutchX.execDepositAndSell Case 1: Fatal error, Gelato auction index ahead of dutchExchange auction index"
+            );
+        }
+
+        // CASE 2: DEPENDS
+        // We already have funds attributed to the currentAuctionIndex
+        if (currentAuctionIndex == orderState.lastParticipatedAuctionIndex) {
+            // Case 2a - SELL: our funds went into the currentAuctionIndex but since they were invested
+            //  during its waiting period (orderState.lastAuctionWasWaiting) and that auction has started
+            //  in the meantime (!newAuctionIsWaiting) we can sell into sellVolumesNext.
+            if (orderState.lastAuctionWasWaiting && !newAuctionIsWaiting) {
+                return true;
+            }
+            // Case 2b - DONT SELL: because either we would doubly invest during same waiting period or
+            //  we have an auction index out of sync error.
+            else
+            {
+                return false;
+            }
+        }
+
+        // CASE 3: SELL - last participated auction has cleared
+        // Our funds went into the previous auction index
+        // We can now sell again into the current auction index.
+        else if (currentAuctionIndex > orderState.lastParticipatedAuctionIndex) {
             return true;
         }
-        else if (newAuctionIndex == lastAuctionIndex.add(1))
-        {
-            require(lastAuctionWasWaiting && newAuctionIsWaiting || lastAuctionWasWaiting && !newAuctionIsWaiting,
-            "newAuctionIndex == lastAuctionIndex.add(1), but lastAuctionWasWaiting && newAuctionIsWaiting || lastAuctionWasWaiting && !newAuctionIsWaiting == false");
-            return true;
-        }
-        else if (newAuctionIndex >= lastAuctionIndex.add(2))
-        {
-            return true;
-        }
-        else
-        {
-            // Claim not executable
+
+        // CASE 4: DONT SELL - EDGE CASE: unhandled errors
+        else {
             return false;
         }
     }
@@ -256,21 +300,21 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
     function execWithdrawTrigger(uint256 _executionClaimId,
                                address _sellToken,
                                address _buyToken,
-                               uint256 _amount,
-                               uint256 _lastAuctionIndex)
+                               uint256 _sellAmount,
+                               uint256 _lastParticipatedAuctionIndex)
         internal
         view
         returns (bool)
     {
         // Decode payload
-        // (uint256 executionClaimId, address sellToken, address buyToken, uint256 amount, uint256 lastAuctionIndex) = abi.decode(_memPayload, (uint256, address, address, uint256, uint256));
+        // (uint256 executionClaimId, address sellToken, address buyToken, uint256 amount, uint256 lastParticipatedAuctionIndex) = abi.decode(_memPayload, (uint256, address, address, uint256, uint256));
 
         // Check if auction in DutchX closed
         uint256 num;
         uint256 den;
         (num, den) = dutchExchange.closingPrices(_sellToken,
                                                 _buyToken,
-                                                _lastAuctionIndex
+                                                _lastParticipatedAuctionIndex
         );
 
         // Check if the last auction the seller participated in has cleared
@@ -280,25 +324,33 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         );
 
         // Callculate withdraw amount
-        uint256 withdrawAmount = _amount.mul(num).div(den);
+        uint256 withdrawAmount = _sellAmount.mul(num).div(den);
 
         // // All checks passed
         return (true);
     }
 
+    // UPDATE-DELETE
     // ****************************  execDepositAndSell(executionClaimId) *********************************
     /**
      * DEV: Called by the execute func in GelatoCore.sol
      * Aim: Post sellOrder on the DutchExchange via depositAndSell()
      */
-    function execDepositAndSellAction(uint256 _executionClaimId, address _sellToken, address _buyToken, uint256 _amount, uint256 _executionTime, uint256 _prepaymentPerSellOrder, uint256 _orderStateId)
+    function execDepositAndSellAction(uint256 _executionClaimId,
+                                      address _sellToken,
+                                      address _buyToken,
+                                      uint256 _sellAmount,
+                                      uint256 _executionTime,
+                                      uint256 _prepaymentPerSellOrder,
+                                      uint256 _orderStateId
+)
         external
     {
         // Step1: Checks for execution safety
         // Make sure that gelatoCore is the only allowed caller to this function.
         // Executors will call this execute function via the Core's execute function.
         require(msg.sender == address(gelatoCore),
-            "GelatoInterface.execute: msg.sender != gelatoCore instance address"
+            "GelatoDutchX.execDepositAndSell: msg.sender != gelatoCore instance address"
         );
 
         // Fetch owner of execution claim
@@ -306,31 +358,30 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         OrderState storage orderState = orderStates[_orderStateId];
 
         // Fetch current DutchX auction values to analyze past auction participation
-        (uint256 newAuctionIndex, bool newAuctionIsWaiting) = getAuctionValues(_sellToken, _buyToken);
+        (uint256 _, uint256 nextParticipationAuctionIndex, bool newAuctionIsWaiting) = getAuctionValues(_sellToken, _buyToken);
 
         // ### EFFECTS ###
         // Update Order State
         orderState.lastAuctionWasWaiting = newAuctionIsWaiting;
-        orderState.lastAuctionIndex = newAuctionIndex;
+        orderState.lastParticipatedAuctionIndex = nextParticipationAuctionIndex;
 
 
         uint256 actualSellAmount;
         {
             uint256 dutchXFee;
             // Update sellOrder.amount so when an executor calls execWithdraw, the seller receives withdraws the correct amount given sellAmountMinusFee
-            (actualSellAmount, dutchXFee) = _calcActualSellAmount(_amount);
+            (actualSellAmount, dutchXFee) = _calcActualSellAmount(_sellAmount);
 
-            emit LogActualSellAmount(
-                                    _executionClaimId,
+            emit LogActualSellAmount(_executionClaimId,
                                     _orderStateId,
-                                    _amount,
+                                    _sellAmount,
                                     actualSellAmount,
                                     dutchXFee
             );
             // ### EFFECTS END ###
 
             // INTERACTION: sell on dutchExchange
-            _depositAndSell(_sellToken, _buyToken, _amount);
+            _depositAndSell(_sellToken, _buyToken, _sellAmount);
             // INTERACTION: END
         }
 
@@ -357,29 +408,31 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
     }
     // **************************** IcedOut execute(executionClaimId) END *********************************
 
+    // DELETE
+    // ****************************  execWithdraw(executionClaimId) *********************************
     // Withdraw function executor will call
-    function execWithdrawAction(uint256 _executionClaimId, address _sellToken, address _buyToken, uint256 _amount, uint256 _lastAuctionIndex)
+    function execWithdrawAction(uint256 _executionClaimId, address _sellToken, address _buyToken, uint256 _sellAmount, uint256 _lastParticipatedAuctionIndex)
         external
     {
         // Step1: Checks for execution safety
         // Make sure that gelatoCore is the only allowed caller to this function.
         // Executors will call this execute function via the Core's execute function.
         require(msg.sender == address(gelatoCore),
-            "GelatoInterface.execute: msg.sender != gelatoCore instance address"
+            "GelatoDutchX.execWithdraw: msg.sender != gelatoCore instance address"
         );
 
         // Fetch owner of execution claim
         address tokenOwner = gelatoCore.ownerOf(_executionClaimId);
 
         // Calculate withdraw amount
-        _withdraw(tokenOwner, _sellToken, _buyToken, _lastAuctionIndex, _amount);
+        _withdraw(tokenOwner, _sellToken, _buyToken, _lastParticipatedAuctionIndex, _sellAmount);
 
         // Event emission
         emit LogWithdrawComplete(_executionClaimId,
                                  _executionClaimId,
                                  tokenOwner,
                                  _buyToken,
-                                 _amount
+                                 _sellAmount
         );
     }
 
@@ -422,18 +475,18 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
     function _withdraw(address _seller,
                        address _sellToken,
                        address _buyToken,
-                       uint256 _lastAuctionIndex,
+                       uint256 _lastParticipatedAuctionIndex,
                        uint256 _withdrawAmount
     )
         public
     {
 
         // Withdraw funds from dutchExchange to Gelato
-        // DEV uses memory value lastAuctionIndex in case execute func calls it as we already incremented storage value
+        // DEV uses memory value lastParticipatedAuctionIndex in case execute func calls it as we already incremented storage value
         dutchExchange.claimAndWithdraw(_sellToken,
                                        _buyToken,
                                        address(this),
-                                       _lastAuctionIndex,
+                                       _lastParticipatedAuctionIndex,
                                        _withdrawAmount
         );
 
@@ -503,12 +556,6 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
     // }
 
     // Allows manual withdrawals on behalf of a seller from any calling address
-    // This is allowed also on the GelatoDutchX Automated Withdrawal Interface
-    //  because all remaining claims are still executable (do not throw revert as a result)
-    //  since they still do postSellOrder. Actually they could now even be a bit cheaper
-    //   to execute for the executor, as no withdrawal control flow is entered any more.
-    // withdrawManually only works up until the last withdrawal because the last withdrawal is its
-    //  own ExecutionClaim on the Core, and a manual withdrawal thereof would result in unwanted complexity.
     // @DEV: Gas Limit Change => Hardcode
     // function withdrawManually(uint256 _executionClaimId)
     //     external
@@ -527,7 +574,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
     //     require(funcSelector == bytes4(keccak256(bytes(execWithdrawString))), "Only claims that have not been sold yet can be cancelled");
 
     //     // Decode payload
-    //     (, address sellToken, address buyToken, uint256 amount, , uint256 lastAuctionIndex) = abi.decode(memPayload, (uint256, address, address, uint256, uint256, uint256));
+    //     (, address sellToken, address buyToken, uint256 amount, , uint256 lastParticipatedAuctionIndex) = abi.decode(memPayload, (uint256, address, address, uint256, uint256, uint256));
 
     //     // ******* CHECKS *******
     //     // If amount == 0, struct has already been deleted
@@ -536,10 +583,10 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
     //     require(msg.sender == tokenOwner, "Only the executionClaim Owner can cancel the execution");
 
 
-    //     // Fetch price of last participated in and cleared auction using lastAuctionIndex
+    //     // Fetch price of last participated in and cleared auction using lastParticipatedAuctionIndex
     //     uint256 num;
     //     uint256 den;
-    //     (num, den) = dutchExchange.closingPrices(sellToken, buyToken, lastAuctionIndex);
+    //     (num, den) = dutchExchange.closingPrices(sellToken, buyToken, lastParticipatedAuctionIndex);
 
     //     // Require that the last auction the seller participated in has cleared
     //     require(den != 0,
@@ -559,7 +606,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
     //     _withdraw(tokenOwner,  // seller
     //               sellToken,
     //               buyToken,
-    //               lastAuctionIndex,
+    //               lastParticipatedAuctionIndex,
     //               withdrawAmount
     //     );
 
@@ -572,24 +619,112 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
     function getAuctionValues(address _sellToken, address _buyToken)
         internal
         view
-        returns(uint256, bool)
+        returns(uint256 currentAuctionIndex,
+                uint256 nextParticipationAuctionIndex,
+                bool newAuctionIsWaiting
+        )
     {
-        uint256 newAuctionIndex = dutchExchange.getAuctionIndex(_sellToken, _buyToken);
+        currentAuctionIndex = dutchExchange.getAuctionIndex(_sellToken, _buyToken);
         uint256 auctionStartTime = dutchExchange.getAuctionStart(_sellToken, _buyToken);
 
-        // Waiting Period variables needed to prevent double participation in DutchX auctions
-        bool newAuctionIsWaiting;
         // Check if we are in a Waiting period or auction running period
-        if (auctionStartTime > now || auctionStartTime == auctionStartWaitingForFunding)
-        {
+        if (auctionStartTime > now || auctionStartTime == auctionStartWaitingForFunding) {
+            // We are in waiting period
             newAuctionIsWaiting = true;
-        }
-        else if (auctionStartTime < now)
-        {
+            // SellAmount will go into sellVolumesCurrent
+            nextParticipationAuctionIndex = currentAuctionIndex;
+        } else if (auctionStartTime < now) {
+            // Auction is currently ongoing
             newAuctionIsWaiting = false;
+            // SellAmount will go into sellVolumesNext
+            nextParticipationAuctionIndex = currentAuctionIndex.add(1);
         }
-        return(newAuctionIndex, newAuctionIsWaiting);
     }
+
+    // Deposit and sell on the dutchExchange
+    function _depositAndSell(address _sellToken,
+                             address _buyToken,
+                             uint256 _amountPerSellOrder
+    )
+        private
+    {
+        // Approve DutchX to transfer the funds from gelatoInterface
+        ERC20(_sellToken).approve(address(dutchExchange), _amountPerSellOrder);
+
+        // DEV deposit and sell on the dutchExchange
+        dutchExchange.depositAndSell(_sellToken, _buyToken, _amountPerSellOrder);
+    }
+
+    // Internal fn that withdraws funds from dutchExchange to the sellers account
+    function _withdraw(address _seller,
+                       address _sellToken,
+                       address _buyToken,
+                       uint256 _lastParticipatedAuctionIndex,
+                       uint256 _sellAmountAfterFee
+    )
+        private
+        returns(uint256 withdrawAmount)
+    {
+        // Calc how much the sellAmount of buy_tokens received in the previously participated auction
+        withdrawAmount = _calcWithdrawAmount(_sellToken,
+                                             _buyToken,
+                                             _lastParticipatedAuctionIndex,
+                                             _sellAmountAfterFee
+        );
+
+        // Withdraw funds from dutchExchange to Gelato
+        // DEV uses memory value  in case execute func calls it as we already incremented storage value
+        dutchExchange.claimAndWithdraw(_sellToken,
+                                       _buyToken,
+                                       address(this),
+                                       _lastParticipatedAuctionIndex,
+                                       withdrawAmount
+        );
+
+        // Transfer Tokens from GelatoDutchX to Seller
+        ERC20(_buyToken).safeTransfer(_seller, withdrawAmount);
+    }
+
+    // DEV Calculates sellAmount withdrawable from past, cleared auction
+    function _calcWithdrawAmount(address _sellToken,
+                                 address _buyToken,
+                                 uint256 _lastParticipatedAuctionIndex,
+                                 uint256 _sellAmountAfterFee
+    )
+        public
+        returns(uint256 withdrawAmount)
+    {
+        // Fetch numerator and denominator from dutchExchange
+        uint256 num;
+        uint256 den;
+
+        // FETCH PRICE OF CLEARED ORDER WITH INDEX
+        // num: buyVolumeOpp || den: sellVolumeOpp
+        // Ex: num = 1000, den = 10 => 1WETH === 100RDN
+        (num, den) = dutchExchange.closingPrices(_sellToken,
+                                                 _buyToken,
+                                                 _lastParticipatedAuctionIndex
+        );
+
+        // Check if the last auction the seller participated in has cleared
+        // DEV Check line 442 in dutchExchange contract
+        // DEV Test: Are there any other possibilities for den being 0 other than when the auction has not yet cleared?
+        require(den != 0,
+            "GelatoDutchX._calcWithdrawAmount: den != 0, Last auction did not clear thus far, you have to wait"
+        );
+
+        emit LogWithdrawAmount(_sellToken,
+                               _buyToken,
+                               _lastParticipatedAuctionIndex,
+                               num,
+                               den,
+                               _sellAmountAfterFee.mul(num).div(den)
+        );
+
+        // Callculate withdraw sellAmount
+        withdrawAmount = _sellAmountAfterFee.mul(num).div(den);
+    }
+    // **************************** Helper functions END *********************************
 
 }
 

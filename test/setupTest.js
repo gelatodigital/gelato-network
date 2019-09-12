@@ -76,7 +76,7 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
 
     // Get gelatoDutchExchange's balance on core before adding a new balance
     let gelatoDutchExchangeBalanceBefore = await gelatoCore.contract.methods
-      .getInterfaceBalance(gelatoDutchExchange.address)
+      .interfaceBalances(gelatoDutchExchange.address)
       .call();
     let gelatoDutchExchangeBalanceBeforeBN = new BN(
       gelatoDutchExchangeBalanceBefore
@@ -116,7 +116,7 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
 
     // Get gelatoDutchExchange's balance on core after adding a new balance
     let gelatoDutchExchangeBalanceAfter = await gelatoCore.contract.methods
-      .getInterfaceBalance(gelatoDutchExchange.address)
+      .interfaceBalances(gelatoDutchExchange.address)
       .call();
 
     let gelatoDutchExchangeBalanceAfterBN = new BN(
@@ -139,7 +139,7 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
 
     // Get gelatoDutchExchange's balance on core before adding a new balance
     let gelatoDutchExchangeBalanceBefore = await gelatoCore.contract.methods
-      .getInterfaceBalance(gelatoDutchExchange.address)
+      .interfaceBalances(gelatoDutchExchange.address)
       .call();
     let gelatoDutchExchangeBalanceBeforeBN = new BN(
       gelatoDutchExchangeBalanceBefore
@@ -155,7 +155,7 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
 
     // Get gelatoDutchExchange's balance on core after adding a new balance
     let gelatoDutchExchangeBalanceAfter = await gelatoCore.contract.methods
-      .getInterfaceBalance(gelatoDutchExchange.address)
+      .interfaceBalances(gelatoDutchExchange.address)
       .call();
 
     let gelatoDutchExchangeBalanceAfterBN = new BN(
@@ -180,7 +180,7 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
 
     // Get gelatoDutchExchange's balance on core before adding a new balance
     let gelatoDutchExchangeBalanceBefore = await gelatoCore.contract.methods
-      .getInterfaceBalance(gelatoDutchExchange.address)
+      .interfaceBalances(gelatoDutchExchange.address)
       .call();
     let gelatoDutchExchangeBalanceBeforeBN = new BN(
       gelatoDutchExchangeBalanceBefore
@@ -220,7 +220,7 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
 
     // Get gelatoDutchExchange's balance on core after adding a new balance
     let gelatoDutchExchangeBalanceAfter = await gelatoCore.contract.methods
-      .getInterfaceBalance(gelatoDutchExchange.address)
+      .interfaceBalances(gelatoDutchExchange.address)
       .call();
 
     let gelatoDutchExchangeBalanceAfterBN = new BN(
@@ -237,87 +237,87 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
     );
   });
 
-  it("GelatoCore can update gelatoGasPrice", async () => {
+  it("GelatoCore can update recommendedGasPriceForInterfaces", async () => {
     // Getter
-    let gelatoGasPriceBefore = await gelatoCore.contract.methods
-      .gelatoGasPrice()
+    let recommendedGasPriceForInterfacesBefore = await gelatoCore.contract.methods
+      .recommendedGasPriceForInterfaces()
       .call();
     // Update
-    let newGasPrice = web3.utils.toWei("100", "gwei");
+    let newGasPrice = web3.utils.toWei("20", "gwei");
     await gelatoCore.contract.methods
-      .updateGelatoGasPrice(newGasPrice)
+      .updateRecommendedGasPriceForInterfaces(newGasPrice)
       .send({ from: gelatoCoreOwner, gas: 5000000 });
     // Getter
-    let gelatoGasPriceAfter = await gelatoCore.contract.methods
-      .gelatoGasPrice()
+    let recommendedGasPriceForInterfacesAfter = await gelatoCore.contract.methods
+      .recommendedGasPriceForInterfaces()
       .call();
     assert.notEqual(
-      gelatoGasPriceBefore,
-      gelatoGasPriceAfter,
+      recommendedGasPriceForInterfacesBefore,
+      recommendedGasPriceForInterfacesAfter,
       "New Gas price should be differnt to old one"
     );
     assert.equal(
       newGasPrice,
-      gelatoGasPriceAfter,
-      "GelatoGasPrice should be updateable"
+      recommendedGasPriceForInterfacesAfter,
+      "recommendedGasPriceForInterfaces should be updateable"
     );
 
     // Switch GasPrice back to 5
-    let oldGasPrice = web3.utils.toWei("20", "gwei");
+    let oldGasPrice = web3.utils.toWei("5", "gwei");
     await gelatoCore.contract.methods
-      .updateGelatoGasPrice(oldGasPrice)
+      .updateRecommendedGasPriceForInterfaces(oldGasPrice)
       .send({ from: gelatoCoreOwner, gas: 5000000 });
   });
 
-  it("GelatoCore can update GelatoExecutionMargin", async () => {
+  it("GelatoCore can update executorProfit", async () => {
     // Getter
-    let gelatoExecutionMarginBefore = await gelatoCore.contract.methods
-      .gelatoExecutionMargin()
+    let executorProfitBefore = await gelatoCore.contract.methods
+      .executorProfit()
       .call();
     // Update
     let newExecutionMargin = 1000000000000000; // 1 Finney
     await gelatoCore.contract.methods
-      .updateGelatoExecutionMargin(newExecutionMargin)
+      .updateExecutorProfit(newExecutionMargin)
       .send({ from: gelatoCoreOwner, gas: 5000000 });
     // Getter
-    let gelatoExecutionMarginAfter = await gelatoCore.contract.methods
-      .gelatoExecutionMargin()
+    let executorProfitAfter = await gelatoCore.contract.methods
+      .executorProfit()
       .call();
     assert.notEqual(
-      gelatoExecutionMarginBefore,
-      gelatoExecutionMarginAfter,
+      executorProfitBefore,
+      executorProfitAfter,
       "New Execution Marginn should be differnt to old one"
     );
     assert.equal(
       newExecutionMargin,
-      gelatoExecutionMarginAfter,
-      "gelatoExecutionMargin should be updateable"
+      executorProfitAfter,
+      "executorProfit should be updateable"
     );
   });
 
-  it("GelatoCore can update GelatoMaxGasPrice", async () => {
+  it("GelatoCore can update executorGasPrice", async () => {
     // Getter
-    let gelatoMaxGasPriceBefore = await gelatoCore.contract.methods
-      .gelatoMaxGasPrice()
+    let executorGasPriceBefore = await gelatoCore.contract.methods
+      .executorGasPrice()
       .call();
     // Update
     let maxGasPrice = web3.utils.toWei("70", "gwei");
     await gelatoCore.contract.methods
-      .updateGelatoMaxGasPrice(maxGasPrice)
+      .updateExecutorGasPrice(maxGasPrice)
       .send({ from: gelatoCoreOwner, gas: 5000000 });
     // Getter
-    let gelatoMaxGasPrice = await gelatoCore.contract.methods
-      .gelatoMaxGasPrice()
+    let executorGasPrice = await gelatoCore.contract.methods
+      .executorGasPrice()
       .call();
     assert.notEqual(
-      gelatoMaxGasPriceBefore,
-      gelatoMaxGasPrice,
+      executorGasPriceBefore,
+      executorGasPrice,
       "New Gas price should be differnt to old one"
     );
     assert.equal(
       maxGasPrice,
-      gelatoMaxGasPrice,
-      "GelatoMaxGasPrice should be updateable"
+      executorGasPrice,
+      "executorGasPrice should be updateable"
     );
   });
 
@@ -330,7 +330,7 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
     // Update
     let newGasPrice = await web3.utils.toWei("70", "gwei");
     await gelatoDutchExchange.contract.methods
-      .useIndividualGasPrice(newGasPrice)
+      .useInterfaceGasPrice(newGasPrice)
       .send({ from: gelatoCoreOwner, gas: 5000000 });
     // Getter
     let gdxGelatoPrepayment2 = await gelatoDutchExchange.contract.methods
@@ -352,7 +352,7 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
       gdxGelatoPrepayment2,
       "New Gas price should be differnt to old one"
     );
-    // assert.equal(maxSellOrders, gdxMaxSellOrdersAfter, "GelatoMaxGasPrice should be updateable")
+    // assert.equal(maxSellOrders, gdxMaxSellOrdersAfter, "executorGasPrice should be updateable")
   });
 
   it("GelatoDutchExchangeInterface can switch from using its own gasPrice to gelatoCore's one", async () => {
@@ -362,7 +362,7 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
       .call();
     // Update
     await gelatoDutchExchange.contract.methods
-      .useGelatoGasPrice()
+      .useRecommendedGasPrice()
       .send({ from: gelatoCoreOwner, gas: 5000000 });
     // Getter
     let gdxGelatoPrepayment2 = await gelatoDutchExchange.contract.methods
@@ -372,16 +372,16 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
     let gdxGelatoPrepayment2BN = new BN(gdxGelatoPrepayment2.toString());
 
     // USE GELATO_GAS_PRICE_BN as gasPrice, as it is the one in gelatoCore
-    let currentGelatoGasPrice = await gelatoCore.contract.methods
-      .gelatoGasPrice()
+    let currentrecommendedGasPriceForInterfaces = await gelatoCore.contract.methods
+      .recommendedGasPriceForInterfaces()
       .call();
-    let currentGelatoGasPriceBN = new BN(currentGelatoGasPrice.toString());
-    let predictedGDXGelatoPrepayment = currentGelatoGasPriceBN
-      .mul(dutchXMaxGasBN)
+    let currentrecommendedGasPriceForInterfacesBN = new BN(currentrecommendedGasPriceForInterfaces.toString());
+    let predictedGDXGelatoPrepayment = currentrecommendedGasPriceForInterfacesBN
+      .mul(maxGasBN)
       .eq(gdxGelatoPrepayment2BN);
     assert.isTrue(
       predictedGDXGelatoPrepayment,
-      `${currentGelatoGasPriceBN} * ${dutchXMaxGasBN} should be equal to ${gdxGelatoPrepayment2BN}`
+      `${currentrecommendedGasPriceForInterfacesBN} * ${maxGasBN} should be equal to ${gdxGelatoPrepayment2BN}`
     );
 
     assert.notEqual(
@@ -389,7 +389,7 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
       gdxGelatoPrepayment2,
       "New Gas price should be differnt to old one"
     );
-    // assert.equal(maxSellOrders, gdxMaxSellOrdersAfter, "GelatoMaxGasPrice should be updateable")
+    // assert.equal(maxSellOrders, gdxMaxSellOrdersAfter, "executorGasPrice should be updateable")
   });
 
 

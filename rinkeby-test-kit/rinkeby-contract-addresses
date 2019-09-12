@@ -1,0 +1,59 @@
+
+CURRENT
+--------------
+
+LUIS RINKEBY
+===========
+0xb9ed66dc0BdD361c94ed83fBD0fBC761d260c1A4
+
+GELATO CORE
+===========
+>>> 0xFebb3B583A27Da0ccE1B43abD2b08F55424055B7
+https://rinkeby.etherscan.io/address/0xFebb3B583A27Da0ccE1B43abD2b08F55424055B7
+Owner: 0xb9ed66dc0BdD361c94ed83fBD0fBC761d260c1A4
+
+
+GELATO DUTCHX
+=============
+>>> 0x8c1dacD2bFb3d1A12203CC8c18f64Fa7C1281943
+https://rinkeby.etherscan.io/address/0x8c1dacd2bfb3d1a12203cc8c18f64fa7c1281943
+Owner: 0xb9ed66dc0BdD361c94ed83fBD0fBC761d260c1A4
+
+
+DUTCHX-PROXY
+============
+>>> 0xaAEb2035FF394fdB2C879190f95e7676f1A9444B
+https://rinkeby.etherscan.io/address/0xaaeb2035ff394fdb2c879190f95e7676f1a9444b
+
+
+
+Old Deployed Instances
+--------------------------------------------------------------------------------------------------
+
+AuctionIndex withdrawal bug:
+============================
+GELATO CORE
+-----------
+0xe4C021A60d34C6122872EB90D72f161c47E48282
+Owner: 0xb9ed66dc0BdD361c94ed83fBD0fBC761d260c1A4
+
+GELATO DUTCHX
+-------------
+0x47076e3511E3d97FdBAF105F85a8eb314Ad79A66
+Owner: 0xb9ed66dc0BdD361c94ed83fBD0fBC761d260c1A4
+
+
+AuctionIndex depositAndSell blocker when index+1
+==================================================
+GELATO CORE
+-----------
+0xFebb3B583A27Da0ccE1B43abD2b08F55424055B7
+https://rinkeby.etherscan.io/address/0xFebb3B583A27Da0ccE1B43abD2b08F55424055B7
+Owner: 0xb9ed66dc0BdD361c94ed83fBD0fBC761d260c1A4
+
+GELATO DUTCHX
+-------------
+>>> 0x8c1dacD2bFb3d1A12203CC8c18f64Fa7C1281943
+https://rinkeby.etherscan.io/address/0x8c1dacd2bfb3d1a12203cc8c18f64fa7c1281943
+Owner: 0xb9ed66dc0BdD361c94ed83fBD0fBC761d260c1A4
+

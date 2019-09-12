@@ -134,8 +134,8 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
 
     // benchmarked gasUsed = 726,360 (for 2 subOrders + 1 lastWithdrawal)
     let txGasPrice = await web3.utils.toWei("5", "gwei");
-    let txMintReciept = await gelatoDutchExchange.contract.methods
-      .timeSellOrders(
+    await gelatoDutchExchange.contract.methods
+      .timedSellOrders(
         sellToken.address,
         buyToken.address,
         TOTAL_SELL_VOLUME,
@@ -344,7 +344,7 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
 });
 
 describe("Should not be able to mint when tokens not traded on the dutchX", () => {
-  it("Check that timeSellOrders() reverts when a non existing token is chosen", async function() {
+  it("Check that timedSellOrders() reverts when a non existing token is chosen", async function() {
     let ERC20 = artifacts.require("ERC20");
     // Deploy 1 new ERC20
     let newBuyToken = await ERC20.new();
@@ -360,7 +360,7 @@ describe("Should not be able to mint when tokens not traded on the dutchX", () =
 
     // Call should revert
     await truffleAssert.reverts(
-      gelatoDutchExchange.timeSellOrders(
+      gelatoDutchExchange.timedSellOrders(
         sellToken.address,
         newBuyToken.address,
         TOTAL_SELL_VOLUME,
@@ -451,7 +451,82 @@ describe("Check gelatoDutchExchange Interface payload values", () => {
 
     })
 
-  })
+    // fetch the newly created orderState on GELATO_DX
+    orderState = await gelatoDutchExchange.contract.methods
+      .orderStates(orderStateId)
+      .call();
+
+    // check the orderState
+    assert.strictEqual(
+      orderState.lastAuctionWasWaiting,
+      false,
+      "orderState.lastAuctionWasWaiting problem"
+    );
+    assert.strictEqual(
+      orderState.lastParticipatedAuctionIndex,
+      "0",
+      "orderState.lastParticipatedAuctionIndex problem"
+    );
+  });
+  it("Check sellOrder values", async () => {
+    let lastExecutionClaimId = await gelatoCore.contract.methods
+      .getCurrentExecutionClaimId()
+      .call();
+    let firstExecutionClaimId =
+      parseInt(lastExecutionClaimId) - parseInt(numberOfSubOrders) * 2;
+    let assertExecutionTime = executionTime;
+    assertExecutionTimeBN = new BN(assertExecutionTime);
+
+    while (firstExecutionClaimId < parseInt(lastExecutionClaimId)) {
+      firstExecutionClaimId = firstExecutionClaimId + 1;
+      if (firstExecutionClaimId % 2 !== 0) {
+        let sellOrder = await gelatoDutchExchange.contract.methods
+          .sellOrders(firstExecutionClaimId + 1, firstExecutionClaimId)
+          .call();
+        // OrderState Id must be correct
+        assert.strictEqual(
+          sellOrder.orderStateId,
+          orderStateId,
+          "Order State Id Problem in sellOrder"
+        );
+
+        // Execution Time must be correct
+        let fetchedExecutionTime = new BN(sellOrder.executionTime);
+        let executionTimeIsEqual = assertExecutionTimeBN.eq(
+          fetchedExecutionTime
+        );
+        assert.isTrue(
+          executionTimeIsEqual,
+          `ExecutionTime Problem: ${assertExecutionTimeBN.toString()}needs to be equal ${fetchedExecutionTime.toString()}`
+        );
+
+        // Amount must be correct
+        let amountIsEqual = SUBORDER_SIZE_BN.eq(new BN(sellOrder.sellAmount));
+        assert.isTrue(amountIsEqual, "Amount Problem in sellOrder");
+
+        // Posted should be false by default
+        assert.strictEqual(
+          sellOrder.posted,
+          false,
+          "Posted (bool) Problem in sellOrder"
+        );
+
+        let gdxPrepayment = await gelatoDutchExchange.contract.methods
+          .calcGelatoPrepayment()
+          .call();
+        assert.strictEqual(
+          sellOrder.prepaymentPerSellOrder,
+          gdxPrepayment,
+          "prePayment Problem"
+        );
+
+        // Account for next iteration
+        assertExecutionTimeBN = assertExecutionTimeBN.add(
+          new BN(INTERVAL_SPAN)
+        );
+      }
+    }
+  });
 
   it("What happened in this test?", async function() {
     // Fetch User Ether Balance
