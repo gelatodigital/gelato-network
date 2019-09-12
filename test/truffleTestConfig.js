@@ -30,7 +30,10 @@ const TOTAL_SELL_VOLUME = web3.utils.toWei("20", "ether"); // 20 WETH
 const SUBORDER_SIZE_BN = new BN(web3.utils.toWei("10", "ether")); // 10 WETH
 const INTERVAL_SPAN = "21600"; // 6 hours
 const MSG_VALUE_BN = GDX_PREPAID_FEE_BN.mul(NUM_SUBORDERS_BN); // wei
-const dutchXMaxGasBN = new BN(500000 + 200000);
+const depositAndSellMaxGas = new BN(500000)
+const withdrawMaxGas = new BN(200000)
+const dutchXMaxGasBN = depositAndSellMaxGas.add(withdrawMaxGas)
+
 
 // To be set in truffle test
 let dutchExchangeProxy;
@@ -96,5 +99,7 @@ module.exports = {
     execDepositAndSellTrigger,
     execDepositAndSellAction,
     execWithdrawTrigger,
-    execWithdrawAction
+    execWithdrawAction,
+    depositAndSellMaxGas,
+    withdrawMaxGas
 };

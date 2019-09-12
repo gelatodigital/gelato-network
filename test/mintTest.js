@@ -47,7 +47,9 @@ let {
   execDepositAndSellTrigger,
   execDepositAndSellAction,
   execWithdrawTrigger,
-  execWithdrawAction
+  execWithdrawAction,
+  depositAndSellMaxGas,
+  withdrawMaxGas
 } = require("./truffleTestConfig.js");
 
 let txHash;
@@ -238,8 +240,9 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
       .orderIds()
       .call();
 
+
     for (
-      let i = mintExecutionClaimId - parseInt(NUM_SUBORDERS_BN.toString());
+      let i = mintExecutionClaimId - 1 ;
       i < parseInt(NUM_SUBORDERS_BN.toString());
       i++
     ) {
@@ -345,11 +348,22 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
       //   PrepaymentAmount: ${gelatoPrepayment}
       // `)
 
-      computedExecutionClaimHashes[parseInt(mintExecutionClaimId)] = [
-        triggerPayload,
-        actionPayload
-      ];
 
+      // Hash all parameters using sha3
+      const executionClaimHash = web3.utils.soliditySha3(
+        { type: 'address', value: gelatoDutchExchange.address},
+        { type: 'bytes', value: triggerPayload},
+        { type: 'address', value: gelatoDutchExchange.address},
+        { type: 'bytes', value: actionPayload},
+        { type: 'uint256', value: depositAndSellMaxGas.toString()},
+        { type: 'address', value: gelatoDutchExchange.address},
+        { type: 'uint256', value: mintExecutionClaimId}
+        )
+        console.log(`Computed Hash: ${executionClaimHash}`)
+
+      computedExecutionClaimHashes[parseInt(mintExecutionClaimId)] =
+        executionClaimHash
+      ;
       // Actions for next iteration
 
       // Increment execution time by interval span
@@ -368,10 +382,9 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
         events.forEach(async event => {
           // Minted Claims: {executionClaimId: actionPayload}
           // mintedClaims[event.returnValues.executionClaimId] = executionClaimHash;
-          mintedClaims[parseInt(event.returnValues.executionClaimId)] = [
-            event.returnValues.triggerPayload,
-            event.returnValues.actionPayload
-          ];
+          mintedClaims[parseInt(event.returnValues.executionClaimId)] =
+            event.returnValues.executionClaimHash
+          ;
           // Fetch current executionClaimId
           firstExecutionClaimId = firstExecutionClaimId + 1;
           assert.strictEqual(
@@ -418,17 +431,19 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
       }
     );
 
+    // Check that payloads are encoded correctly
     for (var index in mintedClaims) {
       assert.strictEqual(
-        computedExecutionClaimHashes[index][0],
-        mintedClaims[index][0]
+        computedExecutionClaimHashes[index],
+        mintedClaims[index]
       );
       assert.strictEqual(
-        computedExecutionClaimHashes[index][1],
-        mintedClaims[index][1]
+        computedExecutionClaimHashes[index],
+        mintedClaims[index]
       );
     }
   });
+
 });
 
 /*
