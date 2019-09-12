@@ -459,7 +459,8 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         {
             // Check if parameters are correct
             // Hash(address trigger, bytes triggerPayload, address action, bytes actionPayload, uint256 actionMaxGas, address dappInterface, uint256 executionClaimId)
-            bytes32 executionClaimHash = keccak256(abi.encodePacked(_triggerAddress, _triggerPayload, _actionAddress, _actionPayload, _actionMaxGas, address(this), _executionClaimId));
+            // @Dev not really necessary to conduct the hash check here, as it will be done in gelato core
+            // bytes32 executionClaimHash = keccak256(abi.encodePacked(_triggerAddress, _triggerPayload, _actionAddress, _actionPayload, _actionMaxGas, address(this), _executionClaimId));
 
             // Check that execution claim has the correct funcSelector
             (bytes memory memPayload, bytes4 funcSelector) = decodeWithFunctionSignature(_actionPayload);
@@ -527,64 +528,65 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
     // withdrawManually only works up until the last withdrawal because the last withdrawal is its
     //  own ExecutionClaim on the Core, and a manual withdrawal thereof would result in unwanted complexity.
     // @DEV: Gas Limit Change => Hardcode
-    // function withdrawManually(uint256 _executionClaimId)
-    //     external
-    //     returns(bool)
-    // {
-    //     // Fetch owner of execution claim
-    //     address tokenOwner = gelatoCore.ownerOf(_executionClaimId);
+    function withdrawManually(address _triggerAddress, address _actionAddress, uint256 _actionMaxGas, uint256 _executionClaimId, bytes calldata _triggerPayload, bytes calldata _actionPayload)
+        external
+    {
+        {
+            // Fetch owner of execution claim
+            address tokenOwner = gelatoCore.ownerOf(_executionClaimId);
+            address sellToken;
+            address buyToken;
+            uint256 amount;
+            uint256 lastAuctionIndex;
+            (bytes memory memPayload, bytes4 funcSelector) = decodeWithFunctionSignature(_actionPayload);
+            // #### CHECKS ####
+            // @DEV check that we are dealing with a execWithdraw claim
+            require(funcSelector == bytes4(keccak256(bytes(execWithdrawActionString))), "Only claims that have not been sold yet can be cancelled");
 
-    //      // Fetch calldata from gelato core and decode
-    //     bytes memory payload = gelatoCore.getClaimPayload(_executionClaimId);
+            // Decode payload
+            uint256 executionClaimId;
+            (executionClaimId, sellToken, buyToken, amount, lastAuctionIndex) = abi.decode(memPayload, (uint256, address, address, uint256, uint256));
 
-    //     (bytes memory memPayload, bytes4 funcSelector) = decodeWithFunctionSignature(payload);
+            require(executionClaimId == _executionClaimId, "ExecutionClaimIds do not match");
 
-    //     // #### CHECKS ####
-    //     // @DEV check that we are dealing with a execWithdraw claim
-    //     require(funcSelector == bytes4(keccak256(bytes(execWithdrawString))), "Only claims that have not been sold yet can be cancelled");
+            // ******* CHECKS *******
+            // If amount == 0, struct has already been deleted
+            require(amount != 0, "Amount for manual withdraw cannot be zero");
+            // Only Execution Claim Owner can withdraw manually
+            require(msg.sender == tokenOwner, "Only the executionClaim Owner can cancel the execution");
 
-    //     // Decode payload
-    //     (, address sellToken, address buyToken, uint256 amount, , uint256 lastAuctionIndex) = abi.decode(memPayload, (uint256, address, address, uint256, uint256, uint256));
+            uint256 num;
+            uint256 den;
+            (num, den) = dutchExchange.closingPrices(sellToken, buyToken, lastAuctionIndex);
 
-    //     // ******* CHECKS *******
-    //     // If amount == 0, struct has already been deleted
-    //     require(amount != 0, "Amount for manual withdraw cannot be zero");
-    //     // Only Execution Claim Owner can withdraw manually
-    //     require(msg.sender == tokenOwner, "Only the executionClaim Owner can cancel the execution");
+            // Require that the last auction the seller participated in has cleared
+            require(den != 0,
+                "withdrawManually: den != 0, Last auction did not clear thus far, you have to wait"
+            );
+
+            uint256 withdrawAmount = amount.mul(num).div(den);
+
+            // Initiate withdraw
+            _withdraw(tokenOwner,  // seller
+                    sellToken,
+                    buyToken,
+                    lastAuctionIndex,
+                    withdrawAmount
+            );
+        }
+
+        // Cancel execution claim on core
+        gelatoCore.cancelExecutionClaim(_triggerAddress,
+                                        _triggerPayload,
+                                        _actionAddress,
+                                        _actionPayload,
+                                        _actionMaxGas,
+                                        address(this),
+                                        _executionClaimId);
 
 
-    //     // Fetch price of last participated in and cleared auction using lastAuctionIndex
-    //     uint256 num;
-    //     uint256 den;
-    //     (num, den) = dutchExchange.closingPrices(sellToken, buyToken, lastAuctionIndex);
 
-    //     // Require that the last auction the seller participated in has cleared
-    //     require(den != 0,
-    //         "withdrawManually: den != 0, Last auction did not clear thus far, you have to wait"
-    //     );
-
-    //     uint256 withdrawAmount = amount.mul(num).div(den);
-
-    //     // ******* CHECKS END *******
-
-    //     // ******* INTERACTIONS *******
-
-    //     // Cancel execution claim on core
-    //     gelatoCore.cancelExecutionClaim(_executionClaimId);
-
-    //     // Initiate withdraw
-    //     _withdraw(tokenOwner,  // seller
-    //               sellToken,
-    //               buyToken,
-    //               lastAuctionIndex,
-    //               withdrawAmount
-    //     );
-
-    //     // ******* INTERACTIONS *******
-
-    //     // Success
-    //     return true;
-    // }
+    }
 
     function getAuctionValues(address _sellToken, address _buyToken)
         internal
