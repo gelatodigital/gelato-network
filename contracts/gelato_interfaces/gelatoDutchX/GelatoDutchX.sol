@@ -16,7 +16,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
     // **************************** State Variables ******************************
     using Counters for Counters.Counter;
 
-    Counters.Counter private orderIds;
+    Counters.Counter public orderIds;
 
     // One OrderState has many SellOrder
     struct OrderState {
@@ -38,13 +38,14 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
     // Constants that are set during contract construction and updateable via setters
     uint256 public auctionStartWaitingForFunding;
 
+    string constant execDepositAndSellTriggerString = "execDepositAndSellTrigger(uint256,address,address,uint256,uint256,uint256)";
+
     string constant execDepositAndSellActionString = "execDepositAndSellAction(uint256,address,address,uint256,uint256,uint256,uint256)";
 
-    string constant execDepositAndSellTriggerString = "execDepositAndSellTrigger(uint256,address,address,uint256,uint256,uint256)";
+    string constant execWithdrawTriggerString = "execWithdrawTrigger(uint256,address,address,uint256,uint256)";
 
     string constant execWithdrawActionString = "execWithdrawAction(uint256,address,address,uint256,uint256)";
 
-    string constant execWithdrawTriggerString = "execWithdrawTrigger(uint256,address,address,uint256,uint256)";
 
     uint256 public execDepositAndSellGas;
 

@@ -67,11 +67,11 @@ describe("Test possible intregration test architecture", () => {
         await commandLine.execShellCommandLog(`truffle test test/mintTest.js`)
         console.log("#########################################")
     })
-    it("test7 - Check if both claims are executable", async function () {
-        this.timeout(50000)
-        await commandLine.execShellCommandLog(`truffle test test/canExecTest.js`)
-        console.log("#########################################")
-    })
+    // it("test7 - Check if both claims are executable", async function () {
+    //     this.timeout(50000)
+    //     await commandLine.execShellCommandLog(`truffle test test/canExecTest.js`)
+    //     console.log("#########################################")
+    // })
 })
 
 execShellCommand

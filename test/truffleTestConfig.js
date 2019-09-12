@@ -18,6 +18,10 @@ const BN = web3.utils.BN;
 const GELATO_GAS_PRICE_BN = new BN(web3.utils.toWei("5", "gwei"));
 const GDX_MAXGAS_BN = new BN("500000"); // 500.000 must be benchmarked
 const GDX_PREPAID_FEE_BN = GDX_MAXGAS_BN.mul(GELATO_GAS_PRICE_BN); // wei
+const execDepositAndSellTrigger = "execDepositAndSellTrigger(uint256,address,address,uint256,uint256,uint256)";
+const execDepositAndSellAction = "execDepositAndSellAction(uint256,address,address,uint256,uint256,uint256,uint256)";
+const execWithdrawTrigger = "execWithdrawTrigger(uint256,address,address,uint256,uint256)";
+const execWithdrawAction = "execWithdrawAction(uint256,address,address,uint256,uint256)";
 
 // Split Sell Order Details
 const numberOfSubOrders = "2"
@@ -88,5 +92,9 @@ module.exports = {
     userSellTokenBalance,
     userBuyTokenBalance,
     executorEthBalance,
-    dutchXMaxGasBN
+    dutchXMaxGasBN,
+    execDepositAndSellTrigger,
+    execDepositAndSellAction,
+    execWithdrawTrigger,
+    execWithdrawAction
 };
