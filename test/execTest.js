@@ -5,45 +5,51 @@
 
 let {
   numberOfSubOrders,
-    GelatoCore,
-    GelatoDutchX,
-    SellToken,
-    BuyToken,
-    DutchExchangeProxy,
-    DutchExchange,
-    timeTravel,
-    BN,
-    NUM_SUBORDERS_BN,
-    GELATO_GAS_PRICE_BN,
-    TOTAL_SELL_VOLUME,
-    SUBORDER_SIZE_BN,
-    INTERVAL_SPAN,
-    GDX_MAXGAS_BN,
-    GDX_PREPAID_FEE_BN,
-    dutchExchangeProxy,
-    dutchExchange,
-    seller,
-    accounts,
-    sellToken,
-    buyToken,
-    gelatoDutchXContract,
-    gelatoCore,
-    gelatoCoreOwner,
-    orderStateId,
-    orderState,
-    executionTime,
-    interfaceOrderId,
-    executionClaimIds,
-    MSG_VALUE_BN,
-    execShellCommand,
-    DxGetter,
-    execShellCommandLog,
-    truffleAssert,
-    userEthBalance,
-    userSellTokenBalance,
-    userBuyTokenBalance,
-    executorEthBalance,
-    dutchXMaxGasBN
+  GelatoCore,
+  GelatoDutchX,
+  SellToken,
+  BuyToken,
+  DutchExchangeProxy,
+  DutchExchange,
+  timeTravel,
+  BN,
+  NUM_SUBORDERS_BN,
+  GELATO_GAS_PRICE_BN,
+  TOTAL_SELL_VOLUME,
+  SUBORDER_SIZE_BN,
+  INTERVAL_SPAN,
+  GDX_MAXGAS_BN,
+  GDX_PREPAID_FEE_BN,
+  dutchExchangeProxy,
+  dutchExchange,
+  seller,
+  accounts,
+  sellToken,
+  buyToken,
+  gelatoDutchXContract,
+  gelatoCore,
+  gelatoCoreOwner,
+  orderStateId,
+  orderState,
+  executionTime,
+  interfaceOrderId,
+  executionClaimIds,
+  MSG_VALUE_BN,
+  execShellCommand,
+  DxGetter,
+  execShellCommandLog,
+  truffleAssert,
+  userEthBalance,
+  userSellTokenBalance,
+  userBuyTokenBalance,
+  executorEthBalance,
+  dutchXMaxGasBN,
+  execDepositAndSellTrigger,
+  execDepositAndSellAction,
+  execWithdrawTrigger,
+  execWithdrawAction,
+  depositAndSellMaxGas,
+  withdrawMaxGas
 } = require("./truffleTestConfig.js");
 
 let txHash;
@@ -56,6 +62,7 @@ let depositAndSellClaim
 let withdrawClaim
 let sellOrder;
 
+let mintedClaims = {};
 let decodedPayload;
 let decodedPayloads = {}
 let definedExecutionTimeBN;
@@ -80,9 +87,35 @@ describe("Successfully execute execution claim", () => {
     seller = accounts[2];
     revertExecutor = accounts[8]
     executor = accounts[9];
-    execDepositAndSell = web3.eth.abi.encodeFunctionSignature('execDepositAndSell(uint256,address,address,uint256,uint256,uint256,uint256,uint256,bool)')
-    execWithdraw = web3.eth.abi.encodeFunctionSignature('execWithdraw(uint256,address,address,uint256,uint256)')
+    // execDepositAndSell = web3.eth.abi.encodeFunctionSignature('execDepositAndSell(uint256,address,address,uint256,uint256,uint256,uint256,uint256,bool)')
+    // execWithdraw = web3.eth.abi.encodeFunctionSignature('execWithdraw(uint256,address,address,uint256,uint256)')
   });
+
+
+  it("Check that we can fetch all past created execution claims", async () => {
+    console.log("Log all them events")
+
+    await gelatoCore.getPastEvents(
+      "LogNewExecutionClaimMinted",
+      (error, events) => {
+        if (error) {
+          console.log("JO")
+          console.error;
+        }
+        console.log(`WHY NO EVENT: ${events}`)
+        events.forEach(event => {
+          console.log(event)
+          // Minted Claims: {executionClaimId: actionPayload}
+          // mintedClaims[event.returnValues.executionClaimId] = executionClaimHash;
+          mintedClaims[parseInt(event.returnValues.executionClaimId)] = [
+            event.returnValues.triggerAddress, event.returnValues.triggerPayload, event.returnValues.actionAddress, event.returnValues.actionPayload, event.returnValues.actionMaxGas, event.returnValues.dappInterface, event.returnValues.executionClaimId, event.returnValues.executionClaimHash, event.returnValues.executionClaimOwner];
+          });
+
+      }
+    );
+
+    console.log("DONE")
+  })
 
   it("Fetch Before Balance of seller and executor", async function() {
     // Fetch User Ether Balance
@@ -125,31 +158,50 @@ describe("Successfully execute execution claim", () => {
     assert.isTrue(true);
   })
 
+  // Gets all past created execution claims, loops over them and stores the one which is executable in a hashtable
   it("Check what function the next executable claim is", async function() {
     this.timeout(50000)
-    // Get the current execution claim on the core
-    let shouldBeZero;
-    for (let i = 1; i <= lastExecutionClaimId; i ++)
-    {
-      try
-      {
-        let canExecuteReturn = await gelatoCore.contract.methods.canExecute(i).call();
-        shouldBeZero = canExecuteReturn[0];
-        if (parseInt(shouldBeZero) === 0)
-        {
-          nextExecutionClaim = i;
-        }
-      }
-       catch(e)
-      {
+    // Get all past created execution claims
+    console.log(mintedClaims.length)
+    for (var index in mintedClaims) {
+      console.log("HEY")
+      let claim = mintedClaims[index]
+      let canExecuteReturn = await gelatoCore.contract.method.canExecute(claim[0], claim[1], claim[2], claim[3], claim[4], claim[5], claim[9]).call()
+      console.log(canExecuteReturn)
 
-      }
 
 
     }
-    console.log(`ExecutionClaimID: ${nextExecutionClaim}`)
+
+    console.log("DONE")
+
+    //
+
+
+    // let shouldBeZero;
+    // for (let i = 1; i <= lastExecutionClaimId; i ++)
+    // {
+    //   try
+    //   {
+    //     let canExecuteReturn = await gelatoCore.contract.methods.canExecute(i).call();
+    //     shouldBeZero = canExecuteReturn[0];
+    //     if (parseInt(shouldBeZero) === 0)
+    //     {
+    //       nextExecutionClaim = i;
+    //     }
+    //   }
+    //    catch(e)
+    //   {
+
+    //   }
+
+
+    // }
+    // console.log(`ExecutionClaimID: ${nextExecutionClaim}`)
 
   })
+
+/*
 
   it("fetch executionClaim payload", async() => {
     let encodedPayload = await gelatoCore.contract.methods
@@ -795,4 +847,6 @@ describe("Successfully execute execution claim", () => {
   // Check that an executor can call execute with the same claimId again to drain the interface
 
   // Check that sellOrder in interface got updated correcty
+
+*/
 });
