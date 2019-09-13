@@ -72,7 +72,6 @@ describe("Test possible intregration test architecture", () => {
         await commandLine.execShellCommandLog(`truffle test test/execTest.js`)
         console.log("#########################################")
     })
-    /*
     it("test8 - Start Auction 3", async function () {
         this.timeout(50000)
         await commandLine.execShellCommandLog(`yarn gdx-start-auction`)
@@ -113,7 +112,7 @@ describe("Test possible intregration test architecture", () => {
         await commandLine.execShellCommandLog(`truffle test test/resumeTest.js`)
         console.log("#########################################")
     })
-    */
+
 })
 
 execShellCommand

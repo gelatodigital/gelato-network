@@ -196,7 +196,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
 
     // Check if execDepositAndSell is executable
     function execDepositAndSellTrigger(uint256 _executionClaimId, address _sellToken, address _buyToken, uint256 _amount, uint256 _executionTime, uint256 _orderStateId)
-        internal
+        external
         view
         returns (bool)
     {
@@ -259,7 +259,7 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
                                address _buyToken,
                                uint256 _amount,
                                uint256 _lastAuctionIndex)
-        internal
+        external
         view
         returns (bool)
     {

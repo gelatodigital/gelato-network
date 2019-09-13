@@ -76,7 +76,7 @@ contract GelatoCore is Ownable, Claim {
     uint256 constant gasOverhead = 41414;
 
     // Gas stipends for acceptRelayedCall, preRelayedCall and postRelayedCall
-    uint256 constant canExecMaxGas = 50000;
+    uint256 constant canExecMaxGas = 100000;
 
     // Executor min gas refunds
     uint256 constant executorGasRefund = 50000;
@@ -321,6 +321,8 @@ contract GelatoCore is Ownable, Claim {
         // Call 'acceptExecutionRequest' in interface contract
         (bool success, bytes memory returndata) = _triggerAddress.staticcall.gas(canExecMaxGas)(_triggerPayload);
 
+        //return (100, executionClaimOwner);
+
         // Check dappInterface return value
         if (!success) {
             // Return 1 in case of error
@@ -342,6 +344,7 @@ contract GelatoCore is Ownable, Claim {
             }
 
         }
+
 
     }
 
