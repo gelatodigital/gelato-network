@@ -119,25 +119,37 @@ describe("Successfully execute execution claim", () => {
         });
       });
 
-
     // Check which execution claims already got executed and remove then from the list
     await gelatoCore
-    .getPastEvents(
-      "LogClaimExecutedBurnedAndDeleted",
-      {
-        fromBlock: 0,
-        toBlock: "latest"
-      },
-      function(error, events) {}
-    )
-    .then(function(events) {
-      events.forEach(event => {
-        delete mintedClaims[parseInt(event.returnValues.executionClaimId)];
-
+      .getPastEvents(
+        "LogClaimExecutedBurnedAndDeleted",
+        {
+          fromBlock: 0,
+          toBlock: "latest"
+        },
+        function(error, events) {}
+      )
+      .then(function(events) {
+        events.forEach(event => {
+          delete mintedClaims[parseInt(event.returnValues.executionClaimId)];
+        });
       });
-    });
 
-
+    // Check which execution claims already got cancelled and remove then from the list
+    await gelatoCore
+      .getPastEvents(
+        "LogClaimCancelled",
+        {
+          fromBlock: 0,
+          toBlock: "latest"
+        },
+        function(error, events) {}
+      )
+      .then(function(events) {
+        events.forEach(event => {
+          delete mintedClaims[parseInt(event.returnValues.executionClaimId)];
+        });
+      });
   });
 
   it("Fetch Before Balance of seller and executor", async function() {
@@ -155,34 +167,11 @@ describe("Successfully execute execution claim", () => {
     executorEthBalance = await web3.eth.getBalance(executor);
   });
 
-  // it("fetch the correct executionClaimId to execute", async () => {
-  //   // Get the current execution claim on the core
-  //   lastExecutionClaimId = await gelatoCore.contract.methods
-  //     .getCurrentExecutionClaimId()
-  //     .call();
-  //   // Get the first execution claim minted in by the mint test
-  //   nextExecutionClaim =
-  //     parseInt(lastExecutionClaimId) - parseInt(numberOfSubOrders) * 2 + 1;
-
-  //   // Fetch owner of executionClaim, if address(0) gets returned, we it already was executed and we try the next
-  //   let mustNotBeZero = "0x0";
-  //   while (mustNotBeZero === "0x0") {
-  //     try {
-  //       mustNotBeZero = await gelatoCore.contract.methods
-  //         .ownerOf(nextExecutionClaim)
-  //         .call();
-  //     } catch (err) {
-  //       nextExecutionClaim = nextExecutionClaim + 1;
-  //     }
-  //   }
-  //   assert.isTrue(true);
-  // });
-
   // Gets all past created execution claims, loops over them and stores the one which is executable in a hashtable
-  it("Check what function the next executable claim is", async function() {
+  it("Iterate over minted execution claims and fetch executable execution claim", async function() {
     this.timeout(70000);
     // Get all past created execution claims
-    let executionClaimIdFetchSuccessful = false
+    let executionClaimIdFetchSuccessful = false;
     let anyClaimExecutable = false;
     let canExecuteReturn;
 
@@ -199,28 +188,24 @@ describe("Successfully execute execution claim", () => {
         uint256 _executionClaimId)
       */
       canExecuteReturn = await gelatoCore.contract.methods
-      .canExecute(
-        claim[0],
-        claim[1],
-        claim[2],
-        claim[3],
-        claim[4],
-        claim[5],
-        claim[6]
-      )
-      .call();
+        .canExecute(
+          claim[0],
+          claim[1],
+          claim[2],
+          claim[3],
+          claim[4],
+          claim[5],
+          claim[6]
+        )
+        .call();
 
-      if (parseInt(canExecuteReturn[0].toString()) === 0)
-      {
+      if (parseInt(canExecuteReturn[0].toString()) === 0) {
         nextExecutionClaim = index;
-        anyClaimExecutable = true
+        anyClaimExecutable = true;
         console.log(`ExecutionClaimId: ${nextExecutionClaim}
-                     Should be a withdraw claim
-        `)
+        `);
         encodedPayload = claim[3];
-      }
-      else
-      {
+      } else {
         anyClaimExecutable = false;
       }
     }
@@ -228,7 +213,7 @@ describe("Successfully execute execution claim", () => {
     // We fetched a deposit and sell claim, where the execution time is still in the future
     if (!anyClaimExecutable) {
       await timeTravel.advanceTimeAndBlock(parseInt(INTERVAL_SPAN));
-      console.log(`Should only enter for deposit and sell claims`)
+      console.log(`Should only enter for deposit and sell claims`);
       for (let index in mintedClaims) {
         let claim = mintedClaims[index];
 
@@ -246,15 +231,14 @@ describe("Successfully execute execution claim", () => {
 
         if (parseInt(canExecuteReturn[0].toString()) === 0) {
           nextExecutionClaim = index;
-          console.log(`ExecutionClaimId: ${nextExecutionClaim}`)
+          console.log(`ExecutionClaimId: ${nextExecutionClaim}`);
           encodedPayload = claim[3];
           anyClaimExecutable = true;
-
         }
       }
     }
 
-    assert.isTrue(anyClaimExecutable)
+    assert.isTrue(anyClaimExecutable);
   });
 
   it("decode them parameters", async () => {
@@ -271,17 +255,27 @@ describe("Successfully execute execution claim", () => {
     }
     console.log(`
         Returned Func:       ${returnedFuncSelec}
-        DepositAndSell Func: ${web3.eth.abi.encodeFunctionSignature(execDepositAndSellAction)}
-        Withdraw Func:       ${web3.eth.abi.encodeFunctionSignature(execWithdrawAction)}
-    `)
+        DepositAndSell Func: ${web3.eth.abi.encodeFunctionSignature(
+          execDepositAndSellAction
+        )}
+        Withdraw Func:       ${web3.eth.abi.encodeFunctionSignature(
+          execWithdrawAction
+        )}
+    `);
 
-    if (returnedFuncSelec === web3.eth.abi.encodeFunctionSignature(execDepositAndSellAction)) {
+    if (
+      returnedFuncSelec ===
+      web3.eth.abi.encodeFunctionSignature(execDepositAndSellAction)
+    ) {
       isDepositAndSell = 0;
-    } else if (returnedFuncSelec === web3.eth.abi.encodeFunctionSignature(execWithdrawAction)) {
+    } else if (
+      returnedFuncSelec ===
+      web3.eth.abi.encodeFunctionSignature(execWithdrawAction)
+    ) {
       isDepositAndSell = 1;
     } else {
       isDepositAndSell = 2;
-      console.log("FUNC SIG WRONG")
+      console.log("FUNC SIG WRONG");
     }
 
     if (isDepositAndSell === 0) {
@@ -352,7 +346,6 @@ describe("Successfully execute execution claim", () => {
       );
 
       orderState = false;
-
     }
     // console.log("Decoded Payload: decodedPayload ", decodedPayload);
   });
@@ -400,7 +393,11 @@ describe("Successfully execute execution claim", () => {
     if (isDepositAndSell === 1) {
       // Check if auction cleared with DutchX Getter
       let returnValue = await dxGetter.contract.methods
-        .getClosingPrices(sellToken.address, buyToken.address, decodedPayload._lastAuctionIndex)
+        .getClosingPrices(
+          sellToken.address,
+          buyToken.address,
+          decodedPayload._lastAuctionIndex
+        )
         .call();
       let shouldNotBeZero = parseInt(returnValue[1]) !== 0;
       assert.isTrue(shouldNotBeZero);
@@ -702,11 +699,7 @@ describe("Successfully execute execution claim", () => {
     }
 
     let closingPrice1 = await dxGetter.contract.methods
-      .getClosingPrices(
-        sellToken.address,
-        buyToken.address,
-        lastAuctionIndex
-      )
+      .getClosingPrices(sellToken.address, buyToken.address, lastAuctionIndex)
       .call();
 
     let num = new BN(closingPrice1[0].toString());

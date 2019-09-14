@@ -82,12 +82,12 @@ describe("Test possible intregration test architecture", () => {
         await commandLine.execShellCommandLog(`yarn gdx-to-next-exec-time`)
         console.log("#########################################")
     })
-    it("test10 - Withdraw 2nd Execution Claim - execManualWithdraw", async function () {
+    it("test10 - Manual Withdraw 3rd Execution Claim - execManualWithdraw", async function () {
         this.timeout(50000)
         await commandLine.execShellCommandLog(`truffle test test/manualWithdrawTest.js`)
         console.log("#########################################")
     })
-    it("test11 - Execute 3rd Execution Claim - execDepositAndSell", async function () {
+    it("test11 - Execute 2nd Execution Claim - execDepositAndSell", async function () {
         this.timeout(50000)
         await commandLine.execShellCommandLog(`truffle test test/execTest.js`)
         console.log("#########################################")
