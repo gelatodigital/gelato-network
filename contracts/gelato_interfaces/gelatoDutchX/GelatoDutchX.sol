@@ -369,15 +369,19 @@ contract GelatoDutchX is IcedOut, SafeTransfer {
         // Fetch owner of execution claim
         address tokenOwner = gelatoCore.ownerOf(_executionClaimId);
 
+        (uint256 num, uint256 den) = dutchExchange.closingPrices(_sellToken, _buyToken, _lastAuctionIndex);
+
+        uint256 withdrawAmount = _amount.mul(num).div(den);
+
         // Calculate withdraw amount
-        _withdraw(tokenOwner, _sellToken, _buyToken, _lastAuctionIndex, _amount);
+        _withdraw(tokenOwner, _sellToken, _buyToken, _lastAuctionIndex, withdrawAmount);
 
         // Event emission
         emit LogWithdrawComplete(_executionClaimId,
                                  _executionClaimId,
                                  tokenOwner,
                                  _buyToken,
-                                 _amount
+                                 withdrawAmount
         );
     }
 
