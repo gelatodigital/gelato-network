@@ -92,7 +92,7 @@ describe("Cancel outstanding execution claims", () => {
         .balanceOf(seller)
         .call());
         // Fetch Executor Ether Balance
-        executorEthBalance = await web3.eth.getBalance(executor);
+        executorEthBalance = await gelatoCore.contract.methods.executorBalances(executor).call();
     });
 
     it("Check that we can fetch all past created execution claims", async () => {
@@ -403,7 +403,7 @@ describe("Cancel outstanding execution claims", () => {
         .balanceOf(seller)
         .call();
         // Fetch Executor Ether Balance
-        executorEthBalanceAfter = await web3.eth.getBalance(executor);
+        executorEthBalanceAfter =  await gelatoCore.contract.methods.executorBalances(executor).call();
 
 
         console.log(`

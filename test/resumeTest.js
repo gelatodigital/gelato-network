@@ -56,6 +56,7 @@ describe("TEST RESUME", () => {
     accounts = await web3.eth.getAccounts();
     sellToken = await SellToken.deployed();
     buyToken = await BuyToken.deployed();
+    gelatoCore = await GelatoCore.deployed();
     seller = accounts[2];
     executor = accounts[9];
     // Fetch User Ether Balance
@@ -69,9 +70,9 @@ describe("TEST RESUME", () => {
       .balanceOf(seller)
       .call();
     // Fetch Executor Ether Balance
-    executorEthBalanceAfter = await web3.eth.getBalance(executor);
+    executorEthBalanceAfter = await gelatoCore.contract.methods.executorBalances(executor).call()
 
-    let hunderdEth = web3.utils.toWei("100", "ether");
+    let hunderdEth = web3.utils.toWei("0", "ether");
     let twentyWeth = TOTAL_SELL_VOLUME;
     userBuyTokenBalance = 0;
     userSellTokenBalance = twentyWeth;
