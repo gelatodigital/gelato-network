@@ -93,23 +93,14 @@ contract GelatoDutchX is IcedOut {
     }
 
 
-    // **************************** State Variable Setters ******************************
-    function setAuctionStartWaitingForFunding(uint256 _auctionStartWaitingForFunding)
-        onlyOwner
-        external
-    {
-        auctionStartWaitingForFunding = _auctionStartWaitingForFunding;
-    }
-    // **************************** State Variable Setters END ******************************
-
     // Create
     // **************************** timedSellOrders() ******************************
     function mintTimedSellOrders(address _sellToken,
-                             address _buyToken,
-                             uint256 _numSellOrders,
-                             uint256 _amountPerSellOrder,
-                             uint256 _executionTime,
-                             uint256 _intervalSpan
+                                 address _buyToken,
+                                 uint256 _numSellOrders,
+                                 uint256 _amountPerSellOrder,
+                                 uint256 _executionTime,
+                                 uint256 _intervalSpan
     )
         public
         payable
@@ -161,12 +152,11 @@ contract GelatoDutchX is IcedOut {
         // Step7: Create all sellOrders
         for (uint256 i = 0; i < _numSellOrders; i++) {
 
+            // Compute new execution time. First will be == _executionTime
             uint256 executionTime = _executionTime.add(_intervalSpan.mul(i));
 
+            // Fetch next execution cliam id
             uint256 nextExecutionClaimId = getNextExecutionClaimId();
-
-            // Payload: (funcSelector, uint256 executionClaimId, address sellToken, address buyToken, uint256 amount, uint256 executionTime, uint256 prepaymentPerSellOrder, uint256 orderStateId)
-            // bytes memory payload = abi.encodeWithSignature(execDepositAndSellString, nextExecutionClaimId, _sellToken, _buyToken, _sellOrderAmount, executionTime, prepaymentPerSellOrder, orderStateId, 0, false);
 
             // Create Trigger Payload
             bytes memory triggerPayload = abi.encodeWithSignature(execDepositAndSellTriggerString,
@@ -189,7 +179,6 @@ contract GelatoDutchX is IcedOut {
                                                                  orderStateId
             );
 
-            // mintExecutionClaim(address _triggerAddress, bytes memory _triggerPayload, address _actionAddress, bytes memory _actionPayload, uint256 _actionMaxGas, address _executionClaimOwner
             mintExecutionClaim(address(this),
                       triggerPayload,
                       address(this),
@@ -197,12 +186,6 @@ contract GelatoDutchX is IcedOut {
                       execDepositAndSellGas,
                       msg.sender  // executionClaimOwner
             );
-
-            // old
-            // mintExecutionClaim(address(this), payload, execDepositAndSellGas);
-
-            // withdraw execution claim => depositAndSell exeuctionClaim => sellOrder
-            //  *** GELATO CORE PROTOCOL INTERACTION END ***
         }
 
         // Step8: Emit New Sell Order
@@ -224,7 +207,6 @@ contract GelatoDutchX is IcedOut {
     {
 
         // Check the condition: Execution Time
-        // checkTimeCondition(sellOrder.executionTime);
         require(_executionTime <= now,
             "IcedOut Time Condition: Function called scheduled execution time"
         );
@@ -339,8 +321,10 @@ contract GelatoDutchX is IcedOut {
             "GelatoDutchX.execDepositAndSell: msg.sender != gelatoCore instance address"
         );
 
+        // Fetch orderState
         OrderState storage orderState = orderStates[_orderStateId];
 
+        // Fetch token owner from gelato core
         address tokenOwner = gelatoCore.ownerOf(_executionClaimId);
 
         // Fetch current DutchX auction values to analyze past auction participation
@@ -407,11 +391,13 @@ contract GelatoDutchX is IcedOut {
         // Fetch owner of execution claim
         address tokenOwner = gelatoCore.ownerOf(_executionClaimId);
 
+        // Get auction closing prices from dutchX
         (uint256 num, uint256 den) = dutchExchange.closingPrices(_sellToken, _buyToken, _lastParticipatedAuctionIndex);
 
+        // Calculate withdrawAmount of token Owner
         uint256 withdrawAmount = _sellAmount.mul(num).div(den);
 
-        // Calculate withdraw amount
+        // Withdraw tokens on behalf of user
         _withdraw(tokenOwner, _sellToken, _buyToken, _lastParticipatedAuctionIndex, withdrawAmount);
 
         // Event emission
@@ -502,11 +488,6 @@ contract GelatoDutchX is IcedOut {
         uint256 amount;
         uint256 prepaymentAmount;
         {
-            // Check if parameters are correct
-            // Hash(address trigger, bytes triggerPayload, address action, bytes actionPayload, uint256 actionMaxGas, address dappInterface, uint256 executionClaimId)
-            // @Dev not really necessary to conduct the hash check here, as it will be done in gelato core
-            // bytes32 executionClaimHash = keccak256(abi.encodePacked(_triggerAddress, _triggerPayload, _actionAddress, _actionPayload, _actionMaxGas, address(this), _executionClaimId));
-
             // Check that execution claim has the correct funcSelector
             (bytes memory memPayload, bytes4 funcSelector) = decodeWithFunctionSignature(_actionPayload);
 
@@ -518,8 +499,6 @@ contract GelatoDutchX is IcedOut {
             // Decode actionPayload to reive prepaymentAmount
             (, sellToken, buyToken, amount, , prepaymentAmount, ) = abi.decode(memPayload, (uint256, address, address, uint256, uint256, uint256, uint256));
 
-            // bytes memory actionPayload = abi.encodeWithSignature(execDepositAndSellActionString, nextExecutionClaimId, _sellToken, _buyToken, _sellOrderAmount, executionTime, prepaymentPerSellOrder, orderStateId);
-
             // address seller = gelatoCore.ownerOf(_executionClaimId);
             address tokenOwner = gelatoCore.ownerOf(_executionClaimId);
 
@@ -529,14 +508,10 @@ contract GelatoDutchX is IcedOut {
 
             // // #### CHECKS END ####
 
-            // CHECKS: msg.sender == executionClaimOwner is checked by Core
-
             // ****** EFFECTS ******
             // Emit event before deletion/burning of relevant variables
             emit LogOrderCancelled(_executionClaimId, _executionClaimId, tokenOwner);
         }
-
-
 
         // Cancel both execution Claims on core
         // ** Gelato Core interactions **
@@ -559,7 +534,6 @@ contract GelatoDutchX is IcedOut {
         // Transfer ERC20 Tokens back to seller
         ERC20(sellToken).safeTransfer(msg.sender, amount);
 
-
         // // ****** INTERACTIONS END ******
 
         // Success
@@ -579,6 +553,7 @@ contract GelatoDutchX is IcedOut {
             uint256 amount;
             uint256 lastAuctionIndex;
             (bytes memory memPayload, bytes4 funcSelector) = decodeWithFunctionSignature(_actionPayload);
+
             // #### CHECKS ####
             // @DEV check that we are dealing with a execWithdraw claim
             require(funcSelector == bytes4(keccak256(bytes(execWithdrawActionString))), "Only claims that have not been sold yet can be cancelled");
@@ -604,6 +579,7 @@ contract GelatoDutchX is IcedOut {
                 "withdrawManually: den != 0, Last auction did not clear thus far, you have to wait"
             );
 
+            // Calculate withdraw amount
             uint256 withdrawAmount = amount.mul(num).div(den);
 
             // Initiate withdraw
@@ -693,6 +669,15 @@ contract GelatoDutchX is IcedOut {
         withdrawAmount = _sellAmountAfterFee.mul(num).div(den);
     }
     // **************************** Helper functions END *********************************
+
+    // **************************** State Variable Setters ******************************
+    function setAuctionStartWaitingForFunding(uint256 _auctionStartWaitingForFunding)
+        onlyOwner
+        external
+    {
+        auctionStartWaitingForFunding = _auctionStartWaitingForFunding;
+    }
+    // **************************** State Variable Setters END ******************************
 
 }
 

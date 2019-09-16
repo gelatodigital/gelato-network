@@ -518,12 +518,12 @@ contract GelatoCore is GelatoClaim, Ownable {
         {
             uint256 canExecuteResult;
             (canExecuteResult, executionClaimOwner) = canExecute(_triggerAddress,
-                                                                                 _triggerPayload,
-                                                                                 _actionAddress,
-                                                                                 _actionPayload,
-                                                                                 _actionMaxGas,
-                                                                                 _dappInterface,
-                                                                                 _executionClaimId
+                                                                 _triggerPayload,
+                                                                 _actionAddress,
+                                                                 _actionPayload,
+                                                                 _actionMaxGas,
+                                                                 _dappInterface,
+                                                                 _executionClaimId
             );
             // if canExecuteResult is not equal 0, we return 1 or 2, based on the received preExecutionCheck value;
             if (canExecuteResult != 0) {
@@ -534,17 +534,13 @@ contract GelatoCore is GelatoClaim, Ownable {
             }
         }
 
-        // !!! From this point on, this transaction SHOULD not revert nor run out of gas, and the recipient will be charged
-        // for the gas spent.
+        // __________________From this point on, this transaction SHOULD not revert nor run out of gas, and the dappInterface will be charged for the actual gas consumed
 
-        // **** EFFECTS ****
-        // @DEV MAYBE ADD LATER; PROBABLY NOT FOR ONE STATE VARIABLE Delete the ExecutionClaim struct
-        // delete executionClaims[_executionClaimId];
-        // ******** EFFECTS END ****
+        // **** EFFECTS 1 ****
+        // When re entering, executionHash will be bytes32(0)
+        delete executionClaims[_executionClaimId];
 
-        // Calls to the interface are performed atomically inside an inner transaction which may revert in case of
-        // errors in the interface contract or malicious behaviour. In either case (revert or regular execution) the return data encodes the
-        // RelayCallStatus value.
+        // Calls to the interface are performed atomically inside an inner transaction which may revert in case of errors in the interface contract or malicious behaviour such as dappInterfaces withdrawing their
         {
 
             bytes memory payloadWithSelector = abi.encodeWithSelector(this.safeExecute.selector,
