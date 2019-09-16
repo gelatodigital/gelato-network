@@ -26,10 +26,9 @@ contract GelatoCore is GelatoClaim, Ownable {
     event LogMinInterfaceBalanceUpdated(uint256 minInterfaceBalance, uint256 newMinInterfaceBalance);
     event LogExecutorProfitUpdated(uint256 executorProfit, uint256 newExecutorProfit);
     event LogExecutorGasPriceUpdated(uint256 executorGasPrice, uint256 newExecutorGasPrice);
-    event LogCanExecFNMaxGasUpdated(uint256 canExecFNMaxGas, uint256 newCanExecFNMaxGas);
-    event LogExecFNGas1Updated(uint256 execFNGas1, uint256 newExecFNGas1);
-    event LogExecFNGas2Updated(uint256 execFNGas2, uint256 newExecFNGas2);
-    event LogExecFNRefundedGasUpdated(uint256 execFNRefundedGas, uint256 newExecFNRefundedGas);
+    event LogUpdatedCanExecMaxGas(uint256 canExecMaxGas, uint256 newcanExecMaxGas);
+    event LogUpdatedFixedGasConsumptionInBetween(uint256 execFNGas2, uint256 newExecFNGas2);
+    event LogUpdatedExecutorGasRefund(uint256 execFNRefundedGas, uint256 newExecFNRefundedGas);
     event LogRecommendedGasPriceForInterfacesUpdated(uint256 recommendedGasPriceForInterfaces,
                                                      uint256 newRecommendedGasPriceForInterfaces
     );
@@ -53,13 +52,13 @@ contract GelatoCore is GelatoClaim, Ownable {
                                            uint256 executorPayout,
                                            uint256 executorProfit,
                                            uint256 gasUsedEstimate,
-                                           uint256 cappedGasPriceUsed,
+                                           uint256 usedGasPrice,
                                            uint256 executionCostEstimate
     );
     event LogExecuteResult(bool indexed status,
-                        address indexed executor,
-                        uint256 indexed executionClaimId,
-                        uint256 executionGas
+                           address indexed executor,
+                           uint256 indexed executionClaimId,
+                           uint256 executionGas
     );
     // Delete
     event LogExecutionClaimCancelled(address indexed dappInterface,
@@ -79,19 +78,7 @@ contract GelatoCore is GelatoClaim, Ownable {
     Counters.Counter private _executionClaimIds;
     // Gas values
 
-    // Gas cost of all execute() instructions after endGas => 19633
-    // Gas cost to initialize transaction = 21781
-    // Sum: 34034
-    uint256 constant gasOverhead = 41414;
-
-    // Gas stipends for acceptRelayedCall, preRelayedCall and postRelayedCall
-    uint256 constant canExecMaxGas = 100000;
-
-    // Executor min gas refunds
-    uint256 constant executorGasRefund = 50000;
-
-    // Cost after first gas left and before last gase left
-    uint256 constant inbetweenMaxGas = 100000;
+    // *** Constant gas values END ***
 
     // Execution claim is exeutable should always return 1
     uint256 constant isNotExecutable = 1;
@@ -107,28 +94,30 @@ contract GelatoCore is GelatoClaim, Ownable {
 
     //_____________ Gelato Execution Economics ________________
     // @DEV: every parameter should have its own UPDATE function
-    // Flat number
+
+    // Fixed profit to be expected for executors for each executed transaction
     uint256 public executorProfit;
 
-    // The gas price that executors must take - this must be continually set
+    // The gas price that executors can max select
     uint256 public executorGasPrice;
-    // The gasPrice core provides as a default for interface as a basis to charge users
+
+    // *** Constant gas values ***
+
+    // Gas consumption of execute() before and after gaslefts()
+    // @DEV UPDATE with new redesign
+    uint256 public uncountedGasConsumption;
+
+    // Cost after first gasleft() and before last gasleft()
+    uint256 public fixedGasConsumptionInBetween;
+
+    // Max gas the canExec function is allowed to consume. Triggers have to adhere to this value
+    uint256 public canExecMaxGas;
+
+    // Minimium gas refunds executors can expect from nullying several values in execute(). To be subtracted from the total reward for executors
+    uint256 public executorGasRefund;
+
     uint256 public recommendedGasPriceForInterfaces;
 
-    // Gas stipends for acceptRelayedCall, preRelayedCall and postRelayedCall
-    // 50000 - set in migrate.js
-    uint256 public canExecFNMaxGas;
-
-    // Cost after first gas left and before last gas left
-    // 100000 - set in migrate.js
-    uint256 public execFNGas1;
-    // Gas cost of all execute() instructions after endGas => 19633
-    // Gas cost to initialize transaction = 21781
-    // 41414 - set in migrate.js
-    uint256 public execFNGas2;
-    // Executor min gas refunds
-    // 50000 - set in migrate.js
-    uint256 public execFNRefundedGas;
     //_____________ Gelato Execution Economics END ________________
 
     // **************************** State Variables END ******************************
@@ -138,22 +127,23 @@ contract GelatoCore is GelatoClaim, Ownable {
     constructor(uint256 _minInterfaceBalance,
                 uint256 _executorProfit,
                 uint256 _executorGasPrice,
-                uint256 _canExecFNMaxGas,
-                uint256 _execFNGas1,
-                uint256 _execFNGas2,
-                uint256 _execFNRefundedGas,
+                uint256 _canExecMaxGas,
+                uint256 _uncountedGasConsumption,
+                uint256 _fixedGasConsumptionInBetween,
+                uint256 _executorGasRefund,
                 uint256 _recommendedGasPriceForInterfaces
     )
         GelatoClaim("gelato", "GEL")  // ERC721Metadata constructor(name, symbol)
         public
     {
+
         minInterfaceBalance = _minInterfaceBalance;
         executorProfit = _executorProfit;
         executorGasPrice = _executorGasPrice;
-        canExecFNMaxGas = _canExecFNMaxGas;
-        execFNGas1 = _execFNGas1;
-        execFNGas2 = _execFNGas2;
-        execFNRefundedGas = _execFNRefundedGas;
+        canExecMaxGas = _canExecMaxGas;
+        uncountedGasConsumption = _uncountedGasConsumption;
+        fixedGasConsumptionInBetween = _fixedGasConsumptionInBetween;
+        executorGasRefund = _executorGasRefund;
         recommendedGasPriceForInterfaces = _recommendedGasPriceForInterfaces;
     }
     // **************************** Gelato Core constructor() END *****************************
@@ -279,37 +269,37 @@ contract GelatoCore is GelatoClaim, Ownable {
         executorGasPrice = _newExecutorGasPrice;
     }
 
-    function updateCanExecFNMaxGas(uint256 _newCanExecFNMaxGas)
+    function updateCanExecMaxGas(uint256 _newCanExecMaxGas)
         public
         onlyOwner
     {
-        emit LogCanExecFNMaxGasUpdated(canExecFNMaxGas, _newCanExecFNMaxGas);
-        canExecFNMaxGas = _newCanExecFNMaxGas;
+        emit LogUpdatedCanExecMaxGas(canExecMaxGas, _newCanExecMaxGas);
+        canExecMaxGas = _newCanExecMaxGas;
     }
 
-    function updateExecFNGas1(uint256 _newExecFNGas1)
+    function updateUncountedGasConsumption(uint256 _newUncountedGasConsumption)
         public
         onlyOwner
     {
-        emit LogExecFNGas1Updated(execFNGas1, _newExecFNGas1);
-        execFNGas1 = _newExecFNGas1;
+        emit LogUpdatedFixedGasConsumptionInBetween(uncountedGasConsumption, _newUncountedGasConsumption);
+        uncountedGasConsumption = _newUncountedGasConsumption;
     }
 
-    function updateExecFNGas2(uint256 _newExecFNGas2)
+    function updateFixedGasConsumptionInBetween(uint256 _newFixedGasConsumptionInBetween)
         public
         onlyOwner
     {
-        emit LogExecFNGas2Updated(execFNGas2, _newExecFNGas2);
-        execFNGas2 = _newExecFNGas2;
+        emit LogUpdatedFixedGasConsumptionInBetween(fixedGasConsumptionInBetween, _newFixedGasConsumptionInBetween);
+        fixedGasConsumptionInBetween = _newFixedGasConsumptionInBetween;
     }
 
     // Update GAS_REFUND
-    function updateExecFNRefundedGas(uint256 _newExecFNRefundedGas)
+    function updateExecutorGasRefund(uint256 _newExecutorGasRefund)
         public
         onlyOwner
     {
-        emit LogExecFNRefundedGasUpdated(execFNRefundedGas, _newExecFNRefundedGas);
-        execFNRefundedGas = _newExecFNRefundedGas;
+        emit LogUpdatedExecutorGasRefund(executorGasRefund, _newExecutorGasRefund);
+        executorGasRefund = _newExecutorGasRefund;
     }
 
     // Update gas price recommendation for interfaces
@@ -428,7 +418,7 @@ contract GelatoCore is GelatoClaim, Ownable {
         // **** CHECKS END ****;
 
         // Call 'acceptExecutionRequest' in interface contract
-        (bool success, bytes memory returndata) = _triggerAddress.staticcall.gas(canExecFNMaxGas)(_triggerPayload);
+        (bool success, bytes memory returndata) = _triggerAddress.staticcall.gas(canExecMaxGas)(_triggerPayload);
 
         //return (100, executionClaimOwner);
 
@@ -474,18 +464,18 @@ contract GelatoCore is GelatoClaim, Ownable {
         // 1: Exeutor must be registered and have stake // OR permissionless
 
         // 3: Start gas should be equal or greater to the interface maxGas, gas overhead plus maxGases of canExecute and the internal operations of conductAtomicCall
-        require(startGas >= getExecFNGas(_actionMaxGas),
+        require(startGas >= getMaxExecutionGasConsumption(_actionMaxGas),
             "GelatoCore.execute: Insufficient gas sent"
         );
 
         // 4: Interface has sufficient funds  staked to pay for the maximum possible charge
         // We don't yet know how much gas will be used by the recipient, so we make sure there are enough funds to pay
         // If tx Gas Price is higher than executorGasPrice, use executorGasPrice
-        uint256 cappedGasPriceUsed;
-        tx.gasprice > executorGasPrice ? cappedGasPriceUsed = executorGasPrice : cappedGasPriceUsed = tx.gasprice;
+        uint256 usedGasPrice;
+        tx.gasprice > executorGasPrice ? usedGasPrice = executorGasPrice : usedGasPrice = tx.gasprice;
 
         // Make sure that interfaces have enough funds staked on core for the maximum possible charge.
-        require((getExecFNGas(_actionMaxGas).mul(cappedGasPriceUsed)).add(executorProfit) <= interfaceBalances[_dappInterface],
+        require((getMaxExecutionGasConsumption(_actionMaxGas).mul(usedGasPrice)).add(executorProfit) <= interfaceBalances[_dappInterface],
             "GelatoCore.execute: Insufficient interface balance on gelato core"
         );
 
@@ -552,9 +542,9 @@ contract GelatoCore is GelatoClaim, Ownable {
             // Calaculate how much gas we used up in this function. Subtract the certain gas refunds the executor will receive for nullifying values
             // Gas Overhead corresponds to the actions occuring before and after the gasleft() calcs
             // @DEV UPDATE WITH NEW FUNC
-            uint256 gasUsedEstimate = startGas.sub(endGas).add(execFNGas2).sub(executorGasRefund);
+            uint256 gasUsedEstimate = startGas.sub(endGas).add(uncountedGasConsumption).sub(executorGasRefund);
             // Calculate Total Cost
-            uint256 executionCostEstimate = gasUsedEstimate.mul(cappedGasPriceUsed);
+            uint256 executionCostEstimate = gasUsedEstimate.mul(usedGasPrice);
             // Calculate Executor Payout (including a fee set by GelatoCore.sol)
             // uint256 executorPayout= executionCostEstimate.mul(100 + executorProfit).div(100);
             // @DEV Think about it
@@ -568,7 +558,7 @@ contract GelatoCore is GelatoClaim, Ownable {
                                                 executorPayout,
                                                 executorProfit,
                                                 gasUsedEstimate,
-                                                cappedGasPriceUsed,
+                                                usedGasPrice,
                                                 executionCostEstimate
             );
         }
@@ -618,13 +608,13 @@ contract GelatoCore is GelatoClaim, Ownable {
     }
     // ************** execute() -> safeExecute() END **************
 
-    function getExecFNGas(uint256 _actionMaxGas)
+    function getMaxExecutionGasConsumption(uint256 _actionMaxGas)
         internal
         view
         returns (uint256)
     {
         // Only use .add for last, user inputted value to avoid over - underflow
-        return canExecFNMaxGas + execFNGas1 + execFNGas2.add(_actionMaxGas);
+        return uncountedGasConsumption + canExecMaxGas + fixedGasConsumptionInBetween.add(_actionMaxGas);
     }
     // **************************** EXECUTE FUNCTION SUITE END ******************************
 
