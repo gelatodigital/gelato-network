@@ -69,7 +69,7 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
   });
 
   it("Adding 1ETH as balance from gelatoDutchExchange to gelatoCore should work", async () => {
-    let messageValue = web3.utils.toWei("1", "ether");
+    let messageValue = web3.utils.toWei("2", "ether");
     let messageValueBN = new BN(messageValue);
     let coreOwnerBalanceBefore = await web3.eth.getBalance(gelatoCoreOwner);
     let coreOwnerBalancePreBN = new BN(coreOwnerBalanceBefore.toString());
@@ -377,11 +377,11 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
       .call();
     let currentrecommendedGasPriceForInterfacesBN = new BN(currentrecommendedGasPriceForInterfaces.toString());
     let predictedGDXGelatoPrepayment = currentrecommendedGasPriceForInterfacesBN
-      .mul(maxGasBN)
+      .mul(dutchXMaxGasBN)
       .eq(gdxGelatoPrepayment2BN);
     assert.isTrue(
       predictedGDXGelatoPrepayment,
-      `${currentrecommendedGasPriceForInterfacesBN} * ${maxGasBN} should be equal to ${gdxGelatoPrepayment2BN}`
+      `${currentrecommendedGasPriceForInterfacesBN} * ${dutchXMaxGasBN} should be equal to ${gdxGelatoPrepayment2BN}`
     );
 
     assert.notEqual(

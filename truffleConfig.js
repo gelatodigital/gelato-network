@@ -122,19 +122,22 @@ function truffleConfig({
   };
 
   if (compatibilityTruffle4) {
-    debug("Truffle 4");
+    console.log("Compiling with Truffle 4")
+    debug('Truffle 4')
     // Truffle 4
     truffleConfig.solc = {
       optimizer: {
         enabled: optimizedEnabled
       }
-    };
+    }
+    truffleConfig.compilers = {
+      solc: {
+        version: "0.5.10",
+      }
+    }
   } else {
-    debug(
-      "Truffle 5 - solidity: %s, useDocker: %s",
-      solcVersion,
-      solcUseDocker
-    );
+    console.log("Compiling with Truffle 5")
+    debug('Truffle 5 - solidity: %s, useDocker: %s', solcVersion, solcUseDocker)
     // Truffle 5
     truffleConfig.compilers = {
       solc: {
@@ -148,7 +151,7 @@ function truffleConfig({
           // evmVersion: "byzantium"  // Default: "byzantium". Others:  "homestead", ...
         }
       }
-    };
+    }
   }
 
   return truffleConfig;

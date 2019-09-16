@@ -112,6 +112,7 @@ describe("Test possible intregration test architecture", () => {
         await commandLine.execShellCommandLog(`truffle test test/resumeTest.js`)
         console.log("#########################################")
     })
+
 })
 
 execShellCommand

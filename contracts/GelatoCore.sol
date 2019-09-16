@@ -77,12 +77,31 @@ contract GelatoCore is GelatoClaim, Ownable {
 
     // Counter for execution Claims
     Counters.Counter private _executionClaimIds;
+    // Gas values
+
+    // Gas cost of all execute() instructions after endGas => 19633
+    // Gas cost to initialize transaction = 21781
+    // Sum: 34034
+    uint256 constant gasOverhead = 41414;
+
+    // Gas stipends for acceptRelayedCall, preRelayedCall and postRelayedCall
+    uint256 constant canExecMaxGas = 100000;
+
+    // Executor min gas refunds
+    uint256 constant executorGasRefund = 50000;
+
+    // Cost after first gas left and before last gase left
+    uint256 constant inbetweenMaxGas = 100000;
+
+    // Execution claim is exeutable should always return 1
+    uint256 constant isNotExecutable = 1;
 
     // executionClaimId => bytes32 executionClaimHash
     mapping(uint256 => bytes32) public executionClaims;
 
     // Balance of interfaces which pay for claim execution
     mapping(address => uint256) public interfaceBalances;
+
     // The minimum balance for an interface to mint/execute claims
     uint256 public minInterfaceBalance;
 
@@ -112,8 +131,6 @@ contract GelatoCore is GelatoClaim, Ownable {
     uint256 public execFNRefundedGas;
     //_____________ Gelato Execution Economics END ________________
 
-    // Execution claim is exeutable should always return 1
-    uint256 constant isNotExecutable = 1;
     // **************************** State Variables END ******************************
 
 
@@ -121,6 +138,7 @@ contract GelatoCore is GelatoClaim, Ownable {
     constructor(uint256 _minInterfaceBalance,
                 uint256 _executorProfit,
                 uint256 _executorGasPrice,
+                uint256 _canExecFNMaxGas,
                 uint256 _execFNGas1,
                 uint256 _execFNGas2,
                 uint256 _execFNRefundedGas,
@@ -165,7 +183,7 @@ contract GelatoCore is GelatoClaim, Ownable {
         //  We could check that the bytes param is not == 0x, but this would require 2 costly keccak calls
 
         // Only staked interfaces can mint claims
-        require(interfaceBalances[msg.sender] >= minEthBalance,
+        require(interfaceBalances[msg.sender] >= minInterfaceBalance,
             "Only interfaces with over 0.5 ether can mint new execution claims"
         );
 
@@ -402,7 +420,7 @@ contract GelatoCore is GelatoClaim, Ownable {
         // **** CHECKS ****
         // Check if Interface has sufficient balance on core
         // @DEV, Lets change to maxPossibleCharge calcs like in GSN
-        if (interfaceBalances[_dappInterface] < minEthBalance)
+        if (interfaceBalances[_dappInterface] < minInterfaceBalance)
         {
             // If insufficient balance, return 3
             return (uint256(PreExecutionCheck.InsufficientBalance), executionClaimOwner);
@@ -411,6 +429,8 @@ contract GelatoCore is GelatoClaim, Ownable {
 
         // Call 'acceptExecutionRequest' in interface contract
         (bool success, bytes memory returndata) = _triggerAddress.staticcall.gas(canExecFNMaxGas)(_triggerPayload);
+
+        //return (100, executionClaimOwner);
 
         // Check dappInterface return value
         if (!success) {
@@ -433,6 +453,7 @@ contract GelatoCore is GelatoClaim, Ownable {
             }
 
         }
+
 
     }
 
@@ -469,8 +490,10 @@ contract GelatoCore is GelatoClaim, Ownable {
         );
 
         // Call canExecute to verify that transaction can be executed
+        address executionClaimOwner;
         {
-            (uint256 canExecuteResult, address executionClaimOwner) = canExecute(_triggerAddress,
+            uint256 canExecuteResult;
+            (canExecuteResult, executionClaimOwner) = canExecute(_triggerAddress,
                                                                                  _triggerPayload,
                                                                                  _actionAddress,
                                                                                  _actionPayload,
@@ -523,6 +546,7 @@ contract GelatoCore is GelatoClaim, Ownable {
 
         // Calc executor payout
         // How much gas we have left in this tx
+        uint256 executorPayout;
         {
             uint256 endGas = gasleft();
             // Calaculate how much gas we used up in this function. Subtract the certain gas refunds the executor will receive for nullifying values
@@ -534,23 +558,25 @@ contract GelatoCore is GelatoClaim, Ownable {
             // Calculate Executor Payout (including a fee set by GelatoCore.sol)
             // uint256 executorPayout= executionCostEstimate.mul(100 + executorProfit).div(100);
             // @DEV Think about it
-            uint256 executorPayout = executionCostEstimate.add(executorProfit);
+            executorPayout = executionCostEstimate.add(executorProfit);
+
+            // Emit event now before deletion of struct
+            emit LogClaimExecutedBurnedAndDeleted(_dappInterface,
+                                                _executionClaimId,
+                                                executionClaimOwner,
+                                                msg.sender,  // executor
+                                                executorPayout,
+                                                executorProfit,
+                                                gasUsedEstimate,
+                                                cappedGasPriceUsed,
+                                                executionCostEstimate
+            );
         }
 
         // Effects 2: Reduce interface balance by executorPayout
         interfaceBalances[_dappInterface] = interfaceBalances[_dappInterface].sub(executorPayout);
 
-        // Emit event now before deletion of struct
-        emit LogClaimExecutedBurnedAndDeleted(dappInterface,
-                                              _executionClaimId,
-                                              executionClaimOwner,
-                                              msg.sender,  // executor
-                                              executorPayout,
-                                              executorProfit,
-                                              gasUsedEstimate,
-                                              cappedGasPriceUsed,
-                                              executionCostEstimate
-        );
+
 
         // Conduct the payout to the executor
         // Transfer the prepaid fee to the executor as reward
@@ -594,7 +620,7 @@ contract GelatoCore is GelatoClaim, Ownable {
 
     function getExecFNGas(uint256 _actionMaxGas)
         internal
-        pure
+        view
         returns (uint256)
     {
         // Only use .add for last, user inputted value to avoid over - underflow
@@ -636,7 +662,7 @@ contract GelatoCore is GelatoClaim, Ownable {
         require(_dappInterface == msg.sender);
 
         // EFFECTS
-        emit LogExecutionClaimCancelled(executionClaim.dappInterface,
+        emit LogExecutionClaimCancelled(_dappInterface,
                                         _executionClaimId,
                                         executionClaimOwner
         );

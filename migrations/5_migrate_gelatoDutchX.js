@@ -4,7 +4,9 @@
 // Set Gelato Contract as truffle artifact
 const GelatoCore = artifacts.require("GelatoCore");
 const GelatoDutchX = artifacts.require("GelatoDutchX");
-const INTERFACE_MAX_GAS = 500000; // sell and withdraw claims benchmarking
+const DEPOSITANDSELLGAS = 500000;
+const WITHDRAWGAS = 200000;
+const INTERFACE_MAX_GAS = DEPOSITANDSELLGAS + WITHDRAWGAS;
 const INTERFACE_GAS_PRICE = 0; // defaults to gelatoCore.recommendedGasPriceForInterface
 // Rinkeby
 const DX_PROXY_RINKEBY_ADDRESS = "0xaAEb2035FF394fdB2C879190f95e7676f1A9444B";
@@ -32,8 +34,9 @@ module.exports = async function(deployer, network, accounts) {
       GelatoDutchX,
       gelatoCore.address,
       dxProxy.address,
-      INTERFACE_MAX_GAS,
       INTERFACE_GAS_PRICE,
+      DEPOSITANDSELLGAS,
+      WITHDRAWGAS,
       {
         from: ganacheInterfaceDeployer
       }
@@ -47,14 +50,15 @@ module.exports = async function(deployer, network, accounts) {
           Owner:       ${accounts[0]}
           GelatoCore:  ${gelatoCore.address}
           DutchXProxy: ${DX_PROXY_RINKEBY_ADDRESS}
-          interfaceMaxGas:   ${INTERFACE_MAX_GAS}
+          interfaceMaxGas:   ${DEPOSITANDSELLGAS + DEPOSITANDSELLGAS}
           interfaceGasPrice: ${INTERFACE_GAS_PRICE} (0 = gelatoCore default)`);
     await deployer.deploy(
       GelatoDutchX,
       gelatoCore.address,
       DX_PROXY_RINKEBY_ADDRESS,
-      INTERFACE_MAX_GAS,
-      INTERFACE_GAS_PRICE
+      INTERFACE_GAS_PRICE,
+      DEPOSITANDSELLGAS,
+      WITHDRAWGAS
     );
   }
   // Log the address of deployed GelatoDutchX
