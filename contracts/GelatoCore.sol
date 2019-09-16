@@ -43,6 +43,9 @@ contract GelatoCore is GelatoClaim, Ownable {
                                         uint256 withdrawnAmount,
                                         uint256 newBalance
     );
+    event LogExecutorBalanceWithdrawal(address indexed executor,
+                                        uint256 withdrawAmount
+    );
     // Execute Suite
     event LogCanExecuteFailed(address indexed executor, uint256 indexed executionClaimId);
     event LogClaimExecutedBurnedAndDeleted(address indexed dappInterface,
@@ -357,25 +360,23 @@ contract GelatoCore is GelatoClaim, Ownable {
     }
 
     // Enable interfaces to withdraw some of their added balances
-    function withdrawExecutorBalance(uint256 _withdrawAmount)
+    function withdrawExecutorBalance()
         external
     {
         // Checks
-        require(_withdrawAmount > 0, "WithdrawAmount must be greater than zero");
         uint256 currentExecutorBalance = executorBalances[msg.sender];
-        require(_withdrawAmount <= currentExecutorBalance,
-            "GelatoCore.withdrawExecutorBalance(): WithdrawAmount must be smaller or equal to the executors current balance"
+        require(currentExecutorBalance > 0,
+            "Executor must have a positive balance on gelato core"
         );
 
         // Effects
-        executorBalances[msg.sender] = currentExecutorBalance.sub(_withdrawAmount);
+        executorBalances[msg.sender] = 0;
 
         // Interaction
-        msg.sender.transfer(_withdrawAmount);
-        emit LogInterfaceBalanceWithdrawal(msg.sender,
-                                           currentExecutorBalance,
-                                           _withdrawAmount,
-                                           executorBalances[msg.sender]
+        msg.sender.transfer(currentExecutorBalance);
+
+        emit LogExecutorBalanceWithdrawal(msg.sender,
+                                           currentExecutorBalance
         );
     }
 
