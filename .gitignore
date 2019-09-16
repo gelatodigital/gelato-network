@@ -8,3 +8,4 @@ coverage
 .history
 env/*
 !env/*.example
+.env

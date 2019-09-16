@@ -142,9 +142,6 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
     // benchmarked gasUsed = 726,360 (for 2 subOrders + 1 lastWithdrawal)
     let txGasPrice = await web3.utils.toWei("5", "gwei");
 
-    let orderStateId =
-      (await gelatoDutchExchange.contract.methods.orderIds().call()) - 1;
-
     let mintExecutionClaimId = await gelatoCore.contract.methods
       .getCurrentExecutionClaimId()
       .call();
@@ -153,7 +150,7 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
       mintExecutionClaimId - parseInt(NUM_SUBORDERS_BN.toString()) + 1;
 
     let txMintReciept = await gelatoDutchExchange.contract.methods
-      .timeSellOrders(
+      .mintTimedSellOrders(
         sellToken.address,
         buyToken.address,
         NUM_SUBORDERS_BN.toString(),
@@ -532,7 +529,7 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
 
 
 describe("Should not be able to mint when tokens not traded on the dutchX", () => {
-  it("Check that timeSellOrders() reverts when a non existing token is chosen", async function() {
+  it("Check that timedSellOrders() reverts when a non existing token is chosen", async function() {
     let ERC20 = artifacts.require("ERC20");
     // Deploy 1 new ERC20
     let newBuyToken = await ERC20.new();
@@ -548,7 +545,7 @@ describe("Should not be able to mint when tokens not traded on the dutchX", () =
 
     // Call should revert
     await truffleAssert.reverts(
-      gelatoDutchExchange.timeSellOrders(
+      gelatoDutchExchange.mintTimedSellOrders(
         sellToken.address,
         newBuyToken.address,
         NUM_SUBORDERS_BN.toString(),

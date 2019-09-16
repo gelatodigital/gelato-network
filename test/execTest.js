@@ -130,15 +130,18 @@ describe("Successfully execute execution claim", () => {
         function(error, events) {}
       )
       .then(function(events) {
-        events.forEach(event => {
-          delete mintedClaims[parseInt(event.returnValues.executionClaimId)];
-        });
+        if (events !== undefined)
+        {
+          events.forEach(event => {
+            delete mintedClaims[parseInt(event.returnValues.executionClaimId)];
+          });
+        }
       });
 
     // Check which execution claims already got cancelled and remove then from the list
     await gelatoCore
       .getPastEvents(
-        "LogClaimCancelled",
+        "LogExecutionClaimCancelled",
         {
           fromBlock: 0,
           toBlock: "latest"
@@ -146,9 +149,12 @@ describe("Successfully execute execution claim", () => {
         function(error, events) {}
       )
       .then(function(events) {
-        events.forEach(event => {
-          delete mintedClaims[parseInt(event.returnValues.executionClaimId)];
-        });
+        if (events !== undefined)
+        {
+          events.forEach(event => {
+            delete mintedClaims[parseInt(event.returnValues.executionClaimId)];
+          });
+        }
       });
   });
 
@@ -202,8 +208,6 @@ describe("Successfully execute execution claim", () => {
       if (parseInt(canExecuteReturn[0].toString()) === 0) {
         nextExecutionClaim = index;
         anyClaimExecutable = true;
-        console.log(`ExecutionClaimId: ${nextExecutionClaim}
-        `);
         encodedPayload = claim[3];
       } else {
         anyClaimExecutable = false;
@@ -213,7 +217,6 @@ describe("Successfully execute execution claim", () => {
     // We fetched a deposit and sell claim, where the execution time is still in the future
     if (!anyClaimExecutable) {
       await timeTravel.advanceTimeAndBlock(parseInt(INTERVAL_SPAN));
-      console.log(`Should only enter for deposit and sell claims`);
       for (let index in mintedClaims) {
         let claim = mintedClaims[index];
 
@@ -231,13 +234,14 @@ describe("Successfully execute execution claim", () => {
 
         if (parseInt(canExecuteReturn[0].toString()) === 0) {
           nextExecutionClaim = index;
-          console.log(`ExecutionClaimId: ${nextExecutionClaim}`);
           encodedPayload = claim[3];
           anyClaimExecutable = true;
         }
       }
     }
 
+    console.log(`To be executed ExecutionClaimId: ${nextExecutionClaim}
+        `);
     assert.isTrue(anyClaimExecutable);
   });
 
@@ -253,15 +257,15 @@ describe("Successfully execute execution claim", () => {
         returnedDataPayload = returnedDataPayload.concat(encodedPayload[i]);
       }
     }
-    console.log(`
-        Returned Func:       ${returnedFuncSelec}
-        DepositAndSell Func: ${web3.eth.abi.encodeFunctionSignature(
-          execDepositAndSellAction
-        )}
-        Withdraw Func:       ${web3.eth.abi.encodeFunctionSignature(
-          execWithdrawAction
-        )}
-    `);
+    // console.log(`
+    //     Returned Func:       ${returnedFuncSelec}
+    //     DepositAndSell Func: ${web3.eth.abi.encodeFunctionSignature(
+    //       execDepositAndSellAction
+    //     )}
+    //     Withdraw Func:       ${web3.eth.abi.encodeFunctionSignature(
+    //       execWithdrawAction
+    //     )}
+    // `);
 
     if (
       returnedFuncSelec ===
@@ -438,7 +442,7 @@ describe("Successfully execute execution claim", () => {
 
     let gdxGelatoBalanceBefore = new BN(
       await gelatoCore.contract.methods
-        .getInterfaceBalance(gelatoDutchExchange.address)
+        .interfaceBalances(gelatoDutchExchange.address)
         .call()
     );
 
@@ -484,7 +488,7 @@ describe("Successfully execute execution claim", () => {
 
     let gdxGelatoBalanceAfter = new BN(
       await gelatoCore.contract.methods
-        .getInterfaceBalance(gelatoDutchExchange.address)
+        .interfaceBalances(gelatoDutchExchange.address)
         .call()
     );
 
@@ -493,16 +497,19 @@ describe("Successfully execute execution claim", () => {
     let totalGasUsed;
     let usedGasPrice;
     let executorPayout;
-    await gelatoCore.getPastEvents("LogExecutionMetrics", (error, events) => {
-      if (error) {
-        console.error;
-      } else {
-        let event = events[0];
-        totalGasUsed = event.returnValues.totalGasUsed;
-        usedGasPrice = event.returnValues.usedGasPrice;
-        executorPayout = event.returnValues.executorPayout;
+    await gelatoCore.getPastEvents(
+      "LogClaimExecutedBurnedAndDeleted",
+      (error, events) => {
+        if (error) {
+          console.error;
+        } else {
+          let event = events[0];
+          totalGasUsed = event.returnValues.gasUsedEstimate;
+          usedGasPrice = event.returnValues.cappedGasPriceUsed;
+          executorPayout = event.returnValues.executorPayout;
+        }
       }
-    });
+    );
 
     // console.log(`
     //   Total Gas returned from contract: ${totalGasUsed}
@@ -693,7 +700,7 @@ describe("Successfully execute execution claim", () => {
     // Order state already fetched
     let AuctionIndex;
     if (isDepositAndSell === 0) {
-      lastAuctionIndex = orderState.lastAuctionIndex;
+      lastAuctionIndex = orderState.lastParticipatedAuctionIndex;
     } else {
       lastAuctionIndex = decodedPayload._lastAuctionIndex;
     }
@@ -737,7 +744,7 @@ describe("Successfully execute execution claim", () => {
 
     // Check if we did an automated top up
     await gelatoDutchExchange.getPastEvents(
-      "LogAddedBalanceToGelato",
+      "LogGelatoBalanceAdded",
       (error, events) => {
         if (events[0] === undefined) {
           amountDeductedfromInterface = gdxGelatoBalanceBefore.sub(
@@ -749,7 +756,7 @@ describe("Successfully execute execution claim", () => {
         } else {
           amountDeductedfromInterface = gdxGelatoBalanceBefore
             .sub(gdxGelatoBalanceAfter)
-            .add(new BN(events[0].returnValues.weiAmount));
+            .add(new BN(events[0].returnValues.amount));
           //   console.log(`
           // GelatoBalanceBefore: ${gdxGelatoBalanceBefore.toString()}
           // GelatoBalanceAfter: ${gdxGelatoBalanceAfter.toString()}

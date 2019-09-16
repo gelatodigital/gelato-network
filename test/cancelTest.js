@@ -1,5 +1,5 @@
 let {
-    numberOfSubOrders,
+  numberOfSubOrders,
   GelatoCore,
   GelatoDutchX,
   SellToken,
@@ -123,35 +123,41 @@ describe("Cancel outstanding execution claims", () => {
 
         // Check which execution claims already got executed and remove then from the list
         await gelatoCore
-          .getPastEvents(
-            "LogClaimExecutedBurnedAndDeleted",
-            {
-              fromBlock: 0,
-              toBlock: "latest"
-            },
-            function(error, events) {}
-          )
-          .then(function(events) {
+        .getPastEvents(
+          "LogClaimExecutedBurnedAndDeleted",
+          {
+            fromBlock: 0,
+            toBlock: "latest"
+          },
+          function(error, events) {}
+        )
+        .then(function(events) {
+          if (events !== undefined)
+          {
             events.forEach(event => {
               delete mintedClaims[parseInt(event.returnValues.executionClaimId)];
             });
-          });
+          }
+        });
 
-        // Check which execution claims already got cancelled and remove then from the list
-        await gelatoCore
-          .getPastEvents(
-            "LogClaimCancelled",
-            {
-              fromBlock: 0,
-              toBlock: "latest"
-            },
-            function(error, events) {}
-          )
-          .then(function(events) {
+      // Check which execution claims already got cancelled and remove then from the list
+      await gelatoCore
+        .getPastEvents(
+          "LogExecutionClaimCancelled",
+          {
+            fromBlock: 0,
+            toBlock: "latest"
+          },
+          function(error, events) {}
+        )
+        .then(function(events) {
+          if (events !== undefined)
+          {
             events.forEach(event => {
               delete mintedClaims[parseInt(event.returnValues.executionClaimId)];
             });
-          });
+          }
+        });
       });
 
       // Gets all past created execution claims, loops over them and stores the one which is executable in a hashtable
@@ -407,29 +413,35 @@ describe("Cancel outstanding execution claims", () => {
             ETH Balances Before:  ${userEthBalance / 10 ** 18} ETH
             ETH Balances After:   ${userEthBalanceAfter / 10 ** 18} ETH
             -----------
-            Difference:           ${(userEthBalanceAfter - userEthBalance) / 10 ** 18} ETH
+            Difference:           ${(userEthBalanceAfter - userEthBalance) /
+              10 ** 18} ETH
 
             WETH Balance Before:  ${userSellTokenBalance / 10 ** 18} WETH
             WETH Balance After:   ${userSellTokenBalanceAfter / 10 ** 18} WETH
             -----------
-            Difference:           ${(userSellTokenBalanceAfter - userSellTokenBalance) / 10 ** 18} WETH
+            Difference:           ${(userSellTokenBalanceAfter -
+              userSellTokenBalance) /
+              10 ** 18} WETH
 
             ICE Balance Before:   ${userBuyTokenBalance / 10 ** 18} ICE
             ICE Balance After:    ${userBuyTokenBalanceAfter / 10 ** 18} ICE
             -----------
-            Difference:           ${(userBuyTokenBalanceAfter  - userBuyTokenBalance) / 10 ** 18} ICE
+            Difference:           ${(userBuyTokenBalanceAfter -
+              userBuyTokenBalance) /
+              10 ** 18} ICE
 
         EXECUTOR BALANCE:
             ETH Balance Before:   ${executorEthBalance / 10 ** 18} ETH
             ETH Balance After:    ${executorEthBalanceAfter / 10 ** 18} ETH
             -----------
-            Difference:           ${(executorEthBalanceAfter - executorEthBalance) / 10 ** 18} ETH
+            Difference:           ${(executorEthBalanceAfter -
+              executorEthBalance) /
+              10 ** 18} ETH
 
         ***************************************************+
 
         `);
 
-        assert.isTrue(true);
-    });
-
+    assert.isTrue(true);
+  });
 });

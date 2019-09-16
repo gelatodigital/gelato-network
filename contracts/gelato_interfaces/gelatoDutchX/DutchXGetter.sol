@@ -7,11 +7,6 @@ contract DutchXGetter {
 
     DutchExchange public dutchExchange;
 
-    struct Fraction {
-        uint num;
-        uint den;
-    }
-
     constructor(address _dutchExchangeProxy) public {
         dutchExchange = DutchExchange(_dutchExchangeProxy);
     }
@@ -19,24 +14,18 @@ contract DutchXGetter {
     function getClosingPrices(address _sellToken, address _buyToken, uint256 _auctionIndex)
         public
         view
-        returns( uint256, uint256)
+        returns( uint256 num, uint256 den)
     {
-        uint256 den;
-        uint256 num;
         (num, den) = dutchExchange.getCurrentAuctionPrice(_sellToken, _buyToken, _auctionIndex);
-        return (num, den);
     }
 
 
     function getFeeRatio(address _dxInterface)
         public
         view
-        returns ( uint256, uint256)
+        returns ( uint256 num, uint256 den)
     {
-        uint256 den;
-        uint256 num;
         (num, den) = dutchExchange.getFeeRatio(_dxInterface);
-        return (den, num);
     }
 
     function getAuctionIndex(address _sellToken, address _buyToken)
