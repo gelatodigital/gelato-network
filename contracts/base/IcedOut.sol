@@ -58,6 +58,9 @@ contract IcedOut is Ownable {
           public
           onlyOwner
      {
+          require(address(this).balance >= _withdrawAmount,
+               "IcedOut.withdrawBalanceToOwner: _withdrawAmount > balance"
+          );
           msg.sender.transfer(_withdrawAmount);
           emit LogBalanceWithdrawnToOwner(_withdrawAmount,
                                           address(this).balance,

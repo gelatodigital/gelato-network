@@ -27,6 +27,7 @@ contract GelatoCore is GelatoClaim, Ownable {
     event LogExecutorProfitUpdated(uint256 executorProfit, uint256 newExecutorProfit);
     event LogExecutorGasPriceUpdated(uint256 executorGasPrice, uint256 newExecutorGasPrice);
     event LogUpdatedCanExecMaxGas(uint256 canExecMaxGas, uint256 newcanExecMaxGas);
+    event LogUpdatedUncountedGasConsumption(uint256 uncountedGasConsumption, uint256 newUncountedGasConsumption);
     event LogUpdatedFixedGasConsumptionInBetween(uint256 execFNGas2, uint256 newExecFNGas2);
     event LogUpdatedExecutorGasRefund(uint256 execFNRefundedGas, uint256 newExecFNRefundedGas);
     event LogRecommendedGasPriceForInterfacesUpdated(uint256 recommendedGasPriceForInterfaces,
@@ -293,7 +294,7 @@ contract GelatoCore is GelatoClaim, Ownable {
         public
         onlyOwner
     {
-        emit LogUpdatedFixedGasConsumptionInBetween(uncountedGasConsumption, _newUncountedGasConsumption);
+        emit LogUpdatedUncountedGasConsumption(uncountedGasConsumption, _newUncountedGasConsumption);
         uncountedGasConsumption = _newUncountedGasConsumption;
     }
 
