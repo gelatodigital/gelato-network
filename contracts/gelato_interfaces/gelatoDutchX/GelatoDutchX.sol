@@ -11,7 +11,6 @@ import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 contract GelatoDutchX is IcedOut {
     // **************************** Events ******************************
     event LogNewOrderCreated(uint256 indexed orderStateId, address indexed seller);
-    event LogFeeNumDen(uint256 num, uint256 den);
     event LogActualSellAmount(uint256 indexed executionClaimId,
                               uint256 subOrderAmount,
                               uint256 actualSellAmount,
@@ -422,8 +421,6 @@ contract GelatoDutchX is IcedOut {
         uint256 den;
         // Returns e.g. num = 1, den = 500 for 0.2% fee
         (num, den) = dutchExchange.getFeeRatio(address(this));
-
-        emit LogFeeNumDen(num, den);
 
         // Calc fee amount
         dutchXFee = _subOrderSize.mul(num).div(den);
