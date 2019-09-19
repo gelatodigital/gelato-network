@@ -397,7 +397,6 @@ contract GelatoCore is GelatoClaim, Ownable {
         Success, // Interface call succeeded
         Failure,  // Interface call reverted
         InterfaceBalanceChanged  // The transaction was relayed and reverted due to the recipient's balance changing
-
     }
 
     // Function for executors to verify that execution claim is executable
@@ -453,7 +452,8 @@ contract GelatoCore is GelatoClaim, Ownable {
         // **** CHECKS END ****;
 
         // Conduct static call to trigger. If true, action is ready to be executed
-        (bool success, bytes memory returndata) = _triggerAddress.staticcall.gas(canExecMaxGas)(_triggerPayload);
+        (bool success,
+         bytes memory returndata) = _triggerAddress.staticcall.gas(canExecMaxGas)(_triggerPayload);
 
         // Check dappInterface return value
         if (!success) {
@@ -490,7 +490,7 @@ contract GelatoCore is GelatoClaim, Ownable {
                      uint256 _executionClaimId
     )
         external
-        returns (uint256 safeExecuteStatus)
+        returns (uint256 safeExecuteResult)
     {
         // // Calculate start GAS, set by the executor.
         uint256 startGas = gasleft();
@@ -551,7 +551,7 @@ contract GelatoCore is GelatoClaim, Ownable {
 
             // Call safeExecute func
             (, bytes memory returnData) = address(this).call(payloadWithSelector);
-            safeExecuteStatus = abi.decode(returnData, (uint256));
+            safeExecuteResult = abi.decode(returnData, (uint256));
         }
 
         // **** EFFECTS 2 ****

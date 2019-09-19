@@ -10,11 +10,7 @@ import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 contract GelatoAggregator is IcedOut {
     // **************************** Events ******************************
     event LogNewOrderCreated(uint256 indexed orderStateId, address indexed seller);
-    event LogActualSellAmount(uint256 indexed executionClaimId,
-                              uint256 subOrderAmount,
-                              uint256 actualSellAmount,
-                              uint256 dutchXFee
-    );
+
     event LogOrderCancelled(uint256 indexed executionClaimId,
                             uint256 indexed orderID,
                             address indexed seller
@@ -370,7 +366,12 @@ contract GelatoAggregator is IcedOut {
     // DELETE
     // ****************************  execWithdraw(executionClaimId) *********************************
     // Withdraw function executor will call
-    function execWithdrawAction(uint256 _executionClaimId, address _sellToken, address _buyToken, uint256 _sellAmount, uint256 _lastParticipatedAuctionIndex)
+    function execWithdrawAction(uint256 _executionClaimId,
+                                address _sellToken,
+                                address _buyToken,
+                                uint256 _sellAmount,
+                                uint256 _lastParticipatedAuctionIndex
+    )
         external
     {
         // Step1: Checks for execution safety
@@ -390,7 +391,12 @@ contract GelatoAggregator is IcedOut {
         uint256 withdrawAmount = _sellAmount.mul(num).div(den);
 
         // Withdraw tokens on behalf of user
-        _withdraw(tokenOwner, _sellToken, _buyToken, _lastParticipatedAuctionIndex, withdrawAmount);
+        _withdraw(tokenOwner,
+                  _sellToken,
+                  _buyToken,
+                  _lastParticipatedAuctionIndex,
+                  withdrawAmount
+        );
 
         // Event emission
         emit LogWithdrawComplete(_executionClaimId,
@@ -403,39 +409,19 @@ contract GelatoAggregator is IcedOut {
 
     }
 
-    // **************************** Helper functions *********************************
-    // Calculate sub order size accounting for current dutchExchange liquidity contribution fee.
-    function _calcActualSellAmount(uint256 _subOrderSize)
-        public
-        returns(uint256 actualSellAmount, uint256 dutchXFee)
-    {
-        // Get current fee ratio of Gelato contract
-        uint256 num;
-        uint256 den;
-        // Returns e.g. num = 1, den = 500 for 0.2% fee
-        (num, den) = dutchExchange.getFeeRatio(address(this));
-
-        // Calc fee amount
-        dutchXFee = _subOrderSize.mul(num).div(den);
-
-        // Calc actual Sell Amount
-        actualSellAmount = _subOrderSize.sub(dutchXFee);
-    }
-
-
-
-
-
-    // **************************** Helper functions END *********************************
-
-
 
     // **************************** Extra functions *********************************
     // Allows sellers to cancel their deployed orders
     // @🐮 create cancel helper on IcedOut.sol
 
     // Front end has to save all necessary variables and input them automatically for user
-    function cancelOrder(address _triggerAddress, bytes calldata _triggerPayload, address _actionAddress, bytes calldata _actionPayload, uint256 _actionMaxGas, uint256 _executionClaimId)
+    function cancelOrder(address _triggerAddress,
+                         bytes calldata _triggerPayload,
+                         address _actionAddress,
+                         bytes calldata _actionPayload,
+                         uint256 _actionMaxGas,
+                         uint256 _executionClaimId
+    )
         external
         returns(bool)
     {

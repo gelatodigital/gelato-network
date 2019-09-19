@@ -1,14 +1,10 @@
 pragma solidity ^0.5.10;
 
-import '../../../gelato_interfaces/gelato_DutchX_interfaces/IDutchX.sol';
-import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
-import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
+import '../gelato_DutchX_base/GelatoDutchXStandard.sol';
+import '@openzeppelin/contracts/drafts/Counters.sol';
 
-contract GelatoDutchXInterface {
+contract GelatoDutchXInterface is GelatoDutchXStandard {
     using Counters for Counters.Counter;
-    using SafeERC20 for ERC20;
-
-    IDutchX public dutchX;
 
     struct OrderState {
         bool lastAuctionWasWaiting;
@@ -25,8 +21,6 @@ contract GelatoDutchXInterface {
     {
         dutchX = IDutchX(_DutchX);
     }
-
-
 
 
     function _sellOnDutchX(address _sellToken,
