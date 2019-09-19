@@ -4,46 +4,46 @@
  */
 
 let {
-    numberOfSubOrders,
-    GelatoCore,
-    GelatoDutchX,
-    SellToken,
-    BuyToken,
-    DutchExchangeProxy,
-    DutchExchange,
-    timeTravel,
-    BN,
-    NUM_SUBORDERS_BN,
-    GELATO_GAS_PRICE_BN,
-    TOTAL_SELL_VOLUME,
-    SUBORDER_SIZE_BN,
-    INTERVAL_SPAN,
-    GDX_MAXGAS_BN,
-    GDX_PREPAID_FEE_BN,
-    dutchExchangeProxy,
-    dutchExchange,
-    seller,
-    accounts,
-    sellToken,
-    buyToken,
-    gelatoDutchXContract,
-    gelatoCore,
-    gelatoCoreOwner,
-    orderStateId,
-    orderState,
-    executionTime,
-    interfaceOrderId,
-    executionClaimIds,
-    MSG_VALUE_BN,
-    execShellCommand,
-    DxGetter,
-    execShellCommandLog,
-    truffleAssert,
-    userEthBalance,
-    userSellTokenBalance,
-    userBuyTokenBalance,
-    executorEthBalance,
-    dutchXMaxGasBN
+  numberOfSubOrders,
+  GelatoCore,
+  GelatoDutchX,
+  SellToken,
+  BuyToken,
+  DutchExchangeProxy,
+  DutchExchange,
+  timeTravel,
+  BN,
+  NUM_SUBORDERS_BN,
+  GELATO_GAS_PRICE_BN,
+  TOTAL_SELL_VOLUME,
+  SUBORDER_SIZE_BN,
+  INTERVAL_SPAN,
+  GDX_MAXGAS_BN,
+  GDX_PREPAID_FEE_BN,
+  dutchExchangeProxy,
+  dutchExchange,
+  seller,
+  accounts,
+  sellToken,
+  buyToken,
+  gelatoDutchXContract,
+  gelatoCore,
+  gelatoCoreOwner,
+  orderStateId,
+  orderState,
+  executionTime,
+  interfaceOrderId,
+  executionClaimIds,
+  MSG_VALUE_BN,
+  execShellCommand,
+  DxGetter,
+  execShellCommandLog,
+  truffleAssert,
+  userEthBalance,
+  userSellTokenBalance,
+  userBuyTokenBalance,
+  executorEthBalance,
+  dutchXMaxGasBN
 } = require("./truffleTestConfig.js");
 
 let txHash;
@@ -321,7 +321,6 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
     );
   });
 
-
   it("GelatoDutchExchangeInterface can switch from using gelato Cores gasPrice to using its own", async () => {
     // Getter
     let gdxGelatoPrepayment1 = await gelatoDutchExchange.contract.methods
@@ -344,7 +343,9 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
       .eq(gdxGelatoPrepayment2BN);
     assert.isTrue(
       predictedGDXGelatoPrepayment,
-      `${newGasPriceBN.mul(dutchXMaxGasBN)} (== ${newGasPriceBN} * ${dutchXMaxGasBN}) should be equal to ${gdxGelatoPrepayment2BN}`
+      `${newGasPriceBN.mul(
+        dutchXMaxGasBN
+      )} (== ${newGasPriceBN} * ${dutchXMaxGasBN}) should be equal to ${gdxGelatoPrepayment2BN}`
     );
 
     assert.notEqual(
@@ -375,7 +376,9 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
     let currentrecommendedGasPriceForInterfaces = await gelatoCore.contract.methods
       .recommendedGasPriceForInterfaces()
       .call();
-    let currentrecommendedGasPriceForInterfacesBN = new BN(currentrecommendedGasPriceForInterfaces.toString());
+    let currentrecommendedGasPriceForInterfacesBN = new BN(
+      currentrecommendedGasPriceForInterfaces.toString()
+    );
     let predictedGDXGelatoPrepayment = currentrecommendedGasPriceForInterfacesBN
       .mul(dutchXMaxGasBN)
       .eq(gdxGelatoPrepayment2BN);
@@ -391,6 +394,4 @@ describe("Test the successful setup of gelatoDutchExchangeInterface (gdx)", () =
     );
     // assert.equal(maxSellOrders, gdxMaxSellOrdersAfter, "executorGasPrice should be updateable")
   });
-
-
 });

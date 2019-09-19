@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-interface IDutchExchange {
+interface IDutchX {
     function getAuctionIndex(address token1, address token2) external view returns (uint256);
 
     function getAuctionStart(address token1, address token2) external view returns (uint256);
@@ -8,7 +8,7 @@ interface IDutchExchange {
     function getClearingTime(
         address token1,
         address token2,
-        uint auctionIndex
+        uint256 auctionIndex
     )
         external
         view
@@ -35,13 +35,28 @@ interface IDutchExchange {
     function buyerBalances(address sellToken, address buyToken, uint256 auctionIndex, address user) external view returns(uint256);
     function claimedAmounts(address sellToken, address buyToken, uint256 auctionIndex, address user) external view returns(uint256);
 
-    function deposit(address tokenAddress, uint amount) external returns (uint);
-    function withdraw(address tokenAddress, uint amount) external returns (uint);
-
-    function depositAndSell(address sellToken, address buyToken, uint amount) external returns (uint256, uint256, uint256);
-
-    function postBuyOrder(address sellToken, address buyToken, uint auctionIndex, uint amount)
+    function deposit(address tokenAddress, uint256 amount) external returns (uint256);
+    function withdraw(address tokenAddress, uint256 amount) external returns (uint256);
+    function claimAndWithdraw(address sellToken,
+                              address buyToken,
+                              address user,
+                              uint256 auctionIndex,
+                              uint256 amount
+    )
         external
-        returns (uint);
+        returns (uint256, uint256, uint256);
+
+    function depositAndSell(address sellToken, address buyToken, uint256 amount) external returns (uint256, uint256, uint256);
+
+    function postBuyOrder(address sellToken, address buyToken, uint256 auctionIndex, uint256 amount)
+        external
+        returns (uint256);
+
+
+
+    function getFeeRatio(address user)
+        external
+        view
+        returns (uint256, uint256);
 
 }

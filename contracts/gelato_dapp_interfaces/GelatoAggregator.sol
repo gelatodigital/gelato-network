@@ -1,14 +1,13 @@
 pragma solidity ^0.5.10;
 
 //  Imports:
-import '../../base/IcedOut.sol';
-import '@gnosis.pm/dx-contracts/contracts/DutchExchange.sol';
+import './gelato_interfaces_base/IcedOut.sol';
 import '@openzeppelin/contracts/drafts/Counters.sol';
 import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 
 // Gelato IcedOut-compliant DutchX Interface for splitting sell orders and for automated withdrawals
-contract GelatoDutchX is IcedOut {
+contract GelatoAggregator is IcedOut {
     // **************************** Events ******************************
     event LogNewOrderCreated(uint256 indexed orderStateId, address indexed seller);
     event LogActualSellAmount(uint256 indexed executionClaimId,
@@ -37,41 +36,18 @@ contract GelatoDutchX is IcedOut {
     event LogGas(uint256 gas1, uint256 gas2);
     // **************************** Events END ******************************
 
-    // base contract => Ownable => indirect use through IcedOut
-    // Libraries
-    // using SafeMath for uint256; => indirect use through IcedOut
-    using Counters for Counters.Counter;
-    using SafeERC20 for ERC20;
 
-    struct OrderState {
-        bool lastAuctionWasWaiting;  // default: false
-        uint256 lastParticipatedAuctionIndex;  // default: 0
-    }
-
-    Counters.Counter public orderIds;
     // **************************** State Variables ******************************
     // Interfaces to other contracts that are set during construction.
-    // GelatoCore public gelatoCore;
-    DutchExchange public dutchExchange;
 
     // mapping(orderStateId => orderState)
-    mapping(uint256 => OrderState) public orderStates;
+
 
     // Constants that are set during contract construction and updateable via setters
-    string constant execDepositAndSellTriggerString = "execDepositAndSellTrigger(uint256,address,address,uint256,uint256,uint256)";
-
-    string constant execDepositAndSellActionString = "execDepositAndSellAction(uint256,address,address,uint256,uint256,uint256,uint256)";
-
-    string constant execWithdrawTriggerString = "execWithdrawTrigger(uint256,address,address,uint256,uint256)";
-
-    string constant execWithdrawActionString = "execWithdrawAction(uint256,address,address,uint256,uint256)";
 
     uint256 public execDepositAndSellGas;
-
     uint256 public execWithdrawGas;
 
-    uint256 public auctionStartWaitingForFunding;
-    // **************************** State Variables END ******************************
 
     // constructor():
     constructor(address payable _GelatoCore,
@@ -85,7 +61,7 @@ contract GelatoDutchX is IcedOut {
         public
     {
         // gelatoCore = GelatoCore(_GelatoCore);
-        dutchExchange = DutchExchange(_DutchExchange);
+        dutchExchange = IDutchExchange(_DutchExchange);
         auctionStartWaitingForFunding = 1;
         execDepositAndSellGas = _execDepositAndSellGas;
         execWithdrawGas = _execWithdrawGas;
@@ -132,7 +108,10 @@ contract GelatoDutchX is IcedOut {
         );
 
         // Step4: Transfer the totalSellVolume from msg.sender(seller) to this contract
-        ERC20(_sellToken).safeTransferFrom(msg.sender, address(this), _numSellOrders.mul(_amountPerSellOrder));
+        ERC20(_sellToken).safeTransferFrom(msg.sender,
+                                           address(this),
+                                           _numSellOrders.mul(_amountPerSellOrder)
+        );
 
         // Step5: Instantiate new dutchExchange-specific sell order state
         OrderState memory orderState = OrderState(
@@ -179,11 +158,11 @@ contract GelatoDutchX is IcedOut {
             );
 
             mintExecutionClaim(address(this),
-                      triggerPayload,
-                      address(this),
-                      actionPayload,
-                      execDepositAndSellGas,
-                      msg.sender  // executionClaimOwner
+                               triggerPayload,
+                               address(this),
+                               actionPayload,
+                               execDepositAndSellGas,
+                               msg.sender  // executionClaimOwner
             );
         }
 
@@ -329,7 +308,9 @@ contract GelatoDutchX is IcedOut {
         // Fetch current DutchX auction values to analyze past auction participation
         // Update Order State
         uint256 nextParticipationAuctionIndex;
-        (, nextParticipationAuctionIndex, orderState.lastAuctionWasWaiting) = getAuctionValues(_sellToken, _buyToken);
+        (, nextParticipationAuctionIndex, orderState.lastAuctionWasWaiting) = getAuctionValues(_sellToken,
+                                                                                               _buyToken
+        );
 
         // ### EFFECTS ###
         orderState.lastParticipatedAuctionIndex = nextParticipationAuctionIndex;
@@ -360,10 +341,22 @@ contract GelatoDutchX is IcedOut {
             uint256 nextExecutionClaimId = getNextExecutionClaimId();
 
             // Create Trigger Payload
-            bytes memory triggerPayload = abi.encodeWithSignature(execWithdrawTriggerString, nextExecutionClaimId, _sellToken, _buyToken, actualSellAmount, nextParticipationAuctionIndex);
+            bytes memory triggerPayload = abi.encodeWithSignature(execWithdrawTriggerString,
+                                                                  nextExecutionClaimId,
+                                                                  _sellToken,
+                                                                  _buyToken,
+                                                                  actualSellAmount,
+                                                                  nextParticipationAuctionIndex
+            );
 
             // Create Action Payload
-            bytes memory actionPayload = abi.encodeWithSignature(execWithdrawActionString, nextExecutionClaimId, _sellToken, _buyToken, actualSellAmount, nextParticipationAuctionIndex);
+            bytes memory actionPayload = abi.encodeWithSignature(execWithdrawActionString,
+                                                                 nextExecutionClaimId,
+                                                                 _sellToken,
+                                                                 _buyToken,
+                                                                 actualSellAmount,
+                                                                 nextParticipationAuctionIndex
+            );
 
             // Mint new withdraw token
             mintExecutionClaim(address(this), triggerPayload, address(this), actionPayload, execWithdrawGas, tokenOwner);
@@ -429,42 +422,8 @@ contract GelatoDutchX is IcedOut {
         actualSellAmount = _subOrderSize.sub(dutchXFee);
     }
 
-    // Deposit and sell on the dutchExchange
-    function _depositAndSell(address _sellToken,
-                             address _buyToken,
-                             uint256 _sellAmount
-    )
-        private
-    {
-        // Approve DutchX to transfer the funds from gelatoInterface
-        ERC20(_sellToken).approve(address(dutchExchange), _sellAmount);
 
-        // DEV deposit and sell on the dutchExchange
-        dutchExchange.depositAndSell(_sellToken, _buyToken, _sellAmount);
-    }
 
-    // Internal fn that withdraws funds from dutchExchange to the sellers account
-    function _withdraw(address _tokenOwner,
-                       address _sellToken,
-                       address _buyToken,
-                       uint256 _lastParticipatedAuctionIndex,
-                       uint256 _withdrawAmount
-    )
-        private
-    {
-
-        // Withdraw funds from dutchExchange to Gelato
-        // DEV uses memory value lastParticipatedAuctionIndex in case execute func calls it as we already incremented storage value
-        dutchExchange.claimAndWithdraw(_sellToken,
-                                       _buyToken,
-                                       address(this),
-                                       _lastParticipatedAuctionIndex,
-                                       _withdrawAmount
-        );
-
-        // Transfer Tokens from Gelato to Seller
-        ERC20(_buyToken).safeTransfer(_tokenOwner, _withdrawAmount);
-    }
 
 
     // **************************** Helper functions END *********************************

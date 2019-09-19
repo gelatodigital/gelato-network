@@ -1,7 +1,7 @@
 pragma solidity ^0.5.10;
 
 // Imports
-import '../GelatoCore.sol';
+import '../../gelato_core/GelatoCore.sol';
 import '@openzeppelin/contracts/ownership/Ownable.sol';
 import '@openzeppelin/contracts/math/SafeMath.sol';
 

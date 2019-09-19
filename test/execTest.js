@@ -130,8 +130,7 @@ describe("Successfully execute execution claim", () => {
         function(error, events) {}
       )
       .then(function(events) {
-        if (events !== undefined)
-        {
+        if (events !== undefined) {
           events.forEach(event => {
             delete mintedClaims[parseInt(event.returnValues.executionClaimId)];
           });
@@ -149,8 +148,7 @@ describe("Successfully execute execution claim", () => {
         function(error, events) {}
       )
       .then(function(events) {
-        if (events !== undefined)
-        {
+        if (events !== undefined) {
           events.forEach(event => {
             delete mintedClaims[parseInt(event.returnValues.executionClaimId)];
           });
@@ -170,9 +168,10 @@ describe("Successfully execute execution claim", () => {
       .balanceOf(seller)
       .call();
     // Fetch Executor Ether Balance on gelato Core
-    executorEthBalance = await gelatoCore.contract.methods.executorBalances(executor).call()
+    executorEthBalance = await gelatoCore.contract.methods
+      .executorBalances(executor)
+      .call();
     // executorEthBalance = await web3.eth.getBalance(executor);
-
   });
 
   // Gets all past created execution claims, loops over them and stores the one which is executable in a hashtable
@@ -434,7 +433,9 @@ describe("Successfully execute execution claim", () => {
   it("Successfully execute execution claim", async () => {
     // Fetch executor pre Balance
     // let executorBalancePre = new BN(await web3.eth.getBalance(executor));
-    let executorBalancePre = new BN (await gelatoCore.contract.methods.executorBalances(executor).call())
+    let executorBalancePre = new BN(
+      await gelatoCore.contract.methods.executorBalances(executor).call()
+    );
 
     let claim = mintedClaims[nextExecutionClaim];
 
@@ -530,9 +531,10 @@ describe("Successfully execute execution claim", () => {
     // CHECK that core owners ETH balance decreased by 1 ETH + tx fees
     // Sellers ETH Balance post mint
     // let executorBalancePost = new BN(await web3.eth.getBalance(executor));
-    let executorBalancePost = new BN(await gelatoCore.contract.methods.executorBalances(executor).call())
-    executorEthBalanceAfter = executorBalancePost
-
+    let executorBalancePost = new BN(
+      await gelatoCore.contract.methods.executorBalances(executor).call()
+    );
+    executorEthBalanceAfter = executorBalancePost;
 
     // Calculate the Executor payout was correct
     // 1. The execuor reward specified in the execution claim on the interfac should equal the postBalance - preBalance

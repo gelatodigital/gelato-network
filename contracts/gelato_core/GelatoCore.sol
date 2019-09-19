@@ -1,7 +1,7 @@
 pragma solidity ^0.5.10;
 
 // Imports:
-import './base/GelatoClaim.sol';
+import './gelato_core_base/GelatoClaim.sol';
 import "@openzeppelin/contracts/drafts/Counters.sol";
 import '@openzeppelin/contracts/ownership/Ownable.sol';
 
@@ -172,11 +172,12 @@ contract GelatoCore is GelatoClaim, Ownable {
                                 bytes calldata _triggerPayload,
                                 address _actionAddress,
                                 bytes calldata _actionPayload,
-                                uint256 _actionMaxGas,
+                                uint256 _actionGasStipend,
                                 address _executionClaimOwner
     )
-        payable
         external
+        payable
+        returns(bool)
     {
         // CHECKS
         // All checks are done interface side. If interface sets wrong _payload, its not the core's fault.
@@ -188,12 +189,13 @@ contract GelatoCore is GelatoClaim, Ownable {
         );
 
         // ****** Mint new executionClaim ERC721 token ******
-
         // Increment the current token id
         Counters.increment(_executionClaimIds);
-
         // Get a new, unique token id for the newly minted ERC721
         uint256 executionClaimId = _executionClaimIds.current();
+        // Mint new ERC721 Token representing one childOrder
+        _mint(_executionClaimOwner, executionClaimId);
+        // ****** Mint new executionClaim ERC721 token END ******
 
         // Create executionClaimHash (we include executionClaimId to avoid hash collisions).
         // We exclude _executionClaimOwner as this might change over the lifecycle of the executionClaim
@@ -201,31 +203,27 @@ contract GelatoCore is GelatoClaim, Ownable {
                                                                 _triggerPayload,
                                                                 _actionAddress,
                                                                 _actionPayload,
-                                                                _actionMaxGas,
+                                                                _actionGasStipend,
                                                                 msg.sender,  // dappInterface
                                                                 executionClaimId
         ));
-
-        // Mint new ERC721 Token representing one childOrder
-        _mint(_executionClaimOwner, executionClaimId);
-
-        // ****** Mint new executionClaim ERC721 token END ******
-
         // ExecutionClaims tracking state variable update
-        // ERC721(executionClaimId) => ExecutionClaim(struct)
+        // ERC721(executionClaimId) => executionClaimHash
         executionClaims[executionClaimId] = executionClaimHash;
 
-        // Step4: Emit event to notify executors that a new sub order was created
+        // Notify executors that new execution claim exists
         emit LogNewExecutionClaimMinted(_triggerAddress,
                                         _triggerPayload,
                                         _actionAddress,
                                         _actionPayload,
-                                        _actionMaxGas,
+                                        _actionGasStipend,
                                         msg.sender,  // dappInterface
                                         executionClaimId,
                                         executionClaimHash,
                                         _executionClaimOwner
         );
+
+        return true;
     }
     // **************************** mintExecutionClaim() END ******************************
 
@@ -234,10 +232,9 @@ contract GelatoCore is GelatoClaim, Ownable {
     function getExecutionClaimHash(uint256 _executionClaimId)
         public
         view
-        returns(bytes32)
+        returns(bytes32 executionClaimHash)
     {
-        bytes32 executionClaimHash = executionClaims[_executionClaimId];
-        return executionClaimHash;
+        executionClaimHash = executionClaims[_executionClaimId];
     }
 
     // To get executionClaimOwner call ownerOf(executionClaimId)
@@ -245,10 +242,9 @@ contract GelatoCore is GelatoClaim, Ownable {
     function getCurrentExecutionClaimId()
         public
         view
-        returns(uint256)
+        returns(uint256 currentId)
     {
-        uint256 currentId = _executionClaimIds.current();
-        return currentId;
+        currentId = _executionClaimIds.current();
     }
     // **************************** ExecutionClaim Getters END ***************************
 
@@ -410,7 +406,7 @@ contract GelatoCore is GelatoClaim, Ownable {
                         bytes memory _triggerPayload,
                         address _actionAddress,
                         bytes memory _actionPayload,
-                        uint256 _actionMaxGas,
+                        uint256 _actionGasStipend,
                         address _dappInterface,
                         uint256 _executionClaimId)
         public
@@ -422,7 +418,7 @@ contract GelatoCore is GelatoClaim, Ownable {
                                                                         _triggerPayload,
                                                                         _actionAddress,
                                                                         _actionPayload,
-                                                                        _actionMaxGas,
+                                                                        _actionGasStipend,
                                                                         _dappInterface,
                                                                         _executionClaimId
         ));
@@ -489,9 +485,10 @@ contract GelatoCore is GelatoClaim, Ownable {
                      bytes calldata _triggerPayload,
                      address _actionAddress,
                      bytes calldata _actionPayload,
-                     uint256 _actionMaxGas,
+                     uint256 _actionGasStipend,
                      address _dappInterface,
-                     uint256 _executionClaimId)
+                     uint256 _executionClaimId
+    )
         external
         returns (uint256 safeExecuteStatus)
     {
@@ -499,7 +496,7 @@ contract GelatoCore is GelatoClaim, Ownable {
         uint256 startGas = gasleft();
 
         // 3: Start gas should be equal or greater to the interface maxGas, gas overhead plus maxGases of canExecute and the internal operations of conductAtomicCall
-        require(startGas >= getMaxExecutionGasConsumption(_actionMaxGas),
+        require(startGas >= getMaxExecutionGasConsumption(_actionGasStipend),
             "GelatoCore.execute: Insufficient gas sent"
         );
 
@@ -510,7 +507,7 @@ contract GelatoCore is GelatoClaim, Ownable {
         tx.gasprice > executorGasPrice ? usedGasPrice = executorGasPrice : usedGasPrice = tx.gasprice;
 
         // Make sure that interfaces have enough funds staked on core for the maximum possible charge.
-        require((getMaxExecutionGasConsumption(_actionMaxGas).mul(usedGasPrice)).add(executorProfit) <= interfaceBalances[_dappInterface],
+        require((getMaxExecutionGasConsumption(_actionGasStipend).mul(usedGasPrice)).add(executorProfit) <= interfaceBalances[_dappInterface],
             "GelatoCore.execute: Insufficient interface balance on gelato core"
         );
 
@@ -522,7 +519,7 @@ contract GelatoCore is GelatoClaim, Ownable {
                                                                  _triggerPayload,
                                                                  _actionAddress,
                                                                  _actionPayload,
-                                                                 _actionMaxGas,
+                                                                 _actionGasStipend,
                                                                  _dappInterface,
                                                                  _executionClaimId
             );
@@ -547,12 +544,12 @@ contract GelatoCore is GelatoClaim, Ownable {
             bytes memory payloadWithSelector = abi.encodeWithSelector(this.safeExecute.selector,
                                                                       _actionAddress,
                                                                       _actionPayload,
-                                                                      _actionMaxGas,
+                                                                      _actionGasStipend,
                                                                       _executionClaimId,
                                                                       msg.sender
             );
 
-            // Call conductAtomicCall func
+            // Call safeExecute func
             (, bytes memory returnData) = address(this).call(payloadWithSelector);
             safeExecuteStatus = abi.decode(returnData, (uint256));
         }
@@ -583,14 +580,14 @@ contract GelatoCore is GelatoClaim, Ownable {
 
             // Emit event now before deletion of struct
             emit LogClaimExecutedBurnedAndDeleted(_dappInterface,
-                                                _executionClaimId,
-                                                executionClaimOwner,
-                                                msg.sender,  // executor
-                                                executorPayout,
-                                                executorProfit,
-                                                gasUsedEstimate,
-                                                usedGasPrice,
-                                                executionCostEstimate
+                                                  _executionClaimId,
+                                                  executionClaimOwner,
+                                                  msg.sender,  // executor
+                                                  executorPayout,
+                                                  executorProfit,
+                                                  gasUsedEstimate,
+                                                  usedGasPrice,
+                                                  executionCostEstimate
             );
         }
 
@@ -604,7 +601,7 @@ contract GelatoCore is GelatoClaim, Ownable {
     // To protect from interfaceBalance drain re-entrancy attack
     function safeExecute(address _dappInterface,
                          bytes calldata _actionPayload,
-                         uint256 _actionMaxGas,
+                         uint256 _actionGasStipend,
                          uint256 _executionClaimId,
                          address _executor
     )
@@ -622,8 +619,8 @@ contract GelatoCore is GelatoClaim, Ownable {
         // emit LogGasConsumption(gasleft(), 3);
         // Current tx gas cost:
         // gelatoDutchX depositAnd sell: 465.597
-        (bool executedClaimStatus,) = _dappInterface.call.gas(_actionMaxGas)(_actionPayload); // .gas(_actionMaxGas)
-        emit LogExecuteResult(executedClaimStatus, _executor, _executionClaimId, _actionMaxGas);
+        (bool executedClaimStatus,) = _dappInterface.call.gas(_actionGasStipend)(_actionPayload); // .gas(_actionGasStipend)
+        emit LogExecuteResult(executedClaimStatus, _executor, _executionClaimId, _actionGasStipend);
 
         // If interface withdrew some balance, revert transaction
         require(interfaceBalances[_dappInterface] >= interfaceBalanceBefore,
@@ -635,13 +632,13 @@ contract GelatoCore is GelatoClaim, Ownable {
     }
     // ************** execute() -> safeExecute() END **************
 
-    function getMaxExecutionGasConsumption(uint256 _actionMaxGas)
+    function getMaxExecutionGasConsumption(uint256 _actionGasStipend)
         internal
         view
         returns (uint256)
     {
         // Only use .add for last, user inputted value to avoid over - underflow
-        return uncountedGasConsumption + canExecMaxGas + fixedGasConsumptionInBetween.add(_actionMaxGas);
+        return uncountedGasConsumption + canExecMaxGas + fixedGasConsumptionInBetween.add(_actionGasStipend);
     }
     // **************************** EXECUTE FUNCTION SUITE END ******************************
 
@@ -650,7 +647,7 @@ contract GelatoCore is GelatoClaim, Ownable {
                                   bytes calldata _triggerPayload,
                                   address _actionAddress,
                                   bytes calldata _actionPayload,
-                                  uint256 _actionMaxGas,
+                                  uint256 _actionGasStipend,
                                   address _dappInterface,
                                   uint256 _executionClaimId
     )
@@ -661,7 +658,7 @@ contract GelatoCore is GelatoClaim, Ownable {
                                                                         _triggerPayload,
                                                                         _actionAddress,
                                                                         _actionPayload,
-                                                                        _actionMaxGas,
+                                                                        _actionGasStipend,
                                                                         _dappInterface,
                                                                         _executionClaimId
         ));
