@@ -1,18 +1,13 @@
 pragma solidity ^0.5.10;
 
 import './gelato_dappInterface_standards/IcedOut.sol';
-import './gelato_dappInterface_standards/GelatoTriggerRegistry.sol';
-import './gelato_dappInterface_standards/GelatoActionRegistry.sol';
 import '@openzeppelin/contracts/drafts/Counters.sol';
 import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 import '@openzeppelin/contracts/ownership/Ownable.sol';
 
 
-contract GelatoAggregator is IcedOutOwnable,
-                             GelatoTriggerRegistry,
-                             GelatoActionRegistry
-{
+contract GelatoAggregator is IcedOutOwnable {
     // **************************** Events ******************************
     event LogNewOrderCreated(uint256 indexed orderStateId, address indexed seller);
 
@@ -31,24 +26,21 @@ contract GelatoAggregator is IcedOutOwnable,
     // **************************** Events END ******************************
 
 
-    // constructor():
     constructor(address payable _GelatoCore,
                 uint256 _interfaceGasPrice,
-                uint256 _execDepositAndSellGas,
-                uint256 _execWithdrawGas
+                uint256 _automaticTopUpAmount
     )
-        // Initialize gelatoCore address & interfaceMaxGas in IcedOut parent
-        IcedOut(_GelatoCore, _execDepositAndSellGas + _execWithdrawGas, _interfaceGasPrice) // interfaceMaxGas 277317 for depsositAndSell
+        IcedOut(_GelatoCore,
+                _interfaceGasPrice,
+                _automaticTopUpAmount
+        )
         public
     {
-        // gelatoCore = GelatoCore(_GelatoCore);
-        dutchExchange = IDutchExchange(_DutchExchange);
-        auctionStartWaitingForFunding = 1;
         execDepositAndSellGas = _execDepositAndSellGas;
         execWithdrawGas = _execWithdrawGas;
     }
 
-    // ____________ (De-)Register Trigger ____________
+    // ____________ (De-)Register Trigger _____________________________
     function registerTrigger(address _triggerAddress,
                              bytes4 calldata _functionSelector
     )
@@ -73,8 +65,9 @@ contract GelatoAggregator is IcedOutOwnable,
         );
         return true;
     }
-    // ____________ (De-)Register Trigger END ____________
-    // ____________ (De-)Register Action ____________
+     // =========================
+
+    // ____________ (De-)Register Action _____________________________
     function registerAction(address _actionAddress,
                              bytes4 calldata _functionSelector
     )
@@ -99,13 +92,9 @@ contract GelatoAggregator is IcedOutOwnable,
         );
         return true;
     }
-    // ____________ (De-)Register Action END ____________
+    // =========================
 
 
-
-
-
-    // Create
     // **************************** timedSellOrders() ******************************
     function mintTimedSellOrders(address _sellToken,
                                  address _buyToken,

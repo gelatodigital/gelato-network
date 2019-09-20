@@ -1,10 +1,12 @@
 pragma solidity ^0.5.10;
 
-// Imports
 import '../../gelato_core/GelatoCore.sol';
+import '../../gelato_actions/gelato_actions_standards/IGelatoAction.sol'
+import './gelato_dappInterface_standards/GelatoTriggerRegistry.sol';
+import './gelato_dappInterface_standards/GelatoActionRegistry.sol';
 import '@openzeppelin/contracts/math/SafeMath.sol';
 
-contract IcedOut {
+contract IcedOut is GelatoTriggerRegistry, GelatoActionRegistry {
      using SafeMath for uint256;
 
      GelatoCore public gelatoCore;
@@ -25,7 +27,58 @@ contract IcedOut {
           automaticTopUpAmount = _automaticTopUpAmount;
      }
 
-     // ___________ GasPrice ___________
+     enum GasPricing {
+        GelatoDefault
+    }
+     function _getExecutionClaimPrice(address _action)
+          internal
+          view
+          returns(uint256 executionClaimPrice)
+     {
+
+          uint256 usedGasPrice;
+          if (interfaceGasPrice == uint8(GasPricing.GelatoDefault))
+          {
+               usedGasPrice = gelatoCore.defaultGasPriceForInterfaces();
+          }
+          else
+          {
+               usedGasPrice = interfaceGasPrice;
+          }
+          uint256 actionGasStipend = IGelatoAction
+          executionClaimPrice = interfaceMaxGas.mul(usedGasPrice);
+     }
+
+     // _________________ ExecutionClaim Minting ____________________________
+     function _mintExecutionClaim(address _triggerAddress,
+                                  bytes memory _triggerPayload,
+                                  address _actionAddress,
+                                  bytes memory _actionPayload,
+                                  uint256 _actionMaxGas,
+                                  address _executionClaimSender
+     )
+          internal
+     {
+          require(gelatoCore.mintExecutionClaim(_triggerAddress,
+                                                _triggerPayload,
+                                                _actionAddress,
+                                                _actionPayload,
+                                                _actionMaxGas,
+                                                _executionClaimSender),
+               "IcedOut._mintExecutionClaim: failed"
+          );
+     }
+     function _getNextExecutionClaimId()
+          internal
+          view
+          returns(uint256)
+     {
+          return gelatoCore.getCurrentExecutionClaimId().add(1);
+     }
+     // =========================
+
+
+     // ___________ GasPrice ______________________________________________
      function _useInterfaceGasPrice(uint256 _interfaceGasPrice)
           internal
      {
@@ -39,9 +92,10 @@ contract IcedOut {
      {
           interfaceGasPrice = 0;
      }
-     // ====================================================================
+     // =========================
 
-     // _________________ Interface Funding Flows _________________
+
+     // _________________ Interface Funding Flows ____________________________
      // ___________ GelatoInterface <-- EOA ___________
      function acceptEther()
           external
@@ -67,7 +121,7 @@ contract IcedOut {
                                          uint256 gelatoBalancePost,
                                          uint256 interfaceBalancePost
      );
-     function withdrawBalanceFromGelato(uint256 _withdrawAmount)
+     function _withdrawBalanceFromGelato(uint256 _withdrawAmount)
           internal
      {
           gelatoCore.withdrawInterfaceBalance(_withdrawAmount);
@@ -100,62 +154,35 @@ contract IcedOut {
           _withdrawBalanceFromGelato(_withdrawAmount);
           _withdrawBalanceToSender(_withdrawAmount);
      }
-     // ====================================================================
+     // =========================
 
 
-     // Mint new execution claims in core
-     function mintExecutionClaim(address _triggerAddress,
-                                 bytes memory _triggerPayload,
-                                 address _actionAddress,
-                                 bytes memory _actionPayload,
-                                 uint256 _actionMaxGas,
-                                 address _executionClaimSender
-     )
+     // ___________ Automatic Top Up _______________________________________
+     event LogNewAutomaticTopUpAmount(address indexed sender,
+                                      uint256 oldAutomaticTopUpAmount,
+                                      uint256 newAutomaticTopUpAmount,
+     );
+     function _setAutomaticTopUpAmount(uint256 _newAmount)
           internal
      {
-          /*
-          address _triggerAddress,
-                                bytes calldata _triggerPayload,
-                                address _actionAddress,
-                                bytes calldata _actionPayload,
-                                uint256 _actionMaxGas,
-                                address _executionClaimSender
-          */
-          // executionClaimId = gelatoCore.getCurrentExecutionClaimId().add(1)
-          gelatoCore.mintExecutionClaim(_triggerAddress,
-                                        _triggerPayload,
-                                        _actionAddress,
-                                        _actionPayload,
-                                        _actionMaxGas,
-                                        _executionClaimSender
+          emit LogNewAutomaticTopUpAmount(msg.sender,
+                                          automaticTopUpAmount,
+                                          _newAmount
           );
-          // gelatoCore.mintExecutionClaim(payload, _user, _executionGas);
+          automaticTopUpAmount = _newAmount;
      }
-
-     function getNextExecutionClaimId()
-          internal
-          view
-          returns(uint256)
-     {
-          return gelatoCore.getCurrentExecutionClaimId().add(1);
-     }
-
-
-     // IF interface balance is below threshold on gelato Core,
-     //  add all of the ETH in interface as new balance in gelato core
-     function automaticTopUp()
+     function _automaticTopUp()
           internal
      {
-          // Fetch interface eth balance on gelato core
           uint256 interfaceGelatoBalance = gelatoCore.interfaceBalances(address(this));
           if (interfaceGelatoBalance < gelatoCore.minInterfaceBalance())
           {
-               uint256 interfaceEthBalance = address(this).balance;
-               gelatoCore.addInterfaceBalance.value(interfaceEthBalance)();
+               gelatoCore.addInterfaceBalance.value(automaticTopUpAmount)();
                emit LogToppedUpBalanceOnGelato(interfaceEthBalance,
                                                gelatoCore.interfaceBalances(address(this)),
                                                address(this).balance
                );
           }
      }
+     // =========================
 }

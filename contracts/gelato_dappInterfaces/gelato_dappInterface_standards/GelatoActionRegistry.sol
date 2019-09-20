@@ -5,7 +5,7 @@ contract ActionRegistry {
     mapping(address => mapping(bytes4 => bool)) public actions;
 
     modifier onlyRegisteredActions(address _action,
-                                   bytes4 calldata _functionSelector)
+                                   bytes4 _functionSelector)
     {
         require(actions[_action][_functionSelector],
             "Actioned "
@@ -17,8 +17,8 @@ contract ActionRegistry {
                               address indexed _actionAddress,
                               bytes4 indexed _functionSelector
     );
-    function _registerAction(address _actionAddress
-                             bytes4 calldata _functionSelector
+    function _registerAction(address _actionAddress,
+                             bytes4 _functionSelector
     )
         internal
         returns(bool)
@@ -37,8 +37,8 @@ contract ActionRegistry {
                                 address indexed _actionAddress,
                                 bytes4 indexed _functionSelector
     );
-    function _deregisterAction(address _actionAddress
-                               bytes4 calldata _functionSelector
+    function _deregisterAction(address _actionAddress,
+                               bytes4 _functionSelector
     )
         internal
         returns(bool)

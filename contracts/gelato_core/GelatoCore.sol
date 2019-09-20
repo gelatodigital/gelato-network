@@ -23,15 +23,29 @@ contract GelatoCore is GelatoExecutionClaim, Ownable {
     );
     // Update
     // - Gelato Params
-    event LogMinInterfaceBalanceUpdated(uint256 minInterfaceBalance, uint256 newMinInterfaceBalance);
-    event LogExecutorProfitUpdated(uint256 executorProfit, uint256 newExecutorProfit);
-    event LogExecutorGasPriceUpdated(uint256 executorGasPrice, uint256 newExecutorGasPrice);
-    event LogUpdatedCanExecMaxGas(uint256 canExecMaxGas, uint256 newcanExecMaxGas);
-    event LogUpdatedUncountedGasConsumption(uint256 uncountedGasConsumption, uint256 newUncountedGasConsumption);
-    event LogUpdatedFixedGasConsumptionInBetween(uint256 execFNGas2, uint256 newExecFNGas2);
-    event LogUpdatedExecutorGasRefund(uint256 execFNRefundedGas, uint256 newExecFNRefundedGas);
-    event LogRecommendedGasPriceForInterfacesUpdated(uint256 recommendedGasPriceForInterfaces,
-                                                     uint256 newRecommendedGasPriceForInterfaces
+    event LogMinInterfaceBalanceUpdated(uint256 minInterfaceBalance,
+                                        uint256 newMinInterfaceBalance
+    );
+    event LogExecutorProfitUpdated(uint256 executorProfit,
+                                  uint256 newExecutorProfit
+    );
+    event LogExecutorGasPriceUpdated(uint256 executorGasPrice,
+                                     uint256 newExecutorGasPrice
+    );
+    event LogUpdatedCanExecMaxGas(uint256 canExecMaxGas,
+                                  uint256 newcanExecMaxGas
+    );
+    event LogUpdatedUncountedGasConsumption(uint256 uncountedGasConsumption,
+                                            uint256 newUncountedGasConsumption
+    );
+    event LogUpdatedFixedGasConsumptionInBetween(uint256 execFNGas2,
+                                                 uint256 newExecFNGas2
+    );
+    event LogUpdatedExecutorGasRefund(uint256 execFNRefundedGas,
+                                      uint256 newExecFNRefundedGas
+    );
+    event LogDefaultGasPriceForInterfacesUpdated(uint256 defaultGasPriceForInterfaces,
+                                                 uint256 newDefaultGasPriceForInterfaces
     );
     // - Interface Params
     event LogInterfaceBalanceAdded(address indexed dappInterface,
@@ -102,7 +116,7 @@ contract GelatoCore is GelatoExecutionClaim, Ownable {
     // The gas price that executors can max select
     uint256 public executorGasPrice;
 
-    uint256 public recommendedGasPriceForInterfaces;
+    uint256 public defaultGasPriceForInterfaces;
     //_____________ Gelato Execution Economics END ________________
 
     //_____________ Constant gas values _____________
@@ -134,7 +148,7 @@ contract GelatoCore is GelatoExecutionClaim, Ownable {
                 uint256 _uncountedGasConsumption,
                 uint256 _fixedGasConsumptionInBetween,
                 uint256 _executorGasRefund,
-                uint256 _recommendedGasPriceForInterfaces
+                uint256 _defaultGasPriceForInterfaces
     )
         GelatoExecutionClaim("gelato", "GEL")  // ERC721Metadata constructor(name, symbol)
         public
@@ -147,7 +161,7 @@ contract GelatoCore is GelatoExecutionClaim, Ownable {
         uncountedGasConsumption = _uncountedGasConsumption;
         fixedGasConsumptionInBetween = _fixedGasConsumptionInBetween;
         executorGasRefund = _executorGasRefund;
-        recommendedGasPriceForInterfaces = _recommendedGasPriceForInterfaces;
+        defaultGasPriceForInterfaces = _defaultGasPriceForInterfaces;
     }
     // **************************** Gelato Core constructor() END *****************************
 
@@ -305,12 +319,14 @@ contract GelatoCore is GelatoExecutionClaim, Ownable {
     }
 
     // Update gas price recommendation for interfaces
-    function updateRecommendedGasPriceForInterfaces(uint256 _newRecommendedGasPrice)
+    function updateDefaultGasPriceForInterfaces(uint256 _newDefaultGasPrice)
         public
         onlyOwner
     {
-        emit LogRecommendedGasPriceForInterfacesUpdated(recommendedGasPriceForInterfaces, _newRecommendedGasPrice);
-        recommendedGasPriceForInterfaces = _newRecommendedGasPrice;
+        emit LogDefaultGasPriceForInterfacesUpdated(defaultGasPriceForInterfaces,
+                                                    _newDefaultGasPrice
+        );
+        defaultGasPriceForInterfaces = _newDefaultGasPrice;
     }
     // *** Gelato Params Governance END ****
 
