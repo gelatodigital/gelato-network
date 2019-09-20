@@ -1,11 +1,11 @@
 pragma solidity ^0.5.10;
 
 // Imports:
-import './gelato_core_base/GelatoClaim.sol';
+import './gelato_core_standards/GelatoExecutionClaim.sol';
 import "@openzeppelin/contracts/drafts/Counters.sol";
 import '@openzeppelin/contracts/ownership/Ownable.sol';
 
-contract GelatoCore is GelatoClaim, Ownable {
+contract GelatoCore is GelatoExecutionClaim, Ownable {
     // Libraries inherited from Claim:
     // using Counters for Counters.Counter;
     // using SafeMath for uint256;
@@ -74,21 +74,15 @@ contract GelatoCore is GelatoClaim, Ownable {
     event LogGasConsumption(uint256 indexed gasConsumed, uint256 indexed num);
     // **************************** Events END **********************************
 
+
     // **************************** State Variables **********************************
-    // Gelato Version
-    string public version = "0.0.3";
-
-    // Counter for execution Claims
+    // Unique Token Ids for ERC721 execution Claims
     Counters.Counter private _executionClaimIds;
-    // Gas values
-
-
+    // executionClaimId => bytes32 executionClaimHash
+    mapping(uint256 => bytes32) public executionClaims;
 
     // Execution claim is exeutable should always return 1
     uint256 constant isNotExecutable = 1;
-
-    // executionClaimId => bytes32 executionClaimHash
-    mapping(uint256 => bytes32) public executionClaims;
 
     // Balance of interfaces which pay for claim execution
     mapping(address => uint256) public interfaceBalances;
@@ -109,7 +103,6 @@ contract GelatoCore is GelatoClaim, Ownable {
     uint256 public executorGasPrice;
 
     uint256 public recommendedGasPriceForInterfaces;
-
     //_____________ Gelato Execution Economics END ________________
 
     //_____________ Constant gas values _____________
@@ -143,7 +136,7 @@ contract GelatoCore is GelatoClaim, Ownable {
                 uint256 _executorGasRefund,
                 uint256 _recommendedGasPriceForInterfaces
     )
-        GelatoClaim("gelato", "GEL")  // ERC721Metadata constructor(name, symbol)
+        GelatoExecutionClaim("gelato", "GEL")  // ERC721Metadata constructor(name, symbol)
         public
     {
 

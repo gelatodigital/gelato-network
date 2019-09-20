@@ -1,20 +1,20 @@
 pragma solidity ^0.5.10;
 
-import '../gelato_actions_base/GelatoActionsStandard.sol'
-import '../../gelato_dapp_interfaces/gelato_DutchX/gelato_DutchX_base/GelatoDutchXStandard.sol'
-import '@openzeppelin/contracts/utils/ReentrancyGuard.sol'
+import '../gelato_actions_standards/GelatoActionsStandard.sol';
+import '../../gelato_dappInterfaces/gelato_DutchX/gelato_DutchX_standards/GelatoDutchXStandard.sol';
+import '@openzeppelin/contracts/utils/ReentrancyGuard.sol';
 
-contract ActionWithdrawFromDutchXToBeneficiary is GelatoActionsStandard, GelatoDutchXStandard, ReentrancyGuard {
-
-    string constant public actionSignature
-        = "withdrawFromDutchX(uint256, address, address, address, address, uint256, uint256)";
-
+contract ActionWithdrawFromDutchXToBeneficiary is GelatoActionsStandard,
+                                                  GelatoDutchXStandard,
+                                                  ReentrancyGuard
+{
     constructor(address _GelatoCore,
-                address _DutchX,
-                uint256 _actionGas
+                string _actionSignature,
+                uint256 _actionGasStipend,
+                address _DutchX
     )
         public
-        GelatoActionsStandard(_GelatoCore, actionSignature, _actionGas)
+        GelatoActionsStandard(_GelatoCore, _actionSignature, _actionGasStipend)
         GelatoDutchXStandard(_DutchX)
     {}
 
@@ -23,27 +23,35 @@ contract ActionWithdrawFromDutchXToBeneficiary is GelatoActionsStandard, GelatoD
                                 address indexed beneficiary,
                                 address sellToken,
                                 address indexed buyToken,
-                                uint256 auctionIndex
-                                uint256 withdrawAmount,
-    );)
+                                address seller,
+                                uint256 auctionIndex,
+                                uint256 withdrawAmount
+    );
 
-    function withdrawFromDutchX(uint256 _executionClaimId,
-                                address _executionClaimOwner,
-                                address _beneficiary,
-                                address _sellToken,
-                                address _buyToken,
-                                uint256 _auctionIndex,
-                                uint256 _withdrawAmount
+    function withdrawFromDutchXToBeneficiary(uint256 _executionClaimId,
+                                             address _executionClaimOwner,
+                                             address _beneficiary,
+                                             address _sellToken,
+                                             address _buyToken,
+                                             address _seller,
+                                             uint256 _auctionIndex,
+                                             uint256 _sellAmountAfterFee
     )
         nonReentrant
-        external
+        public
         returns(bool)
     {
         super._action();
+        uint256 withdrawAmount = _getWithdrawAmount(_sellToken,
+                                                    _buyToken,
+                                                    _auctionIndex,
+                                                    _sellAmountAfterFee
+        );
         require(_withdrawFromDutchX(_sellToken,
                                     _buyToken,
+                                    _seller,
                                     _auctionIndex,
-                                    _withdrawAmount),
+                                    withdrawAmount),
             "ActionSellWithdrawDutchX._withdrawFromDutchX failed"
         );
         ERC20(_buyToken).safeTransfer(_beneficiary, withdrawAmount);
@@ -52,8 +60,9 @@ contract ActionWithdrawFromDutchXToBeneficiary is GelatoActionsStandard, GelatoD
                                    _beneficiary,
                                    _sellToken,
                                    _buyToken,
+                                   _seller,
                                    _auctionIndex,
-                                   _withdrawAmount,
+                                   withdrawAmount,
         )
         return true;
     }

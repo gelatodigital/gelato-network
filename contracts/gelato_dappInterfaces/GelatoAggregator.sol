@@ -1,13 +1,18 @@
 pragma solidity ^0.5.10;
 
-//  Imports:
-import './gelato_interfaces_base/IcedOut.sol';
+import './gelato_dappInterface_standards/IcedOut.sol';
+import './gelato_dappInterface_standards/GelatoTriggerRegistry.sol';
+import './gelato_dappInterface_standards/GelatoActionRegistry.sol';
 import '@openzeppelin/contracts/drafts/Counters.sol';
 import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
+import '@openzeppelin/contracts/ownership/Ownable.sol';
 
-// Gelato IcedOut-compliant DutchX Interface for splitting sell orders and for automated withdrawals
-contract GelatoAggregator is IcedOut {
+
+contract GelatoAggregator is IcedOutOwnable,
+                             GelatoTriggerRegistry,
+                             GelatoActionRegistry
+{
     // **************************** Events ******************************
     event LogNewOrderCreated(uint256 indexed orderStateId, address indexed seller);
 
@@ -22,32 +27,12 @@ contract GelatoAggregator is IcedOut {
                               uint256 withdrawAmount
     );
     event LogOrderCompletedAndDeleted(uint256 indexed orderStateId);
-    event LogWithdrawAmount(address indexed sellToken,
-                            address indexed buyToken,
-                            uint256 indexed auctionIndex,
-                            uint256 num,
-                            uint256 den,
-                            uint256 withdrawAmount
-    );
     event LogGas(uint256 gas1, uint256 gas2);
     // **************************** Events END ******************************
 
 
-    // **************************** State Variables ******************************
-    // Interfaces to other contracts that are set during construction.
-
-    // mapping(orderStateId => orderState)
-
-
-    // Constants that are set during contract construction and updateable via setters
-
-    uint256 public execDepositAndSellGas;
-    uint256 public execWithdrawGas;
-
-
     // constructor():
     constructor(address payable _GelatoCore,
-                address _DutchExchange,
                 uint256 _interfaceGasPrice,
                 uint256 _execDepositAndSellGas,
                 uint256 _execWithdrawGas
@@ -62,6 +47,62 @@ contract GelatoAggregator is IcedOut {
         execDepositAndSellGas = _execDepositAndSellGas;
         execWithdrawGas = _execWithdrawGas;
     }
+
+    // ____________ (De-)Register Trigger ____________
+    function registerTrigger(address _triggerAddress,
+                             bytes4 calldata _functionSelector
+    )
+        external
+        onlyOwner
+        returns(bool)
+    {
+        require(_registerTrigger(),
+            "GelatoAggregator._registerTrigger: failed"
+        );
+        return true;
+    }
+    function deregisterTrigger(address _triggerAddress,
+                               bytes4 calldata _functionSelector
+    )
+        external
+        onlyOwner
+        returns(bool)
+    {
+        require(_deregisterTrigger(),
+            "GelatoAggregator._deregisterTrigger: failed"
+        );
+        return true;
+    }
+    // ____________ (De-)Register Trigger END ____________
+    // ____________ (De-)Register Action ____________
+    function registerAction(address _actionAddress,
+                             bytes4 calldata _functionSelector
+    )
+        external
+        onlyOwner
+        returns(bool)
+    {
+        require(_registerAction(),
+            "GelatoAggregator._registerAction: failed"
+        );
+        return true;
+    }
+    function deregisterAction(address _actionAddress,
+                              bytes4 calldata _functionSelector
+    )
+        external
+        onlyOwner
+        returns(bool)
+    {
+        require(_deregisterAction(),
+            "GelatoAggregator._deregisterAction: failed"
+        );
+        return true;
+    }
+    // ____________ (De-)Register Action END ____________
+
+
+
 
 
     // Create
@@ -361,6 +402,10 @@ contract GelatoAggregator is IcedOut {
         // ********************** Step7: Execution Logic END **********************
 
     }
+
+
+
+
     // **************************** IcedOut execute(executionClaimId) END *********************************
 
     // DELETE
@@ -482,144 +527,9 @@ contract GelatoAggregator is IcedOut {
         return true;
     }
 
-    // Allows manual withdrawals on behalf of a seller from any calling address
-    // @DEV: Gas Limit Change => Hardcode
-    function withdrawManually(address _triggerAddress, address _actionAddress, uint256 _actionMaxGas, uint256 _executionClaimId, bytes calldata _triggerPayload, bytes calldata _actionPayload)
-        external
-    {
-        {
-            // Fetch owner of execution claim
-            address tokenOwner = gelatoCore.ownerOf(_executionClaimId);
-            address sellToken;
-            address buyToken;
-            uint256 amount;
-            uint256 lastAuctionIndex;
-            (bytes memory memPayload, bytes4 funcSelector) = decodeWithFunctionSignature(_actionPayload);
 
-            // #### CHECKS ####
-            // @DEV check that we are dealing with a execWithdraw claim
-            require(funcSelector == bytes4(keccak256(bytes(execWithdrawActionString))), "Only claims that have not been sold yet can be cancelled");
-
-            // Decode payload
-            uint256 executionClaimId;
-            (executionClaimId, sellToken, buyToken, amount, lastAuctionIndex) = abi.decode(memPayload, (uint256, address, address, uint256, uint256));
-
-            require(executionClaimId == _executionClaimId, "ExecutionClaimIds do not match");
-
-            // ******* CHECKS *******
-            // If amount == 0, struct has already been deleted
-            require(amount != 0, "Amount for manual withdraw cannot be zero");
-            // Only Execution Claim Owner can withdraw manually
-            require(msg.sender == tokenOwner, "Only the executionClaim Owner can cancel the execution");
-
-            uint256 num;
-            uint256 den;
-            (num, den) = dutchExchange.closingPrices(sellToken, buyToken, lastAuctionIndex);
-
-            // Require that the last auction the seller participated in has cleared
-            require(den != 0,
-                "withdrawManually: den != 0, Last auction did not clear thus far, you have to wait"
-            );
-
-            // Calculate withdraw amount
-            uint256 withdrawAmount = amount.mul(num).div(den);
-
-            // Initiate withdraw
-            _withdraw(tokenOwner,  // seller
-                    sellToken,
-                    buyToken,
-                    lastAuctionIndex,
-                    withdrawAmount
-            );
-        }
-
-        // Cancel execution claim on core
-        gelatoCore.cancelExecutionClaim(_triggerAddress,
-                                        _triggerPayload,
-                                        _actionAddress,
-                                        _actionPayload,
-                                        _actionMaxGas,
-                                        address(this),
-                                        _executionClaimId
-        );
-
-
-    }
-
-    function getAuctionValues(address _sellToken, address _buyToken)
-        internal
-        view
-        returns(uint256 currentAuctionIndex,
-                uint256 nextParticipationAuctionIndex,
-                bool newAuctionIsWaiting
-        )
-    {
-        currentAuctionIndex = dutchExchange.getAuctionIndex(_sellToken, _buyToken);
-        uint256 auctionStartTime = dutchExchange.getAuctionStart(_sellToken, _buyToken);
-
-        // Check if we are in a Waiting period or auction running period
-        if (auctionStartTime > now || auctionStartTime == auctionStartWaitingForFunding) {
-            // We are in waiting period
-            newAuctionIsWaiting = true;
-            // SellAmount will go into sellVolumesCurrent
-            nextParticipationAuctionIndex = currentAuctionIndex;
-        } else if (auctionStartTime < now) {
-            // Auction is currently ongoing
-            newAuctionIsWaiting = false;
-            // SellAmount will go into sellVolumesNext
-            nextParticipationAuctionIndex = currentAuctionIndex.add(1);
-        }
-    }
-
-    // DEV Calculates sellAmount withdrawable from past, cleared auction
-    function _calcWithdrawAmount(address _sellToken,
-                                 address _buyToken,
-                                 uint256 _lastParticipatedAuctionIndex,
-                                 uint256 _sellAmountAfterFee
-    )
-        public
-        returns(uint256 withdrawAmount)
-    {
-        // Fetch numerator and denominator from dutchExchange
-        uint256 num;
-        uint256 den;
-
-        // FETCH PRICE OF CLEARED ORDER WITH INDEX
-        // num: buyVolumeOpp || den: sellVolumeOpp
-        // Ex: num = 1000, den = 10 => 1WETH === 100RDN
-        (num, den) = dutchExchange.closingPrices(_sellToken,
-                                                 _buyToken,
-                                                 _lastParticipatedAuctionIndex
-        );
-
-        // Check if the last auction the seller participated in has cleared
-        // DEV Check line 442 in dutchExchange contract
-        // DEV Test: Are there any other possibilities for den being 0 other than when the auction has not yet cleared?
-        require(den != 0,
-            "GelatoDutchX._calcWithdrawAmount: den != 0, Last auction did not clear thus far, you have to wait"
-        );
-
-        emit LogWithdrawAmount(_sellToken,
-                               _buyToken,
-                               _lastParticipatedAuctionIndex,
-                               num,
-                               den,
-                               _sellAmountAfterFee.mul(num).div(den)
-        );
-
-        // Callculate withdraw sellAmount
-        withdrawAmount = _sellAmountAfterFee.mul(num).div(den);
-    }
     // **************************** Helper functions END *********************************
 
-    // **************************** State Variable Setters ******************************
-    function setAuctionStartWaitingForFunding(uint256 _auctionStartWaitingForFunding)
-        onlyOwner
-        external
-    {
-        auctionStartWaitingForFunding = _auctionStartWaitingForFunding;
-    }
-    // **************************** State Variable Setters END ******************************
 
 }
 
