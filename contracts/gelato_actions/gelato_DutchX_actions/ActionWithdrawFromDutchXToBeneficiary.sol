@@ -1,6 +1,6 @@
 pragma solidity ^0.5.10;
 
-import '../gelato_actions_standards/GelatoActionsStandard.sol';
+import '../gelato_action_standards/GelatoActionsStandard.sol';
 import '../../gelato_dappInterfaces/gelato_DutchX/gelato_DutchX_standards/GelatoDutchXStandard.sol';
 import '@openzeppelin/contracts/utils/ReentrancyGuard.sol';
 
@@ -41,7 +41,7 @@ contract ActionWithdrawFromDutchXToBeneficiary is GelatoActionsStandard,
         public
         returns(bool)
     {
-        super._action();
+        _actionChecks();
         uint256 withdrawAmount = _getWithdrawAmount(_sellToken,
                                                     _buyToken,
                                                     _auctionIndex,

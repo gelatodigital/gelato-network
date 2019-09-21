@@ -1,182 +1,61 @@
 pragma solidity ^0.5.10;
 
-// Imports:
 import './gelato_core_standards/GelatoExecutionClaim.sol';
+import './gelato_core_standards/GelatoCoreAccounting.sol';
 import "@openzeppelin/contracts/drafts/Counters.sol";
-import '@openzeppelin/contracts/ownership/Ownable.sol';
 
-contract GelatoCore is GelatoExecutionClaim, Ownable {
-    // Libraries inherited from Claim:
-    // using Counters for Counters.Counter;
-    // using SafeMath for uint256;
+contract GelatoCore is GelatoExecutionClaim,
+                       GelatoCoreAccounting
+{
+    // Unique Token Ids for ERC721 execution Claims
+    Counters.Counter private _executionClaimIds;
+    // executionClaimIds Getter
+    function getCurrentExecutionClaimId()
+        public
+        view
+        returns(uint256 currentId)
+    {
+        currentId = _executionClaimIds.current();
+    }
 
-    // **************************** Events **********************************
+    // executionClaimId => bytes32 executionClaimHash
+    mapping(uint256 => bytes32) public hashedExecutionClaims;
+
+
+    constructor(uint256 _minInterfaceBalance,
+                uint256 _executorProfit,
+                uint256 _executorGasPrice,
+                uint256 _defaultGasPriceForInterfaces
+                uint256 _gasOutsideGasleftChecks,
+                uint256 _gasInsideGasleftChecks,
+                uint256 _canExecMaxGas,
+                uint256 _executorGasRefundEstimate,
+    )
+        GelatoExecutionClaim("gelato", "GTA")
+        public
+    {
+        minInterfaceBalance = _minInterfaceBalance;
+        executorProfit = _executorProfit;
+        executorGasPrice = _executorGasPrice;
+        defaultGasPriceForInterfaces = _defaultGasPriceForInterfaces;
+        gasOutsideGasleftChecks = _gasOutsideGasleftChecks;
+        gasInsideGasleftChecks = _gasInsideGasleftChecks;
+        canExecMaxGas = _canExecMaxGas;
+        executorGasRefundEstimate = _executorGasRefundEstimate;
+    }
+
+    // ********************* mintExecutionClaim() *********************
     event LogNewExecutionClaimMinted(address triggerAddress,
                                      bytes triggerPayload,
                                      address actionAddress,
                                      bytes actionPayload,
-                                     uint256 actionMaxGas,
+                                     uint256 actionGasStipend,
                                      address dappInterface,
                                      uint256 executionClaimId,
                                      bytes32 executionClaimHash,
                                      address executionClaimOwner
     );
-    // Update
-    // - Gelato Params
-    event LogMinInterfaceBalanceUpdated(uint256 minInterfaceBalance,
-                                        uint256 newMinInterfaceBalance
-    );
-    event LogExecutorProfitUpdated(uint256 executorProfit,
-                                  uint256 newExecutorProfit
-    );
-    event LogExecutorGasPriceUpdated(uint256 executorGasPrice,
-                                     uint256 newExecutorGasPrice
-    );
-    event LogUpdatedCanExecMaxGas(uint256 canExecMaxGas,
-                                  uint256 newcanExecMaxGas
-    );
-    event LogUpdatedUncountedGasConsumption(uint256 uncountedGasConsumption,
-                                            uint256 newUncountedGasConsumption
-    );
-    event LogUpdatedFixedGasConsumptionInBetween(uint256 execFNGas2,
-                                                 uint256 newExecFNGas2
-    );
-    event LogUpdatedExecutorGasRefund(uint256 execFNRefundedGas,
-                                      uint256 newExecFNRefundedGas
-    );
-    event LogDefaultGasPriceForInterfacesUpdated(uint256 defaultGasPriceForInterfaces,
-                                                 uint256 newDefaultGasPriceForInterfaces
-    );
-    // - Interface Params
-    event LogInterfaceBalanceAdded(address indexed dappInterface,
-                                   uint256 oldBalance,
-                                   uint256 addedAmount,
-                                   uint256 newBalance
-    );
-    event LogInterfaceBalanceWithdrawal(address indexed dappInterface,
-                                        uint256 oldBalance,
-                                        uint256 withdrawnAmount,
-                                        uint256 newBalance
-    );
-    event LogExecutorBalanceWithdrawal(address indexed executor,
-                                        uint256 withdrawAmount
-    );
-    // Execute Suite
-    event LogCanExecuteFailed(address indexed executor,
-                              uint256 indexed executionClaimId
-    );
-    event LogClaimExecutedBurnedAndDeleted(address indexed dappInterface,
-                                           uint256 indexed executionClaimId,
-                                           address indexed executionClaimOwner,
-                                           address payable executor,
-                                           uint256 executorPayout,
-                                           uint256 executorProfit,
-                                           uint256 gasUsedEstimate,
-                                           uint256 usedGasPrice,
-                                           uint256 executionCostEstimate
-    );
-    event LogExecuteResult(bool indexed status,
-                           address indexed executor,
-                           uint256 indexed executionClaimId,
-                           uint256 executionGas
-    );
-    // Delete
-    event LogExecutionClaimCancelled(address indexed dappInterface,
-                                     uint256 indexed executionClaimId,
-                                     address indexed executionClaimOwner
-    );
 
-    // DELETE LATER
-    event LogGasConsumption(uint256 indexed gasConsumed, uint256 indexed num);
-    // **************************** Events END **********************************
-
-
-    // **************************** State Variables **********************************
-    // Unique Token Ids for ERC721 execution Claims
-    Counters.Counter private _executionClaimIds;
-    // executionClaimId => bytes32 executionClaimHash
-    mapping(uint256 => bytes32) public executionClaims;
-
-    // Execution claim is exeutable should always return 1
-    uint256 constant isNotExecutable = 1;
-
-    // Balance of interfaces which pay for claim execution
-    mapping(address => uint256) public interfaceBalances;
-
-    // Balance of executors for execution executionClaims
-    mapping(address => uint256) public executorBalances;
-
-    // The minimum balance for an interface to mint/execute claims
-    uint256 public minInterfaceBalance;
-
-    //_____________ Gelato Execution Economics ________________
-    // @DEV: every parameter should have its own UPDATE function
-
-    // Fixed profit to be expected for executors for each executed transaction
-    uint256 public executorProfit;
-
-    // The gas price that executors can max select
-    uint256 public executorGasPrice;
-
-    uint256 public defaultGasPriceForInterfaces;
-    //_____________ Gelato Execution Economics END ________________
-
-    //_____________ Constant gas values _____________
-
-    // Gas consumption of execute() before and after gaslefts()
-    // @DEV UPDATE with new redesign
-    uint256 public uncountedGasConsumption;
-
-    // Cost after first gasleft() and before last gasleft()
-    uint256 public fixedGasConsumptionInBetween;
-
-    // Max gas the canExec function is allowed to consume. Triggers have to adhere to this value
-    uint256 public canExecMaxGas;
-
-    // Minimium gas refunds executors can expect from nullying several values in execute(). To be subtracted from the total reward for executors
-    uint256 public executorGasRefund;
-
-    //_____________ Constant gas values END _____________
-
-
-    // **************************** State Variables END ******************************
-
-
-    // **************************** Gelato Core constructor() ******************************
-    constructor(uint256 _minInterfaceBalance,
-                uint256 _executorProfit,
-                uint256 _executorGasPrice,
-                uint256 _canExecMaxGas,
-                uint256 _uncountedGasConsumption,
-                uint256 _fixedGasConsumptionInBetween,
-                uint256 _executorGasRefund,
-                uint256 _defaultGasPriceForInterfaces
-    )
-        GelatoExecutionClaim("gelato", "GEL")  // ERC721Metadata constructor(name, symbol)
-        public
-    {
-
-        minInterfaceBalance = _minInterfaceBalance;
-        executorProfit = _executorProfit;
-        executorGasPrice = _executorGasPrice;
-        canExecMaxGas = _canExecMaxGas;
-        uncountedGasConsumption = _uncountedGasConsumption;
-        fixedGasConsumptionInBetween = _fixedGasConsumptionInBetween;
-        executorGasRefund = _executorGasRefund;
-        defaultGasPriceForInterfaces = _defaultGasPriceForInterfaces;
-    }
-    // **************************** Gelato Core constructor() END *****************************
-
-    // Fallback function needed for arbitrary funding additions to Gelato Core's balance by owner
-    // @DEV: possibly no need, as sent Ether reverts are built-in features of new EVM contracts
-    function() external payable {
-        require(isOwner(),
-            "GelatoCore.fallback function: only the owner should send ether to Gelato Core without selecting a payable function."
-        );
-    }
-
-    // CREATE
-    // **************************** mintExecutionClaim() ******************************
     function mintExecutionClaim(address _triggerAddress,
                                 bytes calldata _triggerPayload,
                                 address _actionAddress,
@@ -184,30 +63,19 @@ contract GelatoCore is GelatoExecutionClaim, Ownable {
                                 uint256 _actionGasStipend,
                                 address _executionClaimOwner
     )
+        stakedInterface
         external
         payable
         returns(bool)
     {
-        // CHECKS
-        // All checks are done interface side. If interface sets wrong _payload, its not the core's fault.
-        // We could check that the bytes param is not == 0x, but this would require 2 costly keccak calls
-
-        // Only staked interfaces can mint claims
-        require(interfaceBalances[msg.sender] >= minInterfaceBalance,
-            "Only interfaces that have a balance greater than minInterfaceBalance can mint new execution claims"
-        );
-
         // ****** Mint new executionClaim ERC721 token ******
-        // Increment the current token id
         Counters.increment(_executionClaimIds);
-        // Get a new, unique token id for the newly minted ERC721
         uint256 executionClaimId = _executionClaimIds.current();
-        // Mint new ERC721 Token representing one childOrder
         _mint(_executionClaimOwner, executionClaimId);
         // ****** Mint new executionClaim ERC721 token END ******
 
-        // Create executionClaimHash (we include executionClaimId to avoid hash collisions).
-        // We exclude _executionClaimOwner as this might change over the lifecycle of the executionClaim
+        // Include executionClaimId: avoid hash collisions
+        // Exclude _executionClaimOwner: ExecutionClaims are transferable
         bytes32 executionClaimHash = keccak256(abi.encodePacked(_triggerAddress,
                                                                 _triggerPayload,
                                                                 _actionAddress,
@@ -216,11 +84,8 @@ contract GelatoCore is GelatoExecutionClaim, Ownable {
                                                                 msg.sender,  // dappInterface
                                                                 executionClaimId
         ));
-        // ExecutionClaims tracking state variable update
-        // ERC721(executionClaimId) => executionClaimHash
-        executionClaims[executionClaimId] = executionClaimHash;
+        hashedExecutionClaims[executionClaimId] = executionClaimHash;
 
-        // Notify executors that new execution claim exists
         emit LogNewExecutionClaimMinted(_triggerAddress,
                                         _triggerPayload,
                                         _actionAddress,
@@ -234,176 +99,20 @@ contract GelatoCore is GelatoExecutionClaim, Ownable {
 
         return true;
     }
-    // **************************** mintExecutionClaim() END ******************************
-
-    // READ
-    // **************************** ExecutionClaim Getters ***************************
-    function getExecutionClaimHash(uint256 _executionClaimId)
-        public
-        view
-        returns(bytes32 executionClaimHash)
-    {
-        executionClaimHash = executionClaims[_executionClaimId];
-    }
-
-    // To get executionClaimOwner call ownerOf(executionClaimId)
-
-    function getCurrentExecutionClaimId()
-        public
-        view
-        returns(uint256 currentId)
-    {
-        currentId = _executionClaimIds.current();
-    }
-    // **************************** ExecutionClaim Getters END ***************************
-
-    // Update
-    // **************************** Core Updateability ******************************
-    // *** Gelato Params Governance ****
-    // Updating the min ether balance of interfaces
-    function updateMinInterfaceBalance(uint256 _newMinInterfaceBalance)
-        public
-        onlyOwner
-    {
-        emit LogMinInterfaceBalanceUpdated(minInterfaceBalance, _newMinInterfaceBalance);
-        minInterfaceBalance = _newMinInterfaceBalance;
-    }
-
-    // Set the global fee an executor can receive in the gelato system
-    function updateExecutorProfit(uint256 _newExecutorProfit)
-        public
-        onlyOwner
-    {
-        emit LogExecutorProfitUpdated(executorProfit, _newExecutorProfit);
-        executorProfit = _newExecutorProfit;
-    }
-
-    // Set the global max gas price an executor can receive in the gelato system
-    function updateExecutorGasPrice(uint256 _newExecutorGasPrice)
-        public
-        onlyOwner
-    {
-        emit LogExecutorGasPriceUpdated(executorGasPrice, _newExecutorGasPrice);
-        executorGasPrice = _newExecutorGasPrice;
-    }
-
-    function updateCanExecMaxGas(uint256 _newCanExecMaxGas)
-        public
-        onlyOwner
-    {
-        emit LogUpdatedCanExecMaxGas(canExecMaxGas, _newCanExecMaxGas);
-        canExecMaxGas = _newCanExecMaxGas;
-    }
-
-    function updateUncountedGasConsumption(uint256 _newUncountedGasConsumption)
-        public
-        onlyOwner
-    {
-        emit LogUpdatedUncountedGasConsumption(uncountedGasConsumption, _newUncountedGasConsumption);
-        uncountedGasConsumption = _newUncountedGasConsumption;
-    }
-
-    function updateFixedGasConsumptionInBetween(uint256 _newFixedGasConsumptionInBetween)
-        public
-        onlyOwner
-    {
-        emit LogUpdatedFixedGasConsumptionInBetween(fixedGasConsumptionInBetween, _newFixedGasConsumptionInBetween);
-        fixedGasConsumptionInBetween = _newFixedGasConsumptionInBetween;
-    }
-
-    // Update gas refund subtracted from executor payout
-    function updateExecutorGasRefund(uint256 _newExecutorGasRefund)
-        public
-        onlyOwner
-    {
-        emit LogUpdatedExecutorGasRefund(executorGasRefund, _newExecutorGasRefund);
-        executorGasRefund = _newExecutorGasRefund;
-    }
-
-    // Update gas price recommendation for interfaces
-    function updateDefaultGasPriceForInterfaces(uint256 _newDefaultGasPrice)
-        public
-        onlyOwner
-    {
-        emit LogDefaultGasPriceForInterfacesUpdated(defaultGasPriceForInterfaces,
-                                                    _newDefaultGasPrice
-        );
-        defaultGasPriceForInterfaces = _newDefaultGasPrice;
-    }
-    // *** Gelato Params Governance END ****
-
-    // *** Interface Params Governance ****
-    // Enable interfaces to add a balance to Gelato to pay for transaction executions
-    function addInterfaceBalance()
-        public
-        payable
-    {
-        require(msg.value > 0, "GelatoCore.addInterfaceBalance(): Msg.value must be greater than zero");
-        uint256 currentInterfaceBalance = interfaceBalances[msg.sender];
-        uint256 newBalance = currentInterfaceBalance.add(msg.value);
-        interfaceBalances[msg.sender] = newBalance;
-        emit LogInterfaceBalanceAdded(msg.sender,
-                                      currentInterfaceBalance,
-                                      msg.value,
-                                      newBalance
-        );
-    }
-
-    // Enable interfaces to withdraw some of their added balances
-    function withdrawInterfaceBalance(uint256 _withdrawAmount)
-        external
-    {
-        require(_withdrawAmount > 0, "WithdrawAmount must be greater than zero");
-        uint256 currentInterfaceBalance = interfaceBalances[msg.sender];
-        require(_withdrawAmount <= currentInterfaceBalance,
-            "GelatoCore.withdrawInterfaceBalance(): WithdrawAmount must be smaller or equal to the interfaces current balance"
-        );
-        interfaceBalances[msg.sender] = currentInterfaceBalance.sub(_withdrawAmount);
-        msg.sender.transfer(_withdrawAmount);
-        emit LogInterfaceBalanceWithdrawal(msg.sender,
-                                           currentInterfaceBalance,
-                                           _withdrawAmount,
-                                           interfaceBalances[msg.sender]
-        );
-    }
-
-    // Enable interfaces to withdraw some of their added balances
-    function withdrawExecutorBalance()
-        external
-    {
-        // Checks
-        uint256 currentExecutorBalance = executorBalances[msg.sender];
-        require(currentExecutorBalance > 0,
-            "Executor must have a positive balance on gelato core"
-        );
-
-        // Effects
-        executorBalances[msg.sender] = 0;
-
-        // Interaction
-        msg.sender.transfer(currentExecutorBalance);
-
-        emit LogExecutorBalanceWithdrawal(msg.sender,
-                                           currentExecutorBalance
-        );
-    }
-
-    // *** Interface Params Governance END ****
-    // **************************** Core Updateability END ******************************
+    // ********************* mintExecutionClaim() END
 
 
-    // **************************** EXECUTE FUNCTION SUITE ******************************
-    // Preconditions for execution, checked by canExecute and returned as an uint256 from interface
+    // ********************* EXECUTE FUNCTION SUITE *********************
+    // Preconditions for execution
+    //  checked by canExecute and returned as an uint256 from interface
     enum PreExecutionCheck {
-        IsExecutable,                         // All checks passed, the executionClaim can be executed
-        TriggerReverted,  // The interfaces reverted when calling acceptExecutionRequest
+        IsExecutable,  // All checks passed, the executionClaim can be executed
+        TriggerReverted,
         WrongReturnValue, // The Interface returned an error code and not 0 for is executable
-        InsufficientBalance, // The interface has insufficient balance on gelato core
-        ClaimDoesNotExist, // The claim was never minted or already executed
-        WrongCalldata // The computed execution claim hash was wrong
+        InsufficientInterfaceBalance,
+        NonExistantExecutionClaim,  // The claim was never minted or already executed
+        WrongCalldata  // The computed execution claim hash was wrong
     }
-
-    // Preconditions for execution, checked by canExecute and returned as an uint256 from interface
     enum PostExecutionStatus {
         Success, // Interface call succeeded
         Failure,  // Interface call reverted
@@ -434,7 +143,7 @@ contract GelatoCore is GelatoExecutionClaim, Ownable {
         ));
 
         // Retrieve stored execution claim hash
-        bytes32 storedExecutionClaimHash = executionClaims[_executionClaimId];
+        bytes32 storedExecutionClaimHash = hashedExecutionClaims[_executionClaimId];
 
         // Fetch current owner of execution cöao,
         executionClaimOwner = ownerOf(_executionClaimId);
@@ -450,7 +159,7 @@ contract GelatoCore is GelatoExecutionClaim, Ownable {
         // Require execution claim to exist and / or not be burned
         if (executionClaimOwner == address(0))
         {
-            return (uint256(PreExecutionCheck.ClaimDoesNotExist), executionClaimOwner);
+            return (uint256(PreExecutionCheck.NonExistantExecutionClaim), executionClaimOwner);
         }
 
         // Check if Interface has sufficient balance on core
@@ -458,7 +167,7 @@ contract GelatoCore is GelatoExecutionClaim, Ownable {
         if (interfaceBalances[_dappInterface] < minInterfaceBalance)
         {
             // If insufficient balance, return 3
-            return (uint256(PreExecutionCheck.InsufficientBalance), executionClaimOwner);
+            return (uint256(PreExecutionCheck.InsufficientInterfaceBalance), executionClaimOwner);
         }
         // **** CHECKS END ****;
 
@@ -468,30 +177,36 @@ contract GelatoCore is GelatoExecutionClaim, Ownable {
 
         // Check dappInterface return value
         if (!success) {
-            // Return 1 in case of error
             return (uint256(PreExecutionCheck.TriggerReverted), executionClaimOwner);
         }
         else
         {
-            // Decode return value from interface
             bool executable = abi.decode(returndata, (bool));
-            // Decoded returndata should return true for the executor to deem execution claim executable
-            if (executable)
-            {
+            if (executable) {
                 return (uint256(PreExecutionCheck.IsExecutable), executionClaimOwner);
-            }
-            // If not true, return 2 (internal error code)
-            else
-            {
+            } else {
                 return (uint256(PreExecutionCheck.WrongReturnValue), executionClaimOwner);
             }
-
         }
 
 
     }
 
     // ************** execute() -> safeExecute() **************
+    event LogCanExecuteFailed(address indexed executor,
+                              uint256 indexed executionClaimId
+    );
+    event LogClaimExecutedBurnedAndDeleted(address indexed dappInterface,
+                                           uint256 indexed executionClaimId,
+                                           address indexed executionClaimOwner,
+                                           address payable executor,
+                                           uint256 executorPayout,
+                                           uint256 executorProfit,
+                                           uint256 gasUsedEstimate,
+                                           uint256 usedGasPrice,
+                                           uint256 executionCostEstimate
+    );
+
     function execute(address _triggerAddress,
                      bytes calldata _triggerPayload,
                      address _actionAddress,
@@ -547,7 +262,7 @@ contract GelatoCore is GelatoExecutionClaim, Ownable {
 
         // **** EFFECTS 1 ****
         // When re entering, executionHash will be bytes32(0)
-        delete executionClaims[_executionClaimId];
+        delete hashedExecutionClaims[_executionClaimId];
 
         // Calls to the interface are performed atomically inside an inner transaction which may revert in case of errors in the interface contract or malicious behaviour such as dappInterfaces withdrawing their
         {
@@ -571,7 +286,7 @@ contract GelatoCore is GelatoExecutionClaim, Ownable {
         //  => Discuss
         _burn(_executionClaimId);
 
-        // ******** EFFECTS 2 END ****
+        // ******** EFFECTS 2 END
 
         // Calc executor payout
         // How much gas we have left in this tx
@@ -581,7 +296,7 @@ contract GelatoCore is GelatoExecutionClaim, Ownable {
             // Calaculate how much gas we used up in this function. Subtract the certain gas refunds the executor will receive for nullifying values
             // Gas Overhead corresponds to the actions occuring before and after the gasleft() calcs
             // @DEV UPDATE WITH NEW FUNC
-            uint256 gasUsedEstimate = startGas.sub(endGas).add(uncountedGasConsumption).sub(executorGasRefund);
+            uint256 gasUsedEstimate = startGas.sub(endGas).add(gasOutsideGasleftChecks).sub(executorGasRefundEstimate);
             // Calculate Total Cost
             uint256 executionCostEstimate = gasUsedEstimate.mul(usedGasPrice);
             // Calculate Executor Payout (including a fee set by GelatoCore.sol)
@@ -610,6 +325,11 @@ contract GelatoCore is GelatoExecutionClaim, Ownable {
     }
 
     // To protect from interfaceBalance drain re-entrancy attack
+    event LogExecuteResult(bool indexed status,
+                           address indexed executor,
+                           uint256 indexed executionClaimId,
+                           uint256 executionGas
+    );
     function safeExecute(address _dappInterface,
                          bytes calldata _actionPayload,
                          uint256 _actionGasStipend,
@@ -627,7 +347,6 @@ contract GelatoCore is GelatoExecutionClaim, Ownable {
         uint256 interfaceBalanceBefore = interfaceBalances[_dappInterface];
 
         // Interactions
-        // emit LogGasConsumption(gasleft(), 3);
         // Current tx gas cost:
         // gelatoDutchX depositAnd sell: 465.597
         (bool executedClaimStatus,) = _dappInterface.call.gas(_actionGasStipend)(_actionPayload); // .gas(_actionGasStipend)
@@ -641,7 +360,7 @@ contract GelatoCore is GelatoExecutionClaim, Ownable {
         // return if .call succeeded or failed
         return executedClaimStatus ? uint256(PostExecutionStatus.Success) : uint256(PostExecutionStatus.Failure);
     }
-    // ************** execute() -> safeExecute() END **************
+    // ************** execute() -> safeExecute() END
 
     function getMaxExecutionGasConsumption(uint256 _actionGasStipend)
         internal
@@ -649,11 +368,16 @@ contract GelatoCore is GelatoExecutionClaim, Ownable {
         returns (uint256)
     {
         // Only use .add for last, user inputted value to avoid over - underflow
-        return uncountedGasConsumption + canExecMaxGas + fixedGasConsumptionInBetween.add(_actionGasStipend);
+        return gasOutsideGasleftChecks + canExecMaxGas + gasInsideGasleftChecks.add(_actionGasStipend);
     }
-    // **************************** EXECUTE FUNCTION SUITE END ******************************
+    // ********************* EXECUTE FUNCTION SUITE END
 
-    // **************************** cancelExecutionClaim() ***************************
+
+    // ********************* cancelExecutionClaim() *********************
+    event LogExecutionClaimCancelled(address indexed dappInterface,
+                                     uint256 indexed executionClaimId,
+                                     address indexed executionClaimOwner
+    );
     function cancelExecutionClaim(address _triggerAddress,
                                   bytes calldata _triggerPayload,
                                   address _actionAddress,
@@ -673,7 +397,7 @@ contract GelatoCore is GelatoExecutionClaim, Ownable {
                                                                         _dappInterface,
                                                                         _executionClaimId
         ));
-        bytes32 storedExecutionClaimHash = executionClaims[_executionClaimId];
+        bytes32 storedExecutionClaimHash = hashedExecutionClaims[_executionClaimId];
 
         // CHECKS
         require(computedExecutionClaimHash == storedExecutionClaimHash,
@@ -692,11 +416,9 @@ contract GelatoCore is GelatoExecutionClaim, Ownable {
                                         executionClaimOwner
         );
         _burn(_executionClaimId);
-        delete executionClaims[_executionClaimId];
+        delete hashedExecutionClaims[_executionClaimId];
 
     }
-    // **************************** cancelExecutionClaim() END ***************************
+    // ********************* cancelExecutionClaim() END
 
 }
-
-

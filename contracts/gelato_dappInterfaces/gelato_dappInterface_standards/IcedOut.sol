@@ -40,6 +40,20 @@ contract IcedOut is {
           uint256 actionGasStipend = IGelatoAction(_action).actionGasStipend();
           executionClaimPrice = actionGasStipend.mul(gasPriceHedge);
      }
+     
+     function _useInterfaceGasPrice(uint256 _interfaceGasPrice)
+          internal
+     {
+          require(_interfaceGasPrice != 0,
+               "IcedOut.useInterfaceGasPrice: zero-value"
+          );
+          interfaceGasPrice = _interfaceGasPrice;
+     }
+     function _useDefaultGasPrice()
+          internal
+     {
+          interfaceGasPrice = uint8(GasPricePrediction.GelatoDefault);
+     }
      // =========================
 
 
@@ -68,23 +82,6 @@ contract IcedOut is {
           returns(uint256)
      {
           return gelatoCore.getCurrentExecutionClaimId().add(1);
-     }
-     // =========================
-
-
-     // ___________ GasPrice ______________________________________________
-     function _useInterfaceGasPrice(uint256 _interfaceGasPrice)
-          internal
-     {
-          require(_interfaceGasPrice != 0,
-               "IcedOut.useInterfaceGasPrice: zero-value"
-          );
-          interfaceGasPrice = _interfaceGasPrice;
-     }
-     function _useDefaultGasPrice()
-          internal
-     {
-          interfaceGasPrice = uint8(GasPricePrediction.GelatoDefault);
      }
      // =========================
 

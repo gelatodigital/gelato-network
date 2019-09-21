@@ -30,13 +30,13 @@ contract GelatoAggregator is IcedOutOwnable,
     // **************************** Events END ******************************
 
 
-    constructor(address payable _GelatoCore,
+    constructor(address payable _gelatoCore,
                 uint256 _interfaceGasPrice,
                 uint256 _automaticTopUpAmount
     )
-        IcedOut(_GelatoCore,
-                _interfaceGasPrice,
-                _automaticTopUpAmount
+        IcedOutOwnable(_gelatoCore,
+                       _interfaceGasPrice,
+                       _automaticTopUpAmount
         )
         public
     {

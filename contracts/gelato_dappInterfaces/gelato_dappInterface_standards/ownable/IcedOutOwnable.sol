@@ -13,7 +13,7 @@ contract IcedOutOwnable is IcedOut, Ownable {
           internal
      {}
 
-     // ___________ GasPrice ______________________________________________
+     // ___________ ExecutionClaim Pricing __________________________________________
      function _useInterfaceGasPrice(uint256 _interfaceGasPrice)
           onlyOwner
           public

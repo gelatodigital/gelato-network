@@ -19,6 +19,18 @@ contract GelatoActionsStandard is IGelatoAction {
         actionGasStipend = _actionGasStipend;
     }
 
+    function matchingGelatoCore(address _gelatoCore)
+        external
+        view
+        returns(bool)
+    {
+        if (gelatoCore == _gelatoCore) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     modifier onlyGelatoCore() {
         require(msg.sender == address(gelatoCore),
             "GelatoActionsStandard.onlyGelatoCore failed"
@@ -40,10 +52,11 @@ contract GelatoActionsStandard is IGelatoAction {
         _;
     }
 
-    function _action()
+    function _actionChecks()
         onlyGelatoCore
         correctSelector
         sufficientGas
         internal
+        view
     {}
 }
