@@ -1,13 +1,17 @@
 pragma solidity ^0.5.10;
 
-import './gelato_dappInterface_standards/IcedOut.sol';
+import './gelato_dappInterface_standards/ownable/IcedOutOwnable.sol';
+import './gelato_dappInterface_standards/ownable/GelatoTriggerRegistryOwnable.sol';
+import './gelato_dappInterface_standards/ownable/GelatoActionRegistryOwnable.sol';
 import '@openzeppelin/contracts/drafts/Counters.sol';
 import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
-import '@openzeppelin/contracts/ownership/Ownable.sol';
 
 
-contract GelatoAggregator is IcedOutOwnable {
+contract GelatoAggregator is IcedOutOwnable,
+                             GelatoTriggerRegistryOwnable,
+                             GelatoActionRegistryOwnable
+{
     // **************************** Events ******************************
     event LogNewOrderCreated(uint256 indexed orderStateId, address indexed seller);
 
@@ -39,60 +43,6 @@ contract GelatoAggregator is IcedOutOwnable {
         execDepositAndSellGas = _execDepositAndSellGas;
         execWithdrawGas = _execWithdrawGas;
     }
-
-    // ____________ (De-)Register Trigger _____________________________
-    function registerTrigger(address _triggerAddress,
-                             bytes4 calldata _functionSelector
-    )
-        external
-        onlyOwner
-        returns(bool)
-    {
-        require(_registerTrigger(),
-            "GelatoAggregator._registerTrigger: failed"
-        );
-        return true;
-    }
-    function deregisterTrigger(address _triggerAddress,
-                               bytes4 calldata _functionSelector
-    )
-        external
-        onlyOwner
-        returns(bool)
-    {
-        require(_deregisterTrigger(),
-            "GelatoAggregator._deregisterTrigger: failed"
-        );
-        return true;
-    }
-     // =========================
-
-    // ____________ (De-)Register Action _____________________________
-    function registerAction(address _actionAddress,
-                             bytes4 calldata _functionSelector
-    )
-        external
-        onlyOwner
-        returns(bool)
-    {
-        require(_registerAction(),
-            "GelatoAggregator._registerAction: failed"
-        );
-        return true;
-    }
-    function deregisterAction(address _actionAddress,
-                              bytes4 calldata _functionSelector
-    )
-        external
-        onlyOwner
-        returns(bool)
-    {
-        require(_deregisterAction(),
-            "GelatoAggregator._deregisterAction: failed"
-        );
-        return true;
-    }
-    // =========================
 
 
     // **************************** timedSellOrders() ******************************

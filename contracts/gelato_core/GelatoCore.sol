@@ -62,7 +62,9 @@ contract GelatoCore is GelatoExecutionClaim, Ownable {
                                         uint256 withdrawAmount
     );
     // Execute Suite
-    event LogCanExecuteFailed(address indexed executor, uint256 indexed executionClaimId);
+    event LogCanExecuteFailed(address indexed executor,
+                              uint256 indexed executionClaimId
+    );
     event LogClaimExecutedBurnedAndDeleted(address indexed dappInterface,
                                            uint256 indexed executionClaimId,
                                            address indexed executionClaimOwner,

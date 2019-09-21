@@ -1,8 +1,9 @@
 pragma solidity ^0.5.10;
 
+import './IGelatoAction.sol';
 import '../../gelato_core/GelatoCore.sol';
 
-contract GelatoActionsStandard {
+contract GelatoActionsStandard is IGelatoAction {
     GelatoCore public gelatoCore;
     bytes4 public actionSelector;
     uint256 public actionGasStipend;

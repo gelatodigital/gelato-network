@@ -2,18 +2,13 @@ pragma solidity ^0.5.10;
 
 import '../../gelato_core/GelatoCore.sol';
 import '../../gelato_actions/gelato_actions_standards/IGelatoAction.sol'
-import './gelato_dappInterface_standards/GelatoTriggerRegistry.sol';
-import './gelato_dappInterface_standards/GelatoActionRegistry.sol';
 import '@openzeppelin/contracts/math/SafeMath.sol';
 
-contract IcedOut is GelatoTriggerRegistry, GelatoActionRegistry {
+contract IcedOut is {
      using SafeMath for uint256;
 
      GelatoCore public gelatoCore;
-
-     /// @dev: To adjust prePayment, use gasPrice
      uint256 public interfaceGasPrice;
-
      uint256 public automaticTopUpAmount;
 
      constructor(address payable _gelatoCore,
@@ -27,27 +22,26 @@ contract IcedOut is GelatoTriggerRegistry, GelatoActionRegistry {
           automaticTopUpAmount = _automaticTopUpAmount;
      }
 
-     enum GasPricing {
-        GelatoDefault
-    }
+     // _________________ ExecutionClaim Pricing ____________________________
+     enum GasPricePrediction {
+          GelatoDefault
+     }
      function _getExecutionClaimPrice(address _action)
           internal
           view
           returns(uint256 executionClaimPrice)
      {
-
-          uint256 usedGasPrice;
-          if (interfaceGasPrice == uint8(GasPricing.GelatoDefault))
-          {
-               usedGasPrice = gelatoCore.defaultGasPriceForInterfaces();
+          uint256 gasPriceHedge;
+          if (interfaceGasPrice == uint8(GasPricePrediction.GelatoDefault)) {
+               gasPriceHedge = gelatoCore.defaultGasPriceForInterfaces();
+          } else {
+               gasPriceHedge = interfaceGasPrice;
           }
-          else
-          {
-               usedGasPrice = interfaceGasPrice;
-          }
-          uint256 actionGasStipend = IGelatoAction
-          executionClaimPrice = interfaceMaxGas.mul(usedGasPrice);
+          uint256 actionGasStipend = IGelatoAction(_action).actionGasStipend();
+          executionClaimPrice = actionGasStipend.mul(gasPriceHedge);
      }
+     // =========================
+
 
      // _________________ ExecutionClaim Minting ____________________________
      function _mintExecutionClaim(address _triggerAddress,
@@ -55,7 +49,7 @@ contract IcedOut is GelatoTriggerRegistry, GelatoActionRegistry {
                                   address _actionAddress,
                                   bytes memory _actionPayload,
                                   uint256 _actionMaxGas,
-                                  address _executionClaimSender
+                                  address _executionClaimOwner
      )
           internal
      {
@@ -64,7 +58,7 @@ contract IcedOut is GelatoTriggerRegistry, GelatoActionRegistry {
                                                 _actionAddress,
                                                 _actionPayload,
                                                 _actionMaxGas,
-                                                _executionClaimSender),
+                                                _executionClaimOwner),
                "IcedOut._mintExecutionClaim: failed"
           );
      }
@@ -87,10 +81,10 @@ contract IcedOut is GelatoTriggerRegistry, GelatoActionRegistry {
           );
           interfaceGasPrice = _interfaceGasPrice;
      }
-     function _useRecommendedGasPrice()
+     function _useDefaultGasPrice()
           internal
      {
-          interfaceGasPrice = 0;
+          interfaceGasPrice = uint8(GasPricePrediction.GelatoDefault);
      }
      // =========================
 

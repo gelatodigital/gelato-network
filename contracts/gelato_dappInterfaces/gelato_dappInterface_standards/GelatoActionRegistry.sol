@@ -8,8 +8,9 @@ contract ActionRegistry {
                                    bytes4 _functionSelector)
     {
         require(actions[_action][_functionSelector],
-            "Actioned "
+            "GelatoActionRegistry.onlyRegisteredActions: failed"
         );
+        _;
     }
 
     // ____________ Register Actions ____________
@@ -21,14 +22,12 @@ contract ActionRegistry {
                              bytes4 _functionSelector
     )
         internal
-        returns(bool)
     {
         actions[_actionAddress][_functionSelector] = true;
         emit LogActionRegistered(msg.sender,
                                  _actionAddress,
                                  _functionSelector
         );
-        return true;
     }
     // ____________________________________________
 
@@ -41,14 +40,12 @@ contract ActionRegistry {
                                bytes4 _functionSelector
     )
         internal
-        returns(bool)
     {
         actions[_actionAddress][_functionSelector] = false;
         emit LogActionDeregistered(msg.sender,
                                    _actionAddress,
                                    _functionSelector
         );
-        return true;
     }
     // ____________________________________________
 }

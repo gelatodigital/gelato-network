@@ -1,8 +1,17 @@
 pragma solidity ^0.5.10;
 
-contract Triggered {
+contract GelatoTriggerRegistry {
     // trigger => functionSelector
     mapping(address => mapping(bytes4 => bool)) public triggers;
+
+    modifier onlyRegisteredTriggers(address _trigger,
+                                    bytes4 _functionSelector)
+    {
+        require(triggers[_trigger][_functionSelector],
+            "GelatoTriggerRegistry.onlyRegisteredTriggers: failed"
+        );
+        _;
+    }
 
     // ____________ Register Trigger ____________
     event LogTriggerRegistered(address indexed _registrator,
@@ -13,14 +22,12 @@ contract Triggered {
                               bytes4 _functionSelector
     )
         internal
-        returns(bool)
     {
         triggers[_triggerAddress][_functionSelector] = true;
         emit LogTriggerRegistered(msg.sender,
                                   _triggerAddress,
                                   _functionSelector
         );
-        return true;
     }
     // ____________ Register Trigger END ____________
 
@@ -33,14 +40,12 @@ contract Triggered {
                                 bytes4  _functionSelector
     )
         internal
-        returns(bool)
     {
         triggers[_triggerAddress][_functionSelector] = false;
         emit LogTriggerDeregistered(msg.sender,
                                     _triggerAddress,
                                     _functionSelector
         );
-        return true;
     }
     // ____________ Deregister Trigger ____________
 }
