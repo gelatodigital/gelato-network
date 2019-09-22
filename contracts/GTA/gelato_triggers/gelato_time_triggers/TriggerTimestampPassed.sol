@@ -9,7 +9,7 @@ contract TriggerTimestampPassed is GelatoTriggersStandard {
         GelatoTriggersStandard(_gelatoCore, _triggerSignature)
     {}
 
-    function timestampPassed(uint256 _timestamp)
+    function fired(uint256 _timestamp)
         public
         view
         returns(bool)

@@ -5,9 +5,9 @@ contract GelatoTriggerRegistry {
     mapping(address => mapping(bytes4 => bool)) public triggers;
 
     modifier onlyRegisteredTriggers(address _trigger,
-                                    bytes4 _functionSelector)
+                                    bytes4 _triggerSelector)
     {
-        require(triggers[_trigger][_functionSelector],
+        require(triggers[_trigger][_triggerSelector],
             "GelatoTriggerRegistry.onlyRegisteredTriggers: failed"
         );
         _;
@@ -16,17 +16,17 @@ contract GelatoTriggerRegistry {
     // ____________ Register Trigger ____________
     event LogTriggerRegistered(address indexed _registrator,
                                address indexed _triggerAddress,
-                               bytes4 indexed _functionSelector
+                               bytes4 indexed _triggerSelector
     );
     function _registerTrigger(address _triggerAddress,
-                              bytes4 _functionSelector
+                              bytes4 _triggerSelector
     )
         internal
     {
-        triggers[_triggerAddress][_functionSelector] = true;
+        triggers[_triggerAddress][_triggerSelector] = true;
         emit LogTriggerRegistered(msg.sender,
                                   _triggerAddress,
-                                  _functionSelector
+                                  _triggerSelector
         );
     }
     // ____________ Register Trigger END ____________
@@ -34,17 +34,17 @@ contract GelatoTriggerRegistry {
     // ____________ Deregister Trigger ____________
     event LogTriggerDeregistered(address indexed _registrator,
                                  address indexed _triggerAddress,
-                                 bytes4 indexed _functionSelector
+                                 bytes4 indexed _triggerSelector
     );
     function _deregisterTrigger(address _triggerAddress,
-                                bytes4  _functionSelector
+                                bytes4  _triggerSelector
     )
         internal
     {
-        triggers[_triggerAddress][_functionSelector] = false;
+        triggers[_triggerAddress][_triggerSelector] = false;
         emit LogTriggerDeregistered(msg.sender,
                                     _triggerAddress,
-                                    _functionSelector
+                                    _triggerSelector
         );
     }
     // ____________ Deregister Trigger ____________

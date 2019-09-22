@@ -8,14 +8,18 @@ contract ActionWithdrawFromDutchXToBeneficiary is GelatoActionsStandard,
                                                   GelatoDutchXStandard,
                                                   ReentrancyGuard
 {
-    constructor(address _GelatoCore,
+    constructor(address _gelatoCore,
+                address _dutchX,
                 string _actionSignature,
-                uint256 _actionGasStipend,
-                address _DutchX
+                uint256 _actionGasStipend
     )
         public
-        GelatoActionsStandard(_GelatoCore, _actionSignature, _actionGasStipend)
-        GelatoDutchXStandard(_DutchX)
+        GelatoActionsStandard(_gelatoCore,
+                              _dutchX
+                              _actionSignature,
+                              _actionGasStipend
+        )
+        GelatoDutchXStandard(_dutchX)
     {}
 
     event LogWithdrawFromDutchX(uint256 indexed executionClaimId,

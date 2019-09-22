@@ -3,7 +3,7 @@ pragma solidity ^0.5.10;
 import './gelato_dappInterface_standards/ownable/IcedOutOwnable.sol';
 import './gelato_dappInterface_standards/ownable/GelatoTriggerRegistryOwnable.sol';
 import './gelato_dappInterface_standards/ownable/GelatoActionRegistryOwnable.sol';
-import '@openzeppelin/contracts/drafts/Counters.sol';
+import '../gelato_actions/gelato_action_standards/IGelatoAction.sol.';
 import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 
@@ -12,12 +12,15 @@ contract GelatoAggregator is IcedOutOwnable,
                              GelatoTriggerRegistryOwnable,
                              GelatoActionRegistryOwnable
 {
-    // **************************** Events ******************************
-    event LogNewOrderCreated(uint256 indexed orderStateId, address indexed seller);
+    using SafeERC20 for ERC20;
 
-    event LogOrderCancelled(uint256 indexed executionClaimId,
-                            uint256 indexed orderID,
-                            address indexed seller
+    // **************************** Events ******************************
+    event LogNewOrder(uint256 indexed executionClaimOwner,
+                      uint256 executionClaimId
+                      address indexed triggerAddress,
+                      bytes4 triggerSelector,
+                      address indexed actionAddress,
+                      bytes4 actionSelector
     );
     event LogWithdrawComplete(uint256 indexed executionClaimId,
                               address indexed seller,
@@ -25,7 +28,6 @@ contract GelatoAggregator is IcedOutOwnable,
                               uint256 sellAmount,
                               uint256 withdrawAmount
     );
-    event LogOrderCompletedAndDeleted(uint256 indexed orderStateId);
     event LogGas(uint256 gas1, uint256 gas2);
     // **************************** Events END ******************************
 
@@ -36,116 +38,83 @@ contract GelatoAggregator is IcedOutOwnable,
     )
         IcedOutOwnable(_gelatoCore,
                        _interfaceGasPrice,
-                       _automaticTopUpAmount
-        )
+                       _automaticTopUpAmount)
         public
-    {
-        execDepositAndSellGas = _execDepositAndSellGas;
-        execWithdrawGas = _execWithdrawGas;
-    }
+    {}
 
 
-    // **************************** timedSellOrders() ******************************
-    function mintTimedSellOrders(address _sellToken,
-                                 address _buyToken,
-                                 uint256 _numSellOrders,
-                                 uint256 _amountPerSellOrder,
-                                 uint256 _executionTime,
-                                 uint256 _intervalSpan
+    // **************************** DutchX Timed Sell Orders ******************
+    function dutchXTimedSellAndWithdraw(address _trigger,
+                                        bytes4 _triggerSelector,
+                                        uint256 _executionTime
+                                        address _action,
+                                        bytes4 _actionSelector,
+                                        address _sellToken,
+                                        address _buyToken,
+                                        uint256 _sellAmount
     )
+        onlyRegisteredTriggers(_trigger, _triggerSelector)
+        onlyRegisteredActions(_action, _actionSelector)
+        matchingGelatoCore(_trigger)
+        matchingGelatoCore(_action)
+        matchingTriggerSelector(_trigger, _triggerSelector)
+        matchingActionSelector(_action, _actionSelector)
+        actionHasERC20Allowance(_action, _sellToken, msg.sender, _sellAmount)
+        actionConditionsFulfilled(_sellToken, _buyToken)
         public
         payable
+        returns(bool)
     {
-        // Step1: Zero value preventions
-        require(_sellToken != address(0), "GelatoCore.mintExecutionClaim: _sellToken: No zero addresses allowed");
-        require(_buyToken != address(0), "GelatoCore.mintExecutionClaim: _buyToken: No zero addresses allowed");
-        require(_amountPerSellOrder != 0, "GelatoCore.mintExecutionClaim: _amountPerSellOrder cannot be 0");
-        require(_numSellOrders != 0, "timedSellOrders: numSubOrders cannot be 0");
-
-        // Step2: Valid execution Time check
-        // Check that executionTime is in the future (10 minute buffer given)
         require(_executionTime.add(10 minutes) >= now,
-            "GelatoDutchX.timedSellOrders: Failed test: Execution time must be in the future"
+            "GelatoDutchX.dutchXTimedSellAndWithdraw: _executionTime failed"
         );
-        // Time between different selOrders needs to be at least 6 hours
-        require(_intervalSpan >= 6 hours,
-            "GelatoDutchX.timedSellOrders: _intervalSpan not at/above minimum of 6 hours"
-        );
-
-        // Step3: Invariant Requirements
-        // Require that user transfers the correct prepayment sellAmount. Charge 2x execute + Withdraw
-        uint256 prepaymentPerSellOrder = calcGelatoPrepayment();
-        require(msg.value == prepaymentPerSellOrder.mul(_numSellOrders),  // calc for msg.sender==dappInterface
-            "GelatoDutchX.timedSellOrders: User ETH prepayment transfer is incorrect"
-        );
-        // Only tokens that are tradeable on the Dutch Exchange can be posted
-        require(dutchExchange.getAuctionIndex(_sellToken, _buyToken) != 0,
-            "GelatoDutchX.timedSellOrders: The selected tokens are not traded on the Dutch Exchange"
+        require(_buyToken != address(0),
+            "GelatoDutchX.dutchXTimedSellAndWithdraw: _buyToken zero-value"
         );
 
-        // Step4: Transfer the totalSellVolume from msg.sender(seller) to this contract
-        ERC20(_sellToken).safeTransferFrom(msg.sender,
-                                           address(this),
-                                           _numSellOrders.mul(_amountPerSellOrder)
+        /// @dev Calculations for charging the msg.sender/user
+        uint256 prepaidExecutionFee = _getExecutionClaimPrice(_action);
+        require(msg.value == prepaidExecutionFee,
+            "GelatoDutchX.dutchXTimedSellAndWithdraw: prepaidExecutionFee failed"
         );
 
-        // Step5: Instantiate new dutchExchange-specific sell order state
-        OrderState memory orderState = OrderState(
-            false,  // default: lastAuctionWasWaiting
-            0  // default:
+        // _________________Minting_____________________________________________
+        uint256 nextExecutionClaimId = _getNextExecutionClaimId();
+        // Trigger-Action Payloads
+        bytes memory triggerPayload = abi.encodeWithSelector(_triggerSelector,
+                                                             nextExecutionClaimId,
+                                                             _executionTime
+        );
+        uint256 actionGasStipend = IGelatoAction(_action).actionGasStipend();
+        bytes memory actionPayload = abi.encodeWithSelector(_actionSelector,
+                                                            nextExecutionClaimId,
+                                                            actionGasStipend,
+                                                            _sellToken,
+                                                            _buyToken,
+                                                            _sellAmount,
+                                                            prepaidExecutionFee
         );
 
-        // Step6: fetch new OrderStateId and store orderState in orderState mapping
-        // Increment the current OrderId
-        Counters.increment(orderIds);
-        // Get a new, unique OrderId for the newly created Sell Order
-        uint256 orderStateId = orderIds.current();
-        // Update GelatoDutchX state variables
-        orderStates[orderStateId] = orderState;
+        _mintExecutionClaim(nextExecutionClaimId,
+                            msg.sender,  // executionClaimOwner
+                            _triggerAddress,  // dappInterface
+                            triggerPayload,
+                            _actionAddress,
+                            actionPayload,
+                            actionGasStipend
+        );
+        emit LogNewOrder(msg.sender,
+                         nextExecutionClaimId,
+                         _triggerAddress,
+                         _triggerSelector,
+                         _actionAddress,
+                         _actionSelector
+        );
+        // =========================
 
-        // Step7: Create all sellOrders
-        for (uint256 i = 0; i < _numSellOrders; i++) {
-
-            // Compute new execution time. First will be == _executionTime
-            uint256 executionTime = _executionTime.add(_intervalSpan.mul(i));
-
-            // Fetch next execution cliam id
-            uint256 nextExecutionClaimId = getNextExecutionClaimId();
-
-            // Create Trigger Payload
-            bytes memory triggerPayload = abi.encodeWithSignature(execDepositAndSellTriggerString,
-                                                                  nextExecutionClaimId,
-                                                                  _sellToken,
-                                                                  _buyToken,
-                                                                  _amountPerSellOrder,
-                                                                  executionTime,
-                                                                  orderStateId
-            );
-
-            // Create Action Payload
-            bytes memory actionPayload = abi.encodeWithSignature(execDepositAndSellActionString,
-                                                                 nextExecutionClaimId,
-                                                                 _sellToken,
-                                                                 _buyToken,
-                                                                 _amountPerSellOrder,
-                                                                 executionTime,
-                                                                 prepaymentPerSellOrder,
-                                                                 orderStateId
-            );
-
-            mintExecutionClaim(address(this),
-                               triggerPayload,
-                               address(this),
-                               actionPayload,
-                               execDepositAndSellGas,
-                               msg.sender  // executionClaimOwner
-            );
-        }
-
-        // Step8: Emit New Sell Order
-        emit LogNewOrderCreated(orderStateId, msg.sender);
+        return true;
     }
-    // **************************** timeSellOrders() END ******************************
+    // **************************** DutchX Timed Sell Orders END
 
     // Check if execDepositAndSell is executable
     function execDepositAndSellTrigger(uint256 _executionClaimId,
@@ -263,7 +232,7 @@ contract GelatoAggregator is IcedOutOwnable,
                                       address _buyToken,
                                       uint256 _sellAmount,
                                       uint256 _executionTime,
-                                      uint256 _prepaymentAmount,
+                                      uint256 _prepaidExecutionFeeAmount,
                                       uint256 _orderStateId
     )
         external
@@ -412,7 +381,7 @@ contract GelatoAggregator is IcedOutOwnable,
 
         address sellToken;
         uint256 amount;
-        uint256 prepaymentAmount;
+        uint256 prepaidExecutionFeeAmount;
         {
             // Check that execution claim has the correct funcSelector
             (bytes memory memPayload, bytes4 funcSelector) = decodeWithFunctionSignature(_actionPayload);
@@ -422,8 +391,8 @@ contract GelatoAggregator is IcedOutOwnable,
             require(funcSelector == bytes4(keccak256(bytes(execDepositAndSellActionString))), "Only execDepositAndSell claims can be cancelled");
 
             address buyToken;
-            // Decode actionPayload to reive prepaymentAmount
-            (, sellToken, buyToken, amount, , prepaymentAmount, ) = abi.decode(memPayload, (uint256, address, address, uint256, uint256, uint256, uint256));
+            // Decode actionPayload to reive prepaidExecutionFeeAmount
+            (, sellToken, buyToken, amount, , prepaidExecutionFeeAmount, ) = abi.decode(memPayload, (uint256, address, address, uint256, uint256, uint256, uint256));
 
             // address seller = gelatoCore.ownerOf(_executionClaimId);
             address tokenOwner = gelatoCore.ownerOf(_executionClaimId);
@@ -454,8 +423,8 @@ contract GelatoAggregator is IcedOutOwnable,
 
         // ****** INTERACTIONS ******
         // transfer sellAmount back from this contracts ERC20 balance to seller
-        // Refund user the given prepayment amount!!!
-        msg.sender.transfer(prepaymentAmount);
+        // Refund user the given prepaidExecutionFee amount!!!
+        msg.sender.transfer(prepaidExecutionFeeAmount);
 
         // Transfer ERC20 Tokens back to seller
         ERC20(sellToken).safeTransfer(msg.sender, amount);

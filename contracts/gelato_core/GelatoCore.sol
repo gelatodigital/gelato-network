@@ -45,23 +45,24 @@ contract GelatoCore is GelatoExecutionClaim,
     }
 
     // ********************* mintExecutionClaim() *********************
-    event LogNewExecutionClaimMinted(address triggerAddress,
+    event LogNewExecutionClaimMinted(address indexed dappInterface,
+                                     address indexed executionClaimOwner,
+                                     uint256 indexed executionClaimId,
+                                     address triggerAddress,
                                      bytes triggerPayload,
                                      address actionAddress,
                                      bytes actionPayload,
                                      uint256 actionGasStipend,
-                                     address dappInterface,
-                                     uint256 executionClaimId,
-                                     bytes32 executionClaimHash,
-                                     address executionClaimOwner
+                                     bytes32 executionClaimHash
     );
 
-    function mintExecutionClaim(address _triggerAddress,
+    function mintExecutionClaim(uint256 _executionClaimId,
+                                address _executionClaimOwner,
+                                address _triggerAddress,
                                 bytes calldata _triggerPayload,
                                 address _actionAddress,
                                 bytes calldata _actionPayload,
-                                uint256 _actionGasStipend,
-                                address _executionClaimOwner
+                                uint256 _actionGasStipend
     )
         stakedInterface
         external
@@ -71,30 +72,34 @@ contract GelatoCore is GelatoExecutionClaim,
         // ****** Mint new executionClaim ERC721 token ******
         Counters.increment(_executionClaimIds);
         uint256 executionClaimId = _executionClaimIds.current();
+        require(executionClaimId == _executionClaimId,
+            "GelatoCore.mintExecutionClaim: _executionClaimId failed"
+        );
         _mint(_executionClaimOwner, executionClaimId);
         // ****** Mint new executionClaim ERC721 token END ******
 
         // Include executionClaimId: avoid hash collisions
         // Exclude _executionClaimOwner: ExecutionClaims are transferable
-        bytes32 executionClaimHash = keccak256(abi.encodePacked(_triggerAddress,
+        // msg.sender == dappInterface
+        bytes32 executionClaimHash = keccak256(abi.encodePacked(msg.sender,
+                                                                executionClaimId,
+                                                                _triggerAddress,
                                                                 _triggerPayload,
                                                                 _actionAddress,
                                                                 _actionPayload,
-                                                                _actionGasStipend,
-                                                                msg.sender,  // dappInterface
-                                                                executionClaimId
+                                                                _actionGasStipend
         ));
         hashedExecutionClaims[executionClaimId] = executionClaimHash;
 
-        emit LogNewExecutionClaimMinted(_triggerAddress,
+        emit LogNewExecutionClaimMinted(_executionClaimOwner,
+                                        executionClaimId,
+                                        msg.sender,  // dappInterface
+                                        _triggerAddress,
                                         _triggerPayload,
                                         _actionAddress,
                                         _actionPayload,
                                         _actionGasStipend,
-                                        msg.sender,  // dappInterface
-                                        executionClaimId,
-                                        executionClaimHash,
-                                        _executionClaimOwner
+                                        executionClaimHash
         );
 
         return true;
