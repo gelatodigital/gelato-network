@@ -1,22 +1,18 @@
 pragma solidity ^0.5.10;
 
-import './gelato_dappInterface_standards/ownable/IcedOutOwnable.sol';
-import './gelato_dappInterface_standards/ownable/GelatoTriggerRegistryOwnable.sol';
-import './gelato_dappInterface_standards/ownable/GelatoActionRegistryOwnable.sol';
-import '../gelato_actions/gelato_action_standards/IGelatoAction.sol.';
+import './GTAI_standards/ownable/IcedOutOwnable.sol';
+import './GTAI_standards/ownable/GTARegistryOwnable.sol';
 import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 
-
-contract GelatoAggregator is IcedOutOwnable,
-                             GelatoTriggerRegistryOwnable,
-                             GelatoActionRegistryOwnable
+contract GTAIAggregator is IcedOutOwnable,
+                           GTARegistryOwnable
 {
     using SafeERC20 for ERC20;
 
     // **************************** Events ******************************
-    event LogNewOrder(uint256 indexed executionClaimOwner,
-                      uint256 executionClaimId
+    event LogNewOrder(uint256 executionClaimId,
+                      uint256 indexed executionClaimOwner,
                       address indexed triggerAddress,
                       bytes4 triggerSelector,
                       address indexed actionAddress,
@@ -33,12 +29,13 @@ contract GelatoAggregator is IcedOutOwnable,
 
 
     constructor(address payable _gelatoCore,
-                uint256 _interfaceGasPrice,
+                uint256 _gtaiGasPrice,
                 uint256 _automaticTopUpAmount
     )
         IcedOutOwnable(_gelatoCore,
-                       _interfaceGasPrice,
+                       _gtaiGasPrice,
                        _automaticTopUpAmount)
+        GTARegistryOwnable(_gelatoCore)
         public
     {}
 
@@ -46,36 +43,31 @@ contract GelatoAggregator is IcedOutOwnable,
     // **************************** DutchX Timed Sell Orders ******************
     function dutchXTimedSellAndWithdraw(address _trigger,
                                         bytes4 _triggerSelector,
-                                        uint256 _executionTime
+                                        uint256 _executionTime,
                                         address _action,
                                         bytes4 _actionSelector,
                                         address _sellToken,
                                         address _buyToken,
                                         uint256 _sellAmount
     )
-        onlyRegisteredTriggers(_trigger, _triggerSelector)
-        onlyRegisteredActions(_action, _actionSelector)
-        matchingGelatoCore(_trigger)
-        matchingGelatoCore(_action)
-        matchingTriggerSelector(_trigger, _triggerSelector)
-        matchingActionSelector(_action, _actionSelector)
+        standardGTAIRegistryChecks(_trigger, _action, _triggerSelector, _actionSelector)
         actionHasERC20Allowance(_action, _sellToken, msg.sender, _sellAmount)
-        actionConditionsFulfilled(_sellToken, _buyToken)
+        actionConditionsFulfilled(_action, abi.encode(_sellToken, _buyToken))
         public
         payable
         returns(bool)
     {
         require(_executionTime.add(10 minutes) >= now,
-            "GelatoDutchX.dutchXTimedSellAndWithdraw: _executionTime failed"
+            "GTAIAggregator.dutchXTimedSellAndWithdraw: _executionTime failed"
         );
         require(_buyToken != address(0),
-            "GelatoDutchX.dutchXTimedSellAndWithdraw: _buyToken zero-value"
+            "GTAIAggregator.dutchXTimedSellAndWithdraw: _buyToken zero-value"
         );
 
         /// @dev Calculations for charging the msg.sender/user
         uint256 prepaidExecutionFee = _getExecutionClaimPrice(_action);
         require(msg.value == prepaidExecutionFee,
-            "GelatoDutchX.dutchXTimedSellAndWithdraw: prepaidExecutionFee failed"
+            "GTAIAggregator.dutchXTimedSellAndWithdraw: prepaidExecutionFee failed"
         );
 
         // _________________Minting_____________________________________________
@@ -85,7 +77,7 @@ contract GelatoAggregator is IcedOutOwnable,
                                                              nextExecutionClaimId,
                                                              _executionTime
         );
-        uint256 actionGasStipend = IGelatoAction(_action).actionGasStipend();
+        uint256 actionGasStipend = _getActionGasStipend(_action);
         bytes memory actionPayload = abi.encodeWithSelector(_actionSelector,
                                                             nextExecutionClaimId,
                                                             actionGasStipend,
@@ -94,17 +86,16 @@ contract GelatoAggregator is IcedOutOwnable,
                                                             _sellAmount,
                                                             prepaidExecutionFee
         );
-
         _mintExecutionClaim(nextExecutionClaimId,
                             msg.sender,  // executionClaimOwner
-                            _triggerAddress,  // dappInterface
+                            _triggerAddress,
                             triggerPayload,
                             _actionAddress,
                             actionPayload,
                             actionGasStipend
         );
-        emit LogNewOrder(msg.sender,
-                         nextExecutionClaimId,
+        emit LogNewOrder(nextExecutionClaimId,
+                         msg.sender,
                          _triggerAddress,
                          _triggerSelector,
                          _actionAddress,
@@ -116,83 +107,14 @@ contract GelatoAggregator is IcedOutOwnable,
     }
     // **************************** DutchX Timed Sell Orders END
 
-    // Check if execDepositAndSell is executable
-    function execDepositAndSellTrigger(uint256 _executionClaimId,
-                                       address _sellToken,
-                                       address _buyToken,
-                                       uint256 _sellAmount,
-                                       uint256 _executionTime,
-                                       uint256 _orderStateId
-    )
-        external
-        view
-        returns (bool)
-    {
-
-        // Check the condition: Execution Time
-        require(_executionTime <= now,
-            "IcedOut Time Condition: Function called scheduled execution time"
-        );
-
-        // Check if interface has enough funds to sell on the Dutch Exchange
-        require(ERC20(_sellToken).balanceOf(address(this)) >= _sellAmount,
-            "GelatoInterface.execute: ERC20(sellToken).balanceOf(address(this)) !>= subOrderSize"
-        );
-
-        // Fetch OrderState
-        OrderState memory orderState = orderStates[_orderStateId];
-
-        // Fetch current DutchX auction values to analyze past auction participation
-        (uint256 newAuctionIndex, , bool newAuctionIsWaiting) = getAuctionValues(_sellToken, _buyToken);
-
-        // Goal: prevent doubly participating in same auction
-        // CASE 1: DONT SELL - EDGE CASE: indices out of sync
-        // Ensure that currentAuctionIndex is at most 1 below lastParticipatedAuctionIndex
-        // The 'if' is to avoid an underflow for default 0 lastParticipatedAuctionIndex
-        if (orderState.lastParticipatedAuctionIndex > 0) {
-            // "GelatoDutchX.execDepositAndSell Case 1: Fatal error, Gelato auction index ahead of dutchExchange auction index"
-            if(newAuctionIndex < orderState.lastParticipatedAuctionIndex.sub(1))
-            {
-                return false;
-            }
-        }
-
-        // CASE 2: DEPENDS
-        // We already have funds attributed to the newAuctionIndex
-        if (newAuctionIndex == orderState.lastParticipatedAuctionIndex) {
-            // Case 2a - SELL: our funds went into the newAuctionIndex but since they were invested
-            //  during its waiting period (orderState.lastAuctionWasWaiting) and that auction has started
-            //  in the meantime (!newAuctionIsWaiting) we can sell into sellVolumesNext.
-            if (orderState.lastAuctionWasWaiting && !newAuctionIsWaiting) {
-                return true;
-            }
-            // Case 2b - DONT SELL: because either we would doubly invest during same waiting period or
-            //  we have an auction index out of sync error.
-            else
-            {
-                return false;
-            }
-        }
-
-        // CASE 3: SELL - last participated auction has cleared
-        // Our funds went into the previous auction index
-        // We can now sell again into the current auction index.
-        else if (newAuctionIndex > orderState.lastParticipatedAuctionIndex) {
-            return true;
-        }
-
-        // CASE 4: DONT SELL - EDGE CASE: unhandled errors
-        else {
-            return false;
-        }
-    }
 
     // Test if execWithdraw is executable
     function execWithdrawTrigger(uint256 _executionClaimId,
-                               address _sellToken,
-                               address _buyToken,
-                               uint256 _sellAmount,
-                               uint256 _lastParticipatedAuctionIndex)
+                                 address _sellToken,
+                                 address _buyToken,
+                                 uint256 _sellAmount,
+                                 uint256 _lastParticipatedAuctionIndex
+    )
         external
         view
         returns (bool)
@@ -203,10 +125,7 @@ contract GelatoAggregator is IcedOutOwnable,
         // Check if auction in DutchX closed
         uint256 num;
         uint256 den;
-        (num, den) = dutchExchange.closingPrices(_sellToken,
-                                                _buyToken,
-                                                _lastParticipatedAuctionIndex
-        );
+
 
         // Check if the last auction the seller participated in has cleared
         // DEV Test: Are there any other possibilities for den being 0 other than when the auction has not yet cleared?
@@ -241,7 +160,7 @@ contract GelatoAggregator is IcedOutOwnable,
         // Make sure that gelatoCore is the only allowed caller to this function.
         // Executors will call this execute function via the Core's execute function.
         require(msg.sender == address(gelatoCore),
-            "GelatoDutchX.execDepositAndSell: msg.sender != gelatoCore instance address"
+            "GTAIAggregator.execDepositAndSell: msg.sender != gelatoCore instance address"
         );
 
         // Fetch orderState
@@ -331,7 +250,7 @@ contract GelatoAggregator is IcedOutOwnable,
         // Make sure that gelatoCore is the only allowed caller to this function.
         // Executors will call this execute function via the Core's execute function.
         require(msg.sender == address(gelatoCore),
-            "GelatoDutchX.execWithdraw: msg.sender != gelatoCore instance address"
+            "GTAIAggregator.execWithdraw: msg.sender != gelatoCore instance address"
         );
 
         // Fetch owner of execution claim

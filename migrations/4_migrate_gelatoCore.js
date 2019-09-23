@@ -23,7 +23,7 @@ module.exports = async function(deployer, network, accounts) {
           Deploying GelatoCore.sol with
           =============================
           Owner:                      ${ganacheCoreDeployer}
-          minInterfaceBalance:        ${web3.utils.fromWei(MIN_INTERFACE_BALANCE, "ether")} ETH
+          minGTAIBalance:        ${web3.utils.fromWei(MIN_INTERFACE_BALANCE, "ether")} ETH
           executorProfit:             ${web3.utils.fromWei(EXECUTOR_PROFIT, "ether")} ETH
           executorGasPrice:           ${web3.utils.fromWei(EXECUTOR_GAS_PRICE, "gwei")} gwei
           execFixedGasConsInBetween:  ${FIXEDGASCONSUMPTIONINBETWEEN} gas
@@ -50,7 +50,7 @@ module.exports = async function(deployer, network, accounts) {
           Deploying GelatoCore.sol with
           =============================
           Owner:                      ${accounts[0]}
-          minInterfaceBalance:        ${web3.utils.fromWei(MIN_INTERFACE_BALANCE, "ether")} ETH
+          minGTAIBalance:        ${web3.utils.fromWei(MIN_INTERFACE_BALANCE, "ether")} ETH
           executorProfit:             ${web3.utils.fromWei(EXECUTOR_PROFIT, "ether")} ETH
           executorGasPrice:           ${web3.utils.fromWei(EXECUTOR_GAS_PRICE, "gwei")} gwei
           execFixedGasConsInBetween:  ${FIXEDGASCONSUMPTIONINBETWEEN} gas

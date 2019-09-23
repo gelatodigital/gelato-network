@@ -16,14 +16,14 @@ interface IIcedOut {
      // Events
      event LogGelatoBalanceAdded(uint256 amount,
                                  uint256 gelatoBalancePost,
-                                 uint256 interfaceBalancePost
+                                 uint256 gtaiBalancePost
      );
      event LogGelatoBalanceWithdrawn(uint256 amount,
                                      uint256 gelatoBalancePost,
-                                     uint256 interfaceBalancePost
+                                     uint256 gtaiBalancePost
      );
      event LogBalanceWithdrawnToOwner(uint256 amount,
-                                      uint256 interfaceBalancePost,
+                                      uint256 gtaiBalancePost,
                                       uint256 ownerBalancePost
      );
 
@@ -49,7 +49,7 @@ interface IIcedOut {
      function mintExecutionClaim(string calldata _function, address _user) external returns (uint256, bytes memory);
 
      // Switch from querying gelatoCore's gas price to using an interface specific one
-     function useInterfaceGasPrice(uint256 _interfaceGasPrice) external;
+     function useInterfaceGasPrice(uint256 _gtaiGasPrice) external;
 
      // Switch from using interface specific gasPrice to fetching it from gelato core
      function useRecommendedGasPrice() external;

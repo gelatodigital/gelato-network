@@ -1,17 +1,10 @@
 pragma solidity ^0.5.10;
 
+import '../../GTA/gelato_triggers/gelato_trigger_standards/IGelatoTrigger.sol';
+
 contract GelatoTriggerRegistry {
     // trigger => functionSelector
     mapping(address => mapping(bytes4 => bool)) public triggers;
-
-    modifier onlyRegisteredTriggers(address _trigger,
-                                    bytes4 _triggerSelector)
-    {
-        require(triggers[_trigger][_triggerSelector],
-            "GelatoTriggerRegistry.onlyRegisteredTriggers: failed"
-        );
-        _;
-    }
 
     // ____________ Register Trigger ____________
     event LogTriggerRegistered(address indexed _registrator,
@@ -29,7 +22,7 @@ contract GelatoTriggerRegistry {
                                   _triggerSelector
         );
     }
-    // ____________ Register Trigger END ____________
+    // ===========
 
     // ____________ Deregister Trigger ____________
     event LogTriggerDeregistered(address indexed _registrator,
@@ -47,5 +40,25 @@ contract GelatoTriggerRegistry {
                                     _triggerSelector
         );
     }
-    // ____________ Deregister Trigger ____________
+    // ===========
+
+    // ____________ Standard Checks _____________________________________
+    modifier onlyRegisteredTriggers(address _trigger,
+                                    bytes4 _triggerSelector)
+    {
+        require(triggers[_trigger][_triggerSelector],
+            "GelatoTriggerRegistry.onlyRegisteredTriggers: failed"
+        );
+        _;
+    }
+
+    modifier matchingTriggerSelector(address _trigger,
+                                     bytes4 _triggerSelector)
+     {
+        require(IGelatoTrigger(_trigger).matchingTriggerSelector(_triggerSelector),
+            "GelatoTriggerRegistry.matchingTriggerSelector: failed"
+        );
+        _;
+     }
+    // ===========
 }

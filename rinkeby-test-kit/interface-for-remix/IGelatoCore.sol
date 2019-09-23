@@ -111,7 +111,7 @@ interface IGelatoCore {
     );
     // Update
     // - Gelato Params
-    event LogMinInterfaceBalanceUpdated(uint256 minInterfaceBalance, uint256 newMinInterfaceBalance);
+    event LogMinInterfaceBalanceUpdated(uint256 minGTAIBalance, uint256 newMinInterfaceBalance);
     event LogExecutorProfitUpdated(uint256 executorProfit, uint256 newExecutorProfit);
     event LogExecutorGasPriceUpdated(uint256 executorGasPrice, uint256 newExecutorGasPrice);
     event LogExecFNGasOverheadUpdated(uint256 execFNGasOverhead, uint256 newExecFNGasOverhead);
@@ -156,10 +156,10 @@ interface IGelatoCore {
     function executionClaims(uint256 executionClaimId) external view returns(address, bytes memory);
 
     // Balance of interfaces which pay for claim execution
-    function interfaceBalances(address _dappInterface) external view returns(uint256);
+    function gtaiBalances(address _dappInterface) external view returns(uint256);
 
     // Minimum ether balance of interfaces
-    function minInterfaceBalance() external view returns(uint256);
+    function minGTAIBalance() external view returns(uint256);
 
     // Fees in % paid to executors for their execution. E.g. 5 == 5%
     function executorProfit() external view returns(uint256);
@@ -232,7 +232,7 @@ interface IGelatoCore {
 
     // *** Interface Params Governance ****
     // Enable interfaces to add a balance to Gelato to pay for transaction executions
-    function addInterfaceBalance() external payable;
+    function addGTAIBalance() external payable;
 
     // Enable interfaces to withdraw some of their added balances
     function withdrawInterfaceBalance(uint256 _withdrawAmount) external;

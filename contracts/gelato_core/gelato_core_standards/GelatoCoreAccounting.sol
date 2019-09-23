@@ -13,12 +13,12 @@ contract GelatoCoreAccounting is Ownable, ReentrancyGuard {
     }
 
     //_____________ Gelato ExecutionClaim Economics _______________________
-    mapping(address => uint256) public interfaceBalances;
+    mapping(address => uint256) public GTAIBalances;
     mapping(address => uint256) public executorBalances;
-    uint256 public minInterfaceBalance;
+    uint256 public minGTAIBalance;
     uint256 public executorProfit;
     uint256 public executorGasPrice;
-    uint256 public defaultGasPriceForInterfaces;
+    uint256 public defaultGasPriceForGTAIs;
     //_____________ Constant gas values _____________
     uint256 public gasOutsideGasleftChecks;
     uint256 public gasInsideGasleftChecks;
@@ -26,61 +26,61 @@ contract GelatoCoreAccounting is Ownable, ReentrancyGuard {
     uint256 public executorGasRefundEstimate;
     // =========================
 
-    modifier stakedInterface {
-        require(interfaceBalances[msg.sender] >= minInterfaceBalance,
-            "GelatoCore.stakedInterfaces: fail"
+    modifier stakedGTAI {
+        require(GTAIBalances[msg.sender] >= minGTAIBalance,
+            "GelatoCore.stakedGTAIs: fail"
         );
         _;
     }
 
     //_____________ Interface  _________________________________________
-    event LogInterfaceBalanceAdded(address indexed dappInterface,
-                                   uint256 oldBalance,
-                                   uint256 addedAmount,
-                                   uint256 newBalance
+    event LogGTAIBalanceAdded(address indexed GTAI,
+                              uint256 oldBalance,
+                              uint256 addedAmount,
+                              uint256 newBalance
     );
-    function addInterfaceBalance()
+    function addGTAIBalance()
         external
         payable
     {
         require(msg.value > 0,
-            "GelatoCoreAccounting.addInterfaceBalance(): zero-value"
+            "GelatoCoreAccounting.addGTAIBalance(): zero-value"
         );
-        uint256 currentInterfaceBalance = interfaceBalances[msg.sender];
-        uint256 newBalance = currentInterfaceBalance.add(msg.value);
-        interfaceBalances[msg.sender] = newBalance;
-        emit LogInterfaceBalanceAdded(msg.sender,
-                                      currentInterfaceBalance,
-                                      msg.value,
-                                      newBalance
+        uint256 currentBalance = GTAIBalances[msg.sender];
+        uint256 newBalance = currentBalance.add(msg.value);
+        GTAIBalances[msg.sender] = newBalance;
+        emit LogGTAIBalanceAdded(msg.sender,
+                                 currentBalance,
+                                 msg.value,
+                                 newBalance
         );
     }
 
-    event LogInterfaceBalanceWithdrawal(address indexed dappInterface,
-                                        uint256 oldBalance,
-                                        uint256 withdrawnAmount,
-                                        uint256 newBalance
+    event LogGTAIBalanceWithdrawal(address indexed GTAI,
+                                   uint256 oldBalance,
+                                   uint256 withdrawnAmount,
+                                   uint256 newBalance
     );
-    function withdrawInterfaceBalance(uint256 _withdrawAmount)
+    function withdrawGTAIBalance(uint256 _withdrawAmount)
         nonReentrant
         external
     {
         require(_withdrawAmount > 0,
-            "GelatoCoreAccounting.withdrawInterfaceBalance(): zero-value"
+            "GelatoCoreAccounting.withdrawGTAIBalance(): zero-value"
         );
         // Checks
-        uint256 currentInterfaceBalance = interfaceBalances[msg.sender];
-        require(_withdrawAmount <= currentInterfaceBalance,
-            "GelatoCoreAccounting.withdrawInterfaceBalance(): failed"
+        uint256 currentBalance = GTAIBalances[msg.sender];
+        require(_withdrawAmount <= currentBalance,
+            "GelatoCoreAccounting.withdrawGTAIBalance(): failed"
         );
         // Effects
-        interfaceBalances[msg.sender] = currentInterfaceBalance.sub(_withdrawAmount);
+        GTAIBalances[msg.sender] = currentBalance.sub(_withdrawAmount);
         // Interaction
         msg.sender.transfer(_withdrawAmount);
-        emit LogInterfaceBalanceWithdrawal(msg.sender,
-                                           currentInterfaceBalance,
-                                           _withdrawAmount,
-                                           interfaceBalances[msg.sender]
+        emit LogGTAIBalanceWithdrawal(msg.sender,
+                                      currentBalance,
+                                      _withdrawAmount,
+                                      GTAIBalances[msg.sender]
         );
     }
     // =========================
@@ -110,15 +110,15 @@ contract GelatoCoreAccounting is Ownable, ReentrancyGuard {
 
 
     //_____________ Update Gelato Accounting ___________________________________
-    event LogMinInterfaceBalanceUpdated(uint256 minInterfaceBalance,
-                                        uint256 newMinInterfaceBalance
+    event LogMinGTAIBalanceUpdated(uint256 minGTAIBalance,
+                                   uint256 newMinGTAIBalance
     );
-    function updateMinInterfaceBalance(uint256 _newMinInterfaceBalance)
+    function updateMinGTAIBalance(uint256 _newMinGTAIBalance)
         public
         onlyOwner
     {
-        emit LogMinInterfaceBalanceUpdated(minInterfaceBalance, _newMinInterfaceBalance);
-        minInterfaceBalance = _newMinInterfaceBalance;
+        emit LogMinGTAIBalanceUpdated(minGTAIBalance, _newMinGTAIBalance);
+        minGTAIBalance = _newMinGTAIBalance;
     }
 
     event LogExecutorProfitUpdated(uint256 executorProfit,
@@ -143,17 +143,17 @@ contract GelatoCoreAccounting is Ownable, ReentrancyGuard {
         executorGasPrice = _newExecutorGasPrice;
     }
 
-    event LogDefaultGasPriceForInterfacesUpdated(uint256 defaultGasPriceForInterfaces,
-                                                 uint256 newDefaultGasPriceForInterfaces
+    event LogDefaultGasPriceForGTAIsUpdated(uint256 defaultGasPriceForGTAIs,
+                                            uint256 newDefaultGasPriceForGTAIs
     );
-    function updateDefaultGasPriceForInterfaces(uint256 _newDefaultGasPrice)
+    function updateDefaultGasPriceForInterfaces(uint256 _newDefaultGasPriceForGTAIs)
         public
         onlyOwner
     {
-        emit LogDefaultGasPriceForInterfacesUpdated(defaultGasPriceForInterfaces,
-                                                    _newDefaultGasPrice
+        emit LogDefaultGasPriceForGTAIsUpdated(defaultGasPriceForGTAIs,
+                                               _newDefaultGasPriceForGTAIs
         );
-        defaultGasPriceForInterfaces = _newDefaultGasPrice;
+        defaultGasPriceForGTAIs = _newDefaultGasPriceForGTAIs;
     }
     event LogGasOutsideGasleftChecksUpdated(uint256 gasOutsideGasleftChecks,
                                             uint256 newGasOutsideGasleftChecks

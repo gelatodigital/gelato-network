@@ -1,12 +1,12 @@
 pragma solidity ^0.5.10;
 
 import '../gelato_action_standards/GelatoActionsStandard.sol';
-import '../../gelato_dappInterfaces/gelato_DutchX/gelato_DutchX_standards/GelatoDutchXStandard.sol';
+import '../../../gelato_dappInterfaces/gelato_DutchX/gelato_DutchX_standards/GelatoDutchXStandard.sol';
 import '@openzeppelin/contracts/utils/ReentrancyGuard.sol';
 
-contract ActionSellOnDutchX is GelatoActionsStandard,
-                               GelatoDutchXStandard,
-                               ReentrancyGuard
+contract ActionDutchXSell is GelatoActionsStandard,
+                             GelatoDutchXStandard,
+                             ReentrancyGuard
 {
     constructor(address _gelatoCore,
                 address _dutchX,
@@ -15,7 +15,7 @@ contract ActionSellOnDutchX is GelatoActionsStandard,
     )
         public
         GelatoActionsStandard(_gelatoCore,
-                              _dutchX
+                              _dutchX,
                               _actionSignature,
                               _actionGasStipend
         )
@@ -36,21 +36,13 @@ contract ActionSellOnDutchX is GelatoActionsStandard,
             return true;
         }
     }
-    modifier tokenPairIsTraded(address _sellToken,
-                               address _buyToken)
-    {
-        require(conditionsFulfilled(_sellToken, _buyToken),
-            "ActionSellOnDutchX.tokenPairIsTraded: failed"
-        );
-        _;
-    }
 
     // Action:
-    function sellOnDutchX(uint256 _executionClaimId,
-                          address _executionClaimOwner,
-                          address _sellToken,
-                          address _buyToken,
-                          uint256 _sellAmount
+    function action(uint256 _executionClaimId,
+                    address _executionClaimOwner,
+                    address _sellToken,
+                    address _buyToken,
+                    uint256 _sellAmount
     )
         nonReentrant
         ERC20Allowance(_sellToken, _executionClaimOwner, _sellAmount)
@@ -59,15 +51,18 @@ contract ActionSellOnDutchX is GelatoActionsStandard,
         returns(bool)
     {
         _standardActionChecks();
+        require(conditionsFulfilled(_sellToken, buyToken),
+            "ActionDutchXSell.action: tokens not traded on DutchX"
+        );
         require(_buyToken != address(0),
-            "ActionSellOnDutchX.sellOnDutchX: _buyToken zero-value"
+            "ActionDutchXSell.action: _buyToken zero-value"
         );
         require(_sellOnDutchX(_executionClaimId,
                               _executionClaimOwner,
                               _sellToken,
                               _buyToken,
                               _sellAmount),
-            "ActionSellOnDutchX._sellOnDutchX failed"
+            "ActionSellOnDutchX.action._sellOnDutchX failed"
         );
         return true;
     }
