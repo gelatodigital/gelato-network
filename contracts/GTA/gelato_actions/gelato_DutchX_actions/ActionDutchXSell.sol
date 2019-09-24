@@ -48,7 +48,10 @@ contract ActionDutchXSell is GelatoActionsStandard,
         ERC20Allowance(_sellToken, _executionClaimOwner, _sellAmount)
         tokenPairIsTraded(_sellToken, _buyToken)
         public
-        returns(bool)
+        returns(bool,
+                uint256 sellAuctionIndex,
+                uint256 sellAmountAfterFee
+        )
     {
         _standardActionChecks();
         require(conditionsFulfilled(_sellToken, buyToken),
@@ -57,12 +60,16 @@ contract ActionDutchXSell is GelatoActionsStandard,
         require(_buyToken != address(0),
             "ActionDutchXSell.action: _buyToken zero-value"
         );
-        require(_sellOnDutchX(_executionClaimId,
-                              _executionClaimOwner,
-                              _sellToken,
-                              _buyToken,
-                              _sellAmount),
-            "ActionSellOnDutchX.action._sellOnDutchX failed"
+        (success,
+         sellAuctionIndex,
+         sellAmountAfterFee) = _sellOnDutchX(_executionClaimId,
+                                             _executionClaimOwner,
+                                             _sellToken,
+                                             _buyToken,
+                                             _sellAmount
+        );
+        require(success,
+            "ActionDutchXSell.action._sellOnDutchX failed"
         );
         return true;
     }

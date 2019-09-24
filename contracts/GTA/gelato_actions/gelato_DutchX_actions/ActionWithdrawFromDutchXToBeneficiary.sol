@@ -45,7 +45,7 @@ contract ActionWithdrawFromDutchXToBeneficiary is GelatoActionsStandard,
         public
         returns(bool)
     {
-        _actionChecks();
+        _standardActionChecks();
         uint256 withdrawAmount = _getWithdrawAmount(_sellToken,
                                                     _buyToken,
                                                     _auctionIndex,

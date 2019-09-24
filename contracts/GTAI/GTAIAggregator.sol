@@ -1,22 +1,32 @@
 pragma solidity ^0.5.10;
 
-import './GTAI_standards/ownable/IcedOutOwnable.sol';
-import './GTAI_standards/ownable/GTARegistryOwnable.sol';
+import './GTAI_standards/IcedOut/IcedOutOwnable.sol';
+import './GTAI_standards/GTAI_registry/ownable_registry/GTARegistryOwnable.sol';
+import './GTAI_standards/GTAI_chained/IChainedMintingGTAI.sol';
 import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 
 contract GTAIAggregator is IcedOutOwnable,
-                           GTARegistryOwnable
+                           GTARegistryOwnable,
+                           IChainedMintingGTAI
 {
     using SafeERC20 for ERC20;
 
     // **************************** Events ******************************
     event LogNewOrder(uint256 executionClaimId,
                       uint256 indexed executionClaimOwner,
-                      address indexed triggerAddress,
+                      address indexed trigger,
                       bytes4 triggerSelector,
-                      address indexed actionAddress,
+                      address indexed action,
                       bytes4 actionSelector
+    );
+    event LogChainedExecutionClaimMinted(address indexed minter,
+                                         uint256 executionClaimId,
+                                         uint256 indexed executionClaimOwner,
+                                         address trigger,
+                                         bytes4 triggerSelector,
+                                         address indexed action,
+                                         bytes4 actionSelector
     );
     event LogWithdrawComplete(uint256 indexed executionClaimId,
                               address indexed seller,
@@ -24,7 +34,6 @@ contract GTAIAggregator is IcedOutOwnable,
                               uint256 sellAmount,
                               uint256 withdrawAmount
     );
-    event LogGas(uint256 gas1, uint256 gas2);
     // **************************** Events END ******************************
 
 
@@ -39,8 +48,47 @@ contract GTAIAggregator is IcedOutOwnable,
         public
     {}
 
+    //___________________ Chained Execution Claim Minting _____________________
+    function mintChainedExecutionClaim(address _executionClaimOwner,
+                                       address _chainedTrigger,
+                                       bytes4 _chainedTriggerSelector,
+                                       bytes calldata _chainedTriggerPayload,
+                                       address _chainedAction,
+                                       bytes4 _chainedActionSelector,
+                                       bytes calldata _chainedActionPayload
+    )
+        msgSenderIsRegisteredAction
+        standardGTARegistryChecks(_chainedTrigger,
+                                  _chainedAction,
+                                  _chainedTriggerSelector,
+                                  _chainedActionSelector
+        )
+        external
+        returns(bool)
+    {
+        uint256 chainedExecutionClaimId = _getNextExecutionClaimId();
+        uint256 chainedActionGasStipend = _getActionGasStipend(_chainedAction);
+        _mintExecutionClaim(_executionClaimOwner,
+                            _chainedTrigger,
+                            _chainedTriggerPayload,
+                            _chainedAction,
+                            _chainedActionPayload,
+                            chainedActionGasStipend
+        );
+        emit LogChainedExecutionClaimMinted(msg.sender,
+                                            chainedExecutionClaimId,
+                                            _executionClaimOwner,
+                                            _chainedTrigger,
+                                            _chainedTriggerSelector,
+                                            _chainedAction,
+                                            _chainedActionSelector
+        );
+        return true;
+    }
+    // ================
 
-    // **************************** DutchX Timed Sell Orders ******************
+
+    // ******************** DutchX Timed Sell and CHAINED withdraw *****************
     function dutchXTimedSellAndWithdraw(address _trigger,
                                         bytes4 _triggerSelector,
                                         uint256 _executionTime,
@@ -50,7 +98,7 @@ contract GTAIAggregator is IcedOutOwnable,
                                         address _buyToken,
                                         uint256 _sellAmount
     )
-        standardGTAIRegistryChecks(_trigger, _action, _triggerSelector, _actionSelector)
+        standardGTARegistryChecks(_trigger, _action, _triggerSelector, _actionSelector)
         actionHasERC20Allowance(_action, _sellToken, msg.sender, _sellAmount)
         actionConditionsFulfilled(_action, abi.encode(_sellToken, _buyToken))
         public
@@ -88,24 +136,24 @@ contract GTAIAggregator is IcedOutOwnable,
         );
         _mintExecutionClaim(nextExecutionClaimId,
                             msg.sender,  // executionClaimOwner
-                            _triggerAddress,
+                            _trigger,
                             triggerPayload,
-                            _actionAddress,
+                            _action,
                             actionPayload,
                             actionGasStipend
         );
         emit LogNewOrder(nextExecutionClaimId,
                          msg.sender,
-                         _triggerAddress,
+                         _trigger,
                          _triggerSelector,
-                         _actionAddress,
+                         _action,
                          _actionSelector
         );
         // =========================
 
         return true;
     }
-    // **************************** DutchX Timed Sell Orders END
+    // ************* DutchX Timed Sell and CHAINED Withdraw END
 
 
     // Test if execWithdraw is executable
@@ -223,7 +271,13 @@ contract GTAIAggregator is IcedOutOwnable,
             );
 
             // Mint new withdraw token
-            mintExecutionClaim(address(this), triggerPayload, address(this), actionPayload, execWithdrawGas, tokenOwner);
+            mintExecutionClaim(address(this),
+                               triggerPayload,
+                               address(this),
+                               actionPayload,
+                               execWithdrawGas,
+                               tokenOwner
+            );
 
         }
         // ********************** Step7: Execution Logic END **********************
@@ -287,9 +341,9 @@ contract GTAIAggregator is IcedOutOwnable,
     // @🐮 create cancel helper on IcedOut.sol
 
     // Front end has to save all necessary variables and input them automatically for user
-    function cancelOrder(address _triggerAddress,
+    function cancelOrder(address _trigger,
                          bytes calldata _triggerPayload,
-                         address _actionAddress,
+                         address _action,
                          bytes calldata _actionPayload,
                          uint256 _actionMaxGas,
                          uint256 _executionClaimId
@@ -329,9 +383,9 @@ contract GTAIAggregator is IcedOutOwnable,
 
         // Cancel both execution Claims on core
         // ** Gelato Core interactions **
-        gelatoCore.cancelExecutionClaim(_triggerAddress,
+        gelatoCore.cancelExecutionClaim(_trigger,
                                         _triggerPayload,
-                                        _actionAddress,
+                                        _action,
                                         _actionPayload,
                                         _actionMaxGas,
                                         address(this),

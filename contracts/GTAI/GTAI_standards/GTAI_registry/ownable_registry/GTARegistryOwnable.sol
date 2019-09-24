@@ -1,22 +1,22 @@
 pragma solidity ^0.5.10;
 
 import '../../GTA/GTA_standards/GTA.sol';
-import './GelatoTriggerRegistry.sol';
-import './GelatoActionRegistry.sol';
+import './GelatoTriggerRegistryOwnable.sol';
+import './GelatoActionRegistryOwnable.sol';
 
-contract GTAIRegistry is GTA,
-                         GelatoTriggerRegistry,
-                         GelatoActionRegistry
+contract GTARegistryOwnable is GTA,
+                               GelatoTriggerRegistryOwnable,
+                               GelatoActionRegistryOwnable
 {
     constructor(address _gelatoCore)
         GTA(_gelatoCore)
         internal
     {}
 
-     modifier standardGTAIRegistryChecks(address _trigger,
-                                         address _action,
-                                         bytes4 _triggerSelector,
-                                         bytes4 _actionSelector)
+     modifier standardGTARegistryChecks(address _trigger,
+                                        address _action,
+                                        bytes4 _triggerSelector,
+                                        bytes4 _actionSelector)
      {
           onlyRegisteredTriggers(_trigger, _triggerSelector)
           onlyRegisteredActions(_action, _actionSelector)

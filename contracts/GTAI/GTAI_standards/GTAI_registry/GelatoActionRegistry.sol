@@ -62,12 +62,19 @@ contract GelatoActionRegistry {
 
      modifier matchingActionSelector(address _action,
                                      bytes4 _actionSelector)
-     {
+    {
         require(IGelatoAction(_action).matchingActionSelector(_actionSelector),
             "GelatoActionRegistry.matchingActionSelector: failed"
         );
         _;
-     }
+    }
+
+    modifier msgSenderIsRegisteredAction() {
+        require(actions[msg.sender] != bytes4(0),
+            "GelatoActionRegistry.msgSenderIsRegisteredAction: failed"
+        );
+        _;
+    }
     // ===========
 
     // ____________ Additional Checks _____________________________________

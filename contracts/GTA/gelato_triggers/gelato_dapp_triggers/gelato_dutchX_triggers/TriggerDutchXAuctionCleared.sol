@@ -5,7 +5,7 @@ import '../../../gelato_dappInterfaces/gelato_dutchX/gelato_dutchX_interfaces/ID
 
 contract TriggerDutchXAuctionCleared is GelatoTriggersStandard {
 
-    IDutchX dutchX public;
+    IDutchX public dutchX;
 
     constructor(address _gelatoCore,
                 string _triggerSignature,
