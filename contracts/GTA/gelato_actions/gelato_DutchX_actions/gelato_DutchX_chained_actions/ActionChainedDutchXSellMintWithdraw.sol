@@ -1,10 +1,10 @@
 pragma solidity ^0.5.10;
 
 import './ActionDutchXSell.sol';
-import '../../GTA_standards/GTA_chained/GelatoChainedMinting.sol';
+import '../../GTA_standards/GTA_chained/GTAChainedMinting.sol';
 
 contract ActionChainedDutchXSellMintWithdraw is ActionDutchXSell,
-                                                GelatoChainedMinting
+                                                GTAChainedMinting
 {
     constructor(address _gelatoCore,
                 address _dutchX,
@@ -57,25 +57,27 @@ contract ActionChainedDutchXSellMintWithdraw is ActionDutchXSell,
             "ActionChainedDutchXSellMintWithdraw.super.action: failed"
         );
         // chained minting: mint withdrawal execution claims via gtai
-        bytes _chainedTriggerPayload = abi.encodeWithSelector(chainedTAData.triggerSelector,
-                                                              _sellToken,
-                                                              _buyToken,
-                                                              sellAuctionIndex
-        );
-        bytes _chainedActionPayload = abi.encodeWithSelector(chainedTAData.actionSelector,
-                                                             _executionClaimId,
-                                                             _executionClaimOwner,
-                                                             _beneficiary,
+        bytes chainedTriggerPayload = abi.encodeWithSelector(chainedTAData.triggerSelector,
                                                              _sellToken,
                                                              _buyToken,
-                                                             address(this),  // seller
-                                                             sellAuctionIndex,
-                                                             sellAmountAfterFee
+                                                             sellAuctionIndex
         );
-        _mintExecutionClaim(_executionClaimOwner);
-        emit LogChainedDutchXSellMintWithdraw(_executionClaimId,
-                                              _executionClaimOwner
+        bytes chainedActionPayload = abi.encodeWithSelector(chainedTAData.actionSelector,
+                                                            _executionClaimId,
+                                                            _executionClaimOwner,
+                                                            _beneficiary,
+                                                            _sellToken,
+                                                            _buyToken,
+                                                            address(this),  // seller
+                                                            sellAuctionIndex,
+                                                            sellAmountAfterFee
         );
+        require(_mintExecutionClaim(_executionClaimOwner,
+                                    chainedTriggerPayload,
+                                    chainedActionPayload),
+            "ActionChainedDutchXSellMintWithdraw._mintExecutionClaim: failed"
+        );
+        emit LogChainedDutchXSellMintWithdraw(_executionClaimId, _executionClaimOwner);
         return true;
     }
 }

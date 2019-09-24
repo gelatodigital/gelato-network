@@ -3,11 +3,12 @@ pragma solidity ^0.5.10;
 interface IChainedMintingGTAI {
 
     function mintChainedExecutionClaim(address _executionClaimOwner,
-                                       address _triggerAddress,
-                                       bytes calldata _triggerPayload,
-                                       address _actionAddress,
-                                       bytes calldata _actionPayload,
-                                       uint256 _actionGasStipend
+                                       address _chainedTrigger,
+                                       bytes4 _chainedTriggerSelector,
+                                       bytes calldata _chainedTriggerPayload,
+                                       address _chainedAction,
+                                       bytes4 _chainedActionSelector,
+                                       bytes calldata _chainedActionPayload
     )
         external
         returns(bool)

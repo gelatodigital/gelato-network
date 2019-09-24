@@ -14,7 +14,7 @@ contract GTAChainedMinting {
     ChainedTAData public chainedTAData;
 
 
-    constructor(address _chainedMintingGTAI
+    constructor(address _chainedMintingGTAI,
                 address _chainedTrigger,
                 bytes4 _chainedTriggerSelector,
                 address _chainedAction,
@@ -35,15 +35,17 @@ contract GTAChainedMinting {
                                  bytes memory _chainedActionPayload
     )
         internal
+        returns(bool)
     {
         require(chainedMintingGTAI.mintChainedExecutionClaim(_executionClaimOwner,
-                                                             ChainedTAData.trigger,
-                                                             ChainedTAData.triggerSelector,
+                                                             chainedTAData.trigger,
+                                                             chainedTAData.triggerSelector,
                                                              _chainedTriggerPayload,
-                                                             ChainedTAData.action,
-                                                             ChainedTAData.actionSelector,
-                                                             _chainedActionPayload)
+                                                             chainedTAData.action,
+                                                             chainedTAData.actionSelector,
+                                                             _chainedActionPayload),
             "GTAChainedMinting._mintExecutionClaim: failed"
         );
+        return true;
     }
 }
