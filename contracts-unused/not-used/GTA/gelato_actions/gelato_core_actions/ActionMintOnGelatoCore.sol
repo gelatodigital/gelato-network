@@ -1,6 +1,6 @@
 pragma solidity ^0.5.10;
 
-import './gelato_actions_base/GelatoActionsStandard.sol'
+import '../gelato_actions_standard/GelatoActionsStandard.sol';
 
 contract ActionMintOnGelatoCore is GelatoActionsStandard {
 
@@ -16,7 +16,7 @@ contract ActionMintOnGelatoCore is GelatoActionsStandard {
                               bytes calldata _triggerPayload,
                               address _actionAddress,
                               bytes calldata _actionPayload,
-                              uint256 _actionGasStipend
+                              uint256 _actionGasStipend,
                               address _executionClaimOwner
     )
         external

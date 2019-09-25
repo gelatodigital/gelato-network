@@ -25,11 +25,11 @@ contract GelatoCore is GelatoExecutionClaim,
     constructor(uint256 _minGTAIBalance,
                 uint256 _executorProfit,
                 uint256 _executorGasPrice,
-                uint256 _defaultGasPriceForGTAIs
+                uint256 _defaultGasPriceForGTAIs,
                 uint256 _gasOutsideGasleftChecks,
                 uint256 _gasInsideGasleftChecks,
                 uint256 _canExecMaxGas,
-                uint256 _executorGasRefundEstimate,
+                uint256 _executorGasRefundEstimate
     )
         GelatoExecutionClaim("gelato", "GTA")
         public
@@ -64,7 +64,7 @@ contract GelatoCore is GelatoExecutionClaim,
                                 bytes calldata _actionPayload,
                                 uint256 _actionGasStipend
     )
-        stakedGTAI
+        onlyStakedGTAI
         external
         payable
         returns(bool)
@@ -80,8 +80,7 @@ contract GelatoCore is GelatoExecutionClaim,
 
         // Include executionClaimId: avoid hash collisions
         // Exclude _executionClaimOwner: ExecutionClaims are transferable
-        bytes32 executionClaimHash = keccak256(abi.encodePacked(msg.sender,  // GTAI
-                                                                executionClaimId,
+        bytes32 executionClaimHash = keccak256(abi.encodePacked(executionClaimId,
                                                                 _triggerAddress,
                                                                 _triggerPayload,
                                                                 _actionAddress,
@@ -123,7 +122,7 @@ contract GelatoCore is GelatoExecutionClaim,
                         bytes memory _triggerPayload,
                         address _actionAddress,
                         bytes memory _actionPayload,
-                        uint256 _actionGasStipend,
+                        uint256 _actionGasStipend
     )
         public
         view
@@ -133,7 +132,7 @@ contract GelatoCore is GelatoExecutionClaim,
         // _____________ Static CHECKS __________________________________________
         // Check if Interface has sufficient balance on core
         ///@dev tx maximum cost check is done inside the execute fn
-        if (GTAIBalances[_GTAI] < minGTAIBalance) {
+        if (gtaiBalances[_GTAI] < minGTAIBalance) {
             return (uint256(PreExecutionCheck.InsufficientGTAIBalance),
                     executionClaimOwner
             );
@@ -148,8 +147,7 @@ contract GelatoCore is GelatoExecutionClaim,
         }
 
         // Compute executionClaimHash from calldata
-        bytes32 computedExecutionClaimHash = keccak256(abi.encodePacked(_GTAI,
-                                                                        _executionClaimId,
+        bytes32 computedExecutionClaimHash = keccak256(abi.encodePacked(_executionClaimId,
                                                                         _triggerAddress,
                                                                         _triggerPayload,
                                                                         _actionAddress,
@@ -168,10 +166,10 @@ contract GelatoCore is GelatoExecutionClaim,
         // _____________ Dynamic CHECKS __________________________________________
         // Conduct static call to trigger. If true, action is ready to be executed
         (bool success,
-         bytes memory returndata) = _triggerAddress.staticcall
+         bytes memory returndata) = (_triggerAddress.staticcall
                                                    .gas(canExecMaxGas)
                                                    (_triggerPayload)
-        ; // staticcall end
+        );
 
         // Check GTAI return value
         if (!success) {
@@ -197,6 +195,11 @@ contract GelatoCore is GelatoExecutionClaim,
     event LogCanExecuteFailed(address indexed executor,
                               uint256 indexed executionClaimId
     );
+    event LogExecuteResult(bool indexed status,
+                           address indexed executor,
+                           uint256 indexed executionClaimId,
+                           uint256 executionGas
+    );
     event LogClaimExecutedBurnedAndDeleted(address indexed GTAI,
                                            uint256 indexed executionClaimId,
                                            address indexed executionClaimOwner,
@@ -214,33 +217,43 @@ contract GelatoCore is GelatoExecutionClaim,
         InterfaceBalanceChanged
     }
 
-    function execute(address _triggerAddress,
+    function execute(uint256 _executionClaimId,
+                     address _GTAI,
+                     address _triggerAddress,
                      bytes calldata _triggerPayload,
                      address _actionAddress,
                      bytes calldata _actionPayload,
-                     uint256 _actionGasStipend,
-                     address _GTAI,
-                     uint256 _executionClaimId
+                     uint256 _actionGasStipend
     )
         external
         returns (uint256 safeExecuteResult)
     {
         // // Calculate start GAS, set by the executor.
         uint256 startGas = gasleft();
+        uint256 maxGasConsumption = _getMaxExecutionGasConsumption(_actionGasStipend);
 
-        // 3: Start gas should be equal or greater to the GTAI maxGas, gas overhead plus maxGases of canExecute and the internal operations of conductAtomicCall
-        require(startGas >= getMaxExecutionGasConsumption(_actionGasStipend),
+        // 3: Start gas should be equal or greater to the GTAI maxGas,
+        //  gas overhead plus maxGases of canExecute and the internal operations
+        //   of safeExecute()
+        require(startGas >= maxGasConsumption,
             "GelatoCore.execute: Insufficient gas sent"
         );
 
-        // 4: Interface has sufficient funds  staked to pay for the maximum possible charge
-        // We don't yet know how much gas will be used by the recipient, so we make sure there are enough funds to pay
-        // If tx Gas Price is higher than executorGasPrice, use executorGasPrice
+        // 4: Interface has sufficient funds  staked to pay for the maximum possible
+        //  charge. We don't yet know how much gas will be used by the recipient,
+        //   so we make sure there are enough funds to pay. If tx Gas Price is higher
+        //   than executorGasPrice, use executorGasPrice
         uint256 usedGasPrice;
-        tx.gasprice > executorGasPrice ? usedGasPrice = executorGasPrice : usedGasPrice = tx.gasprice;
+        if (tx.gasprice > executorGasPrice) {
+            usedGasPrice = executorGasPrice;
+        } else {
+            usedGasPrice = tx.gasprice;
+        }
 
         // Make sure that GTAIs have enough funds staked on core for the maximum possible charge.
-        require((getMaxExecutionGasConsumption(_actionGasStipend).mul(usedGasPrice)).add(executorProfit) <= GTAIBalances[_GTAI],
+        require((maxGasConsumption
+                    .mul(usedGasPrice)
+                    .add(executorProfit)) <= gtaiBalances[_GTAI],
             "GelatoCore.execute: Insufficient GTAI balance on gelato core"
         );
 
@@ -248,13 +261,13 @@ contract GelatoCore is GelatoExecutionClaim,
         address executionClaimOwner;
         {
             uint256 canExecuteResult;
-            (canExecuteResult, executionClaimOwner) = canExecute(_triggerAddress,
+            (canExecuteResult, executionClaimOwner) = canExecute(_GTAI,
+                                                                 _executionClaimId,
+                                                                 _triggerAddress,
                                                                  _triggerPayload,
                                                                  _actionAddress,
                                                                  _actionPayload,
-                                                                 _actionGasStipend,
-                                                                 _GTAI,
-                                                                 _executionClaimId
+                                                                 _actionGasStipend
             );
             // if canExecuteResult is not equal 0, we return 1 or 2, based on the received preExecutionCheck value;
             if (canExecuteResult != 0) {
@@ -265,7 +278,8 @@ contract GelatoCore is GelatoExecutionClaim,
             }
         }
 
-        // __________________From this point on, this transaction SHOULD not revert nor run out of gas, and the GTAI will be charged for the actual gas consumed
+        // ____From this point on, this transaction SHOULD not revert
+        //  nor run out of gas, and the GTAI will be charged for the actual gas consumed
 
         // **** EFFECTS 1 ****
         // When re entering, executionHash will be bytes32(0)
@@ -303,7 +317,11 @@ contract GelatoCore is GelatoExecutionClaim,
             // Calaculate how much gas we used up in this function. Subtract the certain gas refunds the executor will receive for nullifying values
             // Gas Overhead corresponds to the actions occuring before and after the gasleft() calcs
             // @DEV UPDATE WITH NEW FUNC
-            uint256 gasUsedEstimate = startGas.sub(endGas).add(gasOutsideGasleftChecks).sub(executorGasRefundEstimate);
+            uint256 gasUsedEstimate = (startGas
+                                        .sub(endGas)
+                                        .add(gasOutsideGasleftChecks)
+                                        .sub(executorGasRefundEstimate)
+            );
             // Calculate Total Cost
             uint256 executionCostEstimate = gasUsedEstimate.mul(usedGasPrice);
             // Calculate Executor Payout (including a fee set by GelatoCore.sol)
@@ -324,19 +342,12 @@ contract GelatoCore is GelatoExecutionClaim,
             );
         }
 
-        // Reduce GTAI balance by executorPayout
-        GTAIBalances[_GTAI] = GTAIBalances[_GTAI].sub(executorPayout);
-
-        // Increase executor balance by executorPayout
+        // Balance Updates
+        gtaiBalances[_GTAI] = gtaiBalances[_GTAI].sub(executorPayout);
         executorBalances[msg.sender] = executorBalances[msg.sender].add(executorPayout);
     }
 
-    // To protect from GTAIBalance drain re-entrancy attack
-    event LogExecuteResult(bool indexed status,
-                           address indexed executor,
-                           uint256 indexed executionClaimId,
-                           uint256 executionGas
-    );
+
     function safeExecute(address _GTAI,
                          bytes calldata _actionPayload,
                          uint256 _actionGasStipend,
@@ -350,59 +361,77 @@ contract GelatoCore is GelatoExecutionClaim,
             "GelatoCore.safeExecute: Only Gelato Core can call this function"
         );
 
-        // Interfaces are not allowed to withdraw their balance while an executionClaim is being executed. They can however increase their balance
-        uint256 GTAIBalanceBefore = GTAIBalances[_GTAI];
+        // Interfaces are not allowed to withdraw their balance while an executionClaim is being executed.
+        // They can however increase their balance.
+        uint256 GTAIBalanceBefore = gtaiBalances[_GTAI];
 
         // Interactions
-        // Current tx gas cost:
-        // gelatoDutchX depositAnd sell: 465.597
-        (bool executedClaimStatus,) = _GTAI.call.gas(_actionGasStipend)(_actionPayload); // .gas(_actionGasStipend)
-        emit LogExecuteResult(executedClaimStatus, _executor, _executionClaimId, _actionGasStipend);
-
-        // If GTAI withdrew some balance, revert transaction
-        require(GTAIBalances[_GTAI] >= GTAIBalanceBefore,
-            "GelatoCore.safeExecute: Interface withdrew some balance during the transaction"
+        (bool success,) = _GTAI.call.gas(_actionGasStipend)(_actionPayload);
+        emit LogExecuteResult(executedClaimStatus,
+                              _executor,
+                              _executionClaimId,
+                              _actionGasStipend
         );
 
-        // return if .call succeeded or failed
-        return executedClaimStatus ? uint256(PostExecutionStatus.Success) : uint256(PostExecutionStatus.Failure);
+        // If GTAI withdrew some balance, revert transaction
+        require(gtaiBalances[_GTAI] >= GTAIBalanceBefore,
+            "GelatoCore.safeExecute: forbidden interim gtaiBalance withdrawal"
+        );
+
+        // return whether .call succeeded or failed
+        if (success) {
+            return uint256(PostExecutionStatus.Success);
+        } else {
+            return uint256(PostExecutionStatus.Failure);
+        }
     }
     // ************** execute() -> safeExecute() END
 
-    function getMaxExecutionGasConsumption(uint256 _actionGasStipend)
+    function _getMaxExecutionGasConsumption(uint256 _actionGasStipend)
         internal
         view
         returns (uint256)
     {
         // Only use .add for last, user inputted value to avoid over - underflow
-        return gasOutsideGasleftChecks + canExecMaxGas + gasInsideGasleftChecks.add(_actionGasStipend);
+        return (gasOutsideGasleftChecks
+                + canExecMaxGas
+                + gasInsideGasleftChecks
+                .add(_actionGasStipend)
+        );
     }
     // ********************* EXECUTE FUNCTION SUITE END
 
 
     // ********************* cancelExecutionClaim() *********************
-    event LogExecutionClaimCancelled(address indexed GTAI,
-                                     uint256 indexed executionClaimId,
-                                     address indexed executionClaimOwner
+    modifier onlyExecutionClaimOwner(uint256 _executionClaimId) {
+        require(msg.sender == ownerOf(_executionClaimId),
+            "GelatoCore.onlyExecutionClaimOwner: failed"
+        );
+        _;
+    }
+
+    event LogExecutionClaimCancelled(uint256 indexed executionClaimId,
+                                     address indexed executionClaimOwner,
+                                     address indexed GTAI
     );
-    function cancelExecutionClaim(address _triggerAddress,
+    function cancelExecutionClaim(uint256 _executionClaimId,
+                                  address _triggerAddress,
                                   bytes calldata _triggerPayload,
                                   address _actionAddress,
                                   bytes calldata _actionPayload,
                                   uint256 _actionGasStipend,
-                                  address _GTAI,
-                                  uint256 _executionClaimId
+                                  address _GTAI
     )
+        onlyExecutionClaimOwner(_executionClaimId)
         external
     {
         // Compute executionClaimHash from calldata
-        bytes32 computedExecutionClaimHash = keccak256(abi.encodePacked(_triggerAddress,
+        bytes32 computedExecutionClaimHash = keccak256(abi.encodePacked(_executionClaimId,
+                                                                        _triggerAddress,
                                                                         _triggerPayload,
                                                                         _actionAddress,
                                                                         _actionPayload,
-                                                                        _actionGasStipend,
-                                                                        _GTAI,
-                                                                        _executionClaimId
+                                                                        _actionGasStipend
         ));
         bytes32 storedExecutionClaimHash = hashedExecutionClaims[_executionClaimId];
 
@@ -410,21 +439,13 @@ contract GelatoCore is GelatoExecutionClaim,
         require(computedExecutionClaimHash == storedExecutionClaimHash,
             "Computed execution hash does not equal stored execution hash"
         );
-        // Local variables needed for Checks, Effects -> Interactions pattern
-        address executionClaimOwner = ownerOf(_executionClaimId);
-        // Check that execution claim exists
-        require(executionClaimOwner != address(0));
-        // Only the GTAI can cancel the executionClaim
-        require(_GTAI == msg.sender);
-
         // EFFECTS
-        emit LogExecutionClaimCancelled(_GTAI,
-                                        _executionClaimId,
-                                        executionClaimOwner
+        emit LogExecutionClaimCancelled(_executionClaimId,
+                                        ownerOf(_executionClaimId),
+                                        _GTAI
         );
         _burn(_executionClaimId);
         delete hashedExecutionClaims[_executionClaimId];
-
     }
     // ********************* cancelExecutionClaim() END
 

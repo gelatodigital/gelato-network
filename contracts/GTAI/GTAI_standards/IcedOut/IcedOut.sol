@@ -1,7 +1,7 @@
 pragma solidity ^0.5.10;
 
-import '../../gelato_core/GelatoCore.sol';
-import '../../GTA/gelato_actions/gelato_action_standards/IGelatoAction.sol';
+import '../../../gelato_core/GelatoCore.sol';
+import '../../../GTA/gelato_actions/gelato_action_standards/IGelatoAction.sol';
 import '@openzeppelin/contracts/math/SafeMath.sol';
 
 contract IcedOut {
@@ -101,7 +101,7 @@ contract IcedOut {
                                uint256 thisBalance
      );
      function _topUpBalanceOnGelato()
-          internal
+          public
           payable
      {
           gelatoCore.addGTAIBalance.value(msg.value)();
@@ -147,7 +147,7 @@ contract IcedOut {
      function _withdrawBalanceFromGelato(uint256 _withdrawAmount)
           internal
      {
-          gelatoCore.withdrawInterfaceBalance(_withdrawAmount);
+          gelatoCore.withdrawGTAIBalance(_withdrawAmount);
           emit LogBalanceWithdrawnFromGelato(_withdrawAmount,
                                              gelatoCore.gtaiBalances(address(this)),
                                              address(this).balance

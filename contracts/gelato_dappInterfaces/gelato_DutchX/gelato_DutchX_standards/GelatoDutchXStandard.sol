@@ -3,9 +3,11 @@ pragma solidity ^0.5.10;
 import '../gelato_DutchX_interfaces/IDutchX.sol';
 import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
+import '@openzeppelin/contracts/math/SafeMath.sol';
 
 contract GelatoDutchXStandard {
     using SafeERC20 for ERC20;
+    using SafeMath for uint256;
 
     IDutchX public dutchX;
 
@@ -45,21 +47,16 @@ contract GelatoDutchXStandard {
         view
         returns(uint256 sellAuctionIndex)
     {
-        currentAuctionIndex = dutchX.getAuctionIndex(_sellToken, _buyToken);
+        uint256 currentAuctionIndex = dutchX.getAuctionIndex(_sellToken, _buyToken);
         uint256 auctionStartTime = dutchX.getAuctionStart(_sellToken, _buyToken);
-
         // Check if we are in a Waiting period or auction running period
         if (auctionStartTime > now || auctionStartTime == AUCTION_START_WAITING_FOR_FUNDING)
         {
-            // We are in waiting period
-            newAuctionIsWaiting = true;
-            // SellAmount will go into sellVolumesCurrent
+            // Waiting Period: sellAmount will go into sellVolumesCurrent
             sellAuctionIndex = currentAuctionIndex;
         }
         else if (auctionStartTime < now) {
-            // Auction is currently ongoing
-            newAuctionIsWaiting = false;
-            // SellAmount will go into sellVolumesNext
+            // Auction ongoing: sellAmount will go into sellVolumesNext
             sellAuctionIndex = currentAuctionIndex.add(1);
         }
     }
@@ -71,23 +68,17 @@ contract GelatoDutchXStandard {
                            uint256 _sellAmount
     )
         internal
-        returns(bool,
-                uint256 sellAuctionIndex,
-                uint256 sellAmountAfterFee
-        )
+        returns(bool, uint256, uint256)
     {
-        uint256 dutchXFee;
-        (sellAmountAfterFee,
-         dutchXFee) = _getSellAmountAfterFee(address(this),
-                                             _sellAmount
+        (uint256 sellAmountAfterFee,
+         uint256 dutchXFee) = _getSellAmountAfterFee(address(this),
+                                                     _sellAmount
         );
         require(ERC20(_sellToken).balanceOf(address(this)) >= _sellAmount,
             "GelatoDutchXStandard._sellOnDutchX: sellToken.balanceOf(addr(this)) failed"
         );
-        require(ERC20(_sellToken).safeApprove(address(dutchX), _sellAmount),
-            "GelatoDutchXStandard._sellOnDutchX: sellToken.approve failed"
-        );
-        sellAuctionIndex = _getSellAuctionIndex(_sellToken,_buyToken);
+        ERC20(_sellToken).safeApprove(address(dutchX), _sellAmount);
+        uint256 sellAuctionIndex = _getSellAuctionIndex(_sellToken,_buyToken);
         require(sellAuctionIndex != 0,
             "GelatoDutchXStandard._sellOnDutchX: nextParticipationIndex failed"
         );
@@ -102,7 +93,7 @@ contract GelatoDutchXStandard {
                              sellAmountAfterFee,
                              sellAuctionIndex
         );
-        return true;
+        return (true, sellAuctionIndex, sellAmountAfterFee);
     }
     // ******************** SELL END ********************
 
@@ -153,7 +144,7 @@ contract GelatoDutchXStandard {
                                 _buyToken,
                                 _seller,
                                 _auctionIndex,
-                                withdrawAmount
+                                _withdrawAmount
         );
         return true;
     }

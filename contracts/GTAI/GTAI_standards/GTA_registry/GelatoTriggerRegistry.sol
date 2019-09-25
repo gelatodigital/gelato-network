@@ -1,6 +1,6 @@
 pragma solidity ^0.5.10;
 
-import '../../GTA/gelato_triggers/gelato_trigger_standards/IGelatoTrigger.sol';
+import '../../../GTA/gelato_triggers/gelato_trigger_standards/IGelatoTrigger.sol';
 
 contract GelatoTriggerRegistry {
     // trigger => functionSelector

@@ -8,9 +8,9 @@ contract ActionDutchXSell is GelatoActionsStandard,
                              GelatoDutchXStandard,
                              ReentrancyGuard
 {
-    constructor(address _gelatoCore,
+    constructor(address payable _gelatoCore,
                 address _dutchX,
-                string _actionSignature,
+                string memory _actionSignature,
                 uint256 _actionGasStipend
     )
         public
@@ -23,14 +23,14 @@ contract ActionDutchXSell is GelatoActionsStandard,
     {}
 
     // SellCondition: token pair is traded on DutchX
-    function conditionsFulfilled(bytes calldata _payload)
+    function conditionsFulfilled(bytes memory _payload)
         public
         view
         returns(bool)
     {
         (address _sellToken,
          address _buyToken) = abi.decode(_payload, (address, address));
-        if (dutchExchange.getAuctionIndex(_sellToken, _buyToken) == 0) {
+        if (dutchX.getAuctionIndex(_sellToken, _buyToken) == 0) {
             return false;
         } else {
             return true;
@@ -46,31 +46,27 @@ contract ActionDutchXSell is GelatoActionsStandard,
     )
         nonReentrant
         ERC20Allowance(_sellToken, _executionClaimOwner, _sellAmount)
-        tokenPairIsTraded(_sellToken, _buyToken)
         public
-        returns(bool,
-                uint256 sellAuctionIndex,
-                uint256 sellAmountAfterFee
-        )
+        returns(bool, uint256, uint256)
     {
         _standardActionChecks();
-        require(conditionsFulfilled(_sellToken, buyToken),
+        require(conditionsFulfilled(abi.encode(_sellToken, _buyToken)),
             "ActionDutchXSell.action: tokens not traded on DutchX"
         );
         require(_buyToken != address(0),
             "ActionDutchXSell.action: _buyToken zero-value"
         );
-        (success,
-         sellAuctionIndex,
-         sellAmountAfterFee) = _sellOnDutchX(_executionClaimId,
-                                             _executionClaimOwner,
-                                             _sellToken,
-                                             _buyToken,
-                                             _sellAmount
+        (bool success,
+         uint256 sellAuctionIndex,
+         uint256 sellAmountAfterFee) = _sellOnDutchX(_executionClaimId,
+                                                     _executionClaimOwner,
+                                                     _sellToken,
+                                                     _buyToken,
+                                                     _sellAmount
         );
         require(success,
             "ActionDutchXSell.action._sellOnDutchX failed"
         );
-        return true;
+        return (true, sellAuctionIndex, sellAmountAfterFee);
     }
 }

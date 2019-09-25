@@ -2,8 +2,10 @@ pragma solidity ^0.5.10;
 
 import '@openzeppelin/contracts/ownership/Ownable.sol';
 import '@openzeppelin/contracts/utils/ReentrancyGuard.sol';
+import '@openzeppelin/contracts/math/SafeMath.sol';
 
 contract GelatoCoreAccounting is Ownable, ReentrancyGuard {
+    using SafeMath for uint256;
 
     // Fallback Function
     function() external payable {
@@ -13,7 +15,7 @@ contract GelatoCoreAccounting is Ownable, ReentrancyGuard {
     }
 
     //_____________ Gelato ExecutionClaim Economics _______________________
-    mapping(address => uint256) public GTAIBalances;
+    mapping(address => uint256) public gtaiBalances;
     mapping(address => uint256) public executorBalances;
     uint256 public minGTAIBalance;
     uint256 public executorProfit;
@@ -26,8 +28,8 @@ contract GelatoCoreAccounting is Ownable, ReentrancyGuard {
     uint256 public executorGasRefundEstimate;
     // =========================
 
-    modifier stakedGTAI {
-        require(GTAIBalances[msg.sender] >= minGTAIBalance,
+    modifier onlyStakedGTAI() {
+        require(gtaiBalances[msg.sender] >= minGTAIBalance,
             "GelatoCore.stakedGTAIs: fail"
         );
         _;
@@ -46,9 +48,9 @@ contract GelatoCoreAccounting is Ownable, ReentrancyGuard {
         require(msg.value > 0,
             "GelatoCoreAccounting.addGTAIBalance(): zero-value"
         );
-        uint256 currentBalance = GTAIBalances[msg.sender];
+        uint256 currentBalance = gtaiBalances[msg.sender];
         uint256 newBalance = currentBalance.add(msg.value);
-        GTAIBalances[msg.sender] = newBalance;
+        gtaiBalances[msg.sender] = newBalance;
         emit LogGTAIBalanceAdded(msg.sender,
                                  currentBalance,
                                  msg.value,
@@ -69,18 +71,18 @@ contract GelatoCoreAccounting is Ownable, ReentrancyGuard {
             "GelatoCoreAccounting.withdrawGTAIBalance(): zero-value"
         );
         // Checks
-        uint256 currentBalance = GTAIBalances[msg.sender];
+        uint256 currentBalance = gtaiBalances[msg.sender];
         require(_withdrawAmount <= currentBalance,
             "GelatoCoreAccounting.withdrawGTAIBalance(): failed"
         );
         // Effects
-        GTAIBalances[msg.sender] = currentBalance.sub(_withdrawAmount);
+        gtaiBalances[msg.sender] = currentBalance.sub(_withdrawAmount);
         // Interaction
         msg.sender.transfer(_withdrawAmount);
         emit LogGTAIBalanceWithdrawal(msg.sender,
                                       currentBalance,
                                       _withdrawAmount,
-                                      GTAIBalances[msg.sender]
+                                      gtaiBalances[msg.sender]
         );
     }
     // =========================
@@ -168,15 +170,15 @@ contract GelatoCoreAccounting is Ownable, ReentrancyGuard {
         gasOutsideGasleftChecks = _newGasOutsideGasleftChecks;
     }
 
-    event LogGasInsideGasleftChecksUpdated(uint256 execFNGas2,
-                                           uint256 newExecFNGas2
+    event LogGasInsideGasleftChecksUpdated(uint256 gasInsideGasleftChecks,
+                                           uint256 newGasInsideGasleftChecks
     );
     function updateGasInsideGasleftChecks(uint256 _newGasInsideGasleftChecks)
         public
         onlyOwner
     {
         emit LogGasInsideGasleftChecksUpdated(gasInsideGasleftChecks, _newGasInsideGasleftChecks);
-        gasInsideGasleftChecks = _newGasInsideGas   tChecks;
+        gasInsideGasleftChecks = _newGasInsideGasleftChecks;
     }
 
     event LogUpdatedCanExecMaxGas(uint256 canExecMaxGas,
@@ -190,15 +192,17 @@ contract GelatoCoreAccounting is Ownable, ReentrancyGuard {
         canExecMaxGas = _newCanExecMaxGas;
     }
 
-    event LogExecutorGasRefundEstimateUpdated(uint256 execFNRefundedGas,
-                                              uint256 newExecFNRefundedGas
+    event LogExecutorGasRefundEstimateUpdated(uint256 executorGasRefundEstimate,
+                                              uint256 newExecutorGasRefundEstimate
     );
-    function updateExecutorGasRefund(uint256 _newExecutorGasRefund)
+    function updateExecutorGasRefund(uint256 _newExecutorGasRefundEstimate)
         public
         onlyOwner
     {
-        emit LogUpdatedExecutorGasRefund(executorGasRefund, _newExecutorGasRefund);
-        executorGasRefund = _newExecutorGasRefund;
+        emit LogExecutorGasRefundEstimateUpdated(executorGasRefundEstimate,
+                                                 _newExecutorGasRefundEstimate
+        );
+        executorGasRefundEstimate = _newExecutorGasRefundEstimate;
     }
     // =========================
 }

@@ -1,10 +1,18 @@
 pragma solidity ^0.5.10;
 
-import '../../GTA/gelato_actions/gelato_action_standards/IGelatoAction.sol';
+import '../../../GTA/gelato_actions/gelato_action_standards/IGelatoAction.sol';
 
 contract GelatoActionRegistry {
     // action => functionSelector
     mapping(address => mapping(bytes4 => bool)) public actions;
+
+    function _getActionSelector(address _action)
+        internal
+        view
+        returns(bytes4 actionSelector)
+    {
+        actionSelector = IGelatoAction(_action).actionSelector();
+    }
 
     function _getActionGasStipend(address _action)
         internal
@@ -69,8 +77,8 @@ contract GelatoActionRegistry {
         _;
     }
 
-    modifier msgSenderIsRegisteredAction() {
-        require(actions[msg.sender] != bytes4(0),
+    modifier msgSenderIsRegisteredAction(bytes4 _functionSelector) {
+        require(actions[msg.sender][_functionSelector],
             "GelatoActionRegistry.msgSenderIsRegisteredAction: failed"
         );
         _;

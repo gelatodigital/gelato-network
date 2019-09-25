@@ -1,21 +1,21 @@
 pragma solidity ^0.5.10;
 
 import '../gelato_action_standards/GelatoActionsStandard.sol';
-import '../../gelato_dappInterfaces/gelato_DutchX/gelato_DutchX_standards/GelatoDutchXStandard.sol';
+import '../../../gelato_dappInterfaces/gelato_DutchX/gelato_DutchX_standards/GelatoDutchXStandard.sol';
 import '@openzeppelin/contracts/utils/ReentrancyGuard.sol';
 
 contract ActionWithdrawFromDutchXToBeneficiary is GelatoActionsStandard,
                                                   GelatoDutchXStandard,
                                                   ReentrancyGuard
 {
-    constructor(address _gelatoCore,
+    constructor(address payable _gelatoCore,
                 address _dutchX,
-                string _actionSignature,
+                string memory _actionSignature,
                 uint256 _actionGasStipend
     )
         public
         GelatoActionsStandard(_gelatoCore,
-                              _dutchX
+                              _dutchX,
                               _actionSignature,
                               _actionGasStipend
         )
@@ -66,8 +66,8 @@ contract ActionWithdrawFromDutchXToBeneficiary is GelatoActionsStandard,
                                    _buyToken,
                                    _seller,
                                    _auctionIndex,
-                                   withdrawAmount,
-        )
+                                   withdrawAmount
+        );
         return true;
     }
 }

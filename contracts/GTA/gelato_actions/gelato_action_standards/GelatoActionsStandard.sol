@@ -1,20 +1,17 @@
 pragma solidity ^0.5.10;
 
-import '../../GTA.sol';
-import './IGelatoAction.sol';
+import '../../GTA_standards/GTA.sol';
 import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
-// import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 
-contract GelatoActionsStandard is GTA, IGelatoAction {
-    // using SafeERC20 for ERC20;
-
+contract GelatoActionsStandard is GTA
+{
     address public dapp;
     bytes4 public actionSelector;
     uint256 public actionGasStipend;
 
-    constructor(address _gelatoCore,
+    constructor(address payable _gelatoCore,
                 address _dapp,
-                string _actionSignature,
+                string memory _actionSignature,
                 uint256 _actionGasStipend
     )
         GTA(_gelatoCore)
@@ -27,7 +24,12 @@ contract GelatoActionsStandard is GTA, IGelatoAction {
 
     // Standard Action Checks
     modifier correctActionSelector() {
-        require(bytes4(msg.data) == actionSelector,
+        bytes memory payload = msg.data;
+        bytes4 _actionSelector;
+        assembly {
+            _actionSelector := mload(add(0x20, payload))
+        }
+        require(_actionSelector == actionSelector,
             "GelatoActionsStandard.correctActionSelector failed"
         );
         _;
@@ -78,7 +80,7 @@ contract GelatoActionsStandard is GTA, IGelatoAction {
         require(_allowance != 0,
             "GelatatoActionsStandard.isERC20Approved: _allowance zero-value"
         );
-        if (ERC20(_token).allowance(_tokenOwner, address(this) >= _allowance) {
+        if (ERC20(_token).allowance(_tokenOwner, address(this)) >= _allowance) {
             return true;
         } else {
             return false;
@@ -88,15 +90,13 @@ contract GelatoActionsStandard is GTA, IGelatoAction {
                             address _tokenOwner,
                             uint256 _allowance)
     {
-        require(hasERC20Allowance(address _token,
-                                  address _tokenOwner,
-                                  uint256 _allowance),
+        require(hasERC20Allowance(_token, _tokenOwner, _allowance),
             "GelatoActionsStandard.ERC20Allowance: failed"
         );
         _;
     }
 
-    function conditionsFulfilled(bytes calldata payload)
+    function _conditionsFulfilled(bytes memory payload)
         internal
         view
         returns(bool)

@@ -1,22 +1,26 @@
 pragma solidity ^0.5.10;
 
-import '../../GTA.sol';
-import './IGelatoTrigger.sol';
+import '../../GTA_standards/GTA.sol';
 
-contract GelatoTriggersStandard is GTA, IGelatoTrigger {
+contract GelatoTriggersStandard is GTA {
     bytes4 public triggerSelector;
 
-    constructor(address _gelatoCore,
-                string _triggerSignature
+    constructor(address payable _gelatoCore,
+                string memory _triggerSignature
     )
-        GTA(address _gelatoCore)
+        GTA(_gelatoCore)
         internal
     {
         triggerSelector = bytes4(keccak256(bytes(_triggerSignature)));
     }
 
     modifier correctTriggerSelector() {
-        require(bytes4(msg.data) == triggerSelector,
+        bytes memory payload = msg.data;
+        bytes4 _triggerSelector;
+        assembly {
+            _triggerSelector := mload(add(0x20, payload))
+        }
+        require(_triggerSelector == triggerSelector,
             "GelatoTriggersStandard.correctTriggerSelector failed"
         );
         _;
