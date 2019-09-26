@@ -82,11 +82,16 @@ contract GTAIAggregator is IcedOutOwnable,
 
 
     // ******************** DutchX Timed Sell and CHAINED withdraw *****************
+    /** @dev
+      * Trigger: TriggerTimestampPassed.sol
+      * Action:  ActionChainedDutchXSellMintWithdraw.sol
+    */
     function dutchXTimedSellAndWithdraw(address _trigger,
                                         bytes4 _triggerSelector,
                                         uint256 _executionTime,
                                         address _action,
                                         bytes4 _actionSelector,
+                                        address _beneficiary,
                                         address _sellToken,
                                         address _buyToken,
                                         uint256 _sellAmount
@@ -125,11 +130,11 @@ contract GTAIAggregator is IcedOutOwnable,
         );
         bytes memory actionPayload = abi.encodeWithSelector(_actionSelector,
                                                             nextExecutionClaimId,
-                                                            actionGasStipend,
+                                                            msg.sender,
+                                                            _beneficiary,
                                                             _sellToken,
                                                             _buyToken,
-                                                            _sellAmount,
-                                                            prepaidExecutionFee
+                                                            _sellAmount
         );
         _mintExecutionClaim(nextExecutionClaimId,
                             msg.sender,  // executionClaimOwner
