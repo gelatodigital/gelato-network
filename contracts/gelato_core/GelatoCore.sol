@@ -119,13 +119,13 @@ contract GelatoCore is GelatoExecutionClaim,
         NotExecutable
     }
 
-    function canExecute(address _GTAI,
-                        uint256 _executionClaimId,
-                        address _trigger,
+    function canExecute(address _trigger,
                         bytes memory _triggerPayload,
                         address _action,
                         bytes memory _actionPayload,
-                        uint256 _actionGasStipend
+                        uint256 _actionGasStipend,
+                        address _GTAI,
+                        uint256 _executionClaimId
     )
         public
         view
@@ -207,8 +207,8 @@ contract GelatoCore is GelatoExecutionClaim,
                                            address indexed GTAI,
                                            address payable executor,
                                            uint256 accountedGasPrice,
-                                           //uint256 gasUsedEstimate,
-                                           //uint256 executionCostEstimate,
+                                           uint256 gasUsedEstimate,
+                                           uint256 executionCostEstimate,
                                            uint256 executorProfit,
                                            uint256 executorPayout
     );
@@ -219,13 +219,14 @@ contract GelatoCore is GelatoExecutionClaim,
         CanExecuteFailed
     }
 
-    function execute(uint256 _executionClaimId,
-                     address _GTAI,
-                     address _trigger,
+    function execute(address _trigger,
                      bytes calldata _triggerPayload,
                      address _action,
                      bytes calldata _actionPayload,
-                     uint256 _actionGasStipend
+                     uint256 _actionGasStipend,
+                     address _GTAI,
+                     uint256 _executionClaimId
+
     )
         external
         returns(uint8 executionResult)
@@ -257,13 +258,13 @@ contract GelatoCore is GelatoExecutionClaim,
         {
             uint8 canExecuteResult;
             (canExecuteResult,
-             executionClaimOwner) = canExecute(_GTAI,
-                                               _executionClaimId,
-                                               _trigger,
+             executionClaimOwner) = canExecute(_trigger,
                                                _triggerPayload,
                                                _action,
                                                _actionPayload,
-                                               _actionGasStipend
+                                               _actionGasStipend,
+                                               _GTAI,
+                                               _executionClaimId
             );
             if (canExecuteResult != uint8(CanExecuteCheck.Executable)) {
                 emit LogCanExecuteFailed(_executionClaimId,
@@ -318,23 +319,22 @@ contract GelatoCore is GelatoExecutionClaim,
             uint256 executionCostEstimate = gasUsedEstimate.mul(accountedGasPrice);
             executorPayout = executionCostEstimate.add(executorProfit);
             // or % payout: executionCostEstimate.mul(100 + executorProfit).div(100);
-        }
-        // Balance Updates
-        gtaiBalances[_GTAI] = gtaiBalances[_GTAI].sub(executorPayout);
-        executorBalances[msg.sender] = executorBalances[msg.sender].add(executorPayout);
 
-        /*emit LogClaimExecutedBurnedAndDeleted(_executionClaimId,
+            emit LogClaimExecutedBurnedAndDeleted(_executionClaimId,
                                                 executionClaimOwner,
                                                 _GTAI,
                                                 msg.sender,  // executor
                                                 accountedGasPrice,
-                                                //gasUsedEstimate,
-                                                //executionCostEstimate,
+                                                gasUsedEstimate,
+                                                executionCostEstimate,
                                                 executorProfit,
                                                 executorPayout
-        );*/
+            );
+        }
+        // Balance Updates
+        gtaiBalances[_GTAI] = gtaiBalances[_GTAI].sub(executorPayout);
+        executorBalances[msg.sender] = executorBalances[msg.sender].add(executorPayout);
     }
-
 
     function safeExecute(uint256 _executionClaimId,
                          address _GTAI,
