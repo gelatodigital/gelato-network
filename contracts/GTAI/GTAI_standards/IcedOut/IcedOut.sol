@@ -71,8 +71,7 @@ contract IcedOut {
                                   address _triggerAddress,
                                   bytes memory _triggerPayload,
                                   address _actionAddress,
-                                  bytes memory _actionPayload,
-                                  uint256 _actionGasStipend
+                                  bytes memory _actionPayload
      )
           internal
      {
@@ -81,8 +80,7 @@ contract IcedOut {
                                                 _triggerAddress,
                                                 _triggerPayload,
                                                 _actionAddress,
-                                                _actionPayload,
-                                                _actionGasStipend),
+                                                _actionPayload),
                "IcedOut._mintExecutionClaim: failed"
           );
      }

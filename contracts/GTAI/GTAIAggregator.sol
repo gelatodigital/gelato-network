@@ -51,14 +51,12 @@ contract GTAIAggregator is IcedOutOwnable,
                                    address(gelatoCore)
         );
         uint256 chainedExecutionClaimId = _getNextExecutionClaimId();
-        uint256 chainedActionGasStipend = _getActionGasStipend(_chainedAction);
         _mintExecutionClaim(chainedExecutionClaimId,
                             _executionClaimOwner,
                             _chainedTrigger,
                             _chainedTriggerPayload,
                             _chainedAction,
-                            _chainedActionPayload,
-                            chainedActionGasStipend
+                            _chainedActionPayload
         );
         emit LogChainedExecutionClaimMinted(msg.sender,
                                             chainedExecutionClaimId,
@@ -125,7 +123,6 @@ contract GTAIAggregator is IcedOutOwnable,
                                                              nextExecutionClaimId,
                                                              _executionTime
         );
-        uint256 actionGasStipend = _getActionGasStipend(_action);
         bytes memory actionPayload = abi.encodeWithSelector(_actionSelector,
                                                             nextExecutionClaimId,
                                                             actionGasStipend,
@@ -139,8 +136,7 @@ contract GTAIAggregator is IcedOutOwnable,
                             _trigger,
                             triggerPayload,
                             _action,
-                            actionPayload,
-                            actionGasStipend
+                            actionPayload
         );
         emit LogNewOrder(nextExecutionClaimId,
                          msg.sender,

@@ -3,6 +3,7 @@ pragma solidity ^0.5.10;
 import './gelato_core_standards/GelatoExecutionClaim.sol';
 import './gelato_core_standards/GelatoCoreAccounting.sol';
 import "@openzeppelin/contracts/drafts/Counters.sol";
+import '../GTA/gelato_actions/gelato_action_standards/IGelatoAction.sol';
 
 contract GelatoCore is GelatoExecutionClaim,
                        GelatoCoreAccounting
@@ -58,11 +59,10 @@ contract GelatoCore is GelatoExecutionClaim,
 
     function mintExecutionClaim(uint256 _executionClaimId,
                                 address _executionClaimOwner,
-                                address _triggerAddress,
+                                address _trigger,
                                 bytes calldata _triggerPayload,
-                                address _actionAddress,
-                                bytes calldata _actionPayload,
-                                uint256 _actionGasStipend
+                                address _action,
+                                bytes calldata _actionPayload
     )
         onlyStakedGTAI
         external
@@ -78,25 +78,27 @@ contract GelatoCore is GelatoExecutionClaim,
         _mint(_executionClaimOwner, executionClaimId);
         // =============
 
+        uint256 actionGasStipend = IGelatoAction(_action).actionGasStipend();
+
         // Include executionClaimId: avoid hash collisions
         // Exclude _executionClaimOwner: ExecutionClaims are transferable
         bytes32 executionClaimHash = keccak256(abi.encodePacked(executionClaimId,
-                                                                _triggerAddress,
+                                                                _trigger,
                                                                 _triggerPayload,
-                                                                _actionAddress,
+                                                                _action,
                                                                 _actionPayload,
-                                                                _actionGasStipend
+                                                                actionGasStipend
         ));
         hashedExecutionClaims[executionClaimId] = executionClaimHash;
 
         emit LogNewExecutionClaimMinted(msg.sender,  // GTAI
                                         executionClaimId,
                                         _executionClaimOwner,
-                                        _triggerAddress,
+                                        _trigger,
                                         _triggerPayload,
-                                        _actionAddress,
+                                        _action,
                                         _actionPayload,
-                                        _actionGasStipend,
+                                        actionGasStipend,
                                         executionClaimHash
         );
 
@@ -118,9 +120,9 @@ contract GelatoCore is GelatoExecutionClaim,
 
     function canExecute(address _GTAI,
                         uint256 _executionClaimId,
-                        address _triggerAddress,
+                        address _trigger,
                         bytes memory _triggerPayload,
-                        address _actionAddress,
+                        address _action,
                         bytes memory _actionPayload,
                         uint256 _actionGasStipend
     )
@@ -148,9 +150,9 @@ contract GelatoCore is GelatoExecutionClaim,
 
         // Compute executionClaimHash from calldata
         bytes32 computedExecutionClaimHash = keccak256(abi.encodePacked(_executionClaimId,
-                                                                        _triggerAddress,
+                                                                        _trigger,
                                                                         _triggerPayload,
-                                                                        _actionAddress,
+                                                                        _action,
                                                                         _actionPayload,
                                                                         _actionGasStipend
         ));
@@ -166,7 +168,7 @@ contract GelatoCore is GelatoExecutionClaim,
         // _____________ Dynamic CHECKS __________________________________________
         // Conduct static call to trigger. If true, action is ready to be executed
         (bool success,
-         bytes memory returndata) = (_triggerAddress.staticcall
+         bytes memory returndata) = (_trigger.staticcall
                                                    .gas(canExecMaxGas)
                                                    (_triggerPayload)
         );
@@ -219,9 +221,9 @@ contract GelatoCore is GelatoExecutionClaim,
 
     function execute(uint256 _executionClaimId,
                      address _GTAI,
-                     address _triggerAddress,
+                     address _trigger,
                      bytes calldata _triggerPayload,
-                     address _actionAddress,
+                     address _action,
                      bytes calldata _actionPayload,
                      uint256 _actionGasStipend
     )
@@ -263,9 +265,9 @@ contract GelatoCore is GelatoExecutionClaim,
             uint256 canExecuteResult;
             (canExecuteResult, executionClaimOwner) = canExecute(_GTAI,
                                                                  _executionClaimId,
-                                                                 _triggerAddress,
+                                                                 _trigger,
                                                                  _triggerPayload,
-                                                                 _actionAddress,
+                                                                 _action,
                                                                  _actionPayload,
                                                                  _actionGasStipend
             );
@@ -289,7 +291,7 @@ contract GelatoCore is GelatoExecutionClaim,
         {
 
             bytes memory payloadWithSelector = abi.encodeWithSelector(this.safeExecute.selector,
-                                                                      _actionAddress,
+                                                                      _action,
                                                                       _actionPayload,
                                                                       _actionGasStipend,
                                                                       _executionClaimId,
@@ -415,9 +417,9 @@ contract GelatoCore is GelatoExecutionClaim,
                                      address indexed GTAI
     );
     function cancelExecutionClaim(uint256 _executionClaimId,
-                                  address _triggerAddress,
+                                  address _trigger,
                                   bytes calldata _triggerPayload,
-                                  address _actionAddress,
+                                  address _action,
                                   bytes calldata _actionPayload,
                                   uint256 _actionGasStipend,
                                   address _GTAI
@@ -427,9 +429,9 @@ contract GelatoCore is GelatoExecutionClaim,
     {
         // Compute executionClaimHash from calldata
         bytes32 computedExecutionClaimHash = keccak256(abi.encodePacked(_executionClaimId,
-                                                                        _triggerAddress,
+                                                                        _trigger,
                                                                         _triggerPayload,
-                                                                        _actionAddress,
+                                                                        _action,
                                                                         _actionPayload,
                                                                         _actionGasStipend
         ));
