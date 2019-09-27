@@ -6,6 +6,14 @@ contract GelatoTriggerRegistry {
     // trigger => functionSelector
     mapping(address => mapping(bytes4 => bool)) public triggers;
 
+    function _getTriggerSelector(address _trigger)
+        internal
+        view
+        returns(bytes4 triggerSelector)
+    {
+        triggerSelector = IGelatoTrigger(_trigger).triggerSelector();
+    }
+
     // ____________ Register Trigger ____________
     event LogTriggerRegistered(address indexed _registrator,
                                address indexed _triggerAddress,

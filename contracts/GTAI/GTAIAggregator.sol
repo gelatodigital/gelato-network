@@ -75,9 +75,9 @@ contract GTAIAggregator is IcedOutOwnable,
     event LogNewOrder(uint256 executionClaimId,
                       address indexed executionClaimOwner,
                       address indexed trigger,
-                      //bytes4 triggerSelector,
-                      address indexed action
-                      //bytes4 actionSelector
+                      bytes4 triggerSelector,
+                      address indexed action,
+                      bytes4 actionSelector
     );
 
 
@@ -87,17 +87,23 @@ contract GTAIAggregator is IcedOutOwnable,
       * Action:  ActionChainedDutchXSellMintWithdraw.sol
     */
     function dutchXTimedSellAndWithdraw(address _trigger,
-                                        //bytes4 _triggerSelector,
+                                        bytes4 _triggerSelector,
                                         uint256 _executionTime,
                                         address _action,
-                                        //bytes4 _actionSelector,
-                                        //address _beneficiary,
+                                        bytes4 _actionSelector,
+                                        address _beneficiary,
                                         address _sellToken,
                                         address _buyToken,
                                         uint256 _sellAmount
     )
         actionHasERC20Allowance(_action, _sellToken, msg.sender, _sellAmount)
         actionConditionsFulfilled(_action, abi.encode(_sellToken, _buyToken))
+        onlyRegisteredTriggers(_trigger, _triggerSelector)
+        onlyRegisteredActions(_action, _actionSelector)
+        hasMatchingGelatoCore(address(gelatoCore))
+        hasMatchingGelatoCore(address(gelatoCore))
+        //matchingTriggerSelector(_trigger, _triggerSelector)
+        //matchingActionSelector(_action, _actionSelector)
         public
         payable
         returns(bool)
@@ -124,27 +130,18 @@ contract GTAIAggregator is IcedOutOwnable,
         // _________________Minting_____________________________________________
         uint256 nextExecutionClaimId = _getNextExecutionClaimId();
         // Trigger-Action Payloads
-        bytes memory triggerPayload;
-        {
-            bytes4 triggerSelector = IGelatoTrigger(_trigger).triggerSelector();
-            triggerPayload = abi.encodeWithSelector(triggerSelector,
-                                                    nextExecutionClaimId,
-                                                    _executionTime
-            );
-
-        }
-        bytes memory actionPayload;
-        {
-            bytes4 actionSelector = IGelatoAction(_action).actionSelector();
-            actionPayload = abi.encodeWithSelector(actionSelector,
-                                                   nextExecutionClaimId,
-                                                   msg.sender,
-                                                   //_beneficiary,
-                                                   _sellToken,
-                                                   _buyToken,
-                                                   _sellAmount
-            );
-        }
+        bytes memory triggerPayload = abi.encodeWithSelector(_triggerSelector,
+                                                             nextExecutionClaimId,
+                                                             _executionTime
+        );
+        bytes memory actionPayload = abi.encodeWithSelector(_actionSelector,
+                                                            nextExecutionClaimId,
+                                                            msg.sender,
+                                                          //  _beneficiary,
+                                                            _sellToken,
+                                                            _buyToken,
+                                                            _sellAmount
+        );
         _mintExecutionClaim(nextExecutionClaimId,
                             msg.sender,  // executionClaimOwner
                             _trigger,
@@ -155,9 +152,9 @@ contract GTAIAggregator is IcedOutOwnable,
         emit LogNewOrder(nextExecutionClaimId,
                          msg.sender,
                          _trigger,
-                         //_triggerSelector,
-                         _action
-                         //_actionSelector
+                         _triggerSelector,
+                         _action,
+                         _actionSelector
         );
         // =========================
 
