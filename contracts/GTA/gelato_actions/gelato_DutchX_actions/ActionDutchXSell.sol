@@ -53,9 +53,6 @@ contract ActionDutchXSell is GelatoActionsStandard,
         require(conditionsFulfilled(abi.encode(_sellToken, _buyToken)),
             "ActionDutchXSell.action: tokens not traded on DutchX"
         );
-        require(_buyToken != address(0),
-            "ActionDutchXSell.action: _buyToken zero-value"
-        );
         (bool success,
          uint256 sellAuctionIndex,
          uint256 sellAmountAfterFee) = _sellOnDutchX(_executionClaimId,

@@ -10,7 +10,7 @@ contract ActionChainedDutchXSellMintWithdraw is ActionDutchXSell,
                 address _dutchX,
                 string memory _actionSignature,
                 uint256 _actionGasStipend,
-                address _chainedMintingGTAI,
+                address _mintingGTAI,
                 address _chainedTrigger,
                 address _chainedAction
     )
@@ -20,16 +20,13 @@ contract ActionChainedDutchXSellMintWithdraw is ActionDutchXSell,
                          _actionSignature,
                          _actionGasStipend
         )
-        GTAChainedMinting(_chainedMintingGTAI,
+        GTAChainedMinting(_mintingGTAI,
                           _chainedTrigger,
                           _chainedAction
         )
     {}
 
     // Action:
-    event LogChainedDutchXSellMintWithdraw(uint256 indexed executionClaimId,
-                                           address indexed executionClaimOwner
-    );
     function action(uint256 _executionClaimId,
                     address _executionClaimOwner,
                     address _beneficiary,
@@ -68,12 +65,15 @@ contract ActionChainedDutchXSellMintWithdraw is ActionDutchXSell,
                                                                    sellAuctionIndex,
                                                                    sellAmountAfterFee
         );
-        require(_mintExecutionClaim(_executionClaimOwner,
-                                    chainedTriggerPayload,
-                                    chainedActionPayload),
+        require(_activateChainedTAviaMintingGTAI(_executionClaimOwner,
+                                                 chainedTriggerPayload,
+                                                 chainedActionPayload),
             "ActionChainedDutchXSellMintWithdraw._mintExecutionClaim: failed"
         );
-        emit LogChainedDutchXSellMintWithdraw(_executionClaimId, _executionClaimOwner);
+        emit LogGTAChainedMinting(_executionClaimId,
+                                  _executionClaimOwner,
+                                  address(this)
+        );
         return true;
     }
 }

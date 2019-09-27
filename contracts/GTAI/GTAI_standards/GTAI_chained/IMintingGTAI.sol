@@ -1,6 +1,6 @@
 pragma solidity ^0.5.10;
 
-interface IChainedMintingGTAI {
+interface IMintingGTAI {
 
     function activateChainedTA(address _executionClaimOwner,
                                address _chainedTrigger,
