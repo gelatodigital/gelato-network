@@ -7,25 +7,21 @@ contract GelatoTriggerRegistryOwnable is GelatoTriggerRegistry,
                                          Ownable
 {
 
-    function registerTrigger(address _triggerAddress,
-                             bytes4 _functionSelector
-    )
+    function registerTrigger(address _triggerAddress)
         onlyOwner
         public
         returns(bool)
     {
-        _registerTrigger(_triggerAddress, _functionSelector);
+        _registerTrigger(_triggerAddress);
         return true;
     }
 
-    function deregisterTrigger(address _triggerAddress,
-                               bytes4  _functionSelector
-    )
+    function deregisterTrigger(address _triggerAddress)
         onlyOwner
         public
         returns(bool)
     {
-        _deregisterTrigger(_triggerAddress, _functionSelector);
+        _deregisterTrigger(_triggerAddress);
         return true;
     }
 }

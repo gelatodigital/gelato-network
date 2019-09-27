@@ -33,6 +33,7 @@ contract GelatoDutchXStandard {
 
     function _getSellAmountAfterFee(address _seller, uint256 _sellAmount)
         internal
+        view
         returns(uint256 sellAmountAfterFee, uint256 dutchXFee)
     {
         (uint256 num, uint256 den) = dutchX.getFeeRatio(_seller);

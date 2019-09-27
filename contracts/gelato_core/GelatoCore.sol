@@ -133,6 +133,7 @@ contract GelatoCore is GelatoExecutionClaim,
         returns (uint8, address executionClaimOwner)
     {
         executionClaimOwner = ownerOf(_executionClaimId);
+
         // _____________ Static CHECKS __________________________________________
         // Check if Interface has sufficient balance on core
         ///@dev tx maximum cost check is done inside the execute fn
@@ -193,7 +194,20 @@ contract GelatoCore is GelatoExecutionClaim,
         // ==============
     }
 
-    // ************** execute() **************
+    // ********************* EXECUTE FUNCTION SUITE *************************
+    function _getMaxExecutionGasConsumption(uint256 _actionGasStipend)
+        internal
+        view
+        returns (uint256)
+    {
+        // Only use .add for last, user inputted value to avoid over - underflow
+        return (gasOutsideGasleftChecks
+                + canExecMaxGas
+                + gasInsideGasleftChecks
+                .add(_actionGasStipend)
+        );
+    }
+
     event LogCanExecuteFailed(uint256 indexed executionClaimId,
                               address payable indexed executor,
                               uint256 indexed canExecuteResult
@@ -286,11 +300,12 @@ contract GelatoCore is GelatoExecutionClaim,
         // _________ safeExecute()_______________________________________________
         {
             bytes memory safeExecutePayload = abi.encodeWithSelector(this.safeExecute.selector,
+                                                                     _GTAI,
+                                                                     msg.sender,
                                                                      _executionClaimId,
                                                                      _action,
                                                                      _actionPayload,
-                                                                     _actionGasStipend,
-                                                                     msg.sender
+                                                                     _actionGasStipend
             );
             // call safeExecute()
             (, bytes memory returnData) = address(this).call(safeExecutePayload);
@@ -338,10 +353,10 @@ contract GelatoCore is GelatoExecutionClaim,
 
     function safeExecute(uint256 _executionClaimId,
                          address _GTAI,
+                         address payable _executor,
                          address _action,
                          bytes calldata _actionPayload,
-                         uint256 _actionGasStipend,
-                         address _executor
+                         uint256 _actionGasStipend
     )
         external
         returns(uint8)
@@ -359,7 +374,7 @@ contract GelatoCore is GelatoExecutionClaim,
         (bool success,) = _action.call.gas(_actionGasStipend)(_actionPayload);
         emit LogExecutionResult(_executionClaimId,
                                 success,
-                                msg.sender
+                                _executor
         );
 
         // If GTAI withdrew some balance, revert transaction
@@ -375,19 +390,6 @@ contract GelatoCore is GelatoExecutionClaim,
         }
     }
     // ************** execute() -> safeExecute() END
-
-    function _getMaxExecutionGasConsumption(uint256 _actionGasStipend)
-        internal
-        view
-        returns (uint256)
-    {
-        // Only use .add for last, user inputted value to avoid over - underflow
-        return (gasOutsideGasleftChecks
-                + canExecMaxGas
-                + gasInsideGasleftChecks
-                .add(_actionGasStipend)
-        );
-    }
     // ********************* EXECUTE FUNCTION SUITE END
 
 

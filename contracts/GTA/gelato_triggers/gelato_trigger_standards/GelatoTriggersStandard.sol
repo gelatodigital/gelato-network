@@ -15,10 +15,9 @@ contract GelatoTriggersStandard is GTA {
     }
 
     modifier correctTriggerSelector() {
-        bytes memory payload = msg.data;
         bytes4 _triggerSelector;
         assembly {
-            _triggerSelector := mload(add(0x20, payload))
+            _triggerSelector := mload(add(0x20, calldataload(0)))
         }
         require(_triggerSelector == triggerSelector,
             "GelatoTriggersStandard.correctTriggerSelector failed"

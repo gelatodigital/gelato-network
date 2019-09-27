@@ -1,33 +1,41 @@
 pragma solidity ^0.5.10;
 
 import '../../../GTAI/GTAI_standards/GTAI_chained/IChainedMintingGTAI.sol';
+import '../../gelato_triggers/gelato_trigger_standards/IGelatoTrigger.sol';
+import '../../gelato_actions/gelato_action_standards/IGelatoAction.sol';
 
 contract GTAChainedMinting {
 
     IChainedMintingGTAI public chainedMintingGTAI;
-    struct ChainedTAData {
-        address trigger;
-        bytes4 triggerSelector;
-        address action;
-        bytes4 actionSelector;
-    }
-    ChainedTAData public chainedTAData;
+    address public chainedTrigger;
+    address public chainedAction;
 
 
     constructor(address _chainedMintingGTAI,
                 address _chainedTrigger,
-                bytes4 _chainedTriggerSelector,
-                address _chainedAction,
-                bytes4 _chainedActionSelector
+                address _chainedAction
     )
         internal
     {
         chainedMintingGTAI = IChainedMintingGTAI(_chainedMintingGTAI);
-        chainedTAData = ChainedTAData(_chainedTrigger,
-                                      _chainedTriggerSelector,
-                                      _chainedAction,
-                                      _chainedActionSelector
-        );
+        chainedTrigger = _chainedTrigger;
+        chainedAction = _chainedAction;
+    }
+
+    function _getChainedTriggerSelector()
+        internal
+        view
+        returns(bytes4 chainedTriggerSelector)
+    {
+        chainedTriggerSelector = IGelatoTrigger(chainedTrigger).triggerSelector();
+    }
+
+    function _getChainedActionSelector()
+        internal
+        view
+        returns(bytes4 chainedActionSelector)
+    {
+        chainedActionSelector = IGelatoAction(chainedAction).actionSelector();
     }
 
     function _mintExecutionClaim(address _executionClaimOwner,
@@ -37,13 +45,11 @@ contract GTAChainedMinting {
         internal
         returns(bool)
     {
-        require(chainedMintingGTAI.mintChainedExecutionClaim(_executionClaimOwner,
-                                                             chainedTAData.trigger,
-                                                             chainedTAData.triggerSelector,
-                                                             _chainedTriggerPayload,
-                                                             chainedTAData.action,
-                                                             chainedTAData.actionSelector,
-                                                             _chainedActionPayload),
+        require(chainedMintingGTAI.activateChainedTA(_executionClaimOwner,
+                                                     chainedTrigger,
+                                                     _chainedTriggerPayload,
+                                                     chainedAction,
+                                                     _chainedActionPayload),
             "GTAChainedMinting._mintExecutionClaim: failed"
         );
         return true;

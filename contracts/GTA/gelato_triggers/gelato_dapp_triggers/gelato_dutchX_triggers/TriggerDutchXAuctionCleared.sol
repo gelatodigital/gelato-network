@@ -40,8 +40,7 @@ contract TriggerDutchXAuctionCleared is GelatoTriggersStandard {
         returns(bool)
     {
         _triggerChecks();
-        (uint256 num,
-         uint256 den) = getAuctionClosingPrices(_sellToken, _buyToken, _auctionIndex);
+        (, uint256 den) = getAuctionClosingPrices(_sellToken, _buyToken, _auctionIndex);
         if (den == 0) {
             return false;
         } else {

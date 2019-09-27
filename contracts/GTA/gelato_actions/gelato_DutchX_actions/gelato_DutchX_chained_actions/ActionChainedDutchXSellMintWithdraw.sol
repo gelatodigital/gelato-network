@@ -12,9 +12,7 @@ contract ActionChainedDutchXSellMintWithdraw is ActionDutchXSell,
                 uint256 _actionGasStipend,
                 address _chainedMintingGTAI,
                 address _chainedTrigger,
-                bytes4 _chainedTriggerSelector,
-                address _chainedAction,
-                bytes4 _chainedActionSelector
+                address _chainedAction
     )
         public
         ActionDutchXSell(_gelatoCore,
@@ -24,9 +22,7 @@ contract ActionChainedDutchXSellMintWithdraw is ActionDutchXSell,
         )
         GTAChainedMinting(_chainedMintingGTAI,
                           _chainedTrigger,
-                          _chainedTriggerSelector,
-                          _chainedAction,
-                          _chainedActionSelector
+                          _chainedAction
         )
     {}
 
@@ -57,12 +53,12 @@ contract ActionChainedDutchXSellMintWithdraw is ActionDutchXSell,
             "ActionChainedDutchXSellMintWithdraw.super.action: failed"
         );
         // chained minting: mint withdrawal execution claims via gtai
-        bytes memory chainedTriggerPayload = abi.encodeWithSelector(chainedTAData.triggerSelector,
+        bytes memory chainedTriggerPayload = abi.encodeWithSelector(_getChainedTriggerSelector(),
                                                                     _sellToken,
                                                                     _buyToken,
                                                                     sellAuctionIndex
         );
-        bytes memory chainedActionPayload = abi.encodeWithSelector(chainedTAData.actionSelector,
+        bytes memory chainedActionPayload = abi.encodeWithSelector(_getChainedActionSelector(),
                                                                    _executionClaimId,
                                                                    _executionClaimOwner,
                                                                    _beneficiary,

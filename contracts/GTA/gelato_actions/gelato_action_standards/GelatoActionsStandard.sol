@@ -22,12 +22,23 @@ contract GelatoActionsStandard is GTA
         actionGasStipend = _actionGasStipend;
     }
 
+    function matchingActionSelector(bytes4 _actionSelector)
+        public
+        view
+        returns(bool)
+    {
+        if (actionSelector == _actionSelector) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     // Standard Action Checks
     modifier correctActionSelector() {
-        bytes memory payload = msg.data;
         bytes4 _actionSelector;
         assembly {
-            _actionSelector := mload(add(0x20, payload))
+            _actionSelector := mload(add(0x20, calldataload(0)))
         }
         require(_actionSelector == actionSelector,
             "GelatoActionsStandard.correctActionSelector failed"
@@ -40,18 +51,6 @@ contract GelatoActionsStandard is GTA
             "GelatoActionsStandard.sufficientGas failed"
         );
         _;
-    }
-
-    function matchingActionSelector(bytes4 _actionSelector)
-        public
-        view
-        returns(bool)
-    {
-        if (actionSelector == _actionSelector) {
-            return true;
-        } else {
-            return false;
-        }
     }
 
     function _standardActionChecks()

@@ -4,7 +4,7 @@ import '../../../GTA/gelato_actions/gelato_action_standards/IGelatoAction.sol';
 
 contract GelatoActionRegistry {
     // action => functionSelector
-    mapping(address => mapping(bytes4 => bool)) public actions;
+    mapping(address => bool) public actions;
 
     function _getActionSelector(address _action)
         internal
@@ -24,61 +24,52 @@ contract GelatoActionRegistry {
 
     // ____________ Register Actions ____________
     event LogActionRegistered(address indexed _registrator,
-                              address indexed _actionAddress,
-                              bytes4 indexed _actionSelector
+                              address indexed _actionAddress
     );
-    function _registerAction(address _actionAddress,
-                             bytes4 _actionSelector
-    )
+    function _registerAction(address _actionAddress)
         internal
     {
-        actions[_actionAddress][_actionSelector] = true;
+        actions[_actionAddress] = true;
         emit LogActionRegistered(msg.sender,
-                                 _actionAddress,
-                                 _actionSelector
+                                 _actionAddress
         );
     }
     // ===========
 
     // ____________ Deregister Actions ____________
     event LogActionDeregistered(address indexed _registrator,
-                                address indexed _actionAddress,
-                                bytes4 indexed _actionSelector
+                                address indexed _actionAddress
     );
-    function _deregisterAction(address _actionAddress,
-                               bytes4 _actionSelector
-    )
+    function _deregisterAction(address _actionAddress)
         internal
     {
-        actions[_actionAddress][_actionSelector] = false;
+        actions[_actionAddress] = false;
         emit LogActionDeregistered(msg.sender,
-                                   _actionAddress,
-                                   _actionSelector
+                                   _actionAddress
         );
     }
     // ===========
 
     // ____________ Standard Checks _____________________________________
-    modifier onlyRegisteredActions(address _action,
-                                   bytes4 _actionSelector)
+    modifier onlyRegisteredActions(address _action)
     {
-        require(actions[_action][_actionSelector],
+        require(actions[_action],
             "GelatoActionRegistry.onlyRegisteredActions: failed"
         );
         _;
     }
 
-     modifier matchingActionSelector(address _action,
-                                     bytes4 _actionSelector)
+    modifier actionHasMatchingGelatoCore(address _action,
+                                         address payable _gelatoCore)
     {
-        require(IGelatoAction(_action).matchingActionSelector(_actionSelector),
-            "GelatoActionRegistry.matchingActionSelector: failed"
+        require(IGelatoAction(_action).matchingGelatoCore(_gelatoCore),
+            "GelatoActionRegistry.actionHasMatchingGelatoCore: failed"
         );
         _;
     }
 
-    modifier msgSenderIsRegisteredAction(bytes4 _functionSelector) {
-        require(actions[msg.sender][_functionSelector],
+    modifier msgSenderIsRegisteredAction() {
+        require(actions[msg.sender],
             "GelatoActionRegistry.msgSenderIsRegisteredAction: failed"
         );
         _;
