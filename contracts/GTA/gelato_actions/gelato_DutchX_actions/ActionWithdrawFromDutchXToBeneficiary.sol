@@ -68,6 +68,7 @@ contract ActionWithdrawFromDutchXToBeneficiary is GelatoActionsStandard,
                                    _auctionIndex,
                                    withdrawAmount
         );
+        emit LogAction(_executionClaimId, _executionClaimOwner);
         return true;
     }
 }

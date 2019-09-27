@@ -100,4 +100,8 @@ contract GelatoActionsStandard is GTA
         view
         returns(bool)
     {}
+
+    event LogAction(uint256 indexed _executionClaimId,
+                    address indexed _executionClaimOwner
+    );
 }

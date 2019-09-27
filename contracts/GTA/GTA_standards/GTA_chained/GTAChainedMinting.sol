@@ -56,7 +56,6 @@ contract GTAChainedMinting {
     }
 
     event LogGTAChainedMinting(uint256 indexed executionClaimId,
-                               address indexed executionClaimOwner,
-                               address indexed action
+                               address indexed executionClaimOwner
     );
 }

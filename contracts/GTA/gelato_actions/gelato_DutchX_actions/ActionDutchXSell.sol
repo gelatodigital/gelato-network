@@ -64,6 +64,7 @@ contract ActionDutchXSell is GelatoActionsStandard,
         require(success,
             "ActionDutchXSell.action._sellOnDutchX failed"
         );
+        emit LogAction(_executionClaimId, _executionClaimOwner);
         return (true, sellAuctionIndex, sellAmountAfterFee);
     }
 }

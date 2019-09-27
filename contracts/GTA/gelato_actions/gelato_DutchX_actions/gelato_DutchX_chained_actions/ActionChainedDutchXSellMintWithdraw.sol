@@ -70,10 +70,7 @@ contract ActionChainedDutchXSellMintWithdraw is ActionDutchXSell,
                                                  chainedActionPayload),
             "ActionChainedDutchXSellMintWithdraw._mintExecutionClaim: failed"
         );
-        emit LogGTAChainedMinting(_executionClaimId,
-                                  _executionClaimOwner,
-                                  address(this)
-        );
+        emit LogGTAChainedMinting(_executionClaimId, _executionClaimOwner);
         return true;
     }
 }
