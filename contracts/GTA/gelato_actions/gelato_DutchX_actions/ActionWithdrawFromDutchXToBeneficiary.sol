@@ -10,14 +10,14 @@ contract ActionWithdrawFromDutchXToBeneficiary is GelatoActionsStandard,
 {
     constructor(address payable _gelatoCore,
                 address _dutchX,
-                string memory _actionSignature,
                 uint256 _actionGasStipend
     )
         public
-        GelatoActionsStandard(_gelatoCore,
-                              _dutchX,
-                              _actionSignature,
-                              _actionGasStipend
+        GelatoActionsStandard(
+            _gelatoCore,
+            _dutchX,
+            "action(uint256,address,address,address,address,address,uint256,uint256)",
+            _actionGasStipend
         )
         GelatoDutchXStandard(_dutchX)
     {}
@@ -32,14 +32,14 @@ contract ActionWithdrawFromDutchXToBeneficiary is GelatoActionsStandard,
                                 uint256 withdrawAmount
     );
 
-    function withdrawFromDutchXToBeneficiary(uint256 _executionClaimId,
-                                             address _executionClaimOwner,
-                                             address _beneficiary,
-                                             address _sellToken,
-                                             address _buyToken,
-                                             address _seller,
-                                             uint256 _auctionIndex,
-                                             uint256 _sellAmountAfterFee
+    function action(uint256 _executionClaimId,
+                    address _executionClaimOwner,
+                    address _beneficiary,
+                    address _sellToken,
+                    address _buyToken,
+                    address _seller,
+                    uint256 _auctionIndex,
+                    uint256 _sellAmountAfterFee
     )
         nonReentrant
         public
@@ -56,7 +56,7 @@ contract ActionWithdrawFromDutchXToBeneficiary is GelatoActionsStandard,
                                     _seller,
                                     _auctionIndex,
                                     withdrawAmount),
-            "ActionSellWithdrawDutchX._withdrawFromDutchX failed"
+            "ActionSellWithdrawDutchX.action._withdrawFromDutchX failed"
         );
         ERC20(_buyToken).safeTransfer(_beneficiary, withdrawAmount);
         emit LogWithdrawFromDutchX(_executionClaimId,

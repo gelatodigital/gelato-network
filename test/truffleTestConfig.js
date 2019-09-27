@@ -1,6 +1,8 @@
 // Import Contracts
 const GelatoCore = artifacts.require("GelatoCore");
-const GelatoDutchX = artifacts.require("GelatoDutchX");
+const GTAIAggregator = artifacts.require("GTAIAggregator");
+const ActionChainedDutchXSellMintWithdraw
+    = artifacts.require("ActionChainedDutchXSellMintWithdraw");
 const SellToken = artifacts.require("EtherToken");
 const BuyToken = artifacts.require("TokenRDN");
 const DutchExchangeProxy = artifacts.require("DutchExchangeProxy");
@@ -58,7 +60,7 @@ let executorEthBalance;
 module.exports = {
     numberOfSubOrders,
     GelatoCore,
-    GelatoDutchX,
+    GTAIAggregator,
     SellToken,
     BuyToken,
     DutchExchangeProxy,
@@ -101,5 +103,6 @@ module.exports = {
     execWithdrawTrigger,
     execWithdrawAction,
     depositAndSellMaxGas,
-    withdrawMaxGas
+    withdrawMaxGas,
+    ActionChainedDutchXSellMintWithdraw
 };

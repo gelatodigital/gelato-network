@@ -8,11 +8,10 @@ contract TriggerDutchXAuctionCleared is GelatoTriggersStandard {
     IDutchX public dutchX;
 
     constructor(address payable _gelatoCore,
-                string memory _triggerSignature,
                 address _dutchX
     )
         public
-        GelatoTriggersStandard(_gelatoCore, _triggerSignature)
+        GelatoTriggersStandard(_gelatoCore, "fired(address,address,uint256)")
     {
         dutchX = IDutchX(_dutchX);
     }

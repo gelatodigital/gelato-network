@@ -8,7 +8,6 @@ contract ActionChainedDutchXSellMintWithdraw is ActionDutchXSell,
 {
     constructor(address payable _gelatoCore,
                 address _dutchX,
-                string memory _actionSignature,
                 uint256 _actionGasStipend,
                 address _mintingGTAI,
                 address _chainedTrigger,
@@ -17,7 +16,7 @@ contract ActionChainedDutchXSellMintWithdraw is ActionDutchXSell,
         public
         ActionDutchXSell(_gelatoCore,
                          _dutchX,
-                         _actionSignature,
+                         "action(uint256,address,address,address,address,uint256)",
                          _actionGasStipend
         )
         GTAChainedMinting(_mintingGTAI,

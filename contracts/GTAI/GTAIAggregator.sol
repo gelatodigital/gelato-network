@@ -3,12 +3,10 @@ pragma solidity ^0.5.10;
 import './GTAI_standards/IcedOut/IcedOutOwnable.sol';
 import './GTAI_standards/GTA_registry/ownable_registry/GelatoTriggerRegistryOwnable.sol';
 import './GTAI_standards/GTA_registry/ownable_registry/GelatoActionRegistryOwnable.sol';
-import './GTAI_standards/IGTAI.sol';
 
 contract GTAIAggregator is IcedOutOwnable,
                            GelatoTriggerRegistryOwnable,
-                           GelatoActionRegistryOwnable,
-                           IGTAI
+                           GelatoActionRegistryOwnable
 {
 
     constructor(address payable _gelatoCore,
