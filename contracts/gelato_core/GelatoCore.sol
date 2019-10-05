@@ -241,7 +241,6 @@ contract GelatoCore is GelatoExecutionClaim,
     {
         // Ensure that executor sends enough gas for the execution
         uint256 startGas = gasleft();
-        // uint256 maxGasConsumption = _getMaxExecutionGasConsumption(_actionGasStipend);
         require(startGas >= _getMaxExecutionGasConsumption(_actionGasStipend),
             "GelatoCore.execute: Insufficient gas sent"
         );

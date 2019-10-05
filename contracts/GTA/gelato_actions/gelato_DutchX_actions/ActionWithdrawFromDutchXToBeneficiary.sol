@@ -1,12 +1,10 @@
 pragma solidity ^0.5.10;
 
 import '../gelato_action_standards/GelatoActionsStandard.sol';
-import '../../../gelato_dappInterfaces/gelato_DutchX/gelato_DutchX_standards/GelatoDutchXStandard.sol';
-import '@openzeppelin/contracts/utils/ReentrancyGuard.sol';
+import '../../../gelato_dappInterfaces/gelato_DutchX/GelatoDutchXInterface.sol';
 
 contract ActionWithdrawFromDutchXToBeneficiary is GelatoActionsStandard,
-                                                  GelatoDutchXStandard,
-                                                  ReentrancyGuard
+                                                  GelatoDutchXInterface
 {
     constructor(address payable _gelatoCore,
                 address _dutchX,
@@ -19,12 +17,11 @@ contract ActionWithdrawFromDutchXToBeneficiary is GelatoActionsStandard,
                               _actionSignature,
                               _actionGasStipend
         )
-        GelatoDutchXStandard(_dutchX)
+        GelatoDutchXInterface(_dutchX)
     {}
 
     event LogWithdrawFromDutchX(uint256 indexed executionClaimId,
-                                address executionClaimOwner,
-                                address indexed beneficiary,
+                                address indexed executionClaimOwner,
                                 address sellToken,
                                 address indexed buyToken,
                                 address seller,
@@ -32,21 +29,26 @@ contract ActionWithdrawFromDutchXToBeneficiary is GelatoActionsStandard,
                                 uint256 withdrawAmount
     );
 
-    function action(// Standard Action Params
-                    uint256 _executionClaimId,
-                    address _executionClaimOwner,
-                    // Specific Action Params
-                    address _beneficiary,
-                    address _sellToken,
-                    address _buyToken,
-                    address _seller,
-                    uint256 _auctionIndex,
-                    uint256 _sellAmountAfterFee
+    function withdrawFromDutchXToExecutionClaimOwner(
+        // Standard Action Params
+        uint256 _executionClaimId,  // via execute() calldata
+        address _executionClaimOwner, // via actionPayload (default:0x)
+        // Specific Action Params
+        address _sellToken,
+        address _buyToken,
+        address _seller,
+        uint256 _auctionIndex,
+        uint256 _sellAmountAfterFee
     )
-        nonReentrant
         public
         returns(bool)
     {
+        // Standard action Setup
+        address executionClaimOwner
+            = GelatoActionsStandard._setup(_executionClaimOwner,
+                                           _executionClaimId
+        );
+
         uint256 withdrawAmount = _getWithdrawAmount(_sellToken,
                                                     _buyToken,
                                                     _auctionIndex,
@@ -59,17 +61,16 @@ contract ActionWithdrawFromDutchXToBeneficiary is GelatoActionsStandard,
                                     withdrawAmount),
             "ActionSellWithdrawDutchX.action._withdrawFromDutchX failed"
         );
-        ERC20(_buyToken).safeTransfer(_beneficiary, withdrawAmount);
+        ERC20(_buyToken).safeTransfer(executionClaimOwner, withdrawAmount);
         emit LogWithdrawFromDutchX(_executionClaimId,
-                                   _executionClaimOwner,
-                                   _beneficiary,
+                                   executionClaimOwner,
                                    _sellToken,
                                    _buyToken,
                                    _seller,
                                    _auctionIndex,
                                    withdrawAmount
         );
-        emit LogAction(_executionClaimId, _executionClaimOwner);
+        emit LogAction(_executionClaimId, executionClaimOwner);
         return true;
     }
 }

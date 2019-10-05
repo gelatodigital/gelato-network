@@ -22,6 +22,21 @@ contract GelatoActionsStandard is GTA
         actionGasStipend = _actionGasStipend;
     }
 
+    // any action should call this to initialise its executionClaimOwner
+    function _setup(address _executionClaimOwner,
+                    uint256 _executionClaimId
+    )
+        internal
+        view
+        returns(address executionClaimOwner)
+    {
+        if (_executionClaimOwner == address(0)) {
+            executionClaimOwner = _getExecutionClaimOwner(_executionClaimId);
+        } else {
+            executionClaimOwner = _executionClaimOwner;
+        }
+    }
+
     // Action Events
     event LogAction(uint256 indexed _executionClaimId,
                     address indexed _executionClaimOwner
@@ -38,9 +53,9 @@ contract GelatoActionsStandard is GTA
     }
 
     // Optional action checks
-    function checkERC20Allowance(address _token,
-                                 address _tokenOwner,
-                                 uint256 _allowance
+    function hasERC20Allowance(address _token,
+                               address _tokenOwner,
+                               uint256 _allowance
     )
         public
         view
@@ -60,14 +75,5 @@ contract GelatoActionsStandard is GTA
         } else {
             return false;
         }
-    }
-    modifier hasERC20Allowance(address _token,
-                               address _tokenOwner,
-                               uint256 _allowance)
-    {
-        require(checkERC20Allowance(_token, _tokenOwner, _allowance),
-            "GelatoActionsStandard.hasERC20Allowance: failed"
-        );
-        _;
     }
 }

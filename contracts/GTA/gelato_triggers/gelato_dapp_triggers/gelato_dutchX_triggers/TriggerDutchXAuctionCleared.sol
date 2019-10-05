@@ -1,7 +1,7 @@
 pragma solidity ^0.5.10;
 
 import '../../gelato_trigger_standards/GelatoTriggersStandard.sol';
-import '../../../../gelato_dappInterfaces/gelato_dutchX/gelato_dutchX_interfaces/IDutchX.sol';
+import '../../../../gelato_dappInterfaces/gelato_dutchX/IDutchX.sol';
 
 contract TriggerDutchXAuctionCleared is GelatoTriggersStandard {
 

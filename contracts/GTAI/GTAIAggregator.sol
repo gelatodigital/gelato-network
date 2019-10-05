@@ -53,7 +53,7 @@ contract GTAIAggregator is IcedOutOwnable,
         );
         bytes memory actionPayload
             = abi.encodeWithSelector(_getActionSelector(_action),
-                                     msg.sender,  // executionClaimOwner
+                                     address(0),  // default: action will fetch ecOwner
                                      _specificActionParams
         );
         // Standard action conditions check before minting

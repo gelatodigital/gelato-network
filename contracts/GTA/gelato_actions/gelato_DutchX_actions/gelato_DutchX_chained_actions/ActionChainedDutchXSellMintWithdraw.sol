@@ -27,26 +27,32 @@ contract ActionChainedDutchXSellMintWithdraw is ActionDutchXSell,
     {}
 
     // Action:
-    function action(// Standard Action Params
-                    uint256 _executionClaimId,
-                    address _executionClaimOwner,
-                    // Specific Action Params
-                    address _beneficiary,
-                    address _sellToken,
-                    address _buyToken,
-                    uint256 _sellAmount
+    function sellMintWithdraw(// Standard Action Params
+                              uint256 _executionClaimId,  // via execute() calldata
+                              address _executionClaimOwner,  // via actionPayload
+                              // Specific Action Params
+                              address _sellToken,
+                              address _buyToken,
+                              uint256 _sellAmount
     )
         public
         returns(bool)
     {
+        // Standard action Setup
+        address executionClaimOwner
+            = GelatoActionsStandard._setup(_executionClaimOwner,
+                                           _executionClaimId
+        );
+
         // action: perform checks and sell on dutchX
         (bool success,
          uint256 sellAuctionIndex,
-         uint256 sellAmountAfterFee) = super.action(_executionClaimId,
-                                                    _executionClaimOwner,
-                                                    _sellToken,
-                                                    _buyToken,
-                                                    _sellAmount
+         uint256 sellAmountAfterFee)
+            = ActionDutchXSell.sell(_executionClaimId,
+                                    executionClaimOwner,
+                                    _sellToken,
+                                    _buyToken,
+                                    _sellAmount
         );
         require(success,
             "ActionChainedDutchXSellMintWithdraw.super.action: failed"
@@ -61,20 +67,19 @@ contract ActionChainedDutchXSellMintWithdraw is ActionDutchXSell,
         bytes memory chainedActionPayload
             = abi.encodeWithSelector(_getChainedActionSelector(),
                                      _executionClaimId,
-                                     _executionClaimOwner,
-                                     _beneficiary,
+                                     address(0), // == chainedAction will fetch ecOwner
                                      _sellToken,
                                      _buyToken,
                                      address(this),  // seller
                                      sellAuctionIndex,
                                      sellAmountAfterFee
         );
-        require(_activateChainedTAviaMintingGTAI(_executionClaimOwner,
+        require(_activateChainedTAviaMintingGTAI(executionClaimOwner,
                                                  chainedTriggerPayload,
                                                  chainedActionPayload),
             "ActionChainedDutchXSellMintWithdraw._mintExecutionClaim: failed"
         );
-        emit LogGTAChainedMinting(_executionClaimId, _executionClaimOwner);
+        emit LogGTAChainedMinting(_executionClaimId, executionClaimOwner);
         return true;
     }
 }

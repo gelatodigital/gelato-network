@@ -20,7 +20,7 @@ const ActionWithdrawFromDutchXToBeneficiary = artifacts.require(
 let gelatoCore;
 let dutchX;
 const ACTION_SIGNATURE =
-  "action(uint256,address,address,address,address,uint256)";
+  "sellMintWithdraw(uint256,address,address,address,uint256)";
 const ACTION_GAS_STIPEND = "500000";
 // Minting GTAI
 let gtaiAggregator;

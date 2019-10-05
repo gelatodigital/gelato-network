@@ -1,12 +1,10 @@
 pragma solidity ^0.5.10;
 
 import '../gelato_action_standards/GelatoActionsStandard.sol';
-import '../../../gelato_dappInterfaces/gelato_DutchX/gelato_DutchX_standards/GelatoDutchXStandard.sol';
-import '@openzeppelin/contracts/utils/ReentrancyGuard.sol';
+import '../../../gelato_dappInterfaces/gelato_DutchX/GelatoDutchXInterface.sol';
 
 contract ActionDutchXSell is GelatoActionsStandard,
-                             GelatoDutchXStandard,
-                             ReentrancyGuard
+                             GelatoDutchXInterface
 {
     constructor(address payable _gelatoCore,
                 address _dutchX,
@@ -19,7 +17,7 @@ contract ActionDutchXSell is GelatoActionsStandard,
                               _actionSignature,
                               _actionGasStipend
         )
-        GelatoDutchXStandard(_dutchX)
+        GelatoDutchXInterface(_dutchX)
     {}
 
     // SellCondition: token pair is traded on DutchX
@@ -51,23 +49,30 @@ contract ActionDutchXSell is GelatoActionsStandard,
     }
 
     // Action:
-    function action(// Standard Action Params
-                    uint256 _executionClaimId,
-                    address _executionClaimOwner,
-                    // Specific Action Params
-                    address _sellToken,
-                    address _buyToken,
-                    uint256 _sellAmount
+    function sell(// Standard Action Params
+                  uint256 _executionClaimId,  // via execute() calldata
+                  address _executionClaimOwner,  // via actionPayload (default:0x)
+                  // Specific Action Params
+                  address _sellToken,
+                  address _buyToken,
+                  uint256 _sellAmount
     )
-        nonReentrant
-        hasERC20Allowance(_sellToken, _executionClaimOwner, _sellAmount)
         public
         returns(bool, uint256, uint256)
     {
+        // Standard action Setup
+        address executionClaimOwner
+            = GelatoActionsStandard._setup(_executionClaimOwner,
+                                           _executionClaimId
+        );
+
+        require(hasERC20Allowance(_sellToken, executionClaimOwner, _sellAmount),
+            "ActionDutchXSell.action.hasERC20Allowance: failed"
+        );
         (bool success,
          uint256 sellAuctionIndex,
          uint256 sellAmountAfterFee) = _sellOnDutchX(_executionClaimId,
-                                                     _executionClaimOwner,
+                                                     executionClaimOwner,
                                                      _sellToken,
                                                      _buyToken,
                                                      _sellAmount
@@ -75,7 +80,7 @@ contract ActionDutchXSell is GelatoActionsStandard,
         require(success,
             "ActionDutchXSell.action._sellOnDutchX failed"
         );
-        emit LogAction(_executionClaimId, _executionClaimOwner);
+        emit LogAction(_executionClaimId, executionClaimOwner);
         return (true, sellAuctionIndex, sellAmountAfterFee);
     }
 }
