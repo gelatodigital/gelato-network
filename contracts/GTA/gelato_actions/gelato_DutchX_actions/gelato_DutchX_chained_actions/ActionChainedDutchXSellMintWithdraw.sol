@@ -8,6 +8,7 @@ contract ActionChainedDutchXSellMintWithdraw is ActionDutchXSell,
 {
     constructor(address payable _gelatoCore,
                 address _dutchX,
+                string memory _actionSignature,
                 uint256 _actionGasStipend,
                 address _mintingGTAI,
                 address _chainedTrigger,
@@ -16,7 +17,7 @@ contract ActionChainedDutchXSellMintWithdraw is ActionDutchXSell,
         public
         ActionDutchXSell(_gelatoCore,
                          _dutchX,
-                         "action(uint256,address,address,address,address,uint256)",
+                         _actionSignature,
                          _actionGasStipend
         )
         GTAChainedMinting(_mintingGTAI,
@@ -26,8 +27,10 @@ contract ActionChainedDutchXSellMintWithdraw is ActionDutchXSell,
     {}
 
     // Action:
-    function action(uint256 _executionClaimId,
+    function action(// Standard Action Params
+                    uint256 _executionClaimId,
                     address _executionClaimOwner,
+                    // Specific Action Params
                     address _beneficiary,
                     address _sellToken,
                     address _buyToken,
@@ -49,20 +52,22 @@ contract ActionChainedDutchXSellMintWithdraw is ActionDutchXSell,
             "ActionChainedDutchXSellMintWithdraw.super.action: failed"
         );
         // chained minting: mint withdrawal execution claims via gtai
-        bytes memory chainedTriggerPayload = abi.encodeWithSelector(_getChainedTriggerSelector(),
-                                                                    _sellToken,
-                                                                    _buyToken,
-                                                                    sellAuctionIndex
+        bytes memory chainedTriggerPayload
+            = abi.encodeWithSelector(_getChainedTriggerSelector(),
+                                     _sellToken,
+                                     _buyToken,
+                                     sellAuctionIndex
         );
-        bytes memory chainedActionPayload = abi.encodeWithSelector(_getChainedActionSelector(),
-                                                                   _executionClaimId,
-                                                                   _executionClaimOwner,
-                                                                   _beneficiary,
-                                                                   _sellToken,
-                                                                   _buyToken,
-                                                                   address(this),  // seller
-                                                                   sellAuctionIndex,
-                                                                   sellAmountAfterFee
+        bytes memory chainedActionPayload
+            = abi.encodeWithSelector(_getChainedActionSelector(),
+                                     _executionClaimId,
+                                     _executionClaimOwner,
+                                     _beneficiary,
+                                     _sellToken,
+                                     _buyToken,
+                                     address(this),  // seller
+                                     sellAuctionIndex,
+                                     sellAmountAfterFee
         );
         require(_activateChainedTAviaMintingGTAI(_executionClaimOwner,
                                                  chainedTriggerPayload,

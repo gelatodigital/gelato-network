@@ -3,19 +3,22 @@
 
 const CONTRACT_NAME = "ActionWithdrawFromDutchXToBeneficiary";
 // Artifacts
-const ActionWithdrawFromDutchXToBeneficiary
-  = artifacts.require("ActionWithdrawFromDutchXToBeneficiary");
+const ActionWithdrawFromDutchXToBeneficiary = artifacts.require(
+  "ActionWithdrawFromDutchXToBeneficiary"
+);
 const GelatoCore = artifacts.require("GelatoCore");
 const DutchExchangeProxy = artifacts.require("DutchExchangeProxy");
 
 // Constructor params
 let gelatoCore;
 let dutchX;
+const ACTION_SIGNATURE =
+  "action(uint256,address,address,address,address,address,uint256,uint256)";
 const ACTION_GAS_STIPEND = "200000";
 
 module.exports = async function(deployer, network, accounts) {
   if (network.startsWith("dev")) {
-    console.log(`\n\tDeploying ${CONTRACT_NAME} to ganache\n`)
+    console.log(`\n\tDeploying ${CONTRACT_NAME} to ganache\n`);
     const ganacheCoreDeployer = accounts[0]; // Ganache account
     // Constructor params
     gelatoCore = await GelatoCore.deployed();
@@ -27,17 +30,19 @@ module.exports = async function(deployer, network, accounts) {
           GelatoCore:        ${gelatoCore.address}
           DutchX Proxy:      ${dutchX.address}
           ActionGasStipend:  ${ACTION_GAS_STIPEND}
+          ActionSignature:   ${ACTION_SIGNATURE}
     `);
     // Deploy with constructor params
     await deployer.deploy(
-        ActionWithdrawFromDutchXToBeneficiary,
-        gelatoCore.address,
-        dutchX.address,
-        ACTION_GAS_STIPEND,
+      ActionWithdrawFromDutchXToBeneficiary,
+      gelatoCore.address,
+      dutchX.address,
+      ACTION_SIGNATURE,
+      ACTION_GAS_STIPEND,
       { from: ganacheCoreDeployer }
     );
   } else {
-    console.log(`\n\tDeploying ${CONTRACT_NAME} to live net\n`)
+    console.log(`\n\tDeploying ${CONTRACT_NAME} to live net\n`);
     // Constructor params
     gelatoCore = await GelatoCore.deployed();
     dutchX = await DutchExchangeProxy.deployed();
@@ -47,12 +52,14 @@ module.exports = async function(deployer, network, accounts) {
           GelatoCore:        ${gelatoCore.address}
           DutchX Proxy:      ${dutchX.address}
           ActionGasStipend:  ${ACTION_GAS_STIPEND}
+          ActionSignature:   ${ACTION_SIGNATURE}
     `);
     await deployer.deploy(
-        ActionWithdrawFromDutchXToBeneficiary,
-        gelatoCore.address,
-        dutchX.address,
-        ACTION_GAS_STIPEND,
+      ActionWithdrawFromDutchXToBeneficiary,
+      gelatoCore.address,
+      dutchX.address,
+      ACTION_SIGNATURE,
+      ACTION_GAS_STIPEND
     );
   }
   // Print deployed contract address to console

@@ -5,66 +5,42 @@ import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 
 contract GelatoActionsStandard is GTA
 {
-    address public dapp;
+    address public interactionContract;
     bytes4 public actionSelector;
     uint256 public actionGasStipend;
 
     constructor(address payable _gelatoCore,
-                address _dapp,
+                address _interactionContract,
                 string memory _actionSignature,
                 uint256 _actionGasStipend
     )
         GTA(_gelatoCore)
         internal
     {
-        dapp = _dapp;
+        interactionContract = _interactionContract;
         actionSelector = bytes4(keccak256(bytes(_actionSignature)));
         actionGasStipend = _actionGasStipend;
     }
 
-    function matchingActionSelector(bytes4 _actionSelector)
+    // Action Events
+    event LogAction(uint256 indexed _executionClaimId,
+                    address indexed _executionClaimOwner
+    );
+
+    // FN for standardised action condition checking by GTAIs
+    // Can be overriden inside child actions - if needed.
+    function actionConditionsFulfilled(bytes memory)
         public
         view
         returns(bool)
     {
-        if (actionSelector == _actionSelector) {
-            return true;
-        } else {
-            return false;
-        }
+        return true;
     }
-
-    // Standard Action Checks
-    modifier correctActionSelector() {
-        bytes4 _actionSelector;
-        assembly {
-            _actionSelector := mload(add(0x20, calldataload(0)))
-        }
-        require(_actionSelector == actionSelector,
-            "GelatoActionsStandard.correctActionSelector failed"
-        );
-        _;
-    }
-
-    modifier sufficientGas() {
-        require(gasleft() >= actionGasStipend,
-            "GelatoActionsStandard.sufficientGas failed"
-        );
-        _;
-    }
-
-    function _standardActionChecks()
-        onlyGelatoCore
-        correctActionSelector
-        sufficientGas
-        internal
-        view
-    {}
 
     // Optional action checks
-    function hasERC20Allowance(address _token,
-                               address _tokenOwner,
-                               uint256 _allowance
+    function checkERC20Allowance(address _token,
+                                 address _tokenOwner,
+                                 uint256 _allowance
     )
         public
         view
@@ -85,23 +61,13 @@ contract GelatoActionsStandard is GTA
             return false;
         }
     }
-    modifier ERC20Allowance(address _token,
-                            address _tokenOwner,
-                            uint256 _allowance)
+    modifier hasERC20Allowance(address _token,
+                               address _tokenOwner,
+                               uint256 _allowance)
     {
-        require(hasERC20Allowance(_token, _tokenOwner, _allowance),
-            "GelatoActionsStandard.ERC20Allowance: failed"
+        require(checkERC20Allowance(_token, _tokenOwner, _allowance),
+            "GelatoActionsStandard.hasERC20Allowance: failed"
         );
         _;
     }
-
-    function _conditionsFulfilled(bytes memory payload)
-        internal
-        view
-        returns(bool)
-    {}
-
-    event LogAction(uint256 indexed _executionClaimId,
-                    address indexed _executionClaimOwner
-    );
 }

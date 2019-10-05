@@ -19,6 +19,8 @@ const ActionWithdrawFromDutchXToBeneficiary = artifacts.require(
 // Constructor params
 let gelatoCore;
 let dutchX;
+const ACTION_SIGNATURE =
+  "action(uint256,address,address,address,address,uint256)";
 const ACTION_GAS_STIPEND = "500000";
 // Minting GTAI
 let gtaiAggregator;
@@ -41,11 +43,12 @@ module.exports = async function(deployer, network, accounts) {
     console.log(`
           Deploying ${CONTRACT_NAME} with
           =============================
-          GelatoCore:        ${gelatoCore.address}
-          DutchX Proxy:      ${dutchX.address}
-          Action Gas Stipend: ${ACTION_GAS_STIPEND}
-          GTAI Aggregator:   ${gtaiAggregator.address}
-          TriggerDutchXAuctionCleared: ${triggerDutchXAuctionCleared.address}
+          GelatoCore:       ${gelatoCore.address}
+          DutchX Proxy:     ${dutchX.address}
+          ActionGasStipend: ${ACTION_GAS_STIPEND}
+          ActionSignature:  ${ACTION_SIGNATURE}
+          GTAIAggregator:   ${gtaiAggregator.address}
+          TriggerDutchXAuctionCleared:           ${triggerDutchXAuctionCleared.address}
           ActionWithdrawFromDutchXToBeneficiary: ${actionWithdrawFromDutchXToBeneficiary.address}
     `);
     // Deploy with constructor params
@@ -53,6 +56,7 @@ module.exports = async function(deployer, network, accounts) {
       ActionChainedDutchXSellMintWithdraw,
       gelatoCore.address,
       dutchX.address,
+      ACTION_SIGNATURE,
       ACTION_GAS_STIPEND,
       gtaiAggregator.address,
       triggerDutchXAuctionCleared.address,
@@ -70,21 +74,23 @@ module.exports = async function(deployer, network, accounts) {
     console.log(`
           Deploying ${CONTRACT_NAME} with
           =============================
-          GelatoCore:        ${gelatoCore.address}
-          DutchX Proxy:      ${dutchX.address}
-          Action Gas Stipend: ${ACTION_GAS_STIPEND}
-          GTAI Aggregator:   ${gtaiAggregator.address}
-          TriggerDutchXAuctionCleared: ${triggerDutchXAuctionCleared.address}
+          GelatoCore:       ${gelatoCore.address}
+          DutchX Proxy:     ${dutchX.address}
+          ActionGasStipend: ${ACTION_GAS_STIPEND}
+          ActionSignature:  ${ACTION_SIGNATURE}
+          GTAIAggregator:   ${gtaiAggregator.address}
+          TriggerDutchXAuctionCleared:           ${triggerDutchXAuctionCleared.address}
           ActionWithdrawFromDutchXToBeneficiary: ${actionWithdrawFromDutchXToBeneficiary.address}
     `);
     await deployer.deploy(
       ActionChainedDutchXSellMintWithdraw,
       gelatoCore.address,
       dutchX.address,
+      ACTION_SIGNATURE,
       ACTION_GAS_STIPEND,
       gtaiAggregator.address,
       triggerDutchXAuctionCleared.address,
-      actionWithdrawFromDutchXToBeneficiary.address,
+      actionWithdrawFromDutchXToBeneficiary.address
     );
   }
   // Print deployed contract address to console

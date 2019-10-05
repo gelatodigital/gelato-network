@@ -58,16 +58,15 @@ contract IcedOut {
 
 
      // _________________ ExecutionClaim Minting ____________________________
-     function _getNextExecutionClaimId()
+     function _getCurrentExecutionClaimId()
           internal
           view
           returns(uint256)
      {
-          return gelatoCore.getCurrentExecutionClaimId().add(1);
+          return gelatoCore.getCurrentExecutionClaimId();
      }
 
-     function _mintExecutionClaim(uint256 _executionClaimId,
-                                  address _executionClaimOwner,
+     function _mintExecutionClaim(address _executionClaimOwner,
                                   address _triggerAddress,
                                   bytes memory _triggerPayload,
                                   address _actionAddress,
@@ -75,8 +74,7 @@ contract IcedOut {
      )
           internal
      {
-          require(gelatoCore.mintExecutionClaim(_executionClaimId,
-                                                _executionClaimOwner,
+          require(gelatoCore.mintExecutionClaim(_executionClaimOwner,
                                                 _triggerAddress,
                                                 _triggerPayload,
                                                 _actionAddress,

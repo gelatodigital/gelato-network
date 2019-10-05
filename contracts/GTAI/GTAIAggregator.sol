@@ -29,9 +29,9 @@ contract GTAIAggregator is IcedOutOwnable,
     );
 
     function activateTA(address _trigger,
-                        bytes calldata _triggerParams,
+                        bytes calldata _specificTriggerParams,
                         address _action,
-                        bytes calldata _actionParams
+                        bytes calldata _specificActionParams
     )
         onlyRegisteredTriggers(_trigger)
         onlyRegisteredActions(_action)
@@ -46,26 +46,28 @@ contract GTAIAggregator is IcedOutOwnable,
         );
 
         // _________________Minting_____________________________________________
-        uint256 nextExecutionClaimId = _getNextExecutionClaimId();
         // Trigger-Action Payloads
-        bytes memory triggerPayload = abi.encodeWithSelector(_getTriggerSelector(_trigger),
-                                                             nextExecutionClaimId,
-                                                             _triggerParams
+        bytes memory triggerPayload
+            = abi.encodeWithSelector(_getTriggerSelector(_trigger),
+                                     _specificTriggerParams
         );
-        bytes memory actionPayload = abi.encodeWithSelector(_getActionSelector(_action),
-                                                            nextExecutionClaimId,
-                                                            msg.sender,
-                                                            _actionParams
+        bytes memory actionPayload
+            = abi.encodeWithSelector(_getActionSelector(_action),
+                                     msg.sender,  // executionClaimOwner
+                                     _specificActionParams
         );
-        _mintExecutionClaim(nextExecutionClaimId,
-                            msg.sender,  // executionClaimOwner
+        // Standard action conditions check before minting
+        require(_actionConditionsFulfilled(_action, actionPayload),
+            "GTAIAggregator.activateTA._actionConditionsFulfilled: failed"
+        );
+        _mintExecutionClaim(msg.sender,  // executionClaimOwner
                             _trigger,
                             triggerPayload,
                             _action,
                             actionPayload
         );
-        emit LogActivation(nextExecutionClaimId,
-                            msg.sender,
+        emit LogActivation(_getCurrentExecutionClaimId(),
+                           msg.sender,
                            _trigger,
                            _action
         );
@@ -75,11 +77,11 @@ contract GTAIAggregator is IcedOutOwnable,
     }
 
     //___________________ Chained Execution Claim Minting _____________________
-    event LogChainedActivation(address indexed minter,
-                               uint256 executionClaimId,
+    event LogChainedActivation(uint256 executionClaimId,
                                address indexed executionClaimOwner,
                                address trigger,
-                               address indexed action
+                               address indexed action,
+                               address indexed minter
     );
 
     function activateChainedTA(address _executionClaimOwner,
@@ -91,22 +93,21 @@ contract GTAIAggregator is IcedOutOwnable,
         msgSenderIsRegisteredAction()
         onlyRegisteredTriggers(_chainedTrigger)
         onlyRegisteredActions(_chainedAction)
+        actionConditionsFulfilled(_chainedAction, _chainedActionPayload)
         external
         returns(bool)
     {
-        uint256 chainedExecutionClaimId = _getNextExecutionClaimId();
-        _mintExecutionClaim(chainedExecutionClaimId,
-                            _executionClaimOwner,
+        _mintExecutionClaim(_executionClaimOwner,
                             _chainedTrigger,
                             _chainedTriggerPayload,
                             _chainedAction,
                             _chainedActionPayload
         );
-        emit LogChainedActivation(msg.sender,
-                                  chainedExecutionClaimId,
+        emit LogChainedActivation(_getCurrentExecutionClaimId(),
                                   _executionClaimOwner,
                                   _chainedTrigger,
-                                  _chainedAction
+                                  _chainedAction,
+                                  msg.sender  // minterAction
         );
         return true;
     }

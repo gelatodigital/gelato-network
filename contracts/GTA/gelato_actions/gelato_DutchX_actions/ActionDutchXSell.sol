@@ -23,13 +23,26 @@ contract ActionDutchXSell is GelatoActionsStandard,
     {}
 
     // SellCondition: token pair is traded on DutchX
-    function conditionsFulfilled(bytes memory _payload)
+    // To be queried passing actionParams by GTAIs prior to minting
+    function actionConditionsFulfilled(bytes memory _actionPayload)
         public
         view
         returns(bool)
     {
-        (address _sellToken,
-         address _buyToken) = abi.decode(_payload, (address, address));
+        (// Standard Action Params
+         ,,,
+         // Specific Action Params
+         address _sellToken,
+         address _buyToken
+         ,) = abi.decode(_actionPayload,(// Standard Action Params
+                                         bytes4,  // actionSelector
+                                         address,  // ecID
+                                         uint256,  // ecOwner
+                                         // Specific Action Params
+                                         address,  // sellToken
+                                         address,  // buyToken
+                                         uint256)  // sellAmount
+        );
         if (dutchX.getAuctionIndex(_sellToken, _buyToken) == 0) {
             return false;
         } else {
@@ -38,21 +51,19 @@ contract ActionDutchXSell is GelatoActionsStandard,
     }
 
     // Action:
-    function action(uint256 _executionClaimId,
+    function action(// Standard Action Params
+                    uint256 _executionClaimId,
                     address _executionClaimOwner,
+                    // Specific Action Params
                     address _sellToken,
                     address _buyToken,
                     uint256 _sellAmount
     )
         nonReentrant
-        ERC20Allowance(_sellToken, _executionClaimOwner, _sellAmount)
+        hasERC20Allowance(_sellToken, _executionClaimOwner, _sellAmount)
         public
         returns(bool, uint256, uint256)
     {
-        _standardActionChecks();
-        require(conditionsFulfilled(abi.encode(_sellToken, _buyToken)),
-            "ActionDutchXSell.action: tokens not traded on DutchX"
-        );
         (bool success,
          uint256 sellAuctionIndex,
          uint256 sellAmountAfterFee) = _sellOnDutchX(_executionClaimId,

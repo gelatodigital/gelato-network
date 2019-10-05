@@ -57,8 +57,7 @@ contract GelatoCore is GelatoExecutionClaim,
                                      bytes32 executionClaimHash
     );
 
-    function mintExecutionClaim(uint256 _executionClaimId,
-                                address _executionClaimOwner,
+    function mintExecutionClaim(address _executionClaimOwner,
                                 address _trigger,
                                 bytes calldata _triggerPayload,
                                 address _action,
@@ -72,18 +71,13 @@ contract GelatoCore is GelatoExecutionClaim,
         // ______ Mint new executionClaim ERC721 token _____________________
         Counters.increment(_executionClaimIds);
         uint256 executionClaimId = _executionClaimIds.current();
-        require(executionClaimId == _executionClaimId,
-            "GelatoCore.mintExecutionClaim: _executionClaimId failed"
-        );
         _mint(_executionClaimOwner, executionClaimId);
         // =============
-
         uint256 actionGasStipend = IGelatoAction(_action).actionGasStipend();
-
         // Include executionClaimId: avoid hash collisions
         // Exclude _executionClaimOwner: ExecutionClaims are transferable
         bytes32 executionClaimHash = keccak256(abi.encodePacked(executionClaimId,
-                                                                msg.sender,
+                                                                msg.sender, // GTAI
                                                                 _trigger,
                                                                 _triggerPayload,
                                                                 _action,
@@ -91,7 +85,6 @@ contract GelatoCore is GelatoExecutionClaim,
                                                                 actionGasStipend
         ));
         hashedExecutionClaims[executionClaimId] = executionClaimHash;
-
         emit LogNewExecutionClaimMinted(msg.sender,  // GTAI
                                         executionClaimId,
                                         _executionClaimOwner,
@@ -102,7 +95,6 @@ contract GelatoCore is GelatoExecutionClaim,
                                         actionGasStipend,
                                         executionClaimHash
         );
-
         return true;
     }
     // ********************* mintExecutionClaim() END
@@ -151,13 +143,14 @@ contract GelatoCore is GelatoExecutionClaim,
         }
 
         // Compute executionClaimHash from calldata
-        bytes32 computedExecutionClaimHash = keccak256(abi.encodePacked(_executionClaimId,
-                                                                        _GTAI,
-                                                                        _trigger,
-                                                                        _triggerPayload,
-                                                                        _action,
-                                                                        _actionPayload,
-                                                                        _actionGasStipend
+        bytes32 computedExecutionClaimHash
+            = keccak256(abi.encodePacked(_executionClaimId,
+                                         _GTAI,
+                                         _trigger,
+                                         _triggerPayload,
+                                         _action,
+                                         _actionPayload,
+                                         _actionGasStipend
         ));
         bytes32 storedExecutionClaimHash = hashedExecutionClaims[_executionClaimId];
         // Check that passed calldata is correct
@@ -242,6 +235,7 @@ contract GelatoCore is GelatoExecutionClaim,
                      uint256 _executionClaimId
 
     )
+        nonReentrant
         external
         returns(uint8 executionResult)
     {
@@ -299,13 +293,14 @@ contract GelatoCore is GelatoExecutionClaim,
 
         // _________ safeExecute()_______________________________________________
         {
-            bytes memory safeExecutePayload = abi.encodeWithSelector(this.safeExecute.selector,
-                                                                     _GTAI,
-                                                                     msg.sender,
-                                                                     _executionClaimId,
-                                                                     _action,
-                                                                     _actionPayload,
-                                                                     _actionGasStipend
+            bytes memory safeExecutePayload
+                = abi.encodeWithSelector(this.safeExecute.selector,
+                                         _GTAI,
+                                         msg.sender,
+                                         _executionClaimId,
+                                         _action,
+                                         _actionPayload,
+                                         _actionGasStipend
             );
             // call safeExecute()
             (, bytes memory returnData) = address(this).call(safeExecutePayload);
@@ -336,14 +331,14 @@ contract GelatoCore is GelatoExecutionClaim,
             // or % payout: executionCostEstimate.mul(100 + executorProfit).div(100);
 
             emit LogClaimExecutedBurnedAndDeleted(_executionClaimId,
-                                                executionClaimOwner,
-                                                _GTAI,
-                                                msg.sender,  // executor
-                                                accountedGasPrice,
-                                                gasUsedEstimate,
-                                                executionCostEstimate,
-                                                executorProfit,
-                                                executorPayout
+                                                  executionClaimOwner,
+                                                  _GTAI,
+                                                  msg.sender,  // executor
+                                                  accountedGasPrice,
+                                                  gasUsedEstimate,
+                                                  executionCostEstimate,
+                                                  executorProfit,
+                                                  executorPayout
             );
         }
         // Balance Updates
@@ -371,7 +366,10 @@ contract GelatoCore is GelatoExecutionClaim,
         uint256 gtaiBalanceBefore = gtaiBalances[_GTAI];
 
         // Interactions
-        (bool success,) = _action.call.gas(_actionGasStipend)(_actionPayload);
+        (bool success,) = _action.call
+                                 .gas(_actionGasStipend)
+                                 (abi.encode(_executionClaimId, _actionPayload)
+        );
         emit LogExecutionResult(_executionClaimId,
                                 success,
                                 _executor
@@ -417,13 +415,14 @@ contract GelatoCore is GelatoExecutionClaim,
         external
     {
         // Compute executionClaimHash from calldata
-        bytes32 computedExecutionClaimHash = keccak256(abi.encodePacked(_executionClaimId,
-                                                                        _GTAI,
-                                                                        _trigger,
-                                                                        _triggerPayload,
-                                                                        _action,
-                                                                        _actionPayload,
-                                                                        _actionGasStipend
+        bytes32 computedExecutionClaimHash
+            = keccak256(abi.encodePacked(_executionClaimId,
+                                         _GTAI,
+                                         _trigger,
+                                         _triggerPayload,
+                                         _action,
+                                         _actionPayload,
+                                         _actionGasStipend
         ));
         bytes32 storedExecutionClaimHash = hashedExecutionClaims[_executionClaimId];
 

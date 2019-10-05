@@ -48,14 +48,5 @@ contract GelatoTriggerRegistry {
         );
         _;
     }
-
-    modifier triggerHasMatchingGelatoCore(address _trigger,
-                                          address payable _gelatoCore)
-    {
-        require(IGelatoTrigger(_trigger).matchingGelatoCore(_gelatoCore),
-            "GelatoTriggerRegistry.triggerHasMatchingGelatoCore: failed"
-        );
-        _;
-    }
     // ===========
 }

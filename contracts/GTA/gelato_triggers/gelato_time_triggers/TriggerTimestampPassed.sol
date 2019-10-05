@@ -4,9 +4,11 @@ import '../gelato_trigger_standards/GelatoTriggersStandard.sol';
 
 contract TriggerTimestampPassed is GelatoTriggersStandard {
 
-    constructor(address payable _gelatoCore)
+    constructor(address payable _gelatoCore,
+                string memory _triggerSignature
+    )
         public
-        GelatoTriggersStandard(_gelatoCore, "fired(uint256)")
+        GelatoTriggersStandard(_gelatoCore, _triggerSignature)
     {}
 
     function fired(uint256 _timestamp)
@@ -14,7 +16,6 @@ contract TriggerTimestampPassed is GelatoTriggersStandard {
         view
         returns(bool)
     {
-        _triggerChecks();
         return _timestamp <= now;
     }
 

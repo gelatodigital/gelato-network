@@ -10,14 +10,14 @@ contract ActionWithdrawFromDutchXToBeneficiary is GelatoActionsStandard,
 {
     constructor(address payable _gelatoCore,
                 address _dutchX,
+                string memory _actionSignature,
                 uint256 _actionGasStipend
     )
         public
-        GelatoActionsStandard(
-            _gelatoCore,
-            _dutchX,
-            "action(uint256,address,address,address,address,address,uint256,uint256)",
-            _actionGasStipend
+        GelatoActionsStandard(_gelatoCore,
+                              _dutchX,
+                              _actionSignature,
+                              _actionGasStipend
         )
         GelatoDutchXStandard(_dutchX)
     {}
@@ -32,8 +32,10 @@ contract ActionWithdrawFromDutchXToBeneficiary is GelatoActionsStandard,
                                 uint256 withdrawAmount
     );
 
-    function action(uint256 _executionClaimId,
+    function action(// Standard Action Params
+                    uint256 _executionClaimId,
                     address _executionClaimOwner,
+                    // Specific Action Params
                     address _beneficiary,
                     address _sellToken,
                     address _buyToken,
@@ -45,7 +47,6 @@ contract ActionWithdrawFromDutchXToBeneficiary is GelatoActionsStandard,
         public
         returns(bool)
     {
-        _standardActionChecks();
         uint256 withdrawAmount = _getWithdrawAmount(_sellToken,
                                                     _buyToken,
                                                     _auctionIndex,

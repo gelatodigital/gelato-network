@@ -7,6 +7,7 @@ const GelatoCore = artifacts.require("GelatoCore");
 
 // constructor params
 let gelatoCore;
+const TRIGGER_SIGNATURE = "fired(uint256)";
 
 module.exports = async function(deployer, network, accounts) {
   if (network.startsWith("dev")) {
@@ -18,11 +19,17 @@ module.exports = async function(deployer, network, accounts) {
           Deploying ${CONTRACT_NAME} with
           =============================
           GelatoCore:        ${gelatoCore.address}
+          TriggerSignature:  ${TRIGGER_SIGNATURE}
           `);
     // Deploy with constructor params
-    await deployer.deploy(TriggerTimestampPassed, gelatoCore.address, {
-      from: ganacheCoreDeployer
-    });
+    await deployer.deploy(
+      TriggerTimestampPassed,
+      gelatoCore.address,
+      TRIGGER_SIGNATURE,
+      {
+        from: ganacheCoreDeployer
+      }
+    );
   } else {
     console.log(`\n\tDeploying ${CONTRACT_NAME} to live net\n`);
     gelatoCore = await GelatoCore.deployed();
@@ -30,8 +37,13 @@ module.exports = async function(deployer, network, accounts) {
           Deploying ${CONTRACT_NAME} with
           =============================
           GelatoCore:        ${gelatoCore.address}
+          TriggerSignature:  ${TRIGGER_SIGNATURE}
           `);
-    await deployer.deploy(TriggerTimestampPassed, gelatoCore.address);
+    await deployer.deploy(
+      TriggerTimestampPassed,
+      gelatoCore.address,
+      TRIGGER_SIGNATURE
+    );
   }
   // Print deployed contract address to console
   const deployedContract = await TriggerTimestampPassed.deployed();

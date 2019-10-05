@@ -59,15 +59,6 @@ contract GelatoActionRegistry {
         _;
     }
 
-    modifier actionHasMatchingGelatoCore(address _action,
-                                         address payable _gelatoCore)
-    {
-        require(IGelatoAction(_action).matchingGelatoCore(_gelatoCore),
-            "GelatoActionRegistry.actionHasMatchingGelatoCore: failed"
-        );
-        _;
-    }
-
     modifier msgSenderIsRegisteredAction() {
         require(actions[msg.sender],
             "GelatoActionRegistry.msgSenderIsRegisteredAction: failed"
@@ -77,10 +68,24 @@ contract GelatoActionRegistry {
     // ===========
 
     // ____________ Additional Checks _____________________________________
-    modifier actionConditionsFulfilled(address _action,
-                                       bytes memory _payload)
+    function _actionConditionsFulfilled(address _action,
+                                        bytes memory _actionPayload
+    )
+        internal
+        view
+        returns(bool)
     {
-        require(IGelatoAction(_action).conditionsFulfilled(_payload),
+        if (IGelatoAction(_action).actionConditionsFulfilled(_actionPayload)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    modifier actionConditionsFulfilled(address _action,
+                                       bytes memory _actionPayload)
+    {
+        require(_actionConditionsFulfilled(_action, _actionPayload),
             "GelatoActionRegistry.actionConditionsFulfilled: failed"
         );
         _;

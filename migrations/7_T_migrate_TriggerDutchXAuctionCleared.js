@@ -12,6 +12,7 @@ const DutchExchangeProxy = artifacts.require("DutchExchangeProxy");
 
 // Constructor params
 let gelatoCore;
+const TRIGGER_SIGNATURE = "fired(address,address,uint256)";
 let dutchX;
 
 module.exports = async function(deployer, network, accounts) {
@@ -25,12 +26,14 @@ module.exports = async function(deployer, network, accounts) {
           Deploying ${CONTRACT_NAME} with
           =============================
           GelatoCore:        ${gelatoCore.address}
+          TriggerSignature:  ${TRIGGER_SIGNATURE}
           DutchX Proxy:      ${dutchX.address}
-          `);
+    `);
     // Deploy with constructor params
     await deployer.deploy(
       TriggerDutchXAuctionCleared,
       gelatoCore.address,
+      TRIGGER_SIGNATURE,
       dutchX.address,
       { from: ganacheCoreDeployer }
     );
@@ -42,10 +45,13 @@ module.exports = async function(deployer, network, accounts) {
           Deploying ${CONTRACT_NAME} with
           =============================
           GelatoCore:        ${gelatoCore.address}
-          `);
+          TriggerSignature:  ${TRIGGER_SIGNATURE}
+          DutchX Proxy:      ${dutchX.address}
+    `);
     await deployer.deploy(
       TriggerDutchXAuctionCleared,
       gelatoCore.address,
+      TRIGGER_SIGNATURE,
       dutchX.address
     );
   }
