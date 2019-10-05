@@ -1,6 +1,6 @@
 pragma solidity ^0.5.10;
 
-import '../gelato_trigger_standards/GelatoTriggersStandard.sol';
+import '../../gelato_trigger_standards/GelatoTriggersStandard.sol';
 
 contract TriggerTimestampPassed is GelatoTriggersStandard {
 
@@ -16,7 +16,7 @@ contract TriggerTimestampPassed is GelatoTriggersStandard {
         view
         returns(bool)
     {
-        return _timestamp <= now;
+        return _timestamp <= block.timestamp;
     }
 
     function getLatestTimestamp()

@@ -3,7 +3,7 @@ pragma solidity ^0.5.10;
 import './IcedOut.sol';
 import '@openzeppelin/contracts/ownership/Ownable.sol';
 
-contract IcedOutOwnable is IcedOut, Ownable {
+contract IcedOutOwnable is Ownable, IcedOut {
 
      constructor(address payable _gelatoCore,
                  uint256 _gtaiGasPrice,
@@ -30,6 +30,12 @@ contract IcedOutOwnable is IcedOut, Ownable {
 
 
      // _________________ Interface Funding Flows ____________________________
+     // ___________ GelatoInterface <-- EOA ___________
+     function acceptEther()
+          onlyOwner
+          external
+          payable
+     {}
      // ___________ GelatoCore <--> Interface ___________
      function topUpBalanceOnGelato()
           onlyOwner
