@@ -23,6 +23,22 @@ contract IcedOut {
      }
 
      // _________________ ExecutionClaim Pricing ____________________________
+     function _getExecutionGasEstimate(address _action)
+          internal
+          view
+          returns(uint256 executionGasEstimate)
+     {
+          uint256 gasOutsideGasLeftChecks = gelatoCore.gasOutsideGasleftChecks();
+          uint256 gasInsideGasLeftChecks = gelatoCore.gasInsideGasleftChecks();
+          uint256 actionGasStipend = IGelatoAction(_action).actionGasStipend();
+          uint256 executorGasRefundEstimate = gelatoCore.executorGasRefundEstimate();
+          executionGasEstimate
+               = (gasOutsideGasLeftChecks.add(gasInsideGasLeftChecks)
+                                         .add(gasInsideGasLeftChecks)
+                                         .add(actionGasStipend)
+                                         .sub(executorGasRefundEstimate)
+          );
+     }
      enum GasPricePrediction {
           GelatoDefault
      }
@@ -37,8 +53,11 @@ contract IcedOut {
           } else {
                gasPriceHedge = gtaiGasPrice;
           }
-          uint256 actionGasStipend = IGelatoAction(_action).actionGasStipend();
-          executionClaimPrice = actionGasStipend.mul(gasPriceHedge);
+          uint256 executionGasEstimate = _getExecutionGasEstimate(_action);
+          uint256 executorProfit = gelatoCore.executorProfit();
+          executionClaimPrice = (executionGasEstimate.mul(gasPriceHedge)
+                                                     .add(executorProfit)
+          );
      }
 
      function _useGTAIGasPrice(uint256 _gtaiGasPrice)

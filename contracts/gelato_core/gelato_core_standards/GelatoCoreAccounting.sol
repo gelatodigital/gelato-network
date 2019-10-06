@@ -10,7 +10,7 @@ contract GelatoCoreAccounting is Ownable, ReentrancyGuard {
     // Fallback Function
     function() external payable {
         require(isOwner(),
-            "GelatoCore.fallback function: only the owner should send ether to Gelato Core without selecting a payable function."
+            "GelatoCore.fallback: only owner should send ether without fnSelector."
         );
     }
 
