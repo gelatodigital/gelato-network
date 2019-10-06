@@ -10,7 +10,6 @@ const GelatoCore = artifacts.require("GelatoCore");
 const MIN_GTAI_BALANCE = web3.utils.toWei("0.5", "ether");
 const EXECUTOR_PROFIT = web3.utils.toWei("2", "finney");
 const EXECUTOR_GAS_PRICE = web3.utils.toWei("5", "gwei");
-const DEFAULT_GAS_PRICE_FOR_GTAIS = web3.utils.toWei("5", "gwei");
 const GAS_INSIDE_GASLEFT_CHECKS = "100000";
 const GAS_OUTSIDE_GASLEFT_CHECKS = "41414";
 const CAN_EXEC_MAX_GAS = "100000";
@@ -32,7 +31,6 @@ module.exports = async function(deployer, network, accounts) {
           gasInsideGasleftChecks:     ${GAS_INSIDE_GASLEFT_CHECKS} gas
           gasOutsideGasLeftChecks     ${GAS_OUTSIDE_GASLEFT_CHECKS} gas
           executorGasRefundEstimate:  ${EXECUTOR_GAS_REFUND_ESTIMATE} gas
-          defaultGasPriceForGTAIs:    ${web3.utils.fromWei(DEFAULT_GAS_PRICE_FOR_GTAIS, "gwei")} gwei
     `);
     // Deploy with constructor params
     await deployer.deploy(
@@ -40,11 +38,10 @@ module.exports = async function(deployer, network, accounts) {
       MIN_GTAI_BALANCE,
       EXECUTOR_PROFIT,
       EXECUTOR_GAS_PRICE,
-      CAN_EXEC_MAX_GAS,
       GAS_OUTSIDE_GASLEFT_CHECKS,
       GAS_INSIDE_GASLEFT_CHECKS,
-      EXECUTOR_GAS_REFUND_ESTIMATE,
-      DEFAULT_GAS_PRICE_FOR_GTAIS,
+      CAN_EXEC_MAX_GAS,
+      EXECUTOR_GAS_REFUND_ESTIMATE
       { from: ganacheCoreDeployer }
     );
   } else {
@@ -60,18 +57,16 @@ module.exports = async function(deployer, network, accounts) {
           gasInsideGasleftChecks:     ${GAS_INSIDE_GASLEFT_CHECKS} gas
           gasOutsideGasLeftChecks     ${GAS_OUTSIDE_GASLEFT_CHECKS} gas
           executorGasRefundEstimate:  ${EXECUTOR_GAS_REFUND_ESTIMATE} gas
-          defaultGasPriceForGTAIs:    ${web3.utils.fromWei(DEFAULT_GAS_PRICE_FOR_GTAIS, "gwei")} gwei
     `);
     await deployer.deploy(
       GelatoCore,
       MIN_GTAI_BALANCE,
       EXECUTOR_PROFIT,
       EXECUTOR_GAS_PRICE,
-      CAN_EXEC_MAX_GAS,
       GAS_OUTSIDE_GASLEFT_CHECKS,
       GAS_INSIDE_GASLEFT_CHECKS,
-      EXECUTOR_GAS_REFUND_ESTIMATE,
-      DEFAULT_GAS_PRICE_FOR_GTAIS
+      CAN_EXEC_MAX_GAS,
+      EXECUTOR_GAS_REFUND_ESTIMATE
     );
   }
   // Print deployed contract address to console

@@ -54,52 +54,32 @@ contract IcedOut {
                                          .sub(executorGasRefundEstimate)
           );
      }
-     enum GasPricePrediction {
-          GelatoDefault
-     }
+
      function _getExecutionClaimPrice(address _action)
           internal
           view
           returns(uint256 executionClaimPrice)
      {
-          uint256 gasPriceHedge;
-          if (gtaiGasPrice == uint8(GasPricePrediction.GelatoDefault)) {
-               gasPriceHedge = gelatoCore.defaultGasPriceForGTAIs();
-          } else {
-               gasPriceHedge = gtaiGasPrice;
-          }
           uint256 executionGasEstimate = _getExecutionGasEstimate(_action);
           uint256 executorProfit = gelatoCore.executorProfit();
-          executionClaimPrice = (executionGasEstimate.mul(gasPriceHedge)
+          executionClaimPrice = (executionGasEstimate.mul(gtaiGasPrice)
                                                      .add(executorProfit)
           );
      }
 
-     function _useGTAIGasPrice(uint256 _gtaiGasPrice)
+     event LogGTAIGasPriceUpdated(uint256 oldGTAIGasPrice,
+                                  uint256 newGTAIGasPrice
+     );
+     function _setGTAIGasPrice(uint256 _gtaiGasPrice)
           internal
      {
-          require(_gtaiGasPrice != 0,
-               "IcedOut.useInterfaceGasPrice: zero-value"
-          );
+          emit LogGTAIGasPriceUpdated(gtaiGasPrice, _gtaiGasPrice);
           gtaiGasPrice = _gtaiGasPrice;
-     }
-     function _useGelatoDefaultGasPrice()
-          internal
-     {
-          gtaiGasPrice = uint8(GasPricePrediction.GelatoDefault);
      }
      // =========================
 
 
      // _________________ ExecutionClaim Minting ____________________________
-     function _getCurrentExecutionClaimId()
-          internal
-          view
-          returns(uint256)
-     {
-          return gelatoCore.getCurrentExecutionClaimId();
-     }
-
      function _mintExecutionClaim(address _executionClaimOwner,
                                   address _trigger,
                                   bytes memory _triggerPayload,
@@ -121,6 +101,14 @@ contract IcedOut {
                              _executionClaimLifespan),
                "IcedOut._mintExecutionClaim: failed"
           );
+     }
+
+     function _getCurrentExecutionClaimId()
+          internal
+          view
+          returns(uint256)
+     {
+          return gelatoCore.getCurrentExecutionClaimId();
      }
      // =========================
 

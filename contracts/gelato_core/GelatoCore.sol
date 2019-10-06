@@ -11,7 +11,6 @@ contract GelatoCore is GelatoExecutionClaim,
     constructor(uint256 _minGTAIBalance,
                 uint256 _executorProfit,
                 uint256 _executorGasPrice,
-                uint256 _defaultGasPriceForGTAIs,
                 uint256 _gasOutsideGasleftChecks,
                 uint256 _gasInsideGasleftChecks,
                 uint256 _canExecMaxGas,
@@ -23,7 +22,6 @@ contract GelatoCore is GelatoExecutionClaim,
         minGTAIBalance = _minGTAIBalance;
         executorProfit = _executorProfit;
         executorGasPrice = _executorGasPrice;
-        defaultGasPriceForGTAIs = _defaultGasPriceForGTAIs;
         gasOutsideGasleftChecks = _gasOutsideGasleftChecks;
         gasInsideGasleftChecks = _gasInsideGasleftChecks;
         canExecMaxGas = _canExecMaxGas;

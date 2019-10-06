@@ -10,7 +10,7 @@ const GelatoCore = artifacts.require("GelatoCore");
 // Constructor params
 let gelatoCore;
 const EXECUTION_CLAIM_LIFESPAN = "7776000"; // 3 months in seconds
-const GTAI_GAS_PRICE = "0";
+const GTAI_GAS_PRICE = web3.utils.toWei("5", "gwei");
 const AUTOMATIC_TOPUP_AMOUNT = web3.utils.toWei("0.5", "ether");
 
 module.exports = async function(deployer, network, accounts) {

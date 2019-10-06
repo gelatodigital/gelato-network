@@ -4,7 +4,9 @@ import '@openzeppelin/contracts/ownership/Ownable.sol';
 import '@openzeppelin/contracts/utils/ReentrancyGuard.sol';
 import '@openzeppelin/contracts/math/SafeMath.sol';
 
-contract GelatoCoreAccounting is Ownable, ReentrancyGuard {
+contract GelatoCoreAccounting is Ownable,
+                                 ReentrancyGuard
+{
     using SafeMath for uint256;
 
     // Fallback Function
@@ -21,7 +23,6 @@ contract GelatoCoreAccounting is Ownable, ReentrancyGuard {
     uint256 public minGTAIBalance;
     uint256 public executorProfit;
     uint256 public executorGasPrice;
-    uint256 public defaultGasPriceForGTAIs;
     //_____________ Constant gas values _____________
     uint256 public gasOutsideGasleftChecks;
     uint256 public gasInsideGasleftChecks;
@@ -160,18 +161,7 @@ contract GelatoCoreAccounting is Ownable, ReentrancyGuard {
         executorGasPrice = _newExecutorGasPrice;
     }
 
-    event LogDefaultGasPriceForGTAIsUpdated(uint256 defaultGasPriceForGTAIs,
-                                            uint256 newDefaultGasPriceForGTAIs
-    );
-    function updateDefaultGasPriceForInterfaces(uint256 _newDefaultGasPriceForGTAIs)
-        public
-        onlyOwner
-    {
-        emit LogDefaultGasPriceForGTAIsUpdated(defaultGasPriceForGTAIs,
-                                               _newDefaultGasPriceForGTAIs
-        );
-        defaultGasPriceForGTAIs = _newDefaultGasPriceForGTAIs;
-    }
+
     event LogGasOutsideGasleftChecksUpdated(uint256 gasOutsideGasleftChecks,
                                             uint256 newGasOutsideGasleftChecks
     );

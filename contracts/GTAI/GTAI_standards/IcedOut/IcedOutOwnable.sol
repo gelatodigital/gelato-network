@@ -28,17 +28,11 @@ contract IcedOutOwnable is Ownable, IcedOut {
      // =========================
 
      // ___________ ExecutionClaim Pricing __________________________________________
-     function useGTAIGasPrice(uint256 _gtaiGasPrice)
+     function setGTAIGasPrice(uint256 _gtaiGasPrice)
           onlyOwner
           public
      {
-          _useGTAIGasPrice(_gtaiGasPrice);
-     }
-     function useGelatoDefaultGasPrice()
-          onlyOwner
-          public
-     {
-          _useGelatoDefaultGasPrice();
+          _setGTAIGasPrice(_gtaiGasPrice);
      }
      // =========================
 
