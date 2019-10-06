@@ -6,12 +6,26 @@ import '@openzeppelin/contracts/ownership/Ownable.sol';
 contract IcedOutOwnable is Ownable, IcedOut {
 
      constructor(address payable _gelatoCore,
+                 uint256 _executionClaimLifetime,
                  uint256 _gtaiGasPrice,
                  uint256 _automaticTopUpAmount
      )
-          IcedOut(_gelatoCore, _gtaiGasPrice, _automaticTopUpAmount)
+          IcedOut(_gelatoCore,
+                  _executionClaimLifetime,
+                  _gtaiGasPrice,
+                  _automaticTopUpAmount
+          )
           internal
      {}
+
+     // _________________ ExecutionClaim Expiration Time ____________________
+     function setExecutionClaimLifespan(uint256 _lifespan)
+          onlyOwner
+          public
+     {
+          _setExecutionClaimLifespan(_lifespan);
+     }
+     // =========================
 
      // ___________ ExecutionClaim Pricing __________________________________________
      function useGTAIGasPrice(uint256 _gtaiGasPrice)

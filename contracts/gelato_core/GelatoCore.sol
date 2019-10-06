@@ -66,7 +66,7 @@ contract GelatoCore is GelatoExecutionClaim,
     // executionClaimId => bytes32 executionClaimHash
     mapping(uint256 => bytes32) public hashedExecutionClaims;
     // gtai => executionClaimId => expirationTime
-    mapping(address => mapping(uint256 => uint256)) public gtaiExecutionClaimExpirations;
+    mapping(address => mapping(uint256 => uint256)) public gtaiExecutionClaimExpiryDate;
 
     event LogNewExecutionClaimMinted(address indexed GTAI,
                                      uint256 indexed executionClaimId,
@@ -84,7 +84,7 @@ contract GelatoCore is GelatoExecutionClaim,
                                 bytes calldata _triggerPayload,
                                 address _action,
                                 bytes calldata _actionPayload,
-                                uint256 _executionClaimExpirationTime
+                                uint256 _executionClaimLifespan
     )
         onlyStakedGTAI
         external
@@ -115,9 +115,9 @@ contract GelatoCore is GelatoExecutionClaim,
                                                                 actionGasStipend
         ));
         hashedExecutionClaims[executionClaimId] = executionClaimHash;
-        if (_executionClaimExpirationTime != 0) {
-            gtaiExecutionClaimExpirations[msg.sender][executionClaimId]
-                = _executionClaimExpirationTime;
+        if (_executionClaimLifespan != 0) {
+            gtaiExecutionClaimExpiryDate[msg.sender][executionClaimId]
+                = now.add(_executionClaimLifespan);
         }
         gtaiExecutionClaimsCounter[msg.sender]
             = gtaiExecutionClaimsCounter[msg.sender].add(1);
@@ -263,7 +263,7 @@ contract GelatoCore is GelatoExecutionClaim,
         returns(uint8 executionResult)
     {
         // Only unexpired executionClaims are executable
-        require(gtaiExecutionClaimExpirations[_GTAI][_executionClaimId] > now,
+        require(gtaiExecutionClaimExpiryDate[_GTAI][_executionClaimId] > now,
             "GelatoCore.execute(): expiration time failed"
         );
 
@@ -435,7 +435,7 @@ contract GelatoCore is GelatoExecutionClaim,
             "GelatoCore.cancelExecutionClaim: msg.sender failed"
         );
         if (msg.sender == _GTAI) {
-            require(gtaiExecutionClaimExpirations[_GTAI][_executionClaimId] <= now,
+            require(gtaiExecutionClaimExpiryDate[_GTAI][_executionClaimId] <= now,
                 "GelatoCore.cancelExecutionClaim: expirationTime failed"
             );
         }

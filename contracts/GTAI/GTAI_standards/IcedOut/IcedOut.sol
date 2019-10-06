@@ -8,19 +8,34 @@ contract IcedOut {
      using SafeMath for uint256;
 
      GelatoCore public gelatoCore;
+     uint256 public executionClaimLifespan;
      uint256 public gtaiGasPrice;
      uint256 public automaticTopUpAmount;
 
      constructor(address payable _gelatoCore,
+                 uint256 _executionClaimLifespan,
                  uint256 _gtaiGasPrice,
                  uint256 _automaticTopUpAmount
      )
           internal
      {
           gelatoCore = GelatoCore(_gelatoCore);
+          executionClaimLifespan = _executionClaimLifespan;
           gtaiGasPrice = _gtaiGasPrice;
           automaticTopUpAmount = _automaticTopUpAmount;
      }
+
+     // _________________ ExecutionClaim Expiration Time ____________________
+     event LogExecutionClaimLifespanUpdate(uint256 _oldLifespan,
+                                           uint256 _newLifespan
+     );
+     function _setExecutionClaimLifespan(uint256 _lifespan)
+          internal
+     {
+          emit LogExecutionClaimLifespanUpdate(executionClaimLifespan, _lifespan);
+          executionClaimLifespan = _lifespan;
+     }
+     // =========================
 
      // _________________ ExecutionClaim Pricing ____________________________
      function _getExecutionGasEstimate(address _action)
@@ -90,7 +105,7 @@ contract IcedOut {
                                   bytes memory _triggerPayload,
                                   address _actionAddress,
                                   bytes memory _actionPayload,
-                                  uint256 _executionClaimExpirationTime
+                                  uint256 _executionClaimLifespan
      )
           internal
      {
@@ -99,7 +114,7 @@ contract IcedOut {
                                                 _triggerPayload,
                                                 _actionAddress,
                                                 _actionPayload,
-                                                _executionClaimExpirationTime),
+                                                _executionClaimLifespan),
                "IcedOut._mintExecutionClaim: failed"
           );
      }

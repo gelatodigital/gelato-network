@@ -9,6 +9,7 @@ const GelatoCore = artifacts.require("GelatoCore");
 
 // Constructor params
 let gelatoCore;
+const EXECUTION_CLAIM_LIFESPAN = "7776000"; // 3 months in seconds
 const GTAI_GAS_PRICE = "0";
 const AUTOMATIC_TOPUP_AMOUNT = web3.utils.toWei("0.5", "ether");
 
@@ -19,19 +20,21 @@ module.exports = async function(deployer, network, accounts) {
     gelatoCore = await GelatoCore.deployed();
     // Log constructor params to console
     console.log(`
-          Deploying ${CONTRACT_NAME} with
-          =============================
-          GelatoCore:        ${gelatoCore.address}
-          GTAI gas price: ${web3.utils.fromWei(GTAI_GAS_PRICE, "ether")} ETH
-          AutomaticTopUp amount: ${web3.utils.fromWei(
-            AUTOMATIC_TOPUP_AMOUNT,
-            "ether"
-          )} ETH
+      Deploying ${CONTRACT_NAME} with
+      =============================
+      GelatoCore:             ${gelatoCore.address}
+      ExecutionClaimLifespan: ${EXECUTION_CLAIM_LIFESPAN}
+      GTAI gas price:         ${web3.utils.fromWei(GTAI_GAS_PRICE, "ether")} ETH
+      AutomaticTopUp amount:  ${web3.utils.fromWei(
+        AUTOMATIC_TOPUP_AMOUNT,
+        "ether"
+      )} ETH
     `);
     // Deploy with constructor params
     await deployer.deploy(
       GTAIAggregator,
       gelatoCore.address,
+      EXECUTION_CLAIM_LIFESPAN,
       GTAI_GAS_PRICE,
       AUTOMATIC_TOPUP_AMOUNT,
       { from: ganacheCoreDeployer }
@@ -42,9 +45,13 @@ module.exports = async function(deployer, network, accounts) {
     console.log(`
           Deploying ${CONTRACT_NAME} with
           =============================
-          GelatoCore:        ${gelatoCore.address}
-          GTAI gas price: ${web3.utils.fromWei(GTAI_GAS_PRICE, "ether")} ETH
-          AutomaticTopUp amount: ${web3.utils.fromWei(
+          GelatoCore:             ${gelatoCore.address}
+          ExecutionClaimLifespan: ${EXECUTION_CLAIM_LIFESPAN}
+          GTAI gas price:         ${web3.utils.fromWei(
+            GTAI_GAS_PRICE,
+            "ether"
+          )} ETH
+          AutomaticTopUp amount:  ${web3.utils.fromWei(
             AUTOMATIC_TOPUP_AMOUNT,
             "ether"
           )} ETH
@@ -52,6 +59,7 @@ module.exports = async function(deployer, network, accounts) {
     await deployer.deploy(
       GTAIAggregator,
       gelatoCore.address,
+      EXECUTION_CLAIM_LIFESPAN,
       GTAI_GAS_PRICE,
       AUTOMATIC_TOPUP_AMOUNT
     );

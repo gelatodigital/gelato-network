@@ -10,10 +10,12 @@ contract GTAIAggregator is IcedOutOwnable,
 {
 
     constructor(address payable _gelatoCore,
+                uint256 _executionClaimLifetime,
                 uint256 _gtaiGasPrice,
                 uint256 _automaticTopUpAmount
     )
         IcedOutOwnable(_gelatoCore,
+                       _executionClaimLifetime,
                        _gtaiGasPrice,
                        _automaticTopUpAmount
         )
@@ -65,7 +67,7 @@ contract GTAIAggregator is IcedOutOwnable,
                             triggerPayload,
                             _action,
                             actionPayload,
-                            12 weeks  // expiration time
+                            executionClaimLifespan
         );
         emit LogActivation(_getCurrentExecutionClaimId(),
                            msg.sender,
@@ -103,7 +105,7 @@ contract GTAIAggregator is IcedOutOwnable,
                             _chainedTriggerPayload,
                             _chainedAction,
                             _chainedActionPayload,
-                            12 weeks  // expiration time
+                            executionClaimLifespan
         );
         emit LogChainedActivation(_getCurrentExecutionClaimId(),
                                   _executionClaimOwner,
