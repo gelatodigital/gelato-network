@@ -89,8 +89,8 @@ contract IcedOut {
      )
           internal
      {
-          uint256 executionClaimMintingDeposit
-               = gelatoCore.getExecutionClaimMintingDeposit(_action);
+          (uint256 executionClaimMintingDeposit
+           ,) = gelatoCore.getExecutionClaimMintingDeposit(_action);
           require(gelatoCore.mintExecutionClaim
                             .value(executionClaimMintingDeposit)
                             (_executionClaimOwner,

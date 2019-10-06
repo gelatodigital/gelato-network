@@ -41,17 +41,6 @@ contract GelatoCore is GelatoExecutionClaim,
     }
 
     // ********************* mintExecutionClaim() *********************
-    function getExecutionClaimMintingDeposit(address _action)
-        public
-        view
-        returns(uint256 executionClaimMintingDeposit)
-    {
-        uint256 actionGasStipend = IGelatoAction(_action).actionGasStipend();
-        uint256 maxExecutionGasConsumption
-            = _getMaxExecutionGasConsumption(actionGasStipend);
-        executionClaimMintingDeposit = maxExecutionGasConsumption.mul(tx.gasprice);
-    }
-
     // Unique Token Ids for ERC721 execution Claims
     Counters.Counter private _executionClaimIds;
     function getCurrentExecutionClaimId()
@@ -65,6 +54,17 @@ contract GelatoCore is GelatoExecutionClaim,
     mapping(uint256 => bytes32) public hashedExecutionClaims;
     // gtai => executionClaimId => expirationTime
     mapping(address => mapping(uint256 => uint256)) public gtaiExecutionClaimExpiryDate;
+
+    function getExecutionClaimMintingDeposit(address _action)
+        public
+        view
+        returns(uint256 executionClaimMintingDeposit, uint256 actionGasStipend)
+    {
+        actionGasStipend = IGelatoAction(_action).actionGasStipend();
+        uint256 maxExecutionGasConsumption
+            = _getMaxExecutionGasConsumption(actionGasStipend);
+        executionClaimMintingDeposit = maxExecutionGasConsumption.mul(tx.gasprice);
+    }
 
     event LogNewExecutionClaimMinted(address indexed GTAI,
                                      uint256 indexed executionClaimId,
@@ -90,18 +90,17 @@ contract GelatoCore is GelatoExecutionClaim,
         returns(bool)
     {
         // GTAIs must top up their balance in order to mint
-        uint256 executionClaimMintingDeposit = getExecutionClaimMintingDeposit(_action);
+        (uint256 executionClaimMintingDeposit,
+         uint256 actionGasStipend) = getExecutionClaimMintingDeposit(_action);
         require(executionClaimMintingDeposit <= msg.value,
             "GelatoCore.mintExecutionClaim: executionClaimMintingDeposit failed"
         );
         gtaiBalances[msg.sender] = gtaiBalances[msg.sender].add(msg.value);
-
         // ______ Mint new executionClaim ERC721 token _____________________
         Counters.increment(_executionClaimIds);
         uint256 executionClaimId = _executionClaimIds.current();
         _mint(_executionClaimOwner, executionClaimId);
         // =============
-        uint256 actionGasStipend = IGelatoAction(_action).actionGasStipend();
         // Include executionClaimId: avoid hash collisions
         // Exclude _executionClaimOwner: ExecutionClaims are transferable
         bytes32 executionClaimHash = keccak256(abi.encodePacked(executionClaimId,
