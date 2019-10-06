@@ -16,6 +16,7 @@ contract GelatoCoreAccounting is Ownable, ReentrancyGuard {
 
     //_____________ Gelato ExecutionClaim Economics _______________________
     mapping(address => uint256) public gtaiBalances;
+    mapping(address => uint256) public gtaiExecutionClaimsCounter;
     mapping(address => uint256) public executorBalances;
     uint256 public minGTAIBalance;
     uint256 public executorProfit;
@@ -28,9 +29,20 @@ contract GelatoCoreAccounting is Ownable, ReentrancyGuard {
     uint256 public executorGasRefundEstimate;
     // =========================
 
+    function _isStakedGTAI()
+        internal
+        view
+        returns(bool)
+    {
+        if (gtaiBalances[msg.sender] >= minGTAIBalance) {
+            return true;
+        } else {
+            return false;
+        }
+    }
     modifier onlyStakedGTAI() {
-        require(gtaiBalances[msg.sender] >= minGTAIBalance,
-            "GelatoCore.stakedGTAIs: fail"
+        require(_isStakedGTAI(),
+            "GelatoCore.onlyStakedGTAI: fail"
         );
         _;
     }
@@ -67,6 +79,9 @@ contract GelatoCoreAccounting is Ownable, ReentrancyGuard {
         nonReentrant
         external
     {
+        require(gtaiExecutionClaimsCounter[msg.sender] == 0,
+            "GelatoCoreAccounting.withdrawGTAIBalance(): outstanding executionClaims"
+        );
         require(_withdrawAmount > 0,
             "GelatoCoreAccounting.withdrawGTAIBalance(): zero-value"
         );

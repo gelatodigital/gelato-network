@@ -64,7 +64,8 @@ contract GTAIAggregator is IcedOutOwnable,
                             _trigger,
                             triggerPayload,
                             _action,
-                            actionPayload
+                            actionPayload,
+                            12 weeks  // expiration time
         );
         emit LogActivation(_getCurrentExecutionClaimId(),
                            msg.sender,
@@ -101,7 +102,8 @@ contract GTAIAggregator is IcedOutOwnable,
                             _chainedTrigger,
                             _chainedTriggerPayload,
                             _chainedAction,
-                            _chainedActionPayload
+                            _chainedActionPayload,
+                            12 weeks  // expiration time
         );
         emit LogChainedActivation(_getCurrentExecutionClaimId(),
                                   _executionClaimOwner,

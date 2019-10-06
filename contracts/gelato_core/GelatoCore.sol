@@ -8,21 +8,6 @@ import '../GTA/gelato_actions/gelato_action_standards/IGelatoAction.sol';
 contract GelatoCore is GelatoExecutionClaim,
                        GelatoCoreAccounting
 {
-    // Unique Token Ids for ERC721 execution Claims
-    Counters.Counter private _executionClaimIds;
-
-    function getCurrentExecutionClaimId()
-        external
-        view
-        returns(uint256 currentId)
-    {
-        currentId = _executionClaimIds.current();
-    }
-
-    // executionClaimId => bytes32 executionClaimHash
-    mapping(uint256 => bytes32) public hashedExecutionClaims;
-
-
     constructor(uint256 _minGTAIBalance,
                 uint256 _executorProfit,
                 uint256 _executorGasPrice,
@@ -45,7 +30,44 @@ contract GelatoCore is GelatoExecutionClaim,
         executorGasRefundEstimate = _executorGasRefundEstimate;
     }
 
+    function _getMaxExecutionGasConsumption(uint256 _actionGasStipend)
+        internal
+        view
+        returns (uint256)
+    {
+        return (gasOutsideGasleftChecks
+                + gasInsideGasleftChecks
+                + canExecMaxGas
+                .add(_actionGasStipend)
+        );
+    }
+
     // ********************* mintExecutionClaim() *********************
+    function _getExecutionClaimMintingDeposit(address _action)
+        internal
+        view
+        returns(uint256 executionClaimMintingDeposit)
+    {
+        uint256 actionGasStipend = IGelatoAction(_action).actionGasStipend();
+        uint256 maxExecutionGasConsumption
+            = _getMaxExecutionGasConsumption(actionGasStipend);
+        executionClaimMintingDeposit = maxExecutionGasConsumption.mul(tx.gasprice);
+    }
+
+    // Unique Token Ids for ERC721 execution Claims
+    Counters.Counter private _executionClaimIds;
+    function getCurrentExecutionClaimId()
+        external
+        view
+        returns(uint256 currentId)
+    {
+        currentId = _executionClaimIds.current();
+    }
+    // executionClaimId => bytes32 executionClaimHash
+    mapping(uint256 => bytes32) public hashedExecutionClaims;
+    // gtai => executionClaimId => expirationTime
+    mapping(address => mapping(uint256 => uint256)) public gtaiExecutionClaimExpirations;
+
     event LogNewExecutionClaimMinted(address indexed GTAI,
                                      uint256 indexed executionClaimId,
                                      address indexed executionClaimOwner,
@@ -61,15 +83,20 @@ contract GelatoCore is GelatoExecutionClaim,
                                 address _trigger,
                                 bytes calldata _triggerPayload,
                                 address _action,
-                                bytes calldata _actionPayload
+                                bytes calldata _actionPayload,
+                                uint256 _executionClaimExpirationTime
     )
         onlyStakedGTAI
         external
         payable
         returns(bool)
     {
-
-
+        // GTAIs must top up their balance in order to mint
+        uint256 executionClaimMintingDeposit = _getExecutionClaimMintingDeposit(_action);
+        require(executionClaimMintingDeposit <= msg.value,
+            "GelatoCore.mintExecutionClaim: executionClaimMintingDeposit failed"
+        );
+        gtaiBalances[msg.sender] = gtaiBalances[msg.sender].add(msg.value);
 
         // ______ Mint new executionClaim ERC721 token _____________________
         Counters.increment(_executionClaimIds);
@@ -88,6 +115,12 @@ contract GelatoCore is GelatoExecutionClaim,
                                                                 actionGasStipend
         ));
         hashedExecutionClaims[executionClaimId] = executionClaimHash;
+        if (_executionClaimExpirationTime != 0) {
+            gtaiExecutionClaimExpirations[msg.sender][executionClaimId]
+                = _executionClaimExpirationTime;
+        }
+        gtaiExecutionClaimsCounter[msg.sender]
+            = gtaiExecutionClaimsCounter[msg.sender].add(1);
         emit LogNewExecutionClaimMinted(msg.sender,  // GTAI
                                         executionClaimId,
                                         _executionClaimOwner,
@@ -191,19 +224,6 @@ contract GelatoCore is GelatoExecutionClaim,
     }
 
     // ********************* EXECUTE FUNCTION SUITE *************************
-    function _getMaxExecutionGasConsumption(uint256 _actionGasStipend)
-        internal
-        view
-        returns (uint256)
-    {
-        // Only use .add for last, user inputted value to avoid over - underflow
-        return (gasOutsideGasleftChecks
-                + canExecMaxGas
-                + gasInsideGasleftChecks
-                .add(_actionGasStipend)
-        );
-    }
-
     event LogCanExecuteFailed(uint256 indexed executionClaimId,
                               address payable indexed executor,
                               uint256 indexed canExecuteResult
@@ -242,6 +262,11 @@ contract GelatoCore is GelatoExecutionClaim,
         external
         returns(uint8 executionResult)
     {
+        // Only unexpired executionClaims are executable
+        require(gtaiExecutionClaimExpirations[_GTAI][_executionClaimId] > now,
+            "GelatoCore.execute(): expiration time failed"
+        );
+
         // Ensure that executor sends enough gas for the execution
         uint256 startGas = gasleft();
         require(startGas >= _getMaxExecutionGasConsumption(_actionGasStipend),
@@ -340,8 +365,9 @@ contract GelatoCore is GelatoExecutionClaim,
                                                   executorPayout
             );
         }
-        // Balance Updates
+        // Updates
         gtaiBalances[_GTAI] = gtaiBalances[_GTAI].sub(executorPayout);
+        gtaiExecutionClaimsCounter[_GTAI] = gtaiExecutionClaimsCounter[_GTAI].sub(1);
         executorBalances[msg.sender] = executorBalances[msg.sender].add(executorPayout);
     }
 
@@ -405,9 +431,14 @@ contract GelatoCore is GelatoExecutionClaim,
         external
     {
         address executionClaimOwner = ownerOf(_executionClaimId);
-        require(msg.sender == executionClaimOwner,
-            "GelatoCore.cancelExecutionClaim: msg.sender not owner"
+        require(msg.sender == executionClaimOwner || msg.sender == _GTAI,
+            "GelatoCore.cancelExecutionClaim: msg.sender failed"
         );
+        if (msg.sender == _GTAI) {
+            require(gtaiExecutionClaimExpirations[_GTAI][_executionClaimId] <= now,
+                "GelatoCore.cancelExecutionClaim: expirationTime failed"
+            );
+        }
         bytes32 computedExecutionClaimHash
             = keccak256(abi.encodePacked(_executionClaimId,
                                          _GTAI,
@@ -422,6 +453,7 @@ contract GelatoCore is GelatoExecutionClaim,
             "GelatoCore.cancelExecutionClaim: hash compare failed"
         );
         _burn(_executionClaimId);
+        gtaiExecutionClaimsCounter[_GTAI] = gtaiExecutionClaimsCounter[_GTAI].sub(1);
         delete hashedExecutionClaims[_executionClaimId];
         emit LogExecutionClaimCancelled(_executionClaimId,
                                         executionClaimOwner,
