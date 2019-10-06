@@ -43,8 +43,8 @@ contract GelatoCore is GelatoExecutionClaim,
     }
 
     // ********************* mintExecutionClaim() *********************
-    function _getExecutionClaimMintingDeposit(address _action)
-        internal
+    function getExecutionClaimMintingDeposit(address _action)
+        public
         view
         returns(uint256 executionClaimMintingDeposit)
     {
@@ -92,7 +92,7 @@ contract GelatoCore is GelatoExecutionClaim,
         returns(bool)
     {
         // GTAIs must top up their balance in order to mint
-        uint256 executionClaimMintingDeposit = _getExecutionClaimMintingDeposit(_action);
+        uint256 executionClaimMintingDeposit = getExecutionClaimMintingDeposit(_action);
         require(executionClaimMintingDeposit <= msg.value,
             "GelatoCore.mintExecutionClaim: executionClaimMintingDeposit failed"
         );

@@ -101,20 +101,24 @@ contract IcedOut {
      }
 
      function _mintExecutionClaim(address _executionClaimOwner,
-                                  address _triggerAddress,
+                                  address _trigger,
                                   bytes memory _triggerPayload,
-                                  address _actionAddress,
+                                  address _action,
                                   bytes memory _actionPayload,
                                   uint256 _executionClaimLifespan
      )
           internal
      {
-          require(gelatoCore.mintExecutionClaim(_executionClaimOwner,
-                                                _triggerAddress,
-                                                _triggerPayload,
-                                                _actionAddress,
-                                                _actionPayload,
-                                                _executionClaimLifespan),
+          uint256 executionClaimMintingDeposit
+               = gelatoCore.getExecutionClaimMintingDeposit(_action);
+          require(gelatoCore.mintExecutionClaim
+                            .value(executionClaimMintingDeposit)
+                            (_executionClaimOwner,
+                             _trigger,
+                             _triggerPayload,
+                             _action,
+                             _actionPayload,
+                             _executionClaimLifespan),
                "IcedOut._mintExecutionClaim: failed"
           );
      }
