@@ -45,7 +45,7 @@ module.exports = async function(deployer, network, accounts) {
     console.log(`
           Deploying ${CONTRACT_NAME} with
           =============================
-          Owner:                  ${accounts[0]}
+          Owner:                  HOW TO GET CURRENT PROVIDER SELECTED ADDRESS?
           GelatoCore:             ${gelatoCore.address}
           ExecutionClaimLifespan: ${EXECUTION_CLAIM_LIFESPAN}
           GTAI gas price:         ${web3.utils.fromWei(

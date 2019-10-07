@@ -19,12 +19,11 @@ const EXECUTOR_GAS_REFUND_ESTIMATE = "50000";
 module.exports = async function(deployer, network, accounts) {
   if (network.startsWith("dev")) {
     console.log(`\n\tDeploying ${CONTRACT_NAME}  to ganache\n`)
-    const ganacheCoreDeployer = accounts[0]; // Ganache account
     // Log constructor params to console
     console.log(`
           Deploying ${CONTRACT_NAME} with
           =============================
-          Owner:                      ${ganacheCoreDeployer}
+          Owner:                      ${accounts[0]}
           minGTAIBalance:             ${web3.utils.fromWei(MIN_GTAI_BALANCE, "ether")} ETH
           executorProfit:             ${web3.utils.fromWei(EXECUTOR_PROFIT, "ether")} ETH
           executorGasPrice:           ${web3.utils.fromWei(EXECUTOR_GAS_PRICE, "gwei")} gwei
@@ -50,7 +49,7 @@ module.exports = async function(deployer, network, accounts) {
     console.log(`
           Deploying ${CONTRACT_NAME} with
           =============================
-          Owner:                      ${accounts[0]}
+          Owner:                      HOW TO GET CURRENT PROVIDER SELECTED ADDRESS?
           minGTAIBalance:             ${web3.utils.fromWei(MIN_GTAI_BALANCE, "ether")} ETH
           executorProfit:             ${web3.utils.fromWei(EXECUTOR_PROFIT, "ether")} ETH
           executorGasPrice:           ${web3.utils.fromWei(EXECUTOR_GAS_PRICE, "gwei")} gwei

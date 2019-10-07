@@ -19,7 +19,6 @@ const ACTION_GAS_STIPEND = "200000";
 module.exports = async function(deployer, network, accounts) {
   if (network.startsWith("dev")) {
     console.log(`\n\tDeploying ${CONTRACT_NAME} to ganache\n`);
-    const ganacheCoreDeployer = accounts[0]; // Ganache account
     // Constructor params
     gelatoCore = await GelatoCore.deployed();
     dutchX = await DutchExchangeProxy.deployed();
@@ -27,7 +26,6 @@ module.exports = async function(deployer, network, accounts) {
     console.log(`
           Deploying ${CONTRACT_NAME} with
           =============================
-          Owner:             ${accounts[0]}
           GelatoCore:        ${gelatoCore.address}
           DutchX Proxy:      ${dutchX.address}
           ActionGasStipend:  ${ACTION_GAS_STIPEND}
@@ -52,7 +50,6 @@ module.exports = async function(deployer, network, accounts) {
     console.log(`
           Deploying ${CONTRACT_NAME} with
           =============================
-          Owner:             ${accounts[0]}
           GelatoCore:        ${gelatoCore.address}
           DutchX Proxy:      ${dutchX.address}
           ActionGasStipend:  ${ACTION_GAS_STIPEND}
