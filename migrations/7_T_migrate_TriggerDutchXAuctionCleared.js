@@ -18,7 +18,6 @@ let dutchX;
 module.exports = async function(deployer, network, accounts) {
   if (network.startsWith("dev")) {
     console.log(`\n\tDeploying ${CONTRACT_NAME} to ganache\n`);
-    const ganacheCoreDeployer = accounts[0]; // Ganache account
     gelatoCore = await GelatoCore.deployed();
     dutchX = await DutchExchangeProxy.deployed();
     // Log constructor params to console
@@ -37,10 +36,12 @@ module.exports = async function(deployer, network, accounts) {
       dutchX.address,
       { from: ganacheCoreDeployer }
     );
-  } else {
-    console.log(`\n\tDeploying ${CONTRACT_NAME} to live net\n`);
+  } else if (network.startsWith("rinkeby")) {
+    console.log(`\n\tDeploying ${CONTRACT_NAME} to RINKEBY\n`);
     gelatoCore = await GelatoCore.deployed();
-    dutchX = await DutchExchangeProxy.deployed();
+    dutchX = await DutchExchangeProxy.at(
+      "0xaAEb2035FF394fdB2C879190f95e7676f1A9444B"
+    );
     console.log(`
           Deploying ${CONTRACT_NAME} with
           =============================
@@ -54,6 +55,8 @@ module.exports = async function(deployer, network, accounts) {
       TRIGGER_SIGNATURE,
       dutchX.address
     );
+  } else {
+    console.log("Do later");
   }
   // Print deployed contract address to console
   const deployedContract = await TriggerDutchXAuctionCleared.deployed();

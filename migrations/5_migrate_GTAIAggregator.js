@@ -16,12 +16,12 @@ const AUTOMATIC_TOPUP_AMOUNT = web3.utils.toWei("0.5", "ether");
 module.exports = async function(deployer, network, accounts) {
   if (network.startsWith("dev")) {
     console.log(`\n\tDeploying ${CONTRACT_NAME} to ganache\n`);
-    const ganacheCoreDeployer = accounts[0]; // Ganache account
     gelatoCore = await GelatoCore.deployed();
     // Log constructor params to console
     console.log(`
       Deploying ${CONTRACT_NAME} with
       =============================
+      Owner:                  ${accounts[0]}
       GelatoCore:             ${gelatoCore.address}
       ExecutionClaimLifespan: ${EXECUTION_CLAIM_LIFESPAN}
       GTAI gas price:         ${web3.utils.fromWei(GTAI_GAS_PRICE, "ether")} ETH
@@ -45,6 +45,7 @@ module.exports = async function(deployer, network, accounts) {
     console.log(`
           Deploying ${CONTRACT_NAME} with
           =============================
+          Owner:                  ${accounts[0]}
           GelatoCore:             ${gelatoCore.address}
           ExecutionClaimLifespan: ${EXECUTION_CLAIM_LIFESPAN}
           GTAI gas price:         ${web3.utils.fromWei(

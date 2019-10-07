@@ -27,6 +27,7 @@ module.exports = async function(deployer, network, accounts) {
     console.log(`
           Deploying ${CONTRACT_NAME} with
           =============================
+          Owner:             ${accounts[0]}
           GelatoCore:        ${gelatoCore.address}
           DutchX Proxy:      ${dutchX.address}
           ActionGasStipend:  ${ACTION_GAS_STIPEND}
@@ -41,14 +42,17 @@ module.exports = async function(deployer, network, accounts) {
       ACTION_GAS_STIPEND,
       { from: ganacheCoreDeployer }
     );
-  } else {
-    console.log(`\n\tDeploying ${CONTRACT_NAME} to live net\n`);
+  } else if (network.startsWith("rinkeby")) {
+    console.log(`\n\tDeploying ${CONTRACT_NAME} to RINKEBY\n`);
     // Constructor params
     gelatoCore = await GelatoCore.deployed();
-    dutchX = await DutchExchangeProxy.deployed();
+    dutchX = await DutchExchangeProxy.at(
+      "0xaAEb2035FF394fdB2C879190f95e7676f1A9444B"
+    );
     console.log(`
           Deploying ${CONTRACT_NAME} with
           =============================
+          Owner:             ${accounts[0]}
           GelatoCore:        ${gelatoCore.address}
           DutchX Proxy:      ${dutchX.address}
           ActionGasStipend:  ${ACTION_GAS_STIPEND}
@@ -61,6 +65,8 @@ module.exports = async function(deployer, network, accounts) {
       ACTION_SIGNATURE,
       ACTION_GAS_STIPEND
     );
+  } else {
+    console.log("Do later");
   }
   // Print deployed contract address to console
   const deployedContract = await ActionWithdrawFromDutchXToBeneficiary.deployed();

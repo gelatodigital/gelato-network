@@ -63,11 +63,13 @@ module.exports = async function(deployer, network, accounts) {
       actionWithdrawFromDutchXToBeneficiary.address,
       { from: ganacheCoreDeployer }
     );
-  } else {
-    console.log(`\n\tDeploying ${CONTRACT_NAME} to live net\n`);
+  } else if (network.startsWith("rinkeby")) {
+    console.log(`\n\tDeploying ${CONTRACT_NAME} to RINKEBY\n`);
     // Constructor params
     gelatoCore = await GelatoCore.deployed();
-    dutchX = await DutchExchangeProxy.deployed();
+    dutchX = await DutchExchangeProxy.at(
+      "0xaAEb2035FF394fdB2C879190f95e7676f1A9444B"
+    );
     gtaiAggregator = await GTAIAggregator.deployed();
     triggerDutchXAuctionCleared = await TriggerDutchXAuctionCleared.deployed();
     actionWithdrawFromDutchXToBeneficiary = await ActionWithdrawFromDutchXToBeneficiary.deployed();
@@ -92,6 +94,8 @@ module.exports = async function(deployer, network, accounts) {
       triggerDutchXAuctionCleared.address,
       actionWithdrawFromDutchXToBeneficiary.address
     );
+  } else {
+    console.log("Do later");
   }
   // Print deployed contract address to console
   const deployedContract = await ActionChainedDutchXSellMintWithdraw.deployed();

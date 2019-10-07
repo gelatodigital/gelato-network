@@ -41,7 +41,7 @@ module.exports = async function(deployer, network, accounts) {
       GAS_OUTSIDE_GASLEFT_CHECKS,
       GAS_INSIDE_GASLEFT_CHECKS,
       CAN_EXEC_MAX_GAS,
-      EXECUTOR_GAS_REFUND_ESTIMATE
+      EXECUTOR_GAS_REFUND_ESTIMATE,
       { from: ganacheCoreDeployer }
     );
   } else {
@@ -50,7 +50,7 @@ module.exports = async function(deployer, network, accounts) {
     console.log(`
           Deploying ${CONTRACT_NAME} with
           =============================
-          Owner:                      ${ganacheCoreDeployer}
+          Owner:                      ${accounts[0]}
           minGTAIBalance:             ${web3.utils.fromWei(MIN_GTAI_BALANCE, "ether")} ETH
           executorProfit:             ${web3.utils.fromWei(EXECUTOR_PROFIT, "ether")} ETH
           executorGasPrice:           ${web3.utils.fromWei(EXECUTOR_GAS_PRICE, "gwei")} gwei

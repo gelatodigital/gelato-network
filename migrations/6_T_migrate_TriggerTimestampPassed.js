@@ -12,7 +12,6 @@ const TRIGGER_SIGNATURE = "fired(uint256)";
 module.exports = async function(deployer, network, accounts) {
   if (network.startsWith("dev")) {
     console.log(`\n\tDeploying ${CONTRACT_NAME} to ganache\n`);
-    const ganacheCoreDeployer = accounts[0]; // Ganache account
     gelatoCore = await GelatoCore.deployed();
     // Log constructor params to console
     console.log(`
