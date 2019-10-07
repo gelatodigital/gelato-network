@@ -38,7 +38,7 @@ module.exports = async function(deployer, network, accounts) {
       dutchX.address,
       ACTION_SIGNATURE,
       ACTION_GAS_STIPEND,
-      { from: ganacheCoreDeployer }
+      { from: accounts[0] }
     );
   } else if (network.startsWith("rinkeby")) {
     console.log(`\n\tDeploying ${CONTRACT_NAME} to RINKEBY\n`);

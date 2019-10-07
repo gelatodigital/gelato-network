@@ -9,9 +9,10 @@ interface IGelatoAction {
         external
         view
         returns(bool);
-    function hasERC20Allowance(address _token,
-                               address _tokenOwner,
-                               uint256 _allowance
+    function cancel(bytes calldata) external returns(bool);
+    function actionHasERC20Allowance(address _token,
+                                     address _tokenOwner,
+                                     uint256 _allowance
     )
         external
         view

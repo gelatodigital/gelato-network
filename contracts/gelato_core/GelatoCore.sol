@@ -68,7 +68,7 @@ contract GelatoCore is GelatoExecutionClaim,
                                 address _trigger,
                                 bytes calldata _triggerPayload,
                                 address _action,
-                                bytes calldata _actionPayload,
+                                bytes calldata _specificActionParams,
                                 uint256 _executionClaimLifespan
     )
         gtaiBalanceOk
@@ -80,6 +80,18 @@ contract GelatoCore is GelatoExecutionClaim,
         uint256 executionClaimId = _executionClaimIds.current();
         _mint(_executionClaimOwner, executionClaimId);
         // =============
+        // ______ Action Payload encoding __________________________________
+        bytes memory actionPayload;
+        {
+            bytes4 actionSelector = IGelatoAction(_action).actionSelector();
+            actionPayload = abi.encodeWithSelector(// Standard Action Params
+                                                   actionSelector,
+                                                   executionClaimId,
+                                                   // Specific Action Params
+                                                   _specificActionParams
+            );
+        }
+        // =============
         uint256 actionGasStipend = IGelatoAction(_action).actionGasStipend();
         uint256 executionClaimExpiryDate = now.add(_executionClaimLifespan);
         // Include executionClaimId: avoid hash collisions
@@ -90,7 +102,7 @@ contract GelatoCore is GelatoExecutionClaim,
                                          _trigger,
                                          _triggerPayload,
                                          _action,
-                                         _actionPayload,
+                                         actionPayload,
                                          actionGasStipend,
                                          executionClaimExpiryDate
         ));
@@ -103,7 +115,7 @@ contract GelatoCore is GelatoExecutionClaim,
                                         _trigger,
                                         _triggerPayload,
                                         _action,
-                                        _actionPayload,
+                                        actionPayload,
                                         actionGasStipend,
                                         executionClaimExpiryDate
         );
@@ -284,9 +296,9 @@ contract GelatoCore is GelatoExecutionClaim,
 
         // _________  _action.call() _______________________________________________
         {
-            (bool success,) = _action.call
-                                    .gas(_actionGasStipend)
-                                    (abi.encode(_executionClaimId, _actionPayload)
+            (bool success,) = (_action.call
+                                      .gas(_actionGasStipend)
+                                      (_actionPayload)
             );
             emit LogExecutionResult(_executionClaimId,
                                     success,
@@ -372,8 +384,12 @@ contract GelatoCore is GelatoExecutionClaim,
                                          _executionClaimExpiryDate
         ));
         bytes32 storedExecutionClaimHash = hashedExecutionClaims[_executionClaimId];
-        require(computedExecutionClaimHash == storedExecutionClaimHash,
+        require(computedExecutionClaimHash != storedExecutionClaimHash,
             "GelatoCore.cancelExecutionClaim: hash compare failed"
+        );
+        // Forward compatibility with actions that need clean-up:
+        require(IGelatoAction(_action).cancel(),
+            "GelatoCore.cancelExecutionClaim: _action.cancel failed"
         );
         _burn(_executionClaimId);
         gtaiExecutionClaimsCounter[_GTAI] = gtaiExecutionClaimsCounter[_GTAI].sub(1);

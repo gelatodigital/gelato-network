@@ -53,21 +53,16 @@ contract GTAIAggregator is IcedOutOwnable,
             = abi.encodeWithSelector(_getTriggerSelector(_trigger),
                                      _specificTriggerParams
         );
-        bytes memory actionPayload
-            = abi.encodeWithSelector(_getActionSelector(_action),
-                                     address(0),  // default: action will fetch ecOwner
-                                     _specificActionParams
-        );
         // Standard action conditions check before minting
-        require(_actionConditionsFulfilled(_action, actionPayload),
+        require(_actionConditionsFulfilled(_action, msg.sender, _specificActionParams),
             "GTAIAggregator.activateTA._actionConditionsFulfilled: failed"
         );
         _mintExecutionClaim(msg.sender,  // executionClaimOwner
                             _trigger,
                             triggerPayload,
                             _action,
-                            actionPayload,
-                            executionClaimLifespan
+                            _specificActionParams,
+                            actionExecutionClaimLifespan[_action]
         );
         emit LogActivation(_getCurrentExecutionClaimId(),
                            msg.sender,
@@ -105,7 +100,7 @@ contract GTAIAggregator is IcedOutOwnable,
                             _chainedTriggerPayload,
                             _chainedAction,
                             _chainedActionPayload,
-                            executionClaimLifespan
+                            actionExecutionClaimLifespan[_action]
         );
         emit LogChainedActivation(_getCurrentExecutionClaimId(),
                                   _executionClaimOwner,

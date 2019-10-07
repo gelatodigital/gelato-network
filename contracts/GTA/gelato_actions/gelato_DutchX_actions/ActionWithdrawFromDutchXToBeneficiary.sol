@@ -31,8 +31,7 @@ contract ActionWithdrawFromDutchXToBeneficiary is GelatoActionsStandard,
 
     function withdrawFromDutchXToExecutionClaimOwner(
         // Standard Action Params
-        uint256 _executionClaimId,  // via execute() calldata
-        address _executionClaimOwner, // via actionPayload (default:0x)
+        uint256 _executionClaimId,
         // Specific Action Params
         address _sellToken,
         address _buyToken,
@@ -43,12 +42,7 @@ contract ActionWithdrawFromDutchXToBeneficiary is GelatoActionsStandard,
         public
         returns(bool)
     {
-        // Standard action Setup
-        address executionClaimOwner
-            = GelatoActionsStandard._setup(_executionClaimOwner,
-                                           _executionClaimId
-        );
-
+        address executionClaimOwner =_getExecutionClaimOwner(_executionClaimId);
         uint256 withdrawAmount = _getWithdrawAmount(_sellToken,
                                                     _buyToken,
                                                     _auctionIndex,

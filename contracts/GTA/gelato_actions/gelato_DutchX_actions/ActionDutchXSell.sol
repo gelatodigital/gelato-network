@@ -20,54 +20,48 @@ contract ActionDutchXSell is GelatoActionsStandard,
         GelatoDutchXInterface(_dutchX)
     {}
 
-    // SellCondition: token pair is traded on DutchX
+    // SellCondition: token pair is traded on DutchX and user approved ERC20s
     // To be queried passing actionParams by GTAIs prior to minting
-    function actionConditionsFulfilled(bytes memory _actionPayload)
+    function actionConditionsFulfilled(address _user,
+                                       bytes memory _specificActionParams
+    )
         public
         view
         returns(bool)
     {
-        (// Standard Action Params
-         ,,,
-         // Specific Action Params
-         address _sellToken,
-         address _buyToken
-         ,) = abi.decode(_actionPayload,(// Standard Action Params
-                                         bytes4,  // actionSelector
-                                         address,  // ecID
-                                         uint256,  // ecOwner
-                                         // Specific Action Params
-                                         address,  // sellToken
-                                         address,  // buyToken
-                                         uint256)  // sellAmount
+        (address _sellToken,
+         address _buyToken,
+         uint256 _sellAmount)
+            = abi.decode(_specificActionParams, (// Specific Action Params
+                                                 address,  // sellToken
+                                                 address,  // buyToken
+                                                 uint256)  // sellAmount
         );
+        bool tokensTraded;
         if (dutchX.getAuctionIndex(_sellToken, _buyToken) == 0) {
-            return false;
+            tokensTraded = false;
         } else {
-            return true;
+            tokensTraded = true;
         }
+        bool userApproved = actionHasERC20Allowance(_sellToken, _user, _sellAmount);
+        return (tokensTraded && userApproved);
     }
 
     // Action:
     function sell(// Standard Action Params
                   uint256 _executionClaimId,  // via execute() calldata
-                  address _executionClaimOwner,  // via actionPayload (default:0x)
                   // Specific Action Params
                   address _sellToken,
                   address _buyToken,
                   uint256 _sellAmount
     )
+        msgSenderIsGelatoCore
         public
         returns(bool, uint256, uint256)
     {
-        // Standard action Setup
-        address executionClaimOwner
-            = GelatoActionsStandard._setup(_executionClaimOwner,
-                                           _executionClaimId
-        );
-
-        require(hasERC20Allowance(_sellToken, executionClaimOwner, _sellAmount),
-            "ActionDutchXSell.action.hasERC20Allowance: failed"
+        address executionClaimOwner =_getExecutionClaimOwner(_executionClaimId);
+        require(actionHasERC20Allowance(_sellToken, executionClaimOwner, _sellAmount),
+            "ActionDutchXSell.action.actionHasERC20Allowance: failed"
         );
         (bool success,
          uint256 sellAuctionIndex,

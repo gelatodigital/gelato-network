@@ -26,7 +26,7 @@ module.exports = async function(deployer, network, accounts) {
       gelatoCore.address,
       TRIGGER_SIGNATURE,
       {
-        from: ganacheCoreDeployer
+        from: accounts[0]
       }
     );
   } else {

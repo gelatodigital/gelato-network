@@ -34,7 +34,7 @@ module.exports = async function(deployer, network, accounts) {
       gelatoCore.address,
       TRIGGER_SIGNATURE,
       dutchX.address,
-      { from: ganacheCoreDeployer }
+      { from: accounts[0] }
     );
   } else if (network.startsWith("rinkeby")) {
     console.log(`\n\tDeploying ${CONTRACT_NAME} to RINKEBY\n`);

@@ -75,11 +75,15 @@ contract GelatoDutchXInterface {
          uint256 dutchXFee) = _getSellAmountAfterFee(address(this),
                                                      _sellAmount
         );
-        require(ERC20(_sellToken).balanceOf(address(this)) >= _sellAmount,
-            "GelatoDutchXInterface._sellOnDutchX: sellToken.balanceOf(addr(this)) failed"
+        require(ERC20(_sellToken).safeTransferFrom(_executionClaimOwner,
+                                                   address(this),
+                                                   _sellAmount),
+            "GelatoDutchXInterface._sellOnDutchX: sellToken.safeTransferFrom failed"
         );
-        ERC20(_sellToken).safeApprove(address(dutchX), _sellAmount);
-        uint256 sellAuctionIndex = _getSellAuctionIndex(_sellToken,_buyToken);
+        require(ERC20(_sellToken).safeApprove(address(dutchX), _sellAmount),
+            "GelatoDutchXInterface._sellOnDutchX: sellToken.safeApprove failed"
+        );
+        uint256 sellAuctionIndex = _getSellAuctionIndex(_sellToken, _buyToken);
         require(sellAuctionIndex != 0,
             "GelatoDutchXInterface._sellOnDutchX: nextParticipationIndex failed"
         );

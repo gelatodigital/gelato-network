@@ -49,7 +49,7 @@ module.exports = async function(deployer, network, accounts) {
       GAS_INSIDE_GASLEFT_CHECKS,
       CAN_EXEC_MAX_GAS,
       EXECUTOR_GAS_REFUND_ESTIMATE,
-      { from: ganacheCoreDeployer }
+      { from: accounts[0] }
     );
   } else {
     console.log(`\n\tDeploying ${CONTRACT_NAME}  to live net\n`);

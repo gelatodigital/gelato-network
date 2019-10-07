@@ -28,28 +28,22 @@ contract ActionChainedDutchXSellMintWithdraw is ActionDutchXSell,
 
     // Action:
     function sellMintWithdraw(// Standard Action Params
-                              uint256 _executionClaimId,  // via execute() calldata
-                              address _executionClaimOwner,  // via actionPayload
+                              uint256 _executionClaimId,  
                               // Specific Action Params
                               address _sellToken,
                               address _buyToken,
                               uint256 _sellAmount
     )
+        msgSenderIsGelatoCore
         public
         returns(bool)
     {
-        // Standard action Setup
-        address executionClaimOwner
-            = GelatoActionsStandard._setup(_executionClaimOwner,
-                                           _executionClaimId
-        );
-
+        address executionClaimOwner =_getExecutionClaimOwner(_executionClaimId);
         // action: perform checks and sell on dutchX
         (bool success,
          uint256 sellAuctionIndex,
          uint256 sellAmountAfterFee)
             = ActionDutchXSell.sell(_executionClaimId,
-                                    executionClaimOwner,
                                     _sellToken,
                                     _buyToken,
                                     _sellAmount

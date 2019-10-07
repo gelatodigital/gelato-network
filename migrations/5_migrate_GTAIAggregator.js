@@ -37,7 +37,7 @@ module.exports = async function(deployer, network, accounts) {
       EXECUTION_CLAIM_LIFESPAN,
       GTAI_GAS_PRICE,
       AUTOMATIC_TOPUP_AMOUNT,
-      { from: ganacheCoreDeployer }
+      { from: accounts[0] }
     );
   } else {
     console.log(`\n\tDeploying ${CONTRACT_NAME} to live net\n`);

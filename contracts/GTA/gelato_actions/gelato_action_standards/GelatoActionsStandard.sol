@@ -22,19 +22,11 @@ contract GelatoActionsStandard is GTA
         actionGasStipend = _actionGasStipend;
     }
 
-    // any action should call this to initialise its executionClaimOwner
-    function _setup(address _executionClaimOwner,
-                    uint256 _executionClaimId
-    )
-        internal
-        view
-        returns(address executionClaimOwner)
-    {
-        if (_executionClaimOwner == address(0)) {
-            executionClaimOwner = _getExecutionClaimOwner(_executionClaimId);
-        } else {
-            executionClaimOwner = _executionClaimOwner;
-        }
+    modifier msgSenderIsGelatoCore() {
+        require(msg.sender == address(gelatoCore),
+            "GelatoActionsStandard.msgSenderIsGelatoCore(): failed"
+        );
+        _;
     }
 
     // Action Events
@@ -42,9 +34,20 @@ contract GelatoActionsStandard is GTA
                     address indexed _executionClaimOwner
     );
 
+    // Cancellation function always called by gelatoCore.cancelExecutionClaim()
+    //  For forward compatibility with actions that might implement more
+    // elaborate state (e.g. escrowing funds) and that need to do a cleanup
+    function cancel(bytes memory)
+        msgSenderIsGelatoCore
+        public
+        returns(bool)
+    {
+        return true;
+    }
+
     // FN for standardised action condition checking by GTAIs
     // Can be overriden inside child actions - if needed.
-    function actionConditionsFulfilled(bytes memory)
+    function actionConditionsFulfilled(address, bytes memory)
         public
         view
         returns(bool)
@@ -53,9 +56,9 @@ contract GelatoActionsStandard is GTA
     }
 
     // Optional action checks
-    function hasERC20Allowance(address _token,
-                               address _tokenOwner,
-                               uint256 _allowance
+    function actionHasERC20Allowance(address _token,
+                                     address _tokenOwner,
+                                     uint256 _allowance
     )
         public
         view

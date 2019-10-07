@@ -32,7 +32,6 @@ let actionWithdrawFromDutchXToBeneficiary;
 module.exports = async function(deployer, network, accounts) {
   if (network.startsWith("dev")) {
     console.log(`\n\tDeploying ${CONTRACT_NAME} to ganache\n`);
-    const ganacheCoreDeployer = accounts[0]; // Ganache account
     // Constructor params
     gelatoCore = await GelatoCore.deployed();
     dutchX = await DutchExchangeProxy.deployed();
@@ -61,7 +60,7 @@ module.exports = async function(deployer, network, accounts) {
       gtaiAggregator.address,
       triggerDutchXAuctionCleared.address,
       actionWithdrawFromDutchXToBeneficiary.address,
-      { from: ganacheCoreDeployer }
+      { from: accounts[0] }
     );
   } else if (network.startsWith("rinkeby")) {
     console.log(`\n\tDeploying ${CONTRACT_NAME} to RINKEBY\n`);
