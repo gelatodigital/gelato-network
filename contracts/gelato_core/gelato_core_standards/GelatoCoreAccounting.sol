@@ -20,7 +20,7 @@ contract GelatoCoreAccounting is Ownable,
     mapping(address => uint256) public gtaiBalances;
     mapping(address => uint256) public gtaiExecutionClaimsCounter;
     mapping(address => uint256) public executorBalances;
-    uint256 public minGTAIBalance;
+    uint256 public minStakePerExecutionClaim;
     uint256 public executorProfit;
     uint256 public executorGasPrice;
     //_____________ Constant gas values _____________
@@ -30,20 +30,25 @@ contract GelatoCoreAccounting is Ownable,
     uint256 public executorGasRefundEstimate;
     // =========================
 
-    function _isStakedGTAI()
-        internal
+    function getGTAIBalanceRequirement(address _GTAI)
+        public
+        view
+        returns(uint256 gtaiBalanceRequirement)
+    {
+        gtaiBalanceRequirement
+            = minStakePerExecutionClaim.mul(gtaiExecutionClaimsCounter[_GTAI]);
+    }
+
+    function gtaiHasSufficientBalance(address _GTAI)
+        public
         view
         returns(bool)
     {
-        if (gtaiBalances[msg.sender] >= minGTAIBalance) {
-            return true;
-        } else {
-            return false;
-        }
+        return gtaiBalances[_GTAI] >= getGTAIBalanceRequirement(_GTAI);
     }
-    modifier onlyStakedGTAI() {
-        require(_isStakedGTAI(),
-            "GelatoCore.onlyStakedGTAI: fail"
+    modifier gtaiBalanceOk() {
+        require(gtaiHasSufficientBalance(msg.sender),
+            "GelatoCoreAccounting.gtaiBalanceOk: fail"
         );
         _;
     }
@@ -71,6 +76,19 @@ contract GelatoCoreAccounting is Ownable,
         );
     }
 
+    function _withdrawAmountOk(address _GTAI,
+                               uint256 _withdrawAmount
+    )
+        internal
+        view
+        returns(bool, uint256 currentGTAIBalance)
+    {
+        uint256 gtaiBalanceRequirement = getGTAIBalanceRequirement(_GTAI);
+        currentGTAIBalance = gtaiBalances[_GTAI];
+        return (currentGTAIBalance.sub(_withdrawAmount) >= gtaiBalanceRequirement,
+                currentGTAIBalance
+        );
+    }
     event LogGTAIBalanceWithdrawal(address indexed GTAI,
                                    uint256 oldBalance,
                                    uint256 withdrawnAmount,
@@ -80,23 +98,21 @@ contract GelatoCoreAccounting is Ownable,
         nonReentrant
         external
     {
-        require(gtaiExecutionClaimsCounter[msg.sender] == 0,
-            "GelatoCoreAccounting.withdrawGTAIBalance(): outstanding executionClaims"
-        );
         require(_withdrawAmount > 0,
             "GelatoCoreAccounting.withdrawGTAIBalance(): zero-value"
         );
-        // Checks
-        uint256 currentBalance = gtaiBalances[msg.sender];
-        require(_withdrawAmount <= currentBalance,
-            "GelatoCoreAccounting.withdrawGTAIBalance(): failed"
+        (bool withdrawAmountOk,
+         uint256 currentGTAIBalance) = _withdrawAmountOk(msg.sender, _withdrawAmount);
+        require(withdrawAmountOk,
+            "GelatoCoreAccounting.withdrawGTAIBalance: withdrawAmountOk failed"
         );
+        // Checks: withdrawAmountOk(_withdrawAmount)
         // Effects
-        gtaiBalances[msg.sender] = currentBalance.sub(_withdrawAmount);
+        gtaiBalances[msg.sender] = currentGTAIBalance.sub(_withdrawAmount);
         // Interaction
         msg.sender.transfer(_withdrawAmount);
         emit LogGTAIBalanceWithdrawal(msg.sender,
-                                      currentBalance,
+                                      currentGTAIBalance,
                                       _withdrawAmount,
                                       gtaiBalances[msg.sender]
         );
@@ -128,15 +144,17 @@ contract GelatoCoreAccounting is Ownable,
 
 
     //_____________ Update Gelato Accounting ___________________________________
-    event LogMinGTAIBalanceUpdated(uint256 minGTAIBalance,
-                                   uint256 newMinGTAIBalance
+    event LogMinStakePerExecutionClaimUpdated(uint256 minStakePerExecutionClaim,
+                                   uint256 newminStakePerExecutionClaim
     );
-    function updateMinGTAIBalance(uint256 _newMinGTAIBalance)
+    function updateMinStakePerExecutionClaim(uint256 _newMinStakePerExecutionClaim)
         public
         onlyOwner
     {
-        emit LogMinGTAIBalanceUpdated(minGTAIBalance, _newMinGTAIBalance);
-        minGTAIBalance = _newMinGTAIBalance;
+        emit LogMinStakePerExecutionClaimUpdated(minStakePerExecutionClaim,
+                                                 _newMinStakePerExecutionClaim
+        );
+        minStakePerExecutionClaim = _newMinStakePerExecutionClaim;
     }
 
     event LogExecutorProfitUpdated(uint256 executorProfit,

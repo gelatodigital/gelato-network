@@ -73,14 +73,4 @@ contract IcedOutOwnable is Ownable, IcedOut {
           withdrawBalanceToOwner(_withdrawAmount);
      }
      // =========================
-
-
-     // ___________ Automatic Top Up _______________________________________
-     function setAutomaticTopUpAmount(uint256 _newAmount)
-          onlyOwner
-          public
-     {
-          _setAutomaticTopUpAmount(_newAmount);
-     }
-     // =========================
 }

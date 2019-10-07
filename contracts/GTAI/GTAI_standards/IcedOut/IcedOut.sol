@@ -89,16 +89,12 @@ contract IcedOut {
      )
           internal
      {
-          (uint256 executionClaimMintingDeposit
-           ,) = gelatoCore.getExecutionClaimMintingDeposit(_action);
-          require(gelatoCore.mintExecutionClaim
-                            .value(executionClaimMintingDeposit)
-                            (_executionClaimOwner,
-                             _trigger,
-                             _triggerPayload,
-                             _action,
-                             _actionPayload,
-                             _executionClaimLifespan),
+          require(gelatoCore.mintExecutionClaim(_executionClaimOwner,
+                                                _trigger,
+                                                _triggerPayload,
+                                                _action,
+                                                _actionPayload,
+                                                _executionClaimLifespan),
                "IcedOut._mintExecutionClaim: failed"
           );
      }
@@ -113,6 +109,15 @@ contract IcedOut {
      // =========================
 
      // _________________ Interface Funding Flows ____________________________
+     function _getGTAIBalanceRequirement()
+          internal
+          view
+          returns(uint256 gtaiBalanceRequirement)
+     {
+          gtaiBalanceRequirement
+               = gelatoCore.getGTAIBalanceRequirement(address(this));
+     }
+
      // _______________ Top Up __________________________________
      // ___________ GelatoInterface <-- EOA ___________
      function acceptEther()
@@ -134,35 +139,6 @@ contract IcedOut {
                                    address(this).balance
           );
      }
-     // ___________ Automatic Top Up _______________________________________
-     event LogNewAutomaticTopUpAmount(address indexed sender,
-                                      uint256 oldAutomaticTopUpAmount,
-                                      uint256 newAutomaticTopUpAmount
-     );
-     function _setAutomaticTopUpAmount(uint256 _newAmount)
-          internal
-     {
-          emit LogNewAutomaticTopUpAmount(msg.sender,
-                                          automaticTopUpAmount,
-                                          _newAmount
-          );
-          automaticTopUpAmount = _newAmount;
-     }
-     function _automaticTopUp()
-          internal
-     {
-          uint256 gtaiGelatoBalance = gelatoCore.gtaiBalances(address(this));
-          if (gtaiGelatoBalance < gelatoCore.minGTAIBalance())
-          {
-               gelatoCore.addGTAIBalance.value(automaticTopUpAmount)();
-               emit LogGTAIBalanceTopUp(automaticTopUpAmount,
-                                        gelatoCore.gtaiBalances(address(this)),
-                                        address(this).balance
-               );
-          }
-     }
-     // =========================
-
      // _______________ Withdraw __________________________________
      event LogBalanceWithdrawnFromGelato(uint256 amount,
                                          uint256 gtaiBalancePost,
