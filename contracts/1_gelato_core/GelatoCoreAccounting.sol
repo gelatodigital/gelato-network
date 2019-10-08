@@ -28,6 +28,7 @@ contract GelatoCoreAccounting is Ownable,
     uint256 public gasInsideGasleftChecks;
     uint256 public canExecMaxGas;
     uint256 public executorGasRefundEstimate;
+    uint256 public cancelIncentive;
     // =========================
 
     function getGTAIBalanceRequirement(address _GTAI)
@@ -226,6 +227,19 @@ contract GelatoCoreAccounting is Ownable,
                                                  _newExecutorGasRefundEstimate
         );
         executorGasRefundEstimate = _newExecutorGasRefundEstimate;
+    }
+
+    event LogCancelIncentiveUpdated(uint256 cancelIncentive,
+                                    uint256 newCancelIncentive
+    );
+    function updateCancelIncentive(uint256 _newCancelIncentive)
+        public
+        onlyOwner
+    {
+        emit LogCancelIncentiveUpdated(cancelIncentive,
+                                       _newCancelIncentive
+        );
+        cancelIncentive = _newCancelIncentive;
     }
     // =========================
 }

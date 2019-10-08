@@ -14,7 +14,8 @@ contract GelatoCore is GelatoExecutionClaim,
                 uint256 _gasOutsideGasleftChecks,
                 uint256 _gasInsideGasleftChecks,
                 uint256 _canExecMaxGas,
-                uint256 _executorGasRefundEstimate
+                uint256 _executorGasRefundEstimate,
+                uint256 _cancelIncentive
     )
         GelatoExecutionClaim("gelato", "GTA")
         public
@@ -26,6 +27,7 @@ contract GelatoCore is GelatoExecutionClaim,
         gasInsideGasleftChecks = _gasInsideGasleftChecks;
         canExecMaxGas = _canExecMaxGas;
         executorGasRefundEstimate = _executorGasRefundEstimate;
+        cancelIncentive = _cancelIncentive;
     }
 
     function _getMaxExecutionGasConsumption(uint256 _actionGasStipend)
@@ -58,7 +60,7 @@ contract GelatoCore is GelatoExecutionClaim,
                                      address indexed executionClaimOwner,
                                      address triggerAddress,
                                      bytes triggerPayload,
-                                     address actionAddress,
+                                     address action,
                                      bytes actionPayload,
                                      uint256 actionGasStipend,
                                      uint256 executionClaimExpiryDate
@@ -73,7 +75,7 @@ contract GelatoCore is GelatoExecutionClaim,
     )
         gtaiBalanceOk
         external
-        returns(bool)
+        //returns(bool)
     {
         // ______ Mint new executionClaim ERC721 token _____________________
         Counters.increment(_executionClaimIds);
@@ -119,7 +121,7 @@ contract GelatoCore is GelatoExecutionClaim,
                                         actionGasStipend,
                                         executionClaimExpiryDate
         );
-        return true;
+        //return true;
     }
     // ********************* mintExecutionClaim() END
 
@@ -398,6 +400,7 @@ contract GelatoCore is GelatoExecutionClaim,
                                         executionClaimOwner,
                                         _GTAI
         );
+        msg.sender.transfer(executorProfit + cancelIncentive);
     }
     // ********************* cancelExecutionClaim() END
 

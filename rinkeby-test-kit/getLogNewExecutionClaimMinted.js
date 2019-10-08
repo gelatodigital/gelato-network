@@ -19,7 +19,7 @@ module.exports = async function(callback) {
         console.log(`
                 Trigger address: ${event.returnValues.triggerAddress}
                 Trigger payload: ${event.returnValues.triggerPayload}
-                Action address: ${event.returnValues.actionAddress}
+                Action address: ${event.returnValues.action}
                 Action payload: ${event.returnValues.actionPayload}
                 Maxgas: ${event.returnValues.actionMaxGas}
                 dappInterface: ${event.returnValues.dappInterface}

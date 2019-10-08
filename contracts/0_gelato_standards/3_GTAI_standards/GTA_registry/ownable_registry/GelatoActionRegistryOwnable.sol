@@ -7,23 +7,23 @@ contract GelatoActionRegistryOwnable is GelatoActionRegistry,
                                         Ownable
 {
 
-    function registerAction(address _actionAddress,
+    function registerAction(address _action,
                             uint256 _executionClaimLifespan
     )
         onlyOwner
         public
         returns(bool)
     {
-        _registerAction(_actionAddress, _executionClaimLifespan);
+        _registerAction(_action, _executionClaimLifespan);
         return true;
     }
 
-    function deregisterAction(address _actionAddress)
+    function deregisterAction(address _action)
         onlyOwner
         public
         returns(bool)
     {
-        _deregisterAction(_actionAddress);
+        _deregisterAction(_action);
         return true;
     }
 }

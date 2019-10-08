@@ -3,9 +3,10 @@ pragma solidity ^0.5.10;
 import './IDutchX.sol';
 import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
+import '../../4_gelato_ERC20/GelatoERC20Helpers.sol';
 import '@openzeppelin/contracts/math/SafeMath.sol';
 
-contract GelatoDutchXInterface {
+contract GelatoDutchXInterface is GelatoERC20Helpers {
     using SafeERC20 for ERC20;
     using SafeMath for uint256;
 
@@ -75,13 +76,14 @@ contract GelatoDutchXInterface {
          uint256 dutchXFee) = _getSellAmountAfterFee(address(this),
                                                      _sellAmount
         );
-        ERC20(_sellToken).safeTransferFrom(_executionClaimOwner,
-                                           address(this),
-                                           _sellAmount
+        require(_safeTransferFrom(_sellToken,
+                                  _executionClaimOwner,
+                                  address(this),
+                                  _sellAmount),
+            "GelatoDutchXInterface._sellOnDutchX: _safeTransferFrom failed"
         );
-        
-        require(ERC20(_sellToken).safeApprove(address(dutchX), _sellAmount),
-            "GelatoDutchXInterface._sellOnDutchX: sellToken.safeApprove failed"
+        require(_safeIncreaseERC20Allowance(_sellToken, address(dutchX), _sellAmount),
+            "GelatoDutchXInterface._sellOnDutchX: _safeIncreaseERC20Allowance failed"
         );
         uint256 sellAuctionIndex = _getSellAuctionIndex(_sellToken, _buyToken);
         require(sellAuctionIndex != 0,

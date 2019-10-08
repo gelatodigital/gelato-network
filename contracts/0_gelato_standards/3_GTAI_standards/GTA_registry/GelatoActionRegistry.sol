@@ -3,8 +3,16 @@ pragma solidity ^0.5.10;
 import '../../../0_gelato_standards/2_GTA_standards/gelato_action_standards/IGelatoAction.sol';
 
 contract GelatoActionRegistry {
-    // action => executionClaimLifespan
-    mapping(address => uint256) public actionExecutionClaimLifespan;
+    // action => _actionExecutionClaimLifespanCap
+    mapping(address => uint256) internal _actionExecutionClaimLifespanCap;
+
+    function getActionExecutionClaimLifespanCap(address _action)
+        external
+        view
+        returns(uint256 actionExecutionClaimLifespanCap)
+    {
+        actionExecutionClaimLifespanCap = _actionExecutionClaimLifespanCap[_action];
+    }
 
     function _getActionSelector(address _action)
         internal
@@ -14,57 +22,54 @@ contract GelatoActionRegistry {
         actionSelector = IGelatoAction(_action).actionSelector();
     }
 
-    function _getActionGasStipend(address _action)
-        internal
-        view
-        returns(uint256 actionGasStipend)
-    {
-        actionGasStipend = IGelatoAction(_action).actionGasStipend();
-    }
-
     // ____________ Register Actions ____________
     event LogActionRegistered(address indexed _registrator,
-                              address indexed _actionAddress,
-                              uint256 executionClaimLifespan
+                              address indexed _action,
+                              uint256 _actionExecutionClaimLifespanCap
     );
-    function _registerAction(address _actionAddress,
-                             uint256 _executionClaimLifespan
+    function _registerAction(address _action,
+                             uint256 __actionExecutionClaimLifespanCap
     )
         internal
     {
-        actionExecutionClaimLifespan[_actionAddress] = _executionClaimLifespan;
+        _actionExecutionClaimLifespanCap[_action] = __actionExecutionClaimLifespanCap;
         emit LogActionRegistered(msg.sender,
-                                 _actionAddress,
-                                 _executionClaimLifespan
+                                 _action,
+                                 __actionExecutionClaimLifespanCap
         );
     }
     // ===========
 
     // ____________ Deregister Actions ____________
     event LogActionDeregistered(address indexed _registrator,
-                                address indexed _actionAddress
+                                address indexed _action
     );
-    function _deregisterAction(address _actionAddress)
+    function _deregisterAction(address _action)
         internal
     {
-        actionExecutionClaimLifespan[_actionAddress] = 0;
+        _actionExecutionClaimLifespanCap[_action] = 0;
         emit LogActionDeregistered(msg.sender,
-                                   _actionAddress
+                                   _action
         );
     }
     // ===========
 
     // ____________ Standard Checks _____________________________________
-    modifier onlyRegisteredActions(address _action)
+    modifier onlyRegisteredActions(address _action,
+                                   uint256 _executionClaimLifespan)
     {
-        require(actionExecutionClaimLifespan[_action],
-            "GelatoActionRegistry.onlyRegisteredActions: failed"
+        uint256 executionClaimLifespanCap = _actionExecutionClaimLifespanCap[_action];
+        require(executionClaimLifespanCap != 0,
+            "GelatoActionRegistry.onlyRegisteredActions: action is not registered"
+        );
+        require(_executionClaimLifespan <= executionClaimLifespanCap,
+            "GelatoActionRegistry.onlyRegisteredActions: _executionClaimLifespan above cap"
         );
         _;
     }
 
     modifier msgSenderIsRegisteredAction() {
-        require(actionExecutionClaimLifespan[msg.sender],
+        require(_actionExecutionClaimLifespanCap[msg.sender] != 0,
             "GelatoActionRegistry.msgSenderIsRegisteredAction: failed"
         );
         _;
@@ -73,22 +78,26 @@ contract GelatoActionRegistry {
 
     // ____________ Additional Checks _____________________________________
     function _actionConditionsFulfilled(address _action,
-                                        address _user,
+                                        address _executionClaimOwner,
                                         bytes memory _specificActionParams
     )
         internal
         view
         returns(bool)
     {
-        return IGelatoAction(_action).actionConditionsFulfilled(_user,
+        return IGelatoAction(_action).actionConditionsFulfilled(_executionClaimOwner,
                                                                 _specificActionParams
         );
     }
 
     modifier actionConditionsFulfilled(address _action,
-                                       bytes memory _specificActionParams)
+                                       address _executionClaimOwner,
+                                       bytes memory _specificActionParams
+    )
     {
-        require(_actionConditionsFulfilled(_action, _specificActionParams),
+        require(_actionConditionsFulfilled(_action,
+                                           _executionClaimOwner,
+                                           _specificActionParams),
             "GelatoActionRegistry.actionConditionsFulfilled: failed"
         );
         _;

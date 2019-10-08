@@ -3,8 +3,10 @@ pragma solidity ^0.5.10;
 import '../0_gelato_standards/3_GTAI_standards/IcedOut/IcedOutOwnable.sol';
 import '../0_gelato_standards/3_GTAI_standards/GTA_registry/ownable_registry/GelatoTriggerRegistryOwnable.sol';
 import '../0_gelato_standards/3_GTAI_standards/GTA_registry/ownable_registry/GelatoActionRegistryOwnable.sol';
+import '../0_gelato_standards/3_GTAI_standards/IGTAIFull.sol';
 
-contract GTAIAggregator is IcedOutOwnable,
+contract GTAIAggregator is IGTAIFull,
+                           IcedOutOwnable,
                            GelatoTriggerRegistryOwnable,
                            GelatoActionRegistryOwnable
 {
@@ -33,10 +35,11 @@ contract GTAIAggregator is IcedOutOwnable,
     function activateTA(address _trigger,
                         bytes calldata _specificTriggerParams,
                         address _action,
-                        bytes calldata _specificActionParams
+                        bytes calldata _specificActionParams,
+                        uint256 _executionClaimLifespan
     )
         onlyRegisteredTriggers(_trigger)
-        onlyRegisteredActions(_action)
+        onlyRegisteredActions(_action, _executionClaimLifespan)
         external
         payable
         returns(bool)
@@ -44,9 +47,8 @@ contract GTAIAggregator is IcedOutOwnable,
         /// @dev Calculations for charging the msg.sender/user
         uint256 prepaidExecutionFee = _getExecutionClaimPrice(_action);
         require(msg.value == prepaidExecutionFee,
-            "GTAIAggregator.dutchXTimedSellAndWithdraw: prepaidExecutionFee failed"
+            "GTAIAggregator.activateTA: prepaidExecutionFee failed"
         );
-
         // _________________Minting_____________________________________________
         // Trigger-Action Payloads
         bytes memory triggerPayload
@@ -62,14 +64,13 @@ contract GTAIAggregator is IcedOutOwnable,
                             triggerPayload,
                             _action,
                             _specificActionParams,
-                            actionExecutionClaimLifespan[_action]
+                            _executionClaimLifespan
         );
         emit LogActivation(_getCurrentExecutionClaimId(),
                            msg.sender,
                            _trigger,
                            _action
         );
-
         return true;
         // =========================
     }
@@ -82,16 +83,20 @@ contract GTAIAggregator is IcedOutOwnable,
                                address indexed minter
     );
 
-    function activateChainedTA(address _executionClaimOwner,
-                               address _chainedTrigger,
+    function activateChainedTA(address _chainedTrigger,
                                bytes calldata _chainedTriggerPayload,
                                address _chainedAction,
-                               bytes calldata _chainedActionPayload
+                               bytes calldata _chainedActionPayload,
+                               uint256 _chainedExecutionClaimLifespan,
+                               address _executionClaimOwner
     )
         msgSenderIsRegisteredAction()
         onlyRegisteredTriggers(_chainedTrigger)
-        onlyRegisteredActions(_chainedAction)
-        actionConditionsFulfilled(_chainedAction, _chainedActionPayload)
+        onlyRegisteredActions(_chainedAction, _chainedExecutionClaimLifespan)
+        actionConditionsFulfilled(_chainedAction,
+                                  _executionClaimOwner,
+                                  _chainedActionPayload
+        )
         external
         returns(bool)
     {
@@ -100,7 +105,7 @@ contract GTAIAggregator is IcedOutOwnable,
                             _chainedTriggerPayload,
                             _chainedAction,
                             _chainedActionPayload,
-                            actionExecutionClaimLifespan[_chainedAction]
+                            _chainedExecutionClaimLifespan
         );
         emit LogChainedActivation(_getCurrentExecutionClaimId(),
                                   _executionClaimOwner,

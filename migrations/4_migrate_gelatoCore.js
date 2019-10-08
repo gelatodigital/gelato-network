@@ -14,6 +14,7 @@ const GAS_INSIDE_GASLEFT_CHECKS = "100000";
 const GAS_OUTSIDE_GASLEFT_CHECKS = "41414";
 const CAN_EXEC_MAX_GAS = "100000";
 const EXECUTOR_GAS_REFUND_ESTIMATE = "50000";
+const CANCEL_INCENTIVE = web3.utils.toWei("0.5", "finney");
 
 module.exports = async function(deployer, network, accounts) {
   if (network.startsWith("dev")) {
@@ -38,6 +39,10 @@ module.exports = async function(deployer, network, accounts) {
           gasInsideGasleftChecks:     ${GAS_INSIDE_GASLEFT_CHECKS} gas
           gasOutsideGasLeftChecks     ${GAS_OUTSIDE_GASLEFT_CHECKS} gas
           executorGasRefundEstimate:  ${EXECUTOR_GAS_REFUND_ESTIMATE} gas
+          cancelIncentive:            ${web3.utils.fromWei(
+            CANCEL_INCENTIVE,
+            "ether"
+          )} ETH
     `);
     // Deploy with constructor params
     await deployer.deploy(
@@ -49,6 +54,7 @@ module.exports = async function(deployer, network, accounts) {
       GAS_INSIDE_GASLEFT_CHECKS,
       CAN_EXEC_MAX_GAS,
       EXECUTOR_GAS_REFUND_ESTIMATE,
+      CANCEL_INCENTIVE,
       { from: accounts[0] }
     );
   } else {
@@ -73,6 +79,10 @@ module.exports = async function(deployer, network, accounts) {
           gasInsideGasleftChecks:     ${GAS_INSIDE_GASLEFT_CHECKS} gas
           gasOutsideGasLeftChecks     ${GAS_OUTSIDE_GASLEFT_CHECKS} gas
           executorGasRefundEstimate:  ${EXECUTOR_GAS_REFUND_ESTIMATE} gas
+          cancelIncentive:            ${web3.utils.fromWei(
+            CANCEL_INCENTIVE,
+            "ether"
+          )} ETH
     `);
     await deployer.deploy(
       GelatoCore,
@@ -82,7 +92,8 @@ module.exports = async function(deployer, network, accounts) {
       GAS_OUTSIDE_GASLEFT_CHECKS,
       GAS_INSIDE_GASLEFT_CHECKS,
       CAN_EXEC_MAX_GAS,
-      EXECUTOR_GAS_REFUND_ESTIMATE
+      EXECUTOR_GAS_REFUND_ESTIMATE,
+      CANCEL_INCENTIVE
     );
   }
   // Print deployed contract address to console

@@ -5,7 +5,9 @@ interface IGelatoAction {
     function interactionContract() external view returns(address);
     function actionSelector() external view returns(bytes4);
     function actionGasStipend() external view returns(uint256);
-    function actionConditionsFulfilled(bytes calldata _actionPayload)
+    function actionConditionsFulfilled(address _executionClaimOwner,
+                                       bytes calldata _specificActionParams
+    )
         external
         view
         returns(bool);
@@ -13,12 +15,5 @@ interface IGelatoAction {
                     address _executionClaimOwner
     )
         external
-        returns(bool);
-    function actionHasERC20Allowance(address _token,
-                                     address _tokenOwner,
-                                     uint256 _allowance
-    )
-        external
-        view
         returns(bool);
 }

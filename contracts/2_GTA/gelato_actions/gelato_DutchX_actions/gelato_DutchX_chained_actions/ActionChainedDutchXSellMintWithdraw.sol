@@ -27,7 +27,7 @@ contract ActionChainedDutchXSellMintWithdraw is ActionDutchXSell,
     {}
 
     // Action:
-    function sellMintWithdraw(// Standard Action Params
+    function sellMintWithdraw(// Standard Chained Action Params
                               uint256 _executionClaimId,
                               // Specific Action Params
                               address _sellToken,
@@ -61,16 +61,15 @@ contract ActionChainedDutchXSellMintWithdraw is ActionDutchXSell,
         bytes memory chainedActionPayload
             = abi.encodeWithSelector(_getChainedActionSelector(),
                                      _executionClaimId,
-                                     address(0), // == chainedAction will fetch ecOwner
                                      _sellToken,
                                      _buyToken,
                                      address(this),  // seller
                                      sellAuctionIndex,
                                      sellAmountAfterFee
         );
-        require(_activateChainedTAviaMintingGTAI(executionClaimOwner,
-                                                 chainedTriggerPayload,
-                                                 chainedActionPayload),
+        require(_activateChainedTAviaMintingGTAI(chainedTriggerPayload,
+                                                 chainedActionPayload,
+                                                 executionClaimOwner),
             "ActionChainedDutchXSellMintWithdraw._mintExecutionClaim: failed"
         );
         emit LogGTAChainedMinting(_executionClaimId, executionClaimOwner);

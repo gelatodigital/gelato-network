@@ -1,15 +1,14 @@
 pragma solidity ^0.5.10;
 
-import '../../../0_gelato_standards/3_GTAI_standards/GTAI_chained/IMintingGTAI.sol';
+import '../../../0_gelato_standards/3_GTAI_standards/IGTAIFull.sol';
 import '../../../0_gelato_standards/2_GTA_standards/gelato_trigger_standards/IGelatoTrigger.sol';
 import '../../../0_gelato_standards/2_GTA_standards/gelato_action_standards/IGelatoAction.sol';
 
 contract GTAChainedMinting {
 
-    IMintingGTAI public mintingGTAI;
+    IGTAIFull public mintingGTAI;
     address public chainedTrigger;
     address public chainedAction;
-
 
     constructor(address _mintingGTAI,
                 address _chainedTrigger,
@@ -17,7 +16,7 @@ contract GTAChainedMinting {
     )
         internal
     {
-        mintingGTAI = IMintingGTAI(_mintingGTAI);
+        mintingGTAI = IGTAIFull(_mintingGTAI);
         chainedTrigger = _chainedTrigger;
         chainedAction = _chainedAction;
     }
@@ -38,18 +37,30 @@ contract GTAChainedMinting {
         chainedActionSelector = IGelatoAction(chainedAction).actionSelector();
     }
 
-    function _activateChainedTAviaMintingGTAI(address _executionClaimOwner,
-                                              bytes memory _chainedTriggerPayload,
-                                              bytes memory _chainedActionPayload
+    function _getChainedExecutionClaimLifespanCap(address _chainedAction)
+        internal
+        view
+        returns(uint256 chainedExecutionClaimLifespanCap)
+    {
+        chainedExecutionClaimLifespanCap
+            = mintingGTAI.getActionExecutionClaimLifespanCap(_chainedAction);
+    }
+
+    function _activateChainedTAviaMintingGTAI(bytes memory _chainedTriggerPayload,
+                                              bytes memory _chainedActionPayload,
+                                              address _executionClaimOwner
     )
         internal
         returns(bool)
     {
-        require(mintingGTAI.activateChainedTA(_executionClaimOwner,
-                                              chainedTrigger,
+        uint256 chainedExecutionClaimLifespanCap
+            = _getChainedExecutionClaimLifespanCap(chainedAction);
+        require(mintingGTAI.activateChainedTA(chainedTrigger,
                                               _chainedTriggerPayload,
                                               chainedAction,
-                                              _chainedActionPayload),
+                                              _chainedActionPayload,
+                                              chainedExecutionClaimLifespanCap,
+                                              _executionClaimOwner),
             "GTAChainedMinting._activateChainedTAviaMintingGTAI: failed"
         );
         return true;
