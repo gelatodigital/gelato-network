@@ -75,7 +75,6 @@ contract GelatoCore is GelatoExecutionClaim,
     )
         gtaiBalanceOk
         external
-        //returns(bool)
     {
         // ______ Mint new executionClaim ERC721 token _____________________
         Counters.increment(_executionClaimIds);
@@ -121,7 +120,6 @@ contract GelatoCore is GelatoExecutionClaim,
                                         actionGasStipend,
                                         executionClaimExpiryDate
         );
-        //return true;
     }
     // ********************* mintExecutionClaim() END
 

@@ -59,12 +59,13 @@ contract GTAIAggregator is IGTAIFull,
         require(_actionConditionsFulfilled(_action, msg.sender, _specificActionParams),
             "GTAIAggregator.activateTA._actionConditionsFulfilled: failed"
         );
-        _mintExecutionClaim(msg.sender,  // executionClaimOwner
-                            _trigger,
-                            triggerPayload,
-                            _action,
-                            _specificActionParams,
-                            _executionClaimLifespan
+        require(_mintExecutionClaim(msg.sender,  // executionClaimOwner
+                                    _trigger,
+                                    triggerPayload,
+                                    _action,
+                                    _specificActionParams,
+                                    _executionClaimLifespan),
+            "IcedOut._mintExecutionClaim: failed"
         );
         emit LogActivation(_getCurrentExecutionClaimId(),
                            msg.sender,
@@ -76,19 +77,17 @@ contract GTAIAggregator is IGTAIFull,
     }
 
     //___________________ Chained Execution Claim Minting _____________________
-    event LogChainedActivation(uint256 executionClaimId,
+    event LogChainedActivation(uint256 indexed executionClaimId,
                                address indexed executionClaimOwner,
-                               address trigger,
-                               address indexed action,
                                address indexed minter
     );
 
-    function activateChainedTA(address _chainedTrigger,
+    function activateChainedTA(address _executionClaimOwner,
+                               address _chainedTrigger,
                                bytes calldata _chainedTriggerPayload,
                                address _chainedAction,
                                bytes calldata _chainedActionPayload,
-                               uint256 _chainedExecutionClaimLifespan,
-                               address _executionClaimOwner
+                               uint256 _chainedExecutionClaimLifespan
     )
         msgSenderIsRegisteredAction()
         onlyRegisteredTriggers(_chainedTrigger)
@@ -98,7 +97,6 @@ contract GTAIAggregator is IGTAIFull,
                                   _chainedActionPayload
         )
         external
-        returns(bool)
     {
         _mintExecutionClaim(_executionClaimOwner,
                             _chainedTrigger,
@@ -109,11 +107,8 @@ contract GTAIAggregator is IGTAIFull,
         );
         emit LogChainedActivation(_getCurrentExecutionClaimId(),
                                   _executionClaimOwner,
-                                  _chainedTrigger,
-                                  _chainedAction,
-                                  msg.sender  // minterAction
+                                  msg.sender
         );
-        return true;
     }
     // ================
 }

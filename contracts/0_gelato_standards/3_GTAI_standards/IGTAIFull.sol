@@ -20,8 +20,7 @@ interface IGTAIFull {
     )
         external
         payable
-        returns(bool)
-    ; // end
+        returns(bool);
 
     event LogChainedActivation(uint256 executionClaimId,
                                address indexed executionClaimOwner,
@@ -30,13 +29,12 @@ interface IGTAIFull {
                                address indexed minter
     );
 
-    function activateChainedTA(address _chainedTrigger,
+    function activateChainedTA(address _executionClaimOwner,
+                               address _chainedTrigger,
                                bytes calldata _chainedTriggerPayload,
                                address _chainedAction,
                                bytes calldata _chainedActionPayload,
-                               uint256 _chainedExecutionClaimLifespan,
-                               address _executionClaimOwner
+                               uint256 _chainedExecutionClaimLifespan
     )
-        external
-        returns(bool);
+        external;
 }

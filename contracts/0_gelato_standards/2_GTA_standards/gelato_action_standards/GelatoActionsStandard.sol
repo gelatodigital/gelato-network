@@ -55,6 +55,7 @@ contract GelatoActionsStandard is GTA
         view
         returns(bool)
     {
+        address(this); // to silence state mutability warning (see OZ Context.sol)
         return true;
     }
 }

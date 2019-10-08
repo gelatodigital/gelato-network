@@ -67,10 +67,10 @@ contract ActionChainedDutchXSellMintWithdraw is ActionDutchXSell,
                                      sellAuctionIndex,
                                      sellAmountAfterFee
         );
-        require(_activateChainedTAviaMintingGTAI(chainedTriggerPayload,
-                                                 chainedActionPayload,
-                                                 executionClaimOwner),
-            "ActionChainedDutchXSellMintWithdraw._mintExecutionClaim: failed"
+        require(_activateChainedTAviaMintingGTAI(executionClaimOwner,
+                                                 chainedTriggerPayload,
+                                                 chainedActionPayload),
+            "ActionChainedDutchXSellMintWithdraw._activateChainedTAviaMintingGTAI: failed"
         );
         emit LogGTAChainedMinting(_executionClaimId, executionClaimOwner);
         return true;

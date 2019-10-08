@@ -88,15 +88,16 @@ contract IcedOut {
                                   uint256 _executionClaimLifespan
      )
           internal
+          returns(bool)
      {
-          require(gelatoCore.mintExecutionClaim(_executionClaimOwner,
-                                                _trigger,
-                                                _triggerPayload,
-                                                _action,
-                                                _actionPayload,
-                                                _executionClaimLifespan),
-               "IcedOut._mintExecutionClaim: failed"
+          gelatoCore.mintExecutionClaim(_executionClaimOwner,
+                                        _trigger,
+                                        _triggerPayload,
+                                        _action,
+                                        _actionPayload,
+                                        _executionClaimLifespan
           );
+          return true;
      }
 
      function _getCurrentExecutionClaimId()

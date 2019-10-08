@@ -46,22 +46,21 @@ contract GTAChainedMinting {
             = mintingGTAI.getActionExecutionClaimLifespanCap(_chainedAction);
     }
 
-    function _activateChainedTAviaMintingGTAI(bytes memory _chainedTriggerPayload,
-                                              bytes memory _chainedActionPayload,
-                                              address _executionClaimOwner
+    function _activateChainedTAviaMintingGTAI(address _executionClaimOwner,
+                                              bytes memory _chainedTriggerPayload,
+                                              bytes memory _chainedActionPayload
     )
         internal
         returns(bool)
     {
         uint256 chainedExecutionClaimLifespanCap
             = _getChainedExecutionClaimLifespanCap(chainedAction);
-        require(mintingGTAI.activateChainedTA(chainedTrigger,
-                                              _chainedTriggerPayload,
-                                              chainedAction,
-                                              _chainedActionPayload,
-                                              chainedExecutionClaimLifespanCap,
-                                              _executionClaimOwner),
-            "GTAChainedMinting._activateChainedTAviaMintingGTAI: failed"
+        mintingGTAI.activateChainedTA(_executionClaimOwner,
+                                      chainedTrigger,
+                                      _chainedTriggerPayload,
+                                      chainedAction,
+                                      _chainedActionPayload,
+                                      chainedExecutionClaimLifespanCap
         );
         return true;
     }
