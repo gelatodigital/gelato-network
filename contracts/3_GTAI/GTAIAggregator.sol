@@ -78,8 +78,9 @@ contract GTAIAggregator is IGTAIFull,
 
     //___________________ Chained Execution Claim Minting _____________________
     event LogChainedActivation(uint256 indexed executionClaimId,
-                               address indexed executionClaimOwner,
-                               address indexed minter
+                               address indexed chainedTrigger,
+                               address indexed chainedAction,
+                               address minter
     );
 
     function activateChainedTA(address _executionClaimOwner,
@@ -106,7 +107,8 @@ contract GTAIAggregator is IGTAIFull,
                             _chainedExecutionClaimLifespan
         );
         emit LogChainedActivation(_getCurrentExecutionClaimId(),
-                                  _executionClaimOwner,
+                                  _chainedTrigger,
+                                  _chainedAction,
                                   msg.sender
         );
     }
