@@ -9,9 +9,7 @@ const GelatoCore = artifacts.require("GelatoCore");
 
 // Constructor params
 let gelatoCore;
-const EXECUTION_CLAIM_LIFESPAN = "7776000"; // 3 months in seconds
 const GTAI_GAS_PRICE = web3.utils.toWei("5", "gwei");
-const AUTOMATIC_TOPUP_AMOUNT = web3.utils.toWei("0.5", "ether");
 
 module.exports = async function(deployer, network, accounts) {
   if (network.startsWith("dev")) {
@@ -23,22 +21,12 @@ module.exports = async function(deployer, network, accounts) {
       =============================
       Owner:                  ${accounts[0]}
       GelatoCore:             ${gelatoCore.address}
-      ExecutionClaimLifespan: ${EXECUTION_CLAIM_LIFESPAN}
       GTAI gas price:         ${web3.utils.fromWei(GTAI_GAS_PRICE, "ether")} ETH
-      AutomaticTopUp amount:  ${web3.utils.fromWei(
-        AUTOMATIC_TOPUP_AMOUNT,
-        "ether"
-      )} ETH
     `);
     // Deploy with constructor params
-    await deployer.deploy(
-      GTAIAggregator,
-      gelatoCore.address,
-      EXECUTION_CLAIM_LIFESPAN,
-      GTAI_GAS_PRICE,
-      AUTOMATIC_TOPUP_AMOUNT,
-      { from: accounts[0] }
-    );
+    await deployer.deploy(GTAIAggregator, gelatoCore.address, GTAI_GAS_PRICE, {
+      from: accounts[0]
+    });
   } else {
     console.log(`\n\tDeploying ${CONTRACT_NAME} to live net\n`);
     gelatoCore = await GelatoCore.deployed();
@@ -47,23 +35,12 @@ module.exports = async function(deployer, network, accounts) {
           =============================
           Owner:                  HOW TO GET CURRENT PROVIDER SELECTED ADDRESS?
           GelatoCore:             ${gelatoCore.address}
-          ExecutionClaimLifespan: ${EXECUTION_CLAIM_LIFESPAN}
           GTAI gas price:         ${web3.utils.fromWei(
             GTAI_GAS_PRICE,
             "ether"
           )} ETH
-          AutomaticTopUp amount:  ${web3.utils.fromWei(
-            AUTOMATIC_TOPUP_AMOUNT,
-            "ether"
-          )} ETH
     `);
-    await deployer.deploy(
-      GTAIAggregator,
-      gelatoCore.address,
-      EXECUTION_CLAIM_LIFESPAN,
-      GTAI_GAS_PRICE,
-      AUTOMATIC_TOPUP_AMOUNT
-    );
+    await deployer.deploy(GTAIAggregator, gelatoCore.address, GTAI_GAS_PRICE);
   }
   // Print deployed contract address to console
   const deployedContract = await GTAIAggregator.deployed();

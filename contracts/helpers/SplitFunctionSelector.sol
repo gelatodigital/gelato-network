@@ -1,6 +1,9 @@
 pragma solidity ^0.5.10;
 
 contract SplitFunctionSelector {
+    // This contract should not be deployed
+    constructor() internal {}
+
     function splitFunctionSelector(bytes memory _payloadWithSelector)
         internal
         pure
