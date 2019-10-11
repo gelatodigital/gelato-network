@@ -133,7 +133,7 @@ interface IGelatoCore {
     // Delete
     event LogClaimExecutedBurnedAndDeleted(address indexed dappInterface,
                                            uint256 indexed executionClaimId,
-                                           address indexed executionClaimOwner,
+                                           address indexed user,
                                            address payable executor,
                                            uint256 executorPayout,
                                            uint256 executorProfit,
@@ -143,7 +143,7 @@ interface IGelatoCore {
     );
     event LogExecutionClaimCancelled(address indexed dappInterface,
                                      uint256 indexed executionClaimId,
-                                     address indexed executionClaimOwner
+                                     address indexed user
     );
     // **************************** Events END **********************************
 
@@ -176,7 +176,7 @@ interface IGelatoCore {
     // @DEV We somehow get a greater refund, investigate
     function execFNRefundedGas() external view returns(uint256);
 
-    // The gasPrice core provides as a default for interface as a basis to charge users
+    // The gasPrice core provides as a default for interface as a basis to charge user
     function recommendedGasPriceForInterfaces() external view  returns(uint256);
     // **************************** State Variables END ******************************
 
@@ -186,7 +186,7 @@ interface IGelatoCore {
     // CREATE
     // **************************** mintExecutionClaim() ******************************
     function mintExecutionClaim(bytes calldata _functionSignature,
-                                address _executionClaimOwner
+                                address _user
     )
         payable
         external;
@@ -198,7 +198,7 @@ interface IGelatoCore {
     function getCurrentExecutionClaimId() external view returns(uint256);
 
 
-    // To get executionClaimOwner call ownerOf(executionClaimId)
+    // To get user call ownerOf(executionClaimId)
 
     // Getters for individual Execution Claim fields
     // To get executionClaim interface

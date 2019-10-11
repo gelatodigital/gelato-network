@@ -60,9 +60,9 @@
                 }
             }
         },
-        "/users": {
+        "/user": {
             "get": {
-                "description": "Get all users you have acess to.\n\n- Organisation admins will get all users in their organisation.\n\n- Normal users will only get their own user object.\n",
+                "description": "Get all user you have acess to.\n\n- Organisation admins will get all user in their organisation.\n\n- Normal user will only get their own user object.\n",
                 "tags": [
                     "User"
                 ],
@@ -90,7 +90,7 @@
                 }
             }
         },
-        "/users/{id}": {
+        "/user/{id}": {
             "get": {
                 "description": "Used to get a user that you have access to.",
                 "tags": [
@@ -122,9 +122,9 @@
                 }
             }
         },
-        "/users/me": {
+        "/user/me": {
             "get": {
-                "description": "Alias of `/users/{id}`. (All subroutes are compatible. e.g. `/users/me/svgs`)\n\nGet the current users's object\n",
+                "description": "Alias of `/user/{id}`. (All subroutes are compatible. e.g. `/user/me/svgs`)\n\nGet the current user's object\n",
                 "tags": [
                     "User"
                 ],
@@ -149,7 +149,7 @@
                 }
             }
         },
-        "/users/{id}/dimensions": {
+        "/user/{id}/dimensions": {
             "get": {
                 "description": "Get all the dimensions the user has access to.",
                 "tags": [
@@ -197,7 +197,7 @@
                 }
             }
         },
-        "/users/{id}/svgs": {
+        "/user/{id}/svgs": {
             "get": {
                 "description": "Get all the svgs the user has access to.",
                 "tags": [
@@ -869,7 +869,7 @@
                 "updated_at": {
                     "$ref": "#/definitions/timestamp"
                 },
-                "users": {
+                "user": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/User"

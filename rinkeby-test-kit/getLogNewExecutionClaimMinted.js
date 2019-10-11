@@ -25,7 +25,7 @@ module.exports = async function(callback) {
                 dappInterface: ${event.returnValues.dappInterface}
                 Execution CLaim Id: ${event.returnValues.executionClaimId}
                 Claim Hash: ${event.returnValues.executionClaimHash}
-                Owner: ${event.returnValues.executionClaimOwner}
+                Owner: ${event.returnValues.user}
         `);
       });
     });

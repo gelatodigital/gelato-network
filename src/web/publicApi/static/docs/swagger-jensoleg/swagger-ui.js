@@ -1203,7 +1203,7 @@ SwaggerClient.prototype.buildFromSpec = function (response) {
 
         return;
       }
-      
+
       var tags = operation.tags;
 
       if (_.isUndefined(tags) || !_.isArray(tags) || tags.length === 0) {
@@ -1724,7 +1724,7 @@ SuperagentHttpClient.prototype.execute = function (obj) {
 
 var SwaggerHttp = require('./http');
 
-/** 
+/**
  * Resolves a spec's remote references
  */
 var Resolver = module.exports = function () {};
@@ -2059,7 +2059,7 @@ SwaggerSpecConverter.prototype.convert = function (obj, clientAuthorizations, ca
 
   // add security definitions
   this.securityDefinitions(obj, swagger);
-  
+
   // take basePath into account
   if (obj.basePath) {
     this.setDocumentationLocation(obj.basePath);
@@ -15490,27 +15490,27 @@ var baseEach = require('../internal/baseEach'),
  * @returns {*} Returns the matched element, else `undefined`.
  * @example
  *
- * var users = [
+ * var user = [
  *   { 'user': 'barney',  'age': 36, 'active': true },
  *   { 'user': 'fred',    'age': 40, 'active': false },
  *   { 'user': 'pebbles', 'age': 1,  'active': true }
  * ];
  *
- * _.result(_.find(users, function(chr) {
+ * _.result(_.find(user, function(chr) {
  *   return chr.age < 40;
  * }), 'user');
  * // => 'barney'
  *
  * // using the `_.matches` callback shorthand
- * _.result(_.find(users, { 'age': 1, 'active': true }), 'user');
+ * _.result(_.find(user, { 'age': 1, 'active': true }), 'user');
  * // => 'pebbles'
  *
  * // using the `_.matchesProperty` callback shorthand
- * _.result(_.find(users, 'active', false), 'user');
+ * _.result(_.find(user, 'active', false), 'user');
  * // => 'fred'
  *
  * // using the `_.property` callback shorthand
- * _.result(_.find(users, 'active'), 'user');
+ * _.result(_.find(user, 'active'), 'user');
  * // => 'barney'
  */
 var find = createFind(baseEach);
@@ -15609,13 +15609,13 @@ var arrayMap = require('../internal/arrayMap'),
  * _.map({ 'a': 1, 'b': 2 }, timesThree);
  * // => [3, 6] (iteration order is not guaranteed)
  *
- * var users = [
+ * var user = [
  *   { 'user': 'barney' },
  *   { 'user': 'fred' }
  * ];
  *
  * // using the `_.property` callback shorthand
- * _.map(users, 'user');
+ * _.map(user, 'user');
  * // => ['barney', 'fred']
  */
 function map(collection, iteratee, thisArg) {
@@ -18514,13 +18514,13 @@ var baseClone = require('../internal/baseClone'),
  * @returns {*} Returns the deep cloned value.
  * @example
  *
- * var users = [
+ * var user = [
  *   { 'user': 'barney' },
  *   { 'user': 'fred' }
  * ];
  *
- * var deep = _.cloneDeep(users);
- * deep[0] === users[0];
+ * var deep = _.cloneDeep(user);
+ * deep[0] === user[0];
  * // => false
  *
  * // using a customizer callback
@@ -19773,8 +19773,8 @@ function Response(req, options) {
   options = options || {};
   this.req = req;
   this.xhr = this.req.xhr;
-  this.text = this.req.method !='HEAD' 
-     ? this.xhr.responseText 
+  this.text = this.req.method !='HEAD'
+     ? this.xhr.responseText
      : null;
   this.setStatusProperties(this.xhr.status);
   this.header = this.headers = parseHeader(this.xhr.getAllResponseHeaders());
@@ -19935,7 +19935,7 @@ function Request(method, url) {
     var res = null;
 
     try {
-      res = new Response(self); 
+      res = new Response(self);
     } catch(e) {
       err = new Error('Parser is unable to parse the response');
       err.parse = true;
@@ -20424,9 +20424,9 @@ request.Request = Request;
  *
  * Examples:
  *
- *    request('GET', '/users').end(callback)
- *    request('/users').end(callback)
- *    request('/users', callback)
+ *    request('GET', '/user').end(callback)
+ *    request('/user').end(callback)
+ *    request('/user', callback)
  *
  * @param {String} method
  * @param {String|Function} url or callback
@@ -20737,7 +20737,7 @@ Emitter.prototype.hasListeners = function(event){
  * TODO: combatible error handling?
  */
 
-module.exports = function(arr, fn, initial){  
+module.exports = function(arr, fn, initial){
   var idx = 0;
   var len = arr.length;
   var curr = arguments.length == 3
@@ -20747,7 +20747,7 @@ module.exports = function(arr, fn, initial){
   while (idx < len) {
     curr = fn.call(null, curr, arr[idx], ++idx, arr);
   }
-  
+
   return curr;
 };
 },{}]},{},[1])(1)
@@ -20978,7 +20978,7 @@ window.SwaggerUi = Backbone.Router.extend({
 
 window.SwaggerUi.Views = {};
 
-// don't break backward compatibility with previous versions and warn users to upgrade their code
+// don't break backward compatibility with previous versions and warn user to upgrade their code
 (function(){
   window.authorizations = {
     add: function() {

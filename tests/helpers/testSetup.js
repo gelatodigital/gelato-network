@@ -167,10 +167,10 @@ async function getHelpers ({ ethereumClient, dxInfoService, auctionRepo, ethereu
   async function fundUser1 () {
     debug(`\n**********  Setup DX: Funding, and aproved tokens and Oracle  **********\n`)
     // Deposit 50ETH in the ETH Token
-    // const [, ...users] = accounts
-    const users = accounts.slice(1, 1 + NUM_TEST_USERS)
+    // const [, ...user] = accounts
+    const user = accounts.slice(1, 1 + NUM_TEST_USERS)
     debug('owner: %s', owner)
-    debug('users: %s', users.join(', '))
+    debug('user: %s', user.join(', '))
 
     const initialAmounts = [
       { token: 'WETH', amount: INITIAL_AMOUNTS['WETH'] },
@@ -213,13 +213,13 @@ async function getHelpers ({ ethereumClient, dxInfoService, auctionRepo, ethereu
     debug('\t\t- All tokens has been approved')
 
     debug('\n\tFunding DX:')
-    const userSetupPromises = users.map(async userAddress => {
-      const userId = users.indexOf(userAddress) + 1
+    const userSetupPromises = user.map(async userAddress => {
+      const userId = user.indexOf(userAddress) + 1
 
-      // The owner gives some tokens to the users
+      // The owner gives some tokens to the user
       await Promise.all(
         depositERC20Tokens
-          // We don't need to give ETH to the users (they deposit it)
+          // We don't need to give ETH to the user (they deposit it)
           .filter(t => t !== 'WETH')
           .map(token => {
             const amount = getAmount(token)
@@ -272,7 +272,7 @@ async function getHelpers ({ ethereumClient, dxInfoService, auctionRepo, ethereu
 
     // Do funding
     await Promise.all(userSetupPromises)
-    debug('\t\t- All users has deposited the %s tokens in the DX\n',
+    debug('\t\t- All user has deposited the %s tokens in the DX\n',
       depositERC20Tokens.join(', '))
 
     // I don't understand why we need this
@@ -313,7 +313,7 @@ async function getHelpers ({ ethereumClient, dxInfoService, auctionRepo, ethereu
   async function printAddresses () {
     debug(`\n**********  Addresses  **********\n`)
     // debug('\n\tUsers:')
-    const users = {
+    const user = {
       /*
       'Owner': owner,
       'User 1': user1,
@@ -323,9 +323,9 @@ async function getHelpers ({ ethereumClient, dxInfoService, auctionRepo, ethereu
       'user1': user1,
       'user2': user2
     }
-    Object.keys(users).forEach(name => {
-      // debug('\t\t-%s: %s', name, users[name])
-      debug("var %s = '%s'", name, users[name])
+    Object.keys(user).forEach(name => {
+      // debug('\t\t-%s: %s', name, user[name])
+      debug("var %s = '%s'", name, user[name])
     })
 
     // Print token addresses

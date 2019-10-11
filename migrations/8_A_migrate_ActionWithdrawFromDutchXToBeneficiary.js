@@ -13,7 +13,7 @@ const DutchExchangeProxy = artifacts.require("DutchExchangeProxy");
 let gelatoCore;
 let dutchX;
 const ACTION_SIGNATURE =
-  "withdrawFromDutchXToExecutionClaimOwner(uint256,address,address,address,address,uint256,uint256)";
+  "withdrawFromDutchXToUser(uint256,address,address,address,address,uint256,uint256)";
 const ACTION_GAS_STIPEND = "200000";
 
 module.exports = async function(deployer, network, accounts) {

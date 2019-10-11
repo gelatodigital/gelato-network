@@ -47,14 +47,14 @@ paths:
           schema:
             $ref: '#/definitions/Error'
 
-  /users:
+  /user:
     get:
       description: |
-        Get all users you have acess to.
+        Get all user you have acess to.
 
-        - Organisation admins will get all users in their organisation.
+        - Organisation admins will get all user in their organisation.
 
-        - Normal users will only get their own user object.
+        - Normal user will only get their own user object.
       tags:
         - User
       security:
@@ -71,7 +71,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
 
-  /users/{id}:
+  /user/{id}:
     get:
       description: Used to get a user that you have access to.
       tags:
@@ -90,12 +90,12 @@ paths:
           schema:
             $ref: '#/definitions/Error'
 
-  /users/me:
+  /user/me:
     get:
       description: |
-        Alias of `/users/{id}`. (All subroutes are compatible. e.g. `/users/me/svgs`)
+        Alias of `/user/{id}`. (All subroutes are compatible. e.g. `/user/me/svgs`)
 
-        Get the current users's object
+        Get the current user's object
       tags:
         - User
       security:
@@ -110,7 +110,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
 
-  /users/{id}/dimensions:
+  /user/{id}/dimensions:
     get:
       description: Get all the dimensions the user has access to.
       tags:
@@ -137,16 +137,16 @@ paths:
             $ref: '#/definitions/Error'
 
 
-  # /users/{id}/features:
+  # /user/{id}/features:
 
-  # /users/{id}/fonts:
+  # /user/{id}/fonts:
 
-  # /users/{id}/jobs:
+  # /user/{id}/jobs:
 
   # For=visibility
-  # /users/{id}/shares:
+  # /user/{id}/shares:
 
-  /users/{id}/svgs:
+  /user/{id}/svgs:
     get:
       description: Get all the svgs the user has access to.
       tags:
@@ -172,7 +172,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
 
-  # /users/{id}/vector_layers:
+  # /user/{id}/vector_layers:
 
 parameters:
   id:
@@ -687,7 +687,7 @@ definitions:
         $ref: '#/definitions/timestamp'
       updated_at:
         $ref: '#/definitions/timestamp'
-      users:
+      user:
         type: array
         items:
           $ref: '#/definitions/User'

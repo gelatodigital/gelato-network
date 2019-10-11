@@ -58,7 +58,7 @@ async function run ({
   }
 
   if (firstTrades.length > 0) {
-    debug('Found %d different users', firstTrades.length)
+    debug('Found %d different user', firstTrades.length)
     firstTrades.forEach(trade => {
       debug('  User: %s. Data: %o', trade.args.user, {
         event: trade.event,
