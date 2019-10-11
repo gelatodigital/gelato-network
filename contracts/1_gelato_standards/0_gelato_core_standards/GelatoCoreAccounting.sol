@@ -34,6 +34,20 @@ contract GelatoCoreAccounting is Ownable,
     uint256 internal cancelIncentive;
     // =========================
 
+    // _______ Execution Gas Caps )____________________________________________
+    function _getMaxExecutionGasConsumption(uint256 _actionGasStipend)
+        private
+        view
+        returns(uint256)
+    {
+        return (gasOutsideGasleftChecks
+                + gasInsideGasleftChecks
+                + canExecMaxGas
+                .add(_actionGasStipend)
+        );
+    }
+    // =======
+
     // _______ GTAIBalance Checks ___________________________________________
     function _GTAIBalanceRequirement(address _GTAI)
         internal
@@ -93,6 +107,10 @@ contract GelatoCoreAccounting is Ownable,
     function getCancelIncentive() external view returns(uint256) {
         return cancelIncentive;
     }
+    function getMaxExecutionGasConsumption(uint256 _actionGasStipend)
+        external
+        view
+        returns(uint256);
     function getGTAIBalanceRequirement(address _GTAI)
         external
         view

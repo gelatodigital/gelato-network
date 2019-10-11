@@ -14,4 +14,46 @@ contract GTAIStandardOwnable is IcedOutOwnable,
         IcedOutOwnable(_gelatoCore, _gtaiGasPrice)
         internal
     {}
+
+    event LogActivation(uint256 executionClaimId,
+                        address indexed executionClaimOwner,
+                        address indexed trigger,
+                        address indexed action
+    );
+
+    function _activateTA(address _trigger,
+                         bytes memory _specificTriggerParams,
+                         address _action,
+                         bytes memory _specificActionParams,
+                         uint256 _executionClaimLifespan
+    )
+        onlyRegisteredTriggers(_trigger)
+        onlyRegisteredActions(_action, _executionClaimLifespan)
+        internal
+    {
+        // _________________Minting_____________________________________________
+        // Trigger-Action Payloads
+        bytes memory triggerPayload
+            = abi.encodeWithSelector(_getTriggerSelector(_trigger),
+                                     _specificTriggerParams
+        );
+        // Standard action conditions check before minting
+        require(_actionConditionsFulfilled(_action, msg.sender, _specificActionParams),
+            "GTAIStandardOwnable.activateTA._actionConditionsFulfilled: failed"
+        );
+        require(_mintExecutionClaim(msg.sender,  // executionClaimOwner
+                                    _trigger,
+                                    triggerPayload,
+                                    _action,
+                                    _specificActionParams,
+                                    _executionClaimLifespan),
+            "GTAIStandardOwnable.activateTA._mintExecutionClaim: failed"
+        );
+        emit LogActivation(_getCurrentExecutionClaimId(),
+                           msg.sender,
+                           _trigger,
+                           _action
+        );
+        // =========================
+    }
 }

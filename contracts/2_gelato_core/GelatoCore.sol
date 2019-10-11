@@ -1,13 +1,11 @@
 pragma solidity ^0.5.10;
 
 import '../0_gelato_interfaces/0_gelato_core_interfaces/IGelatoCore.sol';
-import '../1_gelato_standards/0_gelato_core_standards/GelatoExecutionClaim.sol';
 import '../1_gelato_standards/0_gelato_core_standards/GelatoCoreAccounting.sol';
 import "@openzeppelin/contracts/drafts/Counters.sol";
 import '../0_gelato_interfaces/1_GTA_interfaces/gelato_action_interfaces/IGelatoAction.sol';
 
 contract GelatoCore is IGelatoCore,
-                       GelatoExecutionClaim,
                        GelatoCoreAccounting
 {
     constructor(uint256 _minStakePerExecutionClaim,
@@ -19,7 +17,6 @@ contract GelatoCore is IGelatoCore,
                 uint256 _executorGasRefundEstimate,
                 uint256 _cancelIncentive
     )
-        GelatoExecutionClaim("gelato", "GTA")
         public
     {
         minStakePerExecutionClaim = _minStakePerExecutionClaim;
@@ -32,27 +29,24 @@ contract GelatoCore is IGelatoCore,
         cancelIncentive = _cancelIncentive;
     }
 
-    function _getMaxExecutionGasConsumption(uint256 _actionGasStipend)
-        private
-        view
-        returns (uint256)
-    {
-        return (gasOutsideGasleftChecks
-                + gasInsideGasleftChecks
-                + canExecMaxGas
-                .add(_actionGasStipend)
-        );
-    }
-
-    // ********************* mintExecutionClaim() *********************
-    // Unique Token Ids for ERC721 execution Claims
-    Counters.Counter private _executionClaimIds;
+    // Unique ExecutionClaim Ids
+    using Counters for Counters.Counter;
+    Counters.Counter private executionClaimIds;
     function getCurrentExecutionClaimId()
         external
         view
         returns(uint256 currentId)
     {
-        currentId = _executionClaimIds.current();
+        currentId = executionClaimIds.current();
+    }
+    // executionClaimId => executionClaimOwner
+    mapping(uint256 => address) private executionClaimOwners;
+    function getExecutionClaimOwner(uint256 _executionClaimId)
+        external
+        view
+        returns(address)
+    {
+        return executionClaimOwners[_executionClaimId];
     }
     // executionClaimId => bytes32 executionClaimHash
     mapping(uint256 => bytes32) private hashedExecutionClaims;
@@ -73,7 +67,7 @@ contract GelatoCore is IGelatoCore,
                                      uint256 actionGasStipend,
                                      uint256 executionClaimExpiryDate
     );
-
+    // ********************* mintExecutionClaim() *********************
     function mintExecutionClaim(address _executionClaimOwner,
                                 address _trigger,
                                 bytes calldata _triggerPayload,
@@ -84,10 +78,10 @@ contract GelatoCore is IGelatoCore,
         gtaiBalanceOk
         external
     {
-        // ______ Mint new executionClaim ERC721 token _____________________
-        Counters.increment(_executionClaimIds);
-        uint256 executionClaimId = _executionClaimIds.current();
-        _mint(_executionClaimOwner, executionClaimId);
+        // ______ Mint new executionClaim __________________________________
+        Counters.increment(executionClaimIds);
+        uint256 executionClaimId = executionClaimIds.current();
+        executionClaimOwners[executionClaimId] = _executionClaimOwner;
         // =============
         // ______ Action Payload encoding __________________________________
         bytes memory actionPayload;

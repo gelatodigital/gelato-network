@@ -7,9 +7,19 @@ import '@openzeppelin/contracts/math/SafeMath.sol';
 contract IcedOut {
      using SafeMath for uint256;
 
-     GelatoCore public gelatoCore;
-     address payable public selectedExecutor;
-     uint256 public gtaiGasPrice;
+     GelatoCore internal gelatoCore;
+     address payable internal selectedExecutor;
+     uint256 internal gtaiGasPrice;
+
+     function getGelatoCore() external view returns(address) {
+          return address(gelatoCore);
+     }
+     function getSelectedExecutor() external view returns(address payable) {
+          return selectedExecutor;
+     }
+     function getGTAIGasPrice() external view returns(uint256) {
+          return gtaiGasPrice;
+     }
 
      constructor(address payable _gelatoCore,
                  uint256 _gtaiGasPrice

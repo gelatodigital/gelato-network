@@ -1,13 +1,8 @@
 pragma solidity ^0.5.10;
 
-interface IGTAIFull {
-
-    // ______________ GTAI) ______________________________________________________
-    event LogActivation(uint256 executionClaimId,
-                        address indexed executionClaimOwner,
-                        address indexed trigger,
-                        address indexed action
-    );
+interface IGTAIFull
+{
+    // ______________ GTAIStandard _________________________________________
     function activateTA(address _trigger,
                         bytes calldata _specificTriggerParams,
                         address _action,
@@ -18,12 +13,14 @@ interface IGTAIFull {
         payable
         returns(bool);
 
-    event LogChainedActivation(uint256 executionClaimId,
-                               address indexed executionClaimOwner,
-                               address trigger,
-                               address indexed action,
-                               address indexed minter
+    event LogActivation(uint256 executionClaimId,
+                        address indexed executionClaimOwner,
+                        address indexed trigger,
+                        address indexed action
     );
+    // =================
+
+    // ______________ GTAIChainedStandard __________________________________
     function activateChainedTA(address _executionClaimOwner,
                                address _chainedTrigger,
                                bytes calldata _chainedTriggerPayload,
@@ -31,13 +28,28 @@ interface IGTAIFull {
                                bytes calldata _chainedActionPayload,
                                uint256 _chainedExecutionClaimLifespan
     )
-        external;
+        external
+        returns(bool);
+
+    event LogChainedActivation(uint256 indexed executionClaimId,
+                               address indexed chainedTrigger,
+                               address indexed chainedAction,
+                               address minter
+    );
     // =================
 
-    // ______________ GelatoActionRegistry ______________________________________
-    function getActionExecutionClaimLifespanCap(address _action)
-        external
-        view
-        returns(uint256);
+    // ______________ IcedOut ______________________________________________
+    // view
+    function getGelatoCore() external view returns(address);
+    function getSelectedExecutor() external view returns(address payable);
+    function getGTAIGasPrice() external view returns(uint256);
+    // state mutating
+    function acceptEther() external payable;
+    function selectExecutor(address payable _executor) external;
+    function setGTAIGasPrice(uint256 _gtaiGasPrice) external;
+    function topUpBalanceOnGelato() external payable;
+    function withdrawBalanceFromGelato(uint256 _withdrawAmount) external;
+    function withdrawBalanceToOwner(uint256 _withdrawAmount) external;
+    function withdrawBalanceFromGelatoToOwner(uint256 _withdrawAmount) external;
     // =================
 }

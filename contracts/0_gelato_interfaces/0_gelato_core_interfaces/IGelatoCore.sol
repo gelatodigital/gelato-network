@@ -2,15 +2,19 @@ pragma solidity ^0.5.10;
 
 interface IGelatoCore {
     // ___________ GelatoCore _______________________________________
-    // ______ State Readers _____________
+    // State Readers
     function getCurrentExecutionClaimId() external view returns(uint256);
+    function getExecutionClaimOwner(uint256 _executionClaimId)
+        external
+        view
+        returns(address);
     function getHashedExecutionClaim(uint256 _executionClaimId)
         external
         view
         returns(bytes32);
     // =====
-    // ______ State Mutators _____________
-    // ______ For GTAIs ___
+    // _____ State Mutators _____________
+    // For GTAIs
     event LogNewExecutionClaimMinted(address indexed GTAI,
                                      uint256 indexed executionClaimId,
                                      address indexed executionClaimOwner,
@@ -30,7 +34,7 @@ interface IGelatoCore {
     )
         external;
     // ==
-    // ______ For Executors ___
+    // For Executors
     enum CanExecuteCheck {
         ExecutionClaimExpired,
         InsufficientGTAIBalance,
@@ -51,7 +55,6 @@ interface IGelatoCore {
     )
         external
         view
-        // 0 as first return value == 'executable'
         returns(uint8);
 
     event LogCanExecuteFailed(uint256 indexed executionClaimId,
@@ -110,7 +113,7 @@ interface IGelatoCore {
     // =========================
 
     // ___________ GelatoCoreAccounting _______________________________________
-    // ______ State Readers _____________
+    //  State Readers
     function getGTAIBalance(address _gtai) external view returns(uint256);
     function getGTAIExecutionClaimsCounter(address _gtai) external view returns(uint256);
     function getExecutorBalance(address _executor) external view returns(uint256);
@@ -130,6 +133,10 @@ interface IGelatoCore {
         external
         view
         returns(bool);
+    function getMaxExecutionGasConsumption(uint256 _actionGasStipend)
+        external
+        view
+        returns(uint256);
     // =====
     // ______ State Mutators _____________
     // ____ For GTAIs _______
