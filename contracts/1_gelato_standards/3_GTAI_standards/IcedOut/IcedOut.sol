@@ -85,7 +85,7 @@ contract IcedOut {
 
 
      // _________________ ExecutionClaim Minting ____________________________
-     function _mintExecutionClaim(address _executionClaimOwner,
+     function _mintExecutionClaim(address _user,
                                   address _trigger,
                                   bytes memory _triggerPayload,
                                   address _action,
@@ -95,7 +95,7 @@ contract IcedOut {
           internal
           returns(bool)
      {
-          gelatoCore.mintExecutionClaim(_executionClaimOwner,
+          gelatoCore.mintExecutionClaim(_user,
                                         _trigger,
                                         _triggerPayload,
                                         _action,

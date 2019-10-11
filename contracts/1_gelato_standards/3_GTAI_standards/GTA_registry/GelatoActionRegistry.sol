@@ -81,25 +81,25 @@ contract GelatoActionRegistry {
 
     // ____________ Additional Checks _____________________________________
     function _actionConditionsFulfilled(address _action,
-                                        address _executionClaimOwner,
+                                        address _user,
                                         bytes memory _specificActionParams
     )
         internal
         view
         returns(bool)
     {
-        return IGelatoAction(_action).actionConditionsFulfilled(_executionClaimOwner,
+        return IGelatoAction(_action).actionConditionsFulfilled(_user,
                                                                 _specificActionParams
         );
     }
 
     modifier actionConditionsFulfilled(address _action,
-                                       address _executionClaimOwner,
+                                       address _user,
                                        bytes memory _specificActionParams
     )
     {
         require(_actionConditionsFulfilled(_action,
-                                           _executionClaimOwner,
+                                           _user,
                                            _specificActionParams),
             "GelatoActionRegistry.actionConditionsFulfilled: failed"
         );

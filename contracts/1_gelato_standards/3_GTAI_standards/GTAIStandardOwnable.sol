@@ -16,7 +16,7 @@ contract GTAIStandardOwnable is IcedOutOwnable,
     {}
 
     event LogActivation(uint256 executionClaimId,
-                        address indexed executionClaimOwner,
+                        address indexed user,
                         address indexed trigger,
                         address indexed action
     );
@@ -41,7 +41,7 @@ contract GTAIStandardOwnable is IcedOutOwnable,
         require(_actionConditionsFulfilled(_action, msg.sender, _specificActionParams),
             "GTAIStandardOwnable.activateTA._actionConditionsFulfilled: failed"
         );
-        require(_mintExecutionClaim(msg.sender,  // executionClaimOwner
+        require(_mintExecutionClaim(msg.sender,  // user
                                     _trigger,
                                     triggerPayload,
                                     _action,

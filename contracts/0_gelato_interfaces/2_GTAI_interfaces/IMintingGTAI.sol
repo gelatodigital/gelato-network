@@ -3,7 +3,7 @@ pragma solidity ^0.5.10;
 // Interface for GelatoChainedMintingActions to their mintingGTAIs
 interface IMintingGTAI
 {
-    function activateChainedTA(address _executionClaimOwner,
+    function activateChainedTA(address _user,
                                address _chainedTrigger,
                                bytes calldata _chainedTriggerPayload,
                                address _chainedAction,

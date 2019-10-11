@@ -13,11 +13,11 @@ contract GTA {
         gelatoCore = GelatoCore(_gelatoCore);
     }
 
-    function _getExecutionClaimOwner(uint256 _executionClaimId)
+    function _getUser(uint256 _executionClaimId)
         internal
         view
-        returns(address executionClaimOwner)
+        returns(address user)
     {
-        executionClaimOwner = gelatoCore.ownerOf(_executionClaimId);
+        user = gelatoCore.ownerOf(_executionClaimId);
     }
 }

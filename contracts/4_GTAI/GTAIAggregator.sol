@@ -46,7 +46,7 @@ contract GTAIAggregator is IGTAIChained,
 
     //_____ API FOR TRIGGER-ACTION PAIR CHAINED ExecutionClaim Minting __________________
     /// @dev msg.sender must be a registered action!
-    function activateChainedTA(address _executionClaimOwner,
+    function activateChainedTA(address _user,
                                address _chainedTrigger,
                                bytes calldata _chainedTriggerPayload,
                                address _chainedAction,
@@ -56,7 +56,7 @@ contract GTAIAggregator is IGTAIChained,
         external
         returns(bool)
     {
-        _activateChainedTA(_executionClaimOwner,
+        _activateChainedTA(_user,
                            _chainedTrigger,
                            _chainedTriggerPayload,
                            _chainedAction,

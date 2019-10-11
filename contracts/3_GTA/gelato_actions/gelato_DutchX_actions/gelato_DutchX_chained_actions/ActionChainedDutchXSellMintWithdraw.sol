@@ -38,7 +38,7 @@ contract ActionChainedDutchXSellMintWithdraw is ActionDutchXSell,
         public
         returns(bool)
     {
-        address executionClaimOwner =_getExecutionClaimOwner(_executionClaimId);
+        address user =_getUser(_executionClaimId);
         // action: perform checks and sell on dutchX
         (bool success,
          uint256 sellAuctionIndex,
@@ -67,12 +67,12 @@ contract ActionChainedDutchXSellMintWithdraw is ActionDutchXSell,
                                      sellAuctionIndex,
                                      sellAmountAfterFee
         );
-        require(_activateChainedTAviaMintingGTAI(executionClaimOwner,
+        require(_activateChainedTAviaMintingGTAI(user,
                                                  chainedTriggerPayload,
                                                  chainedActionPayload),
             "ActionChainedDutchXSellMintWithdraw._activateChainedTAviaMintingGTAI: failed"
         );
-        emit LogGTAChainedMinting(_executionClaimId, executionClaimOwner);
+        emit LogGTAChainedMinting(_executionClaimId, user);
         return true;
     }
 }

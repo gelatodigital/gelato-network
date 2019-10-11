@@ -50,9 +50,9 @@ contract GelatoChainedMintingStandard {
             = mintingGTAI.getActionExecutionClaimLifespanCap(_chainedAction);
     }
 
-    event LogGTAChainedMinting(address indexed executionClaimOwner);
+    event LogGTAChainedMinting(address indexed user);
 
-    function _activateChainedTAviaMintingGTAI(address _executionClaimOwner,
+    function _activateChainedTAviaMintingGTAI(address _user,
                                               bytes memory _chainedTriggerPayload,
                                               bytes memory _chainedActionPayload
     )
@@ -61,14 +61,14 @@ contract GelatoChainedMintingStandard {
     {
         uint256 chainedExecutionClaimLifespanCap
             = _getChainedExecutionClaimLifespanCap(chainedAction);
-        mintingGTAI.activateChainedTA(_executionClaimOwner,
+        mintingGTAI.activateChainedTA(_user,
                                       chainedTrigger,
                                       _chainedTriggerPayload,
                                       chainedAction,
                                       _chainedActionPayload,
                                       chainedExecutionClaimLifespanCap
         );
-        emit LogGTAChainedMinting(_executionClaimOwner);
+        emit LogGTAChainedMinting(_user);
         return true;
     }
 }

@@ -23,7 +23,7 @@ contract ActionWithdrawFromDutchXToBeneficiary is IGelatoAction,
     {}
 
     event LogWithdrawFromDutchX(uint256 indexed executionClaimId,
-                                address indexed executionClaimOwner,
+                                address indexed user,
                                 address sellToken,
                                 address indexed buyToken,
                                 address seller,
@@ -32,7 +32,7 @@ contract ActionWithdrawFromDutchXToBeneficiary is IGelatoAction,
     );
 
     // Action: public due to msg.sender context persistance, in internal calls (chaining)
-    function withdrawFromDutchXToExecutionClaimOwner(
+    function withdrawFromDutchXToUser(
         // Standard Action Params
         uint256 _executionClaimId,
         // Specific Action Params
@@ -46,7 +46,7 @@ contract ActionWithdrawFromDutchXToBeneficiary is IGelatoAction,
         public
         returns(bool)
     {
-        address executionClaimOwner =_getExecutionClaimOwner(_executionClaimId);
+        address user =_getUser(_executionClaimId);
         uint256 withdrawAmount = _getWithdrawAmount(_sellToken,
                                                     _buyToken,
                                                     _auctionIndex,
@@ -59,16 +59,16 @@ contract ActionWithdrawFromDutchXToBeneficiary is IGelatoAction,
                                     withdrawAmount),
             "ActionSellWithdrawDutchX.action._withdrawFromDutchX failed"
         );
-        ERC20(_buyToken).safeTransfer(executionClaimOwner, withdrawAmount);
+        ERC20(_buyToken).safeTransfer(user, withdrawAmount);
         emit LogWithdrawFromDutchX(_executionClaimId,
-                                   executionClaimOwner,
+                                   user,
                                    _sellToken,
                                    _buyToken,
                                    _seller,
                                    _auctionIndex,
                                    withdrawAmount
         );
-        emit LogAction(_executionClaimId, executionClaimOwner);
+        emit LogAction(_executionClaimId, user);
         return true;
     }
 }

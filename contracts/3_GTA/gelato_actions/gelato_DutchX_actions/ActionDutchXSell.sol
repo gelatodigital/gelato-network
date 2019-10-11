@@ -26,7 +26,7 @@ contract ActionDutchXSell is IGelatoAction,
     // To be queried passing actionParams by GTAIs prior to minting
     // Extends GelatiActionsStandard's function
     function _actionConditionsFulfilled(// Standard Param
-                                        address _executionClaimOwner,
+                                        address _user,
                                         // Specific Param
                                         bytes memory _specificActionParams
     )
@@ -48,15 +48,15 @@ contract ActionDutchXSell is IGelatoAction,
         } else {
             tokensTraded = true;
         }
-        bool executionClaimOwnerDidApprove = hasERC20Allowance(_sellToken,
-                                                               _executionClaimOwner,
+        bool userDidApprove = hasERC20Allowance(_sellToken,
+                                                               _user,
                                                                _sellAmount
         );
-        return (tokensTraded && executionClaimOwnerDidApprove);
+        return (tokensTraded && userDidApprove);
     }
     // Extends GelatoActionsStandard's function Part
     function actionConditionsFulfilled(// Standard Param
-                                       address _executionClaimOwner,
+                                       address _user,
                                        // Specific Param(s)
                                        bytes calldata _specificActionParams
     )
@@ -64,7 +64,7 @@ contract ActionDutchXSell is IGelatoAction,
         view
         returns(bool)
     {
-        return _actionConditionsFulfilled(_executionClaimOwner, _specificActionParams);
+        return _actionConditionsFulfilled(_user, _specificActionParams);
     }
 
     // Action: public due to msg.sender context persistance, in internal calls (chaining)
@@ -79,8 +79,8 @@ contract ActionDutchXSell is IGelatoAction,
         public
         returns(bool, uint256, uint256)
     {
-        address executionClaimOwner =_getExecutionClaimOwner(_executionClaimId);
-        require(actionConditionsFulfilled(executionClaimOwner,
+        address user =_getUser(_executionClaimId);
+        require(actionConditionsFulfilled(user,
                                           abi.encode(_sellToken,
                                                      _buyToken,
                                                      _sellAmount)
@@ -90,7 +90,7 @@ contract ActionDutchXSell is IGelatoAction,
         (bool success,
          uint256 sellAuctionIndex,
          uint256 sellAmountAfterFee) = _sellOnDutchX(_executionClaimId,
-                                                     executionClaimOwner,
+                                                     user,
                                                      _sellToken,
                                                      _buyToken,
                                                      _sellAmount
@@ -98,7 +98,7 @@ contract ActionDutchXSell is IGelatoAction,
         require(success,
             "ActionDutchXSell.action._sellOnDutchX failed"
         );
-        emit LogAction(_executionClaimId, executionClaimOwner);
+        emit LogAction(_executionClaimId, user);
         return (true, sellAuctionIndex, sellAmountAfterFee);
     }
 }

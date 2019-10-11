@@ -34,13 +34,13 @@ contract GelatoActionsStandard is GTA
 
     // Events
     event LogAction(uint256 indexed executionClaimId,
-                    address indexed executionClaimOwner
+                    address indexed user
     );
 
     // FN for standardised action condition checking by GTAIs
     // Derived contract must override it, to extend it
     function actionConditionsFulfilled(// Standard Param
-                                       address,  // executionClaimOwner
+                                       address,  // user
                                        // Specific Param(s)
                                        bytes calldata  // specificActionParams
     )
@@ -55,10 +55,10 @@ contract GelatoActionsStandard is GTA
     //  For forward compatibility with actions that might implement more
     // elaborate state (e.g. escrowing funds) and that need to do a cleanup
     event LogActionCancellation(uint256 indexed executionClaimId,
-                                address indexed executionClaimOwner
+                                address indexed user
     );
     // Derived contract must override it, to extend it
-    function cancel(uint256, address)  // executionClaimId, executionClaimOwner
+    function cancel(uint256, address)  // executionClaimId, user
         msgSenderIsGelatoCore
         external
         returns(bool)

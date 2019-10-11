@@ -17,7 +17,7 @@ contract GTAIChainedStandardOwnable is GTAIStandardOwnable
                                address minter
     );
 
-    function _activateChainedTA(address _executionClaimOwner,
+    function _activateChainedTA(address _user,
                                 address _chainedTrigger,
                                 bytes memory _chainedTriggerPayload,
                                 address _chainedAction,
@@ -28,12 +28,12 @@ contract GTAIChainedStandardOwnable is GTAIStandardOwnable
         onlyRegisteredTriggers(_chainedTrigger)
         onlyRegisteredActions(_chainedAction, _chainedExecutionClaimLifespan)
         actionConditionsFulfilled(_chainedAction,
-                                  _executionClaimOwner,
+                                  _user,
                                   _chainedActionPayload
         )
         internal
     {
-        require(_mintExecutionClaim(_executionClaimOwner,
+        require(_mintExecutionClaim(_user,
                                     _chainedTrigger,
                                     _chainedTriggerPayload,
                                     _chainedAction,

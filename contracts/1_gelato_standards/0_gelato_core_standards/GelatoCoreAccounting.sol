@@ -3,40 +3,47 @@ pragma solidity ^0.5.10;
 import '@openzeppelin/contracts/ownership/Ownable.sol';
 import '@openzeppelin/contracts/utils/ReentrancyGuard.sol';
 import '@openzeppelin/contracts/math/SafeMath.sol';
+import '../0_gelato_interfaces/1_GTA_interfaces/gelato_action_interfaces/IGelatoAction.sol';
 
 contract GelatoCoreAccounting is Ownable,
                                  ReentrancyGuard
 {
     using SafeMath for uint256;
 
-    // to make clear that this is not a standalone-deployment contract
-    constructor() internal {}
-
-    // Fallback Function
-    function() external payable {
-        require(isOwner(),
-            "GelatoCore.fallback: only owner should send ether without fnSelector."
-        );
-    }
-
     //_____________ Gelato ExecutionClaim Economics _______________________
-    mapping(address => uint256) internal gtaiBalances;
-    mapping(address => uint256) internal gtaiExecutionClaimsCounter;
+    mapping(address => uint256) internal executorPrices;
+    mapping(address => uint256) internal userBalances;
     mapping(address => uint256) internal executorBalances;
-    uint256 internal minStakePerExecutionClaim;
-    uint256 internal executorProfit;
-    uint256 internal executorGasPrice;
+    uint256 internal executionClaimLifespan;
     //_____________ Constant gas values _____________
     uint256 internal gasOutsideGasleftChecks;
     uint256 internal gasInsideGasleftChecks;
     uint256 internal canExecMaxGas;
-    uint256 internal executorGasRefundEstimate;
-    uint256 internal cancelIncentive;
     // =========================
 
-    // _______ Execution Gas Caps )____________________________________________
+    constructor(uint256 _executionClaimLifespan,
+                uint256 _gasOutsideGasleftChecks,
+                uint256 _gasInsideGasleftChecks,
+                uint256 _canExecMaxGas
+    )
+        internal
+    {
+        executionClaimLifespan = _executionClaimLifespan;
+        gasOutsideGasleftChecks = _gasOutsideGasleftChecks;
+        gasInsideGasleftChecks = _gasInsideGasleftChecks;
+        canExecMaxGas = _canExecMaxGas;
+    }
+
+    modifier onlyRegisteredExecutor(address _executor) {
+        require(executorPrices[_executor] != 0,
+            "GelatoCoreAccounting.onlyRegisteredExecutors: failed"
+        );
+        _;
+    }
+
+    // _______ Execution Gas Caps ____________________________________________
     function _getMaxExecutionGasConsumption(uint256 _actionGasStipend)
-        private
+        internal
         view
         returns(uint256)
     {
@@ -46,51 +53,38 @@ contract GelatoCoreAccounting is Ownable,
                 .add(_actionGasStipend)
         );
     }
+    function getMaxExecutionGasConsumption(uint256 _actionGasStipend)
+        external
+        view
+        returns(uint256)
+    {
+        return _getMaxExecutionGasConsumption(_actionGasStipend);
+    }
     // =======
 
-    // _______ GTAIBalance Checks ___________________________________________
-    function _GTAIBalanceRequirement(address _GTAI)
-        internal
+    // _______ Important Data to be included as msg.value for minting __________
+    function getMintingDepositPayable(address _action,
+                                      address _selectedExecutor
+    )
+        external
         view
-        returns(uint256 gtaiBalanceRequirement)
+        returns(uint256 mintingDepositPayable)
     {
-        gtaiBalanceRequirement
-            = minStakePerExecutionClaim.mul(gtaiExecutionClaimsCounter[_GTAI]);
+        uint256 actionGasStipend = IGelatoAction(_action).getActionGasStipend();
+        uint256 executionMaxGas = _getMaxExecutionGasConsumption(actionGasStipend);
+        mintingDepositPayable = executionMaxGas.mul(executorPrices[_executor]);
     }
-    function _gtaiHasSufficientBalance(address _GTAI)
-        internal
-        view
-        returns(bool)
-    {
-        return gtaiBalances[_GTAI] >= _GTAIBalanceRequirement(_GTAI);
-    }
-    modifier gtaiBalanceOk() {
-        require(_gtaiHasSufficientBalance(msg.sender),
-            "GelatoCoreAccounting.gtaiBalanceOk: fail"
-        );
-        _;
-    }
-    // =========================
-
+    // =======
 
     // __________ Interface for State Reads ___________________________________
-    function getGTAIBalance(address _gtai) external view returns(uint256) {
-        return gtaiBalances[_gtai];
+    function getExecutorPrice(address _executor) external view returns(uint256) {
+        return executorPrices[_executor];
     }
-    function getGTAIExecutionClaimsCounter(address _gtai) external view returns(uint256) {
-        return gtaiExecutionClaimsCounter[_gtai];
+    function getUserBalance(address _user) external view returns(uint256) {
+        return userBalances[_user];
     }
     function getExecutorBalance(address _executor) external view returns(uint256) {
         return executorBalances[_executor];
-    }
-    function getMinStakePerExecutonClaim() external view returns(uint256) {
-        return minStakePerExecutionClaim;
-    }
-    function getExecutorProfit() external view returns(uint256) {
-        return executorProfit;
-    }
-    function getExecutorGasPrice() external view returns(uint256) {
-        return executorGasPrice;
     }
     function getGasOutsideGasleftChecks() external view returns(uint256) {
         return gasOutsideGasleftChecks;
@@ -101,100 +95,20 @@ contract GelatoCoreAccounting is Ownable,
     function getCanExecMaxGas() external view returns(uint256) {
         return canExecMaxGas;
     }
-    function getExecutorGasRefundEstimate() external view returns(uint256) {
-        return executorGasRefundEstimate;
-    }
-    function getCancelIncentive() external view returns(uint256) {
-        return cancelIncentive;
-    }
-    function getMaxExecutionGasConsumption(uint256 _actionGasStipend)
-        external
-        view
-        returns(uint256);
-    function getGTAIBalanceRequirement(address _GTAI)
-        external
-        view
-        returns(uint256)
-    {
-        return _GTAIBalanceRequirement(_GTAI);
-    }
-    function sufficientBalanceCheck(address _GTAI)
-        external
-        view
-        returns(bool)
-    {
-        return gtaiBalances[_GTAI] >= _GTAIBalanceRequirement(_GTAI);
-    }
     // =========================
 
     // ____________ Interface for STATE MUTATIONS ________________________________________
-    //_____________ Interface for GTAIs  __________
-    event LogGTAIBalanceAdded(address indexed GTAI,
-                              uint256 oldBalance,
-                              uint256 addedAmount,
-                              uint256 newBalance
-    );
-    function addGTAIBalance()
-        external
-        payable
-    {
-        require(msg.value > 0,
-            "GelatoCoreAccounting.addGTAIBalance(): zero-value"
-        );
-        uint256 currentBalance = gtaiBalances[msg.sender];
-        uint256 newBalance = currentBalance.add(msg.value);
-        gtaiBalances[msg.sender] = newBalance;
-        emit LogGTAIBalanceAdded(msg.sender,
-                                 currentBalance,
-                                 msg.value,
-                                 newBalance
-        );
-    }
-
-    function _withdrawAmountOk(address _GTAI,
-                               uint256 _withdrawAmount
-    )
-        internal
-        view
-        returns(bool, uint256 currentGTAIBalance)
-    {
-        uint256 gtaiBalanceRequirement = getGTAIBalanceRequirement(_GTAI);
-        currentGTAIBalance = gtaiBalances[_GTAI];
-        return (currentGTAIBalance.sub(_withdrawAmount) >= gtaiBalanceRequirement,
-                currentGTAIBalance
-        );
-    }
-    event LogGTAIBalanceWithdrawal(address indexed GTAI,
-                                   uint256 oldBalance,
-                                   uint256 withdrawnAmount,
-                                   uint256 newBalance
-    );
-    function withdrawGTAIBalance(uint256 _withdrawAmount)
-        nonReentrant
-        external
-    {
-        require(_withdrawAmount > 0,
-            "GelatoCoreAccounting.withdrawGTAIBalance(): zero-value"
-        );
-        (bool withdrawAmountOk,
-         uint256 currentGTAIBalance) = _withdrawAmountOk(msg.sender, _withdrawAmount);
-        require(withdrawAmountOk,
-            "GelatoCoreAccounting.withdrawGTAIBalance: withdrawAmountOk failed"
-        );
-        // Checks: withdrawAmountOk(_withdrawAmount)
-        // Effects
-        gtaiBalances[msg.sender] = currentGTAIBalance.sub(_withdrawAmount);
-        // Interaction
-        msg.sender.transfer(_withdrawAmount);
-        emit LogGTAIBalanceWithdrawal(msg.sender,
-                                      currentGTAIBalance,
-                                      _withdrawAmount,
-                                      gtaiBalances[msg.sender]
-        );
-    }
-    // =========
-
     //_____________ Interface for Executor __________
+    event LogExecutorPriceUpdated(uint256 executorPrice,
+                                  uint256 newExecutorPrice
+    );
+    function setExecutorPrice(uint256 _newExecutorGasPrice)
+        external
+    {
+        emit LogExecutorPriceUpdated(executorPrice, _newExecutorGasPrice);
+        executorPrices[msg.sender] = _newExecutorGasPrice;
+    }
+
     event LogExecutorBalanceWithdrawal(address indexed executor,
                                        uint256 withdrawAmount
     );
@@ -219,46 +133,23 @@ contract GelatoCoreAccounting is Ownable,
 
 
     //_____________ Interface for GelatoCore Owner __________
-    event LogMinStakePerExecutionClaimUpdated(uint256 minStakePerExecutionClaim,
-                                              uint256 newminStakePerExecutionClaim
+    event LogExecutionClaimLifespanUpdated(uint256 oldExecutionClaimLifespan,
+                                           uint256 newExecutionClaimLifespan
     );
-    function updateMinStakePerExecutionClaim(uint256 _newMinStakePerExecutionClaim)
+    function setExecutionClaimLifespan(uint256 _newExecutionClaimLifespan)
         onlyOwner
         external
     {
-        emit LogMinStakePerExecutionClaimUpdated(minStakePerExecutionClaim,
-                                                 _newMinStakePerExecutionClaim
+        emit LogExecutionClaimLifespanUpdated(executionClaimLifespan,
+                                              _newExecutionClaimLifespan
         );
-        minStakePerExecutionClaim = _newMinStakePerExecutionClaim;
+        executionClaimLifespan = _newExecutionClaimLifespan;
     }
-
-    event LogExecutorProfitUpdated(uint256 executorProfit,
-                                   uint256 newExecutorProfit
-    );
-    function updateExecutorProfit(uint256 _newExecutorProfit)
-        onlyOwner
-        external
-    {
-        emit LogExecutorProfitUpdated(executorProfit, _newExecutorProfit);
-        executorProfit = _newExecutorProfit;
-    }
-
-    event LogExecutorGasPriceUpdated(uint256 executorGasPrice,
-                                     uint256 newExecutorGasPrice
-    );
-    function updateExecutorGasPrice(uint256 _newExecutorGasPrice)
-        onlyOwner
-        external
-    {
-        emit LogExecutorGasPriceUpdated(executorGasPrice, _newExecutorGasPrice);
-        executorGasPrice = _newExecutorGasPrice;
-    }
-
 
     event LogGasOutsideGasleftChecksUpdated(uint256 gasOutsideGasleftChecks,
                                             uint256 newGasOutsideGasleftChecks
     );
-    function updateGasOutsideGasleftChecks(uint256 _newGasOutsideGasleftChecks)
+    function setGasOutsideGasleftChecks(uint256 _newGasOutsideGasleftChecks)
         onlyOwner
         external
     {
@@ -271,7 +162,7 @@ contract GelatoCoreAccounting is Ownable,
     event LogGasInsideGasleftChecksUpdated(uint256 gasInsideGasleftChecks,
                                            uint256 newGasInsideGasleftChecks
     );
-    function updateGasInsideGasleftChecks(uint256 _newGasInsideGasleftChecks)
+    function setGasInsideGasleftChecks(uint256 _newGasInsideGasleftChecks)
         onlyOwner
         external
     {
@@ -284,38 +175,12 @@ contract GelatoCoreAccounting is Ownable,
     event LogUpdatedCanExecMaxGas(uint256 canExecMaxGas,
                                   uint256 newcanExecMaxGas
     );
-    function updateCanExecMaxGas(uint256 _newCanExecMaxGas)
+    function setCanExecMaxGas(uint256 _newCanExecMaxGas)
         onlyOwner
         external
     {
         emit LogUpdatedCanExecMaxGas(canExecMaxGas, _newCanExecMaxGas);
         canExecMaxGas = _newCanExecMaxGas;
-    }
-
-    event LogExecutorGasRefundEstimateUpdated(uint256 executorGasRefundEstimate,
-                                              uint256 newExecutorGasRefundEstimate
-    );
-    function updateExecutorGasRefund(uint256 _newExecutorGasRefundEstimate)
-        onlyOwner
-        external
-    {
-        emit LogExecutorGasRefundEstimateUpdated(executorGasRefundEstimate,
-                                                 _newExecutorGasRefundEstimate
-        );
-        executorGasRefundEstimate = _newExecutorGasRefundEstimate;
-    }
-
-    event LogCancelIncentiveUpdated(uint256 cancelIncentive,
-                                    uint256 newCancelIncentive
-    );
-    function updateCancelIncentive(uint256 _newCancelIncentive)
-        onlyOwner
-        external
-    {
-        emit LogCancelIncentiveUpdated(cancelIncentive,
-                                       _newCancelIncentive
-        );
-        cancelIncentive = _newCancelIncentive;
     }
     // =========================
 }

@@ -22,7 +22,7 @@ contract GelatoDutchXInterface is GelatoERC20Helpers {
 
     // ******************** SELL ********************
     event LogSellOnDutchX(uint256 indexed executionClaimId,
-                          address indexed executionClaimOwner,
+                          address indexed user,
                           address indexed sellToken,
                           address buyToken,
                           address dutchXSeller,
@@ -64,7 +64,7 @@ contract GelatoDutchXInterface is GelatoERC20Helpers {
     }
 
     function _sellOnDutchX(uint256 _executionClaimId,
-                           address _executionClaimOwner,
+                           address _user,
                            address _sellToken,
                            address _buyToken,
                            uint256 _sellAmount
@@ -77,7 +77,7 @@ contract GelatoDutchXInterface is GelatoERC20Helpers {
                                                      _sellAmount
         );
         require(_safeTransferFrom(_sellToken,
-                                  _executionClaimOwner,
+                                  _user,
                                   address(this),
                                   _sellAmount),
             "GelatoDutchXInterface._sellOnDutchX: _safeTransferFrom failed"
@@ -91,7 +91,7 @@ contract GelatoDutchXInterface is GelatoERC20Helpers {
         );
         dutchX.depositAndSell(_sellToken, _buyToken, _sellAmount);
         emit LogSellOnDutchX(_executionClaimId,
-                             _executionClaimOwner,
+                             _user,
                              _sellToken,
                              _buyToken,
                              address(this),

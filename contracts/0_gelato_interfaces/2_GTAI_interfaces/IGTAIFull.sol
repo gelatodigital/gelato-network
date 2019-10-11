@@ -14,14 +14,14 @@ interface IGTAIFull
         returns(bool);
 
     event LogActivation(uint256 executionClaimId,
-                        address indexed executionClaimOwner,
+                        address indexed user,
                         address indexed trigger,
                         address indexed action
     );
     // =================
 
     // ______________ GTAIChainedStandard __________________________________
-    function activateChainedTA(address _executionClaimOwner,
+    function activateChainedTA(address _user,
                                address _chainedTrigger,
                                bytes calldata _chainedTriggerPayload,
                                address _chainedAction,

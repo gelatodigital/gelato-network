@@ -4,7 +4,7 @@ interface IGelatoCore {
     // ___________ GelatoCore _______________________________________
     // State Readers
     function getCurrentExecutionClaimId() external view returns(uint256);
-    function getExecutionClaimOwner(uint256 _executionClaimId)
+    function getUser(uint256 _executionClaimId)
         external
         view
         returns(address);
@@ -17,7 +17,7 @@ interface IGelatoCore {
     // For GTAIs
     event LogNewExecutionClaimMinted(address indexed GTAI,
                                      uint256 indexed executionClaimId,
-                                     address indexed executionClaimOwner,
+                                     address indexed user,
                                      address triggerAddress,
                                      bytes triggerPayload,
                                      address action,
@@ -25,7 +25,7 @@ interface IGelatoCore {
                                      uint256 actionGasStipend,
                                      uint256 executionClaimExpiryDate
     );
-    function mintExecutionClaim(address _executionClaimOwner,
+    function mintExecutionClaim(address _user,
                                 address _trigger,
                                 bytes calldata _triggerPayload,
                                 address _action,
@@ -66,7 +66,7 @@ interface IGelatoCore {
                              address payable indexed executor
     );
     event LogClaimExecutedBurnedAndDeleted(uint256 indexed executionClaimId,
-                                           address indexed executionClaimOwner,
+                                           address indexed user,
                                            address indexed GTAI,
                                            address payable executor,
                                            uint256 accountedGasPrice,
@@ -95,7 +95,7 @@ interface IGelatoCore {
     // ==
     // ______ For Users or Executors ___
     event LogExecutionClaimCancelled(uint256 indexed executionClaimId,
-                                     address indexed executionClaimOwner,
+                                     address indexed user,
                                      address indexed GTAI
     );
     function cancelExecutionClaim(uint256 _executionClaimId,
