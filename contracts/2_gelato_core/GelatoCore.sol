@@ -1,9 +1,17 @@
 pragma solidity ^0.5.10;
+
+/// @dev user's GelatoWallet
+//import '../'
+
 import '@openzeppelin/contracts/ownership/Ownable.sol';
 import '@openzeppelin/contracts/utils/ReentrancyGuard.sol';
 import '@openzeppelin/contracts/math/SafeMath.sol';
 import '../0_gelato_interfaces/1_GTA_interfaces/gelato_action_interfaces/IGelatoAction.sol';
 
+
+/**
+ * @title GelatoCoreAccounting
+ */
 contract GelatoCoreAccounting is Ownable,
                                  ReentrancyGuard
 {
@@ -184,6 +192,11 @@ contract GelatoCoreAccounting is Ownable,
     // =========================
 }
 
+
+/**
+ * @title GelatoCore
+ */
+
 import '../0_gelato_interfaces/0_gelato_core_interfaces/IGelatoCore.sol';
 import "@openzeppelin/contracts/drafts/Counters.sol";
 import '../0_gelato_interfaces/1_GTA_interfaces/gelato_trigger_interfaces/IGelatoTrigger.sol';
@@ -325,50 +338,6 @@ contract GelatoCore is IGelatoCore,
     }
     // $$$$$$$$$$$$$$$ mintExecutionClaim() END
 
-    // $$$$$$$$$$$ mintChainedExecutionClaim() API  $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-    // user => chainedAction
-    mapping(address => address) private paidChainedActions;
-
-    function getPaidChainedAction(uint256 _user)
-        external
-        view
-        returns(address)
-    {
-        return paidChainedActions[_user];
-    }
-
-    modifier onlyPaidChainedAction(address _user) {
-        require(paidChainedActions[_user] != address(0),
-            "GelatoCore.onlyPaidChainedAction: failed"
-        );
-        _;
-    }
-
-    function mintChainedExecutionClaim(address _user,
-                                       address _chainedTrigger,
-                                       bytes memory _chainedTriggerPayload,
-                                       address _chainedAction,
-                                       bytes memory _chainedActionPayload,
-                                       uint256 _chainedExecutionClaimLifespan
-    )
-        onlyPaidChainedAction(_user)
-        internal
-    {
-        require(_mintExecutionClaim(_user,
-                                    _chainedTrigger,
-                                    _chainedTriggerPayload,
-                                    _chainedAction,
-                                    _chainedActionPayload,
-                                    _chainedExecutionClaimLifespan),
-            "GTAIChainedStandardOwnable._activateChainedTA._mintExecutionClaim: fail"
-        );
-        emit LogChainedActivation(_getCurrentExecutionClaimId(),
-                                  _chainedTrigger,
-                                  _chainedAction,
-                                  msg.sender
-        );
-    }
-    // $$$$$$$$$$$$$$$ mintChainedExecutionClaim() END
 
     // ********************* EXECUTE FUNCTION SUITE *********************
     //  checked by canExecute and returned as a uint256 from User
