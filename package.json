@@ -12,6 +12,7 @@
     "dutchx-mainnet": "./src/cli/cli-mainnet.js"
   },
   "scripts": {
+    "executornode:ropsten": "npx truffle exec executornode.js --network ropsten",
     "console:dev": "npx truffle console --network development",
     "console:rinkeby": "export RINKEBY=RINKEBY; npx truffle console --network rinkeby",
     "console:mainnet": "npx truffle console --network mainnet",

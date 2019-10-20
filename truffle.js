@@ -13,7 +13,12 @@ const privateKey = process.env.PK;
 let mnemonic = process.env.MNEMONIC;
 // rinkeby variable set via export in package.json
 if (process.env.RINKEBY) {
+  console.log("\n\t USING RINKEBY_MNEMONIC \n");
   mnemonic = process.env.RINKEBY_MNEMONIC;
+}
+if (process.env.ROPSTEN) {
+  console.log("\n\t USING ROPSTEN_MNEMONIC \n");
+  mnemonic = process.env.ROPSTEN_MNEMONIC;
 }
 if (!privateKey && !mnemonic) {
   mnemonic = DEFAULT_MNEMONIC;
