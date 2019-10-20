@@ -11,6 +11,7 @@ module.exports = async function(callback) {
   const mintedClaims = {};
   const deploymentblockNum = 6606049;
 
+  
   // Get LogNewExecutionClaimMinted return values
   await gelatoCore
     .getPastEvents(
