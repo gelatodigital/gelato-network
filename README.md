@@ -1,2 +1,2 @@
 # gelato
-The new, fresh, clean gelato Repo - OpenZeppelin SDK and ethers.js - no more web3.js or truffle
+The new gelato Repo (with old commit history): OpenZeppelin SDK and ethers.js - no more web3.js or truffle
