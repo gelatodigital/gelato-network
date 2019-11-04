@@ -1,0 +1,24 @@
+{
+  "name": "gelato",
+  "version": "0.0.0",
+  "description": "gelato - smart contracts and Ethereum Javascript APIs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gelatodigital/gelato.git"
+  },
+  "keywords": [
+    "ethereum",
+    "solidity",
+    "web3"
+  ],
+  "author": "Hilmar Orth and Luis Schliesske",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/gelatodigital/gelato/issues"
+  },
+  "homepage": "https://github.com/gelatodigital/gelato#readme"
+}

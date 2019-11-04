@@ -206,7 +206,6 @@ contract GelatoCoreAccounting is Initializable,
     /// @notice NEW: the minimum executionClaimLifespan imposed upon executors
     uint256 internal minExecutionClaimLifespan;
     //_____________ Gelato ExecutionClaim Economics _______________________
-    mapping(address => uint256) internal userProxyDeposit;
     mapping(address => uint256) internal executorPrice;
     mapping(address => uint256) internal executorClaimLifespan;
     mapping(address => uint256) internal executorBalance;
@@ -301,14 +300,6 @@ contract GelatoCoreAccounting is Initializable,
      */
     function getMinExecutionClaimLifespan() external view returns(uint256) {
         return minExecutionClaimLifespan;
-    }
-    /**
-     * @dev get a userProxy's gelato-internal wei deposit
-     * @param _userProxy
-     * @return uint256 wei amount of _userProxy's gelato-internal deposit
-     */
-    function getUserProxyDeposit(address _userProxy) external view returns(uint256) {
-        return userProxyDeposit[_userProxy];
     }
     /**
      * @dev get an executor's price
@@ -686,16 +677,28 @@ contract GelatoCore is GelatoUserProxies,
         {
             /// @notice check if msg.sender is a user (EOA)
             if (msg.sender == tx.origin) {
-                userProxy = address(proxyRegistry.proxies(msg.sender));
-                require(userProxy != address(0),
-                    "GelatoCore.mintExecutionClaim: msg.sender has no proxy"
+                DSProxy userProxyContract = proxyRegistry.proxies(msg.sender);
+                require(userProxyContract != DSProxy(0),
+                    "GelatoCore.mintExecutionClaim: EOA has no registered proxy"
                 );
+                require(userProxyContract.authority == address(this),
+                    "GelatoCore.mintExecutionClaim: EOA has not authorized gelatoCore"
+                );
+                userProxy = address(userProxyContract);
             } else {
                 DSProxyFactory proxyFactory = DSProxyFactory(proxyFactory);
                 require(proxyFactory.isProxy(msg.sender),
-                    "GelatoCore.mintExecutionClaim: msg.sender is not a proxy"
+                    "GelatoCore.mintExecutionClaim: msg.sender is not a valid proxy"
                 );
-                userProxy = msg.sender;
+                DSProxy userProxyContract = DSProxy(msg.sender);
+                address owner = userProxyContract.owner();
+                userProxy = address(proxyRegistry.proxies(owner));
+                require(userProxy != address(0),
+                    "GelatoCore.mintExecutionClaim: proxy not registered"
+                );
+                require(userProxyContract.authority == address(this),
+                    "GelatoCore.mintExecutionClaim: proxy has gelatoCore unauthorized"
+                );
             }
         }
         // =============
@@ -709,7 +712,6 @@ contract GelatoCore is GelatoUserProxies,
                 "GelatoCore.mintExecutionClaim: msg.value failed"
             );
         }
-        userProxyDeposit[userProxy] = userProxyDeposit[userProxy].add(msg.value);
         // =============
         // ______ Mint new executionClaim ______________________________________
         Counters.increment(executionClaimIds);
@@ -752,7 +754,6 @@ contract GelatoCore is GelatoUserProxies,
     //  checked by canExecute and returned as a uint256 from User
     enum CanExecuteCheck {
         WrongCalldataOrAlreadyDeleted,  // also returns if a not-selected executor calls fn
-        UserProxyOutOfFunds,
         NonExistantExecutionClaim,
         ExecutionClaimExpired,
         TriggerReverted,
@@ -790,10 +791,6 @@ contract GelatoCore is GelatoUserProxies,
         // Check passed calldata and that msg.sender is selected executor
         if(computedExecutionClaimHash != hashedExecutionClaims[_executionClaimId]) {
             return uint8(CanExecuteCheck.WrongCalldataOrAlreadyDeleted);
-        }
-        // Require user proxy to have balance to pay executor
-        if (userProxyDeposit[_userProxy] < _mintingDeposit) {
-            return uint8(CanExecuteCheck.UserProxyOutOfFunds);
         }
         // Require execution claim to exist / not be cancelled
         if (userProxyByExecutionClaimId[_executionClaimId] == address(0)) {
@@ -984,7 +981,6 @@ contract GelatoCore is GelatoUserProxies,
             );
         }
         // Balance Updates (INTERACTIONS)
-        userProxyDeposit[_userProxy] = userProxyDeposit[_userProxy].sub(_mintingDeposit);
         executorBalance[msg.sender] = executorBalance[msg.sender].add(_mintingDeposit);
         // ====
     }

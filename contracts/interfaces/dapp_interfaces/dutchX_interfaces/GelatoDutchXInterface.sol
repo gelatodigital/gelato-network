@@ -1,38 +1,30 @@
 pragma solidity ^0.5.10;
 
+import '../../../helpers/GelatoERC20Lib.sol';
+import '@openzeppelin/contracts-ethereum-package/math/SafeMath.sol';
 import './IDutchX.sol';
-import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
-import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
-import '../../4_gelato_ERC20/GelatoERC20Helpers.sol';
-import '@openzeppelin/contracts/math/SafeMath.sol';
 
-contract GelatoDutchXInterface is GelatoERC20Helpers {
-    using SafeERC20 for ERC20;
+contract GelatoDutchXInterface
+{
+    using GelatoERC20Lib for IERC20;
     using SafeMath for uint256;
 
-    IDutchX public dutchX;
+    IDutchX internal dutchX;
 
-    uint8 public constant AUCTION_START_WAITING_FOR_FUNDING = 1;
+    uint8 internal constant AUCTION_START_WAITING_FOR_FUNDING = 1;
 
-    constructor(address _DutchX)
+    function _initialize(address _dutchX)
         internal
     {
-        dutchX = IDutchX(_DutchX);
+        dutchX = IDutchX(_dutchX);
     }
 
-    // ******************** SELL ********************
-    event LogSellOnDutchX(uint256 indexed executionClaimId,
-                          address indexed user,
-                          address indexed sellToken,
-                          address buyToken,
-                          address dutchXSeller,
-                          uint256 sellAmount,
-                          uint256 dutchXFee,
-                          uint256 sellAmountAfterFee,
-                          uint256 sellAuctionIndex
-    );
+    function getDutchXAddress() external view returns(address) {return address(dutchX);}
 
-    function _getSellAmountAfterFee(address _seller, uint256 _sellAmount)
+    // ******************** SELL ********************
+    function _getSellAmountAfterFee(address _seller,
+                                    uint256 _sellAmount
+    )
         internal
         view
         returns(uint256 sellAmountAfterFee, uint256 dutchXFee)
@@ -62,6 +54,17 @@ contract GelatoDutchXInterface is GelatoERC20Helpers {
             sellAuctionIndex = currentAuctionIndex.add(1);
         }
     }
+    
+    event LogSellOnDutchX(uint256 indexed executionClaimId,
+                          address indexed user,
+                          address indexed sellToken,
+                          address buyToken,
+                          address dutchXSeller,
+                          uint256 sellAmount,
+                          uint256 dutchXFee,
+                          uint256 sellAmountAfterFee,
+                          uint256 sellAuctionIndex
+    );
 
     function _sellOnDutchX(uint256 _executionClaimId,
                            address _user,

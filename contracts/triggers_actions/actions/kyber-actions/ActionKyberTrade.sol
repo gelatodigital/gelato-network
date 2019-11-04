@@ -2,7 +2,7 @@
 pragma solidity ^0.5.0;
 
 import '../GelatoActionsStandard.sol';
-import '../../../Interfaces/Kyber/IKyber.sol';
+import '../../../interfaces/dapp_interfaces/kyber_interfaces/IKyber.sol';
 import '@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.sol';
 
 contract ActionKyberTrade is GelatoActionsStandard
@@ -27,7 +27,8 @@ contract ActionKyberTrade is GelatoActionsStandard
     );
 
 
-    function action(address _src,
+    function action(address _kyber,
+                    address _src,
                     uint256 _srcAmt,
                     address _dest,
                     address _user,
@@ -36,21 +37,19 @@ contract ActionKyberTrade is GelatoActionsStandard
         external
         returns (uint256 destAmt)
     {
-        ///@notice KyberNetworkProxy on ropsten
-        address kyber = 0x818E6FECD516Ecc3849DAf6845e3EC868087B755;
         IERC20 srcERC20 = IERC20(_src);
-        uint256 kyberAllowance = srcERC20.allowance(address(this), kyber);
+        uint256 kyberAllowance = srcERC20.allowance(address(this), _kyber);
         if (kyberAllowance < _srcAmt) {
-            srcERC20.approve(kyber, 2**255);
+            srcERC20.approve(_kyber, 2**255);
         }
         srcERC20.transferFrom(_user, address(this), _srcAmt);
-        destAmt = IKyber(kyber).trade(_src,
-                                      _srcAmt,
-                                      _dest,
-                                      _user,
-                                      2**255,
-                                      _minConversionRate,
-                                      address(0)  // fee-sharing
+        destAmt = IKyber(_kyber).trade(_src,
+                                       _srcAmt,
+                                       _dest,
+                                       _user,
+                                       2**255,
+                                       _minConversionRate,
+                                       address(0)  // fee-sharing
         );
         emit LogTrade(_src,
                       _srcAmt,
