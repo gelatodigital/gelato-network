@@ -1,24 +1,26 @@
 {
-  "name": "gelato",
-  "version": "0.0.0",
-  "description": "gelato - smart contracts and Ethereum Javascript APIs",
+  "name": "triggered-oz",
+  "version": "1.0.0",
+  "engines": {
+    "node": "12.12.0"
+  },
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "mint": "node scripts/minting/proxyMultiMintForTimeTrigger.js",
+    "exec-debug": "export BLOCK=$BLOCK; DEBUG='executornode' && node scripts/executornode.js"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/gelatodigital/gelato.git"
-  },
-  "keywords": [
-    "ethereum",
-    "solidity",
-    "web3"
-  ],
-  "author": "Hilmar Orth and Luis Schliesske",
+  "keywords": [],
+  "author": "",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/gelatodigital/gelato/issues"
+  "dependencies": {
+    "debug": "^4.1.1",
+    "ethers": "^4.0.38"
   },
-  "homepage": "https://github.com/gelatodigital/gelato#readme"
+  "devDependencies": {
+    "@openzeppelin/contracts": "^2.4.0",
+    "@openzeppelin/contracts-ethereum-package": "^2.3.0",
+    "@openzeppelin/upgrades": "^2.5.3",
+    "@truffle/hdwallet-provider": "^1.0.23",
+    "dotenv": "^8.2.0"
+  }
 }
