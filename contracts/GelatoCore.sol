@@ -4,6 +4,7 @@ import './interfaces/user_proxies_interfaces/IProxyRegistry.sol';
 import './user_proxies/DappSys/DSProxy.sol';
 import './user_proxies/DappSys/DSGuard.sol';
 import './interfaces/triggers_actions_interfaces/IGelatoAction.sol';
+import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/upgrades/contracts/Initializable.sol";
 import '@openzeppelin/contracts-ethereum-package/contracts/drafts/Counters.sol';
 import '@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol';
@@ -199,6 +200,7 @@ contract GelatoCoreAccounting is Initializable,
     /// @notice non-deploy base contract
     constructor() internal {}
 
+    using Address for address payable;  /// for oz's sendValue method
     using SafeMath for uint256;
 
     /// @notice NEW: the minimum executionClaimLifespan imposed upon executors
@@ -459,7 +461,7 @@ contract GelatoCoreAccounting is Initializable,
     /**
      * @dev function for executors to withdraw their ETH on core
      * @notice funds withdrawal => re-entrancy protection.
-     * @notice new: we use .call.value()("") instead of .transfer due to IstanbulHF
+     * @notice new: we use .sendValue instead of .transfer due to IstanbulHF
      */
     function withdrawExecutorBalance()
         external
@@ -474,7 +476,7 @@ contract GelatoCoreAccounting is Initializable,
         executorBalance[msg.sender] = 0;
         // Interaction
          ///@notice NEW: .call syntax due to Istanbul opcodes and .transfer problem
-        msg.sender.call.value(currentExecutorBalance)("");
+        msg.sender.sendValue(currentExecutorBalance);
         emit LogWithdrawExecutorBalance(msg.sender, currentExecutorBalance);
     }
     event LogWithdrawExecutorBalance(address indexed executor,
@@ -577,6 +579,8 @@ contract GelatoCoreAccounting is Initializable,
 contract GelatoCore is GelatoUserProxies,
                        GelatoCoreAccounting
 {
+    using Address for address payable;  /// for oz's sendValue method
+
     /**
      * @dev GelatoCore's initializer function (constructor for upgradeable contracts)
      * @param _proxyRegistry
@@ -1004,7 +1008,7 @@ contract GelatoCore is GelatoUserProxies,
      * @notice prior to executionClaim expiry, only owner of _userProxy can cancel
         for a refund. Post executionClaim expiry, _selectedExecutor can also cancel,
         for a reward.
-     * @notice .call.value()("") instead of .transfer due to IstanbulHF
+     * @notice .sendValue instead of .transfer due to IstanbulHF
      */
     function cancelExecutionClaim(address _trigger,
                                   bytes calldata _triggerPayload,
@@ -1046,7 +1050,7 @@ contract GelatoCore is GelatoUserProxies,
         delete userProxyByExecutionClaimId[_executionClaimId];
         delete hashedExecutionClaims[_executionClaimId];
         emit LogExecutionClaimCancelled(_executionClaimId, _userProxy, msg.sender);
-        msg.sender.call.value(_mintingDeposit)("");  /// @notice NEW due to IstanbulHF
+        msg.sender.sendValue(_mintingDeposit);  /// @notice NEW due to IstanbulHF
     }
     event LogExecutionClaimCancelled(uint256 indexed executionClaimId,
                                      address indexed userProxy,
