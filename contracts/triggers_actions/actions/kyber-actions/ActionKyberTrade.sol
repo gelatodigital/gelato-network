@@ -11,53 +11,54 @@ contract ActionKyberTrade is GelatoActionsStandard
         external
         initializer
     {
-        GelatoActionsStandard
-            ._initialize("action(address,address,address,uint256,uint256)",
-                         300000
-        );
+        GelatoActionsStandard._initialize(this.action.selector, 300000);
     }
 
-    event LogTrade(address src,
-                   uint256 srcAmt,
-                   address dest,
-                   uint256 destAmt,
-                   address user,
-                   uint256 minConversionRate,
-                   address feeSharingParticipant
-    );
-
-
-    function action(address _kyber,
+    ///@dev KyberNetworkProxy on ropsten hardcoded atm
+    function action(// Standard Action Params
+                    uint256 _executionClaimId,
+                    address _user,
+                    // Specific Action Params
                     address _src,
                     uint256 _srcAmt,
                     address _dest,
-                    address _user,
                     uint256 _minConversionRate
     )
         external
         returns (uint256 destAmt)
     {
+        address kyber = 0x818E6FECD516Ecc3849DAf6845e3EC868087B755;  // ropsten
         IERC20 srcERC20 = IERC20(_src);
-        uint256 kyberAllowance = srcERC20.allowance(address(this), _kyber);
+        uint256 kyberAllowance = srcERC20.allowance(address(this), kyber);
         if (kyberAllowance < _srcAmt) {
-            srcERC20.approve(_kyber, 2**255);
+            srcERC20.approve(kyber, 2**255);
         }
         srcERC20.transferFrom(_user, address(this), _srcAmt);
-        destAmt = IKyber(_kyber).trade(_src,
-                                       _srcAmt,
-                                       _dest,
-                                       _user,
-                                       2**255,
-                                       _minConversionRate,
-                                       address(0)  // fee-sharing
+        destAmt = IKyber(kyber).trade(_src,
+                                      _srcAmt,
+                                      _dest,
+                                      _user,
+                                      2**255,
+                                      _minConversionRate,
+                                      address(0)  // fee-sharing
         );
-        emit LogTrade(_src,
-                      _srcAmt,
-                      _dest,
-                      destAmt,
-                      _user,
-                      _minConversionRate,
-                      address(0)  // fee-sharing
+        emit LogAction(_executionClaimId,
+                       _user,
+                       _src,
+                       _srcAmt,
+                       _dest,
+                       destAmt,
+                       _minConversionRate,
+                       address(0)  // fee-sharing
         );
     }
+    event LogAction(uint256 indexed executionClaimId,
+                    address indexed user,
+                    address indexed src,
+                    uint256 srcAmt,
+                    address dest,
+                    uint256 destAmt,
+                    uint256 minConversionRate,
+                    address feeSharingParticipant
+    );
 }

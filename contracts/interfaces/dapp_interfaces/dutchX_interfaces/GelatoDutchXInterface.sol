@@ -1,11 +1,15 @@
 pragma solidity ^0.5.10;
 
-import '../../../helpers/GelatoERC20Lib.sol';
+import "@openzeppelin/upgrades/contracts/Initializable.sol";
 import '@openzeppelin/contracts-ethereum-package/math/SafeMath.sol';
+import '../../../helpers/GelatoERC20Lib.sol';
 import './IDutchX.sol';
 
-contract GelatoDutchXInterface
+contract GelatoDutchXInterface is Initializable
 {
+    /// @dev non-deploy base contract
+    constructor() internal {}
+
     using GelatoERC20Lib for IERC20;
     using SafeMath for uint256;
 
@@ -15,6 +19,7 @@ contract GelatoDutchXInterface
 
     function _initialize(address _dutchX)
         internal
+        initializer
     {
         dutchX = IDutchX(_dutchX);
     }
@@ -54,12 +59,12 @@ contract GelatoDutchXInterface
             sellAuctionIndex = currentAuctionIndex.add(1);
         }
     }
-    
+
     event LogSellOnDutchX(uint256 indexed executionClaimId,
-                          address indexed user,
+                          address indexed dutchXSeller,
                           address indexed sellToken,
                           address buyToken,
-                          address dutchXSeller,
+                          address user,
                           uint256 sellAmount,
                           uint256 dutchXFee,
                           uint256 sellAmountAfterFee,
@@ -76,16 +81,12 @@ contract GelatoDutchXInterface
         returns(bool, uint256, uint256)
     {
         (uint256 sellAmountAfterFee,
-         uint256 dutchXFee) = _getSellAmountAfterFee(address(this),
-                                                     _sellAmount
-        );
-        require(_safeTransferFrom(_sellToken,
-                                  _user,
-                                  address(this),
-                                  _sellAmount),
+         uint256 dutchXFee) = _getSellAmountAfterFee(address(this), _sellAmount);
+        IERC20 sellToken = IERC20(_sellToken);
+        require(sellToken._safeTransferFrom(_user, address(this), _sellAmount),
             "GelatoDutchXInterface._sellOnDutchX: _safeTransferFrom failed"
         );
-        require(_safeIncreaseERC20Allowance(_sellToken, address(dutchX), _sellAmount),
+        require(sellToken._safeIncreaseERC20Allowance(address(dutchX), _sellAmount),
             "GelatoDutchXInterface._sellOnDutchX: _safeIncreaseERC20Allowance failed"
         );
         uint256 sellAuctionIndex = _getSellAuctionIndex(_sellToken, _buyToken);
@@ -94,10 +95,10 @@ contract GelatoDutchXInterface
         );
         dutchX.depositAndSell(_sellToken, _buyToken, _sellAmount);
         emit LogSellOnDutchX(_executionClaimId,
-                             _user,
+                             address(this),  // userProxy/dutchXSeller
                              _sellToken,
                              _buyToken,
-                             address(this),
+                             _user,
                              _sellAmount,
                              dutchXFee,
                              sellAmountAfterFee,
@@ -109,13 +110,6 @@ contract GelatoDutchXInterface
 
 
     // ******************** WITHDRAW ********************
-    event LogDutchXClosingPrices(address indexed sellToken,
-                                 address indexed buyToken,
-                                 uint256 indexed auctionIndex,
-                                 uint256 num,
-                                 uint256 den
-    );
-
     function _getWithdrawAmount(address _sellToken,
                                 address _buyToken,
                                 uint256 _auctionIndex,
@@ -125,25 +119,15 @@ contract GelatoDutchXInterface
         returns(uint256 withdrawAmount)
     {
         (uint256 num,
-         uint256 den) = dutchX.closingPrices(_sellToken,
-                                             _buyToken,
-                                             _auctionIndex
-        );
+         uint256 den) = dutchX.closingPrices(_sellToken, _buyToken, _auctionIndex);
         require(den != 0,
-            "GelatoDutchX._getWithdrawAmount: den != 0, Last auction did not clear."
-        );
-        emit LogDutchXClosingPrices(_sellToken,
-                                    _buyToken,
-                                    _auctionIndex,
-                                    num,
-                                    den
+            "GelatoDutchX._getWithdrawAmount: Auction did not clear."
         );
         withdrawAmount = _sellAmountAfterFee.mul(num).div(den);
     }
 
     function _withdrawFromDutchX(address _sellToken,
                                  address _buyToken,
-                                 address _seller,
                                  uint256 _auctionIndex,
                                  uint256 _withdrawAmount
     )
@@ -152,7 +136,7 @@ contract GelatoDutchXInterface
     {
         dutchX.claimAndWithdraw(_sellToken,
                                 _buyToken,
-                                _seller,
+                                address(this),  // seller==userProxy in delegatecall
                                 _auctionIndex,
                                 _withdrawAmount
         );

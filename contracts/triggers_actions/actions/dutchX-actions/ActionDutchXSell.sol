@@ -1,30 +1,26 @@
 pragma solidity ^0.5.10;
 
-import '../../../0_gelato_interfaces/1_GTA_interfaces/gelato_action_interfaces/IGelatoAction.sol';
-import '../../../1_gelato_standards/2_GTA_standards/gelato_action_standards/GelatoActionsStandard.sol';
-import '../../../1_gelato_standards/1_gelato_dappInterface_standards/gelato_DutchX/GelatoDutchXInterface.sol';
+import '../GelatoActionsStandard.sol';
+import '../../../interfaces/dapp_interfaces/dutchX_interfaces/GelatoDutchXInterface.sol';
 
-contract ActionDutchXSell is IGelatoAction,
-                             GelatoActionsStandard,
+contract ActionDutchXSell is GelatoActionsStandard,
                              GelatoDutchXInterface
 {
-    constructor(address payable _gelatoCore,
-                address _dutchX,
-                string memory _actionSignature,
-                uint256 _actionGasStipend
-    )
-        public
-        GelatoActionsStandard(_gelatoCore,
-                              _dutchX,
-                              _actionSignature,
-                              _actionGasStipend
-        )
-        GelatoDutchXInterface(_dutchX)
-    {}
+    function initialize(address _dutchX, uint256 _actionGasStipend)
+        external
+    {
+        _initialize(_dutchX, _actionGasStipend);
+    }
+
+    function _initialize(address _dutchX, uint256 _actionGasStipend)
+        internal
+        initializer
+    {
+        GelatoActionsStandard._initialize(this.action.selector, _actionGasStipend);
+        GelatoDutchXInterface._initialize(_dutchX);
+    }
 
     // SellCondition: token pair is traded on DutchX and user approved ERC20s
-    // To be queried passing actionParams by GTAIs prior to minting
-    // Extends GelatiActionsStandard's function
     function _actionConditionsFulfilled(// Standard Param
                                         address _user,
                                         // Specific Param
@@ -42,19 +38,20 @@ contract ActionDutchXSell is IGelatoAction,
                                                  address,  // buyToken
                                                  uint256)  // sellAmount
         );
-        bool tokensTraded;
+        bool validTokenPair;
         if (dutchX.getAuctionIndex(_sellToken, _buyToken) == 0) {
-            tokensTraded = false;
+            validTokenPair = false;
         } else {
-            tokensTraded = true;
+            validTokenPair = true;
         }
-        bool userDidApprove = hasERC20Allowance(_sellToken,
-                                                               _user,
-                                                               _sellAmount
-        );
-        return (tokensTraded && userDidApprove);
+        IERC20 sellToken = IERC20(_sellToken);
+        bool userProxyHasAllowance
+            = sellToken._hasERC20Allowance(_user, address(this), _sellAmount);
+        bool userHasFunds = sellToken.balanceOf(_user) >= _sellAmount;
+        return (validTokenPair && userProxyHasAllowance && userHasFunds);
     }
-    // Extends GelatoActionsStandard's function Part
+
+    /// @dev overriding Standard fn - called by triggers/frontends for sanity check
     function actionConditionsFulfilled(// Standard Param
                                        address _user,
                                        // Specific Param(s)
@@ -68,29 +65,21 @@ contract ActionDutchXSell is IGelatoAction,
     }
 
     // Action: public due to msg.sender context persistance, in internal calls (chaining)
-    function sell(// Standard Action Params
-                  uint256 _executionClaimId,  // via execute() calldata
-                  // Specific Action Params
-                  address _sellToken,
-                  address _buyToken,
-                  uint256 _sellAmount
+    function action(// Standard Action Params
+                    uint256 _executionClaimId,
+                    address _user,
+                    // Specific Action Params
+                    address _sellToken,
+                    address _buyToken,
+                    uint256 _sellAmount
     )
-        msgSenderIsGelatoCore
         public
         returns(bool, uint256, uint256)
     {
-        address user =_getUser(_executionClaimId);
-        require(actionConditionsFulfilled(user,
-                                          abi.encode(_sellToken,
-                                                     _buyToken,
-                                                     _sellAmount)
-                                          ),
-            "ActionDutchXSell.action.actionConditionsFulfilled: failed"
-        );
         (bool success,
          uint256 sellAuctionIndex,
          uint256 sellAmountAfterFee) = _sellOnDutchX(_executionClaimId,
-                                                     user,
+                                                     _user,
                                                      _sellToken,
                                                      _buyToken,
                                                      _sellAmount
