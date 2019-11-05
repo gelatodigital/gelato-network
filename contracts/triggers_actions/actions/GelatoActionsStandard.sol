@@ -24,8 +24,8 @@ contract GelatoActionsStandard is Initializable
     /**
      * @notice Returns whether the action-specific conditions are fulfilled
      * @dev if actions have specific conditions they should override and extend this fn
-     * @param address the end-users address
-     * @param bytes the encoded specific params for the action function
+     * param address: the end-users address
+     * param bytes: the encoded specific params for the action function
      * @return boolean true if specific action conditions are fulfilled, else false.
      */
     function actionConditionsFulfilled(// Standard Param

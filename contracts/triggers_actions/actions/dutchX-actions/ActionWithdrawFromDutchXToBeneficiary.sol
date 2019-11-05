@@ -1,4 +1,4 @@
-pragma solidity ^0.5.10;
+/*pragma solidity ^0.5.10;
 
 import '../../../0_gelato_interfaces/1_GTA_interfaces/gelato_action_interfaces/IGelatoAction.sol';
 import '../../../1_gelato_standards/2_GTA_standards/gelato_action_standards/GelatoActionsStandard.sol';
@@ -72,4 +72,4 @@ contract ActionWithdrawFromDutchXToBeneficiary is IGelatoAction,
         return true;
     }
 }
-
+*/

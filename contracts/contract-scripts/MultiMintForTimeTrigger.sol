@@ -1,8 +1,8 @@
 pragma solidity ^0.5.10;
 
 import '@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol';
-import '../Interfaces/IGelatoCore.sol';
-import '../Interfaces/Triggers-Actions/IGelatoTrigger.sol';
+import '../interfaces/IGelatoCore.sol';
+import '../interfaces/triggers_actions_interfaces/IGelatoTrigger.sol';
 
 contract MultiMintForTimeTrigger
 {

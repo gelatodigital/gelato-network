@@ -1,4 +1,4 @@
-pragma solidity ^0.5.10;
+/*pragma solidity ^0.5.10;
 
 import '../../../../1_gelato_standards/3_GTA_standards/gelato_trigger_standards/GelatoTriggersStandard.sol';
 import '../../../../1_gelato_standards/1_gelato_dappInterface_standards/gelato_dutchX/IDutchX.sol';
@@ -55,3 +55,4 @@ contract TriggerDutchXAuctionCleared is GelatoTriggersStandard {
         return address(dutchX);
     }
 }
+*/

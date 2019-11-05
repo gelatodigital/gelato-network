@@ -38,7 +38,7 @@ contract ActionDutchXSell is GelatoActionsStandard,
      * @dev receives forwarded calls from actionConditionsFulfilled API or is used
        in derived contracts. Internal-External distinction and msg.sender persistance.
      * @param _user per gelato protocol address(this) should be the user's proxy
-     * @param _specficActionParams
+     * @param _specificActionParams x
      */
     function _actionConditionsFulfilled(// Standard Action Params
                                         address _user,
@@ -117,7 +117,7 @@ contract ActionDutchXSell is GelatoActionsStandard,
         require(success,
             "ActionDutchXSell.action._sellOnDutchX failed"
         );
-        emit LogAction(_executionClaimId, user);
+        emit LogAction(_executionClaimId, _user);
         return (true, sellAuctionIndex, sellAmountAfterFee);
     }
     /**
@@ -127,9 +127,9 @@ contract ActionDutchXSell is GelatoActionsStandard,
         and enablement of proper usage (msg.sender persistance) via inheritance.
      * @param _executionClaimId the id received from gelatoCore.mintExecutionClaim()
      * @param _user the actual end-user (not their Gelato userProxy)
-     * @param _sellToken
-     * @param _buyToken
-     * @param _sellAmount
+     * @param _sellToken x
+     * @param _buyToken x
+     * @param _sellAmount x
      * @return boolean true if _sellOnDutchX succeeded, else false
      * @return uint256 sellAuctionIndex: the auction into which _sellAmount was posted
      * @return uint256 sellAmountAfterFee == actualSellAmount: _sellAmount - dutchXFee

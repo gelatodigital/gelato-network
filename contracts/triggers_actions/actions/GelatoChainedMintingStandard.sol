@@ -1,4 +1,4 @@
-pragma solidity ^0.5.10;
+/*pragma solidity ^0.5.10;
 
 import '../../../0_gelato_interfaces/2_GTAI_interfaces/IMintingGTAI.sol';
 import '../../../0_gelato_interfaces/1_GTA_interfaces/gelato_trigger_interfaces/IGelatoTrigger.sol';
@@ -72,3 +72,4 @@ contract GelatoChainedMintingStandard {
         return true;
     }
 }
+*/

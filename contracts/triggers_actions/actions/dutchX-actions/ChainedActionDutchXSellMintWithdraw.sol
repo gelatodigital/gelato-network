@@ -1,4 +1,4 @@
-pragma solidity ^0.5.10;
+/*pragma solidity ^0.5.10;
 
 import '../ActionDutchXSell.sol';
 import '../../../../1_gelato_standards/2_GTA_standards/GTA_chained_standards/GTAChainedMintingStandard.sol';
@@ -76,3 +76,4 @@ contract ChainedActionDutchXSellMintWithdraw is ActionDutchXSell,
         return true;
     }
 }
+*/

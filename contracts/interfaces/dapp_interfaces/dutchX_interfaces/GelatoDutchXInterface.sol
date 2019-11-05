@@ -1,7 +1,7 @@
 pragma solidity ^0.5.10;
 
 import "@openzeppelin/upgrades/contracts/Initializable.sol";
-import '@openzeppelin/contracts-ethereum-package/math/SafeMath.sol';
+import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import '../../../helpers/GelatoERC20Lib.sol';
 import './IDutchX.sol';
 
