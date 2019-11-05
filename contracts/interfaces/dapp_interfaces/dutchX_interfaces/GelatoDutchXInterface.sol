@@ -88,13 +88,15 @@ contract GelatoDutchXInterface is Initializable
         IDutchX _dutchX = IDutchX(0xaAEb2035FF394fdB2C879190f95e7676f1A9444B);
         (uint256 sellAmountAfterFee,
          uint256 dutchXFee) = _getSellAmountAfterFee(address(this), _sellAmount);
-        IERC20 sellToken = IERC20(_sellToken);
-        require(sellToken._safeTransferFrom(_user, address(this), _sellAmount),
-            "GelatoDutchXInterface._sellOnDutchX: _safeTransferFrom failed"
-        );
-        require(sellToken._safeIncreaseERC20Allowance(address(dutchX), _sellAmount),
-            "GelatoDutchXInterface._sellOnDutchX: _safeIncreaseERC20Allowance failed"
-        );
+        {
+            IERC20 sellToken = IERC20(_sellToken);
+            require(sellToken._safeTransferFrom(_user, address(this), _sellAmount),
+                "GelatoDutchXInterface._sellOnDutchX: _safeTransferFrom failed"
+            );
+            require(sellToken._safeIncreaseERC20Allowance(address(dutchX), _sellAmount),
+                "GelatoDutchXInterface._sellOnDutchX: _safeIncreaseERC20Allowance failed"
+            );
+        }
         uint256 sellAuctionIndex = _getSellAuctionIndex(_sellToken, _buyToken);
         require(sellAuctionIndex != 0,
             "GelatoDutchXInterface._sellOnDutchX: nextParticipationIndex failed"
