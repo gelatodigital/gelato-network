@@ -21,6 +21,7 @@
     "@openzeppelin/contracts-ethereum-package": "^2.3.0",
     "@openzeppelin/upgrades": "^2.5.3",
     "@truffle/hdwallet-provider": "^1.0.23",
-    "dotenv": "^8.2.0"
+    "dotenv": "^8.2.0",
+    "solidity-docgen": "^0.3.9"
   }
 }

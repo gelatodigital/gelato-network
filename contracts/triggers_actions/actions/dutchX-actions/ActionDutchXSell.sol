@@ -3,15 +3,28 @@ pragma solidity ^0.5.10;
 import '../GelatoActionsStandard.sol';
 import '../../../interfaces/dapp_interfaces/dutchX_interfaces/GelatoDutchXInterface.sol';
 
+/**
+ * @title ActionDutchXSell
+ * @notice posts sell orders into dutchX auctions - caution: funds are NOT SOLD,
+   but merely posted into auctions. Trade settlement will happen asynchronously.
+ * @dev The funds sold via this Action can be withdrawn with ActionWithdrawFromDutchX*
+ */
 contract ActionDutchXSell is GelatoActionsStandard,
                              GelatoDutchXInterface
 {
+    /**
+     * @dev OpenZeppelin's upgradeable contracts constructor function. Should be
+       called immediately after deployment and only once in a proxyWrapper's lifetime.
+       Calls are forwarded to the internal _initialize fn to allow for external-internal
+       distinction and inheritance.
+     * @param _dutchX the address of the deployed dutchX Proxy
+     * @param _actionGasStipend the maxGas consumption of a normal tx to this.action()
+     */
     function initialize(address _dutchX, uint256 _actionGasStipend)
         external
     {
         _initialize(_dutchX, _actionGasStipend);
     }
-
     function _initialize(address _dutchX, uint256 _actionGasStipend)
         internal
         initializer
@@ -20,10 +33,16 @@ contract ActionDutchXSell is GelatoActionsStandard,
         GelatoDutchXInterface._initialize(_dutchX);
     }
 
-    // SellCondition: token pair is traded on DutchX and user approved ERC20s
-    function _actionConditionsFulfilled(// Standard Param
+    // ___________________ actionConditionsFulfilled fn & API ________________________
+    /**
+     * @dev receives forwarded calls from actionConditionsFulfilled API or is used
+       in derived contracts. Internal-External distinction and msg.sender persistance.
+     * @param _user per gelato protocol address(this) should be the user's proxy
+     * @param _specficActionParams
+     */
+    function _actionConditionsFulfilled(// Standard Action Params
                                         address _user,
-                                        // Specific Param
+                                        // // Specific Action Params
                                         bytes memory _specificActionParams
     )
         internal
@@ -50,8 +69,17 @@ contract ActionDutchXSell is GelatoActionsStandard,
         bool userHasFunds = sellToken.balanceOf(_user) >= _sellAmount;
         return (validTokenPair && userProxyHasAllowance && userHasFunds);
     }
-
-    /// @dev overriding Standard fn - called by triggers/frontends for sanity check
+    /**
+     * @notice Returns true if the token-pair is valid, the user proxy has the user's
+         ERC20 allowance and the  user has the ERC20 balance at the time of the call.
+     * @dev overrides and extend the function of GelatoActionsStandard. Forwards calls
+        to internal fn _actionConditionsFulfilled as part of internal-external
+        interface distinction and enablement of proper usage (msg.sender persistance)
+        via inheritance.
+     * @param _user the end-users address
+     * @param _specificActionParams the encoded specific params for this.action
+     * @return boolean true if validTokenPair, userProxyHasAllowance and userHasFunds
+     */
     function actionConditionsFulfilled(// Standard Param
                                        address _user,
                                        // Specific Param(s)
@@ -63,17 +91,19 @@ contract ActionDutchXSell is GelatoActionsStandard,
     {
         return _actionConditionsFulfilled(_user, _specificActionParams);
     }
+    // ======================
 
-    // Action: public due to msg.sender context persistance, in internal calls (chaining)
-    function action(// Standard Action Params
-                    uint256 _executionClaimId,
-                    address _user,
-                    // Specific Action Params
-                    address _sellToken,
-                    address _buyToken,
-                    uint256 _sellAmount
+    // ___________________ ACTION FUNCTION & API __________________________________
+    ///@dev Internal action fn to enable inheritance with msg.sender persistance
+    function _action(// Standard Action Params
+                     uint256 _executionClaimId,
+                     address _user,
+                     // Specific Action Params
+                     address _sellToken,
+                     address _buyToken,
+                     uint256 _sellAmount
     )
-        public
+        internal
         returns(bool, uint256, uint256)
     {
         (bool success,
@@ -90,4 +120,32 @@ contract ActionDutchXSell is GelatoActionsStandard,
         emit LogAction(_executionClaimId, user);
         return (true, sellAuctionIndex, sellAmountAfterFee);
     }
+    /**
+     * @notice posts user's sell order on DutchX
+     * @dev action API to be .delegatecalled by userProxy.execute(). Forwards calls
+        to internal fn _action as part of internal-external interface distinction
+        and enablement of proper usage (msg.sender persistance) via inheritance.
+     * @param _executionClaimId the id received from gelatoCore.mintExecutionClaim()
+     * @param _user the actual end-user (not their Gelato userProxy)
+     * @param _sellToken
+     * @param _buyToken
+     * @param _sellAmount
+     * @return boolean true if _sellOnDutchX succeeded, else false
+     * @return uint256 sellAuctionIndex: the auction into which _sellAmount was posted
+     * @return uint256 sellAmountAfterFee == actualSellAmount: _sellAmount - dutchXFee
+     */
+    function action(// Standard Action Params
+                    uint256 _executionClaimId,
+                    address _user,
+                    // Specific Action Params
+                    address _sellToken,
+                    address _buyToken,
+                    uint256 _sellAmount
+    )
+        external
+        returns(bool, uint256, uint256)
+    {
+        return _action(_executionClaimId, _user, _sellToken, _buyToken, _sellAmount);
+    }
+    // ======================
 }

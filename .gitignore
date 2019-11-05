@@ -1,6 +1,12 @@
 # Dependency directory
 node_modules
 
+# Annoying copies
+package-lock 2.json
+package 2.json
+networks 2.json
+
+
 # local env variables
 .env
 

@@ -21,8 +21,13 @@ contract GelatoActionsStandard is Initializable
         actionGasStipend = _actionGasStipend;
     }
 
-    // FN for standardised action condition checking by triggers (and frontends)
-    // Derived contract must override it, to extend it
+    /**
+     * @notice Returns whether the action-specific conditions are fulfilled
+     * @dev if actions have specific conditions they should override and extend this fn
+     * @param address the end-users address
+     * @param bytes the encoded specific params for the action function
+     * @return boolean true if specific action conditions are fulfilled, else false.
+     */
     function actionConditionsFulfilled(// Standard Param
                                        address,  // user
                                        // Specific Param(s)
@@ -34,4 +39,7 @@ contract GelatoActionsStandard is Initializable
     {
         return true;
     }
+
+    // Standard Event
+    event LogAction(uint256 indexed executionClaimId, address indexed user);
 }

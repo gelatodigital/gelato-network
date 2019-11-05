@@ -34,7 +34,9 @@ contract GelatoDutchXInterface is Initializable
         view
         returns(uint256 sellAmountAfterFee, uint256 dutchXFee)
     {
-        (uint256 num, uint256 den) = dutchX.getFeeRatio(_seller);
+        // Rinkeby DutchX Proxy
+        IDutchX _dutchX = IDutchX(0xaAEb2035FF394fdB2C879190f95e7676f1A9444B);
+        (uint256 num, uint256 den) = _dutchX.getFeeRatio(_seller);
         dutchXFee = _sellAmount.mul(num).div(den);
         sellAmountAfterFee = _sellAmount.sub(dutchXFee);
     }
@@ -46,8 +48,10 @@ contract GelatoDutchXInterface is Initializable
         view
         returns(uint256 sellAuctionIndex)
     {
-        uint256 currentAuctionIndex = dutchX.getAuctionIndex(_sellToken, _buyToken);
-        uint256 auctionStartTime = dutchX.getAuctionStart(_sellToken, _buyToken);
+        // Rinkeby DutchX Proxy
+        IDutchX _dutchX = IDutchX(0xaAEb2035FF394fdB2C879190f95e7676f1A9444B);
+        uint256 currentAuctionIndex = _dutchX.getAuctionIndex(_sellToken, _buyToken);
+        uint256 auctionStartTime = _dutchX.getAuctionStart(_sellToken, _buyToken);
         // Check if we are in a Waiting period or auction running period
         if (auctionStartTime > now || auctionStartTime == AUCTION_START_WAITING_FOR_FUNDING)
         {
@@ -80,6 +84,8 @@ contract GelatoDutchXInterface is Initializable
         internal
         returns(bool, uint256, uint256)
     {
+        // Rinkeby DutchX Proxy
+        IDutchX _dutchX = IDutchX(0xaAEb2035FF394fdB2C879190f95e7676f1A9444B);
         (uint256 sellAmountAfterFee,
          uint256 dutchXFee) = _getSellAmountAfterFee(address(this), _sellAmount);
         IERC20 sellToken = IERC20(_sellToken);
@@ -93,7 +99,7 @@ contract GelatoDutchXInterface is Initializable
         require(sellAuctionIndex != 0,
             "GelatoDutchXInterface._sellOnDutchX: nextParticipationIndex failed"
         );
-        dutchX.depositAndSell(_sellToken, _buyToken, _sellAmount);
+        _dutchX.depositAndSell(_sellToken, _buyToken, _sellAmount);
         emit LogSellOnDutchX(_executionClaimId,
                              address(this),  // userProxy/dutchXSeller
                              _sellToken,
@@ -118,8 +124,10 @@ contract GelatoDutchXInterface is Initializable
         internal
         returns(uint256 withdrawAmount)
     {
+        // Rinkeby DutchX Proxy
+        IDutchX _dutchX = IDutchX(0xaAEb2035FF394fdB2C879190f95e7676f1A9444B);
         (uint256 num,
-         uint256 den) = dutchX.closingPrices(_sellToken, _buyToken, _auctionIndex);
+         uint256 den) = _dutchX.closingPrices(_sellToken, _buyToken, _auctionIndex);
         require(den != 0,
             "GelatoDutchX._getWithdrawAmount: Auction did not clear."
         );
@@ -134,11 +142,13 @@ contract GelatoDutchXInterface is Initializable
         internal
         returns(bool)
     {
-        dutchX.claimAndWithdraw(_sellToken,
-                                _buyToken,
-                                address(this),  // seller==userProxy in delegatecall
-                                _auctionIndex,
-                                _withdrawAmount
+        // Rinkeby DutchX Proxy
+        IDutchX _dutchX = IDutchX(0xaAEb2035FF394fdB2C879190f95e7676f1A9444B);
+        _dutchX.claimAndWithdraw(_sellToken,
+                                 _buyToken,
+                                 address(this),  // seller==userProxy in delegatecall
+                                 _auctionIndex,
+                                 _withdrawAmount
         );
         return true;
     }
