@@ -18,7 +18,17 @@ debug(
 );
 
 // Setting up Provider and Signer (wallet)
-const provider = new ethers.providers.InfuraProvider("ropsten", INFURA_ID);
+let provider;
+if (process.env.ROPSTEN) {
+  provider = new ethers.providers.InfuraProvider("ropsten", INFURA_ID);
+  debug(`\n\t\t ✅ connected to ROPSTEN ✅ \n`);
+} else if (process.env.RINKEBY) {
+  provider = new ethers.providers.InfuraProvider("rinkeby", INFURA_ID);
+  debug(`\n\t\t ✅ connected to RINKEBY ✅ \n`);
+} else {
+  debug(`\n\t\t ❗NO NETWORK DEFINED ❗\n`);
+}
+
 const wallet = ethers.Wallet.fromMnemonic(DEV_MNEMONIC);
 const connectedWallet = wallet.connect(provider);
 
@@ -218,7 +228,9 @@ async function queryChainAndExecute() {
   for (let executionClaimId in mintedClaims) {
     // Proceed only if executionClaimId not currently undergoing execution
     if (beingExecuted[executionClaimId] === true) {
-      debug(`\t\t ❗❗ Skipping ID ${executionClaimId} as already being executed ❗❗`);
+      debug(
+        `\t\t ❗❗ Skipping ID ${executionClaimId} as already being executed ❗❗`
+      );
       continue;
     }
     // Proceed only if executionClaimId not currently undergoing execution

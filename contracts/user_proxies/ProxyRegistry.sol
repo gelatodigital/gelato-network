@@ -6,6 +6,8 @@ import './DappSys/DSProxy.sol';
 //   and keeps a registry of owner => proxy
 contract ProxyRegistry {
     mapping(address => DSProxy) public proxies;
+    mapping(address => bool) public registeredProxy;
+
     DSProxyFactory internal factory;
 
     constructor(address factory_) public {
@@ -24,5 +26,6 @@ contract ProxyRegistry {
         require(proxies[owner] == DSProxy(0) || proxies[owner].owner() != owner); // Not allow new proxy if the user already has one and remains being the owner
         proxy = factory.build(owner);
         proxies[owner] = DSProxy(proxy);
+        registeredProxy[proxy] = true;
     }
 }

@@ -25,9 +25,6 @@ contract GelatoUserProxies is Initializable,
 
     IProxyRegistry internal proxyRegistry;
     DSProxyFactory internal proxyFactory;
-    DSGuardFactory internal guardFactory;
-
-    bytes4 internal proxyExecSelector;
 
     /**
      * @dev initializer function is like a constructor for upgradeable contracts
@@ -37,16 +34,13 @@ contract GelatoUserProxies is Initializable,
      * @notice as per OpenZeppelin SDK
      */
     function _initialize(address _proxyRegistry,
-                         address _proxyFactory,
-                         address _guardFactory
+                         address _proxyFactory
     )
         internal
         initializer
     {
         proxyRegistry = IProxyRegistry(_proxyRegistry);
         proxyFactory = DSProxyFactory(_proxyFactory);
-        guardFactory = DSGuardFactory(_guardFactory);
-        proxyExecSelector = bytes4(keccak256("execute(address,bytes)"));
     }
 
     // _____________ Creating Gelato User Proxies n/3 ______________________
@@ -63,51 +57,16 @@ contract GelatoUserProxies is Initializable,
      * @dev This function should be called for users that have nothing deployed yet
             User-EOA-tx that should follow: userProxy.setAuthority(userProxyGuard).
      * @return address of the deployed DSProxy aka userAccount
-     * @return address of the userProxy's guard
      */
     function devirginize()
         external
         userHasNoProxy
-        returns(address userProxy, address userProxyGuardAddress)
+        returns(address userProxy)
     {
         userProxy = proxyRegistry.build(msg.sender);
-        DSGuard userProxyGuard = guardFactory.newGuard();
-        userProxyGuard.permit(address(this), userProxy, bytes32(proxyExecSelector));
-        userProxyGuard.setOwner(msg.sender);  ///@notice changed from address(userProxy)
-        userProxyGuardAddress = address(userProxyGuard);
-        emit LogDevirginize(userProxy, userProxyGuardAddress);
+        emit LogDevirginize(userProxy);
     }
     event LogDevirginize(address userProxy, address userProxyGuard);
-
-    /**
-     * @dev this function should be called for users that have a proxy but no guard
-     * @return the address of the deployed DSProxy aka userAccount
-     * @notice user-EOA-tx that should follow: userProxy.setAuthority(userProxyGuard)
-     * @notice Guard potentially breaks user's dapp interactions with previous dapps
-     */
-    function guard()
-        external
-        returns(address userProxyGuardAddress)
-    {
-        DSProxy userProxy = proxyRegistry.proxies(msg.sender);
-        require(userProxy != DSProxy(0),
-            "GelatoUserProxies.guard: user has no proxy deployed -> devirginize()"
-        );
-        require(userProxy.authority() == DSAuthority(0),
-            "GelatoUserProxies.guard: user already has a DSAuthority"
-        );
-        DSGuard userProxyGuard = guardFactory.newGuard();
-        userProxyGuard.permit(address(this), address(userProxy), bytes32(proxyExecSelector));
-        userProxyGuard.setOwner(msg.sender);  ///@notice changed from address(userProxy)
-        userProxyGuardAddress = address(userProxyGuard);
-        emit LogGuard(userProxyGuardAddress);
-    }
-    event LogGuard(address userProxyGuard);
-
-    /**
-     * @notice 3rd option: user already has a DSGuard
-     * => permit(gelatoCore, address(userProxy), proxyExecSelector) via frontend
-     */
     // ================
 
     // _____________ State Variable Getters ______________________
@@ -124,20 +83,6 @@ contract GelatoUserProxies is Initializable,
      */
     function getProxyFactoryAddress() external view returns(address) {
         return address(proxyFactory);
-    }
-    /**
-     * @dev get the guardFactory's address
-     * @return address of guardFactory
-     */
-    function getGuardFactoryAddress() external view returns(address) {
-        return address(guardFactory);
-    }
-    /**
-     * @dev get the sig param for permit fn on userProxy's DSGuard
-     * @return the userProxy's execute function's selector as bytes32
-     */
-    function getSigForGuard() external view returns(bytes32) {
-        return bytes32(proxyExecSelector);
     }
     // ================
 
@@ -170,21 +115,6 @@ contract GelatoUserProxies is Initializable,
     }
     event LogSetProxyFactory(address indexed proxyFactory,
                              address indexed newProxyFactory
-    );
-
-    /**
-     * @dev GelatoCore owner calls this function to connect core to new DSGuard factory
-     * @param _newGuardFactory x
-     */
-    function setGuardFactory( address _newGuardFactory)
-        external
-        onlyOwner
-    {
-        emit LogSetGuardFactory(address(guardFactory), _newGuardFactory);
-        guardFactory = DSGuardFactory(_newGuardFactory);
-    }
-    event LogSetGuardFactory(address indexed oldGuardFactory,
-                             address indexed newGuardFactory
     );
     // ================
 }
@@ -577,18 +507,16 @@ contract GelatoCore is GelatoUserProxies,
     /**
      * @dev GelatoCore's initializer function (constructor for upgradeable contracts)
      * @param _proxyRegistry z
-     * @param _guardFactory z
      * @notice as per OpenZeppelin SDK - this initializer fn must call the initializers
         of all the base contracts.
      */
     function initialize(address _proxyRegistry,
-                        address _proxyFactory,
-                        address _guardFactory
+                        address _proxyFactory
     )
         public
         initializer
     {
-        GelatoUserProxies._initialize(_proxyRegistry, _proxyFactory, _guardFactory);
+        GelatoUserProxies._initialize(_proxyRegistry, _proxyFactory);
         GelatoCoreAccounting._initialize();
     }
 
@@ -684,17 +612,6 @@ contract GelatoCore is GelatoUserProxies,
                     "GelatoCore.mintExecutionClaim: EOA has no registered proxy"
                 );
                 userProxy = address(userProxyContract);
-                address guard = address(userProxyContract.authority());
-                DSGuard guardContract = DSGuard(guard);
-                /*require(guardFactory.isGuard(address(guard)),
-                    "GelatoCore.mintExecutionClaim: EOA has no valid guard"
-                ); unsafe in case user deployed DSGuard thru other factory*/
-                // Below: only safe under assumption that authorities implement canCall
-                require(guardContract.canCall(address(this),  // src = gelatoCore
-                                              userProxy,  // dest = userProxy
-                                              userProxyContract.execute.selector),
-                    "GelatoCore.mintExecutionClaim: EOA has not authorized gelatoCore"
-                );
             } else {
                 DSProxyFactory proxyFactory = DSProxyFactory(proxyFactory);
                 require(proxyFactory.isProxy(msg.sender),
