@@ -54,8 +54,12 @@ contract ProxyFactory {
     // deploys a new proxy instance
     // sets custom owner of proxy
     function build(address owner) public returns (address payable proxy) {
-        proxy = address(new Proxy());
-        emit Created(msg.sender, owner, address(proxy));
+        Proxy proxyContract = new Proxy();
+        address gelatoCoreProxyRinkeby
+            = 0x479095cE2950e4974DC42B0177e7a83d2037b8df;
+        proxyContract.initialize(owner, gelatoCoreProxyRinkeby);
+        proxy = address(proxyContract);
+        emit Created(msg.sender, owner, proxy);
         Proxy(proxy).setOwner(owner);
         isProxy[proxy] = true;
     }

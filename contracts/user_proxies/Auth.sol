@@ -4,14 +4,17 @@ pragma solidity ^0.5.10;
 
 contract Auth is Initializable
 {
-    address public  gelatoCore;
-    address public  owner;
+    address public gelatoCore;
+    address public owner;
 
-    function initialize(address _owner)
+    function initialize(address _owner,
+                        address _gelatoCore
+    )
         external
         initializer
     {
         owner = _owner;
+        gelatoCore = _gelatoCore;
     }
 
     function setOwner(address _newOwner)

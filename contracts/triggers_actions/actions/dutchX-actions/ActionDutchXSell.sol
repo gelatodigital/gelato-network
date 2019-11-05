@@ -1,5 +1,6 @@
 pragma solidity ^0.5.10;
 
+import "@openzeppelin/upgrades/contracts/Initializable.sol";
 import '../GelatoActionsStandard.sol';
 import '../../../interfaces/dapp_interfaces/dutchX_interfaces/GelatoDutchXInterface.sol';
 
@@ -9,7 +10,8 @@ import '../../../interfaces/dapp_interfaces/dutchX_interfaces/GelatoDutchXInterf
    but merely posted into auctions. Trade settlement will happen asynchronously.
  * @dev The funds sold via this Action can be withdrawn with ActionWithdrawFromDutchX*
  */
-contract ActionDutchXSell is GelatoActionsStandard,
+contract ActionDutchXSell is Initializable,
+                             GelatoActionsStandard,
                              GelatoDutchXInterface
 {
     /**
@@ -20,16 +22,17 @@ contract ActionDutchXSell is GelatoActionsStandard,
      * @param _dutchX the address of the deployed dutchX Proxy
      * @param _actionGasStipend the maxGas consumption of a normal tx to this.action()
      */
-    function initialize(address _dutchX, uint256 _actionGasStipend)
+    function initialize(uint256 _actionGasStipend, address _dutchX)
         external
     {
-        _initialize(_dutchX, _actionGasStipend);
+        _initialize(_actionGasStipend, _dutchX);
     }
-    function _initialize(address _dutchX, uint256 _actionGasStipend)
+    function _initialize(uint256 _actionGasStipend, address _dutchX)
         internal
         initializer
     {
-        GelatoActionsStandard._initialize(this.action.selector, _actionGasStipend);
+        actionSelector = this.action.selector;
+        actionGasStipend = _actionGasStipend;
         GelatoDutchXInterface._initialize(_dutchX);
     }
 

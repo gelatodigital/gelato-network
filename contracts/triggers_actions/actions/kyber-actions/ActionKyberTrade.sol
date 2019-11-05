@@ -1,17 +1,20 @@
 
 pragma solidity ^0.5.0;
 
+import "@openzeppelin/upgrades/contracts/Initializable.sol";
 import '../GelatoActionsStandard.sol';
 import '../../../interfaces/dapp_interfaces/kyber_interfaces/IKyber.sol';
 import '@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.sol';
 
-contract ActionKyberTrade is GelatoActionsStandard
+contract ActionKyberTrade is Initializable,
+                             GelatoActionsStandard
 {
     function initialize()
         external
         initializer
     {
-        GelatoActionsStandard._initialize(this.action.selector, 300000);
+        actionSelector = this.action.selector;
+        actionGasStipend = 300000;
     }
 
     ///@dev KyberNetworkProxy on ropsten hardcoded atm

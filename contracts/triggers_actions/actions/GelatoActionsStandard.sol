@@ -1,8 +1,6 @@
 pragma solidity ^0.5.10;
 
-import "@openzeppelin/upgrades/contracts/Initializable.sol";
-
-contract GelatoActionsStandard is Initializable
+contract GelatoActionsStandard
 {
     /// @dev non-deploy base contract
     constructor() internal {}
@@ -12,14 +10,6 @@ contract GelatoActionsStandard is Initializable
 
     function getActionSelector() external view returns(bytes4) {return actionSelector;}
     function getActionGasStipend() external view returns(uint256) {return actionGasStipend;}
-
-    function _initialize(bytes4 _actionSelector, uint256 _actionGasStipend)
-        internal
-        initializer
-    {
-        actionSelector = _actionSelector;
-        actionGasStipend = _actionGasStipend;
-    }
 
     /**
      * @notice Returns whether the action-specific conditions are fulfilled
@@ -37,6 +27,7 @@ contract GelatoActionsStandard is Initializable
         view
         returns(bool)
     {
+        this;  // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
         return true;
     }
 

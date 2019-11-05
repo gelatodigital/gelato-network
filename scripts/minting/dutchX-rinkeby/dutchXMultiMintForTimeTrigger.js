@@ -2,11 +2,11 @@
 const ethers = require("ethers");
 
 // Helpers
-const sleep = require("../helpers/sleep.js").sleep;
+const sleep = require("../../helpers/sleep.js").sleep;
 
 // ENV VARIABLES
 const path = require("path");
-require("dotenv").config({ path: path.resolve(__dirname, "../../.env") });
+require("dotenv").config({ path: path.resolve(__dirname, "../../../.env") });
 const DEV_MNEMONIC = process.env.DEV_MNEMONIC;
 const INFURA_ID = process.env.INFURA_ID;
 console.log(
