@@ -1,14 +1,16 @@
 pragma solidity ^0.5.10;
 
+import "@openzeppelin/upgrades/contracts/Initializable.sol";
 import '../GelatoTriggersStandard.sol';
 
-contract TriggerTimestampPassed is GelatoTriggersStandard
+contract TriggerTimestampPassed is Initializable,
+                                   GelatoTriggersStandard
 {
     function initialize()
         external
         initializer
     {
-        GelatoTriggersStandard._initialize("fired(uint256)");
+        triggerSelector = this.fired.selector;
     }
 
     function fired(uint256 _timestamp)

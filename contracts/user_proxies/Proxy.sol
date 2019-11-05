@@ -1,20 +1,19 @@
 pragma solidity ^0.5.10;
 
-import "./DSAuth.sol";
+import "./Auth.sol";
 
-// DSProxy
+// Proxy
 // Allows code execution using a persistant identity This can be very
 // useful to execute a sequence of atomic actions. Since the owner of
 // the proxy can be changed, this allows for dynamic ownership models
 // i.e. a multisig
-contract DSProxy is DSAuth
+contract Proxy is Auth
 {
     function() external payable {}
 
     function execute(address _target, bytes memory _data)
         public
         auth
-        note
         payable
         returns (bytes memory response)
     {
@@ -39,10 +38,10 @@ contract DSProxy is DSAuth
     }
 }
 
-// DSProxyFactory
+// ProxyFactory
 // This factory deploys new proxy instances through build()
 // Deployed proxy addresses are logged
-contract DSProxyFactory {
+contract ProxyFactory {
     event Created(address indexed sender, address indexed owner, address proxy);
     mapping(address=>bool) public isProxy;
 
@@ -55,9 +54,9 @@ contract DSProxyFactory {
     // deploys a new proxy instance
     // sets custom owner of proxy
     function build(address owner) public returns (address payable proxy) {
-        proxy = address(new DSProxy();
+        proxy = address(new Proxy());
         emit Created(msg.sender, owner, address(proxy));
-        DSProxy(proxy).setOwner(owner);
+        Proxy(proxy).setOwner(owner);
         isProxy[proxy] = true;
     }
 }

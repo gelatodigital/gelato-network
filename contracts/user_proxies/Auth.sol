@@ -1,12 +1,24 @@
+import "@openzeppelin/upgrades/contracts/Initializable.sol";
+
 pragma solidity ^0.5.10;
 
-contract DSAuth
+contract Auth is Initializable
 {
     address public  gelatoCore;
     address public  owner;
 
-    constructor() public {
-        owner = msg.sender;
+    function initialize(address _owner)
+        external
+        initializer
+    {
+        owner = _owner;
+    }
+
+    function setOwner(address _newOwner)
+        external
+        auth
+    {
+        owner = _newOwner;
     }
 
     function setGelatoCore(address _gelatoCore)

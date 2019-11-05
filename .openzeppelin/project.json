@@ -1,7 +1,12 @@
 {
   "manifestVersion": "2.2",
   "contracts": {
-    "ActionDutchXSell": "ActionDutchXSell"
+    "ActionDutchXSell": "ActionDutchXSell",
+    "GelatoCore": "GelatoCore",
+    "ProxyFactory": "ProxyFactory",
+    "ProxyRegistry": "ProxyRegistry",
+    "TriggerTimestampPassed": "TriggerTimestampPassed",
+    "MultiMintForTimeTrigger": "MultiMintForTimeTrigger"
   },
   "dependencies": {},
   "name": "gelato",

@@ -1,20 +1,11 @@
 pragma solidity ^0.5.10;
 
-import "@openzeppelin/upgrades/contracts/Initializable.sol";
-
-contract GelatoTriggersStandard is Initializable
+contract GelatoTriggersStandard
 {
     /// @dev non-deploy base contract
     constructor() internal {}
-    
-    bytes4 internal triggerSelector;
 
-    function _initialize(string memory _triggerSignature)
-        internal
-        initializer
-    {
-        triggerSelector = bytes4(keccak256(bytes(_triggerSignature)));
-    }
+    bytes4 internal triggerSelector;
 
     function getTriggerSelector()
         external

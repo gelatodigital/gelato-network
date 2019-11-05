@@ -1,8 +1,7 @@
 pragma solidity ^0.5.10;
 
 import './interfaces/user_proxies_interfaces/IProxyRegistry.sol';
-import './user_proxies/DappSys/DSProxy.sol';
-import './user_proxies/DappSys/DSGuard.sol';
+import './user_proxies/Proxy.sol';
 import './interfaces/triggers_actions_interfaces/IGelatoAction.sol';
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/upgrades/contracts/Initializable.sol";
@@ -24,13 +23,12 @@ contract GelatoUserProxies is Initializable,
     constructor() internal {}
 
     IProxyRegistry internal proxyRegistry;
-    DSProxyFactory internal proxyFactory;
+    ProxyFactory internal proxyFactory;
 
     /**
      * @dev initializer function is like a constructor for upgradeable contracts
      * @param _proxyRegistry x
      * @param _proxyFactory y
-     * @param _guardFactory z
      * @notice as per OpenZeppelin SDK
      */
     function _initialize(address _proxyRegistry,
@@ -40,13 +38,13 @@ contract GelatoUserProxies is Initializable,
         initializer
     {
         proxyRegistry = IProxyRegistry(_proxyRegistry);
-        proxyFactory = DSProxyFactory(_proxyFactory);
+        proxyFactory = ProxyFactory(_proxyFactory);
     }
 
     // _____________ Creating Gelato User Proxies n/3 ______________________
     /// @dev requires msg.sender (user) to have no proxy
     modifier userHasNoProxy {
-        require(proxyRegistry.proxies(msg.sender) == DSProxy(0),
+        require(proxyRegistry.proxies(msg.sender) == Proxy(0),
             "GelatoUserProxies: user already has a proxy"
         );
         _;
@@ -56,7 +54,7 @@ contract GelatoUserProxies is Initializable,
      * @notice deploys gelato proxy for users that have no proxy yet
      * @dev This function should be called for users that have nothing deployed yet
             User-EOA-tx that should follow: userProxy.setAuthority(userProxyGuard).
-     * @return address of the deployed DSProxy aka userAccount
+     * @return address of the deployed Proxy aka userAccount
      */
     function devirginize()
         external
@@ -66,7 +64,7 @@ contract GelatoUserProxies is Initializable,
         userProxy = proxyRegistry.build(msg.sender);
         emit LogDevirginize(userProxy);
     }
-    event LogDevirginize(address userProxy, address userProxyGuard);
+    event LogDevirginize(address userProxy);
     // ================
 
     // _____________ State Variable Getters ______________________
@@ -111,7 +109,7 @@ contract GelatoUserProxies is Initializable,
         onlyOwner
     {
         emit LogSetProxyRegistry(address(proxyFactory), _newProxyFactory);
-        proxyFactory = DSProxyFactory(_newProxyFactory);
+        proxyFactory = ProxyFactory(_newProxyFactory);
     }
     event LogSetProxyFactory(address indexed proxyFactory,
                              address indexed newProxyFactory
@@ -154,7 +152,7 @@ contract GelatoCoreAccounting is Initializable,
      * param _gasOutsideGasleftChecks: gas cost to be determined and set by owner
      * param _gasInsideGasleftChecks: gas cost to be determined and set by owner
      * param _canExecMaxGas: gas cost to be determined and set by owner
-     * param _userProxyExecGas: the overhead consumed by the DSProxy execute fn
+     * param _userProxyExecGas: the overhead consumed by the Proxy execute fn
      * @notice as per OpenZeppelin SDK
      */
     function _initialize()
@@ -607,33 +605,15 @@ contract GelatoCore is GelatoUserProxies,
         {
             /// @notice check if msg.sender is a user (EOA)
             if (msg.sender == tx.origin) {
-                DSProxy userProxyContract = proxyRegistry.proxies(msg.sender);
-                require(userProxyContract != DSProxy(0),
+                userProxy = address(proxyRegistry.proxies(msg.sender));
+                require(userProxy != address(0),
                     "GelatoCore.mintExecutionClaim: EOA has no registered proxy"
                 );
-                userProxy = address(userProxyContract);
             } else {
-                DSProxyFactory proxyFactory = DSProxyFactory(proxyFactory);
-                require(proxyFactory.isProxy(msg.sender),
-                    "GelatoCore.mintExecutionClaim: msg.sender is not a valid proxy"
+                require(proxyRegistry.registeredProxy(msg.sender),
+                    "GelatoCore.mintExecutionClaim: msg.sender not a registered proxy"
                 );
-                DSProxy userProxyContract = DSProxy(msg.sender);
-                address owner = userProxyContract.owner();
-                userProxy = address(proxyRegistry.proxies(owner));
-                require(userProxy != address(0),
-                    "GelatoCore.mintExecutionClaim: proxy not registered"
-                );
-                address guard = address(userProxyContract.authority());
-                DSGuard guardContract = DSGuard(guard);
-                /*require(guardFactory.isGuard(address(guard)),
-                    "GelatoCore.mintExecutionClaim: proxy has no valid guard"
-                ); unsafe in case user deployed DSGuard thru other factory*/
-                // Below: only safe under assumption that authorities implement canCall
-                require(guardContract.canCall(address(this),  // src = gelatoCore
-                                              userProxy,  // dest = userProxy
-                                              userProxyContract.execute.selector),
-                    "GelatoCore.mintExecutionClaim: proxy has not authorized gelatoCore"
-                );
+                userProxy = msg.sender;
             }
         }
         // =============
@@ -884,7 +864,7 @@ contract GelatoCore is GelatoUserProxies,
 
         // _________  call to userProxy.execute => action  __________________________
         {
-            bytes memory returndata = (DSProxy(_userProxy).execute
+            bytes memory returndata = (Proxy(_userProxy).execute
                                                           .gas(_executeGas)
                                                           (_action, _actionPayload)
             );
@@ -955,7 +935,7 @@ contract GelatoCore is GelatoUserProxies,
         nonReentrant
     {
         {
-            address userProxyOwner = DSProxy(_userProxy).owner();
+            address userProxyOwner = Proxy(_userProxy).owner();
             if (msg.sender != userProxyOwner) {
                 require(_executionClaimExpiryDate <= now && msg.sender == _selectedExecutor,
                     "GelatoCore.cancelExecutionClaim: only selected executor post expiry"
