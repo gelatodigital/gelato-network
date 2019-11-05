@@ -18,11 +18,11 @@ module.exports = {
       provider: () =>
         new HDWalletProvider(DEV_MNEMONIC, "https://ropsten.infura.io/v3/" + INFURA_ID),
       networkId: 3 // Ropsten's id
-    }/*,
+    },
     rinkeby: {
       provider: () =>
         new HDWalletProvider(DEV_MNEMONIC, "https://rinkeby.infura.io/v3/" + INFURA_ID),
-      networkId: 3 // Ropsten's id
-    }*/
+      networkId: 4 // Rinkeby's id
+    }
   }
 };

@@ -1,6 +1,8 @@
 {
   "manifestVersion": "2.2",
-  "contracts": {},
+  "contracts": {
+    "ActionDutchXSell": "ActionDutchXSell"
+  },
   "dependencies": {},
   "name": "gelato",
   "version": "0.0.0",
