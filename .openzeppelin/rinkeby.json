@@ -332,11 +332,11 @@
       }
     },
     "ProxyFactory": {
-      "address": "0x881650B796654e786F478746f1E4E31A977A5651",
-      "constructorCode": "60806040523480156100115760006000fd5b50610017565b610ed6806100266000396000f3fe",
-      "bodyBytecodeHash": "a16b0017921cf214eb53dd82c7c1e47d2ca02f2b08ef7967d7a34759a019b763",
-      "localBytecodeHash": "b344db0c8e519497728f330bedf5fdd8ed421a3bebf9f311c0002433c7bc86f1",
-      "deployedBytecodeHash": "b344db0c8e519497728f330bedf5fdd8ed421a3bebf9f311c0002433c7bc86f1",
+      "address": "0x3616C455E9465699f960024CC3dfe0b68049ebAF",
+      "constructorCode": "60806040523480156100115760006000fd5b50610017565b610e3d806100266000396000f3fe",
+      "bodyBytecodeHash": "093440e8ea83fca1884e6d4a203e97ddd9b524c8b172eb870783c329c2d02aae",
+      "localBytecodeHash": "cafdfbb9869d4a1c75952ef9627f739cd7a7d33a06679201d0642ea65ba28b7c",
+      "deployedBytecodeHash": "cafdfbb9869d4a1c75952ef9627f739cd7a7d33a06679201d0642ea65ba28b7c",
       "types": {
         "t_bool": {
           "id": "t_bool",
@@ -574,14 +574,14 @@
       {
         "address": "0x49A791153dbEe3fBc081Ce159d51C70A89323e73",
         "version": "0.0.0",
-        "implementation": "0x881650B796654e786F478746f1E4E31A977A5651",
+        "implementation": "0x3616C455E9465699f960024CC3dfe0b68049ebAF",
         "admin": "0x2265a909E7678f16f5622941836d14aEfda8f2A2",
         "kind": "Upgradeable"
       }
     ],
     "gelato/ProxyRegistry": [
       {
-        "address": "0xF517BbB76126d2469Dd8E30c292178e60f845B49",
+        "address": "0x73ae6fCd61d5A42BD9eAdC32c573aa9119d540F6",
         "version": "0.0.0",
         "implementation": "0x678EA3A0F91d175dE598D23AED19497992055e79",
         "admin": "0x2265a909E7678f16f5622941836d14aEfda8f2A2",
@@ -590,7 +590,7 @@
     ],
     "gelato/GelatoCore": [
       {
-        "address": "0x479095cE2950e4974DC42B0177e7a83d2037b8df",
+        "address": "0x0e7dDacA829CD452FF341CF81aC6Ae4f0D2328A7",
         "version": "0.0.0",
         "implementation": "0x40811cbd52F9C8490c474DF20D89CE61d93D3567",
         "admin": "0x2265a909E7678f16f5622941836d14aEfda8f2A2",

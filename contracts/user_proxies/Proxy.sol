@@ -1,6 +1,53 @@
 pragma solidity ^0.5.10;
 
-import "./Auth.sol";
+import "@openzeppelin/upgrades/contracts/Initializable.sol";
+
+contract Auth is Initializable
+{
+    address public gelatoCore;
+    address public owner;
+
+    function initialize(address _owner,
+                        address _gelatoCore
+    )
+        external
+        initializer
+    {
+        owner = _owner;
+        gelatoCore = _gelatoCore;
+    }
+
+    function setOwner(address _newOwner)
+        external
+        auth
+    {
+        owner = _newOwner;
+    }
+
+    function setGelatoCore(address _gelatoCore)
+        external
+        auth
+    {
+        gelatoCore = _gelatoCore;
+    }
+
+    modifier auth {
+        require(isAuthorized(msg.sender), "ds-auth-unauthorized");
+        _;
+    }
+
+    function isAuthorized(address src) internal view returns (bool) {
+        if (src == address(this)) {
+            return true;
+        } else if (src == owner) {
+            return true;
+        } else if (src == gelatoCore) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+}
 
 // Proxy
 // Allows code execution using a persistant identity This can be very
@@ -37,31 +84,3 @@ contract Proxy is Auth
         }
     }
 }
-
-// ProxyFactory
-// This factory deploys new proxy instances through build()
-// Deployed proxy addresses are logged
-contract ProxyFactory {
-    event Created(address indexed sender, address indexed owner, address proxy);
-    mapping(address=>bool) public isProxy;
-
-    // deploys a new proxy instance
-    // sets owner of proxy to caller
-    function build() public returns (address payable proxy) {
-        proxy = build(msg.sender);
-    }
-
-    // deploys a new proxy instance
-    // sets custom owner of proxy
-    function build(address owner) public returns (address payable proxy) {
-        Proxy proxyContract = new Proxy();
-        address gelatoCoreProxyRinkeby
-            = 0x479095cE2950e4974DC42B0177e7a83d2037b8df;
-        proxyContract.initialize(owner, gelatoCoreProxyRinkeby);
-        proxy = address(proxyContract);
-        emit Created(msg.sender, owner, proxy);
-        Proxy(proxy).setOwner(owner);
-        isProxy[proxy] = true;
-    }
-}
-

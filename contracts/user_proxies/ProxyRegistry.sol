@@ -1,6 +1,7 @@
 pragma solidity ^0.5.10;
 
 import './Proxy.sol';
+import './ProxyFactory.sol';
 import "@openzeppelin/upgrades/contracts/Initializable.sol";
 
 // This Registry deploys new proxy instances through ProxyFactory.build(address)

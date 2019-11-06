@@ -52,13 +52,18 @@ Encoder: 0x3582B9F47D9af6640647995BCaa2948B8fdb24e3
 ################### RINKEBY ###########################################
 #######################################################################
 
+Luis
+-----
+account: 0x203AdbbA2402a36C202F207caA8ce81f1A4c7a72
+proxy: 0x2cBe8EB80604B37d723C7a6A9f971c62F2E202b1
+
 Gelato
 ------
-GelatoCoreProxy: 0x479095cE2950e4974DC42B0177e7a83d2037b8df
+GelatoCoreProxy: 0x0e7dDacA829CD452FF341CF81aC6Ae4f0D2328A7
 
 User-Proxies
 ------------
-ProxyRegistryProxy: 0xF517BbB76126d2469Dd8E30c292178e60f845B49
+ProxyRegistryProxy: 0x73ae6fCd61d5A42BD9eAdC32c573aa9119d540F6
 ProxyFactoryProxy: 0x49A791153dbEe3fBc081Ce159d51C70A89323e73
 
 DUTCHX
