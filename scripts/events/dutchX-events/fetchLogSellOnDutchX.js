@@ -78,7 +78,13 @@ async function fetchLogSellOnDutchX() {
     if (Object.keys(sellOnDutchXLogs).length === 0) {
       console.log("\n\n\t\t LogSellOnDutchX: NONE");
     } else {
-      console.dir(sellOnDutchXLogs);
+      for (let obj of sellOnDutchXLogs) {
+        for (let [key, value] of Object.entries(obj)) {
+          console.log(`${key}: ${value.toString()}`);
+        }
+        console.log("\n");
+      }
+      //console.dir(sellOnDutchXLogs);
     }
   } catch (err) {
     console.log(err);
