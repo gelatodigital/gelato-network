@@ -17,13 +17,18 @@ debug(
     INFURA_ID !== undefined}`
 );
 
+// Contract Addresses for instantiation
+let gelatoCoreAddress;
+
 // Setting up Provider and Signer (wallet)
 let provider;
 if (process.env.ROPSTEN) {
   provider = new ethers.providers.InfuraProvider("ropsten", INFURA_ID);
+  gelatoCoreAddress = "0x624f09392ae014484a1aB64c6D155A7E2B6998E6";
   debug(`\n\t\t ✅ connected to ROPSTEN ✅ \n`);
 } else if (process.env.RINKEBY) {
   provider = new ethers.providers.InfuraProvider("rinkeby", INFURA_ID);
+  gelatoCoreAddress = "0x0e7dDacA829CD452FF341CF81aC6Ae4f0D2328A7";
   debug(`\n\t\t ✅ connected to RINKEBY ✅ \n`);
 } else {
   debug(`\n\t\t ❗NO NETWORK DEFINED ❗\n`);
@@ -32,8 +37,6 @@ if (process.env.ROPSTEN) {
 const wallet = ethers.Wallet.fromMnemonic(DEV_MNEMONIC);
 const connectedWallet = wallet.connect(provider);
 
-// Contract Addresses for instantiation
-const GELATO_CORE_ADDRESS = "0x624f09392ae014484a1aB64c6D155A7E2B6998E6";
 
 // Read-Write Instance of GelatoCore
 const gelatoCoreContractABI = [
@@ -45,7 +48,7 @@ const gelatoCoreContractABI = [
   "event LogExecutionClaimCancelled(uint256 indexed executionClaimId, address indexed userProxy, address indexed cancelor)"
 ];
 const gelatoCoreContract = new ethers.Contract(
-  GELATO_CORE_ADDRESS,
+  gelatoCoreAddress,
   gelatoCoreContractABI,
   connectedWallet
 );
@@ -88,7 +91,7 @@ async function queryChainAndExecute() {
     "LogNewExecutionClaimMinted(address,uint256,address,bytes,uint256,uint256,uint256)"
   );
   let filterMinted = {
-    address: GELATO_CORE_ADDRESS,
+    address: gelatoCoreAddress,
     fromBlock: parseInt(searchFromBlock),
     topics: [topicMinted]
   };
@@ -121,7 +124,7 @@ async function queryChainAndExecute() {
     "LogTriggerActionMinted(uint256,address,bytes,address)"
   );
   let filterTAMinted = {
-    address: GELATO_CORE_ADDRESS,
+    address: gelatoCoreAddress,
     fromBlock: parseInt(searchFromBlock),
     topics: [topicTAMinted]
   };
@@ -149,7 +152,7 @@ async function queryChainAndExecute() {
     "LogClaimExecutedAndDeleted(uint256,address,address,uint256,uint256,uint256,uint256)"
   );
   let filterDeleted = {
-    address: GELATO_CORE_ADDRESS,
+    address: gelatoCoreAddress,
     fromBlock: parseInt(searchFromBlock),
     topics: [topicDeleted]
   };
@@ -175,7 +178,7 @@ async function queryChainAndExecute() {
     "LogExecutionClaimCancelled(uint256,address,address)"
   );
   let filterCancelled = {
-    address: GELATO_CORE_ADDRESS,
+    address: gelatoCoreAddress,
     fromBlock: parseInt(searchFromBlock),
     topics: [topicCancelled]
   };
@@ -218,7 +221,6 @@ async function queryChainAndExecute() {
   let canExecuteReturn;
   const canExecuteResults = [
     "WrongCalldataOrAlreadyDeleted",
-    "UserProxyOutOfFunds",
     "NonExistantExecutionClaim",
     "ExecutionClaimExpired",
     "TriggerReverted",

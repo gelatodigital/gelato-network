@@ -15,28 +15,18 @@ console.log(
 );
 
 // Setting up Provider and Signer (wallet)
-const provider = new ethers.providers.InfuraProvider("ropsten", INFURA_ID);
+const provider = new ethers.providers.InfuraProvider("rinkeby", INFURA_ID);
 const wallet = ethers.Wallet.fromMnemonic(DEV_MNEMONIC);
 const connectedWallet = wallet.connect(provider);
 
 // Contract Addresses for instantiation
-const KYBER_PROXY_ADDRESS = "0x818E6FECD516Ecc3849DAf6845e3EC868087B755";
-const GELATO_CORE_ADDRESS = "0x624f09392ae014484a1aB64c6D155A7E2B6998E6";
-const USER_PROXY_ADDRESS = "0x386b7F18599a0b392F9e3a22F1475A6129558833";
-
-// Read Instance of KyberContract
-const kyberABI = [
-  "function getExpectedRate(address SRC, address DEST, uint srcQty) view returns(uint,uint)"
-];
-const kyberContract = new ethers.Contract(
-  KYBER_PROXY_ADDRESS,
-  kyberABI,
-  provider
-);
+const GELATO_CORE_ADDRESS = "0x0e7dDacA829CD452FF341CF81aC6Ae4f0D2328A7";
+const USER_PROXY_ADDRESS = "0x2cBe8EB80604B37d723C7a6A9f971c62F2E202b1";
 
 // ReadInstance of GelatoCore
 const gelatoCoreABI = [
-  "function getMintingDepositPayable(address _action, address _selectedExecutor) view returns(uint)"
+  "function getMintingDepositPayable(address _action, address _selectedExecutor) view returns(uint)",
+  "function getCurrentExecutionClaimId() view returns(uint)"
 ];
 const gelatoCoreContract = new ethers.Contract(
   GELATO_CORE_ADDRESS,
@@ -55,61 +45,54 @@ const userProxyContract = new ethers.Contract(
 );
 
 // Arguments for userProxy.execute(address target, bytes memory data)
-const MULTI_MINT_IMPL_ADDRESS = "0xD10b3f4b06439b2b8B2D9788b6A5278d6055B19B";
-const TARGET_ADDRESS = MULTI_MINT_IMPL_ADDRESS;
+const MULTI_MINT_IMPL_ADDRESS = "0x03692e5B7fF7ceF44d34BEA26110d85E5a12b3Db";
 
 // Arguments for function call to multiMintProxy.multiMint()
-const TRIGGER_TIME_PROXY_ADDRESS = "0x8ef28734d54d63A50a7D7F37A4523f9af5ca2B19";
+const TRIGGER_TIME_PROXY_ADDRESS = "0x7A154C838f0FE48944D0a04a125f4D0C80c9360F";
 const START_TIME = Math.floor(Date.now() / 1000);
-const ACTION_KYBER_IMPL_ADDRESS = "0xD31D01544Ab158a4370D38B2E9b0d3390E928A2b";
+const ACTION_DUTCHX_SELL_IMPL_ADDRESS =
+  "0x986F7247Be7768B6fB4DA3D35f8e77234E040F34";
 // Specific Action Params: encoded during main() execution
 const USER = "0x203AdbbA2402a36C202F207caA8ce81f1A4c7a72";
-const SRC = "0x4E470dc7321E84CA96FcAEDD0C8aBCebbAEB68C6"; // ropsten knc
-const DEST = "0xaD6D458402F60fD3Bd25163575031ACDce07538D"; // ropsten dai
-const SRC_AMOUNT = ethers.utils.parseUnits("10", 18);
+const SELL_TOKEN = "0xd0dab4e640d95e9e8a47545598c33e31bdb53c7c"; // rinkeby GNO
+const BUY_TOKEN = "0xc778417e063141139fce010982780140aa0cd5ab"; // rinkeby WETH
+const SELL_AMOUNT = ethers.utils.parseUnits("50", 18);
 // minConversionRate async fetched from KyberNetwork during main() execution
 const SELECTED_EXECUTOR_ADDRESS = "0x203AdbbA2402a36C202F207caA8ce81f1A4c7a72";
-const INTERVAL_SPAN = "120"; // 300 seconds
+const INTERVAL_SPAN = "300"; // 300 seconds
 const NUMBER_OF_MINTS = "2";
 
 // ABI encoding function
-const getActionKyberTradePayloadWithSelector = require("../helpers/encodings.js")
-  .getActionKyberTradePayloadWithSelector;
-const getMultiMintForTimeTriggerPayloadWithSelector = require("../helpers/encodings.js")
+const getActionDutchXSellPayloadWithSelector = require("../../helpers/encodings.js")
+  .getActionDutchXSellPayloadWithSelector;
+const getMultiMintForTimeTriggerPayloadWithSelector = require("../../helpers/encodings.js")
   .getMultiMintForTimeTriggerPayloadWithSelector;
 
 // The execution logic
 async function main() {
-  // Fetch the slippage rate from KyberNetwork and assign it to minConversionRate
-  let minConversionRate;
-  [_, minConversionRate] = await kyberContract.getExpectedRate(
-    SRC,
-    DEST,
-    SRC_AMOUNT
-  );
-  console.log(
-    `\n\t\t minConversionRate: ${ethers.utils.formatUnits(
-      minConversionRate,
-      18
-    )}\n`
-  );
+  let executionClaimId = await gelatoCoreContract.getCurrentExecutionClaimId();
+  console.log(`\t\t Current ExecutionClaimId: ${executionClaimId}\n`);
+  executionClaimId++;
+  console.log(`\t\t Encoding for ExecutionClaimId: ${executionClaimId}\n`);
 
   // Encode the specific params for ActionKyberTrade
-  const ACTION_KYBER_PAYLOAD = getActionKyberTradePayloadWithSelector(
-    SRC,
-    SRC_AMOUNT,
-    DEST,
+  const ACTION_DUTCHX_SELL_PAYLOAD = getActionDutchXSellPayloadWithSelector(
+    executionClaimId,
     USER,
-    minConversionRate
+    SELL_TOKEN,
+    BUY_TOKEN,
+    SELL_AMOUNT
   );
-  console.log(`\t\t EncodedActionParams: \n ${ACTION_KYBER_PAYLOAD}\n`);
+  console.log(
+    `\t\t Action Payload With Selector: \n ${ACTION_DUTCHX_SELL_PAYLOAD}\n`
+  );
 
   // Encode the payload for the call to MultiMintForTimeTrigger.multiMint
   const MULTI_MINT_PAYLOAD_WITH_SELECTOR = getMultiMintForTimeTriggerPayloadWithSelector(
     TRIGGER_TIME_PROXY_ADDRESS,
     START_TIME.toString(),
-    ACTION_KYBER_IMPL_ADDRESS,
-    ACTION_KYBER_PAYLOAD,
+    ACTION_DUTCHX_SELL_IMPL_ADDRESS,
+    ACTION_DUTCHX_SELL_PAYLOAD,
     SELECTED_EXECUTOR_ADDRESS,
     INTERVAL_SPAN,
     NUMBER_OF_MINTS
@@ -120,13 +103,11 @@ async function main() {
 
   // Getting the current Ethereum price
   let etherscanProvider = new ethers.providers.EtherscanProvider();
-  let ethUSDPrice;
-  etherscanProvider.getEtherPrice().then(price => {
-    console.log(`\n\t\t Ether price in USD: ${price}`);
-    ethUSDPrice = price;
-  });
+  let ethUSDPrice = await etherscanProvider.getEtherPrice();
+  console.log(`\n\t\t Ether price in USD: ${ethUSDPrice}`);
+
   const MINTING_DEPOSIT_PER_MINT = await gelatoCoreContract.getMintingDepositPayable(
-    ACTION_KYBER_IMPL_ADDRESS,
+    ACTION_DUTCHX_SELL_IMPL_ADDRESS,
     SELECTED_EXECUTOR_ADDRESS
   );
   console.log(
@@ -151,29 +132,24 @@ async function main() {
   let tx;
   try {
     tx = await userProxyContract.execute(
-      TARGET_ADDRESS,
+      MULTI_MINT_IMPL_ADDRESS,
       MULTI_MINT_PAYLOAD_WITH_SELECTOR,
       {
         value: MSG_VALUE,
         gasLimit: 2000000
       }
     );
+    console.log(
+      `\n\t\t userProxy.execute(multiMintForTimeTrigger) txHash:\n \t${tx.hash}`
+    );
+    // The operation is NOT complete yet; we must wait until it is mined
+    console.log("\t\t waiting for the execute transaction to get mined \n");
+    txreceipt = await tx.wait();
+    console.log("\t\t Execute TX Receipt:\n", txreceipt);
+    console.log(`\n\t\t minting tx mined in block ${txreceipt.blockNumber}`);
   } catch (err) {
     console.log(err);
   }
-  console.log(
-    `\n\t\t userProxy.execute(multiMintForTimeTrigger) txHash:\n \t${tx.hash}`
-  );
-
-  // The operation is NOT complete yet; we must wait until it is mined
-  console.log("\n\t\t waiting for transaction to get mined \n");
-  let txReceipt;
-  try {
-    txReceipt = await tx.wait();
-  } catch (err) {
-    console.log(err);
-  }
-  console.log(`\n\t\t minting tx mined in block ${txReceipt.blockNumber}`);
 }
 
 // What to execute when running node

@@ -3,7 +3,7 @@ pragma solidity ^0.5.10;
 import "@openzeppelin/upgrades/contracts/Initializable.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import '../../../helpers/GelatoERC20Lib.sol';
-import './IDutchX.sol';
+import '../../../interfaces/dapp_interfaces/dutchX_interfaces/IDutchX.sol';
 
 contract GelatoDutchXInterface is Initializable
 {
@@ -93,7 +93,7 @@ contract GelatoDutchXInterface is Initializable
             require(sellToken._safeTransferFrom(_user, address(this), _sellAmount),
                 "GelatoDutchXInterface._sellOnDutchX: _safeTransferFrom failed"
             );
-            require(sellToken._safeIncreaseERC20Allowance(address(dutchX), _sellAmount),
+            require(sellToken._safeIncreaseERC20Allowance(address(_dutchX), _sellAmount),
                 "GelatoDutchXInterface._sellOnDutchX: _safeIncreaseERC20Allowance failed"
             );
         }

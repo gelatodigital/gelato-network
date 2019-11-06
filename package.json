@@ -8,7 +8,7 @@
   "scripts": {
     "kyber-multimint-ropsten": "node scripts/minting/kyber-ropsten/kyberMultiMintForTimeTrigger.js",
     "dutchx-multimint-rinkeby": "node scripts/minting/dutchX-rinkeby/dutchXMultiMintForTimeTrigger.js",
-    "exec-debug": "export BLOCK=$BLOCK; DEBUG='executornode' && node scripts/executornode.js"
+    "exec-rinkeby": "DEBUG='executornode' && node scripts/executornode.js"
   },
   "keywords": [],
   "author": "",

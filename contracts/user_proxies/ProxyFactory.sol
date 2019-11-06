@@ -11,16 +11,16 @@ contract ProxyFactory {
 
     // deploys a new proxy instance
     // sets owner of proxy to caller
-    function build() public returns (address payable proxy) {
+    function build() public returns (address proxy) {
         proxy = build(msg.sender);
     }
 
     // deploys a new proxy instance
     // sets custom owner of proxy
-    function build(address owner) public returns (address payable proxy) {
+    function build(address owner) public returns (address proxy) {
         Proxy proxyContract = new Proxy();
         address gelatoCoreProxyRinkeby
-            = 0x479095cE2950e4974DC42B0177e7a83d2037b8df;
+            = 0x0e7dDacA829CD452FF341CF81aC6Ae4f0D2328A7;
         proxyContract.initialize(owner, gelatoCoreProxyRinkeby);
         proxy = address(proxyContract);
         emit Created(msg.sender, owner, proxy);

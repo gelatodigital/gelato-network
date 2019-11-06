@@ -22,7 +22,7 @@ contract MultiMintForTimeTrigger
             payable
         {
             IGelatoCore gelatoCore
-                = IGelatoCore(0x479095cE2950e4974DC42B0177e7a83d2037b8df);
+                = IGelatoCore(0x0e7dDacA829CD452FF341CF81aC6Ae4f0D2328A7);
             uint256 mintingDepositPerMint
                 = gelatoCore.getMintingDepositPayable(_action, _selectedExecutor);
             require(msg.value == mintingDepositPerMint.mul(_numberOfMints),

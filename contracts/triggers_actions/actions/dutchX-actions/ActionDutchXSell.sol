@@ -2,7 +2,7 @@ pragma solidity ^0.5.10;
 
 import "@openzeppelin/upgrades/contracts/Initializable.sol";
 import '../GelatoActionsStandard.sol';
-import '../../../interfaces/dapp_interfaces/dutchX_interfaces/GelatoDutchXInterface.sol';
+import './GelatoDutchXInterface.sol';
 
 /**
  * @title ActionDutchXSell

@@ -56,8 +56,6 @@ contract Auth is Initializable
 // i.e. a multisig
 contract Proxy is Auth
 {
-    function() external payable {}
-
     function execute(address _target, bytes memory _data)
         public
         auth

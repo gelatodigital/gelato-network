@@ -24,7 +24,7 @@ exports.getActionKyberTradePayloadWithSelector = (
   _user,
   _minConversionRate
 ) => {
-  const actionKyberTradeABI = [
+  const actionDutchXSellABI = [
     {
       name: "action",
       type: "function",
@@ -37,7 +37,7 @@ exports.getActionKyberTradePayloadWithSelector = (
       ]
     }
   ];
-  const interface = new ethers.utils.Interface(actionKyberTradeABI);
+  const interface = new ethers.utils.Interface(actionDutchXSellABI);
 
   const actionPayloadWithSelector = interface.functions.action.encode([
     _src,
@@ -50,11 +50,50 @@ exports.getActionKyberTradePayloadWithSelector = (
   return actionPayloadWithSelector;
 };
 
+exports.getActionDutchXSellPayloadWithSelector = (
+  // action params with selector
+  _executionClaimId,
+  _user,
+  _sellToken,
+  _buyToken,
+  _sellAmount
+) => {
+  const actionDutchXSellABI = [
+    {
+      name: "action",
+      type: "function",
+      inputs: [
+        { type: "uint256", name: "_executionClaimId" },
+        { type: "address", name: "_user" },
+        { type: "address", name: "_sellToken" },
+        { type: "address", name: "_buyToken" },
+        { type: "uint256", name: "_sellAmount" }
+      ],
+      outputs: [
+        { type: "bool", name: "" },
+        { type: "uint256", name: "" },
+        { type: "uint256", name: "" }
+      ]
+    }
+  ];
+  const interface = new ethers.utils.Interface(actionDutchXSellABI);
+
+  const actionPayloadWithSelector = interface.functions.action.encode([
+    _executionClaimId,
+    _user,
+    _sellToken,
+    _buyToken,
+    _sellAmount
+  ]);
+
+  return actionPayloadWithSelector;
+};
+
 exports.getMultiMintForTimeTriggerPayloadWithSelector = (
   timeTrigger,
   startTime,
   action,
-  actionPayload,
+  actionPayloadWithSelector,
   selectedExecutor,
   intervalSpan,
   numberOfMints
@@ -81,7 +120,7 @@ exports.getMultiMintForTimeTriggerPayloadWithSelector = (
       timeTrigger,
       startTime,
       action,
-      actionPayload,
+      actionPayloadWithSelector,
       selectedExecutor,
       intervalSpan,
       numberOfMints

@@ -21,13 +21,13 @@ contract ProxyRegistry is Initializable {
 
     // deploys a new proxy instance
     // sets owner of proxy to caller
-    function build() public returns (address payable proxy) {
+    function build() public returns (address proxy) {
         proxy = build(msg.sender);
     }
 
     // deploys a new proxy instance
     // sets custom owner of proxy
-    function build(address owner) public returns (address payable proxy) {
+    function build(address owner) public returns (address proxy) {
         require(proxies[owner] == Proxy(0) || proxies[owner].owner() != owner); // Not allow new proxy if the user already has one and remains being the owner
         proxy = factory.build(owner);
         proxies[owner] = Proxy(proxy);
