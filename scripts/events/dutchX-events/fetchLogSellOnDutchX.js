@@ -28,9 +28,6 @@ if (process.env.ROPSTEN) {
   console.log(`\n\t\t ❗NO NETWORK DEFINED ❗\n`);
 }
 
-const wallet = ethers.Wallet.fromMnemonic(DEV_MNEMONIC);
-const connectedWallet = wallet.connect(provider);
-
 // Helpers
 const sleep = require("../../helpers/sleep.js").sleep;
 
@@ -41,15 +38,12 @@ if (searchFromBlock === "") {
   throw new Error("You must call this script with 'export BLOCK=NUMBER;'");
 }
 
-// Store the fetched events values here
-let sellOnDutchXLogs = {};
+// LogNewExecutionClaimMinted
+const gelatoDutchXInterfaceABI = [
+  "event LogSellOnDutchX(address indexed user, address indexed dutchXSeller, address indexed sellToken, address buyToken, uint256 sellAmount, uint256 dutchXFee, uint256 sellAmountAfterFee, uint256 sellAuctionIndex)"
+];
 
 async function fetchLogSellOnDutchX() {
-  // LogNewExecutionClaimMinted
-  const gelatoDutchXInterfaceABI = [
-    "event LogSellOnDutchX(address indexed user, address indexed dutchXSeller, address indexed sellToken, address buyToken, uint256 sellAmount, uint256 dutchXFee, uint256 sellAmountAfterFee, uint256 sellAuctionIndex)"
-  ];
-
   // Log Parsing
   let iface = new ethers.utils.Interface(gelatoDutchXInterfaceABI);
 
@@ -63,48 +57,31 @@ async function fetchLogSellOnDutchX() {
   };
   try {
     const logsSellOnDutchX = await provider.getLogs(filterSellOnDutchX);
-    logsSellOnDutchX.forEach(log => {
-      if (log !== null) {
-        const parsedLog = iface.parseLog(log);
-        console.log(parsedlog);
-        const executionClaimId = parsedLog.values.executionClaimId.toString();
-        console.log(
-          `\t\LogSellOnDutchX:\n\t\texecutionClaimId: ${executionClaimId}\n`
-        );
-        sellOnDutchXLogs[executionClaimId] = {
-          user: parsedLog.values.user,
-          dutchXSeller: parsedLog.values.dutchXSeller,
-          sellToken: parsedLog.values.sellToken,
-          buyToken: parsedLog.values.buyToken,
-          sellAmount: parsedLog.values.sellAmount,
-          dutchXFee: parsedLog.values.dutchXFee,
-          sellAmountAfterFee: parsedLog.values.sellAmountAfterFee,
-          sellAuctionIndex: parsedLog.values.sellAuctionIndex
-        };
+    const sellOnDutchXLogs = logsSellOnDutchX.reduce((acc, log, i) => {
+      const parsedLog = iface.parseLog(log);
+      if (!acc[i]) {
+        acc[i] = [];
       }
-    });
+      acc[i] = {
+        user: parsedLog.values.user,
+        dutchXSeller: parsedLog.values.dutchXSeller,
+        sellToken: parsedLog.values.sellToken,
+        buyToken: parsedLog.values.buyToken,
+        sellAmount: parsedLog.values.sellAmount,
+        dutchXFee: parsedLog.values.dutchXFee,
+        sellAmountAfterFee: parsedLog.values.sellAmountAfterFee,
+        sellAuctionIndex: parsedLog.values.sellAuctionIndex
+      };
+      return acc;
+    }, []);
+    // Log available executionClaims
+    if (Object.keys(sellOnDutchXLogs).length === 0) {
+      console.log("\n\n\t\t LogSellOnDutchX: NONE");
+    } else {
+      console.dir(sellOnDutchXLogs);
+    }
   } catch (err) {
     console.log(err);
-  }
-  // Log available executionClaims
-  if (Object.values(sellOnDutchXLogs).length === 0) {
-    console.log("\n\n\t\t LogSellOnDutchX: NONE");
-  } else {
-    console.log(sellOnDutchXLogs);
-    await sleep(10000000);
-    for (let executionClaimId in sellOnDutchXLogs) {
-      if (executionClaimId.dutchXSeller !== undefined) {
-        console.log(
-          `\n\n\t\t LogSellOnDutchX for executionClaimId ${executionClaimId}\n`
-        );
-        for (let [key, value] of Object.entries(
-          sellOnDutchXLogs[executionClaimId]
-        )) {
-          console.log(`\t\t${key}: ${value}`);
-        }
-        console.log("\n");
-      }
-    }
   }
 }
 
