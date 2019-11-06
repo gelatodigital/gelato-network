@@ -1,75 +1,86 @@
-/*pragma solidity ^0.5.10;
+pragma solidity ^0.5.10;
 
-import '../../../0_gelato_interfaces/1_GTA_interfaces/gelato_action_interfaces/IGelatoAction.sol';
-import '../../../1_gelato_standards/2_GTA_standards/gelato_action_standards/GelatoActionsStandard.sol';
-import '../../../1_gelato_standards/1_gelato_dappInterface_standards/gelato_DutchX/GelatoDutchXInterface.sol';
+import "@openzeppelin/upgrades/contracts/Initializable.sol";
+import '../GelatoActionsStandard.sol';
+import './GelatoDutchXInterface.sol';
 
-contract ActionWithdrawFromDutchXToBeneficiary is IGelatoAction,
-                                                  GelatoActionsStandard,
-                                                  GelatoDutchXInterface
+contract ActionWithdrawFromDutchXToUser is Initializable,
+                                           GelatoActionsStandard,
+                                           GelatoDutchXInterface
 {
-    constructor(address payable _gelatoCore,
-                address _dutchX,
-                string memory _actionSignature,
-                uint256 _actionGasStipend
-    )
-        public
-        GelatoActionsStandard(_gelatoCore,
-                              _dutchX,
-                              _actionSignature,
-                              _actionGasStipend
-        )
-        GelatoDutchXInterface(_dutchX)
-    {}
-
-    event LogWithdrawFromDutchX(uint256 indexed executionClaimId,
-                                address indexed user,
-                                address sellToken,
-                                address indexed buyToken,
-                                address seller,
-                                uint256 auctionIndex,
-                                uint256 withdrawAmount
-    );
+    using SafeERC20 for IERC20;
+    
+    /**
+     * @dev OpenZeppelin's upgradeable contracts constructor function. Should be
+       called immediately after deployment and only once in a proxyWrapper's lifetime.
+       Calls are forwarded to the internal _initialize fn to allow for external-internal
+       distinction and inheritance.
+     * @param _actionGasStipend the maxGas consumption of a normal tx to this.action()
+     * @param _dutchX the address of the deployed dutchX Proxy
+     */
+    function initialize(uint256 _actionGasStipend, address _dutchX)
+        external
+    {
+        _initialize(_actionGasStipend, _dutchX);
+    }
+    function _initialize(uint256 _actionGasStipend, address _dutchX)
+        internal
+        initializer
+    {
+        actionSelector = this.action.selector;
+        actionGasStipend = _actionGasStipend;
+        GelatoDutchXInterface._initialize(_dutchX);
+    }
 
     // Action: public due to msg.sender context persistance, in internal calls (chaining)
-    function withdrawFromDutchXToUser(
-        // Standard Action Params
-        uint256 _executionClaimId,
-        // Specific Action Params
-        address _sellToken,
-        address _buyToken,
-        address _seller,
-        uint256 _auctionIndex,
-        uint256 _sellAmountAfterFee
+    function _action(// Standard Action Params
+                     address _user,
+                     // Specific Action Params
+                     address _sellToken,
+                     address _buyToken,
+                     uint256 _auctionIndex,
+                     uint256 _sellAmountAfterFee
     )
-        msgSenderIsGelatoCore
-        public
+        internal
         returns(bool)
     {
-        address user =_getUser(_executionClaimId);
         uint256 withdrawAmount = _getWithdrawAmount(_sellToken,
                                                     _buyToken,
                                                     _auctionIndex,
                                                     _sellAmountAfterFee
         );
-        require(_withdrawFromDutchX(_sellToken,
-                                    _buyToken,
-                                    _seller,
-                                    _auctionIndex,
-                                    withdrawAmount),
+        require(_withdrawFromDutchX(_sellToken, _buyToken, _auctionIndex, withdrawAmount),
             "ActionSellWithdrawDutchX.action._withdrawFromDutchX failed"
         );
-        ERC20(_buyToken).safeTransfer(user, withdrawAmount);
-        emit LogWithdrawFromDutchX(_executionClaimId,
-                                   user,
+        IERC20(_buyToken).safeTransfer(_user, withdrawAmount);
+        emit LogWithdrawFromDutchX(_user,
                                    _sellToken,
                                    _buyToken,
-                                   _seller,
                                    _auctionIndex,
                                    withdrawAmount
         );
-        emit LogAction(_executionClaimId, user);
+        emit LogAction(_user);
         return true;
     }
+
+    function action(// Standard Action Params
+                    address _user,
+                    // Specific Action Params
+                    address _sellToken,
+                    address _buyToken,
+                    uint256 _auctionIndex,
+                    uint256 _sellAmountAfterFee
+    )
+        external
+        returns(bool)
+    {
+        return _action(_user, _sellToken, _buyToken, _auctionIndex, _sellAmountAfterFee);
+    }
+
+    event LogWithdrawFromDutchX(address indexed user,
+                                address indexed sellToken,
+                                address indexed buyToken,
+                                uint256 auctionIndex,
+                                uint256 withdrawAmount
+    );
 }
-*/
