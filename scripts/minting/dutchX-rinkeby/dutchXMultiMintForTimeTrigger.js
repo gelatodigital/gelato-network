@@ -51,7 +51,7 @@ const MULTI_MINT_IMPL_ADDRESS = "0x03692e5B7fF7ceF44d34BEA26110d85E5a12b3Db";
 const TRIGGER_TIME_PROXY_ADDRESS = "0x7A154C838f0FE48944D0a04a125f4D0C80c9360F";
 const START_TIME = Math.floor(Date.now() / 1000);
 const ACTION_DUTCHX_SELL_IMPL_ADDRESS =
-  "0x986F7247Be7768B6fB4DA3D35f8e77234E040F34";
+  "0xd41Dcd393262c226736c1aACe1a4DAc571bb20Eb";
 // Specific Action Params: encoded during main() execution
 const USER = "0x203AdbbA2402a36C202F207caA8ce81f1A4c7a72";
 const SELL_TOKEN = "0xd0dab4e640d95e9e8a47545598c33e31bdb53c7c"; // rinkeby GNO
@@ -70,14 +70,8 @@ const getMultiMintForTimeTriggerPayloadWithSelector = require("../../helpers/enc
 
 // The execution logic
 async function main() {
-  let executionClaimId = await gelatoCoreContract.getCurrentExecutionClaimId();
-  console.log(`\t\t Current ExecutionClaimId: ${executionClaimId}\n`);
-  executionClaimId++;
-  console.log(`\t\t Encoding for ExecutionClaimId: ${executionClaimId}\n`);
-
   // Encode the specific params for ActionKyberTrade
   const ACTION_DUTCHX_SELL_PAYLOAD = getActionDutchXSellPayloadWithSelector(
-    executionClaimId,
     USER,
     SELL_TOKEN,
     BUY_TOKEN,

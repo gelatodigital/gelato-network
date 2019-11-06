@@ -32,5 +32,5 @@ contract GelatoActionsStandard
     }
 
     // Standard Event
-    event LogAction(uint256 indexed executionClaimId, address indexed user);
+    event LogAction(address indexed user);
 }

@@ -52,7 +52,6 @@ exports.getActionKyberTradePayloadWithSelector = (
 
 exports.getActionDutchXSellPayloadWithSelector = (
   // action params with selector
-  _executionClaimId,
   _user,
   _sellToken,
   _buyToken,
@@ -63,7 +62,6 @@ exports.getActionDutchXSellPayloadWithSelector = (
       name: "action",
       type: "function",
       inputs: [
-        { type: "uint256", name: "_executionClaimId" },
         { type: "address", name: "_user" },
         { type: "address", name: "_sellToken" },
         { type: "address", name: "_buyToken" },
@@ -79,7 +77,6 @@ exports.getActionDutchXSellPayloadWithSelector = (
   const interface = new ethers.utils.Interface(actionDutchXSellABI);
 
   const actionPayloadWithSelector = interface.functions.action.encode([
-    _executionClaimId,
     _user,
     _sellToken,
     _buyToken,

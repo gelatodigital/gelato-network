@@ -74,7 +74,7 @@ GNO: 0xd0dab4e640d95e9e8a47545598c33e31bdb53c7c
 WETH: 0xc778417e063141139fce010982780140aa0cd5ab
 
 Actions:
-ActionDutchXSellImplementation: 0x986F7247Be7768B6fB4DA3D35f8e77234E040F34
+ActionDutchXSellImplementation: 0xd41Dcd393262c226736c1aACe1a4DAc571bb20Eb
 
 Triggers:
 

@@ -64,19 +64,17 @@ contract GelatoDutchXInterface is Initializable
         }
     }
 
-    event LogSellOnDutchX(uint256 indexed executionClaimId,
+    event LogSellOnDutchX(address indexed user,
                           address indexed dutchXSeller,
                           address indexed sellToken,
                           address buyToken,
-                          address user,
                           uint256 sellAmount,
                           uint256 dutchXFee,
                           uint256 sellAmountAfterFee,
                           uint256 sellAuctionIndex
     );
 
-    function _sellOnDutchX(uint256 _executionClaimId,
-                           address _user,
+    function _sellOnDutchX(address _user,
                            address _sellToken,
                            address _buyToken,
                            uint256 _sellAmount
@@ -102,11 +100,10 @@ contract GelatoDutchXInterface is Initializable
             "GelatoDutchXInterface._sellOnDutchX: nextParticipationIndex failed"
         );
         _dutchX.depositAndSell(_sellToken, _buyToken, _sellAmount);
-        emit LogSellOnDutchX(_executionClaimId,
+        emit LogSellOnDutchX(_user,
                              address(this),  // userProxy/dutchXSeller
                              _sellToken,
                              _buyToken,
-                             _user,
                              _sellAmount,
                              dutchXFee,
                              sellAmountAfterFee,

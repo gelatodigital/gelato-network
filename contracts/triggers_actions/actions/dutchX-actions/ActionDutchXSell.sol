@@ -99,7 +99,6 @@ contract ActionDutchXSell is Initializable,
     // ___________________ ACTION FUNCTION & API __________________________________
     ///@dev Internal action fn to enable inheritance with msg.sender persistance
     function _action(// Standard Action Params
-                     uint256 _executionClaimId,
                      address _user,
                      // Specific Action Params
                      address _sellToken,
@@ -111,8 +110,7 @@ contract ActionDutchXSell is Initializable,
     {
         (bool success,
          uint256 sellAuctionIndex,
-         uint256 sellAmountAfterFee) = _sellOnDutchX(_executionClaimId,
-                                                     _user,
+         uint256 sellAmountAfterFee) = _sellOnDutchX(_user,
                                                      _sellToken,
                                                      _buyToken,
                                                      _sellAmount
@@ -120,7 +118,7 @@ contract ActionDutchXSell is Initializable,
         require(success,
             "ActionDutchXSell.action._sellOnDutchX failed"
         );
-        emit LogAction(_executionClaimId, _user);
+        emit LogAction(_user);
         return (true, sellAuctionIndex, sellAmountAfterFee);
     }
     /**
@@ -128,7 +126,6 @@ contract ActionDutchXSell is Initializable,
      * @dev action API to be .delegatecalled by userProxy.execute(). Forwards calls
         to internal fn _action as part of internal-external interface distinction
         and enablement of proper usage (msg.sender persistance) via inheritance.
-     * @param _executionClaimId the id received from gelatoCore.mintExecutionClaim()
      * @param _user the actual end-user (not their Gelato userProxy)
      * @param _sellToken x
      * @param _buyToken x
@@ -138,7 +135,6 @@ contract ActionDutchXSell is Initializable,
      * @return uint256 sellAmountAfterFee == actualSellAmount: _sellAmount - dutchXFee
      */
     function action(// Standard Action Params
-                    uint256 _executionClaimId,
                     address _user,
                     // Specific Action Params
                     address _sellToken,
@@ -148,7 +144,7 @@ contract ActionDutchXSell is Initializable,
         external
         returns(bool, uint256, uint256)
     {
-        return _action(_executionClaimId, _user, _sellToken, _buyToken, _sellAmount);
+        return _action(_user, _sellToken, _buyToken, _sellAmount);
     }
     // ======================
 }
