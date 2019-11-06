@@ -56,7 +56,7 @@ const ACTION_DUTCHX_SELL_IMPL_ADDRESS =
 const USER = "0x203AdbbA2402a36C202F207caA8ce81f1A4c7a72";
 const SELL_TOKEN = "0xd0dab4e640d95e9e8a47545598c33e31bdb53c7c"; // rinkeby GNO
 const BUY_TOKEN = "0xc778417e063141139fce010982780140aa0cd5ab"; // rinkeby WETH
-const SELL_AMOUNT = ethers.utils.parseUnits("50", 18);
+const SELL_AMOUNT = ethers.utils.parseUnits("10", 18);
 // minConversionRate async fetched from KyberNetwork during main() execution
 const SELECTED_EXECUTOR_ADDRESS = "0x203AdbbA2402a36C202F207caA8ce81f1A4c7a72";
 const INTERVAL_SPAN = "300"; // 300 seconds
@@ -134,7 +134,7 @@ async function main() {
       }
     );
     console.log(
-      `\n\t\t userProxy.execute(multiMintForTimeTrigger) txHash:\n \t${tx.hash}`
+      `\n\t\t userProxy.execute(multiMintForTimeTrigger) txHash:\n \t${tx.hash}\n`
     );
     // The operation is NOT complete yet; we must wait until it is mined
     console.log("\t\t waiting for the execute transaction to get mined \n");

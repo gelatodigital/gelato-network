@@ -47,14 +47,14 @@ let sellOnDutchXLogs = {};
 async function fetchLogSellOnDutchX() {
   // LogNewExecutionClaimMinted
   const gelatoDutchXInterfaceABI = [
-    "event LogSellOnDutchX(uint256 indexed executionClaimId, address indexed dutchXSeller, address indexed sellToken, address buyToken, address user, uint256 sellAmount, uint256 dutchXFee, uint256 sellAmountAfterFee, uint256 sellAuctionIndex)"
+    "event LogSellOnDutchX(address indexed user, address indexed dutchXSeller, address indexed sellToken, address buyToken, uint256 sellAmount, uint256 dutchXFee, uint256 sellAmountAfterFee, uint256 sellAuctionIndex)"
   ];
 
   // Log Parsing
   let iface = new ethers.utils.Interface(gelatoDutchXInterfaceABI);
 
   let topicSellOnDutchX = ethers.utils.id(
-    "LogSellOnDutchX(uint256,address,address,address,address,uint256,uint256,uint256,uint256)"
+    "LogSellOnDutchX(address,address,address,address,uint256,uint256,uint256,uint256)"
   );
   let filterSellOnDutchX = {
     address: userProxyAddress,
@@ -66,16 +66,16 @@ async function fetchLogSellOnDutchX() {
     logsSellOnDutchX.forEach(log => {
       if (log !== null) {
         const parsedLog = iface.parseLog(log);
+        console.log(parsedlog);
         const executionClaimId = parsedLog.values.executionClaimId.toString();
         console.log(
           `\t\LogSellOnDutchX:\n\t\texecutionClaimId: ${executionClaimId}\n`
         );
         sellOnDutchXLogs[executionClaimId] = {
-          executionClaimId: executionClaimId,
+          user: parsedLog.values.user,
           dutchXSeller: parsedLog.values.dutchXSeller,
           sellToken: parsedLog.values.sellToken,
           buyToken: parsedLog.values.buyToken,
-          user: parsedLog.values.user,
           sellAmount: parsedLog.values.sellAmount,
           dutchXFee: parsedLog.values.dutchXFee,
           sellAmountAfterFee: parsedLog.values.sellAmountAfterFee,

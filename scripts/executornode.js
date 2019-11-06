@@ -37,7 +37,6 @@ if (process.env.ROPSTEN) {
 const wallet = ethers.Wallet.fromMnemonic(DEV_MNEMONIC);
 const connectedWallet = wallet.connect(provider);
 
-
 // Read-Write Instance of GelatoCore
 const gelatoCoreContractABI = [
   "function canExecute(address _trigger, bytes _triggerPayload, address _userProxy, bytes _actionPayload, uint256 _executeGas, uint256 _executionClaimId, uint256 _executionClaimExpiryDate, uint256 _executorFee) view returns (uint8)",
@@ -162,11 +161,13 @@ async function queryChainAndExecute() {
       if (log !== undefined) {
         const parsedLog = iface.parseLog(log);
         const executionClaimId = parsedLog.values.executionClaimId.toString();
-        for (let key of Object.keys(mintedClaims[executionClaimId])) {
-          delete mintedClaims[executionClaimId][key];
+        if (mintedClaims[executionClaimId] !== undefined) {
+          for (let key of Object.keys(mintedClaims[executionClaimId])) {
+            delete mintedClaims[executionClaimId][key];
+          }
+          delete mintedClaims[executionClaimId];
+          debug(`\n\t\t LogClaimExecutedAndDeleted: ${executionClaimId}`);
         }
-        delete mintedClaims[executionClaimId];
-        debug(`\n\t\t LogClaimExecutedAndDeleted: ${executionClaimId}`);
       }
     });
   } catch (err) {
@@ -188,11 +189,13 @@ async function queryChainAndExecute() {
       if (log !== undefined) {
         const parsedLog = iface.parseLog(log);
         const executionClaimId = parsedLog.values.executionClaimId.toString();
-        for (let key of Object.keys(mintedClaims[executionClaimId])) {
-          delete mintedClaims[executionClaimId][key];
+        if (mintedClaims[executionClaimId] !== undefined) {
+          for (let key of Object.keys(mintedClaims[executionClaimId])) {
+            delete mintedClaims[executionClaimId][key];
+          }
+          delete mintedClaims[executionClaimId];
+          debug(`\n\t\t LogExecutionClaimCancelled: ${executionClaimId}`);
         }
-        delete mintedClaims[executionClaimId];
-        debug(`\n\t\t LogExecutionClaimCancelled: ${executionClaimId}`);
       }
     });
   } catch (err) {
