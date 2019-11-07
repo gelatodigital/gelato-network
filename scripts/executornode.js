@@ -207,7 +207,7 @@ async function queryChainAndExecute() {
     debug("\n\n\t\t Available ExecutionClaims: NONE");
   } else {
     for (let executionClaimId in mintedClaims) {
-      if (executionClaimId.trigger !== undefined) {
+      if (mintedClaims[executionClaimId].trigger !== undefined) {
         debug("\n\n\t\t Available ExecutionClaims:");
         for (let [key, value] of Object.entries(
           mintedClaims[executionClaimId]

@@ -54,8 +54,8 @@ const ACTION_DUTCHX_SELL_IMPL_ADDRESS =
   "0xd41Dcd393262c226736c1aACe1a4DAc571bb20Eb";
 // Specific Action Params: encoded during main() execution
 const USER = "0x203AdbbA2402a36C202F207caA8ce81f1A4c7a72";
-const SELL_TOKEN = "0xc778417e063141139fce010982780140aa0cd5ab"; // rinkeby GNO
-const BUY_TOKEN = "0xd0dab4e640d95e9e8a47545598c33e31bdb53c7c"; // rinkeby WETH
+const SELL_TOKEN = "0xd0dab4e640d95e9e8a47545598c33e31bdb53c7c"; // rinkeby GNO
+const BUY_TOKEN = "0xc778417e063141139fce010982780140aa0cd5ab"; // rinkeby WETH
 const SELL_AMOUNT = ethers.utils.parseUnits("1", 18);
 // minConversionRate async fetched from KyberNetwork during main() execution
 const SELECTED_EXECUTOR_ADDRESS = "0x203AdbbA2402a36C202F207caA8ce81f1A4c7a72";
@@ -63,7 +63,7 @@ const INTERVAL_SPAN = "300"; // 300 seconds
 const NUMBER_OF_MINTS = "2";
 
 // ABI encoding function
-const getActionDutchXSellPayloadWithSelector = require("./actionDutchXSellEncoder.js")
+const getActionDutchXSellPayloadWithSelector = require("./dutchX-encoders/actionDutchXSellEncoder.js")
   .getActionDutchXSellPayloadWithSelector;
 const getMultiMintForTimeTriggerPayloadWithSelector = require("../multi-mint/time-trigger/multiMintTimeTriggerEncoder.js")
   .getMultiMintForTimeTriggerPayloadWithSelector;
