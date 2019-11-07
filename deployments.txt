@@ -71,8 +71,8 @@ User-Proxies
 ProxyRegistryProxy: 0x73ae6fCd61d5A42BD9eAdC32c573aa9119d540F6
 ProxyFactoryProxy: 0x49A791153dbEe3fBc081Ce159d51C70A89323e73
 
-DUTCHX
-----------
+        DUTCHX
+===================
 DutchXProxy: 0xaAEb2035FF394fdB2C879190f95e7676f1A9444B
 
 GNO: 0xd0dab4e640d95e9e8a47545598c33e31bdb53c7c
@@ -83,8 +83,9 @@ ActionDutchXSellImplementation: 0xd41Dcd393262c226736c1aACe1a4DAc571bb20Eb
 ActionWithdrawFromDutchXToUserImpl: 0x41f1E7dC0087dDf692F1474275b460776c25946e
 
 Triggers:
+TriggerDutchXAuctionCleared: 0xBe45753474D625952a26303C48B19AA47809165a
+=====================
 
----------
 
 Triggers
 --------
