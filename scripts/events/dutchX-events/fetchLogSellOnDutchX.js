@@ -18,11 +18,11 @@ let userProxyAddress;
 let provider;
 if (process.env.ROPSTEN) {
   provider = new ethers.providers.InfuraProvider("ropsten", INFURA_ID);
-  //userProxyAddress = "0x624f09392ae014484a1aB64c6D155A7E2B6998E6";
+  userProxyAddress = process.env.USER_PROXY;
   console.log(`\n\t\t ✅ connected to ROPSTEN ✅ \n`);
 } else if (process.env.RINKEBY) {
   provider = new ethers.providers.InfuraProvider("rinkeby", INFURA_ID);
-  userProxyAddress = "0x2cBe8EB80604B37d723C7a6A9f971c62F2E202b1";
+  userProxyAddress = process.env.USER_PROXY;
   console.log(`\n\t\t ✅ connected to RINKEBY ✅ \n`);
 } else {
   console.log(`\n\t\t ❗NO NETWORK DEFINED ❗\n`);

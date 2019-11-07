@@ -6,7 +6,8 @@
     "ProxyFactory": "ProxyFactory",
     "ProxyRegistry": "ProxyRegistry",
     "TriggerTimestampPassed": "TriggerTimestampPassed",
-    "MultiMintForTimeTrigger": "MultiMintForTimeTrigger"
+    "MultiMintForTimeTrigger": "MultiMintForTimeTrigger",
+    "ActionWithdrawFromDutchXToUser": "ActionWithdrawFromDutchXToUser"
   },
   "dependencies": {},
   "name": "gelato",

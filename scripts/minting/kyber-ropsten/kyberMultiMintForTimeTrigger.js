@@ -73,9 +73,9 @@ const INTERVAL_SPAN = "120"; // 300 seconds
 const NUMBER_OF_MINTS = "2";
 
 // ABI encoding function
-const getActionKyberTradePayloadWithSelector = require("../helpers/encodings.js")
+const getActionKyberTradePayloadWithSelector = require("./actionKyberTradeEncoder.js")
   .getActionKyberTradePayloadWithSelector;
-const getMultiMintForTimeTriggerPayloadWithSelector = require("../helpers/encodings.js")
+const getMultiMintForTimeTriggerPayloadWithSelector = require("../multi-mint/time-trigger/multiMintTimeTriggerEncoder.js")
   .getMultiMintForTimeTriggerPayloadWithSelector;
 
 // The execution logic
