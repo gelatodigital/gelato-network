@@ -52,15 +52,18 @@ contract ActionClaimWithdrawBalancesAtIndexFromDutchXToUser is Initializable,
         uint256 sellerBalancesAtIndex = _getSellerBalancesAtIndex(_sellToken,
                                                                   _buyToken,
                                                                   _auctionIndex,
-                                                                  _user
+                                                                  address(this)
         );
         require(sellerBalancesAtIndex != 0,
             "ActionClaimWithdrawBalancesAtIndexFromDutchXToUser: nothing to claim"
         );
         uint256 withdrawAmount
-            = _claimSellerFundsAtIndex(_sellToken, _buyToken, _user, _auctionIndex);
+            = _claimSellerFundsAtIndex(_sellToken, _buyToken, address(this), _auctionIndex);
         require(withdrawAmount != 0,
             "ActionClaimWithdrawBalancesAtIndexFromDutchXToUser.__claimSellerFundsAtIndex: failed"
+        );
+        require(_withdrawTokenFromDutchX(_buyToken, withdrawAmount),
+            "ActionClaimWithdrawBalancesAtIndexFromDutchXToUser.action._withdrawTokenFromDutchX failed"
         );
         IERC20(_buyToken).safeTransfer(_user, withdrawAmount);
         emit LogClaimWithdrawFromDutchXToUser(_user,

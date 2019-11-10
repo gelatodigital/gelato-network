@@ -20,7 +20,7 @@ let provider;
 let gelatoCoreAddress;
 
 // Parameters needed
-const AUCTION_INDEX = "684";
+const AUCTION_INDEX = "685";
 // Trigger
 let triggerDutchXAuctionCleared;
 // Specific Trigger Params
@@ -44,10 +44,10 @@ if (process.env.ROPSTEN) {
   provider = new ethers.providers.InfuraProvider("rinkeby", INFURA_ID);
   gelatoCoreAddress = "0x0e7dDacA829CD452FF341CF81aC6Ae4f0D2328A7";
   triggerDutchXAuctionCleared = "0xBe45753474D625952a26303C48B19AA47809165a";
-  sellToken = "0xd0dab4e640d95e9e8a47545598c33e31bdb53c7c"; // rinkeby GNO
-  buyToken = "0xc778417e063141139fce010982780140aa0cd5ab"; // rinkeby WETH
+  sellToken = "0xc778417e063141139fce010982780140aa0cd5ab"; // rinkeby GNO
+  buyToken = "0xd0dab4e640d95e9e8a47545598c33e31bdb53c7c"; // rinkeby WETH
   actionClaimWithdrawBalancesAtIndexFromDutchXToUser =
-    "0x37DeBF31e652BeF1DF413960D6203Cd505693dDb";
+    "0xe22A92F4bb9e9Ba67636AB005B7bd80967dfE857";
   user = "0x203AdbbA2402a36C202F207caA8ce81f1A4c7a72";
   selectedExecutor = "0x203AdbbA2402a36C202F207caA8ce81f1A4c7a72";
 } else {

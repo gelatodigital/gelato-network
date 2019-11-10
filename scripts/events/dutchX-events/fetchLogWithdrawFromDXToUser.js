@@ -42,7 +42,7 @@ if (searchFromBlock === "" || searchFromBlock === undefined) {
 
 // LogNewExecutionClaimMinted
 const actionWithdrawFromDXToUserABI = [
-  "event LogWithdrawFromDutchXToUser(address indexed _user, address indexed _token, uint256 withdrawAmount)"
+  "event LogWithdrawFromDutchXToUser(address indexed user, address indexed token, uint256 withdrawAmount)"
 ];
 
 async function main() {
@@ -79,7 +79,7 @@ async function main() {
     } else {
       for (let obj of withdrawFromDXToUserLogs) {
         for (let [key, value] of Object.entries(obj)) {
-          console.log(`${key}: ${value.toString()}`);
+          console.log(`${key}: ${value}`);
         }
         console.log("\n");
       }
