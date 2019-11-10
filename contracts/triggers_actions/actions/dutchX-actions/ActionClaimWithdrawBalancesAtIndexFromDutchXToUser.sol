@@ -4,12 +4,17 @@ import "@openzeppelin/upgrades/contracts/Initializable.sol";
 import '../GelatoActionsStandard.sol';
 import './GelatoDutchXInterface.sol';
 
-contract ActionWithdrawFromDutchXToUser is Initializable,
-                                           GelatoActionsStandard,
-                                           GelatoDutchXInterface
+
+/// @notice This action withdraws all of user's sellerBalances at auctionIndex.
+/// @dev Caution: claimAndWithdraw only works 1 time per user per auctionIndex.
+//      for multiple withdraws for 1 user from same auctionIndex use 1 time claim()
+//      or claimAndWithdraw(), and  all other times ONLY withdraw()
+contract ActionClaimWithdrawBalancesAtIndexFromDutchXToUser is Initializable,
+                                                               GelatoActionsStandard,
+                                                               GelatoDutchXInterface
 {
     using SafeERC20 for IERC20;
-    
+
     /**
      * @dev OpenZeppelin's upgradeable contracts constructor function. Should be
        called immediately after deployment and only once in a proxyWrapper's lifetime.
@@ -38,26 +43,31 @@ contract ActionWithdrawFromDutchXToUser is Initializable,
                      // Specific Action Params
                      address _sellToken,
                      address _buyToken,
-                     uint256 _auctionIndex,
-                     uint256 _sellAmountAfterFee
+                     uint256 _auctionIndex
     )
         internal
         returns(bool)
     {
+
+        uint256 sellerBalancesAtIndex = _getSellerBalancesAtIndex(_sellToken,
+                                                                  _buyToken,
+                                                                  _auctionIndex,
+                                                                  _user
+        );
         uint256 withdrawAmount = _getWithdrawAmount(_sellToken,
                                                     _buyToken,
                                                     _auctionIndex,
-                                                    _sellAmountAfterFee
+                                                    sellerBalancesAtIndex
         );
         require(_withdrawFromDutchX(_sellToken, _buyToken, _auctionIndex, withdrawAmount),
             "ActionSellWithdrawDutchX.action._withdrawFromDutchX failed"
         );
         IERC20(_buyToken).safeTransfer(_user, withdrawAmount);
-        emit LogWithdrawFromDutchX(_user,
-                                   _sellToken,
-                                   _buyToken,
-                                   _auctionIndex,
-                                   withdrawAmount
+        emit LogWithdrawFromDutchXToUser(_user,
+                                         _sellToken,
+                                         _buyToken,
+                                         _auctionIndex,
+                                         withdrawAmount
         );
         emit LogAction(_user);
         return true;
@@ -68,19 +78,18 @@ contract ActionWithdrawFromDutchXToUser is Initializable,
                     // Specific Action Params
                     address _sellToken,
                     address _buyToken,
-                    uint256 _auctionIndex,
-                    uint256 _sellAmountAfterFee
+                    uint256 _auctionIndex
     )
         external
         returns(bool)
     {
-        return _action(_user, _sellToken, _buyToken, _auctionIndex, _sellAmountAfterFee);
+        return _action(_user, _sellToken, _buyToken, _auctionIndex);
     }
 
-    event LogWithdrawFromDutchX(address indexed user,
-                                address indexed sellToken,
-                                address indexed buyToken,
-                                uint256 auctionIndex,
-                                uint256 withdrawAmount
+    event LogWithdrawFromDutchXToUser(address indexed user,
+                                      address indexed sellToken,
+                                      address indexed buyToken,
+                                      uint256 auctionIndex,
+                                      uint256 withdrawAmount
     );
 }

@@ -115,10 +115,24 @@ contract GelatoDutchXInterface is Initializable
 
 
     // ******************** WITHDRAW ********************
+    function _getSellerBalancesAtIndex(address _sellToken,
+                                       address _buyToken,
+                                       uint256 _auctionIndex,
+                                       address _user
+    )
+        internal
+        view
+        returns(uint256 sellerBalances)
+    {
+        // Rinkeby DutchX Proxy
+        IDutchX _dutchX = IDutchX(0xaAEb2035FF394fdB2C879190f95e7676f1A9444B);
+        sellerBalances = _dutchX.sellerBalances(_sellToken, _buyToken, _auctionIndex, _user);
+    }
+
     function _getWithdrawAmount(address _sellToken,
                                 address _buyToken,
                                 uint256 _auctionIndex,
-                                uint256 _sellAmountAfterFee
+                                uint256 _sellerBalancesAtIndex
     )
         internal
         returns(uint256 withdrawAmount)
@@ -130,7 +144,7 @@ contract GelatoDutchXInterface is Initializable
         require(den != 0,
             "GelatoDutchX._getWithdrawAmount: Auction did not clear."
         );
-        withdrawAmount = _sellAmountAfterFee.mul(num).div(den);
+        withdrawAmount = _sellerBalancesAtIndex.mul(num).div(den);
     }
 
     function _withdrawFromDutchX(address _sellToken,

@@ -15,12 +15,22 @@ console.log(
 );
 
 // Setting up Provider and Signer (wallet)
-const provider = new ethers.providers.InfuraProvider("rinkeby", INFURA_ID);
+let provider;
+let gelatoCoreAddress;
+
+// The block from which we start
+if (process.env.ROPSTEN) {
+  console.log(`\n\t\t ✅ connected to ROPSTEN ✅ \n`);
+  provider = new ethers.providers.InfuraProvider("ropsten", INFURA_ID);
+} else if (process.env.RINKEBY) {
+  console.log(`\n\t\t ✅ connected to RINKEBY ✅ \n`);
+  provider = new ethers.providers.InfuraProvider("rinkeby", INFURA_ID);
+  gelatoCoreAddress = "0x0e7dDacA829CD452FF341CF81aC6Ae4f0D2328A7";
+} else {
+  console.log(`\n\t\t ❗NO NETWORK DEFINED ❗\n`);
+}
 const wallet = ethers.Wallet.fromMnemonic(DEV_MNEMONIC);
 const connectedWallet = wallet.connect(provider);
-
-// Contract Addresses for instantiation
-const GELATO_CORE_ADDRESS = "0x0e7dDacA829CD452FF341CF81aC6Ae4f0D2328A7";
 
 // ReadInstance of GelatoCore
 const gelatoCoreABI = [
@@ -28,7 +38,7 @@ const gelatoCoreABI = [
   "function mintExecutionClaim(address _trigger, bytes _triggerPayload, address _action, bytes _actionPayload, address _selectedExecutor) payable"
 ];
 const gelatoCoreContract = new ethers.Contract(
-  GELATO_CORE_ADDRESS,
+  gelatoCoreAddress,
   gelatoCoreABI,
   connectedWallet
 );
@@ -41,27 +51,26 @@ const SELL_TOKEN = "0xd0dab4e640d95e9e8a47545598c33e31bdb53c7c"; // rinkeby GNO
 const BUY_TOKEN = "0xc778417e063141139fce010982780140aa0cd5ab"; // rinkeby WETH
 const AUCTION_INDEX = "684";
 // Action
-const ACTION_WITHDRAW_FROM_DUTCHX_TO_USER =
-  "0x41f1E7dC0087dDf692F1474275b460776c25946e";
+const ACTION_CLAIM_WITHDRAW_BALANCES_AT_INDEX_FROM_DUTCHX_TO_USER =
+  "0x3A332fd2c1E644b2EeE987d2680aE2D4386931d1";
 // Specific Action Params:
 const USER = "0x203AdbbA2402a36C202F207caA8ce81f1A4c7a72";
 // const SELL_TOKEN = "0xd0dab4e640d95e9e8a47545598c33e31bdb53c7c"; // rinkeby GNO
 // const BUY_TOKEN = "0xc778417e063141139fce010982780140aa0cd5ab"; // rinkeby WETH
-const SELL_AMOUNT_AFTER_FEE = ethers.utils.parseUnits("49.75", 18);
 
 // gelatoCore.mintExecutionClaim params
 const SELECTED_EXECUTOR_ADDRESS = "0x203AdbbA2402a36C202F207caA8ce81f1A4c7a72";
 
 // ABI encoding function
-const getTriggerDXAuctionClearedPayloadWithSelector = require("./dutchx-encoders/triggerDXAuctionClearedEncoder.js")
+const getTriggerPayloadWithSelector = require("./dutchx-encoders/triggerDXAuctionClearedEncoder.js")
   .getTriggerDXAuctionClearedPayloadWithSelector;
-const getActionWithdrawFromDXToUserPayloadWithSelector = require("./dutchx-encoders/actionWithdrawFromDXToUserEncoder.js")
+const getActionPayloadWithSelector = require("./dutchx-encoders/actionWithdrawBalancesAtIndexFromDXToUserEncoder.js")
   .getActionWithdrawFromDXToUserPayloadWithSelector;
 
 // The execution logic
 async function main() {
   // Encode the specific params for ActionKyberTrade
-  const TRIGGER_DUTCHX_AUCTION_CLEARED_PAYLOAD = getTriggerDXAuctionClearedPayloadWithSelector(
+  const TRIGGER_DUTCHX_AUCTION_CLEARED_PAYLOAD = getTriggerPayloadWithSelector(
     SELL_TOKEN,
     BUY_TOKEN,
     AUCTION_INDEX
@@ -71,15 +80,14 @@ async function main() {
   );
 
   // Encode the specific params for ActionKyberTrade
-  const ACTION_WITHDRAW_FROM_DX_TO_USER_PAYLOAD = getActionWithdrawFromDXToUserPayloadWithSelector(
+  const ACTION_CLAIM_WITHDRAW_BALANCES_AT_INDEX_FROM_DX_TO_USER_PAYLOAD = getActionPayloadWithSelector(
     USER,
     SELL_TOKEN,
     BUY_TOKEN,
-    AUCTION_INDEX,
-    SELL_AMOUNT_AFTER_FEE
+    AUCTION_INDEX
   );
   console.log(
-    `\t\t ActionWithdrawFromDutchXToUser Payload With Selector: \n ${ACTION_WITHDRAW_FROM_DX_TO_USER_PAYLOAD}\n`
+    `\t\t ActionClaimWithdrawBalancesAtIndexFromDutchXToUser Payload With Selector: \n ${ACTION_CLAIM_WITHDRAW_BALANCES_AT_INDEX_FROM_DX_TO_USER_PAYLOAD}\n`
   );
 
   // Getting the current Ethereum price
@@ -88,7 +96,7 @@ async function main() {
   console.log(`\n\t\t Ether price in USD: ${ethUSDPrice}`);
 
   const MINTING_DEPOSIT = await gelatoCoreContract.getMintingDepositPayable(
-    ACTION_WITHDRAW_FROM_DUTCHX_TO_USER,
+    ACTION_CLAIM_WITHDRAW_BALANCES_AT_INDEX_FROM_DUTCHX_TO_USER,
     SELECTED_EXECUTOR_ADDRESS
   );
   console.log(
@@ -105,8 +113,8 @@ async function main() {
     tx = await gelatoCoreContract.mintExecutionClaim(
       TRIGGER_DUTCHX_AUCTION_CLEARED,
       TRIGGER_DUTCHX_AUCTION_CLEARED_PAYLOAD,
-      ACTION_WITHDRAW_FROM_DUTCHX_TO_USER,
-      ACTION_WITHDRAW_FROM_DX_TO_USER_PAYLOAD,
+      ACTION_CLAIM_WITHDRAW_BALANCES_AT_INDEX_FROM_DUTCHX_TO_USER,
+      ACTION_CLAIM_WITHDRAW_BALANCES_AT_INDEX_FROM_DX_TO_USER_PAYLOAD,
       SELECTED_EXECUTOR_ADDRESS,
       {
         value: MINTING_DEPOSIT,

@@ -558,99 +558,6 @@
         "uninitializedBaseContracts": []
       }
     },
-    "ActionWithdrawFromDutchXToUser": {
-      "address": "0x41f1E7dC0087dDf692F1474275b460776c25946e",
-      "constructorCode": "60806040525b5b5b5b61000d565b6110a18061001c6000396000f3fe",
-      "bodyBytecodeHash": "6e8fb0e9d524dc8869f58098c723c2e6998335cad22cb0db33bcbd804d5ea349",
-      "localBytecodeHash": "c912b7d807b65f396e2d695299e30595edd5c46888ab13247f4362a4cc8e3674",
-      "deployedBytecodeHash": "c912b7d807b65f396e2d695299e30595edd5c46888ab13247f4362a4cc8e3674",
-      "types": {
-        "t_bool": {
-          "id": "t_bool",
-          "kind": "elementary",
-          "label": "bool"
-        },
-        "t_uint256": {
-          "id": "t_uint256",
-          "kind": "elementary",
-          "label": "uint256"
-        },
-        "t_array:50<t_uint256>": {
-          "id": "t_array:50<t_uint256>",
-          "valueType": "t_uint256",
-          "length": "50",
-          "kind": "array",
-          "label": "uint256[50]"
-        },
-        "t_bytes4": {
-          "id": "t_bytes4",
-          "kind": "elementary",
-          "label": "bytes4"
-        },
-        "t_address": {
-          "id": "t_address",
-          "kind": "elementary",
-          "label": "address"
-        }
-      },
-      "storage": [
-        {
-          "contract": "Initializable",
-          "path": "@openzeppelin/upgrades/contracts/Initializable.sol",
-          "label": "initialized",
-          "astId": 759,
-          "type": "t_bool",
-          "src": "757:24:9"
-        },
-        {
-          "contract": "Initializable",
-          "path": "@openzeppelin/upgrades/contracts/Initializable.sol",
-          "label": "initializing",
-          "astId": 761,
-          "type": "t_bool",
-          "src": "876:25:9"
-        },
-        {
-          "contract": "Initializable",
-          "path": "@openzeppelin/upgrades/contracts/Initializable.sol",
-          "label": "______gap",
-          "astId": 817,
-          "type": "t_array:50<t_uint256>",
-          "src": "1951:29:9"
-        },
-        {
-          "contract": "GelatoActionsStandard",
-          "path": "contracts/triggers_actions/actions/GelatoActionsStandard.sol",
-          "label": "actionSelector",
-          "astId": 2987,
-          "type": "t_bytes4",
-          "src": "132:30:21"
-        },
-        {
-          "contract": "GelatoActionsStandard",
-          "path": "contracts/triggers_actions/actions/GelatoActionsStandard.sol",
-          "label": "actionGasStipend",
-          "astId": 2989,
-          "type": "t_uint256",
-          "src": "168:33:21"
-        },
-        {
-          "contract": "GelatoDutchXInterface",
-          "path": "contracts/triggers_actions/actions/dutchX-actions/GelatoDutchXInterface.sol",
-          "label": "dutchX",
-          "astId": 3408,
-          "type": "t_address",
-          "src": "482:23:26"
-        }
-      ],
-      "warnings": {
-        "hasConstructor": false,
-        "hasSelfDestruct": false,
-        "hasDelegateCall": false,
-        "hasInitialValuesInDeclarations": false,
-        "uninitializedBaseContracts": []
-      }
-    },
     "TriggerDutchXAuctionCleared": {
       "address": "0xc964edED8DB3343234C61aaa6f4f19b0DEBd6c51",
       "constructorCode": "60806040525b5b61000b565b6106ae8061001a6000396000f3fe",
@@ -735,6 +642,99 @@
         "hasInitialValuesInDeclarations": false,
         "uninitializedBaseContracts": []
       }
+    },
+    "ActionClaimWithdrawBalancesAtIndexFromDutchXToUser": {
+      "address": "0x3A332fd2c1E644b2EeE987d2680aE2D4386931d1",
+      "constructorCode": "60806040525b5b5b5b61000d565b6112008061001c6000396000f3fe",
+      "bodyBytecodeHash": "14769d5612b3447d1fdf75d09823142478edba000fb558b20f6a92c1470cee3c",
+      "localBytecodeHash": "960fc3cdb3bdbecf8d7fea65732af9571de4b7a1b0f4804f6cae3bd238bed543",
+      "deployedBytecodeHash": "960fc3cdb3bdbecf8d7fea65732af9571de4b7a1b0f4804f6cae3bd238bed543",
+      "types": {
+        "t_bool": {
+          "id": "t_bool",
+          "kind": "elementary",
+          "label": "bool"
+        },
+        "t_uint256": {
+          "id": "t_uint256",
+          "kind": "elementary",
+          "label": "uint256"
+        },
+        "t_array:50<t_uint256>": {
+          "id": "t_array:50<t_uint256>",
+          "valueType": "t_uint256",
+          "length": "50",
+          "kind": "array",
+          "label": "uint256[50]"
+        },
+        "t_bytes4": {
+          "id": "t_bytes4",
+          "kind": "elementary",
+          "label": "bytes4"
+        },
+        "t_address": {
+          "id": "t_address",
+          "kind": "elementary",
+          "label": "address"
+        }
+      },
+      "storage": [
+        {
+          "contract": "Initializable",
+          "path": "@openzeppelin/upgrades/contracts/Initializable.sol",
+          "label": "initialized",
+          "astId": 759,
+          "type": "t_bool",
+          "src": "757:24:9"
+        },
+        {
+          "contract": "Initializable",
+          "path": "@openzeppelin/upgrades/contracts/Initializable.sol",
+          "label": "initializing",
+          "astId": 761,
+          "type": "t_bool",
+          "src": "876:25:9"
+        },
+        {
+          "contract": "Initializable",
+          "path": "@openzeppelin/upgrades/contracts/Initializable.sol",
+          "label": "______gap",
+          "astId": 817,
+          "type": "t_array:50<t_uint256>",
+          "src": "1951:29:9"
+        },
+        {
+          "contract": "GelatoActionsStandard",
+          "path": "contracts/triggers_actions/actions/GelatoActionsStandard.sol",
+          "label": "actionSelector",
+          "astId": 2987,
+          "type": "t_bytes4",
+          "src": "132:30:21"
+        },
+        {
+          "contract": "GelatoActionsStandard",
+          "path": "contracts/triggers_actions/actions/GelatoActionsStandard.sol",
+          "label": "actionGasStipend",
+          "astId": 2989,
+          "type": "t_uint256",
+          "src": "168:33:21"
+        },
+        {
+          "contract": "GelatoDutchXInterface",
+          "path": "contracts/triggers_actions/actions/dutchX-actions/GelatoDutchXInterface.sol",
+          "label": "dutchX",
+          "astId": 3412,
+          "type": "t_address",
+          "src": "482:23:26"
+        }
+      ],
+      "warnings": {
+        "hasConstructor": false,
+        "hasSelfDestruct": false,
+        "hasDelegateCall": false,
+        "hasInitialValuesInDeclarations": false,
+        "uninitializedBaseContracts": []
+      }
     }
   },
   "solidityLibs": {},
@@ -793,20 +793,20 @@
         "kind": "Upgradeable"
       }
     ],
-    "gelato/ActionWithdrawFromDutchXToUser": [
-      {
-        "address": "0xd2491B4E7FDF7C7C7b53e183D71A17E7CF10BCE6",
-        "version": "0.0.0",
-        "implementation": "0x41f1E7dC0087dDf692F1474275b460776c25946e",
-        "admin": "0x2265a909E7678f16f5622941836d14aEfda8f2A2",
-        "kind": "Upgradeable"
-      }
-    ],
     "gelato/TriggerDutchXAuctionCleared": [
       {
         "address": "0xBe45753474D625952a26303C48B19AA47809165a",
         "version": "0.0.0",
         "implementation": "0xc964edED8DB3343234C61aaa6f4f19b0DEBd6c51",
+        "admin": "0x2265a909E7678f16f5622941836d14aEfda8f2A2",
+        "kind": "Upgradeable"
+      }
+    ],
+    "gelato/ActionClaimWithdrawBalancesAtIndexFromDutchXToUser": [
+      {
+        "address": "0xF66Af45A0D184BE2063BaD684D064dAf0CCeeb8B",
+        "version": "0.0.0",
+        "implementation": "0x3A332fd2c1E644b2EeE987d2680aE2D4386931d1",
         "admin": "0x2265a909E7678f16f5622941836d14aEfda8f2A2",
         "kind": "Upgradeable"
       }

@@ -8,7 +8,7 @@
   "scripts": {
     "kyber-multimint-ropsten": "node scripts/minting/kyber-ropsten/kyberMultiMintForTimeTrigger.js",
     "dutchx-multimint-rinkeby": "node scripts/minting/dutchX-rinkeby/dutchXMultiMintForTimeTrigger.js",
-    "dutchx-mint-withdraw-rinkeby": "node scripts/minting/dutchX-rinkeby/dutchXMintWithdrawToUser.js",
+    "dutchx-mint-claimwithdraw-rinkeby": "node scripts/minting/dutchX-rinkeby/dutchXMintClaimWithdrawBalancesAtIndexFromDXToUser.js",
     "exec-rinkeby": "export RINKEBY=true && export DEBUG='executornode' && node scripts/executornode.js",
     "dutchx-fetch-logsell-rinkeby": "export RINKEBY=true && node scripts/events/dutchx-events/fetchLogSellOnDutchX.js"
   },
