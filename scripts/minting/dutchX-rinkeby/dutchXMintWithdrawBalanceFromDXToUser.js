@@ -27,7 +27,7 @@ let triggerDutchXAuctionCleared;
 let sellToken;
 let buyToken;
 // Action
-let actionClaimWithdrawBalancesAtIndexFromDutchXToUser;
+let actionWithdrawBalanceFromDutchXToUser;
 // Action Params:
 let user;
 // const sellToken = "0xd0dab4e640d95e9e8a47545598c33e31bdb53c7c"; // rinkeby GNO
@@ -46,8 +46,8 @@ if (process.env.ROPSTEN) {
   triggerDutchXAuctionCleared = "0xBe45753474D625952a26303C48B19AA47809165a";
   sellToken = "0xd0dab4e640d95e9e8a47545598c33e31bdb53c7c"; // rinkeby GNO
   buyToken = "0xc778417e063141139fce010982780140aa0cd5ab"; // rinkeby WETH
-  actionClaimWithdrawBalancesAtIndexFromDutchXToUser =
-    "0x37DeBF31e652BeF1DF413960D6203Cd505693dDb";
+  actionWithdrawBalanceFromDutchXToUser =
+    "0x7CC0deb5b72c5A3102Fc0a74f4fF3ac2D50249Da";
   user = "0x203AdbbA2402a36C202F207caA8ce81f1A4c7a72";
   selectedExecutor = "0x203AdbbA2402a36C202F207caA8ce81f1A4c7a72";
 } else {
@@ -72,8 +72,8 @@ const gelatoCoreContract = new ethers.Contract(
 // ABI encoding function
 const getTriggerPayloadWithSelector = require("./dutchx-encoders/triggerDXAuctionClearedEncoder.js")
   .getTriggerDXAuctionClearedPayloadWithSelector;
-const getActionPayloadWithSelector = require("./dutchx-encoders/actionClaimWithdrawBalancesAtIndexFromDXToUserEncoder.js")
-  .getActionClaimWithdrawBalancesAtIndexFromDXToUserPayloadWithSelector;
+const getActionPayloadWithSelector = require("./dutchx-encoders/actionWithdrawBalanceFromDXToUserEncoder.js")
+  .getActionWithdrawBalanceFromDXToUserPayloadWithSelector;
 
 // The execution logic
 async function main() {
@@ -88,14 +88,12 @@ async function main() {
   );
 
   // Encode the specific params for ActionKyberTrade
-  const ACTION_CLAIM_WITHDRAW_BALANCES_AT_INDEX_FROM_DX_TO_USER_PAYLOAD = getActionPayloadWithSelector(
+  const ACTION_WITHDRAW_BALANCE_FROM_DX_TO_USER_PAYLOAD = getActionPayloadWithSelector(
     user,
-    sellToken,
-    buyToken,
-    AUCTION_INDEX
+    buyToken
   );
   console.log(
-    `\t\t ActionClaimWithdrawBalancesAtIndexFromDutchXToUser Payload With Selector: \n ${ACTION_CLAIM_WITHDRAW_BALANCES_AT_INDEX_FROM_DX_TO_USER_PAYLOAD}\n`
+    `\t\t ActionWithdrawBalanceAtFromDutchXToUser Payload With Selector: \n ${ACTION_WITHDRAW_BALANCE_FROM_DX_TO_USER_PAYLOAD}\n`
   );
 
   // Getting the current Ethereum price
@@ -104,7 +102,7 @@ async function main() {
   console.log(`\n\t\t Ether price in USD: ${ethUSDPrice}`);
 
   const MINTING_DEPOSIT = await gelatoCoreContract.getMintingDepositPayable(
-    actionClaimWithdrawBalancesAtIndexFromDutchXToUser,
+    actionWithdrawBalanceFromDutchXToUser,
     selectedExecutor
   );
   console.log(
@@ -121,8 +119,8 @@ async function main() {
     tx = await gelatoCoreContract.mintExecutionClaim(
       triggerDutchXAuctionCleared,
       TRIGGER_DUTCHX_AUCTION_CLEARED_PAYLOAD,
-      actionClaimWithdrawBalancesAtIndexFromDutchXToUser,
-      ACTION_CLAIM_WITHDRAW_BALANCES_AT_INDEX_FROM_DX_TO_USER_PAYLOAD,
+      actionWithdrawBalanceFromDutchXToUser,
+      ACTION_WITHDRAW_BALANCE_FROM_DX_TO_USER_PAYLOAD,
       selectedExecutor,
       {
         value: MINTING_DEPOSIT,

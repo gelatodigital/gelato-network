@@ -37,6 +37,9 @@ interface IDutchX {
 
     function deposit(address tokenAddress, uint256 amount) external returns (uint256);
     function withdraw(address tokenAddress, uint256 amount) external returns (uint256);
+    function claimSellerFunds(address sellToken, address buyToken, address user, uint auctionIndex)
+        external
+        returns (uint,uint);
     function claimAndWithdraw(address sellToken,
                               address buyToken,
                               address user,

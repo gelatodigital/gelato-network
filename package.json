@@ -6,11 +6,15 @@
   },
   "main": "index.js",
   "scripts": {
+    "gc-logminting-rinkeby": "export RINKEBY=true && node scripts/events/gelatoCore-events/fetchMintingLogs.js",
     "kyber-multimint-ropsten": "node scripts/minting/kyber-ropsten/kyberMultiMintForTimeTrigger.js",
-    "dutchx-multimint-rinkeby": "node scripts/minting/dutchX-rinkeby/dutchXMultiMintForTimeTrigger.js",
-    "dutchx-mint-claimwithdraw-rinkeby": "node scripts/minting/dutchX-rinkeby/dutchXMintClaimWithdrawBalancesAtIndexFromDXToUser.js",
+    "dx-multimint-rinkeby": "node scripts/minting/dutchX-rinkeby/dutchXMultiMintForTimeTrigger.js",
+    "dx-mint-claimwithdraw-rinkeby": "export RINKEBY=true && node scripts/minting/dutchX-rinkeby/dutchXMintClaimWithdrawBalancesAtIndexFromDXToUser.js",
+    "dx-mint-withdraw-rinkeby": "export RINKEBY=true && node scripts/minting/dutchX-rinkeby/dutchXMintWithdrawBalanceFromDXToUser",
     "exec-rinkeby": "export RINKEBY=true && export DEBUG='executornode' && node scripts/executornode.js",
-    "dutchx-fetch-logsell-rinkeby": "export RINKEBY=true && node scripts/events/dutchx-events/fetchLogSellOnDutchX.js"
+    "dx-logsell-rinkeby": "export RINKEBY=true && node scripts/events/dutchx-events/fetchLogSellOnDutchX.js",
+    "dx-logclaimwithdraw-rinkeby": "export RINKEBY=true && node scripts/events/dutchx-events/fetchLogClaimWithdrawFromDXToUser.js",
+    "dx-logwithdraw-rinkeby": "export RINKEBY=true && node scripts/events/dutchx-events/fetchLogWithdrawFromDXToUser.js"
   },
   "keywords": [],
   "author": "",

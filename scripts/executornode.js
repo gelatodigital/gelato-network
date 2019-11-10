@@ -20,28 +20,37 @@ debug(
 // Contract Addresses for instantiation
 let gelatoCoreAddress;
 
-// Setting up Provider and Signer (wallet)
+// Setting up Provider and getting network-specific variables
 let provider;
+let searchFromBlock;
 if (process.env.ROPSTEN) {
+  debug(`\n\t\t ✅ connected to ROPSTEN ✅ \n`);
   provider = new ethers.providers.InfuraProvider("ropsten", INFURA_ID);
   gelatoCoreAddress = "0x624f09392ae014484a1aB64c6D155A7E2B6998E6";
-  debug(`\n\t\t ✅ connected to ROPSTEN ✅ \n`);
+  searchFromBlock = process.env.ROPSTEN_BLOCK;
 } else if (process.env.RINKEBY) {
+  debug(`\n\t\t ✅ connected to RINKEBY ✅ \n`);
   provider = new ethers.providers.InfuraProvider("rinkeby", INFURA_ID);
   gelatoCoreAddress = "0x0e7dDacA829CD452FF341CF81aC6Ae4f0D2328A7";
-  debug(`\n\t\t ✅ connected to RINKEBY ✅ \n`);
+  searchFromBlock = process.env.RINKEBY_BLOCK;
 } else {
   debug(`\n\t\t ❗NO NETWORK DEFINED ❗\n`);
 }
+debug(`\n\t\t Starting from block number: ${searchFromBlock}`);
+if (searchFromBlock === "" || searchFromBlock === undefined) {
+  throw new Error("You must call this script with 'export BLOCK=NUMBER;'");
+}
 
+// Instantiating Signer (wallet)
 const wallet = ethers.Wallet.fromMnemonic(DEV_MNEMONIC);
 const connectedWallet = wallet.connect(provider);
 
 // Read-Write Instance of GelatoCore
 const gelatoCoreContractABI = [
-  "function canExecute(address _trigger, bytes _triggerPayload, address _userProxy, bytes _actionPayload, uint256 _executeGas, uint256 _executionClaimId, uint256 _executionClaimExpiryDate, uint256 _executorFee) view returns (uint8)",
-  "function execute(address _trigger, bytes _triggerPayload, address _userProxy, bytes _actionPayload, address _action, uint256 _executeGas, uint256 _executionClaimId, uint256 _executionClaimExpiryDate, uint256 _executorFee) returns (uint8 executionResult)",
-  "event LogNewExecutionClaimMinted(address indexed selectedExecutor, uint256 indexed executionClaimId, address indexed userProxy, bytes actionPayload, uint256 executeGas, uint256 executionClaimExpiryDate, uint256 executorFee)",
+  "function canExecute(address _trigger, bytes _triggerPayload, address _userProxy, bytes _actionPayload, uint256 _executeGas, uint256 _executionClaimId, uint256 _executionClaimExpiryDate, uint256 _mintingDeposit) view returns (uint8)",
+  "function execute(address _trigger, bytes _triggerPayload, address _userProxy, bytes _actionPayload, address _action, uint256 _executeGas, uint256 _executionClaimId, uint256 _executionClaimExpiryDate, uint256 _mintingDeposit) returns (uint8 executionResult)",
+  "function cancelExecutionClaim(address _trigger, bytes _triggerPayload, address _userProxy, bytes _actionPayload, uint256 _executionClaimId, address _selectedExecutor, uint256 _executeGas, uint256 _executionClaimExpiryDate, uint256 _mintingDeposit)",
+  "event LogNewExecutionClaimMinted(address indexed selectedExecutor, uint256 indexed executionClaimId, address indexed userProxy, bytes actionPayload, uint256 executeGas, uint256 executionClaimExpiryDate, uint256 mintingDeposit)",
   "event LogTriggerActionMinted(uint256 indexed executionClaimId, address indexed trigger, bytes triggerPayload, address indexed action)",
   "event LogClaimExecutedAndDeleted(uint256 indexed executionClaimId, address indexed userProxy, address indexed executor, uint256 gasUsedEstimate, uint256 gasPriceUsed, uint256 executionCostEstimate, uint256 executorPayout)",
   "event LogExecutionClaimCancelled(uint256 indexed executionClaimId, address indexed userProxy, address indexed cancelor)"
@@ -52,17 +61,10 @@ const gelatoCoreContract = new ethers.Contract(
   connectedWallet
 );
 
-// The block from which we start
-let searchFromBlock = process.env.BLOCK;
-debug(`\n\t\t Starting from block number: ${searchFromBlock}`);
-if (searchFromBlock === "") {
-  throw new Error("You must call this script with 'export BLOCK=NUMBER;'");
-}
-
 // This gets executed with node
 async function main() {
   queryChainAndExecute();
-  setInterval(queryChainAndExecute, 30 * 1000);
+  setInterval(queryChainAndExecute, 60 * 1000);
 }
 main().catch(err => debug(err));
 
@@ -75,11 +77,14 @@ let failedExecuteAttempts = {};
 // The blacklist of buggy claims that wont get execution attempts no 🤶
 let blacklist = {};
 
+// Blocknumber
+let currentBlock;
+
 // The logic that gets executed from inside main()
 async function queryChainAndExecute() {
-  let currentBlock = await provider.getBlockNumber();
+  currentBlock = await provider.getBlockNumber();
   debug(`\n\t\t Starting from block number: ${searchFromBlock}`);
-  debug(`\n\t\t Current block number:       ${searchFromBlock}`);
+  debug(`\n\t\t Current block number:       ${currentBlock}`);
   debug(`\n\t\t Running Executor Node from: ${wallet.address}\n`);
 
   // Log Parsing
@@ -110,7 +115,7 @@ async function queryChainAndExecute() {
           actionPayload: parsedLog.values.actionPayload,
           executeGas: parsedLog.values.executeGas,
           executionClaimExpiryDate: parsedLog.values.executionClaimExpiryDate,
-          executorFee: parsedLog.values.executorFee
+          mintingDeposit: parsedLog.values.mintingDeposit
         };
       }
     });
@@ -162,9 +167,6 @@ async function queryChainAndExecute() {
         const parsedLog = iface.parseLog(log);
         const executionClaimId = parsedLog.values.executionClaimId.toString();
         if (mintedClaims[executionClaimId] !== undefined) {
-          for (let key of Object.keys(mintedClaims[executionClaimId])) {
-            delete mintedClaims[executionClaimId][key];
-          }
           delete mintedClaims[executionClaimId];
           debug(`\n\t\t LogClaimExecutedAndDeleted: ${executionClaimId}`);
         }
@@ -190,9 +192,6 @@ async function queryChainAndExecute() {
         const parsedLog = iface.parseLog(log);
         const executionClaimId = parsedLog.values.executionClaimId.toString();
         if (mintedClaims[executionClaimId] !== undefined) {
-          for (let key of Object.keys(mintedClaims[executionClaimId])) {
-            delete mintedClaims[executionClaimId][key];
-          }
           delete mintedClaims[executionClaimId];
           debug(`\n\t\t LogExecutionClaimCancelled: ${executionClaimId}`);
         }
@@ -207,7 +206,7 @@ async function queryChainAndExecute() {
     debug("\n\n\t\t Available ExecutionClaims: NONE");
   } else {
     for (let executionClaimId in mintedClaims) {
-      if (mintedClaims[executionClaimId].trigger !== undefined) {
+      if (mintedClaims[executionClaimId] !== undefined) {
         debug("\n\n\t\t Available ExecutionClaims:");
         for (let [key, value] of Object.entries(
           mintedClaims[executionClaimId]
@@ -241,7 +240,7 @@ async function queryChainAndExecute() {
     // Proceed only if executionClaimId not currently undergoing execution
     if (blacklist[executionClaimId] === true) {
       debug(
-        `\t\t ❗❗Skipping ID ${executionClaimId} as it is BLACKLISTED (3 failed attempts)❗❗`
+        `\t\t ❗❗Skipping ID ${executionClaimId} as it is BLACKLISTED (2 failed attempts)❗❗`
       );
       continue;
     }
@@ -255,7 +254,7 @@ async function queryChainAndExecute() {
         mintedClaims[executionClaimId].executeGas,
         mintedClaims[executionClaimId].executionClaimId,
         mintedClaims[executionClaimId].executionClaimExpiryDate,
-        mintedClaims[executionClaimId].executorFee
+        mintedClaims[executionClaimId].mintingDeposit
       );
       debug(
         `\n\t\t CanExecute Result for ${executionClaimId}: ${
@@ -265,9 +264,58 @@ async function queryChainAndExecute() {
     } catch (err) {
       debug(err);
     }
-    if (canExecuteResults[parseInt(canExecuteReturn)] === "Executable") {
+    if (
+      canExecuteResults[parseInt(canExecuteReturn)] ===
+      "WrongCalldataOrAlreadyDeleted"
+    ) {
+      debug(
+        `\t\t ❌  ExecutionClaimId: ${executionClaimId} removed from task list ❌ `
+      );
+      delete mintedClaims[executionClaimId];
+      continue;
+    } else if (
+      canExecuteResults[parseInt(canExecuteReturn)] === "ExecutionClaimExpired"
+    ) {
+      if (mintedClaims[executionClaimId].selectedExecutor != wallet.address) {
+        debug(
+          `\t\t ❌  ExecutionClaimId: ${executionClaimId} should be cancelled by Executor: ${mintedClaims[executionClaimId].selectedExecutor} \n \t\t => removed from task list ❌ `
+        );
+        delete mintedClaims[executionClaimId];
+        continue;
+      }
+      debug(
+        `\t\t ❌  ⚡⚡⚡ Sending TX ⚡⚡⚡ to cancel ExecutionClaimId: ${executionClaimId} ❌ \n`
+      );
+      try {
+        beingExecuted[executionClaimId] = true;
+        tx = await gelatoCoreContract.cancelExecutionClaim(
+          mintedClaims[executionClaimId].trigger,
+          mintedClaims[executionClaimId].triggerPayload,
+          mintedClaims[executionClaimId].userProxy,
+          mintedClaims[executionClaimId].actionPayload,
+          mintedClaims[executionClaimId].executionClaimId,
+          mintedClaims[executionClaimId].selectedExecutor,
+          mintedClaims[executionClaimId].executeGas,
+          mintedClaims[executionClaimId].executionClaimExpiryDate,
+          mintedClaims[executionClaimId].mintingDeposit,
+          {
+            gasLimit: 1000000
+          }
+        );
+        debug(
+          `\t\t gelatoCore.cancelExecutionClaim() txHash:\n \t${tx.hash}\n`
+        );
+        // The operation is NOT complete yet; we must wait until it is mined
+        debug("\t\t waiting for the cancel transaction to get mined \n");
+        txreceipt = await tx.wait();
+        beingExecuted[executionClaimId] = false;
+        debug("\t\t Cancel TX Receipt:\n", txreceipt);
+      } catch (err) {
+        debug(err);
+      }
+    } else if (canExecuteResults[parseInt(canExecuteReturn)] === "Executable") {
       debug(`
-            🔥🔥🔥ExeutionClaim: ${executionClaimId} is executable🔥🔥🔥
+            🔥🔥🔥ExeutionClaim: ${executionClaimId} is executable🔥🔥🔥 \n
           `);
       let tx;
       try {
@@ -282,9 +330,9 @@ async function queryChainAndExecute() {
           mintedClaims[executionClaimId].executeGas,
           mintedClaims[executionClaimId].executionClaimId,
           mintedClaims[executionClaimId].executionClaimExpiryDate,
-          mintedClaims[executionClaimId].executorFee,
+          mintedClaims[executionClaimId].mintingDeposit,
           {
-            gasLimit: 5000000
+            gasLimit: 1000000
           }
         );
         debug(`\t\t gelatoCore.execute() txHash:\n \t${tx.hash}\n`);
@@ -299,17 +347,17 @@ async function queryChainAndExecute() {
         if (failedExecuteAttempts[executionClaimId] === undefined) {
           failedExecuteAttempts[executionClaimId] = 1;
           debug(
-            `\n\t\t ❗❗ FAILED EXECUTE ATTEMPT RECORDED FOR ID ${executionClaimId}: ${failedExecuteAttempts[executionClaimId]}/3 allowed attempts ❗❗ `
+            `\n\t\t ❗❗ FAILED EXECUTE ATTEMPT RECORDED FOR ID ${executionClaimId}: ${failedExecuteAttempts[executionClaimId]}/2 allowed attempts ❗❗ `
           );
           continue;
         }
         failedExecuteAttempts[executionClaimId]++;
         debug(
-          `\n\t\t❗❗FAILED EXECUTE ATTEMPT RECORDED FOR ID ${executionClaimId}: ${failedExecuteAttempts[executionClaimId]}/3 allowed attempts ❗❗`
+          `\n\t\t❗❗FAILED EXECUTE ATTEMPT RECORDED FOR ID ${executionClaimId}: ${failedExecuteAttempts[executionClaimId]}/2 allowed attempts ❗❗`
         );
-        if (failedExecuteAttempts[executionClaimId] === 3) {
+        if (failedExecuteAttempts[executionClaimId] === 2) {
           debug(
-            `\n\t\t ❗❗ 3 ATTEMPTS FOR ID ${executionClaimId} FAILED -> BLACKLISTED ❗❗`
+            `\n\t\t ❗❗ 2 ATTEMPTS FOR ID ${executionClaimId} FAILED -> BLACKLISTED ❗❗`
           );
           blacklist[executionClaimId] = true;
           continue;

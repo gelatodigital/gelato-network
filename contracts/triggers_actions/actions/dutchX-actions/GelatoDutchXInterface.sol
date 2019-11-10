@@ -126,7 +126,23 @@ contract GelatoDutchXInterface is Initializable
     {
         // Rinkeby DutchX Proxy
         IDutchX _dutchX = IDutchX(0xaAEb2035FF394fdB2C879190f95e7676f1A9444B);
-        sellerBalances = _dutchX.sellerBalances(_sellToken, _buyToken, _auctionIndex, _user);
+        sellerBalances
+            = _dutchX.sellerBalances(_sellToken, _buyToken, _auctionIndex, _user);
+    }
+
+    function _claimSellerFundsAtIndex(address _sellToken,
+                                      address _buyToken,
+                                      address _user,
+                                      uint256 _auctionIndex
+    )
+        internal
+        returns(uint256)
+    {
+        // Rinkeby DutchX Proxy
+        IDutchX _dutchX = IDutchX(0xaAEb2035FF394fdB2C879190f95e7676f1A9444B);
+        (uint256 claimedAmount,)
+            = _dutchX.claimSellerFunds(_sellToken, _buyToken, _user, _auctionIndex);
+        return claimedAmount;
     }
 
     function _getWithdrawAmount(address _sellToken,
@@ -147,10 +163,10 @@ contract GelatoDutchXInterface is Initializable
         withdrawAmount = _sellerBalancesAtIndex.mul(num).div(den);
     }
 
-    function _withdrawFromDutchX(address _sellToken,
-                                 address _buyToken,
-                                 uint256 _auctionIndex,
-                                 uint256 _withdrawAmount
+    function _claimAndWithdrawFromDutchX(address _sellToken,
+                                         address _buyToken,
+                                         uint256 _auctionIndex,
+                                         uint256 _withdrawAmount
     )
         internal
         returns(bool)
@@ -163,6 +179,30 @@ contract GelatoDutchXInterface is Initializable
                                  _auctionIndex,
                                  _withdrawAmount
         );
+        return true;
+    }
+
+    function _getTokenBalanceOnDutchX(address _sellToken,
+                                      address _user
+    )
+        internal
+        view
+        returns(uint256 tokenBalance)
+    {
+        // Rinkeby DutchX Proxy
+        IDutchX _dutchX = IDutchX(0xaAEb2035FF394fdB2C879190f95e7676f1A9444B);
+        tokenBalance = _dutchX.balances(_sellToken, _user);
+    }
+
+    function _withdrawTokenFromDutchX(address _sellToken,
+                                      uint256 _withdrawAmount
+    )
+        internal
+        returns(bool)
+    {
+        // Rinkeby DutchX Proxy
+        IDutchX _dutchX = IDutchX(0xaAEb2035FF394fdB2C879190f95e7676f1A9444B);
+        _dutchX.withdraw(_sellToken, _withdrawAmount);
         return true;
     }
     // ******************** WITHDRAW END ********************

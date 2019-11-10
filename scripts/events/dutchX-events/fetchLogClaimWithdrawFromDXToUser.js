@@ -42,17 +42,15 @@ if (searchFromBlock === "" || searchFromBlock === undefined) {
 
 // LogNewExecutionClaimMinted
 const actionWithdrawFromDXToUserABI = [
-  "event LogWithdrawFromDutchXToUser(address indexed _user, address indexed _token, uint256 withdrawAmount)"
+  "event LogClaimWithdrawFromDutchXToUser(address indexed user, address indexed sellToken, address indexed buyToken, uint256 auctionIndex, uint256 withdrawAmount)"
 ];
 
 async function main() {
-  let currentBlock = await provider.getBlockNumber();
-  console.log(`\n\t\t Current block number:     ${currentBlock}`);
   // Log Parsing
   let iface = new ethers.utils.Interface(actionWithdrawFromDXToUserABI);
 
   let topicWithdrawFromDXToUser = ethers.utils.id(
-    "LogWithdrawFromDutchXToUser(address,address,uint256)"
+    "LogClaimWithdrawFromDutchXToUser(address,address,address,uint256,uint256)"
   );
   let filterWithdrawFromDXToUser = {
     address: userProxyAddress,
@@ -68,14 +66,16 @@ async function main() {
       }
       acc[i] = {
         user: parsedLog.values.user,
-        token: parsedLog.values.token,
+        sellToken: parsedLog.values.sellToken,
+        buyToken: parsedLog.values.buyToken,
+        auctionIndex: parsedLog.values.auctionIndex,
         withdrawAmount: parsedLog.values.withdrawAmount
       };
       return acc;
     }, []);
     // Log available executionClaims
     if (Object.keys(withdrawFromDXToUserLogs).length === 0) {
-      console.log("\n\n\t\t LogWithdrawFromDutchXToUser: NONE");
+      console.log("\n\n\t\t LogClaimWithdrawFromDutchXToUser: NONE");
     } else {
       for (let obj of withdrawFromDXToUserLogs) {
         for (let [key, value] of Object.entries(obj)) {

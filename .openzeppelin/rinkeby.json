@@ -644,11 +644,11 @@
       }
     },
     "ActionClaimWithdrawBalancesAtIndexFromDutchXToUser": {
-      "address": "0x3A332fd2c1E644b2EeE987d2680aE2D4386931d1",
-      "constructorCode": "60806040525b5b5b5b61000d565b6112008061001c6000396000f3fe",
-      "bodyBytecodeHash": "14769d5612b3447d1fdf75d09823142478edba000fb558b20f6a92c1470cee3c",
-      "localBytecodeHash": "960fc3cdb3bdbecf8d7fea65732af9571de4b7a1b0f4804f6cae3bd238bed543",
-      "deployedBytecodeHash": "960fc3cdb3bdbecf8d7fea65732af9571de4b7a1b0f4804f6cae3bd238bed543",
+      "address": "0x37DeBF31e652BeF1DF413960D6203Cd505693dDb",
+      "constructorCode": "60806040525b5b5b5b61000d565b610f648061001c6000396000f3fe",
+      "bodyBytecodeHash": "525a284442ba8c6361201ca4afa8531e1186d905a1cef34741114720c97a5733",
+      "localBytecodeHash": "b15aa320e878335bc35c0e23d3d355db58399cf6a46e254ee807829821d70bb2",
+      "deployedBytecodeHash": "b15aa320e878335bc35c0e23d3d355db58399cf6a46e254ee807829821d70bb2",
       "types": {
         "t_bool": {
           "id": "t_bool",
@@ -707,7 +707,7 @@
           "contract": "GelatoActionsStandard",
           "path": "contracts/triggers_actions/actions/GelatoActionsStandard.sol",
           "label": "actionSelector",
-          "astId": 2987,
+          "astId": 3002,
           "type": "t_bytes4",
           "src": "132:30:21"
         },
@@ -715,7 +715,7 @@
           "contract": "GelatoActionsStandard",
           "path": "contracts/triggers_actions/actions/GelatoActionsStandard.sol",
           "label": "actionGasStipend",
-          "astId": 2989,
+          "astId": 3004,
           "type": "t_uint256",
           "src": "168:33:21"
         },
@@ -723,9 +723,104 @@
           "contract": "GelatoDutchXInterface",
           "path": "contracts/triggers_actions/actions/dutchX-actions/GelatoDutchXInterface.sol",
           "label": "dutchX",
-          "astId": 3412,
+          "astId": 3562,
           "type": "t_address",
-          "src": "482:23:26"
+          "src": "482:23:27"
+        }
+      ],
+      "warnings": {
+        "hasConstructor": false,
+        "hasSelfDestruct": false,
+        "hasDelegateCall": false,
+        "hasInitialValuesInDeclarations": false,
+        "uninitializedBaseContracts": [],
+        "storageUncheckedVars": [],
+        "storageDiff": []
+      }
+    },
+    "ActionWithdrawBalanceFromDutchXToUser": {
+      "address": "0x7CC0deb5b72c5A3102Fc0a74f4fF3ac2D50249Da",
+      "constructorCode": "60806040525b5b5b5b61000d565b610e308061001c6000396000f3fe",
+      "bodyBytecodeHash": "5de11d58d3919aa7bf5704d199c4e8e0063bf1563fcf91dfe13a9c2c205e14d6",
+      "localBytecodeHash": "90ce60a70bb1697e29f967fce433dacdd504cdee8318eb3a23aed04e2efffc1c",
+      "deployedBytecodeHash": "90ce60a70bb1697e29f967fce433dacdd504cdee8318eb3a23aed04e2efffc1c",
+      "types": {
+        "t_bool": {
+          "id": "t_bool",
+          "kind": "elementary",
+          "label": "bool"
+        },
+        "t_uint256": {
+          "id": "t_uint256",
+          "kind": "elementary",
+          "label": "uint256"
+        },
+        "t_array:50<t_uint256>": {
+          "id": "t_array:50<t_uint256>",
+          "valueType": "t_uint256",
+          "length": "50",
+          "kind": "array",
+          "label": "uint256[50]"
+        },
+        "t_bytes4": {
+          "id": "t_bytes4",
+          "kind": "elementary",
+          "label": "bytes4"
+        },
+        "t_address": {
+          "id": "t_address",
+          "kind": "elementary",
+          "label": "address"
+        }
+      },
+      "storage": [
+        {
+          "contract": "Initializable",
+          "path": "@openzeppelin/upgrades/contracts/Initializable.sol",
+          "label": "initialized",
+          "astId": 759,
+          "type": "t_bool",
+          "src": "757:24:9"
+        },
+        {
+          "contract": "Initializable",
+          "path": "@openzeppelin/upgrades/contracts/Initializable.sol",
+          "label": "initializing",
+          "astId": 761,
+          "type": "t_bool",
+          "src": "876:25:9"
+        },
+        {
+          "contract": "Initializable",
+          "path": "@openzeppelin/upgrades/contracts/Initializable.sol",
+          "label": "______gap",
+          "astId": 817,
+          "type": "t_array:50<t_uint256>",
+          "src": "1951:29:9"
+        },
+        {
+          "contract": "GelatoActionsStandard",
+          "path": "contracts/triggers_actions/actions/GelatoActionsStandard.sol",
+          "label": "actionSelector",
+          "astId": 3002,
+          "type": "t_bytes4",
+          "src": "132:30:21"
+        },
+        {
+          "contract": "GelatoActionsStandard",
+          "path": "contracts/triggers_actions/actions/GelatoActionsStandard.sol",
+          "label": "actionGasStipend",
+          "astId": 3004,
+          "type": "t_uint256",
+          "src": "168:33:21"
+        },
+        {
+          "contract": "GelatoDutchXInterface",
+          "path": "contracts/triggers_actions/actions/dutchX-actions/GelatoDutchXInterface.sol",
+          "label": "dutchX",
+          "astId": 3562,
+          "type": "t_address",
+          "src": "482:23:27"
         }
       ],
       "warnings": {
@@ -806,7 +901,16 @@
       {
         "address": "0xF66Af45A0D184BE2063BaD684D064dAf0CCeeb8B",
         "version": "0.0.0",
-        "implementation": "0x3A332fd2c1E644b2EeE987d2680aE2D4386931d1",
+        "implementation": "0x37DeBF31e652BeF1DF413960D6203Cd505693dDb",
+        "admin": "0x2265a909E7678f16f5622941836d14aEfda8f2A2",
+        "kind": "Upgradeable"
+      }
+    ],
+    "gelato/ActionWithdrawBalanceFromDutchXToUser": [
+      {
+        "address": "0x39DEA48d49B92A5D3f3a377210D5b0b0eF46Bcc1",
+        "version": "0.0.0",
+        "implementation": "0x7CC0deb5b72c5A3102Fc0a74f4fF3ac2D50249Da",
         "admin": "0x2265a909E7678f16f5622941836d14aEfda8f2A2",
         "kind": "Upgradeable"
       }

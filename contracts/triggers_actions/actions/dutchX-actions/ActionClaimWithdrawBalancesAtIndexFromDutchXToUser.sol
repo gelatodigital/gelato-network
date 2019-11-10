@@ -54,20 +54,20 @@ contract ActionClaimWithdrawBalancesAtIndexFromDutchXToUser is Initializable,
                                                                   _auctionIndex,
                                                                   _user
         );
-        uint256 withdrawAmount = _getWithdrawAmount(_sellToken,
-                                                    _buyToken,
-                                                    _auctionIndex,
-                                                    sellerBalancesAtIndex
+        require(sellerBalancesAtIndex != 0,
+            "ActionClaimWithdrawBalancesAtIndexFromDutchXToUser: nothing to claim"
         );
-        require(_withdrawFromDutchX(_sellToken, _buyToken, _auctionIndex, withdrawAmount),
-            "ActionSellWithdrawDutchX.action._withdrawFromDutchX failed"
+        uint256 withdrawAmount
+            = _claimSellerFundsAtIndex(_sellToken, _buyToken, _user, _auctionIndex);
+        require(withdrawAmount != 0,
+            "ActionClaimWithdrawBalancesAtIndexFromDutchXToUser.__claimSellerFundsAtIndex: failed"
         );
         IERC20(_buyToken).safeTransfer(_user, withdrawAmount);
-        emit LogWithdrawFromDutchXToUser(_user,
-                                         _sellToken,
-                                         _buyToken,
-                                         _auctionIndex,
-                                         withdrawAmount
+        emit LogClaimWithdrawFromDutchXToUser(_user,
+                                              _sellToken,
+                                              _buyToken,
+                                              _auctionIndex,
+                                              withdrawAmount
         );
         emit LogAction(_user);
         return true;
@@ -86,10 +86,10 @@ contract ActionClaimWithdrawBalancesAtIndexFromDutchXToUser is Initializable,
         return _action(_user, _sellToken, _buyToken, _auctionIndex);
     }
 
-    event LogWithdrawFromDutchXToUser(address indexed user,
-                                      address indexed sellToken,
-                                      address indexed buyToken,
-                                      uint256 auctionIndex,
-                                      uint256 withdrawAmount
+    event LogClaimWithdrawFromDutchXToUser(address indexed user,
+                                           address indexed sellToken,
+                                           address indexed buyToken,
+                                           uint256 auctionIndex,
+                                           uint256 withdrawAmount
     );
 }
