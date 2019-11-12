@@ -1,8 +1,6 @@
 pragma solidity ^0.5.10;
 
-import './interfaces/user_proxies_interfaces/IProxyRegistry.sol';
-import './user_proxies/Proxy.sol';
-import './user_proxies/ProxyFactory.sol';
+import './GelatoUserProxy.sol';
 import './interfaces/triggers_actions_interfaces/IGelatoAction.sol';
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/upgrades/contracts/Initializable.sol";
@@ -11,42 +9,21 @@ import '@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol
 import '@openzeppelin/contracts-ethereum-package/contracts/utils/ReentrancyGuard.sol';
 import '@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol';
 
-/**
- * @dev No need to inherit Initializable or Ownable because of inheritance linearization:
-    GelatoCore is first derived from GelatoCoreAccounting, which already sets those up.
- * @dev non-deploy base contract
- */
-contract GelatoUserProxies is Initializable,
-                              Ownable
 
+/// @title GelatoUserProxyManager
+/// @dev registry and factory for GelatoUserProxies
+contract GelatoUserProxyManager
 {
-    /// @notice non-deploy base contract
+    /// @dev non-deploy base contract
     constructor() internal {}
 
-    IProxyRegistry internal proxyRegistry;
-    ProxyFactory internal proxyFactory;
-
-    /**
-     * @dev initializer function is like a constructor for upgradeable contracts
-     * @param _proxyRegistry x
-     * @param _proxyFactory y
-     * @notice as per OpenZeppelin SDK
-     */
-    function _initialize(address _proxyRegistry,
-                         address _proxyFactory
-    )
-        internal
-        initializer
-    {
-        proxyRegistry = IProxyRegistry(_proxyRegistry);
-        proxyFactory = ProxyFactory(_proxyFactory);
-    }
+    mapping(address => address) internal userToUserProxy;
 
     // _____________ Creating Gelato User Proxies n/3 ______________________
     /// @dev requires msg.sender (user) to have no proxy
     modifier userHasNoProxy {
-        require(proxyRegistry.proxies(msg.sender) == Proxy(0),
-            "GelatoUserProxies: user already has a proxy"
+        require(userToUserProxy[msg.sender] == address(0),
+            "GelatoUserProxyManager: user already has an proxy"
         );
         _;
     }
@@ -54,67 +31,18 @@ contract GelatoUserProxies is Initializable,
     /**
      * @notice deploys gelato proxy for users that have no proxy yet
      * @dev This function should be called for users that have nothing deployed yet
-            User-EOA-tx that should follow: userProxy.setAuthority(userProxyGuard).
-     * @return address of the deployed Proxy aka userAccount
+     * @return address of the deployed GelatoUserProxy
      */
-    function devirginize()
+    function deployUserProxy()
         external
         userHasNoProxy
         returns(address userProxy)
     {
-        userProxy = proxyRegistry.build(msg.sender);
-        emit LogDevirginize(userProxy);
+        userProxy = new GelatoUserProxy(msg.sender);
+        userToUserProxy[msg.sender] = userProxy;
+        emit LogDeployUserProxy(userProxy, msg.sender);
     }
-    event LogDevirginize(address userProxy);
-    // ================
-
-    // _____________ State Variable Getters ______________________
-    /**
-     * @dev get the proxyRegistry's address
-     * @return address of proxyRegistry
-     */
-    function getProxyRegistryAddress() external view returns(address) {
-        return address(proxyRegistry);
-    }
-    /**
-     * @dev get the proxyFactory's address
-     * @return address of proxyFactory
-     */
-    function getProxyFactoryAddress() external view returns(address) {
-        return address(proxyFactory);
-    }
-    // ================
-
-    // _____________ State Variable administration ______________________
-    /**
-     * @dev GelatoCore owner calls this function to connect Core to new ProxyRegistry
-     * @param _newProxyRegistry x
-     */
-    function setProxyRegistry(address _newProxyRegistry)
-        external
-        onlyOwner
-    {
-        emit LogSetProxyRegistry(address(proxyRegistry), _newProxyRegistry);
-        proxyRegistry = IProxyRegistry(_newProxyRegistry);
-    }
-    event LogSetProxyRegistry(address indexed oldProxyRegistry,
-                              address indexed newProxyRegistry
-    );
-
-    /**
-     * @dev GelatoCore owner calls this function to conect core to new ProxyFactory
-     * @param _newProxyFactory x
-     */
-    function setProxyFactory(address _newProxyFactory)
-        external
-        onlyOwner
-    {
-        emit LogSetProxyRegistry(address(proxyFactory), _newProxyFactory);
-        proxyFactory = ProxyFactory(_newProxyFactory);
-    }
-    event LogSetProxyFactory(address indexed proxyFactory,
-                             address indexed newProxyFactory
-    );
+    event LogDeployUserProxy(address indexed userProxy, address indexed user);
     // ================
 }
 
@@ -128,7 +56,7 @@ contract GelatoCoreAccounting is Initializable,
                                  Ownable,
                                  ReentrancyGuard
 {
-    /// @notice non-deploy base contract
+    /// @dev non-deploy base contract
     constructor() internal {}
 
     using Address for address payable;  /// for oz's sendValue method
@@ -144,7 +72,7 @@ contract GelatoCoreAccounting is Initializable,
     uint256 internal gasOutsideGasleftChecks;
     uint256 internal gasInsideGasleftChecks;
     uint256 internal canExecMaxGas;
-    uint256 internal userProxyExecGas;  ///@notice NEW (but part of hackathon)
+    uint256 internal userProxyExecGas;
     // =========================
 
 
@@ -498,7 +426,7 @@ contract GelatoCoreAccounting is Initializable,
  * @title GelatoCore
  * @notice deployable contract
  */
-contract GelatoCore is GelatoUserProxies,
+contract GelatoCore is GelatoUserProxyManager,
                        GelatoCoreAccounting
 {
     using Address for address payable;  /// for oz's sendValue method
@@ -515,7 +443,7 @@ contract GelatoCore is GelatoUserProxies,
         public
         initializer
     {
-        GelatoUserProxies._initialize(_proxyRegistry, _proxyFactory);
+        GelatoUserProxyManager._initialize(_proxyRegistry, _proxyFactory);
         GelatoCoreAccounting._initialize();
     }
 
@@ -865,16 +793,13 @@ contract GelatoCore is GelatoUserProxies,
 
         // _________  call to userProxy.execute => action  __________________________
         {
-            bytes memory returndata = (Proxy(_userProxy).execute
-                                                          .gas(_executeGas)
-                                                          (_action, _actionPayload)
+            (bool success,) = (Proxy(_userProxy).execute
+                                                .gas(_executeGas)
+                                                (_action, _actionPayload)
             );
-            /// @notice if execution fails, no revert, because executor still paid out
-            if (returndata.length == 0) {
-                executionResult = uint8(ExecutionResult.Failure);
-            } else {
-                executionResult = uint8(ExecutionResult.Success);
-            }
+            if (success) executionResult = uint8(ExecutionResult.Success);
+            // @dev if execution fails, no revert, because executor still paid out
+            else executionResult = uint8(ExecutionResult.Failure);
             emit LogExecutionResult(_executionClaimId, executionResult, msg.sender);
         }
         // ========
