@@ -1,12 +1,12 @@
-/*pragma solidity ^0.5.10;
+pragma solidity ^0.5.10;
 
-import '../ActionDutchXSell.sol';
-import '../../../../1_gelato_standards/2_GTA_standards/GTA_chained_standards/GTAChainedMintingStandard.sol';
+//import '../ActionDutchXSell.sol';
+//import '../../../../1_gelato_standards/2_GTA_standards/GTA_chained_standards/GTAChainedMintingStandard.sol';
 
-contract ChainedActionDutchXSellMintWithdraw is ActionDutchXSell,
-                                                GTAChainedMintingStandard
+contract ChainedActionDutchXSellMintWithdraw //is ActionDutchXSell,
+                                               // GTAChainedMintingStandard
 {
-    constructor(address payable _gelatoCore,
+/*    constructor(address payable _gelatoCore,
                 address _dutchX,
                 string memory _actionSignature,
                 uint256 _actionGasStipend,
@@ -75,5 +75,5 @@ contract ChainedActionDutchXSellMintWithdraw is ActionDutchXSell,
         emit LogGTAChainedMinting(_executionClaimId, user);
         return true;
     }
+    */
 }
-*/

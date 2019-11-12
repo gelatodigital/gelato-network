@@ -17,33 +17,104 @@ contract GelatoUserProxyManager
     /// @dev non-deploy base contract
     constructor() internal {}
 
-    mapping(address => address) internal userToUserProxy;
+    uint256 internal userCount;
+    mapping(address => address) internal userToProxy;
+    mapping(address => address payable) internal proxyToUser;
+    address payable[] internal users;
+    address[] internal userProxies;
 
-    // _____________ Creating Gelato User Proxies n/3 ______________________
-    /// @dev requires msg.sender (user) to have no proxy
     modifier userHasNoProxy {
-        require(userToUserProxy[msg.sender] == address(0),
+        require(userToProxy[msg.sender] == address(0),
             "GelatoUserProxyManager: user already has an proxy"
         );
         _;
     }
 
-    /**
-     * @notice deploys gelato proxy for users that have no proxy yet
-     * @dev This function should be called for users that have nothing deployed yet
-     * @return address of the deployed GelatoUserProxy
-     */
-    function deployUserProxy()
+    /// @notice deploys gelato proxy for users that have no proxy yet
+    /// @dev This function should be called for users that have nothing deployed yet
+    /// @return address of the deployed GelatoUserProxy
+    function createUserProxy()
         external
         userHasNoProxy
         returns(address userProxy)
     {
-        userProxy = new GelatoUserProxy(msg.sender);
-        userToUserProxy[msg.sender] = userProxy;
-        emit LogDeployUserProxy(userProxy, msg.sender);
+        userProxy = address(new GelatoUserProxy(msg.sender));
+        userToProxy[msg.sender] = userProxy;
+        proxyToUser[userProxy] = msg.sender;
+        users.push(msg.sender);
+        userProxies.push(userProxy);
+        userCount++;
+        emit LogCreateUserProxy(userProxy, msg.sender);
     }
-    event LogDeployUserProxy(address indexed userProxy, address indexed user);
-    // ================
+    event LogCreateUserProxy(address indexed userProxy, address indexed user);
+
+    // ______________ State Readers ______________________________________
+    function _isUser(address _user)
+        internal
+        view
+        returns(bool)
+    {
+        return userToProxy[_user] != address(0);
+    }
+
+    function _isUserProxy(address _userProxy)
+        internal
+        view
+        returns(bool)
+    {
+        return proxyToUser[_userProxy] != address(0);
+    }
+    // ______ State Read APIs __________________
+    function getUserCount() external view returns(uint256) {return userCount;}
+
+    function getUserOfProxy(address _proxy)
+        external
+        view
+        returns(address payable)
+    {
+        return proxyToUser[_proxy];
+    }
+
+    function isUser(address _user)
+        external
+        view
+        returns(bool)
+    {
+        return _isUser(_user);
+    }
+
+    function getProxyOfUser(address _user)
+        external
+        view
+        returns(address)
+    {
+        return userToProxy[_user];
+    }
+
+    function isUserProxy(address _userProxy)
+        external
+        view
+        returns(bool)
+    {
+        return _isUserProxy(_userProxy);
+    }
+
+    function getUsers()
+        external
+        view
+        returns(address payable[] memory)
+    {
+        return users;
+    }
+
+    function getUserProxies()
+        external
+        view
+        returns(address[] memory)
+    {
+        return userProxies;
+    }
+    // =========================
 }
 
 
@@ -81,7 +152,7 @@ contract GelatoCoreAccounting is Initializable,
      * param _gasOutsideGasleftChecks: gas cost to be determined and set by owner
      * param _gasInsideGasleftChecks: gas cost to be determined and set by owner
      * param _canExecMaxGas: gas cost to be determined and set by owner
-     * param _userProxyExecGas: the overhead consumed by the Proxy execute fn
+     * param _userProxyExecGas: the overhead consumed by the GelatoUserProxy execute fn
      * @notice as per OpenZeppelin SDK
      */
     function _initialize()
@@ -431,19 +502,12 @@ contract GelatoCore is GelatoUserProxyManager,
 {
     using Address for address payable;  /// for oz's sendValue method
 
-    /**
-     * @dev GelatoCore's initializer function (constructor for upgradeable contracts)
-     * @param _proxyRegistry z
-     * @notice as per OpenZeppelin SDK - this initializer fn must call the initializers
-        of all the base contracts.
-     */
-    function initialize(address _proxyRegistry,
-                        address _proxyFactory
-    )
+    /// @dev initializer fn must call the initializers of all the base contracts.
+    /// @notice GelatoCore's initializer function (constructor for upgradeable contracts)
+    function initialize()
         public
         initializer
     {
-        GelatoUserProxyManager._initialize(_proxyRegistry, _proxyFactory);
         GelatoCoreAccounting._initialize();
     }
 
@@ -469,12 +533,21 @@ contract GelatoCore is GelatoUserProxyManager,
      * @param _executionClaimId z
      * @return address of the userProxy behind _executionClaimId
      */
-    function getProxyWithExecutionClaimId(uint256 _executionClaimId)
+    function getUserProxyWithExecutionClaimId(uint256 _executionClaimId)
         external
         view
         returns(address)
     {
         return userProxyByExecutionClaimId[_executionClaimId];
+    }
+
+    function getUserWithExecutionClaimId(uint256 _executionClaimId)
+        external
+        view
+        returns(address payable)
+    {
+        address userProxy = userProxyByExecutionClaimId[_executionClaimId];
+        return proxyToUser[userProxy];
     }
 
     // executionClaimId => bytes32 executionClaimHash
@@ -531,20 +604,9 @@ contract GelatoCore is GelatoUserProxyManager,
     {
         // ______ Authenticate msg.sender is proxied user or a proxy _______
         address userProxy;
-        {
-            /// @notice check if msg.sender is a user (EOA)
-            if (msg.sender == tx.origin) {
-                userProxy = address(proxyRegistry.proxies(msg.sender));
-                require(userProxy != address(0),
-                    "GelatoCore.mintExecutionClaim: EOA has no registered proxy"
-                );
-            } else {
-                require(proxyRegistry.registeredProxy(msg.sender),
-                    "GelatoCore.mintExecutionClaim: msg.sender not a registered proxy"
-                );
-                userProxy = msg.sender;
-            }
-        }
+        if (_isUser(msg.sender)) userProxy = userToProxy[msg.sender];
+        else if (_isUserProxy(msg.sender)) userProxy = msg.sender;
+        else revert("GelatoCore.mintExecutionClaim: msg.sender is not proxied");
         // =============
         // ______ Charge Minting Deposit _______________________________________
         uint256 actionGasStipend = IGelatoAction(_action).getActionGasStipend();
@@ -793,9 +855,9 @@ contract GelatoCore is GelatoUserProxyManager,
 
         // _________  call to userProxy.execute => action  __________________________
         {
-            (bool success,) = (Proxy(_userProxy).execute
-                                                .gas(_executeGas)
-                                                (_action, _actionPayload)
+            (bool success,) = (GelatoUserProxy(_userProxy).execute
+                                                          .gas(_executeGas)
+                                                          (_action, _actionPayload)
             );
             if (success) executionResult = uint8(ExecutionResult.Success);
             // @dev if execution fails, no revert, because executor still paid out
@@ -861,8 +923,7 @@ contract GelatoCore is GelatoUserProxyManager,
         nonReentrant
     {
         {
-            address userProxyOwner = Proxy(_userProxy).owner();
-            if (msg.sender != userProxyOwner) {
+            if (msg.sender != proxyToUser[_userProxy]) {
                 require(_executionClaimExpiryDate <= now && msg.sender == _selectedExecutor,
                     "GelatoCore.cancelExecutionClaim: only selected executor post expiry"
                 );

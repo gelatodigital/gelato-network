@@ -151,6 +151,7 @@ contract GelatoDutchXInterface is Initializable
                                 uint256 _sellerBalancesAtIndex
     )
         internal
+        view
         returns(uint256 withdrawAmount)
     {
         // Rinkeby DutchX Proxy
