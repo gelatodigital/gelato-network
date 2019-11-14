@@ -8,9 +8,9 @@ import "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol
  * @title GelatoTriggerActionAdmin
  * @notice non-deploy base contract
  */
- contract GelatoTriggerActionAdmin is Initializable,
-                                      Ownable
- {
+ contract GelatoTriggerActionAdmin/* is Initializable,
+                                      Ownable */
+ { /*
     /// @dev non-deploy base contract
     constructor() internal {}
 
@@ -67,7 +67,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol
         internal
         onlyOwner
     {
-        
+
     }
 
     function _blacklistTrigger(address _trigger,
@@ -144,5 +144,5 @@ import "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol
                               address indexed oneBeforeTrigger,
                               address indexed oneAfterTrigger
     );
-    // ================
+    // ================ */
  }
