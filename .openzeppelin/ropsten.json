@@ -438,11 +438,11 @@
       }
     },
     "MultiMintForTimeTrigger": {
-      "address": "0x447D243f98127D6321D8669Fc0b0b776870eBf1b",
+      "address": "0x4692450dfC1b34C1DcCF661fda5B0aaeaA4f210e",
       "constructorCode": "608060405234801561001057600080fd5b5061070c806100206000396000f3fe",
-      "bodyBytecodeHash": "ab5ca5ef296e9a9475f6d202ffe1c6c3a6d0ac89acb5854304a360889af5260f",
-      "localBytecodeHash": "144de1c91f7e18b60f3ddc3d37db06b1327d8358d78a56f131bc589f3fdf025e",
-      "deployedBytecodeHash": "144de1c91f7e18b60f3ddc3d37db06b1327d8358d78a56f131bc589f3fdf025e",
+      "bodyBytecodeHash": "1e2cdd1632ca55c950c247cde0f64828fb148a587503bac5039e23d0cec9f290",
+      "localBytecodeHash": "8e38888dc24e58fdbe3e7ab1a8af57026f76307bf1b46a335aa0494de6bbe922",
+      "deployedBytecodeHash": "8e38888dc24e58fdbe3e7ab1a8af57026f76307bf1b46a335aa0494de6bbe922",
       "types": {},
       "storage": [],
       "warnings": {
@@ -487,7 +487,7 @@
       {
         "address": "0xFD233dD3d8ffb6F0F297b543cE24672a0Bb847a0",
         "version": "0.0.1",
-        "implementation": "0x447D243f98127D6321D8669Fc0b0b776870eBf1b",
+        "implementation": "0x4692450dfC1b34C1DcCF661fda5B0aaeaA4f210e",
         "admin": "0x61f513A66fE17E6E21b773B394e1274EFF916a75",
         "kind": "Upgradeable"
       }
