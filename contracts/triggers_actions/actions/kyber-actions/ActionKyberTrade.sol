@@ -17,12 +17,11 @@ contract ActionKyberTrade is Initializable,
         initializer
     {
         actionSelector = this.action.selector;
-        actionGasStipend = 300000;
+        actionGasStipend = 700000;
     }
 
     ///@dev KyberNetworkProxy on ropsten hardcoded atm
     function action(// Standard Action Params
-                    uint256 _executionClaimId,
                     address _user,
                     // Specific Action Params
                     address _src,
@@ -51,8 +50,7 @@ contract ActionKyberTrade is Initializable,
                                       _minConversionRate,
                                       address(0)  // fee-sharing
         );
-        emit LogAction(_executionClaimId,
-                       _user,
+        emit LogAction(_user,
                        _src,
                        _srcAmt,
                        _dest,
@@ -61,8 +59,7 @@ contract ActionKyberTrade is Initializable,
                        address(0)  // fee-sharing
         );
     }
-    event LogAction(uint256 indexed executionClaimId,
-                    address indexed user,
+    event LogAction(address indexed user,
                     address indexed src,
                     uint256 srcAmt,
                     address dest,

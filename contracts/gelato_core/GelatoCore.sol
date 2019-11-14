@@ -279,7 +279,7 @@ contract GelatoCore is GelatoUserProxyManager,
                               uint256 indexed canExecuteResult
     );
     event LogExecutionResult(uint256 indexed executionClaimId,
-                             bytes returndata,
+                             uint8 indexed executionResult,
                              address payable indexed executor
     );
     event LogClaimExecutedAndDeleted(uint256 indexed executionClaimId,
@@ -365,20 +365,15 @@ contract GelatoCore is GelatoUserProxyManager,
         delete userProxyByExecutionClaimId[_executionClaimId];
 
         // _________  call to userProxy.execute => action  __________________________
-       {
-            bytes memory returndata = GelatoUserProxy(_userProxy).execute
-                                                                 .gas(_executeGas)
-                                                                 (_action, _actionPayload
+        {
+            (bool success,) = (GelatoUserProxy(_userProxy).execute
+                                                          .gas(2000000)
+                                                          (_action, _actionPayload)
             );
-            emit LogExecutionResult(_executionClaimId,
-                                    returndata,
-                                    msg.sender // executor
-            );
-            if (returndata.length == 0) {
-                executionResult = uint8(ExecutionResult.Failure);
-            } else {
-                executionResult = uint8(ExecutionResult.Success);
-            }
+            if (success) executionResult = uint8(ExecutionResult.Success);
+            // @dev if execution fails, no revert, because executor still paid out
+            else executionResult = uint8(ExecutionResult.Failure);
+            emit LogExecutionResult(_executionClaimId, executionResult, msg.sender);
         }
         // ========
         {

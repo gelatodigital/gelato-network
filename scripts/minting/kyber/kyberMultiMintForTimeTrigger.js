@@ -32,12 +32,12 @@ let provider;
 if (process.env.ROPSTEN) {
   console.log(`\n\t\t ✅ connected to ROPSTEN ✅ \n`);
   provider = new ethers.providers.InfuraProvider("ropsten", INFURA_ID);
-  gelatoCoreAddress = "0x84Ea81AD0EF5Aa3c6Aa051c76B5af6E946F88C4E";
+  gelatoCoreAddress = "0x0Fcf27B454b344645a94788A3e820A0D2dab7F0e";
   kyberProxyAddress = "0x818E6FECD516Ecc3849DAf6845e3EC868087B755";
-  userProxyAddress = "0x64039D999ad572Bc574Cc1F3b36B7a4671C8c538";
-  multiMintImplAddress = "0x4Bf21584Cf8E362B16dd9a0DF94f896712986658";
+  userProxyAddress = "0xF37c83EBf9Fb837c3d303b0A2A2Be5Cf5345f0A9";
+  multiMintImplAddress = "0xcD816f760BBd8d63740a82cff56c04288667D921";
   triggerTimestampPassedAddress = "0x6B54F08968a9dc7959df88d202b99876c2E496eb";
-  actionKyberTradeImplAddress = "0x8ce40023B1b12fC5DCEca111A336B8D07542e8F1";
+  actionKyberTradeImplAddress = "0xB59b6B36a31661cd24F95D703ec4c7Ce41f2E06E";
   src = "0x4E470dc7321E84CA96FcAEDD0C8aBCebbAEB68C6"; // Ropsten KNC
   dest = "0xaD6D458402F60fD3Bd25163575031ACDce07538D"; // Ropsten DAI
 } else if (process.env.RINKEBY && !process.env.ROPSTEN) {
@@ -80,7 +80,7 @@ const gelatoCoreContract = new ethers.Contract(
 
 // Read-Write Instance of UserProxy
 const userProxyABI = [
-  "function execute(address target, bytes data) payable returns(bytes response)"
+  "function execute(address _action, bytes _actionPayload) payable returns(bool success, bytes returndata)"
 ];
 const userProxyContract = new ethers.Contract(
   userProxyAddress,
@@ -125,10 +125,10 @@ async function main() {
 
   // Encode the specific params for ActionKyberTrade
   const ACTION_KYBER_PAYLOAD_WITH_SELECTOR = getActionKyberTradePayloadWithSelector(
+    USER,
     src,
     SRC_AMOUNT,
     dest,
-    USER,
     minConversionRate
   );
   console.log(

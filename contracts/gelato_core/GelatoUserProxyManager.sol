@@ -27,7 +27,7 @@ contract GelatoUserProxyManager
     /// @return address of the deployed GelatoUserProxy
     function createUserProxy()
         external
-        //userHasNoProxy
+        userHasNoProxy
         returns(address userProxy)
     {
         userProxy = address(new GelatoUserProxy(msg.sender));
