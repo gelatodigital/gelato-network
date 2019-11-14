@@ -1,6 +1,6 @@
 {
-  "name": "triggered-oz",
-  "version": "1.0.0",
+  "name": "gelato-contracts",
+  "version": "0.0.1",
   "engines": {
     "node": "12.12.0"
   },

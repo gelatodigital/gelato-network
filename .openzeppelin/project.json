@@ -1,22 +1,7 @@
 {
   "manifestVersion": "2.2",
-  "contracts": {
-    "GelatoCore": "GelatoCore",
-    "ActionKyberTrade": "ActionKyberTrade",
-    "TriggerTimestampPassed": "TriggerTimestampPassed",
-    "MultiMintForTimeTrigger": "MultiMintForTimeTrigger"
-  },
-  "dependencies": {
-    "@openzeppelin/contracts-ethereum-package": "^2.3.0"
-  },
-  "name": "gelato",
-  "version": "0.0.0",
-  "compiler": {
-    "manager": "openzeppelin",
-    "solcVersion": "0.5.12",
-    "compilerSettings": {
-      "optimizer": {}
-    }
-  },
-  "telemetryOptIn": true
+  "contracts": {},
+  "dependencies": {},
+  "name": "gelato-contracts",
+  "version": "0.0.1"
 }
