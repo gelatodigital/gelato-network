@@ -9,6 +9,7 @@
     "gc-logminting:ropsten": "export ROPSTEN=true && node scripts/events/gelatoCore_events/fetchMintingLogs.js",
     "gc-logminting:rinkeby": "export RINKEBY=true && node scripts/events/gelatoCore_events/fetchMintingLogs.js",
     "kyber-multimint:ropsten": "export ROPSTEN=true && node scripts/minting/kyber/kyberMultiMintForTimeTrigger.js",
+    "kyber-multimint:rinkeby": "export RINKEBY=true && node scripts/minting/kyber/kyberMultiMintForTimeTrigger.js",
     "dx-multimint:rinkeby": "node scripts/minting/dutchX_rinkeby/dutchXMultiMintForTimeTrigger.js",
     "dx-mint-claimwithdraw:rinkeby": "export RINKEBY=true && node scripts/minting/dutchX_rinkeby/dutchXMintClaimWithdrawBalancesAtIndexFromDXToUser.js",
     "dx-mint-withdraw:rinkeby": "export RINKEBY=true && node scripts/minting/dutchX_rinkeby/dutchXMintWithdrawBalanceFromDXToUser",

@@ -2,9 +2,10 @@
   "manifestVersion": "2.2",
   "contracts": {
     "TriggerTimestampPassed": "TriggerTimestampPassed",
-    "ActionKyberTrade": "ActionKyberTrade",
     "MultiMintForTimeTrigger": "MultiMintForTimeTrigger",
-    "GelatoCore": "GelatoCore"
+    "GelatoCore": "GelatoCore",
+    "MultiMintForTimeTriggerRinkeby": "MultiMintForTimeTriggerRinkeby",
+    "ActionKyberTradeRinkeby": "ActionKyberTradeRinkeby"
   },
   "dependencies": {},
   "name": "gelato-contracts",

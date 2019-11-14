@@ -43,6 +43,14 @@ if (process.env.ROPSTEN) {
 } else if (process.env.RINKEBY && !process.env.ROPSTEN) {
   console.log(`\n\t\t ✅ connected to RINKEBY ✅ \n`);
   provider = new ethers.providers.InfuraProvider("rinkeby", INFURA_ID);
+  gelatoCoreAddress = "0x501aF774Eb578203CC34E7171273124A93706C06";
+  kyberProxyAddress = "0xF77eC7Ed5f5B9a5aee4cfa6FFCaC6A4C315BaC76";
+  userProxyAddress = "0x0bb7FEAdBa7e184Cbea720f06Ee34c82825Cd34C";
+  multiMintImplAddress = "0x47aC300a47095EedA741dA6088fd243D044430Cc";
+  triggerTimestampPassedAddress = "0xBdA9E16D8506C3AB2431fD4EE081c6d8a847FBaD";
+  actionKyberTradeImplAddress = "0x5e2C7234DC00eF98B52B694b29824AcF30dBA53e";
+  src = "0x6FA355a7b6bD2D6bD8b927C489221BFBb6f1D7B2"; // Rinkeby KNC
+  dest = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"; // Rinkeby SNT
 } else {
   console.log(`\n\t\t ❗NO NETWORK DEFINED ❗\n`);
 }
@@ -95,7 +103,7 @@ const TARGET_ADDRESS = multiMintImplAddress;
 const START_TIME = Math.floor(Date.now() / 1000);
 // Specific Action Params: encoded during main() execution
 const USER = "0x203AdbbA2402a36C202F207caA8ce81f1A4c7a72";
-const SRC_AMOUNT = ethers.utils.parseUnits("1", 18);
+const SRC_AMOUNT = ethers.utils.parseUnits("10", 18);
 // minConversionRate async fetched from KyberNetwork during main() execution
 const SELECTED_EXECUTOR_ADDRESS = "0x203AdbbA2402a36C202F207caA8ce81f1A4c7a72";
 const INTERVAL_SPAN = "120"; // 300 seconds
