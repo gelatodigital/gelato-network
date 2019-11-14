@@ -63,9 +63,9 @@ const INTERVAL_SPAN = "300"; // 300 seconds
 const NUMBER_OF_MINTS = "2";
 
 // ABI encoding function
-const getActionDutchXSellPayloadWithSelector = require("./dutchX-encoders/actionDutchXSellEncoder.js")
+const getActionDutchXSellPayloadWithSelector = require("./dutchX_encoders/actionDutchXSellEncoder.js")
   .getActionDutchXSellPayloadWithSelector;
-const getMultiMintForTimeTriggerPayloadWithSelector = require("../multi-mint/time-trigger/multiMintTimeTriggerEncoder.js")
+const getMultiMintForTimeTriggerPayloadWithSelector = require("../multi_mint/time_trigger/multiMintTimeTriggerEncoder.js")
   .getMultiMintForTimeTriggerPayloadWithSelector;
 
 // The execution logic

@@ -4,11 +4,14 @@ pragma solidity ^0.5.0;
 import "@openzeppelin/upgrades/contracts/Initializable.sol";
 import '../GelatoActionsStandard.sol';
 import '../../../interfaces/dapp_interfaces/kyber_interfaces/IKyber.sol';
+import '../../../helpers/GelatoERC20Lib.sol';
 import '@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.sol';
 
 contract ActionKyberTrade is Initializable,
                              GelatoActionsStandard
 {
+    using GelatoERC20Lib for IERC20;
+
     function initialize()
         external
         initializer
@@ -31,12 +34,15 @@ contract ActionKyberTrade is Initializable,
         returns (uint256 destAmt)
     {
         address kyber = 0x818E6FECD516Ecc3849DAf6845e3EC868087B755;  // ropsten
-        IERC20 srcERC20 = IERC20(_src);
-        uint256 kyberAllowance = srcERC20.allowance(address(this), kyber);
-        if (kyberAllowance < _srcAmt) {
-            srcERC20.approve(kyber, 2**255);
+        {
+            IERC20 srcERC20 = IERC20(_src);
+            require(srcERC20._safeTransferFrom(_user, address(this), _srcAmt),
+                "ActionKyberTrade.action: _safeTransferFrom failed"
+            );
+            require(srcERC20._safeIncreaseERC20Allowance(kyber, _srcAmt),
+                "ActionKyberTrade.action: _safeIncreaseERC20Allowance failed"
+            );
         }
-        srcERC20.transferFrom(_user, address(this), _srcAmt);
         destAmt = IKyber(kyber).trade(_src,
                                       _srcAmt,
                                       _dest,

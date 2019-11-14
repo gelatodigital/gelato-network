@@ -8,9 +8,9 @@ contract GelatoUserProxy
     function getUser() external view returns(address payable) {return user;}
     function getGelatoCore() external view returns(address payable) {return gelatoCore;}
 
-    modifier onlyGelatoCore() {
-        require(msg.sender == gelatoCore,
-            "GelatoUserProxy.onlyGelatoCore: failed"
+    modifier auth() {
+        require(msg.sender == user || msg.sender == gelatoCore,
+            "GelatoUserProxy.auth: failed"
         );
         _;
     }
@@ -24,19 +24,41 @@ contract GelatoUserProxy
 
     function setGelatoCore(address payable _gelatoCore)
         external
-        onlyGelatoCore
+        auth
     {
         gelatoCore = _gelatoCore;
     }
 
-    function execute(address _action, bytes calldata _actionPayload)
-        external
+    function execute(address _action, bytes memory _actionPayload)
+        public
         payable
-        onlyGelatoCore
-        returns(bool success, bytes memory returndata)
+        auth
+        returns(bytes memory returndata)
     {
-        (success, returndata) = _action.delegatecall(_actionPayload);
+        require(_action != address(0),
+            "GelatoUserProxy.execute: invalid _action"
+        );
+
+        // call contract in current context
+        assembly {
+            let succeeded := delegatecall(sub(gas, 5000), _action, add(_actionPayload, 0x20), mload(_actionPayload), 0, 0)
+            let size := returndatasize
+
+            returndata := mload(0x40)
+            mstore(0x40, add(returndata, and(add(add(size, 0x20), 0x1f), not(0x1f))))
+            mstore(returndata, size)
+            returndatacopy(add(returndata, 0x20), 0, size)
+
+            switch iszero(succeeded)
+            case 1 {
+                // throw if delegatecall failed
+                revert(add(returndata, 0x20), size)
+            }
+        }
+        // @dev address.delegatecall does
+        /*bytes memory actionPayload = _actionPayload;
+        (success, returndata) = _action.delegatecall(actionPayload);
         ///@dev we should delete require later - leave it for testing action executionClaimIds
-        require(success, "GelatoUserProxy.execute(): delegatecall failed");
+        require(success, "GelatoUserProxy.execute(): delegatecall failed");*/
     }
 }

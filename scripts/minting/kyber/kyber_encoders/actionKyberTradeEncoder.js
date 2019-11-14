@@ -24,7 +24,7 @@ exports.getActionKyberTradePayloadWithSelector = (
   _user,
   _minConversionRate
 ) => {
-  const actionDutchXSellABI = [
+  const actionKyberTradeABI = [
     {
       name: "action",
       type: "function",
@@ -37,7 +37,7 @@ exports.getActionKyberTradePayloadWithSelector = (
       ]
     }
   ];
-  const interface = new ethers.utils.Interface(actionDutchXSellABI);
+  const interface = new ethers.utils.Interface(actionKyberTradeABI);
 
   const actionPayloadWithSelector = interface.functions.action.encode([
     _src,
