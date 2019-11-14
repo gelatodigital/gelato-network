@@ -50,7 +50,7 @@ if (process.env.ROPSTEN) {
   triggerTimestampPassedAddress = "0xBdA9E16D8506C3AB2431fD4EE081c6d8a847FBaD";
   actionKyberTradeImplAddress = "0x5e2C7234DC00eF98B52B694b29824AcF30dBA53e";
   src = "0x6FA355a7b6bD2D6bD8b927C489221BFBb6f1D7B2"; // Rinkeby KNC
-  dest = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"; // Rinkeby SNT
+  dest = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"; // ETH signal
 } else {
   console.log(`\n\t\t ❗NO NETWORK DEFINED ❗\n`);
 }
