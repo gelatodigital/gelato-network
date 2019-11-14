@@ -2,6 +2,7 @@ pragma solidity ^0.5.10;
 
 import './GelatoUserProxyManager.sol';
 import './GelatoCoreAccounting.sol';
+import '@openzeppelin/contracts-ethereum-package/contracts/drafts/Counters.sol';
 
 /**
  * @title GelatoCore

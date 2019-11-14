@@ -1,17 +1,14 @@
 {
   "manifestVersion": "2.2",
   "contracts": {
-    "ActionDutchXSell": "ActionDutchXSell",
     "GelatoCore": "GelatoCore",
-    "ProxyFactory": "ProxyFactory",
-    "ProxyRegistry": "ProxyRegistry",
+    "ActionKyberTrade": "ActionKyberTrade",
     "TriggerTimestampPassed": "TriggerTimestampPassed",
-    "MultiMintForTimeTrigger": "MultiMintForTimeTrigger",
-    "TriggerDutchXAuctionCleared": "TriggerDutchXAuctionCleared",
-    "ActionClaimWithdrawBalancesAtIndexFromDutchXToUser": "ActionClaimWithdrawBalancesAtIndexFromDutchXToUser",
-    "ActionWithdrawBalanceFromDutchXToUser": "ActionWithdrawBalanceFromDutchXToUser"
+    "MultiMintForTimeTrigger": "MultiMintForTimeTrigger"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@openzeppelin/contracts-ethereum-package": "^2.3.0"
+  },
   "name": "gelato",
   "version": "0.0.0",
   "compiler": {
@@ -20,5 +17,6 @@
     "compilerSettings": {
       "optimizer": {}
     }
-  }
+  },
+  "telemetryOptIn": true
 }
