@@ -17,7 +17,7 @@ contract GelatoUserProxyManager
 
     modifier userHasNoProxy {
         require(userToProxy[msg.sender] == address(0),
-            "GelatoUserProxyManager: user already has an proxy"
+            "GelatoUserProxyManager: user already has a proxy"
         );
         _;
     }

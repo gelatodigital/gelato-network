@@ -30,10 +30,18 @@ import "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol
         actionSinglyLinkedWhitelist[HEAD] = GENESIS;
     }
 
-    // ______ Trigger Whitelisting __________________________________________
+    modifier validAddress(address _) {
+        require(_ != address(0) && _ != GENESIS && _ != HEAD,
+            "GelatoTriggerActionAdmin.validAddress: invalid"
+        );
+        _;
+    }
+
+    // ______ Trigger White\Black-listing __________________________________________
     function _isWhitelistedTrigger(address _trigger)
         internal
         view
+        validAddress(_trigger)
         returns(bool)
     {
         return triggerSinglyLinkedWhitelist[_trigger] != address(0);
@@ -41,31 +49,53 @@ import "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol
 
     function _whitelistTrigger(address _trigger)
         internal
+        validAddress(_trigger)
         onlyOwner
     {
-        require(_trigger != address(0) && _trigger != GENESIS && _trigger != HEAD,
-            "GelatoTriggerActionAdmin._whitelistTrigger: invalid trigger"
-        );
         require(!_isWhitelistedTrigger(),
             "GelatoTriggerActionAdmin._whitelistTrigger: trigger already whitelisted"
         );
-        address previousRef = triggerSinglyLinkedWhitelist[HEAD];
-        triggerSinglyLinkedWhitelist[_trigger] = previousRef;
+        address oneBeforeTrigger = triggerSinglyLinkedWhitelist[HEAD];
+        triggerSinglyLinkedWhitelist[_trigger] = oneBeforeTrigger;
         triggerSinglyLinkedWhitelist[HEAD] = _trigger;
         triggerCount++;
-        emit LogWhitelistTrigger(_trigger, previousRef);
+        emit LogWhitelistTrigger(_trigger, oneBeforeTrigger);
     }
-    event LogWhitelistTrigger(address indexed trigger, address previousRef);
+    event LogWhitelistTrigger(address indexed trigger, address indexed oneBeforeTrigger);
 
-    function _blacklistTrigger(address _trigger)
+    function _whitelistTrigger(address[] memory _triggers)
         internal
         onlyOwner
     {
-
+        
     }
+
+    function _blacklistTrigger(address _trigger,
+                               address _oneAfterTrigger
+    )
+        internal
+        validAddress(_trigger)
+        onlyOwner
+    {
+        require(_isWhitelistedTrigger(),
+            "GelatoTriggerActionAdmin._blacklistTrigger: trigger not whitelisted"
+        );
+        require(triggerSinglyLinkedWhitelist[_oneAfterTrigger] == _trigger,
+            "GelatoTriggerActionAdmin._blacklistTrigger: invalid _oneAfterTrigger"
+        );
+        address oneBeforeTrigger = triggerSinglyLinkedWhitelist[_trigger];
+        triggerSinglyLinkedWhitelist[_oneAfterTrigger] = oneBeforeTrigger;
+        triggerSinglyLinkedWhitelist[_trigger] = address(0);
+        triggerCount--;
+        emit LogBlacklistTrigger(_trigger, oneBeforeTrigger, _oneAfterTrigger);
+    }
+    event LogBlacklistTrigger(address indexed trigger,
+                              address indexed oneBeforeTrigger,
+                              address indexed oneAfterTrigger
+    );
     // ================
 
-    // ______ Action Whitelisting __________________________________________
+    // ______ Action White\Black-listing __________________________________________
     function _isWhitelistedAction(address _action)
         internal
         view
@@ -91,6 +121,28 @@ import "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol
         emit LogWhitelistAction(_action, previousRef);
     }
     event LogWhitelistAction(address indexed _action, address previousRef);
-    // ================
 
+    function _blacklistAction(address _trigger,
+                              address _oneAfterTrigger
+    )
+        internal
+        validAddress(_trigger)
+        onlyOwner
+    {
+        require(_isWhitelistedTrigger(),
+            "GelatoTriggerActionAdmin._blacklistTrigger: trigger not whitelisted"
+        );
+        require(triggerSinglyLinkedWhitelist[_oneAfterTrigger] == _trigger,
+            "GelatoTriggerActionAdmin._blacklistTrigger: invalid _oneAfterTrigger"
+        );
+        address oneBeforeTrigger = triggerSinglyLinkedWhitelist[_trigger];
+        triggerSinglyLinkedWhitelist[_oneAfterTrigger] = oneBeforeTrigger;
+        triggerSinglyLinkedWhitelist[_trigger] = address(0);
+        emit LogBlacklistTrigger(_trigger, oneBeforeTrigger, _oneAfterTrigger);
+    }
+    event LogBlacklistTrigger(address indexed trigger,
+                              address indexed oneBeforeTrigger,
+                              address indexed oneAfterTrigger
+    );
+    // ================
  }

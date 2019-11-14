@@ -2,15 +2,13 @@ pragma solidity ^0.5.10;
 
 import './GelatoUserProxyManager.sol';
 import './GelatoCoreAccounting.sol';
-import './GelatoTriggerActionAdmin.sol';
 
 /**
  * @title GelatoCore
  * @notice deployable contract
  */
 contract GelatoCore is GelatoUserProxyManager,
-                       GelatoCoreAccounting,
-                       GelatoTriggerActionAdmin
+                       GelatoCoreAccounting
 {
     using Address for address payable;  /// for oz's sendValue method
 
@@ -21,7 +19,6 @@ contract GelatoCore is GelatoUserProxyManager,
         initializer
     {
         GelatoCoreAccounting._initialize();
-        GelatoTriggerActionAdmin._initialize();
     }
 
     // Unique ExecutionClaim Ids
@@ -316,7 +313,7 @@ contract GelatoCore is GelatoUserProxyManager,
      */
     function execute(address _trigger,
                      bytes calldata _triggerPayload,
-                     address payable _userProxy,
+                     address _userProxy,
                      bytes calldata _actionPayload,
                      address _action,
                      uint256 _executeGas,
@@ -424,7 +421,7 @@ contract GelatoCore is GelatoUserProxyManager,
      */
     function cancelExecutionClaim(address _trigger,
                                   bytes calldata _triggerPayload,
-                                  address payable _userProxy,
+                                  address _userProxy,
                                   bytes calldata _actionPayload,
                                   uint256 _executionClaimId,
                                   address payable _selectedExecutor,
