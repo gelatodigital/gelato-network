@@ -76,7 +76,7 @@ Actions
 
 Scripts
 -------
-MultiMintForTimeTriggerImpl: 0x5e2C7234DC00eF98B52B694b29824AcF30dBA53e
+MultiMintForTimeTriggerRinkebyImpl: 0xa9370d2c5f24866448b129a0Ff81aF99689CD23a
 
 Helpers
 -------

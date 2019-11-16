@@ -358,11 +358,11 @@
       }
     },
     "MultiMintForTimeTrigger": {
-      "address": "0x906E41B207A61bCDFe6a5277Bdf47ed74F2d9DEE",
-      "constructorCode": "608060405234801561001057600080fd5b5061070c806100206000396000f3fe",
-      "bodyBytecodeHash": "5223e061702bea0c4353f64003109037c99166ea8b59b0e7459c513d4eeab472",
-      "localBytecodeHash": "b4ffeb6eeaee761839c67db460566bf1047aac6fac2c730956cb88efa7d34994",
-      "deployedBytecodeHash": "b4ffeb6eeaee761839c67db460566bf1047aac6fac2c730956cb88efa7d34994",
+      "address": "0xD89874912396c92291D031E96f899C37b51DfEF3",
+      "constructorCode": "608060405234801561001057600080fd5b50610709806100206000396000f3fe",
+      "bodyBytecodeHash": "efa3c1abf8295447b5c5b8305a51eb0cb0d60f8cb8637d35ef78c5ea8f91717c",
+      "localBytecodeHash": "25f6e9ea677c1b18dd7db5d5da45256e194bd5f84383580c128e0100ae432828",
+      "deployedBytecodeHash": "25f6e9ea677c1b18dd7db5d5da45256e194bd5f84383580c128e0100ae432828",
       "types": {},
       "storage": [],
       "warnings": {
@@ -374,11 +374,11 @@
       }
     },
     "MultiMintForTimeTriggerRinkeby": {
-      "address": "0x47aC300a47095EedA741dA6088fd243D044430Cc",
-      "constructorCode": "608060405234801561001057600080fd5b5061070c806100206000396000f3fe",
-      "bodyBytecodeHash": "da934f7c2c39c9a5f9bccca7a53121157d3ada33034908e1d977663f445f8c22",
-      "localBytecodeHash": "a54722e499b35381dbb37b36126dd19d7e4274467fd49eb771cf4af718417531",
-      "deployedBytecodeHash": "a54722e499b35381dbb37b36126dd19d7e4274467fd49eb771cf4af718417531",
+      "address": "0xa9370d2c5f24866448b129a0Ff81aF99689CD23a",
+      "constructorCode": "608060405234801561001057600080fd5b50610709806100206000396000f3fe",
+      "bodyBytecodeHash": "4ee155c046c4f582e943a14ee012f7a6a1acdab0f234b059f35541422c7ce575",
+      "localBytecodeHash": "6abd9fa43b8be46d677e49ff7ae636111bfbf6b7c6721f09dc9caa7587317fff",
+      "deployedBytecodeHash": "6abd9fa43b8be46d677e49ff7ae636111bfbf6b7c6721f09dc9caa7587317fff",
       "types": {},
       "storage": [],
       "warnings": {
@@ -494,7 +494,7 @@
       {
         "address": "0xCb843167a69783BC3617e772211da15c8cfE6f40",
         "version": "0.0.1",
-        "implementation": "0x47aC300a47095EedA741dA6088fd243D044430Cc",
+        "implementation": "0xa9370d2c5f24866448b129a0Ff81aF99689CD23a",
         "admin": "0x687eB97001c3ed5727Ee557804BB710568456e86",
         "kind": "Upgradeable"
       }
