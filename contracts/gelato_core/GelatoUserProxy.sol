@@ -8,9 +8,9 @@ contract GelatoUserProxy
     function getUser() external view returns(address payable) {return user;}
     function getGelatoCore() external view returns(address payable) {return gelatoCore;}
 
-    modifier onlyGelatoCore() {
-        require(msg.sender == gelatoCore,
-            "GelatoUserProxy.onlyGelatoCore: failed"
+    modifier auth() {
+        require(msg.sender == user || msg.sender == gelatoCore,
+            "GelatoUserProxy.auth: failed"
         );
         _;
     }
@@ -24,7 +24,7 @@ contract GelatoUserProxy
 
     function setGelatoCore(address payable _gelatoCore)
         external
-        onlyGelatoCore
+        auth
     {
         gelatoCore = _gelatoCore;
     }
@@ -32,9 +32,13 @@ contract GelatoUserProxy
     function execute(address _action, bytes calldata _actionPayload)
         external
         payable
-        onlyGelatoCore
+        auth
         returns(bool success, bytes memory returndata)
     {
+        require(_action != address(0),
+            "GelatoUserProxy.execute: invalid _action"
+        );
+        // @dev address.delegatecall does
         (success, returndata) = _action.delegatecall(_actionPayload);
         ///@dev we should delete require later - leave it for testing action executionClaimIds
         require(success, "GelatoUserProxy.execute(): delegatecall failed");
