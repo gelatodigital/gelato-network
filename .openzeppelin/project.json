@@ -1,17 +1,24 @@
 {
   "manifestVersion": "2.2",
   "contracts": {
+    "TriggerTimestampPassed": "TriggerTimestampPassed",
+    "MultiMintForTimeTrigger": "MultiMintForTimeTrigger",
     "GelatoCore": "GelatoCore",
-    "TriggerTimestampPassed": "TriggerTimestampPassed"
+    "MultiMintForTimeTriggerRinkeby": "MultiMintForTimeTriggerRinkeby",
+    "ActionKyberTradeRinkeby": "ActionKyberTradeRinkeby"
   },
   "dependencies": {},
   "name": "gelato-contracts",
   "version": "0.0.1",
+  "telemetryOptIn": true,
   "compiler": {
     "manager": "openzeppelin",
     "solcVersion": "0.5.12",
     "compilerSettings": {
-      "optimizer": {}
+      "optimizer": {
+        "enabled": false,
+        "runs": "200"
+      }
     }
   }
 }
