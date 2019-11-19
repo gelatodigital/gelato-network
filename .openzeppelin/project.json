@@ -13,7 +13,7 @@
   "telemetryOptIn": true,
   "compiler": {
     "manager": "openzeppelin",
-    "solcVersion": "0.5.12",
+    "solcVersion": "0.5.13",
     "compilerSettings": {
       "optimizer": {
         "enabled": false,
