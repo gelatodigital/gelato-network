@@ -1,6 +1,6 @@
 pragma solidity ^0.5.10;
 
-import './interfaces/triggers_actions_interfaces/IGelatoAction.sol';
+import '../interfaces/triggers_actions_interfaces/IGelatoAction.sol';
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 import "@openzeppelin/upgrades/contracts/Initializable.sol";
 import '@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol';
