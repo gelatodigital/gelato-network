@@ -1,13 +1,15 @@
 # What is gelato?
-Think of gelato as If This, Then That for smart contracts. It allows for the combination of arbitrary triggers with arbitrary actions. Designed and run for developers. Use gelato to build out cool end-user products, such as limit orders on DEXs or automated Interest Rate refinancing dapps using multiple lending protocols.
+Think of gelato as `If This, Then That` for smart contracts. It allows for the combination of arbitrary triggers with arbitrary actions on-chain. Gelato is designed and run for developers. 
+
+Use gelato to build out cool end-user products, such as limit orders on DEXs or automated interest rate refinancing using multiple lending protocols.
 
 # What does this repo contain?
-This Repo containts the smart contracts and uses OpenZeppelin SDK and ethers.js.
+It containts the smart contracts and uses OpenZeppelin SDK and ethers.js.
 
 # Want to build a trigger and action on top of gelato?
 Check out our example trigger and action contract, decide one some new ones, inherit from the standards and deploy your owm trigger / actions on Rinkeby! 
 
-# Want to reach out?:
+# Want to reach out?
 Reach out to us in our official Telegram Community chat: https://t.me/joinchat/HcTaOxJ0_FjU-r34vbvK8A
 
 # Rinkeby Smart Contracts:
