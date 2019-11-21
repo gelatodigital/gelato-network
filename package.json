@@ -21,7 +21,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "debug": "^4.1.1",
     "ethers": "^4.0.38"
   },
   "devDependencies": {

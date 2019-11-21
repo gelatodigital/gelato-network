@@ -4,23 +4,24 @@ pragma solidity ^0.5.0;
 import "@openzeppelin/upgrades/contracts/Initializable.sol";
 import '../GelatoActionsStandard.sol';
 import '../../../interfaces/dapp_interfaces/kyber_interfaces/IKyber.sol';
-import '../../../helpers/GelatoERC20Lib.sol';
 import '@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.sol';
+import '@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol';
 
 contract ActionKyberTradeRinkeby is Initializable,
                                     GelatoActionsStandard
 {
-    using GelatoERC20Lib for IERC20;
+    using SafeERC20 for IERC20;
 
-    function initialize()
+    function initialize(uint256 _actionGasStipend)
         external
         initializer
     {
+        actionOperation = ActionOperation.delegatecall;
         actionSelector = this.action.selector;
-        actionGasStipend = 700000;
+        actionGasStipend = _actionGasStipend;
     }
 
-    ///@dev KyberNetworkProxy on ropsten hardcoded atm
+    ///@dev KyberNetworkProxy on rinkeby hardcoded
     function action(// Standard Action Params
                     address _user,
                     // Specific Action Params
@@ -32,15 +33,11 @@ contract ActionKyberTradeRinkeby is Initializable,
         external
         returns (uint256 destAmt)
     {
-        address kyber = 0xF77eC7Ed5f5B9a5aee4cfa6FFCaC6A4C315BaC76;  // ropsten
+        address kyber = 0xF77eC7Ed5f5B9a5aee4cfa6FFCaC6A4C315BaC76;  // rinkeby
         {
             IERC20 srcERC20 = IERC20(_src);
-            require(srcERC20._safeTransferFrom(_user, address(this), _srcAmt),
-                "ActionKyberTrade.action: _safeTransferFrom failed"
-            );
-            require(srcERC20._safeIncreaseERC20Allowance(kyber, _srcAmt),
-                "ActionKyberTrade.action: _safeIncreaseERC20Allowance failed"
-            );
+            srcERC20.safeTransferFrom(_user, address(this), _srcAmt);
+            srcERC20.safeIncreaseAllowance(kyber, _srcAmt);
         }
         destAmt = IKyber(kyber).trade(_src,
                                       _srcAmt,

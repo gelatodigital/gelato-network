@@ -1,5 +1,7 @@
 pragma solidity ^0.5.10;
 
+import '../triggers_actions/actions/GelatoActionsStandard';
+
 contract GelatoUserProxy
 {
     address payable internal user;
@@ -38,9 +40,18 @@ contract GelatoUserProxy
         require(_action != address(0),
             "GelatoUserProxy.execute: invalid _action"
         );
-        // @dev address.delegatecall does
-        (success, returndata) = _action.delegatecall(_actionPayload);
-        ///@dev we should delete require later - leave it for testing action executionClaimIds
-        require(success, "GelatoUserProxy.execute(): delegatecall failed");
+        ActionOperation operation = GelatoActionsStandard(_action).getActionOperation();
+        require(operation == ActionOperation.call || operation == ActionOperation.delegatecall,
+            "GelatoUserProxy.execute(): invalid action operation"
+        );
+        if (operation == ActionOperation.call) {
+            (success, returndata) = _action.call(_actionPayload);
+            ///@dev we should delete require later - leave it for testing action executionClaimIds
+            require(success, "GelatoUserProxy.execute(): _action.call failed");
+        } else {
+            (success, returndata) = _action.delegatecall(_actionPayload);
+            ///@dev we should delete require later - leave it for testing action executionClaimIds
+            require(success, "GelatoUserProxy.execute(): _action.delegatecall failed");
+        }
     }
 }

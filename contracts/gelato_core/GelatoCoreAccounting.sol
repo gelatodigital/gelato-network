@@ -28,10 +28,13 @@ contract GelatoCoreAccounting is Initializable,
     mapping(address => uint256) internal executorClaimLifespan;
     mapping(address => uint256) internal executorBalance;
     //_____________ Gas values for executionClaim cost calculations _______
-    uint256 internal gasOutsideGasleftChecks;
-    uint256 internal gasInsideGasleftChecks;
     uint256 internal canExecMaxGas;
-    uint256 internal userProxyExecGas;
+    uint256 internal gelatoCoreExecGasOverhead;
+    uint256 internal userProxyExecGasOverhead;
+    uint256 internal nonActionExecutionGas = (canExecMaxGas
+                                              + gelatoCoreExecGasOverhead
+                                              + userProxyExecGasOverhead
+    );
     // =========================
 
 
@@ -50,10 +53,9 @@ contract GelatoCoreAccounting is Initializable,
         Ownable.initialize(msg.sender);
         ReentrancyGuard.initialize();
         minExecutionClaimLifespan = 600;  // 10 minutes
-        gasOutsideGasleftChecks = 40000 + 17331;
-        gasInsideGasleftChecks = 100000 - gasOutsideGasleftChecks;
         canExecMaxGas = 100000;
-        userProxyExecGas = 100000;
+        gelatoCoreExecGasOverhead = 100000;
+        userProxyExecGasOverhead = 40000;
     }
 
     // _______ ExecutionClaim Gas Cost Calculation _________________________________
@@ -67,12 +69,7 @@ contract GelatoCoreAccounting is Initializable,
         view
         returns(uint256)
     {
-        return (gasOutsideGasleftChecks
-                + gasInsideGasleftChecks
-                + canExecMaxGas
-                + userProxyExecGas
-                .add(_actionGasStipend)
-        );
+        return nonActionExecutionGas.add(_actionGasStipend);
     }
     // =======
 
@@ -144,20 +141,6 @@ contract GelatoCoreAccounting is Initializable,
         return executorBalance[_executor];
     }
     /**
-     * @dev getter for gasOutsideGasleftChecks state variable
-     * @return uint256 gasOutsideGasleftChecks
-     */
-    function getGasOutsideGasleftChecks() external view returns(uint256) {
-        return gasOutsideGasleftChecks;
-    }
-    /**
-     * @dev getter for gasInsideGasleftChecks state variable
-     * @return uint256 gasInsideGasleftChecks
-     */
-    function getGasInsideGasleftChecks() external view returns(uint256) {
-        return gasInsideGasleftChecks;
-    }
-    /**
      * @dev getter for canExecMaxGas state variable
      * @return uint256 canExecMaxGas
      */
@@ -165,11 +148,25 @@ contract GelatoCoreAccounting is Initializable,
         return canExecMaxGas;
     }
     /**
-     * @dev getter for userProxyExecGas state variable
-     * @return uint256 userProxyExecGas
+     * @dev getter for gelatoCoreExecGasOverhead state variable
+     * @return uint256 gelatoCoreExecGasOverhead
      */
-    function getUserProxyExecGas() external view returns(uint256) {
-        return userProxyExecGas;
+    function getGelatoCoreExecGasOverhead() external view returns(uint256) {
+        return gelatoCoreExecGasOverhead;
+    }
+    /**
+     * @dev getter for userProxyExecGasOverhead state variable
+     * @return uint256 userProxyExecGasOverhead
+     */
+    function getUserProxyExecGasOverhead() external view returns(uint256) {
+        return userProxyExecGasOverhead;
+    }
+    /**
+     * @dev getter for nonActionExecutionGas state variable
+     * @return uint256 nonActionExecutionGas
+     */
+    function getNonActionExecutionGas() external view returns(uint256) {
+        return nonActionExecutionGas;
     }
     // =========================
 
@@ -314,43 +311,7 @@ contract GelatoCoreAccounting is Initializable,
 
     /**
      * @dev setter for GelatoCore devs to configure the protocol's executionGas calculations
-     * @param _newGasOutsideGasleftChecks x
-     * @notice important for _getMinExecutionGasRequirement and getMintingDepositPayable
-     */
-    function setGasOutsideGasleftChecks(uint256 _newGasOutsideGasleftChecks)
-        onlyOwner
-        external
-    {
-        emit LogSetGasOutsideGasleftChecks(gasOutsideGasleftChecks,
-                                           _newGasOutsideGasleftChecks
-        );
-        gasOutsideGasleftChecks = _newGasOutsideGasleftChecks;
-    }
-    event LogSetGasOutsideGasleftChecks(uint256 gasOutsideGasleftChecks,
-                                        uint256 newGasOutsideGasleftChecks
-    );
-
-    /**
-     * @dev setter for GelatoCore devs to configure the protocol's executionGas calculations
-     * @param _newGasInsideGasleftChecks z
-     * @notice important for _getMinExecutionGasRequirement and getMintingDepositPayable
-     */
-    function setGasInsideGasleftChecks(uint256 _newGasInsideGasleftChecks)
-        onlyOwner
-        external
-    {
-        emit LogSetGasInsideGasleftChecks(gasInsideGasleftChecks,
-                                          _newGasInsideGasleftChecks
-        );
-        gasInsideGasleftChecks = _newGasInsideGasleftChecks;
-    }
-    event LogSetGasInsideGasleftChecks(uint256 gasInsideGasleftChecks,
-                                       uint256 newGasInsideGasleftChecks
-    );
-
-    /**
-     * @dev setter for GelatoCore devs to configure the protocol's executionGas calculations
-     * @param _newCanExecMaxGas z
+     * @param _newCanExecMaxGas new number for gelatoCore._canExecute max Gas
      * @notice important for _getMinExecutionGasRequirement and getMintingDepositPayable
      */
     function setCanExecMaxGas(uint256 _newCanExecMaxGas)
@@ -364,17 +325,35 @@ contract GelatoCoreAccounting is Initializable,
 
     /**
      * @dev setter for GelatoCore devs to configure the protocol's executionGas calculations
-     * @param _newUserProxyExecGas z
+     * @param _newGasOverhead new calc for gelatoCore.execute overhead gas
      * @notice important for _getMinExecutionGasRequirement and getMintingDepositPayable
      */
-    function setUserProxyExecGas(uint256 _newUserProxyExecGas)
+    function setGelatoCoreExecGasOverhead(uint256 _newGasOverhead)
         onlyOwner
         external
     {
-        emit LogSetUserProxyExecGas(userProxyExecGas, _newUserProxyExecGas);
-        userProxyExecGas = _newUserProxyExecGas;
+        emit LogSetGelatoCoreExecGasOverhead(gelatoCoreExecGasOverhead, _newGasOverhead);
+        gelatoCoreExecGasOverhead = _newGasOverhead;
     }
-    event LogSetUserProxyExecGas(uint256 userProxyExecGas, uint256 newUserProxyExecGas);
+    event LogSetGelatoCoreExecGasOverhead(uint256 gelatoCoreExecGasOverhead,
+                                          uint256 _newGasOverhead
+    );
+
+    /**
+     * @dev setter for GelatoCore devs to configure the protocol's executionGas calculations
+     * @param _newGasOverhead new calc for userProxy.execute overhead gas
+     * @notice important for _getMinExecutionGasRequirement and getMintingDepositPayable
+     */
+    function setUserProxyExecGasOverhead(uint256 _newGasOverhead)
+        onlyOwner
+        external
+    {
+        emit LogSetUserProxyExecGasOverhead(userProxyExecGasOverhead, _newGasOverhead);
+        userProxyExecGasOverhead = _newGasOverhead;
+    }
+    event LogSetUserProxyExecGasOverhead(uint256 userProxyExecGasOverhead,
+                                         uint256 _newGasOverhead
+    );
     // =========
     // =========================
 }

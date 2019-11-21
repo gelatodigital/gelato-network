@@ -5,9 +5,13 @@ contract GelatoActionsStandard
     /// @dev non-deploy base contract
     constructor() internal {}
 
+    enum ActionOperation { call, delegatecall }
+    ActionOperation internal actionOperation;
     bytes4 internal actionSelector;
     uint256 internal actionGasStipend;
 
+    /// @dev abstract fn -> non-deploy base contract
+    function getActionOperation() external view returns(ActionOperation) {return actionOperation;}
     function getActionSelector() external view returns(bytes4) {return actionSelector;}
     function getActionGasStipend() external view returns(uint256) {return actionGasStipend;}
 

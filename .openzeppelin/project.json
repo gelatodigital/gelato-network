@@ -7,7 +7,9 @@
     "MultiMintForTimeTriggerRinkeby": "MultiMintForTimeTriggerRinkeby",
     "ActionKyberTradeRinkeby": "ActionKyberTradeRinkeby"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@openzeppelin/contracts-ethereum-package": "^2.4.0"
+  },
   "name": "gelato-contracts",
   "version": "0.0.1",
   "telemetryOptIn": true,
