@@ -2,7 +2,7 @@ pragma solidity ^0.5.10;
 
 import "@openzeppelin/upgrades/contracts/Initializable.sol";
 import '../../GelatoTriggersStandard.sol';
-import '../../../../interfaces/dapp_interfaces/dutchX_interfaces/IDutchX.sol';
+import '../../../dapp_interfaces/dutchX_interfaces/IDutchX.sol';
 
 contract TriggerDutchXAuctionCleared is Initializable,
                                         GelatoTriggersStandard

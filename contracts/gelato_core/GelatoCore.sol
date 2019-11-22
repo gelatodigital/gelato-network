@@ -1,8 +1,8 @@
 pragma solidity ^0.5.10;
 
-import './GelatoUserProxyManager.sol';
-import './GelatoCoreAccounting.sol';
-import '@openzeppelin/contracts-ethereum-package/contracts/drafts/Counters.sol';
+import "./GelatoUserProxyManager.sol";
+import "./GelatoCoreAccounting.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/drafts/Counters.sol";
 
 /**
  * @title GelatoCore
@@ -105,7 +105,7 @@ contract GelatoCore is GelatoUserProxyManager,
      */
     function mintExecutionClaim(address _trigger,
                                 bytes calldata _triggerPayload,
-                                address _action,
+                                address payable _action,
                                 bytes calldata _actionPayload,
                                 address payable _selectedExecutor
 
@@ -319,7 +319,7 @@ contract GelatoCore is GelatoUserProxyManager,
                      bytes calldata _triggerPayload,
                      address _userProxy,
                      bytes calldata _actionPayload,
-                     address _action,
+                     address payable _action,
                      uint256 _userProxyExecGas,
                      uint256 _executionClaimId,
                      uint256 _executionClaimExpiryDate,
@@ -374,7 +374,7 @@ contract GelatoCore is GelatoUserProxyManager,
                                                           .gas(_userProxyExecGas)
                                                           (_action, _actionPayload)
             );
-            LogUserProxyExecuteGas(gasBefore, gasleft(), gasBefore - gasleft());
+            emit LogUserProxyExecuteGas(gasBefore, gasleft(), gasBefore - gasleft());
             if (success) executionResult = ExecutionResult.Success;
             // @dev if execution fails, no revert, because executor still paid out
             else executionResult = ExecutionResult.Failure;

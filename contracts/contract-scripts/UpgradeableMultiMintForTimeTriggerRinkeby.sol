@@ -1,10 +1,10 @@
 pragma solidity ^0.5.10;
 
-import '@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol';
-import '../interfaces/IGelatoCore.sol';
-import '../interfaces/triggers_actions_interfaces/IGelatoTrigger.sol';
+import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
+import "../gelato_core/IGelatoCore.sol";
+import "../triggers_actions/triggers/IGelatoTrigger.sol";
 
-contract MultiMintForTimeTrigger
+contract UpgradeableMultiMintForTimeTriggerRinkeby
 {
     using SafeMath for uint256;
 
@@ -22,7 +22,7 @@ contract MultiMintForTimeTrigger
             payable
         {
             IGelatoCore gelatoCore
-                = IGelatoCore(0x0Fcf27B454b344645a94788A3e820A0D2dab7F0e);
+                = IGelatoCore(0x501aF774Eb578203CC34E7171273124A93706C06);
             uint256 mintingDepositPerMint
                 = gelatoCore.getMintingDepositPayable(_action, _selectedExecutor);
             require(msg.value == mintingDepositPerMint.mul(_numberOfMints),

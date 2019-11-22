@@ -2,22 +2,23 @@
 pragma solidity ^0.5.0;
 
 import "@openzeppelin/upgrades/contracts/Initializable.sol";
-import '../GelatoActionsStandard.sol';
-import '../../../interfaces/dapp_interfaces/kyber_interfaces/IKyber.sol';
-import '@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.sol';
-import '@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol';
+import "../GelatoActionsStandard.sol";
+import "../../dapp_interfaces/kyber_interfaces/IKyber.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
 
 contract ActionKyberTradeRinkeby is Initializable,
                                     GelatoActionsStandard
 {
     using SafeERC20 for IERC20;
 
-    function initialize()
+    function initialize(uint256 _actionGasStipend)
         external
         initializer
     {
+        actionOperation = ActionOperation.delegatecall;
         actionSelector = this.action.selector;
-        actionGasStipend = 700000;
+        actionGasStipend = _actionGasStipend;
     }
 
     ///@dev KyberNetworkProxy on rinkeby hardcoded

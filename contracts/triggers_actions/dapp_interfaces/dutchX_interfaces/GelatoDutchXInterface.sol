@@ -2,8 +2,8 @@ pragma solidity ^0.5.10;
 
 import "@openzeppelin/upgrades/contracts/Initializable.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
-import '../../../helpers/GelatoERC20Lib.sol';
-import '../../../interfaces/dapp_interfaces/dutchX_interfaces/IDutchX.sol';
+import "../../../helpers/GelatoERC20Lib.sol";
+import "./IDutchX.sol";
 
 contract GelatoDutchXInterface is Initializable
 {

@@ -1,6 +1,6 @@
 pragma solidity ^0.5.10;
 
-import '../triggers_actions/actions/GelatoActionsStandard';
+import "../triggers_actions/actions/GelatoUpgradeableActionsStandard.sol";
 
 contract GelatoUserProxy
 {
@@ -17,8 +17,16 @@ contract GelatoUserProxy
         _;
     }
 
+    modifier noZeroAddress(address _) {
+        require(_ != address(0),
+            "GelatoUserProxy.noZeroAddress"
+        );
+        _;
+    }
+
     constructor(address payable _user)
         public
+        noZeroAddress(_user)
     {
         user = _user;
         gelatoCore = msg.sender;
@@ -31,27 +39,37 @@ contract GelatoUserProxy
         gelatoCore = _gelatoCore;
     }
 
-    function execute(address _action, bytes calldata _actionPayload)
+    function execute(address payable _action, bytes calldata _actionPayload)
         external
         payable
         auth
+        noZeroAddress(_action)
         returns(bool success, bytes memory returndata)
     {
-        require(_action != address(0),
-            "GelatoUserProxy.execute: invalid _action"
-        );
-        ActionOperation operation = GelatoActionsStandard(_action).getActionOperation();
-        require(operation == ActionOperation.call || operation == ActionOperation.delegatecall,
-            "GelatoUserProxy.execute(): invalid action operation"
-        );
-        if (operation == ActionOperation.call) {
+        GelatoActionsStandard.ActionOperation operation
+            = GelatoActionsStandard(_action).getActionOperation();
+        if (operation == GelatoActionsStandard.ActionOperation.call)
+        {
             (success, returndata) = _action.call(_actionPayload);
             ///@dev we should delete require later - leave it for testing action executionClaimIds
             require(success, "GelatoUserProxy.execute(): _action.call failed");
-        } else {
+        }
+        else if (operation == GelatoActionsStandard.ActionOperation.delegatecall)
+        {
             (success, returndata) = _action.delegatecall(_actionPayload);
             ///@dev we should delete require later - leave it for testing action executionClaimIds
             require(success, "GelatoUserProxy.execute(): _action.delegatecall failed");
+        }
+        else if (operation == GelatoActionsStandard.ActionOperation.proxydelegatecall)
+        {
+            address action
+                = GelatoUpgradeableActionsStandard(_action).getActionImplementation(_action);
+            (success, returndata) = action.delegatecall(_actionPayload);
+            ///@dev we should delete require later - leave it for testing action executionClaimIds
+            require(success, "GelatoUserProxy.execute(): action.(proxy)delegatecall failed");
+        }
+        else {
+            revert("GelatoUserProxy.execute(): invalid action operation");
         }
     }
 }

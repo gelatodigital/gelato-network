@@ -13,11 +13,20 @@ contract TriggerTimestampPassed is Initializable,
         triggerSelector = this.fired.selector;
     }
 
-    function fired(uint256 _timestamp)
+    function fired(// Standard Trigger Params
+                   address _action,
+                   address _user,
+                   bytes calldata _specificActionParams,
+                   // Specific Trigger Params
+                   uint256 _timestamp
+    )
         external
         view
         returns(bool)
     {
+        require(_actionConditionsFulfilled(_action, _user, _specificActionParams),
+            "TriggerTimestampPassed.fired._actionConditionsFulfilled: failed"
+        );
         return _timestamp <= block.timestamp;
     }
 
