@@ -51,7 +51,8 @@ contract UpgradeableActionMultiMintForTimeTrigger is Initializable,
             "UpgradeableActionMultiMintForTimeTrigger.initializeMyImplementation: failed"
         );
     }
-
+    function initializeImplementation() external {return _initializeImplementation();}
+    
     function implementationInitializer(uint256 _actionGasStipend,
                                        IGelatoCore _gelatoCore
     )

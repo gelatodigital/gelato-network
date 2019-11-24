@@ -17,9 +17,9 @@ contract UpgradeableActionKyberTrade is Initializable,
 
     function getKyberAddress() external view returns(address) {return kyberAddress;}
 
-    function proxyInitialize(address _proxyAdmin,
-                             uint256 _actionGasStipend,
-                             address _kyberAddress
+    function proxyInitializer(address _proxyAdmin,
+                              uint256 _actionGasStipend,
+                              address _kyberAddress
     )
         external
         initializer
@@ -53,6 +53,8 @@ contract UpgradeableActionKyberTrade is Initializable,
             "UpgradeableActionKyberTrade.initializeMyImplementation: failed"
         );
     }
+
+    function initializeImplementation() external {return _initializeImplementation();}
 
     function implementationInitializer(uint256 _actionGasStipend,
                                        address _kyberAddress
