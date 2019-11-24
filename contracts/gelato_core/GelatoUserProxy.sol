@@ -39,7 +39,7 @@ contract GelatoUserProxy
         gelatoCore = _gelatoCore;
     }
 
-    function execute(address payable _action, bytes calldata _actionPayload)
+    function execute(address payable _action, bytes calldata _actionPayloadWSelector)
         external
         payable
         auth
@@ -50,23 +50,23 @@ contract GelatoUserProxy
             = GelatoActionsStandard(_action).getActionOperation();
         if (operation == GelatoActionsStandard.ActionOperation.call)
         {
-            (success, returndata) = _action.call(_actionPayload);
+            (success, returndata) = _action.call(_actionPayloadWSelector);
             ///@dev we should delete require later - leave it for testing action executionClaimIds
             require(success, "GelatoUserProxy.execute(): _action.call failed");
         }
         else if (operation == GelatoActionsStandard.ActionOperation.delegatecall)
         {
-            (success, returndata) = _action.delegatecall(_actionPayload);
+            (success, returndata) = _action.delegatecall(_actionPayloadWSelector);
             ///@dev we should delete require later - leave it for testing action executionClaimIds
             require(success, "GelatoUserProxy.execute(): _action.delegatecall failed");
         }
         else if (operation == GelatoActionsStandard.ActionOperation.proxydelegatecall)
         {
-            address action
-                = GelatoUpgradeableActionsStandard(_action).getActionImplementation(_action);
-            (success, returndata) = action.delegatecall(_actionPayload);
+            address actionImpl
+                = GelatoUpgradeableActionsStandard(_action).getItsImplementation();
+            (success, returndata) = actionImpl.delegatecall(_actionPayloadWSelector);
             ///@dev we should delete require later - leave it for testing action executionClaimIds
-            require(success, "GelatoUserProxy.execute(): action.(proxy)delegatecall failed");
+            require(success, "GelatoUserProxy.execute(): actionImpl.delegatecall failed");
         }
         else {
             revert("GelatoUserProxy.execute(): invalid action operation");

@@ -15,8 +15,7 @@ contract TriggerTimestampPassed is Initializable,
 
     function fired(// Standard Trigger Params
                    address _action,
-                   address _user,
-                   bytes calldata _specificActionParams,
+                   bytes calldata _actionPayloadWithSelector,
                    // Specific Trigger Params
                    uint256 _timestamp
     )
@@ -24,10 +23,9 @@ contract TriggerTimestampPassed is Initializable,
         view
         returns(bool)
     {
-        require(_actionConditionsFulfilled(_action, _user, _specificActionParams),
-            "TriggerTimestampPassed.fired._actionConditionsFulfilled: failed"
+        return (_actionConditionsFulfilled(_action, _actionPayloadWithSelector) &&
+                _timestamp <= block.timestamp
         );
-        return _timestamp <= block.timestamp;
     }
 
     function getLatestTimestamp()

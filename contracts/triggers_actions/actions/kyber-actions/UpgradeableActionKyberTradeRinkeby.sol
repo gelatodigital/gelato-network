@@ -19,7 +19,7 @@ contract UpgradeableActionKyberTradeRinkeby is Initializable,
         external
         initializer
     {
-        actionProxyAdmin = ProxyAdmin(_actionProxyAdmin);
+        itsProxyAdmin = ProxyAdmin(_actionProxyAdmin);
         actionOperation = ActionOperation.proxydelegatecall;
         actionSelector = this.action.selector;
         actionGasStipend = _actionGasStipend;
@@ -34,7 +34,7 @@ contract UpgradeableActionKyberTradeRinkeby is Initializable,
          bytes memory payload) = _splitFunctionSelector(_actionPayload);
         (address _user,
          address _src,
-         uint256 _srcAmt, , ) = abi.decode(payload, (address, 
+         uint256 _srcAmt, , ) = abi.decode(payload, (address,
                                                      address,
                                                      uint256,
                                                      address,

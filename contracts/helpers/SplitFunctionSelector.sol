@@ -14,8 +14,8 @@ contract SplitFunctionSelector {
             functionSelector := mload(add(0x20, _payloadWithSelector))
             // mstore(p, v) => mem[p…(p+32)) := v
             mstore(
-                add(_payloadWithSelector, 4),  // p
-                sub(mload(_payloadWithSelector), 4)  // v
+                add(_payloadWithSelector, 4),  // p shifted by 4 bytes
+                sub(mload(_payloadWithSelector), 4)  // v (length of payload - 4)
             )
             payloadWithoutSelector := add(_payloadWithSelector, 4)
         }
