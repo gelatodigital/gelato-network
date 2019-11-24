@@ -662,7 +662,7 @@
       {
         "address": "0x6ef7947A18b93D4F0A67BdBc2c6F933b8a0b9257",
         "version": "0.0.1",
-        "implementation": "0x8DEC0D67A8d91dA91082d6D22B378A06Ee61DE9f",
+        "implementation": "0x40d2f0d48bD5c0863C65189B442D5A9428eC52Dc",
         "admin": "0xFe3F0D18382Ab8D92731Ac44b65faAB53516034D",
         "kind": "Upgradeable"
       }
