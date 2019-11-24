@@ -39,7 +39,7 @@ contract GelatoUserProxy
         gelatoCore = _gelatoCore;
     }
 
-    function execute(address payable _action, bytes calldata _actionPayloadWSelector)
+    function execute(address payable _action, bytes calldata _actionPayloadWithSelector)
         external
         payable
         auth
@@ -50,13 +50,13 @@ contract GelatoUserProxy
             = GelatoActionsStandard(_action).getActionOperation();
         if (operation == GelatoActionsStandard.ActionOperation.call)
         {
-            (success, returndata) = _action.call(_actionPayloadWSelector);
+            (success, returndata) = _action.call(_actionPayloadWithSelector);
             ///@dev we should delete require later - leave it for testing action executionClaimIds
             require(success, "GelatoUserProxy.execute(): _action.call failed");
         }
         else if (operation == GelatoActionsStandard.ActionOperation.delegatecall)
         {
-            (success, returndata) = _action.delegatecall(_actionPayloadWSelector);
+            (success, returndata) = _action.delegatecall(_actionPayloadWithSelector);
             ///@dev we should delete require later - leave it for testing action executionClaimIds
             require(success, "GelatoUserProxy.execute(): _action.delegatecall failed");
         }
@@ -64,7 +64,7 @@ contract GelatoUserProxy
         {
             address actionImpl
                 = GelatoUpgradeableActionsStandard(_action).getMyImplementationAddress();
-            (success, returndata) = actionImpl.delegatecall(_actionPayloadWSelector);
+            (success, returndata) = actionImpl.delegatecall(_actionPayloadWithSelector);
             ///@dev we should delete require later - leave it for testing action executionClaimIds
             require(success, "GelatoUserProxy.execute(): actionImpl.delegatecall failed");
         }

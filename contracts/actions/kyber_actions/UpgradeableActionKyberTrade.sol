@@ -4,7 +4,7 @@ import "@openzeppelin/upgrades/contracts/Initializable.sol";
 import "../GelatoUpgradeableActionsStandard.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
-import "../../../helpers/SplitFunctionSelector.sol";
+import "../../helpers/SplitFunctionSelector.sol";
 import "../../dapp_interfaces/kyber_interfaces/IKyber.sol";
 
 contract UpgradeableActionKyberTrade is Initializable,
@@ -46,11 +46,11 @@ contract UpgradeableActionKyberTrade is Initializable,
         UpgradeableActionKyberTrade implementation
             = UpgradeableActionKyberTrade(_getMyImplementationAddress());
         require(implementation.getKyberAddress() == address(0),
-            "UpgradeableActionMultiMintForTimeTrigger.initializeMyImplementation: already init"
+            "UpgradeableActionKyberTrade.initializeMyImplementation: already init"
         );
         implementation.implementationInitializer(actionGasStipend, kyberAddress);
         require(implementation.getKyberAddress() != address(0),
-            "UpgradeableActionMultiMintForTimeTrigger.initializeMyImplementation: failed"
+            "UpgradeableActionKyberTrade.initializeMyImplementation: failed"
         );
     }
 
@@ -60,10 +60,10 @@ contract UpgradeableActionKyberTrade is Initializable,
         external
     {
         require(msg.sender != address(this),
-            "UpgradeableActionMultiMintForTimeTrigger.implementationInitializer: failed"
+            "UpgradeableActionKyberTrade.implementationInitializer: failed"
         );
         require(actionSelector == bytes4(0),
-            "UpgradeableActionMultiMintForTimeTrigger.implementationInitializer: already init"
+            "UpgradeableActionKyberTrade.implementationInitializer: already init"
         );
         actionOperation = ActionOperation.proxydelegatecall;
         actionSelector = this.action.selector;

@@ -82,31 +82,31 @@ contract GelatoCore is GelatoUserProxyManager,
     event LogNewExecutionClaimMinted(address indexed selectedExecutor,
                                      uint256 indexed executionClaimId,
                                      address indexed userProxy,
-                                     bytes actionPayload,
                                      uint256 userProxyExecGas,
                                      uint256 executionClaimExpiryDate,
                                      uint256 mintingDeposit
     );
     event LogTriggerActionMinted(uint256 indexed executionClaimId,
                                  address indexed trigger,
-                                 bytes triggerPayload,
-                                 address indexed action
+                                 bytes triggerPayloadWithSelector,
+                                 address indexed action,
+                                 bytes actionPayloadWithSelector
     );
     /**
      * @dev API for minting execution claims on gelatoCore
      * @param _trigger: the address of the trigger
-     * @param _triggerPayload: the encoded trigger params with function selector
+     * @param _triggerPayloadWithSelector: the encoded trigger params with function selector
      * @param _action: the address of the action
-     * @param _actionPayload: the encoded action params with function selector
+     * @param _actionPayloadWithSelector: the encoded action params with function selector
      * @param _selectedExecutor: the registered executor to service this claim
      * @notice re-entrancy guard because accounting ops are present inside fn
      * @notice msg.value is a refundable deposit - only a fee if executed
      * @notice minting event split into two, due to stack too deep issue
      */
     function mintExecutionClaim(address _trigger,
-                                bytes calldata _triggerPayload,
+                                bytes calldata _triggerPayloadWithSelector,
                                 address payable _action,
-                                bytes calldata _actionPayload,
+                                bytes calldata _actionPayloadWithSelector,
                                 address payable _selectedExecutor
 
     )
@@ -144,9 +144,9 @@ contract GelatoCore is GelatoUserProxyManager,
             /// @notice Include executionClaimId to avoid hash collisions
             bytes32 executionClaimHash
                 = keccak256(abi.encodePacked(_trigger,
-                                             _triggerPayload,
+                                             _triggerPayloadWithSelector,
                                              userProxy,
-                                             _actionPayload,
+                                             _actionPayloadWithSelector,
                                              executionClaimId,
                                              _selectedExecutor,
                                              userProxyExecGasOverhead.add(actionGasStipend),
@@ -159,12 +159,16 @@ contract GelatoCore is GelatoUserProxyManager,
         emit LogNewExecutionClaimMinted(_selectedExecutor,
                                         executionClaimId,
                                         userProxy,
-                                        _actionPayload,
                                         userProxyExecGasOverhead.add(actionGasStipend),
                                         executionClaimExpiryDate,
                                         msg.value
         );
-        emit LogTriggerActionMinted(executionClaimId, _trigger, _triggerPayload, _action);
+        emit LogTriggerActionMinted(executionClaimId,
+                                    _trigger,
+                                    _triggerPayloadWithSelector,
+                                    _action,
+                                    _actionPayloadWithSelector
+        );
     }
     // $$$$$$$$$$$$$$$ mintExecutionClaim() API END
 
@@ -182,9 +186,9 @@ contract GelatoCore is GelatoUserProxyManager,
 
     /// @dev canExecute API forwards its calls to this private function
     function _canExecute(address _trigger,
-                         bytes memory _triggerPayload,
+                         bytes memory _triggerPayloadWithSelector,
                          address _userProxy,
-                         bytes memory _actionPayload,
+                         bytes memory _actionPayloadWithSelector,
                          uint256 _userProxyExecGas,
                          uint256 _executionClaimId,
                          uint256 _executionClaimExpiryDate,
@@ -198,9 +202,9 @@ contract GelatoCore is GelatoUserProxyManager,
         // Compute executionClaimHash from calldata
         bytes32 computedExecutionClaimHash
             = keccak256(abi.encodePacked(_trigger,
-                                         _triggerPayload,
+                                         _triggerPayloadWithSelector,
                                          _userProxy,
-                                         _actionPayload,
+                                         _actionPayloadWithSelector,
                                          _executionClaimId,
                                          msg.sender,  // selected? executor
                                          _userProxyExecGas,
@@ -224,7 +228,7 @@ contract GelatoCore is GelatoUserProxyManager,
         (bool success,
          bytes memory returndata) = (_trigger.staticcall
                                              .gas(canExecMaxGas)
-                                             (_triggerPayload)
+                                             (_triggerPayloadWithSelector)
         );
         if (!success) {
             return CanExecuteCheck.TriggerReverted;
@@ -241,9 +245,9 @@ contract GelatoCore is GelatoUserProxyManager,
     /**
      * @dev the API for executors to check whether a claim is executable
      * @param _trigger executors get this from LogTriggerActionMinted
-     * @param _triggerPayload executors get this from LogTriggerActionMinted
+     * @param _triggerPayloadWithSelector executors get this from LogTriggerActionMinted
      * @param _userProxy executors get this from LogExecutionClaimMinted
-     * @param _actionPayload executors get this from LogExecutionClaimMinted
+     * @param _actionPayloadWithSelector executors get this from LogExecutionClaimMinted
      * @param _userProxyExecGas executors get this from LogExecutionClaimMinted
      * @param _executionClaimId executors get this from LogExecutionClaimMinted
      * @param _executionClaimExpiryDate executors get this from LogExecutionClaimMinted
@@ -252,9 +256,9 @@ contract GelatoCore is GelatoUserProxyManager,
      * @notice if return value == 6, the claim is executable
      */
     function canExecute(address _trigger,
-                        bytes calldata _triggerPayload,
+                        bytes calldata _triggerPayloadWithSelector,
                         address _userProxy,
-                        bytes calldata _actionPayload,
+                        bytes calldata _actionPayloadWithSelector,
                         uint256 _userProxyExecGas,
                         uint256 _executionClaimId,
                         uint256 _executionClaimExpiryDate,
@@ -265,9 +269,9 @@ contract GelatoCore is GelatoUserProxyManager,
         returns (CanExecuteCheck)
     {
         return _canExecute(_trigger,
-                           _triggerPayload,
+                           _triggerPayloadWithSelector,
                            _userProxy,
-                           _actionPayload,
+                           _actionPayloadWithSelector,
                            _userProxyExecGas,
                            _executionClaimId,
                            _executionClaimExpiryDate,
@@ -303,9 +307,9 @@ contract GelatoCore is GelatoUserProxyManager,
     /**
      * @dev the API executors call when they execute an executionClaim
      * @param _trigger executors get this from LogTriggerActionMinted
-     * @param _triggerPayload executors get this from LogTriggerActionMinted
+     * @param _triggerPayloadWithSelector executors get this from LogTriggerActionMinted
      * @param _userProxy executors get this from LogExecutionClaimMinted
-     * @param _actionPayload executors get this from LogExecutionClaimMinted
+     * @param _actionPayloadWithSelector executors get this from LogExecutionClaimMinted
      * @param _action executors get this from LogTriggerActionMinted
      * @param _userProxyExecGas executors get this from LogExecutionClaimMinted
      * @param _executionClaimId executors get this from LogExecutionClaimMinted
@@ -316,9 +320,9 @@ contract GelatoCore is GelatoUserProxyManager,
      * @notice re-entrancy protection due to accounting operations and interactions
      */
     function execute(address _trigger,
-                     bytes calldata _triggerPayload,
+                     bytes calldata _triggerPayloadWithSelector,
                      address _userProxy,
-                     bytes calldata _actionPayload,
+                     bytes calldata _actionPayloadWithSelector,
                      address payable _action,
                      uint256 _userProxyExecGas,
                      uint256 _executionClaimId,
@@ -338,9 +342,9 @@ contract GelatoCore is GelatoUserProxyManager,
         // _______ canExecute() check ______________________________________________
         {
             CanExecuteCheck canExecuteResult = _canExecute(_trigger,
-                                                           _triggerPayload,
+                                                           _triggerPayloadWithSelector,
                                                            _userProxy,
-                                                           _actionPayload,
+                                                           _actionPayloadWithSelector,
                                                            _userProxyExecGas,
                                                            _executionClaimId,
                                                            _executionClaimExpiryDate,
@@ -370,9 +374,10 @@ contract GelatoCore is GelatoUserProxyManager,
         // _________  call to userProxy.execute => action  __________________________
         {
             uint256 gasBefore = gasleft();
-            (bool success,) = (GelatoUserProxy(_userProxy).execute
-                                                          .gas(_userProxyExecGas)
-                                                          (_action, _actionPayload)
+            (bool success,) = (
+                GelatoUserProxy(_userProxy).execute
+                                            .gas(_userProxyExecGas)
+                                            (_action, _actionPayloadWithSelector)
             );
             emit LogUserProxyExecuteGas(gasBefore, gasleft(), gasBefore - gasleft());
             if (success) executionResult = ExecutionResult.Success;
@@ -406,9 +411,9 @@ contract GelatoCore is GelatoUserProxyManager,
     /**
      * @dev API for canceling executionClaims
      * @param _trigger callers get this from LogTriggerActionMinted
-     * @param _triggerPayload callers get this from LogTriggerActionMinted
+     * @param _triggerPayloadWithSelector callers get this from LogTriggerActionMinted
      * @param _userProxy callers get this from LogExecutionClaimMinted
-     * @param _actionPayload callers get this from LogExecutionClaimMinted
+     * @param _actionPayloadWithSelector callers get this from LogExecutionClaimMinted
      * @param _executionClaimId callers get this from LogExecutionClaimMinted
      * @param _selectedExecutor callers get this from LogExecutionClaimMinted
      * @param _userProxyExecGas callers get this from LogExecutionClaimMinted
@@ -421,9 +426,9 @@ contract GelatoCore is GelatoUserProxyManager,
      * @notice .sendValue instead of .transfer due to IstanbulHF
      */
     function cancelExecutionClaim(address _trigger,
-                                  bytes calldata _triggerPayload,
+                                  bytes calldata _triggerPayloadWithSelector,
                                   address _userProxy,
-                                  bytes calldata _actionPayload,
+                                  bytes calldata _actionPayloadWithSelector,
                                   uint256 _executionClaimId,
                                   address payable _selectedExecutor,
                                   uint256 _userProxyExecGas,
@@ -443,9 +448,9 @@ contract GelatoCore is GelatoUserProxyManager,
         {
             bytes32 computedExecutionClaimHash
                 = keccak256(abi.encodePacked(_trigger,
-                                             _triggerPayload,
+                                             _triggerPayloadWithSelector,
                                              _userProxy,
-                                             _actionPayload,
+                                             _actionPayloadWithSelector,
                                              _executionClaimId,
                                              _selectedExecutor,
                                              _userProxyExecGas,

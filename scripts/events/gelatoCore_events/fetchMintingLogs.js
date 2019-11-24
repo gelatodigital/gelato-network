@@ -42,8 +42,8 @@ if (searchFromBlock === "" || searchFromBlock === undefined) {
 
 // Read Instance of GelatoCore
 const gelatoCoreContractABI = [
-  "event LogNewExecutionClaimMinted(address indexed selectedExecutor, uint256 indexed executionClaimId, address indexed userProxy, bytes actionPayload, uint256 executeGas, uint256 executionClaimExpiryDate, uint256 mintingDeposit)",
-  "event LogTriggerActionMinted(uint256 indexed executionClaimId, address indexed trigger, bytes triggerPayload, address indexed action)"
+  "event LogNewExecutionClaimMinted(address indexed selectedExecutor, uint256 indexed executionClaimId, address indexed userProxy, uint256 executeGas, uint256 executionClaimExpiryDate, uint256 mintingDeposit)",
+  "event LogTriggerActionMinted(uint256 indexed executionClaimId, address indexed trigger, bytes triggerPayloadWithSelector, address indexed action, bytes actionPayloadWithSelector)"
 ];
 
 async function main() {
@@ -54,7 +54,7 @@ async function main() {
 
   // LogNewExecutionClaimMinted
   let topicMinted = ethers.utils.id(
-    "LogNewExecutionClaimMinted(address,uint256,address,bytes,uint256,uint256,uint256)"
+    "LogNewExecutionClaimMinted(address,uint256,address,uint256,uint256,uint256)"
   );
   let filterMinted = {
     address: gelatoCoreAddress,
@@ -63,7 +63,7 @@ async function main() {
   };
   // LogTriggerActionMinted
   let topicTAMinted = ethers.utils.id(
-    "LogTriggerActionMinted(uint256,address,bytes,address)"
+    "LogTriggerActionMinted(uint256,address,bytes,address,bytes)"
   );
   let filterTAMinted = {
     address: gelatoCoreAddress,
@@ -82,7 +82,6 @@ async function main() {
         selectedExecutor: parsedMintedLog.values.selectedExecutor,
         executionClaimId: parsedMintedLog.values.executionClaimId,
         userProxy: parsedMintedLog.values.userProxy,
-        actionPayload: parsedMintedLog.values.actionPayload,
         executeGas: parsedMintedLog.values.executeGas,
         executionClaimExpiryDate:
           parsedMintedLog.values.executionClaimExpiryDate,
@@ -90,8 +89,11 @@ async function main() {
       };
       const parsedTAMintedLog = iface.parseLog(logsTAMinted[i]);
       acc[i].trigger = parsedTAMintedLog.values.trigger;
-      acc[i].triggerPayload = parsedTAMintedLog.values.triggerPayload;
+      acc[i].triggerPayloadWithSelector =
+        parsedTAMintedLog.values.triggerPayloadWithSelector;
       acc[i].action = parsedTAMintedLog.values.action;
+      acc[i].actionPayloadWithSelector =
+        parsedTAMintedLog.values.actionPayloadWithSelector;
       return acc;
     }, []);
 
