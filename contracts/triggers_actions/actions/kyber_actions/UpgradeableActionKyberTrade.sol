@@ -17,9 +17,9 @@ contract UpgradeableActionKyberTrade is Initializable,
 
     function getKyberAddress() external view returns(address) {return kyberAddress;}
 
-    function initialize(address _proxyAdmin,
-                        uint256 _actionGasStipend,
-                        address _kyber
+    function proxyInitialize(address _proxyAdmin,
+                             uint256 _actionGasStipend,
+                             address _kyberAddress
     )
         external
         initializer
@@ -28,13 +28,8 @@ contract UpgradeableActionKyberTrade is Initializable,
         actionOperation = ActionOperation.proxydelegatecall;
         actionSelector = this.action.selector;
         actionGasStipend = _actionGasStipend;
-        kyberAddress = _kyber;
-        UpgradeableActionKyberTrade implementation
-            = UpgradeableActionKyberTrade(_getMyImplementationAddress());
-        implementation.initialize(_proxyAdmin, _actionGasStipend, _kyber);
-        require(implementation.getKyberAddress() != address(0),
-            "UpgradeableActionKyberTrade.initialize: implementation init failed"
-        );
+        kyberAddress = _kyberAddress;
+        _initializeImplementation();
     }
 
     modifier initialized() {
@@ -42,6 +37,38 @@ contract UpgradeableActionKyberTrade is Initializable,
             "UpgradeableActionKyberTrade.initialized: failed"
         );
         _;
+    }
+
+    function _initializeImplementation()
+        private
+        initialized
+    {
+        UpgradeableActionKyberTrade implementation
+            = UpgradeableActionKyberTrade(_getMyImplementationAddress());
+        require(implementation.getKyberAddress() == address(0),
+            "UpgradeableActionMultiMintForTimeTrigger.initializeMyImplementation: already init"
+        );
+        implementation.implementationInitializer(actionGasStipend, kyberAddress);
+        require(implementation.getKyberAddress() != address(0),
+            "UpgradeableActionMultiMintForTimeTrigger.initializeMyImplementation: failed"
+        );
+    }
+
+    function implementationInitializer(uint256 _actionGasStipend,
+                                       address _kyberAddress
+    )
+        external
+    {
+        require(msg.sender != address(this),
+            "UpgradeableActionMultiMintForTimeTrigger.implementationInitializer: failed"
+        );
+        require(actionSelector == bytes4(0),
+            "UpgradeableActionMultiMintForTimeTrigger.implementationInitializer: already init"
+        );
+        actionOperation = ActionOperation.proxydelegatecall;
+        actionSelector = this.action.selector;
+        actionGasStipend = _actionGasStipend;
+        kyberAddress = _kyberAddress;
     }
 
     function _actionConditionsFulfilled(bytes memory _actionPayload)

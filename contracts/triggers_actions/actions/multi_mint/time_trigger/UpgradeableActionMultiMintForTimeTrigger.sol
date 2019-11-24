@@ -15,9 +15,9 @@ contract UpgradeableActionMultiMintForTimeTrigger is Initializable,
 
     function getGelatoCore() external view returns(IGelatoCore) {return gelatoCore;}
 
-    function initialize(address _proxyAdmin,
-                        uint256 _actionGasStipend,
-                        address _gelatoCore
+    function proxyInitializer(address _proxyAdmin,
+                              uint256 _actionGasStipend,
+                              address _gelatoCore
     )
         external
         initializer
@@ -27,12 +27,7 @@ contract UpgradeableActionMultiMintForTimeTrigger is Initializable,
         actionSelector = this.action.selector;
         actionGasStipend = _actionGasStipend;
         gelatoCore = IGelatoCore(_gelatoCore);
-        UpgradeableActionMultiMintForTimeTrigger implementation
-            = UpgradeableActionMultiMintForTimeTrigger(_getMyImplementationAddress());
-        implementation.initialize(_proxyAdmin, _actionGasStipend, _gelatoCore);
-        require(implementation.getGelatoCore() != IGelatoCore(0),
-            "UpgradeableActionMultiMintForTimeTrigger.initialize: implementation init failed"
-        );
+        _initializeImplementation();
     }
 
     modifier initialized() {
@@ -40,6 +35,38 @@ contract UpgradeableActionMultiMintForTimeTrigger is Initializable,
             "UpgradeableActionMultiMintForTimeTrigger.initialized: failed"
         );
         _;
+    }
+
+    function _initializeImplementation()
+        private
+        initialized
+    {
+        UpgradeableActionMultiMintForTimeTrigger implementation
+            = UpgradeableActionMultiMintForTimeTrigger(_getMyImplementationAddress());
+        require(implementation.getGelatoCore() == IGelatoCore(0),
+            "UpgradeableActionMultiMintForTimeTrigger.initializeMyImplementation: already init"
+        );
+        implementation.implementationInitializer(actionGasStipend, gelatoCore);
+        require(implementation.getGelatoCore() != IGelatoCore(0),
+            "UpgradeableActionMultiMintForTimeTrigger.initializeMyImplementation: failed"
+        );
+    }
+
+    function implementationInitializer(uint256 _actionGasStipend,
+                                       IGelatoCore _gelatoCore
+    )
+        external
+    {
+        require(msg.sender != address(this),
+            "UpgradeableActionMultiMintForTimeTrigger.implementationInitializer: failed"
+        );
+        require(actionSelector == bytes4(0),
+            "UpgradeableActionMultiMintForTimeTrigger.implementationInitializer: already init"
+        );
+        actionOperation = ActionOperation.proxydelegatecall;
+        actionSelector = this.action.selector;
+        actionGasStipend = _actionGasStipend;
+        gelatoCore = _gelatoCore;
     }
 
     function action(// gelatoCore.mintExecutionClaim params

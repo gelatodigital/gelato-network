@@ -1,83 +1,11 @@
 {
   "contracts": {
-    "TriggerTimestampPassed": {
-      "address": "0xdD9222ef3aa01fb66fed2F9B3c38f4E535737029",
-      "constructorCode": "60806040526102df806100136000396000f3fe",
-      "bodyBytecodeHash": "4a84e7c7f25edfc484ecbfe0d780ad27ec66338975a80d1bfd2cff9e71aa724a",
-      "localBytecodeHash": "8940da5372d522e1ccc5b3e0a2c255af61d881b6117974a6707f08d811a3aae6",
-      "deployedBytecodeHash": "8940da5372d522e1ccc5b3e0a2c255af61d881b6117974a6707f08d811a3aae6",
-      "types": {
-        "t_bool": {
-          "id": "t_bool",
-          "kind": "elementary",
-          "label": "bool"
-        },
-        "t_uint256": {
-          "id": "t_uint256",
-          "kind": "elementary",
-          "label": "uint256"
-        },
-        "t_array:50<t_uint256>": {
-          "id": "t_array:50<t_uint256>",
-          "valueType": "t_uint256",
-          "length": "50",
-          "kind": "array",
-          "label": "uint256[50]"
-        },
-        "t_bytes4": {
-          "id": "t_bytes4",
-          "kind": "elementary",
-          "label": "bytes4"
-        }
-      },
-      "storage": [
-        {
-          "contract": "Initializable",
-          "path": "@openzeppelin/upgrades/contracts/Initializable.sol",
-          "label": "initialized",
-          "astId": 759,
-          "type": "t_bool",
-          "src": "757:24:9"
-        },
-        {
-          "contract": "Initializable",
-          "path": "@openzeppelin/upgrades/contracts/Initializable.sol",
-          "label": "initializing",
-          "astId": 761,
-          "type": "t_bool",
-          "src": "876:25:9"
-        },
-        {
-          "contract": "Initializable",
-          "path": "@openzeppelin/upgrades/contracts/Initializable.sol",
-          "label": "______gap",
-          "astId": 817,
-          "type": "t_array:50<t_uint256>",
-          "src": "1951:29:9"
-        },
-        {
-          "contract": "GelatoTriggersStandard",
-          "path": "contracts/triggers_actions/triggers/GelatoTriggersStandard.sol",
-          "label": "triggerSelector",
-          "astId": 4412,
-          "type": "t_bytes4",
-          "src": "133:31:34"
-        }
-      ],
-      "warnings": {
-        "hasConstructor": false,
-        "hasSelfDestruct": false,
-        "hasDelegateCall": false,
-        "hasInitialValuesInDeclarations": false,
-        "uninitializedBaseContracts": []
-      }
-    },
     "GelatoCore": {
-      "address": "0x02Fc5047b769D0750E7af8FF0Fc334b244975e10",
-      "constructorCode": "6080604052615368806100136000396000f3fe",
-      "bodyBytecodeHash": "b43e99c7416f9efe661c6f14bb69627a00015e1166233940adcab9cfaca037b3",
-      "localBytecodeHash": "2a1d410b4091996cec2151e43b16494a0f2b9ee55429b1a067eea29c41ddf71e",
-      "deployedBytecodeHash": "2a1d410b4091996cec2151e43b16494a0f2b9ee55429b1a067eea29c41ddf71e",
+      "address": "0x8AaD3B30710699DCB7A54C60DF96276d92581118",
+      "constructorCode": "608060405260a45460a35460a254010160a555615946806100216000396000f3fe",
+      "bodyBytecodeHash": "edf1f897a4ee5dbc511ff8a365c35b73ff216638857ecdc55d2e20e92b5db430",
+      "localBytecodeHash": "b5bc14ff9723fa54ee4c973a0f9ae6d5522c453cb3b0a91614227e4c733d9b89",
+      "deployedBytecodeHash": "b5bc14ff9723fa54ee4c973a0f9ae6d5522c453cb3b0a91614227e4c733d9b89",
       "types": {
         "t_uint256": {
           "id": "t_uint256",
@@ -145,9 +73,9 @@
           "members": [
             {
               "label": "_value",
-              "astId": 34,
+              "astId": 37,
               "type": "t_uint256",
-              "src": "1022:14:1"
+              "src": "1024:14:1"
             }
           ]
         },
@@ -168,71 +96,71 @@
           "contract": "GelatoUserProxyManager",
           "path": "contracts/gelato_core/GelatoUserProxyManager.sol",
           "label": "userCount",
-          "astId": 2334,
+          "astId": 2910,
           "type": "t_uint256",
-          "src": "252:26:15"
+          "src": "252:26:20"
         },
         {
           "contract": "GelatoUserProxyManager",
           "path": "contracts/gelato_core/GelatoUserProxyManager.sol",
           "label": "userToProxy",
-          "astId": 2338,
+          "astId": 2914,
           "type": "t_mapping<t_address>",
-          "src": "284:48:15"
+          "src": "284:48:20"
         },
         {
           "contract": "GelatoUserProxyManager",
           "path": "contracts/gelato_core/GelatoUserProxyManager.sol",
           "label": "proxyToUser",
-          "astId": 2342,
+          "astId": 2918,
           "type": "t_mapping<t_address_payable>",
-          "src": "338:56:15"
+          "src": "338:56:20"
         },
         {
           "contract": "GelatoUserProxyManager",
           "path": "contracts/gelato_core/GelatoUserProxyManager.sol",
           "label": "users",
-          "astId": 2345,
+          "astId": 2921,
           "type": "t_array:dyn<t_address_payable>",
-          "src": "400:32:15"
+          "src": "400:32:20"
         },
         {
           "contract": "GelatoUserProxyManager",
           "path": "contracts/gelato_core/GelatoUserProxyManager.sol",
           "label": "userProxies",
-          "astId": 2348,
+          "astId": 2924,
           "type": "t_array:dyn<t_address>",
-          "src": "438:30:15"
+          "src": "438:30:20"
         },
         {
           "contract": "Initializable",
           "path": "@openzeppelin/upgrades/contracts/Initializable.sol",
           "label": "initialized",
-          "astId": 759,
+          "astId": 798,
           "type": "t_bool",
-          "src": "757:24:9"
+          "src": "757:24:8"
         },
         {
           "contract": "Initializable",
           "path": "@openzeppelin/upgrades/contracts/Initializable.sol",
           "label": "initializing",
-          "astId": 761,
+          "astId": 800,
           "type": "t_bool",
-          "src": "876:25:9"
+          "src": "876:25:8"
         },
         {
           "contract": "Initializable",
           "path": "@openzeppelin/upgrades/contracts/Initializable.sol",
           "label": "______gap",
-          "astId": 817,
+          "astId": 856,
           "type": "t_array:50<t_uint256>",
-          "src": "1951:29:9"
+          "src": "1951:29:8"
         },
         {
           "contract": "Ownable",
           "path": "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol",
           "label": "_owner",
-          "astId": 218,
+          "astId": 275,
           "type": "t_address",
           "src": "526:22:3"
         },
@@ -240,7 +168,7 @@
           "contract": "Ownable",
           "path": "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol",
           "label": "______gap",
-          "astId": 331,
+          "astId": 388,
           "type": "t_array:50<t_uint256>",
           "src": "2471:29:3"
         },
@@ -248,105 +176,105 @@
           "contract": "ReentrancyGuard",
           "path": "@openzeppelin/contracts-ethereum-package/contracts/utils/ReentrancyGuard.sol",
           "label": "_guardCounter",
-          "astId": 646,
+          "astId": 760,
           "type": "t_uint256",
-          "src": "738:29:7"
+          "src": "733:29:7"
         },
         {
           "contract": "ReentrancyGuard",
           "path": "@openzeppelin/contracts-ethereum-package/contracts/utils/ReentrancyGuard.sol",
           "label": "______gap",
-          "astId": 679,
+          "astId": 793,
           "type": "t_array:50<t_uint256>",
-          "src": "1568:29:7"
+          "src": "1563:29:7"
         },
         {
           "contract": "GelatoCoreAccounting",
           "path": "contracts/gelato_core/GelatoCoreAccounting.sol",
           "label": "minExecutionClaimLifespan",
-          "astId": 1696,
+          "astId": 2224,
           "type": "t_uint256",
-          "src": "929:42:12"
+          "src": "943:42:18"
         },
         {
           "contract": "GelatoCoreAccounting",
           "path": "contracts/gelato_core/GelatoCoreAccounting.sol",
           "label": "executorPrice",
-          "astId": 1700,
+          "astId": 2228,
           "type": "t_mapping<t_uint256>",
-          "src": "1053:50:12"
+          "src": "1067:50:18"
         },
         {
           "contract": "GelatoCoreAccounting",
           "path": "contracts/gelato_core/GelatoCoreAccounting.sol",
           "label": "executorClaimLifespan",
-          "astId": 1704,
+          "astId": 2232,
           "type": "t_mapping<t_uint256>",
-          "src": "1109:58:12"
+          "src": "1123:58:18"
         },
         {
           "contract": "GelatoCoreAccounting",
           "path": "contracts/gelato_core/GelatoCoreAccounting.sol",
           "label": "executorBalance",
-          "astId": 1708,
+          "astId": 2236,
           "type": "t_mapping<t_uint256>",
-          "src": "1173:52:12"
-        },
-        {
-          "contract": "GelatoCoreAccounting",
-          "path": "contracts/gelato_core/GelatoCoreAccounting.sol",
-          "label": "gasOutsideGasleftChecks",
-          "astId": 1710,
-          "type": "t_uint256",
-          "src": "1307:40:12"
-        },
-        {
-          "contract": "GelatoCoreAccounting",
-          "path": "contracts/gelato_core/GelatoCoreAccounting.sol",
-          "label": "gasInsideGasleftChecks",
-          "astId": 1712,
-          "type": "t_uint256",
-          "src": "1353:39:12"
+          "src": "1187:52:18"
         },
         {
           "contract": "GelatoCoreAccounting",
           "path": "contracts/gelato_core/GelatoCoreAccounting.sol",
           "label": "canExecMaxGas",
-          "astId": 1714,
+          "astId": 2238,
           "type": "t_uint256",
-          "src": "1398:30:12"
+          "src": "1321:30:18"
         },
         {
           "contract": "GelatoCoreAccounting",
           "path": "contracts/gelato_core/GelatoCoreAccounting.sol",
-          "label": "userProxyExecGas",
-          "astId": 1716,
+          "label": "gelatoCoreExecGasOverhead",
+          "astId": 2240,
           "type": "t_uint256",
-          "src": "1434:33:12"
+          "src": "1357:42:18"
+        },
+        {
+          "contract": "GelatoCoreAccounting",
+          "path": "contracts/gelato_core/GelatoCoreAccounting.sol",
+          "label": "userProxyExecGasOverhead",
+          "astId": 2242,
+          "type": "t_uint256",
+          "src": "1405:41:18"
+        },
+        {
+          "contract": "GelatoCoreAccounting",
+          "path": "contracts/gelato_core/GelatoCoreAccounting.sol",
+          "label": "nonActionExecutionGas",
+          "astId": 2250,
+          "type": "t_uint256",
+          "src": "1452:208:18"
         },
         {
           "contract": "GelatoCore",
           "path": "contracts/gelato_core/GelatoCore.sol",
           "label": "executionClaimIds",
-          "astId": 950,
+          "astId": 1477,
           "type": "t_struct<Counters.Counter>",
-          "src": "776:42:11"
+          "src": "922:42:17"
         },
         {
           "contract": "GelatoCore",
           "path": "contracts/gelato_core/GelatoCore.sol",
           "label": "userProxyByExecutionClaimId",
-          "astId": 966,
+          "astId": 1493,
           "type": "t_mapping<t_address>",
-          "src": "1158:63:11"
+          "src": "1304:63:17"
         },
         {
           "contract": "GelatoCore",
           "path": "contracts/gelato_core/GelatoCore.sol",
           "label": "hashedExecutionClaims",
-          "astId": 1000,
+          "astId": 1527,
           "type": "t_mapping<t_bytes32>",
-          "src": "1935:57:11"
+          "src": "2081:57:17"
         }
       ],
       "warnings": {
@@ -354,47 +282,26 @@
         "hasSelfDestruct": false,
         "hasDelegateCall": false,
         "hasInitialValuesInDeclarations": false,
-        "uninitializedBaseContracts": []
+        "uninitializedBaseContracts": [],
+        "storageUncheckedVars": [
+          {
+            "contract": "GelatoCore",
+            "path": "contracts/gelato_core/GelatoCore.sol",
+            "label": "executionClaimIds",
+            "astId": 1477,
+            "type": "t_struct<Counters.Counter>",
+            "src": "922:42:17"
+          }
+        ],
+        "storageDiff": []
       }
     },
-    "MultiMintForTimeTrigger": {
-      "address": "0xD89874912396c92291D031E96f899C37b51DfEF3",
-      "constructorCode": "608060405234801561001057600080fd5b50610709806100206000396000f3fe",
-      "bodyBytecodeHash": "efa3c1abf8295447b5c5b8305a51eb0cb0d60f8cb8637d35ef78c5ea8f91717c",
-      "localBytecodeHash": "25f6e9ea677c1b18dd7db5d5da45256e194bd5f84383580c128e0100ae432828",
-      "deployedBytecodeHash": "25f6e9ea677c1b18dd7db5d5da45256e194bd5f84383580c128e0100ae432828",
-      "types": {},
-      "storage": [],
-      "warnings": {
-        "hasConstructor": false,
-        "hasSelfDestruct": false,
-        "hasDelegateCall": false,
-        "hasInitialValuesInDeclarations": false,
-        "uninitializedBaseContracts": []
-      }
-    },
-    "MultiMintForTimeTriggerRinkeby": {
-      "address": "0xa9370d2c5f24866448b129a0Ff81aF99689CD23a",
-      "constructorCode": "608060405234801561001057600080fd5b50610709806100206000396000f3fe",
-      "bodyBytecodeHash": "4ee155c046c4f582e943a14ee012f7a6a1acdab0f234b059f35541422c7ce575",
-      "localBytecodeHash": "6abd9fa43b8be46d677e49ff7ae636111bfbf6b7c6721f09dc9caa7587317fff",
-      "deployedBytecodeHash": "6abd9fa43b8be46d677e49ff7ae636111bfbf6b7c6721f09dc9caa7587317fff",
-      "types": {},
-      "storage": [],
-      "warnings": {
-        "hasConstructor": false,
-        "hasSelfDestruct": false,
-        "hasDelegateCall": false,
-        "hasInitialValuesInDeclarations": false,
-        "uninitializedBaseContracts": []
-      }
-    },
-    "ActionKyberTradeRinkeby": {
-      "address": "0x5e2C7234DC00eF98B52B694b29824AcF30dBA53e",
-      "constructorCode": "608060405261130b806100136000396000f3fe",
-      "bodyBytecodeHash": "507c368562ca00959080fec42277158f3bae90c7a312f774e051aaa5a6b2c8ba",
-      "localBytecodeHash": "9b759e31ad7a757fe8246b4c81ddccf921c41d273df956615c5bd87c95fa1471",
-      "deployedBytecodeHash": "9b759e31ad7a757fe8246b4c81ddccf921c41d273df956615c5bd87c95fa1471",
+    "UpgradeableActionMultiMintForTimeTrigger": {
+      "address": "0x25Cc67B62964EB65d416BD247a468ACd34d5CbBc",
+      "constructorCode": "60806040526115f1806100136000396000f3fe",
+      "bodyBytecodeHash": "ca641347628450931f57a09884c84211e7e26956c2b70997eb797fa068cea7ec",
+      "localBytecodeHash": "52ec2a3ecefc53bcca690f5c0c1b8c91d03701ca19d8113e77a2cbe11539f6bf",
+      "deployedBytecodeHash": "52ec2a3ecefc53bcca690f5c0c1b8c91d03701ca19d8113e77a2cbe11539f6bf",
       "types": {
         "t_bool": {
           "id": "t_bool",
@@ -413,10 +320,25 @@
           "kind": "array",
           "label": "uint256[50]"
         },
+        "t_enum<GelatoActionsStandard.ActionOperation>": {
+          "id": "t_enum<GelatoActionsStandard.ActionOperation>",
+          "kind": "enum",
+          "label": "GelatoActionsStandard.ActionOperation",
+          "members": [
+            "call",
+            "delegatecall",
+            "proxydelegatecall"
+          ]
+        },
         "t_bytes4": {
           "id": "t_bytes4",
           "kind": "elementary",
           "label": "bytes4"
+        },
+        "t_address": {
+          "id": "t_address",
+          "kind": "elementary",
+          "label": "address"
         }
       },
       "storage": [
@@ -424,41 +346,65 @@
           "contract": "Initializable",
           "path": "@openzeppelin/upgrades/contracts/Initializable.sol",
           "label": "initialized",
-          "astId": 759,
+          "astId": 798,
           "type": "t_bool",
-          "src": "757:24:9"
+          "src": "757:24:8"
         },
         {
           "contract": "Initializable",
           "path": "@openzeppelin/upgrades/contracts/Initializable.sol",
           "label": "initializing",
-          "astId": 761,
+          "astId": 800,
           "type": "t_bool",
-          "src": "876:25:9"
+          "src": "876:25:8"
         },
         {
           "contract": "Initializable",
           "path": "@openzeppelin/upgrades/contracts/Initializable.sol",
           "label": "______gap",
-          "astId": 817,
+          "astId": 856,
           "type": "t_array:50<t_uint256>",
-          "src": "1951:29:9"
+          "src": "1951:29:8"
+        },
+        {
+          "contract": "GelatoActionsStandard",
+          "path": "contracts/triggers_actions/actions/GelatoActionsStandard.sol",
+          "label": "actionOperation",
+          "astId": 3387,
+          "type": "t_enum<GelatoActionsStandard.ActionOperation>",
+          "src": "247:40:25"
         },
         {
           "contract": "GelatoActionsStandard",
           "path": "contracts/triggers_actions/actions/GelatoActionsStandard.sol",
           "label": "actionSelector",
-          "astId": 3235,
+          "astId": 3389,
           "type": "t_bytes4",
-          "src": "132:30:26"
+          "src": "293:30:25"
         },
         {
           "contract": "GelatoActionsStandard",
           "path": "contracts/triggers_actions/actions/GelatoActionsStandard.sol",
           "label": "actionGasStipend",
-          "astId": 3237,
+          "astId": 3391,
           "type": "t_uint256",
-          "src": "168:33:26"
+          "src": "329:33:25"
+        },
+        {
+          "contract": "GelatoUpgradeableActionsStandard",
+          "path": "contracts/triggers_actions/actions/GelatoUpgradeableActionsStandard.sol",
+          "label": "myProxyAdmin",
+          "astId": 3448,
+          "type": "t_address",
+          "src": "479:32:26"
+        },
+        {
+          "contract": "UpgradeableActionMultiMintForTimeTrigger",
+          "path": "contracts/triggers_actions/actions/multi_mint/time_trigger/UpgradeableActionMultiMintForTimeTrigger.sol",
+          "label": "gelatoCore",
+          "astId": 4862,
+          "type": "t_address",
+          "src": "510:31:37"
         }
       ],
       "warnings": {
@@ -466,7 +412,18 @@
         "hasSelfDestruct": false,
         "hasDelegateCall": false,
         "hasInitialValuesInDeclarations": false,
-        "uninitializedBaseContracts": []
+        "uninitializedBaseContracts": [],
+        "storageUncheckedVars": [
+          {
+            "contract": "GelatoActionsStandard",
+            "path": "contracts/triggers_actions/actions/GelatoActionsStandard.sol",
+            "label": "actionOperation",
+            "astId": 3387,
+            "type": "t_enum<GelatoActionsStandard.ActionOperation>",
+            "src": "247:40:25"
+          }
+        ],
+        "storageDiff": []
       }
     }
   },
@@ -474,37 +431,19 @@
   "proxies": {
     "gelato-contracts/GelatoCore": [
       {
-        "address": "0x501aF774Eb578203CC34E7171273124A93706C06",
+        "address": "0xdDbbbBc9128eE4282d2fe8854763d778fEA551b1",
         "version": "0.0.1",
-        "implementation": "0x02Fc5047b769D0750E7af8FF0Fc334b244975e10",
-        "admin": "0x687eB97001c3ed5727Ee557804BB710568456e86",
+        "implementation": "0x8AaD3B30710699DCB7A54C60DF96276d92581118",
+        "admin": "0xFe3F0D18382Ab8D92731Ac44b65faAB53516034D",
         "kind": "Upgradeable"
       }
     ],
-    "gelato-contracts/TriggerTimestampPassed": [
+    "gelato-contracts/UpgradeableActionMultiMintForTimeTrigger": [
       {
-        "address": "0xBdA9E16D8506C3AB2431fD4EE081c6d8a847FBaD",
+        "address": "0x98e7290bDb544482E7B653C0167B0c886Be268f3",
         "version": "0.0.1",
-        "implementation": "0xdD9222ef3aa01fb66fed2F9B3c38f4E535737029",
-        "admin": "0x687eB97001c3ed5727Ee557804BB710568456e86",
-        "kind": "Upgradeable"
-      }
-    ],
-    "gelato-contracts/MultiMintForTimeTriggerRinkeby": [
-      {
-        "address": "0xCb843167a69783BC3617e772211da15c8cfE6f40",
-        "version": "0.0.1",
-        "implementation": "0xa9370d2c5f24866448b129a0Ff81aF99689CD23a",
-        "admin": "0x687eB97001c3ed5727Ee557804BB710568456e86",
-        "kind": "Upgradeable"
-      }
-    ],
-    "gelato-contracts/ActionKyberTradeRinkeby": [
-      {
-        "address": "0x01b5361E9ec35f2246b74DdE31d706D621ECF1B9",
-        "version": "0.0.1",
-        "implementation": "0x5e2C7234DC00eF98B52B694b29824AcF30dBA53e",
-        "admin": "0x687eB97001c3ed5727Ee557804BB710568456e86",
+        "implementation": "0x25Cc67B62964EB65d416BD247a468ACd34d5CbBc",
+        "admin": "0xFe3F0D18382Ab8D92731Ac44b65faAB53516034D",
         "kind": "Upgradeable"
       }
     ]
@@ -512,6 +451,6 @@
   "manifestVersion": "2.2",
   "version": "0.0.1",
   "proxyAdmin": {
-    "address": "0x687eB97001c3ed5727Ee557804BB710568456e86"
+    "address": "0xFe3F0D18382Ab8D92731Ac44b65faAB53516034D"
   }
 }

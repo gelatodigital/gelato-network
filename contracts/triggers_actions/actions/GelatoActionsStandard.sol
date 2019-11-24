@@ -32,16 +32,6 @@ contract GelatoActionsStandard is IGelatoAction
         return true;
     }
 
-    function _actionConditionsFulfilled(bytes memory _actionPayloadWithSelector
-    ) internal view returns(bool);
-
-    modifier actionConditionsCheck(bytes memory _actionPayloadWithSelector) {
-        require(_actionConditionsFulfilled(_actionPayloadWithSelector),
-            "GelatoActionsStandard.actionConditionsCheck: failed"
-        );
-        _;
-    }
-
     // Standard Event
     event LogAction(address indexed user);
 }
