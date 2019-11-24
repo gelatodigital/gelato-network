@@ -1,12 +1,42 @@
 pragma solidity ^0.5.10;
 
+import "@openzeppelin/upgrades/contracts/Initializable.sol";
+import "../../GelatoUpgradeableScriptsBase.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
-import "../gelato_core/IGelatoCore.sol";
-import "../triggers_actions/triggers/IGelatoTrigger.sol";
+import "../../../gelato_core/IGelatoCore.sol";
+import "../../../triggers_actions/triggers/IGelatoTrigger.sol";
 
-contract MultiMintForTimeTriggerRinkeby
+contract UpgradeableMultiMintForTimeTrigger is  Initializable,
+                                                GelatoUpgradeableScriptsBase
 {
     using SafeMath for uint256;
+
+    IGelatoCore internal gelatoCore;
+
+    function getGelatoCore() external view returns(address) {return address(gelatoCore);}
+
+    function initialize(address _proxyAdmin,
+                        address _gelatoCore
+    )
+        external
+        initializer
+    {
+        myProxyAdmin = ProxyAdmin(_proxyAdmin);
+        gelatoCore = IGelatoCore(_gelatoCore);
+        UpgradeableMultiMintForTimeTrigger implementation
+            = UpgradeableMultiMintForTimeTrigger(_getMyImplementation());
+        implementation.initialize(gelatoCore);
+        require(implementation.getGelatoCore() != IGelatoCore(0),
+            "UpgradeableMultiMintForTimeTrigger.initialize: implementation init failed"
+        );
+    }
+
+    modifier initialized() {
+        require(gelatoCore != IGelatoCore(0),
+            "UpgradeableMultiMintForTimeTrigger.initialized: failed"
+        );
+        _;
+    }
 
     function multiMint(// gelatoCore.mintExecutionClaim params
                        address _timeTrigger,
@@ -20,9 +50,8 @@ contract MultiMintForTimeTriggerRinkeby
     )
             external
             payable
+            initialized
         {
-            IGelatoCore gelatoCore
-                = IGelatoCore(0x501aF774Eb578203CC34E7171273124A93706C06);
             uint256 mintingDepositPerMint
                 = gelatoCore.getMintingDepositPayable(_action, _selectedExecutor);
             require(msg.value == mintingDepositPerMint.mul(_numberOfMints),

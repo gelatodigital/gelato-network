@@ -1,9 +1,8 @@
 {
   "manifestVersion": "2.2",
   "contracts": {
-    "TriggerTimestampPassed": "TriggerTimestampPassed",
-    "MultiMintForTimeTrigger": "MultiMintForTimeTrigger",
     "GelatoCore": "GelatoCore",
+    "TriggerTimestampPassed": "TriggerTimestampPassed",
     "MultiMintForTimeTriggerRinkeby": "MultiMintForTimeTriggerRinkeby",
     "ActionKyberTradeRinkeby": "ActionKyberTradeRinkeby"
   },

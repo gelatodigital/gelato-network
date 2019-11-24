@@ -6,10 +6,10 @@ interface IGelatoUpgradeableAction {
     function getActionOperation() external view returns(GelatoActionsStandard.ActionOperation);
     function getActionSelector() external view returns(bytes4);
     function getActionGasStipend() external view returns(uint256);
-    function actionConditionsFulfilled(address _user,
-                                       bytes calldata _specificActionParams
+    function actionConditionsFulfilled(
+        bytes calldata _actionPayloadWithSelector
     ) external view returns(bool);
     event LogAction(address indexed user);
-    function getActionProxyAdmin() external view returns(address);
-    function getActionImplementation(address payable _actionProxy) external view returns(address);
+    function getMyProxyAdmin() external view returns(address);
+    function getMyImplementation(address payable _actionProxy) external view returns(address);
 }

@@ -1,28 +1,49 @@
 pragma solidity ^0.5.0;
 
 import "@openzeppelin/upgrades/contracts/Initializable.sol";
-import "../GelatoUpgradeableActionsStandard.sol";
+import "../../../contract_scripts/GelatoUpgradeableScriptsBase.sol";
+import "../GelatoActionsStandard.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
 import "../../../helpers/SplitFunctionSelector.sol";
 import "../../dapp_interfaces/kyber_interfaces/IKyber.sol";
 
-contract UpgradeableActionKyberTradeRinkeby is Initializable,
-                                               GelatoUpgradeableActionsStandard,
-                                               SplitFunctionSelector
+contract UpgradeableActionKyberTrade is Initializable,
+                                        GelatoUpgradeableScriptsBase,
+                                        GelatoActionsStandard,
+                                        SplitFunctionSelector
 {
     using SafeERC20 for IERC20;
 
-    function initialize(address _actionProxyAdmin,
-                        uint256 _actionGasStipend
+    address internal kyber;
+
+    function getKyber() external view returns(address) {return kyber;}
+
+    function initialize(address _proxyAdmin,
+                        uint256 _actionGasStipend,
+                        address _kyber
     )
         external
         initializer
     {
-        itsProxyAdmin = ProxyAdmin(_actionProxyAdmin);
+        myProxyAdmin = ProxyAdmin(_actionProxyAdmin);
         actionOperation = ActionOperation.proxydelegatecall;
         actionSelector = this.action.selector;
         actionGasStipend = _actionGasStipend;
+        kyber = _kyber;
+        UpgradeableActionKyberTrade implementation
+            = UpgradeableActionKyberTrade(_getMyImplementation());
+        implementation.initialize(_proxyAdmin, _actionGasStipend, _kyber);
+        require(implementation.getKyber() != address(0),
+            "UpgradeableActionKyberTrade.initialize: implementation init failed"
+        );
+    }
+
+    modifier initialized() {
+        require(kyber != address(0),
+            "UpgradeableActionKyberTrade.initialized: failed"
+        );
+        _;
     }
 
     function _actionConditionsFulfilled(bytes memory _actionPayload)
@@ -44,6 +65,7 @@ contract UpgradeableActionKyberTradeRinkeby is Initializable,
         uint256 srcUserBalance = srcERC20.balanceOf(_user);
         uint256 srcUserProxyAllowance = srcERC20.allowance(_user, address(this));
         return (functionSelector == actionSelector &&
+                kyber != address(0) &&
                 srcUserBalance >= _srcAmt &&
                 _srcAmt <= srcUserProxyAllowance
         );
@@ -57,7 +79,6 @@ contract UpgradeableActionKyberTradeRinkeby is Initializable,
         return _actionConditionsFulfilled(_actionPayload);
     }
 
-    ///@dev KyberNetworkProxy on rinkeby hardcoded
     function action(// Standard Action Params
                     address _user,
                     // Specific Action Params
@@ -67,9 +88,9 @@ contract UpgradeableActionKyberTradeRinkeby is Initializable,
                     uint256 _minConversionRate
     )
         external
+        initialized
         returns (uint256 destAmt)
     {
-        address kyber = 0xF77eC7Ed5f5B9a5aee4cfa6FFCaC6A4C315BaC76;  // rinkeby
         {
             IERC20 srcERC20 = IERC20(_src);
             srcERC20.safeTransferFrom(_user, address(this), _srcAmt);
