@@ -1,52 +1,56 @@
 pragma solidity ^0.5.10;
 
 import "@openzeppelin/upgrades/contracts/Initializable.sol";
-import "../../GelatoUpgradeableScriptsBase.sol";
+import "../../GelatoUpgradeableActionsStandard.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
-import "../../../gelato_core/IGelatoCore.sol";
-import "../../../triggers_actions/triggers/IGelatoTrigger.sol";
+import "../../../../gelato_core/IGelatoCore.sol";
+import "../../../triggers/IGelatoTrigger.sol";
 
-contract UpgradeableMultiMintForTimeTrigger is  Initializable,
-                                                GelatoUpgradeableScriptsBase
+contract UpgradeableActionMultiMintForTimeTrigger is Initializable,
+                                                     GelatoUpgradeableActionsStandard
 {
     using SafeMath for uint256;
 
     IGelatoCore internal gelatoCore;
 
-    function getGelatoCore() external view returns(address) {return address(gelatoCore);}
+    function getGelatoCore() external view returns(IGelatoCore) {return gelatoCore;}
 
     function initialize(address _proxyAdmin,
+                        uint256 _actionGasStipend,
                         address _gelatoCore
     )
         external
         initializer
     {
         myProxyAdmin = ProxyAdmin(_proxyAdmin);
+        actionOperation = ActionOperation.proxydelegatecall;
+        actionSelector = this.action.selector;
+        actionGasStipend = _actionGasStipend;
         gelatoCore = IGelatoCore(_gelatoCore);
-        UpgradeableMultiMintForTimeTrigger implementation
-            = UpgradeableMultiMintForTimeTrigger(_getMyImplementation());
-        implementation.initialize(gelatoCore);
+        UpgradeableActionMultiMintForTimeTrigger implementation
+            = UpgradeableActionMultiMintForTimeTrigger(_getMyImplementationAddress());
+        implementation.initialize(_proxyAdmin, _actionGasStipend, _gelatoCore);
         require(implementation.getGelatoCore() != IGelatoCore(0),
-            "UpgradeableMultiMintForTimeTrigger.initialize: implementation init failed"
+            "UpgradeableActionMultiMintForTimeTrigger.initialize: implementation init failed"
         );
     }
 
     modifier initialized() {
         require(gelatoCore != IGelatoCore(0),
-            "UpgradeableMultiMintForTimeTrigger.initialized: failed"
+            "UpgradeableActionMultiMintForTimeTrigger.initialized: failed"
         );
         _;
     }
 
-    function multiMint(// gelatoCore.mintExecutionClaim params
-                       address _timeTrigger,
-                       uint256 _startTime,  // will be encoded here
-                       address _action,
-                       bytes calldata _actionPayload,
-                       address payable _selectedExecutor,
-                       // MultiMintTimeBased params
-                       uint256 _intervalSpan,
-                       uint256 _numberOfMints
+    function action(// gelatoCore.mintExecutionClaim params
+                    address _timeTrigger,
+                    uint256 _startTime,  // will be encoded here
+                    address _action,
+                    bytes calldata _actionPayload,
+                    address payable _selectedExecutor,
+                    // MultiMintTimeBased params
+                    uint256 _intervalSpan,
+                    uint256 _numberOfMints
     )
             external
             payable

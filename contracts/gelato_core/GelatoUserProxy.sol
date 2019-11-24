@@ -63,7 +63,7 @@ contract GelatoUserProxy
         else if (operation == GelatoActionsStandard.ActionOperation.proxydelegatecall)
         {
             address actionImpl
-                = GelatoUpgradeableActionsStandard(_action).getItsImplementation();
+                = GelatoUpgradeableActionsStandard(_action).getMyImplementationAddress();
             (success, returndata) = actionImpl.delegatecall(_actionPayloadWSelector);
             ///@dev we should delete require later - leave it for testing action executionClaimIds
             require(success, "GelatoUserProxy.execute(): actionImpl.delegatecall failed");
