@@ -1,6 +1,6 @@
 pragma solidity ^0.5.10;
 
-import "../triggers_actions/actions/GelatoUpgradeableActionsStandard.sol";
+import "../actions/GelatoUpgradeableActionsStandard.sol";
 
 contract GelatoUserProxy
 {

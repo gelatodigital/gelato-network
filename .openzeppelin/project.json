@@ -2,9 +2,13 @@
   "manifestVersion": "2.2",
   "contracts": {
     "GelatoCore": "GelatoCore",
-    "UpgradeableActionMultiMintForTimeTrigger": "UpgradeableActionMultiMintForTimeTrigger"
+    "UpgradeableActionMultiMintForTimeTrigger": "UpgradeableActionMultiMintForTimeTrigger",
+    "TriggerTimestampPassed": "TriggerTimestampPassed",
+    "UpgradeableActionKyberTrade": "UpgradeableActionKyberTrade"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@openzeppelin/contracts-ethereum-package": "^2.4.0"
+  },
   "name": "gelato-contracts",
   "version": "0.0.1",
   "compiler": {
