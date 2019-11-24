@@ -30,7 +30,7 @@ if (process.env.ROPSTEN) {
   console.log(`\n\t\t ✅ connected to RINKEBY ✅ \n`);
   provider = new ethers.providers.InfuraProvider("rinkeby", INFURA_ID);
   searchFromBlock = process.env.RINKEBY_BLOCK;
-  gelatoCoreAddress = "0x0e7dDacA829CD452FF341CF81aC6Ae4f0D2328A7";
+  gelatoCoreAddress = "0x501aF774Eb578203CC34E7171273124A93706C06";
 } else {
   console.log(`\n\t\t ❗NO NETWORK DEFINED OR RINKEBY-v-ROPSTEN-clash❗\n`);
 }
