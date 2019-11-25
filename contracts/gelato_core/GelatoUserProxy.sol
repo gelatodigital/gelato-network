@@ -2,8 +2,7 @@ pragma solidity ^0.5.10;
 
 import "../actions/GelatoUpgradeableActionsStandard.sol";
 
-contract GelatoUserProxy
-{
+contract GelatoUserProxy {
     address payable internal user;
     address payable internal gelatoCore;
 
@@ -46,24 +45,22 @@ contract GelatoUserProxy
         noZeroAddress(_action)
         returns(bool success, bytes memory returndata)
     {
-        GelatoActionsStandard.ActionOperation operation
-            = GelatoActionsStandard(_action).getActionOperation();
-        if (operation == GelatoActionsStandard.ActionOperation.call)
-        {
+        GelatoActionsStandard.ActionOperation operation = GelatoActionsStandard(_action).getActionOperation();
+        if (operation == GelatoActionsStandard.ActionOperation.call) {
             (success, returndata) = _action.call(_actionPayloadWithSelector);
             ///@dev we should delete require later - leave it for testing action executionClaimIds
             require(success, "GelatoUserProxy.execute(): _action.call failed");
         }
-        else if (operation == GelatoActionsStandard.ActionOperation.delegatecall)
-        {
+        else if (operation == GelatoActionsStandard.ActionOperation.delegatecall) {
             (success, returndata) = _action.delegatecall(_actionPayloadWithSelector);
             ///@dev we should delete require later - leave it for testing action executionClaimIds
             require(success, "GelatoUserProxy.execute(): _action.delegatecall failed");
         }
-        else if (operation == GelatoActionsStandard.ActionOperation.proxydelegatecall)
-        {
-            address actionImpl
-                = GelatoUpgradeableActionsStandard(_action).getMyImplementationAddress();
+        else if (operation == GelatoActionsStandard.ActionOperation.proxydelegatecall) {
+            address actionImpl = GelatoUpgradeableActionsStandard(_action).askProxyForImplementationAddress();
+            require(GelatoUpgradeableActionsStandard(actionImpl).askImplementationIfInit(),
+                "GelatoUserProxy.execute(): actionImpl not initialized"
+            );
             (success, returndata) = actionImpl.delegatecall(_actionPayloadWithSelector);
             ///@dev we should delete require later - leave it for testing action executionClaimIds
             require(success, "GelatoUserProxy.execute(): actionImpl.delegatecall failed");

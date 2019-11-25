@@ -18,7 +18,7 @@ exports.getMultiMintForTimeTriggerPayloadWithSelector = (
           { type: "address", name: "_timeTrigger" },
           { type: "uint256", name: "_startTime" },
           { type: "address", name: "_action" },
-          { type: "bytes", name: "_actionPayload" },
+          { type: "bytes", name: "_actionPayloadWithSelector" },
           { type: "address", name: "_selectedExecutor" },
           { type: "uint256", name: "_intervalSpan" },
           { type: "uint256", name: "_numberOfMints" }

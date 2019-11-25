@@ -11,25 +11,48 @@ contract GelatoUpgradeableActionsStandard is IGelatoUpgradeableAction,
     /// @dev non-deploy base contract
     constructor() internal {}
 
-    ProxyAdmin internal myProxyAdmin;
+    ProxyAdmin internal proxysProxyAdmin;
+    bool internal implementationInit;
 
-    function getMyProxyAdminAddress() external view returns(address) {return address(myProxyAdmin);}
-
-    function _getMyImplementationAddress()
-        internal
-        view
-        returns(address)
-    {
-        return myProxyAdmin.getProxyImplementation(
-            AdminUpgradeabilityProxy(address(uint160(address(this))))
-        );
-    }
-
-    function getMyImplementationAddress()
+    function askProxyForProxyAdminAddress()
         external
         view
         returns(address)
     {
-        return _getMyImplementationAddress();
+        return address(proxysProxyAdmin);
+    }
+    function askImplementationIfInit()
+        external
+        view
+        returns(bool)
+    {
+        return implementationInit;
+    }
+
+    function askProxyIfImplementationInit()
+        external
+        view
+        returns(bool)
+    {
+        GelatoUpgradeableActionsStandard impl = GelatoUpgradeableActionsStandard(_askProxyForImplementationAddress());
+        return impl.askImplementationIfInit();
+    }
+
+    function askProxyForImplementationAddress()
+        external
+        view
+        returns(address)
+    {
+        return _askProxyForImplementationAddress();
+    }
+
+    function _askProxyForImplementationAddress()
+        internal
+        view
+        returns(address)
+    {
+        return proxysProxyAdmin.getProxyImplementation(
+            AdminUpgradeabilityProxy(address(uint160(address(this))))
+        );
     }
 }

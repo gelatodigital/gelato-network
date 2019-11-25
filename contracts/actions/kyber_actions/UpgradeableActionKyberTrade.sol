@@ -24,45 +24,25 @@ contract UpgradeableActionKyberTrade is Initializable,
         external
         initializer
     {
-        myProxyAdmin = ProxyAdmin(_proxyAdmin);
+        proxysProxyAdmin = ProxyAdmin(_proxyAdmin);
         actionOperation = ActionOperation.proxydelegatecall;
         actionSelector = this.action.selector;
         actionGasStipend = _actionGasStipend;
         kyberAddress = _kyberAddress;
-        _initializeImplementation();
+        _initializeImplementationFromProxy();
     }
 
-    modifier initialized() {
-        require(kyberAddress != address(0),
-            "UpgradeableActionKyberTrade.initialized: failed"
-        );
-        _;
-    }
-
-    function _initializeImplementation()
-        private
-        initialized
+    function initializeImplementationFromProxy()
+        external
     {
-        UpgradeableActionKyberTrade implementation
-            = UpgradeableActionKyberTrade(_getMyImplementationAddress());
-        require(implementation.getKyberAddress() == address(0),
-            "UpgradeableActionKyberTrade.initializeMyImplementation: already init"
-        );
-        implementation.implementationInitializer(actionGasStipend, kyberAddress);
-        require(implementation.getKyberAddress() != address(0),
-            "UpgradeableActionKyberTrade.initializeMyImplementation: failed"
-        );
+        return _initializeImplementationFromProxy();
     }
 
-    function initializeImplementation() external {return _initializeImplementation();}
-
-    function implementationInitializer(uint256 _actionGasStipend,
-                                       address _kyberAddress
-    )
+    function initializerOnImplementation(uint256 _actionGasStipend, address _kyberAddress)
         external
     {
         require(msg.sender != address(this),
-            "UpgradeableActionKyberTrade.implementationInitializer: failed"
+            "UpgradeableActionKyberTrade.implementationInitializer: alled proxy instead of implementation"
         );
         require(actionSelector == bytes4(0),
             "UpgradeableActionKyberTrade.implementationInitializer: already init"
@@ -71,31 +51,7 @@ contract UpgradeableActionKyberTrade is Initializable,
         actionSelector = this.action.selector;
         actionGasStipend = _actionGasStipend;
         kyberAddress = _kyberAddress;
-    }
-
-    function _actionConditionsFulfilled(bytes memory _actionPayload)
-        internal
-        view
-        returns(bool)
-    {
-        (bytes4 functionSelector,
-         bytes memory payload) = _splitFunctionSelector(_actionPayload);
-        (address _user,
-         address _src,
-         uint256 _srcAmt, , ) = abi.decode(payload, (address,
-                                                     address,
-                                                     uint256,
-                                                     address,
-                                                     uint256)
-        );
-        IERC20 srcERC20 = IERC20(_src);
-        uint256 srcUserBalance = srcERC20.balanceOf(_user);
-        uint256 srcUserProxyAllowance = srcERC20.allowance(_user, address(this));
-        return (functionSelector == actionSelector &&
-                kyberAddress != address(0) &&
-                srcUserBalance >= _srcAmt &&
-                _srcAmt <= srcUserProxyAllowance
-        );
+        implementationInit = true;
     }
 
     function actionConditionsFulfilled(bytes calldata _actionPayload)
@@ -106,13 +62,21 @@ contract UpgradeableActionKyberTrade is Initializable,
         return _actionConditionsFulfilled(_actionPayload);
     }
 
-    function action(// Standard Action Params
-                    address _user,
-                    // Specific Action Params
-                    address _src,
-                    uint256 _srcAmt,
-                    address _dest,
-                    uint256 _minConversionRate
+    modifier initialized() {
+        require(kyberAddress != address(0),
+            "UpgradeableActionKyberTrade.initialized: failed"
+        );
+        _;
+    }
+
+    function action(
+        // Standard Action Params
+        address _user,
+        // Specific Action Params
+        address _src,
+        uint256 _srcAmt,
+        address _dest,
+        uint256 _minConversionRate
     )
         external
         initialized
@@ -123,21 +87,23 @@ contract UpgradeableActionKyberTrade is Initializable,
             srcERC20.safeTransferFrom(_user, address(this), _srcAmt);
             srcERC20.safeIncreaseAllowance(kyberAddress, _srcAmt);
         }
-        destAmt = IKyber(kyberAddress).trade(_src,
-                                          _srcAmt,
-                                          _dest,
-                                          _user,
-                                          2**255,
-                                          _minConversionRate,
-                                          address(0)  // fee-sharing
+        destAmt = IKyber(kyberAddress).trade(
+            _src,
+            _srcAmt,
+            _dest,
+            _user,
+            2**255,
+            _minConversionRate,
+            address(0)  // fee-sharing
         );
-        emit LogAction(_user,
-                       _src,
-                       _srcAmt,
-                       _dest,
-                       destAmt,
-                       _minConversionRate,
-                       address(0)  // fee-sharing
+        emit LogAction(
+            _user,
+            _src,
+            _srcAmt,
+            _dest,
+            destAmt,
+            _minConversionRate,
+            address(0)  // fee-sharing
         );
     }
     event LogAction(address indexed user,
@@ -148,4 +114,40 @@ contract UpgradeableActionKyberTrade is Initializable,
                     uint256 minConversionRate,
                     address feeSharingParticipant
     );
+
+
+    function _initializeImplementationFromProxy()
+        private
+        initialized
+    {
+        UpgradeableActionKyberTrade implementation = UpgradeableActionKyberTrade(_askProxyForImplementationAddress());
+        require(!implementation.askImplementationIfInit(),
+            "UpgradeableActionKyberTrade.initializeMyImplementation: already init"
+        );
+        implementation.initializerOnImplementation(actionGasStipend, kyberAddress);
+        require(implementation.askImplementationIfInit(),
+            "UpgradeableActionKyberTrade.initializeMyImplementation: failed"
+        );
+    }
+
+    function _actionConditionsFulfilled(bytes memory _actionPayload)
+        internal
+        view
+        returns(bool)
+    {
+        (bytes4 functionSelector,
+         bytes memory payload) = _splitFunctionSelector(_actionPayload);
+        (address _user, address _src, uint256 _srcAmt, , ) = abi.decode(
+            payload,
+            (address, address, uint256, address,uint256)
+        );
+        IERC20 srcERC20 = IERC20(_src);
+        uint256 srcUserBalance = srcERC20.balanceOf(_user);
+        uint256 srcUserProxyAllowance = srcERC20.allowance(_user, address(this));
+        return (functionSelector == actionSelector &&
+                kyberAddress != address(0) &&
+                srcUserBalance >= _srcAmt &&
+                _srcAmt <= srcUserProxyAllowance
+        );
+    }
 }

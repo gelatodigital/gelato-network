@@ -3,7 +3,8 @@ node_modules
 
 # Annoying copies
 
-
+# MythX
+bin/
 
 # local env variables
 .env

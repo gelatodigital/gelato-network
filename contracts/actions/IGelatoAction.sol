@@ -1,6 +1,6 @@
 pragma solidity ^0.5.10;
 
-import './GelatoActionsStandard.sol';
+import "./GelatoActionsStandard.sol";
 
 interface IGelatoAction {
     function getActionOperation() external view returns(GelatoActionsStandard.ActionOperation);

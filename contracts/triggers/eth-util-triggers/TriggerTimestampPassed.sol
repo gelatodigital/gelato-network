@@ -1,7 +1,7 @@
 pragma solidity ^0.5.10;
 
 import "@openzeppelin/upgrades/contracts/Initializable.sol";
-import '../GelatoTriggersStandard.sol';
+import "../GelatoTriggersStandard.sol";
 
 contract TriggerTimestampPassed is Initializable,
                                    GelatoTriggersStandard

@@ -15,9 +15,9 @@ console.log(
 );
 
 // Contract Addresses
-let multiMintImplAddress;
+let upgradeableMultiMintAddress;
 let triggerTimestampPassedAddress;
-let actionKyberTradeImplAddress;
+let upgradeableActionKyberTradeAddress;
 let src;
 let dest;
 
@@ -35,24 +35,28 @@ if (process.env.ROPSTEN) {
   gelatoCoreAddress = "0x0Fcf27B454b344645a94788A3e820A0D2dab7F0e";
   kyberProxyAddress = "0x818E6FECD516Ecc3849DAf6845e3EC868087B755";
   userProxyAddress = "0xF37c83EBf9Fb837c3d303b0A2A2Be5Cf5345f0A9";
-  multiMintImplAddress = "0xcD816f760BBd8d63740a82cff56c04288667D921";
+  upgradeableMultiMintAddress = "0xcD816f760BBd8d63740a82cff56c04288667D921";
   triggerTimestampPassedAddress = "0x6B54F08968a9dc7959df88d202b99876c2E496eb";
-  actionKyberTradeImplAddress = "0xB59b6B36a31661cd24F95D703ec4c7Ce41f2E06E";
+  upgradeableActionKyberTradeAddress =
+    "0xB59b6B36a31661cd24F95D703ec4c7Ce41f2E06E";
   src = "0x4E470dc7321E84CA96FcAEDD0C8aBCebbAEB68C6"; // Ropsten KNC
   dest = "0xaD6D458402F60fD3Bd25163575031ACDce07538D"; // Ropsten DAI
-} else if (process.env.RINKEBY && !process.env.ROPSTEN) {
+} else if (process.env.RINKEBY) {
   console.log(`\n\t\t ✅ connected to RINKEBY ✅ \n`);
   provider = new ethers.providers.InfuraProvider("rinkeby", INFURA_ID);
-  gelatoCoreAddress = "0x501aF774Eb578203CC34E7171273124A93706C06";
+  gelatoCoreAddress = "0xdDbbbBc9128eE4282d2fe8854763d778fEA551b1";
   kyberProxyAddress = "0xF77eC7Ed5f5B9a5aee4cfa6FFCaC6A4C315BaC76";
-  userProxyAddress = "0x0bb7FEAdBa7e184Cbea720f06Ee34c82825Cd34C";
-  multiMintImplAddress = "0x47aC300a47095EedA741dA6088fd243D044430Cc";
-  triggerTimestampPassedAddress = "0xBdA9E16D8506C3AB2431fD4EE081c6d8a847FBaD";
-  actionKyberTradeImplAddress = "0x5e2C7234DC00eF98B52B694b29824AcF30dBA53e";
+  userProxyAddress = "0x9fA79B838bF5C611eee6Cfcd2f387E9B57Db078B";
+  upgradeableMultiMintAddress = "0x98e7290bDb544482E7B653C0167B0c886Be268f3";
+  triggerTimestampPassedAddress = "0x2211Dde1def400085307b1725676eb6bBa68995A";
+  upgradeableActionKyberTradeAddress =
+    "0x6ef7947A18b93D4F0A67BdBc2c6F933b8a0b9257";
   src = "0x6FA355a7b6bD2D6bD8b927C489221BFBb6f1D7B2"; // Rinkeby KNC
-  dest = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"; // ETH signal
+  dest = "0x725d648E6ff2B8C44c96eFAEa29b305e5bb1526a"; // Rinkeby MANA
+} else if (process.env.ROPSTEN && process.env.RINKEBY) {
+  console.error(`\n\t\t ❗ROPSTEN v RINKEBY CLASH ❗\n`);
 } else {
-  console.log(`\n\t\t ❗NO NETWORK DEFINED ❗\n`);
+  console.error(`\n\t\t ❗NO NETWORK DEFINED ❗\n`);
 }
 console.log(
   `\n\t\t Current block number: ${provider
@@ -97,7 +101,7 @@ const userProxyContract = new ethers.Contract(
 );
 
 // Arguments for userProxy.execute(address target, bytes memory data)
-const TARGET_ADDRESS = multiMintImplAddress;
+const TARGET_ADDRESS = upgradeableMultiMintAddress;
 
 // Arguments for function call to multiMintProxy.multiMint()
 const START_TIME = Math.floor(Date.now() / 1000);
@@ -147,7 +151,7 @@ async function main() {
   const MULTI_MINT_PAYLOAD_WITH_SELECTOR = getMultiMintForTimeTriggerPayloadWithSelector(
     triggerTimestampPassedAddress,
     START_TIME.toString(),
-    actionKyberTradeImplAddress,
+    upgradeableActionKyberTradeAddress,
     ACTION_KYBER_PAYLOAD_WITH_SELECTOR,
     SELECTED_EXECUTOR_ADDRESS,
     INTERVAL_SPAN,
@@ -163,7 +167,7 @@ async function main() {
   console.log(`\n\t\t Ether price in USD: ${ethUSDPrice}`);
 
   const MINTING_DEPOSIT_PER_MINT = await gelatoCoreContract.getMintingDepositPayable(
-    actionKyberTradeImplAddress,
+    upgradeableActionKyberTradeAddress,
     SELECTED_EXECUTOR_ADDRESS
   );
   console.log(
@@ -185,9 +189,8 @@ async function main() {
   );
 
   // send tx to PAYABLE contract method
-  let tx;
   try {
-    tx = await userProxyContract.execute(
+    const tx = await userProxyContract.execute(
       TARGET_ADDRESS,
       MULTI_MINT_PAYLOAD_WITH_SELECTOR,
       {
@@ -195,22 +198,15 @@ async function main() {
         gasLimit: 2000000
       }
     );
+    console.log(
+      `\n\t\t userProxy.execute(multiMintForTimeTrigger) txHash:\n \t${tx.hash}`
+    );
+    console.log("\n\t\t waiting for transaction to get mined \n");
+    const txReceipt = await tx.wait();
+    console.log(`\n\t\t minting tx mined in block ${txReceipt.blockNumber}`);
   } catch (err) {
     console.log(err);
   }
-  console.log(
-    `\n\t\t userProxy.execute(multiMintForTimeTrigger) txHash:\n \t${tx.hash}`
-  );
-
-  // The operation is NOT complete yet; we must wait until it is mined
-  console.log("\n\t\t waiting for transaction to get mined \n");
-  let txReceipt;
-  try {
-    txReceipt = await tx.wait();
-  } catch (err) {
-    console.log(err);
-  }
-  console.log(`\n\t\t minting tx mined in block ${txReceipt.blockNumber}`);
 }
 
 // What to execute when running node
