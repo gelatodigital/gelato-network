@@ -86,10 +86,11 @@ contract UpgradeableActionMultiMintForTimeTrigger is Initializable,
         );
         for (uint256 i = 0; i < _numberOfMints; i++) {
             uint256 timestamp = _startTime.add(_intervalSpan.mul(i));
+            bytes memory actionPayloadWithSelector = _actionPayloadWithSelector;
             bytes memory triggerPayloadWithSelector = abi.encodeWithSelector(
                 IGelatoTrigger(_timeTrigger).getTriggerSelector(),
                 _action,
-                _actionPayloadWithSelector,
+                actionPayloadWithSelector,
                 timestamp
             );
             gelatoCore.mintExecutionClaim.value(mintingDepositPerMint)(

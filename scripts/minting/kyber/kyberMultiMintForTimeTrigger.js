@@ -46,7 +46,7 @@ if (process.env.ROPSTEN) {
   provider = new ethers.providers.InfuraProvider("rinkeby", INFURA_ID);
   gelatoCoreAddress = "0xdDbbbBc9128eE4282d2fe8854763d778fEA551b1";
   kyberProxyAddress = "0xF77eC7Ed5f5B9a5aee4cfa6FFCaC6A4C315BaC76";
-  userProxyAddress = "0x9fA79B838bF5C611eee6Cfcd2f387E9B57Db078B";
+  userProxyAddress = "0x331232C54659b057e3142a8d50239d83c3f8F818";
   upgradeableMultiMintAddress = "0x98e7290bDb544482E7B653C0167B0c886Be268f3";
   triggerTimestampPassedAddress = "0x2211Dde1def400085307b1725676eb6bBa68995A";
   upgradeableActionKyberTradeAddress =
@@ -58,13 +58,11 @@ if (process.env.ROPSTEN) {
 } else {
   console.error(`\n\t\t ❗NO NETWORK DEFINED ❗\n`);
 }
-console.log(
-  `\n\t\t Current block number: ${provider
-    .getBlockNumber()
-    .then(blockNumber => {
-      console.log(blockNumber);
-    })}`
-);
+provider
+  .getBlockNumber()
+  .then(blocknumber =>
+    console.log(`\n\t\t Current block number: ${blocknumber}`)
+  );
 
 // Signer (wallet)
 const wallet = ethers.Wallet.fromMnemonic(DEV_MNEMONIC);

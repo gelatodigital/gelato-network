@@ -12,7 +12,7 @@ exports.getMultiMintForTimeTriggerPayloadWithSelector = (
   ) => {
     const multiMintABI = [
       {
-        name: "multiMint",
+        name: "action",
         type: "function",
         inputs: [
           { type: "address", name: "_timeTrigger" },
@@ -27,7 +27,7 @@ exports.getMultiMintForTimeTriggerPayloadWithSelector = (
     ];
     const interface = new ethers.utils.Interface(multiMintABI);
 
-    const encodedMultiMintPayloadWithSelector = interface.functions.multiMint.encode(
+    const encodedMultiMintPayloadWithSelector = interface.functions.action.encode(
       [
         timeTrigger,
         startTime,
