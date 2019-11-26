@@ -41,7 +41,9 @@ contract ActionMultiMintForTimeTrigger is GelatoActionsStandard {
         for (uint256 i = 0; i < _numberOfMints; i++) {
             uint256 timestamp = _startTime.add(_intervalSpan.mul(i));
             bytes memory triggerPayloadWithSelector = abi.encodeWithSelector(
-                IGelatoTrigger(_timeTrigger).getTriggerSelector(),
+                _timeTrigger.getTriggerSelector(),
+                _action,
+                _actionPayloadWithSelector,
                 timestamp
             );
             gelatoCore.mintExecutionClaim.value(mintingDepositPerMint)(

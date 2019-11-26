@@ -11,20 +11,6 @@ contract GelatoTriggersStandard is IGelatoTrigger {
 
     function getTriggerSelector() external view returns(bytes4) {return triggerSelector;}
 
-    function fired(// Standard Trigger Params
-                   IGelatoAction,  // action
-                   bytes calldata,  // actionPayloadWithSelector
-                   // Specific Trigger Params
-                   bytes calldata
-    )
-        external
-        view
-        returns(bool)
-    {
-        this;  // To silence state mutability warning
-        return true;
-    }
-
     function _actionConditionsFulfilled(IGelatoAction _action,
                                         bytes memory _actionPayloadWithSelector
     )
