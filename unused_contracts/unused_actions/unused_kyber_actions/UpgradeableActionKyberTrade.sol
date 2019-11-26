@@ -25,7 +25,7 @@ contract UpgradeableActionKyberTrade is Initializable,
         initializer
     {
         proxysProxyAdmin = ProxyAdmin(_proxyAdmin);
-        actionOperation = ActionOperation.proxydelegatecall;
+        actionOperation = ActionOperation.delegatecall;
         actionSelector = this.action.selector;
         actionGasStipend = _actionGasStipend;
         kyberAddress = _kyberAddress;
@@ -47,7 +47,7 @@ contract UpgradeableActionKyberTrade is Initializable,
         require(actionSelector == bytes4(0),
             "UpgradeableActionKyberTrade.implementationInitializer: already init"
         );
-        actionOperation = ActionOperation.proxydelegatecall;
+        actionOperation = ActionOperation.delegatecall;
         actionSelector = this.action.selector;
         actionGasStipend = _actionGasStipend;
         kyberAddress = _kyberAddress;

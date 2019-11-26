@@ -1,23 +1,37 @@
 pragma solidity ^0.5.10;
 
-import '../actions/IGelatoAction.sol';
+import "./IGelatoTrigger.sol";
+import "../actions/IGelatoAction.sol";
 
-contract GelatoTriggersStandard
-{
+contract GelatoTriggersStandard is IGelatoTrigger {
     /// @dev non-deploy base contract
     constructor() internal {}
 
     bytes4 internal triggerSelector;
-    
+
     function getTriggerSelector() external view returns(bytes4) {return triggerSelector;}
 
-    function _actionConditionsFulfilled(address _action,
+    function fired(// Standard Trigger Params
+                   IGelatoAction,  // action
+                   bytes calldata,  // actionPayloadWithSelector
+                   // Specific Trigger Params
+                   bytes calldata
+    )
+        external
+        view
+        returns(bool)
+    {
+        this;  // To silence state mutability warning
+        return true;
+    }
+
+    function _actionConditionsFulfilled(IGelatoAction _action,
                                         bytes memory _actionPayloadWithSelector
     )
         internal
         view
         returns(bool)
     {
-        return IGelatoAction(_action).actionConditionsFulfilled(_actionPayloadWithSelector);
+        return _action.actionConditionsFulfilled(_actionPayloadWithSelector);
     }
 }

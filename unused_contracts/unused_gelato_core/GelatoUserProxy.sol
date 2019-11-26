@@ -1,9 +1,8 @@
 pragma solidity ^0.5.10;
 
-import "./IGelatoUserProxy.sol";
-import "../actions/GelatoActionsStandard.sol";
+import "../actions/GelatoUpgradeableActionsStandard.sol";
 
-contract GelatoUserProxy is IGelatoUserProxy {
+contract GelatoUserProxy {
     address payable internal user;
     address payable internal gelatoCore;
 
@@ -51,11 +50,22 @@ contract GelatoUserProxy is IGelatoUserProxy {
             (success, returndata) = _action.call(_actionPayloadWithSelector);
             ///@dev we should delete require later - leave it for testing action executionClaimIds
             require(success, "GelatoUserProxy.execute(): _action.call failed");
-        } else if (operation == GelatoActionsStandard.ActionOperation.delegatecall) {
+        }
+        else if (operation == GelatoActionsStandard.ActionOperation.delegatecall) {
             (success, returndata) = _action.delegatecall(_actionPayloadWithSelector);
             ///@dev we should delete require later - leave it for testing action executionClaimIds
             require(success, "GelatoUserProxy.execute(): _action.delegatecall failed");
-        } else {
+        }
+        else if (operation == GelatoActionsStandard.ActionOperation.delegatecall) {
+            address actionImpl = GelatoUpgradeableActionsStandard(_action).askProxyForImplementationAddress();
+            require(GelatoUpgradeableActionsStandard(actionImpl).askImplementationIfInit(),
+                "GelatoUserProxy.execute(): actionImpl not initialized"
+            );
+            (success, returndata) = actionImpl.delegatecall(_actionPayloadWithSelector);
+            ///@dev we should delete require later - leave it for testing action executionClaimIds
+            require(success, "GelatoUserProxy.execute(): actionImpl.delegatecall failed");
+        }
+        else {
             revert("GelatoUserProxy.execute(): invalid action operation");
         }
     }

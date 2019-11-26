@@ -14,15 +14,16 @@ contract TriggerTimestampPassed is Initializable,
     }
 
     function fired(// Standard Trigger Params
-                   address _action,
+                   IGelatoAction _action,
                    bytes calldata _actionPayloadWithSelector,
                    // Specific Trigger Params
-                   uint256 _timestamp
+                   bytes calldata _specificTriggerParams
     )
         external
         view
         returns(bool)
     {
+        uint256 _timestamp = abi.decode(_specificTriggerParams, (uint256));
         return (_actionConditionsFulfilled(_action, _actionPayloadWithSelector) &&
                 _timestamp <= block.timestamp
         );

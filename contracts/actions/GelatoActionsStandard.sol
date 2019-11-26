@@ -1,13 +1,13 @@
 pragma solidity ^0.5.10;
 
-import './IGelatoAction.sol';
+import "./IGelatoAction.sol";
 
 contract GelatoActionsStandard is IGelatoAction
 {
     /// @dev non-deploy base contract
     constructor() internal {}
 
-    enum ActionOperation { call, delegatecall, proxydelegatecall }
+    enum ActionOperation { call, delegatecall }
     ActionOperation internal actionOperation;
     bytes4 internal actionSelector;
     uint256 internal actionGasStipend;

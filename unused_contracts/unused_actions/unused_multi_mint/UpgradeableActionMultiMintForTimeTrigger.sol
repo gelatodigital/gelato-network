@@ -23,7 +23,7 @@ contract UpgradeableActionMultiMintForTimeTrigger is Initializable,
         initializer
     {
         proxysProxyAdmin = ProxyAdmin(_proxysProxyAdmin);
-        actionOperation = ActionOperation.proxydelegatecall;
+        actionOperation = ActionOperation.delegatecall;
         actionSelector = this.action.selector;
         actionGasStipend = _actionGasStipend;
         gelatoCore = IGelatoCore(_gelatoCore);
@@ -48,7 +48,7 @@ contract UpgradeableActionMultiMintForTimeTrigger is Initializable,
         require(actionSelector == bytes4(0),
             "UpgradeableActionMultiMintForTimeTrigger.implementationInitializer: already init"
         );
-        actionOperation = ActionOperation.proxydelegatecall;
+        actionOperation = ActionOperation.delegatecall;
         actionSelector = this.action.selector;
         actionGasStipend = _actionGasStipend;
         gelatoCore = _gelatoCore;
