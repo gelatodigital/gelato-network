@@ -7,6 +7,7 @@
   "main": "index.js",
   "scripts": {
     "erc20-approve:rinkeby": "export RINKEBY=true && node scripts/erc20/erc20Approve.js",
+    "erc20-approve:ropsten": "export ROPSTEN=true && node scripts/erc20/erc20Approve.js",
     "gc-logminting:ropsten": "export ROPSTEN=true && node scripts/events/gelatoCore_events/fetchMintingLogs.js",
     "gc-logminting:rinkeby": "export RINKEBY=true && node scripts/events/gelatoCore_events/fetchMintingLogs.js",
     "kyber-multimint:ropsten": "export ROPSTEN=true && node scripts/minting/kyber/kyberMultiMintForTimeTrigger.js",

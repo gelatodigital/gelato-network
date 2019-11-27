@@ -1,0 +1,509 @@
+{
+  "contracts": {
+    "TriggerTimestampPassed": {
+      "address": "0x8A1694635b358A697e50B3B89209E6a8EB556B0D",
+      "constructorCode": "60806040526102df806100136000396000f3fe",
+      "bodyBytecodeHash": "4a84e7c7f25edfc484ecbfe0d780ad27ec66338975a80d1bfd2cff9e71aa724a",
+      "localBytecodeHash": "8940da5372d522e1ccc5b3e0a2c255af61d881b6117974a6707f08d811a3aae6",
+      "deployedBytecodeHash": "8940da5372d522e1ccc5b3e0a2c255af61d881b6117974a6707f08d811a3aae6",
+      "types": {
+        "t_bool": {
+          "id": "t_bool",
+          "kind": "elementary",
+          "label": "bool"
+        },
+        "t_uint256": {
+          "id": "t_uint256",
+          "kind": "elementary",
+          "label": "uint256"
+        },
+        "t_array:50<t_uint256>": {
+          "id": "t_array:50<t_uint256>",
+          "valueType": "t_uint256",
+          "length": "50",
+          "kind": "array",
+          "label": "uint256[50]"
+        },
+        "t_bytes4": {
+          "id": "t_bytes4",
+          "kind": "elementary",
+          "label": "bytes4"
+        }
+      },
+      "storage": [
+        {
+          "contract": "Initializable",
+          "path": "@openzeppelin/upgrades/contracts/Initializable.sol",
+          "label": "initialized",
+          "astId": 798,
+          "type": "t_bool",
+          "src": "757:24:8"
+        },
+        {
+          "contract": "Initializable",
+          "path": "@openzeppelin/upgrades/contracts/Initializable.sol",
+          "label": "initializing",
+          "astId": 800,
+          "type": "t_bool",
+          "src": "876:25:8"
+        },
+        {
+          "contract": "Initializable",
+          "path": "@openzeppelin/upgrades/contracts/Initializable.sol",
+          "label": "______gap",
+          "astId": 856,
+          "type": "t_array:50<t_uint256>",
+          "src": "1951:29:8"
+        },
+        {
+          "contract": "GelatoTriggersStandard",
+          "path": "contracts/triggers/GelatoTriggersStandard.sol",
+          "label": "triggerSelector",
+          "astId": 3388,
+          "type": "t_bytes4",
+          "src": "182:31:24"
+        }
+      ],
+      "warnings": {
+        "hasConstructor": false,
+        "hasSelfDestruct": false,
+        "hasDelegateCall": false,
+        "hasInitialValuesInDeclarations": false,
+        "uninitializedBaseContracts": []
+      }
+    },
+    "GelatoCore": {
+      "address": "0x566Ff5080F1D1fB2d40ff26710c2219831635391",
+      "constructorCode": "608060405260a45460a35460a254010160a55561598c806100216000396000f3fe",
+      "bodyBytecodeHash": "702b4d70c4a0e9243484fb5568eb5df8648f33d783a2983c04f54405074d3047",
+      "localBytecodeHash": "dde75c384f34dcbacb7884afc854be4c47b59ed81368d337cd6541b39474e25a",
+      "deployedBytecodeHash": "dde75c384f34dcbacb7884afc854be4c47b59ed81368d337cd6541b39474e25a",
+      "types": {
+        "t_uint256": {
+          "id": "t_uint256",
+          "kind": "elementary",
+          "label": "uint256"
+        },
+        "t_address": {
+          "id": "t_address",
+          "kind": "elementary",
+          "label": "address"
+        },
+        "t_mapping<t_address>": {
+          "id": "t_mapping<t_address>",
+          "valueType": "t_address",
+          "label": "mapping(key => address)",
+          "kind": "mapping"
+        },
+        "t_address_payable": {
+          "id": "t_address_payable",
+          "kind": "elementary",
+          "label": "address payable"
+        },
+        "t_mapping<t_address_payable>": {
+          "id": "t_mapping<t_address_payable>",
+          "valueType": "t_address_payable",
+          "label": "mapping(key => address payable)",
+          "kind": "mapping"
+        },
+        "t_array:dyn<t_address_payable>": {
+          "id": "t_array:dyn<t_address_payable>",
+          "valueType": "t_address_payable",
+          "length": "dyn",
+          "kind": "array",
+          "label": "address payable[]"
+        },
+        "t_array:dyn<t_address>": {
+          "id": "t_array:dyn<t_address>",
+          "valueType": "t_address",
+          "length": "dyn",
+          "kind": "array",
+          "label": "address[]"
+        },
+        "t_bool": {
+          "id": "t_bool",
+          "kind": "elementary",
+          "label": "bool"
+        },
+        "t_array:50<t_uint256>": {
+          "id": "t_array:50<t_uint256>",
+          "valueType": "t_uint256",
+          "length": "50",
+          "kind": "array",
+          "label": "uint256[50]"
+        },
+        "t_mapping<t_uint256>": {
+          "id": "t_mapping<t_uint256>",
+          "valueType": "t_uint256",
+          "label": "mapping(key => uint256)",
+          "kind": "mapping"
+        },
+        "t_struct<Counters.Counter>": {
+          "id": "t_struct<Counters.Counter>",
+          "kind": "struct",
+          "label": "Counters.Counter",
+          "members": [
+            {
+              "label": "_value",
+              "astId": 37,
+              "type": "t_uint256",
+              "src": "1024:14:1"
+            }
+          ]
+        },
+        "t_bytes32": {
+          "id": "t_bytes32",
+          "kind": "elementary",
+          "label": "bytes32"
+        },
+        "t_mapping<t_bytes32>": {
+          "id": "t_mapping<t_bytes32>",
+          "valueType": "t_bytes32",
+          "label": "mapping(key => bytes32)",
+          "kind": "mapping"
+        }
+      },
+      "storage": [
+        {
+          "contract": "GelatoUserProxyManager",
+          "path": "contracts/gelato_core/GelatoUserProxyManager.sol",
+          "label": "userCount",
+          "astId": 2725,
+          "type": "t_uint256",
+          "src": "319:26:18"
+        },
+        {
+          "contract": "GelatoUserProxyManager",
+          "path": "contracts/gelato_core/GelatoUserProxyManager.sol",
+          "label": "userToProxy",
+          "astId": 2729,
+          "type": "t_mapping<t_address>",
+          "src": "351:57:18"
+        },
+        {
+          "contract": "GelatoUserProxyManager",
+          "path": "contracts/gelato_core/GelatoUserProxyManager.sol",
+          "label": "proxyToUser",
+          "astId": 2733,
+          "type": "t_mapping<t_address_payable>",
+          "src": "414:56:18"
+        },
+        {
+          "contract": "GelatoUserProxyManager",
+          "path": "contracts/gelato_core/GelatoUserProxyManager.sol",
+          "label": "users",
+          "astId": 2736,
+          "type": "t_array:dyn<t_address_payable>",
+          "src": "476:32:18"
+        },
+        {
+          "contract": "GelatoUserProxyManager",
+          "path": "contracts/gelato_core/GelatoUserProxyManager.sol",
+          "label": "userProxies",
+          "astId": 2739,
+          "type": "t_array:dyn<t_address>",
+          "src": "514:39:18"
+        },
+        {
+          "contract": "Initializable",
+          "path": "@openzeppelin/upgrades/contracts/Initializable.sol",
+          "label": "initialized",
+          "astId": 798,
+          "type": "t_bool",
+          "src": "757:24:8"
+        },
+        {
+          "contract": "Initializable",
+          "path": "@openzeppelin/upgrades/contracts/Initializable.sol",
+          "label": "initializing",
+          "astId": 800,
+          "type": "t_bool",
+          "src": "876:25:8"
+        },
+        {
+          "contract": "Initializable",
+          "path": "@openzeppelin/upgrades/contracts/Initializable.sol",
+          "label": "______gap",
+          "astId": 856,
+          "type": "t_array:50<t_uint256>",
+          "src": "1951:29:8"
+        },
+        {
+          "contract": "Ownable",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol",
+          "label": "_owner",
+          "astId": 275,
+          "type": "t_address",
+          "src": "526:22:3"
+        },
+        {
+          "contract": "Ownable",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol",
+          "label": "______gap",
+          "astId": 388,
+          "type": "t_array:50<t_uint256>",
+          "src": "2471:29:3"
+        },
+        {
+          "contract": "ReentrancyGuard",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/utils/ReentrancyGuard.sol",
+          "label": "_guardCounter",
+          "astId": 760,
+          "type": "t_uint256",
+          "src": "733:29:7"
+        },
+        {
+          "contract": "ReentrancyGuard",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/utils/ReentrancyGuard.sol",
+          "label": "______gap",
+          "astId": 793,
+          "type": "t_array:50<t_uint256>",
+          "src": "1563:29:7"
+        },
+        {
+          "contract": "GelatoCoreAccounting",
+          "path": "contracts/gelato_core/GelatoCoreAccounting.sol",
+          "label": "minExecutionClaimLifespan",
+          "astId": 2098,
+          "type": "t_uint256",
+          "src": "814:42:15"
+        },
+        {
+          "contract": "GelatoCoreAccounting",
+          "path": "contracts/gelato_core/GelatoCoreAccounting.sol",
+          "label": "executorPrice",
+          "astId": 2102,
+          "type": "t_mapping<t_uint256>",
+          "src": "938:50:15"
+        },
+        {
+          "contract": "GelatoCoreAccounting",
+          "path": "contracts/gelato_core/GelatoCoreAccounting.sol",
+          "label": "executorClaimLifespan",
+          "astId": 2106,
+          "type": "t_mapping<t_uint256>",
+          "src": "994:58:15"
+        },
+        {
+          "contract": "GelatoCoreAccounting",
+          "path": "contracts/gelato_core/GelatoCoreAccounting.sol",
+          "label": "executorBalance",
+          "astId": 2110,
+          "type": "t_mapping<t_uint256>",
+          "src": "1058:52:15"
+        },
+        {
+          "contract": "GelatoCoreAccounting",
+          "path": "contracts/gelato_core/GelatoCoreAccounting.sol",
+          "label": "canExecMaxGas",
+          "astId": 2112,
+          "type": "t_uint256",
+          "src": "1192:30:15"
+        },
+        {
+          "contract": "GelatoCoreAccounting",
+          "path": "contracts/gelato_core/GelatoCoreAccounting.sol",
+          "label": "gelatoCoreExecGasOverhead",
+          "astId": 2114,
+          "type": "t_uint256",
+          "src": "1228:42:15"
+        },
+        {
+          "contract": "GelatoCoreAccounting",
+          "path": "contracts/gelato_core/GelatoCoreAccounting.sol",
+          "label": "userProxyExecGasOverhead",
+          "astId": 2116,
+          "type": "t_uint256",
+          "src": "1276:41:15"
+        },
+        {
+          "contract": "GelatoCoreAccounting",
+          "path": "contracts/gelato_core/GelatoCoreAccounting.sol",
+          "label": "nonActionExecutionGas",
+          "astId": 2124,
+          "type": "t_uint256",
+          "src": "1323:141:15"
+        },
+        {
+          "contract": "GelatoCore",
+          "path": "contracts/gelato_core/GelatoCore.sol",
+          "label": "executionClaimIds",
+          "astId": 1344,
+          "type": "t_struct<Counters.Counter>",
+          "src": "1054:42:14"
+        },
+        {
+          "contract": "GelatoCore",
+          "path": "contracts/gelato_core/GelatoCore.sol",
+          "label": "userProxyByExecutionClaimId",
+          "astId": 1348,
+          "type": "t_mapping<t_address>",
+          "src": "1157:72:14"
+        },
+        {
+          "contract": "GelatoCore",
+          "path": "contracts/gelato_core/GelatoCore.sol",
+          "label": "hashedExecutionClaims",
+          "astId": 1352,
+          "type": "t_mapping<t_bytes32>",
+          "src": "1289:57:14"
+        }
+      ],
+      "warnings": {
+        "hasConstructor": false,
+        "hasSelfDestruct": false,
+        "hasDelegateCall": false,
+        "hasInitialValuesInDeclarations": false,
+        "uninitializedBaseContracts": []
+      }
+    },
+    "ActionMultiMintForTimeTrigger": {
+      "address": "0x6d679B6EfE6FBC3BC7FD48b86Cc223305a56b9cF",
+      "constructorCode": "608060405234801561001057600080fd5b5060016000806101000a81548160ff0219169083600181111561002f57fe5b02179055506351cda43b60e01b600060016101000a81548163ffffffff021916908360e01c0217905550620f42406001819055506108f6806100726000396000f3fe",
+      "bodyBytecodeHash": "2854b27e56a458a8b392620e5e61edb49015180d3732249e1e4d5977def046ea",
+      "localBytecodeHash": "214bf114a458da3ebe32d84ee992d6ed61f0048c4aa361ebb67ce64d6d8e17e5",
+      "deployedBytecodeHash": "214bf114a458da3ebe32d84ee992d6ed61f0048c4aa361ebb67ce64d6d8e17e5",
+      "types": {
+        "t_enum<GelatoActionsStandard.ActionOperation>": {
+          "id": "t_enum<GelatoActionsStandard.ActionOperation>",
+          "kind": "enum",
+          "label": "GelatoActionsStandard.ActionOperation",
+          "members": [
+            "call",
+            "delegatecall"
+          ]
+        },
+        "t_bytes4": {
+          "id": "t_bytes4",
+          "kind": "elementary",
+          "label": "bytes4"
+        },
+        "t_uint256": {
+          "id": "t_uint256",
+          "kind": "elementary",
+          "label": "uint256"
+        }
+      },
+      "storage": [
+        {
+          "contract": "GelatoActionsStandard",
+          "path": "contracts/actions/GelatoActionsStandard.sol",
+          "label": "actionOperation",
+          "astId": 871,
+          "type": "t_enum<GelatoActionsStandard.ActionOperation>",
+          "src": "228:40:9"
+        },
+        {
+          "contract": "GelatoActionsStandard",
+          "path": "contracts/actions/GelatoActionsStandard.sol",
+          "label": "actionSelector",
+          "astId": 873,
+          "type": "t_bytes4",
+          "src": "274:30:9"
+        },
+        {
+          "contract": "GelatoActionsStandard",
+          "path": "contracts/actions/GelatoActionsStandard.sol",
+          "label": "actionGasStipend",
+          "astId": 875,
+          "type": "t_uint256",
+          "src": "310:33:9"
+        }
+      ],
+      "warnings": {
+        "hasConstructor": true,
+        "hasSelfDestruct": false,
+        "hasDelegateCall": false,
+        "hasInitialValuesInDeclarations": false,
+        "uninitializedBaseContracts": []
+      }
+    },
+    "ActionKyberTrade": {
+      "address": "0xAbeB5c311A85d73B2B0357bB3D08b183787591E0",
+      "constructorCode": "608060405234801561001057600080fd5b5060016000806101000a81548160ff0219169083600181111561002f57fe5b021790555063b824a63a60e01b600060016101000a81548163ffffffff021916908360e01c0217905550620aae6060018190555061104d806100726000396000f3fe",
+      "bodyBytecodeHash": "294b83830467a87d4cf480fc2af994a1df20c4790fec2f3dab387f180dab398b",
+      "localBytecodeHash": "6a0d1cc2a1d9685cef9554848f1648b8754463b658dc783400c0c501e3529e3b",
+      "deployedBytecodeHash": "6a0d1cc2a1d9685cef9554848f1648b8754463b658dc783400c0c501e3529e3b",
+      "types": {
+        "t_enum<GelatoActionsStandard.ActionOperation>": {
+          "id": "t_enum<GelatoActionsStandard.ActionOperation>",
+          "kind": "enum",
+          "label": "GelatoActionsStandard.ActionOperation",
+          "members": [
+            "call",
+            "delegatecall"
+          ]
+        },
+        "t_bytes4": {
+          "id": "t_bytes4",
+          "kind": "elementary",
+          "label": "bytes4"
+        },
+        "t_uint256": {
+          "id": "t_uint256",
+          "kind": "elementary",
+          "label": "uint256"
+        }
+      },
+      "storage": [
+        {
+          "contract": "GelatoActionsStandard",
+          "path": "contracts/actions/GelatoActionsStandard.sol",
+          "label": "actionOperation",
+          "astId": 871,
+          "type": "t_enum<GelatoActionsStandard.ActionOperation>",
+          "src": "228:40:9"
+        },
+        {
+          "contract": "GelatoActionsStandard",
+          "path": "contracts/actions/GelatoActionsStandard.sol",
+          "label": "actionSelector",
+          "astId": 873,
+          "type": "t_bytes4",
+          "src": "274:30:9"
+        },
+        {
+          "contract": "GelatoActionsStandard",
+          "path": "contracts/actions/GelatoActionsStandard.sol",
+          "label": "actionGasStipend",
+          "astId": 875,
+          "type": "t_uint256",
+          "src": "310:33:9"
+        }
+      ],
+      "warnings": {
+        "hasConstructor": true,
+        "hasSelfDestruct": false,
+        "hasDelegateCall": false,
+        "hasInitialValuesInDeclarations": false,
+        "uninitializedBaseContracts": []
+      }
+    }
+  },
+  "solidityLibs": {},
+  "proxies": {
+    "gelato-contracts/GelatoCore": [
+      {
+        "address": "0x3C64f059a17beCe12d5C43515AB67836c5857E26",
+        "version": "0.0.1",
+        "implementation": "0x566Ff5080F1D1fB2d40ff26710c2219831635391",
+        "admin": "0x9084AaAE31AaA7C10f678F7011e95ac9170Be368",
+        "kind": "Upgradeable"
+      }
+    ],
+    "gelato-contracts/TriggerTimestampPassed": [
+      {
+        "address": "0x173422312A7e5F571BEaa221287A20Ec4Dc712EE",
+        "version": "0.0.1",
+        "implementation": "0x8A1694635b358A697e50B3B89209E6a8EB556B0D",
+        "admin": "0x9084AaAE31AaA7C10f678F7011e95ac9170Be368",
+        "kind": "Upgradeable"
+      }
+    ]
+  },
+  "manifestVersion": "2.2",
+  "version": "0.0.1",
+  "proxyAdmin": {
+    "address": "0x9084AaAE31AaA7C10f678F7011e95ac9170Be368"
+  }
+}

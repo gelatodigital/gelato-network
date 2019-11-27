@@ -9,12 +9,12 @@ import "../../../triggers/IGelatoTrigger.sol";
 contract ActionMultiMintForTimeTrigger is GelatoActionsStandard {
     using SafeMath for uint256;
 
-    constructor(uint256 _actionGasStipend)
+    constructor()
         public
     {
         actionOperation = ActionOperation.delegatecall;
         actionSelector = this.action.selector;
-        actionGasStipend = _actionGasStipend;
+        actionGasStipend = 1000000;
     }
 
     function action(
@@ -31,8 +31,8 @@ contract ActionMultiMintForTimeTrigger is GelatoActionsStandard {
         external
         payable
     {
-        IGelatoCore gelatoCore = IGelatoCore(0x501aF774Eb578203CC34E7171273124A93706C06);
-        uint256 mintingDepositPerMint = IGelatoCoreAccounting(0x501aF774Eb578203CC34E7171273124A93706C06).getMintingDepositPayable(
+        IGelatoCore gelatoCore = IGelatoCore(0x3C64f059a17beCe12d5C43515AB67836c5857E26);
+        uint256 mintingDepositPerMint = IGelatoCoreAccounting(0x3C64f059a17beCe12d5C43515AB67836c5857E26).getMintingDepositPayable(
             _action,
             _selectedExecutor
         );
