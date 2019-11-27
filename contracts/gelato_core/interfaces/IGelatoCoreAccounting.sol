@@ -1,6 +1,6 @@
 pragma solidity ^0.5.10;
 
-import "../actions/IGelatoAction.sol";
+import "../../actions/IGelatoAction.sol";
 
 interface IGelatoCoreAccounting {
 

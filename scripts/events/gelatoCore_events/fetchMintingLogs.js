@@ -25,7 +25,7 @@ if (process.env.ROPSTEN) {
   console.log(`\n\t\t ✅ connected to ROPSTEN ✅ \n`);
   provider = new ethers.providers.InfuraProvider("ropsten", INFURA_ID);
   searchFromBlock = process.env.ROPSTEN_BLOCK;
-  gelatoCoreAddress = "0x84Ea81AD0EF5Aa3c6Aa051c76B5af6E946F88C4E";
+  gelatoCoreAddress = "0x3C64f059a17beCe12d5C43515AB67836c5857E26";
 } else if (process.env.RINKEBY && !process.env.ROPSTEN) {
   console.log(`\n\t\t ✅ connected to RINKEBY ✅ \n`);
   provider = new ethers.providers.InfuraProvider("rinkeby", INFURA_ID);
@@ -103,7 +103,7 @@ async function main() {
     } else {
       for (let obj of combinedMintingLogs) {
         for (let [key, value] of Object.entries(obj)) {
-          console.log(`${key}: ${value}`);
+          console.dir(`${key}: ${value}`);
         }
         console.log("\n");
       }

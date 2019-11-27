@@ -1,6 +1,6 @@
 pragma solidity ^0.5.10;
 
-import "./IGelatoCore.sol";
+import "./interfaces/IGelatoCore.sol";
 import "./GelatoUserProxyManager.sol";
 import "./GelatoCoreAccounting.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/drafts/Counters.sol";
@@ -439,7 +439,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
             if (!success) return GelatoCoreEnums.CanExecuteCheck.ActionReverted;
             else {
                 executable = abi.decode(returndata, (bool));
-                if (!executable) return GelatoCoreEnums.CanExecuteCheck.ActionConditionsNotFulfilled;
+                if (!executable) return GelatoCoreEnums.CanExecuteCheck.ActionConditionsNotOk;
             }
         }
         if (executable) return GelatoCoreEnums.CanExecuteCheck.Executable;

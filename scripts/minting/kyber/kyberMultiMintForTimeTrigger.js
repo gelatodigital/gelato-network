@@ -35,22 +35,22 @@ if (process.env.ROPSTEN) {
   gelatoCoreAddress = "0x3C64f059a17beCe12d5C43515AB67836c5857E26";
   kyberProxyAddress = "0x818E6FECD516Ecc3849DAf6845e3EC868087B755";
   userProxyAddress = "0x9C4A922FF17d7Dd06f678C65Ee4142C8fBD95962";
-  actionMultiMintAddress = "0x6d679B6EfE6FBC3BC7FD48b86Cc223305a56b9cF";
+  actionMultiMintAddress = "0xd72cdd01799BB5315536524ED8c6CAa96a8e129b";
   triggerTimestampPassedAddress = "0x173422312A7e5F571BEaa221287A20Ec4Dc712EE";
-  actionKyberTradeAddress = "0xAbeB5c311A85d73B2B0357bB3D08b183787591E0";
+  actionKyberTradeAddress = "0xc8BC0E2729F6aBddCc751c8b6DB24286276F1FCD";
   src = "0x4E470dc7321E84CA96FcAEDD0C8aBCebbAEB68C6"; // Ropsten KNC
   dest = "0xaD6D458402F60fD3Bd25163575031ACDce07538D"; // Ropsten DAI
 } else if (process.env.RINKEBY) {
   console.log(`\n\t\t ✅ connected to RINKEBY ✅ \n`);
-  provider = new ethers.providers.InfuraProvider("rinkeby", INFURA_ID);
+  /*provider = new ethers.providers.InfuraProvider("rinkeby", INFURA_ID);
   gelatoCoreAddress = "0xdDbbbBc9128eE4282d2fe8854763d778fEA551b1";
   kyberProxyAddress = "0xF77eC7Ed5f5B9a5aee4cfa6FFCaC6A4C315BaC76";
   userProxyAddress = "0x331232C54659b057e3142a8d50239d83c3f8F818";
-  actionMultiMintAddress = "0x98e7290bDb544482E7B653C0167B0c886Be268f3";
+  actionMultiMintAddress = "0xf3106Ce6f503EF6b585bAaC595a410D44E38e887";
   triggerTimestampPassedAddress = "0x2211Dde1def400085307b1725676eb6bBa68995A";
-  actionKyberTradeAddress = "0x6ef7947A18b93D4F0A67BdBc2c6F933b8a0b9257";
+  actionKyberTradeAddress = "0x181Ae14Fb5047C810B975d385E5bC923890eCf43";
   src = "0x6FA355a7b6bD2D6bD8b927C489221BFBb6f1D7B2"; // Rinkeby KNC
-  dest = "0x725d648E6ff2B8C44c96eFAEa29b305e5bb1526a"; // Rinkeby MANA
+  dest = "0x725d648E6ff2B8C44c96eFAEa29b305e5bb1526a"; // Rinkeby MANA */
 } else if (process.env.ROPSTEN && process.env.RINKEBY) {
   console.error(`\n\t\t ❗ROPSTEN v RINKEBY CLASH ❗\n`);
 } else {
@@ -140,7 +140,7 @@ async function main() {
     minConversionRate
   );
   console.log(
-    `\t\t EncodedActionParams: \n ${ACTION_KYBER_PAYLOAD_WITH_SELECTOR}\n`
+    `\t\t ActionKyber Payload With Selector: \n ${ACTION_KYBER_PAYLOAD_WITH_SELECTOR}\n`
   );
 
   // Encode the payload for the call to MultiMintForTimeTrigger.multiMint

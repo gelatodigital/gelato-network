@@ -39,7 +39,8 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
         external
         returns (uint256 destAmt)
     {
-        address kyberAddress = 0xF77eC7Ed5f5B9a5aee4cfa6FFCaC6A4C315BaC76;  // rinkeby
+        // !!!!!!!!! ROPSTEN !!!!!!
+        address kyberAddress = 0x818E6FECD516Ecc3849DAf6845e3EC868087B755;
         {
             IERC20 srcERC20 = IERC20(_src);
             srcERC20.safeTransferFrom(_user, address(this), _srcAmt);
@@ -87,7 +88,10 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
         );
         IERC20 srcERC20 = IERC20(_src);
         uint256 srcUserBalance = srcERC20.balanceOf(_user);
-        uint256 srcUserProxyAllowance = srcERC20.allowance(_user, address(this));
+        uint256 srcUserProxyAllowance = srcERC20.allowance(
+            _user,
+            address(_getProxyOfUser(_user))
+        );
         return (
             functionSelector == actionSelector &&
             srcUserBalance >= _srcAmt &&

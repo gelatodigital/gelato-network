@@ -14,7 +14,7 @@ contract GelatoCoreEnums {
         TriggerReverted,
         TriggerNotFired,
         ActionReverted,
-        ActionConditionsNotFulfilled,
+        ActionConditionsNotOk,
         Executable
     }
 }

@@ -1,6 +1,6 @@
 pragma solidity ^0.5.10;
 
-import "./IGelatoUserProxy.sol";
+import "./interfaces/IGelatoUserProxy.sol";
 import "../actions/GelatoActionsStandard.sol";
 
 contract GelatoUserProxy is IGelatoUserProxy {
@@ -28,7 +28,7 @@ contract GelatoUserProxy is IGelatoUserProxy {
         );
         _;
     }
-    
+
     function execute(address payable _action, bytes calldata _actionPayloadWithSelector)
         external
         payable
