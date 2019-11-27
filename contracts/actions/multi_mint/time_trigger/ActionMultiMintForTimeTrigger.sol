@@ -3,6 +3,7 @@ pragma solidity ^0.5.10;
 import "../../GelatoActionsStandard.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "../../../gelato_core/IGelatoCore.sol";
+import "../../../gelato_core/IGelatoCoreAccounting.sol";
 import "../../../triggers/IGelatoTrigger.sol";
 
 contract ActionMultiMintForTimeTrigger is GelatoActionsStandard {
@@ -31,7 +32,7 @@ contract ActionMultiMintForTimeTrigger is GelatoActionsStandard {
         payable
     {
         IGelatoCore gelatoCore = IGelatoCore(0x501aF774Eb578203CC34E7171273124A93706C06);
-        uint256 mintingDepositPerMint = gelatoCore.getMintingDepositPayable(
+        uint256 mintingDepositPerMint = IGelatoCoreAccounting(0x501aF774Eb578203CC34E7171273124A93706C06).getMintingDepositPayable(
             _action,
             _selectedExecutor
         );
@@ -42,8 +43,6 @@ contract ActionMultiMintForTimeTrigger is GelatoActionsStandard {
             uint256 timestamp = _startTime.add(_intervalSpan.mul(i));
             bytes memory triggerPayloadWithSelector = abi.encodeWithSelector(
                 _timeTrigger.getTriggerSelector(),
-                _action,
-                _actionPayloadWithSelector,
                 timestamp
             );
             gelatoCore.mintExecutionClaim.value(mintingDepositPerMint)(

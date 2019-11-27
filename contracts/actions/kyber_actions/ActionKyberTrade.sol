@@ -65,21 +65,22 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
         );
     }
 
-    function actionConditionsFulfilled(bytes calldata _actionPayloadWithSelector)
+    function actionConditionsOk(bytes calldata _actionPayloadWithSelector)
         external
         view
         returns(bool)
     {
-        return _actionConditionsFulfilled(_actionPayloadWithSelector);
+        return _actionConditionsOk(_actionPayloadWithSelector);
     }
 
-    function _actionConditionsFulfilled(bytes memory _actionPayloadWithSelector)
+    function _actionConditionsOk(bytes memory _actionPayloadWithSelector)
         internal
         view
         returns(bool)
     {
-        (bytes4 functionSelector,
-         bytes memory payload) = _splitFunctionSelector(_actionPayloadWithSelector);
+        (bytes4 functionSelector, bytes memory payload) = SplitFunctionSelector.split(
+            _actionPayloadWithSelector
+        );
         (address _user, address _src, uint256 _srcAmt, , ) = abi.decode(
             payload,
             (address, address, uint256, address,uint256)
@@ -87,9 +88,10 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
         IERC20 srcERC20 = IERC20(_src);
         uint256 srcUserBalance = srcERC20.balanceOf(_user);
         uint256 srcUserProxyAllowance = srcERC20.allowance(_user, address(this));
-        return (functionSelector == actionSelector &&
-                srcUserBalance >= _srcAmt &&
-                _srcAmt <= srcUserProxyAllowance
+        return (
+            functionSelector == actionSelector &&
+            srcUserBalance >= _srcAmt &&
+            _srcAmt <= srcUserProxyAllowance
         );
     }
 }

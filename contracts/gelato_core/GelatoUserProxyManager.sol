@@ -22,8 +22,6 @@ contract GelatoUserProxyManager is IGelatoUserProxyManager {
         _;
     }
 
-    event LogCreateUserProxy(IGelatoUserProxy indexed userProxy, address indexed user);
-
     /// @notice deploys gelato proxy for users that have no proxy yet
     /// @dev This function should be called for users that have nothing deployed yet
     /// @return address of the deployed GelatoUserProxy

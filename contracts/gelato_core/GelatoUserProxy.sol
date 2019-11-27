@@ -7,8 +7,13 @@ contract GelatoUserProxy is IGelatoUserProxy {
     address payable internal user;
     address payable internal gelatoCore;
 
-    function getUser() external view returns(address payable) {return user;}
-    function getGelatoCore() external view returns(address payable) {return gelatoCore;}
+    constructor(address payable _user)
+        public
+        noZeroAddress(_user)
+    {
+        user = _user;
+        gelatoCore = msg.sender;
+    }
 
     modifier auth() {
         require(msg.sender == user || msg.sender == gelatoCore,
@@ -23,22 +28,7 @@ contract GelatoUserProxy is IGelatoUserProxy {
         );
         _;
     }
-
-    constructor(address payable _user)
-        public
-        noZeroAddress(_user)
-    {
-        user = _user;
-        gelatoCore = msg.sender;
-    }
-
-    function setGelatoCore(address payable _gelatoCore)
-        external
-        auth
-    {
-        gelatoCore = _gelatoCore;
-    }
-
+    
     function execute(address payable _action, bytes calldata _actionPayloadWithSelector)
         external
         payable
@@ -59,4 +49,15 @@ contract GelatoUserProxy is IGelatoUserProxy {
             revert("GelatoUserProxy.execute(): invalid action operation");
         }
     }
+
+    function setGelatoCore(address payable _gelatoCore)
+        external
+        auth
+    {
+        gelatoCore = _gelatoCore;
+    }
+
+    function getUser() external view returns(address payable) {return user;}
+
+    function getGelatoCore() external view returns(address payable) {return gelatoCore;}
 }

@@ -2,8 +2,7 @@ pragma solidity ^0.5.10;
 
 import "./IGelatoAction.sol";
 
-contract GelatoActionsStandard is IGelatoAction
-{
+contract GelatoActionsStandard is IGelatoAction {
     /// @dev non-deploy base contract
     constructor() internal {}
 
@@ -11,6 +10,9 @@ contract GelatoActionsStandard is IGelatoAction
     ActionOperation internal actionOperation;
     bytes4 internal actionSelector;
     uint256 internal actionGasStipend;
+
+    // Standard Event
+    event LogAction(address indexed user);
 
     /// @dev abstract fn -> non-deploy base contract
     function getActionOperation() external view returns(ActionOperation) {return actionOperation;}
@@ -23,7 +25,7 @@ contract GelatoActionsStandard is IGelatoAction
      * param bytes: the actionPayload (with actionSelector)
      * @return boolean true if specific action conditions are fulfilled, else false.
      */
-    function actionConditionsFulfilled(bytes calldata)  // _actionPayloadWithSelector
+    function actionConditionsOk(bytes calldata)  // _actionPayloadWithSelector
         external
         view
         returns(bool)
@@ -31,7 +33,4 @@ contract GelatoActionsStandard is IGelatoAction
         this;  // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
         return true;
     }
-
-    // Standard Event
-    event LogAction(address indexed user);
 }

@@ -4,8 +4,8 @@ contract SplitFunctionSelector {
     // This contract should not be deployed
     constructor() internal {}
 
-    function _splitFunctionSelector(bytes memory _payloadWithSelector)
-        internal
+    function split(bytes memory _payloadWithSelector)
+        public
         pure
         returns(bytes4 functionSelector, bytes memory payloadWithoutSelector)
     {

@@ -11,21 +11,12 @@ contract TriggerTimestampPassed is Initializable, GelatoTriggersStandard {
         triggerSelector = this.fired.selector;
     }
 
-    function fired(
-        // Standard Trigger Params
-        IGelatoAction _action,
-        bytes calldata _actionPayloadWithSelector,
-        // Specific Trigger Params
-        uint256 _timestamp
-    )
+    function fired(uint256 _timestamp)
         external
         view
         returns(bool)
     {
-        return (
-            _actionConditionsFulfilled(_action, _actionPayloadWithSelector) &&
-            _timestamp <= block.timestamp
-        );
+        return _timestamp <= block.timestamp;
     }
 
     function getLatestTimestamp()
@@ -35,5 +26,4 @@ contract TriggerTimestampPassed is Initializable, GelatoTriggersStandard {
     {
         return block.timestamp;
     }
-
 }
