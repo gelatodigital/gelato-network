@@ -4,14 +4,13 @@ import "./interfaces/IGelatoCoreAccounting.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 import "@openzeppelin/upgrades/contracts/Initializable.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 
 /**
  * @title GelatoCoreAccounting
  * @notice non-deploy base contract
  */
-contract GelatoCoreAccounting is IGelatoCoreAccounting, Initializable, Ownable, ReentrancyGuard {
+contract GelatoCoreAccounting is IGelatoCoreAccounting, Initializable, Ownable {
 
     using Address for address payable;  /// for oz's sendValue method
     using SafeMath for uint256;
@@ -147,7 +146,6 @@ contract GelatoCoreAccounting is IGelatoCoreAccounting, Initializable, Ownable, 
      */
     function withdrawExecutorBalance()
         external
-        nonReentrant
     {
         // Checks
         uint256 currentExecutorBalance = executorBalance[msg.sender];
