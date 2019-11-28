@@ -4,7 +4,8 @@ import "./interfaces/IGelatoUserProxyManager.sol";
 import "./GelatoUserProxy.sol";
 
 /// @title GelatoUserProxyManager
-/// @dev registry and factory for GelatoUserProxies
+/// @notice registry and factory for GelatoUserProxies
+/// @dev find all NatSpecs inside IGelatoUserProxyManager
 contract GelatoUserProxyManager is IGelatoUserProxyManager {
     /// @dev non-deploy base contract
     constructor() internal {}
@@ -23,9 +24,6 @@ contract GelatoUserProxyManager is IGelatoUserProxyManager {
         _;
     }
 
-    /// @notice deploys gelato proxy for users that have no proxy yet
-    /// @dev This function should be called for users that have nothing deployed yet
-    /// @return address of the deployed GelatoUserProxy
     function createUserProxy()
         external
         //userHasNoProxy

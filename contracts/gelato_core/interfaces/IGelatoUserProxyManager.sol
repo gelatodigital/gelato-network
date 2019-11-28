@@ -2,10 +2,11 @@ pragma solidity ^0.5.10;
 
 import "./IGelatoUserProxy.sol";
 
-/// @title GelatoUserProxyManager
+/// @title IGelatoUserProxyManager
 /// @dev registry and factory for GelatoUserProxies
 interface IGelatoUserProxyManager {
     event LogCreateUserProxy(IGelatoUserProxy indexed userProxy, address indexed user);
+
     /// @notice deploys gelato proxy for users that have no proxy yet
     /// @dev This function should be called for users that have nothing deployed yet
     /// @return address of the deployed GelatoUserProxy

@@ -49,6 +49,17 @@ interface IGelatoCore {
         address indexed cancelor
     );
 
+    /**
+     * @dev API for minting execution claims on gelatoCore
+     * @param _trigger: the address of the trigger
+     * @param _triggerPayloadWithSelector: the encoded trigger params with function selector
+     * @param _action: the address of the action
+     * @param _actionPayloadWithSelector: the encoded action params with function selector
+     * @param _selectedExecutor: the registered executor to service this claim
+     * @notice re-entrancy guard because accounting ops are present inside fn
+     * @notice msg.value is a refundable deposit - only a fee if executed
+     * @notice minting event split into two, due to stack too deep issue
+     */
     function mintExecutionClaim(
         IGelatoTrigger _trigger,
         bytes calldata _triggerPayloadWithSelector,
@@ -60,6 +71,21 @@ interface IGelatoCore {
         external
         payable;
 
+    /**
+     * @dev the API executors call when they execute an executionClaim
+     * @param _trigger executors get this from LogTriggerActionMinted
+     * @param _triggerPayloadWithSelector executors get this from LogTriggerActionMinted
+     * @param _userProxy executors get this from LogExecutionClaimMinted
+     * @param _actionPayloadWithSelector executors get this from LogExecutionClaimMinted
+     * @param _action executors get this from LogTriggerActionMinted
+     * @param _userProxyExecGas executors get this from LogExecutionClaimMinted
+     * @param _executionClaimId executors get this from LogExecutionClaimMinted
+     * @param _executionClaimExpiryDate executors get this from LogExecutionClaimMinted
+     * @param _mintingDeposit executors get this from LogExecutionClaimMinted
+     * @return uint8 which converts to one of enum GelatoCoreEnums.ExecutionResult values
+     * @notice if return value == 0, the claim got executed
+     * @notice re-entrancy protection due to accounting operations and interactions
+     */
     function execute(
         IGelatoTrigger _trigger,
         bytes calldata _triggerPayloadWithSelector,
@@ -74,6 +100,23 @@ interface IGelatoCore {
         external
         returns(GelatoCoreEnums.ExecutionResult executionResult);
 
+    /**
+     * @dev API for canceling executionClaims
+     * @param _trigger callers get this from LogTriggerActionMinted
+     * @param _triggerPayloadWithSelector callers get this from LogTriggerActionMinted
+     * @param _userProxy callers get this from LogExecutionClaimMinted
+     * @param _actionPayloadWithSelector callers get this from LogExecutionClaimMinted
+     * @param _executionClaimId callers get this from LogExecutionClaimMinted
+     * @param _selectedExecutor callers get this from LogExecutionClaimMinted
+     * @param _userProxyExecGas callers get this from LogExecutionClaimMinted
+     * @param _executionClaimExpiryDate callers get this from LogExecutionClaimMinted
+     * @param _mintingDeposit callers get this from LogExecutionClaimMinted
+     * @notice re-entrancy protection due to accounting operations and interactions
+     * @notice prior to executionClaim expiry, only owner of _userProxy can cancel
+        for a refund. Post executionClaim expiry, _selectedExecutor can also cancel,
+        for a reward.
+     * @notice .sendValue instead of .transfer due to IstanbulHF
+     */
     function cancelExecutionClaim(
         IGelatoTrigger _trigger,
         bytes calldata _triggerPayloadWithSelector,
@@ -88,8 +131,13 @@ interface IGelatoCore {
     )
         external;
 
+    /// @dev get the current executionClaimId
+    /// @return uint256 current executionClaim Id
     function getCurrentExecutionClaimId() external view returns(uint256 currentId);
 
+    /// @dev api to read from the userProxyByExecutionClaimId state variable
+    /// @param _executionClaimId z
+    /// @return address of the userProxy behind _executionClaimId
     function getUserProxyWithExecutionClaimId(uint256 _executionClaimId)
         external
         view
@@ -100,11 +148,27 @@ interface IGelatoCore {
         view
         returns(address payable);
 
+    /// @dev interface to read from the hashedExecutionClaims state variable
+    /// @param _executionClaimId z
+    /// @return the bytes32 hash of the executionClaim with _executionClaimId
     function getHashedExecutionClaim(uint256 _executionClaimId)
         external
         view
         returns(bytes32);
 
+    /**
+     * @dev the API for executors to check whether a claim is executable
+     * @param _trigger executors get this from LogTriggerActionMinted
+     * @param _triggerPayloadWithSelector executors get this from LogTriggerActionMinted
+     * @param _userProxy executors get this from LogExecutionClaimMinted
+     * @param _actionPayloadWithSelector executors get this from LogExecutionClaimMinted
+     * @param _userProxyExecGas executors get this from LogExecutionClaimMinted
+     * @param _executionClaimId executors get this from LogExecutionClaimMinted
+     * @param _executionClaimExpiryDate executors get this from LogExecutionClaimMinted
+     * @param _mintingDeposit executors get this from LogExecutionClaimMinted
+     * @return uint8 which converts to one of enum GelatoCoreEnums.CanExecuteCheck values
+     * @notice if return value == 6, the claim is executable
+     */
     function canExecute(
         IGelatoTrigger _trigger,
         bytes calldata _triggerPayloadWithSelector,

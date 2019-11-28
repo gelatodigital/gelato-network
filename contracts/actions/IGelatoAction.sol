@@ -17,6 +17,12 @@ interface IGelatoAction {
 
     function getActionGasStipend() external view returns(uint256);
 
+    /**
+     * @notice Returns whether the action-specific conditions are fulfilled
+     * @dev if actions have specific conditions they should override and extend this fn
+     * param bytes: the actionPayload (with actionSelector)
+     * @return boolean true if specific action conditions are fulfilled, else false.
+     */
     function actionConditionsOk(bytes calldata _actionPayloadWithSelector)
         external
         view
