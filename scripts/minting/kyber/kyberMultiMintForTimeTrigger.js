@@ -32,12 +32,12 @@ let provider;
 if (process.env.ROPSTEN) {
   console.log(`\n\t\t ✅ connected to ROPSTEN ✅ \n`);
   provider = new ethers.providers.InfuraProvider("ropsten", INFURA_ID);
-  gelatoCoreAddress = "0x3C64f059a17beCe12d5C43515AB67836c5857E26";
+  gelatoCoreAddress = "0x8AB2E2C1Da789E960C1ac400e5500eC4C61aEac8";
   kyberProxyAddress = "0x818E6FECD516Ecc3849DAf6845e3EC868087B755";
-  userProxyAddress = "0x9C4A922FF17d7Dd06f678C65Ee4142C8fBD95962";
-  actionMultiMintAddress = "0xd72cdd01799BB5315536524ED8c6CAa96a8e129b";
-  triggerTimestampPassedAddress = "0x173422312A7e5F571BEaa221287A20Ec4Dc712EE";
-  actionKyberTradeAddress = "0xc8BC0E2729F6aBddCc751c8b6DB24286276F1FCD";
+  userProxyAddress = "0xE525a25640b90418c5bFb395774f373F3393182a";
+  actionMultiMintAddress = "0x6F12517aa1d97dC8e65308cb3FA619E5483976D3";
+  triggerTimestampPassedAddress = "0x85936723c53F2fC49B47295cf0F76BCa44C2cd8F";
+  actionKyberTradeAddress = "0xBbe075545C5636837136151DfFD6A774E7005a3b";
   src = "0x4E470dc7321E84CA96FcAEDD0C8aBCebbAEB68C6"; // Ropsten KNC
   dest = "0xaD6D458402F60fD3Bd25163575031ACDce07538D"; // Ropsten DAI
 } else if (process.env.RINKEBY) {

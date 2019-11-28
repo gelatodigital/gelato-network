@@ -1,6 +1,8 @@
 pragma solidity ^0.5.10;
 
 contract GelatoCoreEnums {
+    constructor() internal {}
+
     enum ExecutionResult {
         Success,
         Failure,

@@ -1,9 +1,9 @@
 {
   "manifestVersion": "2.2",
   "contracts": {
+    "ActionKyberTrade": "ActionKyberTrade",
     "GelatoCore": "GelatoCore",
     "TriggerTimestampPassed": "TriggerTimestampPassed",
-    "ActionKyberTrade": "ActionKyberTrade",
     "ActionMultiMintForTimeTrigger": "ActionMultiMintForTimeTrigger"
   },
   "dependencies": {},
