@@ -50,7 +50,6 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         external
         payable
         onlyRegisteredExecutors(_selectedExecutor)
-        nonReentrant
     {
         // ______ Authenticate msg.sender is proxied user or a proxy _______
         IGelatoUserProxy userProxy;
@@ -140,7 +139,6 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         uint256 _mintingDeposit
     )
         external
-        nonReentrant
         returns(GelatoCoreEnums.ExecutionResult executionResult)
     {
         // Ensure that executor sends enough gas for the execution
@@ -252,7 +250,6 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         uint256 _mintingDeposit
     )
         external
-        nonReentrant
     {
         {
             if (msg.sender != proxyToUser[address(_userProxy)]) {
