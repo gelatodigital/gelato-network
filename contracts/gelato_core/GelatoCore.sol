@@ -94,6 +94,64 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         );
     }
 
+    // ================  CAN EXECUTE EXECUTOR API ============================
+    function canExecute(
+        IGelatoTrigger _trigger,
+        bytes calldata _triggerPayloadWithSelector,
+        IGelatoAction _action,
+        bytes calldata _actionPayloadWithSelector,
+        IGelatoUserProxy _userProxy,
+        uint256 _userProxyExecGas,
+        uint256 _executionClaimId,
+        uint256 _executionClaimExpiryDate,
+        uint256 _mintingDeposit
+    )
+        external
+        view
+        returns (GelatoCoreEnums.CanExecuteCheck)
+    {
+        return _canExecute(
+            _trigger,
+            _triggerPayloadWithSelector,
+            _action,
+            _actionPayloadWithSelector,
+            _userProxy,
+            _userProxyExecGas,
+            _executionClaimId,
+            _executionClaimExpiryDate,
+            _mintingDeposit
+        );
+    }
+
+    function logCanExecuteGasViaRevert(
+        IGelatoTrigger _trigger,
+        bytes calldata _triggerPayloadWithSelector,
+        IGelatoAction _action,
+        bytes calldata _actionPayloadWithSelector,
+        IGelatoUserProxy _userProxy,
+        uint256 _userProxyExecGas,
+        uint256 _executionClaimId,
+        uint256 _executionClaimExpiryDate,
+        uint256 _mintingDeposit
+    )
+        external
+        view
+        returns(GelatoCoreEnums.CanExecuteCheck canExecuteResult)
+    {
+        uint256 startGas = gasleft();
+        canExecuteResult = _canExecute(
+            _trigger,
+            _triggerPayloadWithSelector,
+            _action,
+            _actionPayloadWithSelector,
+            _userProxy,
+            _userProxyExecGas,
+            _executionClaimId,
+            _executionClaimExpiryDate,
+            _mintingDeposit
+        );
+        revert(string(abi.encodePacked(startGas - gasleft())));
+    }
 
     // ================  EXECUTE SUITE ======================================
     function execute(
@@ -110,80 +168,48 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         external
         returns(GelatoCoreEnums.ExecutionResult executionResult)
     {
-        // Ensure that executor sends enough gas for the execution
-        uint256 startGas = gasleft();
-        require(
-            startGas >= _getMinExecutionGasRequirement(_userProxyExecGas.sub(userProxyExecGasOverhead)),
-            "GelatoCore.execute: Insufficient gas sent"
-        );
-        // _______ canExecute() check ______________________________________________
-        {
-            GelatoCoreEnums.CanExecuteCheck canExecuteResult = _canExecute(
-                _trigger,
-                _triggerPayloadWithSelector,
-                _action,
-                _actionPayloadWithSelector,
-                _userProxy,
-                _userProxyExecGas,
-                _executionClaimId,
-                _executionClaimExpiryDate,
-                _mintingDeposit
-            );
-            if (canExecuteResult != GelatoCoreEnums.CanExecuteCheck.Executable) {
-                emit LogCanExecuteFailed(
-                    _executionClaimId,
-                    msg.sender,
-                    canExecuteResult
-                );
-                return GelatoCoreEnums.ExecutionResult.CanExecuteFailed;
-            }
-        }
-        // ========
-        // _________________________________________________________________________
-        //  We are past the canExecute latency problem between executors
-        //   initial call to canExecute, and the internal call to canExecute we
-        //   performed above inside the execute fn. This means that there should
-        //   be NO MORE REVERTS UNLESS
-        //   1) trigger, userProxy, and/or action are buggy,
-        //   2) user has insufficient funds at disposal at execution time (e.g.
-        //   has approved funds, but in the interim has transferred them elsewhere)
-        //   3) some out of gas error
-
-        // **** EFFECTS (checks - effects - interactions) ****
-        delete hashedExecutionClaims[_executionClaimId];
-        delete userProxyByExecutionClaimId[_executionClaimId];
-        // _________  call to userProxy.execute => action  __________________________
-        {
-            bytes memory userProxyExecPayloadWithSelector = abi.encodeWithSelector(
-                _userProxy.execute.selector,
-                _action,
-                _actionPayloadWithSelector
-            );
-            uint256 gasBefore = gasleft();
-            (bool success,) = address(_userProxy).call.gas(_userProxyExecGas)(
-                userProxyExecPayloadWithSelector
-            );
-            emit LogUserProxyExecuteGas(gasBefore, gasleft(), gasBefore - gasleft());
-            if (success) executionResult = GelatoCoreEnums.ExecutionResult.Success;
-            // @dev if execution fails, no revert, because executor still paid out
-            else executionResult = GelatoCoreEnums.ExecutionResult.Failure;
-        }
-        // ========
-        // Balance Updates (INTERACTIONS)
-        executorBalance[msg.sender] = executorBalance[msg.sender].add(_mintingDeposit);
-        // ====
-        // gasCheck does not have the initial gas and the emit LogClaimExec.. gas
-        emit LogClaimExecutedAndDeleted(
-            _executionClaimId,
-            executionResult,
-            msg.sender,  // executor
+        return _execute(
+            _trigger,
+            _triggerPayloadWithSelector,
+            _action,
+            _actionPayloadWithSelector,
             _userProxy,
-            tx.gasprice,
-            gasleft().mul(tx.gasprice).add(70000),
-            _mintingDeposit,
-            gasleft()
+            _userProxyExecGas,
+            _executionClaimId,
+            _executionClaimExpiryDate,
+            _mintingDeposit
         );
     }
+
+    function logExecuteGasViaRevert(
+        IGelatoTrigger _trigger,
+        bytes calldata _triggerPayloadWithSelector,
+        IGelatoAction _action,
+        bytes calldata _actionPayloadWithSelector,
+        IGelatoUserProxy _userProxy,
+        uint256 _userProxyExecGas,
+        uint256 _executionClaimId,
+        uint256 _executionClaimExpiryDate,
+        uint256 _mintingDeposit
+    )
+        external
+        returns(GelatoCoreEnums.ExecutionResult executionResult)
+    {
+        uint256 startGas = gasleft();
+        executionResult = _execute(
+            _trigger,
+            _triggerPayloadWithSelector,
+            _action,
+            _actionPayloadWithSelector,
+            _userProxy,
+            _userProxyExecGas,
+            _executionClaimId,
+            _executionClaimExpiryDate,
+            _mintingDeposit
+        );
+        revert(string(abi.encodePacked(startGas - gasleft())));
+    }
+
 
     function cancelExecutionClaim(
         IGelatoTrigger _trigger,
@@ -267,35 +293,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
     }
 
 
-    // ================  CAN EXECUTE SUITE =======================================
-    function canExecute(
-        IGelatoTrigger _trigger,
-        bytes calldata _triggerPayloadWithSelector,
-        IGelatoAction _action,
-        bytes calldata _actionPayloadWithSelector,
-        IGelatoUserProxy _userProxy,
-        uint256 _userProxyExecGas,
-        uint256 _executionClaimId,
-        uint256 _executionClaimExpiryDate,
-        uint256 _mintingDeposit
-    )
-        external
-        view
-        returns (GelatoCoreEnums.CanExecuteCheck)
-    {
-        return _canExecute(
-            _trigger,
-            _triggerPayloadWithSelector,
-            _action,
-            _actionPayloadWithSelector,
-            _userProxy,
-            _userProxyExecGas,
-            _executionClaimId,
-            _executionClaimExpiryDate,
-            _mintingDeposit
-        );
-    }
-
+    // ================  CAN EXECUTE IMPLEMENTATION ==================================
     function _canExecute(
         IGelatoTrigger _trigger,
         bytes memory _triggerPayloadWithSelector,
@@ -326,7 +324,6 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
                 _mintingDeposit
             )
         );
-
         if(computedExecutionClaimHash != hashedExecutionClaims[_executionClaimId]) {
             return GelatoCoreEnums.CanExecuteCheck.WrongCalldataOrAlreadyDeleted;
         } else if (userProxyByExecutionClaimId[_executionClaimId] == IGelatoUserProxy(0)) {
@@ -367,5 +364,96 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         }
         if (executable) return GelatoCoreEnums.CanExecuteCheck.Executable;
         // ==============
+    }
+
+
+    // ================  EXECUTE IMPLEMENTATION ======================================
+    function _execute(
+        IGelatoTrigger _trigger,
+        bytes memory _triggerPayloadWithSelector,
+        IGelatoAction _action,
+        bytes memory _actionPayloadWithSelector,
+        IGelatoUserProxy _userProxy,
+        uint256 _userProxyExecGas,
+        uint256 _executionClaimId,
+        uint256 _executionClaimExpiryDate,
+        uint256 _mintingDeposit
+    )
+        private
+        returns(GelatoCoreEnums.ExecutionResult executionResult)
+    {
+        // Ensure that executor sends enough gas for the execution
+        uint256 startGas = gasleft();
+        require(
+            startGas >= _getMinExecutionGasRequirement(_userProxyExecGas.sub(userProxyExecGasOverhead)),
+            "GelatoCore.execute: Insufficient gas sent"
+        );
+        // _______ canExecute() CHECK ______________________________________________
+        {
+            GelatoCoreEnums.CanExecuteCheck canExecuteResult = _canExecute(
+                _trigger,
+                _triggerPayloadWithSelector,
+                _action,
+                _actionPayloadWithSelector,
+                _userProxy,
+                _userProxyExecGas,
+                _executionClaimId,
+                _executionClaimExpiryDate,
+                _mintingDeposit
+            );
+            if (canExecuteResult != GelatoCoreEnums.CanExecuteCheck.Executable) {
+                emit LogCanExecuteFailed(
+                    _executionClaimId,
+                    msg.sender,
+                    canExecuteResult
+                );
+                return GelatoCoreEnums.ExecutionResult.CanExecuteFailed;
+            }
+        }
+        // ========
+        // _________________________________________________________________________
+        //  We are past the canExecute latency problem between executors
+        //   initial call to canExecute, and the internal call to canExecute we
+        //   performed above inside the execute fn. This means that there should
+        //   be NO MORE REVERTS UNLESS
+        //   1) trigger, userProxy, and/or action are buggy,
+        //   2) user has insufficient funds at disposal at execution time (e.g.
+        //   has approved funds, but in the interim has transferred them elsewhere)
+        //   3) some out of gas error
+
+        // EFFECTS
+        delete hashedExecutionClaims[_executionClaimId];
+        delete userProxyByExecutionClaimId[_executionClaimId];
+        // _________  call to userProxy.execute => action  __________________________
+        {
+            bytes memory userProxyExecPayloadWithSelector = abi.encodeWithSelector(
+                _userProxy.execute.selector,
+                _action,
+                _actionPayloadWithSelector
+            );
+            uint256 gasBefore = gasleft();
+            (bool success,) = address(_userProxy).call.gas(_userProxyExecGas)(
+                userProxyExecPayloadWithSelector
+            );
+            emit LogUserProxyExecuteGas(gasBefore, gasleft(), gasBefore - gasleft());
+            if (success) executionResult = GelatoCoreEnums.ExecutionResult.Success;
+            // @dev if execution fails, no revert, because executor still paid out
+            else executionResult = GelatoCoreEnums.ExecutionResult.Failure;
+        }
+        // ========
+        // INTERACTIONS
+        executorBalance[msg.sender] = executorBalance[msg.sender].add(_mintingDeposit);
+        // ====
+        // gasCheck does not have the initial gas and the emit LogClaimExec.. gas
+        emit LogClaimExecutedAndDeleted(
+            _executionClaimId,
+            executionResult,
+            msg.sender,  // executor
+            _userProxy,
+            tx.gasprice,
+            gasleft().mul(tx.gasprice).add(70000),
+            _mintingDeposit,
+            gasleft()
+        );
     }
 }

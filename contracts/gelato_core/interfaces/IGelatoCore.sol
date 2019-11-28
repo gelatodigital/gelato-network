@@ -72,6 +72,49 @@ interface IGelatoCore {
         payable;
 
     /**
+     * @dev the API for executors to check whether a claim is executable
+     * @param _trigger executors get this from LogTriggerActionMinted
+     * @param _triggerPayloadWithSelector executors get this from LogTriggerActionMinted
+     * @param _userProxy executors get this from LogExecutionClaimMinted
+     * @param _actionPayloadWithSelector executors get this from LogExecutionClaimMinted
+     * @param _userProxyExecGas executors get this from LogExecutionClaimMinted
+     * @param _executionClaimId executors get this from LogExecutionClaimMinted
+     * @param _executionClaimExpiryDate executors get this from LogExecutionClaimMinted
+     * @param _mintingDeposit executors get this from LogExecutionClaimMinted
+     * @return uint8 which converts to one of enum GelatoCoreEnums.CanExecuteCheck values
+     * @notice if return value == 6, the claim is executable
+     */
+    function canExecute(
+        IGelatoTrigger _trigger,
+        bytes calldata _triggerPayloadWithSelector,
+        IGelatoAction _action,
+        bytes calldata _actionPayloadWithSelector,
+        IGelatoUserProxy _userProxy,
+        uint256 _userProxyExecGas,
+        uint256 _executionClaimId,
+        uint256 _executionClaimExpiryDate,
+        uint256 _mintingDeposit
+    )
+        external
+        view
+        returns (GelatoCoreEnums.CanExecuteCheck);
+
+    function logCanExecuteGasViaRevert(
+        IGelatoTrigger _trigger,
+        bytes calldata _triggerPayloadWithSelector,
+        IGelatoAction _action,
+        bytes calldata _actionPayloadWithSelector,
+        IGelatoUserProxy _userProxy,
+        uint256 _userProxyExecGas,
+        uint256 _executionClaimId,
+        uint256 _executionClaimExpiryDate,
+        uint256 _mintingDeposit
+    )
+        external
+        view
+        returns(GelatoCoreEnums.CanExecuteCheck canExecuteResult);
+
+    /**
      * @dev the API executors call when they execute an executionClaim
      * @param _trigger executors get this from LogTriggerActionMinted
      * @param _triggerPayloadWithSelector executors get this from LogTriggerActionMinted
@@ -87,6 +130,20 @@ interface IGelatoCore {
      * @notice re-entrancy protection due to accounting operations and interactions
      */
     function execute(
+        IGelatoTrigger _trigger,
+        bytes calldata _triggerPayloadWithSelector,
+        IGelatoAction _action,
+        bytes calldata _actionPayloadWithSelector,
+        IGelatoUserProxy _userProxy,
+        uint256 _userProxyExecGas,
+        uint256 _executionClaimId,
+        uint256 _executionClaimExpiryDate,
+        uint256 _mintingDeposit
+    )
+        external
+        returns(GelatoCoreEnums.ExecutionResult executionResult);
+
+    function logExecuteGasViaRevert(
         IGelatoTrigger _trigger,
         bytes calldata _triggerPayloadWithSelector,
         IGelatoAction _action,
@@ -156,35 +213,8 @@ interface IGelatoCore {
         view
         returns(bytes32);
 
-    /**
-     * @dev the API for executors to check whether a claim is executable
-     * @param _trigger executors get this from LogTriggerActionMinted
-     * @param _triggerPayloadWithSelector executors get this from LogTriggerActionMinted
-     * @param _userProxy executors get this from LogExecutionClaimMinted
-     * @param _actionPayloadWithSelector executors get this from LogExecutionClaimMinted
-     * @param _userProxyExecGas executors get this from LogExecutionClaimMinted
-     * @param _executionClaimId executors get this from LogExecutionClaimMinted
-     * @param _executionClaimExpiryDate executors get this from LogExecutionClaimMinted
-     * @param _mintingDeposit executors get this from LogExecutionClaimMinted
-     * @return uint8 which converts to one of enum GelatoCoreEnums.CanExecuteCheck values
-     * @notice if return value == 6, the claim is executable
-     */
-    function canExecute(
-        IGelatoTrigger _trigger,
-        bytes calldata _triggerPayloadWithSelector,
-        IGelatoAction _action,
-        bytes calldata _actionPayloadWithSelector,
-        IGelatoUserProxy _userProxy,
-        uint256 _userProxyExecGas,
-        uint256 _executionClaimId,
-        uint256 _executionClaimExpiryDate,
-        uint256 _mintingDeposit
-    )
-        external
-        view
-        returns (GelatoCoreEnums.CanExecuteCheck);
 
-    // IGelatoUserProxyManager
+    // ============= IGelatoUserProxyManager =======================
     event LogCreateUserProxy(IGelatoUserProxy indexed userProxy, address indexed user);
     /// @notice deploys gelato proxy for users that have no proxy yet
     /// @dev This function should be called for users that have nothing deployed yet
