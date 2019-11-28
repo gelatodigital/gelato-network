@@ -48,7 +48,6 @@ contract GelatoCoreAccounting is IGelatoCoreAccounting, Initializable, Ownable {
         initializer
     {
         Ownable.initialize(msg.sender);
-        ReentrancyGuard.initialize();
         minExecutionClaimLifespan = 600;  // 10 minutes
         canExecMaxGas = 100000;
         gelatoCoreExecGasOverhead = 100000;

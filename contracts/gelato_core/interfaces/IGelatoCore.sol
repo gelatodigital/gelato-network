@@ -30,20 +30,15 @@ interface IGelatoCore {
         GelatoCoreEnums.CanExecuteCheck indexed canExecuteResult
     );
 
-    event LogExecutionResult(
-        uint256 indexed executionClaimId,
-        GelatoCoreEnums.ExecutionResult indexed executionResult,
-        address payable indexed executor
-    );
-
     event LogClaimExecutedAndDeleted(
         uint256 indexed executionClaimId,
-        IGelatoUserProxy indexed userProxy,
+        GelatoCoreEnums.ExecutionResult indexed executionResult,
         address payable indexed executor,
-        uint256 gasCheck,
+        IGelatoUserProxy userProxy,
         uint256 gasPriceUsed,
         uint256 executionCostEstimate,
-        uint256 executorPayout
+        uint256 executorPayout,
+        uint256 gasLeft
     );
 
     event LogUserProxyExecuteGas(uint256 gasBefore, uint256 gasAfter, uint256 delta);

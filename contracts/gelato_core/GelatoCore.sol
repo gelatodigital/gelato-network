@@ -50,7 +50,6 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         external
         payable
         onlyRegisteredExecutors(_selectedExecutor)
-        nonReentrant
     {
         // ______ Authenticate msg.sender is proxied user or a proxy _______
         IGelatoUserProxy userProxy;
@@ -60,6 +59,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         // =============
         // ______ Charge Minting Deposit _______________________________________
         uint256 actionGasStipend = _action.getActionGasStipend();
+        require(actionGasStipend != 0, "GelatoCore.mintExecutionClaim: 0 actionGasStipend");
         {
             uint256 executionMinGas = _getMinExecutionGasRequirement(actionGasStipend);
             uint256 mintingDepositPayable = executionMinGas.mul(executorPrice[_selectedExecutor]);
@@ -140,7 +140,6 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         uint256 _mintingDeposit
     )
         external
-        nonReentrant
         returns(GelatoCoreEnums.ExecutionResult executionResult)
     {
         // Ensure that executor sends enough gas for the execution
@@ -186,13 +185,12 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         delete userProxyByExecutionClaimId[_executionClaimId];
         // _________  call to userProxy.execute => action  __________________________
         {
-
-            uint256 gasBefore = gasleft();
             bytes memory userProxyExecPayloadWithSelector = abi.encodeWithSelector(
                 _userProxy.execute.selector,
                 _action,
                 _actionPayloadWithSelector
             );
+            uint256 gasBefore = gasleft();
             (bool success,) = address(_userProxy).call.gas(_userProxyExecGas)(
                 userProxyExecPayloadWithSelector
             );
@@ -200,26 +198,22 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
             if (success) executionResult = GelatoCoreEnums.ExecutionResult.Success;
             // @dev if execution fails, no revert, because executor still paid out
             else executionResult = GelatoCoreEnums.ExecutionResult.Failure;
-            emit LogExecutionResult(_executionClaimId, executionResult, msg.sender);
         }
         // ========
         // Balance Updates (INTERACTIONS)
         executorBalance[msg.sender] = executorBalance[msg.sender].add(_mintingDeposit);
         // ====
-        {
-            uint256 gasCheck = startGas.sub(gasleft());
-            // gasCheck does not have the initial gas and the emit LogClaimExec.. gas
-            uint256 executionCostEstimate = gasCheck.mul(tx.gasprice).add(70000);
-            emit LogClaimExecutedAndDeleted(
-                _executionClaimId,
-                _userProxy,
-                msg.sender,  // executor
-                gasCheck,
-                tx.gasprice,
-                executionCostEstimate,
-                _mintingDeposit
-            );
-        }
+        // gasCheck does not have the initial gas and the emit LogClaimExec.. gas
+        emit LogClaimExecutedAndDeleted(
+            _executionClaimId,
+            executionResult,
+            msg.sender,  // executor
+            _userProxy,
+            tx.gasprice,
+            gasleft().mul(tx.gasprice).add(70000),
+            _mintingDeposit,
+            gasleft()
+        );
     }
 
     /**
@@ -252,39 +246,41 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         uint256 _mintingDeposit
     )
         external
-        nonReentrant
     {
-        {
-            if (msg.sender != proxyToUser[address(_userProxy)]) {
-                require(
-                    _executionClaimExpiryDate <= now && msg.sender == _selectedExecutor,
-                    "GelatoCore.cancelExecutionClaim: only selected executor post expiry"
-                );
-            }
-        }
-        {
-            bytes32 computedExecutionClaimHash = keccak256(
-                abi.encodePacked(
-                    _trigger,
-                    _triggerPayloadWithSelector,
-                    _action,
-                    _actionPayloadWithSelector,
-                    _userProxy,
-                    _executionClaimId,
-                    _selectedExecutor,
-                    _userProxyExecGas,
-                    _executionClaimExpiryDate,
-                    _mintingDeposit
-                )
-            );
+        if (msg.sender != proxyToUser[address(_userProxy)]) {
             require(
-                computedExecutionClaimHash == hashedExecutionClaims[_executionClaimId],
-                "GelatoCore.cancelExecutionClaim: hash compare failed"
+                _executionClaimExpiryDate <= now && msg.sender == _selectedExecutor,
+                "GelatoCore.cancelExecutionClaim: only selected executor post expiry"
             );
         }
+
+        bytes32 computedExecutionClaimHash = keccak256(
+            abi.encodePacked(
+                _trigger,
+                _triggerPayloadWithSelector,
+                _action,
+                _actionPayloadWithSelector,
+                _userProxy,
+                _executionClaimId,
+                _selectedExecutor,
+                _userProxyExecGas,
+                _executionClaimExpiryDate,
+                _mintingDeposit
+            )
+        );
+
+        // Checks
+        require(
+            computedExecutionClaimHash == hashedExecutionClaims[_executionClaimId],
+            "GelatoCore.cancelExecutionClaim: hash compare failed"
+        );
+
+        // Effects
         delete userProxyByExecutionClaimId[_executionClaimId];
         delete hashedExecutionClaims[_executionClaimId];
         emit LogExecutionClaimCancelled(_executionClaimId, _userProxy, msg.sender);
+
+        // Interactions
         msg.sender.sendValue(_mintingDeposit);
     }
 
