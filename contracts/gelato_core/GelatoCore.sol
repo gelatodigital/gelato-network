@@ -14,13 +14,6 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
     using Counters for Counters.Counter;
     using Address for address payable;  /// for oz's sendValue method
 
-    /// @notice GelatoCore's initializer function (constructor for upgradeable contracts)
-    /// @dev initializer fn must call the initializers of all the base contracts.
-    ///       visibility must be public due to Reentrancy Guard overriding
-    function initialize() public initializer {
-        GelatoCoreAccounting._initialize();
-    }
-
     // ================  STATE VARIABLES ======================================
     Counters.Counter private executionClaimIds;
     // executionClaimId => userProxyByExecutionClaimId

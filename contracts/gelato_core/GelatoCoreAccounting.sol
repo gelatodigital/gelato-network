@@ -2,7 +2,6 @@ pragma solidity ^0.5.10;
 
 import "./interfaces/IGelatoCoreAccounting.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
-import "@openzeppelin/upgrades/contracts/Initializable.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 
@@ -10,7 +9,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
  * @title GelatoCoreAccounting
  * @notice non-deploy base contract
  */
-contract GelatoCoreAccounting is IGelatoCoreAccounting, Initializable, Ownable {
+contract GelatoCoreAccounting is IGelatoCoreAccounting, Ownable {
 
     using Address for address payable;  /// for oz's sendValue method
     using SafeMath for uint256;
@@ -33,20 +32,7 @@ contract GelatoCoreAccounting is IGelatoCoreAccounting, Initializable, Ownable {
     // =========================
 
     /// @dev non-deploy base contract
-    constructor() internal {}
-
-    /**
-     * @dev initializer function is like a constructor for upgradeable contracts
-     * param _gasOutsideGasleftChecks: gas cost to be determined and set by owner
-     * param _gasInsideGasleftChecks: gas cost to be determined and set by owner
-     * param _canExecMaxGas: gas cost to be determined and set by owner
-     * param _userProxyExecGas: the overhead consumed by the GelatoUserProxy execute fn
-     * @notice as per OpenZeppelin SDK
-     */
-    function _initialize()
-        internal
-        initializer
-    {
+    constructor() internal {
         Ownable.initialize(msg.sender);
         minExecutionClaimLifespan = 10 minutes;
         canExecMaxGas = 100000;
