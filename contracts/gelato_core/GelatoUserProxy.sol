@@ -50,13 +50,6 @@ contract GelatoUserProxy is IGelatoUserProxy {
         }
     }
 
-    function setGelatoCore(address payable _gelatoCore)
-        external
-        auth
-    {
-        gelatoCore = _gelatoCore;
-    }
-
     function getUser() external view returns(address payable) {return user;}
 
     function getGelatoCore() external view returns(address payable) {return gelatoCore;}

@@ -15,7 +15,7 @@ contract GelatoCoreAccounting is IGelatoCoreAccounting, Initializable, Ownable {
     using Address for address payable;  /// for oz's sendValue method
     using SafeMath for uint256;
 
-    /// @notice NEW: the minimum executionClaimLifespan imposed upon executors
+    // the minimum executionClaimLifespan imposed upon executors
     uint256 internal minExecutionClaimLifespan;
     //_____________ Gelato ExecutionClaim Economics _______________________
     mapping(address => uint256) internal executorPrice;
@@ -48,7 +48,7 @@ contract GelatoCoreAccounting is IGelatoCoreAccounting, Initializable, Ownable {
         initializer
     {
         Ownable.initialize(msg.sender);
-        minExecutionClaimLifespan = 600;  // 10 minutes
+        minExecutionClaimLifespan = 10 minutes;
         canExecMaxGas = 100000;
         gelatoCoreExecGasOverhead = 100000;
         userProxyExecGasOverhead = 40000;
@@ -65,19 +65,22 @@ contract GelatoCoreAccounting is IGelatoCoreAccounting, Initializable, Ownable {
        what the core protocol defines as the minimum (e.g. 10 minutes).
      * @notice NEW
      */
-    function registerExecutor(uint256 _executorPrice,
-                              uint256 _executorClaimLifespan
+    function registerExecutor(
+        uint256 _executorPrice,
+        uint256 _executorClaimLifespan
     )
         external
     {
-        require(_executorClaimLifespan >= minExecutionClaimLifespan,
+        require(
+            _executorClaimLifespan >= minExecutionClaimLifespan,
             "GelatoCoreAccounting.registerExecutor: _executorClaimLifespan cannot be 0"
         );
         executorPrice[msg.sender] = _executorPrice;
         executorClaimLifespan[msg.sender] = _executorClaimLifespan;
-        emit LogRegisterExecutor(msg.sender,
-                                 _executorPrice,
-                                 _executorClaimLifespan
+        emit LogRegisterExecutor(
+            msg.sender,
+            _executorPrice,
+            _executorClaimLifespan
         );
     }
 
@@ -86,7 +89,8 @@ contract GelatoCoreAccounting is IGelatoCoreAccounting, Initializable, Ownable {
      * @param _executor: the address to be checked against executor registrations
      */
     modifier onlyRegisteredExecutors(address _executor) {
-        require(executorClaimLifespan[_executor] != 0,
+        require(
+            executorClaimLifespan[_executor] != 0,
             "GelatoCoreAccounting.onlyRegisteredExecutors: failed"
         );
         _;
@@ -129,11 +133,13 @@ contract GelatoCoreAccounting is IGelatoCoreAccounting, Initializable, Ownable {
     function setExecutorClaimLifespan(uint256 _newExecutorClaimLifespan)
         external
     {
-        require(_newExecutorClaimLifespan >= minExecutionClaimLifespan,
+        require(
+            _newExecutorClaimLifespan >= minExecutionClaimLifespan,
             "GelatoCoreAccounting.setExecutorClaimLifespan: failed"
         );
-        emit LogSetExecutorClaimLifespan(executorClaimLifespan[msg.sender],
-                                         _newExecutorClaimLifespan
+        emit LogSetExecutorClaimLifespan(
+            executorClaimLifespan[msg.sender],
+            _newExecutorClaimLifespan
         );
         executorClaimLifespan[msg.sender] = _newExecutorClaimLifespan;
     }
@@ -148,13 +154,13 @@ contract GelatoCoreAccounting is IGelatoCoreAccounting, Initializable, Ownable {
     {
         // Checks
         uint256 currentExecutorBalance = executorBalance[msg.sender];
-        require(currentExecutorBalance > 0,
+        require(
+            currentExecutorBalance > 0,
             "GelatoCoreAccounting.withdrawExecutorBalance: failed"
         );
         // Effects
         executorBalance[msg.sender] = 0;
         // Interaction
-         ///@notice NEW: .call syntax due to Istanbul opcodes and .transfer problem
         msg.sender.sendValue(currentExecutorBalance);
         emit LogWithdrawExecutorBalance(msg.sender, currentExecutorBalance);
     }
@@ -170,8 +176,13 @@ contract GelatoCoreAccounting is IGelatoCoreAccounting, Initializable, Ownable {
         onlyOwner
         external
     {
-        emit LogSetMinExecutionClaimLifespan(minExecutionClaimLifespan,
-                                             _newMinExecutionClaimLifespan
+        require(
+            _newMinExecutionClaimLifespan >= minExecutionClaimLifespan,
+            "GelatoCoreAccounting.setMinExecutionClaimLifespan: threshold failed"
+        );
+        emit LogSetMinExecutionClaimLifespan(
+            minExecutionClaimLifespan,
+            _newMinExecutionClaimLifespan
         );
         minExecutionClaimLifespan = _newMinExecutionClaimLifespan;
     }
@@ -255,8 +266,9 @@ contract GelatoCoreAccounting is IGelatoCoreAccounting, Initializable, Ownable {
      * @notice minters (e.g. frontends) should use this API to get the msg.value
        payable to GelatoCore's mintExecutionClaim function.
      */
-    function getMintingDepositPayable(IGelatoAction _action,
-                                      address _selectedExecutor
+    function getMintingDepositPayable(
+        IGelatoAction _action,
+        address _selectedExecutor
     )
         external
         view

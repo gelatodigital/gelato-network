@@ -63,7 +63,8 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         {
             uint256 executionMinGas = _getMinExecutionGasRequirement(actionGasStipend);
             uint256 mintingDepositPayable = executionMinGas.mul(executorPrice[_selectedExecutor]);
-            require(msg.value == mintingDepositPayable,
+            require(
+                msg.value == mintingDepositPayable,
                 "GelatoCore.mintExecutionClaim: msg.value failed"
             );
         }
@@ -144,7 +145,8 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
     {
         // Ensure that executor sends enough gas for the execution
         uint256 startGas = gasleft();
-        require(startGas >= _getMinExecutionGasRequirement(_userProxyExecGas.sub(userProxyExecGasOverhead)),
+        require(
+            startGas >= _getMinExecutionGasRequirement(_userProxyExecGas.sub(userProxyExecGasOverhead)),
             "GelatoCore.execute: Insufficient gas sent"
         );
         // _______ canExecute() check ______________________________________________

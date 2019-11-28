@@ -16,7 +16,8 @@ contract GelatoUserProxyManager is IGelatoUserProxyManager {
     IGelatoUserProxy[] internal userProxies;
 
     modifier userHasNoProxy {
-        require(userToProxy[msg.sender] == IGelatoUserProxy(0),
+        require(
+            userToProxy[msg.sender] == IGelatoUserProxy(0),
             "GelatoUserProxyManager: user already has a proxy"
         );
         _;
