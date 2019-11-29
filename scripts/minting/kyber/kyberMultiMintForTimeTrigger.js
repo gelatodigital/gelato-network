@@ -32,27 +32,15 @@ let provider;
 if (process.env.ROPSTEN) {
   console.log(`\n\t\t ✅ connected to ROPSTEN ✅ \n`);
   provider = new ethers.providers.InfuraProvider("ropsten", INFURA_ID);
-  gelatoCoreAddress = process.env.GELATO_CORE_ADDRESS;
+  gelatoCoreAddress = process.env.GELATO_CORE_ADDRESS_ROPSTEN;
   kyberProxyAddress = "0x818E6FECD516Ecc3849DAf6845e3EC868087B755";
-  userProxyAddress = process.env.USER_PROXY_ADDRESS;
+  userProxyAddress = process.env.USER_PROXY_ADDRESS_ROPSTEN;
   actionMultiMintTimeTriggerAddress =
-    process.env.ACTION_MULTI_MINT_TIME_TRIGGER_ADDRESS;
-  triggerTimestampPassedAddress = process.env.TRIGGER_TIMESTAMP_PASSED;
-  actionKyberTradeAddress = process.env.ACTION_KYBER_TRADE;
-  src = process.env.SELL_TOKEN;
-  dest = process.env.BUY_TOKEN;
-} else if (process.env.RINKEBY) {
-  console.log(`\n\t\t ✅ connected to RINKEBY ✅ \n`);
-  gelatoCoreAddress = process.env.GELATO_CORE_ADDRESS;
-  kyberProxyAddress = "0xF77eC7Ed5f5B9a5aee4cfa6FFCaC6A4C315BaC76";
-  userProxyAddress = process.env.USER_PROXY_ADDRESS;
-  actionMultiMintTimeTriggerAddress = process.env.ACTION_MULTI_MINT_TIME_TRIGGER_ADDRESS;
-  triggerTimestampPassedAddress = process.env.TRIGGER_TIMESTAMP_PASSED;
-  actionKyberTradeAddress = process.env.ACTION_KYBER_TRADE;
-  src = process.env.SELL_TOKEN;
-  dest = process.env.BUY_TOKEN;
-} else if (process.env.ROPSTEN && process.env.RINKEBY) {
-  console.error(`\n\t\t ❗ROPSTEN v RINKEBY CLASH ❗\n`);
+    process.env.ACTION_MULTI_MINT_TIME_TRIGGER_ADDRESS_ROPSTEN;
+  triggerTimestampPassedAddress = process.env.TRIGGER_TIMESTAMP_PASSED_ROPSTEN;
+  actionKyberTradeAddress = process.env.ACTION_KYBER_TRADE_ROPSTEN;
+  src = "0x4E470dc7321E84CA96FcAEDD0C8aBCebbAEB68C6"; // Ropsten KNC
+  dest = "0xaD6D458402F60fD3Bd25163575031ACDce07538D"; // Ropsten DAI
 } else {
   console.error(`\n\t\t ❗NO NETWORK DEFINED ❗\n`);
 }
