@@ -3,7 +3,10 @@ pragma solidity ^0.5.10;
 import "../GelatoTriggersStandard.sol";
 
 contract TriggerTimestampPassed is GelatoTriggersStandard {
-    constructor() public { triggerSelector = this.fired.selector; }
+    constructor() public {
+        triggerSelector = this.fired.selector;
+        triggerGas = 30000;
+    }
 
     function fired(uint256 _timestamp)
         external

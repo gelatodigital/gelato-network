@@ -5,6 +5,9 @@ import "./IGelatoUserProxy.sol";
 import "../../triggers/IGelatoTrigger.sol";
 import "../../actions/IGelatoAction.sol";
 
+/// @title IGelatoCore - solidity interface of GelatoCore
+/// @notice canExecute API and minting, execution, cancellation of ExecutionClaims
+/// @dev all the APIs and events are implemented inside GelatoCore
 interface IGelatoCore {
 
     event LogNewExecutionClaimMinted(
@@ -287,7 +290,7 @@ interface IGelatoCore {
 
     function setUserProxyExecGasOverhead(uint256 _newGasOverhead) external;
 
-    function getMinExecutionGasRequirement(uint256 _actionGasStipend)
+    function getMinExecutionGasRequirement(uint256 _actionGasTotal)
         external
         view
         returns(uint256);

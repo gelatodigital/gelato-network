@@ -40,10 +40,10 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         else revert("GelatoCore.mintExecutionClaim: msg.sender is not proxied");
         // =============
         // ______ Charge Minting Deposit _______________________________________
-        uint256 actionGasStipend = _action.getActionGasStipend();
-        require(actionGasStipend != 0, "GelatoCore.mintExecutionClaim: 0 actionGasStipend");
+        uint256 actionGasTotal = _action.getActionGasTotal();
+        require(actionGasTotal != 0, "GelatoCore.mintExecutionClaim: 0 actionGasTotal");
         {
-            uint256 executionMinGas = _getMinExecutionGasRequirement(actionGasStipend);
+            uint256 executionMinGas = _getMinExecutionGasRequirement(actionGasTotal);
             uint256 mintingDepositPayable = executionMinGas.mul(executorPrice[_selectedExecutor]);
             require(
                 msg.value == mintingDepositPayable,
@@ -69,7 +69,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
                     userProxy,
                     executionClaimId,
                     _selectedExecutor,
-                    userProxyExecGasOverhead.add(actionGasStipend),
+                    userProxyExecGasOverhead.add(actionGasTotal),
                     executionClaimExpiryDate,
                     msg.value
                 )
@@ -81,7 +81,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
             _selectedExecutor,
             executionClaimId,
             userProxy,
-            userProxyExecGasOverhead.add(actionGasStipend),
+            userProxyExecGasOverhead.add(actionGasTotal),
             executionClaimExpiryDate,
             msg.value
         );

@@ -2,6 +2,9 @@ pragma solidity ^0.5.10;
 
 import "../../actions/IGelatoAction.sol";
 
+/// @title IGelatoCoreAccounting - solidity interface of GelatoCoreAccounting
+/// @notice APIs for GelatoCore Owners and Executors
+/// @dev all the APIs and events are implemented inside GelatoCoreAccounting
 interface IGelatoCoreAccounting {
 
     event LogRegisterExecutor(
@@ -160,10 +163,10 @@ interface IGelatoCoreAccounting {
         view
         returns(uint256 mintingDepositPayable);
 
-    /// @dev calculates gas requirements based off _actionGasStipend
-    /// @param _actionGasStipend the gas forwarded with the action call
+    /// @dev calculates gas requirements based off _actionGasTotal
+    /// @param _actionGasTotal the gas forwarded with the action call
     /// @return the minimum gas required for calls to gelatoCore.execute()
-    function getMinExecutionGasRequirement(uint256 _actionGasStipend)
+    function getMinExecutionGasRequirement(uint256 _actionGasTotal)
         external
         view
         returns(uint256);

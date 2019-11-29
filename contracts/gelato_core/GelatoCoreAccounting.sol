@@ -5,11 +5,9 @@ import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 
-/**
- * @title GelatoCoreAccounting
- * @notice APIs for GelatoCore Owner and executorClaimLifespan
- * @dev Find all NatSpecs inside IGelatoCoreAccounting
- */
+/// @title GelatoCoreAccounting
+/// @notice APIs for GelatoCore Owner and executorClaimLifespan
+/// @dev Find all NatSpecs inside IGelatoCoreAccounting
 contract GelatoCoreAccounting is IGelatoCoreAccounting, Ownable {
 
     using Address for address payable;  /// for oz's sendValue method
@@ -205,25 +203,25 @@ contract GelatoCoreAccounting is IGelatoCoreAccounting, Ownable {
         onlyRegisteredExecutors(_selectedExecutor)
         returns(uint256 mintingDepositPayable)
     {
-        uint256 actionGasStipend = _action.getActionGasStipend();
-        uint256 executionMinGas = _getMinExecutionGasRequirement(actionGasStipend);
+        uint256 actionGasTotal = _action.getActionGasTotal();
+        uint256 executionMinGas = _getMinExecutionGasRequirement(actionGasTotal);
         mintingDepositPayable = executionMinGas.mul(executorPrice[_selectedExecutor]);
     }
 
-    function getMinExecutionGasRequirement(uint256 _actionGasStipend)
+    function getMinExecutionGasRequirement(uint256 _actionGasTotal)
         external
         view
         returns(uint256)
     {
-        return _getMinExecutionGasRequirement(_actionGasStipend);
+        return _getMinExecutionGasRequirement(_actionGasTotal);
     }
 
-    function _getMinExecutionGasRequirement(uint256 _actionGasStipend)
+    function _getMinExecutionGasRequirement(uint256 _actionGasTotal)
         internal
         view
         returns(uint256)
     {
-        return nonActionExecutionGas.add(_actionGasStipend);
+        return nonActionExecutionGas.add(_actionGasTotal);
     }
     // =======
 }

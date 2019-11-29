@@ -9,12 +9,11 @@ import "../../dapp_interfaces/kyber_interfaces/IKyber.sol";
 contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
     using SafeERC20 for IERC20;
 
-    constructor()
-        public
-    {
+    constructor() public {
         actionOperation = ActionOperation.delegatecall;
         actionSelector = this.action.selector;
-        actionGasStipend = 700000;
+        actionConditionsOkGas = 50000;
+        actionGas = 700000;
     }
 
     event LogAction(

@@ -7,12 +7,11 @@ import "../../../triggers/IGelatoTrigger.sol";
 contract ActionMultiMintForTimeTrigger is GelatoActionsStandard {
     using SafeMath for uint256;
 
-    constructor()
-        public
-    {
+    constructor() public {
         actionOperation = ActionOperation.delegatecall;
         actionSelector = this.action.selector;
-        actionGasStipend = 1000000;
+        actionConditionsOkGas = 30000;
+        actionGas = 1000000;
     }
 
     function action(

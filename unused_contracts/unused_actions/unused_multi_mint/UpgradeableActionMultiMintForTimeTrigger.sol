@@ -16,7 +16,7 @@ contract UpgradeableActionMultiMintForTimeTrigger is Initializable,
 
     function proxyInitializer(
         address _proxysProxyAdmin,
-        uint256 _actionGasStipend,
+        uint256 _actionGasTotal,
         address _gelatoCore
     )
         external
@@ -25,7 +25,7 @@ contract UpgradeableActionMultiMintForTimeTrigger is Initializable,
         proxysProxyAdmin = ProxyAdmin(_proxysProxyAdmin);
         actionOperation = ActionOperation.delegatecall;
         actionSelector = this.action.selector;
-        actionGasStipend = _actionGasStipend;
+        actionGasTotal = _actionGasTotal;
         gelatoCore = IGelatoCore(_gelatoCore);
         _initializeImplementationFromProxy();
     }
@@ -37,7 +37,7 @@ contract UpgradeableActionMultiMintForTimeTrigger is Initializable,
     }
 
     function initializerOnImplementation(
-        uint256 _actionGasStipend,
+        uint256 _actionGasTotal,
         IGelatoCore _gelatoCore
     )
         external
@@ -50,7 +50,7 @@ contract UpgradeableActionMultiMintForTimeTrigger is Initializable,
         );
         actionOperation = ActionOperation.delegatecall;
         actionSelector = this.action.selector;
-        actionGasStipend = _actionGasStipend;
+        actionGasTotal = _actionGasTotal;
         gelatoCore = _gelatoCore;
         implementationInit = true;
     }
@@ -111,7 +111,7 @@ contract UpgradeableActionMultiMintForTimeTrigger is Initializable,
         require(!implementation.askImplementationIfInit(),
             "UpgradeableActionMultiMintForTimeTrigger.initializeMyImplementation: already init"
         );
-        implementation.initializerOnImplementation(actionGasStipend, gelatoCore);
+        implementation.initializerOnImplementation(actionGasTotal, gelatoCore);
         require(implementation.askImplementationIfInit(),
             "UpgradeableActionMultiMintForTimeTrigger.initializeMyImplementation: failed"
         );

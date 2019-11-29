@@ -18,7 +18,7 @@ contract UpgradeableActionKyberTrade is Initializable,
     function getKyberAddress() external view returns(address) {return kyberAddress;}
 
     function proxyInitializer(address _proxyAdmin,
-                              uint256 _actionGasStipend,
+                              uint256 _actionGasTotal,
                               address _kyberAddress
     )
         external
@@ -27,7 +27,7 @@ contract UpgradeableActionKyberTrade is Initializable,
         proxysProxyAdmin = ProxyAdmin(_proxyAdmin);
         actionOperation = ActionOperation.delegatecall;
         actionSelector = this.action.selector;
-        actionGasStipend = _actionGasStipend;
+        actionGasTotal = _actionGasTotal;
         kyberAddress = _kyberAddress;
         _initializeImplementationFromProxy();
     }
@@ -38,7 +38,7 @@ contract UpgradeableActionKyberTrade is Initializable,
         return _initializeImplementationFromProxy();
     }
 
-    function initializerOnImplementation(uint256 _actionGasStipend, address _kyberAddress)
+    function initializerOnImplementation(uint256 _actionGasTotal, address _kyberAddress)
         external
     {
         require(msg.sender != address(this),
@@ -49,7 +49,7 @@ contract UpgradeableActionKyberTrade is Initializable,
         );
         actionOperation = ActionOperation.delegatecall;
         actionSelector = this.action.selector;
-        actionGasStipend = _actionGasStipend;
+        actionGasTotal = _actionGasTotal;
         kyberAddress = _kyberAddress;
         implementationInit = true;
     }
@@ -124,7 +124,7 @@ contract UpgradeableActionKyberTrade is Initializable,
         require(!implementation.askImplementationIfInit(),
             "UpgradeableActionKyberTrade.initializeMyImplementation: already init"
         );
-        implementation.initializerOnImplementation(actionGasStipend, kyberAddress);
+        implementation.initializerOnImplementation(actionGasTotal, kyberAddress);
         require(implementation.askImplementationIfInit(),
             "UpgradeableActionKyberTrade.initializeMyImplementation: failed"
         );

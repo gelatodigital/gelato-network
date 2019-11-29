@@ -3,6 +3,8 @@ pragma solidity ^0.5.10;
 import "./interfaces/IGelatoUserProxy.sol";
 import "../actions/GelatoActionsStandard.sol";
 
+/// @title GelatoUserProxy
+/// @dev find all NatSpecs inside IGelatoUserProxy
 contract GelatoUserProxy is IGelatoUserProxy {
     address payable internal user;
     address payable internal gelatoCore;

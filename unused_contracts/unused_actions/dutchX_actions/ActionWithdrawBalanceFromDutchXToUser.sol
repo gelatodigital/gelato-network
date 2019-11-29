@@ -19,20 +19,20 @@ contract ActionWithdrawBalanceFromDutchXToUser is Initializable,
        called immediately after deployment and only once in a proxyWrapper's lifetime.
        Calls are forwarded to the internal _initialize fn to allow for external-internal
        distinction and inheritance.
-     * @param _actionGasStipend the maxGas consumption of a normal tx to this.action()
+     * @param _actionGasTotal the maxGas consumption of a normal tx to this.action()
      * @param _dutchX the address of the deployed dutchX Proxy
      */
-    function initialize(uint256 _actionGasStipend, address _dutchX)
+    function initialize(uint256 _actionGasTotal, address _dutchX)
         external
     {
-        _initialize(_actionGasStipend, _dutchX);
+        _initialize(_actionGasTotal, _dutchX);
     }
-    function _initialize(uint256 _actionGasStipend, address _dutchX)
+    function _initialize(uint256 _actionGasTotal, address _dutchX)
         internal
         initializer
     {
         actionSelector = this.action.selector;
-        actionGasStipend = _actionGasStipend;
+        actionGasTotal = _actionGasTotal;
         GelatoDutchXInterface._initialize(_dutchX);
     }
 

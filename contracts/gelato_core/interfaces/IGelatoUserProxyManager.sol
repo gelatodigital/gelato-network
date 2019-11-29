@@ -2,8 +2,9 @@ pragma solidity ^0.5.10;
 
 import "./IGelatoUserProxy.sol";
 
-/// @title IGelatoUserProxyManager
-/// @dev registry and factory for GelatoUserProxies
+/// @title IGelatoUserProxyManager - solidity interface of GelatoUserProxyManager
+/// @notice APIs for GelatoUserProxy creation and registry.
+/// @dev all the APIs and events are implemented inside GelatoUserProxyManager
 interface IGelatoUserProxyManager {
     event LogCreateUserProxy(IGelatoUserProxy indexed userProxy, address indexed user);
 
