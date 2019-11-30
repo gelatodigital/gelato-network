@@ -10,7 +10,7 @@ import "../../actions/IGelatoAction.sol";
 /// @dev all the APIs and events are implemented inside GelatoCore
 interface IGelatoCore {
 
-    event LogNewExecutionClaimMinted(
+    event LogExecutionClaimMinted(
         address indexed selectedExecutor,
         uint256 indexed executionClaimId,
         IGelatoUserProxy indexed userProxy,

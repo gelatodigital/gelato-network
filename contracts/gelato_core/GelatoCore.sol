@@ -77,7 +77,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
             hashedExecutionClaims[executionClaimId] = executionClaimHash;
         }
         // =============
-        emit LogNewExecutionClaimMinted(
+        emit LogExecutionClaimMinted(
             _selectedExecutor,
             executionClaimId,
             userProxy,
