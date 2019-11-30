@@ -23,11 +23,11 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
 
     // ================  MINTING ==============================================
     function mintExecutionClaim(
+        address payable _selectedExecutor,
         IGelatoTrigger _trigger,
         bytes calldata _triggerPayloadWithSelector,
         IGelatoAction _action,
-        bytes calldata _actionPayloadWithSelector,
-        address payable _selectedExecutor
+        bytes calldata _actionPayloadWithSelector
     )
         external
         payable
@@ -62,13 +62,13 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
             /// @notice Include executionClaimId to avoid hash collisions
             bytes32 executionClaimHash = keccak256(
                 abi.encodePacked(
+                    _selectedExecutor,
+                    executionClaimId,
+                    userProxy,
                     _trigger,
                     _triggerPayloadWithSelector,
                     _action,
                     _actionPayloadWithSelector,
-                    userProxy,
-                    executionClaimId,
-                    _selectedExecutor,
                     userProxyExecGasOverhead.add(actionGasTotal),
                     executionClaimExpiryDate,
                     msg.value
@@ -81,26 +81,23 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
             _selectedExecutor,
             executionClaimId,
             userProxy,
-            userProxyExecGasOverhead.add(actionGasTotal),
-            executionClaimExpiryDate,
-            msg.value
-        );
-        emit LogTriggerActionMinted(
-            executionClaimId,
             _trigger,
             _triggerPayloadWithSelector,
             _action,
-            _actionPayloadWithSelector
+            _actionPayloadWithSelector,
+            userProxyExecGasOverhead.add(actionGasTotal),
+            executionClaimExpiryDate,
+            msg.value
         );
     }
 
     // ================  CAN EXECUTE EXECUTOR API ============================
     function canExecute(
+        IGelatoUserProxy _userProxy,
         IGelatoTrigger _trigger,
         bytes calldata _triggerPayloadWithSelector,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
-        IGelatoUserProxy _userProxy,
         uint256 _userProxyExecGas,
         uint256 _executionClaimId,
         uint256 _executionClaimExpiryDate,
@@ -111,26 +108,26 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         returns (GelatoCoreEnums.CanExecuteCheck)
     {
         return _canExecute(
+            _executionClaimId,
+            _userProxy,
             _trigger,
             _triggerPayloadWithSelector,
             _action,
             _actionPayloadWithSelector,
-            _userProxy,
             _userProxyExecGas,
-            _executionClaimId,
             _executionClaimExpiryDate,
             _mintingDeposit
         );
     }
 
     function logCanExecuteGasViaRevert(
+        uint256 _executionClaimId,
+        IGelatoUserProxy _userProxy,
         IGelatoTrigger _trigger,
         bytes calldata _triggerPayloadWithSelector,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
-        IGelatoUserProxy _userProxy,
         uint256 _userProxyExecGas,
-        uint256 _executionClaimId,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
     )
@@ -140,13 +137,13 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
     {
         uint256 startGas = gasleft();
         canExecuteResult = _canExecute(
+            _executionClaimId,
+            _userProxy,
             _trigger,
             _triggerPayloadWithSelector,
             _action,
             _actionPayloadWithSelector,
-            _userProxy,
             _userProxyExecGas,
-            _executionClaimId,
             _executionClaimExpiryDate,
             _mintingDeposit
         );
@@ -155,13 +152,13 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
 
     // ================  EXECUTE SUITE ======================================
     function execute(
+        uint256 _executionClaimId,
+        IGelatoUserProxy _userProxy,
         IGelatoTrigger _trigger,
         bytes calldata _triggerPayloadWithSelector,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
-        IGelatoUserProxy _userProxy,
         uint256 _userProxyExecGas,
-        uint256 _executionClaimId,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
     )
@@ -169,26 +166,26 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         returns(GelatoCoreEnums.ExecutionResult executionResult)
     {
         return _execute(
+            _executionClaimId,
+            _userProxy,
             _trigger,
             _triggerPayloadWithSelector,
             _action,
             _actionPayloadWithSelector,
-            _userProxy,
             _userProxyExecGas,
-            _executionClaimId,
             _executionClaimExpiryDate,
             _mintingDeposit
         );
     }
 
     function logExecuteGasViaRevert(
+        uint256 _executionClaimId,
+        IGelatoUserProxy _userProxy,
         IGelatoTrigger _trigger,
         bytes calldata _triggerPayloadWithSelector,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
-        IGelatoUserProxy _userProxy,
         uint256 _userProxyExecGas,
-        uint256 _executionClaimId,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
     )
@@ -197,13 +194,13 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
     {
         uint256 startGas = gasleft();
         executionResult = _execute(
+            _executionClaimId,
+            _userProxy,
             _trigger,
             _triggerPayloadWithSelector,
             _action,
             _actionPayloadWithSelector,
-            _userProxy,
             _userProxyExecGas,
-            _executionClaimId,
             _executionClaimExpiryDate,
             _mintingDeposit
         );
@@ -212,13 +209,13 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
 
 
     function cancelExecutionClaim(
+        address payable _selectedExecutor,
+        uint256 _executionClaimId,
+        IGelatoUserProxy _userProxy,
         IGelatoTrigger _trigger,
         bytes calldata _triggerPayloadWithSelector,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
-        IGelatoUserProxy _userProxy,
-        uint256 _executionClaimId,
-        address payable _selectedExecutor,
         uint256 _userProxyExecGas,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
@@ -233,13 +230,13 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         }
         bytes32 computedExecutionClaimHash = keccak256(
             abi.encodePacked(
+                _selectedExecutor,
+                _executionClaimId,
+                _userProxy,
                 _trigger,
                 _triggerPayloadWithSelector,
                 _action,
                 _actionPayloadWithSelector,
-                _userProxy,
-                _executionClaimId,
-                _selectedExecutor,
                 _userProxyExecGas,
                 _executionClaimExpiryDate,
                 _mintingDeposit
@@ -295,13 +292,13 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
 
     // ================  CAN EXECUTE IMPLEMENTATION ==================================
     function _canExecute(
+        uint256 _executionClaimId,
+        IGelatoUserProxy _userProxy,
         IGelatoTrigger _trigger,
         bytes memory _triggerPayloadWithSelector,
         IGelatoAction _action,
         bytes memory _actionPayloadWithSelector,
-        IGelatoUserProxy _userProxy,
         uint256 _userProxyExecGas,
-        uint256 _executionClaimId,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
     )
@@ -312,13 +309,13 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         // _____________ Static CHECKS __________________________________________
         bytes32 computedExecutionClaimHash = keccak256(
             abi.encodePacked(
+                msg.sender,  // selected? executor
+                _executionClaimId,
+                _userProxy,
                 _trigger,
                 _triggerPayloadWithSelector,
                 _action,
                 _actionPayloadWithSelector,
-                _userProxy,
-                _executionClaimId,
-                msg.sender,  // selected? executor
                 _userProxyExecGas,
                 _executionClaimExpiryDate,
                 _mintingDeposit
@@ -369,13 +366,13 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
 
     // ================  EXECUTE IMPLEMENTATION ======================================
     function _execute(
+        uint256 _executionClaimId,
+        IGelatoUserProxy _userProxy,
         IGelatoTrigger _trigger,
         bytes memory _triggerPayloadWithSelector,
         IGelatoAction _action,
         bytes memory _actionPayloadWithSelector,
-        IGelatoUserProxy _userProxy,
         uint256 _userProxyExecGas,
-        uint256 _executionClaimId,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
     )
@@ -391,13 +388,13 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         // _______ canExecute() CHECK ______________________________________________
         {
             GelatoCoreEnums.CanExecuteCheck canExecuteResult = _canExecute(
+                _executionClaimId,
+                _userProxy,
                 _trigger,
                 _triggerPayloadWithSelector,
                 _action,
                 _actionPayloadWithSelector,
-                _userProxy,
                 _userProxyExecGas,
-                _executionClaimId,
                 _executionClaimExpiryDate,
                 _mintingDeposit
             );
@@ -446,10 +443,10 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         // ====
         // gasCheck does not have the initial gas and the emit LogClaimExec.. gas
         emit LogClaimExecutedAndDeleted(
-            _executionClaimId,
-            executionResult,
             msg.sender,  // executor
+            _executionClaimId,
             _userProxy,
+            executionResult,
             tx.gasprice,
             gasleft().mul(tx.gasprice).add(70000),
             _mintingDeposit,

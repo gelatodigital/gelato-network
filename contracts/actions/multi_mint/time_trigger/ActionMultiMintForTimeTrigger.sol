@@ -16,11 +16,11 @@ contract ActionMultiMintForTimeTrigger is GelatoActionsStandard {
 
     function action(
         // gelatoCore.mintExecutionClaim params
+        address payable _selectedExecutor,
         IGelatoTrigger _timeTrigger,
         uint256 _startTime,  // will be encoded here
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
-        address payable _selectedExecutor,
         // MultiMintTimeBased params
         uint256 _intervalSpan,
         uint256 _numberOfMints
@@ -43,11 +43,11 @@ contract ActionMultiMintForTimeTrigger is GelatoActionsStandard {
                 timestamp
             );
             gelatoCore.mintExecutionClaim.value(mintingDepositPerMint)(
+                _selectedExecutor,
                 _timeTrigger,
                 triggerPayloadWithSelector,
                 _action,
-                _actionPayloadWithSelector,
-                _selectedExecutor
+                _actionPayloadWithSelector
             );
         }
     }

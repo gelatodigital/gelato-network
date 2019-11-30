@@ -25,14 +25,9 @@ if (process.env.ROPSTEN) {
   console.log(`\n\t\t ✅ connected to ROPSTEN ✅ \n`);
   provider = new ethers.providers.InfuraProvider("ropsten", INFURA_ID);
   searchFromBlock = process.env.ROPSTEN_BLOCK;
-  gelatoCoreAddress = "0x3C64f059a17beCe12d5C43515AB67836c5857E26";
-} else if (process.env.RINKEBY && !process.env.ROPSTEN) {
-  console.log(`\n\t\t ✅ connected to RINKEBY ✅ \n`);
-  provider = new ethers.providers.InfuraProvider("rinkeby", INFURA_ID);
-  searchFromBlock = process.env.RINKEBY_BLOCK;
-  gelatoCoreAddress = "0x501aF774Eb578203CC34E7171273124A93706C06";
+  gelatoCoreAddress = process.env.GELATO_CORE_ADDRESS_ROPSTEN;
 } else {
-  console.log(`\n\t\t ❗NO NETWORK DEFINED OR RINKEBY-v-ROPSTEN-clash❗\n`);
+  console.log(`\n\t\t ❗NO NETWORK DEFINED ❗\n`);
 }
 
 console.log(`\n\t\t Starting from block number: ${searchFromBlock}`);
