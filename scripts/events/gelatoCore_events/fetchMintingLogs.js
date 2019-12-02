@@ -37,8 +37,7 @@ if (searchFromBlock === "" || searchFromBlock === undefined) {
 
 // Read Instance of GelatoCore
 const gelatoCoreContractABI = [
-  "event LogNewExecutionClaimMinted(address indexed selectedExecutor, uint256 indexed executionClaimId, address indexed userProxy, uint256 executeGas, uint256 executionClaimExpiryDate, uint256 mintingDeposit)",
-  "event LogTriggerActionMinted(uint256 indexed executionClaimId, address indexed trigger, bytes triggerPayloadWithSelector, address indexed action, bytes actionPayloadWithSelector)"
+  "event LogNewExecutionClaimMinted(address indexed selectedExecutor, uint256 indexed executionClaimId, address indexed userProxy, address trigger, bytes triggerPayloadWithSelector, address action, bytes actionPayloadWithSelector, uint256 executeGas, uint256 executionClaimExpiryDate, uint256 mintingDeposit)"
 ];
 
 async function main() {
@@ -48,61 +47,52 @@ async function main() {
   let iface = new ethers.utils.Interface(gelatoCoreContractABI);
 
   // LogNewExecutionClaimMinted
-  let topicMinted = ethers.utils.id(
-    "LogNewExecutionClaimMinted(address,uint256,address,uint256,uint256,uint256)"
+  let topicExecutionClaimMinted = ethers.utils.id(
+    "LogExecutionClaimMinted(address,uint256,address,address,bytes,address,bytes,uint256,uint256,uint256)"
   );
-  let filterMinted = {
+  let filterExecutionClaimMinted = {
     address: gelatoCoreAddress,
     fromBlock: parseInt(searchFromBlock),
-    topics: [topicMinted]
-  };
-  // LogTriggerActionMinted
-  let topicTAMinted = ethers.utils.id(
-    "LogTriggerActionMinted(uint256,address,bytes,address,bytes)"
-  );
-  let filterTAMinted = {
-    address: gelatoCoreAddress,
-    fromBlock: parseInt(searchFromBlock),
-    topics: [topicTAMinted]
+    topics: [topicExecutionClaimMinted]
   };
   try {
-    const logsMinted = await provider.getLogs(filterMinted);
-    const logsTAMinted = await provider.getLogs(filterTAMinted);
-    const combinedMintingLogs = logsMinted.reduce((acc, log, i) => {
-      const parsedMintedLog = iface.parseLog(log);
-      if (!acc[i]) {
-        acc[i] = [];
-      }
-      acc[i] = {
-        selectedExecutor: parsedMintedLog.values.selectedExecutor,
-        executionClaimId: parsedMintedLog.values.executionClaimId,
-        userProxy: parsedMintedLog.values.userProxy,
-        executeGas: parsedMintedLog.values.executeGas,
-        executionClaimExpiryDate:
-          parsedMintedLog.values.executionClaimExpiryDate,
-        mintingDeposit: parsedMintedLog.values.mintingDeposit
-      };
-      const parsedTAMintedLog = iface.parseLog(logsTAMinted[i]);
-      acc[i].trigger = parsedTAMintedLog.values.trigger;
-      acc[i].triggerPayloadWithSelector =
-        parsedTAMintedLog.values.triggerPayloadWithSelector;
-      acc[i].action = parsedTAMintedLog.values.action;
-      acc[i].actionPayloadWithSelector =
-        parsedTAMintedLog.values.actionPayloadWithSelector;
-      return acc;
-    }, []);
+    const logsExecutionClaimMinted = await provider.getLogs(
+      filterExecutionClaimMinted
+    );
+    const executionClaimsMinted = logsExecutionClaimMinted.reduce(
+      (acc, log, i) => {
+        const parsedLog = iface.parseLog(log);
+        if (!acc[i]) {
+          acc[i] = [];
+        }
+        acc[i] = {
+          selectedExecutor: parsedLog.values.selectedExecutor,
+          executionClaimId: parsedLog.values.executionClaimId,
+          userProxy: parsedLog.values.userProxy,
+          trigger: parsedLog.values.trigger,
+          triggerPayloadWithSelector:
+            parsedLog.values.triggerPayloadWithSelector,
+          action: parsedLog.values.action,
+          actionPayloadWithSelector: parsedLog.values.actionPayloadWithSelector,
+          executeGas: parsedLog.values.executeGas,
+          executionClaimExpiryDate: parsedLog.values.executionClaimExpiryDate,
+          mintingDeposit: parsedLog.values.mintingDeposit
+        };
+        return acc;
+      },
+      []
+    );
 
-    // Log combined return values of LogNewExecutionClaimMinted and LogTriggerActionMinted
-    if (Object.keys(combinedMintingLogs).length === 0) {
+    // Log The Event Values
+    if (executionClaimsMinted.length === 0) {
       console.log("\n\n\t\t Minting Logs: NONE");
     } else {
-      for (let obj of combinedMintingLogs) {
+      for (let obj of executionClaimsMinted) {
         for (let [key, value] of Object.entries(obj)) {
           console.dir(`${key}: ${value}`);
         }
         console.log("\n");
       }
-      //console.dir(combinedMintingLogs);
     }
   } catch (err) {
     console.log(err);

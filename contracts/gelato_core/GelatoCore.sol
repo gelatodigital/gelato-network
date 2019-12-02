@@ -6,7 +6,7 @@ import "./GelatoCoreAccounting.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/drafts/Counters.sol";
 
 /// @title GelatoCore
-/// @notice Execution Claim: minting, checking, execution, and cancelation
+/// @notice Execution Claim: minting, checking, execution, and cancellation
 /// @dev Find all NatSpecs inside IGelatoCore
 contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting {
 
@@ -93,13 +93,13 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
 
     // ================  CAN EXECUTE EXECUTOR API ============================
     function canExecute(
+        uint256 _executionClaimId,
         IGelatoUserProxy _userProxy,
         IGelatoTrigger _trigger,
         bytes calldata _triggerPayloadWithSelector,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
         uint256 _userProxyExecGas,
-        uint256 _executionClaimId,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
     )
@@ -379,8 +379,8 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         private
         returns(GelatoCoreEnums.ExecutionResult executionResult)
     {
-        // Ensure that executor sends enough gas for the execution
         uint256 startGas = gasleft();
+        // Ensure that executor sends enough gas for the execution
         require(
             startGas >= _getMinExecutionGasRequirement(_userProxyExecGas.sub(userProxyExecGasOverhead)),
             "GelatoCore.execute: Insufficient gas sent"
@@ -400,8 +400,8 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
             );
             if (canExecuteResult != GelatoCoreEnums.CanExecuteCheck.Executable) {
                 emit LogCanExecuteFailed(
-                    _executionClaimId,
                     msg.sender,
+                    _executionClaimId,
                     canExecuteResult
                 );
                 return GelatoCoreEnums.ExecutionResult.CanExecuteFailed;

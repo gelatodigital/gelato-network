@@ -133,11 +133,11 @@ async function main() {
 
   // Encode the payload for the call to MultiMintForTimeTrigger.multiMint
   const MULTI_MINT_PAYLOAD_WITH_SELECTOR = getMultiMintForTimeTriggerPayloadWithSelector(
+    SELECTED_EXECUTOR_ADDRESS,
     triggerTimestampPassedAddress,
     START_TIME.toString(),
     actionKyberTradeAddress,
     ACTION_KYBER_PAYLOAD_WITH_SELECTOR,
-    SELECTED_EXECUTOR_ADDRESS,
     INTERVAL_SPAN,
     NUMBER_OF_MINTS
   );

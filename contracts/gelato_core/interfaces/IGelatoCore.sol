@@ -24,8 +24,8 @@ interface IGelatoCore {
     );
 
     event LogCanExecuteFailed(
-        uint256 indexed executionClaimId,
         address payable indexed executor,
+        uint256 indexed executionClaimId,
         GelatoCoreEnums.CanExecuteCheck indexed canExecuteResult
     );
 

@@ -2,42 +2,42 @@
 const ethers = require("ethers");
 
 exports.getMultiMintForTimeTriggerPayloadWithSelector = (
-    timeTrigger,
-    startTime,
-    action,
-    actionPayloadWithSelector,
-    selectedExecutor,
-    intervalSpan,
-    numberOfMints
-  ) => {
-    const multiMintABI = [
-      {
-        name: "action",
-        type: "function",
-        inputs: [
-          { type: "address", name: "_timeTrigger" },
-          { type: "uint256", name: "_startTime" },
-          { type: "address", name: "_action" },
-          { type: "bytes", name: "_actionPayloadWithSelector" },
-          { type: "address", name: "_selectedExecutor" },
-          { type: "uint256", name: "_intervalSpan" },
-          { type: "uint256", name: "_numberOfMints" }
-        ]
-      }
-    ];
-    const interface = new ethers.utils.Interface(multiMintABI);
-
-    const encodedMultiMintPayloadWithSelector = interface.functions.action.encode(
-      [
-        timeTrigger,
-        startTime,
-        action,
-        actionPayloadWithSelector,
-        selectedExecutor,
-        intervalSpan,
-        numberOfMints
+  selectedExecutor,
+  timeTrigger,
+  startTime,
+  action,
+  actionPayloadWithSelector,
+  intervalSpan,
+  numberOfMints
+) => {
+  const multiMintABI = [
+    {
+      name: "action",
+      type: "function",
+      inputs: [
+        { type: "address", name: "_selectedExecutor" },
+        { type: "address", name: "_timeTrigger" },
+        { type: "uint256", name: "_startTime" },
+        { type: "address", name: "_action" },
+        { type: "bytes", name: "_actionPayloadWithSelector" },
+        { type: "uint256", name: "_intervalSpan" },
+        { type: "uint256", name: "_numberOfMints" }
       ]
-    );
+    }
+  ];
+  const interface = new ethers.utils.Interface(multiMintABI);
 
-    return encodedMultiMintPayloadWithSelector;
-  };
+  const encodedMultiMintPayloadWithSelector = interface.functions.action.encode(
+    [
+      selectedExecutor,
+      timeTrigger,
+      startTime,
+      action,
+      actionPayloadWithSelector,
+      intervalSpan,
+      numberOfMints
+    ]
+  );
+
+  return encodedMultiMintPayloadWithSelector;
+};
