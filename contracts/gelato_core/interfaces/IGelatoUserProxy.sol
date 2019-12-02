@@ -6,12 +6,8 @@ import "../../actions/IGelatoAction.sol";
 /// @notice GelatoUserProxy.execute() API called by gelatoCore during .execute()
 /// @dev all the APIs are implemented inside GelatoUserProxy
 interface IGelatoUserProxy {
-    function getUser() external view returns(address payable);
-
-    function getGelatoCore() external view returns(address payable);
-
     function executeCall(
-        address payable _action,
+        address _action,
         bytes calldata _actionPayloadWithSelector
     )
         external
@@ -26,4 +22,8 @@ interface IGelatoUserProxy {
         external
         payable
         returns(bool success, bytes memory returndata);
+
+    function getUser() external view returns(address payable);
+
+    function getGelatoCore() external view returns(address payable);
 }

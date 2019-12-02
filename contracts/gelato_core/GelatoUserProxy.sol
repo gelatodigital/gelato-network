@@ -34,14 +34,15 @@ contract GelatoUserProxy is IGelatoUserProxy {
     }
 
     modifier noZeroAddress(address _) {
-        require(_ != address(0),
+        require(
+            _ != address(0),
             "GelatoUserProxy.noZeroAddress"
         );
         _;
     }
 
     function executeCall(
-        address payable _action,
+        address _action,
         bytes calldata _actionPayloadWithSelector
     )
         external

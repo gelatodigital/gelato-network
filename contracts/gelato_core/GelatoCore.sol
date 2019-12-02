@@ -414,7 +414,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         returns(GelatoCoreEnums.ExecutionResult executionResult)
     {
         uint256 startGas = gasleft();
-        require(startGas >= _minExecutionGas, "GelatoCore.execute: Insufficient gas sent");
+        require(startGas >= _minExecutionGas, "GelatoCore._execute: Insufficient gas sent");
         uint256 actionGas = _action.getActionGas();
         require(actionGas != 0, "GelatoCore._execute: 0 actionGas");
         // _______ canExecute() CHECK ______________________________________________
