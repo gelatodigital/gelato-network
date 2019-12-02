@@ -16,8 +16,10 @@ interface IGelatoCore {
         IGelatoUserProxy indexed userProxy,
         IGelatoTrigger _trigger,
         bytes _triggerPayloadWithSelector,
+        uint256 triggerGas,
         IGelatoAction _action,
         bytes _actionPayloadWithSelector,
+        uint256 _actionGasTotal,
         uint256 minExecutionGas,
         uint256 executionClaimExpiryDate,
         uint256 mintingDeposit
@@ -86,6 +88,8 @@ interface IGelatoCore {
         bytes calldata _triggerPayloadWithSelector,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
+        uint256 _actionGasTotal,
+        uint256 _actionConditionsOkGas,
         uint256 _executionMinGas,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
@@ -101,6 +105,8 @@ interface IGelatoCore {
         bytes calldata _triggerPayloadWithSelector,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
+        uint256 _actionGasTotal,
+        uint256 _actionConditionsOkGas,
         uint256 _executionMinGas,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
@@ -131,6 +137,7 @@ interface IGelatoCore {
         bytes calldata _triggerPayloadWithSelector,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
+        uint256 _actionGasTotal,
         uint256 _executionMinGas,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
@@ -145,6 +152,7 @@ interface IGelatoCore {
         bytes calldata _triggerPayloadWithSelector,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
+        uint256 _actionGasTotal,
         uint256 _executionMinGas,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
@@ -177,6 +185,7 @@ interface IGelatoCore {
         bytes calldata _triggerPayloadWithSelector,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
+        uint256 _actionGasTotal,
         uint256 _executionMinGas,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit

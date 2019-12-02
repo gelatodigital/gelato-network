@@ -57,7 +57,8 @@ contract GelatoUserProxy is IGelatoUserProxy {
 
     function executeDelegatecall(
         IGelatoAction _action,
-        bytes calldata _actionPayloadWithSelector
+        bytes calldata _actionPayloadWithSelector,
+        uint256 _actionGas
     )
         external
         payable
@@ -65,7 +66,6 @@ contract GelatoUserProxy is IGelatoUserProxy {
         noZeroAddress(address(_action))
         returns(bool success, bytes memory returndata)
     {
-        uint256 _actionGas = _action.getActionGas();
         (success, returndata) = address(_action).delegatecall.gas(_actionGas)(
             _actionPayloadWithSelector
         );
