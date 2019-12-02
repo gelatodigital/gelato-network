@@ -3,20 +3,20 @@ pragma solidity ^0.5.10;
 contract GelatoCoreEnums {
     constructor() internal {}
 
-    enum ExecutionResult {
-        Success,
-        Failure,
-        CanExecuteFailed
-    }
+    enum ExecutionResult { Success, Failure, CanExecuteFailed }
+
+    enum TriggerCheck { Reverted, NotFired, Fired }
+
+    enum ActionConditionsCheck { Reverted, NotOk, Ok }
 
     enum CanExecuteCheck {
         WrongCalldataOrAlreadyDeleted,  // also returns if a not-selected executor calls fn
         NonExistantExecutionClaim,
         ExecutionClaimExpired,
-        TriggerReverted,
         TriggerNotFired,
-        ActionReverted,
+        TriggerReverted,
         ActionConditionsNotOk,
+        ActionReverted,
         Executable
     }
 }
