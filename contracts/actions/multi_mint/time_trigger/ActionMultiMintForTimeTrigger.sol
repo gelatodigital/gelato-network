@@ -8,7 +8,6 @@ contract ActionMultiMintForTimeTrigger is GelatoActionsStandard {
     using SafeMath for uint256;
 
     constructor() public {
-        actionOperation = ActionOperation.delegatecall;
         actionSelector = this.action.selector;
         actionConditionsOkGas = 30000;
         actionGas = 1000000;
@@ -30,8 +29,8 @@ contract ActionMultiMintForTimeTrigger is GelatoActionsStandard {
     {
         IGelatoCore gelatoCore = IGelatoCore(0x8AB2E2C1Da789E960C1ac400e5500eC4C61aEac8);
         uint256 mintingDepositPerMint = gelatoCore.getMintingDepositPayable(
-            _action,
-            _selectedExecutor
+            _selectedExecutor,
+            _action
         );
         require(msg.value == mintingDepositPerMint.mul(_numberOfMints),
             "MultiMintTimeBased.multiMint: incorrect msg.value"

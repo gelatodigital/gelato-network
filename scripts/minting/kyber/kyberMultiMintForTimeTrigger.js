@@ -66,7 +66,7 @@ const kyberContract = new ethers.Contract(
 
 // ReadInstance of GelatoCore
 const gelatoCoreABI = [
-  "function getMintingDepositPayable(address _action, address _selectedExecutor) view returns(uint)"
+  "function getMintingDepositPayable(address _selectedExecutor, address _action) view returns(uint)"
 ];
 const gelatoCoreContract = new ethers.Contract(
   gelatoCoreAddress,
@@ -151,8 +151,8 @@ async function main() {
   console.log(`\n\t\t Ether price in USD: ${ethUSDPrice}`);
 
   const MINTING_DEPOSIT_PER_MINT = await gelatoCoreContract.getMintingDepositPayable(
-    actionKyberTradeAddress,
-    SELECTED_EXECUTOR_ADDRESS
+    SELECTED_EXECUTOR_ADDRESS,
+    actionKyberTradeAddress
   );
   console.log(
     `\n\t\t Minting Deposit Per Mint: ${ethers.utils.formatUnits(

@@ -6,10 +6,7 @@ import "./IGelatoAction.sol";
 /// @dev find all the NatSpecs inside IGelatoAction
 contract GelatoActionsStandard is IGelatoAction {
 
-    enum ActionOperation { call, delegatecall }
-
     IGelatoCore internal gelatoCore;
-    ActionOperation internal actionOperation;
     bytes4 internal actionSelector;
     uint256 internal actionConditionsOkGas;
     uint256 internal actionGas;
@@ -21,10 +18,9 @@ contract GelatoActionsStandard is IGelatoAction {
     }
 
     function getGelatoCore() external view returns(IGelatoCore) {return gelatoCore;}
-    function getActionOperation() external view returns(ActionOperation) {return actionOperation;}
     function getActionSelector() external view returns(bytes4) {return actionSelector;}
     function getActionConditionsOkGas() external view returns(uint256) {return actionConditionsOkGas;}
-    function  getActionGas() external view returns(uint256) {return actionGas;}
+    function getActionGas() external view returns(uint256) {return actionGas;}
 
     function getActionGasTotal()
         external

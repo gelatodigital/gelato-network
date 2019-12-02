@@ -11,11 +11,6 @@ interface IGelatoAction {
 
     function getGelatoCore() external view returns(IGelatoCore);
 
-    function getActionOperation()
-        external
-        view
-        returns(GelatoActionsStandard.ActionOperation);
-
     function getActionSelector() external view returns(bytes4);
 
     function getActionConditionsOkGas() external view returns(uint256);

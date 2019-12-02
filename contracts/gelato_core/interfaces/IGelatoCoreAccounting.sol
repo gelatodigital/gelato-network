@@ -32,8 +32,6 @@ interface IGelatoCoreAccounting {
         uint256 newMinExecutionClaimLifespan
     );
 
-    event LogSetCanExecMaxGas(uint256 canExecMaxGas, uint256 newCanExecMaxGas);
-
     event LogSetGelatoCoreExecGasOverhead(
         uint256 gelatoCoreExecGasOverhead,
         uint256 _newGasOverhead
@@ -94,13 +92,6 @@ interface IGelatoCoreAccounting {
 
     /**
      * @dev setter for GelatoCore devs to configure the protocol's executionGas calculations
-     * @param _newCanExecMaxGas new number for gelatoCore._canExecute max Gas
-     * @notice important for _getMinExecutionGasRequirement and getMintingDepositPayable
-     */
-    function setCanExecMaxGas(uint256 _newCanExecMaxGas) external;
-
-    /**
-     * @dev setter for GelatoCore devs to configure the protocol's executionGas calculations
      * @param _newGasOverhead new calc for gelatoCore.execute overhead gas
      * @notice important for _getMinExecutionGasRequirement and getMintingDepositPayable
      */
@@ -132,11 +123,6 @@ interface IGelatoCoreAccounting {
     /// @return uint256 wei amount of _executor's gelato-internal deposit
     function getExecutorBalance(address _executor) external view returns(uint256);
 
-    /// @dev getter for canExecMaxGas state variable
-    /// @return uint256 canExecMaxGas
-    function getCanExecMaxGas() external view returns(uint256);
-
-
     /// @dev getter for gelatoCoreExecGasOverhead state variable
     /// @return uint256 gelatoCoreExecGasOverhead
     function getGelatoCoreExecGasOverhead() external view returns(uint256);
@@ -145,10 +131,9 @@ interface IGelatoCoreAccounting {
     /// @return uint256 userProxyExecGasOverhead
     function getUserProxyExecGasOverhead() external view returns(uint256);
 
-
-    /// @dev getter for nonActionExecutionGas state variable
-    /// @return uint256 nonActionExecutionGas
-    function getNonActionExecutionGas() external view returns(uint256);
+    /// @dev getter for internalExecutionGas state variable
+    /// @return uint256 internalExecutionGas
+    function getTotalExecutionGasOverhead() external view returns(uint256);
 
     /**
      * @dev get the deposit payable for minting on gelatoCore
@@ -158,15 +143,16 @@ interface IGelatoCoreAccounting {
      * @notice minters (e.g. frontends) should use this API to get the msg.value
        payable to GelatoCore's mintExecutionClaim function.
      */
-    function getMintingDepositPayable(IGelatoAction _action, address _selectedExecutor)
+    function getMintingDepositPayable(address _selectedExecutor, IGelatoAction _action)
         external
         view
         returns(uint256 mintingDepositPayable);
 
     /// @dev calculates gas requirements based off _actionGasTotal
+    /// @param _triggerGas the gas forwared to trigger.staticcall inside gelatoCore.execute
     /// @param _actionGasTotal the gas forwarded with the action call
     /// @return the minimum gas required for calls to gelatoCore.execute()
-    function getMinExecutionGasRequirement(uint256 _actionGasTotal)
+    function getMinExecutionGas(uint256 _triggerGas, uint256 _actionGasTotal)
         external
         view
         returns(uint256);

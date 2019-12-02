@@ -20,21 +20,15 @@ contract GelatoCoreAccounting is IGelatoCoreAccounting, Ownable {
     mapping(address => uint256) internal executorClaimLifespan;
     mapping(address => uint256) internal executorBalance;
     //_____________ Gas values for executionClaim cost calculations _______
-    uint256 internal canExecMaxGas;
     uint256 internal gelatoCoreExecGasOverhead;
     uint256 internal userProxyExecGasOverhead;
-    uint256 internal nonActionExecutionGas = (
-        canExecMaxGas
-        + gelatoCoreExecGasOverhead
-        + userProxyExecGasOverhead
-    );
+    uint256 internal totalExecutionGasOverhead = gelatoCoreExecGasOverhead + userProxyExecGasOverhead;
     // =========================
 
     /// @dev non-deploy base contract
     constructor() internal {
         Ownable.initialize(msg.sender);
         minExecutionClaimLifespan = 10 minutes;
-        canExecMaxGas = 100000;
         gelatoCoreExecGasOverhead = 100000;
         userProxyExecGasOverhead = 40000;
     }
@@ -133,14 +127,6 @@ contract GelatoCoreAccounting is IGelatoCoreAccounting, Ownable {
         minExecutionClaimLifespan = _newMinExecutionClaimLifespan;
     }
 
-    function setCanExecMaxGas(uint256 _newCanExecMaxGas)
-        onlyOwner
-        external
-    {
-        emit LogSetCanExecMaxGas(canExecMaxGas, _newCanExecMaxGas);
-        canExecMaxGas = _newCanExecMaxGas;
-    }
-
     function setGelatoCoreExecGasOverhead(uint256 _newGasOverhead)
         onlyOwner
         external
@@ -176,10 +162,6 @@ contract GelatoCoreAccounting is IGelatoCoreAccounting, Ownable {
         return executorBalance[_executor];
     }
 
-    function getCanExecMaxGas() external view returns(uint256) {
-        return canExecMaxGas;
-    }
-
     function getGelatoCoreExecGasOverhead() external view returns(uint256) {
         return gelatoCoreExecGasOverhead;
     }
@@ -188,40 +170,42 @@ contract GelatoCoreAccounting is IGelatoCoreAccounting, Ownable {
         return userProxyExecGasOverhead;
     }
 
-    function getNonActionExecutionGas() external view returns(uint256) {
-        return nonActionExecutionGas;
+    function getTotalExecutionGasOverhead() external view returns(uint256) {
+        return totalExecutionGasOverhead;
     }
     // =========================
 
     // _______ APIs for executionClaim pricing ______________________________________
     function getMintingDepositPayable(
+        address _selectedExecutor,
         IGelatoAction _action,
-        address _selectedExecutor
+        IGelatoTrigger _trigger
     )
         external
         view
         onlyRegisteredExecutors(_selectedExecutor)
         returns(uint256 mintingDepositPayable)
     {
+        uint256 triggerGas = _trigger.getTriggerGas();
         uint256 actionGasTotal = _action.getActionGasTotal();
-        uint256 executionMinGas = _getMinExecutionGasRequirement(actionGasTotal);
+        uint256 executionMinGas = _getMinExecutionGas(triggerGas, actionGasTotal);
         mintingDepositPayable = executionMinGas.mul(executorPrice[_selectedExecutor]);
     }
 
-    function getMinExecutionGasRequirement(uint256 _actionGasTotal)
+    function getMinExecutionGas(uint256 _triggerGas, uint256 _actionGasTotal)
         external
         view
         returns(uint256)
     {
-        return _getMinExecutionGasRequirement(_actionGasTotal);
+        return _getMinExecutionGas(_triggerGas, _actionGasTotal);
     }
 
-    function _getMinExecutionGasRequirement(uint256 _actionGasTotal)
+    function _getMinExecutionGas(uint256 _triggerGas, uint256 _actionGasTotal)
         internal
         view
         returns(uint256)
     {
-        return nonActionExecutionGas.add(_actionGasTotal);
+        return totalExecutionGasOverhead.add(_triggerGas).add(_actionGasTotal);
     }
     // =======
 }

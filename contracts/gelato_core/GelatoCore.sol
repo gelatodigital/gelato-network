@@ -40,13 +40,15 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         else revert("GelatoCore.mintExecutionClaim: msg.sender is not proxied");
         // =============
         // ______ Charge Minting Deposit _______________________________________
-        uint256 actionGasTotal = _action.getActionGasTotal();
-        require(actionGasTotal != 0, "GelatoCore.mintExecutionClaim: 0 actionGasTotal");
+        uint256 minExecutionGas;
         {
-            uint256 executionMinGas = _getMinExecutionGasRequirement(actionGasTotal);
-            uint256 mintingDepositPayable = executionMinGas.mul(executorPrice[_selectedExecutor]);
+            uint256 triggerGas = _trigger.getTriggerGas();
+            require(triggerGas != 0, "GelatoCore.mintExecutionClaim: 0 triggerGas");
+            uint256 actionGasTotal = _action.getActionGasTotal();
+            require(actionGasTotal != 0, "GelatoCore.mintExecutionClaim: 0 actionGasTotal");
+            minExecutionGas = _getMinExecutionGas(triggerGas, actionGasTotal);
             require(
-                msg.value == mintingDepositPayable,
+                msg.value == minExecutionGas.mul(executorPrice[_selectedExecutor]),
                 "GelatoCore.mintExecutionClaim: msg.value failed"
             );
         }
@@ -69,7 +71,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
                     _triggerPayloadWithSelector,
                     _action,
                     _actionPayloadWithSelector,
-                    userProxyExecGasOverhead.add(actionGasTotal),
+                    minExecutionGas,
                     executionClaimExpiryDate,
                     msg.value
                 )
@@ -85,7 +87,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
             _triggerPayloadWithSelector,
             _action,
             _actionPayloadWithSelector,
-            userProxyExecGasOverhead.add(actionGasTotal),
+            minExecutionGas,
             executionClaimExpiryDate,
             msg.value
         );
@@ -99,7 +101,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         bytes calldata _triggerPayloadWithSelector,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
-        uint256 _userProxyExecGas,
+        uint256 _minExecutionGas,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
     )
@@ -114,7 +116,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
             _triggerPayloadWithSelector,
             _action,
             _actionPayloadWithSelector,
-            _userProxyExecGas,
+            _minExecutionGas,
             _executionClaimExpiryDate,
             _mintingDeposit
         );
@@ -127,7 +129,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         bytes calldata _triggerPayloadWithSelector,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
-        uint256 _userProxyExecGas,
+        uint256 _minExecutionGas,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
     )
@@ -143,7 +145,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
             _triggerPayloadWithSelector,
             _action,
             _actionPayloadWithSelector,
-            _userProxyExecGas,
+            _minExecutionGas,
             _executionClaimExpiryDate,
             _mintingDeposit
         );
@@ -158,7 +160,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         bytes calldata _triggerPayloadWithSelector,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
-        uint256 _userProxyExecGas,
+        uint256 _minExecutionGas,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
     )
@@ -172,7 +174,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
             _triggerPayloadWithSelector,
             _action,
             _actionPayloadWithSelector,
-            _userProxyExecGas,
+            _minExecutionGas,
             _executionClaimExpiryDate,
             _mintingDeposit
         );
@@ -185,7 +187,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         bytes calldata _triggerPayloadWithSelector,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
-        uint256 _userProxyExecGas,
+        uint256 _minExecutionGas,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
     )
@@ -200,7 +202,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
             _triggerPayloadWithSelector,
             _action,
             _actionPayloadWithSelector,
-            _userProxyExecGas,
+            _minExecutionGas,
             _executionClaimExpiryDate,
             _mintingDeposit
         );
@@ -216,7 +218,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         bytes calldata _triggerPayloadWithSelector,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
-        uint256 _userProxyExecGas,
+        uint256 _minExecutionGas,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
     )
@@ -237,7 +239,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
                 _triggerPayloadWithSelector,
                 _action,
                 _actionPayloadWithSelector,
-                _userProxyExecGas,
+                _minExecutionGas,
                 _executionClaimExpiryDate,
                 _mintingDeposit
             )
@@ -298,7 +300,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         bytes memory _triggerPayloadWithSelector,
         IGelatoAction _action,
         bytes memory _actionPayloadWithSelector,
-        uint256 _userProxyExecGas,
+        uint256 _minExecutionGas,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
     )
@@ -316,7 +318,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
                 _triggerPayloadWithSelector,
                 _action,
                 _actionPayloadWithSelector,
-                _userProxyExecGas,
+                _minExecutionGas,
                 _executionClaimExpiryDate,
                 _mintingDeposit
             )
@@ -332,9 +334,10 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         // _____________ Dynamic CHECKS __________________________________________
         bool executable;
         {
-            // Call to trigger view (returns(bool))
+            // Staticall to trigger (returns(bool))
+            uint256 triggerGas = _trigger.getTriggerGas();
             (bool success,
-             bytes memory returndata) = address(_trigger).staticcall.gas(canExecMaxGas / 2)(
+             bytes memory returndata) = address(_trigger).staticcall.gas(triggerGas)(
                 _triggerPayloadWithSelector
             );
             if (!success) return GelatoCoreEnums.CanExecuteCheck.TriggerReverted;
@@ -344,13 +347,14 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
             }
         }
         {
-            // Call to action.actionConditionsFulfilled view (returns(bool))
+            // Staticcall to action.actionConditionsFulfilled (returns(bool))
             bytes memory actionConditionsOkPayloadWithSelector = abi.encodeWithSelector(
                 _action.actionConditionsOk.selector,
                 _actionPayloadWithSelector
             );
+            uint256 actionConditionsOkGas = _action.getActionConditionsOkGas();
             (bool success,
-             bytes memory returndata) = address(_action).staticcall.gas(canExecMaxGas / 2)(
+             bytes memory returndata) = address(_action).staticcall.gas(actionConditionsOkGas)(
                 actionConditionsOkPayloadWithSelector
             );
             if (!success) return GelatoCoreEnums.CanExecuteCheck.ActionReverted;
@@ -372,7 +376,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         bytes memory _triggerPayloadWithSelector,
         IGelatoAction _action,
         bytes memory _actionPayloadWithSelector,
-        uint256 _userProxyExecGas,
+        uint256 _minExecutionGas,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
     )
@@ -380,11 +384,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         returns(GelatoCoreEnums.ExecutionResult executionResult)
     {
         uint256 startGas = gasleft();
-        // Ensure that executor sends enough gas for the execution
-        require(
-            startGas >= _getMinExecutionGasRequirement(_userProxyExecGas.sub(userProxyExecGasOverhead)),
-            "GelatoCore.execute: Insufficient gas sent"
-        );
+        require(startGas >= _minExecutionGas, "GelatoCore.execute: Insufficient gas sent");
         // _______ canExecute() CHECK ______________________________________________
         {
             GelatoCoreEnums.CanExecuteCheck canExecuteResult = _canExecute(
@@ -394,7 +394,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
                 _triggerPayloadWithSelector,
                 _action,
                 _actionPayloadWithSelector,
-                _userProxyExecGas,
+                _minExecutionGas,
                 _executionClaimExpiryDate,
                 _mintingDeposit
             );
@@ -408,15 +408,10 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
             }
         }
         // ========
-        // _________________________________________________________________________
-        //  We are past the canExecute latency problem between executors
-        //   initial call to canExecute, and the internal call to canExecute we
-        //   performed above inside the execute fn. This means that there should
-        //   be NO MORE REVERTS UNLESS
-        //   1) trigger, userProxy, and/or action are buggy,
-        //   2) user has insufficient funds at disposal at execution time (e.g.
-        //   has approved funds, but in the interim has transferred them elsewhere)
-        //   3) some out of gas error
+
+        // Above the executor pays for reverts (e.g. canExecute reverts)
+        // -------------------------------------------------------------
+        // From below the user pays for reverts (e.g. action reverts)
 
         // EFFECTS
         delete hashedExecutionClaims[_executionClaimId];
@@ -424,15 +419,11 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         // _________  call to userProxy.execute => action  __________________________
         {
             bytes memory userProxyExecPayloadWithSelector = abi.encodeWithSelector(
-                _userProxy.execute.selector,
+                _userProxy.executeDelegatecall.selector,
                 _action,
                 _actionPayloadWithSelector
             );
-            uint256 gasBefore = gasleft();
-            (bool success,) = address(_userProxy).call.gas(_userProxyExecGas)(
-                userProxyExecPayloadWithSelector
-            );
-            emit LogUserProxyExecuteGas(gasBefore, gasleft(), gasBefore - gasleft());
+            (bool success,) = address(_userProxy).call(userProxyExecPayloadWithSelector);
             if (success) executionResult = GelatoCoreEnums.ExecutionResult.Success;
             // @dev if execution fails, no revert, because executor still paid out
             else executionResult = GelatoCoreEnums.ExecutionResult.Failure;
@@ -448,9 +439,8 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
             _userProxy,
             executionResult,
             tx.gasprice,
-            gasleft().mul(tx.gasprice).add(70000),
-            _mintingDeposit,
-            gasleft()
+            gasleft().sub(startGas).add(gelatoCoreExecGasOverhead).mul(tx.gasprice),
+            _mintingDeposit
         );
     }
 }

@@ -17,8 +17,17 @@ contract GelatoUserProxy is IGelatoUserProxy {
         gelatoCore = msg.sender;
     }
 
+    modifier onlyUser() {
+        require(
+            msg.sender == user,
+            "GelatoUserProxy.onlyUser: failed"
+        );
+        _;
+    }
+
     modifier auth() {
-        require(msg.sender == user || msg.sender == gelatoCore,
+        require(
+            msg.sender == user || msg.sender == gelatoCore,
             "GelatoUserProxy.auth: failed"
         );
         _;
@@ -31,25 +40,37 @@ contract GelatoUserProxy is IGelatoUserProxy {
         _;
     }
 
-    function execute(address payable _action, bytes calldata _actionPayloadWithSelector)
+    function executeCall(
+        address payable _action,
+        bytes calldata _actionPayloadWithSelector
+    )
         external
         payable
-        auth
+        onlyUser
         noZeroAddress(_action)
         returns(bool success, bytes memory returndata)
     {
-        GelatoActionsStandard.ActionOperation operation = GelatoActionsStandard(_action).getActionOperation();
-        if (operation == GelatoActionsStandard.ActionOperation.call) {
-            (success, returndata) = _action.call(_actionPayloadWithSelector);
-            ///@dev we should delete require later - leave it for testing action executionClaimIds
-            require(success, "GelatoUserProxy.execute(): _action.call failed");
-        } else if (operation == GelatoActionsStandard.ActionOperation.delegatecall) {
-            (success, returndata) = _action.delegatecall(_actionPayloadWithSelector);
-            ///@dev we should delete require later - leave it for testing action executionClaimIds
-            require(success, "GelatoUserProxy.execute(): _action.delegatecall failed");
-        } else {
-            revert("GelatoUserProxy.execute(): invalid action operation");
-        }
+        (success, returndata) = _action.call(_actionPayloadWithSelector);
+        ///@dev we should delete require later - leave it for testing action executionClaimIds
+        require(success, "GelatoUserProxy.executeCall(): _action.call failed");
+    }
+
+    function executeDelegatecall(
+        IGelatoAction _action,
+        bytes calldata _actionPayloadWithSelector
+    )
+        external
+        payable
+        auth
+        noZeroAddress(address(_action))
+        returns(bool success, bytes memory returndata)
+    {
+        uint256 _actionGas = _action.getActionGas();
+        (success, returndata) = address(_action).delegatecall.gas(_actionGas)(
+            _actionPayloadWithSelector
+        );
+        ///@dev we should delete require later - leave it for testing action executionClaimIds
+        require(success, "GelatoUserProxy.executeDelegatecall(): _action.delegatecall failed");
     }
 
     function getUser() external view returns(address payable) {return user;}

@@ -10,7 +10,6 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
     using SafeERC20 for IERC20;
 
     constructor() public {
-        actionOperation = ActionOperation.delegatecall;
         actionSelector = this.action.selector;
         actionConditionsOkGas = 50000;
         actionGas = 700000;
