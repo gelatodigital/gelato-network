@@ -1,27 +1,19 @@
 {
   "name": "gelato-contracts",
   "version": "0.0.1",
-  "description": "If This Then That Automation on Ethereum",
+  "description": "If This Then That automation on Ethereum",
+  "repository": "https://github.com/gelatodigital/gelato.git",
+  "author": "The guys from gelato-digital",
+  "private": false,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/gelatodigital/gelato.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/gelatodigital/gelato/issues"
-  },
-  "homepage": "https://github.com/gelatodigital/gelato#readme",
-  "devDependencies": {
-    "@nomiclabs/buidler": "^1.0.1"
+    "compile": "npx buidler compile"
   },
   "dependencies": {
     "@openzeppelin/contracts-ethereum-package": "^2.4.0",
     "@openzeppelin/upgrades": "^2.6.0",
     "dotenv": "^8.2.0"
+  },
+  "devDependencies": {
+    "@nomiclabs/buidler": "^1.0.1"
   }
 }
