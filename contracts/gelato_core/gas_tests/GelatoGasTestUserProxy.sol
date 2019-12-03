@@ -22,6 +22,6 @@ contract GelatoGasTestUserProxy is GelatoUserProxy {
             _actionPayloadWithSelector
         );
         if (success) revert(string(abi.encodePacked(startGas - gasleft())));
-        revert("GasTestUserProxy.executeDelegatecall: Action reverted");
+        revert("GasTestUserProxy.executeDelegatecall: Action reverted or wrong arguments supplied");
     }
 }

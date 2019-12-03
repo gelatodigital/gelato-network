@@ -356,7 +356,21 @@ interface IGelatoCore {
         returns(uint256);
 
 
-    // ==================== GAS TESTING =====================================
+    // ==================== GAS TESTING ==============================================
+    // ============= GELATO_GAS_TEST_USER_PROXY_MANAGER ==============
+    function createGasTestUserProxy() external returns(address gasTestUserProxy);
+
+    function getUserOfGasTestProxy(address _gasTestProxy)
+        external
+        view
+        returns(address);
+
+    function getGasTestProxyOfUser(address _user)
+        external
+        view
+        returns(address);
+
+    // ============= GELATO_GAS_TESTING_FNs ==============
     function revertLogGasTriggerCheck(
         IGelatoTrigger _trigger,
         bytes calldata _triggerPayloadWithSelector,

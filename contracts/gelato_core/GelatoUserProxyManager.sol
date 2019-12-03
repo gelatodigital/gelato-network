@@ -24,6 +24,14 @@ contract GelatoUserProxyManager is IGelatoUserProxyManager, GelatoGasTestUserPro
         _;
     }
 
+    modifier userProxyCheck(IGelatoUserProxy _userProxy) {
+        require(
+            _isUserProxy(address(_userProxy)),
+            "GelatoUserProxyManager.userProxyCheck: _userProxy not registered"
+        );
+        _;
+    }
+
     function createUserProxy()
         external
         //userHasNoProxy

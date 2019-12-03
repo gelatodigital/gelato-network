@@ -1,6 +1,6 @@
 pragma solidity ^0.5.13;
 
-import "./IGelatoGasTestUserProxyManager.sol";
+import "../interfaces/IGelatoGasTestUserProxyManager.sol";
 import "./GelatoGasTestUserProxy.sol";
 
 contract GelatoGasTestUserProxyManager is IGelatoGasTestUserProxyManager {
@@ -10,7 +10,7 @@ contract GelatoGasTestUserProxyManager is IGelatoGasTestUserProxyManager {
     mapping(address => address) internal userToGasTestProxy;
     mapping(address => address) internal gasTestProxyToUser;
 
-    modifier isGasTestProxy(address _) {
+    modifier gasTestProxyCheck(address _) {
         require(_isGasTestProxy(_), "GelatoGasTestUserProxyManager.isGasTestProxy");
         _;
     }
