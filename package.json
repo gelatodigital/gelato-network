@@ -1,35 +1,27 @@
 {
   "name": "gelato-contracts",
   "version": "0.0.1",
-  "engines": {
-    "node": "12.12.0"
-  },
-  "main": "index.js",
+  "description": "If This Then That Automation on Ethereum",
   "scripts": {
-    "erc20-approve:rinkeby": "export RINKEBY=true && node scripts/erc20/erc20Approve.js",
-    "erc20-approve:ropsten": "export ROPSTEN=true && node scripts/erc20/erc20Approve.js",
-    "gc-logminting:ropsten": "export ROPSTEN=true && node scripts/events/gelatoCore_events/fetchMintingLogs.js",
-    "gc-logminting:rinkeby": "export RINKEBY=true && node scripts/events/gelatoCore_events/fetchMintingLogs.js",
-    "kyber-multimint:ropsten": "export ROPSTEN=true && node scripts/minting/kyber/kyberMultiMintForTimeTrigger.js",
-    "kyber-multimint:rinkeby": "export RINKEBY=true && node scripts/minting/kyber/kyberMultiMintForTimeTrigger.js",
-    "dx-multimint:rinkeby": "node scripts/minting/dutchX_rinkeby/dutchXMultiMintForTimeTrigger.js",
-    "dx-mint-claimwithdraw:rinkeby": "export RINKEBY=true && node scripts/minting/dutchX_rinkeby/dutchXMintClaimWithdrawBalancesAtIndexFromDXToUser.js",
-    "dx-mint-withdraw:rinkeby": "export RINKEBY=true && node scripts/minting/dutchX_rinkeby/dutchXMintWithdrawBalanceFromDXToUser",
-    "dx-logsell:rinkeby": "export RINKEBY=true && node scripts/events/dutchX_events/fetchLogSellOnDutchX.js",
-    "dx-logclaimwithdraw:rinkeby": "export RINKEBY=true && node scripts/events/dutchX_events/fetchLogClaimWithdrawFromDXToUser.js",
-    "dx-logwithdraw:rinkeby": "export RINKEBY=true && node scripts/events/dutchX_events/fetchLogWithdrawFromDXToUser.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gelatodigital/gelato.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "ethers": "^4.0.38"
+  "bugs": {
+    "url": "https://github.com/gelatodigital/gelato/issues"
   },
+  "homepage": "https://github.com/gelatodigital/gelato#readme",
   "devDependencies": {
+    "@nomiclabs/buidler": "^1.0.1"
+  },
+  "dependencies": {
     "@openzeppelin/contracts-ethereum-package": "^2.4.0",
     "@openzeppelin/upgrades": "^2.6.0",
-    "@truffle/hdwallet-provider": "^1.0.25",
-    "dotenv": "^8.2.0",
-    "solidity-docgen": "^0.3.13"
+    "dotenv": "^8.2.0"
   }
 }
