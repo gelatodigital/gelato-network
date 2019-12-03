@@ -1,4 +1,4 @@
-pragma solidity ^0.5.10;
+pragma solidity ^0.5.13;
 
 /// @title IGelatoTrigger - solidity interface of GelatoTriggersStandard
 /// @notice all the APIs of GelatoTriggersStandard

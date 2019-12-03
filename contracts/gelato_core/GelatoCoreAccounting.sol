@@ -1,4 +1,4 @@
-pragma solidity ^0.5.10;
+pragma solidity ^0.5.13;
 
 import "./interfaces/IGelatoCoreAccounting.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
@@ -25,7 +25,7 @@ contract GelatoCoreAccounting is IGelatoCoreAccounting, Ownable {
     uint256 internal totalExecutionGasOverhead = gelatoCoreExecGasOverhead + userProxyExecGasOverhead;
     // =========================
 
-    /// @dev non-deploy base contract
+    // non-deploy base contract
     constructor() internal {
         Ownable.initialize(msg.sender);
         minExecutionClaimLifespan = 10 minutes;

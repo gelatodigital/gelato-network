@@ -1,4 +1,4 @@
-pragma solidity ^0.5.10;
+pragma solidity ^0.5.13;
 
 import "@openzeppelin/upgrades/contracts/Initializable.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol";
@@ -11,7 +11,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol
  contract GelatoTriggerActionAdmin/* is Initializable,
                                       Ownable */
  { /*
-    /// @dev non-deploy base contract
+    // non-deploy base contract
     constructor() internal {}
 
     address public constant GENESIS = address(0x1);

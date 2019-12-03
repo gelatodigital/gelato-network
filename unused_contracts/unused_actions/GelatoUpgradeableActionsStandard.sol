@@ -1,4 +1,4 @@
-pragma solidity ^0.5.10;
+pragma solidity ^0.5.13;
 
 import "./IGelatoUpgradeableAction.sol";
 import "./GelatoActionsStandard.sol";
@@ -8,7 +8,7 @@ import "@openzeppelin/upgrades/contracts/upgradeability/AdminUpgradeabilityProxy
 contract GelatoUpgradeableActionsStandard is IGelatoUpgradeableAction,
                                              GelatoActionsStandard
 {
-    /// @dev non-deploy base contract
+    // non-deploy base contract
     constructor() internal {}
 
     ProxyAdmin internal proxysProxyAdmin;

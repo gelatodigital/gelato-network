@@ -1,13 +1,13 @@
-pragma solidity ^0.5.10;
+pragma solidity ^0.5.13;
 
 import "./interfaces/IGelatoUserProxyManager.sol";
-import "./GelatoUserProxy.sol";
+import "./GelatoGasTestUserProxyManager.sol";
 
 /// @title GelatoUserProxyManager
 /// @notice registry and factory for GelatoUserProxies
 /// @dev find all NatSpecs inside IGelatoUserProxyManager
-contract GelatoUserProxyManager is IGelatoUserProxyManager {
-    /// @dev non-deploy base contract
+contract GelatoUserProxyManager is IGelatoUserProxyManager, GelatoGasTestUserProxyManager {
+    // non-deploy base contract
     constructor() internal {}
 
     uint256 internal userCount;

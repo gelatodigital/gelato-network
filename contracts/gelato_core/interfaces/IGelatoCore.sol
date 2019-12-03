@@ -1,4 +1,4 @@
-pragma solidity ^0.5.10;
+pragma solidity ^0.5.13;
 
 import "../GelatoCoreEnums.sol";
 import "./IGelatoUserProxy.sol";
@@ -98,22 +98,6 @@ interface IGelatoCore {
         view
         returns (GelatoCoreEnums.CanExecuteCheck);
 
-    function logCanExecuteGasViaRevert(
-        uint256 _executionClaimId,
-        IGelatoUserProxy _userProxy,
-        IGelatoTrigger _trigger,
-        bytes calldata _triggerPayloadWithSelector,
-        IGelatoAction _action,
-        bytes calldata _actionPayloadWithSelector,
-        uint256 _actionGasTotal,
-        uint256 _actionConditionsOkGas,
-        uint256 _executionMinGas,
-        uint256 _executionClaimExpiryDate,
-        uint256 _mintingDeposit
-    )
-        external
-        view
-        returns(GelatoCoreEnums.CanExecuteCheck canExecuteResult);
 
     /**
      * @dev the API executors call when they execute an executionClaim
@@ -131,21 +115,6 @@ interface IGelatoCore {
      * @notice re-entrancy protection due to accounting operations and interactions
      */
     function execute(
-        uint256 _executionClaimId,
-        IGelatoUserProxy _userProxy,
-        IGelatoTrigger _trigger,
-        bytes calldata _triggerPayloadWithSelector,
-        IGelatoAction _action,
-        bytes calldata _actionPayloadWithSelector,
-        uint256 _actionGasTotal,
-        uint256 _executionMinGas,
-        uint256 _executionClaimExpiryDate,
-        uint256 _mintingDeposit
-    )
-        external
-        returns(GelatoCoreEnums.ExecutionResult executionResult);
-
-    function logExecuteGasViaRevert(
         uint256 _executionClaimId,
         IGelatoUserProxy _userProxy,
         IGelatoTrigger _trigger,
@@ -384,5 +353,69 @@ interface IGelatoCore {
     function getMinExecutionGas(uint256 _triggerGas, uint256 _actionGasTotal)
         external
         view
+        returns(uint256);
+
+
+    // ==================== GAS TESTING =====================================
+    function logTriggerCheckGasViaRevert(
+        IGelatoTrigger _trigger,
+        bytes calldata _triggerPayloadWithSelector,
+        uint256 _triggerGas
+    )
+        external
+        view
+        returns(uint256);
+
+    function logActionConditionsCheckGasViaRevert(
+        IGelatoAction _action,
+        bytes calldata _actionPayloadWithSelector,
+        uint256 _actionConditionsOkGas
+    )
+        external
+        view
+        returns(uint256);
+
+
+    function logCanExecuteGasViaRevert(
+        uint256 _executionClaimId,
+        IGelatoUserProxy _userProxy,
+        IGelatoTrigger _trigger,
+        bytes calldata _triggerPayloadWithSelector,
+        uint256 _triggerGas,
+        IGelatoAction _action,
+        bytes calldata _actionPayloadWithSelector,
+        uint256 _actionGasTotal,
+        uint256 _actionConditionsOkGas,
+        uint256 _minExecutionGas,
+        uint256 _executionClaimExpiryDate,
+        uint256 _mintingDeposit
+    )
+        external
+        view
+        returns(uint256);
+
+    function revertLogActionGasViaGasTestUserProxy(
+        IGelatoUserProxy _gasTestUserProxy,
+        IGelatoAction _action,
+        bytes calldata _actionPayloadWithSelector,
+        uint256 _actionGas
+    )
+        external
+        returns(uint256);
+
+    function logExecuteGasViaRevert(
+        uint256 _executionClaimId,
+        IGelatoUserProxy _userProxy,
+        IGelatoTrigger _trigger,
+        bytes calldata _triggerPayloadWithSelector,
+        uint256 _triggerGas,
+        IGelatoAction _action,
+        bytes calldata _actionPayloadWithSelector,
+        uint256 _actionGasTotal,
+        uint256 _minExecutionGas,
+        uint256 _executionClaimExpiryDate,
+        uint256 _mintingDeposit
+    )
+        external
         returns(uint256);
 }

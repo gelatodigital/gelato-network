@@ -1,4 +1,4 @@
-pragma solidity ^0.5.10;
+pragma solidity ^0.5.13;
 
 interface IGelatoUpgradeableAction {
     function askProxyForProxyAdminAddress() external view returns(address);

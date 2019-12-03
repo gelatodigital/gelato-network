@@ -1,4 +1,4 @@
-pragma solidity ^0.5.10;
+pragma solidity ^0.5.13;
 
 import "@openzeppelin/upgrades/contracts/Initializable.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
@@ -7,7 +7,7 @@ import "./IDutchX.sol";
 
 contract GelatoDutchXInterface is Initializable
 {
-    /// @dev non-deploy base contract
+    // non-deploy base contract
     constructor() internal {}
 
     using GelatoERC20Lib for IERC20;

@@ -1,4 +1,4 @@
-pragma solidity ^0.5.10;
+pragma solidity ^0.5.13;
 
 import "../../GelatoActionsStandard.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";

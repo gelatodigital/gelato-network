@@ -1,4 +1,4 @@
-pragma solidity ^0.5.10;
+pragma solidity ^0.5.13;
 
 import "./IGelatoTrigger.sol";
 
@@ -6,7 +6,7 @@ import "./IGelatoTrigger.sol";
 /// @dev find all the NatSpecs inside IGelatoTrigger
 contract GelatoTriggersStandard is IGelatoTrigger {
     constructor() internal {}
-    
+
     bytes4 internal triggerSelector;
     uint256 internal triggerGas;
 
