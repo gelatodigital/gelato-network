@@ -1,30 +1,7 @@
 pragma solidity ^0.5.13;
 
-import "./GelatoUserProxy.sol";
-import "./interfaces/IGelatoGasTestUserProxyManager.sol";
-
-contract GasTestUserProxy is GelatoUserProxy {
-
-    constructor(address payable _user) public GelatoUserProxy(_user) {}
-
-    function executeDelegatecall(
-        IGelatoAction _action,
-        bytes calldata _actionPayloadWithSelector,
-        uint256 _actionGas
-    )
-        external
-        payable
-        auth
-        noZeroAddress(address(_action))
-        returns(bool success, bytes memory returndata)
-    {
-        uint256 startGas = gasleft();
-        (success, returndata) = address(_action).delegatecall.gas(_actionGas)(
-            _actionPayloadWithSelector
-        );
-        revert(string(abi.encodePacked(startGas - gasleft())));
-    }
-}
+import "./IGelatoGasTestUserProxyManager.sol";
+import "./GelatoGasTestUserProxy.sol";
 
 contract GelatoGasTestUserProxyManager is IGelatoGasTestUserProxyManager {
     // non-deploy base contract
@@ -42,7 +19,7 @@ contract GelatoGasTestUserProxyManager is IGelatoGasTestUserProxyManager {
         external
         returns(address gasTestUserProxy)
     {
-        gasTestUserProxy = address(new GasTestUserProxy(msg.sender));
+        gasTestUserProxy = address(new GelatoGasTestUserProxy(msg.sender));
         userToGasTestProxy[msg.sender] = gasTestUserProxy;
         gasTestProxyToUser[gasTestUserProxy] = msg.sender;
     }

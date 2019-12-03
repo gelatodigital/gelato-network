@@ -1,7 +1,7 @@
 pragma solidity ^0.5.13;
 
 import "./interfaces/IGelatoUserProxyManager.sol";
-import "./GelatoGasTestUserProxyManager.sol";
+import "./gas_tests/GelatoGasTestUserProxyManager.sol";
 
 /// @title GelatoUserProxyManager
 /// @notice registry and factory for GelatoUserProxies

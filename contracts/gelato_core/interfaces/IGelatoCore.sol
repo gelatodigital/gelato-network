@@ -357,7 +357,7 @@ interface IGelatoCore {
 
 
     // ==================== GAS TESTING =====================================
-    function logTriggerCheckGasViaRevert(
+    function revertLogGasTriggerCheck(
         IGelatoTrigger _trigger,
         bytes calldata _triggerPayloadWithSelector,
         uint256 _triggerGas
@@ -366,7 +366,7 @@ interface IGelatoCore {
         view
         returns(uint256);
 
-    function logActionConditionsCheckGasViaRevert(
+    function revertLogGasActionConditionsCheck(
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
         uint256 _actionConditionsOkGas
@@ -375,8 +375,7 @@ interface IGelatoCore {
         view
         returns(uint256);
 
-
-    function logCanExecuteGasViaRevert(
+    function revertLogGasCanExecute(
         uint256 _executionClaimId,
         IGelatoUserProxy _userProxy,
         IGelatoTrigger _trigger,
@@ -394,7 +393,7 @@ interface IGelatoCore {
         view
         returns(uint256);
 
-    function revertLogActionGasViaGasTestUserProxy(
+    function revertLogGasActionViaGasTestUserProxy(
         IGelatoUserProxy _gasTestUserProxy,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
@@ -403,7 +402,16 @@ interface IGelatoCore {
         external
         returns(uint256);
 
-    function logExecuteGasViaRevert(
+    function revertLogGasTestUserProxyExecute(
+        IGelatoUserProxy _userProxy,
+        IGelatoAction _action,
+        bytes calldata _actionPayloadWithSelector,
+        uint256 _actionGas
+    )
+        external
+        returns(uint256);
+
+    function revertLogGasExecute(
         uint256 _executionClaimId,
         IGelatoUserProxy _userProxy,
         IGelatoTrigger _trigger,
