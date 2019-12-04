@@ -10,8 +10,8 @@
     "build": "babel ./scripts --out-dir dist",
     "clean": "rimraf dist",
     "compile": "npx buidler compile",
-    "deploy-gelatocore": "babel-node scripts/deploy/deployGelatoCore.js",
-    "etherprice": "npx buidler etherPrice --network ropsten",
+    "deploy:gelatocore": "node scripts/deploy/deployGelatoCore.js",
+    "etherprice": "npx buidler etherPrice",
     "rebuild": "yarn clean && yarn build"
   },
   "devDependencies": {

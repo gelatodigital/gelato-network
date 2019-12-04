@@ -1,4 +1,5 @@
 // Local imports
+require("@babel/register");
 const { getDefaultProvider, providers } = require("ethers");
 
 // ============ Buidler Runtime Environment (BRE) ==================================
@@ -50,7 +51,7 @@ task(
 task(
   "blockNumber:ropsten",
   "Logs the current block number of Ropsten Test Net",
-  async (_, {}) => {
+  async () => {
     try {
       const provider = getDefaultProvider("ropsten");
       const { name: networkName } = await provider.getNetwork();
@@ -67,20 +68,16 @@ task(
 
 task("ether:balance");
 
-task(
-  "ether:price",
-  "Logs the etherscan ether-USD price",
-  async (_, { ethers }) => {
-    try {
-      const { name: networkName } = await ethers.provider.getNetwork();
-      const etherscanProvider = new providers.EtherscanProvider();
-      const ethUSDPrice = await etherscanProvider.getEtherPrice();
-      console.log(`\n\t\t Ether price in USD (${networkName}): ${ethUSDPrice}`);
-    } catch (err) {
-      console.error(err);
-    }
+task("ether:price", "Logs the etherscan ether-USD price", async () => {
+  try {
+    const etherscanProvider = new providers.EtherscanProvider();
+    const { name: networkName } = await etherscanProvider.getNetwork();
+    const ethUSDPrice = await etherscanProvider.getEtherPrice();
+    console.log(`\n\t\t Ether price in USD (${networkName}): ${ethUSDPrice}`);
+  } catch (err) {
+    console.error(err);
   }
-);
+});
 
 task(
   "network:current",
