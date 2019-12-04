@@ -6,12 +6,12 @@
   "author": "The guys from gelato-digital",
   "private": false,
   "scripts": {
-    "blocknumber:ropsten": "npx buidler blockNumber:ropsten",
+    "blocknumber-ropsten": "npx buidler blockNumber:ropsten",
     "build": "babel ./scripts --out-dir dist",
     "clean": "rimraf dist",
     "compile": "npx buidler compile",
-    "deploy:gelatocore": "node scripts/deploy/deployGelatoCore.js",
-    "etherprice": "npx buidler etherPrice",
+    "deploy-gelatocore": "babel-node scripts/deploy/deployGelatoCore.js",
+    "eth-price": "npx buidler eth:price",
     "rebuild": "yarn clean && yarn build"
   },
   "devDependencies": {
