@@ -9,14 +9,13 @@ import "./GelatoActionsStandard.sol";
 interface IGelatoAction {
     event LogAction(address indexed user);
 
+    function setActionConditionsOkGas(uint256 _gas) external;
+    function setActionGas(uint256 _gas) external;
+    
     function getGelatoCore() external view returns(IGelatoCore);
-
     function getActionSelector() external view returns(bytes4);
-
     function getActionConditionsOkGas() external view returns(uint256);
-
     function getActionGas() external view returns(uint256);
-
     function getActionGasTotal() external view returns(uint256);
 
     /**
