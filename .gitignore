@@ -13,10 +13,10 @@ bin/
 .vscode
 
 #buidler
-#cache/
+cache/
 
 # build directory
-#artifacts/
+artifacts/
 build/
 
 # OpenZeppelin SDK
