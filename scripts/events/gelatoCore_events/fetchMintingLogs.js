@@ -1,12 +1,12 @@
 // Javascript Ethereum API Library
-const ethers = require("ethers");
+import { providers, utils } from "ethers";
 
 // Helpers
-const sleep = require("../../helpers/sleep.js").sleep;
+import { sleep } from "../../helpers/sleep.js";
 
 // ENV VARIABLES for exec-console.log (heroku local default fetches from .env)
-const path = require("path");
-require("dotenv").config({ path: path.resolve(__dirname, "../../../.env") });
+import { resolve } from "path";
+require("dotenv").config({ path: resolve(__dirname, "../../../.env") });
 const DEV_MNEMONIC = process.env.DEV_MNEMONIC;
 const INFURA_ID = process.env.INFURA_ID;
 console.log(
@@ -23,7 +23,7 @@ let provider;
 let searchFromBlock;
 if (process.env.ROPSTEN) {
   console.log(`\n\t\t ✅ connected to ROPSTEN ✅ \n`);
-  provider = new ethers.providers.InfuraProvider("ropsten", INFURA_ID);
+  provider = new providers.InfuraProvider("ropsten", INFURA_ID);
   searchFromBlock = process.env.ROPSTEN_BLOCK;
   gelatoCoreAddress = process.env.GELATO_CORE_ADDRESS_ROPSTEN;
 } else {
@@ -44,10 +44,10 @@ async function main() {
   let currentBlock = await provider.getBlockNumber();
   console.log(`\n\t\t Current block number:     ${currentBlock}`);
   // Log Parsing
-  let iface = new ethers.utils.Interface(gelatoCoreContractABI);
+  let iface = new utils.Interface(gelatoCoreContractABI);
 
   // LogNewExecutionClaimMinted
-  let topicExecutionClaimMinted = ethers.utils.id(
+  let topicExecutionClaimMinted = utils.id(
     "LogExecutionClaimMinted(address,uint256,address,address,bytes,address,bytes,uint256,uint256,uint256)"
   );
   let filterExecutionClaimMinted = {

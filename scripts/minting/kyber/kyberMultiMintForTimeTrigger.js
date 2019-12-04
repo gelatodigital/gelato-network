@@ -1,12 +1,12 @@
 // Javascript Ethereum API Library
-const ethers = require("ethers");
+import { providers, Wallet, Contract, utils } from "ethers";
 
 // Helpers
-const sleep = require("../../helpers/sleep.js").sleep;
+import { sleep } from "../../helpers/sleep.js";
 
 // ENV VARIABLES
-const path = require("path");
-require("dotenv").config({ path: path.resolve(__dirname, "../../../.env") });
+import { resolve } from "path";
+require("dotenv").config({ path: resolve(__dirname, "../../../.env") });
 const DEV_MNEMONIC = process.env.DEV_MNEMONIC;
 const INFURA_ID = process.env.INFURA_ID;
 console.log(
@@ -31,7 +31,7 @@ let provider;
 
 if (process.env.ROPSTEN) {
   console.log(`\n\t\t ✅ connected to ROPSTEN ✅ \n`);
-  provider = new ethers.providers.InfuraProvider("ropsten", INFURA_ID);
+  provider = new providers.InfuraProvider("ropsten", INFURA_ID);
   gelatoCoreAddress = process.env.GELATO_CORE_ADDRESS_ROPSTEN;
   kyberProxyAddress = "0x818E6FECD516Ecc3849DAf6845e3EC868087B755";
   userProxyAddress = process.env.USER_PROXY_ADDRESS_ROPSTEN;
@@ -51,14 +51,14 @@ provider
   );
 
 // Signer (wallet)
-const wallet = ethers.Wallet.fromMnemonic(DEV_MNEMONIC);
+const wallet = Wallet.fromMnemonic(DEV_MNEMONIC);
 const connectedWallet = wallet.connect(provider);
 
 // Read Instance of KyberContract
 const kyberABI = [
   "function getExpectedRate(address src, address dest, uint srcQty) view returns(uint,uint)"
 ];
-const kyberContract = new ethers.Contract(
+const kyberContract = new Contract(
   kyberProxyAddress,
   kyberABI,
   provider
@@ -68,7 +68,7 @@ const kyberContract = new ethers.Contract(
 const gelatoCoreABI = [
   "function getMintingDepositPayable(address _selectedExecutor, address _action) view returns(uint)"
 ];
-const gelatoCoreContract = new ethers.Contract(
+const gelatoCoreContract = new Contract(
   gelatoCoreAddress,
   gelatoCoreABI,
   provider
@@ -78,7 +78,7 @@ const gelatoCoreContract = new ethers.Contract(
 const userProxyABI = [
   "function execute(address _action, bytes _actionPayload) payable returns(bool success, bytes returndata)"
 ];
-const userProxyContract = new ethers.Contract(
+const userProxyContract = new Contract(
   userProxyAddress,
   userProxyABI,
   connectedWallet
@@ -91,17 +91,15 @@ const TARGET_ADDRESS = actionMultiMintTimeTriggerAddress;
 const START_TIME = Math.floor(Date.now() / 1000);
 // Specific Action Params: encoded during main() execution
 const USER = "0x203AdbbA2402a36C202F207caA8ce81f1A4c7a72";
-const SRC_AMOUNT = ethers.utils.parseUnits("10", 18);
+const SRC_AMOUNT = utils.parseUnits("10", 18);
 // minConversionRate async fetched from KyberNetwork during main() execution
 const SELECTED_EXECUTOR_ADDRESS = "0x203AdbbA2402a36C202F207caA8ce81f1A4c7a72";
 const INTERVAL_SPAN = "120"; // 300 seconds
 const NUMBER_OF_MINTS = "2";
 
 // ABI encoding function
-const getActionKyberTradePayloadWithSelector = require("./kyber_encoders/actionKyberTradeEncoder.js")
-  .getActionKyberTradePayloadWithSelector;
-const getMultiMintForTimeTriggerPayloadWithSelector = require("../multi_mint/time_trigger/multiMintTimeTriggerEncoder.js")
-  .getMultiMintForTimeTriggerPayloadWithSelector;
+import { getActionKyberTradePayloadWithSelector } from "./kyber_encoders/actionKyberTradeEncoder.js";
+import { getMultiMintForTimeTriggerPayloadWithSelector } from "../multi_mint/time_trigger/multiMintTimeTriggerEncoder.js";
 
 // The execution logic
 async function main() {
@@ -113,7 +111,7 @@ async function main() {
     SRC_AMOUNT
   );
   console.log(
-    `\n\t\t minConversionRate: ${ethers.utils.formatUnits(
+    `\n\t\t minConversionRate: ${utils.formatUnits(
       minConversionRate,
       18
     )}\n`
@@ -146,7 +144,7 @@ async function main() {
   );
 
   // Getting the current Ethereum price
-  let etherscanProvider = new ethers.providers.EtherscanProvider();
+  let etherscanProvider = new providers.EtherscanProvider();
   let ethUSDPrice = await etherscanProvider.getEtherPrice();
   console.log(`\n\t\t Ether price in USD: ${ethUSDPrice}`);
 
@@ -155,21 +153,21 @@ async function main() {
     actionKyberTradeAddress
   );
   console.log(
-    `\n\t\t Minting Deposit Per Mint: ${ethers.utils.formatUnits(
+    `\n\t\t Minting Deposit Per Mint: ${utils.formatUnits(
       MINTING_DEPOSIT_PER_MINT,
       "ether"
     )} ETH \t\t${ethUSDPrice *
       parseFloat(
-        ethers.utils.formatUnits(MINTING_DEPOSIT_PER_MINT, "ether")
+        utils.formatUnits(MINTING_DEPOSIT_PER_MINT, "ether")
       )} $`
   );
   const MSG_VALUE = MINTING_DEPOSIT_PER_MINT.mul(NUMBER_OF_MINTS);
   console.log(
-    `\n\t\t Minting Deposit for ${NUMBER_OF_MINTS} mints: ${ethers.utils.formatUnits(
+    `\n\t\t Minting Deposit for ${NUMBER_OF_MINTS} mints: ${utils.formatUnits(
       MSG_VALUE,
       "ether"
     )} ETH \t ${ethUSDPrice *
-      parseFloat(ethers.utils.formatUnits(MSG_VALUE, "ether"))} $`
+      parseFloat(utils.formatUnits(MSG_VALUE, "ether"))} $`
   );
 
   // send tx to PAYABLE contract method

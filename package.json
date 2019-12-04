@@ -6,16 +6,24 @@
   "author": "The guys from gelato-digital",
   "private": false,
   "scripts": {
-    "compile": "npx buidler compile",
+    "build": "babel ./scripts --out-dir dist",
+    "clean": "rimraf dist",
+    "rebuild": "clean build",
     "blocknumber:ropsten": "npx buidler blockNumber --network ropsten",
     "etherprice:ropsten": "npx buidler etherPrice --network ropsten"
   },
   "devDependencies": {
+    "@babel/cli": "^7.7.4",
+    "@babel/core": "^7.7.4",
+    "@babel/preset-env": "^7.7.4",
     "@nomiclabs/buidler": "^1.0.1",
     "@nomiclabs/buidler-ethers": "^1.0.1",
     "@openzeppelin/contracts-ethereum-package": "^2.4.0",
     "@openzeppelin/upgrades": "^2.6.0",
     "dotenv": "^8.2.0",
     "ethers": "^4.0.23"
+  },
+  "dependencies": {
+    "rimraf": "^3.0.0"
   }
 }

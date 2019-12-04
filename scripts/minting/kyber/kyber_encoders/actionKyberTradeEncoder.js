@@ -1,29 +1,29 @@
 // Javascript Ethereum API Library
-const ethers = require("ethers");
+import { utils } from "ethers";
 
-exports.getEncodedActionKyberTradeParams = (
+export function getEncodedActionKyberTradeParams(
   user,
   src,
   dest,
   srcAmount,
   minConversionRate
-) => {
-  const abiCoder = ethers.utils.defaultAbiCoder;
+) {
+  const abiCoder = utils.defaultAbiCoder;
   const encodedActionParams = abiCoder.encode(
     ["address", "address", "address", "uint256", "uint256"],
     [user, src, dest, srcAmount, minConversionRate]
   );
   return encodedActionParams;
-};
+}
 
-exports.getActionKyberTradePayloadWithSelector = (
+export function getActionKyberTradePayloadWithSelector(
   // action params
   _user,
   _src,
   _srcAmt,
   _dest,
   _minConversionRate
-) => {
+) {
   const actionKyberTradeABI = [
     {
       name: "action",
@@ -37,9 +37,9 @@ exports.getActionKyberTradePayloadWithSelector = (
       ]
     }
   ];
-  const interface = new ethers.utils.Interface(actionKyberTradeABI);
+  const iFace = new utils.Interface(actionKyberTradeABI);
 
-  const actionPayloadWithSelector = interface.functions.action.encode([
+  const actionPayloadWithSelector = iFace.functions.action.encode([
     _user,
     _src,
     _srcAmt,
@@ -48,4 +48,4 @@ exports.getActionKyberTradePayloadWithSelector = (
   ]);
 
   return actionPayloadWithSelector;
-};
+}

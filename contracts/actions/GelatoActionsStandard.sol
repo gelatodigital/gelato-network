@@ -1,11 +1,10 @@
 pragma solidity ^0.5.13;
 
 import "./IGelatoAction.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol";
 
 /// @title GelatoActionsStandard
 /// @dev find all the NatSpecs inside IGelatoAction
-contract GelatoActionsStandard is IGelatoAction, Ownable {
+contract GelatoActionsStandard is IGelatoAction {
 
     IGelatoCore internal gelatoCore;
     bytes4 internal actionSelector;
@@ -17,22 +16,6 @@ contract GelatoActionsStandard is IGelatoAction, Ownable {
 
     constructor() internal {
         gelatoCore = IGelatoCore(0x3C64f059a17beCe12d5C43515AB67836c5857E26);
-    }
-
-    function setActionConditionsOkGas(uint256 _gas)
-        external
-        onlyOwner
-    {
-        actionConditionsOkGas = _gas;
-        _setActionGasTotal();
-    }
-
-    function setActionGas(uint256 _gas)
-        external
-        onlyOwner
-    {
-        actionGas = _gas;
-        _setActionGasTotal();
     }
 
     function getGelatoCore() external view returns(IGelatoCore) {return gelatoCore;}

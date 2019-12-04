@@ -90,10 +90,6 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
             _user,
             address(_getProxyOfUser(_user))
         );
-        return (
-            functionSelector == actionSelector &&
-            srcUserBalance >= _srcAmt &&
-            _srcAmt <= srcUserProxyAllowance
-        );
+        return (srcUserBalance >= _srcAmt && _srcAmt <= srcUserProxyAllowance);
     }
 }

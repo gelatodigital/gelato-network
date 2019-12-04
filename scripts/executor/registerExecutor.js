@@ -1,12 +1,12 @@
 // Javascript Ethereum API Library
-const ethers = require("ethers");
+import { providers, Wallet, Contract } from "ethers";
 
 // Helpers
-const sleep = require("../helpers/sleep.js").sleep;
+import { sleep } from "../helpers/sleep.js";
 
 // ENV VARIABLES
-const path = require("path");
-require("dotenv").config({ path: path.resolve(__dirname, "../../.env") });
+import { resolve } from "path";
+require("dotenv").config({ path: resolve(__dirname, "../../.env") });
 const DEV_MNEMONIC = process.env.DEV_MNEMONIC;
 const INFURA_ID = process.env.INFURA_ID;
 console.log(
@@ -22,25 +22,25 @@ let provider;
 
 if (process.env.ROPSTEN) {
   console.log(`\n\t\t ✅ connected to ROPSTEN ✅ \n`);
-  provider = new ethers.providers.InfuraProvider("ropsten", INFURA_ID);
+  provider = new providers.InfuraProvider("ropsten", INFURA_ID);
   gelatoCoreAddress = process.env.GELATO_CORE_ADDRESS_ROPSTEN;
 } else if (process.env.RINKEBY && !process.env.ROPSTEN) {
   console.log(`\n\t\t ✅ connected to RINKEBY ✅ \n`);
-  provider = new ethers.providers.InfuraProvider("rinkeby", INFURA_ID);
+  provider = new providers.InfuraProvider("rinkeby", INFURA_ID);
   gelatoCoreAddress = process.env.GELATO_CORE_ADDRESS_RINKEBY;
 } else {
   console.log(`\n\t\t ❗NO NETWORK DEFINED ❗\n`);
 }
 
 // Signer (wallet)
-const wallet = ethers.Wallet.fromMnemonic(DEV_MNEMONIC);
+const wallet = Wallet.fromMnemonic(DEV_MNEMONIC);
 const connectedWallet = wallet.connect(provider);
 
 const gelatoCoreABI = [
   "function registerExecutor(uint256 _executorPrice, uint256 _executorClaimLifespan) external"
 ];
 
-const gelatoCore = new ethers.Contract(
+const gelatoCore = new Contract(
   gelatoCoreAddress,
   gelatoCoreABI,
   connectedWallet
@@ -66,6 +66,7 @@ async function main() {
 
 main().catch(err => console.error(err));
 
-exports.main = () => {
+const _main = () => {
   return main();
 };
+export { _main as main };

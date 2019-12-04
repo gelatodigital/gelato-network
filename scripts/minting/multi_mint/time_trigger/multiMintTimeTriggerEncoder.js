@@ -1,7 +1,7 @@
 // Javascript Ethereum API Library
-const ethers = require("ethers");
+import { utils } from "ethers";
 
-exports.getMultiMintForTimeTriggerPayloadWithSelector = (
+export function getMultiMintForTimeTriggerPayloadWithSelector(
   selectedExecutor,
   timeTrigger,
   startTime,
@@ -9,7 +9,7 @@ exports.getMultiMintForTimeTriggerPayloadWithSelector = (
   actionPayloadWithSelector,
   intervalSpan,
   numberOfMints
-) => {
+) {
   const multiMintABI = [
     {
       name: "action",
@@ -25,9 +25,9 @@ exports.getMultiMintForTimeTriggerPayloadWithSelector = (
       ]
     }
   ];
-  const interface = new ethers.utils.Interface(multiMintABI);
+  const iFace = new utils.Interface(multiMintABI);
 
-  const encodedMultiMintPayloadWithSelector = interface.functions.action.encode(
+  const encodedMultiMintPayloadWithSelector = iFace.functions.action.encode(
     [
       selectedExecutor,
       timeTrigger,
@@ -40,4 +40,4 @@ exports.getMultiMintForTimeTriggerPayloadWithSelector = (
   );
 
   return encodedMultiMintPayloadWithSelector;
-};
+}
