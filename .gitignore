@@ -12,8 +12,12 @@ bin/
 # VS Code
 .vscode
 
+#buidler
+cache/
+
 # build directory
-build
+artifacts/
+build/
 
 # OpenZeppelin SDK
 .openzeppelin/dev-*.json
