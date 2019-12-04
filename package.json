@@ -19,6 +19,7 @@
     "@babel/core": "^7.7.4",
     "@babel/node": "^7.7.4",
     "@babel/preset-env": "^7.7.4",
+    "@babel/register": "^7.7.4",
     "@nomiclabs/buidler": "^1.0.1",
     "@nomiclabs/buidler-ethers": "^1.0.1",
     "@openzeppelin/contracts-ethereum-package": "^2.4.0",

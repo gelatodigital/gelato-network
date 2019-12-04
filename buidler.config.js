@@ -1,4 +1,6 @@
 // Local imports
+require("@babel/register");
+
 const { Contract, getDefaultProvider, providers, utils } = require("ethers");
 
 // ============ Buidler Runtime Environment (BRE) ==================================
@@ -74,22 +76,11 @@ task("erc20-approve", "Approves <spender> for <erc20> <amount>")
       const erc20Address = utils.getAddress(taskArgs.erc20);
       const spenderAddress = utils.getAddress(taskArgs.spender);
       const amount = utils.bigNumberify(taskArgs.amount);
-      const [signer, signer2, ...rest] = await ethers.signers();
-      console.log(await signer.getAddress());
-      console.log(await signer2.getAddress());
+      const [signer] = await ethers.signers();
       const ierc20ABI = [
         "function approve(address spender, uint256 amount) external returns (bool)"
       ];
-      /*const erc20Contract = await ethers.getContract(
-        erc20Address,
-        ierc20ABI,
-        signer
-      );*/
-      const erc20Contract = new Contract(
-        erc20Address,
-        ierc20ABI,
-        signer
-      );
+      const erc20Contract = new Contract(erc20Address, ierc20ABI, signer);
       const tx = await erc20Contract.approve(spenderAddress, amount);
       console.log(`\n\t\t erc20:approve txHash:\n\t ${tx.hash}`);
       const txReceipt = await tx.wait();
@@ -108,24 +99,16 @@ task("erc20-allowance", "Logs <spender>'s <erc20> allowance from <owner>")
       const erc20Address = utils.getAddress(taskArgs.erc20);
       const ownerAddress = utils.getAddress(taskArgs.owner);
       const spenderAddress = utils.getAddress(taskArgs.spender);
-      const provider = ethers.provider;
-      const wallet = Wallet.fromMnemonic(DEV_MNEMONIC);
-      const connectedWallet = wallet.connect(provider);
+      const [signer] = await ethers.signers();
       const ierc20ABI = [
         "function allowance(address owner, address spender) external view returns (uint256)"
       ];
-      const erc20Contract = new Contract(
-        erc20Address,
-        ierc20ABI,
-        connectedWallet
-      );
+      const erc20Contract = new Contract(erc20Address, ierc20ABI, signer);
       const allowance = await erc20Contract.allowance(
         ownerAddress,
         spenderAddress
       );
-      console.log(
-        `\n\t\t erc20:allowance: ${utils.formatEther(allowance)} ETH`
-      );
+      console.log(`\n\t\t erc20-allowance: ${allowance}`);
     } catch (error) {
       console.error(error);
     }
