@@ -6,14 +6,16 @@
   "author": "The guys from gelato-digital",
   "private": false,
   "scripts": {
-    "compile": "npx buidler compile"
-  },
-  "dependencies": {
-    "@openzeppelin/contracts-ethereum-package": "^2.4.0",
-    "@openzeppelin/upgrades": "^2.6.0",
-    "dotenv": "^8.2.0"
+    "compile": "npx buidler compile",
+    "blocknumber:ropsten": "npx buidler blockNumber --network ropsten",
+    "etherprice:ropsten": "npx buidler etherPrice --network ropsten"
   },
   "devDependencies": {
-    "@nomiclabs/buidler": "^1.0.1"
+    "@nomiclabs/buidler": "^1.0.1",
+    "@nomiclabs/buidler-ethers": "^1.0.1",
+    "@openzeppelin/contracts-ethereum-package": "^2.4.0",
+    "@openzeppelin/upgrades": "^2.6.0",
+    "dotenv": "^8.2.0",
+    "ethers": "^4.0.23"
   }
 }

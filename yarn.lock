@@ -2,6 +2,11 @@
 # yarn lockfile v1
 
 
+"@nomiclabs/buidler-ethers@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@nomiclabs/buidler-ethers/-/buidler-ethers-1.0.1.tgz#ed904e731fa8891b09fcd1fec975f1517f1f162a"
+  integrity sha512-ZKOhZ0qeWMjq2G9Cvz89L5DoLSrFi1ibqYMQgv/BI/7p1URaVMuWaiGqdWaylZX/7OmlFhTfqJFTDtzU/2K0Bg==
+
 "@nomiclabs/buidler@^1.0.1":
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/@nomiclabs/buidler/-/buidler-1.0.1.tgz#4ac100fa96cf4326a551bf7099922b4c61956a50"
@@ -1432,7 +1437,7 @@ ethers@4.0.0-beta.3:
     uuid "2.0.1"
     xmlhttprequest "1.8.0"
 
-ethers@^4.0.20:
+ethers@^4.0.20, ethers@^4.0.23:
   version "4.0.40"
   resolved "https://registry.yarnpkg.com/ethers/-/ethers-4.0.40.tgz#6e1963d10b5d336a13cd81b519c230cc17624653"
   integrity sha512-MC9BtV7Hpq4dgFONEfanx9aU9GhhoWU270F+/wegHZXA7FR+2KXFdt36YIQYLmVY5ykUWswDxd+f9EVkIa7JOA==
