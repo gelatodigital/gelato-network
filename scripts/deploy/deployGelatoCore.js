@@ -3,8 +3,8 @@ import env from "@nomiclabs/buidler";
 async function main() {
   try {
     await env.run("compile");
-    console.dir(env)
-    //const GelatoCore = env.artifacts.require("GelatoCore");
+    
+
   } catch (error) {
     console.error(error);
   }

@@ -73,18 +73,8 @@ task("erc20-approve", "Approves <spender> for <erc20> <amount>")
   .addParam("amount", "The amount of erc20 tokens to approve")
   .setAction(async (taskArgs, { ethers }) => {
     try {
-      const erc20Address = utils.getAddress(taskArgs.erc20);
-      const spenderAddress = utils.getAddress(taskArgs.spender);
-      const amount = utils.bigNumberify(taskArgs.amount);
-      const [signer] = await ethers.signers();
-      const ierc20ABI = [
-        "function approve(address spender, uint256 amount) external returns (bool)"
-      ];
-      const erc20Contract = new Contract(erc20Address, ierc20ABI, signer);
-      const tx = await erc20Contract.approve(spenderAddress, amount);
-      console.log(`\n\t\t erc20:approve txHash:\n\t ${tx.hash}`);
-      const txReceipt = await tx.wait();
-      console.log(`\t\t Tx mined: ${txReceipt.blockNumber !== undefined}`);
+      const { erc20Approve } = require("./scripts/buidler_tasks/erc20Tasks");
+      await erc20Approve(taskArgs, ethers);
     } catch (error) {
       console.error(error);
     }
@@ -94,21 +84,10 @@ task("erc20-allowance", "Logs <spender>'s <erc20> allowance from <owner>")
   .addParam("erc20", "The erc20 contract address")
   .addParam("owner", "The owners's address")
   .addParam("spender", "The spender's address")
-  .setAction(async taskArgs => {
+  .setAction(async (taskArgs, { ethers }) => {
     try {
-      const erc20Address = utils.getAddress(taskArgs.erc20);
-      const ownerAddress = utils.getAddress(taskArgs.owner);
-      const spenderAddress = utils.getAddress(taskArgs.spender);
-      const [signer] = await ethers.signers();
-      const ierc20ABI = [
-        "function allowance(address owner, address spender) external view returns (uint256)"
-      ];
-      const erc20Contract = new Contract(erc20Address, ierc20ABI, signer);
-      const allowance = await erc20Contract.allowance(
-        ownerAddress,
-        spenderAddress
-      );
-      console.log(`\n\t\t erc20-allowance: ${allowance}`);
+      const { erc20Allowance } = require("./scripts/buidler_tasks/erc20Tasks");
+      await erc20Allowance(taskArgs, ethers);
     } catch (error) {
       console.error(error);
     }
