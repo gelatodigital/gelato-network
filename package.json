@@ -10,7 +10,8 @@
     "build": "babel ./scripts --out-dir dist",
     "clean": "rimraf dist",
     "compile": "npx buidler compile",
-    "deploy-gelatocore": "babel-node scripts/deploy/deployGelatoCore.js",
+    "deploy-gelatocore-ropsten": "export BUIDLER_NETWORK=ropsten && export CONTRACT_NAME=GelatoCore && babel-node scripts/deploy/deployWithoutArgs.js",
+    "deploy-actionmultimintfortimetrigger-ropsten": "export BUIDLER_NETWORK=ropsten && export CONTRACT_NAME=ActionMultiMintForTimeTrigger && babel-node scripts/deploy/deployWithoutArgs.js",
     "eth-price": "npx buidler eth:price",
     "rebuild": "yarn clean && yarn build"
   },
@@ -28,6 +29,7 @@
     "ethers": "^4.0.23"
   },
   "dependencies": {
+    "@openzeppelin/cli": "^2.6.0",
     "rimraf": "^3.0.0"
   }
 }

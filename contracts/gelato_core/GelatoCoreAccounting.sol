@@ -14,24 +14,19 @@ contract GelatoCoreAccounting is IGelatoCoreAccounting, Ownable {
     using SafeMath for uint256;
 
     // the minimum executionClaimLifespan imposed upon executors
-    uint256 internal minExecutionClaimLifespan;
+    uint256 internal constant minExecutionClaimLifespan = 10 minutes;
     //_____________ Gelato ExecutionClaim Economics _______________________
     mapping(address => uint256) internal executorPrice;
     mapping(address => uint256) internal executorClaimLifespan;
     mapping(address => uint256) internal executorBalance;
     //_____________ Gas values for executionClaim cost calculations _______
-    uint256 internal gelatoCoreExecGasOverhead;
-    uint256 internal userProxyExecGasOverhead;
-    uint256 internal totalExecutionGasOverhead = gelatoCoreExecGasOverhead + userProxyExecGasOverhead;
+    uint256 internal constant gelatoCoreExecGasOverhead = 100000;
+    uint256 internal constant userProxyExecGasOverhead = 40000;
+    uint256 internal constant totalExecutionGasOverhead = gelatoCoreExecGasOverhead + userProxyExecGasOverhead;
     // =========================
 
     // non-deploy base contract
-    constructor() internal {
-        Ownable.initialize(msg.sender);
-        minExecutionClaimLifespan = 10 minutes;
-        gelatoCoreExecGasOverhead = 100000;
-        userProxyExecGasOverhead = 40000;
-    }
+    constructor() internal { Ownable.initialize(msg.sender); }
 
     // ____________ Interface for STATE MUTATIONS ________________________________________
     //_____________ Interface for Executor _________________________________
@@ -112,6 +107,7 @@ contract GelatoCoreAccounting is IGelatoCoreAccounting, Ownable {
     // =========
 
     //_____________ Interface for GelatoCore Owner ________________________________
+    /*
     function setMinExecutionClaimLifespan(uint256 _newMinExecutionClaimLifespan)
         onlyOwner
         external
@@ -142,11 +138,12 @@ contract GelatoCoreAccounting is IGelatoCoreAccounting, Ownable {
         emit LogSetUserProxyExecGasOverhead(userProxyExecGasOverhead, _newGasOverhead);
         userProxyExecGasOverhead = _newGasOverhead;
     }
+    */
     // =========
     // =========================
 
     // __________ Interface for State Reads ___________________________________
-    function getMinExecutionClaimLifespan() external view returns(uint256) {
+    function getMinExecutionClaimLifespan() external pure returns(uint256) {
         return minExecutionClaimLifespan;
     }
 
@@ -162,15 +159,15 @@ contract GelatoCoreAccounting is IGelatoCoreAccounting, Ownable {
         return executorBalance[_executor];
     }
 
-    function getGelatoCoreExecGasOverhead() external view returns(uint256) {
+    function getGelatoCoreExecGasOverhead() external pure returns(uint256) {
         return gelatoCoreExecGasOverhead;
     }
 
-    function getUserProxyExecGasOverhead() external view returns(uint256) {
+    function getUserProxyExecGasOverhead() external pure returns(uint256) {
         return userProxyExecGasOverhead;
     }
 
-    function getTotalExecutionGasOverhead() external view returns(uint256) {
+    function getTotalExecutionGasOverhead() external pure returns(uint256) {
         return totalExecutionGasOverhead;
     }
     // =========================
@@ -194,7 +191,7 @@ contract GelatoCoreAccounting is IGelatoCoreAccounting, Ownable {
 
     function getMinExecutionGas(uint256 _triggerGas, uint256 _actionGasTotal)
         external
-        view
+        pure
         returns(uint256)
     {
         return _getMinExecutionGas(_triggerGas, _actionGasTotal);
@@ -202,7 +199,7 @@ contract GelatoCoreAccounting is IGelatoCoreAccounting, Ownable {
 
     function _getMinExecutionGas(uint256 _triggerGas, uint256 _actionGasTotal)
         internal
-        view
+        pure
         returns(uint256)
     {
         return totalExecutionGasOverhead.add(_triggerGas).add(_actionGasTotal);

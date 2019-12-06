@@ -75,7 +75,7 @@ interface IGelatoCore {
      * @param _trigger executors get this from LogTriggerActionMinted
      * @param _triggerPayloadWithSelector executors get this from LogTriggerActionMinted
      * @param _actionPayloadWithSelector executors get this from LogExecutionClaimMinted
-     * @param _executionMinGas executors get this from LogExecutionClaimMinted
+     * @param _minExecutionGas executors get this from LogExecutionClaimMinted
      * @param _executionClaimExpiryDate executors get this from LogExecutionClaimMinted
      * @param _mintingDeposit executors get this from LogExecutionClaimMinted
      * @return uint8 which converts to one of enum GelatoCoreEnums.CanExecuteCheck values
@@ -90,7 +90,7 @@ interface IGelatoCore {
         bytes calldata _actionPayloadWithSelector,
         uint256 _actionGasTotal,
         uint256 _actionConditionsOkGas,
-        uint256 _executionMinGas,
+        uint256 _minExecutionGas,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
     )
@@ -284,27 +284,27 @@ interface IGelatoCore {
     /**
      * @dev setter for gelatoCore devs to impose a lower boundary on
        executors' listed claim lifespans, to disallow bad claims
-     * @param _newMinExecutionClaimLifespan x
+     * param _newMinExecutionClaimLifespan x
      */
-    function setMinExecutionClaimLifespan(uint256 _newMinExecutionClaimLifespan) external;
+    //function setMinExecutionClaimLifespan(uint256 _newMinExecutionClaimLifespan) external;
 
     /**
      * @dev setter for GelatoCore devs to configure the protocol's executionGas calculations
-     * @param _newGasOverhead new calc for gelatoCore.execute overhead gas
+     * param _newGasOverhead new calc for gelatoCore.execute overhead gas
      * @notice important for _getMinExecutionGasRequirement and getMintingDepositPayable
      */
-    function setGelatoCoreExecGasOverhead(uint256 _newGasOverhead) external;
+    // function setGelatoCoreExecGasOverhead(uint256 _newGasOverhead) external;
 
     /**
      * @dev setter for GelatoCore devs to configure the protocol's executionGas calculations
-     * @param _newGasOverhead new calc for userProxy.execute overhead gas
+     * param _newGasOverhead new calc for userProxy.execute overhead gas
      * @notice important for _getMinExecutionGasRequirement and getMintingDepositPayable
      */
-    function setUserProxyExecGasOverhead(uint256 _newGasOverhead) external;
+    // function setUserProxyExecGasOverhead(uint256 _newGasOverhead) external;
 
     /// @dev get the gelato-wide minimum executionClaim lifespan
     /// @return the minimum executionClaim lifespan for all executors
-    function getMinExecutionClaimLifespan() external view returns(uint256);
+    function getMinExecutionClaimLifespan() external pure returns(uint256);
 
     /// @dev get an executor's price
     /// @param _executor x
@@ -323,15 +323,15 @@ interface IGelatoCore {
 
     /// @dev getter for gelatoCoreExecGasOverhead state variable
     /// @return uint256 gelatoCoreExecGasOverhead
-    function getGelatoCoreExecGasOverhead() external view returns(uint256);
+    function getGelatoCoreExecGasOverhead() external pure returns(uint256);
 
     /// @dev getter for userProxyExecGasOverhead state variable
     /// @return uint256 userProxyExecGasOverhead
-    function getUserProxyExecGasOverhead() external view returns(uint256);
+    function getUserProxyExecGasOverhead() external pure returns(uint256);
 
     /// @dev getter for internalExecutionGas state variable
     /// @return uint256 internalExecutionGas
-    function getTotalExecutionGasOverhead() external view returns(uint256);
+    function getTotalExecutionGasOverhead() external pure returns(uint256);
 
     /**
      * @dev get the deposit payable for minting on gelatoCore
@@ -352,7 +352,7 @@ interface IGelatoCore {
     /// @return the minimum gas required for calls to gelatoCore.execute()
     function getMinExecutionGas(uint256 _triggerGas, uint256 _actionGasTotal)
         external
-        view
+        pure
         returns(uint256);
 
 

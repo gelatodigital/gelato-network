@@ -27,7 +27,7 @@ contract ActionMultiMintForTimeTrigger is GelatoActionsStandard {
         external
         payable
     {
-        IGelatoCore gelatoCore = IGelatoCore(0x8AB2E2C1Da789E960C1ac400e5500eC4C61aEac8);
+        IGelatoCore gelatoCore = IGelatoCore(0x76dd57554B6B4DB5F44419d3564Ae23164e56E8f);
         uint256 mintingDepositPerMint = gelatoCore.getMintingDepositPayable(
             _selectedExecutor,
             _action

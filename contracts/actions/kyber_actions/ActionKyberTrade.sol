@@ -77,7 +77,7 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
         view
         returns(bool)
     {
-        (bytes4 functionSelector, bytes memory payload) = SplitFunctionSelector.split(
+        (, bytes memory payload) = SplitFunctionSelector.split(
             _actionPayloadWithSelector
         );
         (address _user, address _src, uint256 _srcAmt, , ) = abi.decode(

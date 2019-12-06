@@ -1,7 +1,11 @@
-// Local imports
+// Helpers
 require("@babel/register");
-
-const { Contract, getDefaultProvider, providers, utils } = require("ethers");
+const { getDefaultProvider, providers, utils } = require("ethers");
+const {
+  checkNestedObj,
+  getNestedObj
+} = require("./scripts/helpers/nestedObjects");
+const { sleep } = require("./scripts/helpers/sleep");
 
 // ============ Buidler Runtime Environment (BRE) ==================================
 // extendEnvironment(env => { env.x = x; })
@@ -18,7 +22,12 @@ module.exports = {
     ropsten: {
       url: `https://ropsten.infura.io/v3/${INFURA_ID}`,
       chainId: 3,
-      accounts: { mnemonic: DEV_MNEMONIC }
+      accounts: { mnemonic: DEV_MNEMONIC },
+      deployments: {
+        actionMultiMintForTimeTrigger:
+          "0x37D03f8C173ceAa7E58f74C819383b862318A2C0",
+        gelatoCore: "0x76dd57554B6B4DB5F44419d3564Ae23164e56E8f"
+      }
     }
   },
   solc: {
@@ -33,16 +42,30 @@ usePlugin("@nomiclabs/buidler-ethers");
 // ============ Tasks ==============================================================
 // task action function receives the Buidler Runtime Environment as second argument
 task(
+  "deployments-ropsten",
+  "Logs the addresses of deployed contracts on ropsten",
+  async (_, { config }) => {
+    try {
+      if (checkNestedObj(config, "networks", "ropsten", "deployments")) {
+        console.log(config.networks.ropsten.deployments);
+      } else
+        throw new Error("No deployments for Ropsten exist inside BRE config");
+    } catch (err) {
+      console.error(err);
+    }
+  }
+);
+
+task(
   "block-number",
   "Logs the current block number of connected network",
   async (_, { ethers }) => {
     try {
       const { name: networkName } = await ethers.provider.getNetwork();
-      await ethers.provider.getBlockNumber().then(blockNumber => {
-        console.log(
-          `Current block number on ${networkName.toUpperCase()}: ${blockNumber}`
-        );
-      });
+      const blockNumber = await ethers.provider.getBlockNumber();
+      console.log(
+        `Current block number on ${networkName.toUpperCase()}: ${blockNumber}`
+      );
     } catch (err) {
       console.error(err);
     }
@@ -56,16 +79,31 @@ task(
     try {
       const provider = getDefaultProvider("ropsten");
       const { name: networkName } = await provider.getNetwork();
-      await provider.getBlockNumber().then(blockNumber => {
-        console.log(
-          `\n\t\t Current block number on ${networkName.toUpperCase()}: ${blockNumber}`
-        );
-      });
+      const blockNumber = await ethers.provider.getBlockNumber();
+      console.log(
+        `Current block number on ${networkName.toUpperCase()}: ${blockNumber}`
+      );
     } catch (err) {
       console.error(err);
     }
   }
 );
+
+task("config", "Logs the current BRE config", async (_, { config }) => {
+  try {
+    console.log(config);
+  } catch (err) {
+    console.error(err);
+  }
+});
+
+task("env", "Logs the current Buidler Runtime Environment", async (_, env) => {
+  try {
+    console.log(env);
+  } catch (err) {
+    console.error(err);
+  }
+});
 
 task("erc20-approve", "Approves <spender> for <erc20> <amount>")
   .addParam("erc20", "The erc20 contract address")
@@ -97,7 +135,7 @@ task("eth-balance", "Prints an account's ether balance")
   .addParam("a", "The account's address")
   .setAction(async taskArgs => {
     try {
-      const address = utils.getAddress(taskArgs.account);
+      const address = utils.getAddress(taskArgs.a);
       const provider = getDefaultProvider("ropsten");
       const balance = await provider.getBalance(address);
       console.log(`\n\t\t ${utils.formatEther(balance)} ETH`);
@@ -122,11 +160,10 @@ task(
   "Logs the currently connected network",
   async (_, { ethers }) => {
     try {
-      await ethers.provider.getNetwork().then(network => {
-        console.log(
-          `\n\t\t Currently connected to: ${network.name.toUpperCase()}`
-        );
-      });
+      const { name: networkName } = await ethers.provider.getNetwork();
+      console.log(
+        `\n\t\t Currently connected to: ${networkName.toUpperCase()}`
+      );
     } catch (err) {
       console.error(err);
     }
