@@ -175,8 +175,8 @@ contract GelatoCoreAccounting is IGelatoCoreAccounting, Ownable {
     // _______ APIs for executionClaim pricing ______________________________________
     function getMintingDepositPayable(
         address _selectedExecutor,
-        IGelatoAction _action,
-        IGelatoTrigger _trigger
+        IGelatoTrigger _trigger,
+        IGelatoAction _action
     )
         external
         view

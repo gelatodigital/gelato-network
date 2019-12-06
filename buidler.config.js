@@ -46,9 +46,9 @@ task(
   "Logs the addresses of deployed contracts on ropsten",
   async (_, { config }) => {
     try {
-      if (checkNestedObj(config, "networks", "ropsten", "deployments")) {
+      if (checkNestedObj(config, "networks", "ropsten", "deployments"))
         console.log(config.networks.ropsten.deployments);
-      } else
+      else
         throw new Error("No deployments for Ropsten exist inside BRE config");
     } catch (err) {
       console.error(err);

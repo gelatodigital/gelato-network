@@ -143,7 +143,11 @@ interface IGelatoCoreAccounting {
      * @notice minters (e.g. frontends) should use this API to get the msg.value
        payable to GelatoCore's mintExecutionClaim function.
      */
-    function getMintingDepositPayable(address _selectedExecutor, IGelatoAction _action)
+    function getMintingDepositPayable(
+        address _selectedExecutor,
+        IGelatoTrigger _trigger,
+        IGelatoAction _action
+    )
         external
         view
         returns(uint256 mintingDepositPayable);

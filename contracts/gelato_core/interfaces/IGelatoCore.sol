@@ -86,6 +86,7 @@ interface IGelatoCore {
         IGelatoUserProxy _userProxy,
         IGelatoTrigger _trigger,
         bytes calldata _triggerPayloadWithSelector,
+        uint256 _triggerGas,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
         uint256 _actionGasTotal,
@@ -119,6 +120,7 @@ interface IGelatoCore {
         IGelatoUserProxy _userProxy,
         IGelatoTrigger _trigger,
         bytes calldata _triggerPayloadWithSelector,
+        uint256 _triggerGas,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
         uint256 _actionGasTotal,
@@ -152,6 +154,7 @@ interface IGelatoCore {
         IGelatoUserProxy _userProxy,
         IGelatoTrigger _trigger,
         bytes calldata _triggerPayloadWithSelector,
+        uint256 _triggerGas,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
         uint256 _actionGasTotal,
@@ -341,7 +344,11 @@ interface IGelatoCore {
      * @notice minters (e.g. frontends) should use this API to get the msg.value
        payable to GelatoCore's mintExecutionClaim function.
      */
-    function getMintingDepositPayable(address _selectedExecutor, IGelatoAction _action)
+    function getMintingDepositPayable(
+        address _selectedExecutor,
+        IGelatoTrigger _trigger,
+        IGelatoAction _action
+    )
         external
         view
         returns(uint256 mintingDepositPayable);

@@ -30,6 +30,7 @@ contract ActionMultiMintForTimeTrigger is GelatoActionsStandard {
         IGelatoCore gelatoCore = IGelatoCore(0x76dd57554B6B4DB5F44419d3564Ae23164e56E8f);
         uint256 mintingDepositPerMint = gelatoCore.getMintingDepositPayable(
             _selectedExecutor,
+            _timeTrigger,
             _action
         );
         require(msg.value == mintingDepositPerMint.mul(_numberOfMints),
