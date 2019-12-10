@@ -1,4 +1,4 @@
-pragma solidity ^0.5.11;
+pragma solidity ^0.5.14;
 
 import "../GelatoActionsStandard.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.sol";
@@ -9,11 +9,11 @@ import "../../dapp_interfaces/kyber_interfaces/IKyber.sol";
 contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
     using SafeERC20 for IERC20;
 
-    constructor() public {
-        actionSelector = this.action.selector;
-        actionConditionsOkGas = 50000;
-        actionGas = 700000;
-    }
+    bytes4 constant internal actionSelector = bytes4(keccak256(bytes(
+        "action(address,address,uint256,address,uint256)"
+    )));
+    uint256 constant internal actionConditionsOkGas = 50000;
+    uint256 constant internal actionGas = 700000;
 
     event LogAction(
         address indexed user,
@@ -37,6 +37,10 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
         external
         returns (uint256 destAmt)
     {
+        require(
+            gasleft() >= actionGas,
+            "ActionMultiMintForTimeTrigger.action: insufficient gasleft()"
+        );
         // !!!!!!!!! ROPSTEN !!!!!!
         address kyberAddress = 0x818E6FECD516Ecc3849DAf6845e3EC868087B755;
         {
@@ -62,6 +66,20 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
             _minConversionRate,
             address(0)  // fee-sharing
         );
+    }
+
+    function getActionSelector() external pure returns(bytes4) {
+        return actionSelector;
+    }
+
+    function getActionConditionsOkGas() external pure returns(uint256) {
+        return actionConditionsOkGas;
+    }
+
+    function getActionGas() external pure returns(uint256) {return actionGas;}
+
+    function getActionTotalGas() external pure returns(uint256) {
+        return actionConditionsOkGas + actionGas;
     }
 
     function actionConditionsOk(bytes calldata _actionPayloadWithSelector)

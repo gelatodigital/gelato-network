@@ -1,4 +1,4 @@
-pragma solidity ^0.5.11;
+pragma solidity ^0.5.14;
 
 import "./interfaces/IGelatoCoreAccounting.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
@@ -183,25 +183,25 @@ contract GelatoCoreAccounting is IGelatoCoreAccounting, Ownable {
         returns(uint256 mintingDepositPayable)
     {
         uint256 triggerGas = _trigger.getTriggerGas();
-        uint256 actionGasTotal = _action.getActionGasTotal();
-        uint256 executionMinGas = _getMinExecutionGas(triggerGas, actionGasTotal);
+        uint256 actionTotalGas = _action.getActionTotalGas();
+        uint256 executionMinGas = _getMinExecutionGas(triggerGas, actionTotalGas);
         mintingDepositPayable = executionMinGas.mul(executorPrice[_selectedExecutor]);
     }
 
-    function getMinExecutionGas(uint256 _triggerGas, uint256 _actionGasTotal)
+    function getMinExecutionGas(uint256 _triggerGas, uint256 _actionTotalGas)
         external
         pure
         returns(uint256)
     {
-        return _getMinExecutionGas(_triggerGas, _actionGasTotal);
+        return _getMinExecutionGas(_triggerGas, _actionTotalGas);
     }
 
-    function _getMinExecutionGas(uint256 _triggerGas, uint256 _actionGasTotal)
+    function _getMinExecutionGas(uint256 _triggerGas, uint256 _actionTotalGas)
         internal
         pure
         returns(uint256)
     {
-        return totalExecutionGasOverhead.add(_triggerGas).add(_actionGasTotal);
+        return totalExecutionGasOverhead.add(_triggerGas).add(_actionTotalGas);
     }
     // =======
 }

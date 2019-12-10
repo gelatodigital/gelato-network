@@ -1,4 +1,4 @@
-pragma solidity ^0.5.11;
+pragma solidity ^0.5.14;
 
 import "@openzeppelin/upgrades/contracts/Initializable.sol";
 import "../GelatoUpgradeableActionsStandard.sol";
@@ -18,7 +18,7 @@ contract UpgradeableActionKyberTrade is Initializable,
     function getKyberAddress() external view returns(address) {return kyberAddress;}
 
     function proxyInitializer(address _proxyAdmin,
-                              uint256 _actionGasTotal,
+                              uint256 _actionTotalGas,
                               address _kyberAddress
     )
         external
@@ -27,7 +27,7 @@ contract UpgradeableActionKyberTrade is Initializable,
         proxysProxyAdmin = ProxyAdmin(_proxyAdmin);
         actionOperation = ActionOperation.delegatecall;
         actionSelector = this.action.selector;
-        actionGasTotal = _actionGasTotal;
+        actionTotalGas = _actionTotalGas;
         kyberAddress = _kyberAddress;
         _initializeImplementationFromProxy();
     }
@@ -38,7 +38,7 @@ contract UpgradeableActionKyberTrade is Initializable,
         return _initializeImplementationFromProxy();
     }
 
-    function initializerOnImplementation(uint256 _actionGasTotal, address _kyberAddress)
+    function initializerOnImplementation(uint256 _actionTotalGas, address _kyberAddress)
         external
     {
         require(msg.sender != address(this),
@@ -49,7 +49,7 @@ contract UpgradeableActionKyberTrade is Initializable,
         );
         actionOperation = ActionOperation.delegatecall;
         actionSelector = this.action.selector;
-        actionGasTotal = _actionGasTotal;
+        actionTotalGas = _actionTotalGas;
         kyberAddress = _kyberAddress;
         implementationInit = true;
     }
@@ -124,7 +124,7 @@ contract UpgradeableActionKyberTrade is Initializable,
         require(!implementation.askImplementationIfInit(),
             "UpgradeableActionKyberTrade.initializeMyImplementation: already init"
         );
-        implementation.initializerOnImplementation(actionGasTotal, kyberAddress);
+        implementation.initializerOnImplementation(actionTotalGas, kyberAddress);
         require(implementation.askImplementationIfInit(),
             "UpgradeableActionKyberTrade.initializeMyImplementation: failed"
         );

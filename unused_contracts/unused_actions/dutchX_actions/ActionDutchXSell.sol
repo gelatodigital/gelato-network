@@ -1,4 +1,4 @@
-pragma solidity ^0.5.11;
+pragma solidity ^0.5.14;
 
 import "@openzeppelin/upgrades/contracts/Initializable.sol";
 import "../GelatoActionsStandard.sol";
@@ -20,19 +20,19 @@ contract ActionDutchXSell is Initializable,
        Calls are forwarded to the internal _initialize fn to allow for external-internal
        distinction and inheritance.
      * @param _dutchX the address of the deployed dutchX Proxy
-     * @param _actionGasTotal the maxGas consumption of a normal tx to this.action()
+     * @param _actionTotalGas the maxGas consumption of a normal tx to this.action()
      */
-    function initialize(uint256 _actionGasTotal, address _dutchX)
+    function initialize(uint256 _actionTotalGas, address _dutchX)
         external
     {
-        _initialize(_actionGasTotal, _dutchX);
+        _initialize(_actionTotalGas, _dutchX);
     }
-    function _initialize(uint256 _actionGasTotal, address _dutchX)
+    function _initialize(uint256 _actionTotalGas, address _dutchX)
         internal
         initializer
     {
         actionSelector = this.action.selector;
-        actionGasTotal = _actionGasTotal;
+        actionTotalGas = _actionTotalGas;
         GelatoDutchXInterface._initialize(_dutchX);
     }
 

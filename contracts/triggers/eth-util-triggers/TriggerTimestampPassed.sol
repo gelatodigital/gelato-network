@@ -1,12 +1,11 @@
-pragma solidity ^0.5.11;
+pragma solidity ^0.5.14;
 
-import "../GelatoTriggersStandard.sol";
+import "../IGelatoTrigger.sol";
 
-contract TriggerTimestampPassed is GelatoTriggersStandard {
-    constructor() public {
-        triggerSelector = this.fired.selector;
-        triggerGas = 30000;
-    }
+contract TriggerTimestampPassed is IGelatoTrigger {
+
+    bytes4 constant internal triggerSelector = bytes4(keccak256(bytes("fired(uint256)")));
+    uint256 constant internal triggerGas = 30000;
 
     function fired(uint256 _timestamp)
         external
@@ -23,4 +22,7 @@ contract TriggerTimestampPassed is GelatoTriggersStandard {
     {
         return block.timestamp;
     }
+
+    function getTriggerSelector() external pure returns(bytes4) {return triggerSelector;}
+    function getTriggerGas() external pure returns(uint256) {return triggerGas;}
 }

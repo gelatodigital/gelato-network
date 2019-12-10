@@ -1,4 +1,4 @@
-pragma solidity ^0.5.11;
+pragma solidity ^0.5.14;
 
 import "@openzeppelin/upgrades/contracts/Initializable.sol";
 import "../../GelatoTriggersStandard.sol";

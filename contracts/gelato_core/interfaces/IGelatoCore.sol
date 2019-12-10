@@ -1,4 +1,4 @@
-pragma solidity ^0.5.11;
+pragma solidity ^0.5.14;
 
 import "../GelatoCoreEnums.sol";
 import "./IGelatoUserProxy.sol";
@@ -18,7 +18,7 @@ interface IGelatoCore {
         bytes _triggerPayloadWithSelector,
         IGelatoAction _action,
         bytes _actionPayloadWithSelector,
-        uint256[3] triggergasActiongastotalMinexecutiongas,
+        uint256[3] triggerGasActionTotalGasMinExecutionGas,
         uint256 executionClaimExpiryDate,
         uint256 mintingDeposit
     );
@@ -72,7 +72,7 @@ interface IGelatoCore {
         bytes calldata _triggerPayloadWithSelector,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
-        uint256[3] calldata _triggergasActiongastotalMinexecutiongas,
+        uint256[3] calldata _triggerGasActionTotalGasMinExecutionGas,
         uint256 _actionConditionsOkGas,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
@@ -95,7 +95,7 @@ interface IGelatoCore {
         bytes calldata _triggerPayloadWithSelector,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
-        uint256[3] calldata _triggergasActiongastotalMinexecutiongas,
+        uint256[3] calldata _triggerGasActionTotalGasMinExecutionGas,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
     )
@@ -118,7 +118,7 @@ interface IGelatoCore {
         bytes calldata _triggerPayloadWithSelector,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
-        uint256[3] calldata _triggergasActiongastotalMinexecutiongas,
+        uint256[3] calldata _triggerGasActionTotalGasMinExecutionGas,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
     )
@@ -258,7 +258,7 @@ interface IGelatoCore {
         returns(uint256 mintingDepositPayable);
 
     /// @notice documented inside IGelatoCoreAccounting
-    function getMinExecutionGas(uint256 _triggerGas, uint256 _actionGasTotal)
+    function getMinExecutionGas(uint256 _triggerGas, uint256 _actionTotalGas)
         external
         pure
         returns(uint256);
@@ -307,7 +307,7 @@ interface IGelatoCore {
         bytes calldata _triggerPayloadWithSelector,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
-        uint256[3] calldata _triggergasActiongastotalMinexecutiongas,
+        uint256[3] calldata _triggerGasActionTotalGasMinExecutionGas,
         uint256 _actionConditionsOkGas,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
@@ -341,7 +341,7 @@ interface IGelatoCore {
         bytes calldata _triggerPayloadWithSelector,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
-        uint256[3] calldata _triggergasActiongastotalMinexecutiongas,
+        uint256[3] calldata _triggerGasActionTotalGasMinExecutionGas,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
     )

@@ -1,7 +1,6 @@
-pragma solidity ^0.5.11;
+pragma solidity ^0.5.14;
 
 import "../gelato_core/interfaces/IGelatoCore.sol";
-import "./GelatoActionsStandard.sol";
 
 /// @title IGelatoAction - solidity interface of GelatoActionsStandard
 /// @notice all the APIs and events of GelatoActionsStandard
@@ -9,11 +8,11 @@ import "./GelatoActionsStandard.sol";
 interface IGelatoAction {
     event LogAction(address indexed user);
 
-    function getGelatoCore() external view returns(IGelatoCore);
-    function getActionSelector() external view returns(bytes4);
-    function getActionConditionsOkGas() external view returns(uint256);
-    function getActionGas() external view returns(uint256);
-    function getActionGasTotal() external view returns(uint256);
+    function getGelatoCore() external pure returns(IGelatoCore);
+    function getActionSelector() external pure returns(bytes4);
+    function getActionConditionsOkGas() external pure returns(uint256);
+    function getActionGas() external pure returns(uint256);
+    function getActionTotalGas() external pure returns(uint256);
 
     /**
      * @notice Returns whether the action-specific conditions are fulfilled

@@ -26,7 +26,8 @@
     "@openzeppelin/contracts-ethereum-package": "^2.4.0",
     "@openzeppelin/upgrades": "^2.6.0",
     "dotenv": "^8.2.0",
-    "ethers": "^4.0.23"
+    "ethers": "^4.0.23",
+    "solc": "^0.5.14"
   },
   "dependencies": {
     "@openzeppelin/cli": "^2.6.0",

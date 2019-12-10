@@ -87,7 +87,7 @@ Lockfile:
       semver "^6.3.0"
       solc "0.5.11"
       solidity-parser-antlr "^0.4.2"
-      source-map-support "^0.5.11"
+      source-map-support "^0.5.14"
       ts-essentials "^2.0.7"
       tsort "0.0.1"
       uuid "^3.3.2"
@@ -3641,7 +3641,7 @@ Lockfile:
     dependencies:
       is-plain-obj "^1.0.0"
 
-  source-map-support@^0.5.11:
+  source-map-support@^0.5.14:
     version "0.5.16"
     resolved "https://registry.yarnpkg.com/source-map-support/-/source-map-support-0.5.16.tgz#0ae069e7fe3ba7538c64c98515e35339eac5a042"
     integrity sha512-efyLRJDr68D9hBBNIPWFjhpFzURh+KJykQwvMyW5UiZzYwoF6l4YMMDIJJEyFWxWCqfyxLzz6tSfUFR+kXXsVQ==

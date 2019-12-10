@@ -1,4 +1,4 @@
-pragma solidity ^0.5.11;
+pragma solidity ^0.5.14;
 
 import "@openzeppelin/upgrades/contracts/Initializable.sol";
 import "../../GelatoUpgradeableActionsStandard.sol";
@@ -16,7 +16,7 @@ contract UpgradeableActionMultiMintForTimeTrigger is Initializable,
 
     function proxyInitializer(
         address _proxysProxyAdmin,
-        uint256 _actionGasTotal,
+        uint256 _actionTotalGas,
         address _gelatoCore
     )
         external
@@ -25,7 +25,7 @@ contract UpgradeableActionMultiMintForTimeTrigger is Initializable,
         proxysProxyAdmin = ProxyAdmin(_proxysProxyAdmin);
         actionOperation = ActionOperation.delegatecall;
         actionSelector = this.action.selector;
-        actionGasTotal = _actionGasTotal;
+        actionTotalGas = _actionTotalGas;
         gelatoCore = IGelatoCore(_gelatoCore);
         _initializeImplementationFromProxy();
     }
@@ -37,7 +37,7 @@ contract UpgradeableActionMultiMintForTimeTrigger is Initializable,
     }
 
     function initializerOnImplementation(
-        uint256 _actionGasTotal,
+        uint256 _actionTotalGas,
         IGelatoCore _gelatoCore
     )
         external
@@ -50,7 +50,7 @@ contract UpgradeableActionMultiMintForTimeTrigger is Initializable,
         );
         actionOperation = ActionOperation.delegatecall;
         actionSelector = this.action.selector;
-        actionGasTotal = _actionGasTotal;
+        actionTotalGas = _actionTotalGas;
         gelatoCore = _gelatoCore;
         implementationInit = true;
     }
@@ -111,7 +111,7 @@ contract UpgradeableActionMultiMintForTimeTrigger is Initializable,
         require(!implementation.askImplementationIfInit(),
             "UpgradeableActionMultiMintForTimeTrigger.initializeMyImplementation: already init"
         );
-        implementation.initializerOnImplementation(actionGasTotal, gelatoCore);
+        implementation.initializerOnImplementation(actionTotalGas, gelatoCore);
         require(implementation.askImplementationIfInit(),
             "UpgradeableActionMultiMintForTimeTrigger.initializeMyImplementation: failed"
         );

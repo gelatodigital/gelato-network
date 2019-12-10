@@ -1,4 +1,4 @@
-pragma solidity ^0.5.11;
+pragma solidity ^0.5.14;
 
 contract SplitFunctionSelector {
     // This contract should not be deployed

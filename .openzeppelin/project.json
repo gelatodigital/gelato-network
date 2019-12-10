@@ -1,7 +1,9 @@
 {
   "manifestVersion": "2.2",
   "contracts": {
-    "GelatoCore": "GelatoCore"
+    "GelatoCore": "GelatoCore",
+    "ActionKyberTrade": "ActionKyberTrade",
+    "ActionMultiMintForTimeTrigger": "ActionMultiMintForTimeTrigger"
   },
   "dependencies": {},
   "name": "gelato-contracts",
@@ -9,7 +11,7 @@
   "telemetryOptIn": true,
   "compiler": {
     "manager": "openzeppelin",
-    "solcVersion": "0.5.13",
+    "solcVersion": "0.5.14",
     "compilerSettings": {
       "optimizer": {
         "enabled": false,

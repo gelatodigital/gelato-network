@@ -1,4 +1,4 @@
-pragma solidity ^0.5.11;
+pragma solidity ^0.5.14;
 
 import "./IGelatoAction.sol";
 
@@ -6,23 +6,16 @@ import "./IGelatoAction.sol";
 /// @dev find all the NatSpecs inside IGelatoAction
 contract GelatoActionsStandard is IGelatoAction {
 
-    IGelatoCore internal gelatoCore;
-    bytes4 internal actionSelector;
-    uint256 internal actionConditionsOkGas;
-    uint256 internal actionGas;
-    uint256 internal actionGasTotal;
+    IGelatoCore constant internal gelatoCore = IGelatoCore(
+        0x3C64f059a17beCe12d5C43515AB67836c5857E26
+    );
 
     event LogAction(address indexed user);
 
-    constructor() internal {
-        gelatoCore = IGelatoCore(0x3C64f059a17beCe12d5C43515AB67836c5857E26);
-    }
+    // Non-deployable contract
+    constructor() internal {}
 
-    function getGelatoCore() external view returns(IGelatoCore) {return gelatoCore;}
-    function getActionSelector() external view returns(bytes4) {return actionSelector;}
-    function getActionConditionsOkGas() external view returns(uint256) {return actionConditionsOkGas;}
-    function getActionGas() external view returns(uint256) {return actionGas;}
-    function getActionGasTotal() external view returns(uint256) {return actionGasTotal;}
+    function getGelatoCore() external pure returns(IGelatoCore) {return gelatoCore;}
 
     function actionConditionsOk(bytes calldata)  // _actionPayloadWithSelector
         external
@@ -47,9 +40,5 @@ contract GelatoActionsStandard is IGelatoAction {
         returns(IGelatoUserProxy)
     {
         return gelatoCore.getProxyOfUser(_user);
-    }
-
-    function _setActionGasTotal() private {
-        actionGasTotal = actionConditionsOkGas + actionGas;
     }
 }

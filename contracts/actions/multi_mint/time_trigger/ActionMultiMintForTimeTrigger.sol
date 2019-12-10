@@ -1,4 +1,4 @@
-pragma solidity ^0.5.11;
+pragma solidity ^0.5.14;
 
 import "../../GelatoActionsStandard.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
@@ -7,11 +7,11 @@ import "../../../triggers/IGelatoTrigger.sol";
 contract ActionMultiMintForTimeTrigger is GelatoActionsStandard {
     using SafeMath for uint256;
 
-    constructor() public {
-        actionSelector = this.action.selector;
-        actionConditionsOkGas = 30000;
-        actionGas = 1000000;
-    }
+    bytes4 constant internal actionSelector = bytes4(keccak256(bytes(
+        "action(address payable,address,uint256,address,bytes,uint256,uint256)"
+    )));
+    uint256 constant internal actionConditionsOkGas = 30000;
+    uint256 constant internal actionGas = 1000000;
 
     function action(
         // gelatoCore.mintExecutionClaim params
@@ -27,6 +27,11 @@ contract ActionMultiMintForTimeTrigger is GelatoActionsStandard {
         external
         payable
     {
+        require(
+            gasleft() >= actionGas,
+            "ActionMultiMintForTimeTrigger.action: insufficient gasleft()"
+        );
+        // We cannot use storage gelatoCore due to delegatecall context
         IGelatoCore gelatoCore = IGelatoCore(0x76dd57554B6B4DB5F44419d3564Ae23164e56E8f);
         uint256 mintingDepositPerMint = gelatoCore.getMintingDepositPayable(
             _selectedExecutor,
@@ -50,5 +55,17 @@ contract ActionMultiMintForTimeTrigger is GelatoActionsStandard {
                 _actionPayloadWithSelector
             );
         }
+    }
+
+    function getActionSelector() external pure returns(bytes4) {return actionSelector;}
+
+    function getActionConditionsOkGas() external pure returns(uint256) {
+        return actionConditionsOkGas;
+    }
+
+    function getActionGas() external pure returns(uint256) {return actionGas;}
+
+    function getActionTotalGas() external pure returns(uint256) {
+        return actionConditionsOkGas + actionGas;
     }
 }
