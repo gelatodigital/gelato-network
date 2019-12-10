@@ -16,11 +16,9 @@ interface IGelatoCore {
         IGelatoUserProxy indexed userProxy,
         IGelatoTrigger _trigger,
         bytes _triggerPayloadWithSelector,
-        uint256 triggerGas,
         IGelatoAction _action,
         bytes _actionPayloadWithSelector,
-        uint256 _actionGasTotal,
-        uint256 minExecutionGas,
+        uint256[3] triggergasActiongastotalMinexecutiongas,
         uint256 executionClaimExpiryDate,
         uint256 mintingDeposit
     );
@@ -34,7 +32,6 @@ interface IGelatoCore {
     event LogClaimExecutedAndDeleted(
         address payable indexed executor,
         uint256 indexed executionClaimId,
-        IGelatoUserProxy userProxy,
         GelatoCoreEnums.ExecutionResult indexed executionResult,
         uint256 gasPriceUsed,
         uint256 executionCostEstimate,
@@ -49,11 +46,6 @@ interface IGelatoCore {
 
     /**
      * @dev API for minting execution claims on gelatoCore
-     * @param _selectedExecutor: the registered executor to service this claim
-     * @param _trigger: the address of the trigger
-     * @param _triggerPayloadWithSelector: the encoded trigger params with function selector
-     * @param _action: the address of the action
-     * @param _actionPayloadWithSelector: the encoded action params with function selector
      * @notice re-entrancy guard because accounting ops are present inside fn
      * @notice msg.value is a refundable deposit - only a fee if executed
      * @notice minting event split into two, due to stack too deep issue
@@ -70,14 +62,6 @@ interface IGelatoCore {
 
     /**
      * @dev the API for executors to check whether a claim is executable
-     * @param _executionClaimId executors get this from LogExecutionClaimMinted
-     * @param _userProxy executors get this from LogExecutionClaimMinted
-     * @param _trigger executors get this from LogTriggerActionMinted
-     * @param _triggerPayloadWithSelector executors get this from LogTriggerActionMinted
-     * @param _actionPayloadWithSelector executors get this from LogExecutionClaimMinted
-     * @param _minExecutionGas executors get this from LogExecutionClaimMinted
-     * @param _executionClaimExpiryDate executors get this from LogExecutionClaimMinted
-     * @param _mintingDeposit executors get this from LogExecutionClaimMinted
      * @return uint8 which converts to one of enum GelatoCoreEnums.CanExecuteCheck values
      * @notice if return value == 6, the claim is executable
      */
@@ -86,12 +70,10 @@ interface IGelatoCore {
         IGelatoUserProxy _userProxy,
         IGelatoTrigger _trigger,
         bytes calldata _triggerPayloadWithSelector,
-        uint256 _triggerGas,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
-        uint256 _actionGasTotal,
+        uint256[3] calldata _triggergasActiongastotalMinexecutiongas,
         uint256 _actionConditionsOkGas,
-        uint256 _minExecutionGas,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
     )
@@ -102,15 +84,6 @@ interface IGelatoCore {
 
     /**
      * @dev the API executors call when they execute an executionClaim
-     * @param _executionClaimId executors get this from LogExecutionClaimMinted
-     * @param _userProxy executors get this from LogExecutionClaimMinted
-     * @param _trigger executors get this from LogTriggerActionMinted
-     * @param _triggerPayloadWithSelector executors get this from LogTriggerActionMinted
-     * @param _actionPayloadWithSelector executors get this from LogExecutionClaimMinted
-     * @param _action executors get this from LogTriggerActionMinted
-     * @param _executionMinGas executors get this from LogExecutionClaimMinted
-     * @param _executionClaimExpiryDate executors get this from LogExecutionClaimMinted
-     * @param _mintingDeposit executors get this from LogExecutionClaimMinted
      * @return uint8 which converts to one of enum GelatoCoreEnums.ExecutionResult values
      * @notice if return value == 0, the claim got executed
      * @notice re-entrancy protection due to accounting operations and interactions
@@ -120,11 +93,9 @@ interface IGelatoCore {
         IGelatoUserProxy _userProxy,
         IGelatoTrigger _trigger,
         bytes calldata _triggerPayloadWithSelector,
-        uint256 _triggerGas,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
-        uint256 _actionGasTotal,
-        uint256 _executionMinGas,
+        uint256[3] calldata _triggergasActiongastotalMinexecutiongas,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
     )
@@ -133,15 +104,6 @@ interface IGelatoCore {
 
     /**
      * @dev API for canceling executionClaims
-     * @param _selectedExecutor callers get this from LogExecutionClaimMinted
-     * @param _executionClaimId callers get this from LogExecutionClaimMinted
-     * @param _userProxy callers get this from LogExecutionClaimMinted
-     * @param _trigger callers get this from LogTriggerActionMinted
-     * @param _triggerPayloadWithSelector callers get this from LogTriggerActionMinted
-     * @param _actionPayloadWithSelector callers get this from LogExecutionClaimMinted
-     * @param _executionMinGas callers get this from LogExecutionClaimMinted
-     * @param _executionClaimExpiryDate callers get this from LogExecutionClaimMinted
-     * @param _mintingDeposit callers get this from LogExecutionClaimMinted
      * @notice re-entrancy protection due to accounting operations and interactions
      * @notice prior to executionClaim expiry, only owner of _userProxy can cancel
         for a refund. Post executionClaim expiry, _selectedExecutor can also cancel,
@@ -154,11 +116,9 @@ interface IGelatoCore {
         IGelatoUserProxy _userProxy,
         IGelatoTrigger _trigger,
         bytes calldata _triggerPayloadWithSelector,
-        uint256 _triggerGas,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
-        uint256 _actionGasTotal,
-        uint256 _executionMinGas,
+        uint256[3] calldata _triggergasActiongastotalMinexecutiongas,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
     )
@@ -345,12 +305,10 @@ interface IGelatoCore {
         IGelatoUserProxy _userProxy,
         IGelatoTrigger _trigger,
         bytes calldata _triggerPayloadWithSelector,
-        uint256 _triggerGas,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
-        uint256 _actionGasTotal,
+        uint256[3] calldata _triggergasActiongastotalMinexecutiongas,
         uint256 _actionConditionsOkGas,
-        uint256 _minExecutionGas,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
     )
@@ -381,11 +339,9 @@ interface IGelatoCore {
         IGelatoUserProxy _userProxy,
         IGelatoTrigger _trigger,
         bytes calldata _triggerPayloadWithSelector,
-        uint256 _triggerGas,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
-        uint256 _actionGasTotal,
-        uint256 _minExecutionGas,
+        uint256[3] calldata _triggergasActiongastotalMinexecutiongas,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
     )

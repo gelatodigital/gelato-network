@@ -1,6 +1,8 @@
 {
   "manifestVersion": "2.2",
-  "contracts": {},
+  "contracts": {
+    "GelatoCore": "GelatoCore"
+  },
   "dependencies": {},
   "name": "gelato-contracts",
   "version": "0.0.1",
