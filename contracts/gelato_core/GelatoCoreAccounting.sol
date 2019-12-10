@@ -1,4 +1,4 @@
-pragma solidity ^0.5.13;
+pragma solidity ^0.5.11;
 
 import "./interfaces/IGelatoCoreAccounting.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
@@ -107,8 +107,7 @@ contract GelatoCoreAccounting is IGelatoCoreAccounting, Ownable {
     // =========
 
     //_____________ Interface for GelatoCore Owner ________________________________
-    /*
-    function setMinExecutionClaimLifespan(uint256 _newMinExecutionClaimLifespan)
+    /*function setMinExecutionClaimLifespan(uint256 _newMinExecutionClaimLifespan)
         onlyOwner
         external
     {

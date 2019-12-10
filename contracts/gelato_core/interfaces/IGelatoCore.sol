@@ -1,4 +1,4 @@
-pragma solidity ^0.5.13;
+pragma solidity ^0.5.11;
 
 import "../GelatoCoreEnums.sol";
 import "./IGelatoUserProxy.sol";
@@ -192,9 +192,8 @@ interface IGelatoCore {
 
     // ============= IGelatoUserProxyManager =======================
     event LogCreateUserProxy(IGelatoUserProxy indexed userProxy, address indexed user);
-    /// @notice deploys gelato proxy for users that have no proxy yet
-    /// @dev This function should be called for users that have nothing deployed yet
-    /// @return address of the deployed GelatoUserProxy
+
+    /// @notice documented inside IGelatoUserProxyManager
     function createUserProxy() external returns(IGelatoUserProxy);
 
     // ______ State Read APIs __________________
@@ -243,107 +242,52 @@ interface IGelatoCore {
         uint256 _newGasOverhead
     );
 
-    /**
-     * @dev fn to register as an executorClaimLifespan
-     * @param _executorPrice the price factor the executor charges for its services
-     * @param _executorClaimLifespan the lifespan of claims minted for this executor
-     * @notice while executorPrice could be 0, executorClaimLifespan must be at least
-       what the core protocol defines as the minimum (e.g. 10 minutes).
-     * @notice NEW
-     */
+    /// @notice documented inside IGelatoCoreAccounting
     function registerExecutor(uint256 _executorPrice, uint256 _executorClaimLifespan) external;
 
-    /**
-     * @dev fn to deregister as an executor
-     * @notice ideally this fn is called by all executors as soon as they stop
-       running their node/business. However, this behavior cannot be enforced.
-       Frontends/Minters have to monitor executors' uptime themselves, in order to
-       determine which listed executors are alive and have strong service guarantees.
-     */
+    /// @notice documented inside IGelatoCoreAccounting
     function deregisterExecutor() external;
 
-    /**
-     * @dev fn for executors to configure their pricing of claims minted for them
-     * @param _newExecutorGasPrice the new price to be listed for the executor
-     * @notice param can be 0 for executors that operate pro bono - caution:
-        if executors set their price to 0 then they get nothing, not even gas refunds.
-     */
+    /// @notice documented inside IGelatoCoreAccounting
     function setExecutorPrice(uint256 _newExecutorGasPrice) external;
 
-    /**
-     * @dev fn for executors to configure the lifespan of claims minted for them
-     * @param _newExecutorClaimLifespan the new lifespan to be listed for the executor
-     * @notice param cannot be 0 - use deregisterExecutor() to deregister
-     */
+    /// @notice documented inside IGelatoCoreAccounting
     function setExecutorClaimLifespan(uint256 _newExecutorClaimLifespan) external;
 
-    /**
-     * @dev function for executors to withdraw their ETH on core
-     * @notice funds withdrawal => re-entrancy protection.
-     * @notice new: we use .sendValue instead of .transfer due to IstanbulHF
-     */
+    /// @notice documented inside IGelatoCoreAccounting
     function withdrawExecutorBalance() external;
 
-    /**
-     * @dev setter for gelatoCore devs to impose a lower boundary on
-       executors' listed claim lifespans, to disallow bad claims
-     * param _newMinExecutionClaimLifespan x
-     */
-    //function setMinExecutionClaimLifespan(uint256 _newMinExecutionClaimLifespan) external;
+    // @notice documented inside IGelatoCoreAccounting
+    // function setMinExecutionClaimLifespan(uint256 _newMinExecutionClaimLifespan) external;
 
-    /**
-     * @dev setter for GelatoCore devs to configure the protocol's executionGas calculations
-     * param _newGasOverhead new calc for gelatoCore.execute overhead gas
-     * @notice important for _getMinExecutionGasRequirement and getMintingDepositPayable
-     */
+    // @notice documented inside IGelatoCoreAccounting
     // function setGelatoCoreExecGasOverhead(uint256 _newGasOverhead) external;
 
-    /**
-     * @dev setter for GelatoCore devs to configure the protocol's executionGas calculations
-     * param _newGasOverhead new calc for userProxy.execute overhead gas
-     * @notice important for _getMinExecutionGasRequirement and getMintingDepositPayable
-     */
+    // @notice documented inside IGelatoCoreAccounting
     // function setUserProxyExecGasOverhead(uint256 _newGasOverhead) external;
 
-    /// @dev get the gelato-wide minimum executionClaim lifespan
-    /// @return the minimum executionClaim lifespan for all executors
+    /// @notice documented inside IGelatoCoreAccounting
     function getMinExecutionClaimLifespan() external pure returns(uint256);
 
-    /// @dev get an executor's price
-    /// @param _executor x
-    /// @return uint256 executor's price factor
+    /// @notice documented inside IGelatoCoreAccounting
     function getExecutorPrice(address _executor) external view returns(uint256);
 
-    /// @dev get an executor's executionClaim lifespan
-    /// @param _executor x
-    /// @return uint256 executor's executionClaim lifespan
+    /// @notice documented inside IGelatoCoreAccounting
     function getExecutorClaimLifespan(address _executor) external view returns(uint256);
 
-    /// @dev get the gelato-internal wei balance of an executor
-    /// @param _executor z
-    /// @return uint256 wei amount of _executor's gelato-internal deposit
+    /// @notice documented inside IGelatoCoreAccounting
     function getExecutorBalance(address _executor) external view returns(uint256);
 
-    /// @dev getter for gelatoCoreExecGasOverhead state variable
-    /// @return uint256 gelatoCoreExecGasOverhead
+    /// @notice documented inside IGelatoCoreAccounting
     function getGelatoCoreExecGasOverhead() external pure returns(uint256);
 
-    /// @dev getter for userProxyExecGasOverhead state variable
-    /// @return uint256 userProxyExecGasOverhead
+    /// @notice documented inside IGelatoCoreAccounting
     function getUserProxyExecGasOverhead() external pure returns(uint256);
 
-    /// @dev getter for internalExecutionGas state variable
-    /// @return uint256 internalExecutionGas
+    /// @notice documented inside IGelatoCoreAccounting
     function getTotalExecutionGasOverhead() external pure returns(uint256);
 
-    /**
-     * @dev get the deposit payable for minting on gelatoCore
-     * @param _action the action contract to be executed
-     * @param _selectedExecutor the executor that should call the action
-     * @return amount of wei that needs to be deposited inside gelato for minting
-     * @notice minters (e.g. frontends) should use this API to get the msg.value
-       payable to GelatoCore's mintExecutionClaim function.
-     */
+    /// @notice documented inside IGelatoCoreAccounting
     function getMintingDepositPayable(
         address _selectedExecutor,
         IGelatoTrigger _trigger,
@@ -353,10 +297,7 @@ interface IGelatoCore {
         view
         returns(uint256 mintingDepositPayable);
 
-    /// @dev calculates gas requirements based off _actionGasTotal
-    /// @param _triggerGas the gas forwared to trigger.staticcall inside gelatoCore.execute
-    /// @param _actionGasTotal the gas forwarded with the action call
-    /// @return the minimum gas required for calls to gelatoCore.execute()
+    /// @notice documented inside IGelatoCoreAccounting
     function getMinExecutionGas(uint256 _triggerGas, uint256 _actionGasTotal)
         external
         pure
@@ -365,13 +306,16 @@ interface IGelatoCore {
 
     // ==================== GAS TESTING ==============================================
     // ============= GELATO_GAS_TEST_USER_PROXY_MANAGER ==============
+    /// @notice documented inside IGelatoGasTestUserProxyManager
     function createGasTestUserProxy() external returns(address gasTestUserProxy);
 
+    /// @notice documented inside IGelatoGasTestUserProxyManager
     function getUserOfGasTestProxy(address _gasTestProxy)
         external
         view
         returns(address);
 
+    /// @notice documented inside IGelatoGasTestUserProxyManager
     function getGasTestProxyOfUser(address _user)
         external
         view

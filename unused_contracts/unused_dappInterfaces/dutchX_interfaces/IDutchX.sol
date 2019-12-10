@@ -1,4 +1,4 @@
-pragma solidity ^0.5.13;
+pragma solidity ^0.5.11;
 
 interface IDutchX {
     function getAuctionIndex(address token1, address token2) external view returns (uint256);

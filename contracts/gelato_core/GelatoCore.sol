@@ -1,4 +1,4 @@
-pragma solidity ^0.5.13;
+pragma solidity ^0.5.11;
 
 import "./interfaces/IGelatoCore.sol";
 import "./GelatoUserProxyManager.sol";
@@ -39,16 +39,26 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         else if (_isUserProxy(msg.sender)) userProxy = IGelatoUserProxy(msg.sender);
         else revert("GelatoCore.mintExecutionClaim: msg.sender is not proxied");
         // =============
-        // ______ Charge Minting Deposit _______________________________________
-        uint256 triggerGas = _trigger.getTriggerGas();
-        require(triggerGas != 0, "GelatoCore.mintExecutionClaim: 0 triggerGas");
-        uint256 actionGasTotal = _action.getActionGasTotal();
-        require(actionGasTotal != 0, "GelatoCore.mintExecutionClaim: 0 actionGasTotal");
-        uint256 minExecutionGas = _getMinExecutionGas(triggerGas, actionGasTotal);
-        require(
-            msg.value == minExecutionGas.mul(executorPrice[_selectedExecutor]),
-            "GelatoCore.mintExecutionClaim: msg.value failed"
-        );
+        // ______ Read Gas Values & Charge Minting Deposit _______________________
+        uint256[3] memory triggergasActiongastotalMinexecutiongas;
+        {
+            uint256 triggerGas = _trigger.getTriggerGas();
+            require(triggerGas != 0, "GelatoCore.mintExecutionClaim: 0 triggerGas");
+            triggergasActiongastotalMinexecutiongas.push(triggerGas);
+
+            uint256 actionGasTotal = _action.getActionGasTotal();
+            require(actionGasTotal != 0, "GelatoCore.mintExecutionClaim: 0 actionGasTotal");
+            triggergasActiongastotalMinexecutiongas.push(actionGasTotal);
+
+            uint256 minExecutionGas = _getMinExecutionGas(triggerGas, actionGasTotal);
+            triggergasActiongastotalMinexecutiongas.push(minExecutionGas);
+
+            require(
+                msg.value == minExecutionGas.mul(executorPrice[_selectedExecutor]),
+                "GelatoCore.mintExecutionClaim: msg.value failed"
+            );
+        }
+
         // =============
         // ______ Mint new executionClaim ______________________________________
         Counters.increment(executionClaimIds);
@@ -66,11 +76,9 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
                     userProxy,
                     _trigger,
                     _triggerPayloadWithSelector,
-                    triggerGas,
                     _action,
                     _actionPayloadWithSelector,
-                    actionGasTotal,
-                    minExecutionGas,
+                    triggergasActiongastotalMinexecutiongas,
                     executionClaimExpiryDate,
                     msg.value
                 )
@@ -84,11 +92,9 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
             userProxy,
             _trigger,
             _triggerPayloadWithSelector,
-            triggerGas,
             _action,
             _actionPayloadWithSelector,
-            actionGasTotal,
-            minExecutionGas,
+            triggergasActiongastotalMinexecutiongas,
             executionClaimExpiryDate,
             msg.value
         );
