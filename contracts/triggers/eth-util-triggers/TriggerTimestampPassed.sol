@@ -15,14 +15,11 @@ contract TriggerTimestampPassed is IGelatoTrigger {
         return _timestamp <= block.timestamp;
     }
 
-    function getLatestTimestamp()
-        external
-        view
-        returns(uint256)
-    {
-        return block.timestamp;
-    }
+    function getLatestTimestamp() external view returns(uint256) {return block.timestamp;}
 
+    function correctTriggerSelector() external pure returns(bool) {
+        return triggerSelector == this.fired.selector;
+    }
     function getTriggerSelector() external pure returns(bytes4) {return triggerSelector;}
     function getTriggerGas() external pure returns(uint256) {return triggerGas;}
 }

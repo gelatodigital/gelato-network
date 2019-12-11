@@ -31,10 +31,18 @@ module.exports = {
       url: `https://ropsten.infura.io/v3/${INFURA_ID}`,
       chainId: 3,
       accounts: { mnemonic: DEV_MNEMONIC },
+      contracts: [
+        "ActionKyberTrade",
+        "ActionMultiMintForTimeTrigger",
+        "GelatoCore",
+        "TriggerTimestampPassed"
+      ],
       deployments: {
+        actionKyberTrade: "0xBcFE16FA07D10eB594e18C567677f5FD5c2f9810",
         actionMultiMintForTimeTrigger:
-          "0xB03613a14dFf8bc9D03F532B4715F6DeAC8dc016",
-        gelatoCore: "0x86CcCd81e00E5164b76Ef632EF79a987A4ACE938"
+          "0xDceFcE56B11Df6248889c702c71bA1BC4Cb14D25",
+        gelatoCore: "0x86CcCd81e00E5164b76Ef632EF79a987A4ACE938",
+        triggerTimestampPassed: "0x4CE65C29303929455c9373F0B657C5d00E2EC714"
       }
     }
   },
@@ -94,12 +102,28 @@ task("config", "Logs the current BRE config", async (_, { config }) => {
 });
 
 task(
+  "contracts-ropsten",
+  "Logs the names of contracts available for deployment on ropsten",
+  async (_, { config }) => {
+    try {
+      if (checkNestedObj(config, "networks", "ropsten", "contracts")) {
+        console.log("\n", config.networks.ropsten.contracts, "\n");
+        return config.networks.ropsten.contracts;
+      } else
+        throw new Error("No contracts for Ropsten exist inside BRE config");
+    } catch (err) {
+      console.error(err);
+    }
+  }
+);
+
+task(
   "deployments-ropsten",
   "Logs the addresses of deployed contracts on ropsten",
   async (_, { config }) => {
     try {
       if (checkNestedObj(config, "networks", "ropsten", "deployments")) {
-        console.dir(config.networks.ropsten.deployments);
+        console.log("\n", config.networks.ropsten.deployments, "\n");
         return config.networks.ropsten.deployments;
       } else
         throw new Error("No deployments for Ropsten exist inside BRE config");
