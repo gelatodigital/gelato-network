@@ -14,6 +14,7 @@ export async function erc20Approve(taskArgs, ethers) {
     console.log(`\n\t\t erc20:approve txHash:\n\t ${tx.hash}`);
     const txReceipt = await tx.wait();
     console.log(`\t\t Tx mined: ${txReceipt.blockNumber !== undefined}`);
+    return txReceipt;
   } catch (error) {
     console.error(error);
   }
@@ -33,7 +34,7 @@ export async function erc20Allowance(taskArgs, ethers) {
       ownerAddress,
       spenderAddress
     );
-    console.log(`\n\t\t erc20-allowance: ${allowance}`);
+    return allowance;
   } catch (error) {
     console.error(error);
   }

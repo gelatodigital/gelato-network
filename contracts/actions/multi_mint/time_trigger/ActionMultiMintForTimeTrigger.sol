@@ -3,6 +3,8 @@ pragma solidity ^0.5.14;
 import "../../GelatoActionsStandard.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../../triggers/IGelatoTrigger.sol";
+import "../../../gelato_core/interfaces/IGelatoCore.sol";
+import "../../../gelato_core/interfaces/IGelatoCoreAccounting.sol";
 
 contract ActionMultiMintForTimeTrigger is GelatoActionsStandard {
     using SafeMath for uint256;
@@ -15,6 +17,8 @@ contract ActionMultiMintForTimeTrigger is GelatoActionsStandard {
     uint256 constant internal actionTotalGas = actionConditionsOkGas + actionGas;
 
     function action(
+        // multi mint delegatecall requirement
+        address _gelatoCore,
         // gelatoCore.mintExecutionClaim params
         address payable _selectedExecutor,
         IGelatoTrigger _timeTrigger,
@@ -33,8 +37,9 @@ contract ActionMultiMintForTimeTrigger is GelatoActionsStandard {
             "ActionMultiMintForTimeTrigger.action: insufficient gasleft()"
         );
         // We cannot use storage gelatoCore due to delegatecall context
-        IGelatoCore gelatoCore = IGelatoCore(0x76dd57554B6B4DB5F44419d3564Ae23164e56E8f);
-        uint256 mintingDepositPerMint = gelatoCore.getMintingDepositPayable(
+        uint256 mintingDepositPerMint = IGelatoCoreAccounting(
+            _gelatoCore
+        ).getMintingDepositPayable(
             _selectedExecutor,
             _timeTrigger,
             _action
@@ -48,7 +53,7 @@ contract ActionMultiMintForTimeTrigger is GelatoActionsStandard {
                 _timeTrigger.getTriggerSelector(),
                 timestamp
             );
-            gelatoCore.mintExecutionClaim.value(mintingDepositPerMint)(
+            IGelatoCore(_gelatoCore).mintExecutionClaim.value(mintingDepositPerMint)(
                 _selectedExecutor,
                 _timeTrigger,
                 triggerPayloadWithSelector,

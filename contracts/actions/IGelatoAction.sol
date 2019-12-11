@@ -1,6 +1,6 @@
 pragma solidity ^0.5.14;
 
-import "../gelato_core/interfaces/IGelatoCore.sol";
+import "../gelato_core/interfaces/IGelatoUserProxyManager.sol";
 
 /// @title IGelatoAction - solidity interface of GelatoActionsStandard
 /// @notice all the APIs and events of GelatoActionsStandard
@@ -8,7 +8,7 @@ import "../gelato_core/interfaces/IGelatoCore.sol";
 interface IGelatoAction {
     event LogAction(address indexed user);
 
-    function getGelatoCore() external pure returns(IGelatoCore);
+    function getGelatoCore() external pure returns(address);
     function getActionSelector() external pure returns(bytes4);
     function getActionConditionsOkGas() external pure returns(uint256);
     function getActionGas() external pure returns(uint256);

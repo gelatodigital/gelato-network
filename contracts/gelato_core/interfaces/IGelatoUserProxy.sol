@@ -23,7 +23,7 @@ interface IGelatoUserProxy {
         payable
         returns(bool success, bytes memory returndata);
 
-    function getUser() external view returns(address payable);
+    function getUser() external view returns(address);
 
-    function getGelatoCore() external view returns(address payable);
+    function getGelatoCore() external view returns(address);
 }

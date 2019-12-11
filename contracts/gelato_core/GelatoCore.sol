@@ -21,8 +21,6 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
     // executionClaimId => bytes32 executionClaimHash
     mapping(uint256 => bytes32) private hashedExecutionClaims;
 
-    constructor() public {}
-
     // ================  MINTING ==============================================
     function mintExecutionClaim(
         address payable _selectedExecutor,
@@ -50,10 +48,10 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
 
             uint256 actionTotalGas = _action.getActionTotalGas();
             require(actionTotalGas != 0, "GelatoCore.mintExecutionClaim: 0 actionTotalGas");
-             triggerGasActionTotalGasMinExecutionGas[1] = actionTotalGas;
+            triggerGasActionTotalGasMinExecutionGas[1] = actionTotalGas;
 
             uint256 minExecutionGas = _getMinExecutionGas(triggerGas, actionTotalGas);
-           triggerGasActionTotalGasMinExecutionGas[2] = minExecutionGas;
+            triggerGasActionTotalGasMinExecutionGas[2] = minExecutionGas;
 
             require(
                 msg.value == minExecutionGas.mul(executorPrice[_selectedExecutor]),
@@ -223,7 +221,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
     function getUserWithExecutionClaimId(uint256 _executionClaimId)
         external
         view
-        returns(address payable)
+        returns(address)
     {
         IGelatoUserProxy userProxy = userProxyByExecutionClaimId[_executionClaimId];
         return proxyToUser[address(userProxy)];

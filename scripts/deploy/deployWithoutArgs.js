@@ -11,9 +11,7 @@ const main = async () => {
     await env.run("compile");
     await env.run("network-current");
     const ContractFactory = await env.ethers.getContract(contractName);
-    console.log("\n\n", ContractFactory.interface.deployFunction);
     const contract = await ContractFactory.deploy();
-    console.dir(contract);
     console.log(
       `\n\t\t ${contractName} deployment tx hash:\n\t\t ${contract.deployTransaction.hash}`
     );

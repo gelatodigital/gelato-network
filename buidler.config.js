@@ -23,6 +23,10 @@ console.log(
 module.exports = {
   defaultNetwork: "buidlerevm",
   networks: {
+    buidlerevm: {
+      gas: 9500000,
+      hardfork: "istanbul"
+    },
     ropsten: {
       url: `https://ropsten.infura.io/v3/${INFURA_ID}`,
       chainId: 3,
@@ -30,13 +34,13 @@ module.exports = {
       deployments: {
         actionMultiMintForTimeTrigger:
           "0xB03613a14dFf8bc9D03F532B4715F6DeAC8dc016",
-        gelatoCore: "0x76dd57554B6B4DB5F44419d3564Ae23164e56E8f"
+        gelatoCore: "0x86CcCd81e00E5164b76Ef632EF79a987A4ACE938"
       }
     }
   },
   solc: {
     version: "0.5.14",
-    optimizer: { enabled: false }
+    optimizer: { enabled: true, runs: 200 }
   }
 };
 
@@ -55,6 +59,7 @@ task(
       console.log(
         `Current block number on ${networkName.toUpperCase()}: ${blockNumber}`
       );
+      return blockNumber;
     } catch (err) {
       console.error(err);
     }
@@ -72,6 +77,7 @@ task(
       console.log(
         `Current block number on ${networkName.toUpperCase()}: ${blockNumber}`
       );
+      return blockNumber;
     } catch (err) {
       console.error(err);
     }
@@ -81,6 +87,7 @@ task(
 task("config", "Logs the current BRE config", async (_, { config }) => {
   try {
     console.log(config);
+    return config;
   } catch (err) {
     console.error(err);
   }
@@ -91,9 +98,10 @@ task(
   "Logs the addresses of deployed contracts on ropsten",
   async (_, { config }) => {
     try {
-      if (checkNestedObj(config, "networks", "ropsten", "deployments"))
+      if (checkNestedObj(config, "networks", "ropsten", "deployments")) {
         console.dir(config.networks.ropsten.deployments);
-      else
+        return config.networks.ropsten.deployments;
+      } else
         throw new Error("No deployments for Ropsten exist inside BRE config");
     } catch (err) {
       console.error(err);
@@ -104,6 +112,7 @@ task(
 task("env", "Logs the current Buidler Runtime Environment", async (_, env) => {
   try {
     console.log(env);
+    return env;
   } catch (err) {
     console.error(err);
   }
@@ -129,7 +138,9 @@ task("erc20-allowance", "Logs <spender>'s <erc20> allowance from <owner>")
   .setAction(async (taskArgs, { ethers }) => {
     try {
       const { erc20Allowance } = require("./scripts/buidler_tasks/erc20Tasks");
-      await erc20Allowance(taskArgs, ethers);
+      const allowance = await erc20Allowance(taskArgs, ethers);
+      console.log(`\n\t\t erc20-allowance: ${allowance}`);
+      return allowance;
     } catch (error) {
       console.error(error);
     }
@@ -143,6 +154,7 @@ task("eth-balance", "Prints an account's ether balance")
       const provider = getDefaultProvider("ropsten");
       const balance = await provider.getBalance(address);
       console.log(`\n\t\t ${utils.formatEther(balance)} ETH`);
+      return balance;
     } catch (error) {
       console.error(error);
     }
@@ -154,6 +166,7 @@ task("eth-price", "Logs the etherscan ether-USD price", async () => {
     const { name: networkName } = await etherscanProvider.getNetwork();
     const ethUSDPrice = await etherscanProvider.getEtherPrice();
     console.log(`\n\t\t Ether price in USD (${networkName}): ${ethUSDPrice}`);
+    return ethUSDPrice;
   } catch (err) {
     console.error(err);
   }
@@ -168,6 +181,9 @@ task(
       console.log(
         `\n\t\t Currently connected to: ${networkName.toUpperCase()}`
       );
+      if (networkName.toUpperCase() == "UNKNOWN")
+        console.log("\t\t UNKNOWN may be buidlerevm");
+      return networkName;
     } catch (err) {
       console.error(err);
     }

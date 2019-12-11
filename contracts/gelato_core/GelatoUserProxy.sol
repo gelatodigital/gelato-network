@@ -6,8 +6,8 @@ import "../actions/GelatoActionsStandard.sol";
 /// @title GelatoUserProxy
 /// @dev find all NatSpecs inside IGelatoUserProxy
 contract GelatoUserProxy is IGelatoUserProxy {
-    address payable internal user;
-    address payable internal gelatoCore;
+    address internal user;
+    address internal gelatoCore;
 
     constructor(address payable _user)
         public
@@ -74,7 +74,7 @@ contract GelatoUserProxy is IGelatoUserProxy {
         require(success, "GelatoUserProxy.executeDelegatecall(): _action.delegatecall failed");
     }
 
-    function getUser() external view returns(address payable) {return user;}
+    function getUser() external view returns(address) {return user;}
 
-    function getGelatoCore() external view returns(address payable) {return gelatoCore;}
+    function getGelatoCore() external view returns(address) {return gelatoCore;}
 }

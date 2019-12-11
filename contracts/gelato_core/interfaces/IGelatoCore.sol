@@ -139,7 +139,7 @@ interface IGelatoCore {
     function getUserWithExecutionClaimId(uint256 _executionClaimId)
         external
         view
-        returns(address payable);
+        returns(address);
 
     /// @dev interface to read from the hashedExecutionClaims state variable
     /// @param _executionClaimId TO DO
@@ -214,119 +214,5 @@ interface IGelatoCore {
         uint256 _mintingDeposit
     )
         external
-        returns(uint256);
-
-
-    // ============= I_GELATO_USER_PROXY_MANAGER ========================================
-    event LogCreateUserProxy(IGelatoUserProxy indexed userProxy, address indexed user);
-
-    /// @notice documented inside IGelatoUserProxyManager
-    function createUserProxy() external returns(IGelatoUserProxy);
-
-    // ______ State Read APIs __________________
-    function getUserCount() external view returns(uint256);
-    function getUserOfProxy(IGelatoUserProxy _proxy) external view returns(address payable);
-    function isUser(address _user) external view returns(bool);
-    function getProxyOfUser(address _user) external view returns(IGelatoUserProxy);
-    function isUserProxy(IGelatoUserProxy _userProxy) external view returns(bool);
-    function getUsers() external view returns(address payable[] memory);
-    function getUserProxies() external view returns(IGelatoUserProxy[] memory);
-
-    // ============= GELATO_GAS_TEST_USER_PROXY_MANAGER ==============
-    /// @notice documented inside IGelatoGasTestUserProxyManager
-    function createGasTestUserProxy() external returns(address gasTestUserProxy);
-
-    /// @notice documented inside IGelatoGasTestUserProxyManager
-    function getUserOfGasTestProxy(address _gasTestProxy)
-        external
-        view
-        returns(address);
-
-    /// @notice documented inside IGelatoGasTestUserProxyManager
-    function getGasTestProxyOfUser(address _user)
-        external
-        view
-        returns(address);
-
-
-    // ================== I_GELATO_CORE_ACCOUNTING ====================================
-    event LogRegisterExecutor(
-        address payable indexed executor,
-        uint256 executorPrice,
-        uint256 executorClaimLifespan
-    );
-
-    event LogDeregisterExecutor(address payable indexed executor);
-
-    event LogSetExecutorPrice(uint256 executorPrice, uint256 newExecutorPrice);
-
-    event LogSetExecutorClaimLifespan(
-        uint256 executorClaimLifespan,
-        uint256 newExecutorClaimLifespan
-    );
-
-    event LogWithdrawExecutorBalance(
-        address indexed executor,
-        uint256 withdrawAmount
-    );
-
-    event LogSetMinExecutionClaimLifespan(
-        uint256 minExecutionClaimLifespan,
-        uint256 newMinExecutionClaimLifespan
-    );
-
-    /// @notice documented inside IGelatoCoreAccounting
-    function registerExecutor(uint256 _executorPrice, uint256 _executorClaimLifespan) external;
-
-    /// @notice documented inside IGelatoCoreAccounting
-    function deregisterExecutor() external;
-
-    /// @notice documented inside IGelatoCoreAccounting
-    function setExecutorPrice(uint256 _newExecutorGasPrice) external;
-
-    /// @notice documented inside IGelatoCoreAccounting
-    function setExecutorClaimLifespan(uint256 _newExecutorClaimLifespan) external;
-
-    /// @notice documented inside IGelatoCoreAccounting
-    function withdrawExecutorBalance() external;
-
-    // @notice documented inside IGelatoCoreAccounting
-    function setMinExecutionClaimLifespan(uint256 _newMinExecutionClaimLifespan) external;
-
-    /// @notice documented inside IGelatoCoreAccounting
-    function getMinExecutionClaimLifespan() external view returns(uint256);
-
-    /// @notice documented inside IGelatoCoreAccounting
-    function getExecutorPrice(address _executor) external view returns(uint256);
-
-    /// @notice documented inside IGelatoCoreAccounting
-    function getExecutorClaimLifespan(address _executor) external view returns(uint256);
-
-    /// @notice documented inside IGelatoCoreAccounting
-    function getExecutorBalance(address _executor) external view returns(uint256);
-
-    /// @notice documented inside IGelatoCoreAccounting
-    function getGelatoCoreExecGasOverhead() external pure returns(uint256);
-
-    /// @notice documented inside IGelatoCoreAccounting
-    function getUserProxyExecGasOverhead() external pure returns(uint256);
-
-    /// @notice documented inside IGelatoCoreAccounting
-    function getTotalExecutionGasOverhead() external pure returns(uint256);
-
-    /// @notice documented inside IGelatoCoreAccounting
-    function getMintingDepositPayable(
-        address _selectedExecutor,
-        IGelatoTrigger _trigger,
-        IGelatoAction _action
-    )
-        external
-        view
-        returns(uint256 mintingDepositPayable);
-
-    /// @notice documented inside IGelatoCoreAccounting
-    function getMinExecutionGas(uint256 _triggerGas, uint256 _actionTotalGas)
-        external
-        pure
         returns(uint256);
 }

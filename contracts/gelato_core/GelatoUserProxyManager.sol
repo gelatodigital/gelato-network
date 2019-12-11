@@ -12,8 +12,8 @@ contract GelatoUserProxyManager is IGelatoUserProxyManager, GelatoGasTestUserPro
 
     uint256 internal userCount;
     mapping(address => IGelatoUserProxy) internal userToProxy;
-    mapping(address => address payable) internal proxyToUser;
-    address payable[] internal users;
+    mapping(address => address) internal proxyToUser;
+    address[] internal users;
     IGelatoUserProxy[] internal userProxies;
 
     modifier userHasNoProxy {
@@ -52,7 +52,7 @@ contract GelatoUserProxyManager is IGelatoUserProxyManager, GelatoGasTestUserPro
     function getUserOfProxy(IGelatoUserProxy _proxy)
         external
         view
-        returns(address payable)
+        returns(address)
     {
         return proxyToUser[address(_proxy)];
     }
@@ -84,7 +84,7 @@ contract GelatoUserProxyManager is IGelatoUserProxyManager, GelatoGasTestUserPro
     function getUsers()
         external
         view
-        returns(address payable[] memory)
+        returns(address[] memory)
     {
         return users;
     }

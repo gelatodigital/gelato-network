@@ -1,5 +1,6 @@
 pragma solidity ^0.5.14;
 
+import "../../triggers/IGelatoTrigger.sol";
 import "../../actions/IGelatoAction.sol";
 
 /// @title IGelatoCoreAccounting - solidity interface of GelatoCoreAccounting

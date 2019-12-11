@@ -9,11 +9,13 @@
     "block-number-ropsten": "npx buidler block-number-ropsten",
     "build": "babel ./scripts --out-dir dist",
     "clean": "rimraf dist",
-    "compile": "npx buidler compile",
+    "compile": "rm -rf artifacts/; npx buidler compile",
+    "deploy-gelatocore": "export CONTRACT_NAME=GelatoCore && babel-node scripts/deploy/deployWithoutArgs.js",
     "deploy-gelatocore-ropsten": "export BUIDLER_NETWORK=ropsten && export CONTRACT_NAME=GelatoCore && babel-node scripts/deploy/deployWithoutArgs.js",
     "deploy-actionmultimintfortimetrigger-ropsten": "export BUIDLER_NETWORK=ropsten && export CONTRACT_NAME=ActionMultiMintForTimeTrigger && babel-node scripts/deploy/deployWithoutArgs.js",
     "deployments-ropsten": "export BUIDLER_NETWORK=ropsten && npx buidler deployments-ropsten",
-    "eth-price": "npx buidler eth:price",
+    "eth-balance": "npx buidler eth-balance --a",
+    "eth-price": "npx buidler eth-price",
     "rebuild": "yarn clean && yarn build"
   },
   "devDependencies": {
@@ -27,8 +29,7 @@
     "@openzeppelin/contracts": "^2.4.0",
     "@truffle/hdwallet-provider": "^1.0.26",
     "dotenv": "^8.2.0",
-    "ethers": "^4.0.23",
-    "solc": "^0.5.14"
+    "ethers": "^4.0.23"
   },
   "dependencies": {
     "rimraf": "^3.0.0"

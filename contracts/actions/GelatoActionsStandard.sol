@@ -6,16 +6,14 @@ import "./IGelatoAction.sol";
 /// @dev find all the NatSpecs inside IGelatoAction
 contract GelatoActionsStandard is IGelatoAction {
 
-    IGelatoCore constant internal gelatoCore = IGelatoCore(
-        0x3C64f059a17beCe12d5C43515AB67836c5857E26
-    );
+    address constant internal gelatoCore = 0x3C64f059a17beCe12d5C43515AB67836c5857E26;
 
     event LogAction(address indexed user);
 
     // Non-deployable contract
     constructor() internal {}
 
-    function getGelatoCore() external pure returns(IGelatoCore) {return gelatoCore;}
+    function getGelatoCore() external pure returns(address) {return gelatoCore;}
 
     function actionConditionsOk(bytes calldata)  // _actionPayloadWithSelector
         external
@@ -39,6 +37,6 @@ contract GelatoActionsStandard is IGelatoAction {
         view
         returns(IGelatoUserProxy)
     {
-        return gelatoCore.getProxyOfUser(_user);
+        return IGelatoUserProxyManager(gelatoCore).getProxyOfUser(_user);
     }
 }

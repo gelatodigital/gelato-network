@@ -15,11 +15,11 @@ interface IGelatoUserProxyManager {
 
     // ______ State Read APIs __________________
     function getUserCount() external view returns(uint256);
-    function getUserOfProxy(IGelatoUserProxy _proxy) external view returns(address payable);
+    function getUserOfProxy(IGelatoUserProxy _proxy) external view returns(address);
     function isUser(address _user) external view returns(bool);
     function getProxyOfUser(address _user) external view returns(IGelatoUserProxy);
     function isUserProxy(IGelatoUserProxy _userProxy) external view returns(bool);
-    function getUsers() external view returns(address payable[] memory);
+    function getUsers() external view returns(address[] memory);
     function getUserProxies() external view returns(IGelatoUserProxy[] memory);
     // =========================
 
