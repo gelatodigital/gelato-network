@@ -86,27 +86,13 @@ interface IGelatoCoreAccounting {
     /**
      * @dev setter for gelatoCore devs to impose a lower boundary on
        executors' listed claim lifespans, to disallow bad claims
-     * param _newMinExecutionClaimLifespan x
+     * @param _newMinExecutionClaimLifespan TO DO
      */
-    //function setMinExecutionClaimLifespan(uint256 _newMinExecutionClaimLifespan) external;
-
-    /**
-     * @dev setter for GelatoCore devs to configure the protocol's executionGas calculations
-     * param _newGasOverhead new calc for gelatoCore.execute overhead gas
-     * @notice important for _getMinExecutionGasRequirement and getMintingDepositPayable
-     */
-    // function setGelatoCoreExecGasOverhead(uint256 _newGasOverhead) external;
-
-    /**
-     * @dev setter for GelatoCore devs to configure the protocol's executionGas calculations
-     * param _newGasOverhead new calc for userProxy.execute overhead gas
-     * @notice important for _getMinExecutionGasRequirement and getMintingDepositPayable
-     */
-    // function setUserProxyExecGasOverhead(uint256 _newGasOverhead) external;
+    function setMinExecutionClaimLifespan(uint256 _newMinExecutionClaimLifespan) external;
 
     /// @dev get the gelato-wide minimum executionClaim lifespan
     /// @return the minimum executionClaim lifespan for all executors
-    function getMinExecutionClaimLifespan() external pure returns(uint256);
+    function getMinExecutionClaimLifespan() external view returns(uint256);
 
     /// @dev get an executor's price
     /// @param _executor x

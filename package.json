@@ -12,6 +12,7 @@
     "compile": "npx buidler compile",
     "deploy-gelatocore-ropsten": "export BUIDLER_NETWORK=ropsten && export CONTRACT_NAME=GelatoCore && babel-node scripts/deploy/deployWithoutArgs.js",
     "deploy-actionmultimintfortimetrigger-ropsten": "export BUIDLER_NETWORK=ropsten && export CONTRACT_NAME=ActionMultiMintForTimeTrigger && babel-node scripts/deploy/deployWithoutArgs.js",
+    "deployments-ropsten": "export BUIDLER_NETWORK=ropsten && npx buidler deployments-ropsten",
     "eth-price": "npx buidler eth:price",
     "rebuild": "yarn clean && yarn build"
   },

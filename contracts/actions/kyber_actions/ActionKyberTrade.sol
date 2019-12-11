@@ -14,6 +14,7 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
     )));
     uint256 constant internal actionConditionsOkGas = 50000;
     uint256 constant internal actionGas = 700000;
+    uint256 constant internal actionTotalGas = actionConditionsOkGas + actionGas;
 
     event LogAction(
         address indexed user,
@@ -68,19 +69,13 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
         );
     }
 
-    function getActionSelector() external pure returns(bytes4) {
-        return actionSelector;
-    }
+    function getActionSelector() external pure returns(bytes4) {return actionSelector;}
 
-    function getActionConditionsOkGas() external pure returns(uint256) {
-        return actionConditionsOkGas;
-    }
+    function getActionConditionsOkGas() external pure returns(uint256) {return actionConditionsOkGas;}
 
     function getActionGas() external pure returns(uint256) {return actionGas;}
 
-    function getActionTotalGas() external pure returns(uint256) {
-        return actionConditionsOkGas + actionGas;
-    }
+    function getActionTotalGas() external pure returns(uint256) {return actionTotalGas;}
 
     function actionConditionsOk(bytes calldata _actionPayloadWithSelector)
         external

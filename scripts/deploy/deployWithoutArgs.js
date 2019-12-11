@@ -1,5 +1,5 @@
 import env from "@nomiclabs/buidler";
-import sleep from "../helpers/sleep";
+import { sleep } from "../helpers/sleep";
 
 const main = async () => {
   try {
@@ -11,10 +11,9 @@ const main = async () => {
     await env.run("compile");
     await env.run("network-current");
     const ContractFactory = await env.ethers.getContract(contractName);
-    console.dir(ContractFactory);
+    console.log("\n\n", ContractFactory.interface.deployFunction);
     const contract = await ContractFactory.deploy();
     console.dir(contract);
-    await sleep(100000);
     console.log(
       `\n\t\t ${contractName} deployment tx hash:\n\t\t ${contract.deployTransaction.hash}`
     );

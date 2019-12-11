@@ -14,7 +14,7 @@ contract GelatoCoreAccounting is IGelatoCoreAccounting, Ownable {
     using SafeMath for uint256;
 
     // the minimum executionClaimLifespan imposed upon executors
-    uint256 internal constant minExecutionClaimLifespan = 10 minutes;
+    uint256 internal minExecutionClaimLifespan = 10 minutes;
     //_____________ Gelato ExecutionClaim Economics _______________________
     mapping(address => uint256) internal executorPrice;
     mapping(address => uint256) internal executorClaimLifespan;
@@ -107,7 +107,7 @@ contract GelatoCoreAccounting is IGelatoCoreAccounting, Ownable {
     // =========
 
     //_____________ Interface for GelatoCore Owner ________________________________
-    /*function setMinExecutionClaimLifespan(uint256 _newMinExecutionClaimLifespan)
+    function setMinExecutionClaimLifespan(uint256 _newMinExecutionClaimLifespan)
         onlyOwner
         external
     {
@@ -121,7 +121,7 @@ contract GelatoCoreAccounting is IGelatoCoreAccounting, Ownable {
         );
         minExecutionClaimLifespan = _newMinExecutionClaimLifespan;
     }
-
+    /*
     function setGelatoCoreExecGasOverhead(uint256 _newGasOverhead)
         onlyOwner
         external
@@ -142,7 +142,7 @@ contract GelatoCoreAccounting is IGelatoCoreAccounting, Ownable {
     // =========================
 
     // __________ Interface for State Reads ___________________________________
-    function getMinExecutionClaimLifespan() external pure returns(uint256) {
+    function getMinExecutionClaimLifespan() external view returns(uint256) {
         return minExecutionClaimLifespan;
     }
 

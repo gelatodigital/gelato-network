@@ -29,7 +29,7 @@ module.exports = {
       accounts: { mnemonic: DEV_MNEMONIC },
       deployments: {
         actionMultiMintForTimeTrigger:
-          "0x37D03f8C173ceAa7E58f74C819383b862318A2C0",
+          "0xB03613a14dFf8bc9D03F532B4715F6DeAC8dc016",
         gelatoCore: "0x76dd57554B6B4DB5F44419d3564Ae23164e56E8f"
       }
     }
@@ -45,21 +45,6 @@ usePlugin("@nomiclabs/buidler-ethers");
 
 // ============ Tasks ==============================================================
 // task action function receives the Buidler Runtime Environment as second argument
-task(
-  "deployments-ropsten",
-  "Logs the addresses of deployed contracts on ropsten",
-  async (_, { config }) => {
-    try {
-      if (checkNestedObj(config, "networks", "ropsten", "deployments"))
-        console.log(config.networks.ropsten.deployments);
-      else
-        throw new Error("No deployments for Ropsten exist inside BRE config");
-    } catch (err) {
-      console.error(err);
-    }
-  }
-);
-
 task(
   "block-number",
   "Logs the current block number of connected network",
@@ -100,6 +85,21 @@ task("config", "Logs the current BRE config", async (_, { config }) => {
     console.error(err);
   }
 });
+
+task(
+  "deployments-ropsten",
+  "Logs the addresses of deployed contracts on ropsten",
+  async (_, { config }) => {
+    try {
+      if (checkNestedObj(config, "networks", "ropsten", "deployments"))
+        console.dir(config.networks.ropsten.deployments);
+      else
+        throw new Error("No deployments for Ropsten exist inside BRE config");
+    } catch (err) {
+      console.error(err);
+    }
+  }
+);
 
 task("env", "Logs the current Buidler Runtime Environment", async (_, env) => {
   try {

@@ -12,6 +12,7 @@ contract ActionMultiMintForTimeTrigger is GelatoActionsStandard {
     )));
     uint256 constant internal actionConditionsOkGas = 30000;
     uint256 constant internal actionGas = 1000000;
+    uint256 constant internal actionTotalGas = actionConditionsOkGas + actionGas;
 
     function action(
         // gelatoCore.mintExecutionClaim params
@@ -59,13 +60,9 @@ contract ActionMultiMintForTimeTrigger is GelatoActionsStandard {
 
     function getActionSelector() external pure returns(bytes4) {return actionSelector;}
 
-    function getActionConditionsOkGas() external pure returns(uint256) {
-        return actionConditionsOkGas;
-    }
+    function getActionConditionsOkGas() external pure returns(uint256) {return actionConditionsOkGas;}
 
     function getActionGas() external pure returns(uint256) {return actionGas;}
 
-    function getActionTotalGas() external pure returns(uint256) {
-        return actionConditionsOkGas + actionGas;
-    }
+    function getActionTotalGas() external pure returns(uint256) {return actionTotalGas;}
 }

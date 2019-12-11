@@ -21,6 +21,8 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
     // executionClaimId => bytes32 executionClaimHash
     mapping(uint256 => bytes32) private hashedExecutionClaims;
 
+    constructor() public {}
+
     // ================  MINTING ==============================================
     function mintExecutionClaim(
         address payable _selectedExecutor,
