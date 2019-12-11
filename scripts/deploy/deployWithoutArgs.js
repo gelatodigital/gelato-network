@@ -11,9 +11,10 @@ const main = async () => {
     await env.run("compile");
     await env.run("network-current");
     const ContractFactory = await env.ethers.getContract(contractName);
-    console.log(ContractFactory);
-    await sleep(1000000);
+    console.dir(ContractFactory);
     const contract = await ContractFactory.deploy();
+    console.dir(contract);
+    await sleep(100000);
     console.log(
       `\n\t\t ${contractName} deployment tx hash:\n\t\t ${contract.deployTransaction.hash}`
     );

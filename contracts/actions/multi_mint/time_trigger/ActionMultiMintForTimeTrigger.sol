@@ -1,7 +1,7 @@
 pragma solidity ^0.5.14;
 
 import "../../GelatoActionsStandard.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../../triggers/IGelatoTrigger.sol";
 
 contract ActionMultiMintForTimeTrigger is GelatoActionsStandard {

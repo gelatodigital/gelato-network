@@ -15,6 +15,10 @@ const { sleep } = require("./scripts/helpers/sleep");
 require("dotenv").config();
 const DEV_MNEMONIC = process.env.DEV_MNEMONIC;
 const INFURA_ID = process.env.INFURA_ID;
+console.log(
+  `\n\t\t ENV configured: ${DEV_MNEMONIC !== undefined &&
+    INFURA_ID !== undefined}`
+);
 
 module.exports = {
   defaultNetwork: "buidlerevm",
@@ -79,7 +83,7 @@ task(
     try {
       const provider = getDefaultProvider("ropsten");
       const { name: networkName } = await provider.getNetwork();
-      const blockNumber = await ethers.provider.getBlockNumber();
+      const blockNumber = await provider.getBlockNumber();
       console.log(
         `Current block number on ${networkName.toUpperCase()}: ${blockNumber}`
       );

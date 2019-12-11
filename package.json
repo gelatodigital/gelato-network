@@ -1,12 +1,12 @@
 {
   "name": "gelato-contracts",
   "version": "0.0.1",
-  "description": "If This Then That automation on Ethereum",
+  "description": "If This Then That Automation on Ethereum",
   "repository": "https://github.com/gelatodigital/gelato.git",
   "author": "The guys from gelato-digital",
   "private": false,
   "scripts": {
-    "blocknumber-ropsten": "npx buidler blockNumber:ropsten",
+    "block-number-ropsten": "npx buidler block-number-ropsten",
     "build": "babel ./scripts --out-dir dist",
     "clean": "rimraf dist",
     "compile": "npx buidler compile",
@@ -23,14 +23,13 @@
     "@babel/register": "^7.7.4",
     "@nomiclabs/buidler": "^1.0.1",
     "@nomiclabs/buidler-ethers": "^1.0.1",
-    "@openzeppelin/contracts-ethereum-package": "^2.4.0",
-    "@openzeppelin/upgrades": "^2.6.0",
+    "@openzeppelin/contracts": "^2.4.0",
+    "@truffle/hdwallet-provider": "^1.0.26",
     "dotenv": "^8.2.0",
     "ethers": "^4.0.23",
     "solc": "^0.5.14"
   },
   "dependencies": {
-    "@openzeppelin/cli": "^2.6.0",
     "rimraf": "^3.0.0"
   }
 }

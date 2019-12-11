@@ -2,7 +2,7 @@ pragma solidity ^0.5.14;
 
 import "@openzeppelin/upgrades/contracts/Initializable.sol";
 import "../../GelatoUpgradeableActionsStandard.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../../gelato_core/IGelatoCore.sol";
 import "../../../triggers/IGelatoTrigger.sol";
 

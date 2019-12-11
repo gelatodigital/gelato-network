@@ -3,7 +3,7 @@ pragma solidity ^0.5.14;
 import "./interfaces/IGelatoCore.sol";
 import "./GelatoUserProxyManager.sol";
 import "./GelatoCoreAccounting.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/drafts/Counters.sol";
+import "@openzeppelin/contracts/drafts/Counters.sol";
 
 /// @title GelatoCore
 /// @notice Execution Claim: minting, checking, execution, and cancellation

@@ -1,9 +1,9 @@
 pragma solidity ^0.5.14;
 
 import "./interfaces/IGelatoCoreAccounting.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/ownership/Ownable.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
 
 /// @title GelatoCoreAccounting
 /// @notice APIs for GelatoCore Owner and executorClaimLifespan
@@ -26,7 +26,7 @@ contract GelatoCoreAccounting is IGelatoCoreAccounting, Ownable {
     // =========================
 
     // non-deploy base contract
-    constructor() internal { Ownable.initialize(msg.sender); }
+    constructor() internal {}
 
     // ____________ Interface for STATE MUTATIONS ________________________________________
     //_____________ Interface for Executor _________________________________
