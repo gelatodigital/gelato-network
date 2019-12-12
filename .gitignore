@@ -27,3 +27,6 @@ build/
 # macOS
 .DS_Store
 *.icloud
+
+# yarn
+yarn-error.log
