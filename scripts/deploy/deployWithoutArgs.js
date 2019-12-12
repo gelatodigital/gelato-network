@@ -26,12 +26,8 @@ const main = async contractName => {
         "contracts"
       );
       assert(
-        Array.isArray(contracts),
-        `networks.${networkName}.contracts object is not an array`
-      );
-      assert(
-        contracts.includes(contractName),
-        `contract is not listed inside network.${networkName}.contracts inside buidler.config.js`
+        Array.isArray(contracts) && contracts.includes(contractName),
+        `contract is not member of Array: network.${networkName}.contracts inside buidler.config.js`
       );
     } else {
       throw new Error(

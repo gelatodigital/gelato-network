@@ -1,16 +1,9 @@
 pragma solidity ^0.5.14;
 
-import "@openzeppelin/upgrades/contracts/Initializable.sol";
-import "@openzeppelin/contracts/ownership/Ownable.sol";
+// import "@openzeppelin/contracts/ownership/Ownable.sol";
 
-
-/**
- * @title GelatoTriggerActionAdmin
- * @notice non-deploy base contract
- */
- contract GelatoTriggerActionAdmin/* is Initializable,
-                                      Ownable */
- { /*
+contract GelatoTriggerActionAdmin/* is Ownable */ {
+/*
     // non-deploy base contract
     constructor() internal {}
 
@@ -144,5 +137,6 @@ import "@openzeppelin/contracts/ownership/Ownable.sol";
                               address indexed oneBeforeTrigger,
                               address indexed oneAfterTrigger
     );
-    // ================ */
- }
+    // ================
+*/
+}
