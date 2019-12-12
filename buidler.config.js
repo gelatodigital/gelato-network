@@ -54,6 +54,7 @@ module.exports = {
 
 // ============ Plugins ============================================================
 usePlugin("@nomiclabs/buidler-ethers");
+usePlugin("@nomiclabs/buidler-solhint");
 
 // ============ Tasks ==============================================================
 // task action function receives the Buidler Runtime Environment as second argument

@@ -32,10 +32,12 @@
     "@babel/register": "^7.7.4",
     "@nomiclabs/buidler": "^1.0.1",
     "@nomiclabs/buidler-ethers": "^1.0.1",
+    "@nomiclabs/buidler-solhint": "^1.0.1",
     "@openzeppelin/contracts": "^2.4.0",
     "@truffle/hdwallet-provider": "^1.0.26",
     "dotenv": "^8.2.0",
-    "ethers": "^4.0.23"
+    "ethers": "^4.0.23",
+    "solc": "^0.5.14"
   },
   "dependencies": {
     "rimraf": "^3.0.0"

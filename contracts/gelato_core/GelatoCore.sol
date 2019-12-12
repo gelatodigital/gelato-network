@@ -37,6 +37,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         IGelatoUserProxy userProxy;
         if (_isUser(msg.sender)) userProxy = userToProxy[msg.sender];
         else if (_isUserProxy(msg.sender)) userProxy = IGelatoUserProxy(msg.sender);
+        // solhint-disable-next-line
         else revert("GelatoCore.mintExecutionClaim: msg.sender is not proxied");
         // =============
         // ______ Read Gas Values & Charge Minting Deposit _______________________
@@ -246,10 +247,12 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         view
         returns(GelatoCoreEnums.TriggerCheck)
     {
+        /* solhint-disable indent */
         (bool success,
          bytes memory returndata) = address(_trigger).staticcall.gas(_triggerGas)(
             _triggerPayloadWithSelector
         );
+        /* solhint-enable indent */
         if (!success) return GelatoCoreEnums.TriggerCheck.Reverted;
         else {
             bool executable = abi.decode(returndata, (bool));
@@ -271,10 +274,12 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
             _action.actionConditionsOk.selector,
             _actionPayloadWithSelector
         );
+        /* solhint-disable indent */
         (bool success,
          bytes memory returndata) = address(_action).staticcall.gas(_actionConditionsOkGas)(
             actionConditionsOkPayloadWithSelector
         );
+        /* solhint-enable  indent */
         if (!success) return GelatoCoreEnums.ActionConditionsCheck.Reverted;
         else {
             bool executable = abi.decode(returndata, (bool));
@@ -312,7 +317,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
             _executionClaimExpiryDate,
             _mintingDeposit
         );
-
+        /* solhint-disable indent */
         if (computedExecutionClaimHash != hashedExecutionClaims[_executionClaimId])
             return GelatoCoreEnums.CanExecuteCheck.WrongCalldataOrAlreadyDeleted;
         else if (userProxyByExecutionClaimId[_executionClaimId] == IGelatoUserProxy(0))
@@ -344,6 +349,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         else if (actionCheck == GelatoCoreEnums.ActionConditionsCheck.NotOk)
             return GelatoCoreEnums.CanExecuteCheck.ActionConditionsNotOk;
         else return GelatoCoreEnums.CanExecuteCheck.ActionReverted;
+        /* solhint-enable indent */
     }
 
 
@@ -433,6 +439,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         );
         if (success) executionResult = GelatoCoreEnums.ExecutionResult.Success;
         // if execution fails, no revert, and executor still rewarded
+        // solhint-disable-next-line indent
         else executionResult = GelatoCoreEnums.ExecutionResult.Failure;
 
         executorBalance[msg.sender] = executorBalance[msg.sender].add(_mintingDeposit);
@@ -519,6 +526,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         );
         if (actionCheck == GelatoCoreEnums.ActionConditionsCheck.Ok)
             revert(string(abi.encodePacked(startGas - gasleft())));
+        // solhint-disable-next-line max-line-length
         revert("GelatoCore.revertLogActionConditionsCheckGas: Action Conditions NOT Ok, or reverted, or wrong arguments supplied");
     }
 
@@ -594,6 +602,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
             _actionGas
         );
         if (success) revert(string(abi.encodePacked(startGas - gasleft())));
+        // solhint-disable-next-line max-line-length
         revert("GelatoCore.revertLogGasTestUserProxyExecute: UserProxy or Action reverted, or wrong arguments supplied");
     }
 

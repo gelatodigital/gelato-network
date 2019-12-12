@@ -20,6 +20,7 @@ contract GelatoActionsStandard is IGelatoAction {
         view
         returns(bool)
     {
+        // solhint-disable-next-line
         this;  // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
         return true;
     }

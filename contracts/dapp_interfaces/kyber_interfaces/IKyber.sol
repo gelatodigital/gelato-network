@@ -1,8 +1,6 @@
 pragma solidity ^0.5.14;
 
-interface IKyber
-{
-
+interface IKyber {
     /**
      * @dev Makes a trade between src and dest token and send dest tokens to destAddress
      * @param src source ERC20 token contract address
@@ -31,13 +29,14 @@ interface IKyber
      * @notice There is a minimum trading value of 1000 wei tokens.
         Anything fewer is considered as 0.
      */
-    function trade(address src,
-                   uint256 srcAmount,
-                   address dest,
-                   address destAddress,
-                   uint256 maxDestAmount,
-                   uint256 minConversionRate,
-                   address walletId
+    function trade(
+        address src,
+        uint256 srcAmount,
+        address dest,
+        address destAddress,
+        uint256 maxDestAmount,
+        uint256 minConversionRate,
+        address walletId
     )
         external
         payable
@@ -53,10 +52,7 @@ interface IKyber
         To understand what this rate means, divide the obtained value by 10**18
         (tA, tB,)
      */
-    function getExpectedRate(address src,
-                             address dest,
-                             uint256 srcQty
-    )
+    function getExpectedRate(address src, address dest, uint256 srcQty)
         external
         view
         returns (uint256, uint256);
