@@ -8,6 +8,7 @@
   "scripts": {
     "block-number-ropsten": "npx buidler block-number-ropsten",
     "build": "babel ./scripts --out-dir dist",
+    "solhint": "solhint contracts/**/*.sol",
     "clean": "rimraf dist",
     "compile": "rm -rf artifacts/; npx buidler compile",
     "contracts-ropsten": "npx buidler contracts-ropsten",
@@ -32,12 +33,11 @@
     "@babel/register": "^7.7.4",
     "@nomiclabs/buidler": "^1.0.1",
     "@nomiclabs/buidler-ethers": "^1.0.1",
-    "@nomiclabs/buidler-solhint": "^1.0.1",
     "@openzeppelin/contracts": "^2.4.0",
-    "@truffle/hdwallet-provider": "^1.0.26",
     "dotenv": "^8.2.0",
     "ethers": "^4.0.23",
-    "solc": "^0.5.14"
+    "solc": "^0.5.14",
+    "solhint": "^2.3.0"
   },
   "dependencies": {
     "rimraf": "^3.0.0"

@@ -102,22 +102,6 @@ task("config", "Logs the current BRE config", async (_, { config }) => {
 });
 
 task(
-  "contracts-ropsten",
-  "Logs the names of contracts available for deployment on ropsten",
-  async (_, { config }) => {
-    try {
-      if (checkNestedObj(config, "networks", "ropsten", "contracts")) {
-        console.log("\n", config.networks.ropsten.contracts, "\n");
-        return config.networks.ropsten.contracts;
-      } else
-        throw new Error("No contracts for Ropsten exist inside BRE config");
-    } catch (err) {
-      console.error(err);
-    }
-  }
-);
-
-task(
   "deployments-ropsten",
   "Logs the addresses of deployed contracts on ropsten",
   async (_, { config }) => {
