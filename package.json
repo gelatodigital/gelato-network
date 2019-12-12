@@ -22,6 +22,7 @@
     "deploy-triggertimestamppassed-ropsten": "export BUIDLER_NETWORK=ropsten && export CONTRACT_NAME=TriggerTimestampPassed && babel-node scripts/deploy/deployWithoutArgs.js",
     "deployments-ropsten": "export BUIDLER_NETWORK=ropsten && npx buidler deployments-ropsten",
     "eth-balance": "npx buidler eth-balance --a",
+    "eth-balance-signer-ropsten": "npx buidler eth-balance-signer --network ropsten",
     "eth-price": "npx buidler eth-price",
     "rebuild": "yarn clean && yarn build"
   },

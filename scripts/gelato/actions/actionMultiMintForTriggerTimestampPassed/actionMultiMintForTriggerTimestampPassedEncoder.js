@@ -1,7 +1,8 @@
 // Javascript Ethereum API Library
 import { utils } from "ethers";
 
-export function getMultiMintForTimeTriggerPayloadWithSelector(
+export function getPayloadWithSelector(
+  gelatoCore,
   selectedExecutor,
   timeTrigger,
   startTime,
@@ -10,11 +11,12 @@ export function getMultiMintForTimeTriggerPayloadWithSelector(
   intervalSpan,
   numberOfMints
 ) {
-  const multiMintABI = [
+  const actionMultiMintForTriggerTimestampPassedABI = [
     {
       name: "action",
       type: "function",
       inputs: [
+        { type: "address", name: "_gelatoCore" },
         { type: "address", name: "_selectedExecutor" },
         { type: "address", name: "_timeTrigger" },
         { type: "uint256", name: "_startTime" },
@@ -25,19 +27,20 @@ export function getMultiMintForTimeTriggerPayloadWithSelector(
       ]
     }
   ];
-  const iFace = new utils.Interface(multiMintABI);
-
-  const encodedMultiMintPayloadWithSelector = iFace.functions.action.encode(
-    [
-      selectedExecutor,
-      timeTrigger,
-      startTime,
-      action,
-      actionPayloadWithSelector,
-      intervalSpan,
-      numberOfMints
-    ]
+  const iFace = new utils.Interface(
+    actionMultiMintForTriggerTimestampPassedABI
   );
 
-  return encodedMultiMintPayloadWithSelector;
+  const payloadWithSelector = iFace.functions.action.encode([
+    gelatoCore,
+    selectedExecutor,
+    timeTrigger,
+    startTime,
+    action,
+    actionPayloadWithSelector,
+    intervalSpan,
+    numberOfMints
+  ]);
+
+  return payloadWithSelector;
 }

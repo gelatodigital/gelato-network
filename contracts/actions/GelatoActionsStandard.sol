@@ -13,6 +13,9 @@ contract GelatoActionsStandard is IGelatoAction {
     // Non-deployable contract
     constructor() internal {}
 
+    // To be overriden by deriving contracts
+    modifier actionGasCheck {_;}
+
     function getGelatoCore() external pure returns(address) {return gelatoCore;}
 
     function actionConditionsOk(bytes calldata)  // _actionPayloadWithSelector

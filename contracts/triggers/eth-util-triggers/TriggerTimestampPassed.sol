@@ -15,8 +15,8 @@ contract TriggerTimestampPassed is IGelatoTrigger {
         return _timestamp <= block.timestamp;
     }
 
-    function getLatestTimestamp() external view returns(uint256) {return block.timestamp;}
-
+    // Overriding IGelatoTrigger state readers (mandatory)
+    function getTriggerValue() external view returns(uint256) {return block.timestamp;}
     function correctTriggerSelector() external pure returns(bool) {
         return triggerSelector == this.fired.selector;
     }

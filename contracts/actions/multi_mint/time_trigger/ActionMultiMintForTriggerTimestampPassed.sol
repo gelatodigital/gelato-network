@@ -16,6 +16,15 @@ contract ActionMultiMintForTriggerTimestampPassed is GelatoActionsStandard {
     uint256 constant internal actionGas = 1000000;
     uint256 constant internal actionTotalGas = actionConditionsOkGas + actionGas;
 
+    // Overriding GelatoActionsStandard modifier (mandatory)
+    modifier actionGasCheck {
+        require(
+            gasleft() >= actionGas,
+            "ActionMultiMintForTriggerTimestampPassed.actionGasCheck: failed"
+        );
+        _;
+    }
+
     function action(
         // multi mint delegatecall requirement
         address _gelatoCore,
@@ -31,11 +40,8 @@ contract ActionMultiMintForTriggerTimestampPassed is GelatoActionsStandard {
     )
         external
         payable
+        actionGasCheck
     {
-        require(
-            gasleft() >= actionGas,
-            "ActionMultiMintForTimeTrigger.action: insufficient gasleft()"
-        );
         // We cannot use storage gelatoCore due to delegatecall context
         uint256 mintingDepositPerMint = IGelatoCoreAccounting(
             _gelatoCore

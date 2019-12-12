@@ -27,6 +27,15 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
         address feeSharingParticipant
     );
 
+    // Overriding GelatoActionsStandard modifier (mandatory)
+    modifier actionGasCheck {
+        require(
+            gasleft() >= actionGas,
+            "ActionKyberTrade.actionGasCheck: failed"
+        );
+        _;
+    }
+
     function action(
         // Standard Action Params
         address _user,
@@ -37,12 +46,9 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
         uint256 _minConversionRate
     )
         external
+        actionGasCheck
         returns (uint256 destAmt)
     {
-        require(
-            gasleft() >= actionGas,
-            "ActionMultiMintForTimeTrigger.action: insufficient gasleft()"
-        );
         // !!!!!!!!! ROPSTEN !!!!!!
         address kyberAddress = 0x818E6FECD516Ecc3849DAf6845e3EC868087B755;
         {

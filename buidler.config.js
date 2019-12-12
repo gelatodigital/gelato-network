@@ -58,6 +58,24 @@ usePlugin("@nomiclabs/buidler-ethers");
 // ============ Tasks ==============================================================
 // task action function receives the Buidler Runtime Environment as second argument
 task(
+  "block-number-ropsten",
+  "Logs the current block number of Ropsten Test Net",
+  async () => {
+    try {
+      const provider = getDefaultProvider("ropsten");
+      const { name: networkName } = await provider.getNetwork();
+      const blockNumber = await provider.getBlockNumber();
+      console.log(
+        `Current block number on ${networkName.toUpperCase()}: ${blockNumber}`
+      );
+      return blockNumber;
+    } catch (err) {
+      console.error(err);
+    }
+  }
+);
+
+task(
   "block-number",
   "Logs the current block number of connected network",
   async (_, { ethers }) => {
@@ -179,6 +197,33 @@ task("eth-balance", "Prints an account's ether balance")
       const balance = await provider.getBalance(address);
       console.log(`\n\t\t ${utils.formatEther(balance)} ETH`);
       return balance;
+    } catch (error) {
+      console.error(error);
+    }
+  });
+
+task(
+  "eth-balance-signer",
+  "Prints the currently configured Signer's current balance"
+)
+  .addOptionalParam("block", "Optional Param: block or blockTag to query")
+  .setAction(async (taskArgs, { ethers }) => {
+    try {
+      const [signer] = await ethers.signers();
+      let balance;
+      const block = getNestedObj(taskArgs, "block");
+      if (block) {
+        if (isNaN(block)) balance = await signer.getBalance(taskArgs.block);
+        else balance = await signer.getBalance(parseInt(taskArgs.block));
+      } else {
+        balance = await signer.getBalance();
+      }
+      console.log(
+        "\n\t\t Signer Address:",
+        signer._address,
+        `\n\t\t Balance: ${utils.formatEther(balance)} ETH\n`
+      );
+      return [signer, balance];
     } catch (error) {
       console.error(error);
     }
