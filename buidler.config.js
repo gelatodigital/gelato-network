@@ -271,12 +271,12 @@ task(
     "signer",
     "Logs the default Signer Object configured by buidler-ethers"
   )
-  .addFlag(
-    "a",
-    "Logs the address of the default Signer Object configured by buidler-ethers"
+  .addFlag("a", "Use with --signer or --signers to log addresses")
+  .addFlag("ethbalance", "Use with --signer to log Signer's ethBalance")
+  .addOptionalParam(
+    "block",
+    "Use with --signer --ethBalance to log balance at block height"
   )
-  .addFlag("ethbalance", "Logs the default Signer's ETH balance")
-  .addOptionalParam("block", "The optional block input for --signerEthBalance")
   .addFlag(
     "signers",
     "Logs the currently configured transaction buidler-ethers Signer objects"
