@@ -85,38 +85,129 @@ task("bre", "Logs the current Buidler Runtime Environment", async (_, bre) => {
 });
 
 task("bre-config", "Logs the current BRE config")
-  .addFlag("n", "config of networks")
-  .addFlag("dn", "config of default network")
+  .addFlag("networks", "config of networks")
+  .addOptionalParam(
+    "networkname",
+    "Optional use with --n to get info for a specific network"
+  )
+  .addFlag(
+    "contracts",
+    "Use with --n and --networkname for a list of contracts available for deployment on --networkname"
+  )
+  .addFlag(
+    "deployments",
+    "Use with --n and --networkname for an address book of deployed contract instances on --networkname"
+  )
+  .addFlag("defaultnetwork", "config of default network")
   .addFlag("paths", "config of paths")
   .addFlag("solc", "config of solidity compiler")
-  .setAction(async ({ n, dn, paths, solc }, { config }) => {
+  .setAction(
+    async (
+      {
+        networks,
+        networkname,
+        contracts,
+        deployments,
+        defaultnetwork,
+        paths,
+        solc
+      },
+      { config }
+    ) => {
+      try {
+        const optionalReturnValues = [];
+
+        if (networks) {
+          const networkInfo = await run("bre-config:networks", {
+            networkname,
+            contracts,
+            deployments
+          });
+          optionalReturnValues.push(networkInfo);
+        }
+        if (defaultnetwork) optionalReturnValues.push(config.defaultNetwork);
+        if (paths) optionalReturnValues.push(config.paths);
+        if (solc) optionalReturnValues.push(config.solc);
+
+        if (optionalReturnValues.length == 0) {
+          console.log(config);
+          return config;
+        } else if (optionalReturnValues.length == 1) {
+          console.log(optionalReturnValues[0]);
+          return optionalReturnValues[0];
+        }
+        console.log(optionalReturnValues);
+        return optionalReturnValues;
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  );
+
+internalTask("bre-config:networks", `Returns bre.config.network info`)
+  .addOptionalParam(
+    "networkname",
+    "Optional use with --n to get info for a specific network"
+  )
+  .addFlag(
+    "contracts",
+    "Return a list of contract names available for deployment"
+  )
+  .addFlag("deployments", "Return a list of deployed contract instances")
+  .setAction(async ({ networkname, contracts, deployments }, { config }) => {
     try {
       const optionalReturnValues = [];
-      if (n) {
-        console.log("\n BRE Config Networks:\n", config.networks);
-        optionalReturnValues.push(config.networks);
-      }
-      if (dn) {
-        console.log(
-          `\n\t\t BRE Config default network: ${config.defaultNetwork}`
+      if (networkname) await run("checkNetworkName", networkname);
+      if ((contracts || deployments) && !networkname)
+        throw new Error(
+          "Must provide --networkname value with --contracts or --deployments flags"
         );
-        optionalReturnValues.push(config.defaultNetwork);
+      if (contracts) {
+        const contractsInfo = await run("bre-config:networks:contracts", {
+          networkname
+        });
+        optionalReturnValues.push(contractsInfo);
       }
-      if (paths) {
-        console.log("\n BRE Config paths:\n", config.paths);
-        optionalReturnValues.push(config.paths);
+      if (deployments) {
+        const deploymentsInfo = await run("bre-config:networks:deployments", {
+          networkname
+        });
+        optionalReturnValues.push(deploymentsInfo);
       }
-      if (solc) {
-        console.log("\n BRE Config solc:\n", config.solc);
-        optionalReturnValues.push(config.solc);
-      }
-      if (optionalReturnValues.length == 0) {
-        console.log(network);
-        return network;
-      } else if (optionalReturnValues.length == 1) {
-        return optionalReturnValues[0];
-      }
-      return optionalReturnValues;
+      if (optionalReturnValues.length == 0)
+        return networkname ? config.networks[networkname] : config.networks;
+      if (optionalReturnValues.length == 1) return optionalReturnValues[0];
+      else return optionalReturnValues;
+    } catch (err) {
+      console.error(err);
+    }
+  });
+
+internalTask(
+  "bre-config:networks:contracts",
+  `Returns bre.config.networks.networkName.contracts`
+)
+  .addParam("networkname", "Name of network for which to read contracts field")
+  .setAction(async ({ networkname }, { config }) => {
+    try {
+      await run("checkNetworkName", networkname);
+      if (checkNestedObj(config, "networks", networkname, "contracts"))
+        return config.networks[networkname].contracts;
+    } catch (err) {
+      console.error(err);
+    }
+  });
+
+internalTask(
+  "bre-config:networks:deployments",
+  `Returns bre.config.networks.networkName.deployments`
+)
+  .addParam("networkname", "Name of network for which to read contracts field")
+  .setAction(async ({ networkname }, { config }) => {
+    try {
+      await run("checkNetworkName", networkname);
+      if (checkNestedObj(config, "networks", networkname, "deployments"))
+        return config.networks[networkname].deployments;
     } catch (err) {
       console.error(err);
     }
@@ -126,66 +217,26 @@ task("bre-network", `Logs the BRE network object (default: ${DEFAULT_NETWORK})`)
   .addFlag("c", "Logs the BRE network config")
   .addFlag("name", "Logs the currently connected BRE network name")
   .addFlag("provider", "Logs the currently connected BRE network provider")
-  .setAction(async ({ c, name, provider }, { network }) => {
+  .setAction(async ({ c: config, name, provider }, { network }) => {
     try {
       const optionalReturnValues = [];
-      if (c) {
-        console.log("\n BRE Network Config:\n", network.config);
-        optionalReturnValues.push(network.config);
-      }
-      if (name) {
-        console.log(`\n \t\t BRE Neworkname: ${network.name}`);
-        optionalReturnValues.push(network.name);
-      }
-      if (provider) {
-        console.log("\n BRE Network Provider:\n", network.provider);
-        optionalReturnValues.push(network.provider);
-      }
+      if (config) optionalReturnValues.push(network.config);
+      if (name) optionalReturnValues.push(network.name);
+      if (provider) optionalReturnValues.push(network.provider);
+
       if (optionalReturnValues.length == 0) {
         console.log(network);
         return network;
       } else if (optionalReturnValues.length == 1) {
+        console.log(optionalReturnValues[0]);
         return optionalReturnValues[0];
       }
+      console.log(optionalReturnValues);
       return optionalReturnValues;
     } catch (err) {
       console.error(err);
     }
   });
-
-task(
-  "bre-network-contracts",
-  `Logs the names of contracts available for deployment on [--network] (default: ${DEFAULT_NETWORK}})`,
-  async (_, { config, network }) => {
-    try {
-      if (checkNestedObj(config, "networks", network.name, "contracts")) {
-        console.log("\n", config.networks[network.name].contracts, "\n");
-        return config.networks[network.name].contracts;
-      } else
-        throw new Error(
-          `No contracts for ${network.name} exist inside BRE config`
-        );
-    } catch (err) {
-      console.error(err);
-    }
-  }
-);
-
-task(
-  "bre-network-deployments",
-  `Logs the addresses of deployed contracts on [--network] (default: ${DEFAULT_NETWORK})`,
-  async (_, { config, network }) => {
-    try {
-      if (checkNestedObj(config, "networks", network.name, "deployments")) {
-        console.log("\n", config.networks[network.name].deployments, "\n");
-        return config.networks[network.name].deployments;
-      } else
-        throw new Error("No deployments for Ropsten exist inside BRE config");
-    } catch (err) {
-      console.error(err);
-    }
-  }
-);
 
 task(
   "deploy",
@@ -357,5 +408,22 @@ internalTask(
       return signers;
     } catch (error) {
       console.error(error);
+    }
+  });
+
+// Internal Helper Tasks
+internalTask(
+  "checkNetworkName",
+  "Throws if networkName does not exist inside config.networks"
+)
+  .addPositionalParam("networkname", "Name of network to check")
+  .setAction(async (networkname, { config }) => {
+    try {
+      if (!Object.keys(config.networks).includes(networkname))
+        throw new Error(
+          "--networname provided does not exist in config.networks"
+        );
+    } catch (err) {
+      console.error(err);
     }
   });
