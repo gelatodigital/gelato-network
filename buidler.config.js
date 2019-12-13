@@ -66,7 +66,7 @@ task(
     try {
       const blockNumber = await ethers.provider.getBlockNumber();
       console.log(
-        `Current block number on ${ethers._buidlerProvider._networkName.toUpperCase()}: ${blockNumber}`
+        `Current block number on ${ethers.provider._buidlerProvider._networkName.toUpperCase()}: ${blockNumber}`
       );
       return blockNumber;
     } catch (err) {
@@ -318,24 +318,40 @@ task(
   "ethers",
   `Logs the BRE config for the ethers plugin on [--network] (default: ${DEFAULT_NETWORK})`
 )
-  .addFlag(
-    "signer",
-    "Logs the default Signer Object configured by buidler-ethers"
-  )
   .addFlag("a", "Use with --signer or --signers to log addresses")
-  .addFlag("ethbalance", "Use with --signer to log Signer's ethBalance")
   .addOptionalParam(
     "block",
     "Use with --signer --ethBalance to log balance at block height"
+  )
+  .addFlag("buidlerprovider", "Show the buidler-ethers provider")
+  .addFlag("ethbalance", "Use with --signer to log Signer's ethBalance")
+  .addFlag("provider", "Show the buidler-ethers provider object")
+  .addFlag(
+    "signer",
+    "Logs the default Signer Object configured by buidler-ethers"
   )
   .addFlag(
     "signers",
     "Logs the currently configured transaction buidler-ethers Signer objects"
   )
   .setAction(
-    async ({ a: address, signer, ethbalance, block, signers }, { ethers }) => {
+    async (
+      {
+        a: address,
+        block,
+        buidlerprovider,
+        ethbalance,
+        provider,
+        signer,
+        signers
+      },
+      { ethers }
+    ) => {
       try {
         const optionalReturnValues = [];
+        if (buidlerprovider)
+          optionalReturnValues.push(ethers.provider._buidlerProvider);
+        if (provider) optionalReturnValues.push(ethers.provider);
         if (signer) {
           const signerInfo = await run("ethers:signer", {
             address,
