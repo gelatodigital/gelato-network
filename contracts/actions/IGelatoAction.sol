@@ -9,7 +9,6 @@ interface IGelatoAction {
     event LogAction(address indexed user);
 
     function getGelatoCore() external pure returns(address);
-    function correctActionSelector() external pure returns(bool);
     function getActionSelector() external pure returns(bytes4);
     function getActionConditionsOkGas() external pure returns(uint256);
     function getActionGas() external pure returns(uint256);

@@ -17,11 +17,13 @@ const DEV_MNEMONIC = process.env.DEV_MNEMONIC;
 const INFURA_ID = process.env.INFURA_ID;
 console.log(
   `\n\t\t ENV configured: ${DEV_MNEMONIC !== undefined &&
-    INFURA_ID !== undefined}`
+    INFURA_ID !== undefined}\n`
 );
+// Defaults
+const DEFAULT_NETWORK = "ropsten";
 
 module.exports = {
-  defaultNetwork: "buidlerevm",
+  defaultNetwork: DEFAULT_NETWORK,
   networks: {
     buidlerevm: {
       gas: 9500000,
@@ -58,32 +60,13 @@ usePlugin("@nomiclabs/buidler-ethers");
 // ============ Tasks ==============================================================
 // task action function receives the Buidler Runtime Environment as second argument
 task(
-  "block-number-ropsten",
-  "Logs the current block number of Ropsten Test Net",
-  async () => {
-    try {
-      const provider = getDefaultProvider("ropsten");
-      const { name: networkName } = await provider.getNetwork();
-      const blockNumber = await provider.getBlockNumber();
-      console.log(
-        `Current block number on ${networkName.toUpperCase()}: ${blockNumber}`
-      );
-      return blockNumber;
-    } catch (err) {
-      console.error(err);
-    }
-  }
-);
-
-task(
   "block-number",
-  "Logs the current block number of connected network",
+  `Logs the current block number on [--network] (default: ${DEFAULT_NETWORK})`,
   async (_, { ethers }) => {
     try {
-      const { name: networkName } = await ethers.provider.getNetwork();
       const blockNumber = await ethers.provider.getBlockNumber();
       console.log(
-        `Current block number on ${networkName.toUpperCase()}: ${blockNumber}`
+        `Current block number on ${ethers._buidlerProvider._networkName.toUpperCase()}: ${blockNumber}`
       );
       return blockNumber;
     } catch (err) {
@@ -92,25 +75,16 @@ task(
   }
 );
 
-task(
-  "block-number-ropsten",
-  "Logs the current block number of Ropsten Test Net",
-  async () => {
-    try {
-      const provider = getDefaultProvider("ropsten");
-      const { name: networkName } = await provider.getNetwork();
-      const blockNumber = await provider.getBlockNumber();
-      console.log(
-        `Current block number on ${networkName.toUpperCase()}: ${blockNumber}`
-      );
-      return blockNumber;
-    } catch (err) {
-      console.error(err);
-    }
+task("bre", "Logs the current Buidler Runtime Environment", async (_, env) => {
+  try {
+    console.dir(env);
+    return env;
+  } catch (err) {
+    console.error(err);
   }
-);
+});
 
-task("config", "Logs the current BRE config", async (_, { config }) => {
+task("bre-config", "Logs the current BRE config", async (_, { config }) => {
   try {
     console.log(config);
     return config;
@@ -119,16 +93,38 @@ task("config", "Logs the current BRE config", async (_, { config }) => {
   }
 });
 
-task(
-  "contracts-ropsten",
-  "Logs the names of contracts available for deployment on ropsten",
-  async (_, { config }) => {
+task("bre-network", `Logs the BRE network object (default: ${DEFAULT_NETWORK})`)
+  .addOptionalParam("network-config", "Logs the BRE network config")
+  .addOptionalParam("network-name", "Logs the currently connected BRE network name")
+  .addOptionalParam(
+    "provider",
+    "Logs the currently connected BRE network provider"
+  )
+  .setAction(async (taskArgs, { network }) => {
     try {
-      if (checkNestedObj(config, "networks", "ropsten", "contracts")) {
-        console.log("\n", config.networks.ropsten.contracts, "\n");
-        return config.networks.ropsten.contracts;
-      } else
-        throw new Error("No contracts for Ropsten exist inside BRE config");
+      if (Object.keys(taskArgs).length == 0) {
+        console.log(network);
+        return network;
+      } else {
+        const returnValues = [];
+        for (key in taskArgs) {
+          console.log(network[key]);
+          returnValues.push(network[key]);
+        }
+        return returnValues;
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  });
+
+task(
+  "bre-ethers",
+  `Logs the BRE config for the ethers plugin on [--network] (default: ${DEFAULT_NETWORK})`,
+  async (_, { ethers }) => {
+    try {
+      console.log(ethers);
+      return ethers;
     } catch (err) {
       console.error(err);
     }
@@ -136,75 +132,34 @@ task(
 );
 
 task(
-  "deployments-ropsten",
-  "Logs the addresses of deployed contracts on ropsten",
-  async (_, { config }) => {
-    try {
-      if (checkNestedObj(config, "networks", "ropsten", "deployments")) {
-        console.log("\n", config.networks.ropsten.deployments, "\n");
-        return config.networks.ropsten.deployments;
-      } else
-        throw new Error("No deployments for Ropsten exist inside BRE config");
-    } catch (err) {
-      console.error(err);
-    }
-  }
-);
-
-task("env", "Logs the current Buidler Runtime Environment", async (_, env) => {
+  "bre-ethers-signer",
+  `Logs the default Signer Object configured by buidler-ethers for [--network] (default: ${DEFAULT_NETWORK})`
+).setAction(async (_, { ethers }) => {
   try {
-    console.log(env);
-    return env;
-  } catch (err) {
-    console.error(err);
+    const [signer] = await ethers.signers();
+    console.log(signer);
+    return signer;
+  } catch (error) {
+    console.error(error);
   }
 });
 
-task("erc20-approve", "Approves <spender> for <erc20> <amount>")
-  .addParam("erc20", "The erc20 contract address")
-  .addParam("spender", "The spender's address")
-  .addParam("amount", "The amount of erc20 tokens to approve")
-  .setAction(async (taskArgs, { ethers }) => {
-    try {
-      const { erc20Approve } = require("./scripts/buidler_tasks/erc20Tasks");
-      await erc20Approve(taskArgs, ethers);
-    } catch (error) {
-      console.error(error);
-    }
-  });
-
-task("erc20-allowance", "Logs <spender>'s <erc20> allowance from <owner>")
-  .addParam("erc20", "The erc20 contract address")
-  .addParam("owner", "The owners's address")
-  .addParam("spender", "The spender's address")
-  .setAction(async (taskArgs, { ethers }) => {
-    try {
-      const { erc20Allowance } = require("./scripts/buidler_tasks/erc20Tasks");
-      const allowance = await erc20Allowance(taskArgs, ethers);
-      console.log(`\n\t\t erc20-allowance: ${allowance}`);
-      return allowance;
-    } catch (error) {
-      console.error(error);
-    }
-  });
-
-task("eth-balance", "Prints an account's ether balance")
-  .addParam("a", "The account's address")
-  .setAction(async taskArgs => {
-    try {
-      const address = utils.getAddress(taskArgs.a);
-      const provider = getDefaultProvider("ropsten");
-      const balance = await provider.getBalance(address);
-      console.log(`\n\t\t ${utils.formatEther(balance)} ETH`);
-      return balance;
-    } catch (error) {
-      console.error(error);
-    }
-  });
+task(
+  "bre-ethers-signer-address",
+  `Logs the address of the default Signer Object configured by buidler-ethers for [--network] (default: ${DEFAULT_NETWORK})`
+).setAction(async (_, { ethers }) => {
+  try {
+    const [signer] = await ethers.signers();
+    console.log(`\n\t\t${signer._address}`);
+    return signer._address;
+  } catch (error) {
+    console.error(error);
+  }
+});
 
 task(
-  "eth-balance-signer",
-  "Prints the currently configured Signer's current balance"
+  "bre-ethers-signer-eth-balance",
+  `Logs the currently configured Signer's ETH balance [at --block] on [--network] (default: ${DEFAULT_NETWORK})`
 )
   .addOptionalParam("block", "Optional Param: block or blockTag to query")
   .setAction(async (taskArgs, { ethers }) => {
@@ -221,9 +176,138 @@ task(
       console.log(
         "\n\t\t Signer Address:",
         signer._address,
-        `\n\t\t Balance: ${utils.formatEther(balance)} ETH\n`
+        `\n\t\t Balance:        ${utils.formatEther(balance)} ETH\n`
       );
       return [signer, balance];
+    } catch (error) {
+      console.error(error);
+    }
+  });
+
+task(
+  "bre-ethers-signers",
+  "Logs the currently configured transaction buidler-ethers Signer objects"
+).setAction(async (_, { ethers }) => {
+  try {
+    const signers = await ethers.signers();
+    console.log(signers);
+    return signers;
+  } catch (error) {
+    console.error(error);
+  }
+});
+
+task(
+  "bre-ethers-signers-address",
+  "Prints the currently configured transaction buidler-ethers Signer objects"
+).setAction(async (_, { ethers }) => {
+  try {
+    const signers = await ethers.signers();
+    let signerAddresses = [];
+    for (signer of signers) {
+      console.log(`\t\t${signer._address}`);
+      signerAddresses.push(signer._address);
+    }
+    return signerAddresses;
+  } catch (error) {
+    console.error(error);
+  }
+});
+
+
+task(
+  "bre-network-contracts",
+  `Logs the names of contracts available for deployment on [--network] (default: ${DEFAULT_NETWORK}})`,
+  async (_, { config, network }) => {
+    try {
+      if (checkNestedObj(config, "networks", network.name, "contracts")) {
+        console.log("\n", config.networks[network.name].contracts, "\n");
+        return config.networks[network.name].contracts;
+      } else
+        throw new Error(
+          `No contracts for ${network.name} exist inside BRE config`
+        );
+    } catch (err) {
+      console.error(err);
+    }
+  }
+);
+
+task(
+  "bre-network-deployments",
+  `Logs the addresses of deployed contracts on [--network] (default: ${DEFAULT_NETWORK})`,
+  async (_, { config, network }) => {
+    try {
+      if (checkNestedObj(config, "networks", network.name, "deployments")) {
+        console.log("\n", config.networks[network.name].deployments, "\n");
+        return config.networks[network.name].deployments;
+      } else
+        throw new Error("No deployments for Ropsten exist inside BRE config");
+    } catch (err) {
+      console.error(err);
+    }
+  }
+);
+
+task(
+  "deploy",
+  `Deploys <contractname> to [--network] (default: ${DEFAULT_NETWORK})`
+)
+  .addParam("contractname", "the name of the contract artifact to deploy")
+  .setAction(async (taskArgs, env) => {
+    try {
+      const deployWithoutConstructorArgs = require("./scripts/buidler_tasks/deploy/deployWithoutConstructorArgs");
+      await deployWithoutConstructorArgs(taskArgs.contractName, env);
+    } catch (err) {
+      console.error(err);
+    }
+  });
+
+task(
+  "erc20-approve",
+  `Approves <spender> for <erc20> <amount> on [--network] (default: ${DEFAULT_NETWORK})`
+)
+  .addParam("erc20", "The erc20 contract address")
+  .addParam("spender", "The spender's address")
+  .addParam("amount", "The amount of erc20 tokens to approve")
+  .setAction(async (taskArgs, { ethers }) => {
+    try {
+      const erc20Approve = require("./scripts/buidler_tasks/erc20/erc20Approve");
+      await erc20Approve(taskArgs, ethers);
+    } catch (error) {
+      console.error(error);
+    }
+  });
+
+task(
+  "erc20-allowance",
+  `Logs <spender>'s <erc20> allowance from <owner> on [--network] (default: ${DEFAULT_NETWORK})`
+)
+  .addParam("erc20", "The erc20 contract address")
+  .addParam("owner", "The owners's address")
+  .addParam("spender", "The spender's address")
+  .setAction(async (taskArgs, { ethers }) => {
+    try {
+      const erc20Allowance = require("./scripts/buidler_tasks/erc20/erc20Allowance");
+      const allowance = await erc20Allowance(taskArgs, ethers);
+      console.log(`\n\t\t erc20-allowance: ${allowance}`);
+      return allowance;
+    } catch (error) {
+      console.error(error);
+    }
+  });
+
+task(
+  "eth-balance",
+  `Logs an account's [--a] ETH balance on [--network] (default: ${DEFAULT_NETWORK})`
+)
+  .addParam("a", "The account's address")
+  .setAction(async (taskArgs, { ethers }) => {
+    try {
+      const networkName = run(network);
+      const balance = await ethers.provider.getBalance(taskArgs.a);
+      console.log(`\n\t\t ${utils.formatEther(balance)} ETH`);
+      return balance;
     } catch (error) {
       console.error(error);
     }
@@ -234,27 +318,10 @@ task("eth-price", "Logs the etherscan ether-USD price", async () => {
     const etherscanProvider = new providers.EtherscanProvider();
     const { name: networkName } = await etherscanProvider.getNetwork();
     const ethUSDPrice = await etherscanProvider.getEtherPrice();
-    console.log(`\n\t\t Ether price in USD (${networkName}): ${ethUSDPrice}`);
+    console.log(`\n\t\t Ether price in USD (${networkName}): ${ethUSDPrice}$`);
     return ethUSDPrice;
   } catch (err) {
     console.error(err);
   }
 });
 
-task(
-  "network-current",
-  "Logs the currently connected network",
-  async (_, { ethers }) => {
-    try {
-      const { name: networkName } = await ethers.provider.getNetwork();
-      console.log(
-        `\n\t\t Currently connected to: ${networkName.toUpperCase()}`
-      );
-      if (networkName.toUpperCase() == "UNKNOWN")
-        console.log("\t\t UNKNOWN may be buidlerevm");
-      return networkName;
-    } catch (err) {
-      console.error(err);
-    }
-  }
-);

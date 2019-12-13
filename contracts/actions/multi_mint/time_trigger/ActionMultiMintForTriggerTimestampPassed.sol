@@ -9,9 +9,6 @@ import "../../../gelato_core/interfaces/IGelatoCoreAccounting.sol";
 contract ActionMultiMintForTriggerTimestampPassed is GelatoActionsStandard {
     using SafeMath for uint256;
 
-    bytes4 constant internal actionSelector = bytes4(keccak256(bytes(
-        "action(address,address,address,uint256,address,bytes,uint256,uint256)"
-    )));
     uint256 constant internal actionConditionsOkGas = 30000;
     uint256 constant internal actionGas = 1000000;
     uint256 constant internal actionTotalGas = actionConditionsOkGas + actionGas;
@@ -70,10 +67,7 @@ contract ActionMultiMintForTriggerTimestampPassed is GelatoActionsStandard {
     }
 
     // Overriding IGelatoAction state readers (mandatory)
-    function correctActionSelector() external pure returns(bool) {
-        return actionSelector == this.action.selector;
-    }
-    function getActionSelector() external pure returns(bytes4) {return actionSelector;}
+    function getActionSelector() external pure returns(bytes4) {return this.action.selector;}
     function getActionConditionsOkGas() external pure returns(uint256) {return actionConditionsOkGas;}
     function getActionGas() external pure returns(uint256) {return actionGas;}
     function getActionTotalGas() external pure returns(uint256) {return actionTotalGas;}

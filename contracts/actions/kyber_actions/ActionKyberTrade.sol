@@ -9,9 +9,6 @@ import "../../dapp_interfaces/kyber_interfaces/IKyber.sol";
 contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
     using SafeERC20 for IERC20;
 
-    bytes4 constant internal actionSelector = bytes4(keccak256(bytes(
-        "action(address,address,uint256,address,uint256)"
-    )));
     uint256 constant internal actionConditionsOkGas = 50000;
     uint256 constant internal actionGas = 700000;
     uint256 constant internal actionTotalGas = actionConditionsOkGas + actionGas;
@@ -76,15 +73,6 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
         );
     }
 
-    // Overriding IGelatoAction state readers (mandatory)
-    function correctActionSelector() external pure returns(bool) {
-        return actionSelector == this.action.selector;
-    }
-    function getActionSelector() external pure returns(bytes4) {return actionSelector;}
-    function getActionConditionsOkGas() external pure returns(uint256) {return actionConditionsOkGas;}
-    function getActionGas() external pure returns(uint256) {return actionGas;}
-    function getActionTotalGas() external pure returns(uint256) {return actionTotalGas;}
-
     // Overriding and extending GelatoActionsStandard's function (optional)
     function actionConditionsOk(bytes calldata _actionPayloadWithSelector)
         external
@@ -114,4 +102,10 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
         );
         return (srcUserBalance >= _srcAmt && _srcAmt <= srcUserProxyAllowance);
     }
+
+    // Overriding IGelatoAction state readers (mandatory)
+    function getActionSelector() external pure returns(bytes4) {return this.action.selector;}
+    function getActionConditionsOkGas() external pure returns(uint256) {return actionConditionsOkGas;}
+    function getActionGas() external pure returns(uint256) {return actionGas;}
+    function getActionTotalGas() external pure returns(uint256) {return actionTotalGas;}
 }
