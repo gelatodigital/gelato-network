@@ -1,6 +1,6 @@
 // Helpers
 require("@babel/register");
-const { getDefaultProvider, providers, utils } = require("ethers");
+const { providers, utils } = require("ethers");
 const {
   checkNestedObj,
   getNestedObj
@@ -91,32 +91,32 @@ task("bre-config", "Logs the current BRE config")
   .addFlag("solc", "config of solidity compiler")
   .setAction(async ({ n, dn, paths, solc }, { config }) => {
     try {
-      const returnValues = [];
+      const optionalReturnValues = [];
       if (n) {
         console.log("\n BRE Config Networks:\n", config.networks);
-        returnValues.push(config.networks);
+        optionalReturnValues.push(config.networks);
       }
       if (dn) {
         console.log(
           `\n\t\t BRE Config default network: ${config.defaultNetwork}`
         );
-        returnValues.push(config.defaultNetwork);
+        optionalReturnValues.push(config.defaultNetwork);
       }
       if (paths) {
         console.log("\n BRE Config paths:\n", config.paths);
-        returnValues.push(config.paths);
+        optionalReturnValues.push(config.paths);
       }
       if (solc) {
         console.log("\n BRE Config solc:\n", config.solc);
-        returnValues.push(config.solc);
+        optionalReturnValues.push(config.solc);
       }
-      if (returnValues.length == 0) {
+      if (optionalReturnValues.length == 0) {
         console.log(network);
         return network;
-      } else if (returnValues.length == 1) {
-        return returnValues[0];
+      } else if (optionalReturnValues.length == 1) {
+        return optionalReturnValues[0];
       }
-      return returnValues;
+      return optionalReturnValues;
     } catch (err) {
       console.error(err);
     }
@@ -128,26 +128,26 @@ task("bre-network", `Logs the BRE network object (default: ${DEFAULT_NETWORK})`)
   .addFlag("provider", "Logs the currently connected BRE network provider")
   .setAction(async ({ c, name, provider }, { network }) => {
     try {
-      const returnValues = [];
+      const optionalReturnValues = [];
       if (c) {
         console.log("\n BRE Network Config:\n", network.config);
-        returnValues.push(network.config);
+        optionalReturnValues.push(network.config);
       }
       if (name) {
         console.log(`\n \t\t BRE Neworkname: ${network.name}`);
-        returnValues.push(network.name);
+        optionalReturnValues.push(network.name);
       }
       if (provider) {
         console.log("\n BRE Network Provider:\n", network.provider);
-        returnValues.push(network.provider);
+        optionalReturnValues.push(network.provider);
       }
-      if (returnValues.length == 0) {
+      if (optionalReturnValues.length == 0) {
         console.log(network);
         return network;
-      } else if (returnValues.length == 1) {
-        return returnValues[0];
+      } else if (optionalReturnValues.length == 1) {
+        return optionalReturnValues[0];
       }
-      return returnValues;
+      return optionalReturnValues;
     } catch (err) {
       console.error(err);
     }
@@ -240,10 +240,10 @@ task(
   `Logs an account's [--a] ETH balance on [--network] (default: ${DEFAULT_NETWORK})`
 )
   .addParam("a", "The account's address")
-  .setAction(async (taskArgs, { ethers }) => {
+  .setAction(async ({ a: address }, { ethers }) => {
     try {
       const networkName = run(network);
-      const balance = await ethers.provider.getBalance(taskArgs.a);
+      const balance = await ethers.provider.getBalance(address);
       console.log(`\n\t\t ${utils.formatEther(balance)} ETH`);
       return balance;
     } catch (error) {
@@ -265,96 +265,97 @@ task("eth-price", "Logs the etherscan ether-USD price", async () => {
 
 task(
   "ethers",
-  `Logs the BRE config for the ethers plugin on [--network] (default: ${DEFAULT_NETWORK})`,
-  async (_, { ethers }) => {
-    try {
-      console.log(ethers);
-      return ethers;
-    } catch (err) {
-      console.error(err);
-    }
-  }
-);
-
-task(
-  "ethers-signer",
-  `Logs the default Signer Object configured by buidler-ethers for [--network] (default: ${DEFAULT_NETWORK})`
-).setAction(async (_, { ethers }) => {
-  try {
-    const [signer] = await ethers.signers();
-    console.log(signer);
-    return signer;
-  } catch (error) {
-    console.error(error);
-  }
-});
-
-task(
-  "ethers-signer-address",
-  `Logs the address of the default Signer Object configured by buidler-ethers for [--network] (default: ${DEFAULT_NETWORK})`
-).setAction(async (_, { ethers }) => {
-  try {
-    const [signer] = await ethers.signers();
-    console.log(`\n\t\t${signer._address}`);
-    return signer._address;
-  } catch (error) {
-    console.error(error);
-  }
-});
-
-task(
-  "ethers-signer-eth-balance",
-  `Logs the currently configured Signer's ETH balance [at --block] on [--network] (default: ${DEFAULT_NETWORK})`
+  `Logs the BRE config for the ethers plugin on [--network] (default: ${DEFAULT_NETWORK})`
 )
-  .addOptionalParam("block", "Optional Param: block or blockTag to query")
-  .setAction(async (taskArgs, { ethers }) => {
-    try {
-      const [signer] = await ethers.signers();
-      let balance;
-      const block = getNestedObj(taskArgs, "block");
-      if (block) {
-        if (isNaN(block)) balance = await signer.getBalance(taskArgs.block);
-        else balance = await signer.getBalance(parseInt(taskArgs.block));
-      } else {
-        balance = await signer.getBalance();
+  .addFlag(
+    "signer",
+    "Logs the default Signer Object configured by buidler-ethers"
+  )
+  .addFlag(
+    "a",
+    "Logs the address of the default Signer Object configured by buidler-ethers"
+  )
+  .addFlag("ethbalance", "Logs the default Signer's ETH balance")
+  .addOptionalParam("block", "The optional block input for --signerEthBalance")
+  .addFlag(
+    "signers",
+    "Logs the currently configured transaction buidler-ethers Signer objects"
+  )
+  .setAction(
+    async ({ a: address, signer, ethbalance, block, signers }, { ethers }) => {
+      try {
+        const optionalReturnValues = [];
+        if (signer) {
+          const signerInfo = await run("ethers:signer", {
+            address,
+            ethbalance,
+            block
+          });
+          optionalReturnValues.push(signerInfo);
+        } else if (signers) {
+          const signersInfo = await run("ethers:signers", { address });
+          optionalReturnValues.push(signersInfo);
+        }
+        if (optionalReturnValues.length == 0) {
+          console.log(ethers);
+          return ethers;
+        } else if (optionalReturnValues.length == 1) {
+          console.log(optionalReturnValues[0]);
+          return optionalReturnValues[0];
+        }
+        console.log(optionalReturnValues);
+        return optionalReturnValues;
+      } catch (err) {
+        console.error(err);
       }
-      console.log(
-        "\n\t\t Signer Address:",
-        signer._address,
-        `\n\t\t Balance:        ${utils.formatEther(balance)} ETH\n`
-      );
-      return [signer, balance];
+    }
+  );
+
+internalTask(
+  "ethers:signer",
+  "Returns the default buidler-ethers Signer object"
+)
+  .addFlag("address", "Return the signer._address")
+  .addFlag("ethbalance", "Logs the default Signer's ETH balance")
+  .addOptionalParam("block", "Block height to check for signer's balance")
+  .setAction(async ({ address, ethbalance, block }, { ethers }) => {
+    try {
+      const optionalReturnValues = [];
+      const [signer] = await ethers.signers();
+      if (address) optionalReturnValues.push(signer._address);
+      if (ethbalance) {
+        let balance;
+        if (block) {
+          if (isNaN(block)) balance = await signer.getBalance(block);
+          else balance = await signer.getBalance(utils.bigNumberify(block));
+        } else {
+          balance = await signer.getBalance();
+        }
+        optionalReturnValues.push(`${utils.formatEther(balance)} ETH`);
+      }
+      if (optionalReturnValues.length == 0) return signer;
+      if (optionalReturnValues.length == 1) return optionalReturnValues[0];
+      else return optionalReturnValues;
     } catch (error) {
       console.error(error);
     }
   });
 
-task(
-  "ethers-signers",
-  "Logs the currently configured transaction buidler-ethers Signer objects"
-).setAction(async (_, { ethers }) => {
-  try {
-    const signers = await ethers.signers();
-    console.log(signers);
-    return signers;
-  } catch (error) {
-    console.error(error);
-  }
-});
-
-task(
-  "ethers-signers-address",
-  "Prints the currently configured transaction buidler-ethers Signer objects"
-).setAction(async (_, { ethers }) => {
-  try {
-    const signers = await ethers.signers();
-    let signerAddresses = [];
-    for (signer of signers) {
-      console.log(`\t\t${signer._address}`);
-      signerAddresses.push(signer._address);
+internalTask(
+  "ethers:signers",
+  "Returns the BRE configured buidler-ethers Signer objects"
+)
+  .addFlag("address", "Log the addresses of the Signers")
+  .setAction(async ({ address }, { ethers }) => {
+    try {
+      const signers = await ethers.signers();
+      if (address) {
+        const signerAddresses = [];
+        for (signer of signers) signerAddresses.push(signer._address);
+        return signerAddresses;
+      }
+      return signers;
+    } catch (error) {
+      console.error(error);
     }
-    return signerAddresses;
-  } catch (error) {
-    console.error(error);
-  }
-});
+  });
