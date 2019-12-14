@@ -6,7 +6,7 @@ import "./IGelatoAction.sol";
 /// @dev find all the NatSpecs inside IGelatoAction
 contract GelatoActionsStandard is IGelatoAction {
 
-    address constant internal gelatoCore = 0x86CcCd81e00E5164b76Ef632EF79a987A4ACE938;
+    address constant internal gelatoCore = 0x43c7a05290797a25B2E3D4fDE7c504333EbE2428;
 
     event LogAction(address indexed user);
 

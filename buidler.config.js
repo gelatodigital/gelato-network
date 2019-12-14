@@ -1,5 +1,6 @@
 // Helpers
 require("@babel/register");
+const assert = require("assert");
 const { providers, utils } = require("ethers");
 const {
   checkNestedObj,
@@ -35,16 +36,16 @@ module.exports = {
       accounts: { mnemonic: DEV_MNEMONIC },
       contracts: [
         "ActionKyberTrade",
-        "ActionMultiMintForTimeTrigger",
+        "ActionMultiMintForTriggerTimestampPassed",
         "GelatoCore",
         "TriggerTimestampPassed"
       ],
       deployments: {
-        actionKyberTrade: "0xBcFE16FA07D10eB594e18C567677f5FD5c2f9810",
-        actionMultiMintForTimeTrigger:
-          "0xDceFcE56B11Df6248889c702c71bA1BC4Cb14D25",
-        gelatoCore: "0x86CcCd81e00E5164b76Ef632EF79a987A4ACE938",
-        triggerTimestampPassed: "0x4CE65C29303929455c9373F0B657C5d00E2EC714"
+        ActionKyberTrade: "0x7dAFBd01803e298F9e19734Fa7Af3dA10585554e",
+        ActionMultiMintForTimeTrigger:
+          "0xb1FA1BCdb245326d8f6413925Cf338FCEbda5db9",
+        GelatoCore: "0x43c7a05290797a25B2E3D4fDE7c504333EbE2428",
+        TriggerTimestampPassed: "0x45664969e60Bdde9Fb658B85a9808b572B2dD5E6"
       }
     }
   },
@@ -66,7 +67,7 @@ task(
     try {
       const blockNumber = await ethers.provider.getBlockNumber();
       console.log(
-        `Current block number on ${ethers.provider._buidlerProvider._networkName.toUpperCase()}: ${blockNumber}`
+        `${ethers.provider._buidlerProvider._networkName}: ${blockNumber}`
       );
       return blockNumber;
     } catch (err) {
@@ -85,30 +86,30 @@ task("bre", "Logs the current Buidler Runtime Environment", async (_, bre) => {
 });
 
 task("bre-config", "Logs the current BRE config")
+  .addFlag(
+    "contracts",
+    "Use with --networks for a list of contracts available for deployment on --networkname"
+  )
+  .addFlag("defaultnetwork", "config of default network")
+  .addFlag(
+    "deployments",
+    "Use with --networks for an address book of deployed contract instances on --networkname"
+  )
   .addFlag("networks", "config of networks")
   .addOptionalParam(
     "networkname",
-    "Optional use with --n to get info for a specific network"
+    "Optional use with --networks to get info for a specific network"
   )
-  .addFlag(
-    "contracts",
-    "Use with --n and --networkname for a list of contracts available for deployment on --networkname"
-  )
-  .addFlag(
-    "deployments",
-    "Use with --n and --networkname for an address book of deployed contract instances on --networkname"
-  )
-  .addFlag("defaultnetwork", "config of default network")
   .addFlag("paths", "config of paths")
   .addFlag("solc", "config of solidity compiler")
   .setAction(
     async (
       {
+        contracts,
+        defaultnetwork,
+        deployments,
         networks,
         networkname,
-        contracts,
-        deployments,
-        defaultnetwork,
         paths,
         solc
       },
@@ -117,15 +118,15 @@ task("bre-config", "Logs the current BRE config")
       try {
         const optionalReturnValues = [];
 
+        if (defaultnetwork) optionalReturnValues.push(config.defaultNetwork);
         if (networks) {
           const networkInfo = await run("bre-config:networks", {
-            networkname,
             contracts,
-            deployments
+            deployments,
+            networkname
           });
           optionalReturnValues.push(networkInfo);
         }
-        if (defaultnetwork) optionalReturnValues.push(config.defaultNetwork);
         if (paths) optionalReturnValues.push(config.paths);
         if (solc) optionalReturnValues.push(config.solc);
 
@@ -145,23 +146,19 @@ task("bre-config", "Logs the current BRE config")
   );
 
 internalTask("bre-config:networks", `Returns bre.config.network info`)
-  .addOptionalParam(
-    "networkname",
-    "Optional use with --n to get info for a specific network"
-  )
   .addFlag(
     "contracts",
     "Return a list of contract names available for deployment"
   )
   .addFlag("deployments", "Return a list of deployed contract instances")
-  .setAction(async ({ networkname, contracts, deployments }, { config }) => {
+  .addOptionalParam(
+    "networkname",
+    `Use with --networks to get info for a specific network (default: ${DEFAULT_NETWORK})`
+  )
+  .setAction(async ({ contracts, deployments, networkname }, { config }) => {
     try {
       const optionalReturnValues = [];
       if (networkname) await run("checkNetworkName", networkname);
-      if ((contracts || deployments) && !networkname)
-        throw new Error(
-          "Must provide --networkname value with --contracts or --deployments flags"
-        );
       if (contracts) {
         const contractsInfo = await run("bre-config:networks:contracts", {
           networkname
@@ -190,7 +187,8 @@ internalTask(
   .addParam("networkname", "Name of network for which to read contracts field")
   .setAction(async ({ networkname }, { config }) => {
     try {
-      await run("checkNetworkName", networkname);
+      if (networkname) await run("checkNetworkName", networkname);
+      else networkname = DEFAULT_NETWORK;
       if (checkNestedObj(config, "networks", networkname, "contracts"))
         return config.networks[networkname].contracts;
     } catch (err) {
@@ -205,7 +203,8 @@ internalTask(
   .addParam("networkname", "Name of network for which to read contracts field")
   .setAction(async ({ networkname }, { config }) => {
     try {
-      await run("checkNetworkName", networkname);
+      if (networkname) await run("checkNetworkName", networkname);
+      else networkname = DEFAULT_NETWORK;
       if (checkNestedObj(config, "networks", networkname, "deployments"))
         return config.networks[networkname].deployments;
     } catch (err) {
@@ -240,13 +239,19 @@ task("bre-network", `Logs the BRE network object (default: ${DEFAULT_NETWORK})`)
 
 task(
   "deploy",
-  `Deploys <contractname> to [--network] (default: ${DEFAULT_NETWORK})`
+  `Deploys <contractName> to [--network] (default: ${DEFAULT_NETWORK})`
 )
-  .addParam("contractname", "the name of the contract artifact to deploy")
-  .setAction(async (taskArgs, bre) => {
+  .addPositionalParam(
+    "contractName",
+    "the name of the contract artifact to deploy"
+  )
+  .setAction(async ({ contractName }, { network, run }) => {
     try {
-      const deployWithoutConstructorArgs = require("./scripts/buidler_tasks/deploy/deployWithoutConstructorArgs");
-      await deployWithoutConstructorArgs(taskArgs.contractName, bre);
+      await require("./scripts/buidler_tasks/deploy/deployWithoutConstructorArgs").default(
+        contractName,
+        network.name,
+        run
+      );
     } catch (err) {
       console.error(err);
     }
@@ -293,9 +298,9 @@ task(
   .addParam("a", "The account's address")
   .setAction(async ({ a: address }, { ethers }) => {
     try {
-      const networkName = run(network);
+      await run("bre-network", { name: "name" });
       const balance = await ethers.provider.getBalance(address);
-      console.log(`\n\t\t ${utils.formatEther(balance)} ETH`);
+      console.log(`${utils.formatEther(balance)} ETH`);
       return balance;
     } catch (error) {
       console.error(error);
@@ -429,15 +434,35 @@ internalTask(
 
 // Internal Helper Tasks
 internalTask(
+  "checkContractName",
+  "Throws if contractname does not exist inside config.networks.networkName.contracts"
+)
+  .addPositionalParam("contractName", "Name of contract to check")
+  .addOptionalParam("networkName", "Name of the network to check")
+  .setAction(async ({ contractName }, { config, networkName }) => {
+    try {
+      if (networkName) await run("checkNetworkName", { networkName });
+      else networkName = DEFAULT_NETWORK;
+      const contracts = getNestedObj(config.networks, networkName, "contracts");
+      if (!contracts.includes(contractName))
+        throw new Error(
+          `contractname: ${contractName} does not exist in config.networks.${networkName}.contracts`
+        );
+    } catch (err) {
+      console.error(err);
+    }
+  });
+
+internalTask(
   "checkNetworkName",
   "Throws if networkName does not exist inside config.networks"
 )
-  .addPositionalParam("networkname", "Name of network to check")
-  .setAction(async (networkname, { config }) => {
+  .addPositionalParam("networkName", "Name of network to check")
+  .setAction(async ({ networkName }, { config }) => {
     try {
-      if (!Object.keys(config.networks).includes(networkname))
+      if (!Object.keys(config.networks).includes(networkName))
         throw new Error(
-          "--networname provided does not exist in config.networks"
+          `networkName: ${networkName} does not exist in config.networks`
         );
     } catch (err) {
       console.error(err);
