@@ -27,13 +27,21 @@ module.exports = {
   defaultNetwork: DEFAULT_NETWORK,
   networks: {
     buidlerevm: {
-      gas: 9500000,
       hardfork: "istanbul"
     },
     ropsten: {
       url: `https://ropsten.infura.io/v3/${INFURA_ID}`,
       chainId: 3,
       accounts: { mnemonic: DEV_MNEMONIC },
+      addressBook: {
+        erc20: {
+          DAI: 0xad6d458402f60fd3bd25163575031acdce07538d,
+          KNC: 0x4e470dc7321e84ca96fcaedd0c8abcebbaeb68c6,
+          MANA: 0x72fd6c7c1397040a66f33c2ecc83a0f71ee46d5c,
+          OMG: 0x4bfba4a8f28755cb2061c413459ee562c6b9c51b,
+          WETH: 0xbca556c912754bc8e7d4aad20ad69a1b1444f42d
+        }
+      },
       contracts: [
         "ActionKyberTrade",
         "ActionMultiMintForTriggerTimestampPassed",
@@ -62,40 +70,47 @@ usePlugin("@nomiclabs/buidler-ethers");
 // task action function receives the Buidler Runtime Environment as second argument
 task(
   "block-number",
-  `Logs the current block number on [--network] (default: ${DEFAULT_NETWORK})`,
-  async (_, { ethers }) => {
+  `Logs the current block number on [--network] (default: ${DEFAULT_NETWORK})`
+)
+  .addFlag("log", "Logs return values to stdout")
+  .setAction(async ({ log }, { ethers }) => {
     try {
       const blockNumber = await ethers.provider.getBlockNumber();
-      console.log(
-        `${ethers.provider._buidlerProvider._networkName}: ${blockNumber}`
-      );
+      if (log)
+        console.log(
+          `\n${ethers.provider._buidlerProvider._networkName}: ${blockNumber}\n`
+        );
       return blockNumber;
     } catch (err) {
       console.error(err);
+      process.exit(1);
     }
-  }
-);
+  });
 
-task("bre", "Logs the current Buidler Runtime Environment", async (_, bre) => {
-  try {
-    console.dir(bre);
-    return bre;
-  } catch (err) {
-    console.error(err);
-  }
-});
+task("bre", "Return (or --log) the current Buidler Runtime Environment")
+  .addFlag("log", "Logs return values to stdout")
+  .setAction(async ({ log }, bre) => {
+    try {
+      if (log) console.dir(bre);
+      return bre;
+    } catch (err) {
+      console.error(err);
+      process.exit(1);
+    }
+  });
 
-task("bre-config", "Logs the current BRE config")
+task("bre-config", "Return (or --log) BRE.config properties")
   .addFlag(
     "contracts",
     "Use with --networks for a list of contracts available for deployment on --networkname"
   )
-  .addFlag("defaultnetwork", "config of default network")
+  .addFlag("defaultnetwork", "Config of default network")
   .addFlag(
     "deployments",
     "Use with --networks for an address book of deployed contract instances on --networkname"
   )
-  .addFlag("networks", "config of networks")
+  .addFlag("log", "Logs return values to stdout")
+  .addFlag("networks", "Config of networks")
   .addOptionalParam(
     "networkname",
     "Optional use with --networks to get info for a specific network"
@@ -108,6 +123,7 @@ task("bre-config", "Logs the current BRE config")
         contracts,
         defaultnetwork,
         deployments,
+        log,
         networks,
         networkname,
         paths,
@@ -119,7 +135,7 @@ task("bre-config", "Logs the current BRE config")
         const optionalReturnValues = [];
 
         if (defaultnetwork) optionalReturnValues.push(config.defaultNetwork);
-        if (networks) {
+        if (contracts || deployments || networks) {
           const networkInfo = await run("bre-config:networks", {
             contracts,
             deployments,
@@ -131,16 +147,17 @@ task("bre-config", "Logs the current BRE config")
         if (solc) optionalReturnValues.push(config.solc);
 
         if (optionalReturnValues.length == 0) {
-          console.log(config);
+          if (log) console.log(config);
           return config;
         } else if (optionalReturnValues.length == 1) {
-          console.log(optionalReturnValues[0]);
+          if (log) console.log(optionalReturnValues[0]);
           return optionalReturnValues[0];
         }
-        console.log(optionalReturnValues);
+        if (log) console.log(optionalReturnValues);
         return optionalReturnValues;
       } catch (err) {
         console.error(err);
+        process.exit(1);
       }
     }
   );
@@ -159,6 +176,7 @@ internalTask("bre-config:networks", `Returns bre.config.network info`)
     try {
       const optionalReturnValues = [];
       if (networkname) await run("checkNetworkName", networkname);
+      else networkname = DEFAULT_NETWORK;
       if (contracts) {
         const contractsInfo = await run("bre-config:networks:contracts", {
           networkname
@@ -177,6 +195,7 @@ internalTask("bre-config:networks", `Returns bre.config.network info`)
       else return optionalReturnValues;
     } catch (err) {
       console.error(err);
+      process.exit(1);
     }
   });
 
@@ -187,12 +206,11 @@ internalTask(
   .addParam("networkname", "Name of network for which to read contracts field")
   .setAction(async ({ networkname }, { config }) => {
     try {
-      if (networkname) await run("checkNetworkName", networkname);
-      else networkname = DEFAULT_NETWORK;
       if (checkNestedObj(config, "networks", networkname, "contracts"))
         return config.networks[networkname].contracts;
     } catch (err) {
       console.error(err);
+      process.exit(1);
     }
   });
 
@@ -203,20 +221,20 @@ internalTask(
   .addParam("networkname", "Name of network for which to read contracts field")
   .setAction(async ({ networkname }, { config }) => {
     try {
-      if (networkname) await run("checkNetworkName", networkname);
-      else networkname = DEFAULT_NETWORK;
       if (checkNestedObj(config, "networks", networkname, "deployments"))
         return config.networks[networkname].deployments;
     } catch (err) {
       console.error(err);
+      process.exit(1);
     }
   });
 
-task("bre-network", `Logs the BRE network object (default: ${DEFAULT_NETWORK})`)
-  .addFlag("c", "Logs the BRE network config")
-  .addFlag("name", "Logs the currently connected BRE network name")
-  .addFlag("provider", "Logs the currently connected BRE network provider")
-  .setAction(async ({ c: config, name, provider }, { network }) => {
+task("bre-network", `Return (or --log) BRE.network properties`)
+  .addFlag("c", "Return the BRE network config")
+  .addFlag("log", "Logs return values to stdout")
+  .addFlag("name", "Return the currently connected BRE network name")
+  .addFlag("provider", "Return the currently connected BRE network provider")
+  .setAction(async ({ c: config, log, name, provider }, { network }) => {
     try {
       const optionalReturnValues = [];
       if (config) optionalReturnValues.push(network.config);
@@ -224,16 +242,17 @@ task("bre-network", `Logs the BRE network object (default: ${DEFAULT_NETWORK})`)
       if (provider) optionalReturnValues.push(network.provider);
 
       if (optionalReturnValues.length == 0) {
-        console.log(network);
+        if (log) console.log(network);
         return network;
       } else if (optionalReturnValues.length == 1) {
-        console.log(optionalReturnValues[0]);
+        if (log) console.log(optionalReturnValues[0]);
         return optionalReturnValues[0];
       }
-      console.log(optionalReturnValues);
+      if (log) console.log(optionalReturnValues);
       return optionalReturnValues;
     } catch (err) {
       console.error(err);
+      process.exit(1);
     }
   });
 
@@ -245,21 +264,46 @@ task(
     "contractName",
     "the name of the contract artifact to deploy"
   )
-  .setAction(async ({ contractName }, { network, run }) => {
+  .addFlag("clean")
+  .addFlag("compile", "Compile before deploy")
+  .addFlag("log", "Logs to stdout")
+  .setAction(async (taskArgs, bre) => {
     try {
       await require("./scripts/buidler_tasks/deploy/deployWithoutConstructorArgs").default(
-        contractName,
-        network.name,
-        run
+        taskArgs,
+        bre
       );
     } catch (err) {
       console.error(err);
+      process.exit(1);
     }
   });
 
-task(
-  "erc20-approve",
-  `Approves <spender> for <erc20> <amount> on [--network] (default: ${DEFAULT_NETWORK})`
+task("erc20", "A suite of erc20 related tasks")
+  .addPositionalParam(
+    "erc20Address",
+    "The address of the erc20 contract to perform tasks on"
+  )
+  .addFlag(
+    "allowance",
+    "Return (or --log) <erc20Address> allowance by --owner to --spender"
+  )
+  .addOptionalParam("amount", "Uint: use with --approve")
+  .addFlag("approve", "Send tx to <erc20Address> to approve --spender")
+  .addFlag("log", "Logs return values to stdout")
+  .addOptionalParam("owner", "Address: use with (--allowance & --spender)")
+  .addOptionalParam(
+    "spender",
+    "Address: use with --approve or (--allowance & --owner)"
+  )
+  .setAction(async (taskArgs, { ethers }) => {
+    if (taskArgs) {
+    }
+  });
+
+internalTask(
+  "erc20:approve",
+  `Approves --spender for <erc20> <amount> on [--network] (default: ${DEFAULT_NETWORK})`
 )
   .addParam("erc20", "The erc20 contract address")
   .addParam("spender", "The spender's address")
@@ -270,6 +314,7 @@ task(
       await erc20Approve(taskArgs, ethers);
     } catch (error) {
       console.error(error);
+      process.exit(1);
     }
   });
 
@@ -288,6 +333,7 @@ task(
       return allowance;
     } catch (error) {
       console.error(error);
+      process.exit(1);
     }
   });
 
@@ -304,6 +350,7 @@ task(
       return balance;
     } catch (error) {
       console.error(error);
+      process.exit(1);
     }
   });
 
@@ -316,6 +363,7 @@ task("eth-price", "Logs the etherscan ether-USD price", async () => {
     return ethUSDPrice;
   } catch (err) {
     console.error(err);
+    process.exit(1);
   }
 });
 
@@ -379,6 +427,7 @@ task(
         return optionalReturnValues;
       } catch (err) {
         console.error(err);
+        process.exit(1);
       }
     }
   );
@@ -410,6 +459,7 @@ internalTask(
       else return optionalReturnValues;
     } catch (error) {
       console.error(error);
+      process.exit(1);
     }
   });
 
@@ -429,20 +479,100 @@ internalTask(
       return signers;
     } catch (error) {
       console.error(error);
+      process.exit(1);
     }
   });
 
 // Internal Helper Tasks
 internalTask(
+  "checkAddressBook",
+  "Checks config.networks.networkName.addressbook for <category> and optionally <entry>"
+)
+  .addPositionalParam("category", "Name of the category to search under")
+  .addOptionalParam("entry", "Name of the entry to check")
+  .addOptionalParam("networkName", "Name of the network to search under")
+  .setAction(async ({ category, entry, networkName }) => {
+    try {
+      networkName = await run("handleNetworkname", { networkName });
+      await run("checkAddressBook:network", { networkName });
+      await run("checkAddressBook:category", { category, networkName });
+      if (entry) await run("checkAddressBook:entry", { entry });
+    } catch (err) {
+      console.error(err);
+      process.exit(1);
+    }
+  });
+
+internalTask(
+  "checkAddressBook:category",
+  "Throws if the category does not exist inside config.networks.addressbook"
+)
+  .addParam("category", "Name of the category to search under")
+  .addParam("networkName", "Name of the network to search under")
+  .setAction(async ({ category, networkName }, { config }) => {
+    try {
+      if (
+        !checkNestedObj(config.networks, networkName, "addressBook", category)
+      )
+        throw new Error(
+          `Category: ${category} does not exist in config.networks.${networkName}.addressBook`
+        );
+    } catch (err) {
+      console.error(err);
+      process.exit(1);
+    }
+  });
+
+internalTask(
+  "checkAddressBook:entry",
+  "Throws if the entry does not exist inside config.networks.addressbook"
+)
+  .addParam("category", "Name of the category to search under")
+  .addParam("entry", "Name of the entry to check")
+  .setAction(async ({ category, entry }, { config }) => {
+    try {
+      if (
+        !checkNestedObj(
+          config.networks,
+          networkName,
+          "addressBook",
+          category,
+          entry
+        )
+      )
+        throw new Error(
+          `Entry: ${entry} does not exist in config.networks.${networkName}.addressBook.${category}`
+        );
+    } catch (err) {
+      console.error(err);
+      process.exit(1);
+    }
+  });
+
+internalTask(
+  "checkAddressBook:network",
+  "Throws if no addressbook for config.networks.networkName"
+)
+  .addParam("networkName", "Name of the network to search under")
+  .setAction(async ({ networkName }, { config }) => {
+    try {
+      if (!checkNestedObj(config.networks, networkName, "addressBook"))
+        throw new Error(`No addressBook for network: ${networkName}`);
+    } catch (err) {
+      console.error(err);
+      process.exit(1);
+    }
+  });
+
+internalTask(
   "checkContractName",
   "Throws if contractname does not exist inside config.networks.networkName.contracts"
 )
-  .addPositionalParam("contractName", "Name of contract to check")
+  .addParam("contractName", "Name of contract to check")
   .addOptionalParam("networkName", "Name of the network to check")
   .setAction(async ({ contractName }, { config, networkName }) => {
     try {
-      if (networkName) await run("checkNetworkName", { networkName });
-      else networkName = DEFAULT_NETWORK;
+      networkName = await run("handleNetworkname");
       const contracts = getNestedObj(config.networks, networkName, "contracts");
       if (!contracts.includes(contractName))
         throw new Error(
@@ -450,6 +580,7 @@ internalTask(
         );
     } catch (err) {
       console.error(err);
+      process.exit(1);
     }
   });
 
@@ -457,7 +588,7 @@ internalTask(
   "checkNetworkName",
   "Throws if networkName does not exist inside config.networks"
 )
-  .addPositionalParam("networkName", "Name of network to check")
+  .addParam("networkName", "Name of network to check")
   .setAction(async ({ networkName }, { config }) => {
     try {
       if (!Object.keys(config.networks).includes(networkName))
@@ -466,5 +597,22 @@ internalTask(
         );
     } catch (err) {
       console.error(err);
+      process.exit(1);
+    }
+  });
+
+internalTask(
+  "handleNetworkname",
+  `Throws if networkName is invalid OR returns the Default Network (${DEFAULT_NETWORK}) if networkName is undefined`
+)
+  .addParam("networkName")
+  .setAction(async ({ networkName }) => {
+    try {
+      if (networkName) await run("checkNetworkName", { networkName });
+      else networkName = DEFAULT_NETWORK;
+      return networkName;
+    } catch (err) {
+      console.error(err);
+      process.exit(1);
     }
   });

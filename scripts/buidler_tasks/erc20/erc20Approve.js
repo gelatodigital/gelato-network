@@ -12,5 +12,6 @@ export default async (taskArgs, ethers) => {
     return tx.hash;
   } catch (error) {
     console.error(error);
+    process.exit(1);
   }
 };

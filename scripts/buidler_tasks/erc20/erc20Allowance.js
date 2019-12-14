@@ -14,5 +14,6 @@ export default async (taskArgs, ethers) => {
     return allowance;
   } catch (error) {
     console.error(error);
+    process.exit(1);
   }
 };
