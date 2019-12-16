@@ -1,5 +1,6 @@
-// Helpers
+// ES6 module imports via require
 require("@babel/register");
+// Helpers
 const assert = require("assert");
 const { providers, utils } = require("ethers");
 const {
@@ -8,10 +9,10 @@ const {
 } = require("./scripts/helpers/nestedObjects");
 const { sleep } = require("./scripts/helpers/sleep");
 
-// ============ Buidler Runtime Environment (BRE) ==================================
+// ================================= BRE extension ==================================
 // extendEnvironment(bre => { bre.x = x; })
 
-// ============ Config =============================================================
+// ================================= CONFIG =========================================
 // Env Variables
 require("dotenv").config();
 const DEV_MNEMONIC = process.env.DEV_MNEMONIC;
@@ -63,30 +64,13 @@ module.exports = {
   }
 };
 
-// ============ Plugins ============================================================
+// ================================= PLUGINS =========================================
 usePlugin("@nomiclabs/buidler-ethers");
 
-// ============ Tasks ==============================================================
+// ================================= TASKS =========================================
 // task action function receives the Buidler Runtime Environment as second argument
-task(
-  "block-number",
-  `Logs the current block number on [--network] (default: ${DEFAULT_NETWORK})`
-)
-  .addFlag("log", "Logs return values to stdout")
-  .setAction(async ({ log }, { ethers }) => {
-    try {
-      const blockNumber = await ethers.provider.getBlockNumber();
-      if (log)
-        console.log(
-          `\n${ethers.provider._buidlerProvider._networkName}: ${blockNumber}\n`
-        );
-      return blockNumber;
-    } catch (err) {
-      console.error(err);
-      process.exit(1);
-    }
-  });
 
+// ============= BRE ============================
 task("bre", "Return (or --log) the current Buidler Runtime Environment")
   .addFlag("log", "Logs return values to stdout")
   .setAction(async ({ log }, bre) => {
@@ -99,6 +83,7 @@ task("bre", "Return (or --log) the current Buidler Runtime Environment")
     }
   });
 
+// ______ BRE-CONFIG ______________________
 task("bre-config", "Return (or --log) BRE.config properties")
   .addFlag("addressbook", "Returns bre.config.networks.networkName.addressbook")
   .addOptionalParam(
@@ -179,6 +164,7 @@ task("bre-config", "Return (or --log) BRE.config properties")
     }
   );
 
+// ______ bre-config:networks ______________________
 internalTask("bre-config:networks", `Returns bre.config.network info`)
   .addFlag("addressbook")
   .addOptionalParam("addressbookcategory")
@@ -208,7 +194,7 @@ internalTask("bre-config:networks", `Returns bre.config.network info`)
         const optionalReturnValues = [];
         const handledNetworkName = await run("handleNetworkname", networkname);
         if (addressbook) {
-          if (!addressbookcategory && addressbookentry)
+          if (addressbookentry && !addressbookcategory)
             throw new Error(
               "Must supply --addressbookcategory for --addressbookentry"
             );
@@ -340,6 +326,7 @@ internalTask(
     }
   });
 
+// ______ BRE-NETWORK ______________________
 task("bre-network", `Return (or --log) BRE.network properties`)
   .addFlag("c", "Return the BRE network config")
   .addFlag("log", "Logs return values to stdout")
@@ -367,6 +354,7 @@ task("bre-network", `Return (or --log) BRE.network properties`)
     }
   });
 
+// ============= DEPLOY ============================
 task(
   "deploy",
   `Deploys <contractName> to [--network] (default: ${DEFAULT_NETWORK})`
@@ -390,6 +378,7 @@ task(
     }
   });
 
+// ============= ERC20 ============================
 task("erc20", "A suite of erc20 related tasks")
   .addPositionalParam(
     "erc20Address",
@@ -448,16 +437,18 @@ task(
     }
   });
 
+// ============== ETH =================================================================
 task(
   "eth-balance",
-  `Logs an account's [--a] ETH balance on [--network] (default: ${DEFAULT_NETWORK})`
+  `Return or (--log) an [--address] ETH balance on [--network] (default: ${DEFAULT_NETWORK})`
 )
-  .addParam("a", "The account's address")
-  .setAction(async ({ a: address }, { ethers }) => {
+  .addParam("address", "The account's address")
+  .addFlag("log", "Logs return values to stdout")
+  .setAction(async ({ address, log }, { ethers, network }) => {
     try {
-      await run("bre-network", { name: "name" });
       const balance = await ethers.provider.getBalance(address);
-      console.log(`${utils.formatEther(balance)} ETH`);
+      if (log)
+        console.log(`\n${utils.formatEther(balance)} ETH (on ${network.name})`);
       return balance;
     } catch (error) {
       console.error(error);
@@ -478,17 +469,19 @@ task("eth-price", "Logs the etherscan ether-USD price", async () => {
   }
 });
 
+// ============== ETHERS ==============================================================
 task(
   "ethers",
-  `Logs the BRE config for the ethers plugin on [--network] (default: ${DEFAULT_NETWORK})`
+  `Return (or --log) properties of ethers-buidler plugin on [--network] (default: ${DEFAULT_NETWORK})`
 )
-  .addFlag("a", "Use with --signer or --signers to log addresses")
+  .addFlag("address", "Use with --signer or --signers to log addresses")
   .addOptionalParam(
     "block",
     "Use with --signer --ethBalance to log balance at block height"
   )
   .addFlag("buidlerprovider", "Show the buidler-ethers provider")
   .addFlag("ethbalance", "Use with --signer to log Signer's ethBalance")
+  .addFlag("log", "Logs return values to stdout")
   .addFlag("provider", "Show the buidler-ethers provider object")
   .addFlag(
     "signer",
@@ -501,10 +494,11 @@ task(
   .setAction(
     async (
       {
-        a: address,
+        address,
         block,
         buidlerprovider,
         ethbalance,
+        log,
         provider,
         signer,
         signers
@@ -528,13 +522,13 @@ task(
           optionalReturnValues.push(signersInfo);
         }
         if (optionalReturnValues.length == 0) {
-          console.log(ethers);
+          if (log) console.log(ethers);
           return ethers;
         } else if (optionalReturnValues.length == 1) {
-          console.log(optionalReturnValues[0]);
+          if (log) console.log(optionalReturnValues[0]);
           return optionalReturnValues[0];
         }
-        console.log(optionalReturnValues);
+        if (log) console.log(optionalReturnValues);
         return optionalReturnValues;
       } catch (err) {
         console.error(err);
@@ -543,6 +537,7 @@ task(
     }
   );
 
+// ______ ethers:signer(s) ______________________
 internalTask(
   "ethers:signer",
   "Returns the default buidler-ethers Signer object"
@@ -594,7 +589,7 @@ internalTask(
     }
   });
 
-// Internal Helper Tasks
+// ============== INTERNAL HELPER TASKS ================================================
 internalTask(
   "checkContractName",
   "Throws if contractname does not exist inside config.networks.networkName.contracts"
