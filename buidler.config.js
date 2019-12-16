@@ -163,6 +163,9 @@ task("bre-config", "Return (or --log) BRE.config properties")
   );
 
 internalTask("bre-config:networks", `Returns bre.config.network info`)
+  .addFlag("addressbook")
+  .addOptionalParam("addressbook-category")
+  .addOptionalParam("addressbook-entry")
   .addFlag(
     "contracts",
     "Return a list of contract names available for deployment"
