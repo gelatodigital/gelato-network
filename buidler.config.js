@@ -35,11 +35,11 @@ module.exports = {
       accounts: { mnemonic: DEV_MNEMONIC },
       addressBook: {
         erc20: {
-          DAI: 0xad6d458402f60fd3bd25163575031acdce07538d,
-          KNC: 0x4e470dc7321e84ca96fcaedd0c8abcebbaeb68c6,
-          MANA: 0x72fd6c7c1397040a66f33c2ecc83a0f71ee46d5c,
-          OMG: 0x4bfba4a8f28755cb2061c413459ee562c6b9c51b,
-          WETH: 0xbca556c912754bc8e7d4aad20ad69a1b1444f42d
+          DAI: "0xad6d458402f60fd3bd25163575031acdce07538d",
+          KNC: "0x4e470dc7321e84ca96fcaedd0c8abcebbaeb68c6",
+          MANA: "0x72fd6c7c1397040a66f33c2ecc83a0f71ee46d5c",
+          OMG: "0x4bfba4a8f28755cb2061c413459ee562c6b9c51b",
+          WETH: "0xbca556c912754bc8e7d4aad20ad69a1b1444f42d"
         }
       },
       contracts: [
@@ -100,6 +100,15 @@ task("bre", "Return (or --log) the current Buidler Runtime Environment")
   });
 
 task("bre-config", "Return (or --log) BRE.config properties")
+  .addFlag("addressbook", "Returns bre.config.networks.networkName.addressbook")
+  .addOptionalParam(
+    "addressbookcategory",
+    "Returns bre.config.networks.networkName.addressbook.category"
+  )
+  .addOptionalParam(
+    "addressbookentry",
+    "Returns bre.config.networks.networkName.addressbook.category.entry"
+  )
   .addFlag(
     "contracts",
     "Use with --networks for a list of contracts available for deployment on --networkname"
@@ -120,6 +129,9 @@ task("bre-config", "Return (or --log) BRE.config properties")
   .setAction(
     async (
       {
+        addressbook,
+        addressbookcategory,
+        addressbookentry,
         contracts,
         defaultnetwork,
         deployments,
@@ -134,9 +146,14 @@ task("bre-config", "Return (or --log) BRE.config properties")
       try {
         const optionalReturnValues = [];
 
+        if (networkname) await run("checkNetworkName", networkname);
+
         if (defaultnetwork) optionalReturnValues.push(config.defaultNetwork);
-        if (contracts || deployments || networks) {
+        if (addressbook || contracts || deployments || networks) {
           const networkInfo = await run("bre-config:networks", {
+            addressbook,
+            addressbookcategory,
+            addressbookentry,
             contracts,
             deployments,
             networkname
@@ -164,8 +181,8 @@ task("bre-config", "Return (or --log) BRE.config properties")
 
 internalTask("bre-config:networks", `Returns bre.config.network info`)
   .addFlag("addressbook")
-  .addOptionalParam("addressbook-category")
-  .addOptionalParam("addressbook-entry")
+  .addOptionalParam("addressbookcategory")
+  .addOptionalParam("addressbookentry")
   .addFlag(
     "contracts",
     "Return a list of contract names available for deployment"
@@ -175,27 +192,118 @@ internalTask("bre-config:networks", `Returns bre.config.network info`)
     "networkname",
     `Use with --networks to get info for a specific network (default: ${DEFAULT_NETWORK})`
   )
-  .setAction(async ({ contracts, deployments, networkname }, { config }) => {
+  .setAction(
+    async (
+      {
+        addressbook,
+        addressbookcategory,
+        addressbookentry,
+        contracts,
+        deployments,
+        networkname
+      },
+      { config }
+    ) => {
+      try {
+        const optionalReturnValues = [];
+        const handledNetworkName = await run("handleNetworkname", networkname);
+        if (addressbook) {
+          if (!addressbookcategory && addressbookentry)
+            throw new Error(
+              "Must supply --addressbookcategory for --addressbookentry"
+            );
+          const addressbookInfo = await run("bre-config:networks:addressbook", {
+            handledNetworkName,
+            category: addressbookcategory,
+            entry: addressbookentry
+          });
+          optionalReturnValues.push(addressbookInfo);
+        }
+        if (contracts) {
+          const contractsInfo = await run("bre-config:networks:contracts", {
+            handledNetworkName
+          });
+          optionalReturnValues.push(contractsInfo);
+        }
+        if (deployments) {
+          const deploymentsInfo = await run("bre-config:networks:deployments", {
+            handledNetworkName
+          });
+          optionalReturnValues.push(deploymentsInfo);
+        }
+        if (optionalReturnValues.length == 0)
+          return networkname ? config.networks[networkname] : config.networks;
+        if (optionalReturnValues.length == 1) return optionalReturnValues[0];
+        else return optionalReturnValues;
+      } catch (err) {
+        console.error(err);
+        process.exit(1);
+      }
+    }
+  );
+
+internalTask(
+  "bre-config:networks:addressbook",
+  "Returns bre.config.networks.networkName.addressbook.[category].[entry]"
+)
+  .addParam("handledNetworkName")
+  .addOptionalParam("category")
+  .addOptionalParam("entry")
+  .setAction(async ({ handledNetworkName, category, entry }, { config }) => {
     try {
-      const optionalReturnValues = [];
-      if (networkname) await run("checkNetworkName", networkname);
-      else networkname = DEFAULT_NETWORK;
-      if (contracts) {
-        const contractsInfo = await run("bre-config:networks:contracts", {
-          networkname
-        });
-        optionalReturnValues.push(contractsInfo);
+      await run("bre-config:networks:checkAddressBook", {
+        handledNetworkName,
+        category,
+        entry
+      });
+      if (!category && !entry)
+        return config.networks[handledNetworkName].addressBook;
+      else if (category && !entry)
+        return config.networks[handledNetworkName].addressBook[category];
+      else
+        return config.networks[handledNetworkName].addressBook[category][entry];
+    } catch (err) {
+      console.error(err);
+      process.exit(1);
+    }
+  });
+
+internalTask("bre-config:networks:checkAddressBook")
+  .addParam("handledNetworkName")
+  .addOptionalParam("category")
+  .addOptionalParam("entry")
+  .setAction(async ({ handledNetworkName, category, entry }) => {
+    try {
+      if (!checkNestedObj(config.networks, handledNetworkName, "addressBook"))
+        throw new Error(`No addressBook for network: ${handledNetworkName}`);
+      if (category) {
+        if (
+          !checkNestedObj(
+            config.networks,
+            handledNetworkName,
+            "addressBook",
+            category
+          )
+        ) {
+          throw new Error(
+            `Category: ${category} does not exist in config.networks.${handledNetworkName}.addressBook`
+          );
+        }
       }
-      if (deployments) {
-        const deploymentsInfo = await run("bre-config:networks:deployments", {
-          networkname
-        });
-        optionalReturnValues.push(deploymentsInfo);
+      if (entry) {
+        if (
+          !checkNestedObj(
+            config.networks,
+            handledNetworkName,
+            "addressBook",
+            category,
+            entry
+          )
+        )
+          throw new Error(
+            `Entry: ${entry} does not exist in config.networks.${handledNetworkName}.addressBook.${category}`
+          );
       }
-      if (optionalReturnValues.length == 0)
-        return networkname ? config.networks[networkname] : config.networks;
-      if (optionalReturnValues.length == 1) return optionalReturnValues[0];
-      else return optionalReturnValues;
     } catch (err) {
       console.error(err);
       process.exit(1);
@@ -206,11 +314,11 @@ internalTask(
   "bre-config:networks:contracts",
   `Returns bre.config.networks.networkName.contracts`
 )
-  .addParam("networkname", "Name of network for which to read contracts field")
-  .setAction(async ({ networkname }, { config }) => {
+  .addParam("handledNetworkName")
+  .setAction(async ({ handledNetworkName }, { config }) => {
     try {
-      if (checkNestedObj(config, "networks", networkname, "contracts"))
-        return config.networks[networkname].contracts;
+      if (checkNestedObj(config, "networks", handledNetworkName, "contracts"))
+        return config.networks[handledNetworkName].contracts;
     } catch (err) {
       console.error(err);
       process.exit(1);
@@ -221,11 +329,11 @@ internalTask(
   "bre-config:networks:deployments",
   `Returns bre.config.networks.networkName.deployments`
 )
-  .addParam("networkname", "Name of network for which to read contracts field")
-  .setAction(async ({ networkname }, { config }) => {
+  .addParam("handledNetworkName")
+  .setAction(async ({ handledNetworkName }, { config }) => {
     try {
-      if (checkNestedObj(config, "networks", networkname, "deployments"))
-        return config.networks[networkname].deployments;
+      if (checkNestedObj(config, "networks", handledNetworkName, "deployments"))
+        return config.networks[handledNetworkName].deployments;
     } catch (err) {
       console.error(err);
       process.exit(1);
@@ -488,98 +596,21 @@ internalTask(
 
 // Internal Helper Tasks
 internalTask(
-  "checkAddressBook",
-  "Checks config.networks.networkName.addressbook for <category> and optionally <entry>"
-)
-  .addPositionalParam("category", "Name of the category to search under")
-  .addOptionalParam("entry", "Name of the entry to check")
-  .addOptionalParam("networkName", "Name of the network to search under")
-  .setAction(async ({ category, entry, networkName }) => {
-    try {
-      networkName = await run("handleNetworkname", { networkName });
-      await run("checkAddressBook:network", { networkName });
-      await run("checkAddressBook:category", { category, networkName });
-      if (entry) await run("checkAddressBook:entry", { entry });
-    } catch (err) {
-      console.error(err);
-      process.exit(1);
-    }
-  });
-
-internalTask(
-  "checkAddressBook:category",
-  "Throws if the category does not exist inside config.networks.addressbook"
-)
-  .addParam("category", "Name of the category to search under")
-  .addParam("networkName", "Name of the network to search under")
-  .setAction(async ({ category, networkName }, { config }) => {
-    try {
-      if (
-        !checkNestedObj(config.networks, networkName, "addressBook", category)
-      )
-        throw new Error(
-          `Category: ${category} does not exist in config.networks.${networkName}.addressBook`
-        );
-    } catch (err) {
-      console.error(err);
-      process.exit(1);
-    }
-  });
-
-internalTask(
-  "checkAddressBook:entry",
-  "Throws if the entry does not exist inside config.networks.addressbook"
-)
-  .addParam("category", "Name of the category to search under")
-  .addParam("entry", "Name of the entry to check")
-  .setAction(async ({ category, entry }, { config }) => {
-    try {
-      if (
-        !checkNestedObj(
-          config.networks,
-          networkName,
-          "addressBook",
-          category,
-          entry
-        )
-      )
-        throw new Error(
-          `Entry: ${entry} does not exist in config.networks.${networkName}.addressBook.${category}`
-        );
-    } catch (err) {
-      console.error(err);
-      process.exit(1);
-    }
-  });
-
-internalTask(
-  "checkAddressBook:network",
-  "Throws if no addressbook for config.networks.networkName"
-)
-  .addParam("networkName", "Name of the network to search under")
-  .setAction(async ({ networkName }, { config }) => {
-    try {
-      if (!checkNestedObj(config.networks, networkName, "addressBook"))
-        throw new Error(`No addressBook for network: ${networkName}`);
-    } catch (err) {
-      console.error(err);
-      process.exit(1);
-    }
-  });
-
-internalTask(
   "checkContractName",
   "Throws if contractname does not exist inside config.networks.networkName.contracts"
 )
   .addParam("contractName", "Name of contract to check")
-  .addOptionalParam("networkName", "Name of the network to check")
-  .setAction(async ({ contractName }, { config, networkName }) => {
+  .addParam("handledNetworkName", "Name of the network to check")
+  .setAction(async ({ contractName, handledNetworkName }, { config }) => {
     try {
-      networkName = await run("handleNetworkname");
-      const contracts = getNestedObj(config.networks, networkName, "contracts");
+      const contracts = getNestedObj(
+        config.networks,
+        handledNetworkName,
+        "contracts"
+      );
       if (!contracts.includes(contractName))
         throw new Error(
-          `contractname: ${contractName} does not exist in config.networks.${networkName}.contracts`
+          `contractname: ${contractName} does not exist in config.networks.${handledNetworkName}.contracts`
         );
     } catch (err) {
       console.error(err);
