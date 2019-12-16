@@ -1,7 +1,7 @@
 // Javascript Ethereum API Library
 import { utils } from "ethers";
 
-export function getPayloadWithSelector(
+export default (
   gelatoCore,
   selectedExecutor,
   timeTrigger,
@@ -10,7 +10,7 @@ export function getPayloadWithSelector(
   actionPayloadWithSelector,
   intervalSpan,
   numberOfMints
-) {
+) => {
   const actionMultiMintForTriggerTimestampPassedABI = [
     {
       name: "action",
@@ -43,4 +43,4 @@ export function getPayloadWithSelector(
   ]);
 
   return payloadWithSelector;
-}
+};

@@ -1,20 +1,11 @@
 // Buidler config
+import buidler from "@nomiclabs/buidler";
 
 // Javascript Ethereum API Library
 import { providers, Wallet, Contract, utils } from "ethers";
 
 // Helpers
 import { sleep } from "../../helpers/sleep.js";
-
-// ENV VARIABLES
-import { resolve } from "path";
-require("dotenv").config({ path: resolve(__dirname, "../../../.env") });
-const DEV_MNEMONIC = process.env.DEV_MNEMONIC;
-const INFURA_ID = process.env.INFURA_ID;
-console.log(
-  `\n\t\t env variables configured: ${DEV_MNEMONIC !== undefined &&
-    INFURA_ID !== undefined}`
-);
 
 // Contract Addresses
 let actionMultiMintTimeTriggerAddress;
@@ -60,11 +51,7 @@ const connectedWallet = wallet.connect(provider);
 const kyberABI = [
   "function getExpectedRate(address src, address dest, uint srcQty) view returns(uint,uint)"
 ];
-const kyberContract = new Contract(
-  kyberProxyAddress,
-  kyberABI,
-  provider
-);
+const kyberContract = new Contract(kyberProxyAddress, kyberABI, provider);
 
 // ReadInstance of GelatoCore
 const gelatoCoreABI = [
@@ -113,10 +100,7 @@ async function main() {
     SRC_AMOUNT
   );
   console.log(
-    `\n\t\t minConversionRate: ${utils.formatUnits(
-      minConversionRate,
-      18
-    )}\n`
+    `\n\t\t minConversionRate: ${utils.formatUnits(minConversionRate, 18)}\n`
   );
 
   // Encode the specific params for ActionKyberTrade
@@ -159,9 +143,7 @@ async function main() {
       MINTING_DEPOSIT_PER_MINT,
       "ether"
     )} ETH \t\t${ethUSDPrice *
-      parseFloat(
-        utils.formatUnits(MINTING_DEPOSIT_PER_MINT, "ether")
-      )} $`
+      parseFloat(utils.formatUnits(MINTING_DEPOSIT_PER_MINT, "ether"))} $`
   );
   const MSG_VALUE = MINTING_DEPOSIT_PER_MINT.mul(NUMBER_OF_MINTS);
   console.log(
