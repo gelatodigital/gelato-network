@@ -37,10 +37,11 @@ module.exports = {
       addressBook: {
         erc20: {
           DAI: "0xad6d458402f60fd3bd25163575031acdce07538d",
+          "0xad6d458402f60fd3bd25163575031acdce07538d": "DAI",
           KNC: "0x4e470dc7321e84ca96fcaedd0c8abcebbaeb68c6",
-          MANA: "0x72fd6c7c1397040a66f33c2ecc83a0f71ee46d5c",
-          OMG: "0x4bfba4a8f28755cb2061c413459ee562c6b9c51b",
-          WETH: "0xbca556c912754bc8e7d4aad20ad69a1b1444f42d"
+          "0x4e470dc7321e84ca96fcaedd0c8abcebbaeb68c6": "KNC",
+          WETH: "0xbca556c912754bc8e7d4aad20ad69a1b1444f42d",
+          "0xbca556c912754bc8e7d4aad20ad69a1b1444f42d": "WETH"
         }
       },
       contracts: [
@@ -69,6 +70,26 @@ usePlugin("@nomiclabs/buidler-ethers");
 
 // ================================= TASKS =========================================
 // task action function receives the Buidler Runtime Environment as second argument
+
+// ============= BLOCK ============================
+task(
+  "block-number",
+  `Logs the current block number on [--network] (default: ${DEFAULT_NETWORK})`
+)
+  .addFlag("log", "Logs return values to stdout")
+  .setAction(async ({ log }, { ethers }) => {
+    try {
+      const blockNumber = await ethers.provider.getBlockNumber();
+      if (log)
+        console.log(
+          `\n${ethers.provider._buidlerProvider._networkName}: ${blockNumber}\n`
+        );
+      return blockNumber;
+    } catch (err) {
+      console.error(err);
+      process.exit(1);
+    }
+  });
 
 // ============= BRE ============================
 task("bre", "Return (or --log) the current Buidler Runtime Environment")
@@ -237,7 +258,7 @@ internalTask(
   .addOptionalParam("entry")
   .setAction(async ({ handledNetworkName, category, entry }, { config }) => {
     try {
-      await run("bre-config:networks:checkAddressBook", {
+      await run("checkAddressBook", {
         handledNetworkName,
         category,
         entry
@@ -248,48 +269,6 @@ internalTask(
         return config.networks[handledNetworkName].addressBook[category];
       else
         return config.networks[handledNetworkName].addressBook[category][entry];
-    } catch (err) {
-      console.error(err);
-      process.exit(1);
-    }
-  });
-
-internalTask("bre-config:networks:checkAddressBook")
-  .addParam("handledNetworkName")
-  .addOptionalParam("category")
-  .addOptionalParam("entry")
-  .setAction(async ({ handledNetworkName, category, entry }) => {
-    try {
-      if (!checkNestedObj(config.networks, handledNetworkName, "addressBook"))
-        throw new Error(`No addressBook for network: ${handledNetworkName}`);
-      if (category) {
-        if (
-          !checkNestedObj(
-            config.networks,
-            handledNetworkName,
-            "addressBook",
-            category
-          )
-        ) {
-          throw new Error(
-            `Category: ${category} does not exist in config.networks.${handledNetworkName}.addressBook`
-          );
-        }
-      }
-      if (entry) {
-        if (
-          !checkNestedObj(
-            config.networks,
-            handledNetworkName,
-            "addressBook",
-            category,
-            entry
-          )
-        )
-          throw new Error(
-            `Entry: ${entry} does not exist in config.networks.${handledNetworkName}.addressBook.${category}`
-          );
-      }
     } catch (err) {
       console.error(err);
       process.exit(1);
@@ -369,8 +348,7 @@ task(
   .setAction(async (taskArgs, bre) => {
     try {
       await require("./scripts/buidler_tasks/deploy/deployWithoutConstructorArgs").default(
-        taskArgs,
-        bre
+        taskArgs
       );
     } catch (err) {
       console.error(err);
@@ -379,39 +357,73 @@ task(
   });
 
 // ============= ERC20 ============================
-task("erc20", "A suite of erc20 related tasks")
+task(
+  "erc20",
+  `A suite of erc20 related tasks on [--network] (default: ${DEFAULT_NETWORK})`
+)
   .addPositionalParam(
     "erc20Address",
-    "The address of the erc20 contract to perform tasks on"
+    "Must be in config.networks.[--network].addressbook.erc20"
   )
   .addFlag(
     "allowance",
     "Return (or --log) <erc20Address> allowance by --owner to --spender"
   )
   .addOptionalParam("amount", "Uint: use with --approve")
-  .addFlag("approve", "Send tx to <erc20Address> to approve --spender")
+  .addFlag(
+    "approve",
+    "Send tx to <erc20Address> to approve <spender> for <amount> and return (or --log) tx hash"
+  )
   .addFlag("log", "Logs return values to stdout")
   .addOptionalParam("owner", "Address: use with (--allowance & --spender)")
   .addOptionalParam(
     "spender",
     "Address: use with --approve or (--allowance & --owner)"
   )
-  .setAction(async (taskArgs, { ethers }) => {
-    if (taskArgs) {
+  .setAction(async (taskArgs, { network }) => {
+    assert(
+      taskArgs.approve || taskArgs.allowance,
+      "Use erc20 with --approve or --allowance"
+    );
+
+    const returnValues = [];
+
+    await run("checkAddressBook", {
+      handledNetworkName: network.name,
+      category: "erc20",
+      entry: taskArgs.erc20Address
+    });
+
+    if (taskArgs.approve) {
+      const txHash = await run("erc20:approve", taskArgs);
+      if (taskArgs.log) console.log(`\napprove txHash: ${txHash}\n`);
+      returnValues.push({ approveTxHash: txHash });
     }
+
+    if (taskArgs.allowance) {
+      const value = await run("erc20:allowance", taskArgs);
+      if (taskArgs.log) console.log(`\nallowance: ${value}\n`);
+      returnValues.push(value);
+    }
+
+    if (returnValues.length == 0)
+      throw new Error("erc20 task: no return values");
+    else if (returnValues.length == 1) return returnValues[0];
+    return returnValues;
   });
 
 internalTask(
   "erc20:approve",
-  `Approves --spender for <erc20> <amount> on [--network] (default: ${DEFAULT_NETWORK})`
+  `Approves <spender for <amount> of <erc20> on [--network] (default: ${DEFAULT_NETWORK})`
 )
-  .addParam("erc20", "The erc20 contract address")
-  .addParam("spender", "The spender's address")
-  .addParam("amount", "The amount of erc20 tokens to approve")
-  .setAction(async (taskArgs, { ethers }) => {
+  .addParam("erc20Address")
+  .addParam("spender", "address")
+  .addParam("amount", "uint")
+  .setAction(async taskArgs => {
     try {
-      const erc20Approve = require("./scripts/buidler_tasks/erc20/erc20Approve");
-      await erc20Approve(taskArgs, ethers);
+      await require("./scripts/buidler_tasks/erc20/erc20Approve").default(
+        taskArgs
+      );
     } catch (error) {
       console.error(error);
       process.exit(1);
@@ -419,17 +431,17 @@ internalTask(
   });
 
 task(
-  "erc20-allowance",
-  `Logs <spender>'s <erc20> allowance from <owner> on [--network] (default: ${DEFAULT_NETWORK})`
+  "erc20:allowance",
+  `Return <spender>'s <erc20> allowance from <owner> on [--network] (default: ${DEFAULT_NETWORK})`
 )
-  .addParam("erc20", "The erc20 contract address")
-  .addParam("owner", "The owners's address")
-  .addParam("spender", "The spender's address")
-  .setAction(async (taskArgs, { ethers }) => {
+  .addParam("erc20Address")
+  .addParam("owner", "address")
+  .addParam("spender", "address")
+  .setAction(async taskArgs => {
     try {
-      const erc20Allowance = require("./scripts/buidler_tasks/erc20/erc20Allowance");
-      const allowance = await erc20Allowance(taskArgs, ethers);
-      console.log(`\n\t\t erc20-allowance: ${allowance}`);
+      const allowance = require("./scripts/buidler_tasks/erc20/erc20Allowance").default(
+        taskArgs
+      );
       return allowance;
     } catch (error) {
       console.error(error);
@@ -590,6 +602,48 @@ internalTask(
   });
 
 // ============== INTERNAL HELPER TASKS ================================================
+internalTask("checkAddressBook")
+  .addParam("handledNetworkName")
+  .addOptionalParam("category")
+  .addOptionalParam("entry")
+  .setAction(async ({ handledNetworkName, category, entry }) => {
+    try {
+      if (!checkNestedObj(config.networks, handledNetworkName, "addressBook"))
+        throw new Error(`No addressBook for network: ${handledNetworkName}`);
+      if (category) {
+        if (
+          !checkNestedObj(
+            config.networks,
+            handledNetworkName,
+            "addressBook",
+            category
+          )
+        ) {
+          throw new Error(
+            `Category: ${category} does not exist in config.networks.${handledNetworkName}.addressBook`
+          );
+        }
+      }
+      if (entry) {
+        if (
+          !checkNestedObj(
+            config.networks,
+            handledNetworkName,
+            "addressBook",
+            category,
+            entry
+          )
+        )
+          throw new Error(
+            `Entry: ${entry} does not exist in config.networks.${handledNetworkName}.addressBook.${category}`
+          );
+      }
+    } catch (err) {
+      console.error(err);
+      process.exit(1);
+    }
+  });
+
 internalTask(
   "checkContractName",
   "Throws if contractname does not exist inside config.networks.networkName.contracts"
