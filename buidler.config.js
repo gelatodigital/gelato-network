@@ -120,125 +120,12 @@ task("eth-price", "Logs the etherscan ether-USD price", async () => {
   }
 });
 
+
+
 // ============== ETHERS ==============================================================
-task(
-  "ethers",
-  `Return (or --log) properties of ethers-buidler plugin on [--network] (default: ${DEFAULT_NETWORK})`
-)
-  .addFlag("address", "Use with --signer or --signers to log addresses")
-  .addOptionalParam(
-    "block",
-    "Use with --signer --ethBalance to log balance at block height"
-  )
-  .addFlag("buidlerprovider", "Show the buidler-ethers provider")
-  .addFlag("ethbalance", "Use with --signer to log Signer's ethBalance")
-  .addFlag("log", "Logs return values to stdout")
-  .addFlag("provider", "Show the buidler-ethers provider object")
-  .addFlag(
-    "signer",
-    "Logs the default Signer Object configured by buidler-ethers"
-  )
-  .addFlag(
-    "signers",
-    "Logs the currently configured transaction buidler-ethers Signer objects"
-  )
-  .setAction(
-    async (
-      {
-        address,
-        block,
-        buidlerprovider,
-        ethbalance,
-        log,
-        provider,
-        signer,
-        signers
-      },
-      { ethers }
-    ) => {
-      try {
-        const optionalReturnValues = [];
-        if (buidlerprovider)
-          optionalReturnValues.push(ethers.provider._buidlerProvider);
-        if (provider) optionalReturnValues.push(ethers.provider);
-        if (signer) {
-          const signerInfo = await run("ethers:signer", {
-            address,
-            ethbalance,
-            block
-          });
-          optionalReturnValues.push(signerInfo);
-        } else if (signers) {
-          const signersInfo = await run("ethers:signers", { address });
-          optionalReturnValues.push(signersInfo);
-        }
-        if (optionalReturnValues.length == 0) {
-          if (log) console.log(ethers);
-          return ethers;
-        } else if (optionalReturnValues.length == 1) {
-          if (log) console.log(optionalReturnValues[0]);
-          return optionalReturnValues[0];
-        }
-        if (log) console.log(optionalReturnValues);
-        return optionalReturnValues;
-      } catch (err) {
-        console.error(err);
-        process.exit(1);
-      }
-    }
-  );
+require("./scripts/buidler_tasks/ethers/collection.tasks.ethers");
 
-// ______ ethers:signer(s) ______________________
-internalTask(
-  "ethers:signer",
-  "Returns the default buidler-ethers Signer object"
-)
-  .addFlag("address", "Return the signer._address")
-  .addFlag("ethbalance", "Logs the default Signer's ETH balance")
-  .addOptionalParam("block", "Block height to check for signer's balance")
-  .setAction(async ({ address, ethbalance, block }, { ethers }) => {
-    try {
-      const optionalReturnValues = [];
-      const [signer] = await ethers.signers();
-      if (address) optionalReturnValues.push(signer._address);
-      if (ethbalance) {
-        let balance;
-        if (block) {
-          if (isNaN(block)) balance = await signer.getBalance(block);
-          else balance = await signer.getBalance(utils.bigNumberify(block));
-        } else {
-          balance = await signer.getBalance();
-        }
-        optionalReturnValues.push(`${utils.formatEther(balance)} ETH`);
-      }
-      if (optionalReturnValues.length == 0) return signer;
-      if (optionalReturnValues.length == 1) return optionalReturnValues[0];
-      else return optionalReturnValues;
-    } catch (error) {
-      console.error(error);
-      process.exit(1);
-    }
-  });
 
-internalTask(
-  "ethers:signers",
-  "Returns the BRE configured buidler-ethers Signer objects"
-)
-  .addFlag("address", "Log the addresses of the Signers")
-  .setAction(async ({ address }, { ethers }) => {
-    try {
-      const signers = await ethers.signers();
-      if (address) {
-        const signerAddresses = [];
-        for (signer of signers) signerAddresses.push(signer._address);
-        return signerAddresses;
-      }
-      return signers;
-    } catch (error) {
-      console.error(error);
-      process.exit(1);
-    }
-  });
 
 // ============== INTERNAL HELPER TASKS ================================================
 require("./scripts/buidler_tasks/internal/internalTaskCollection");
