@@ -23,7 +23,7 @@
     "@openzeppelin/contracts": "^2.4.0",
     "dotenv": "^8.2.0",
     "ethers": "^4.0.23",
-    "solc": "^0.5.14",
+    "solc": "0.6.0;",
     "solhint": "^2.3.0"
   },
   "dependencies": {
