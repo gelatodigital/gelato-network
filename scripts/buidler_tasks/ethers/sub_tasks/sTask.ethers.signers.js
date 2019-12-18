@@ -10,7 +10,7 @@ export default internalTask(
       const signers = await ethers.signers();
       if (address) {
         const signerAddresses = [];
-        for (signer of signers) signerAddresses.push(signer._address);
+        for (const signer of signers) signerAddresses.push(signer._address);
         return signerAddresses;
       }
       return signers;
