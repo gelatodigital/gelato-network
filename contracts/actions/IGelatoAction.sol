@@ -1,4 +1,4 @@
-pragma solidity 0.6.0;
+pragma solidity ^0.6.0;
 
 /// @title IGelatoAction - solidity interface of GelatoActionsStandard
 /// @notice all the APIs and events of GelatoActionsStandard

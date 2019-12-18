@@ -1,4 +1,4 @@
-pragma solidity 0.6.0;
+pragma solidity ^0.6.0;
 
 abstract contract GelatoCoreEnums {
     enum ExecutionResult { Success, Failure, CanExecuteFailed }

@@ -1,4 +1,4 @@
-pragma solidity 0.6.0;
+pragma solidity ^0.6.0;
 
 import "../GelatoActionsStandard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -83,7 +83,16 @@ contract ActionKyberTrade is GelatoActionsStandard {
         override
         returns(bool)
     {
-
+        bytes4 selector = abi.decode(_actionPayloadWithSelector[:4], (bytes4));
+        require(
+            selector == this.action.selector,
+            "ActionKyberTrade.actionConditionsOk: selector mismatch"
+        );
+        (address _user, address _userProxy, address _src, uint256 _srcAmt,,) = abi.decode(
+            _actionPayloadWithSelector[4:],
+            (address,address,address,uint256,address,uint256)
+        );
+        return _actionConditionsOk(_user, _userProxy, _src, _scrAmt);
     }
 
     function _actionConditionsOk(

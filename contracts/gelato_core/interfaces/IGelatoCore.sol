@@ -1,4 +1,4 @@
-pragma solidity 0.6.0;
+pragma solidity ^0.6.0;
 
 import "../GelatoCoreEnums.sol";
 import "./IGelatoUserProxy.sol";

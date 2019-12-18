@@ -1,4 +1,4 @@
-pragma solidity 0.6.0;
+pragma solidity ^0.6.0;
 
 import "../interfaces/IGelatoGasTestUserProxyManager.sol";
 import "./GelatoGasTestUserProxy.sol";
