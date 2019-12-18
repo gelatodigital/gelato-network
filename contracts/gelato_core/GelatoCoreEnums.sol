@@ -1,8 +1,6 @@
 pragma solidity 0.6.0;
 
-contract GelatoCoreEnums {
-    constructor() internal {}
-
+abstract contract GelatoCoreEnums {
     enum ExecutionResult { Success, Failure, CanExecuteFailed }
 
     enum TriggerCheck { Reverted, NotFired, Fired }

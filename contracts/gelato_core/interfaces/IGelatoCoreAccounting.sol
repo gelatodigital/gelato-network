@@ -84,49 +84,42 @@ interface IGelatoCoreAccounting {
      */
     function withdrawExecutorBalance() external;
 
-    /**
-     * @dev setter for gelatoCore devs to impose a lower boundary on
-       executors' listed claim lifespans, to disallow bad claims
-     * @param _newMinExecutionClaimLifespan TO DO
-     */
-    function setMinExecutionClaimLifespan(uint256 _newMinExecutionClaimLifespan) external;
-
     /// @dev get the gelato-wide minimum executionClaim lifespan
     /// @return the minimum executionClaim lifespan for all executors
-    function getMinExecutionClaimLifespan() external view returns(uint256);
+    function minExecutionClaimLifespan() external view returns(uint256);
 
     /// @dev get an executor's price
-    /// @param _executor x
+    /// @param _executor TO DO
     /// @return uint256 executor's price factor
-    function getExecutorPrice(address _executor) external view returns(uint256);
+    function executorPrice(address _executor) external view returns(uint256);
 
     /// @dev get an executor's executionClaim lifespan
-    /// @param _executor x
+    /// @param _executor TO DO
     /// @return uint256 executor's executionClaim lifespan
-    function getExecutorClaimLifespan(address _executor) external view returns(uint256);
+    function executorClaimLifespan(address _executor) external view returns(uint256);
 
     /// @dev get the gelato-internal wei balance of an executor
     /// @param _executor z
     /// @return uint256 wei amount of _executor's gelato-internal deposit
-    function getExecutorBalance(address _executor) external view returns(uint256);
+    function executorBalance(address _executor) external view returns(uint256);
 
     /// @dev getter for gelatoCoreExecGasOverhead state variable
     /// @return uint256 gelatoCoreExecGasOverhead
-    function getGelatoCoreExecGasOverhead() external pure returns(uint256);
+    function gelatoCoreExecGasOverhead() external pure returns(uint256);
 
     /// @dev getter for userProxyExecGasOverhead state variable
     /// @return uint256 userProxyExecGasOverhead
-    function getUserProxyExecGasOverhead() external pure returns(uint256);
+    function userProxyExecGasOverhead() external pure returns(uint256);
 
     /// @dev getter for internalExecutionGas state variable
     /// @return uint256 internalExecutionGas
-    function getTotalExecutionGasOverhead() external pure returns(uint256);
+    function totalExecutionGasOverhead() external pure returns(uint256);
 
     /**
      * @dev get the deposit payable for minting on gelatoCore
      * @param _action the action contract to be executed
      * @param _selectedExecutor the executor that should call the action
-     * @return amount of wei that needs to be deposited inside gelato for minting
+     * @return mintingDepositPayable wei amount to deposit on GelatoCore for minting
      * @notice minters (e.g. frontends) should use this API to get the msg.value
        payable to GelatoCore's mintExecutionClaim function.
      */

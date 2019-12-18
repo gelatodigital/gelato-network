@@ -16,14 +16,14 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
 
     // ================  STATE VARIABLES ======================================
     Counters.Counter private executionClaimIds;
-    // executionClaimId => userProxyByExecutionClaimId
-    mapping(uint256 => IGelatoUserProxy) private userProxyByExecutionClaimId;
+    // executionClaimId => userProxyWithExecutionClaimId
+    mapping(uint256 => IGelatoUserProxy) public override userProxyWithExecutionClaimId;
     // executionClaimId => bytes32 executionClaimHash
-    mapping(uint256 => bytes32) private hashedExecutionClaims;
+    mapping(uint256 => bytes32) public override executionClaimHash;
 
     // ================  MINTING ==============================================
     function mintExecutionClaim(
-        address payable _selectedExecutor,
+        address _selectedExecutor,
         IGelatoTrigger _trigger,
         bytes calldata _triggerPayloadWithSelector,
         IGelatoAction _action,
@@ -31,6 +31,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
     )
         external
         payable
+        override
         onlyRegisteredExecutors(_selectedExecutor)
     {
         // ______ Authenticate msg.sender is proxied user or a proxy _______
@@ -43,11 +44,11 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         // ______ Read Gas Values & Charge Minting Deposit _______________________
         uint256[3] memory triggerGasActionTotalGasMinExecutionGas;
         {
-            uint256 triggerGas = _trigger.getTriggerGas();
+            uint256 triggerGas = _trigger.triggerGas();
             require(triggerGas != 0, "GelatoCore.mintExecutionClaim: 0 triggerGas");
             triggerGasActionTotalGasMinExecutionGas[0] = triggerGas;
 
-            uint256 actionTotalGas = _action.getActionTotalGas();
+            uint256 actionTotalGas = _action.actionTotalGas();
             require(actionTotalGas != 0, "GelatoCore.mintExecutionClaim: 0 actionTotalGas");
             triggerGasActionTotalGasMinExecutionGas[1] = actionTotalGas;
 
@@ -64,13 +65,13 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         // ______ Mint new executionClaim ______________________________________
         Counters.increment(executionClaimIds);
         uint256 executionClaimId = executionClaimIds.current();
-        userProxyByExecutionClaimId[executionClaimId] = userProxy;
+        userProxyWithExecutionClaimId[executionClaimId] = userProxy;
         // =============
         // ______ ExecutionClaim Hashing ______________________________________
         uint256 executionClaimExpiryDate = now.add(executorClaimLifespan[_selectedExecutor]);
 
         // Include executionClaimId to avoid hash collisions
-        hashedExecutionClaims[executionClaimId] = _computeExecutionClaimHash(
+        executionClaimHash[executionClaimId] = _computeExecutionClaimHash(
             _selectedExecutor,
             executionClaimId,
             userProxy,
@@ -113,6 +114,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
     )
         external
         view
+        override
         returns (GelatoCoreEnums.CanExecuteCheck)
     {
         return _canExecute(
@@ -142,6 +144,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         uint256 _mintingDeposit
     )
         external
+        override
         returns(GelatoCoreEnums.ExecutionResult executionResult)
     {
         return _execute(
@@ -158,7 +161,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
     }
 
     function cancelExecutionClaim(
-        address payable _selectedExecutor,
+        address _selectedExecutor,
         uint256 _executionClaimId,
         IGelatoUserProxy _userProxy,
         IGelatoTrigger _trigger,
@@ -170,6 +173,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         uint256 _mintingDeposit
     )
         external
+        override
     {
         if (msg.sender != proxyToUser[address(_userProxy)]) {
             require(
@@ -191,12 +195,12 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         );
         // Checks
         require(
-            computedExecutionClaimHash == hashedExecutionClaims[_executionClaimId],
+            computedExecutionClaimHash == executionClaimHash[_executionClaimId],
             "GelatoCore.cancelExecutionClaim: hash compare failed"
         );
         // Effects
-        delete userProxyByExecutionClaimId[_executionClaimId];
-        delete hashedExecutionClaims[_executionClaimId];
+        delete userProxyWithExecutionClaimId[_executionClaimId];
+        delete executionClaimHash[_executionClaimId];
         emit LogExecutionClaimCancelled(_executionClaimId, _userProxy, msg.sender);
         // Interactions
         msg.sender.sendValue(_mintingDeposit);
@@ -206,34 +210,20 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
     function getCurrentExecutionClaimId()
         external
         view
+        override
         returns(uint256 currentId)
     {
         currentId = executionClaimIds.current();
     }
 
-    function getUserProxyWithExecutionClaimId(uint256 _executionClaimId)
-        external
-        view
-        returns(IGelatoUserProxy)
-    {
-        return userProxyByExecutionClaimId[_executionClaimId];
-    }
-
     function getUserWithExecutionClaimId(uint256 _executionClaimId)
         external
         view
+        override
         returns(address)
     {
-        IGelatoUserProxy userProxy = userProxyByExecutionClaimId[_executionClaimId];
+        IGelatoUserProxy userProxy = userProxyWithExecutionClaimId[_executionClaimId];
         return proxyToUser[address(userProxy)];
-    }
-
-    function getHashedExecutionClaim(uint256 _executionClaimId)
-        external
-        view
-        returns(bytes32)
-    {
-        return hashedExecutionClaims[_executionClaimId];
     }
 
 
@@ -318,9 +308,9 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
             _mintingDeposit
         );
         /* solhint-disable indent */
-        if (computedExecutionClaimHash != hashedExecutionClaims[_executionClaimId])
+        if (computedExecutionClaimHash != executionClaimHash[_executionClaimId])
             return GelatoCoreEnums.CanExecuteCheck.WrongCalldataOrAlreadyDeleted;
-        else if (userProxyByExecutionClaimId[_executionClaimId] == IGelatoUserProxy(0))
+        else if (userProxyWithExecutionClaimId[_executionClaimId] == IGelatoUserProxy(0))
             return GelatoCoreEnums.CanExecuteCheck.NonExistantExecutionClaim;
         else if (_executionClaimExpiryDate < now)
             return GelatoCoreEnums.CanExecuteCheck.ExecutionClaimExpired;
@@ -393,7 +383,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
             "GelatoCore._execute: Insufficient gas sent"
         );
 
-        uint256 actionGas = _action.getActionGas();
+        uint256 actionGas = _action.actionGas();
         require(actionGas != 0, "GelatoCore._execute: 0 actionGas");
 
         uint256 actionConditionsOkGas = _triggerGasActionTotalGasMinExecutionGas[1].sub(actionGas);
@@ -427,8 +417,8 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         // From below the user pays for reverts (e.g. action reverts)
 
         // EFFECTS
-        delete hashedExecutionClaims[_executionClaimId];
-        delete userProxyByExecutionClaimId[_executionClaimId];
+        delete executionClaimHash[_executionClaimId];
+        delete userProxyWithExecutionClaimId[_executionClaimId];
 
         // INTERACTIONS
         bool success = _executeActionViaUserProxy(
@@ -457,7 +447,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
 
     // ================ EXECUTION CLAIM HASHING ========================================
     function _computeExecutionClaimHash(
-        address payable _selectedExecutor,
+        address _selectedExecutor,
         uint256 _executionClaimId,
         IGelatoUserProxy _userProxy,
         IGelatoTrigger _trigger,
@@ -496,6 +486,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
     )
         external
         view
+        override
         returns(uint256)
     {
         uint256 startGas = gasleft();
@@ -516,6 +507,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
     )
         external
         view
+        override
         returns(uint256)
     {
         uint256 startGas = gasleft();
@@ -545,6 +537,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
     )
         external
         view
+        override
         returns(uint256)
     {
         uint256 startGas = gasleft();
@@ -572,6 +565,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         uint256 _actionGas
     )
         external
+        override
         gasTestProxyCheck(address(_gasTestUserProxy))
         returns(uint256)
     {
@@ -591,6 +585,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         uint256 _actionGas
     )
         external
+        override
         userProxyCheck(_userProxy)
         returns(uint256)
     {
@@ -618,6 +613,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         uint256 _mintingDeposit
     )
         external
+        override
         returns(uint256)
     {
         uint256 startGas = gasleft();

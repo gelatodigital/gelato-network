@@ -4,6 +4,7 @@ import { utils } from "ethers";
 export default (
   // action params
   _user,
+  _userProxy,
   _src,
   _srcAmt,
   _dest,
@@ -15,6 +16,7 @@ export default (
       type: "function",
       inputs: [
         { type: "address", name: "_user" },
+        { type: "address", name: "_userProxy" },
         { type: "address", name: "_src" },
         { type: "uint256", name: "_srcAmt" },
         { type: "address", name: "_dest" },
@@ -26,6 +28,7 @@ export default (
 
   const actionPayloadWithSelector = iFace.functions.action.encode([
     _user,
+    _userProxy,
     _src,
     _srcAmt,
     _dest,

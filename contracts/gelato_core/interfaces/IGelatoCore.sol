@@ -24,13 +24,13 @@ interface IGelatoCore {
     );
 
     event LogCanExecuteFailed(
-        address payable indexed executor,
+        address indexed executor,
         uint256 indexed executionClaimId,
         GelatoCoreEnums.CanExecuteCheck indexed canExecuteResult
     );
 
     event LogClaimExecutedAndDeleted(
-        address payable indexed executor,
+        address indexed executor,
         uint256 indexed executionClaimId,
         GelatoCoreEnums.ExecutionResult indexed executionResult,
         uint256 gasPriceUsed,
@@ -51,7 +51,7 @@ interface IGelatoCore {
      * @notice minting event split into two, due to stack too deep issue
      */
     function mintExecutionClaim(
-        address payable _selectedExecutor,
+        address _selectedExecutor,
         IGelatoTrigger _trigger,
         bytes calldata _triggerPayloadWithSelector,
         IGelatoAction _action,
@@ -83,10 +83,9 @@ interface IGelatoCore {
 
 
     /**
-     * @dev the API executors call when they execute an executionClaim
-     * @return uint8 which converts to one of enum GelatoCoreEnums.ExecutionResult values
-     * @notice if return value == 0, the claim got executed
-     * @notice re-entrancy protection due to accounting operations and interactions
+     * @notice the API executors call when they execute an executionClaim
+     * @dev if return value == 0 the claim got executed
+     * @return executionResult : uint8 (converts to GelatoCoreEnums.ExecutionResult)
      */
     function execute(
         uint256 _executionClaimId,
@@ -111,7 +110,7 @@ interface IGelatoCore {
      * @notice .sendValue instead of .transfer due to IstanbulHF
      */
     function cancelExecutionClaim(
-        address payable _selectedExecutor,
+        address _selectedExecutor,
         uint256 _executionClaimId,
         IGelatoUserProxy _userProxy,
         IGelatoTrigger _trigger,
@@ -125,13 +124,13 @@ interface IGelatoCore {
         external;
 
     /// @dev get the current executionClaimId
-    /// @return uint256 current executionClaim Id
+    /// @return currentId uint256 current executionClaim Id
     function getCurrentExecutionClaimId() external view returns(uint256 currentId);
 
     /// @dev api to read from the userProxyByExecutionClaimId state variable
     /// @param _executionClaimId TO DO
     /// @return address of the userProxy behind _executionClaimId
-    function getUserProxyWithExecutionClaimId(uint256 _executionClaimId)
+    function userProxyWithExecutionClaimId(uint256 _executionClaimId)
         external
         view
         returns(IGelatoUserProxy);
@@ -144,7 +143,7 @@ interface IGelatoCore {
     /// @dev interface to read from the hashedExecutionClaims state variable
     /// @param _executionClaimId TO DO
     /// @return the bytes32 hash of the executionClaim with _executionClaimId
-    function getHashedExecutionClaim(uint256 _executionClaimId)
+    function executionClaimHash(uint256 _executionClaimId)
         external
         view
         returns(bytes32);

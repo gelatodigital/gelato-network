@@ -13,6 +13,7 @@ contract GelatoGasTestUserProxy is GelatoUserProxy {
     )
         external
         payable
+        override
         auth
         noZeroAddress(address(_action))
         returns(bool success, bytes memory returndata)

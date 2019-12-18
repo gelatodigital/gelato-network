@@ -4,7 +4,11 @@ import "../IGelatoTrigger.sol";
 
 contract TriggerTimestampPassed is IGelatoTrigger {
 
-    uint256 constant internal triggerGas = 30000;
+    // triggerSelector public state variable np due to this.actionSelector constant issue
+    function triggerSelector() external pure override returns(bytes4) {
+        return this.fired.selector;
+    }
+    uint256 public constant override triggerGas = 30000;
 
     function fired(uint256 _timestamp)
         external
@@ -14,8 +18,7 @@ contract TriggerTimestampPassed is IGelatoTrigger {
         return _timestamp <= block.timestamp;
     }
 
-    // Overriding IGelatoTrigger state readers (mandatory)
-    function getTriggerValue() external view returns(uint256) {return block.timestamp;}
-    function getTriggerSelector() external pure returns(bytes4) {return this.fired.selector;}
-    function getTriggerGas() external pure returns(uint256) {return triggerGas;}
+    function getTriggerValue() external view override returns(uint256) {
+        return block.timestamp;
+    }
 }

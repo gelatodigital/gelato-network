@@ -3,19 +3,22 @@ pragma solidity 0.6.0;
 import "../GelatoActionsStandard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import "../../helpers/SplitFunctionSelector.sol";
 import "../../dapp_interfaces/kyber_interfaces/IKyber.sol";
 
-contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
+contract ActionKyberTrade is GelatoActionsStandard {
     using SafeERC20 for IERC20;
 
-    uint256 constant internal actionConditionsOkGas = 50000;
-    uint256 constant internal actionGas = 700000;
-    uint256 constant internal actionTotalGas = actionConditionsOkGas + actionGas;
+    // actionSelector public state variable np due to this.actionSelector constant issue
+    function actionSelector() external pure override returns(bytes4) {
+        return this.action.selector;
+    }
+    uint256 public constant override actionConditionsOkGas = 50000;
+    uint256 public constant override actionGas = 700000;
+    uint256 public constant override actionTotalGas = actionConditionsOkGas + actionGas;
 
-    // Overriding GelatoActionsStandard event (optional)
     event LogAction(
         address indexed user,
+        address indexed userProxy,
         address indexed src,
         uint256 srcAmt,
         address dest,
@@ -24,8 +27,7 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
         address feeSharingParticipant
     );
 
-    // Overriding GelatoActionsStandard modifier (mandatory)
-    modifier actionGasCheck {
+    modifier actionGasCheck override {
         require(
             gasleft() >= actionGas,
             "ActionKyberTrade.actionGasCheck: failed"
@@ -36,6 +38,7 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
     function action(
         // Standard Action Params
         address _user,
+        address _userProxy,
         // Specific Action Params
         address _src,
         uint256 _srcAmt,
@@ -64,6 +67,7 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
         );
         emit LogAction(
             _user,
+            _userProxy,
             _src,
             _srcAmt,
             _dest,
@@ -73,39 +77,28 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
         );
     }
 
-    // Overriding and extending GelatoActionsStandard's function (optional)
     function actionConditionsOk(bytes calldata _actionPayloadWithSelector)
         external
         view
+        override
         returns(bool)
     {
-        return _actionConditionsOk(_actionPayloadWithSelector);
+
     }
 
-    function _actionConditionsOk(bytes memory _actionPayloadWithSelector)
+    function _actionConditionsOk(
+        address _user,
+        address _userProxy,
+        address _src,
+        uint256 _srcAmt
+    )
         internal
         view
         returns(bool)
     {
-        (, bytes memory payload) = SplitFunctionSelector.split(
-            _actionPayloadWithSelector
-        );
-        (address _user, address _src, uint256 _srcAmt, , ) = abi.decode(
-            payload,
-            (address, address, uint256, address,uint256)
-        );
         IERC20 srcERC20 = IERC20(_src);
         uint256 srcUserBalance = srcERC20.balanceOf(_user);
-        uint256 srcUserProxyAllowance = srcERC20.allowance(
-            _user,
-            address(_getProxyOfUser(_user))
-        );
+        uint256 srcUserProxyAllowance = srcERC20.allowance(_user, _userProxy);
         return (srcUserBalance >= _srcAmt && _srcAmt <= srcUserProxyAllowance);
     }
-
-    // Overriding IGelatoAction state readers (mandatory)
-    function getActionSelector() external pure returns(bytes4) {return this.action.selector;}
-    function getActionConditionsOkGas() external pure returns(uint256) {return actionConditionsOkGas;}
-    function getActionGas() external pure returns(uint256) {return actionGas;}
-    function getActionTotalGas() external pure returns(uint256) {return actionTotalGas;}
 }

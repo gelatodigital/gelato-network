@@ -2,10 +2,8 @@ pragma solidity 0.6.0;
 
 // import "@openzeppelin/contracts/ownership/Ownable.sol";
 
-contract GelatoTriggerActionAdmin/* is Ownable */ {
+abstract contract GelatoTriggerActionAdmin/* is Ownable */ {
 /*
-    // non-deploy base contract
-    constructor() internal {}
 
     address public constant GENESIS = address(0x1);
     address public constant HEAD = address(0x2);

@@ -2,40 +2,37 @@ pragma solidity 0.6.0;
 
 import "./interfaces/IGelatoCoreAccounting.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
-import "@openzeppelin/contracts/ownership/Ownable.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
 /// @title GelatoCoreAccounting
 /// @notice APIs for GelatoCore Owner and executorClaimLifespan
 /// @dev Find all NatSpecs inside IGelatoCoreAccounting
-contract GelatoCoreAccounting is IGelatoCoreAccounting, Ownable {
+abstract contract GelatoCoreAccounting is IGelatoCoreAccounting {
 
     using Address for address payable;  /// for oz's sendValue method
     using SafeMath for uint256;
 
-    // the minimum executionClaimLifespan imposed upon executors
-    uint256 internal minExecutionClaimLifespan = 10 minutes;
-    //_____________ Gelato ExecutionClaim Economics _______________________
-    mapping(address => uint256) internal executorPrice;
-    mapping(address => uint256) internal executorClaimLifespan;
-    mapping(address => uint256) internal executorBalance;
-    //_____________ Gas values for executionClaim cost calculations _______
-    uint256 internal constant gelatoCoreExecGasOverhead = 100000;
-    uint256 internal constant userProxyExecGasOverhead = 40000;
-    uint256 internal constant totalExecutionGasOverhead = gelatoCoreExecGasOverhead + userProxyExecGasOverhead;
+    //_____________ Gelato Executor Economics _______________________
+    mapping(address => uint256) public override executorPrice;
+    mapping(address => uint256) public override executorClaimLifespan;
+    mapping(address => uint256) public override executorBalance;
     // =========================
+    // the minimum executionClaimLifespan imposed upon executors
+    uint256 public constant override minExecutionClaimLifespan = 10 minutes;
+    //_____________ Gas values for executionClaim cost calculations _______
+    uint256 public constant override gelatoCoreExecGasOverhead = 100000;
+    uint256 public constant override userProxyExecGasOverhead = 40000;
+    uint256 public constant override totalExecutionGasOverhead = (
+        gelatoCoreExecGasOverhead + userProxyExecGasOverhead
+    );
 
-    // non-deploy base contract
-    constructor() internal {}
-
-    // ____________ Interface for STATE MUTATIONS ________________________________________
-    //_____________ Interface for Executor _________________________________
     // __ Executor De/Registrations _______
     function registerExecutor(
         uint256 _executorPrice,
         uint256 _executorClaimLifespan
     )
         external
+        override
     {
         require(
             _executorClaimLifespan >= minExecutionClaimLifespan,
@@ -60,16 +57,18 @@ contract GelatoCoreAccounting is IGelatoCoreAccounting, Ownable {
 
     function deregisterExecutor()
         external
+        override
         onlyRegisteredExecutors(msg.sender)
     {
         executorPrice[msg.sender] = 0;
         executorClaimLifespan[msg.sender] = 0;
         emit LogDeregisterExecutor(msg.sender);
     }
-    // ===
 
+    // __ Executor Economics _______
     function setExecutorPrice(uint256 _newExecutorGasPrice)
         external
+        override
     {
         emit LogSetExecutorPrice(executorPrice[msg.sender], _newExecutorGasPrice);
         executorPrice[msg.sender] = _newExecutorGasPrice;
@@ -77,6 +76,7 @@ contract GelatoCoreAccounting is IGelatoCoreAccounting, Ownable {
 
     function setExecutorClaimLifespan(uint256 _newExecutorClaimLifespan)
         external
+        override
     {
         require(
             _newExecutorClaimLifespan >= minExecutionClaimLifespan,
@@ -91,6 +91,7 @@ contract GelatoCoreAccounting is IGelatoCoreAccounting, Ownable {
 
     function withdrawExecutorBalance()
         external
+        override
     {
         // Checks
         uint256 currentExecutorBalance = executorBalance[msg.sender];
@@ -104,72 +105,6 @@ contract GelatoCoreAccounting is IGelatoCoreAccounting, Ownable {
         msg.sender.sendValue(currentExecutorBalance);
         emit LogWithdrawExecutorBalance(msg.sender, currentExecutorBalance);
     }
-    // =========
-
-    //_____________ Interface for GelatoCore Owner ________________________________
-    function setMinExecutionClaimLifespan(uint256 _newMinExecutionClaimLifespan)
-        onlyOwner
-        external
-    {
-        require(
-            _newMinExecutionClaimLifespan >= minExecutionClaimLifespan,
-            "GelatoCoreAccounting.setMinExecutionClaimLifespan: threshold failed"
-        );
-        emit LogSetMinExecutionClaimLifespan(
-            minExecutionClaimLifespan,
-            _newMinExecutionClaimLifespan
-        );
-        minExecutionClaimLifespan = _newMinExecutionClaimLifespan;
-    }
-    /*
-    function setGelatoCoreExecGasOverhead(uint256 _newGasOverhead)
-        onlyOwner
-        external
-    {
-        emit LogSetGelatoCoreExecGasOverhead(gelatoCoreExecGasOverhead, _newGasOverhead);
-        gelatoCoreExecGasOverhead = _newGasOverhead;
-    }
-
-    function setUserProxyExecGasOverhead(uint256 _newGasOverhead)
-        onlyOwner
-        external
-    {
-        emit LogSetUserProxyExecGasOverhead(userProxyExecGasOverhead, _newGasOverhead);
-        userProxyExecGasOverhead = _newGasOverhead;
-    }
-    */
-    // =========
-    // =========================
-
-    // __________ Interface for State Reads ___________________________________
-    function getMinExecutionClaimLifespan() external view returns(uint256) {
-        return minExecutionClaimLifespan;
-    }
-
-    function getExecutorPrice(address _executor) external view returns(uint256) {
-        return executorPrice[_executor];
-    }
-
-    function getExecutorClaimLifespan(address _executor) external view returns(uint256) {
-        return executorClaimLifespan[_executor];
-    }
-
-    function getExecutorBalance(address _executor) external view returns(uint256) {
-        return executorBalance[_executor];
-    }
-
-    function getGelatoCoreExecGasOverhead() external pure returns(uint256) {
-        return gelatoCoreExecGasOverhead;
-    }
-
-    function getUserProxyExecGasOverhead() external pure returns(uint256) {
-        return userProxyExecGasOverhead;
-    }
-
-    function getTotalExecutionGasOverhead() external pure returns(uint256) {
-        return totalExecutionGasOverhead;
-    }
-    // =========================
 
     // _______ APIs for executionClaim pricing ______________________________________
     function getMintingDepositPayable(
@@ -179,11 +114,12 @@ contract GelatoCoreAccounting is IGelatoCoreAccounting, Ownable {
     )
         external
         view
+        override
         onlyRegisteredExecutors(_selectedExecutor)
         returns(uint256 mintingDepositPayable)
     {
-        uint256 triggerGas = _trigger.getTriggerGas();
-        uint256 actionTotalGas = _action.getActionTotalGas();
+        uint256 triggerGas = _trigger.triggerGas();
+        uint256 actionTotalGas = _action.actionTotalGas();
         uint256 executionMinGas = _getMinExecutionGas(triggerGas, actionTotalGas);
         mintingDepositPayable = executionMinGas.mul(executorPrice[_selectedExecutor]);
     }
@@ -191,6 +127,7 @@ contract GelatoCoreAccounting is IGelatoCoreAccounting, Ownable {
     function getMinExecutionGas(uint256 _triggerGas, uint256 _actionTotalGas)
         external
         pure
+        override
         returns(uint256)
     {
         return _getMinExecutionGas(_triggerGas, _actionTotalGas);

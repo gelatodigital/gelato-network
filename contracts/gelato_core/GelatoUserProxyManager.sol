@@ -6,9 +6,7 @@ import "./gas_tests/GelatoGasTestUserProxyManager.sol";
 /// @title GelatoUserProxyManager
 /// @notice registry and factory for GelatoUserProxies
 /// @dev find all NatSpecs inside IGelatoUserProxyManager
-contract GelatoUserProxyManager is IGelatoUserProxyManager, GelatoGasTestUserProxyManager {
-    // non-deploy base contract
-    constructor() internal {}
+abstract contract GelatoUserProxyManager is IGelatoUserProxyManager, GelatoGasTestUserProxyManager {
 
     uint256 internal userCount;
     mapping(address => IGelatoUserProxy) internal userToProxy;
@@ -34,6 +32,7 @@ contract GelatoUserProxyManager is IGelatoUserProxyManager, GelatoGasTestUserPro
 
     function createUserProxy()
         external
+        override
         //userHasNoProxy
         returns(IGelatoUserProxy userProxy)
     {
@@ -47,11 +46,12 @@ contract GelatoUserProxyManager is IGelatoUserProxyManager, GelatoGasTestUserPro
     }
 
     // ______ State Read APIs __________________
-    function getUserCount() external view returns(uint256) {return userCount;}
+    function getUserCount() external view override returns(uint256) {return userCount;}
 
     function getUserOfProxy(IGelatoUserProxy _proxy)
         external
         view
+        override
         returns(address)
     {
         return proxyToUser[address(_proxy)];
@@ -60,6 +60,7 @@ contract GelatoUserProxyManager is IGelatoUserProxyManager, GelatoGasTestUserPro
     function isUser(address _user)
         external
         view
+        override
         returns(bool)
     {
         return _isUser(_user);
@@ -68,6 +69,7 @@ contract GelatoUserProxyManager is IGelatoUserProxyManager, GelatoGasTestUserPro
     function getProxyOfUser(address _user)
         external
         view
+        override
         returns(IGelatoUserProxy)
     {
         return userToProxy[_user];
@@ -76,6 +78,7 @@ contract GelatoUserProxyManager is IGelatoUserProxyManager, GelatoGasTestUserPro
     function isUserProxy(IGelatoUserProxy _userProxy)
         external
         view
+        override
         returns(bool)
     {
         return _isUserProxy(address(_userProxy));
@@ -84,6 +87,7 @@ contract GelatoUserProxyManager is IGelatoUserProxyManager, GelatoGasTestUserPro
     function getUsers()
         external
         view
+        override
         returns(address[] memory)
     {
         return users;
@@ -92,6 +96,7 @@ contract GelatoUserProxyManager is IGelatoUserProxyManager, GelatoGasTestUserPro
     function getUserProxies()
         external
         view
+        override
         returns(IGelatoUserProxy[] memory)
     {
         return userProxies;

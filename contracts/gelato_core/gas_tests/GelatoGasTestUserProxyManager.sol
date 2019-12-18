@@ -3,9 +3,7 @@ pragma solidity 0.6.0;
 import "../interfaces/IGelatoGasTestUserProxyManager.sol";
 import "./GelatoGasTestUserProxy.sol";
 
-contract GelatoGasTestUserProxyManager is IGelatoGasTestUserProxyManager {
-    // non-deploy base contract
-    constructor() internal {}
+abstract contract GelatoGasTestUserProxyManager is IGelatoGasTestUserProxyManager {
 
     mapping(address => address) internal userToGasTestProxy;
     mapping(address => address) internal gasTestProxyToUser;
@@ -17,6 +15,7 @@ contract GelatoGasTestUserProxyManager is IGelatoGasTestUserProxyManager {
 
     function createGasTestUserProxy()
         external
+        override
         returns(address gasTestUserProxy)
     {
         gasTestUserProxy = address(new GelatoGasTestUserProxy(msg.sender));
@@ -27,6 +26,7 @@ contract GelatoGasTestUserProxyManager is IGelatoGasTestUserProxyManager {
     function getUserOfGasTestProxy(address _gasTestProxy)
         external
         view
+        override
         returns(address)
     {
         return gasTestProxyToUser[_gasTestProxy];
@@ -35,6 +35,7 @@ contract GelatoGasTestUserProxyManager is IGelatoGasTestUserProxyManager {
     function getGasTestProxyOfUser(address _user)
         external
         view
+        override
         returns(address)
     {
         return userToGasTestProxy[_user];

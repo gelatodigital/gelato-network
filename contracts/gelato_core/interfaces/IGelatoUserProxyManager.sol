@@ -22,17 +22,4 @@ interface IGelatoUserProxyManager {
     function getUsers() external view returns(address[] memory);
     function getUserProxies() external view returns(IGelatoUserProxy[] memory);
     // =========================
-
-    // ============= GELATO_GAS_TEST_USER_PROXY_MANAGER ==============================
-    function createGasTestUserProxy() external returns(address gasTestUserProxy);
-
-    function getUserOfGasTestProxy(address _gasTestProxy)
-        external
-        view
-        returns(address);
-
-    function getGasTestProxyOfUser(address _user)
-        external
-        view
-        returns(address);
 }

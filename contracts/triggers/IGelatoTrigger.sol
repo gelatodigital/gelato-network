@@ -4,7 +4,7 @@ pragma solidity 0.6.0;
 /// @notice all the APIs of GelatoTriggersStandard
 /// @dev all the APIs are implemented inside GelatoTriggersStandard
 interface IGelatoTrigger {
+    function triggerSelector() external pure returns(bytes4);
+    function triggerGas() external pure returns(uint256);
     function getTriggerValue() external view returns(uint256);
-    function getTriggerSelector() external pure returns(bytes4);
-    function getTriggerGas() external pure returns(uint256);
 }

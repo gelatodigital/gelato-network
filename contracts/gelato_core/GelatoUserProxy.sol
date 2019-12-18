@@ -47,6 +47,8 @@ contract GelatoUserProxy is IGelatoUserProxy {
     )
         external
         payable
+        override
+        virtual
         onlyUser
         noZeroAddress(_action)
         returns(bool success, bytes memory returndata)
@@ -63,6 +65,8 @@ contract GelatoUserProxy is IGelatoUserProxy {
     )
         external
         payable
+        override
+        virtual
         auth
         noZeroAddress(address(_action))
         returns(bool success, bytes memory returndata)
@@ -74,7 +78,7 @@ contract GelatoUserProxy is IGelatoUserProxy {
         require(success, "GelatoUserProxy.executeDelegatecall(): _action.delegatecall failed");
     }
 
-    function getUser() external view returns(address) {return user;}
+    function getUser() external view override returns(address) {return user;}
 
-    function getGelatoCore() external view returns(address) {return gelatoCore;}
+    function getGelatoCore() external view override returns(address) {return gelatoCore;}
 }
