@@ -29,11 +29,21 @@ interface IGelatoCore {
         GelatoCoreEnums.CanExecuteCheck indexed canExecuteResult
     );
 
-    event LogClaimExecutedAndDeleted(
-        address indexed executor,
+    event LogSuccessfulExecution(
+        address executor,
         uint256 indexed executionClaimId,
-        GelatoCoreEnums.ExecutionResult indexed executionResult,
+        address indexed trigger,
+        address indexed action,
         uint256 gasPriceUsed,
+        uint256 executionCostEstimate,
+        uint256 executorPayout
+    );
+
+    event LogExecutionFailure(
+        address executor,
+        uint256 indexed executionClaimId,
+        address indexed trigger,
+        address indexed action,
         uint256 executionCostEstimate,
         uint256 executorPayout
     );

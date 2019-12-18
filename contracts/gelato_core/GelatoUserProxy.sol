@@ -74,7 +74,7 @@ contract GelatoUserProxy is IGelatoUserProxy {
         (success, returndata) = address(_action).delegatecall.gas(_actionGas)(
             _actionPayloadWithSelector
         );
-        ///@dev we should delete require later - leave it for testing action executionClaimIds
+        // we should delete require later - leave it for testing action executionClaimIds
         require(success, "GelatoUserProxy.executeDelegatecall(): _action.delegatecall failed");
     }
 

@@ -31,7 +31,7 @@ contract ActionMultiMintForTriggerTimestampPassed is GelatoActionsStandard {
         // multi mint delegatecall requirement
         address _gelatoCore,
         // gelatoCore.mintExecutionClaim params
-        address payable _selectedExecutor,
+        address _selectedExecutor,
         IGelatoTrigger _triggerTimestampPassed,
         uint256 _startTime,  // will be encoded here
         IGelatoAction _action,

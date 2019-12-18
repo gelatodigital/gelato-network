@@ -20,6 +20,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
     mapping(uint256 => IGelatoUserProxy) public override userProxyWithExecutionClaimId;
     // executionClaimId => bytes32 executionClaimHash
     mapping(uint256 => bytes32) public override executionClaimHash;
+    //
 
     // ================  MINTING ==============================================
     function mintExecutionClaim(
@@ -344,25 +345,6 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
 
 
     // ================  EXECUTE IMPLEMENTATION ======================================
-    function _executeActionViaUserProxy(
-        IGelatoUserProxy _userProxy,
-        IGelatoAction _action,
-        bytes memory _actionPayloadWithSelector,
-        uint256 _actionGas
-    )
-        private
-        returns (bool success)
-    {
-        bytes memory userProxyExecPayloadWithSelector = abi.encodeWithSelector(
-            _userProxy.executeDelegatecall.selector,
-            _action,
-            _actionPayloadWithSelector,
-            _actionGas
-        );
-        (success,) = address(_userProxy).call(userProxyExecPayloadWithSelector);
-    }
-
-
     function _execute(
         uint256 _executionClaimId,
         IGelatoUserProxy _userProxy,
@@ -375,7 +357,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         uint256 _mintingDeposit
     )
         private
-        returns(GelatoCoreEnums.ExecutionResult executionResult)
+        returns(GelatoCoreEnums.ExecutionResult)
     {
         uint256 startGas = gasleft();
         require(
@@ -421,28 +403,42 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         delete userProxyWithExecutionClaimId[_executionClaimId];
 
         // INTERACTIONS
-        bool success = _executeActionViaUserProxy(
-            _userProxy,
+        try _userProxy.executeDelegatecall(
             _action,
             _actionPayloadWithSelector,
-            actionGas
-        );
-        if (success) executionResult = GelatoCoreEnums.ExecutionResult.Success;
-        // if execution fails, no revert, and executor still rewarded
-        // solhint-disable-next-line indent
-        else executionResult = GelatoCoreEnums.ExecutionResult.Failure;
-
-        executorBalance[msg.sender] = executorBalance[msg.sender].add(_mintingDeposit);
-
-        emit LogClaimExecutedAndDeleted(
-            msg.sender,  // executor
-            _executionClaimId,
-            executionResult,
-            tx.gasprice,
-            // ExecutionCost Estimate: ignore fn call overhead, due to delete gas refunds
-            gasleft().sub(startGas).mul(tx.gasprice),
-            _mintingDeposit  // executorReward
-        );
+            _actionGas
+        ) {
+            // Success
+            executionResult = GelatoCoreEnums.ExecutionResult.Success;
+            executorBalance[msg.sender] = executorBalance[msg.sender].add(_mintingDeposit);
+            emit LogSuccessfulExecution(
+                msg.sender,  // executor
+                _executionClaimId,
+                _trigger,
+            )
+                tx.gasprice,
+                // ExecutionCost Estimate: ignore fn call overhead, due to delete gas refunds
+                gasleft().sub(startGas).mul(tx.gasprice),
+                _mintingDeposit  // executorReward
+            );
+            return GelatoCoreEnums.ExecutionResult.Success
+        } catch {
+            // Reverted
+            executionResult = GelatoCoreEnums.ExecutionResult.Failure;
+            uint256 executionCostEstimate = gasleft().sub(startGas).mul(tx.gasprice);
+            executorBalance[msg.sender] = exectuorBalance[msg.sender].add(
+                executionCostEstimate
+            );
+            emit LogExecutionFailure(
+                msg.sender,  // executor
+                _executionClaimId,
+                tx.gasprice,
+                // ExecutionCost Estimate: ignore fn call overhead, due to delete gas refunds
+                gasleft().sub(startGas).mul(tx.gasprice),
+                _mintingDeposit  // executorReward
+            )
+            return Gelato
+        }
     }
 
     // ================ EXECUTION CLAIM HASHING ========================================
