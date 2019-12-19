@@ -107,7 +107,7 @@ interface IGelatoCore {
         uint256 _mintingDeposit
     )
         external
-        returns(GelatoCoreEnums.ExecutionResult executionResult);
+        returns(GelatoCoreEnums.ExecutionResult executionResult, uint8 errorCode);
 
     /**
      * @dev API for canceling executionClaims
@@ -164,7 +164,7 @@ interface IGelatoCore {
     )
         external
         view
-        returns(uint256);
+        returns(GelatoCoreEnums.TriggerCheck);
 
     function revertLogGasActionConditionsCheck(
         IGelatoAction _action,
@@ -173,7 +173,7 @@ interface IGelatoCore {
     )
         external
         view
-        returns(uint256);
+        returns(GelatoCoreEnums.ActionConditionsCheck);
 
     function revertLogGasCanExecute(
         uint256 _executionClaimId,
@@ -189,7 +189,7 @@ interface IGelatoCore {
     )
         external
         view
-        returns(uint256);
+        returns(GelatoCoreEnums.CanExecuteCheck);
 
     function revertLogGasActionViaGasTestUserProxy(
         IGelatoUserProxy _gasTestUserProxy,
@@ -198,7 +198,7 @@ interface IGelatoCore {
         uint256 _actionGas
     )
         external
-        returns(uint256);
+        returns(GelatoCoreEnums.ExecutionResult, uint8 errorCode);
 
     function revertLogGasTestUserProxyExecute(
         IGelatoUserProxy _userProxy,
@@ -207,7 +207,7 @@ interface IGelatoCore {
         uint256 _actionGas
     )
         external
-        returns(uint256);
+        returns(GelatoCoreEnums.ExecutionResult executionResult, uint8 errorCode);
 
     function revertLogGasExecute(
         uint256 _executionClaimId,
@@ -221,5 +221,5 @@ interface IGelatoCore {
         uint256 _mintingDeposit
     )
         external
-        returns(uint256);
+        returns(GelatoCoreEnums.ExecutionResult executionResult, uint8 errorCode);
 }

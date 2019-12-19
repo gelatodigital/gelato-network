@@ -4,7 +4,7 @@ abstract contract GelatoCoreEnums {
     enum ExecutionResult {
         Success,
         CanExecuteFailed,
-        ActionGasFailure,
+        DefinedActionFailure,
         UndefinedActionFailure,
         DappFailure,
         UserProxyFailure,
