@@ -3,9 +3,10 @@ pragma solidity ^0.6.0;
 import "../GelatoActionsStandard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import "../../helpers/SplitFunctionSelector.sol";
 import "../../dapp_interfaces/kyber_interfaces/IKyber.sol";
 
-contract ActionKyberTrade is GelatoActionsStandard {
+contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
     using SafeERC20 for IERC20;
 
     // actionSelector public state variable np due to this.actionSelector constant issue
@@ -27,14 +28,6 @@ contract ActionKyberTrade is GelatoActionsStandard {
         address feeSharingParticipant
     );
 
-    modifier actionGasCheck override {
-        require(
-            gasleft() >= actionGas,
-            "ActionKyberTrade.actionGasCheck: failed"
-        );
-        _;
-    }
-
     function action(
         // Standard Action Params
         address _user,
@@ -46,7 +39,6 @@ contract ActionKyberTrade is GelatoActionsStandard {
         uint256 _minConversionRate
     )
         external
-        actionGasCheck
         returns (uint256 destAmt)
     {
         // !!!!!!!!! ROPSTEN !!!!!!
@@ -77,25 +69,28 @@ contract ActionKyberTrade is GelatoActionsStandard {
         );
     }
 
+    // Overriding and extending GelatoActionsStandard's function (optional)
     function actionConditionsOk(bytes calldata _actionPayloadWithSelector)
         external
         view
         override
         returns(bool)
     {
-        bytes4 selector = abi.decode(_actionPayloadWithSelector[:4], (bytes4));
+        return _actionConditionsOk(_actionPayloadWithSelector);
     }
 
-    function _actionConditionsOk(
-        address _user,
-        address _userProxy,
-        address _src,
-        uint256 _srcAmt
-    )
+    function _actionConditionsOk(bytes memory _actionPayloadWithSelector)
         internal
         view
         returns(bool)
     {
+        (, bytes memory payload) = SplitFunctionSelector.split(
+            _actionPayloadWithSelector
+        );
+        (address _user, address _userProxy, address _src, uint256 _srcAmt, , ) = abi.decode(
+            payload,
+            (address, address, address, uint256, address,uint256)
+        );
         IERC20 srcERC20 = IERC20(_src);
         uint256 srcUserBalance = srcERC20.balanceOf(_user);
         uint256 srcUserProxyAllowance = srcERC20.allowance(_user, _userProxy);
