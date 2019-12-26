@@ -33,7 +33,7 @@ export default internalTask(
 
         if (networkname) await run("checkNetworkName", { networkname });
 
-        if (addressbook) {
+        if (addressbook || addressbookcategory || addressbookentry) {
           if (addressbookentry && !addressbookcategory)
             throw new Error(
               "Must supply --addressbookcategory for --addressbookentry"

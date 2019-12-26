@@ -18,7 +18,7 @@ export default (
       inputs: [
         { type: "address", name: "_gelatoCore" },
         { type: "address", name: "_selectedExecutor" },
-        { type: "address", name: "_timeTrigger" },
+        { type: "address", name: "_triggerTimestampPassed" },
         { type: "uint256", name: "_startTime" },
         { type: "address", name: "_action" },
         { type: "bytes", name: "_actionPayloadWithSelector" },

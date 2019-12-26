@@ -47,6 +47,9 @@ module.exports = {
           WETH: "0xbca556c912754bc8e7d4aad20ad69a1b1444f42d",
           "0xbca556c912754bc8e7d4aad20ad69a1b1444f42d": "WETH"
         },
+        kyber: {
+          proxy: "0x818E6FECD516Ecc3849DAf6845e3EC868087B755"
+        },
         userProxy: {
           luis: "0x29d90FEda2d9CD3735ce6d5E905a844A338500FF"
         }
@@ -128,7 +131,7 @@ require("./scripts/buidler_tasks/ethers/collection.tasks.ethers");
 
 // ============= GELATO ===============================================================
 // _____ ACTIONS ______________________
-//require("./scripts/buidler_tasks/gelato/actions/collection.tasks.actions");
+require("./scripts/buidler_tasks/gelato/actions/collection.tasks.actions");
 // _____ CORE ______________________
 // UserProxyManager
 require("./scripts/buidler_tasks/gelato/core/user_proxy_manager/collection.tasks.userProxyManager");

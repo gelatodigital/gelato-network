@@ -48,7 +48,14 @@ export default task("bre-config", "Return (or --log) BRE.config properties")
 
         if (defaultnetwork) optionalReturnValues.push(config.defaultNetwork);
 
-        if (addressbook || contracts || deployments || networks) {
+        if (
+          addressbook ||
+          addressbookcategory ||
+          addressbookentry ||
+          contracts ||
+          deployments ||
+          networks
+        ) {
           const networkInfo = await run("bre-config:networks", {
             addressbook,
             addressbookcategory,
