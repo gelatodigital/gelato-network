@@ -14,11 +14,11 @@ export default task("bre-config", "Return (or --log) BRE.config properties")
     "contracts",
     "Use with --networks for a list of contracts available for deployment on --networkname"
   )
-  .addOptionalParam("contractname")
+  .addOptionalParam("contractname", "Use with [--networks] --deployments")
   .addFlag("defaultnetwork", "Config of default network")
   .addFlag(
     "deployments",
-    "Use with --networks for an address book of deployed contract instances on --networkname"
+    "Use [with --networks] for an address book of deployed contract instances on [--networkname]"
   )
   .addFlag("log", "Logs return values to stdout")
   .addFlag("networks", "Config of networks")

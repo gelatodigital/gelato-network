@@ -46,6 +46,9 @@ module.exports = {
           "0x4e470dc7321e84ca96fcaedd0c8abcebbaeb68c6": "KNC",
           WETH: "0xbca556c912754bc8e7d4aad20ad69a1b1444f42d",
           "0xbca556c912754bc8e7d4aad20ad69a1b1444f42d": "WETH"
+        },
+        userProxy: {
+          luis: "0x29d90FEda2d9CD3735ce6d5E905a844A338500FF"
         }
       },
       contracts: [
