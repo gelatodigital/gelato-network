@@ -57,7 +57,7 @@ export default task(
 
       if (taskArgs.log)
         console.log(
-          `\nDeployment-Tx Hash:${contract.deployTransaction.hash}\n`
+          `\nDeployment-Tx Hash: ${contract.deployTransaction.hash}\n`
         );
 
       await contract.deployed();

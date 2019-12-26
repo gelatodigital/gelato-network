@@ -55,11 +55,11 @@ module.exports = {
         "TriggerTimestampPassed"
       ],
       deployments: {
-        ActionKyberTrade: "0x7dAFBd01803e298F9e19734Fa7Af3dA10585554e",
-        ActionMultiMintForTimeTrigger:
-          "0xb1FA1BCdb245326d8f6413925Cf338FCEbda5db9",
-        GelatoCore: "0x43c7a05290797a25B2E3D4fDE7c504333EbE2428",
-        TriggerTimestampPassed: "0x45664969e60Bdde9Fb658B85a9808b572B2dD5E6"
+        ActionKyberTrade: "0x30378131D73f28Aa274c3cdfe15e3e85AfA8020B",
+        ActionMultiMintForTriggerTimestampPassed:
+          "0x195B1890534AB2a416f26A702a7f98048218c20E",
+        GelatoCore: "0x3Fbd854d10A721b910339C25E41F3C417c2fB2BA",
+        TriggerTimestampPassed: "0xc4C66f774Bf5066bF288D6338B2A4Ce0dC66a60C"
       }
     }
   },
