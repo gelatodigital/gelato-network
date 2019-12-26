@@ -14,6 +14,7 @@ export default task("bre-config", "Return (or --log) BRE.config properties")
     "contracts",
     "Use with --networks for a list of contracts available for deployment on --networkname"
   )
+  .addOptionalParam("contractname")
   .addFlag("defaultnetwork", "Config of default network")
   .addFlag(
     "deployments",
@@ -33,6 +34,7 @@ export default task("bre-config", "Return (or --log) BRE.config properties")
       addressbookcategory,
       addressbookentry,
       contracts,
+      contractname,
       defaultnetwork,
       deployments,
       log,
@@ -52,6 +54,7 @@ export default task("bre-config", "Return (or --log) BRE.config properties")
             addressbookcategory,
             addressbookentry,
             contracts,
+            contractname,
             deployments,
             networkname
           });

@@ -120,12 +120,15 @@ task("eth-price", "Logs the etherscan ether-USD price", async () => {
   }
 });
 
-
-
 // ============== ETHERS ==============================================================
 require("./scripts/buidler_tasks/ethers/collection.tasks.ethers");
 
-
+// ============= GELATO ===============================================================
+// _____ ACTIONS ______________________
+//require("./scripts/buidler_tasks/gelato/actions/collection.tasks.actions");
+// _____ CORE ______________________
+// UserProxyManager
+require("./scripts/buidler_tasks/gelato/core/user_proxy_manager/collection.tasks.userProxyManager");
 
 // ============== INTERNAL HELPER TASKS ================================================
 require("./scripts/buidler_tasks/internal/internalTaskCollection");

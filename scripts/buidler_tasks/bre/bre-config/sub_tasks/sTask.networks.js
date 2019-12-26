@@ -12,6 +12,7 @@ export default internalTask(
     "contracts",
     "Return a list of contract names available for deployment"
   )
+  .addOptionalParam("contractname")
   .addFlag("deployments", "Return a list of deployed contract instances")
   .addOptionalParam(
     "networkname",
@@ -23,6 +24,7 @@ export default internalTask(
       addressbookcategory,
       addressbookentry,
       contracts,
+      contractname,
       deployments,
       networkname
     }) => {
@@ -53,6 +55,7 @@ export default internalTask(
 
         if (deployments) {
           const deploymentsInfo = await run("bre-config:networks:deployments", {
+            contractname,
             networkname
           });
           returnValues.push(deploymentsInfo);
