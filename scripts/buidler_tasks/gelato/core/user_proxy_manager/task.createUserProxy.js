@@ -16,17 +16,17 @@ export default task(
         deployments: true,
         contractname: "GelatoCore"
       });
-      const gelatoCoreABI = [
+      const gelatoCoreUserProxyManagerABI = [
         "function createUserProxy() external returns(address)"
       ];
       const gelatoCoreContract = new Contract(
         gelatoCoreAdddress,
-        gelatoCoreABI,
+        gelatoCoreUserProxyManagerABI,
         signer
       );
       const tx = await gelatoCoreContract.createUserProxy();
-      await tx.wait();
       if (log) console.log(`\n\ntxHash createUserProxy: ${tx.hash}`);
+      await tx.wait();
       return tx.hash;
     } catch (error) {
       console.error(error);

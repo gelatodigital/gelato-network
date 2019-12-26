@@ -17,15 +17,6 @@ contract ActionMultiMintForTriggerTimestampPassed is GelatoActionsStandard {
     uint256 public constant override actionGas = 1000000;
     uint256 public constant override actionTotalGas = actionConditionsOkGas + actionGas;
 
-    // Overriding GelatoActionsStandard modifier (mandatory)
-    modifier actionGasCheck override {
-        require(
-            gasleft() >= actionGas,
-            "ActionMultiMintForTriggerTimestampPassed.actionGasCheck: failed"
-        );
-        _;
-    }
-
     // Caution when using storage in delegatecall
     function action(
         // multi mint delegatecall requirement
@@ -42,7 +33,6 @@ contract ActionMultiMintForTriggerTimestampPassed is GelatoActionsStandard {
     )
         external
         payable
-        actionGasCheck
     {
         uint256 mintingDepositPerMint = IGelatoCoreAccounting(
             _gelatoCore

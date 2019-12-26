@@ -4,10 +4,10 @@ import { defaultNetwork } from "../../../../../../buidler.config";
 import sleep from "../../../../../helpers/async/sleep";
 
 // Javascript Ethereum API Library
-import { providers, Contract, utils, ethers } from "ethers";
+import { Contract, utils } from "ethers";
 
 // ABI encoding function
-import encodeActionKyberTradePayloadWithSelector from "../../kyber/trade/abiEncdodeWithSelector";
+import encodeActionKyberTradePayloadWithSelector from "../../kyber/trade/abiEncodeWithSelector";
 import encodeMultiMintPayloadWithSelector from "./abiEncodeWithSelector";
 
 export default task(
@@ -28,7 +28,7 @@ export default task(
         TriggerTimestampPassed: triggerTimestampPassedAddress
       } = await run("bre-config", { deployments: true });
 
-      const { DAI: src, KNC: dest } = await run("bre-config", {
+      const { KNC: src, DAI: dest } = await run("bre-config", {
         addressbookcategory: "erc20"
       });
 
@@ -63,8 +63,7 @@ export default task(
       ];
       const kyberContract = new Contract(kyberProxyAddress, kyberABI, provider);
       // Fetch the slippage rate from KyberNetwork and assign it to minConversionRate
-      let minConversionRate;
-      [_, minConversionRate] = await kyberContract.getExpectedRate(
+      const [_, minConversionRate] = await kyberContract.getExpectedRate(
         src,
         dest,
         SRC_AMOUNT
@@ -76,6 +75,8 @@ export default task(
             18
           )}\n`
         );
+
+      const userProxyAddress = await run("gelato-core-getproxyofuser");
 
       // Encode the specific params for ActionKyberTrade
       const ACTION_KYBER_TRADE_PAYLOAD_WITH_SELECTOR = encodeActionKyberTradePayloadWithSelector(
@@ -104,12 +105,11 @@ export default task(
       );
       if (log)
         console.log(
-          `\nEncoded Payload With Selector for ActionMultiMintForTriggerTimestampPassed:\n ${ACTION_MULTI_MINT_PAYLOAD_WITH_SELECTOR}\n`
+          `\nActionMultiMintForTriggerTimestampPassed payload with selector:\n ${ACTION_MULTI_MINT_PAYLOAD_WITH_SELECTOR}\n`
         );
 
       // Getting the current Ethereum price
-      const etherscanProvider = new providers.EtherscanProvider();
-      const ethUSDPrice = await etherscanProvider.getEtherPrice();
+      const ethUSDPrice = await run("eth-price");
       if (log) console.log(`\nETH-USD: ${ethUSDPrice} $`);
 
       // ReadInstance of GelatoCore
@@ -123,6 +123,7 @@ export default task(
       );
       const MINTING_DEPOSIT_PER_MINT = await gelatoCoreContract.getMintingDepositPayable(
         SELECTED_EXECUTOR_ADDRESS,
+        triggerTimestampPassedAddress,
         actionKyberTradeAddress
       );
       if (log)
@@ -147,7 +148,7 @@ export default task(
       // send tx to PAYABLE contract method
       // Read-Write Instance of UserProxy
       const userProxyABI = [
-        "function executeDelegatecall(address _action, bytes calldata _actionPayloadWithSelector, uint256 _actionGas) external payable returns(bool success, bytes memory returndata)"
+        "function executeDelegatecall(address _action, bytes _actionPayloadWithSelector, uint256 _actionGas) external payable returns(bool success, bytes returndata)"
       ];
       const userProxyContract = new Contract(
         userProxyAddress,
@@ -157,7 +158,7 @@ export default task(
       const tx = await userProxyContract.executeDelegatecall(
         actionMultiMintTimeTriggerAddress,
         ACTION_MULTI_MINT_PAYLOAD_WITH_SELECTOR,
-        "1000000", // _actionGas
+        "4000000", // _actionGas
         {
           value: MSG_VALUE,
           gasLimit: 2000000
@@ -185,7 +186,7 @@ export default task(
         erc20address: src,
         approve: true,
         spender: userProxyAddress,
-        amount: SRC_AMOUNT
+        amount: utils.bigNumberify(2000000000000000000)
       });
 
       return txReceipt;

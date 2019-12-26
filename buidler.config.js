@@ -61,9 +61,9 @@ module.exports = {
         "TriggerTimestampPassed"
       ],
       deployments: {
-        ActionKyberTrade: "0x30378131D73f28Aa274c3cdfe15e3e85AfA8020B",
+        ActionKyberTrade: "0x042dA3A3E47eFb3426AB95fCF90C3f45a50AD664",
         ActionMultiMintForTriggerTimestampPassed:
-          "0x195B1890534AB2a416f26A702a7f98048218c20E",
+          "0x44F0B2F9a60cD5eEEF9917afA4DB954391fb3482",
         GelatoCore: "0x3Fbd854d10A721b910339C25E41F3C417c2fB2BA",
         TriggerTimestampPassed: "0xc4C66f774Bf5066bF288D6338B2A4Ce0dC66a60C"
       }
@@ -133,6 +133,8 @@ require("./scripts/buidler_tasks/ethers/collection.tasks.ethers");
 // _____ ACTIONS ______________________
 require("./scripts/buidler_tasks/gelato/actions/collection.tasks.actions");
 // _____ CORE ______________________
+// Accounting
+require("./scripts/buidler_tasks/gelato/core/accounting/collection.tasks.accounting");
 // UserProxyManager
 require("./scripts/buidler_tasks/gelato/core/user_proxy_manager/collection.tasks.userProxyManager");
 

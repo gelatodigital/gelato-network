@@ -7,7 +7,7 @@ import "../../helpers/SplitFunctionSelector.sol";
 import "../../dapp_interfaces/kyber_interfaces/IKyber.sol";
 
 contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
-    using SafeERC20 for IERC20;
+    // using SafeERC20 for IERC20;
 
     // actionSelector public state variable np due to this.actionSelector constant issue
     function actionSelector() external pure override returns(bytes4) {
@@ -45,8 +45,8 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
         address kyberAddress = 0x818E6FECD516Ecc3849DAf6845e3EC868087B755;
         {
             IERC20 srcERC20 = IERC20(_src);
-            srcERC20.safeTransferFrom(_user, address(this), _srcAmt);
-            srcERC20.safeIncreaseAllowance(kyberAddress, _srcAmt);
+            srcERC20.transferFrom(_user, address(this), _srcAmt);
+            srcERC20.approve(kyberAddress, _srcAmt);
         }
         destAmt = IKyber(kyberAddress).trade(
             _src,
