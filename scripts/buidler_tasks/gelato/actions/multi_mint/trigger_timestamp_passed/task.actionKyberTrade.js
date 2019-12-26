@@ -28,7 +28,7 @@ export default task(
         TriggerTimestampPassed: triggerTimestampPassedAddress
       } = await run("bre-config", { deployments: true });
 
-      const { DAI: src, KNC: dest } = await run("bre-config", {
+      const { KNC: src, MANA: dest } = await run("bre-config", {
         addressbookcategory: "erc20"
       });
 
@@ -171,22 +171,11 @@ export default task(
       if (log) console.log("\n\t\t waiting for transaction to get mined \n");
       const txReceipt = await tx.wait();
 
-      const srcSymbol = await run("bre-config", {
-        addressbookcategory: "erc20",
-        addressbookentry: src
-      });
-      console.log(
-        `\nApproving userProxy: ${userProxyAddress} for ${utils.formatUnits(
-          SRC_AMOUNT,
-          3
-        )}  ${srcSymbol}\n`
-      );
-
       await run("erc20", {
         erc20address: src,
         approve: true,
         spender: userProxyAddress,
-        amount: 2000000000000000000
+        amount: 20000000000000000000
       });
 
       return txReceipt;

@@ -44,6 +44,8 @@ module.exports = {
           "0xad6d458402f60fd3bd25163575031acdce07538d": "DAI",
           KNC: "0x4e470dc7321e84ca96fcaedd0c8abcebbaeb68c6",
           "0x4e470dc7321e84ca96fcaedd0c8abcebbaeb68c6": "KNC",
+          MANA: "0x72fd6C7C1397040A66F33C2ecC83A0F71Ee46D5c",
+          "0x72fd6C7C1397040A66F33C2ecC83A0F71Ee46D5c": "MANA",
           WETH: "0xbca556c912754bc8e7d4aad20ad69a1b1444f42d",
           "0xbca556c912754bc8e7d4aad20ad69a1b1444f42d": "WETH"
         },
