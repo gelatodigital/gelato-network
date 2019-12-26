@@ -28,7 +28,7 @@ export default task(
         TriggerTimestampPassed: triggerTimestampPassedAddress
       } = await run("bre-config", { deployments: true });
 
-      const { KNC: src, DAI: dest } = await run("bre-config", {
+      const { DAI: src, KNC: dest } = await run("bre-config", {
         addressbookcategory: "erc20"
       });
 
@@ -186,7 +186,7 @@ export default task(
         erc20address: src,
         approve: true,
         spender: userProxyAddress,
-        amount: utils.bigNumberify(2000000000000000000)
+        amount: 2000000000000000000
       });
 
       return txReceipt;

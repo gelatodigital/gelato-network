@@ -21,6 +21,7 @@ export default task(
     try {
       // Default for now to avoid accidentally losing addresses during deployment
       taskArgs.log = true;
+      taskArgs.compile = true;
 
       const { contractname } = taskArgs;
       const networkName = network.name;
