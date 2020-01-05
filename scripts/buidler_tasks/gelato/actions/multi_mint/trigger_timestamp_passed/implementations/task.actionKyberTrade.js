@@ -1,14 +1,14 @@
 // Buidler config
 import { task } from "@nomiclabs/buidler/config";
-import { defaultNetwork } from "../../../../../../buidler.config";
-import sleep from "../../../../../helpers/async/sleep";
+import { defaultNetwork } from "../../../../../../../buidler.config";
+import sleep from "../../../../../../helpers/async/sleep";
 
 // Javascript Ethereum API Library
 import { Contract, utils } from "ethers";
 
 // ABI encoding function
-import encodeActionKyberTradePayloadWithSelector from "../../kyber/trade/abiEncodeWithSelector";
-import encodeMultiMintPayloadWithSelector from "./abiEncodeWithSelector";
+import encodeActionKyberTradePayloadWithSelector from "../../../kyber/trade/abiEncodeWithSelector";
+import encodeMultiMintPayloadWithSelector from "../abiEncodeWithSelector";
 
 export default task(
   "gelato-action-multimint",

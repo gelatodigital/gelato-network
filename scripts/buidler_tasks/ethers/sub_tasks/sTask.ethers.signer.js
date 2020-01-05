@@ -9,11 +9,11 @@ export default internalTask(
   .addOptionalParam("block", "Block height to check for signer's balance")
   .setAction(async ({ address, ethbalance, block }) => {
     try {
-      const returnValues = {};
+      const returnValues = [];
 
       const [signer] = await ethers.signers();
 
-      if (address) returnValues.signerAddress = signer._address;
+      if (address) returnValues.push(signer._address);
 
       if (ethbalance) {
         let balance;
@@ -23,11 +23,11 @@ export default internalTask(
         } else {
           balance = await signer.getBalance();
         }
-        returnValues.signerBalance = balance;
+        returnValues.push(balance);
       }
 
-      if (Object.keys(returnValues).length == 0) return signer;
-      if (Object.keys(returnValues).length == 1) return returnValues[0];
+      if (returnValues.length == 0) return signer;
+      else if (returnValues.length == 1) return returnValues[0];
       else return returnValues;
     } catch (error) {
       console.error(error);

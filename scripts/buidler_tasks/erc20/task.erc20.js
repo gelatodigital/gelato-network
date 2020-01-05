@@ -19,6 +19,7 @@ export default task(
     "approve",
     "Send tx to <erc20address> to approve <spender> for <amount> and return (or --log) tx hash"
   )
+  .addFlag("balance", "Return (or --log) <erc20address> balance of --owner")
   .addFlag("log", "Logs return values to stdout")
   .addOptionalParam("owner", "Address: use with (--allowance & --spender)")
   .addOptionalParam(
@@ -29,13 +30,17 @@ export default task(
     async ({
       erc20address,
       allowance,
+      balance,
       amount,
       approve,
       log,
       owner,
       spender
     }) => {
-      assert(approve || allowance, "Use erc20 with --approve or --allowance");
+      assert(
+        approve || allowance || balance,
+        "Use erc20 with --approve or --allowance"
+      );
 
       const returnValues = [];
 
@@ -45,22 +50,24 @@ export default task(
         entry: erc20address
       });
 
+      const erc20Symbol = await run("bre-config", {
+        addressbookcategory: "erc20",
+        addressbookentry: erc20address
+      });
+
+      if (!owner) owner = await run("ethers", { signer: true, address: true });
+
       if (approve) {
         const txHash = await run("erc20:approve", {
           erc20address,
           spender,
           amount
         });
-        if (log) {
-          const ERC20 = await run("bre-config", {
-            addressbookcategory: "erc20",
-            addressbookentry: erc20address
-          });
+        if (log)
           console.log(
-            `\n Approved spender: ${spender} for ${amount / 10 ** 18} ${ERC20}`
+            `\nApproved spender: ${spender} for ${amount /
+              10 ** 18} ${erc20Symbol}\napprove-txHash: ${txHash}\n`
           );
-          console.log(`\napprove-txHash: ${txHash}\n`);
-        }
         returnValues.push({ approveTxHash: txHash });
       }
 
@@ -70,7 +77,23 @@ export default task(
           owner,
           spender
         });
-        if (log) console.log(`\nallowance: ${value}\n`);
+        if (log)
+          console.log(
+            `\nAllowance of\nspender:  ${spender}\nby owner: ${owner}\n${value /
+              10 ** 18} ${erc20Symbol}\n`
+          );
+        returnValues.push(value);
+      }
+
+      if (balance) {
+        const value = await run("erc20:balance", {
+          erc20address,
+          owner
+        });
+        if (log)
+          console.log(
+            `\nBalance of owner: ${owner}\n${value / 10 ** 18} ${erc20Symbol}\n`
+          );
         returnValues.push(value);
       }
 

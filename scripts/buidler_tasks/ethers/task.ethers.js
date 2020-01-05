@@ -49,8 +49,8 @@ export default task(
             block
           });
           if (log && ethbalance)
-            console.log(`\n${utils.formatEther(signerInfo.signerBalance)} ETH`);
-          returnValues.push({ signerInfo });
+            console.log(`\n${utils.formatEther(signerInfo[1])} ETH`);
+          returnValues.push(signerInfo);
         }
 
         if (signers) {
@@ -64,10 +64,10 @@ export default task(
         } else if (returnValues.length == 1) {
           if (log) console.log(returnValues[0]);
           return returnValues[0];
+        } else {
+          if (log) console.log("\nReturnValues:\n", returnValues, "\n");
+          return returnValues;
         }
-        if (log) console.log("\nReturnValues:\n", returnValues, "\n");
-
-        return returnValues;
       } catch (err) {
         console.error(err);
         process.exit(1);
