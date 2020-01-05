@@ -51,7 +51,16 @@ export default task(
           spender,
           amount
         });
-        if (log) console.log(`\napprove-txHash: ${txHash}\n`);
+        if (log) {
+          const ERC20 = await run("bre-config", {
+            addressbookcategory: "erc20",
+            addressbookentry: erc20address
+          });
+          console.log(
+            `\n Approved spender: ${spender} for ${amount / 10 ** 18} ${ERC20}`
+          );
+          console.log(`\napprove-txHash: ${txHash}\n`);
+        }
         returnValues.push({ approveTxHash: txHash });
       }
 

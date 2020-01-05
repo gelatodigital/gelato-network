@@ -138,7 +138,7 @@ export default task(
       const MSG_VALUE = MINTING_DEPOSIT_PER_MINT.mul(NUMBER_OF_MINTS);
       if (log)
         console.log(
-          `\n\t\t Minting Deposit for ${NUMBER_OF_MINTS} mints: ${utils.formatUnits(
+          `\nMinting Deposit for ${NUMBER_OF_MINTS} mints: ${utils.formatUnits(
             MSG_VALUE,
             "ether"
           )} ETH \t ${ethUSDPrice *
@@ -168,7 +168,7 @@ export default task(
         console.log(
           `\nuserProxy.executeDelegatecall(multiMintForTimeTrigger) txHash:\n${tx.hash}`
         );
-      if (log) console.log("\nwaiting for transaction to get mined \n");
+      if (log) console.log("\nwaiting for transaction to get mined\n");
       const txReceipt = await tx.wait();
 
       await run("erc20", {
@@ -176,7 +176,7 @@ export default task(
         approve: true,
         spender: userProxyAddress,
         amount: SRC_AMOUNT.mul(NUMBER_OF_MINTS),
-        log: true
+        log
       });
 
       return txReceipt;

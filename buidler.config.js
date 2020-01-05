@@ -63,7 +63,7 @@ module.exports = {
         "TriggerTimestampPassed"
       ],
       deployments: {
-        ActionKyberTrade: "0x3d31dD8ABC542c7D7dEC5968709357c034654982",
+        ActionKyberTrade: "0xD72cf0C2Acb9F3Da9c21398187c0F6D93e675324",
         ActionMultiMintForTriggerTimestampPassed:
           "0x9f6cf035a6B566EfdB3c7cE720e1AbB0f4f44d32",
         GelatoCore: "0xc448e462F9881DBaA3228503BE367db3b2d123AB",
