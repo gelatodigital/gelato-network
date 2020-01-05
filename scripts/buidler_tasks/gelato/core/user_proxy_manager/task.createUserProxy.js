@@ -7,7 +7,7 @@ export default task(
   `Sends tx to GelatoCore.createUserProxy() on [--network] (default: ${defaultNetwork})`
 )
   .addFlag("log", "Logs return values to stdout")
-  .setAction(async () => {
+  .setAction(async ({ log }) => {
     try {
       // To avoid mistakes default log to true
       log = true;

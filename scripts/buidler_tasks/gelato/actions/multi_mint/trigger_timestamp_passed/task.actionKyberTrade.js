@@ -28,7 +28,7 @@ export default task(
         TriggerTimestampPassed: triggerTimestampPassedAddress
       } = await run("bre-config", { deployments: true });
 
-      const { KNC: src, MANA: dest } = await run("bre-config", {
+      const { DAI: src, KNC: dest } = await run("bre-config", {
         addressbookcategory: "erc20"
       });
 
@@ -128,7 +128,7 @@ export default task(
       );
       if (log)
         console.log(
-          `\n\t\t Minting Deposit Per Mint: ${utils.formatUnits(
+          `\nMinting Deposit Per Mint: ${utils.formatUnits(
             MINTING_DEPOSIT_PER_MINT,
             "ether"
           )} ETH \t\t${ethUSDPrice *
@@ -168,14 +168,15 @@ export default task(
         console.log(
           `\nuserProxy.executeDelegatecall(multiMintForTimeTrigger) txHash:\n${tx.hash}`
         );
-      if (log) console.log("\n\t\t waiting for transaction to get mined \n");
+      if (log) console.log("\nwaiting for transaction to get mined \n");
       const txReceipt = await tx.wait();
 
       await run("erc20", {
         erc20address: src,
         approve: true,
         spender: userProxyAddress,
-        amount: 20000000000000000000
+        amount: SRC_AMOUNT.mul(NUMBER_OF_MINTS),
+        log: true
       });
 
       return txReceipt;

@@ -440,7 +440,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
             executionResult,
             tx.gasprice,
             // ExecutionCost Estimate: ignore fn call overhead, due to delete gas refunds
-            gasleft().sub(startGas).mul(tx.gasprice),
+            (startGas.sub(gasleft())).mul(tx.gasprice),
             _mintingDeposit  // executorReward
         );
     }
