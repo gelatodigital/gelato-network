@@ -1,8 +1,8 @@
 pragma solidity ^0.6.0;
 
 import "../GelatoActionsStandard.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import "../../external/IERC20.sol";
+import "../../external/SafeERC20.sol";
 import "../../helpers/SplitFunctionSelector.sol";
 import "../../dapp_interfaces/kyber_interfaces/IKyber.sol";
 

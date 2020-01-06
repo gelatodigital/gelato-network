@@ -1,7 +1,7 @@
 pragma solidity ^0.6.0;
 
 import "../../GelatoActionsStandard.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "../../../external/SafeMath.sol";
 import "../../../triggers/IGelatoTrigger.sol";
 import "../../../gelato_core/interfaces/IGelatoCore.sol";
 import "../../../gelato_core/interfaces/IGelatoCoreAccounting.sol";
