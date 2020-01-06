@@ -12,16 +12,11 @@ export default task(
   .addPositionalParam("spender", "Address of approvee")
   .addPositionalParam("amount", "Uint: amount to approve spender for")
   .addFlag("log", "Logs return values to stdout")
-  .setAction(async ({ erc20address, amount, log, spender }) => {
+  .setAction(async ({ erc20address, spender, amount, log }) => {
     await run("checkAddressBook", {
       networkname: network.name,
       category: "erc20",
       entry: erc20address
-    });
-
-    const erc20Symbol = await run("bre-config", {
-      addressbookcategory: "erc20",
-      addressbookentry: erc20address
     });
 
     const txHash = await run("erc20:approve", {
@@ -31,11 +26,19 @@ export default task(
       log
     });
 
-    if (log)
+    if (log) {
+      const erc20Symbol = await run("bre-config", {
+        addressbookcategory: "erc20",
+        addressbookentry: erc20address
+      });
       console.log(
-        `\nApproved spender: ${spender} for ${amount /
-          10 ** 18} ${erc20Symbol}\n`
+        `ERC20 Approval:\
+         \nNetwork: ${network.name}\
+         \nERC20:   ${erc20Symbol}\
+         \nSpender: ${spender}\
+         \nAmount:  ${amount / 10 ** 18} ${erc20Symbol}\n`
       );
+    }
 
     return txHash;
   });

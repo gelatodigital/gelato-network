@@ -18,7 +18,7 @@ export default internalTask(
       ];
       const erc20Contract = new Contract(erc20address, ierc20ABI, signer);
       const tx = await erc20Contract.approve(spender, amount);
-      if (log) console.log(`approve-txHash: ${tx.hash}`);
+      if (log) console.log(`\napprove-txHash: ${tx.hash}\n`);
       await tx.wait();
       return tx.hash;
     } catch (error) {
