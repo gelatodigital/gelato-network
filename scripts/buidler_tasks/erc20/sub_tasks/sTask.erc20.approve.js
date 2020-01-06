@@ -9,7 +9,8 @@ export default internalTask(
   .addParam("erc20address")
   .addParam("spender", "address")
   .addParam("amount", "uint")
-  .setAction(async ({ erc20address, spender, amount }) => {
+  .addFlag("log", "Logs return values to stdout")
+  .setAction(async ({ erc20address, spender, amount, log }) => {
     try {
       const [signer] = await ethers.signers();
       const ierc20ABI = [
@@ -17,6 +18,7 @@ export default internalTask(
       ];
       const erc20Contract = new Contract(erc20address, ierc20ABI, signer);
       const tx = await erc20Contract.approve(spender, amount);
+      if (log) console.log(`approve-txHash: ${tx.hash}`);
       await tx.wait();
       return tx.hash;
     } catch (error) {

@@ -61,7 +61,8 @@ export default task(
         const txHash = await run("erc20:approve", {
           erc20address,
           spender,
-          amount
+          amount,
+          log
         });
         if (log)
           console.log(
