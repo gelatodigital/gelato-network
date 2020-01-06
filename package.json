@@ -20,10 +20,9 @@
     "@babel/register": "^7.7.4",
     "@nomiclabs/buidler": "^1.0.1",
     "@nomiclabs/buidler-ethers": "^1.0.1",
-    "@openzeppelin/contracts": "^2.4.0",
     "dotenv": "^8.2.0",
     "ethers": "^4.0.23",
-    "solc": "^0.6.0",
+    "solc": "^0.6.1",
     "solhint": "^2.3.0"
   },
   "dependencies": {
