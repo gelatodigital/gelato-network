@@ -6,7 +6,7 @@ pragma solidity ^0.6.0;
 interface IGelatoAction {
 
     function actionSelector() external pure returns(bytes4);
-    function actionConditionsOkGas() external pure returns(uint256);
+    function actionConditionsCheckGas() external pure returns(uint256);
     function actionGas() external pure returns(uint256);
     function actionTotalGas() external pure returns(uint256);
 
@@ -16,7 +16,7 @@ interface IGelatoAction {
      * @param _actionPayloadWithSelector: the actionPayload (with actionSelector)
      * @return true if specific action conditions are fulfilled, else false.
      */
-    function actionConditionsOk(bytes calldata _actionPayloadWithSelector)
+    function actionConditionsCheck(bytes calldata _actionPayloadWithSelector)
         external
         view
         returns(bool);

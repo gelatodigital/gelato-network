@@ -24,15 +24,17 @@ interface IGelatoCore {
     );
 
     event LogCanExecuteFailed(
-        address indexed executor,
-        uint256 indexed executionClaimId,
-        GelatoCoreEnums.CanExecuteCheck indexed canExecuteResult
-    );
-
-    event LogSuccessfulExecution(
         address executor,
         uint256 indexed executionClaimId,
         IGelatoTrigger indexed trigger,
+        IGelatoAction indexed action,
+        GelatoCoreEnums.CanExecuteCheck canExecuteResult
+    );
+
+    event LogSuccessfulExecution(
+        address indexed executor,
+        uint256 indexed executionClaimId,
+        IGelatoTrigger trigger,
         IGelatoAction indexed action,
         uint256 gasPriceUsed,
         uint256 executionCostEstimate,
@@ -42,8 +44,10 @@ interface IGelatoCore {
     event LogExecutionFailure(
         address executor,
         uint256 indexed executionClaimId,
-        IGelatoTrigger indexed trigger,
-        IGelatoAction indexed action
+        IGelatoTrigger trigger,
+        IGelatoAction indexed action,
+        GelatoCoreEnums.ExecutionResult indexed executionResult,
+        uint8 actionErrorCode
     );
 
     event LogExecutionClaimCancelled(
@@ -93,7 +97,6 @@ interface IGelatoCore {
     /**
      * @notice the API executors call when they execute an executionClaim
      * @dev if return value == 0 the claim got executed
-     * @return executionResult : uint8 (converts to GelatoCoreEnums.ExecutionResult)
      */
     function execute(
         uint256 _executionClaimId,
@@ -106,8 +109,7 @@ interface IGelatoCore {
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
     )
-        external
-        returns(GelatoCoreEnums.ExecutionResult executionResult, uint8 errorCode);
+        external;
 
     /**
      * @dev API for canceling executionClaims
@@ -198,7 +200,7 @@ interface IGelatoCore {
         uint256 _actionGas
     )
         external
-        returns(GelatoCoreEnums.ExecutionResult, uint8 errorCode);
+        returns(GelatoCoreEnums.ExecutionResult, uint8 actionErrorCode);
 
     function revertLogGasTestUserProxyExecute(
         IGelatoUserProxy _userProxy,
@@ -207,7 +209,7 @@ interface IGelatoCore {
         uint256 _actionGas
     )
         external
-        returns(GelatoCoreEnums.ExecutionResult executionResult, uint8 errorCode);
+        returns(GelatoCoreEnums.ExecutionResult executionResult, uint8 actionErrorCode);
 
     function revertLogGasExecute(
         uint256 _executionClaimId,
@@ -221,5 +223,5 @@ interface IGelatoCore {
         uint256 _mintingDeposit
     )
         external
-        returns(GelatoCoreEnums.ExecutionResult executionResult, uint8 errorCode);
+        returns(GelatoCoreEnums.ExecutionResult executionResult, uint8 actionErrorCode);
 }

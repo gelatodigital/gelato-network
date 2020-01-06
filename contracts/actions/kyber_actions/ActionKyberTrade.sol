@@ -21,9 +21,9 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
     function actionSelector() external pure override returns(bytes4) {
         return this.action.selector;
     }
-    uint256 public constant override actionConditionsOkGas = 50000;
+    uint256 public constant override actionConditionsCheckGas = 50000;
     uint256 public constant override actionGas = 700000;
-    uint256 public constant override actionTotalGas = actionConditionsOkGas + actionGas;
+    uint256 public constant override actionTotalGas = actionConditionsCheckGas + actionGas;
 
     event LogAction(
         address indexed user,
@@ -107,7 +107,7 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
     }
 
     // Overriding and extending GelatoActionsStandard's function (optional)
-    function actionConditionsOk(bytes calldata _actionPayloadWithSelector)
+    function actionConditionsCheck(bytes calldata _actionPayloadWithSelector)
         external
         view
         override

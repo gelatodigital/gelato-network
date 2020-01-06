@@ -1,16 +1,6 @@
 pragma solidity ^0.6.0;
 
 abstract contract GelatoCoreEnums {
-    enum ExecutionResult {
-        Success,
-        CanExecuteFailed,
-        DefinedActionFailure,
-        UndefinedActionFailure,
-        DappFailure,
-        UserProxyFailure,
-        UndefinedFailure
-    }
-
     enum TriggerCheck { Reverted, NotFired, Fired }
 
     enum ActionConditionsCheck { Reverted, NotOk, Ok }
@@ -24,5 +14,15 @@ abstract contract GelatoCoreEnums {
         ActionConditionsNotOk,
         ActionReverted,
         Executable
+    }
+
+    enum ExecutionResult {
+        Success,
+        InsufficientActionGas,
+        DefinedActionFailure,
+        UndefinedActionFailure,
+        DappFailure,
+        UserProxyFailure,
+        UndefinedFailure
     }
 }

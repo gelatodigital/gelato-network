@@ -6,9 +6,7 @@ import "./IGelatoAction.sol";
 /// @dev find all the NatSpecs inside IGelatoAction
 abstract contract GelatoActionsStandard is IGelatoAction {
 
-    modifier actionGasCheck virtual {_;}
-
-    function actionConditionsOk(bytes calldata)  // _actionPayloadWithSelector
+    function actionConditionsCheck(bytes calldata)  // _actionPayloadWithSelector
         external
         view
         override

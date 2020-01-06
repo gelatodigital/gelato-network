@@ -12,9 +12,9 @@ contract ActionKyberTrade is GelatoActionsStandard {
     function actionSelector() external pure override returns(bytes4) {
         return this.action.selector;
     }
-    uint256 public constant override actionConditionsOkGas = 50000;
+    uint256 public constant override actionConditionsCheckGas = 50000;
     uint256 public constant override actionGas = 700000;
-    uint256 public constant override actionTotalGas = actionConditionsOkGas + actionGas;
+    uint256 public constant override actionTotalGas = actionConditionsCheckGas + actionGas;
 
     event LogAction(
         address indexed user,
@@ -77,7 +77,7 @@ contract ActionKyberTrade is GelatoActionsStandard {
         );
     }
 
-    function actionConditionsOk(bytes calldata _actionPayloadWithSelector)
+    function actionConditionsCheck(bytes calldata _actionPayloadWithSelector)
         external
         view
         override
@@ -86,7 +86,7 @@ contract ActionKyberTrade is GelatoActionsStandard {
         bytes4 selector = abi.decode(_actionPayloadWithSelector[:4], (bytes4));
         require(
             selector == this.action.selector,
-            "ActionKyberTrade.actionConditionsOk: selector mismatch"
+            "ActionKyberTrade.actionConditionsCheck: selector mismatch"
         );
         (address _user, address _userProxy, address _src, uint256 _srcAmt,,) = abi.decode(
             _actionPayloadWithSelector[4:],

@@ -13,9 +13,9 @@ contract ActionMultiMintForTriggerTimestampPassed is GelatoActionsStandard {
     function actionSelector() external pure override returns(bytes4) {
         return this.action.selector;
     }
-    uint256 public constant override actionConditionsOkGas = 30000;
+    uint256 public constant override actionConditionsCheckGas = 30000;
     uint256 public constant override actionGas = 1000000;
-    uint256 public constant override actionTotalGas = actionConditionsOkGas + actionGas;
+    uint256 public constant override actionTotalGas = actionConditionsCheckGas + actionGas;
 
     // Caution when using storage in delegatecall
     function action(

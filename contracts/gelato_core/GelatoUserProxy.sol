@@ -54,8 +54,6 @@ contract GelatoUserProxy is IGelatoUserProxy {
         returns(bool success, bytes memory returndata)
     {
         (success, returndata) = _action.call(_actionPayloadWithSelector);
-        ///@dev we should delete require later - leave it for testing action executionClaimIds
-        require(success, "GelatoUserProxy.executeCall(): _action.call failed");
     }
 
     function executeDelegatecall(
@@ -69,32 +67,34 @@ contract GelatoUserProxy is IGelatoUserProxy {
         virtual
         auth
         noZeroAddress(address(_action))
-        returns(uint8 executionResult, uint8 errorCode)
+        returns(uint8 executionResult, uint8 actionErrorCode)
     {
-        // Low level try / catch
+        // Halt execution, if insufficient actionGas is sent
+        if (gasleft() < _actionGas + 500) {
+            return (uint8(GelatoCoreEnums.ExecutionResult.InsufficientActionGas), 0);
+        }
+
+        // Low level try / catch (fails if gasleft() < _actionGas)
         (bool success,
          bytes memory returndata) = address(_action).delegatecall.gas(_actionGas)(
             _actionPayloadWithSelector
         );
 
-        // Action reverted: Find out why
+        // Uncaught errors during action execution
         if (!success) {
-            // We return known errors to the calling frame (gelatoCore._executeActionViaUserProxy())
-            (executionResult, errorCode) = abi.decode(returndata, (uint8,uint8));
-            // Unless
-            if (
-                executionResult != uint8(GelatoCoreEnums.ExecutionResult.DefinedActionFailure)
-                && executionResult != uint8(GelatoCoreEnums.ExecutionResult.DappFailure)
-            ) {
-                // An unknown error occured during action.delegatecall frame (no error code)
-                return (uint8(GelatoCoreEnums.ExecutionResult.UndefinedActionFailure), 0);
-            }
-            // we return the identified Error to the calling frame (gelatoCore._executeActionViaUserProxy())
-            return (executionResult, errorCode);
-        }
+            // An uncaught error occured during action.delegatecall frame (no error code)
+            return (uint8(GelatoCoreEnums.ExecutionResult.UndefinedActionFailure), 0);
+        } else {
+            // Success or caught errors during action execution
+            (executionResult, actionErrorCode) = abi.decode(returndata, (uint8,uint8));
 
-        // Success! (no error code)
-        return (uint8(GelatoCoreEnums.ExecutionResult.Success), 0);
+            if (executionResult == uint8(GelatoCoreEnums.ExecutionResult.Success)) {
+                // Successful Execution! (no actionErrorCode)
+                return (uint8(GelatoCoreEnums.ExecutionResult.Success), 0);
+            }
+            // Failure! But identifiable executionResult and actionErrorCode, which get
+            //  returned to the calling frame (gelatoCore._executeActionViaUserProxy())
+        }
     }
 
     function getUser() external view override returns(address) {return user;}

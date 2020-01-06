@@ -2,7 +2,7 @@ pragma solidity ^0.6.0;
 
 import "./interfaces/IGelatoCoreAccounting.sol";
 import "../external/Address.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "../external/SafeMath.sol";
 
 /// @title GelatoCoreAccounting
 /// @notice APIs for GelatoCore Owner and executorClaimLifespan
