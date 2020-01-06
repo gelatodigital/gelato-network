@@ -22,7 +22,10 @@
     "@nomiclabs/buidler-ethers": "^1.0.1",
     "dotenv": "^8.2.0",
     "ethers": "^4.0.23",
+<<<<<<< HEAD
     "solc": "^0.6.1",
+=======
+>>>>>>> luis-try-catch
     "solhint": "^2.3.0"
   },
   "dependencies": {

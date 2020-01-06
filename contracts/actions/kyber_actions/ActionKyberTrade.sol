@@ -2,12 +2,20 @@ pragma solidity ^0.6.0;
 
 import "../GelatoActionsStandard.sol";
 import "../../external/IERC20.sol";
-import "../../external/SafeERC20.sol";
+//import "../../external/SafeERC20.sol";
 import "../../helpers/SplitFunctionSelector.sol";
 import "../../dapp_interfaces/kyber_interfaces/IKyber.sol";
+import "../../gelato_core/GelatoCoreEnums.sol";
 
 contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
-    using SafeERC20 for IERC20;
+    // using SafeERC20 for IERC20; <- internal library methods vs. try/catch
+
+    enum ActionErrorCodes {
+        NoError,
+        TransferFromUser,
+        ApproveKyber,
+        DappError
+    }
 
     // actionSelector public state variable np due to this.actionSelector constant issue
     function actionSelector() external pure override returns(bytes4) {
@@ -39,16 +47,34 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
         uint256 _minConversionRate
     )
         external
-        returns (uint256 destAmt)
+        returns (GelatoCoreEnums.ExecutionResult, ActionErrorCodes)
     {
         // !!!!!!!!! ROPSTEN !!!!!!
         address kyberAddress = 0x818E6FECD516Ecc3849DAf6845e3EC868087B755;
         {
             IERC20 srcERC20 = IERC20(_src);
-            srcERC20.safeTransferFrom(_user, address(this), _srcAmt);
-            srcERC20.safeIncreaseAllowance(kyberAddress, _srcAmt);
+
+            try srcERC20.transferFrom(_user, address(this), _srcAmt) {
+                // pass
+            } catch {
+                return (
+                    GelatoCoreEnums.ExecutionResult.DefinedActionFailure,
+                    ActionErrorCodes.TransferFromUser
+                );
+            }
+
+            try srcERC20.approve(kyberAddress, _srcAmt) {
+                // pass
+            } catch {
+                return (
+                    GelatoCoreEnums.ExecutionResult.DefinedActionFailure,
+                    ActionErrorCodes.ApproveKyber
+                );
+            }
         }
-        destAmt = IKyber(kyberAddress).trade(
+
+        // !! Dapp Interaction !!
+        try IKyber(kyberAddress).trade(
             _src,
             _srcAmt,
             _dest,
@@ -56,17 +82,28 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
             2**255,
             _minConversionRate,
             address(0)  // fee-sharing
-        );
-        emit LogAction(
-            _user,
-            _userProxy,
-            _src,
-            _srcAmt,
-            _dest,
-            destAmt,
-            _minConversionRate,
-            address(0)  // fee-sharing
-        );
+        )
+            returns (uint256 destAmt)
+        {
+            // Success on Dapp
+            emit LogAction(
+                _user,
+                _userProxy,
+                _src,
+                _srcAmt,
+                _dest,
+                destAmt,
+                _minConversionRate,
+                address(0)  // fee-sharing
+            );
+            return (
+                GelatoCoreEnums.ExecutionResult.Success, ActionErrorCodes.NoError
+            );
+        } catch {
+            return (
+                GelatoCoreEnums.ExecutionResult.DappFailure, ActionErrorCodes.DappError
+            );
+        }
     }
 
     // Overriding and extending GelatoActionsStandard's function (optional)

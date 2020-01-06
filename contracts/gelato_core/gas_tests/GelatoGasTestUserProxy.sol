@@ -16,13 +16,36 @@ contract GelatoGasTestUserProxy is GelatoUserProxy {
         override
         auth
         noZeroAddress(address(_action))
-        returns(bool success, bytes memory returndata)
+        returns(uint8 executionResult, uint8 errorCode)
     {
         uint256 startGas = gasleft();
-        (success, returndata) = address(_action).delegatecall.gas(_actionGas)(
+
+        // Low level try / catch
+        (bool success,
+         bytes memory returndata) = address(_action).delegatecall.gas(_actionGas)(
             _actionPayloadWithSelector
         );
-        if (success) revert(string(abi.encodePacked(startGas - gasleft())));
-        revert("GasTestUserProxy.executeDelegatecall: Action reverted or wrong arguments supplied");
+
+        // Action reverted: Find out why
+        if (!success) {
+            // We return known errors to the calling frame (gelatoCore._executeActionViaUserProxy())
+            (executionResult, errorCode) = abi.decode(returndata, (uint8,uint8));
+            // Unless
+            if (
+                executionResult != uint8(GelatoCoreEnums.ExecutionResult.DefinedActionFailure)
+                && executionResult != uint8(GelatoCoreEnums.ExecutionResult.DappFailure)
+            ) {
+                // An unknown error occured during action.delegatecall frame (no error code)
+                revert(string(abi.encodePacked(startGas - gasleft())));
+            }
+            // we return the identified Error to the calling frame (gelatoCore._executeActionViaUserProxy())
+             revert(string(abi.encodePacked(startGas - gasleft())));
+        }
+
+        // Success! (no error code)
+        revert(string(abi.encodePacked(startGas - gasleft())));
+
+        // Success! (no error code)
+        revert(string(abi.encodePacked(startGas - gasleft())));
     }
 }

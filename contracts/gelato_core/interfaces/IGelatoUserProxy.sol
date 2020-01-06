@@ -1,6 +1,7 @@
 pragma solidity ^0.6.0;
 
 import "../../actions/IGelatoAction.sol";
+import "../GelatoCoreEnums.sol";
 
 /// @title IGelatoUserProxy - solidity interface of GelatoTriggersStandard
 /// @notice GelatoUserProxy.execute() API called by gelatoCore during .execute()
@@ -21,7 +22,7 @@ interface IGelatoUserProxy {
     )
         external
         payable
-        returns(bool success, bytes memory returndata);
+        returns(uint8 executionResult, uint8 errorCode);
 
     function getUser() external view returns(address);
 
