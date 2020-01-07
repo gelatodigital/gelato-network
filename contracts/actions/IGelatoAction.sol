@@ -4,6 +4,11 @@ pragma solidity ^0.6.0;
 /// @notice all the APIs and events of GelatoActionsStandard
 /// @dev all the APIs are implemented inside GelatoActionsStandard
 interface IGelatoAction {
+    enum ActionStandardErrorCodes {
+        NoError,  // 0 is standard reserved field for NoError
+        CaughtError,  // 1 is standard reserved field for CaughtError
+        UncaughtError  // 2 is standard reserved field for UncaughtError
+    }
 
     function actionSelector() external pure returns(bytes4);
     function actionConditionsCheckGas() external pure returns(uint256);
@@ -15,9 +20,10 @@ interface IGelatoAction {
      * @dev if actions have specific conditions they should override and extend this fn
      * @param _actionPayloadWithSelector: the actionPayload (with actionSelector)
      * @return true if specific action conditions are fulfilled, else false.
+     * @return actionErrorCodes - 0 for NoError
      */
     function actionConditionsCheck(bytes calldata _actionPayloadWithSelector)
         external
         view
-        returns(bool);
+        returns(bool, uint8);
 }

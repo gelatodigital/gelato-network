@@ -27,7 +27,9 @@ interface IGelatoCore {
         address executor,
         uint256 indexed executionClaimId,
         IGelatoTrigger indexed trigger,
+        uint8 triggerErrorCode,
         IGelatoAction indexed action,
+        uint8 actionErrorCode,
         GelatoCoreEnums.CanExecuteCheck canExecuteResult
     );
 
@@ -91,7 +93,7 @@ interface IGelatoCore {
     )
         external
         view
-        returns (GelatoCoreEnums.CanExecuteCheck);
+        returns (GelatoCoreEnums.CanExecuteCheck, uint8 errorCode);
 
 
     /**

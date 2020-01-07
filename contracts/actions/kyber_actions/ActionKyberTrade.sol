@@ -2,7 +2,7 @@ pragma solidity ^0.6.0;
 
 import "../GelatoActionsStandard.sol";
 import "../../external/IERC20.sol";
-//import "../../external/SafeERC20.sol";
+// import "../../external/SafeERC20.sol";
 import "../../helpers/SplitFunctionSelector.sol";
 import "../../dapp_interfaces/kyber_interfaces/IKyber.sol";
 import "../../gelato_core/GelatoCoreEnums.sol";
@@ -10,8 +10,13 @@ import "../../gelato_core/GelatoCoreEnums.sol";
 contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
     // using SafeERC20 for IERC20; <- internal library methods vs. try/catch
 
+    // Extends IGelatoAction.ActionStandardErrorCodes (no overrides for enums in solc yet)
     enum ActionErrorCodes {
-        NoError,
+        NoError,  // 0 is standard reserved field for NoError
+        CaughtError,  // 1 is standard reserved field for CaughtError
+        UncaughtError,  // 2 is standard reserved field for UncaughtError
+        UserBalance,
+        UserProxyAllowance,
         TransferFromUser,
         ApproveKyber,
         DappError
@@ -58,7 +63,7 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
                 // pass
             } catch {
                 return (
-                    GelatoCoreEnums.ExecutionResult.DefinedActionFailure,
+                    GelatoCoreEnums.ExecutionResult.CaughtActionError,
                     ActionErrorCodes.TransferFromUser
                 );
             }
@@ -67,7 +72,7 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
                 // pass
             } catch {
                 return (
-                    GelatoCoreEnums.ExecutionResult.DefinedActionFailure,
+                    GelatoCoreEnums.ExecutionResult.CaughtActionError,
                     ActionErrorCodes.ApproveKyber
                 );
             }
@@ -101,7 +106,7 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
             );
         } catch {
             return (
-                GelatoCoreEnums.ExecutionResult.DappFailure, ActionErrorCodes.DappError
+                GelatoCoreEnums.ExecutionResult.CaughtDappError, ActionErrorCodes.DappError
             );
         }
     }
@@ -111,7 +116,7 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
         external
         view
         override
-        returns(bool)
+        returns(bool, uint8)
     {
         return _actionConditionsOk(_actionPayloadWithSelector);
     }
@@ -119,18 +124,29 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
     function _actionConditionsOk(bytes memory _actionPayloadWithSelector)
         internal
         view
-        returns(bool)
+        returns(bool, uint8)
     {
         (, bytes memory payload) = SplitFunctionSelector.split(
             _actionPayloadWithSelector
         );
+
         (address _user, address _userProxy, address _src, uint256 _srcAmt, , ) = abi.decode(
             payload,
             (address, address, address, uint256, address,uint256)
         );
+
         IERC20 srcERC20 = IERC20(_src);
+
         uint256 srcUserBalance = srcERC20.balanceOf(_user);
+
+        if (srcUserBalance < _srcAmt)
+            return (false, uint8(ActionErrorCodes.UserBalance));
+
         uint256 srcUserProxyAllowance = srcERC20.allowance(_user, _userProxy);
-        return (srcUserBalance >= _srcAmt && _srcAmt <= srcUserProxyAllowance);
+
+        if (srcUserProxyAllowance < _srcAmt)
+            return (false, uint8(ActionErrorCodes.UserProxyAllowance));
+
+        return (true, uint8(ActionErrorCodes.NoError));
     }
 }

@@ -13,9 +13,12 @@ contract TriggerTimestampPassed is IGelatoTrigger {
     function fired(uint256 _timestamp)
         external
         view
-        returns(bool)
+        returns(bool, uint8)
     {
-        return _timestamp <= block.timestamp;
+        return (
+            _timestamp <= block.timestamp,
+            uint8(TriggerStandardErrorCodes.NoError)
+        );
     }
 
     function getTriggerValue() external view override returns(uint256) {

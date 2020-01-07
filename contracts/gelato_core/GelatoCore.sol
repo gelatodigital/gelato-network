@@ -108,14 +108,14 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
         uint256[3] calldata _triggerGasActionTotalGasMinExecutionGas,
-        uint256 _actionConditionsOkGas,
+        uint256 _actionConditionsCheckGas,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
     )
         external
         view
         override
-        returns (GelatoCoreEnums.CanExecuteCheck)
+        returns (GelatoCoreEnums.CanExecuteCheck, uint8 errorCode)
     {
         return _canExecute(
             _executionClaimId,
@@ -125,7 +125,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
             _action,
             _actionPayloadWithSelector,
             _triggerGasActionTotalGasMinExecutionGas,
-            _actionConditionsOkGas,
+            _actionConditionsCheckGas,
             _executionClaimExpiryDate,
             _mintingDeposit
         );
@@ -235,13 +235,13 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         IGelatoAction _action,
         bytes memory _actionPayloadWithSelector,
         uint256[3] memory _triggerGasActionTotalGasMinExecutionGas,
-        uint256 _actionConditionsOkGas,
+        uint256 _actionConditionsCheckGas,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
     )
         private
         view
-        returns (GelatoCoreEnums.CanExecuteCheck)
+        returns (GelatoCoreEnums.CanExecuteCheck, uint8 errorCode)
     {
         // _____________ Static CHECKS __________________________________________
         bytes32 computedExecutionClaimHash = _computeExecutionClaimHash(
@@ -258,11 +258,20 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         );
         /* solhint-disable indent */
         if (computedExecutionClaimHash != executionClaimHash[_executionClaimId])
-            return GelatoCoreEnums.CanExecuteCheck.WrongCalldataOrAlreadyDeleted;
+            return (
+                GelatoCoreEnums.CanExecuteCheck.WrongCalldataOrAlreadyDeleted,
+                uint8(GelatoCoreEnums.StandardErrorCodes.CaughtError)
+            );
         else if (userProxyWithExecutionClaimId[_executionClaimId] == IGelatoUserProxy(0))
-            return GelatoCoreEnums.CanExecuteCheck.NonExistantExecutionClaim;
+            return (
+                GelatoCoreEnums.CanExecuteCheck.NonExistantExecutionClaim,
+                uint8(GelatoCoreEnums.StandardErrorCodes.CaughtError)
+            );
         else if (_executionClaimExpiryDate < now)
-            return GelatoCoreEnums.CanExecuteCheck.ExecutionClaimExpired;
+            return (
+                GelatoCoreEnums.CanExecuteCheck.ExecutionClaimExpired,
+                uint8(GelatoCoreEnums.StandardErrorCodes.CaughtError)
+            );
 
         // _____________ Dynamic CHECKS __________________________________________
         GelatoCoreEnums.TriggerCheck triggerCheck = _triggerCheck(
@@ -280,7 +289,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         GelatoCoreEnums.ActionConditionsCheck actionCheck = _actionConditionsCheck(
             _action,
             _actionPayloadWithSelector,
-            _actionConditionsOkGas
+            _actionConditionsCheckGas
         );
 
         if (triggerFired && (actionCheck == GelatoCoreEnums.ActionConditionsCheck.Ok))
@@ -317,24 +326,28 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
     function _actionConditionsCheck(
         IGelatoAction _action,
         bytes memory _actionPayloadWithSelector,
-        uint256 _actionConditionsOkGas
+        uint256 _actionConditionsCheckGas
     )
         private
         view
-        returns(GelatoCoreEnums.ActionConditionsCheck)
+        returns(GelatoCoreEnums.ActionConditionsCheck, uint8 actionErrorCode)
     {
-        bytes memory actionConditionsOkPayloadWithSelector = abi.encodeWithSelector(
+        bytes memory actionConditionsCheckPayloadWithSelector = abi.encodeWithSelector(
             _action.actionConditionsCheck.selector,
             _actionPayloadWithSelector
         );
         /* solhint-disable indent */
         (bool success,
-         bytes memory returndata) = address(_action).staticcall.gas(_actionConditionsOkGas)(
-            actionConditionsOkPayloadWithSelector
+         bytes memory returndata) = address(_action).staticcall.gas(_actionConditionsCheckGas)(
+            actionConditionsCheckPayloadWithSelector
         );
         /* solhint-enable  indent */
-        if (!success) return GelatoCoreEnums.ActionConditionsCheck.Reverted;
-        else {
+        if (!success) {
+            return (
+                GelatoCoreEnums.ActionConditionsCheck.UncaughtError,
+
+            );
+        } else {
             bool executable = abi.decode(returndata, (bool));
             if (!executable) return GelatoCoreEnums.ActionConditionsCheck.NotOk;
             return GelatoCoreEnums.ActionConditionsCheck.Ok;
@@ -521,7 +534,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
     function revertLogGasActionConditionsCheck(
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
-        uint256 _actionConditionsOkGas
+        uint256 _actionConditionsCheckGas
     )
         external
         view
@@ -532,7 +545,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         GelatoCoreEnums.ActionConditionsCheck actionCheck = _actionConditionsCheck(
             _action,
             _actionPayloadWithSelector,
-            _actionConditionsOkGas
+            _actionConditionsCheckGas
         );
         if (actionCheck == GelatoCoreEnums.ActionConditionsCheck.Ok)
             revert(string(abi.encodePacked(startGas - gasleft())));
@@ -549,7 +562,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
         uint256[3] calldata _triggerGasActionTotalGasMinExecutionGas,
-        uint256 _actionConditionsOkGas,
+        uint256 _actionConditionsCheckGas,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
     )
@@ -567,7 +580,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
             _action,
             _actionPayloadWithSelector,
             _triggerGasActionTotalGasMinExecutionGas,
-            _actionConditionsOkGas,
+            _actionConditionsCheckGas,
             _executionClaimExpiryDate,
             _mintingDeposit
         );
