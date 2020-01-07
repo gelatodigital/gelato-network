@@ -63,11 +63,11 @@ module.exports = {
         "TriggerTimestampPassed"
       ],
       deployments: {
-        ActionKyberTrade: "0x9cbc1860e0176e58a9196d5d16f31c0a25ab76d1",
+        ActionKyberTrade: "0x5E26327C612635e2ef99245f2447fA778ec62d25",
         ActionMultiMintForTriggerTimestampPassed:
           "0x9f6cf035a6B566EfdB3c7cE720e1AbB0f4f44d32",
-        GelatoCore: "0x3ae6c80a893abadb8851b51d4b46f14ea4830a68",
-        TriggerTimestampPassed: "0xc4C66f774Bf5066bF288D6338B2A4Ce0dC66a60C"
+        GelatoCore: "0xB1f9B9B0CAbB5bc3460775f5636B947507d67ac4",
+        TriggerTimestampPassed: "0xeD40A306E31e4d1F21D47469aFeD852b8caBa721"
       }
     }
   },
@@ -137,8 +137,11 @@ require("./scripts/buidler_tasks/gelato/actions/collection.tasks.actions");
 // _____ CORE ______________________
 // Accounting
 require("./scripts/buidler_tasks/gelato/core/accounting/collection.tasks.accounting");
+// Core
+require("./scripts/buidler_tasks/gelato/core/collection.tasks.core");
 // UserProxyManager
 require("./scripts/buidler_tasks/gelato/core/user_proxy_manager/collection.tasks.userProxyManager");
+
 
 // ============== INTERNAL HELPER TASKS ================================================
 require("./scripts/buidler_tasks/internal/internalTaskCollection");

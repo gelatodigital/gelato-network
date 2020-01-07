@@ -283,13 +283,13 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
             _triggerGasActionTotalGasMinExecutionGas[0]
         );
 
-        // Edge Case: Not! Executable because of an UnhandledTriggerError
+        // Edge Case: Not executable because of an UnhandledTriggerError
         if (!executable && reason == uint8(GelatoCoreEnums.StandardReason.UnhandledError))
             return (
                 GelatoCoreEnums.CanExecuteResult.UnhandledTriggerError,
                 uint8(GelatoCoreEnums.StandardReason.UnhandledError)
             );
-        // Not! Executable because of Trigger Conditions or errors handled on trigger)
+        // Not executable because of Trigger Conditions or errors handled on trigger)
         else if (!executable) return (GelatoCoreEnums.CanExecuteResult.TriggerNotOk, reason);
 
         // => executable
@@ -302,9 +302,9 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
             _actionConditionsCheckGas
         );
 
-        // => executable
-        // TriggerFired && ActionConditions Ok => CanExecute: true
         if (executable)
+            // => executable
+            // TriggerFired && ActionConditions Ok => CanExecute: true
             return (
                 GelatoCoreEnums.CanExecuteResult.Executable,
                 uint8(GelatoCoreEnums.StandardReason.Ok)
@@ -313,13 +313,13 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         // => !executable:
         // TriggerFired BUT ActionConditions NOT Ok => CanExecute: false
 
-        // Edge Case: Not! Executable because of an UnhandledActionConditionsError
+        // Edge Case: Not Executable because of an UnhandledActionConditionsError
         if (reason == uint8(GelatoCoreEnums.StandardReason.UnhandledError))
             return (
                 GelatoCoreEnums.CanExecuteResult.UnhandledActionConditionsError,
                 uint8(GelatoCoreEnums.StandardReason.UnhandledError)
             );
-        // Not! Executable because of Action Conditions or errors handled on action)
+        // Not Executable because of Action Conditions or errors handled on action)
         else return (GelatoCoreEnums.CanExecuteResult.ActionConditionsNotOk, reason);
 
         /* solhint-enable indent */
@@ -422,9 +422,9 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
             }
         }
 
-        // Above the executor pays for reverts (e.g. canExecute reverts)
-        // -------------------------------------------------------------
-        // From below the user pays for reverts (e.g. userProxy/action/dapp reverts)
+        // Above the executor pays for Unsuccessful Execution
+        // ---------------------------------------------------
+        // From below the user pays for Unsuccessful Execution
 
         // EFFECTS
         delete executionClaimHash[_executionClaimId];
@@ -441,7 +441,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         );
         /* solhint-enable  indent */
 
-        if (executionResult == GelatoCoreEnums.ExecutionResult.Success) {
+        if (executionResult == GelatoCoreEnums.ExecutionResult.Success)
             emit LogSuccessfulExecution(
                 msg.sender,  // executor
                 _executionClaimId,
@@ -452,7 +452,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
                 gasleft().sub(startGas).mul(tx.gasprice),
                 _mintingDeposit  // executorReward
             );
-        } else {
+        else
             emit LogExecutionFailure(
                 msg.sender,
                 _executionClaimId,
@@ -461,7 +461,6 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
                 executionResult,
                 reason
             );
-        }
 
         // Executor gets full reward from user no matter if execution successful or not
         executorBalance[msg.sender] = executorBalance[msg.sender].add(_mintingDeposit);
