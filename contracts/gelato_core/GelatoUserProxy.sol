@@ -95,7 +95,7 @@ contract GelatoUserProxy is IGelatoUserProxy {
             );
         } else {
             // Success OR caught errors during action execution
-            (executionResult, reason) = abi.decode(returndata, (uint8,uint8));
+            //(executionResult, reason) = abi.decode(returndata, (uint8,uint8));
 
             // If (Success)
             if (executionResult == uint8(GelatoCoreEnums.ExecutionResult.Success)) {
