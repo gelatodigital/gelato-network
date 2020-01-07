@@ -53,7 +53,7 @@ module.exports = {
           proxy: "0x818E6FECD516Ecc3849DAf6845e3EC868087B755"
         },
         userProxy: {
-          luis: "0x263C7e7fa79688C70F7a0F3EC5e866F38a1b64ab"
+          luis: "0x2Ccdd43f246769dfe0742dc447573ECb135C9127"
         }
       },
       contracts: [

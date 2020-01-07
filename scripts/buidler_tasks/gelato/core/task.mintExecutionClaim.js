@@ -1,4 +1,4 @@
-import { task } from "@nomiclabs/buidler/config";
+/*import { task } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../../buidler.config";
 import { Contract } from "ethers";
 
@@ -33,3 +33,4 @@ export default task(
       process.exit(1);
     }
   });
+*/
