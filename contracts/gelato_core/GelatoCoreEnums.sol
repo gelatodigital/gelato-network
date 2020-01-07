@@ -1,32 +1,26 @@
 pragma solidity ^0.6.0;
 
 abstract contract GelatoCoreEnums {
-    enum StandardErrorCodes { NoError, CaughtError, UncaughtError }
 
-    enum TriggerCheck { Fired, NotFired, CaughtError, UncaughtError }
-
-    enum ActionConditionsCheck { Ok, NotOk, CaughtError, UncaughtError }
-
-    enum CanExecuteCheck {
+    enum CanExecuteResult {
         WrongCalldataOrAlreadyDeleted,  // also returns if a not-selected executor calls fn
         NonExistantExecutionClaim,
         ExecutionClaimExpired,
-        TriggerNotFired,
-        CaughtTriggerError,
-        UncaughtTriggerError,
+        TriggerNotOk,
+        UnhandledTriggerError,
         ActionConditionsNotOk,
-        CaughtActionConditionsError,
-        UncaughtActionConditionsError,
+        UnhandledActionConditionsError,
         Executable
     }
 
     enum ExecutionResult {
-        CaughtActionGasError,
-        CaughtActionError,
-        CaughtDappError,
-        CaughtUnhandledActionError,
-        CaughtUnhandledUserProxyError,
-        UncaughtError,
+        InsufficientActionGas,
+        ActionNotOk,  // Mostly for caught/handled action errors
+        DappNotOk,  // Mostly for caught/ dapp errors (on/by action)
+        UnhandledActionError,
+        UnhandledUserProxyError,
         Success
     }
+
+    enum StandardReason { Ok, NotOk, UnhandledError }
 }

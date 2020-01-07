@@ -1,7 +1,7 @@
 pragma solidity ^0.6.0;
 
 import "./interfaces/IGelatoUserProxy.sol";
-import "../actions/GelatoActionsStandard.sol";
+import "../actions/IGelatoAction.sol";
 
 /// @title GelatoUserProxy
 /// @dev find all NatSpecs inside IGelatoUserProxy
@@ -67,13 +67,13 @@ contract GelatoUserProxy is IGelatoUserProxy {
         virtual
         auth
         noZeroAddress(address(_action))
-        returns(uint8 executionResult, uint8 actionErrorCode)
+        returns(uint8 executionResult, uint8 reason)
     {
         // Halt execution, if insufficient actionGas (+ 210000 gas overhead buffer) is sent
         if (gasleft() < _actionGas + 21000) {
             return (
-                uint8(GelatoCoreEnums.ExecutionResult.CaughtActionGasError),
-                uint8(IGelatoAction.ActionStandardErrorCodes.NoError)
+                uint8(GelatoCoreEnums.ExecutionResult.InsufficientActionGas),
+                uint8(GelatoCoreEnums.StandardReason.NotOk)
             );
         }
 
@@ -83,28 +83,28 @@ contract GelatoUserProxy is IGelatoUserProxy {
             _actionPayloadWithSelector
         );
 
-        // Uncaught errors during action execution
+        // Unhandled errors during action execution
         if (!success) {
-            // An uncaught error occured during action.delegatecall frame
+            // An unhandled error occured during action.delegatecall frame
             return (
-                uint8(GelatoCoreEnums.ExecutionResult.UncaughtActionError),
-                uint8(IGelatoAction.ActionStandardErrorCodes.UncaughtError)
+                uint8(GelatoCoreEnums.ExecutionResult.UnhandledActionError),
+                uint8(GelatoCoreEnums.StandardReason.UnhandledError)
             );
         } else {
             // Success OR caught errors during action execution
-            (executionResult, actionErrorCode) = abi.decode(returndata, (uint8,uint8));
+            (executionResult, reason) = abi.decode(returndata, (uint8,uint8));
 
-            // If Success
+            // If (Success)
             if (executionResult == uint8(GelatoCoreEnums.ExecutionResult.Success)) {
-                // Successful Execution! (0 == ActionErrorCodes.NoError)
+                // Success!
                 return (
                     uint8(GelatoCoreEnums.ExecutionResult.Success),
-                    uint8(IGelatoAction.ActionStandardErrorCodes.NoError)
+                    uint8(GelatoCoreEnums.StandardReason.Ok)
                 );
-            }
-
-            // Else: Failure! But identifiable executionResult and actionErrorCode, which get
-            //  returned to the calling frame (gelatoCore._executeActionViaUserProxy())
+            } // Else: Failure! But handled executionResult and reason, are returned
+              //   to the calling frame (gelatoCore._executeActionViaUserProxy())
+              // If implemented correctly, executionResult must be one of:
+              //   - ActionNotOk or DappNotOk
         }
     }
 

@@ -23,14 +23,15 @@ interface IGelatoCore {
         uint256 mintingDeposit
     );
 
+    // Caution: there are no guarantees that CanExecuteResult and/or reason
+    //  are implemented in a logical fashion by trigger/action developers.
     event LogCanExecuteFailed(
         address executor,
         uint256 indexed executionClaimId,
         IGelatoTrigger indexed trigger,
-        uint8 triggerErrorCode,
         IGelatoAction indexed action,
-        uint8 actionErrorCode,
-        GelatoCoreEnums.CanExecuteCheck canExecuteResult
+        GelatoCoreEnums.CanExecuteResult canExecuteResult,
+        uint8 reason
     );
 
     event LogSuccessfulExecution(
@@ -43,13 +44,15 @@ interface IGelatoCore {
         uint256 executorReward
     );
 
+    // Caution: there are no guarantees that ExecutionResult and/or reason
+    //  are implemented in a logical fashion by trigger/action developers.
     event LogExecutionFailure(
         address executor,
         uint256 indexed executionClaimId,
         IGelatoTrigger trigger,
         IGelatoAction indexed action,
         GelatoCoreEnums.ExecutionResult indexed executionResult,
-        uint8 actionErrorCode
+        uint8 reason
     );
 
     event LogExecutionClaimCancelled(
@@ -75,9 +78,12 @@ interface IGelatoCore {
         payable;
 
     /**
-     * @dev the API for executors to check whether a claim is executable
-     * @return uint8 which converts to one of enum GelatoCoreEnums.CanExecuteCheck values
-     * @notice if return value == 6, the claim is executable
+     * @notice If return value == 6, the claim is executable
+     * @dev The API for executors to check whether a claim is executable.
+     *       Caution: there are no guarantees that CanExecuteResult and/or reason
+     *       are implemented in a logical fashion by trigger/action developers.
+     * @return GelatoCoreEnums.CanExecuteResult The outcome of the canExecuteCheck
+     * @return reason The reason for the outcome of the canExecute Check
      */
     function canExecute(
         uint256 _executionClaimId,
@@ -93,7 +99,7 @@ interface IGelatoCore {
     )
         external
         view
-        returns (GelatoCoreEnums.CanExecuteCheck, uint8 errorCode);
+        returns (GelatoCoreEnums.CanExecuteResult, uint8 reason);
 
 
     /**
@@ -161,25 +167,25 @@ interface IGelatoCore {
         returns(bytes32);
 
     // = GAS_BENCHMARKING ==============
-    function revertLogGasTriggerCheck(
+    function gasTestTriggerCheck(
         IGelatoTrigger _trigger,
         bytes calldata _triggerPayloadWithSelector,
         uint256 _triggerGas
     )
         external
         view
-        returns(GelatoCoreEnums.TriggerCheck);
+        returns(bool executable, uint8 reason);
 
-    function revertLogGasActionConditionsCheck(
+    function gasTestActionConditionsCheck(
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
         uint256 _actionConditionsOkGas
     )
         external
         view
-        returns(GelatoCoreEnums.ActionConditionsCheck);
+        returns(bool executable, uint8 reason);
 
-    function revertLogGasCanExecute(
+    function gasTestCanExecute(
         uint256 _executionClaimId,
         IGelatoUserProxy _userProxy,
         IGelatoTrigger _trigger,
@@ -193,27 +199,27 @@ interface IGelatoCore {
     )
         external
         view
-        returns(GelatoCoreEnums.CanExecuteCheck);
+        returns (GelatoCoreEnums.CanExecuteResult canExecuteResult, uint8 reason);
 
-    function revertLogGasActionViaGasTestUserProxy(
+    function gasTestActionViaGasTestUserProxy(
         IGelatoUserProxy _gasTestUserProxy,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
         uint256 _actionGas
     )
         external
-        returns(GelatoCoreEnums.ExecutionResult, uint8 actionErrorCode);
+        returns(GelatoCoreEnums.ExecutionResult, uint8 reason);
 
-    function revertLogGasTestUserProxyExecute(
+    function gasTestTestUserProxyExecute(
         IGelatoUserProxy _userProxy,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
         uint256 _actionGas
     )
         external
-        returns(GelatoCoreEnums.ExecutionResult executionResult, uint8 actionErrorCode);
+        returns(GelatoCoreEnums.ExecutionResult executionResult, uint8 reason);
 
-    function revertLogGasExecute(
+    function gasTestExecute(
         uint256 _executionClaimId,
         IGelatoUserProxy _userProxy,
         IGelatoTrigger _trigger,
@@ -224,6 +230,5 @@ interface IGelatoCore {
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
     )
-        external
-        returns(GelatoCoreEnums.ExecutionResult executionResult, uint8 actionErrorCode);
+        external;
 }

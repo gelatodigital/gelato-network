@@ -92,10 +92,10 @@ contract ActionKyberTrade is GelatoActionsStandard {
             _actionPayloadWithSelector[4:],
             (address,address,address,uint256,address,uint256)
         );
-        return _actionConditionsOk(_user, _userProxy, _src, _scrAmt);
+        return _actionConditionsCheck(_user, _userProxy, _src, _scrAmt);
     }
 
-    function _actionConditionsOk(
+    function _actionConditionsCheck(
         address _user,
         address _userProxy,
         address _src,

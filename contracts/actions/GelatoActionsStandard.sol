@@ -11,10 +11,10 @@ abstract contract GelatoActionsStandard is IGelatoAction {
         view
         override
         virtual
-        returns(bool, uint8)
+        returns(bool, uint8)  // executable?, reason
     {
         // solhint-disable-next-line
         this;  // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
-        return (true, 0);
+        return (true, uint8(StandardReason.Ok));
     }
 }

@@ -10,16 +10,19 @@ import "../../gelato_core/GelatoCoreEnums.sol";
 contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
     // using SafeERC20 for IERC20; <- internal library methods vs. try/catch
 
-    // Extends IGelatoAction.ActionStandardErrorCodes (no overrides for enums in solc yet)
-    enum ActionErrorCodes {
-        NoError,  // 0 is standard reserved field for NoError
-        CaughtError,  // 1 is standard reserved field for CaughtError
-        UncaughtError,  // 2 is standard reserved field for UncaughtError
-        UserBalance,
-        UserProxyAllowance,
-        TransferFromUser,
-        ApproveKyber,
-        DappError
+    // Extends IGelatoAction.StandardReason (no overrides for enums in solc yet)
+    enum Reason {
+        // StandardReason Fields
+        Ok,  // 0: Standard Field for Fulfilled Conditions and No Errors
+        NotOk,  // 1: Standard Field for Unfulfilled Conditions or Caught/Handled Errors
+        UnhandledError,  // 2: Standard Field for Uncaught/Unhandled Errors
+        // NotOk: Unfulfilled Conditions
+        UserBalanceNotOk,
+        UserProxyAllowanceNotOk,
+        // NotOk: Caught/Handled Errors
+        TransferFromUserError,
+        ApproveKyberError,
+        UndefinedDappError
     }
 
     // actionSelector public state variable np due to this.actionSelector constant issue
@@ -52,7 +55,7 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
         uint256 _minConversionRate
     )
         external
-        returns (GelatoCoreEnums.ExecutionResult, ActionErrorCodes)
+        returns (GelatoCoreEnums.ExecutionResult, Reason)
     {
         // !!!!!!!!! ROPSTEN !!!!!!
         address kyberAddress = 0x818E6FECD516Ecc3849DAf6845e3EC868087B755;
@@ -63,8 +66,8 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
                 // pass
             } catch {
                 return (
-                    GelatoCoreEnums.ExecutionResult.CaughtActionError,
-                    ActionErrorCodes.TransferFromUser
+                    GelatoCoreEnums.ExecutionResult.ActionNotOk,
+                    Reason.TransferFromUserError
                 );
             }
 
@@ -72,8 +75,8 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
                 // pass
             } catch {
                 return (
-                    GelatoCoreEnums.ExecutionResult.CaughtActionError,
-                    ActionErrorCodes.ApproveKyber
+                    GelatoCoreEnums.ExecutionResult.ActionNotOk,
+                    Reason.ApproveKyberError
                 );
             }
         }
@@ -101,12 +104,11 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
                 _minConversionRate,
                 address(0)  // fee-sharing
             );
-            return (
-                GelatoCoreEnums.ExecutionResult.Success, ActionErrorCodes.NoError
-            );
+            return (GelatoCoreEnums.ExecutionResult.Success, Reason.Ok);
         } catch {
             return (
-                GelatoCoreEnums.ExecutionResult.CaughtDappError, ActionErrorCodes.DappError
+                GelatoCoreEnums.ExecutionResult.DappNotOk,
+                Reason.UndefinedDappError
             );
         }
     }
@@ -116,37 +118,34 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
         external
         view
         override
-        returns(bool, uint8)
+        returns(bool, uint8)  // executable?, reason
     {
-        return _actionConditionsOk(_actionPayloadWithSelector);
+        return _actionConditionsCheck(_actionPayloadWithSelector);
     }
 
-    function _actionConditionsOk(bytes memory _actionPayloadWithSelector)
+    function _actionConditionsCheck(bytes memory _actionPayloadWithSelector)
         internal
         view
-        returns(bool, uint8)
+        returns(bool, uint8)  // executable?, reason
     {
         (, bytes memory payload) = SplitFunctionSelector.split(
             _actionPayloadWithSelector
         );
 
-        (address _user, address _userProxy, address _src, uint256 _srcAmt, , ) = abi.decode(
+        (address _user, address _userProxy, address _src, uint256 _srcAmt,,) = abi.decode(
             payload,
             (address, address, address, uint256, address,uint256)
         );
 
         IERC20 srcERC20 = IERC20(_src);
 
-        uint256 srcUserBalance = srcERC20.balanceOf(_user);
+        uint256 userSrcBalance = srcERC20.balanceOf(_user);
+        if (userSrcBalance < _srcAmt) return (false, uint8(Reason.UserBalanceNotOk));
 
-        if (srcUserBalance < _srcAmt)
-            return (false, uint8(ActionErrorCodes.UserBalance));
+        uint256 userProxySrcAllowance = srcERC20.allowance(_user, _userProxy);
+        if (userProxySrcAllowance < _srcAmt)
+            return (false, uint8(Reason.UserProxyAllowanceNotOk));
 
-        uint256 srcUserProxyAllowance = srcERC20.allowance(_user, _userProxy);
-
-        if (srcUserProxyAllowance < _srcAmt)
-            return (false, uint8(ActionErrorCodes.UserProxyAllowance));
-
-        return (true, uint8(ActionErrorCodes.NoError));
+        return (true, uint8(Reason.Ok));
     }
 }
