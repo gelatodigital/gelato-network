@@ -33,7 +33,7 @@ abstract contract GelatoUserProxyManager is IGelatoUserProxyManager, GelatoGasTe
     function createUserProxy()
         external
         override
-        //userHasNoProxy
+        userHasNoProxy
         returns(IGelatoUserProxy userProxy)
     {
         userProxy = new GelatoUserProxy(msg.sender);

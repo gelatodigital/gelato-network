@@ -148,7 +148,7 @@ export default task(
       // send tx to PAYABLE contract method
       // Read-Write Instance of UserProxy
       const userProxyABI = [
-        "function executeDelegatecall(address _action, bytes _actionPayloadWithSelector, uint256 _actionGas) external payable returns(bool success, bytes returndata)"
+        "function executeDelegatecall(address _action, bytes _actionPayloadWithSelector, uint256 _actionGas) external payable returns(uint8 executionResult, uint8 reason)"
       ];
       const userProxyContract = new Contract(
         userProxyAddress,
@@ -161,7 +161,7 @@ export default task(
         "4000000", // _actionGas
         {
           value: MSG_VALUE,
-          gasLimit: 2000000
+          gasLimit: 6000000
         }
       );
       if (log)
@@ -171,13 +171,13 @@ export default task(
       if (log) console.log("\nwaiting for transaction to get mined\n");
       const txReceipt = await tx.wait();
 
-      await run("erc20", {
+      if (log) console.log("\nCaution: Automatic erc20 Approval turned off")
+      /*await run("erc20-approve", {
         erc20address: src,
-        approve: true,
         spender: userProxyAddress,
         amount: SRC_AMOUNT.mul(NUMBER_OF_MINTS),
         log
-      });
+      });*/
 
       return txReceipt;
     } catch (err) {

@@ -69,8 +69,9 @@ contract GelatoUserProxy is IGelatoUserProxy {
         noZeroAddress(address(_action))
         returns(uint8 executionResult, uint8 reason)
     {
-        // Halt execution, if insufficient actionGas (+ 210000 gas overhead buffer) is sent
+        // Return if insufficient actionGas (+ 210000 gas overhead buffer) is sent
         if (gasleft() < _actionGas + 21000) {
+            revert("GasError");
             return (
                 uint8(GelatoCoreEnums.ExecutionResult.InsufficientActionGas),
                 uint8(GelatoCoreEnums.StandardReason.NotOk)
@@ -82,6 +83,8 @@ contract GelatoUserProxy is IGelatoUserProxy {
          bytes memory returndata) = address(_action).delegatecall.gas(_actionGas)(
             _actionPayloadWithSelector
         );
+
+        require(success, "GelatoUserProxy.executeDelegatecall: unsuccessful");
 
         // Unhandled errors during action execution
         if (!success) {
@@ -101,10 +104,12 @@ contract GelatoUserProxy is IGelatoUserProxy {
                     uint8(GelatoCoreEnums.ExecutionResult.Success),
                     uint8(GelatoCoreEnums.StandardReason.Ok)
                 );
-            } // Else: Failure! But handled executionResult and reason, are returned
-              //   to the calling frame (gelatoCore._executeActionViaUserProxy())
-              // If implemented correctly, executionResult must be one of:
-              //   - ActionNotOk or DappNotOk
+            }
+            revert("GelatoUserProxy.executeDelegatecall: ExecutionFailure");
+            // Else: Failure! But handled executionResult and reason, are returned
+            //   to the calling frame (gelatoCore._executeActionViaUserProxy())
+            // If implemented correctly, executionResult must be one of:
+            //   - ActionNotOk or DappNotOk
         }
     }
 

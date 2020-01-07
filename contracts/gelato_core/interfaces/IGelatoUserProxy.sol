@@ -22,7 +22,7 @@ interface IGelatoUserProxy {
     )
         external
         payable
-        returns(uint8 executionResult, uint8 actionErrorCode);
+        returns(uint8 executionResult, uint8 reason);
 
     function getUser() external view returns(address);
 
