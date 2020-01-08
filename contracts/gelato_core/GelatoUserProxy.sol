@@ -41,22 +41,31 @@ contract GelatoUserProxy is IGelatoUserProxy {
         _;
     }
 
-    function executeCall(
-        address _action,
-        bytes calldata _actionPayloadWithSelector
-    )
+    function call(address _account, bytes calldata _payload)
         external
         payable
         override
-        virtual
         onlyUser
-        noZeroAddress(_action)
+        noZeroAddress(_account)
         returns(bool success, bytes memory returndata)
     {
-        (success, returndata) = _action.call(_actionPayloadWithSelector);
+        (success, returndata) = _account.call(_payload);
+        require(success, "GelatoUserProxy.call(): failed");
     }
 
-    function executeDelegatecall(
+    function delegatecall(address _account, bytes calldata _payload)
+        external
+        payable
+        override
+        onlyUser
+        noZeroAddress(_account)
+        returns(bool success, bytes memory returndata)
+    {
+        (success, returndata) = _account.delegatecall(_payload);
+        require(success, "GelatoUserProxy.delegatecall(): failed");
+    }
+
+    function delegatecallGelatoAction(
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
         uint256 _actionGas
@@ -71,21 +80,24 @@ contract GelatoUserProxy is IGelatoUserProxy {
     {
         // Return if insufficient actionGas (+ 210000 gas overhead buffer) is sent
         if (gasleft() < _actionGas + 21000) {
-            revert("GasError");
             return (
                 uint8(GelatoCoreEnums.ExecutionResult.InsufficientActionGas),
                 uint8(GelatoCoreEnums.StandardReason.NotOk)
             );
         }
-
         // Low level try / catch (fails if gasleft() < _actionGas)
         (bool success,
          bytes memory returndata) = address(_action).delegatecall.gas(_actionGas)(
             _actionPayloadWithSelector
         );
+        return _handleGelatoActionReturndata(success, returndata);
+    }
 
-        require(success, "GelatoUserProxy.executeDelegatecall: unsuccessful");
-
+    function _handleGelatoActionReturndata(bool success, bytes memory returndata)
+        internal
+        pure
+        returns(uint8 executionResult, uint8 reason)
+    {
         // Unhandled errors during action execution
         if (!success) {
             // An unhandled error occured during action.delegatecall frame
@@ -95,7 +107,7 @@ contract GelatoUserProxy is IGelatoUserProxy {
             );
         } else {
             // Success OR caught errors during action execution
-            //(executionResult, reason) = abi.decode(returndata, (uint8,uint8));
+            (executionResult, reason) = abi.decode(returndata, (uint8,uint8));
 
             // If (Success)
             if (executionResult == uint8(GelatoCoreEnums.ExecutionResult.Success)) {
@@ -105,7 +117,6 @@ contract GelatoUserProxy is IGelatoUserProxy {
                     uint8(GelatoCoreEnums.StandardReason.Ok)
                 );
             }
-            revert("GelatoUserProxy.executeDelegatecall: ExecutionFailure");
             // Else: Failure! But handled executionResult and reason, are returned
             //   to the calling frame (gelatoCore._executeActionViaUserProxy())
             // If implemented correctly, executionResult must be one of:

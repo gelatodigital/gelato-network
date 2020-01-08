@@ -475,7 +475,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         private
         returns (GelatoCoreEnums.ExecutionResult, uint8)  // executable?, reason
     {
-        try _userProxy.executeDelegatecall(
+        try _userProxy.delegatecallGelatoAction(
             _action,
             _actionPayloadWithSelector,
             _actionGas

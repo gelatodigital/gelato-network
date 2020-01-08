@@ -6,7 +6,7 @@ contract GelatoGasTestUserProxy is GelatoUserProxy {
 
     constructor(address payable _user) public GelatoUserProxy(_user) {}
 
-    function executeDelegatecall(
+    function delegatecallGelatoAction(
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
         uint256 _actionGas
@@ -16,35 +16,34 @@ contract GelatoGasTestUserProxy is GelatoUserProxy {
         override
         auth
         noZeroAddress(address(_action))
-        returns(uint8 executionResult, uint8 actionErrorCode)
+        returns(uint8 executionResult, uint8 reason)
     {
         uint256 startGas = gasleft();
 
-        if (gasleft() < _actionGas + 500) {
-            revert("GelatoGasTestUserProxy.executeDelegatecall: gasleft < _actionGas");
+        // Return if insufficient actionGas (+ 210000 gas overhead buffer) is sent
+        if (gasleft() < _actionGas + 21000) {
+            revert("GelatoGasTestUserProxy.delegatecallGelatoAction: actionGas failed");
         }
-
         // Low level try / catch (fails if gasleft() < _actionGas)
         (bool success,
          bytes memory returndata) = address(_action).delegatecall.gas(_actionGas)(
             _actionPayloadWithSelector
         );
-
-        // Uncaught errors during action execution
+        // Unhandled errors during action execution
         if (!success) {
-            // An uncaught error occured during action.delegatecall frame (no error code)
-            revert("GelatoGasTestUserProxy.executeDelegatecall: uncaught action error");
+            // An unhandled error occured during action.delegatecall frame
+            revert("GelatoGasTestUserProxy.delegatecallGelatoAction: unhandled error");
         } else {
-            // Success or caught errors during action execution
-            (executionResult, actionErrorCode) = abi.decode(returndata, (uint8,uint8));
+            // Success OR caught errors during action execution
+            (executionResult, reason) = abi.decode(returndata, (uint8,uint8));
 
+            // If (Success)
             if (executionResult == uint8(GelatoCoreEnums.ExecutionResult.Success)) {
-                // Successful Execution! (no actionErrorCode)
+                // Success!
                 revert(string(abi.encodePacked(startGas - gasleft())));
             }
-            // Failure! But identifiable executionResult and actionErrorCode, which are
-            //  returned to the calling frame (gelatoCore._executeActionViaUserProxy())
-            revert(string(abi.encodePacked(startGas - gasleft())));
+            // Execution Failure
+            revert("GelatoGasTestUserProxy.delegatecallGelatoAction: Execution Failed");
         }
     }
 }
