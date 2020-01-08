@@ -35,9 +35,12 @@ module.exports = {
       hardfork: "istanbul"
     },
     ropsten: {
-      url: `https://ropsten.infura.io/v3/${INFURA_ID}`,
-      chainId: 3,
+      // Standard
       accounts: { mnemonic: DEV_MNEMONIC },
+      chainId: 3,
+      gasPrice: 20000000000,  // 20 gwei
+      url: `https://ropsten.infura.io/v3/${INFURA_ID}`,
+      // Custom
       addressBook: {
         erc20: {
           DAI: "0xad6d458402f60fd3bd25163575031acdce07538d",
@@ -63,11 +66,11 @@ module.exports = {
         "TriggerTimestampPassed"
       ],
       deployments: {
-        ActionKyberTrade: "0x5E26327C612635e2ef99245f2447fA778ec62d25",
+        ActionKyberTrade: "0x05B0C94eA8EEf2A4Ec19E717C30552298851c761",
         ActionMultiMintForTriggerTimestampPassed:
-          "0x9f6cf035a6B566EfdB3c7cE720e1AbB0f4f44d32",
-        GelatoCore: "0x4f642F9403bf3788D6427bCcBbEEa5b3b558D0aD",
-        TriggerTimestampPassed: "0xeD40A306E31e4d1F21D47469aFeD852b8caBa721"
+          "0x87b9f40e569C3a58C1F07a5E929a5b27edE74D27",
+        GelatoCore: "0x00ad2EeFC59366833304702B1C918574f158129C",
+        TriggerTimestampPassed: "0x525EB0c1279f1CC690D01a2Fcb78A0D5d156D1Ee"
       }
     }
   },
