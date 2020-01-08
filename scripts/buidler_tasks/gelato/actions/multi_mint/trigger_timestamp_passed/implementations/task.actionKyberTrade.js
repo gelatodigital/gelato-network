@@ -176,7 +176,7 @@ export default task(
         amount: SRC_AMOUNT.mul(NUMBER_OF_MINTS),
         log
       });
-t
+
       return txReceipt;
     } catch (err) {
       console.log(err);
