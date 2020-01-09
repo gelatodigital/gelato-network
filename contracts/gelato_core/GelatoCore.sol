@@ -259,12 +259,12 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         /* solhint-disable indent */
         if (computedExecutionClaimHash != executionClaimHash[_executionClaimId])
             return (
-                GelatoCoreEnums.CanExecuteResult.WrongCalldataOrAlreadyDeleted,
+                GelatoCoreEnums.CanExecuteResult.AlreadyDeletedOrWrongCalldata,
                 uint8(GelatoCoreEnums.StandardReason.NotOk)
             );
         else if (userProxyWithExecutionClaimId[_executionClaimId] == IGelatoUserProxy(0))
             return (
-                GelatoCoreEnums.CanExecuteResult.NonExistantExecutionClaim,
+                GelatoCoreEnums.CanExecuteResult.AlreadyDeletedOrNonExistant,
                 uint8(GelatoCoreEnums.StandardReason.NotOk)
             );
         else if (_executionClaimExpiryDate < now)

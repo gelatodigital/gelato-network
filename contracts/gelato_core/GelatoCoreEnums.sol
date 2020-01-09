@@ -3,8 +3,8 @@ pragma solidity ^0.6.0;
 abstract contract GelatoCoreEnums {
 
     enum CanExecuteResult {
-        WrongCalldataOrAlreadyDeleted,  // also returns if a not-selected executor calls fn
-        NonExistantExecutionClaim,
+        AlreadyDeletedOrWrongCalldata,  // also returns if a not-selected executor calls fn
+        AlreadyDeletedOrNonExistant,
         ExecutionClaimExpired,
         TriggerNotOk,
         UnhandledTriggerError,

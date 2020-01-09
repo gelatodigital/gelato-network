@@ -38,7 +38,7 @@ module.exports = {
       // Standard
       accounts: { mnemonic: DEV_MNEMONIC },
       chainId: 3,
-      gasPrice: 20000000000,  // 20 gwei
+      gasPrice: 5000000000, // 5 gwei
       url: `https://ropsten.infura.io/v3/${INFURA_ID}`,
       // Custom
       addressBook: {
@@ -144,7 +144,6 @@ require("./scripts/buidler_tasks/gelato/core/accounting/collection.tasks.account
 require("./scripts/buidler_tasks/gelato/core/collection.tasks.core");
 // UserProxyManager
 require("./scripts/buidler_tasks/gelato/core/user_proxy_manager/collection.tasks.userProxyManager");
-
 
 // ============== INTERNAL HELPER TASKS ================================================
 require("./scripts/buidler_tasks/internal/internalTaskCollection");
