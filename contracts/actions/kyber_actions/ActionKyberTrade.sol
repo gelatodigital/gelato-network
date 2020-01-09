@@ -10,7 +10,7 @@ import "../../gelato_core/GelatoCoreEnums.sol";
 contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
     // using SafeERC20 for IERC20; <- internal library methods vs. try/catch
 
-    // Extends IGelatoAction.StandardReason (no overrides for enums in solc yet)
+    // Extends IGelatoCoreEnums.StandardReason (no overrides for enums in solc yet)
     enum Reason {
         // StandardReason Fields
         Ok,  // 0: Standard Field for Fulfilled Conditions and No Errors

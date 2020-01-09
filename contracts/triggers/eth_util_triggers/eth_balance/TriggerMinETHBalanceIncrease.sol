@@ -1,8 +1,8 @@
 pragma solidity ^0.6.0;
 
-import "../IGelatoTrigger.sol";
+import "../../IGelatoTrigger.sol";
 
-contract TriggerTimestampPassed is IGelatoTrigger {
+contract TriggerMinETHBalanceIncrease is IGelatoTrigger {
 
     enum Reason {
         // StandardReason Fields
@@ -10,7 +10,7 @@ contract TriggerTimestampPassed is IGelatoTrigger {
         NotOk,  // 1: Standard Field for Unfulfilled Conditions or Caught/Handled Errors
         UnhandledError,  // 2: Standard Field for Uncaught/Unhandled Errors
         // NotOk: Unfulfilled Conditions
-        TimestampDidNotPass
+        MinETHBalanceNotReached
     }
 
     // triggerSelector public state variable np due to this.actionSelector constant issue
@@ -19,16 +19,16 @@ contract TriggerTimestampPassed is IGelatoTrigger {
     }
     uint256 public constant override triggerGas = 30000;
 
-    function fired(uint256 _timestamp)
+    function fired(address _account, uint256 _referenceBalance)
         external
         view
         returns(bool, uint8)  // executable?, reason
     {
-        if (_timestamp <= block.timestamp) return (true, uint8(Reason.Ok));
-        else return(false, uint8(Reason.TimestampDidNotPass));
+        if (_account.balance >= _referenceBalance) return (true, uint8(Reason.Ok));
+        else return(false, uint8(Reason.MinETHBalanceNotReached));
     }
 
-    function getTriggerValue() external view override returns(uint256) {
-        return block.timestamp;
+    function getTriggerValue(address _account, uint256) external view override returns(uint256) {
+        return _account.balance;
     }
 }

@@ -6,6 +6,19 @@ import "./IGelatoAction.sol";
 /// @dev find all the NatSpecs inside IGelatoAction
 abstract contract GelatoActionsStandard is IGelatoAction {
 
+    /* CAUTION All Actions must reserve the first 3 fields of their `enum Reason` as such:
+        0: Ok,  // 0: standard field for Fulfilled Conditions and No Errors
+        1: NotOk,  // 1: standard field for Unfulfilled Conditions or Handled Errors
+        2: UnhandledError  // 2: standard field for Unhandled or Uncaught Errors
+    */
+
+    /* CAUTION: all actions must have their action() function according to the following standard format:
+        -  Param1: address _user,
+        -  Param2: address _userProxy
+    => function action(address _user, address _userProxy, ....) external returns (GelatoCoreEnums.ExecutionResult, Reason):
+    action function not defined here because non-overridable, due to different arguments passed across different actions
+    */
+
     function actionConditionsCheck(bytes calldata)  // _actionPayloadWithSelector
         external
         view
