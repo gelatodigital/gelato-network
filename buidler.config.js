@@ -70,7 +70,7 @@ module.exports = {
         ActionMultiMintForTriggerTimestampPassed:
           "0x87b9f40e569C3a58C1F07a5E929a5b27edE74D27",
         GelatoCore: "0x653F3612e5A649EB93D60a55A0f0A2C8e0cF6A73",
-        TriggerTimestampPassed: "0x525EB0c1279f1CC690D01a2Fcb78A0D5d156D1Ee"
+        TriggerTimestampPassed: "0xc82C22f6B82B0c16Fc655B27046061e640701D53"
       }
     }
   },

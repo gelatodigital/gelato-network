@@ -28,7 +28,7 @@ contract TriggerMinETHBalanceIncrease is IGelatoTrigger {
         else return(false, uint8(Reason.MinETHBalanceNotReached));
     }
 
-    function getTriggerValue(address _account, uint256) external view override returns(uint256) {
+    function getTriggerValue(address _account, uint256) external view returns(uint256) {
         return _account.balance;
     }
 }
