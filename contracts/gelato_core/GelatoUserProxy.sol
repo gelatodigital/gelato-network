@@ -81,7 +81,7 @@ contract GelatoUserProxy is IGelatoUserProxy {
         // Return if insufficient actionGas (+ 210000 gas overhead buffer) is sent
         if (gasleft() < _actionGas + 21000) {
             return (
-                uint8(GelatoCoreEnums.ExecutionResult.InsufficientActionGas),
+                uint8(GelatoCoreEnums.ExecutionResult.ActionGasNotOk),
                 uint8(GelatoCoreEnums.StandardReason.NotOk)
             );
         }

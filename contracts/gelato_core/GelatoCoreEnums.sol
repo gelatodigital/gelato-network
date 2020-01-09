@@ -3,9 +3,10 @@ pragma solidity ^0.6.0;
 abstract contract GelatoCoreEnums {
 
     enum CanExecuteResult {
-        AlreadyDeletedOrWrongCalldata,  // also returns if a not-selected executor calls fn
-        AlreadyDeletedOrNonExistant,
+        ExecutionClaimAlreadyExecuted,
+        ExecutionClaimNonExistant,
         ExecutionClaimExpired,
+        WrongCalldata,  // also returns if a not-selected executor calls fn
         TriggerNotOk,
         UnhandledTriggerError,
         ActionConditionsNotOk,
@@ -14,9 +15,9 @@ abstract contract GelatoCoreEnums {
     }
 
     enum ExecutionResult {
-        InsufficientActionGas,
-        ActionNotOk,  // Mostly for caught/handled action errors
-        DappNotOk,  // Mostly for caught/ dapp errors (on/by action)
+        ActionGasNotOk,
+        ActionNotOk,  // Mostly for caught/handled (by action) action errors
+        DappNotOk,  // Mostly for caught/handled (by action) dapp errors
         UnhandledActionError,
         UnhandledUserProxyError,
         Success

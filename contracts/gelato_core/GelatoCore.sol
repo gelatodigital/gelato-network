@@ -63,7 +63,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
 
         // =============
         // ______ Mint new executionClaim ______________________________________
-        Counters.increment(executionClaimIds);
+        executionClaimIds.increment();
         uint256 executionClaimId = executionClaimIds.current();
         userProxyWithExecutionClaimId[executionClaimId] = userProxy;
         // =============
@@ -243,7 +243,25 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         view
         returns (GelatoCoreEnums.CanExecuteResult, uint8 reason)
     {
+        /* solhint-disable indent */
         // _____________ Static CHECKS __________________________________________
+        if (executionClaimHash[_executionClaimId] == bytes32(0))
+            if (_executionClaimId <= executionClaimIds.current())
+                return (
+                    GelatoCoreEnums.CanExecuteResult.ExecutionClaimAlreadyExecuted,
+                    uint8(GelatoCoreEnums.StandardReason.NotOk)
+                );
+            else
+                return (
+                    GelatoCoreEnums.CanExecuteResult.ExecutionClaimNonExistant,
+                    uint8(GelatoCoreEnums.StandardReason.NotOk)
+                );
+        else if (_executionClaimExpiryDate < now)
+            return (
+                GelatoCoreEnums.CanExecuteResult.ExecutionClaimExpired,
+                uint8(GelatoCoreEnums.StandardReason.NotOk)
+            );
+
         bytes32 computedExecutionClaimHash = _computeExecutionClaimHash(
             msg.sender,  // selected? executor
             _executionClaimId,
@@ -256,20 +274,10 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
             _executionClaimExpiryDate,
             _mintingDeposit
         );
-        /* solhint-disable indent */
+
         if (computedExecutionClaimHash != executionClaimHash[_executionClaimId])
             return (
-                GelatoCoreEnums.CanExecuteResult.AlreadyDeletedOrWrongCalldata,
-                uint8(GelatoCoreEnums.StandardReason.NotOk)
-            );
-        else if (userProxyWithExecutionClaimId[_executionClaimId] == IGelatoUserProxy(0))
-            return (
-                GelatoCoreEnums.CanExecuteResult.AlreadyDeletedOrNonExistant,
-                uint8(GelatoCoreEnums.StandardReason.NotOk)
-            );
-        else if (_executionClaimExpiryDate < now)
-            return (
-                GelatoCoreEnums.CanExecuteResult.ExecutionClaimExpired,
+                GelatoCoreEnums.CanExecuteResult.WrongCalldata,
                 uint8(GelatoCoreEnums.StandardReason.NotOk)
             );
 
