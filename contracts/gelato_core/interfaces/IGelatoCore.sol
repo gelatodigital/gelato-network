@@ -58,7 +58,8 @@ interface IGelatoCore {
     event LogExecutionClaimCancelled(
         uint256 indexed executionClaimId,
         IGelatoUserProxy indexed userProxy,
-        address indexed cancelor
+        address indexed cancelor,
+        bool executionClaimExpired
     );
 
     /**

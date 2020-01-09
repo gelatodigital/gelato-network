@@ -69,7 +69,7 @@ module.exports = {
         ActionKyberTrade: "0x05B0C94eA8EEf2A4Ec19E717C30552298851c761",
         ActionMultiMintForTriggerTimestampPassed:
           "0x87b9f40e569C3a58C1F07a5E929a5b27edE74D27",
-        GelatoCore: "0x9f1e47652149900397299a10C3c97aA0dDb59240",
+        GelatoCore: "0x85d555582D8649Ca2D96593d282ff4940319B38d",
         TriggerTimestampPassed: "0x525EB0c1279f1CC690D01a2Fcb78A0D5d156D1Ee"
       }
     }

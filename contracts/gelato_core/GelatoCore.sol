@@ -174,10 +174,11 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         external
         override
     {
+        bool executionClaimExpired = _executionClaimExpiryDate <= now;
         if (msg.sender != proxyToUser[address(_userProxy)]) {
             require(
-                _executionClaimExpiryDate <= now && msg.sender == _selectedExecutor,
-                "GelatoCore.cancelExecutionClaim: only selected executor post expiry"
+                executionClaimExpired && msg.sender == _selectedExecutor,
+                "GelatoCore.cancelExecutionClaim: msgSender problem"
             );
         }
         bytes32 computedExecutionClaimHash = _computeExecutionClaimHash(
@@ -200,7 +201,12 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         // Effects
         delete userProxyWithExecutionClaimId[_executionClaimId];
         delete executionClaimHash[_executionClaimId];
-        emit LogExecutionClaimCancelled(_executionClaimId, _userProxy, msg.sender);
+        emit LogExecutionClaimCancelled(
+            _executionClaimId,
+            _userProxy,
+            msg.sender,
+            executionClaimExpired
+        );
         // Interactions
         msg.sender.sendValue(_mintingDeposit);
     }
