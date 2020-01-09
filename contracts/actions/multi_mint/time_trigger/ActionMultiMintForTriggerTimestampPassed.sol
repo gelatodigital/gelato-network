@@ -6,6 +6,8 @@ import "../../../triggers/IGelatoTrigger.sol";
 import "../../../gelato_core/interfaces/IGelatoCore.sol";
 import "../../../gelato_core/interfaces/IGelatoCoreAccounting.sol";
 
+// CAUTION this contract is not up to date with Action standards due to missing return values
+//  (GelatoCore.Enums.ExecutionResult, uint8 reason) - not possible due to stack too deep
 contract ActionMultiMintForTriggerTimestampPassed is GelatoActionsStandard {
     using SafeMath for uint256;
 
