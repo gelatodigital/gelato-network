@@ -1,6 +1,8 @@
 // ==== action_payloads ====
-import "./action_payloads/sTask.ActionKyberTrade"
+import "./action_payloads/sTask.ActionKyberTrade";
 
 // ==== trigger_payloads ====
 // TriggerMinBalanceIncrease
-import "./trigger_payloads/sTask.TriggerMinBalanceIncrease"
+import "./trigger_payloads/sTask.TriggerMinBalanceIncrease";
+// TriggerTimestampPassed
+import "./trigger_payloads/sTask.TriggerTimestampPassed";

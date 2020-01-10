@@ -16,6 +16,16 @@ export default task(
       // To avoid mistakes default log to true
       log = true;
 
+      // Initialize provider and signer
+      const provider = ethers.provider;
+      const [signer] = await ethers.signers();
+
+      const blockNumber = await provider.getBlockNumber();
+      if (log)
+        console.log(
+          `\nCurrent block number on ${network.name}: ${blockNumber}\n`
+        );
+
       // Contract Addresses
       const {
         ActionKyberTrade: actionKyberTradeAddress,
@@ -24,72 +34,12 @@ export default task(
         TriggerTimestampPassed: triggerTimestampPassedAddress
       } = await run("bre-config", { deployments: true });
 
-      const { DAI: src, KNC: dest } = await run("bre-config", {
-        addressbookcategory: "erc20"
-      });
-
-      const { proxy: kyberProxyAddress } = await run("bre-config", {
-        addressbookcategory: "kyber"
-      });
-
-      // Initialize provider and signer
-      const provider = ethers.provider;
-      const [signer] = await ethers.signers();
-
-      const blockNumber = await ethers.provider.getBlockNumber();
-
-      if (log)
-        console.log(
-          `\nCurrent block number on ${network.name}: ${blockNumber}\n`
-        );
-
-      // Arguments for function call to multiMintProxy.multiMint()
-      const START_TIME = Math.floor(Date.now() / 1000);
-      // Specific Action Params: encoded during main() execution
-      const SRC_AMOUNT = utils.parseUnits("10", 18);
-      // minConversionRate async fetched from KyberNetwork during main() execution
-      const SELECTED_EXECUTOR_ADDRESS =
-        "0x203AdbbA2402a36C202F207caA8ce81f1A4c7a72";
-      const INTERVAL_SPAN = "120"; // 300 seconds
-      const NUMBER_OF_MINTS = "2";
-
-      // Read Instance of KyberContract
-      const kyberABI = [
-        "function getExpectedRate(address src, address dest, uint srcQty) view returns(uint,uint)"
-      ];
-      const kyberContract = new Contract(kyberProxyAddress, kyberABI, provider);
-      // Fetch the slippage rate from KyberNetwork and assign it to minConversionRate
-      const [_, minConversionRate] = await kyberContract.getExpectedRate(
-        src,
-        dest,
-        SRC_AMOUNT
-      );
-      if (log)
-        console.log(
-          `\n\t\t minConversionRate: ${utils.formatUnits(
-            minConversionRate,
-            18
-          )}\n`
-        );
-
       const userProxyAddress = await run("gelato-core-getproxyofuser");
 
       // Encode the specific params for ActionKyberTrade
-      const ACTION_KYBER_TRADE_PAYLOAD_WITH_SELECTOR = await run(
-        "abiEncodeWithSelector",
-        {
-          contractname: "ActionKyberTrade",
-          functionname: "action",
-          inputs: [
-            signer._address, // user
-            userProxyAddress,
-            src,
-            SRC_AMOUNT,
-            dest,
-            minConversionRate
-          ],
-          log
-        }
+      const actionKyberTradePayloadWithSelector = await run(
+        "gelato-core-mint:payloads:ActionKyberTrade",
+        { log }
       );
 
       // Encode the payload for the call to MultiMintForTimeTrigger.multiMint
@@ -104,7 +54,7 @@ export default task(
             triggerTimestampPassedAddress,
             START_TIME.toString(),
             actionKyberTradeAddress,
-            ACTION_KYBER_TRADE_PAYLOAD_WITH_SELECTOR,
+            actionKyberTradePayloadWithSelector,
             INTERVAL_SPAN,
             NUMBER_OF_MINTS
           ],

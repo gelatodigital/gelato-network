@@ -21,6 +21,14 @@ export default internalTask(
       const { DAI: src, KNC: dest } = await run("bre-config", {
         addressbookcategory: "erc20"
       });
+      const srcSymbol = await run("bre-config", {
+        addressbookcategory: "erc20",
+        addressbookentry: src
+      });
+      const destSymbol = await run("bre-config", {
+        addressbookcategory: "erc20",
+        addressbookentry: dest
+      });
       const srcAmt = utils.parseUnits("10", 18);
 
       // Read Instance of KyberContract
@@ -36,6 +44,13 @@ export default internalTask(
         dest,
         srcAmt
       );
+      if (log)
+        console.log(
+          `\nminConversionRate ${srcSymbol}-${destSymbol}: ${utils.formatUnits(
+            minConversionRate,
+            18
+          )}\n`
+        );
 
       // Params as sorted array of inputs for abi.encoding
       // action(_user, _userProxy, _src, _srcAmt, _dest, _minConversionRate)
