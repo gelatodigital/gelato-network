@@ -3,7 +3,7 @@ pragma solidity ^0.6.0;
 abstract contract GelatoCoreEnums {
 
     enum CanExecuteResult {
-        ExecutionClaimAlreadyExecuted,
+        ExecutionClaimAlreadyExecutedOrCancelled,
         ExecutionClaimNonExistant,
         ExecutionClaimExpired,
         WrongCalldata,  // also returns if a not-selected executor calls fn
