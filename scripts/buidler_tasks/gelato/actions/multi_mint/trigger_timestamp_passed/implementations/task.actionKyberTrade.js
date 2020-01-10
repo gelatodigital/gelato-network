@@ -6,10 +6,6 @@ import sleep from "../../../../../../helpers/async/sleep";
 // Javascript Ethereum API Library
 import { Contract, utils } from "ethers";
 
-// ABI encoding function
-import encodeActionKyberTradePayloadWithSelector from "../../../kyber/trade/abiEncodeWithSelector";
-import encodeMultiMintPayloadWithSelector from "../abiEncodeWithSelector";
-
 export default task(
   "gelato-action-multimint",
   `TX to ActionMultiMintForTriggerTimestampPassed on [--network] (default: ${defaultNetwork})`
@@ -79,34 +75,42 @@ export default task(
       const userProxyAddress = await run("gelato-core-getproxyofuser");
 
       // Encode the specific params for ActionKyberTrade
-      const ACTION_KYBER_TRADE_PAYLOAD_WITH_SELECTOR = encodeActionKyberTradePayloadWithSelector(
-        signer._address, // user
-        userProxyAddress,
-        src,
-        SRC_AMOUNT,
-        dest,
-        minConversionRate
+      const ACTION_KYBER_TRADE_PAYLOAD_WITH_SELECTOR = await run(
+        "abiEncodeWithSelector",
+        {
+          contractname: "ActionKyberTrade",
+          functionname: "action",
+          inputs: [
+            signer._address, // user
+            userProxyAddress,
+            src,
+            SRC_AMOUNT,
+            dest,
+            minConversionRate
+          ],
+          log
+        }
       );
-      if (log)
-        console.log(
-          `\nActionKyberTrade payloadWithSelector: \n ${ACTION_KYBER_TRADE_PAYLOAD_WITH_SELECTOR}\n`
-        );
 
       // Encode the payload for the call to MultiMintForTimeTrigger.multiMint
-      const ACTION_MULTI_MINT_PAYLOAD_WITH_SELECTOR = encodeMultiMintPayloadWithSelector(
-        gelatoCoreAddress,
-        SELECTED_EXECUTOR_ADDRESS,
-        triggerTimestampPassedAddress,
-        START_TIME.toString(),
-        actionKyberTradeAddress,
-        ACTION_KYBER_TRADE_PAYLOAD_WITH_SELECTOR,
-        INTERVAL_SPAN,
-        NUMBER_OF_MINTS
+      const ACTION_MULTI_MINT_PAYLOAD_WITH_SELECTOR = await run(
+        "abiEncodeWithSelector",
+        {
+          contractname: "ActionMultiMintForTriggerTimestampPassed",
+          functionname: "action",
+          inputs: [
+            gelatoCoreAddress,
+            SELECTED_EXECUTOR_ADDRESS,
+            triggerTimestampPassedAddress,
+            START_TIME.toString(),
+            actionKyberTradeAddress,
+            ACTION_KYBER_TRADE_PAYLOAD_WITH_SELECTOR,
+            INTERVAL_SPAN,
+            NUMBER_OF_MINTS
+          ],
+          log
+        }
       );
-      if (log)
-        console.log(
-          `\nActionMultiMintForTriggerTimestampPassed payload with selector:\n ${ACTION_MULTI_MINT_PAYLOAD_WITH_SELECTOR}\n`
-        );
 
       // Getting the current Ethereum price
       const ethUSDPrice = await run("eth-price");

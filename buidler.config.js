@@ -66,11 +66,11 @@ module.exports = {
         "TriggerTimestampPassed"
       ],
       deployments: {
-        ActionKyberTrade: "0x05B0C94eA8EEf2A4Ec19E717C30552298851c761",
+        ActionKyberTrade: "0x330295eb63B4ABB05355165Cc9904e87231323F7",
         ActionMultiMintForTriggerTimestampPassed:
           "0x87b9f40e569C3a58C1F07a5E929a5b27edE74D27",
         GelatoCore: "0x653F3612e5A649EB93D60a55A0f0A2C8e0cF6A73",
-        TriggerTimestampPassed: "0xc82C22f6B82B0c16Fc655B27046061e640701D53"
+        TriggerTimestampPassed: "0xcC3C943A865925Ef04569C2e93A964E2D2ff1ff0"
       }
     }
   },
@@ -146,5 +146,5 @@ require("./scripts/buidler_tasks/gelato/core/collection.tasks.core");
 require("./scripts/buidler_tasks/gelato/core/user_proxy_manager/collection.tasks.userProxyManager");
 
 // ============== INTERNAL HELPER TASKS ================================================
-// dictionary, encoding ....
+// encoding, naming ....
 require("./scripts/buidler_tasks/internal/internalTaskCollection");

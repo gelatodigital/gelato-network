@@ -2,26 +2,24 @@ import { internalTask } from "@nomiclabs/buidler/config";
 import { utils } from "ethers";
 
 export default internalTask("abiEncodeWithSelector")
-  .addParam("abi")
-  .addOptionalVariadicPositionalParam("args")
+  .addParam("contractname")
+  .addParam("functionname")
+  .addOptionalVariadicPositionalParam("inputs")
   .addOptionalParam("log")
-  .setAction(async ({ abi, args, log }) => {
+  .setAction(async ({ contractname, functionname, inputs, log }) => {
     try {
-      const iFace = new utils.Interface(
-        actionMultiMintForTriggerTimestampPassedABI
-      );
-
-      const payloadWithSelector = iFace.functions.action.encode([
-        gelatoCore,
-        selectedExecutor,
-        timeTrigger,
-        startTime,
-        action,
-        actionPayloadWithSelector,
-        intervalSpan,
-        numberOfMints
+      const contract = await ethers.getContract(contractname);
+      const abi = contract.interface.abi;
+      const interFace = new utils.Interface(abi);
+      const payloadWithSelector = interFace.functions[functionname].encode([
+        ...inputs
       ]);
-
+      if (log) {
+        console.log(`\nContractName:  ${contractname}`);
+        console.log(`Function Name: ${functionname}`);
+        console.log(`Inputs:\n${inputs}`);
+        console.log(`EncodedPayloadWithSelector:\n${payloadWithSelector}\n`);
+      }
       return payloadWithSelector;
     } catch (err) {
       console.error(err);
