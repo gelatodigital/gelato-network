@@ -138,12 +138,13 @@ require("./scripts/buidler_tasks/ethers/collection.tasks.ethers");
 // _____ ACTIONS ______________________
 require("./scripts/buidler_tasks/gelato/actions/collection.tasks.actions");
 // _____ CORE ______________________
-// Accounting
+// Accounting: registerExecutor, ....
 require("./scripts/buidler_tasks/gelato/core/accounting/collection.tasks.accounting");
-// Core
+// Core: mintExecutionClaim, ....
 require("./scripts/buidler_tasks/gelato/core/collection.tasks.core");
-// UserProxyManager
+// UserProxyManager: createUserProxy, ....
 require("./scripts/buidler_tasks/gelato/core/user_proxy_manager/collection.tasks.userProxyManager");
 
 // ============== INTERNAL HELPER TASKS ================================================
+// dictionary, encoding ....
 require("./scripts/buidler_tasks/internal/internalTaskCollection");

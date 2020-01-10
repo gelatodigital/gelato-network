@@ -21,18 +21,20 @@ contract TriggerMinBalanceIncrease is IGelatoTrigger {
     }
     uint256 public constant override triggerGas = 30000;
 
-    function fired(bool _eth, address _erc20, address _account, uint256 _refBalance)
+    /// @dev Caution: use 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE for ETH _coin
+    /// @param _coin ETH (0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) or ERC20
+    function fired(address _coin, address _account, uint256 _refBalance)
         external
         view
         returns(bool, uint8)  // executable?, reason
     {
         // ETH balances
-        if (_eth)
+        if (_coin == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)
             if (_account.balance >= _refBalance) return (true, uint8(Reason.Ok));
             else return(false, uint8(Reason.MinBalanceIncreaseNotReached));
 
         // ERC20 balances
-        IERC20 erc20 = IERC20(_erc20);
+        IERC20 erc20 = IERC20(_coin);
         try erc20.balanceOf(_account) returns (uint256 erc20Balance) {
             if (erc20Balance >= _refBalance) return (true, uint8(Reason.Ok));
             else return(false, uint8(Reason.MinBalanceIncreaseNotReached));
@@ -41,13 +43,14 @@ contract TriggerMinBalanceIncrease is IGelatoTrigger {
         }
     }
 
-    function getTriggerValue(bool _eth, address _erc20, address _account, uint256)
+    function getTriggerValue(address _coin, address _account, uint256)
         external
         view
         returns(uint256)
     {
-        if (_eth) return _account.balance;
-        IERC20 erc20 = IERC20(_erc20);
+        if (_coin == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)
+            return _account.balance;
+        IERC20 erc20 = IERC20(_coin);
         return erc20.balanceOf(_account);
     }
 }

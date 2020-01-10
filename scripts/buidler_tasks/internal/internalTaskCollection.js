@@ -1,4 +1,8 @@
-import "./iTask.checkAddressBook";
-import "./iTask.checkContractName";
-import "./iTask.checkNetworkName";
-import "./iTask.handleNetworkName";
+// dictionary
+import "./dictionary/iTask.checkAddressBook";
+import "./dictionary/iTask.checkContractName";
+import "./dictionary/iTask.checkNetworkName";
+import "./dictionary/iTask.handleNetworkName";
+
+// encodings
+import "./encoding/iTask.abiEncodeWithSelector";
