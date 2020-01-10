@@ -1,7 +1,7 @@
 pragma solidity ^0.6.0;
 
-import "../../IGelatoTrigger.sol";
-import "../../../external/IERC20.sol";
+import "../IGelatoTrigger.sol";
+import "../../external/IERC20.sol";
 
 contract TriggerMinBalanceIncrease is IGelatoTrigger {
 
