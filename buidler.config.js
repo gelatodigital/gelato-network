@@ -42,6 +42,9 @@ module.exports = {
       url: `https://ropsten.infura.io/v3/${INFURA_ID}`,
       // Custom
       addressBook: {
+        EOAs: {
+          luis: "0x203AdbbA2402a36C202F207caA8ce81f1A4c7a72"
+        },
         erc20: {
           DAI: "0xad6d458402f60fd3bd25163575031acdce07538d",
           "0xad6d458402f60fd3bd25163575031acdce07538d": "DAI",
@@ -138,12 +141,8 @@ require("./scripts/buidler_tasks/ethers/collection.tasks.ethers");
 // _____ ACTIONS ______________________
 require("./scripts/buidler_tasks/gelato/actions/collection.tasks.actions");
 // _____ CORE ______________________
-// Accounting: registerExecutor, ....
-require("./scripts/buidler_tasks/gelato/core/accounting/collection.tasks.accounting");
-// Core: mintExecutionClaim, ....
+// Accounting, UserProxyManager, Minting, ...
 require("./scripts/buidler_tasks/gelato/core/collection.tasks.core");
-// UserProxyManager: createUserProxy, ....
-require("./scripts/buidler_tasks/gelato/core/user_proxy_manager/collection.tasks.userProxyManager");
 
 // ============== INTERNAL HELPER TASKS ================================================
 // encoding, naming ....

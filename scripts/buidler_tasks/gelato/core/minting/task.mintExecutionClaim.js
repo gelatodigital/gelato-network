@@ -1,36 +1,61 @@
-/*import { task } from "@nomiclabs/buidler/config";
+import { task } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../../buidler.config";
 import { Contract } from "ethers";
 
 export default task(
-  "gelato-core-mint",
+  "gelato-core-mintexecutionclaim",
   `Sends tx to GelatoCore.mintExecutionClaim() on [--network] (default: ${defaultNetwork})`
 )
+  .addPositionalParam("selectedexecutor", "address")
+  .addPositionalParam("triggername", "must exist inside buidler.config")
+  .addPositionalParam("triggerPayloadWithSelector", "abi.encoded bytes")
+  .addPositionalParam("actionname", "must exist inside buidler.config")
+  .addPositionalParam("actionPayloadWithSelector", "abi.encoded bytes")
   .addFlag("log", "Logs return values to stdout")
-  .setAction(async ({ log }) => {
+  .setAction(async taskArgs => {
     try {
       // To avoid mistakes default log to true
-      log = true;
-      const [signer] = await ethers.signers();
+      taskArgs.log = true;
+
       const gelatoCoreAdddress = await run("bre-config", {
         deployments: true,
         contractname: "GelatoCore"
       });
-      const gelatoCoreUserProxyManagerABI = [
-        "function createUserProxy() external returns(address)"
-      ];
+      const gelatoCoreABI = await run("getContractABI", {
+        contractname: "GelatoCore"
+      });
+      const [signer] = await ethers.signers();
       const gelatoCoreContract = new Contract(
         gelatoCoreAdddress,
-        gelatoCoreUserProxyManagerABI,
+        gelatoCoreABI,
         signer
       );
-      const tx = await gelatoCoreContract.createUserProxy();
-      if (log) console.log(`\n\ntxHash createUserProxy: ${tx.hash}`);
-      await tx.wait();
-      return tx.hash;
+
+      const triggerAddress = await run("bre-config", {
+        deployments: true,
+        contractname: taskArgs.triggername
+      });
+      const actionAddress = await run("bre-config", {
+        deployments: true,
+        contractname: taskArgs.actionname
+      });
+
+      const mintTx = await gelatoCoreContract.mintExecutionClaim(
+        taskArgs.selectedexecutor,
+        triggerAddress,
+        taskArgs.triggerPayloadWithSelector,
+        actionAddress,
+        taskArgs.actionPayloadWithSelector
+      );
+
+      if (log)
+        console.log(
+          `\n\ntxHash gelatoCore.mintExectuionClaim: ${mintTx.hash}\n`
+        );
+      await mintTx.wait();
+      return mintTx.hash;
     } catch (error) {
       console.error(error);
       process.exit(1);
     }
   });
-*/

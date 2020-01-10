@@ -1,6 +1,14 @@
 import { task } from "@nomiclabs/buidler/config";
 
 export default task("bre-config", "Return (or --log) BRE.config properties")
+  .addOptionalPositionalParam(
+    "contractname",
+    "Use with [--networks] --deployments"
+  )
+  .addOptionalPositionalParam(
+    "networkname",
+    "Optional use with --networks to get info for a specific network"
+  )
   .addFlag("addressbook", "Returns bre.config.networks.networkName.addressbook")
   .addOptionalParam(
     "addressbookcategory",
@@ -14,7 +22,6 @@ export default task("bre-config", "Return (or --log) BRE.config properties")
     "contracts",
     "Use with --networks for a list of contracts available for deployment on --networkname"
   )
-  .addOptionalParam("contractname", "Use with [--networks] --deployments")
   .addFlag("defaultnetwork", "Config of default network")
   .addFlag(
     "deployments",
@@ -22,24 +29,20 @@ export default task("bre-config", "Return (or --log) BRE.config properties")
   )
   .addFlag("log", "Logs return values to stdout")
   .addFlag("networks", "Config of networks")
-  .addOptionalParam(
-    "networkname",
-    "Optional use with --networks to get info for a specific network"
-  )
   .addFlag("paths", "config of paths")
   .addFlag("solc", "config of solidity compiler")
   .setAction(
     async ({
+      contractname,
+      networkname,
       addressbook,
       addressbookcategory,
       addressbookentry,
       contracts,
-      contractname,
       defaultnetwork,
       deployments,
       log,
       networks,
-      networkname,
       paths,
       solc
     }) => {

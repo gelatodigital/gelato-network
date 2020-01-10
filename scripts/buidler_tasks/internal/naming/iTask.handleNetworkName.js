@@ -3,13 +3,13 @@ import { defaultNetwork } from "../../../../buidler.config";
 
 export default internalTask(
   "handleNetworkName",
-  `Throws if networkname is invalid OR returns the Default Network (${defaultNetwork}) if networkname is undefined`
+  `Throws if networkname is invalid OR returns the connected [--network] (default: ${defaultNetwork}), if networkname is undefined`
 )
   .addParam("networkname")
   .setAction(async ({ networkname }) => {
     try {
       if (networkname) await run("checkNetworkName", { networkname });
-      else networkname = defaultNetwork;
+      else networkname = network.name;
       return networkname;
     } catch (err) {
       console.error(err);

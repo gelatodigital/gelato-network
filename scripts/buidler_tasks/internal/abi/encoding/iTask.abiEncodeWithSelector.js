@@ -8,15 +8,14 @@ export default internalTask("abiEncodeWithSelector")
   .addOptionalParam("log")
   .setAction(async ({ contractname, functionname, inputs, log }) => {
     try {
-      const contract = await ethers.getContract(contractname);
-      const abi = contract.interface.abi;
+      const abi = await run("getContractABI", { contractname });
       const interFace = new utils.Interface(abi);
       const payloadWithSelector = interFace.functions[functionname].encode([
         ...inputs
       ]);
       if (log) {
         console.log(`\nContractName:  ${contractname}`);
-        console.log(`Function Name: ${functionname}`);
+        console.log(`FunctionName:    ${functionname}`);
         console.log(`Inputs:\n${inputs}`);
         console.log(`EncodedPayloadWithSelector:\n${payloadWithSelector}\n`);
       }
