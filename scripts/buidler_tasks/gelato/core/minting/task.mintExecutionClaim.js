@@ -17,9 +17,8 @@ export default task(
       // To avoid mistakes default log to true
       taskArgs.log = true;
 
-      const gelatoCoreAdddress = await run("bre-config", {
-        deployments: true,
-        contractname: "GelatoCore"
+      const { GelatoCore: gelatoCoreAdddress } = await run("bre-config", {
+        deployments: true
       });
       const gelatoCoreABI = await run("getContractABI", {
         contractname: "GelatoCore"

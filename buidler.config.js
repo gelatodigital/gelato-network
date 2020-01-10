@@ -55,6 +55,9 @@ module.exports = {
           WETH: "0xbca556c912754bc8e7d4aad20ad69a1b1444f42d",
           "0xbca556c912754bc8e7d4aad20ad69a1b1444f42d": "WETH"
         },
+        executor: {
+          default: "0x203AdbbA2402a36C202F207caA8ce81f1A4c7a72"
+        },
         kyber: {
           proxy: "0x818E6FECD516Ecc3849DAf6845e3EC868087B755"
         },

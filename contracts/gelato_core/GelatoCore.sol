@@ -254,7 +254,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         if (executionClaimHash[_executionClaimId] == bytes32(0))
             if (_executionClaimId <= executionClaimIds.current())
                 return (
-                    GelatoCoreEnums.CanExecuteResult.ExecutionClaimAlreadyExecuted,
+                    GelatoCoreEnums.CanExecuteResult.ExecutionClaimAlreadyExecutedOrCancelled,
                     uint8(GelatoCoreEnums.StandardReason.NotOk)
                 );
             else
