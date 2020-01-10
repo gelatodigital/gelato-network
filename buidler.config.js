@@ -42,7 +42,7 @@ module.exports = {
       url: `https://ropsten.infura.io/v3/${INFURA_ID}`,
       // Custom
       addressBook: {
-        EOAs: {
+        EOA: {
           luis: "0x203AdbbA2402a36C202F207caA8ce81f1A4c7a72"
         },
         erc20: {

@@ -14,7 +14,7 @@ export default internalTask(
       // Params
       const coin = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"; // ETH
       const account = await run("bre-config", {
-        addressbookcategory: "EOAs",
+        addressbookcategory: "EOA",
         addressbookentry: "luis"
       });
       const refBalance = utils.parseEther("1");
