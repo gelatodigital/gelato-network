@@ -40,8 +40,8 @@ export default internalTask(
             );
           const addressbookInfo = await run("bre-config:networks:addressbook", {
             networkname,
-            category: addressbookcategory,
-            entry: addressbookentry
+            addressbookcategory,
+            addressbookentry
           });
           returnValues.push(addressbookInfo);
         }

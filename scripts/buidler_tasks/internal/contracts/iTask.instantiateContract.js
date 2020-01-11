@@ -6,22 +6,24 @@ export default internalTask(
   "Returns a --read or --write instance of --contractname on [--network]"
 )
   .addParam("contractname")
+  .addOptionalParam("contractaddress")
   .addFlag("read")
   .addFlag("write")
-  .setAction(async ({ contractname, read, write }) => {
+  .setAction(async ({ contractname, contractaddress, read, write }) => {
     try {
-      const address = await run("bre-config", {
-        deployments: true,
-        contractname
-      });
+      if (!contractaddress)
+        contractaddress = await run("bre-config", {
+          deployments: true,
+          contractname
+        });
       const abi = await run("abi-get", { contractname });
 
       let instance;
       if (read) {
-        instance = new Contract(address, abi, ethers.provider);
+        instance = new Contract(contractaddress, abi, ethers.provider);
       } else if (write) {
         const [signer] = await ethers.signers();
-        instance = new Contract(address, abi, signer);
+        instance = new Contract(contractaddress, abi, signer);
       }
       return instance;
     } catch (err) {
