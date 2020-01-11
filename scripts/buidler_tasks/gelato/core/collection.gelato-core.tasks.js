@@ -1,6 +1,9 @@
 // GelatoCoreAccounting
-import "./accounting/collection.gelato-core-accounting.tasks"
+import "./accounting/collection.gelato-core-accounting.tasks";
 // GelatoUserProxyManager
-import "./user_proxy_manager/collection.gelato-core-userProxyManager.tasks"
+import "./user_proxy_manager/collection.gelato-core-userProxyManager.tasks";
 // Minting
-import "./minting/collection.minting.tasks"
+import "./minting/collection.minting.tasks";
+
+// === Internal Tasks ===
+import "./iTask.handleExecutor";

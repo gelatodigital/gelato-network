@@ -6,9 +6,9 @@ export default task(
   "gelato-core-getmintingdepositpayable",
   `Return GelatoCore.getMintingDepositPayable() on [--network] (default: ${defaultNetwork})`
 )
-  .addPositionalParam("selectedexecutor", "address")
   .addPositionalParam("triggername", "must exist inside buidler.config")
   .addPositionalParam("actionname", "must exist inside buidler.config")
+  .addOptionalPositionalParam("selectedexecutor", "address")
   .addFlag("log", "Logs return values to stdout")
   .setAction(async taskArgs => {
     try {
@@ -21,6 +21,11 @@ export default task(
         contractname: taskArgs.actionname
       });
 
+      // Handle selected executor default
+      const selectedexecutor = await run("handleExecutor", {
+        selectedexecutor: taskArgs.selectedexecutor
+      });
+
       // Read Instance
       const gelatoCoreContract = await run("instantiateContract", {
         contractname: "GelatoCore",
@@ -28,7 +33,7 @@ export default task(
       });
       // Contract Call
       const mintingDepositPayable = await gelatoCoreContract.getMintingDepositPayable(
-        taskArgs.selectedexecutor,
+        selectedexecutor,
         triggerAddress,
         actionAddress
       );

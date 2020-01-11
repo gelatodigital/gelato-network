@@ -1,34 +1,23 @@
 import { task } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../../buidler.config";
-import { Contract } from "ethers";
 
 export default task(
   "gelato-core-mintexecutionclaim",
   `Sends tx to GelatoCore.mintExecutionClaim() on [--network] (default: ${defaultNetwork})`
 )
-  .addPositionalParam("selectedexecutor", "address")
   .addPositionalParam("triggername", "must exist inside buidler.config")
   .addPositionalParam("triggerPayloadWithSelector", "abi.encoded bytes")
   .addPositionalParam("actionname", "must exist inside buidler.config")
   .addPositionalParam("actionPayloadWithSelector", "abi.encoded bytes")
+  .addOptionalPositionalParam("selectedexecutor", "address")
   .addFlag("log", "Logs return values to stdout")
   .setAction(async taskArgs => {
     try {
       // To avoid mistakes default log to true
       taskArgs.log = true;
 
-      const { GelatoCore: gelatoCoreAdddress } = await run("bre-config", {
-        deployments: true
-      });
-      const gelatoCoreABI = await run("abi-get", {
-        contractname: "GelatoCore"
-      });
-      const [signer] = await ethers.signers();
-      const gelatoCoreContract = new Contract(
-        gelatoCoreAdddress,
-        gelatoCoreABI,
-        signer
-      );
+      // Handle executor
+      selectedexecutor = await run("handleExecutor", { selectedexecutor });
 
       const triggerAddress = await run("bre-config", {
         deployments: true,
@@ -39,8 +28,14 @@ export default task(
         contractname: taskArgs.actionname
       });
 
+      // GelatoCore write Instance
+      const gelatoCoreContract = await run("instantiateContract", {
+        contractname: "GelatoCore",
+        write: true
+      });
+      // mintExecutionClaim TX
       const mintTx = await gelatoCoreContract.mintExecutionClaim(
-        taskArgs.selectedexecutor,
+        selectedexecutor,
         triggerAddress,
         taskArgs.triggerPayloadWithSelector,
         actionAddress,
