@@ -34,13 +34,10 @@ export default task(
         TriggerTimestampPassed: triggerTimestampPassedAddress
       } = await run("bre-config", { deployments: true });
 
-      const userProxyAddress = await run("gelato-core-getproxyofuser");
-
-      // Encode the specific params for ActionKyberTrade
-      const actionKyberTradePayloadWithSelector = await run(
-        "gelato-core-mint:defaultpayloads:ActionKyberTrade",
-        { log }
-      );
+      // Params for ActionMultiMintForTriggerTimestampPassed
+      const { default: SELECTED_EXECUTOR_ADDRESS } = await run("bre-config", {
+        adressbookcategory: "executor"
+      });
 
       // Encode the payload for the call to MultiMintForTimeTrigger.multiMint
       const actionMultiMintForTriggerTimestampPassedPayloadWithSelector = await run(
@@ -49,10 +46,6 @@ export default task(
           log
         }
       );
-
-      // Getting the current Ethereum price
-      const ethUSDPrice = await run("eth-price");
-      if (log) console.log(`\nETH-USD: ${ethUSDPrice} $`);
 
       // ReadInstance of GelatoCore
       const gelatoCoreABI = await run("abi-get", {
@@ -68,7 +61,10 @@ export default task(
         triggerTimestampPassedAddress,
         actionKyberTradeAddress
       );
-      if (log)
+
+
+      if (log) {
+        console.log(`\nETH-USD: ${ethUSDPrice} $`);
         console.log(
           `\nMinting Deposit Per Mint: ${utils.formatUnits(
             MINTING_DEPOSIT_PER_MINT,
@@ -76,6 +72,7 @@ export default task(
           )} ETH \t\t${ethUSDPrice *
             parseFloat(utils.formatUnits(MINTING_DEPOSIT_PER_MINT, "ether"))} $`
         );
+      }
 
       const MSG_VALUE = MINTING_DEPOSIT_PER_MINT.mul(NUMBER_OF_MINTS);
       if (log)
@@ -89,15 +86,18 @@ export default task(
 
       // send tx to PAYABLE contract method
       // Read-Write Instance of UserProxy
-      const userProxyABI = [
-        "function delegatecall(address _account, bytes _payload) external payable returns(bool success, bytes returndata)"
-      ];
+      const userProxyAddress = await run("gelato-core-getproxyofuser");
+      const userProxyABI = await run("abi-get", {
+        contractname: "GelatoUserProxy"
+      });
       const userProxyContract = new Contract(
         userProxyAddress,
         userProxyABI,
         signer
       );
-      const tx = await userProxyContract.delegatecall(
+
+      // ❗Send TX To MultiMint
+      const multiMintTx = await userProxyContract.delegatecall(
         actionMultiMintTimeTriggerAddress,
         actionMultiMintForTriggerTimestampPassedPayloadWithSelector,
         {
@@ -107,11 +107,14 @@ export default task(
       );
       if (log)
         console.log(
-          `\nuserProxy.executeDelegatecall(multiMintForTimeTrigger) txHash:\n${tx.hash}`
+          `\nuserProxy.executeDelegatecall(multiMintForTimeTrigger) txHash:\n${multiMintTx.hash}`
         );
       if (log) console.log("\nwaiting for transaction to get mined\n");
-      const txReceipt = await tx.wait();
 
+      // Wait for TX to get mined
+      await multiMintTx.wait();
+
+      // Automatic ERC20 Approval
       await run("erc20-approve", {
         erc20address: src,
         spender: userProxyAddress,
@@ -119,7 +122,7 @@ export default task(
         log
       });
 
-      return txReceipt;
+      return multiMintTx.hash;
     } catch (err) {
       console.log(err);
     }

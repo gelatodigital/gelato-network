@@ -4,30 +4,19 @@ import { Contract } from "ethers";
 
 export default task(
   "gelato-core-getproxyofuser",
-  `Calls GelatoCore.getProxyOfUser([--user: defaults to ethers signer]) on [--network] (default: ${defaultNetwork})`
+  `Calls GelatoCore.getProxyOfUser([<user>: defaults to ethers signer]) on [--network] (default: ${defaultNetwork})`
 )
   .addFlag("log", "Logs return values to stdout")
-  .addOptionalParam(
+  .addOptionalPositionalParam(
     "user",
     "The address of the user, whose proxy address we query"
   )
-  .setAction(async ({ log, user }) => {
+  .setAction(async ({ user, log }) => {
     try {
-      // To avoid mistakes default log to true
-      log = true;
-      const [signer] = await ethers.signers();
-      const gelatoCoreAdddress = await run("bre-config", {
-        deployments: true,
-        contractname: "GelatoCore"
+      const gelatoCoreContract = await run("instantiateContract", {
+        contractname: "GelatoCore",
+        read: true
       });
-      const gelatoCoreABI = [
-        "function getProxyOfUser(address _user) external view returns(address)"
-      ];
-      const gelatoCoreContract = new Contract(
-        gelatoCoreAdddress,
-        gelatoCoreABI,
-        signer
-      );
       let userAddress;
       if (user) userAddress = user;
       else userAddress = signer._address;

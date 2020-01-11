@@ -1,2 +1,0 @@
-// Executor
-import "./executor/registerExecutor";

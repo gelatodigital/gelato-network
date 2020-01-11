@@ -148,7 +148,7 @@ require("./scripts/buidler_tasks/ethers/collection.tasks.ethers");
 require("./scripts/buidler_tasks/gelato/actions/collection.tasks.actions");
 // _____ CORE ______________________
 // Accounting, UserProxyManager, Minting, ...
-require("./scripts/buidler_tasks/gelato/core/collection.tasks.core");
+require("./scripts/buidler_tasks/gelato/core/collection.gelato-core.tasks");
 
 // ============== INTERNAL HELPER TASKS ================================================
 // encoding, naming ....
