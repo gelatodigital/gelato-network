@@ -29,10 +29,10 @@ contract TriggerMinBalanceIncrease is IGelatoTrigger {
         returns(bool, uint8)  // executable?, reason
     {
         // ETH balances
-        if (_coin == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)
-            if (_account.balance >= _refBalance) return (true, uint8(Reason.Ok));
+        if (_coin == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) {
+            if (_account.balance >= _refBalance) return (true, uint8(Reason.UnhandledError));
             else return(false, uint8(Reason.MinBalanceIncreaseNotReached));
-
+        }
         // ERC20 balances
         IERC20 erc20 = IERC20(_coin);
         try erc20.balanceOf(_account) returns (uint256 erc20Balance) {

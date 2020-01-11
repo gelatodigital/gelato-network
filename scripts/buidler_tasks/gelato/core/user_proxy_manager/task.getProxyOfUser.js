@@ -1,6 +1,5 @@
 import { task } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../../buidler.config";
-import { Contract } from "ethers";
 
 export default task(
   "gelato-core-getproxyofuser",
@@ -19,7 +18,7 @@ export default task(
       });
       let userAddress;
       if (user) userAddress = user;
-      else userAddress = signer._address;
+      else userAddress = await run("ethers", { signer: true, address: true });
 
       const userProxyAddress = await gelatoCoreContract.getProxyOfUser(
         userAddress

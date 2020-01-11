@@ -251,7 +251,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
     {
         /* solhint-disable indent */
         // _____________ Static CHECKS __________________________________________
-        if (executionClaimHash[_executionClaimId] == bytes32(0))
+        if (executionClaimHash[_executionClaimId] == bytes32(0)) {
             if (_executionClaimId <= executionClaimIds.current())
                 return (
                     GelatoCoreEnums.CanExecuteResult.ExecutionClaimAlreadyExecutedOrCancelled,
@@ -262,6 +262,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
                     GelatoCoreEnums.CanExecuteResult.ExecutionClaimNonExistant,
                     uint8(GelatoCoreEnums.StandardReason.NotOk)
                 );
+        }
         else if (_executionClaimExpiryDate < now)
             return (
                 GelatoCoreEnums.CanExecuteResult.ExecutionClaimExpired,

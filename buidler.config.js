@@ -62,7 +62,7 @@ module.exports = {
           proxy: "0x818E6FECD516Ecc3849DAf6845e3EC868087B755"
         },
         userProxy: {
-          luis: "0x5a2D05288a7Be8C012F5318E0B0cccE72D4a2B80"
+          luis: "0xf79c9a450f497B9384de89AdE1FBc04F8cCDfBC8"
         }
       },
       contracts: [
@@ -76,9 +76,9 @@ module.exports = {
         ActionKyberTrade: "0x330295eb63B4ABB05355165Cc9904e87231323F7",
         ActionMultiMintForTriggerTimestampPassed:
           "0x87b9f40e569C3a58C1F07a5E929a5b27edE74D27",
-        GelatoCore: "0x653F3612e5A649EB93D60a55A0f0A2C8e0cF6A73",
-        GelatoUserProxy: "0x5a2d05288a7be8c012f5318e0b0ccce72d4a2b80",
-        TriggerMinBalanceIncrease: "0x9e52FDABcbA0e755eB835faB08e6163D6C6f43Fc",
+        GelatoCore: "0x4ABE40008B90AC00C1Db516149c4c21D8CB70232",
+        GelatoUserProxy: "0xf79c9a450f497B9384de89AdE1FBc04F8cCDfBC8",
+        TriggerMinBalanceIncrease: "0xdDefBb4E0552d7904bCfC97ADA08eE19d1E09c76",
         TriggerTimestampPassed: "0xcC3C943A865925Ef04569C2e93A964E2D2ff1ff0"
       }
     }
