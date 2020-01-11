@@ -2,14 +2,14 @@ import { task } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../../buidler.config";
 
 export default task(
-  "gelato-core-mintexecutionclaim",
+  "gelato-core-mint",
   `Sends tx to GelatoCore.mintExecutionClaim() on [--network] (default: ${defaultNetwork})`
 )
   .addPositionalParam("triggername", "must exist inside buidler.config")
-  .addPositionalParam("triggerPayloadWithSelector", "abi.encoded bytes")
   .addPositionalParam("actionname", "must exist inside buidler.config")
-  .addPositionalParam("actionPayloadWithSelector", "abi.encoded bytes")
-  .addOptionalPositionalParam("selectedexecutor", "address")
+  .addOptionalPositionalParam("triggerpayloadwithselector", "abi.encoded bytes")
+  .addOptionalPositionalParam("actionpayloadwithselector", "abi.encoded bytes")
+  .addOptionalParam("selectedexecutor", "address")
   .addFlag("log", "Logs return values to stdout")
   .setAction(async taskArgs => {
     try {
@@ -17,8 +17,11 @@ export default task(
       taskArgs.log = true;
 
       // Handle executor
-      selectedexecutor = await run("handleExecutor", { selectedexecutor });
+      const selectedexecutor = await run("handleExecutor", {
+        selectedexecutor: taskArgs.selectedexecutor
+      });
 
+      // Handle trigger action addresses
       const triggerAddress = await run("bre-config", {
         deployments: true,
         contractname: taskArgs.triggername
@@ -28,21 +31,52 @@ export default task(
         contractname: taskArgs.actionname
       });
 
+      // Handle trigger payloadsWithSelector
+      let triggerPayloadWithSelector;
+      if (!taskArgs.triggerpayloadwithselector) {
+        triggerPayloadWithSelector = await run(
+          `gelato-core-mint:defaultpayload:${taskArgs.triggername}`
+        );
+      } else {
+        triggerPayloadWithSelector = taskArgs.triggerpayloadwithselector;
+      }
+      // Handle action payloadsWithSelector
+      let actionPayloadWithSelector;
+      if (!taskArgs.actionpayloadwithselector) {
+        actionPayloadWithSelector = await run(
+          `gelato-core-mint:defaultpayload:${taskArgs.actionname}`
+        );
+      } else {
+        actionPayloadWithSelector = taskArgs.actionpayloadwithselector;
+      }
+
+      // MintingDepositPayable
+      const mintingDepositPayable = await run(
+        "gelato-core-getmintingdepositpayable",
+        {
+          selectedexecutor,
+          triggername: taskArgs.triggername,
+          actionname: taskArgs.actionname,
+          log: taskArgs.log
+        }
+      );
+
       // GelatoCore write Instance
       const gelatoCoreContract = await run("instantiateContract", {
         contractname: "GelatoCore",
         write: true
       });
-      // mintExecutionClaim TX
+      // mintExecutionClaim TX (payable)
       const mintTx = await gelatoCoreContract.mintExecutionClaim(
         selectedexecutor,
         triggerAddress,
-        taskArgs.triggerPayloadWithSelector,
+        triggerPayloadWithSelector,
         actionAddress,
-        taskArgs.actionPayloadWithSelector
+        actionPayloadWithSelector,
+        { value: mintingDepositPayable }
       );
 
-      if (log)
+      if (taskArgs.log)
         console.log(
           `\n\ntxHash gelatoCore.mintExectuionClaim: ${mintTx.hash}\n`
         );
