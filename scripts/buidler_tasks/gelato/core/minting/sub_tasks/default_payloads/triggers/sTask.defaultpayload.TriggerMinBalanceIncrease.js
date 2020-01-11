@@ -20,7 +20,7 @@ export default internalTask(
       const refBalance = utils.parseEther("1");
       const inputs = [coin, account, refBalance];
       // Encoding
-      const payloadWithSelector = await run("abiEncodeWithSelector", {
+      const payloadWithSelector = await run("abi-encode-withselector", {
         contractname,
         functionname,
         inputs,

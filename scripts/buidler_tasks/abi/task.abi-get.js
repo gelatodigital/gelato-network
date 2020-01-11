@@ -1,8 +1,7 @@
-import { internalTask } from "@nomiclabs/buidler/config";
-import { utils } from "ethers";
+import { task } from "@nomiclabs/buidler/config";
 
-export default internalTask("getContractABI")
-  .addParam("contractname")
+export default task("abi-get")
+  .addPositionalParam("contractname")
   .addFlag("log")
   .setAction(async ({ contractname, log }) => {
     try {

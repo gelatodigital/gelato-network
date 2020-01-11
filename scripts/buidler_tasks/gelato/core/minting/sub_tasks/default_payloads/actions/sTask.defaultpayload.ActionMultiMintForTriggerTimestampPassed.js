@@ -43,7 +43,7 @@ export default internalTask(
         numberOfMints
       ];
       // Encoding
-      const payloadWithSelector = await run("abiEncodeWithSelector", {
+      const payloadWithSelector = await run("abi-encode-withselector", {
         contractname,
         functionname,
         inputs,

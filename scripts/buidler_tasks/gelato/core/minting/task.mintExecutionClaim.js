@@ -20,7 +20,7 @@ export default task(
       const { GelatoCore: gelatoCoreAdddress } = await run("bre-config", {
         deployments: true
       });
-      const gelatoCoreABI = await run("getContractABI", {
+      const gelatoCoreABI = await run("abi-get", {
         contractname: "GelatoCore"
       });
       const [signer] = await ethers.signers();

@@ -14,7 +14,7 @@ export default internalTask(
       const timestamp = Math.floor(Date.now() / 1000);
       const inputs = [timestamp];
       // Encoding
-      const payloadWithSelector = await run("abiEncodeWithSelector", {
+      const payloadWithSelector = await run("abi-encode-withselector", {
         contractname,
         functionname,
         inputs,

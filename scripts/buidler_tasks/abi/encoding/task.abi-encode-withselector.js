@@ -1,14 +1,14 @@
-import { internalTask } from "@nomiclabs/buidler/config";
+import { task } from "@nomiclabs/buidler/config";
 import { utils } from "ethers";
 
-export default internalTask("abiEncodeWithSelector")
-  .addParam("contractname")
-  .addParam("functionname")
+export default task("abi-encode-withselector")
+  .addPositionalParam("contractname")
+  .addPositionalParam("functionname")
   .addOptionalVariadicPositionalParam("inputs")
-  .addOptionalParam("log")
+  .addFlag("log")
   .setAction(async ({ contractname, functionname, inputs, log }) => {
     try {
-      const abi = await run("getContractABI", { contractname });
+      const abi = await run("abi-get", { contractname });
       const interFace = new utils.Interface(abi);
       const payloadWithSelector = interFace.functions[functionname].encode([
         ...inputs

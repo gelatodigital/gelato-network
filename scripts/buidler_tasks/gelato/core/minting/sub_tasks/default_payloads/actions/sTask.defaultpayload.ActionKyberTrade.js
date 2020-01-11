@@ -35,7 +35,7 @@ export default internalTask(
       const { proxy: kyberProxyAddress } = await run("bre-config", {
         addressbookcategory: "kyber"
       });
-      const kyberABI = await run("getContractABI", { contractname: "IKyber" });
+      const kyberABI = await run("abi-get", { contractname: "IKyber" });
       const provider = ethers.provider;
       const kyberContract = new Contract(kyberProxyAddress, kyberABI, provider);
       // Fetch the slippage rate from KyberNetwork and assign it to minConversionRate
@@ -56,7 +56,7 @@ export default internalTask(
       // action(_user, _userProxy, _src, _srcAmt, _dest, _minConversionRate)
       const inputs = [user, userProxy, src, srcAmt, dest, minConversionRate];
       // Encoding
-      const payloadWithSelector = await run("abiEncodeWithSelector", {
+      const payloadWithSelector = await run("abi-encode-withselector", {
         contractname,
         functionname,
         inputs,

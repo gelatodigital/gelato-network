@@ -92,6 +92,9 @@ usePlugin("@nomiclabs/buidler-ethers");
 // ================================= TASKS =========================================
 // task action function receives the Buidler Runtime Environment as second argument
 
+// ============= ABI ============================
+require("./scripts/buidler_tasks/abi/collection.tasks.abi");
+
 // ============= BLOCK ============================
 require("./scripts/buidler_tasks/block/collection.tasks.block");
 
@@ -149,4 +152,4 @@ require("./scripts/buidler_tasks/gelato/core/collection.tasks.core");
 
 // ============== INTERNAL HELPER TASKS ================================================
 // encoding, naming ....
-require("./scripts/buidler_tasks/internal/internalTaskCollection");
+require("./scripts/buidler_tasks/internal/collection.internalTasks");

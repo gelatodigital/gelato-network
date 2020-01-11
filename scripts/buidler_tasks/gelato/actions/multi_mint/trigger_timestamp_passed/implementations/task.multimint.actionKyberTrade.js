@@ -38,26 +38,14 @@ export default task(
 
       // Encode the specific params for ActionKyberTrade
       const actionKyberTradePayloadWithSelector = await run(
-        "gelato-core-mint:payloads:ActionKyberTrade",
+        "gelato-core-mint:defaultpayloads:ActionKyberTrade",
         { log }
       );
 
       // Encode the payload for the call to MultiMintForTimeTrigger.multiMint
-      const ACTION_MULTI_MINT_PAYLOAD_WITH_SELECTOR = await run(
-        "abiEncodeWithSelector",
+      const actionMultiMintForTriggerTimestampPassedPayloadWithSelector = await run(
+        "gelato-core-mint:defaultpayload:ActionMultiMintForTriggerTimestampPassed",
         {
-          contractname: "ActionMultiMintForTriggerTimestampPassed",
-          functionname: "action",
-          inputs: [
-            gelatoCoreAddress,
-            SELECTED_EXECUTOR_ADDRESS,
-            triggerTimestampPassedAddress,
-            START_TIME.toString(),
-            actionKyberTradeAddress,
-            actionKyberTradePayloadWithSelector,
-            INTERVAL_SPAN,
-            NUMBER_OF_MINTS
-          ],
           log
         }
       );
@@ -67,9 +55,9 @@ export default task(
       if (log) console.log(`\nETH-USD: ${ethUSDPrice} $`);
 
       // ReadInstance of GelatoCore
-      const gelatoCoreABI = [
-        "function getMintingDepositPayable(address _selectedExecutor, address _trigger, address _action) view returns(uint256 mintingDepositPayable)"
-      ];
+      const gelatoCoreABI = await run("abi-get", {
+        contractname: "GelatoCore"
+      });
       const gelatoCoreContract = new Contract(
         gelatoCoreAddress,
         gelatoCoreABI,
@@ -111,7 +99,7 @@ export default task(
       );
       const tx = await userProxyContract.delegatecall(
         actionMultiMintTimeTriggerAddress,
-        ACTION_MULTI_MINT_PAYLOAD_WITH_SELECTOR,
+        actionMultiMintForTriggerTimestampPassedPayloadWithSelector,
         {
           value: MSG_VALUE,
           gasLimit: 3500000
