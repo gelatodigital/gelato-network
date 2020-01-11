@@ -69,6 +69,7 @@ module.exports = {
         "ActionKyberTrade",
         "ActionMultiMintForTriggerTimestampPassed",
         "GelatoCore",
+        "TriggerMinBalanceIncrease",
         "TriggerTimestampPassed"
       ],
       deployments: {
@@ -77,6 +78,7 @@ module.exports = {
           "0x87b9f40e569C3a58C1F07a5E929a5b27edE74D27",
         GelatoCore: "0x653F3612e5A649EB93D60a55A0f0A2C8e0cF6A73",
         GelatoUserProxy: "0x5a2d05288a7be8c012f5318e0b0ccce72d4a2b80",
+        TriggerMinBalanceIncrease: "0x9e52FDABcbA0e755eB835faB08e6163D6C6f43Fc",
         TriggerTimestampPassed: "0xcC3C943A865925Ef04569C2e93A964E2D2ff1ff0"
       }
     }
