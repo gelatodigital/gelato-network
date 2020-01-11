@@ -1,17 +1,18 @@
 import { internalTask } from "@nomiclabs/buidler/config";
 
 export default internalTask(
-  "gelato-core-mint:payloads:TriggerTimestampPassed",
+  "gelato-core-mint:defaultpayload:TriggerTimestampPassed",
   `Returns a hardcoded triggerPayloadWithSelector of TriggerTimestampPassed`
 )
+  .addParam("timestamp", "defaults to Date.now()")
   .addFlag("log")
-  .setAction(async ({ log }) => {
+  .setAction(async ({ timestamp, log }) => {
     try {
       const contractname = "TriggerTimestampPassed";
-      // fired(address _coin, address _account, uint256 _refBalance)
+      // fired(_timestamp)
       const functionname = "fired";
       // Params
-      const timestamp = Math.floor(Date.now() / 1000);
+      if (!timestamp) timestamp = Math.floor(Date.now() / 1000);
       const inputs = [timestamp];
       // Encoding
       const payloadWithSelector = await run("abiEncodeWithSelector", {
