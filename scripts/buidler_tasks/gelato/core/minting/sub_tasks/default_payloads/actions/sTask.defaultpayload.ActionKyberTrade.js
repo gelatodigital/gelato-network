@@ -2,29 +2,16 @@ import { internalTask } from "@nomiclabs/buidler/config";
 import { Contract, utils } from "ethers";
 
 export default internalTask(
-  "gelato-core-mint:payload:ActionKyberTrade",
+  "gelato-core-mint:defaultpayload:ActionKyberTrade",
   `Returns a hardcoded actionPayloadWithSelector of ActionKyberTrade`
 )
-  .addPositionalParam(
-    "actionargs",
-    "Array of args for ActionKyberTrade.action()"
-  )
   .addFlag("log")
-  .setAction(async ({ actionargs, log }) => {
+  .setAction(async ({ log }) => {
     try {
       const contractname = "ActionKyberTrade";
-      // fired(address _coin, address _account, uint256 _refBalance)
+      // action(_user, _userProxy, _src, _srcAmt, _dest, _minConversionRate)
       const functionname = "action";
       // Params
-      const [
-        user,
-        userProxy,
-        src,
-        srcAmt,
-        dest,
-        minConversionRate
-      ] = actionargs;
-
       const { luis: user } = await run("bre-config", {
         addressbookcategory: "EOA"
       });

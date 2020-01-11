@@ -1,14 +1,12 @@
-// ======= Payload ========
-// Triggers
-import "./payload/triggers/sTask.getTriggerPayloadWithSelector"
-
-
-// ==== action_payloads ====
-import ".//sTask.payload.ActionKyberTrade";
-import "./action_payloads/sTask.payload.ActionMultiMintForTriggerTimestampPassed";
-
-// ==== trigger_payloads ====
+// ======= Default Payloads ========
+// === Triggers ===
 // TriggerMinBalanceIncrease
-import "./trigger_payloads/sTask.payload.TriggerMinBalanceIncrease";
+import "./default_payloads/triggers/sTask.defaultpayload.TriggerMinBalanceIncrease";
 // TriggerTimestampPassed
-import "./trigger_payloads/sTask.payload.TriggerTimestampPassed";
+import "./default_payloads/triggers/sTask.defaultpayload.TriggerTimestampPassed";
+
+// === Actions ==
+// ActionKyberTrade
+import "./default_payloads/actions/sTask.defaultpayload.ActionKyberTrade";
+// ActionMultiMintForTriggerTimestampPassed
+import "./default_payloads/actions/sTask.defaultpayload.ActionMultiMintForTriggerTimestampPassed";

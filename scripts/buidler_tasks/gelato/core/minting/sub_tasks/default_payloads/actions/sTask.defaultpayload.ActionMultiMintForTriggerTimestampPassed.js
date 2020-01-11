@@ -1,19 +1,11 @@
 import { internalTask } from "@nomiclabs/buidler/config";
 
 export default internalTask(
-  "gelato-core-mint:payload:ActionMultiMintForTriggerTimestampPassed",
+  "gelato-core-mint:defaultpayload:ActionMultiMintForTriggerTimestampPassed",
   `Returns a hardcoded actionPayloadWithSelector of ActionMultiMintForTriggerTimestampPassed`
 )
-  .addParam("starttime", "When first --actionname execution should happen")
-  .addParam("actionname", "Action for which to multimint")
-  .addParam("actionpayloadwithselector", "Payload for --actionname")
-  .addParam("intervalspan", "The time between action executions")
-  .addParam(
-    "numberofmints",
-    "The number of times --actionname execution should happen"
-  )
   .addFlag("log")
-  .setAction(async taskArgs => {
+  .setAction(async ({ log }) => {
     try {
       const contractname = "ActionMultiMintForTriggerTimestampPassed";
       // action(_gelatoCore, _selectedExecutor, _triggerTimestampPassed, _startTime, _action, _actionPayloadWithSelector, _intervalSpan, _numberOfMints)
@@ -28,27 +20,34 @@ export default internalTask(
       const { default: selectedExecutor } = await run("bre-config", {
         addressbookcategory: "executor"
       });
+      const startTime = Math.floor(Date.now() / 1000);
       const actionAddress = await run("bre-config", {
         deployments: true,
-        contractname: taskArgs.actionname
+        contractname: "ActionKyberTrade"
       });
+      const actionPayloadWithSelector = await run(
+        "gelato-core-mint:defaultpayload:ActionKyberTrade",
+        { log }
+      );
+      const intervalSpan = "300"; // seconds
+      const numberOfMints = "2";
       // Params as sorted array of inputs for abi.encoding
       const inputs = [
         gelatoCoreAddress,
         selectedExecutor,
         triggerTimestampPassedAddress,
-        taskArgs.startTime,
+        startTime,
         actionAddress,
-        taskArgs.actionpayloadwithselector,
-        taskArgs.intervalspan,
-        taskArgs.numberofmints
+        actionPayloadWithSelector,
+        intervalSpan,
+        numberOfMints
       ];
       // Encoding
       const payloadWithSelector = await run("abiEncodeWithSelector", {
         contractname,
         functionname,
         inputs,
-        log: taskArgs.log
+        log
       });
       return payloadWithSelector;
     } catch (err) {
