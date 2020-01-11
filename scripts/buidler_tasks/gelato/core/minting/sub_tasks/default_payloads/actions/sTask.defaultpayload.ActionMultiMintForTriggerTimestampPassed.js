@@ -4,8 +4,16 @@ export default internalTask(
   "gelato-core-mint:defaultpayload:ActionMultiMintForTriggerTimestampPassed",
   `Returns a hardcoded actionPayloadWithSelector of ActionMultiMintForTriggerTimestampPassed`
 )
+  .addParam(
+    "selectedexecutor",
+    "CAUTION: selectedexecutor cannot be a safe default"
+  )
+  .addParam(
+    "numberofmints",
+    "CAUTION: number of mints cannot be a safe default"
+  )
   .addFlag("log")
-  .setAction(async ({ log }) => {
+  .setAction(async ({ selectedexecutor, numberofmints, log }) => {
     try {
       const contractname = "ActionMultiMintForTriggerTimestampPassed";
       // action(_gelatoCore, _selectedExecutor, _triggerTimestampPassed, _startTime, _action, _actionPayloadWithSelector, _intervalSpan, _numberOfMints)
@@ -17,9 +25,6 @@ export default internalTask(
       } = await run("bre-config", {
         deployments: true
       });
-      const { default: selectedExecutor } = await run("bre-config", {
-        addressbookcategory: "executor"
-      });
       const startTime = Math.floor(Date.now() / 1000);
       const actionAddress = await run("bre-config", {
         deployments: true,
@@ -30,17 +35,16 @@ export default internalTask(
         { log }
       );
       const intervalSpan = "300"; // seconds
-      const numberOfMints = "2";
       // Params as sorted array of inputs for abi.encoding
       const inputs = [
         gelatoCoreAddress,
-        selectedExecutor,
+        selectedexecutor,
         triggerTimestampPassedAddress,
         startTime,
         actionAddress,
         actionPayloadWithSelector,
         intervalSpan,
-        numberOfMints
+        numberofmints
       ];
       // Encoding
       const payloadWithSelector = await run("abi-encode-withselector", {

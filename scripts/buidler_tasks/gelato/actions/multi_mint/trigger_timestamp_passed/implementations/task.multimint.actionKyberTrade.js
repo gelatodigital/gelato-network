@@ -22,18 +22,18 @@ export default task(
         ActionMultiMintForTriggerTimestampPassed: actionMultiMintTimeTriggerAddress
       } = await run("bre-config", { deployments: true });
 
-      // Params for ActionMultiMintForTriggerTimestampPassed
-      const { default: SELECTED_EXECUTOR_ADDRESS } = await run("bre-config", {
-        addressbookcategory: "executor",
-        log
+      // Non-Default Params for ActionMultiMintForTriggerTimestampPassed
+      const { default: selectedexecutor } = await run("bre-config", {
+        addressbookcategory: "executor"
       });
-      const SRC_AMOUNT = utils.parseUnits("10", 18);
-      const NUMBER_OF_MINTS = "2";
+      const numberofmints = "2";
 
       // Encode the payload for the call to MultiMintForTimeTrigger.multiMint
       const actionMultiMintForTriggerTimestampPassedPayloadWithSelector = await run(
         "gelato-core-mint:defaultpayload:ActionMultiMintForTriggerTimestampPassed",
         {
+          selectedexecutor,
+          numberofmints,
           log
         }
       );
@@ -42,7 +42,7 @@ export default task(
       const mintinDepositPerMint = await run(
         "gelato-core-getmintingdepositpayable",
         {
-          selectedexecutor: SELECTED_EXECUTOR_ADDRESS,
+          selectedexecutor,
           triggername: "TriggerTimestampPassed",
           actionname: "ActionKyberTrade",
           log
@@ -50,14 +50,14 @@ export default task(
       );
 
       // MSG VALUE for payable mint function
-      const msgValue = mintinDepositPerMint.mul(NUMBER_OF_MINTS);
+      const msgValue = mintinDepositPerMint.mul(numberofmints);
 
       if (log) {
         const msgValueETH = utils.formatUnits(msgValue, "ether");
         const ethUSDPrice = await run("eth-price");
         const msgValueUSD = (ethUSDPrice * parseFloat(msgValueETH)).toFixed(2);
         console.log(
-          `\nMinting Deposit for ${NUMBER_OF_MINTS} mints: ${msgValueETH}ETH (${msgValueUSD}$)\n`
+          `\nMinting Deposit for ${numberofmints} mints: ${msgValueETH}ETH (${msgValueUSD}$)\n`
         );
       }
 
@@ -92,12 +92,6 @@ export default task(
 
       // Automatic ERC20 Approval
       if (log) console.log("\nCaution: ERC20 Approval for userProxy needed\n");
-      /*await run("erc20-approve", {
-        erc20address: src,
-        spender: userProxyAddress,
-        amount: SRC_AMOUNT.mul(NUMBER_OF_MINTS),
-        log
-      });*/
 
       return multiMintTx.hash;
     } catch (err) {
