@@ -130,9 +130,8 @@ task(
 task("eth-price", "Logs the etherscan ether-USD price", async () => {
   try {
     const etherscanProvider = new providers.EtherscanProvider();
-    const { name: networkName } = await etherscanProvider.getNetwork();
     const ethUSDPrice = await etherscanProvider.getEtherPrice();
-    console.log(`\n\t\t Ether price in USD (${networkName}): ${ethUSDPrice}$`);
+    console.log(`\nETH price in USD: ${ethUSDPrice}$\n`);
     return ethUSDPrice;
   } catch (err) {
     console.error(err);

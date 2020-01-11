@@ -31,7 +31,7 @@ export default task(
       const executorPriceGwei = utils.formatUnits(executorPrice, "gwei");
       if (log)
         console.log(
-          `\nNetwork: ${network.name}\nExecutor: ${executorAddress}\nPrice: ${executorPriceGwei} gwei\n`
+          `\nExecutor: ${executorAddress}\nPrice: ${executorPriceGwei} gwei\nNetwork: ${network.name}\n`
         );
       return executorPrice;
     } catch (error) {

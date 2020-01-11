@@ -1,10 +1,10 @@
 import { task } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../../buidler.config";
-import { Contract } from "ethers";
+import { utils } from "ethers";
 
 export default task(
   "gelato-core-getmintingdepositpayable",
-  `Call GelatoCore.getMintingDepositPayable() on [--network] (default: ${defaultNetwork})`
+  `Return GelatoCore.getMintingDepositPayable() on [--network] (default: ${defaultNetwork})`
 )
   .addPositionalParam("selectedexecutor", "address")
   .addPositionalParam("triggername", "must exist inside buidler.config")
@@ -12,22 +12,6 @@ export default task(
   .addFlag("log", "Logs return values to stdout")
   .setAction(async taskArgs => {
     try {
-      // To avoid mistakes default log to true
-      taskArgs.log = true;
-
-      // Read Instance of GelatoCore
-      const { GelatoCore: gelatoCoreAdddress } = await run("bre-config", {
-        deployments: true
-      });
-      const gelatoCoreABI = await run("abi-get", {
-        contractname: "GelatoCore"
-      });
-      const gelatoCoreContract = new Contract(
-        gelatoCoreAdddress,
-        gelatoCoreABI,
-        ethers.provider
-      );
-
       const triggerAddress = await run("bre-config", {
         deployments: true,
         contractname: taskArgs.triggername
@@ -37,6 +21,11 @@ export default task(
         contractname: taskArgs.actionname
       });
 
+      // Read Instance
+      const gelatoCoreContract = await run("instantiateContract", {
+        contractname: "GelatoCore",
+        read: true
+      });
       // Contract Call
       const mintingDepositPayable = await gelatoCoreContract.getMintingDepositPayable(
         taskArgs.selectedexecutor,
@@ -44,22 +33,27 @@ export default task(
         actionAddress
       );
 
-      if (log) {
-        // Getting the current Ethereum price
-        const executorPrice = await run("gelato-core-executorprice", {
-          executor: taskArgs.selectedexecutor
-        });
-        const ethUSDPrice = await run("eth-price");
-        console.log(
-          `\n Trigger-Action-Combo: ${taskArgs.triggername}-${
-            taskArgs.actionname
-          }
-            Minting Deposit Per Mint: ${utils.formatUnits(
-              MINTING_DEPOSIT_PER_MINT,
-              "ether"
-            )} ETH \t\t${ethUSDPrice *
-            parseFloat(utils.formatUnits(MINTING_DEPOSIT_PER_MINT, "ether"))} $`
+      if (taskArgs.log) {
+        const mintingDepositPayableETH = utils.formatUnits(
+          mintingDepositPayable,
+          "ether"
         );
+        console.log(
+          `\nTrigger-Action-Combo: ${taskArgs.triggername}-${taskArgs.actionname}`
+        );
+        console.log(
+          `MintingDepositPayable:        ${mintingDepositPayableETH} ETH`
+        );
+        const ethUSDPrice = await run("eth-price", { log: taskArgs.log });
+        console.log(
+          `MintingDepositPayable in USD: ${(
+            ethUSDPrice * parseFloat(mintingDepositPayableETH)
+          ).toFixed(2)}$`
+        );
+        await run("gelato-core-executorprice", {
+          executor: taskArgs.selectedexecutor,
+          log: taskArgs.log
+        });
       }
 
       return mintingDepositPayable;
