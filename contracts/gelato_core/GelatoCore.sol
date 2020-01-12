@@ -115,7 +115,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         external
         view
         override
-        returns (GelatoCoreEnums.CanExecuteResult, uint8 errorCode)
+        returns (GelatoCoreEnums.CanExecuteResult, uint8 reason)
     {
         return _canExecute(
             _executionClaimId,
@@ -249,25 +249,27 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         view
         returns (GelatoCoreEnums.CanExecuteResult, uint8 reason)
     {
-        /* solhint-disable indent */
         // _____________ Static CHECKS __________________________________________
         if (executionClaimHash[_executionClaimId] == bytes32(0)) {
-            if (_executionClaimId <= executionClaimIds.current())
+            if (_executionClaimId <= executionClaimIds.current()) {
                 return (
                     GelatoCoreEnums.CanExecuteResult.ExecutionClaimAlreadyExecutedOrCancelled,
                     uint8(GelatoCoreEnums.StandardReason.NotOk)
                 );
-            else
+            } else {
                 return (
                     GelatoCoreEnums.CanExecuteResult.ExecutionClaimNonExistant,
                     uint8(GelatoCoreEnums.StandardReason.NotOk)
                 );
+            }
         }
-        else if (_executionClaimExpiryDate < now)
+
+        if (_executionClaimExpiryDate < now) {
             return (
                 GelatoCoreEnums.CanExecuteResult.ExecutionClaimExpired,
                 uint8(GelatoCoreEnums.StandardReason.NotOk)
             );
+        }
 
         bytes32 computedExecutionClaimHash = _computeExecutionClaimHash(
             msg.sender,  // selected? executor
@@ -282,11 +284,12 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
             _mintingDeposit
         );
 
-        if (computedExecutionClaimHash != executionClaimHash[_executionClaimId])
+        if (computedExecutionClaimHash != executionClaimHash[_executionClaimId]) {
             return (
                 GelatoCoreEnums.CanExecuteResult.WrongCalldata,
                 uint8(GelatoCoreEnums.StandardReason.NotOk)
             );
+        }
 
         // _____________ Dynamic CHECKS __________________________________________
         bool executable;
@@ -298,14 +301,18 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
             _triggerGasActionTotalGasMinExecutionGas[0]
         );
 
-        // Edge Case: Not executable because of an UnhandledTriggerError
-        if (!executable && reason == uint8(GelatoCoreEnums.StandardReason.UnhandledError))
-            return (
-                GelatoCoreEnums.CanExecuteResult.UnhandledTriggerError,
-                uint8(GelatoCoreEnums.StandardReason.UnhandledError)
-            );
-        // Not executable because of Trigger Conditions or errors handled on trigger)
-        else if (!executable) return (GelatoCoreEnums.CanExecuteResult.TriggerNotOk, reason);
+        if (!executable) {
+            // Edge Case: Not executable because of an UnhandledTriggerError
+            if (reason == uint8(GelatoCoreEnums.StandardReason.UnhandledError)) {
+                return (
+                    GelatoCoreEnums.CanExecuteResult.UnhandledTriggerError,
+                    uint8(GelatoCoreEnums.StandardReason.UnhandledError)
+                );
+            } else {
+                // Not executable: Trigger Conditions or errors handled on trigger)
+                return (GelatoCoreEnums.CanExecuteResult.TriggerNotOk, reason);
+            }
+        }
 
         // => executable
         // Trigger Has Fired
@@ -317,27 +324,25 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
             _actionConditionsCheckGas
         );
 
-        if (executable)
+        if (executable) {
             // => executable
             // TriggerFired && ActionConditions Ok => CanExecute: true
             return (
                 GelatoCoreEnums.CanExecuteResult.Executable,
                 uint8(GelatoCoreEnums.StandardReason.Ok)
             );
-
         // => !executable:
         // TriggerFired BUT ActionConditions NOT Ok => CanExecute: false
-
-        // Edge Case: Not Executable because of an UnhandledActionConditionsError
-        if (reason == uint8(GelatoCoreEnums.StandardReason.UnhandledError))
+        } else if (reason == uint8(GelatoCoreEnums.StandardReason.UnhandledError)) {
+            // Edge Case: Not Executable because of an UnhandledActionConditionsError
             return (
                 GelatoCoreEnums.CanExecuteResult.UnhandledActionConditionsError,
                 uint8(GelatoCoreEnums.StandardReason.UnhandledError)
             );
-        // Not Executable because of Action Conditions or errors handled on action)
-        else return (GelatoCoreEnums.CanExecuteResult.ActionConditionsNotOk, reason);
-
-        /* solhint-enable indent */
+        } else {
+            // Not Executable because of Action Conditions or errors handled on action)
+            return (GelatoCoreEnums.CanExecuteResult.ActionConditionsNotOk, reason);
+        }
     }
 
     function _triggerCheck(
@@ -407,11 +412,14 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
 
         // _______ canExecute() CHECK ______________________________________________
         {
+            // Inside new scope due to Stack Too Deep
             uint256 actionConditionsCheckGas = _triggerGasActionTotalGasMinExecutionGas[1].sub(
                 actionGas
             );
 
-            (GelatoCoreEnums.CanExecuteResult canExecuteResult, uint8 reason) = _canExecute(
+            GelatoCoreEnums.CanExecuteResult canExecuteResult;
+            uint8 reason;
+            (canExecuteResult, reason) = _canExecute(
                 _executionClaimId,
                 _userProxy,
                 _trigger,
@@ -446,17 +454,16 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         delete userProxyWithExecutionClaimId[_executionClaimId];
 
         // INTERACTIONS
-        /* solhint-disable indent */
-        (GelatoCoreEnums.ExecutionResult executionResult,
-         uint8 reason) = _executeActionViaUserProxy(
+        GelatoCoreEnums.ExecutionResult executionResult;
+        uint8 reason;
+        (executionResult, reason) = _executeActionViaUserProxy(
             _userProxy,
             _action,
             _actionPayloadWithSelector,
             actionGas
         );
-        /* solhint-enable  indent */
 
-        if (executionResult == GelatoCoreEnums.ExecutionResult.Success)
+        if (executionResult == GelatoCoreEnums.ExecutionResult.Success) {
             emit LogSuccessfulExecution(
                 msg.sender,  // executor
                 _executionClaimId,
@@ -467,7 +474,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
                 (startGas.sub(gasleft())).mul(tx.gasprice),
                 _mintingDeposit  // executorReward
             );
-        else
+        } else {
             emit LogExecutionFailure(
                 msg.sender,
                 _executionClaimId,
@@ -476,6 +483,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
                 executionResult,
                 reason
             );
+        }
 
         // Executor gets full reward from user no matter if execution successful or not
         executorBalance[msg.sender] = executorBalance[msg.sender].add(_mintingDeposit);

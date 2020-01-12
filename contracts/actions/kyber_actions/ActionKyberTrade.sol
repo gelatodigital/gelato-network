@@ -140,7 +140,8 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
         IERC20 srcERC20 = IERC20(_src);
 
         uint256 userSrcBalance = srcERC20.balanceOf(_user);
-        if (userSrcBalance < _srcAmt) return (false, uint8(Reason.UserBalanceNotOk));
+        if (userSrcBalance < _srcAmt)
+            return (false, uint8(Reason.UserBalanceNotOk));
 
         uint256 userProxySrcAllowance = srcERC20.allowance(_user, _userProxy);
         if (userProxySrcAllowance < _srcAmt)

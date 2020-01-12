@@ -21,9 +21,9 @@ contract GelatoGasTestUserProxy is GelatoUserProxy {
         uint256 startGas = gasleft();
 
         // Return if insufficient actionGas (+ 210000 gas overhead buffer) is sent
-        if (gasleft() < _actionGas + 21000) {
+        if (gasleft() < _actionGas + 21000)
             revert("GelatoGasTestUserProxy.delegatecallGelatoAction: actionGas failed");
-        }
+
         // Low level try / catch (fails if gasleft() < _actionGas)
         (bool success,
          bytes memory returndata) = address(_action).delegatecall.gas(_actionGas)(
@@ -38,10 +38,9 @@ contract GelatoGasTestUserProxy is GelatoUserProxy {
             (executionResult, reason) = abi.decode(returndata, (uint8,uint8));
 
             // If (Success)
-            if (executionResult == uint8(GelatoCoreEnums.ExecutionResult.Success)) {
-                // Success!
+            if (executionResult == uint8(GelatoCoreEnums.ExecutionResult.Success))
                 revert(string(abi.encodePacked(startGas - gasleft())));
-            }
+
             // Execution Failure
             revert("GelatoGasTestUserProxy.delegatecallGelatoAction: Execution Failed");
         }
