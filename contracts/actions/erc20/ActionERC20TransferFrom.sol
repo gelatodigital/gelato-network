@@ -41,7 +41,7 @@ contract ActionERC20TransferFrom is GelatoActionsStandard, SplitFunctionSelector
         address indexed userProxy,
         IERC20 indexed src,
         uint256 srcAmt,
-        address dest
+        address beneficiary
     );
 
     function action(
@@ -51,13 +51,13 @@ contract ActionERC20TransferFrom is GelatoActionsStandard, SplitFunctionSelector
         // Specific Action Params
         IERC20 _src,
         uint256 _srcAmt,
-        address _dest
+        address _beneficiary
     )
         external
         returns (GelatoCoreEnums.ExecutionResult, Reason)
     {
-        try _src.transferFrom(_user, _dest, _srcAmt) {
-            emit LogAction(_user, _userProxy, _src, _srcAmt, _dest);
+        try _src.transferFrom(_user, _beneficiary, _srcAmt) {
+            emit LogAction(_user, _userProxy, _src, _srcAmt, _beneficiary);
             return (
                 GelatoCoreEnums.ExecutionResult.Success,
                 Reason.Ok

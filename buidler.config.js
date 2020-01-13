@@ -66,6 +66,7 @@ module.exports = {
         }
       },
       contracts: [
+        "ActionERC20TransferFrom",
         "ActionKyberTrade",
         "ActionMultiMintForTriggerTimestampPassed",
         "GelatoCore",
@@ -73,6 +74,7 @@ module.exports = {
         "TriggerTimestampPassed"
       ],
       deployments: {
+        ActionERC20TransferFrom: "0xAB2AEA38619878B38f02d055388878a15b9BF6f9",
         ActionKyberTrade: "0x67f647bDF012A718d5F9bD9C7bEd6e5a2023ccC6",
         ActionMultiMintForTriggerTimestampPassed:
           "0x87b9f40e569C3a58C1F07a5E929a5b27edE74D27",
