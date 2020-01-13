@@ -33,7 +33,7 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
         return this.action.selector;
     }
     uint256 public constant override actionConditionsCheckGas = 50000;
-    uint256 public constant override actionGas = 700000;
+    uint256 public constant override actionGas = 1000000;
     uint256 public constant override actionTotalGas = actionConditionsCheckGas + actionGas;
 
     event LogAction(
