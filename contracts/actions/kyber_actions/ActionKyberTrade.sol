@@ -1,14 +1,16 @@
 pragma solidity ^0.6.0;
 
 import "../GelatoActionsStandard.sol";
+import "../../helpers/SplitFunctionSelector.sol";
 import "../../external/IERC20.sol";
 // import "../../external/SafeERC20.sol";
-import "../../helpers/SplitFunctionSelector.sol";
 import "../../dapp_interfaces/kyber_interfaces/IKyber.sol";
 import "../../gelato_core/GelatoCoreEnums.sol";
+import "../../external/SafeMath.sol";
 
 contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
     // using SafeERC20 for IERC20; <- internal library methods vs. try/catch
+    using SafeMath for uint256;
 
     // Extends IGelatoCoreEnums.StandardReason (no overrides for enums in solc yet)
     enum Reason {
@@ -59,31 +61,32 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
     {
         // !!!!!!!!! ROPSTEN !!!!!!
         address kyberAddress = 0x818E6FECD516Ecc3849DAf6845e3EC868087B755;
-        {
-            IERC20 srcERC20 = IERC20(_src);
 
-            try srcERC20.transferFrom(_user, address(this), _srcAmt) {
-                // pass
-            } catch {
-                return (
-                    GelatoCoreEnums.ExecutionResult.ActionNotOk,
-                    Reason.TransferFromUserError
-                );
-            }
+        IERC20 srcERC20 = IERC20(_src);
 
-            try srcERC20.approve(kyberAddress, _srcAmt) {
-                // pass
-            } catch {
-                return (
-                    GelatoCoreEnums.ExecutionResult.ActionNotOk,
-                    Reason.ApproveKyberError
-                );
-            }
+        try srcERC20.transferFrom(_user, address(this), _srcAmt) {
+            // Pass
+        } catch {
+            return (
+                GelatoCoreEnums.ExecutionResult.ActionNotOk,
+                Reason.TransferFromUserError
+            );
+        }
+
+        try srcERC20.approve(kyberAddress, _srcAmt) {
+            // Pass
+        } catch {
+            _transferBackToUser(srcERC20, _user, _srcAmt);
+            return (
+                GelatoCoreEnums.ExecutionResult.ActionNotOk,
+                Reason.ApproveKyberError
+            );
         }
 
         // !! Dapp Interaction !!
         // Fetch the Kyber expected max slippage rate and assign to minConverstionRate
         uint256 minConversionRate;
+
         try IKyber(kyberAddress).getExpectedRate(
             _src,
             _dest,
@@ -91,8 +94,10 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
         )
             returns(uint256 expectedRate, uint256 slippageRate)
         {
-            minConversionRate = slippageRate;
+           minConversionRate = slippageRate;
         } catch {
+            _transferBackToUser(srcERC20, _user, _srcAmt);
+            _revokeKyberApproval(srcERC20, kyberAddress, _srcAmt);
             return(
                 GelatoCoreEnums.ExecutionResult.DappNotOk,
                 Reason.KyberGetExpectedRateError
@@ -124,6 +129,8 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
             );
             return (GelatoCoreEnums.ExecutionResult.Success, Reason.Ok);
         } catch {
+            _transferBackToUser(srcERC20, _user, _srcAmt);
+            _revokeKyberApproval(srcERC20, kyberAddress, _srcAmt);
             return (
                 GelatoCoreEnums.ExecutionResult.DappNotOk,
                 Reason.KyberTradeError
@@ -166,5 +173,21 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
             return (false, uint8(Reason.UserProxyAllowanceNotOk));
 
         return (true, uint8(Reason.Ok));
+    }
+
+
+    // Cleanup functions in case of reverts during action() execution
+    function _transferBackToUser(IERC20 erc20, address _user, uint256 amt) internal {
+        try erc20.transfer(_user, amt) {} catch {
+            revert("ActionKyberTrade._transferBackToUser failed");
+        }
+    }
+
+    function _revokeKyberApproval(IERC20 erc20, address kyber, uint256 amt) internal {
+        uint256 allowance = erc20.allowance(address(this), kyber);
+        uint256 newAllowance = allowance.sub(amt, "SafeERC20: decreased allowance below zero");
+        try erc20.approve(kyber, newAllowance) {} catch {
+            revert("ActionKyberTrade._revokeKyberApproval failed");
+        }
     }
 }
