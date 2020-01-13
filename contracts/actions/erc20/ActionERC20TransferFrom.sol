@@ -6,7 +6,7 @@ import "../../external/IERC20.sol";
 // import "../../external/SafeERC20.sol";
 import "../../dapp_interfaces/kyber_interfaces/IKyber.sol";
 import "../../gelato_core/GelatoCoreEnums.sol";
-import "../external/Address.sol";
+import "../../external/Address.sol";
 import "../../external/SafeMath.sol";
 
 contract ActionERC20TransferFrom is GelatoActionsStandard, SplitFunctionSelector {
@@ -96,7 +96,7 @@ contract ActionERC20TransferFrom is GelatoActionsStandard, SplitFunctionSelector
 
         IERC20 srcERC20 = IERC20(_src);
 
-        if(!address(_src).isContract()))
+        if(!address(_src).isContract())
             return(false, uint8(Reason.InvalidERC20Address));
 
         uint256 userSrcBalance = srcERC20.balanceOf(_user);
@@ -108,21 +108,5 @@ contract ActionERC20TransferFrom is GelatoActionsStandard, SplitFunctionSelector
             return (false, uint8(Reason.UserProxyAllowanceNotOk));
 
         return (true, uint8(Reason.Ok));
-    }
-
-
-    // Cleanup functions in case of reverts during action() execution
-    function _transferBackToUser(IERC20 erc20, address _user, uint256 amt) internal {
-        try erc20.transfer(_user, amt) {} catch {
-            revert("ActionKyberTrade._transferBackToUser failed");
-        }
-    }
-
-    function _revokeKyberApproval(IERC20 erc20, address kyber, uint256 amt) internal {
-        uint256 allowance = erc20.allowance(address(this), kyber);
-        uint256 newAllowance = allowance.sub(amt, "SafeERC20: decreased allowance below zero");
-        try erc20.approve(kyber, newAllowance) {} catch {
-            revert("ActionKyberTrade._revokeKyberApproval failed");
-        }
     }
 }
