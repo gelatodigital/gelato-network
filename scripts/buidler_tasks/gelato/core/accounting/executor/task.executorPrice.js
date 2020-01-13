@@ -3,7 +3,7 @@ import { defaultNetwork } from "../../../../../../buidler.config";
 import { utils } from "ethers";
 
 export default task(
-  "gelato-core-executorprice",
+  "gc-executorprice",
   `Return (or --log) GelatoCore.executorPrice([<executor>: defaults to default executor]) on [--network] (default: ${defaultNetwork})`
 )
   .addFlag("log", "Logs return values to stdout")

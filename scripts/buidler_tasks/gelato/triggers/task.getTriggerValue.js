@@ -4,7 +4,7 @@ import { utils } from "ethers";
 import sleep from "../../../helpers/async/sleep";
 
 export default task(
-  "gelato-trigger-value",
+  "gt-value",
   `Calls <trigername>.value(<triggerpayloadwithselector>) on [--network] (default: ${defaultNetwork})`
 )
   .addPositionalParam("triggername", "must exist inside buidler.config")
@@ -19,7 +19,7 @@ export default task(
       let triggerPayloadWithSelector;
       if (!triggerpayloadwithselector) {
         triggerPayloadWithSelector = await run(
-          `gelato-core-mint:defaultpayload:${triggername}`
+          `gc-mint:defaultpayload:${triggername}`
         );
       } else {
         triggerPayloadWithSelector = triggerpayloadwithselector;

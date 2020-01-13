@@ -3,7 +3,7 @@ import { defaultNetwork } from "../../../../../buidler.config";
 import { Contract, utils } from "ethers";
 
 export default task(
-  "gelato-core-canexecute",
+  "gc-canexecute",
   `Calls GelatoCore.canExecute() on [--network] (default: ${defaultNetwork})`
 )
   .addPositionalParam("executionclaimid")

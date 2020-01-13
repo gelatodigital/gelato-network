@@ -6,7 +6,7 @@ import { defaultNetwork } from "../../../../../../../buidler.config";
 import { utils } from "ethers";
 
 export default task(
-  "gelato-action-multimint",
+  "ga-multimint",
   `TX to ActionMultiMintForTriggerTimestampPassed on [--network] (default: ${defaultNetwork})`
 )
   .addFlag("log", "Logs return values to stdout")
@@ -30,7 +30,7 @@ export default task(
 
       // Encode the payload for the call to MultiMintForTimeTrigger.multiMint
       const actionMultiMintForTriggerTimestampPassedPayloadWithSelector = await run(
-        "gelato-core-mint:defaultpayload:ActionMultiMintForTriggerTimestampPassed",
+        "gc-mint:defaultpayload:ActionMultiMintForTriggerTimestampPassed",
         {
           selectedexecutor,
           numberofmints,
@@ -39,15 +39,12 @@ export default task(
       );
 
       // ReadInstance of GelatoCore
-      const mintinDepositPerMint = await run(
-        "gelato-core-getmintingdepositpayable",
-        {
-          selectedexecutor,
-          triggername: "TriggerTimestampPassed",
-          actionname: "ActionKyberTrade",
-          log
-        }
-      );
+      const mintinDepositPerMint = await run("gc-getmintingdepositpayable", {
+        selectedexecutor,
+        triggername: "TriggerTimestampPassed",
+        actionname: "ActionKyberTrade",
+        log
+      });
 
       // MSG VALUE for payable mint function
       const msgValue = mintinDepositPerMint.mul(numberofmints);

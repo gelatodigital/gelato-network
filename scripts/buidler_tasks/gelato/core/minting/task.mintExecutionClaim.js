@@ -2,7 +2,7 @@ import { task } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../../buidler.config";
 
 export default task(
-  "gelato-core-mint",
+  "gc-mint",
   `Sends tx to GelatoCore.mintExecutionClaim() on [--network] (default: ${defaultNetwork})`
 )
   .addPositionalParam("triggername", "must exist inside buidler.config")
@@ -35,7 +35,7 @@ export default task(
       let triggerPayloadWithSelector;
       if (!taskArgs.triggerpayloadwithselector) {
         triggerPayloadWithSelector = await run(
-          `gelato-core-mint:defaultpayload:${taskArgs.triggername}`
+          `gc-mint:defaultpayload:${taskArgs.triggername}`
         );
       } else {
         triggerPayloadWithSelector = taskArgs.triggerpayloadwithselector;
@@ -44,7 +44,7 @@ export default task(
       let actionPayloadWithSelector;
       if (!taskArgs.actionpayloadwithselector) {
         actionPayloadWithSelector = await run(
-          `gelato-core-mint:defaultpayload:${taskArgs.actionname}`
+          `gc-mint:defaultpayload:${taskArgs.actionname}`
         );
       } else {
         actionPayloadWithSelector = taskArgs.actionpayloadwithselector;
@@ -52,7 +52,7 @@ export default task(
 
       // MintingDepositPayable
       const mintingDepositPayable = await run(
-        "gelato-core-getmintingdepositpayable",
+        "gc-getmintingdepositpayable",
         {
           selectedexecutor,
           triggername: taskArgs.triggername,

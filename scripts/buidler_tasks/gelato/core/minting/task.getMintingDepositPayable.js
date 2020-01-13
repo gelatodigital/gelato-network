@@ -3,7 +3,7 @@ import { defaultNetwork } from "../../../../../buidler.config";
 import { utils } from "ethers";
 
 export default task(
-  "gelato-core-getmintingdepositpayable",
+  "gc-getmintingdepositpayable",
   `Return GelatoCore.getMintingDepositPayable() on [--network] (default: ${defaultNetwork})`
 )
   .addPositionalParam("triggername", "must exist inside buidler.config")
@@ -55,7 +55,7 @@ export default task(
             ethUSDPrice * parseFloat(mintingDepositPayableETH)
           ).toFixed(2)}$`
         );
-        await run("gelato-core-executorprice", {
+        await run("gc-executorprice", {
           executor: taskArgs.selectedexecutor,
           log: taskArgs.log
         });

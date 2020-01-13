@@ -2,7 +2,7 @@ import { internalTask } from "@nomiclabs/buidler/config";
 import { utils } from "ethers";
 
 export default internalTask(
-  "gelato-core-mint:defaultpayload:TriggerMinBalanceIncrease",
+  "gc-mint:defaultpayload:TriggerMinBalanceIncrease",
   `Returns a hardcoded triggerPayloadWithSelector of TriggerMinBalanceIncrease`
 )
   .addFlag("log")

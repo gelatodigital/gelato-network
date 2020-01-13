@@ -2,7 +2,7 @@ import { task } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../../buidler.config";
 
 export default task(
-  "gelato-core-getproxyofuser",
+  "gc-getproxyofuser",
   `Calls GelatoCore.getProxyOfUser([<user>: defaults to ethers signer]) on [--network] (default: ${defaultNetwork})`
 )
   .addFlag("log", "Logs return values to stdout")

@@ -1,7 +1,7 @@
 import { internalTask } from "@nomiclabs/buidler/config";
 
 export default internalTask(
-  "gelato-core-mint:defaultpayload:TriggerTimestampPassed",
+  "gc-mint:defaultpayload:TriggerTimestampPassed",
   `Returns a hardcoded triggerPayloadWithSelector of TriggerTimestampPassed`
 )
   .addFlag("log")

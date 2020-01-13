@@ -3,7 +3,7 @@ import { defaultNetwork } from "../../../../../../buidler.config";
 import { Contract } from "ethers";
 
 export default task(
-  "gelato-core-registerexecutor",
+  "gc-registerexecutor",
   `Sends tx to GelatoCore.registerExecutor(_executorPrice, _executorClaimLifespan) on [--network] (default: ${defaultNetwork})`
 )
   .addPositionalParam(

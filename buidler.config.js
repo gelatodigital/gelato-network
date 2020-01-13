@@ -152,8 +152,7 @@ require("./scripts/buidler_tasks/gelato/actions/collection.tasks.actions");
 // Accounting, UserProxyManager, Minting, ...
 require("./scripts/buidler_tasks/gelato/core/collection.gelato-core.tasks");
 // _____ Triggers ______________________
-require("./scripts/buidler_tasks/gelato/triggers/task.fired");
-require("./scripts/buidler_tasks/gelato/triggers/task.getTriggerValue")
+require("./scripts/buidler_tasks/gelato/triggers/collection.tasks.triggers");
 
 // ============== INTERNAL HELPER TASKS ================================================
 // encoding, naming ....

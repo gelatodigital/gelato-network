@@ -1,7 +1,7 @@
 import { internalTask } from "@nomiclabs/buidler/config";
 
 export default internalTask(
-  "gelato-core-mint:defaultpayload:ActionMultiMintForTriggerTimestampPassed",
+  "gc-mint:defaultpayload:ActionMultiMintForTriggerTimestampPassed",
   `Returns a hardcoded actionPayloadWithSelector of ActionMultiMintForTriggerTimestampPassed`
 )
   .addParam(
@@ -31,7 +31,7 @@ export default internalTask(
         contractname: "ActionKyberTrade"
       });
       const actionPayloadWithSelector = await run(
-        "gelato-core-mint:defaultpayload:ActionKyberTrade",
+        "gc-mint:defaultpayload:ActionKyberTrade",
         { log }
       );
       const intervalSpan = "300"; // seconds
