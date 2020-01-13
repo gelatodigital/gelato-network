@@ -12,13 +12,14 @@ export default internalTask(
       // fired(address _coin, address _account, uint256 _refBalance)
       const functionname = "fired";
       // Params
-      const coin = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"; // ETH
-      const account = await run("bre-config", {
-        addressbookcategory: "EOA",
-        addressbookentry: "luis"
+      const { DAI: coin } = await run("bre-config", {
+        addressbookcategory: "erc20"
       });
-      const refBalance = utils.parseEther("23");
-      const inputs = [coin, account, refBalance];
+      const { GelatoUserProxy: account } = await run("bre-config", {
+        deployments: true
+      }); // ETH
+      const refBalance = "1";
+      const inputs = [account, coin, refBalance];
       // Encoding
       const payloadWithSelector = await run("abi-encode-withselector", {
         contractname,
