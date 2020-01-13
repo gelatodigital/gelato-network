@@ -301,6 +301,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
             _triggerGasActionTotalGasMinExecutionGas[0]
         );
 
+        // Trigger did NOT Fire
         if (!executable) {
             // Edge Case: Not executable because of an UnhandledTriggerError
             if (reason == uint8(GelatoCoreEnums.StandardReason.UnhandledError)) {
@@ -312,36 +313,32 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
                 // Not executable: Trigger Conditions or errors handled on trigger)
                 return (GelatoCoreEnums.CanExecuteResult.TriggerNotOk, reason);
             }
-        }
+        } else {  // Trigger Has Fired
+            // **** Action Conditions Check ****
+            (executable, reason) = _actionConditionsCheck(
+                _action,
+                _actionPayloadWithSelector,
+                _actionConditionsCheckGas
+            );
 
-        // => executable
-        // Trigger Has Fired
-
-        // **** Action Conditions Check ****
-        (executable, reason) = _actionConditionsCheck(
-            _action,
-            _actionPayloadWithSelector,
-            _actionConditionsCheckGas
-        );
-
-        if (executable) {
-            // => executable
             // TriggerFired && ActionConditions Ok => CanExecute: true
-            return (
-                GelatoCoreEnums.CanExecuteResult.Executable,
-                uint8(GelatoCoreEnums.StandardReason.Ok)
-            );
-        // => !executable:
-        // TriggerFired BUT ActionConditions NOT Ok => CanExecute: false
-        } else if (reason == uint8(GelatoCoreEnums.StandardReason.UnhandledError)) {
-            // Edge Case: Not Executable because of an UnhandledActionConditionsError
-            return (
-                GelatoCoreEnums.CanExecuteResult.UnhandledActionConditionsError,
-                uint8(GelatoCoreEnums.StandardReason.UnhandledError)
-            );
-        } else {
-            // Not Executable because of Action Conditions or errors handled on action)
-            return (GelatoCoreEnums.CanExecuteResult.ActionConditionsNotOk, reason);
+            if (executable) {
+                return (
+                    GelatoCoreEnums.CanExecuteResult.Executable,
+                    uint8(GelatoCoreEnums.StandardReason.Ok)
+                );
+            // => !executable:
+            // TriggerFired BUT ActionConditions NOT Ok => CanExecute: false
+            } else if (reason == uint8(GelatoCoreEnums.StandardReason.UnhandledError)) {
+                // Edge Case: Not Executable because of an UnhandledActionConditionsError
+                return (
+                    GelatoCoreEnums.CanExecuteResult.UnhandledActionConditionsError,
+                    uint8(GelatoCoreEnums.StandardReason.UnhandledError)
+                );
+            } else {
+                // Not Executable because of Action Conditions or errors handled on action)
+                return (GelatoCoreEnums.CanExecuteResult.ActionConditionsNotOk, reason);
+            }
         }
     }
 
@@ -352,7 +349,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
     )
         private
         view
-        returns(bool executable, uint8 reason)
+        returns(bool triggerFired, uint8 reason)
     {
         /* solhint-disable indent */
         (bool success,
@@ -361,7 +358,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         );
         /* solhint-enable indent */
         if (!success) return (false, uint8(GelatoCoreEnums.StandardReason.UnhandledError));
-        else (executable, reason) = abi.decode(returndata, (bool, uint8));
+        else (triggerFired, reason) = abi.decode(returndata, (bool, uint8));
     }
 
     function _actionConditionsCheck(
@@ -371,7 +368,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
     )
         private
         view
-        returns(bool executable, uint8 reason)
+        returns(bool actionConditionsOk, uint8 reason)
      {
         bytes memory actionConditionsCheckPayloadWithSelector = abi.encodeWithSelector(
             _action.actionConditionsCheck.selector,
@@ -384,7 +381,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         );
         /* solhint-enable  indent */
         if (!success) return (false, uint8(GelatoCoreEnums.StandardReason.UnhandledError));
-        else (executable, reason) = abi.decode(returndata, (bool, uint8));
+        else (actionConditionsOk, reason) = abi.decode(returndata, (bool, uint8));
     }
 
 
