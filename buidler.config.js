@@ -73,7 +73,7 @@ module.exports = {
         "TriggerTimestampPassed"
       ],
       deployments: {
-        ActionKyberTrade: "0xC73B1d7FCAdf0374Cc0DD71783DE6A48b5380728",
+        ActionKyberTrade: "0xCCd9F4347a445949e0221359cEd72E7352e6271d",
         ActionMultiMintForTriggerTimestampPassed:
           "0x87b9f40e569C3a58C1F07a5E929a5b27edE74D27",
         GelatoCore: "0x563700A8A6740C8a474DF8F289716afDc30ED07a",
@@ -84,7 +84,7 @@ module.exports = {
     }
   },
   solc: {
-    version: "0.6.0",
+    version: "0.6.1",
     optimizer: { enabled: true, runs: 200 }
   }
 };

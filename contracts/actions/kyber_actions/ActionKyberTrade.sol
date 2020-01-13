@@ -22,7 +22,8 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
         // NotOk: Caught/Handled Errors
         TransferFromUserError,
         ApproveKyberError,
-        UndefinedDappError
+        KyberGetExpectedRateError,
+        KyberTradeError
     }
 
     // actionSelector public state variable np due to this.actionSelector constant issue
@@ -51,8 +52,7 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
         // Specific Action Params
         address _src,
         uint256 _srcAmt,
-        address _dest,
-        uint256 _minConversionRate
+        address _dest
     )
         external
         returns (GelatoCoreEnums.ExecutionResult, Reason)
@@ -82,13 +82,31 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
         }
 
         // !! Dapp Interaction !!
+        // Fetch the Kyber expected max slippage rate and assign to minConverstionRate
+        uint256 minConversionRate;
+        try IKyber(kyberAddress).getExpectedRate(
+            _src,
+            _dest,
+            _srcAmt
+        )
+            returns(uint256 expectedRate, uint256 slippageRate)
+        {
+            minConversionRate = slippageRate;
+        } catch {
+            return(
+                GelatoCoreEnums.ExecutionResult.DappNotOk,
+                Reason.KyberGetExpectedRateError
+            );
+        }
+
+        // !! Dapp Interaction !!
         try IKyber(kyberAddress).trade(
             _src,
             _srcAmt,
             _dest,
             _user,
             2**255,
-            _minConversionRate,
+            minConversionRate,
             address(0)  // fee-sharing
         )
             returns (uint256 destAmt)
@@ -101,14 +119,14 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
                 _srcAmt,
                 _dest,
                 destAmt,
-                _minConversionRate,
+                minConversionRate,
                 address(0)  // fee-sharing
             );
             return (GelatoCoreEnums.ExecutionResult.Success, Reason.Ok);
         } catch {
             return (
                 GelatoCoreEnums.ExecutionResult.DappNotOk,
-                Reason.UndefinedDappError
+                Reason.KyberTradeError
             );
         }
     }
@@ -132,9 +150,9 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
             _actionPayloadWithSelector
         );
 
-        (address _user, address _userProxy, address _src, uint256 _srcAmt,,) = abi.decode(
+        (address _user, address _userProxy, address _src, uint256 _srcAmt,) = abi.decode(
             payload,
-            (address, address, address, uint256, address,uint256)
+            (address, address, address, uint256, address)
         );
 
         IERC20 srcERC20 = IERC20(_src);
