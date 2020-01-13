@@ -76,9 +76,9 @@ module.exports = {
         ActionKyberTrade: "0xC73B1d7FCAdf0374Cc0DD71783DE6A48b5380728",
         ActionMultiMintForTriggerTimestampPassed:
           "0x87b9f40e569C3a58C1F07a5E929a5b27edE74D27",
-        GelatoCore: "0x53130D08d7e59cc6A89C4912CC2b82B08769eA5E",
+        GelatoCore: "0x563700A8A6740C8a474DF8F289716afDc30ED07a",
         GelatoUserProxy: "0xbEE05b3187c3a99755A529607DD33FA1eB1346f7",
-        TriggerMinBalanceIncrease: "0x8b92835f90C449c54769DBcBF27787613F763c3D",
+        TriggerMinBalanceIncrease: "0x4EF151A39B87B8D4b326746DAE4dd19a2fEc9742",
         TriggerTimestampPassed: "0xcC3C943A865925Ef04569C2e93A964E2D2ff1ff0"
       }
     }
