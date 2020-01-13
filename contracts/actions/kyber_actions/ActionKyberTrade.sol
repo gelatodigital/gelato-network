@@ -63,30 +63,30 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
         address kyberAddress = 0x818E6FECD516Ecc3849DAf6845e3EC868087B755;
 
         IERC20 srcERC20 = IERC20(_src);
+        {
+            try srcERC20.transferFrom(_user, address(this), _srcAmt) {
+                // Pass
+            } catch {
+                return (
+                    GelatoCoreEnums.ExecutionResult.ActionNotOk,
+                    Reason.TransferFromUserError
+                );
+            }
 
-        try srcERC20.transferFrom(_user, address(this), _srcAmt) {
-            // Pass
-        } catch {
-            return (
-                GelatoCoreEnums.ExecutionResult.ActionNotOk,
-                Reason.TransferFromUserError
-            );
-        }
-
-        try srcERC20.approve(kyberAddress, _srcAmt) {
-            // Pass
-        } catch {
-            _transferBackToUser(srcERC20, _user, _srcAmt);
-            return (
-                GelatoCoreEnums.ExecutionResult.ActionNotOk,
-                Reason.ApproveKyberError
-            );
+            try srcERC20.approve(kyberAddress, _srcAmt) {
+                // Pass
+            } catch {
+                _transferBackToUser(srcERC20, _user, _srcAmt);
+                return (
+                    GelatoCoreEnums.ExecutionResult.ActionNotOk,
+                    Reason.ApproveKyberError
+                );
+            }
         }
 
         // !! Dapp Interaction !!
         // Fetch the Kyber expected max slippage rate and assign to minConverstionRate
         uint256 minConversionRate;
-
         try IKyber(kyberAddress).getExpectedRate(
             _src,
             _dest,
