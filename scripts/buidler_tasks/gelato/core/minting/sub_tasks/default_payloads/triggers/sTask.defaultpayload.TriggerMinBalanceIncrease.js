@@ -17,7 +17,7 @@ export default internalTask(
         addressbookcategory: "EOA",
         addressbookentry: "luis"
       });
-      const refBalance = utils.parseEther("22");
+      const refBalance = utils.parseEther("23");
       const inputs = [coin, account, refBalance];
       // Encoding
       const payloadWithSelector = await run("abi-encode-withselector", {

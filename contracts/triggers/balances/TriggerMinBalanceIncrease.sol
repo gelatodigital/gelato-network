@@ -23,7 +23,7 @@ contract TriggerMinBalanceIncrease is IGelatoTrigger {
 
     /// @dev Caution: use 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE for ETH _coin
     /// @param _coin ETH (0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) or ERC20
-    function fired(address _coin, address _account, uint256 _refBalance)
+    function fired(address _account, address _coin, uint256 _refBalance)
         external
         view
         returns(bool, uint8)  // executable?, reason
@@ -44,7 +44,7 @@ contract TriggerMinBalanceIncrease is IGelatoTrigger {
         }
     }
 
-    function getTriggerValue(address _coin, address _account, uint256)
+    function getTriggerValue(address _account, address _coin, uint256)
         external
         view
         returns(uint256)

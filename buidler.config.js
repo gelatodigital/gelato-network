@@ -38,7 +38,7 @@ module.exports = {
       // Standard
       accounts: { mnemonic: DEV_MNEMONIC },
       chainId: 3,
-      gasPrice: 5000000000, // 5 gwei
+      gasPrice: 10000000000, // 10 gwei
       url: `https://ropsten.infura.io/v3/${INFURA_ID}`,
       // Custom
       addressBook: {
@@ -62,7 +62,7 @@ module.exports = {
           proxy: "0x818E6FECD516Ecc3849DAf6845e3EC868087B755"
         },
         userProxy: {
-          luis: "0x5f44620c44edbD05c6aB750DFB43C55736095a97"
+          luis: "0xbEE05b3187c3a99755A529607DD33FA1eB1346f7"
         }
       },
       contracts: [
@@ -76,9 +76,9 @@ module.exports = {
         ActionKyberTrade: "0xC73B1d7FCAdf0374Cc0DD71783DE6A48b5380728",
         ActionMultiMintForTriggerTimestampPassed:
           "0x87b9f40e569C3a58C1F07a5E929a5b27edE74D27",
-        GelatoCore: "0xc62BaAab489b2f2B2D1a70fcAfc9B14E82f27ef4",
-        GelatoUserProxy: "0x5f44620c44edbD05c6aB750DFB43C55736095a97",
-        TriggerMinBalanceIncrease: "0xd535DbA711Fb97398473e4B9922b104CFB2D1173",
+        GelatoCore: "0x53130D08d7e59cc6A89C4912CC2b82B08769eA5E",
+        GelatoUserProxy: "0xbEE05b3187c3a99755A529607DD33FA1eB1346f7",
+        TriggerMinBalanceIncrease: "0x8b92835f90C449c54769DBcBF27787613F763c3D",
         TriggerTimestampPassed: "0xcC3C943A865925Ef04569C2e93A964E2D2ff1ff0"
       }
     }
@@ -151,6 +151,9 @@ require("./scripts/buidler_tasks/gelato/actions/collection.tasks.actions");
 // _____ CORE ______________________
 // Accounting, UserProxyManager, Minting, ...
 require("./scripts/buidler_tasks/gelato/core/collection.gelato-core.tasks");
+// _____ Triggers ______________________
+require("./scripts/buidler_tasks/gelato/triggers/task.fired");
+require("./scripts/buidler_tasks/gelato/triggers/task.getTriggerValue")
 
 // ============== INTERNAL HELPER TASKS ================================================
 // encoding, naming ....
