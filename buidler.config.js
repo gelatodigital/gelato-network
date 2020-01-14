@@ -75,7 +75,7 @@ module.exports = {
         "TriggerTimestampPassed"
       ],
       deployments: {
-        ActionERC20Transfer: "0xF5e1764EbFF1d56c5CC27a41cd87f8e49421F48d",
+        ActionERC20Transfer: "0xc5c7c8C408Ea62D599daEcc340F0762D69120418",
         ActionERC20TransferFrom: "0x8FdAf109e391C304939CF64C9B9912b320AdfE56",
         ActionKyberTrade: "0x67f647bDF012A718d5F9bD9C7bEd6e5a2023ccC6",
         ActionMultiMintForTriggerTimestampPassed:

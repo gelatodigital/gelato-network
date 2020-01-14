@@ -98,7 +98,7 @@ contract ActionERC20Transfer is GelatoActionsStandard, SplitFunctionSelector {
 
         IERC20 srcERC20 = IERC20(_src);
 
-        if (srcERC20.balanceOf(address(this)) < _srcAmt)
+        if (srcERC20.balanceOf(_userProxy) < _srcAmt)
             return (false, uint8(Reason.BalanceNotOk));
 
         return (true, uint8(Reason.Ok));
