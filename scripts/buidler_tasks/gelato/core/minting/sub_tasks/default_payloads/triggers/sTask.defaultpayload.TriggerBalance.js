@@ -18,8 +18,8 @@ export default internalTask(
       const { DAI: coin } = await run("bre-config", {
         addressbookcategory: "erc20"
       });
-      const refBalance = "20000000000000000000";
-      const greaterElseSmaller = true;
+      const refBalance = utils.parseUnits("192", 18);
+      const greaterElseSmaller = false;
       const inputs = [account, coin, refBalance, greaterElseSmaller];
       // Encoding
       const payloadWithSelector = await run("abi-encode-withselector", {

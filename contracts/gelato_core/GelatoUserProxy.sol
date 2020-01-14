@@ -112,10 +112,7 @@ contract GelatoUserProxy is IGelatoUserProxy {
             // If (Success)
             if (executionResult == uint8(GelatoCoreEnums.ExecutionResult.Success)) {
                 // Success!
-                return (
-                    uint8(GelatoCoreEnums.ExecutionResult.Success),
-                    uint8(GelatoCoreEnums.StandardReason.Ok)
-                );
+                return (uint8(GelatoCoreEnums.ExecutionResult.Success), reason);
             }
             // Else: Failure! But handled executionResult and reason, are returned
             //   to the calling frame (gelatoCore._executeActionViaUserProxy())

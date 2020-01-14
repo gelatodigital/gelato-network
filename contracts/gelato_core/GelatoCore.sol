@@ -323,10 +323,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
 
             // TriggerFired && ActionConditions Ok => CanExecute: true
             if (executable) {
-                return (
-                    GelatoCoreEnums.CanExecuteResult.Executable,
-                    uint8(GelatoCoreEnums.StandardReason.Ok)
-                );
+                return (GelatoCoreEnums.CanExecuteResult.Executable, reason);
             // => !executable:
             // TriggerFired BUT ActionConditions NOT Ok => CanExecute: false
             } else if (reason == uint8(GelatoCoreEnums.StandardReason.UnhandledError)) {

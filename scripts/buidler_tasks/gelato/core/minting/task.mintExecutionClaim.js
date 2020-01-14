@@ -78,7 +78,7 @@ export default task(
 
       if (taskArgs.log)
         console.log(
-          `\n\ntxHash gelatoCore.mintExectuionClaim: ${mintTx.hash}\n`
+          `\n\ntxHash gelatoCore.mintExecutionClaim: ${mintTx.hash}\n`
         );
       await mintTx.wait();
       return mintTx.hash;
