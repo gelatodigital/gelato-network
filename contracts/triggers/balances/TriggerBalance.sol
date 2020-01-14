@@ -11,11 +11,15 @@ contract TriggerBalance is IGelatoTrigger {
         NotOk,  // 1: Standard Field for Unfulfilled Conditions or Caught/Handled Errors
         UnhandledError,  // 2: Standard Field for Uncaught/Unhandled Errors
         // Ok: Fulfilled Conditions
-        OkBalanceIsGreaterThanRefBalance,
-        OkBalanceIsSmallerThanRefBalance,
+        OkETHBalanceIsGreaterThanRefBalance,
+        OkERC20BalanceIsGreaterThanRefBalance,
+        OkETHBalanceIsSmallerThanRefBalance,
+        OkERC20BalanceIsSmallerThanRefBalance,
         // NotOk: Unfulfilled Conditions
-        NotOkBalanceIsNotGreaterThanRefBalance,
-        NotOkBalanceIsNotSmallerThanRefBalance,
+        NotOkETHBalanceIsNotGreaterThanRefBalance,
+        NotOkERC20BalanceIsNotGreaterThanRefBalance,
+        NotOkETHBalanceIsNotSmallerThanRefBalance,
+        NotOkERC20BalanceIsNotSmallerThanRefBalance,
         ERC20Error
     }
 
@@ -41,14 +45,14 @@ contract TriggerBalance is IGelatoTrigger {
         if (_coin == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) {
             if (_greaterElseSmaller) {  // greaterThan
                 if (_account.balance >= _refBalance)
-                    return (true, uint8(Reason.OkBalanceIsGreaterThanRefBalance));
+                    return (true, uint8(Reason.OkETHBalanceIsGreaterThanRefBalance));
                 else
-                    return(false, uint8(Reason.NotOkBalanceIsNotGreaterThanRefBalance));
+                    return(false, uint8(Reason.NotOkETHBalanceIsNotGreaterThanRefBalance));
             } else {  // smallerThan
                 if (_account.balance <= _refBalance)
-                    return (true, uint8(Reason.OkBalanceIsSmallerThanRefBalance));
+                    return (true, uint8(Reason.OkETHBalanceIsSmallerThanRefBalance));
                 else
-                    return(false, uint8(Reason.NotOkBalanceIsNotSmallerThanRefBalance));
+                    return(false, uint8(Reason.NotOkETHBalanceIsNotSmallerThanRefBalance));
             }
         } else {
             // ERC20 balances
@@ -56,14 +60,14 @@ contract TriggerBalance is IGelatoTrigger {
             try erc20.balanceOf(_account) returns (uint256 erc20Balance) {
                 if (_greaterElseSmaller) {  // greaterThan
                     if (erc20Balance >= _refBalance)
-                        return (true, uint8(Reason.OkBalanceIsGreaterThanRefBalance));
+                        return (true, uint8(Reason.OkERC20BalanceIsGreaterThanRefBalance));
                     else
-                        return(false, uint8(Reason.NotOkBalanceIsNotGreaterThanRefBalance));
+                        return(false, uint8(Reason.NotOkERC20BalanceIsNotGreaterThanRefBalance));
                 } else {  // smallerThan
                     if (erc20Balance <= _refBalance)
-                        return (true, uint8(Reason.OkBalanceIsSmallerThanRefBalance));
+                        return (true, uint8(Reason.OkETHBalanceIsSmallerThanRefBalance));
                     else
-                        return(false, uint8(Reason.NotOkBalanceIsNotSmallerThanRefBalance));
+                        return(false, uint8(Reason.NotOkERC20BalanceIsNotSmallerThanRefBalance));
                 }
             } catch {
                 return(false, uint8(Reason.ERC20Error));
