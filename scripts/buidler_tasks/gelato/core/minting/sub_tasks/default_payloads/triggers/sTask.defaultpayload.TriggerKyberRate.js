@@ -1,6 +1,5 @@
 import { internalTask } from "@nomiclabs/buidler/config";
 import { utils } from "ethers";
-import sleep from "../../../../../../../helpers/async/sleep";
 
 export default internalTask(
   "gc-mint:defaultpayload:TriggerKyberRate",
