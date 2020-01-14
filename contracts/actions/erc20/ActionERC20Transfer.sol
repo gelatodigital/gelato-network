@@ -88,7 +88,7 @@ contract ActionERC20Transfer is GelatoActionsStandard, SplitFunctionSelector {
             _actionPayloadWithSelector
         );
 
-        (address _user, address _userProxy, address _src, uint256 _srcAmt,) = abi.decode(
+        (, address _userProxy, address _src, uint256 _srcAmt,) = abi.decode(
             payload,
             (address, address, address, uint256, address)
         );
