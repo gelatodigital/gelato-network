@@ -12,13 +12,13 @@ export default internalTask(
       // fired(address _coin, address _account, uint256 _refBalance)
       const functionname = "fired";
       // Params
-      const { GelatoUserProxy: account } = await run("bre-config", {
-        deployments: true
+      const { luis: account } = await run("bre-config", {
+        addressbookcategory: "EOA"
       });
       const { DAI: coin } = await run("bre-config", {
         addressbookcategory: "erc20"
       });
-      const refBalance = utils.parseUnits("172", 18);
+      const refBalance = utils.parseUnits("162", 18);
       const greaterElseSmaller = false;
       const inputs = [account, coin, refBalance, greaterElseSmaller];
       // Encoding
