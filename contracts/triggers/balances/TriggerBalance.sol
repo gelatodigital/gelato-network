@@ -3,15 +3,19 @@ pragma solidity ^0.6.0;
 import "../IGelatoTrigger.sol";
 import "../../external/IERC20.sol";
 
-contract TriggerMinBalanceIncrease is IGelatoTrigger {
+contract TriggerBalance is IGelatoTrigger {
 
     enum Reason {
         // StandardReason Fields
         Ok,  // 0: Standard Field for Fulfilled Conditions and No Errors
         NotOk,  // 1: Standard Field for Unfulfilled Conditions or Caught/Handled Errors
         UnhandledError,  // 2: Standard Field for Uncaught/Unhandled Errors
+        // Ok: Fulfilled Conditions
+        BalanceIsGreaterThanRefBalance,
+        BalanceIsSmallerThanRefBalance,
         // NotOk: Unfulfilled Conditions
-        MinBalanceIncreaseNotReached,
+        BalanceIsNotGreaterThanRefBalance,
+        BalanceIsNotSmallerThanRefBalance,
         ERC20Error
     }
 
@@ -23,28 +27,47 @@ contract TriggerMinBalanceIncrease is IGelatoTrigger {
 
     /// @dev Caution: use 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE for ETH _coin
     /// @param _coin ETH (0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) or ERC20
-    function fired(address _account, address _coin, uint256 _refBalance)
+    function fired(
+        address _account,
+        address _coin,
+        uint256 _refBalance,
+        bool _greaterElseSmaller
+    )
         external
         view
         returns(bool, uint8)  // executable?, reason
     {
         // ETH balances
         if (_coin == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) {
-            if (_account.balance >= _refBalance) return (true, uint8(Reason.Ok));
-            else return(false, uint8(Reason.MinBalanceIncreaseNotReached));
+            if (_greaterElseSmaller) {  // greaterThan
+                if (_account.balance >= _refBalance)
+                    return (true, uint8(Reason.BalanceIsGreaterThanRefBalance));
+                else return(false, uint8(Reason.BalanceIsNotGreaterThanRefBalance));
+            } else {  // smallerThan
+                if (_account.balance <= _refBalance)
+                    return (true, uint8(Reason.BalanceIsSmallerThanRefBalance));
+                else return(false, uint8(Reason.BalanceIsNotSmallerThanRefBalance));
+            }
         } else {
             // ERC20 balances
             IERC20 erc20 = IERC20(_coin);
             try erc20.balanceOf(_account) returns (uint256 erc20Balance) {
-                if (erc20Balance >= _refBalance) return (true, uint8(Reason.Ok));
-                else return(false, uint8(Reason.MinBalanceIncreaseNotReached));
+                if (_greaterElseSmaller) {  // greaterThan
+                    if (erc20Balance >= _refBalance)
+                        return (true, uint8(Reason.BalanceIsGreaterThanRefBalance));
+                    else return(false, uint8(Reason.BalanceIsNotGreaterThanRefBalance));
+                } else {  // smallerThan
+                    if (erc20Balance <= _refBalance)
+                        return (true, uint8(Reason.BalanceIsSmallerThanRefBalance));
+                    else return(false, uint8(Reason.BalanceIsNotSmallerThanRefBalance));
+                }
             } catch {
                 return(false, uint8(Reason.ERC20Error));
             }
         }
     }
 
-    function getTriggerValue(address _account, address _coin, uint256)
+    function getTriggerValue(address _account, address _coin, uint256, bool)
         external
         view
         returns(uint256)
