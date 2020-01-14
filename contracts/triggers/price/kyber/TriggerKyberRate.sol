@@ -44,7 +44,7 @@ contract TriggerKyberRate is IGelatoTrigger {
             _dest,
             _srcAmt
         )
-            returns(uint256 expectedRate, uint256)
+            returns(uint256 expectedRate, uint256 _)
         {
             if (_greaterElseSmaller) {  // greaterThan
                 if (expectedRate >= _refRate)

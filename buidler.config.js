@@ -72,10 +72,11 @@ module.exports = {
         "ActionMultiMintForTriggerTimestampPassed",
         "GelatoCore",
         "TriggerBalance",
+        "TriggerKyberRate",
         "TriggerTimestampPassed"
       ],
       deployments: {
-        ActionERC20Transfer: "0xc5c7c8C408Ea62D599daEcc340F0762D69120418",
+        ActionERC20Transfer: "0xF48Fc3D81EFc8415dB2daF644cab7F192Da1C42d",
         ActionERC20TransferFrom: "0x8FdAf109e391C304939CF64C9B9912b320AdfE56",
         ActionKyberTrade: "0x67f647bDF012A718d5F9bD9C7bEd6e5a2023ccC6",
         ActionMultiMintForTriggerTimestampPassed:
@@ -83,6 +84,7 @@ module.exports = {
         GelatoCore: "0x563700A8A6740C8a474DF8F289716afDc30ED07a",
         GelatoUserProxy: "0x1631B08A31Ecc1e125939002326E4b281E9eCd75",
         TriggerBalance: "0xaf4c11A90e98D0C5ecFb403C62Cc8Dfe8DF11030",
+        TriggerKyberRate: "0x0A216eF9Aa01E00459678bdE5B483CF5Ac510E7f",
         TriggerTimestampPassed: "0x20F8EE3153F11Da43137478B6897c9c4cC438B50"
       }
     }
