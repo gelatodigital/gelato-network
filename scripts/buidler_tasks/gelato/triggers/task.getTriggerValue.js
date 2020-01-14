@@ -1,7 +1,6 @@
 import { task } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../buidler.config";
 import { utils } from "ethers";
-import sleep from "../../../helpers/async/sleep";
 
 export default task(
   "gt-value",
@@ -15,34 +14,20 @@ export default task(
       // To avoid mistakes default log to true
       log = true;
 
-      // Handle trigger payloadsWithSelector
-      let triggerPayloadWithSelector;
-      if (!triggerpayloadwithselector) {
-        triggerPayloadWithSelector = await run(
-          `gc-mint:defaultpayload:${triggername}`
-        );
-      } else {
-        triggerPayloadWithSelector = triggerpayloadwithselector;
-      }
-
-      const triggerABI = await run("abi-get", { contractname: triggername });
-
-      let firedFunction;
-      for (const fn of triggerABI) {
-        if (fn.name == "getTriggerValue") firedFunction = fn;
-      }
-      const abiCoder = utils.defaultAbiCoder;
-      const decodedTriggerPayload = abiCoder.decode(
-        firedFunction.inputs,
-        triggerPayloadWithSelector
-      );
-
-      const account = await run("bre-config", {
-        addressbookcategory: "EOA",
-        addressbookentry: "luis"
+      // Params
+      const { DAI: src, KNC: dest } = await run("bre-config", {
+        addressbookcategory: "erc20"
       });
-      const coin = "0xad6d458402f60fd3bd25163575031acdce07538d"; // ETH
-      const refBalance = "0";
+      const srcamt = utils.parseUnits("10", 18);
+      const [expectedRate] = await run("gt-kyber-getexpectedrate", {
+        src,
+        dest,
+        srcamt
+      });
+      const refRate = utils
+        .bigNumberify(expectedRate)
+        .add(utils.parseUnits("1", 17));
+      const greaterElseSmaller = false;
 
       // Trigger Read Instance
       const triggerContract = await run("instantiateContract", {
@@ -51,15 +36,17 @@ export default task(
       });
       // mintExecutionClaim TX (payable)
       const value = await triggerContract.getTriggerValue(
-        account,
-        coin,
-        refBalance
+        src,
+        srcamt,
+        dest,
+        refRate,
+        greaterElseSmaller
       );
 
       if (log) {
         console.log(
           `\nTrigger: ${triggername}\
-             \nTriggerPayloadWithSelector: ${triggerPayloadWithSelector}\
+             \nTriggerPayloadWithSelector: ${triggerpayloadwithselector}\
              \nValue: ${value}\n`
         );
       }

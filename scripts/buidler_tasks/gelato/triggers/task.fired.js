@@ -1,7 +1,6 @@
 import { task } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../buidler.config";
 import { utils } from "ethers";
-import sleep from "../../../helpers/async/sleep";
 
 export default task(
   "gt-fired",
@@ -16,33 +15,20 @@ export default task(
       log = true;
 
       // Handle trigger payloadsWithSelector
-      let triggerPayloadWithSelector;
-      if (!triggerpayloadwithselector) {
-        triggerPayloadWithSelector = await run(
-          `gc-mint:defaultpayload:${triggername}`
-        );
-      } else {
-        triggerPayloadWithSelector = triggerpayloadwithselector;
-      }
-
-      const triggerABI = await run("abi-get", { contractname: triggername });
-
-      let firedFunction;
-      for (const fn of triggerABI) {
-        if (fn.name == "fired") firedFunction = fn;
-      }
-      const abiCoder = utils.defaultAbiCoder;
-      const decodedTriggerPayload = abiCoder.decode(
-        firedFunction.inputs,
-        triggerPayloadWithSelector
-      );
-
-      const account = await run("bre-config", {
-        addressbookcategory: "EOA",
-        addressbookentry: "luis"
+      // Params
+      const { DAI: src, KNC: dest } = await run("bre-config", {
+        addressbookcategory: "erc20"
       });
-      const coin = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"; // ETH
-      const refBalance = "1000000000000000000000000";
+      const srcamt = utils.parseUnits("10", 18);
+      const [expectedRate] = await run("gt-kyber-getexpectedrate", {
+        src,
+        dest,
+        srcamt
+      });
+      const refRate = utils
+        .bigNumberify(expectedRate)
+        .add(utils.parseUnits("1", 17));
+      const greaterElseSmaller = false;
 
       // Trigger Read Instance
       const triggerContract = await run("instantiateContract", {
@@ -50,12 +36,18 @@ export default task(
         read: true
       });
       // mintExecutionClaim TX (payable)
-      const fired = await triggerContract.fired(account, coin, refBalance);
+      const fired = await triggerContract.fired(
+        src,
+        srcamt,
+        dest,
+        refRate,
+        greaterElseSmaller
+      );
 
       if (log)
         console.log(
           `\nTrigger: ${triggername}\
-           \nTriggerPayloadWithSelector: ${triggerPayloadWithSelector}\
+           \nTriggerPayloadWithSelector: ${triggerpayloadwithselector}\
            \nFired?: ${fired}\n`
         );
       return fired;

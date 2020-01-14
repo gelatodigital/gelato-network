@@ -23,7 +23,7 @@ contract TriggerKyberRate is IGelatoTrigger {
     function triggerSelector() external pure override returns(bytes4) {
         return this.fired.selector;
     }
-    uint256 public constant override triggerGas = 30000;
+    uint256 public constant override triggerGas = 50000;
 
     function fired(
         address _src,
@@ -44,7 +44,7 @@ contract TriggerKyberRate is IGelatoTrigger {
             _dest,
             _srcAmt
         )
-            returns(uint256 expectedRate, uint256 _)
+            returns(uint256 expectedRate, uint256)
         {
             if (_greaterElseSmaller) {  // greaterThan
                 if (expectedRate >= _refRate)
