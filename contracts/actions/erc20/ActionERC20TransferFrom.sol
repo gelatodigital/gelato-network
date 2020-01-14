@@ -21,7 +21,7 @@ contract ActionERC20TransferFrom is GelatoActionsStandard, SplitFunctionSelector
         NotOk,  // 1: Standard Field for Unfulfilled Conditions or Caught/Handled Errors
         UnhandledError,  // 2: Standard Field for Uncaught/Unhandled Errors
         // NotOk: Unfulfilled Conditions
-        InvalidERC20Address,
+        ERC20AddressNotOk,
         UserBalanceNotOk,
         UserProxyAllowanceNotOk,
         // NotOk: Caught/Handled Errors
@@ -94,17 +94,15 @@ contract ActionERC20TransferFrom is GelatoActionsStandard, SplitFunctionSelector
             (address, address, address, uint256, address)
         );
 
+        if(!_src.isContract())
+            return(false, uint8(Reason.ERC20AddressNotOk));
+
         IERC20 srcERC20 = IERC20(_src);
 
-        if(!address(_src).isContract())
-            return(false, uint8(Reason.InvalidERC20Address));
-
-        uint256 userSrcBalance = srcERC20.balanceOf(_user);
-        if (userSrcBalance < _srcAmt)
+        if (srcERC20.balanceOf(_user) < _srcAmt)
             return (false, uint8(Reason.UserBalanceNotOk));
 
-        uint256 userProxySrcAllowance = srcERC20.allowance(_user, _userProxy);
-        if (userProxySrcAllowance < _srcAmt)
+        if (srcERC20.allowance(_user, _userProxy) < _srcAmt)
             return (false, uint8(Reason.UserProxyAllowanceNotOk));
 
         return (true, uint8(Reason.Ok));

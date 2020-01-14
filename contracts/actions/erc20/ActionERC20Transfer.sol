@@ -21,9 +21,8 @@ contract ActionERC20Transfer is GelatoActionsStandard, SplitFunctionSelector {
         NotOk,  // 1: Standard Field for Unfulfilled Conditions or Caught/Handled Errors
         UnhandledError,  // 2: Standard Field for Uncaught/Unhandled Errors
         // NotOk: Unfulfilled Conditions
-        InvalidERC20Address,
-        UserBalanceNotOk,
-        UserProxyAllowanceNotOk,
+        ERC20AddressNotOk,
+        BalanceNotOk,
         // NotOk: Caught/Handled Errors
         TransferError
     }
@@ -56,7 +55,7 @@ contract ActionERC20Transfer is GelatoActionsStandard, SplitFunctionSelector {
         external
         returns (GelatoCoreEnums.ExecutionResult, Reason)
     {
-        try _src.transferFrom(_user, _beneficiary, _srcAmt) {
+        try _src.transfer(_beneficiary, _srcAmt) {
             emit LogAction(_user, _userProxy, _src, _srcAmt, _beneficiary);
             return (
                 GelatoCoreEnums.ExecutionResult.Success,
@@ -65,7 +64,7 @@ contract ActionERC20Transfer is GelatoActionsStandard, SplitFunctionSelector {
         } catch {
             return (
                 GelatoCoreEnums.ExecutionResult.DappNotOk,
-                Reason.TransferFromUserError
+                Reason.TransferError
             );
         }
     }
@@ -94,18 +93,13 @@ contract ActionERC20Transfer is GelatoActionsStandard, SplitFunctionSelector {
             (address, address, address, uint256, address)
         );
 
+        if(!_src.isContract())
+            return(false, uint8(Reason.ERC20AddressNotOk));
+
         IERC20 srcERC20 = IERC20(_src);
 
-        if(!address(_src).isContract())
-            return(false, uint8(Reason.InvalidERC20Address));
-
-        uint256 userSrcBalance = srcERC20.balanceOf(_user);
-        if (userSrcBalance < _srcAmt)
-            return (false, uint8(Reason.UserBalanceNotOk));
-
-        uint256 userProxySrcAllowance = srcERC20.allowance(_user, _userProxy);
-        if (userProxySrcAllowance < _srcAmt)
-            return (false, uint8(Reason.UserProxyAllowanceNotOk));
+        if (srcERC20.balanceOf(address(this)) < _srcAmt)
+            return (false, uint8(Reason.BalanceNotOk));
 
         return (true, uint8(Reason.Ok));
     }

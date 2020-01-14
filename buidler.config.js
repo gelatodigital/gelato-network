@@ -66,6 +66,7 @@ module.exports = {
         }
       },
       contracts: [
+        "ActionERC20Transfer",
         "ActionERC20TransferFrom",
         "ActionKyberTrade",
         "ActionMultiMintForTriggerTimestampPassed",
@@ -74,7 +75,8 @@ module.exports = {
         "TriggerTimestampPassed"
       ],
       deployments: {
-        ActionERC20TransferFrom: "0xAB2AEA38619878B38f02d055388878a15b9BF6f9",
+        ActionERC20Transfer: "0xF5e1764EbFF1d56c5CC27a41cd87f8e49421F48d",
+        ActionERC20TransferFrom: "0x8FdAf109e391C304939CF64C9B9912b320AdfE56",
         ActionKyberTrade: "0x67f647bDF012A718d5F9bD9C7bEd6e5a2023ccC6",
         ActionMultiMintForTriggerTimestampPassed:
           "0x87b9f40e569C3a58C1F07a5E929a5b27edE74D27",
