@@ -21,7 +21,7 @@ export default internalTask(
       const { DAI: src } = await run("bre-config", {
         addressbookcategory: "erc20"
       });
-      const srcAmt = "1000000000000";
+      const srcAmt = "19999999000000000000";
 
       const beneficiary = user;
 

@@ -29,6 +29,7 @@ export default task(
         `\nNetwork: ${network.name}\
          \nERC20:   ${erc20Symbol}\
          \nOwner:   ${owner}\
+         \nBalance: ${balance}\
          \nBalance: ${balance / 10 ** 18} ${erc20Symbol}\n`
       );
     }

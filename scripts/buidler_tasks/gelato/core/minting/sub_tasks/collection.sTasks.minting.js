@@ -1,7 +1,7 @@
 // ======= Default Payloads ========
 // === Triggers ===
 // TriggerMinBalanceIncrease
-import "./default_payloads/triggers/sTask.defaultpayload.TriggerMinBalanceIncrease";
+import "./default_payloads/triggers/sTask.defaultpayload.TriggerBalance";
 // TriggerTimestampPassed
 import "./default_payloads/triggers/sTask.defaultpayload.TriggerTimestampPassed";
 
