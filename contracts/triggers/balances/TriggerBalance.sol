@@ -11,11 +11,11 @@ contract TriggerBalance is IGelatoTrigger {
         NotOk,  // 1: Standard Field for Unfulfilled Conditions or Caught/Handled Errors
         UnhandledError,  // 2: Standard Field for Uncaught/Unhandled Errors
         // Ok: Fulfilled Conditions
-        BalanceIsGreaterThanRefBalance,
-        BalanceIsSmallerThanRefBalance,
+        OkBalanceIsGreaterThanRefBalance,
+        OkBalanceIsSmallerThanRefBalance,
         // NotOk: Unfulfilled Conditions
-        BalanceIsNotGreaterThanRefBalance,
-        BalanceIsNotSmallerThanRefBalance,
+        NotOkBalanceIsNotGreaterThanRefBalance,
+        NotOkBalanceIsNotSmallerThanRefBalance,
         ERC20Error
     }
 
@@ -41,12 +41,14 @@ contract TriggerBalance is IGelatoTrigger {
         if (_coin == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) {
             if (_greaterElseSmaller) {  // greaterThan
                 if (_account.balance >= _refBalance)
-                    return (true, uint8(Reason.BalanceIsGreaterThanRefBalance));
-                else return(false, uint8(Reason.BalanceIsNotGreaterThanRefBalance));
+                    return (true, uint8(Reason.OkBalanceIsGreaterThanRefBalance));
+                else
+                    return(false, uint8(Reason.NotOkBalanceIsNotGreaterThanRefBalance));
             } else {  // smallerThan
                 if (_account.balance <= _refBalance)
-                    return (true, uint8(Reason.BalanceIsSmallerThanRefBalance));
-                else return(false, uint8(Reason.BalanceIsNotSmallerThanRefBalance));
+                    return (true, uint8(Reason.OkBalanceIsSmallerThanRefBalance));
+                else
+                    return(false, uint8(Reason.NotOkBalanceIsNotSmallerThanRefBalance));
             }
         } else {
             // ERC20 balances
@@ -54,12 +56,14 @@ contract TriggerBalance is IGelatoTrigger {
             try erc20.balanceOf(_account) returns (uint256 erc20Balance) {
                 if (_greaterElseSmaller) {  // greaterThan
                     if (erc20Balance >= _refBalance)
-                        return (true, uint8(Reason.BalanceIsGreaterThanRefBalance));
-                    else return(false, uint8(Reason.BalanceIsNotGreaterThanRefBalance));
+                        return (true, uint8(Reason.OkBalanceIsGreaterThanRefBalance));
+                    else
+                        return(false, uint8(Reason.NotOkBalanceIsNotGreaterThanRefBalance));
                 } else {  // smallerThan
                     if (erc20Balance <= _refBalance)
-                        return (true, uint8(Reason.BalanceIsSmallerThanRefBalance));
-                    else return(false, uint8(Reason.BalanceIsNotSmallerThanRefBalance));
+                        return (true, uint8(Reason.OkBalanceIsSmallerThanRefBalance));
+                    else
+                        return(false, uint8(Reason.NotOkBalanceIsNotSmallerThanRefBalance));
                 }
             } catch {
                 return(false, uint8(Reason.ERC20Error));
