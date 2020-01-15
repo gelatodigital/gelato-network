@@ -1,19 +1,14 @@
 import { task } from "@nomiclabs/buidler/config";
-import { defaultNetwork } from "../../../../buidler.config";
+import { defaultNetwork } from "../../../../../buidler.config";
 import { utils } from "ethers";
 
 export default task(
-  "gt-value",
-  `Calls <trigername>.value(<triggerpayloadwithselector>) on [--network] (default: ${defaultNetwork})`
+  "gt-balance-fired",
+  `Calls <trigername>.fired(<triggerpayloadwithselector>) on [--network] (default: ${defaultNetwork})`
 )
-  .addPositionalParam("triggername", "must exist inside buidler.config")
-  .addOptionalPositionalParam("triggerpayloadwithselector", "abi.encoded bytes")
   .addFlag("log", "Logs return values to stdout")
-  .setAction(async ({ triggername, triggerpayloadwithselector, log }) => {
+  .setAction(async ({ log }) => {
     try {
-      // To avoid mistakes default log to true
-      log = true;
-
       // Params
       const { luis: account } = await run("bre-config", {
         addressbookcategory: "EOA"
@@ -28,25 +23,23 @@ export default task(
 
       // Trigger Read Instance
       const triggerContract = await run("instantiateContract", {
-        contractname: triggername,
+        contractname: "TriggerBalance",
         read: true
       });
       // mintExecutionClaim TX (payable)
-      const value = await triggerContract.getTriggerValue(
+      const fired = await triggerContract.fired(
         account,
         coin,
         refBalance,
         greaterElseSmaller
       );
 
-      if (log) {
+      if (log)
         console.log(
-          `\nTrigger: ${triggername}\
-             \nTriggerPayloadWithSelector: ${triggerpayloadwithselector}\
-             \nValue: ${value}\n`
+          `\nTrigger: TriggerBalance\
+           \nFired?: ${fired}\n`
         );
-      }
-      return value;
+      return fired;
     } catch (error) {
       console.error(error);
       process.exit(1);

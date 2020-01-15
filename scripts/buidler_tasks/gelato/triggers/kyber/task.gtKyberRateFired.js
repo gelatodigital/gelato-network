@@ -1,19 +1,14 @@
 import { task } from "@nomiclabs/buidler/config";
-import { defaultNetwork } from "../../../../buidler.config";
+import { defaultNetwork } from "../../../../../buidler.config";
 import { utils } from "ethers";
 
 export default task(
-  "gt-fired",
+  "gt-kyberrate-fired",
   `Calls <trigername>.fired(<triggerpayloadwithselector>) on [--network] (default: ${defaultNetwork})`
 )
-  .addPositionalParam("triggername", "must exist inside buidler.config")
-  .addOptionalPositionalParam("triggerpayloadwithselector", "abi.encoded bytes")
   .addFlag("log", "Logs return values to stdout")
-  .setAction(async ({ triggername, triggerpayloadwithselector, log }) => {
+  .setAction(async ({ log }) => {
     try {
-      // To avoid mistakes default log to true
-      log = true;
-
       // Handle trigger payloadsWithSelector
       // Params
       const { DAI: src, KNC: dest } = await run("bre-config", {
@@ -32,7 +27,7 @@ export default task(
 
       // Trigger Read Instance
       const triggerContract = await run("instantiateContract", {
-        contractname: triggername,
+        contractname: "TriggerKyberRate",
         read: true
       });
       // mintExecutionClaim TX (payable)
@@ -46,8 +41,7 @@ export default task(
 
       if (log)
         console.log(
-          `\nTrigger: ${triggername}\
-           \nTriggerPayloadWithSelector: ${triggerpayloadwithselector}\
+          `\nTrigger: TriggerKyberRate\
            \nFired?: ${fired}\n`
         );
       return fired;

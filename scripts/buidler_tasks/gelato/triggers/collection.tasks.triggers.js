@@ -1,5 +1,12 @@
-import "./task.fired";
-import "./task.getTriggerValue";
+// ===== TriggerBalance =====
+// Fired
+import "./balance/task.gtBalanceFired";
+// getTriggerValue
+import "./balance/task.gtBalanceValue";
 
-// ===== Kyber =====
-import "./kyber/task.getExpectedRate";
+// ===== TriggerKyber ===========
+// == TriggerKyberRate
+// Fired
+import "./kyber/task.gtKyberRateFired";
+// getTriggerValue
+import "./kyber/task.gtKyberRateValue";

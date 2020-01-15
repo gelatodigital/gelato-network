@@ -157,6 +157,8 @@ require("./scripts/buidler_tasks/gelato/actions/collection.tasks.actions");
 // _____ CORE ______________________
 // Accounting, UserProxyManager, Minting, ...
 require("./scripts/buidler_tasks/gelato/core/collection.gelato-core.tasks");
+// _____ DAPPS ______________________
+require("./scripts/buidler_tasks/gelato/dapps/collection.tasks.dapps");
 // _____ Triggers ______________________
 require("./scripts/buidler_tasks/gelato/triggers/collection.tasks.triggers");
 
