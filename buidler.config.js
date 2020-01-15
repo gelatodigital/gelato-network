@@ -84,7 +84,7 @@ module.exports = {
         GelatoCore: "0x563700A8A6740C8a474DF8F289716afDc30ED07a",
         GelatoUserProxy: "0x1631B08A31Ecc1e125939002326E4b281E9eCd75",
         TriggerBalance: "0xaf4c11A90e98D0C5ecFb403C62Cc8Dfe8DF11030",
-        TriggerKyberRate: "0x6C88EBdE6B83EE705ea8285D02535763bAE97A81",
+        TriggerKyberRate: "0xbcb765cb4FF012B019068626320c9c577f3D6327",
         TriggerTimestampPassed: "0x20F8EE3153F11Da43137478B6897c9c4cC438B50"
       }
     }

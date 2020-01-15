@@ -23,7 +23,7 @@ contract TriggerKyberRate is IGelatoTrigger {
     function triggerSelector() external pure override returns(bytes4) {
         return this.fired.selector;
     }
-    uint256 public constant override triggerGas = 400000;
+    uint256 public constant override triggerGas = 600000;
 
     function fired(
         address _src,

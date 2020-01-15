@@ -397,6 +397,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         private
     {
         uint256 startGas = gasleft();
+        // CAUTION NEEDS FIXING <= need to account for gas overhead otherwise reverts
         require(
             startGas >= _triggerGasActionTotalGasMinExecutionGas[2],
             "GelatoCore._execute: Insufficient gas sent"
