@@ -43,7 +43,8 @@ module.exports = {
       // Custom
       addressBook: {
         EOA: {
-          luis: "0x203AdbbA2402a36C202F207caA8ce81f1A4c7a72"
+          luis: "0x203AdbbA2402a36C202F207caA8ce81f1A4c7a72",
+          hilmar: "0xe2A8950bC498e19457BE5bBe2C25bC1f535C743e"
         },
         erc20: {
           DAI: "0xad6d458402f60fd3bd25163575031acdce07538d",
