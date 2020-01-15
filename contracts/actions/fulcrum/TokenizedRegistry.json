@@ -1,0 +1,273 @@
+{
+  "name": "TokenizedRegistry",
+  "address": "0xd03eea21041a19672e451bcbb413ce8be72d0381",
+  "abi": [
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "owner",
+      "outputs": [{ "name": "", "type": "address" }],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [{ "name": "", "type": "address" }],
+      "name": "tokens",
+      "outputs": [
+        { "name": "token", "type": "address" },
+        { "name": "asset", "type": "address" },
+        { "name": "name", "type": "string" },
+        { "name": "symbol", "type": "string" },
+        { "name": "tokenType", "type": "uint256" },
+        { "name": "index", "type": "uint256" }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [{ "name": "", "type": "uint256" }],
+      "name": "tokenAddresses",
+      "outputs": [{ "name": "", "type": "address" }],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [{ "name": "_newOwner", "type": "address" }],
+      "name": "transferOwnership",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        { "indexed": true, "name": "previousOwner", "type": "address" },
+        { "indexed": true, "name": "newOwner", "type": "address" }
+      ],
+      "name": "OwnershipTransferred",
+      "type": "event"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        { "name": "_tokens", "type": "address[]" },
+        { "name": "_assets", "type": "address[]" },
+        { "name": "_names", "type": "string[]" },
+        { "name": "_symbols", "type": "string[]" },
+        { "name": "_types", "type": "uint256[]" }
+      ],
+      "name": "addTokens",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [{ "name": "_tokens", "type": "address[]" }],
+      "name": "removeTokens",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        { "name": "_token", "type": "address" },
+        { "name": "_asset", "type": "address" },
+        { "name": "_name", "type": "string" },
+        { "name": "_symbol", "type": "string" },
+        { "name": "_type", "type": "uint256" }
+      ],
+      "name": "addToken",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [{ "name": "_token", "type": "address" }],
+      "name": "removeToken",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        { "name": "_token", "type": "address" },
+        { "name": "_name", "type": "string" }
+      ],
+      "name": "setTokenName",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        { "name": "_token", "type": "address" },
+        { "name": "_symbol", "type": "string" }
+      ],
+      "name": "setTokenSymbol",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [{ "name": "_symbol", "type": "string" }],
+      "name": "getTokenAddressBySymbol",
+      "outputs": [{ "name": "", "type": "address" }],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [{ "name": "_name", "type": "string" }],
+      "name": "getTokenAddressByName",
+      "outputs": [{ "name": "", "type": "address" }],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [{ "name": "_token", "type": "address" }],
+      "name": "getTokenByAddress",
+      "outputs": [
+        {
+          "components": [
+            { "name": "token", "type": "address" },
+            { "name": "asset", "type": "address" },
+            { "name": "name", "type": "string" },
+            { "name": "symbol", "type": "string" },
+            { "name": "tokenType", "type": "uint256" },
+            { "name": "index", "type": "uint256" }
+          ],
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [{ "name": "_name", "type": "string" }],
+      "name": "getTokenByName",
+      "outputs": [
+        {
+          "components": [
+            { "name": "token", "type": "address" },
+            { "name": "asset", "type": "address" },
+            { "name": "name", "type": "string" },
+            { "name": "symbol", "type": "string" },
+            { "name": "tokenType", "type": "uint256" },
+            { "name": "index", "type": "uint256" }
+          ],
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [{ "name": "_symbol", "type": "string" }],
+      "name": "getTokenBySymbol",
+      "outputs": [
+        {
+          "components": [
+            { "name": "token", "type": "address" },
+            { "name": "asset", "type": "address" },
+            { "name": "name", "type": "string" },
+            { "name": "symbol", "type": "string" },
+            { "name": "tokenType", "type": "uint256" },
+            { "name": "index", "type": "uint256" }
+          ],
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "getTokenAddresses",
+      "outputs": [{ "name": "", "type": "address[]" }],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        { "name": "_start", "type": "uint256" },
+        { "name": "_count", "type": "uint256" },
+        { "name": "_tokenType", "type": "uint256" }
+      ],
+      "name": "getTokens",
+      "outputs": [
+        {
+          "components": [
+            { "name": "token", "type": "address" },
+            { "name": "asset", "type": "address" },
+            { "name": "name", "type": "string" },
+            { "name": "symbol", "type": "string" },
+            { "name": "tokenType", "type": "uint256" },
+            { "name": "index", "type": "uint256" }
+          ],
+          "name": "tokenData",
+          "type": "tuple[]"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        { "name": "_token", "type": "address" },
+        { "name": "_tokenType", "type": "uint256" }
+      ],
+      "name": "isTokenType",
+      "outputs": [{ "name": "valid", "type": "bool" }],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        { "name": "_token", "type": "address" },
+        { "name": "_tokenType", "type": "uint256" }
+      ],
+      "name": "getTokenAsset",
+      "outputs": [{ "name": "", "type": "address" }],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ]
+}
