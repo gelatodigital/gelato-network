@@ -15,19 +15,16 @@ export default task(
       log = true;
 
       // Params
-      const { DAI: src, KNC: dest } = await run("bre-config", {
+      const { luis: account } = await run("bre-config", {
+        addressbookcategory: "EOA"
+      });
+      const { DAI: coin } = await run("bre-config", {
         addressbookcategory: "erc20"
       });
-      const srcamt = utils.parseUnits("10", 18);
-      const [expectedRate] = await run("gt-kyber-getexpectedrate", {
-        src,
-        dest,
-        srcamt
-      });
-      const refRate = utils
-        .bigNumberify(expectedRate)
-        .add(utils.parseUnits("1", 17));
-      const greaterElseSmaller = false;
+      /* const coin = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"; // ETH */
+
+      const refBalance = utils.parseUnits("24", 18);
+      const greaterElseSmaller = true;
 
       // Trigger Read Instance
       const triggerContract = await run("instantiateContract", {
@@ -36,10 +33,9 @@ export default task(
       });
       // mintExecutionClaim TX (payable)
       const value = await triggerContract.getTriggerValue(
-        src,
-        srcamt,
-        dest,
-        refRate,
+        account,
+        coin,
+        refBalance,
         greaterElseSmaller
       );
 

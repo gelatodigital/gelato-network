@@ -38,7 +38,7 @@ module.exports = {
       // Standard
       accounts: { mnemonic: DEV_MNEMONIC },
       chainId: 3,
-      gasPrice: 20000000000, // 10 gwei
+      gasPrice: 20000000000, // 20 gwei
       url: `https://ropsten.infura.io/v3/${INFURA_ID}`,
       // Custom
       addressBook: {
