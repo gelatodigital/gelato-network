@@ -9,7 +9,7 @@ abstract contract GelatoActionsStandard is IGelatoAction {
     enum StandardReason {
         Ok,
         NotOk,
-        UnhandledError 
+        UnhandledError
     }
 
     /* CAUTION All Actions must extend their `enum Reason` from `StandardReason as such:

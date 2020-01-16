@@ -4,7 +4,7 @@ import "../GelatoActionsStandard.sol";
 import "../../helpers/SplitFunctionSelector.sol";
 import "../../external/IERC20.sol";
 // import "../../external/SafeERC20.sol";
-import "../../dapp_interfaces/kyber_interfaces/IKyber.sol";
+import "../../dapp_interfaces/kyber/IKyber.sol";
 import "../../gelato_core/GelatoCoreEnums.sol";
 import "../../external/Address.sol";
 import "../../external/SafeMath.sol";

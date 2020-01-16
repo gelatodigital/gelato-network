@@ -1,7 +1,7 @@
 pragma solidity ^0.6.0;
 
 import "../../IGelatoTrigger.sol";
-import "../../../dapp_interfaces/kyber_interfaces/IKyber.sol";
+import "../../../dapp_interfaces/kyber/IKyber.sol";
 
 contract TriggerKyberRate is IGelatoTrigger {
 
