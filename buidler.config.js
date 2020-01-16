@@ -38,7 +38,7 @@ module.exports = {
       // Standard
       accounts: { mnemonic: DEV_MNEMONIC },
       chainId: 42,
-      gasPrice: 20000000000, // 20 gwei
+      gasPrice: 1000000000, // 1 gwei
       url: `https://kovan.infura.io/v3/${INFURA_ID}`,
       // Custom
       addressBook: {
@@ -94,7 +94,7 @@ module.exports = {
         "ActionMultiMintForTriggerTimestampPassed",
         "GelatoCore",
         "TriggerBalance",
-        "TriggerKyberRate",
+        "KovanTriggerKyberRate",
         "TriggerTimestampPassed"
       ],
       deployments: {
@@ -107,7 +107,7 @@ module.exports = {
         GelatoCore: "0xaD944A44Bd6d2BEAa15c49BF300AeDde5d2936B9",
         GelatoUserProxy: "0xbEb2CfD15Fd188634f2f94A7471d194b80D80b12",
         TriggerBalance: "0xe4bD22dfdfcD88df04944be0c745e9961e8dc22b",
-        TriggerKyberRate: "0x40811cbd52F9C8490c474DF20D89CE61d93D3567",
+        KovanTriggerKyberRate: "0x49A791153dbEe3fBc081Ce159d51C70A89323e73",
         TriggerTimestampPassed: "0x591DB4982dD2E184b8F4b8DA9599295Dd379F732"
       }
     },
@@ -157,7 +157,7 @@ module.exports = {
         "ActionMultiMintForTriggerTimestampPassed",
         "GelatoCore",
         "TriggerBalance",
-        "TriggerKyberRate",
+        "RopstenTriggerKyberRate",
         "TriggerTimestampPassed"
       ],
       deployments: {
@@ -172,7 +172,7 @@ module.exports = {
         GelatoCore: "0x563700A8A6740C8a474DF8F289716afDc30ED07a",
         GelatoUserProxy: "0x1631B08A31Ecc1e125939002326E4b281E9eCd75",
         TriggerBalance: "0xaf4c11A90e98D0C5ecFb403C62Cc8Dfe8DF11030",
-        TriggerKyberRate: "0xbcb765cb4FF012B019068626320c9c577f3D6327",
+        RopstenTriggerKyberRate: "0xbcb765cb4FF012B019068626320c9c577f3D6327",
         TriggerTimestampPassed: "0x20F8EE3153F11Da43137478B6897c9c4cC438B50"
       }
     }

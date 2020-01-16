@@ -5,7 +5,8 @@ import "./default_payloads/triggers/sTask.defaultpayload.TriggerBalance";
 // TriggerTimestampPassed
 import "./default_payloads/triggers/sTask.defaultpayload.TriggerTimestampPassed";
 // == Kyber ==
-import "./default_payloads/triggers/sTask.defaultpayload.TriggerKyberRate";
+import "./default_payloads/triggers/sTask.defaultpayload.KovanTriggerKyberRate";
+import "./default_payloads/triggers/sTask.defaultpayload.RopstenTriggerKyberRate";
 
 // === Actions ==
 // ActionERC20Transfer
@@ -13,6 +14,7 @@ import "./default_payloads/actions/sTask.defaultpayload.ActionERC20Transfer";
 // ActionERC20TransferFrom
 import "./default_payloads/actions/sTask.defaultpayload.ActionERC20TransferFrom";
 // ActionKyberTrade
-import "./default_payloads/actions/sTask.defaultpayload.ActionKyberTrade";
+import "./default_payloads/actions/sTask.defaultpayload.KovanActionKyberTrade";
+import "./default_payloads/actions/sTask.defaultpayload.RopstenActionKyberTrade";
 // ActionMultiMintForTriggerTimestampPassed
 import "./default_payloads/actions/sTask.defaultpayload.ActionMultiMintForTriggerTimestampPassed";

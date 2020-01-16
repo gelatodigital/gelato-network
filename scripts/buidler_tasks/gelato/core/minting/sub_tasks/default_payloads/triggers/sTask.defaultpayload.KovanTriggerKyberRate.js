@@ -2,13 +2,15 @@ import { internalTask } from "@nomiclabs/buidler/config";
 import { utils } from "ethers";
 
 export default internalTask(
-  "gc-mint:defaultpayload:TriggerKyberRate",
-  `Returns a hardcoded actionPayloadWithSelector of TriggerKyberRate`
+  "gc-mint:defaultpayload:KovanTriggerKyberRate",
+  `Returns a hardcoded actionPayloadWithSelector of KovanTriggerKyberRate`
 )
   .addFlag("log")
   .setAction(async ({ log }) => {
     try {
-      const contractname = "TriggerKyberRate";
+      if (network.name != "kovan") throw new Error("wrong network!");
+
+      const contractname = "KovanTriggerKyberRate";
       // action(_user, _userProxy, _src, _srcAmt, _dest, _minConversionRate)
       const functionname = "fired";
       // Params

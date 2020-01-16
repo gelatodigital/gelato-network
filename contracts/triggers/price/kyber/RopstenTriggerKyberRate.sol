@@ -3,7 +3,7 @@ pragma solidity ^0.6.0;
 import "../../IGelatoTrigger.sol";
 import "../../../dapp_interfaces/kyber/IKyber.sol";
 
-contract TriggerKyberRate is IGelatoTrigger {
+contract RopstenTriggerKyberRate is IGelatoTrigger {
 
     enum Reason {
         // StandardReason Fields
