@@ -8,7 +8,7 @@ import "../../dapp_interfaces/kyber/IKyber.sol";
 import "../../gelato_core/GelatoCoreEnums.sol";
 import "../../external/SafeMath.sol";
 
-contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
+contract RopstenActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
     // using SafeERC20 for IERC20; <- internal library methods vs. try/catch
     using SafeMath for uint256;
 
