@@ -26,7 +26,7 @@ assert.ok(DEV_MNEMONIC, "no mnenomic in process.env");
 assert.ok(INFURA_ID, "no Infura ID in process.env");
 
 // Defaults
-const DEFAULT_NETWORK = "ropsten";
+const DEFAULT_NETWORK = "kovan";
 
 module.exports = {
   defaultNetwork: DEFAULT_NETWORK,
@@ -34,39 +34,42 @@ module.exports = {
     buidlerevm: {
       hardfork: "istanbul"
     },
-    ropsten: {
+    kovan: {
       // Standard
       accounts: { mnemonic: DEV_MNEMONIC },
-      chainId: 3,
+      chainId: 42,
       gasPrice: 20000000000, // 20 gwei
-      url: `https://ropsten.infura.io/v3/${INFURA_ID}`,
+      url: `https://kovan.infura.io/v3/${INFURA_ID}`,
       // Custom
       addressBook: {
         EOA: {
+          // Kovan
           luis: "0x203AdbbA2402a36C202F207caA8ce81f1A4c7a72",
           hilmar: "0xe2A8950bC498e19457BE5bBe2C25bC1f535C743e"
         },
         erc20: {
-          DAI: "0xad6d458402f60fd3bd25163575031acdce07538d",
-          "0xad6d458402f60fd3bd25163575031acdce07538d": "DAI",
-          KNC: "0x4e470dc7321e84ca96fcaedd0c8abcebbaeb68c6",
-          "0x4e470dc7321e84ca96fcaedd0c8abcebbaeb68c6": "KNC",
-          MANA: "0x72fd6C7C1397040A66F33C2ecC83A0F71Ee46D5c",
-          "0x72fd6C7C1397040A66F33C2ecC83A0F71Ee46D5c": "MANA",
-          WETH: "0xbca556c912754bc8e7d4aad20ad69a1b1444f42d",
-          "0xbca556c912754bc8e7d4aad20ad69a1b1444f42d": "WETH"
+          // Kovan
+          DAI: "0xC4375B7De8af5a38a93548eb8453a498222C4fF2",
+          "0xC4375B7De8af5a38a93548eb8453a498222C4fF2": "DAI",
+          KNC: "0xad67cB4d63C9da94AcA37fDF2761AaDF780ff4a2",
+          "0xad67cB4d63C9da94AcA37fDF2761AaDF780ff4a2": "KNC"
         },
         executor: {
+          // Kovan
           default: "0x203AdbbA2402a36C202F207caA8ce81f1A4c7a72"
         },
         kyber: {
-          proxy: "0x818E6FECD516Ecc3849DAf6845e3EC868087B755"
+          // Kovan
+          proxy: "0x692f391bCc85cefCe8C237C01e1f636BbD70EA4D"
         },
         userProxy: {
-          luis: "0x1631B08A31Ecc1e125939002326E4b281E9eCd75"
+          // Kovan
+          luis: "0xbEb2CfD15Fd188634f2f94A7471d194b80D80b12"
         }
       },
       contracts: [
+        // Kovan
+        "ActionBzxPtokenMintWithToken",
         "ActionERC20Transfer",
         "ActionERC20TransferFrom",
         "ActionKyberTrade",
@@ -77,6 +80,72 @@ module.exports = {
         "TriggerTimestampPassed"
       ],
       deployments: {
+        // Kovan
+        ActionBzxPtokenMintWithToken:
+          "0xF1531B0B71aa97EaF46876EF73dc4218F0e02DFC",
+        ActionERC20Transfer: "0xF48Fc3D81EFc8415dB2daF644cab7F192Da1C42d",
+        ActionERC20TransferFrom: "0x8FdAf109e391C304939CF64C9B9912b320AdfE56",
+        ActionKyberTrade: "0x67f647bDF012A718d5F9bD9C7bEd6e5a2023ccC6",
+        GelatoCore: "0xaD944A44Bd6d2BEAa15c49BF300AeDde5d2936B9",
+        GelatoUserProxy: "0xbEb2CfD15Fd188634f2f94A7471d194b80D80b12",
+        TriggerBalance: "0xaf4c11A90e98D0C5ecFb403C62Cc8Dfe8DF11030",
+        TriggerKyberRate: "0xbcb765cb4FF012B019068626320c9c577f3D6327",
+        TriggerTimestampPassed: "0x591DB4982dD2E184b8F4b8DA9599295Dd379F732"
+      }
+    },
+    ropsten: {
+      // Standard
+      accounts: { mnemonic: DEV_MNEMONIC },
+      chainId: 3,
+      gasPrice: 20000000000, // 20 gwei
+      url: `https://ropsten.infura.io/v3/${INFURA_ID}`,
+      // Custom
+      addressBook: {
+        EOA: {
+          // Ropsten
+          luis: "0x203AdbbA2402a36C202F207caA8ce81f1A4c7a72",
+          hilmar: "0xe2A8950bC498e19457BE5bBe2C25bC1f535C743e"
+        },
+        erc20: {
+          // Ropsten
+          DAI: "0xad6d458402f60fd3bd25163575031acdce07538d",
+          "0xad6d458402f60fd3bd25163575031acdce07538d": "DAI",
+          KNC: "0x4e470dc7321e84ca96fcaedd0c8abcebbaeb68c6",
+          "0x4e470dc7321e84ca96fcaedd0c8abcebbaeb68c6": "KNC",
+          MANA: "0x72fd6C7C1397040A66F33C2ecC83A0F71Ee46D5c",
+          "0x72fd6C7C1397040A66F33C2ecC83A0F71Ee46D5c": "MANA",
+          WETH: "0xbca556c912754bc8e7d4aad20ad69a1b1444f42d",
+          "0xbca556c912754bc8e7d4aad20ad69a1b1444f42d": "WETH"
+        },
+        executor: {
+          // Ropsten
+          default: "0x203AdbbA2402a36C202F207caA8ce81f1A4c7a72"
+        },
+        kyber: {
+          // Ropsten
+          proxy: "0x818E6FECD516Ecc3849DAf6845e3EC868087B755"
+        },
+        userProxy: {
+          // Ropsten
+          luis: "0x1631B08A31Ecc1e125939002326E4b281E9eCd75"
+        }
+      },
+      contracts: [
+        // Ropsten
+        "ActionBzxPtokenMintWithToken",
+        "ActionERC20Transfer",
+        "ActionERC20TransferFrom",
+        "ActionKyberTrade",
+        "ActionMultiMintForTriggerTimestampPassed",
+        "GelatoCore",
+        "TriggerBalance",
+        "TriggerKyberRate",
+        "TriggerTimestampPassed"
+      ],
+      deployments: {
+        // Ropsten
+        ActionBzxPtokenMintWithToken:
+          "0x732033F075b60114E3C0392A621f10F2E8EE0D13",
         ActionERC20Transfer: "0xF48Fc3D81EFc8415dB2daF644cab7F192Da1C42d",
         ActionERC20TransferFrom: "0x8FdAf109e391C304939CF64C9B9912b320AdfE56",
         ActionKyberTrade: "0x67f647bDF012A718d5F9bD9C7bEd6e5a2023ccC6",

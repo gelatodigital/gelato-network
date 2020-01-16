@@ -21,13 +21,13 @@ contract ActionBzxPtokenMintWithToken is GelatoActionsStandard, SplitFunctionSel
         // Ok
         OkPtokensMinted,
         // NotOk: Unfulfilled Conditions
-        UserDepositTokenBalanceNotOk,
-        UserProxyDepositTokenAllowanceNotOk,
+        NotOkUserDepositTokenBalance,
+        NotOkUserProxyDepositTokenAllowance,
         // NotOk: Caught/Handled Errors
-        TransferFromUserError,
-        ApprovePtokenError,
+        ErrorTransferFromUser,
+        ErrorApprovePtoken,
         KyberGetExpectedRateError,
-        PtokenMintWithTokenError
+        ErrorPtokenMintWithToken
     }
 
     // actionSelector public state variable np due to this.actionSelector constant issue
@@ -65,7 +65,7 @@ contract ActionBzxPtokenMintWithToken is GelatoActionsStandard, SplitFunctionSel
             try depositToken.transferFrom(_user, address(this), _depositAmount) {} catch {
                 return (
                     GelatoCoreEnums.ExecutionResult.ActionNotOk,
-                    Reason.TransferFromUserError
+                    Reason.ErrorTransferFromUser
                 );
             }
 
@@ -73,7 +73,7 @@ contract ActionBzxPtokenMintWithToken is GelatoActionsStandard, SplitFunctionSel
                 _transferBackToUser(depositToken, _user, _depositAmount);
                 return (
                     GelatoCoreEnums.ExecutionResult.ActionNotOk,
-                    Reason.ApprovePtokenError
+                    Reason.ErrorApprovePtoken
                 );
             }
         }
@@ -123,7 +123,7 @@ contract ActionBzxPtokenMintWithToken is GelatoActionsStandard, SplitFunctionSel
             _revokePtokenApproval(depositToken, _pTokenAddress, _depositAmount);
             return (
                 GelatoCoreEnums.ExecutionResult.DappNotOk,
-                Reason.PtokenMintWithTokenError
+                Reason.ErrorPtokenMintWithToken
             );
         }
     }
@@ -159,11 +159,11 @@ contract ActionBzxPtokenMintWithToken is GelatoActionsStandard, SplitFunctionSel
 
         uint256 userDepositTokenBalance = depositToken.balanceOf(_user);
         if (userDepositTokenBalance < _depositAmount)
-            return (false, uint8(Reason.UserDepositTokenBalanceNotOk));
+            return (false, uint8(Reason.NotOkUserDepositTokenBalance));
 
         uint256 userProxySrcAllowance = depositToken.allowance(_user, _userProxy);
         if (userProxySrcAllowance < _depositAmount)
-            return (false, uint8(Reason.UserProxyDepositTokenAllowanceNotOk));
+            return (false, uint8(Reason.NotOkUserProxyDepositTokenAllowance));
 
         return (true, uint8(Reason.Ok));
     }
