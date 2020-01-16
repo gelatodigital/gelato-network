@@ -83,13 +83,13 @@ module.exports = {
         // Kovan
         ActionBzxPtokenMintWithToken:
           "0xF1531B0B71aa97EaF46876EF73dc4218F0e02DFC",
-        ActionERC20Transfer: "0xF48Fc3D81EFc8415dB2daF644cab7F192Da1C42d",
-        ActionERC20TransferFrom: "0x8FdAf109e391C304939CF64C9B9912b320AdfE56",
-        ActionKyberTrade: "0x67f647bDF012A718d5F9bD9C7bEd6e5a2023ccC6",
+        ActionERC20Transfer: "0x00eC0c566e16d03b089ff38DD38BA933279886D8",
+        ActionERC20TransferFrom: "0x83D85e7b95eAe643Dc58c6C397701Bf3dd3Dff91",
+        ActionKyberTrade: "0x2265a909E7678f16f5622941836d14aEfda8f2A2",
         GelatoCore: "0xaD944A44Bd6d2BEAa15c49BF300AeDde5d2936B9",
         GelatoUserProxy: "0xbEb2CfD15Fd188634f2f94A7471d194b80D80b12",
-        TriggerBalance: "0xaf4c11A90e98D0C5ecFb403C62Cc8Dfe8DF11030",
-        TriggerKyberRate: "0xbcb765cb4FF012B019068626320c9c577f3D6327",
+        TriggerBalance: "0xe4bD22dfdfcD88df04944be0c745e9961e8dc22b",
+        TriggerKyberRate: "0x40811cbd52F9C8490c474DF20D89CE61d93D3567",
         TriggerTimestampPassed: "0x591DB4982dD2E184b8F4b8DA9599295Dd379F732"
       }
     },
