@@ -17,13 +17,13 @@ export default internalTask(
       const { luis: userProxy } = await run("bre-config", {
         addressbookcategory: "userProxy"
       });
-      const { DAI: depositTokenAddress, dLETH2x: pTokenAddress } = await run(
+      const { DAI: depositTokenAddress, dsETH2x: pTokenAddress } = await run(
         "bre-config",
         {
           addressbookcategory: "erc20"
         }
       );
-      const depositTokenAddressAmt = utils.parseUnits("10", 18);
+      const depositAmt = utils.parseUnits("10", 18);
 
       // Params as sorted array of inputs for abi.encoding
       // action(_user, _userProxy, _depositTokenAddress, _depositAmount, _pTokenAddress, _minConversionRate)
@@ -31,7 +31,7 @@ export default internalTask(
         user,
         userProxy,
         depositTokenAddress,
-        depositTokenAddressAmt,
+        depositAmt,
         pTokenAddress
       ];
       // Encoding

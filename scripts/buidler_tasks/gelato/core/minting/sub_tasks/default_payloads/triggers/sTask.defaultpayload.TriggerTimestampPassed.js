@@ -11,7 +11,7 @@ export default internalTask(
       // fired(_timestamp)
       const functionname = "fired";
       // Params
-      const timestamp = (Math.floor(Date.now() / 1000) + 60); // 60 seconds from now
+      const timestamp = (Math.floor(Date.now() / 1000) + 30); // 30 seconds from now
       const inputs = [timestamp];
       // Encoding
       const payloadWithSelector = await run("abi-encode-withselector", {
