@@ -1,12 +1,12 @@
 pragma solidity ^0.6.0;
 
-import "../GelatoActionsStandard.sol";
-import "../../helpers/SplitFunctionSelector.sol";
-import "../../external/IERC20.sol";
+import "../../GelatoActionsStandard.sol";
+import "../../../helpers/SplitFunctionSelector.sol";
+import "../../../external/IERC20.sol";
 // import "../../external/SafeERC20.sol";
-import "../../dapp_interfaces/bZx/IBzxPtoken.sol";
-import "../../gelato_core/GelatoCoreEnums.sol";
-import "../../external/SafeMath.sol";
+import "../../../dapp_interfaces/bZx/IBzxPtoken.sol";
+import "../../../gelato_core/GelatoCoreEnums.sol";
+import "../../../external/SafeMath.sol";
 
 contract ActionBzxPtokenMintWithToken is GelatoActionsStandard, SplitFunctionSelector {
     // using SafeERC20 for IERC20; <- internal library methods vs. try/catch
