@@ -21,7 +21,10 @@ contract ActionBzxPtokenBurnToToken is GelatoActionsStandard, SplitFunctionSelec
         // Ok
         OkPtokensBurntForTokens,
         // NotOk: Unfulfilled Conditions
+        NotOkUserPtokenBalance,
+        NotOkUserProxyPtokenAllowance,
         // NotOk: Caught/Handled Errors
+        ErrorTransferFromPToken,
         ErrorPtokenBurnToToken
     }
 
@@ -55,6 +58,16 @@ contract ActionBzxPtokenBurnToToken is GelatoActionsStandard, SplitFunctionSelec
         external
         returns (GelatoCoreEnums.ExecutionResult, Reason)
     {
+        IERC20 pToken = IERC20(_pTokenAddress);
+        {
+            try pToken.transferFrom(_user, address(this), _burnAmount) {} catch {
+                return (
+                    GelatoCoreEnums.ExecutionResult.ActionNotOk,
+                    Reason.ErrorTransferFromPToken
+                );
+            }
+        }
+
         // !! Dapp Interaction !!
         // Fetch the pToken's price and allow for maxi
         /* uint256 minConversionRate;
@@ -67,8 +80,8 @@ contract ActionBzxPtokenBurnToToken is GelatoActionsStandard, SplitFunctionSelec
         {
            minConversionRate = slippageRate;
         } catch {
-            _transferBackToUser(depositToken, _user, _burnAmount);
-            _revokePtokenApproval(depositToken, _pTokenAddress, _burnAmount);
+            _transferBackToUser(burnToken, _user, _burnAmount);
+            _revokePtokenApproval(burnToken, _pTokenAddress, _burnAmount);
             return(
                 GelatoCoreEnums.ExecutionResult.DappNotOk,
                 Reason.KyberGetExpectedRateError
@@ -118,18 +131,30 @@ contract ActionBzxPtokenBurnToToken is GelatoActionsStandard, SplitFunctionSelec
         view
         returns(bool, uint8)  // executable?, reason
     {
-        /*(, bytes memory payload) = SplitFunctionSelector.split(
+        (, bytes memory payload) = SplitFunctionSelector.split(
             _actionPayloadWithSelector
         );
 
         (address _user,
          address _userProxy,
-         address _burnTokenAddress,
-         uint256 _burnAmount,) = abi.decode(
+         address _,
+         uint256 _burnAmount,
+         address _pTokenAddress) = abi.decode(
             payload,
             (address, address, address, uint256, address)
-        ); */
+        );
 
+        IERC20 pToken = IERC20(_pTokenAddress);
+
+        uint256 userPtokenBalance = pToken.balanceOf(_user);
+        if (userPtokenBalance < _burnAmount)
+            return (false, uint8(Reason.NotOkUserPtokenBalance));
+
+        uint256 userProxyPtokenAllowance = pToken.allowance(_user, _userProxy);
+        if (userProxyPtokenAllowance < _burnAmount)
+            return (false, uint8(Reason.NotOkUserProxyPtokenAllowance));
+
+        // All conditions fulfilled
         return (true, uint8(Reason.Ok));
     }
 }

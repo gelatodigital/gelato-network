@@ -50,8 +50,8 @@ module.exports = {
         erc20: {
           // Kovan
           // Tokens
-          DAI: "0xc4375b7de8af5a38a93548eb8453a498222c4ff2",
-          "0xc4375b7de8af5a38a93548eb8453a498222c4ff2": "DAI",
+          DAI: "0xC4375B7De8af5a38a93548eb8453a498222C4fF2",
+          "0xC4375B7De8af5a38a93548eb8453a498222C4fF2": "DAI",
           KNC: "0xad67cB4d63C9da94AcA37fDF2761AaDF780ff4a2",
           "0xad67cB4d63C9da94AcA37fDF2761AaDF780ff4a2": "KNC",
           // ==== BzX pTokens ====
@@ -87,6 +87,7 @@ module.exports = {
       },
       contracts: [
         // Kovan
+        "ActionBzxPtokenBurnToToken",
         "ActionBzxPtokenMintWithToken",
         "ActionERC20Transfer",
         "ActionERC20TransferFrom",
@@ -98,16 +99,28 @@ module.exports = {
         "TriggerTimestampPassed"
       ],
       deployments: {
-        // Kovan
+        // ========== KOVAN ===========
+        // === Actions ===
+        // BzX
+        ActionBzxPtokenBurnToToken:
+          "0x58EEEb8ee3dDaA08648679Aa981DC3Dc5D982163",
         ActionBzxPtokenMintWithToken:
-          "0xF1531B0B71aa97EaF46876EF73dc4218F0e02DFC",
+          "0x942aB34BC150401182Fa0DADBEBa2be04EC9AA3C",
+        // erc20
         ActionERC20Transfer: "0x00eC0c566e16d03b089ff38DD38BA933279886D8",
         ActionERC20TransferFrom: "0x83D85e7b95eAe643Dc58c6C397701Bf3dd3Dff91",
+        // kyber
         KovanActionKyberTrade: "0xf0FBC8a0C751399984950569C246c4BA866107dE",
+        // ==== Gelato Core ===
         GelatoCore: "0xaD944A44Bd6d2BEAa15c49BF300AeDde5d2936B9",
+        // Luis User Proxy
         GelatoUserProxy: "0xbEb2CfD15Fd188634f2f94A7471d194b80D80b12",
+        // === Triggers ===
+        // balance
         TriggerBalance: "0xe4bD22dfdfcD88df04944be0c745e9961e8dc22b",
+        // kyber
         KovanTriggerKyberRate: "0x49A791153dbEe3fBc081Ce159d51C70A89323e73",
+        // time
         TriggerTimestampPassed: "0x591DB4982dD2E184b8F4b8DA9599295Dd379F732"
       }
     },

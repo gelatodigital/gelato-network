@@ -17,9 +17,10 @@ interface IBzxPtoken {
         a token other the asset returned by the loanTokenAddress() function will
         trigger a KyberSwap into the correct asset, being subject to any trade slippage
         that may occur.
+     * @param depositAmount you can cap it at loanToken
      * @param maxPriceAllowed A slippage limit on the payout rate of the pTokens minted.
         This should be set to a value above the current price returned by `tokenPrice()`.
-        A value of 0 is ignored.
+        A value of 0 is ignored.  ** footnote 1
      */
     function mintWithToken(
         address receiver,
@@ -94,17 +95,22 @@ interface IBzxPtoken {
     ///  (tokenPrice() - checkpointPrice(user)) * balanceOf(user) / 10^36
     function checkpointPrice(address _user) external view returns (uint256 price);
 
-    /// @notice Returns the maximum amount of `loanTokenAddress()` token that
-    ///  can be deposited to mint pTokens at the current time. This is based on
-    ///  borrow liquidity of the related iToken.
-    function marketLiquidityForAsset() external view returns (uint256);
 
-    /// @notice Returns the maximum amount of pToken that can be minted at the
-    ///  current time. This is based on borrow liquidity of the related iToken,
-    ///  as well as the current pToken price (tokenPrice()).
-    function marketLiquidityForToken() external view returns (uint256);
+    /// @notice marketLiquidityForLoan() will tell you the largest amount
+    ///  you can deposit to mint pTokens based on available liquidity in the lending pools
+    function marketLiquidityForLoan() external view returns(uint256 maxDepositAmount);
 
     /// @notice Returns the owner's balance of the underlying asset.
     /// @dev Identical to: pToken.balanceOf(_owner) * tokenPrice()
     function assetBalanceOf(address _owner) external view returns (uint256);
 }
+
+/** Footnotes
+
+depositA
+
+maxPriceAllowed: maxPriceAllowed is to regulate the changes in tokenPrice() between
+ when it's first queried off-chain, and when it's mined later. it doesn't really have
+ relevance if you query it during a transaction, then submit the mint
+
+*/

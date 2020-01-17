@@ -10,6 +10,8 @@ import "./default_payloads/triggers/sTask.defaultpayload.RopstenTriggerKyberRate
 
 // === Actions ==
 // ActionBzxPtokenMintWithToken
+import "./default_payloads/actions/sTask.defaultpayload.ActionBzxPtokenBurnToToken";
+// ActionBzxPtokenMintWithToken
 import "./default_payloads/actions/sTask.defaultpayload.ActionBzxPtokenMintWithToken";
 // ActionERC20Transfer
 import "./default_payloads/actions/sTask.defaultpayload.ActionERC20Transfer";

@@ -23,10 +23,11 @@ contract ActionBzxPtokenMintWithToken is GelatoActionsStandard, SplitFunctionSel
         // NotOk: Unfulfilled Conditions
         NotOkUserDepositTokenBalance,
         NotOkUserProxyDepositTokenAllowance,
+        NotOkDepositAmount,
         // NotOk: Caught/Handled Errors
+        ErrorPtokenMarketLiquidityForLoan,
         ErrorTransferFromUser,
         ErrorApprovePtoken,
-        KyberGetExpectedRateError,
         ErrorPtokenMintWithToken
     }
 
@@ -80,7 +81,7 @@ contract ActionBzxPtokenMintWithToken is GelatoActionsStandard, SplitFunctionSel
 
         // !! Dapp Interaction !!
         // Fetch the pToken's price and allow for maxi
-        /* uint256 minConversionRate;
+        /*uint256 minConversionRate;
         try IBzxPtoken(_pTokenAddress).tokenPrice(
             _depositTokenAddress,
             _dest,
@@ -96,7 +97,7 @@ contract ActionBzxPtokenMintWithToken is GelatoActionsStandard, SplitFunctionSel
                 GelatoCoreEnums.ExecutionResult.DappNotOk,
                 Reason.KyberGetExpectedRateError
             );
-        } */
+        }*/
 
         // !! Dapp Interaction !!
         try IBzxPtoken(_pTokenAddress).mintWithToken(
@@ -150,7 +151,8 @@ contract ActionBzxPtokenMintWithToken is GelatoActionsStandard, SplitFunctionSel
         (address _user,
          address _userProxy,
          address _depositTokenAddress,
-         uint256 _depositAmount,) = abi.decode(
+         uint256 _depositAmount,
+         address _pTokenAddress) = abi.decode(
             payload,
             (address, address, address, uint256, address)
         );
@@ -165,6 +167,17 @@ contract ActionBzxPtokenMintWithToken is GelatoActionsStandard, SplitFunctionSel
         if (userProxySrcAllowance < _depositAmount)
             return (false, uint8(Reason.NotOkUserProxyDepositTokenAllowance));
 
+        // !! Dapp Interaction !!
+        try IBzxPtoken(_pTokenAddress).marketLiquidityForLoan()
+            returns (uint256 maxDepositAmount)
+        {
+            if (_depositAmount <= maxDepositAmount)
+                return (false, uint8(Reason.NotOkDepositAmount));
+        } catch {
+            return (false, uint8(Reason.ErrorPtokenMarketLiquidityForLoan));
+        }
+
+        // All conditions fulfilled
         return (true, uint8(Reason.Ok));
     }
 
