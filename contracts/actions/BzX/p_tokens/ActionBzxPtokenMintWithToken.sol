@@ -171,7 +171,7 @@ contract ActionBzxPtokenMintWithToken is GelatoActionsStandard, SplitFunctionSel
         try IBzxPtoken(_pTokenAddress).marketLiquidityForLoan()
             returns (uint256 maxDepositAmount)
         {
-            if (_depositAmount <= maxDepositAmount)
+            if (_depositAmount > maxDepositAmount)
                 return (false, uint8(Reason.NotOkDepositAmount));
         } catch {
             return (false, uint8(Reason.ErrorPtokenMarketLiquidityForLoan));

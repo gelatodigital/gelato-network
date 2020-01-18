@@ -105,7 +105,7 @@ module.exports = {
         ActionBzxPtokenBurnToToken:
           "0x58EEEb8ee3dDaA08648679Aa981DC3Dc5D982163",
         ActionBzxPtokenMintWithToken:
-          "0x942aB34BC150401182Fa0DADBEBa2be04EC9AA3C",
+          "0x4B81a51A8B7d8A915440761e4fB9f17Ee489deD8",
         // erc20
         ActionERC20Transfer: "0x00eC0c566e16d03b089ff38DD38BA933279886D8",
         ActionERC20TransferFrom: "0x83D85e7b95eAe643Dc58c6C397701Bf3dd3Dff91",
