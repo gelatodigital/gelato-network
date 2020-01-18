@@ -35,8 +35,8 @@ contract ActionBzxPtokenMintWithToken is GelatoActionsStandard, SplitFunctionSel
     function actionSelector() external pure override returns(bytes4) {
         return this.action.selector;
     }
-    uint256 public constant override actionConditionsCheckGas = 1000000;
-    uint256 public constant override actionGas = 3000000;
+    uint256 public constant override actionConditionsCheckGas = 2000000;
+    uint256 public constant override actionGas = 4500000;
     uint256 public constant override actionTotalGas = actionConditionsCheckGas + actionGas;
 
     event LogAction(
