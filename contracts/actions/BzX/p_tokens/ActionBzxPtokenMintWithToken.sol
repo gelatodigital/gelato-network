@@ -18,16 +18,6 @@ contract ActionBzxPtokenMintWithToken is GelatoActionsStandard {
     }
     uint256 public constant override actionGas = 4200000;
 
-    event LogAction(
-        address indexed user,
-        address indexed userProxy,
-        address depositTokenAddress,
-        uint256 depositAmount,
-        address indexed pTokenAddress,
-        uint256 maxPriceAllowed,
-        uint256 pTokensMinted
-    );
-
     function action(
         // Standard Action Params
         address _user,  // "receiver"
@@ -56,20 +46,7 @@ contract ActionBzxPtokenMintWithToken is GelatoActionsStandard {
             _depositTokenAddress,
             _depositAmount,
             _maxPriceAllowed  // maxPriceAllowed - 0 ignores slippage limit
-        )
-            returns (uint256 pTokensMinted)
-        {
-            // Success on Dapp (pToken)
-            emit LogAction(
-                _user,
-                _userProxy,
-                _depositTokenAddress,
-                _depositAmount,
-                _pTokenAddress,
-                _maxPriceAllowed,
-                pTokensMinted
-            );
-        } catch {
+        ) {} catch {
             revert("ActionBzxPtokenMintWithToken: ErrorPtokenMintWithToken");
         }
     }
@@ -127,7 +104,7 @@ contract ActionBzxPtokenMintWithToken is GelatoActionsStandard {
             (address, address, address, uint256, address, uint256)
         );
 
-        if (!_src.isContract())
+        if (!_depositTokenAddress.isContract())
             return "ActionBzxPtokenMintWithToken: NotOkDepositTokenAddress";
 
         IERC20 depositToken = IERC20(_depositTokenAddress);

@@ -18,16 +18,6 @@ contract ActionBzxPtokenBurnToToken is GelatoActionsStandard {
     }
     uint256 public constant override actionGas = 4200000;
 
-    event LogAction(
-        address indexed user,
-        address indexed userProxy,
-        address burnTokenAddress,
-        uint256 burnAmount,
-        address indexed pTokenAddress,
-        uint256 minPriceAllowed,
-        uint256 tokensReceivable
-    );
-
     function action(
         // Standard Action Params
         address _user,  // "receiver"
@@ -47,25 +37,13 @@ contract ActionBzxPtokenBurnToToken is GelatoActionsStandard {
         }
 
         // !! Dapp Interaction !!
+        uint256 burnTokensReceivable;
         try IBzxPtoken(_pTokenAddress).burnToToken(
             _user,  // receiver
             _burnTokenAddress,
             _burnAmount,
             _minPriceAllowed
-        )
-            returns (uint256 tokensReceivable)
-        {
-            // Success on Dapp (pToken)
-            emit LogAction(
-                _user,
-                _userProxy,
-                _burnTokenAddress,
-                _burnAmount,
-                _pTokenAddress,
-                _minPriceAllowed,
-                tokensReceivable
-            );
-        } catch {
+        ) {} catch {
            revert("ActionBzxPtokenBurnToToken: ErrorPtokenBurnToToken");
         }
     }
@@ -118,7 +96,7 @@ contract ActionBzxPtokenBurnToToken is GelatoActionsStandard {
         (address _user,
          address _userProxy,
          address _pTokenAddress,
-         uint256 _burnAmount, , , ) = abi.decode(
+         uint256 _burnAmount, , ) = abi.decode(
             payload,
             (address, address, address, uint256, address, uint256)
         );

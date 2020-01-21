@@ -13,20 +13,12 @@ contract ActionERC20Transfer is GelatoActionsStandard {
     using Address for address;
 
     // actionSelector public state variable np due to this.actionSelector constant issue
-    /*function actionSelector() external pure override returns(bytes4) {
+    function actionSelector() external pure override returns(bytes4) {
         return this.action.selector;
-    }*/
+    }
     uint256 public constant override actionGas = 80000;
 
-    event LogAction(
-        address indexed user,
-        address indexed userProxy,
-        IERC20 indexed src,
-        uint256 srcAmt,
-        address beneficiary
-    );
-
-    /*function action(
+    function action(
         // Standard Action Params
         address _user,
         address _userProxy,
@@ -37,12 +29,10 @@ contract ActionERC20Transfer is GelatoActionsStandard {
     )
         external
     {
-        try _src.transfer(_beneficiary, _srcAmt) {
-            emit LogAction(_user, _userProxy, _src, _srcAmt, _beneficiary);
-        } catch {
+        try _src.transfer(_beneficiary, _srcAmt) {} catch {
             revert("ActionERC20Transfer: ErrorTransfer");
         }
-    }*/
+    }
 
     // ============ API for FrontEnds ===========
     function getUsersSourceTokenBalance(bytes calldata _actionPayloadWithSelector)

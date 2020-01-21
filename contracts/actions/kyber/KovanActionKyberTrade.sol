@@ -7,7 +7,7 @@ import "../../dapp_interfaces/kyber/IKyber.sol";
 import "../../external/SafeMath.sol";
 import "../../external/Address.sol";
 
-contract RopstenActionKyberTrade is GelatoActionsStandard {
+contract KovanActionKyberTrade is GelatoActionsStandard {
     // using SafeERC20 for IERC20; <- internal library methods vs. try/catch
     using SafeMath for uint256;
     using Address for address;
@@ -17,16 +17,6 @@ contract RopstenActionKyberTrade is GelatoActionsStandard {
         return this.action.selector;
     }
     uint256 public constant override actionGas = 700000;
-
-    event LogAction(
-        address indexed user,
-        address indexed userProxy,
-        address indexed src,
-        uint256 srcAmt,
-        address dest,
-        uint256 destAmt,
-        address feeSharingParticipant
-    );
 
     function action(
         // Standard Action Params
@@ -39,8 +29,8 @@ contract RopstenActionKyberTrade is GelatoActionsStandard {
     )
         external
     {
-        // !!!!!!!!! ROPSTEN !!!!!!
-        address kyberAddress = 0x818E6FECD516Ecc3849DAf6845e3EC868087B755;
+        // !!!!!!!!! Kovan !!!!!!
+        address kyberAddress = 0x692f391bCc85cefCe8C237C01e1f636BbD70EA4D;
 
         IERC20 srcERC20 = IERC20(_src);
 
@@ -60,20 +50,7 @@ contract RopstenActionKyberTrade is GelatoActionsStandard {
             2**255,
             0,  // minConversionRate (if price trigger, limit order still possible)
             address(0)  // fee-sharing
-        )
-            returns (uint256 destAmt)
-        {
-            // Success on Dapp
-            emit LogAction(
-                _user,
-                _userProxy,
-                _src,
-                _srcAmt,
-                _dest,
-                destAmt,
-                address(0)  // fee-sharing
-            );
-        } catch {
+        ) {} catch {
             revert("KovanActionKyberTrade: KyberTradeError");
         }
     }
@@ -101,6 +78,7 @@ contract RopstenActionKyberTrade is GelatoActionsStandard {
             );
         }
     }
+
 
     // ====== ACTION CONDITIONS CHECK ==========
     // Overriding and extending GelatoActionsStandard's function (optional)

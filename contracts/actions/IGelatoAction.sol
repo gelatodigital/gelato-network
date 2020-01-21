@@ -4,7 +4,7 @@ pragma solidity ^0.6.0;
 /// @notice all the APIs and events of GelatoActionsStandard
 /// @dev all the APIs are implemented inside GelatoActionsStandard
 interface IGelatoAction {
-    //function actionSelector() external pure returns(bytes4);
+    function actionSelector() external pure returns(bytes4);
     function actionGas() external pure returns(uint256);
 
     /* CAUTION: all actions must have their action() function according to the following standard format:
