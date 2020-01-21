@@ -4,7 +4,7 @@ pragma solidity ^0.6.0;
 /// @notice all the APIs and events of GelatoActionsStandard
 /// @dev all the APIs are implemented inside GelatoActionsStandard
 interface IGelatoAction {
-    function actionSelector() external pure returns(bytes4);
+    /*function actionSelector() external pure returns(bytes4);*/
     function actionGas() external pure returns(uint256);
 
     /* CAUTION: all actions must have their action() function according to the following standard format:
@@ -17,23 +17,16 @@ interface IGelatoAction {
     action function not defined here because non-overridable, due to different arguments passed across different actions
     */
 
-    /* CAUTION All Actions must reserve the firstfield of their
-       `enum ActionConditions` as such:
-        0: Ok  // 0: standard field for Fulfilled Conditions
-    */
-    enum ActionConditionPrototype { Ok }
-
     /**
      * @notice Returns whether the action-specific conditions are fulfilled
      * @dev if actions have specific conditions they should override and extend this fn
      * @param _actionPayloadWithSelector: the actionPayload (with actionSelector)
-     * @return true if specific action conditions are fulfilled, else false.
-     * @return ActionConditionPrototype or extended and converted to uint8
+     * @return actionCondition
      */
-    function actionConditionsCheck(bytes calldata _actionPayloadWithSelector)
+    /*function actionConditionsCheck(bytes calldata _actionPayloadWithSelector)
         external
         view
-        returns(string memory);
+        returns(string memory);*/
 
     /**
      * @notice Returns the user's balance of the respective source token or ETH

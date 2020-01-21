@@ -16,8 +16,7 @@ interface IGelatoUserProxy {
         uint256 _actionGas
     )
         external
-        payable
-        returns(uint8 executionResult, uint8 reason);
+        payable;
 
     function getUser() external view returns(address);
     function getGelatoCore() external view returns(address);

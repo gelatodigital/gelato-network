@@ -202,17 +202,15 @@ interface IGelatoCore {
         bytes calldata _actionPayloadWithSelector,
         uint256 _actionGas
     )
-        external
-        returns(GelatoCoreEnums.ExecutionResults, uint8 reason);
+        external;
 
-    function gasTestTestUserProxyExecute(
+    function gasTestGasTestUserProxyExecute(
         IGelatoUserProxy _userProxy,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
         uint256 _actionGas
     )
-        external
-        returns(GelatoCoreEnums.ExecutionResults executionResult, uint8 reason);
+        external;
 
     function gasTestExecute(
         uint256 _executionClaimId,

@@ -30,7 +30,7 @@ abstract contract GelatoActionsStandard is IGelatoAction, SplitFunctionSelector 
         return 0;
     }
 
-    function actionConditionsCheck(bytes calldata)  // _actionPayloadWithSelector
+    /*function actionConditionsCheck(bytes calldata)  // _actionPayloadWithSelector
         external
         view
         override
@@ -40,5 +40,5 @@ abstract contract GelatoActionsStandard is IGelatoAction, SplitFunctionSelector 
         this;
         // Standard return value for actionConditions fulfilled and no erros:
         return "ok";
-    }
+    }*/
 }

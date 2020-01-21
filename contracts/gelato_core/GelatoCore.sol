@@ -336,31 +336,33 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         );
 
         // _______ canExecute() CHECK ______________________________________________
-        GelatoCoreEnums.CanExecuteResults canExecuteResult;
-        uint8 reason;
-        (canExecuteResult, reason) = _canExecute(
-            _executionClaimId,
-            _userProxy,
-            _trigger,
-            _triggerPayloadWithSelector,
-            _action,
-            _actionPayloadWithSelector,
-            _triggerGasActionGasMinExecutionGas,
-            _executionClaimExpiryDate,
-            _mintingDeposit
-        );
-
-        if (canExecuteResult != GelatoCoreEnums.CanExecuteResults.Executable) {
-            emit LogCanExecuteFailed(
-                msg.sender,
+        {
+            GelatoCoreEnums.CanExecuteResults canExecuteResult;
+            uint8 reason;
+            (canExecuteResult, reason) = _canExecute(
                 _executionClaimId,
-                _user,
+                _userProxy,
                 _trigger,
+                _triggerPayloadWithSelector,
                 _action,
-                canExecuteResult,
-                reason
+                _actionPayloadWithSelector,
+                _triggerGasActionGasMinExecutionGas,
+                _executionClaimExpiryDate,
+                _mintingDeposit
             );
-            return;  // END OF EXECUTION 
+
+            if (canExecuteResult != GelatoCoreEnums.CanExecuteResults.Executable) {
+                emit LogCanExecuteFailed(
+                    msg.sender,
+                    _executionClaimId,
+                    _user,
+                    _trigger,
+                    _action,
+                    canExecuteResult,
+                    reason
+                );
+                return;  // END OF EXECUTION
+            }
         }
 
         // EFFECTS
@@ -373,7 +375,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         try _userProxy.delegatecallGelatoAction(
             _action,
             _actionPayloadWithSelector,
-            _actionGas
+            _triggerGasActionGasMinExecutionGas[1]
         ) {
             actionExecuted = true;
         } catch Error(string memory revertReason) {
@@ -510,18 +512,17 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         external
         override
         gasTestProxyCheck(address(_gasTestUserProxy))
-        returns(GelatoCoreEnums.ExecutionResults executionResult, uint8 reason)
     {
         // Always reverts inside GelatoGasTestUserProxy.executeDelegateCall
-        (executionResult, reason) = _executeActionViaUserProxy(
-            _gasTestUserProxy,
+        _gasTestUserProxy.delegatecallGelatoAction(
             _action,
             _actionPayloadWithSelector,
             _actionGas
         );
+        revert("GelatoCore.gasTestActionViaGasTestUserProxy: did not revert");
     }
 
-    function gasTestTestUserProxyExecute(
+    function gasTestGasTestUserProxyExecute(
         IGelatoUserProxy _userProxy,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
@@ -530,18 +531,23 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         external
         override
         userProxyCheck(_userProxy)
-        returns(GelatoCoreEnums.ExecutionResults executionResult, uint8 reason)
     {
         uint256 startGas = gasleft();
-        (executionResult, reason) = _executeActionViaUserProxy(
-            _userProxy,
+        bool actionExecuted;
+        string memory executionFailureReason;
+        try _userProxy.delegatecallGelatoAction(
             _action,
             _actionPayloadWithSelector,
             _actionGas
-        );
-        if (executionResult == GelatoCoreEnums.ExecutionResults.Success)
+        ) {
+            actionExecuted = true;
             revert(string(abi.encodePacked(startGas - gasleft())));
-        revert("GelatoCore.gasTestTestUserProxyExecute: Not Executed/Wrong Args");
+        } catch Error(string memory reason) {
+            executionFailureReason = reason;
+            revert("GelatoCore.gasTestTestUserProxyExecute: Defined Error Caught");
+        } catch {
+            revert("GelatoCore.gasTestTestUserProxyExecute: Undefined Error Caught");
+        }
     }
 
     function gasTestExecute(

@@ -13,9 +13,9 @@ contract ActionERC20TransferFrom is GelatoActionsStandard {
     using Address for address;
 
     // actionSelector public state variable np due to this.actionSelector constant issue
-    function actionSelector() external pure override returns(bytes4) {
+    /*function actionSelector() external pure override returns(bytes4) {
         return this.action.selector;
-    }
+    }*/
     uint256 public constant override actionGas = 80000;
 
     event LogAction(
@@ -26,7 +26,7 @@ contract ActionERC20TransferFrom is GelatoActionsStandard {
         address beneficiary
     );
 
-    function action(
+    /*function action(
         // Standard Action Params
         address _user,
         address _userProxy,
@@ -42,7 +42,7 @@ contract ActionERC20TransferFrom is GelatoActionsStandard {
         } catch {
             revert("ActionERC20TransferFrom: ErrorTransferFromUser");
         }
-    }
+    }*/
 
     // ============ API for FrontEnds ===========
     function getUsersSourceTokenBalance(bytes calldata _actionPayloadWithSelector)
@@ -68,7 +68,7 @@ contract ActionERC20TransferFrom is GelatoActionsStandard {
 
     // ======= ACTION CONDITIONS CHECK =========
     // Overriding and extending GelatoActionsStandard's function (optional)
-    function actionConditionsCheck(bytes calldata _actionPayloadWithSelector)
+    /*function actionConditionsCheck(bytes calldata _actionPayloadWithSelector)
         external
         view
         override
@@ -109,5 +109,5 @@ contract ActionERC20TransferFrom is GelatoActionsStandard {
         }
         // STANDARD return string to signal actionConditions Ok
         return "ok";
-    }
+    }*/
 }

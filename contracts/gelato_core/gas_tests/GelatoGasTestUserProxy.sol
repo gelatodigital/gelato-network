@@ -16,7 +16,6 @@ contract GelatoGasTestUserProxy is GelatoUserProxy {
         override
         auth
         noZeroAddress(address(_action))
-        returns(uint8 executionResult, uint8 reason)
     {
         uint256 startGas = gasleft();
 
@@ -26,23 +25,16 @@ contract GelatoGasTestUserProxy is GelatoUserProxy {
 
         // Low level try / catch (fails if gasleft() < _actionGas)
         (bool success,
-         bytes memory returndata) = address(_action).delegatecall.gas(_actionGas)(
+         bytes memory revertReason) = address(_action).delegatecall.gas(_actionGas)(
             _actionPayloadWithSelector
         );
         // Unhandled errors during action execution
         if (!success) {
-            // An unhandled error occured during action.delegatecall frame
+            // error during action execution
+            revertReason;  // silence compiler warning
             revert("GelatoGasTestUserProxy.delegatecallGelatoAction: unhandled error");
-        } else {
-            // Success OR caught errors during action execution
-            (executionResult, reason) = abi.decode(returndata, (uint8,uint8));
-
-            // If (Success)
-            if (executionResult == uint8(GelatoCoreEnums.ExecutionResults.Success))
-                revert(string(abi.encodePacked(startGas - gasleft())));
-
-            // Execution Failure
-            revert("GelatoGasTestUserProxy.delegatecallGelatoAction: Execution Failed");
+        } else { // success
+            revert(string(abi.encodePacked(startGas - gasleft())));
         }
     }
 }
