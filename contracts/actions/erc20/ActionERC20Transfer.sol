@@ -68,7 +68,7 @@ contract ActionERC20Transfer is GelatoActionsStandard {
 
     // ===== ACTION CONDITIONS CHECK ========
     // Overriding and extending GelatoActionsStandard's function (optional)
-    /*function actionConditionsCheck(bytes calldata _actionPayloadWithSelector)
+    function actionConditionsCheck(bytes calldata _actionPayloadWithSelector)
         external
         view
         override
@@ -102,5 +102,5 @@ contract ActionERC20Transfer is GelatoActionsStandard {
         }
         // STANDARD return string to signal actionConditions Ok
         return "ok";
-    }*/
+    }
 }

@@ -4,7 +4,7 @@ pragma solidity ^0.6.0;
 /// @notice all the APIs and events of GelatoActionsStandard
 /// @dev all the APIs are implemented inside GelatoActionsStandard
 interface IGelatoAction {
-    /*function actionSelector() external pure returns(bytes4);*/
+    //function actionSelector() external pure returns(bytes4);
     function actionGas() external pure returns(uint256);
 
     /* CAUTION: all actions must have their action() function according to the following standard format:
@@ -23,10 +23,10 @@ interface IGelatoAction {
      * @param _actionPayloadWithSelector: the actionPayload (with actionSelector)
      * @return actionCondition
      */
-    /*function actionConditionsCheck(bytes calldata _actionPayloadWithSelector)
+    function actionConditionsCheck(bytes calldata _actionPayloadWithSelector)
         external
         view
-        returns(string memory);*/
+        returns(string memory);
 
     /**
      * @notice Returns the user's balance of the respective source token or ETH
