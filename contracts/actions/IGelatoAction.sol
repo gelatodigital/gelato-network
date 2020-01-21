@@ -34,4 +34,15 @@ interface IGelatoAction {
         external
         view
         returns(bool, uint8);
+
+    /**
+     * @notice Returns the user's balance of the respective source token or ETH
+     * @dev if actions have specific token economics they should override and extend this fn
+     * @param _actionPayloadWithSelector: the actionPayload (with actionSelector)
+     * @return userSrcBalance the user's balance
+     */
+    function getUsersSourceTokenBalance(bytes calldata _actionPayloadWithSelector)
+        external
+        view
+        returns(uint256 userSrcBalance);
 }

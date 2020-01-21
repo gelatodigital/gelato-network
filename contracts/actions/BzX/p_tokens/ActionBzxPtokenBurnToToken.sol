@@ -1,7 +1,6 @@
 pragma solidity ^0.6.0;
 
 import "../../GelatoActionsStandard.sol";
-import "../../../helpers/SplitFunctionSelector.sol";
 import "../../../external/IERC20.sol";
 // import "../../external/SafeERC20.sol";
 import "../../../dapp_interfaces/bZx/IBzxPtoken.sol";
@@ -9,7 +8,7 @@ import "../../../gelato_core/GelatoCoreEnums.sol";
 import "../../../external/SafeMath.sol";
 import "../../../external/Address.sol";
 
-contract ActionBzxPtokenBurnToToken is GelatoActionsStandard, SplitFunctionSelector {
+contract ActionBzxPtokenBurnToToken is GelatoActionsStandard {
     // using SafeERC20 for IERC20; <- internal library methods vs. try/catch
     using SafeMath for uint256;
     using Address for address;
@@ -178,5 +177,29 @@ contract ActionBzxPtokenBurnToToken is GelatoActionsStandard, SplitFunctionSelec
 
         // All conditions fulfilled
         return (true, uint8(ActionConditions.Ok));
+    }
+
+    // ============ API for FrontEnds ===========
+    function getUsersSourceTokenBalance(bytes calldata _actionPayloadWithSelector)
+        external
+        view
+        override
+        returns(uint256)
+    {
+        (, bytes memory payload) = SplitFunctionSelector.split(
+            _actionPayloadWithSelector
+        );
+        (address _user, address _userProxy, address _src,,) = abi.decode(
+            payload,
+            (address, address, address, uint256, address)
+        );
+        IERC20 srcERC20 = IERC20(_src);
+        try srcERC20.balanceOf(_user) returns(uint256 userSrcBalance) {
+            return userSrcBalance;
+        } catch {
+            revert(
+                "Error: ActionBzxPtokenBurnToToken.getUsersSourceTokenBalance: balanceOf: balanceOf"
+            );
+        }
     }
 }
