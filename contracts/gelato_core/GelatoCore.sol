@@ -360,7 +360,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
                 canExecuteResult,
                 reason
             );
-            return;  // END OF EXECUTION
+            return;  // END OF EXECUTION 
         }
 
         // EFFECTS
@@ -368,15 +368,21 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         delete userProxyWithExecutionClaimId[_executionClaimId];
 
         // INTERACTIONS
-        GelatoCoreEnums.ExecutionResults executionResult;
-        (executionResult, reason) = _executeActionViaUserProxy(
-            _userProxy,
+        bool actionExecuted;
+        string memory executionFailureReason;
+        try _userProxy.delegatecallGelatoAction(
             _action,
             _actionPayloadWithSelector,
-            _triggerGasActionGasMinExecutionGas[1]
-        );
+            _actionGas
+        ) {
+            actionExecuted = true;
+        } catch Error(string memory revertReason) {
+            executionFailureReason = revertReason;
+        } catch {
+            executionFailureReason = "UnhandledUserProxyError";
+        }
 
-        if (executionResult == GelatoCoreEnums.ExecutionResults.Success) {
+        if (actionExecuted) {
             emit LogSuccessfulExecution(
                 msg.sender,  // executor
                 _executionClaimId,
@@ -398,37 +404,12 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
                 payableUser,
                 _trigger,
                 _action,
-                executionResult,
-                reason
+                executionFailureReason
             );
             // Transfer Minting deposit back to user
             payableUser.sendValue(_mintingDeposit);
         }
     }
-
-   function _executeActionViaUserProxy(
-        IGelatoUserProxy _userProxy,
-        IGelatoAction _action,
-        bytes memory _actionPayloadWithSelector,
-        uint256 _actionGas
-    )
-        private
-        returns (GelatoCoreEnums.ExecutionResults, uint8)  // executable?, reason
-    {
-        try _userProxy.delegatecallGelatoAction(
-            _action,
-            _actionPayloadWithSelector,
-            _actionGas
-        ) returns (uint8 _executionResult, uint8 _reason) {
-            return (GelatoCoreEnums.ExecutionResults(_executionResult), _reason);
-        } catch {
-            return (
-                GelatoCoreEnums.ExecutionResults.UnhandledUserProxyError,
-                uint8(GelatoCoreEnums.StandardReason.UnhandledError)
-            );
-        }
-    }
-
 
     // ================ EXECUTION CLAIM HASHING ========================================
     function _computeExecutionClaimHash(

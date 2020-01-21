@@ -13,7 +13,7 @@ interface IGelatoAction {
         - Param3: source token Address (also ETH) of token to be transferred/moved/sold ...
         - Param4: source token Amount
         - Param5: destination address
-    => function action(address _user, address _userProxy, ....) external returns (GelatoCoreEnums.ExecutionResults, Reason):
+    => function action(address _user, address _userProxy, ....) external;
     action function not defined here because non-overridable, due to different arguments passed across different actions
     */
 
@@ -33,7 +33,7 @@ interface IGelatoAction {
     function actionConditionsCheck(bytes calldata _actionPayloadWithSelector)
         external
         view
-        returns(bool, uint8);
+        returns(string memory);
 
     /**
      * @notice Returns the user's balance of the respective source token or ETH

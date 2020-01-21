@@ -55,8 +55,7 @@ interface IGelatoCore {
         address payable indexed user,
         IGelatoTrigger trigger,
         IGelatoAction action,
-        GelatoCoreEnums.ExecutionResults executionResult,
-        uint8 reason
+        string executionFailureReason
     );
 
     event LogExecutionClaimCancelled(

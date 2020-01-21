@@ -12,14 +12,15 @@ abstract contract GelatoCoreEnums {
         Executable
     }
 
-    enum ExecutionResults {
+    // Not needed atm due to revert with string memory reason
+    /* enum ExecutionResults {
         ActionGasNotOk,
         ActionNotOk,  // Mostly for caught/handled (by action) action errors
         DappNotOk,  // Mostly for caught/handled (by action) dapp errors
         UnhandledActionError,
         UnhandledUserProxyError,
         Success
-    }
+    } */
 
     enum StandardReason { Ok, NotOk, UnhandledError }
 }

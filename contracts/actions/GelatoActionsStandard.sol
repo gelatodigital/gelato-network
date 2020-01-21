@@ -10,21 +10,12 @@ abstract contract GelatoActionsStandard is IGelatoAction, SplitFunctionSelector 
     /* CAUTION: all actions must have their action() function according to the following standard format:
         -  Param1: address _user,
         -  Param2: address _userProxy
-    => function action(address _user, address _userProxy, ....) external returns (GelatoCoreEnums.ExecutionResults, Reason):
+        - Param3: source token Address (also ETH) of token to be transferred/moved/sold ...
+        - Param4: source token Amount
+        - Param5: destination address
+    => function action(address _user, address _userProxy, ....) external;
     action function not defined here because non-overridable, due to different arguments passed across different actions
     */
-
-    function actionConditionsCheck(bytes calldata)  // _actionPayloadWithSelector
-        external
-        view
-        override
-        virtual
-        returns(bool, uint8)  // executable?, reason
-    {
-        // solhint-disable-next-line
-        this;  // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
-        return (true, uint8(ActionConditionPrototype.Ok));
-    }
 
     /// @dev All actions must override this with their own implementation
     ///  until array slicing syntax implementation is possible
@@ -37,5 +28,17 @@ abstract contract GelatoActionsStandard is IGelatoAction, SplitFunctionSelector 
     {
         this;
         return 0;
+    }
+
+    function actionConditionsCheck(bytes calldata)  // _actionPayloadWithSelector
+        external
+        view
+        override
+        virtual
+        returns(string memory)  // actionCondition
+    {
+        this;
+        // Standard return value for actionConditions fulfilled and no erros:
+        return "ok";
     }
 }
