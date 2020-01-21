@@ -30,7 +30,7 @@ interface IGelatoCore {
         uint256 indexed executionClaimId,
         IGelatoTrigger indexed trigger,
         IGelatoAction indexed action,
-        GelatoCoreEnums.CanExecuteResult canExecuteResult,
+        GelatoCoreEnums.CanExecuteResults canExecuteResult,
         uint8 reason
     );
 
@@ -51,7 +51,7 @@ interface IGelatoCore {
         uint256 indexed executionClaimId,
         IGelatoTrigger trigger,
         IGelatoAction indexed action,
-        GelatoCoreEnums.ExecutionResult indexed executionResult,
+        GelatoCoreEnums.ExecutionResults indexed executionResult,
         uint8 reason
     );
 
@@ -83,7 +83,7 @@ interface IGelatoCore {
      * @dev The API for executors to check whether a claim is executable.
      *       Caution: there are no guarantees that CanExecuteResult and/or reason
      *       are implemented in a logical fashion by trigger/action developers.
-     * @return GelatoCoreEnums.CanExecuteResult The outcome of the canExecuteCheck
+     * @return GelatoCoreEnums.CanExecuteResults The outcome of the canExecuteCheck
      * @return reason The reason for the outcome of the canExecute Check
      */
     function canExecute(
@@ -99,7 +99,7 @@ interface IGelatoCore {
     )
         external
         view
-        returns (GelatoCoreEnums.CanExecuteResult, uint8 reason);
+        returns (GelatoCoreEnums.CanExecuteResults, uint8 reason);
 
 
     /**
@@ -189,7 +189,7 @@ interface IGelatoCore {
     )
         external
         view
-        returns (GelatoCoreEnums.CanExecuteResult canExecuteResult, uint8 reason);
+        returns (GelatoCoreEnums.CanExecuteResults canExecuteResult, uint8 reason);
 
     function gasTestActionViaGasTestUserProxy(
         IGelatoUserProxy _gasTestUserProxy,
@@ -198,7 +198,7 @@ interface IGelatoCore {
         uint256 _actionGas
     )
         external
-        returns(GelatoCoreEnums.ExecutionResult, uint8 reason);
+        returns(GelatoCoreEnums.ExecutionResults, uint8 reason);
 
     function gasTestTestUserProxyExecute(
         IGelatoUserProxy _userProxy,
@@ -207,7 +207,7 @@ interface IGelatoCore {
         uint256 _actionGas
     )
         external
-        returns(GelatoCoreEnums.ExecutionResult executionResult, uint8 reason);
+        returns(GelatoCoreEnums.ExecutionResults executionResult, uint8 reason);
 
     function gasTestExecute(
         uint256 _executionClaimId,

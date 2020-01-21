@@ -48,11 +48,11 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
             require(triggerGas != 0, "GelatoCore.mintExecutionClaim: 0 triggerGas");
             triggerGasActionGasMinExecutionGas[0] = triggerGas;
 
-            uint256 actionTotalGas = _action.actionTotalGas();
-            require(actionTotalGas != 0, "GelatoCore.mintExecutionClaim: 0 actionTotalGas");
-            triggerGasActionGasMinExecutionGas[1] = actionTotalGas;
+            uint256 actionGas = _action.actionGas();
+            require(actionGas != 0, "GelatoCore.mintExecutionClaim: 0 actionGas");
+            triggerGasActionGasMinExecutionGas[1] = actionGas;
 
-            uint256 minExecutionGas = _getMinExecutionGas(triggerGas, actionTotalGas);
+            uint256 minExecutionGas = _getMinExecutionGas(triggerGas, actionGas);
             triggerGasActionGasMinExecutionGas[2] = minExecutionGas;
 
             require(
@@ -114,7 +114,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         external
         view
         override
-        returns (GelatoCoreEnums.CanExecuteResult, uint8 reason)
+        returns (GelatoCoreEnums.CanExecuteResults, uint8 reason)
     {
         return _canExecute(
             _executionClaimId,
@@ -244,18 +244,18 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
     )
         private
         view
-        returns (GelatoCoreEnums.CanExecuteResult, uint8 reason)
+        returns (GelatoCoreEnums.CanExecuteResults, uint8 reason)
     {
         // _____________ Static CHECKS __________________________________________
         if (executionClaimHash[_executionClaimId] == bytes32(0)) {
             if (_executionClaimId <= executionClaimIds.current()) {
                 return (
-                    GelatoCoreEnums.CanExecuteResult.ExecutionClaimAlreadyExecutedOrCancelled,
+                    GelatoCoreEnums.CanExecuteResults.ExecutionClaimAlreadyExecutedOrCancelled,
                     uint8(GelatoCoreEnums.StandardReason.NotOk)
                 );
             } else {
                 return (
-                    GelatoCoreEnums.CanExecuteResult.ExecutionClaimNonExistant,
+                    GelatoCoreEnums.CanExecuteResults.ExecutionClaimNonExistant,
                     uint8(GelatoCoreEnums.StandardReason.NotOk)
                 );
             }
@@ -263,7 +263,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
 
         if (_executionClaimExpiryDate < now) {
             return (
-                GelatoCoreEnums.CanExecuteResult.ExecutionClaimExpired,
+                GelatoCoreEnums.CanExecuteResults.ExecutionClaimExpired,
                 uint8(GelatoCoreEnums.StandardReason.NotOk)
             );
         }
@@ -283,7 +283,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
 
         if (computedExecutionClaimHash != executionClaimHash[_executionClaimId]) {
             return (
-                GelatoCoreEnums.CanExecuteResult.WrongCalldata,
+                GelatoCoreEnums.CanExecuteResults.WrongCalldata,
                 uint8(GelatoCoreEnums.StandardReason.NotOk)
             );
         }
@@ -297,15 +297,15 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
 
         if (!success) {
             return (
-                GelatoCoreEnums.CanExecuteResult.UnhandledTriggerError,
+                GelatoCoreEnums.CanExecuteResults.UnhandledTriggerError,
                 uint8(GelatoCoreEnums.StandardReason.UnhandledError)
             );
         } else {
             bool triggerFired;
             (triggerFired, reason) = abi.decode(returndata, (bool, uint8));
-            if (!triggerFired) return (GelatoCoreEnums.CanExecuteResult.TriggerNotOk, reason);
+            if (!triggerFired) return (GelatoCoreEnums.CanExecuteResults.TriggerNotOk, reason);
             // Trigger Fired
-            else return (GelatoCoreEnums.CanExecuteResult.Executable, reason);
+            else return (GelatoCoreEnums.CanExecuteResults.Executable, reason);
         }
     }
 
@@ -331,7 +331,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         );
 
         // _______ canExecute() CHECK ______________________________________________
-        GelatoCoreEnums.CanExecuteResult canExecuteResult;
+        GelatoCoreEnums.CanExecuteResults canExecuteResult;
         uint8 reason;
         (canExecuteResult, reason) = _canExecute(
             _executionClaimId,
@@ -345,7 +345,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
             _mintingDeposit
         );
 
-        if (canExecuteResult != GelatoCoreEnums.CanExecuteResult.Executable) {
+        if (canExecuteResult != GelatoCoreEnums.CanExecuteResults.Executable) {
             emit LogCanExecuteFailed(
                 msg.sender,
                 _executionClaimId,
@@ -367,7 +367,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         delete userProxyWithExecutionClaimId[_executionClaimId];
 
         // INTERACTIONS
-        GelatoCoreEnums.ExecutionResult executionResult;
+        GelatoCoreEnums.ExecutionResults executionResult;
         (executionResult, reason) = _executeActionViaUserProxy(
             _userProxy,
             _action,
@@ -375,7 +375,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
             _triggerGasActionGasMinExecutionGas[1]
         );
 
-        if (executionResult == GelatoCoreEnums.ExecutionResult.Success) {
+        if (executionResult == GelatoCoreEnums.ExecutionResults.Success) {
             emit LogSuccessfulExecution(
                 msg.sender,  // executor
                 _executionClaimId,
@@ -408,17 +408,17 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         uint256 _actionGas
     )
         private
-        returns (GelatoCoreEnums.ExecutionResult, uint8)  // executable?, reason
+        returns (GelatoCoreEnums.ExecutionResults, uint8)  // executable?, reason
     {
         try _userProxy.delegatecallGelatoAction(
             _action,
             _actionPayloadWithSelector,
             _actionGas
         ) returns (uint8 _executionResult, uint8 _reason) {
-            return (GelatoCoreEnums.ExecutionResult(_executionResult), _reason);
+            return (GelatoCoreEnums.ExecutionResults(_executionResult), _reason);
         } catch {
             return (
-                GelatoCoreEnums.ExecutionResult.UnhandledUserProxyError,
+                GelatoCoreEnums.ExecutionResults.UnhandledUserProxyError,
                 uint8(GelatoCoreEnums.StandardReason.UnhandledError)
             );
         }
@@ -496,7 +496,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         external
         view
         override
-        returns (GelatoCoreEnums.CanExecuteResult canExecuteResult, uint8 reason)
+        returns (GelatoCoreEnums.CanExecuteResults canExecuteResult, uint8 reason)
     {
         uint256 startGas = gasleft();
         (canExecuteResult, reason) = _canExecute(
@@ -510,7 +510,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
             _executionClaimExpiryDate,
             _mintingDeposit
         );
-        if (canExecuteResult == GelatoCoreEnums.CanExecuteResult.Executable)
+        if (canExecuteResult == GelatoCoreEnums.CanExecuteResults.Executable)
             revert(string(abi.encodePacked(startGas - gasleft())));
         revert("GelatoCore.gasTestCanExecute: Not Executable/Wrong Args");
     }
@@ -524,7 +524,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         external
         override
         gasTestProxyCheck(address(_gasTestUserProxy))
-        returns(GelatoCoreEnums.ExecutionResult executionResult, uint8 reason)
+        returns(GelatoCoreEnums.ExecutionResults executionResult, uint8 reason)
     {
         // Always reverts inside GelatoGasTestUserProxy.executeDelegateCall
         (executionResult, reason) = _executeActionViaUserProxy(
@@ -544,7 +544,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         external
         override
         userProxyCheck(_userProxy)
-        returns(GelatoCoreEnums.ExecutionResult executionResult, uint8 reason)
+        returns(GelatoCoreEnums.ExecutionResults executionResult, uint8 reason)
     {
         uint256 startGas = gasleft();
         (executionResult, reason) = _executeActionViaUserProxy(
@@ -553,7 +553,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
             _actionPayloadWithSelector,
             _actionGas
         );
-        if (executionResult == GelatoCoreEnums.ExecutionResult.Success)
+        if (executionResult == GelatoCoreEnums.ExecutionResults.Success)
             revert(string(abi.encodePacked(startGas - gasleft())));
         revert("GelatoCore.gasTestTestUserProxyExecute: Not Executed/Wrong Args");
     }

@@ -57,7 +57,7 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
         address _dest
     )
         external
-        returns (GelatoCoreEnums.ExecutionResult, Reason)
+        returns (GelatoCoreEnums.ExecutionResults, Reason)
     {
         // !!!!!!!!! ROPSTEN !!!!!!
         address kyberAddress = 0x818E6FECD516Ecc3849DAf6845e3EC868087B755;
@@ -68,7 +68,7 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
                 // Pass
             } catch {
                 return (
-                    GelatoCoreEnums.ExecutionResult.ActionNotOk,
+                    GelatoCoreEnums.ExecutionResults.ActionNotOk,
                     Reason.TransferFromUserError
                 );
             }
@@ -78,7 +78,7 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
             } catch {
                 _transferBackToUser(srcERC20, _user, _srcAmt);
                 return (
-                    GelatoCoreEnums.ExecutionResult.ActionNotOk,
+                    GelatoCoreEnums.ExecutionResults.ActionNotOk,
                     Reason.ApproveKyberError
                 );
             }
@@ -99,7 +99,7 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
             _transferBackToUser(srcERC20, _user, _srcAmt);
             _revokeKyberApproval(srcERC20, kyberAddress, _srcAmt);
             return(
-                GelatoCoreEnums.ExecutionResult.DappNotOk,
+                GelatoCoreEnums.ExecutionResults.DappNotOk,
                 Reason.KyberGetExpectedRateError
             );
         }
@@ -127,12 +127,12 @@ contract ActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
                 minConversionRate,
                 address(0)  // fee-sharing
             );
-            return (GelatoCoreEnums.ExecutionResult.Success, Reason.Ok);
+            return (GelatoCoreEnums.ExecutionResults.Success, Reason.Ok);
         } catch {
             _transferBackToUser(srcERC20, _user, _srcAmt);
             _revokeKyberApproval(srcERC20, kyberAddress, _srcAmt);
             return (
-                GelatoCoreEnums.ExecutionResult.DappNotOk,
+                GelatoCoreEnums.ExecutionResults.DappNotOk,
                 Reason.KyberTradeError
             );
         }

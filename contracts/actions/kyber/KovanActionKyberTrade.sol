@@ -7,20 +7,17 @@ import "../../external/IERC20.sol";
 import "../../dapp_interfaces/kyber/IKyber.sol";
 import "../../gelato_core/GelatoCoreEnums.sol";
 import "../../external/SafeMath.sol";
+import "../../external/Address.sol";
 
 contract KovanActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
     // using SafeERC20 for IERC20; <- internal library methods vs. try/catch
     using SafeMath for uint256;
+    using Address for address;
 
     // Extends IGelatoCoreEnums.StandardReason (no overrides for enums in solc yet)
     enum Reason {
         // StandardReason Fields
-        Ok,  // 0: Standard Field for Fulfilled Conditions and No Errors
-        NotOk,  // 1: Standard Field for Unfulfilled Conditions or Caught/Handled Errors
-        UnhandledError,  // 2: Standard Field for Uncaught/Unhandled Errors
-        // NotOk: Unfulfilled Conditions
-        UserBalanceNotOk,
-        UserProxyAllowanceNotOk,
+        Ok,  // 0: Standard Field for No Errors
         // NotOk: Caught/Handled Errors
         TransferFromUserError,
         ApproveKyberError,
@@ -32,9 +29,7 @@ contract KovanActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
     function actionSelector() external pure override returns(bytes4) {
         return this.action.selector;
     }
-    uint256 public constant override actionConditionsCheckGas = 50000;
     uint256 public constant override actionGas = 1000000;
-    uint256 public constant override actionTotalGas = actionConditionsCheckGas + actionGas;
 
     event LogAction(
         address indexed user,
@@ -57,7 +52,7 @@ contract KovanActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
         address _dest
     )
         external
-        returns (GelatoCoreEnums.ExecutionResult, Reason)
+        returns (GelatoCoreEnums.ExecutionResults, Reason)
     {
         // !!!!!!!!! Kovan !!!!!!
         address kyberAddress = 0x692f391bCc85cefCe8C237C01e1f636BbD70EA4D;
@@ -68,7 +63,7 @@ contract KovanActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
                 // Pass
             } catch {
                 return (
-                    GelatoCoreEnums.ExecutionResult.ActionNotOk,
+                    GelatoCoreEnums.ExecutionResults.ActionNotOk,
                     Reason.TransferFromUserError
                 );
             }
@@ -78,7 +73,7 @@ contract KovanActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
             } catch {
                 _transferBackToUser(srcERC20, _user, _srcAmt);
                 return (
-                    GelatoCoreEnums.ExecutionResult.ActionNotOk,
+                    GelatoCoreEnums.ExecutionResults.ActionNotOk,
                     Reason.ApproveKyberError
                 );
             }
@@ -99,7 +94,7 @@ contract KovanActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
             _transferBackToUser(srcERC20, _user, _srcAmt);
             _revokeKyberApproval(srcERC20, kyberAddress, _srcAmt);
             return(
-                GelatoCoreEnums.ExecutionResult.DappNotOk,
+                GelatoCoreEnums.ExecutionResults.DappNotOk,
                 Reason.KyberGetExpectedRateError
             );
         }
@@ -127,15 +122,28 @@ contract KovanActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
                 minConversionRate,
                 address(0)  // fee-sharing
             );
-            return (GelatoCoreEnums.ExecutionResult.Success, Reason.Ok);
+            return (GelatoCoreEnums.ExecutionResults.Success, Reason.Ok);
         } catch {
             _transferBackToUser(srcERC20, _user, _srcAmt);
             _revokeKyberApproval(srcERC20, kyberAddress, _srcAmt);
             return (
-                GelatoCoreEnums.ExecutionResult.DappNotOk,
+                GelatoCoreEnums.ExecutionResults.DappNotOk,
                 Reason.KyberTradeError
             );
         }
+    }
+
+    // ====== ACTION CONDITIONS CHECK ==========
+    enum ActionConditions {
+        // StandardReason Fields
+        Ok,  // 0: Standard Field for Fulfilled Conditions
+        // NotOk: Unfulfilled Conditions
+        NotOkSrcAddress,
+        NotOkUserBalance,
+        NotOkUserProxyAllowance,
+        // NotOk: Handled Errors
+        ErrorBalanceOf,
+        ErrorAllowance
     }
 
     // Overriding and extending GelatoActionsStandard's function (optional)
@@ -162,17 +170,26 @@ contract KovanActionKyberTrade is GelatoActionsStandard, SplitFunctionSelector {
             (address, address, address, uint256, address)
         );
 
+        if (!_src.isContract())
+            return(false, uint8(ActionConditions.NotOkSrcAddress));
+
         IERC20 srcERC20 = IERC20(_src);
 
-        uint256 userSrcBalance = srcERC20.balanceOf(_user);
-        if (userSrcBalance < _srcAmt)
-            return (false, uint8(Reason.UserBalanceNotOk));
+        try srcERC20.balanceOf(_user) returns(uint256 userSrcBalance) {
+            if (userSrcBalance < _srcAmt)
+                return (false, uint8(ActionConditions.NotOkUserBalance));
+        } catch {
+            return (false, uint8(ActionConditions.ErrorBalanceOf));
+        }
 
-        uint256 userProxySrcAllowance = srcERC20.allowance(_user, _userProxy);
-        if (userProxySrcAllowance < _srcAmt)
-            return (false, uint8(Reason.UserProxyAllowanceNotOk));
+        try srcERC20.allowance(_user, _userProxy) returns(uint256 userProxySrcAllowance) {
+            if (userProxySrcAllowance < _srcAmt)
+                return (false, uint8(ActionConditions.NotOkUserProxyAllowance));
+        } catch {
+            return (false, uint8(ActionConditions.ErrorAllowance));
+        }
 
-        return (true, uint8(Reason.Ok));
+        return (true, uint8(ActionConditions.Ok));
     }
 
 

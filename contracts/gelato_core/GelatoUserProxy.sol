@@ -81,7 +81,7 @@ contract GelatoUserProxy is IGelatoUserProxy {
         // Return if insufficient actionGas (+ 210000 gas overhead buffer) is sent
         if (gasleft() < _actionGas + 21000) {
             return (
-                uint8(GelatoCoreEnums.ExecutionResult.ActionGasNotOk),
+                uint8(GelatoCoreEnums.ExecutionResults.ActionGasNotOk),
                 uint8(GelatoCoreEnums.StandardReason.NotOk)
             );
         }
@@ -102,7 +102,7 @@ contract GelatoUserProxy is IGelatoUserProxy {
         if (!success) {
             // An unhandled error occured during action.delegatecall frame
             return (
-                uint8(GelatoCoreEnums.ExecutionResult.UnhandledActionError),
+                uint8(GelatoCoreEnums.ExecutionResults.UnhandledActionError),
                 uint8(GelatoCoreEnums.StandardReason.UnhandledError)
             );
         } else {
@@ -110,9 +110,9 @@ contract GelatoUserProxy is IGelatoUserProxy {
             (executionResult, reason) = abi.decode(returndata, (uint8,uint8));
 
             // If (Success)
-            if (executionResult == uint8(GelatoCoreEnums.ExecutionResult.Success)) {
+            if (executionResult == uint8(GelatoCoreEnums.ExecutionResults.Success)) {
                 // Success!
-                return (uint8(GelatoCoreEnums.ExecutionResult.Success), reason);
+                return (uint8(GelatoCoreEnums.ExecutionResults.Success), reason);
             }
             // Else: Failure! But handled executionResult and reason, are returned
             //   to the calling frame (gelatoCore._executeActionViaUserProxy())

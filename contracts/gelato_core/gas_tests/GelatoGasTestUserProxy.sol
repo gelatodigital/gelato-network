@@ -38,7 +38,7 @@ contract GelatoGasTestUserProxy is GelatoUserProxy {
             (executionResult, reason) = abi.decode(returndata, (uint8,uint8));
 
             // If (Success)
-            if (executionResult == uint8(GelatoCoreEnums.ExecutionResult.Success))
+            if (executionResult == uint8(GelatoCoreEnums.ExecutionResults.Success))
                 revert(string(abi.encodePacked(startGas - gasleft())));
 
             // Execution Failure

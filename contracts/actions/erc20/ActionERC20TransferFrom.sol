@@ -6,13 +6,13 @@ import "../../external/IERC20.sol";
 // import "../../external/SafeERC20.sol";
 import "../../dapp_interfaces/kyber/IKyber.sol";
 import "../../gelato_core/GelatoCoreEnums.sol";
-import "../../external/Address.sol";
 import "../../external/SafeMath.sol";
+import "../../external/Address.sol";
 
 contract ActionERC20TransferFrom is GelatoActionsStandard, SplitFunctionSelector {
     // using SafeERC20 for IERC20; <- internal library methods vs. try/catch
-    using Address for address;  /// for oz's sendValue method
     using SafeMath for uint256;
+    using Address for address;
 
     // Extends IGelatoCoreEnums.StandardReason (no overrides for enums in solc yet)
     enum Reason {
@@ -20,10 +20,6 @@ contract ActionERC20TransferFrom is GelatoActionsStandard, SplitFunctionSelector
         Ok,  // 0: Standard Field for Fulfilled Conditions and No Errors
         NotOk,  // 1: Standard Field for Unfulfilled Conditions or Caught/Handled Errors
         UnhandledError,  // 2: Standard Field for Uncaught/Unhandled Errors
-        // NotOk: Unfulfilled Conditions
-        ERC20AddressNotOk,
-        UserBalanceNotOk,
-        UserProxyAllowanceNotOk,
         // NotOk: Caught/Handled Errors
         TransferFromUserError
     }
@@ -32,9 +28,7 @@ contract ActionERC20TransferFrom is GelatoActionsStandard, SplitFunctionSelector
     function actionSelector() external pure override returns(bytes4) {
         return this.action.selector;
     }
-    uint256 public constant override actionConditionsCheckGas = 30000;
     uint256 public constant override actionGas = 80000;
-    uint256 public constant override actionTotalGas = actionConditionsCheckGas + actionGas;
 
     event LogAction(
         address indexed user,
@@ -54,20 +48,32 @@ contract ActionERC20TransferFrom is GelatoActionsStandard, SplitFunctionSelector
         address _beneficiary
     )
         external
-        returns (GelatoCoreEnums.ExecutionResult, Reason)
+        returns (GelatoCoreEnums.ExecutionResults, Reason)
     {
         try _src.transferFrom(_user, _beneficiary, _srcAmt) {
             emit LogAction(_user, _userProxy, _src, _srcAmt, _beneficiary);
             return (
-                GelatoCoreEnums.ExecutionResult.Success,
+                GelatoCoreEnums.ExecutionResults.Success,
                 Reason.Ok
             );
         } catch {
             return (
-                GelatoCoreEnums.ExecutionResult.DappNotOk,
+                GelatoCoreEnums.ExecutionResults.DappNotOk,
                 Reason.TransferFromUserError
             );
         }
+    }
+
+    // ======= ACTION CONDITIONS CHECK =========
+    enum ActionConditions {
+        Ok, // 0: Standard Field for Fulfilled Conditions
+        // NotOk: Unfulfilled Conditions
+        NotOkERC20Address,
+        NotOkUserBalance,
+        NotOkUserProxyAllowance,
+        // NotOk: Handled Errors
+        ErrorBalanceOf,
+        ErrorAllowance
     }
 
     // Overriding and extending GelatoActionsStandard's function (optional)
@@ -94,17 +100,25 @@ contract ActionERC20TransferFrom is GelatoActionsStandard, SplitFunctionSelector
             (address, address, address, uint256, address)
         );
 
-        if(!_src.isContract())
-            return(false, uint8(Reason.ERC20AddressNotOk));
+        if (!_src.isContract())
+            return(false, uint8(ActionConditions.NotOkERC20Address));
 
         IERC20 srcERC20 = IERC20(_src);
 
-        if (srcERC20.balanceOf(_user) < _srcAmt)
-            return (false, uint8(Reason.UserBalanceNotOk));
+        try srcERC20.balanceOf(_user) returns(uint256 srcBalance) {
+            if (srcBalance < _srcAmt)
+                return (false, uint8(ActionConditions.NotOkUserBalance));
+        } catch {
+            return (false, uint8(ActionConditions.ErrorBalanceOf));
+        }
 
-        if (srcERC20.allowance(_user, _userProxy) < _srcAmt)
-            return (false, uint8(Reason.UserProxyAllowanceNotOk));
+        try srcERC20.allowance(_user, _userProxy) returns(uint256 userProxyAllowance) {
+            if (userProxyAllowance < _srcAmt)
+                return (false, uint8(ActionConditions.NotOkUserProxyAllowance));
+        } catch {
+            return (false, uint8(ActionConditions.ErrorAllowance));
+        }
 
-        return (true, uint8(Reason.Ok));
+        return (true, uint8(ActionConditions.Ok));
     }
 }

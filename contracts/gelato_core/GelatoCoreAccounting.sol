@@ -119,26 +119,26 @@ abstract contract GelatoCoreAccounting is IGelatoCoreAccounting {
         returns(uint256 mintingDepositPayable)
     {
         uint256 triggerGas = _trigger.triggerGas();
-        uint256 actionTotalGas = _action.actionTotalGas();
-        uint256 executionMinGas = _getMinExecutionGas(triggerGas, actionTotalGas);
+        uint256 actionGas = _action.actionGas();
+        uint256 executionMinGas = _getMinExecutionGas(triggerGas, actionGas);
         mintingDepositPayable = executionMinGas.mul(executorPrice[_selectedExecutor]);
     }
 
-    function getMinExecutionGas(uint256 _triggerGas, uint256 _actionTotalGas)
+    function getMinExecutionGas(uint256 _triggerGas, uint256 _actionGas)
         external
         pure
         override
         returns(uint256)
     {
-        return _getMinExecutionGas(_triggerGas, _actionTotalGas);
+        return _getMinExecutionGas(_triggerGas, _actionGas);
     }
 
-    function _getMinExecutionGas(uint256 _triggerGas, uint256 _actionTotalGas)
+    function _getMinExecutionGas(uint256 _triggerGas, uint256 _actionGas)
         internal
         pure
         returns(uint256)
     {
-        return totalExecutionGasOverhead.add(_triggerGas).add(_actionTotalGas);
+        return totalExecutionGasOverhead.add(_triggerGas).add(_actionGas);
     }
     // =======
 }

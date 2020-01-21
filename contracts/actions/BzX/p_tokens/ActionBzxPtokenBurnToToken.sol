@@ -7,10 +7,12 @@ import "../../../external/IERC20.sol";
 import "../../../dapp_interfaces/bZx/IBzxPtoken.sol";
 import "../../../gelato_core/GelatoCoreEnums.sol";
 import "../../../external/SafeMath.sol";
+import "../../../external/Address.sol";
 
 contract ActionBzxPtokenBurnToToken is GelatoActionsStandard, SplitFunctionSelector {
     // using SafeERC20 for IERC20; <- internal library methods vs. try/catch
     using SafeMath for uint256;
+    using Address for address;
 
     // Extends IGelatoCoreEnums.StandardReason (no overrides for enums in solc yet)
     enum Reason {
@@ -32,9 +34,7 @@ contract ActionBzxPtokenBurnToToken is GelatoActionsStandard, SplitFunctionSelec
     function actionSelector() external pure override returns(bytes4) {
         return this.action.selector;
     }
-    uint256 public constant override actionConditionsCheckGas = 2000000;
     uint256 public constant override actionGas = 4000000;
-    uint256 public constant override actionTotalGas = actionConditionsCheckGas + actionGas;
 
     event LogAction(
         address indexed user,
@@ -51,18 +51,18 @@ contract ActionBzxPtokenBurnToToken is GelatoActionsStandard, SplitFunctionSelec
         address _user,  // "receiver"
         address _userProxy,
         // Specific Action Params
-        address _burnTokenAddress,
+        address _pTokenAddress,
         uint256 _burnAmount,
-        address _pTokenAddress
+        address _burnTokenAddress
     )
         external
-        returns (GelatoCoreEnums.ExecutionResult, Reason)
+        returns (GelatoCoreEnums.ExecutionResults, Reason)
     {
         IERC20 pToken = IERC20(_pTokenAddress);
         {
             try pToken.transferFrom(_user, address(this), _burnAmount) {} catch {
                 return (
-                    GelatoCoreEnums.ExecutionResult.ActionNotOk,
+                    GelatoCoreEnums.ExecutionResults.ActionNotOk,
                     Reason.ErrorTransferFromPToken
                 );
             }
@@ -83,7 +83,7 @@ contract ActionBzxPtokenBurnToToken is GelatoActionsStandard, SplitFunctionSelec
             _transferBackToUser(burnToken, _user, _burnAmount);
             _revokePtokenApproval(burnToken, _pTokenAddress, _burnAmount);
             return(
-                GelatoCoreEnums.ExecutionResult.DappNotOk,
+                GelatoCoreEnums.ExecutionResults.DappNotOk,
                 Reason.KyberGetExpectedRateError
             );
         } */
@@ -107,13 +107,26 @@ contract ActionBzxPtokenBurnToToken is GelatoActionsStandard, SplitFunctionSelec
                 0,  // minPriceAllowed
                 tokensReceivable
             );
-            return (GelatoCoreEnums.ExecutionResult.Success, Reason.OkPtokensBurntForTokens);
+            return (GelatoCoreEnums.ExecutionResults.Success, Reason.OkPtokensBurntForTokens);
         } catch {
             return (
-                GelatoCoreEnums.ExecutionResult.DappNotOk,
+                GelatoCoreEnums.ExecutionResults.DappNotOk,
                 Reason.ErrorPtokenBurnToToken
             );
         }
+    }
+
+
+    // ======= ACTION CONDITIONS CHECK =========
+    enum ActionConditions {
+        Ok, // 0: Standard Field for Fulfilled Conditions
+        // NotOk: Unfulfilled Conditions
+        NotOkPTokenAddress,
+        NotOkUserPtokenBalance,
+        NotOkUserProxyPtokenAllowance,
+        // NotOk: Handled Errors
+        ErrorBalanceOf,
+        ErrorAllowance
     }
 
     // Overriding and extending GelatoActionsStandard's function (optional)
@@ -144,17 +157,26 @@ contract ActionBzxPtokenBurnToToken is GelatoActionsStandard, SplitFunctionSelec
             (address, address, address, uint256, address)
         );
 
+        if(!_pTokenAddress.isContract())
+            return(false, uint8(ActionConditions.NotOkPTokenAddress));
+
         IERC20 pToken = IERC20(_pTokenAddress);
 
-        uint256 userPtokenBalance = pToken.balanceOf(_user);
-        if (userPtokenBalance < _burnAmount)
-            return (false, uint8(Reason.NotOkUserPtokenBalance));
+        try pToken.balanceOf(_user) returns(uint256 userPtokenBalance) {
+            if (userPtokenBalance < _burnAmount)
+                return (false, uint8(ActionConditions.NotOkUserPtokenBalance));
+        } catch {
+            return (false, uint8(ActionConditions.ErrorBalanceOf));
+        }
 
-        uint256 userProxyPtokenAllowance = pToken.allowance(_user, _userProxy);
-        if (userProxyPtokenAllowance < _burnAmount)
-            return (false, uint8(Reason.NotOkUserProxyPtokenAllowance));
+        try pToken.allowance(_user, _userProxy) returns(uint256 userProxyAllowance) {
+            if (userProxyAllowance < _burnAmount)
+                return (false, uint8(ActionConditions.NotOkUserProxyPtokenAllowance));
+        } catch {
+            return (false, uint8(ActionConditions.ErrorAllowance));
+        }
 
         // All conditions fulfilled
-        return (true, uint8(Reason.Ok));
+        return (true, uint8(ActionConditions.Ok));
     }
 }

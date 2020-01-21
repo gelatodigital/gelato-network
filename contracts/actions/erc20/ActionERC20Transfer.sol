@@ -6,13 +6,13 @@ import "../../external/IERC20.sol";
 // import "../../external/SafeERC20.sol";
 import "../../dapp_interfaces/kyber/IKyber.sol";
 import "../../gelato_core/GelatoCoreEnums.sol";
-import "../../external/Address.sol";
 import "../../external/SafeMath.sol";
+import "../../external/Address.sol";
 
 contract ActionERC20Transfer is GelatoActionsStandard, SplitFunctionSelector {
     // using SafeERC20 for IERC20; <- internal library methods vs. try/catch
-    using Address for address;  /// for oz's sendValue method
     using SafeMath for uint256;
+    using Address for address;
 
     // Extends IGelatoCoreEnums.StandardReason (no overrides for enums in solc yet)
     enum Reason {
@@ -20,20 +20,15 @@ contract ActionERC20Transfer is GelatoActionsStandard, SplitFunctionSelector {
         Ok,  // 0: Standard Field for Fulfilled Conditions and No Errors
         NotOk,  // 1: Standard Field for Unfulfilled Conditions or Caught/Handled Errors
         UnhandledError,  // 2: Standard Field for Uncaught/Unhandled Errors
-        // NotOk: Unfulfilled Conditions
-        ERC20AddressNotOk,
-        BalanceNotOk,
         // NotOk: Caught/Handled Errors
-        TransferError
+        ErrorTransfer
     }
 
     // actionSelector public state variable np due to this.actionSelector constant issue
     function actionSelector() external pure override returns(bytes4) {
         return this.action.selector;
     }
-    uint256 public constant override actionConditionsCheckGas = 30000;
     uint256 public constant override actionGas = 80000;
-    uint256 public constant override actionTotalGas = actionConditionsCheckGas + actionGas;
 
     event LogAction(
         address indexed user,
@@ -53,21 +48,32 @@ contract ActionERC20Transfer is GelatoActionsStandard, SplitFunctionSelector {
         address _beneficiary
     )
         external
-        returns (GelatoCoreEnums.ExecutionResult, Reason)
+        returns (GelatoCoreEnums.ExecutionResults, Reason)
     {
         try _src.transfer(_beneficiary, _srcAmt) {
             emit LogAction(_user, _userProxy, _src, _srcAmt, _beneficiary);
             return (
-                GelatoCoreEnums.ExecutionResult.Success,
+                GelatoCoreEnums.ExecutionResults.Success,
                 Reason.Ok
             );
         } catch {
             return (
-                GelatoCoreEnums.ExecutionResult.DappNotOk,
-                Reason.TransferError
+                GelatoCoreEnums.ExecutionResults.DappNotOk,
+                Reason.ErrorTransfer
             );
         }
     }
+
+    // ===== ACTION CONDITIONS CHECK ========
+    enum ActionConditions {
+        Ok,  // 0: Standard Field for Fulfilled Conditions
+        // NotOk: Unfulfilled Conditions
+        NotOkERC20Address,
+        NotOkUserProxyBalance,
+        // NotOk: Handled Errors
+        ErrorBalanceOf
+    }
+
 
     // Overriding and extending GelatoActionsStandard's function (optional)
     function actionConditionsCheck(bytes calldata _actionPayloadWithSelector)
@@ -88,19 +94,23 @@ contract ActionERC20Transfer is GelatoActionsStandard, SplitFunctionSelector {
             _actionPayloadWithSelector
         );
 
-        (, address _userProxy, address _src, uint256 _srcAmt,) = abi.decode(
+        (,, address _src, uint256 _srcAmt,) = abi.decode(
             payload,
             (address, address, address, uint256, address)
         );
 
-        if(!_src.isContract())
-            return(false, uint8(Reason.ERC20AddressNotOk));
+        if (!_src.isContract())
+            return(false, uint8(ActionConditions.NotOkERC20Address));
 
         IERC20 srcERC20 = IERC20(_src);
 
-        if (srcERC20.balanceOf(_userProxy) < _srcAmt)
-            return (false, uint8(Reason.BalanceNotOk));
+        try srcERC20.balanceOf(address(this)) returns(uint256 srcBalance) {
+            if (srcBalance < _srcAmt)
+                return (false, uint8(ActionConditions.NotOkUserProxyBalance));
+        } catch {
+            return (false, uint8(ActionConditions.ErrorBalanceOf));
+        }
 
-        return (true, uint8(Reason.Ok));
+        return (true, uint8(ActionConditions.Ok));
     }
 }
