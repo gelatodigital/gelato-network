@@ -94,7 +94,6 @@ interface IGelatoCore {
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
         uint256[3] calldata _triggerGasActionTotalGasMinExecutionGas,
-        uint256 _actionConditionsOkGas,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
     )
@@ -177,15 +176,6 @@ interface IGelatoCore {
         view
         returns(bool executable, uint8 reason);
 
-    function gasTestActionConditionsCheck(
-        IGelatoAction _action,
-        bytes calldata _actionPayloadWithSelector,
-        uint256 _actionConditionsOkGas
-    )
-        external
-        view
-        returns(bool executable, uint8 reason);
-
     function gasTestCanExecute(
         uint256 _executionClaimId,
         IGelatoUserProxy _userProxy,
@@ -194,7 +184,6 @@ interface IGelatoCore {
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
         uint256[3] calldata _triggerGasActionTotalGasMinExecutionGas,
-        uint256 _actionConditionsOkGas,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
     )
