@@ -110,7 +110,7 @@ module.exports = {
         ActionERC20Transfer: "0x00eC0c566e16d03b089ff38DD38BA933279886D8",
         ActionERC20TransferFrom: "0x83D85e7b95eAe643Dc58c6C397701Bf3dd3Dff91",
         // kyber
-        KovanActionKyberTrade: "0xf0FBC8a0C751399984950569C246c4BA866107dE",
+        KovanActionKyberTrade: "0x853A4A656FA4e8f6b503d7EE4a43eD09e59C8AA0",
         // ==== Gelato Core ===
         GelatoCore: "0x21F7908734A147e084DBEe58C616fd59CE2A0a02",
         // Luis User Proxy
@@ -121,7 +121,7 @@ module.exports = {
         // kyber
         KovanTriggerKyberRate: "0x49A791153dbEe3fBc081Ce159d51C70A89323e73",
         // time
-        TriggerTimestampPassed: "0x591DB4982dD2E184b8F4b8DA9599295Dd379F732"
+        TriggerTimestampPassed: "0x328eAA9C817383e0A2fc815F810BCA7FF3ea6288"
       }
     },
     ropsten: {
