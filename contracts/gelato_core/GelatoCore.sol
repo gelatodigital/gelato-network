@@ -88,6 +88,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         emit LogExecutionClaimMinted(
             _selectedExecutor,
             executionClaimId,
+            msg.sender,  // _user
             userProxy,
             _trigger,
             _triggerPayloadWithSelector,
@@ -132,6 +133,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
     // ================  EXECUTE SUITE ======================================
     function execute(
         uint256 _executionClaimId,
+        address _user,
         IGelatoUserProxy _userProxy,
         IGelatoTrigger _trigger,
         bytes calldata _triggerPayloadWithSelector,
@@ -146,6 +148,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
     {
         return _execute(
             _executionClaimId,
+            _user,
             _userProxy,
             _trigger,
             _triggerPayloadWithSelector,
@@ -160,6 +163,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
     function cancelExecutionClaim(
         address _selectedExecutor,
         uint256 _executionClaimId,
+        address _user,
         IGelatoUserProxy _userProxy,
         IGelatoTrigger _trigger,
         bytes calldata _triggerPayloadWithSelector,
@@ -201,7 +205,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         delete executionClaimHash[_executionClaimId];
         emit LogExecutionClaimCancelled(
             _executionClaimId,
-            _userProxy,
+            _user,
             msg.sender,
             executionClaimExpired
         );
@@ -312,6 +316,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
     // ================  EXECUTE IMPLEMENTATION ======================================
     function _execute(
         uint256 _executionClaimId,
+        address _user,
         IGelatoUserProxy _userProxy,
         IGelatoTrigger _trigger,
         bytes memory _triggerPayloadWithSelector,
@@ -349,6 +354,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
             emit LogCanExecuteFailed(
                 msg.sender,
                 _executionClaimId,
+                _user,
                 _trigger,
                 _action,
                 canExecuteResult,
@@ -356,11 +362,6 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
             );
             return;  // END OF EXECUTION
         }
-
-
-        // Above the executor pays for Unsuccessful Execution
-        // ---------------------------------------------------
-        // From below the user pays for Unsuccessful Execution
 
         // EFFECTS
         delete executionClaimHash[_executionClaimId];
@@ -379,6 +380,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
             emit LogSuccessfulExecution(
                 msg.sender,  // executor
                 _executionClaimId,
+                _user,
                 _trigger,
                 _action,
                 tx.gasprice,
@@ -386,19 +388,22 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
                 (startGas.sub(gasleft())).mul(tx.gasprice),
                 _mintingDeposit  // executorReward
             );
+            // Executor gets full reward only if Execution was successful
+            executorBalance[msg.sender] = executorBalance[msg.sender].add(_mintingDeposit);
         } else {
+            address payable payableUser = address(uint160(_user));
             emit LogExecutionFailure(
                 msg.sender,
                 _executionClaimId,
+                payableUser,
                 _trigger,
                 _action,
                 executionResult,
                 reason
             );
+            // Transfer Minting deposit back to user
+            payableUser.sendValue(_mintingDeposit);
         }
-
-        // Executor gets full reward from user no matter if execution successful or not
-        executorBalance[msg.sender] = executorBalance[msg.sender].add(_mintingDeposit);
     }
 
    function _executeActionViaUserProxy(
@@ -560,6 +565,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
 
     function gasTestExecute(
         uint256 _executionClaimId,
+        address payable _user,
         IGelatoUserProxy _userProxy,
         IGelatoTrigger _trigger,
         bytes calldata _triggerPayloadWithSelector,
@@ -575,6 +581,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         uint256 startGas = gasleft();
         _execute(
             _executionClaimId,
+            _user,
             _userProxy,
             _trigger,
             _triggerPayloadWithSelector,

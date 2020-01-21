@@ -13,7 +13,8 @@ interface IGelatoCore {
     event LogExecutionClaimMinted(
         address indexed selectedExecutor,
         uint256 indexed executionClaimId,
-        IGelatoUserProxy indexed userProxy,
+        address indexed user,
+        IGelatoUserProxy userProxy,
         IGelatoTrigger trigger,
         bytes triggerPayloadWithSelector,
         IGelatoAction action,
@@ -26,10 +27,11 @@ interface IGelatoCore {
     // Caution: there are no guarantees that CanExecuteResult and/or reason
     //  are implemented in a logical fashion by trigger/action developers.
     event LogCanExecuteFailed(
-        address executor,
+        address indexed executor,
         uint256 indexed executionClaimId,
-        IGelatoTrigger indexed trigger,
-        IGelatoAction indexed action,
+        address indexed user,
+        IGelatoTrigger trigger,
+        IGelatoAction action,
         GelatoCoreEnums.CanExecuteResults canExecuteResult,
         uint8 reason
     );
@@ -37,8 +39,9 @@ interface IGelatoCore {
     event LogSuccessfulExecution(
         address indexed executor,
         uint256 indexed executionClaimId,
+        address indexed user,
         IGelatoTrigger trigger,
-        IGelatoAction indexed action,
+        IGelatoAction action,
         uint256 gasPriceUsed,
         uint256 executionCostEstimate,
         uint256 executorReward
@@ -47,17 +50,18 @@ interface IGelatoCore {
     // Caution: there are no guarantees that ExecutionResult and/or reason
     //  are implemented in a logical fashion by trigger/action developers.
     event LogExecutionFailure(
-        address executor,
+        address indexed executor,
         uint256 indexed executionClaimId,
+        address payable indexed user,
         IGelatoTrigger trigger,
-        IGelatoAction indexed action,
-        GelatoCoreEnums.ExecutionResults indexed executionResult,
+        IGelatoAction action,
+        GelatoCoreEnums.ExecutionResults executionResult,
         uint8 reason
     );
 
     event LogExecutionClaimCancelled(
         uint256 indexed executionClaimId,
-        IGelatoUserProxy indexed userProxy,
+        address indexed user,
         address indexed cancelor,
         bool executionClaimExpired
     );
@@ -108,6 +112,7 @@ interface IGelatoCore {
      */
     function execute(
         uint256 _executionClaimId,
+        address _user,
         IGelatoUserProxy _userProxy,
         IGelatoTrigger _trigger,
         bytes calldata _triggerPayloadWithSelector,
@@ -130,6 +135,7 @@ interface IGelatoCore {
     function cancelExecutionClaim(
         address _selectedExecutor,
         uint256 _executionClaimId,
+        address _user,
         IGelatoUserProxy _userProxy,
         IGelatoTrigger _trigger,
         bytes calldata _triggerPayloadWithSelector,
@@ -211,6 +217,7 @@ interface IGelatoCore {
 
     function gasTestExecute(
         uint256 _executionClaimId,
+        address payable _user,
         IGelatoUserProxy _userProxy,
         IGelatoTrigger _trigger,
         bytes calldata _triggerPayloadWithSelector,
