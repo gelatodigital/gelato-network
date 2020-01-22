@@ -15,7 +15,7 @@ contract KovanTriggerKyberRate is IGelatoTrigger {
         UnhandledError,  // 2: Standard Field for Uncaught/Unhandled Errors
         // Ok: Fulfilled Conditions
         OkKyberExpectedRateIsGreaterThanRefRate,
-        OkKyberSlippageRateIsGreaterThanRefRate,
+        OkKyberExpectedRateIsGreaterThanBufferedRefRate,
         OkKyberExpectedRateIsSmallerThanRefRate,
         OkKyberExpectedRateIsSmallerThanBufferedRefRate,
         // NotOk: Unfulfilled Conditions
@@ -52,10 +52,12 @@ contract KovanTriggerKyberRate is IGelatoTrigger {
             returns(uint256 expectedRate, uint256 slippageRate)
         {
             if (_greaterElseSmaller) {  // greaterThan
+                uint256 buffer = expectedRate.sub(slippageRate);
+                uint256 bufferedRefRate = _refRate.sub(buffer);
                 if (expectedRate >= _refRate)
                     return (true, uint8(Reason.OkKyberExpectedRateIsGreaterThanRefRate));
-                else if (slippageRate >= _refRate)
-                    return (true, uint8(Reason.OkKyberSlippageRateIsGreaterThanRefRate));
+                else if (expectedRate >= bufferedRefRate)
+                    return (true, uint8(Reason.OkKyberExpectedRateIsGreaterThanBufferedRefRate));
                 else
                     return (false, uint8(Reason.NotOkKyberSlippageRateIsNotGreaterThanRefRate));
             } else {  // smallerThan
