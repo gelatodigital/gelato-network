@@ -13,10 +13,10 @@ export default task(
       const { luis: account } = await run("bre-config", {
         addressbookcategory: "EOA"
       });
-      const { DAI: coin } = await run("bre-config", {
+      /*const { DAI: coin } = await run("bre-config", {
         addressbookcategory: "erc20"
-      });
-      /* const coin = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"; // ETH */
+      }); */
+      const coin = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"; // ETH
 
       const refBalance = utils.parseUnits("24", 18);
       const greaterElseSmaller = true;
@@ -36,7 +36,7 @@ export default task(
 
       if (log) {
         console.log(
-          `\nTrigger: TriggerKyberRate\
+          `\nTrigger: TriggerBalance\
            \nValue:     ${value}\
            \nFormatted: ${utils.formatUnits(value, 18)}`
         );
