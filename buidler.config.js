@@ -107,7 +107,7 @@ module.exports = {
         ActionBzxPtokenMintWithToken:
           "0xECD9a96B4D4Ec5Bbc1bb8839424e04bd79347054",
         // erc20
-        ActionERC20Transfer: "0x517D5aaab63987066571e29Eb5Dd8cA36b909709",
+        ActionERC20Transfer: "0x61309D44243183570d4043E093CC35b85811C51A",
         ActionERC20TransferFrom: "0x8042D433CbB8FBa68A9E12475fAD9205bAA74746",
         // kyber
         KovanActionKyberTrade: "0x853A4A656FA4e8f6b503d7EE4a43eD09e59C8AA0",

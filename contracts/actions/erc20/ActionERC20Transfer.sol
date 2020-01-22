@@ -76,7 +76,7 @@ contract ActionERC20Transfer is GelatoActionsStandard {
             _actionPayloadWithSelector
         );
 
-        (,, address _src, uint256 _srcAmt,) = abi.decode(
+        (address _user, address _userProxy, address _src, uint256 _srcAmt,) = abi.decode(
             payload,
             (address, address, address, uint256, address)
         );
@@ -85,7 +85,7 @@ contract ActionERC20Transfer is GelatoActionsStandard {
 
         IERC20 srcERC20 = IERC20(_src);
 
-        try srcERC20.balanceOf(address(this)) returns(uint256 srcBalance) {
+        try srcERC20.balanceOf(_userProxy) returns(uint256 srcBalance) {
             if (srcBalance < _srcAmt) return "ActionERC20Transfer: NotOkUserProxyBalance";
         } catch {
             return "ActionERC20Transfer: ErrorBalanceOf";
