@@ -119,7 +119,7 @@ module.exports = {
         // balance
         TriggerBalance: "0xc0993255E46FD2E911d92fa63477e061b917aA14",
         // kyber
-        KovanTriggerKyberRate: "0x8e67833e1948877FD1eAB0e408483d9AEA7212a8",
+        KovanTriggerKyberRate: "0x91BdF21dE574451fdc0c2a5859D6E91FD984f3cc",
         // time
         TriggerTimestampPassed: "0x328eAA9C817383e0A2fc815F810BCA7FF3ea6288"
       }
