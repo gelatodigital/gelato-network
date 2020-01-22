@@ -107,8 +107,8 @@ module.exports = {
         ActionBzxPtokenMintWithToken:
           "0xECD9a96B4D4Ec5Bbc1bb8839424e04bd79347054",
         // erc20
-        ActionERC20Transfer: "0x00eC0c566e16d03b089ff38DD38BA933279886D8",
-        ActionERC20TransferFrom: "0x83D85e7b95eAe643Dc58c6C397701Bf3dd3Dff91",
+        ActionERC20Transfer: "0x517D5aaab63987066571e29Eb5Dd8cA36b909709",
+        ActionERC20TransferFrom: "0x8042D433CbB8FBa68A9E12475fAD9205bAA74746",
         // kyber
         KovanActionKyberTrade: "0x853A4A656FA4e8f6b503d7EE4a43eD09e59C8AA0",
         // ==== Gelato Core ===
@@ -117,7 +117,7 @@ module.exports = {
         GelatoUserProxy: "0x3BcD06215aFF61a1f7F58A3D03FA5c14916090a0",
         // === Triggers ===
         // balance
-        TriggerBalance: "0xe4bD22dfdfcD88df04944be0c745e9961e8dc22b",
+        TriggerBalance: "0xc0993255E46FD2E911d92fa63477e061b917aA14",
         // kyber
         KovanTriggerKyberRate: "0x49A791153dbEe3fBc081Ce159d51C70A89323e73",
         // time
