@@ -22,8 +22,9 @@ export default task(
       const greaterElseSmaller = true;
 
       // Trigger Read Instance
+      const contractname = "TriggerBalance"
       const triggerContract = await run("instantiateContract", {
-        contractname: "TriggerBalance",
+        contractname,
         read: true
       });
       // mintExecutionClaim TX (payable)
@@ -36,9 +37,12 @@ export default task(
 
       if (log) {
         console.log(
-          `\nTrigger: TriggerBalance\
-           \nValue:     ${value}\
-           \nFormatted: ${utils.formatUnits(value, 18)}`
+          `\nContractName:     ${contractname}\
+           \nContractAddress:  ${triggerContract.address}\
+           \nAccount:          ${account}\
+           \nCoin:             ${coin}\
+           \nValue:            ${value}\
+           \nFormatted:        ${utils.formatUnits(value, 18)}`
         );
       }
       return value;
