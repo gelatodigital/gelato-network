@@ -95,7 +95,7 @@ module.exports = {
         "ActionMultiMintForTriggerTimestampPassed",
         "GelatoCore",
         "TriggerBalance",
-        "KovanTriggerKyberRate",
+        "TriggerKyberRateKovan",
         "TriggerTimestampPassed"
       ],
       deployments: {
@@ -103,9 +103,9 @@ module.exports = {
         // === Actions ===
         // BzX
         ActionBzxPtokenBurnToToken:
-          "0x986F7247Be7768B6fB4DA3D35f8e77234E040F34",
+          "0xA5d7aFfBe3049efa9BC5DC23A16946cd7CE70061",
         ActionBzxPtokenMintWithToken:
-          "0xECD9a96B4D4Ec5Bbc1bb8839424e04bd79347054",
+          "0x10C06Ab7F13E9Ae1e3c8cD82370C2Fc01002a9EF",
         // erc20
         ActionERC20Transfer: "0x83a9a1B430e1d738D85859B9Ec509426b4B36058",
         ActionERC20TransferFrom: "0x3E9665BB5C3bBa2A89a14c289fE503D50fE44319",
@@ -119,7 +119,7 @@ module.exports = {
         // balance
         TriggerBalance: "0xc0993255E46FD2E911d92fa63477e061b917aA14",
         // kyber
-        KovanTriggerKyberRate: "0x91BdF21dE574451fdc0c2a5859D6E91FD984f3cc",
+        TriggerKyberRateKovan: "0xfEe2C4Fd7Be69AC4353230e56EAe6a156c9d4dC4",
         // time
         TriggerTimestampPassed: "0x328eAA9C817383e0A2fc815F810BCA7FF3ea6288"
       }

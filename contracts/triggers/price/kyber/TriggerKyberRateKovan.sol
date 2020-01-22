@@ -4,7 +4,7 @@ import "../../IGelatoTrigger.sol";
 import "../../../dapp_interfaces/kyber/IKyber.sol";
 import "../../../external/SafeMath.sol";
 
-contract KovanTriggerKyberRate is IGelatoTrigger {
+contract TriggerKyberRateKovan is IGelatoTrigger {
 
     using SafeMath for uint256;
 
@@ -15,12 +15,10 @@ contract KovanTriggerKyberRate is IGelatoTrigger {
         UnhandledError,  // 2: Standard Field for Uncaught/Unhandled Errors
         // Ok: Fulfilled Conditions
         OkKyberExpectedRateIsGreaterThanRefRate,
-        OkKyberExpectedRateIsGreaterThanBufferedRefRate,
         OkKyberExpectedRateIsSmallerThanRefRate,
-        OkKyberExpectedRateIsSmallerThanBufferedRefRate,
         // NotOk: Unfulfilled Conditions
-        NotOkKyberSlippageRateIsNotGreaterThanRefRate,
-        NotOkKyberExpectedRateIsNotSmallerThanBufferedRefRate,
+        NotOkKyberExpectedRateIsNotGreaterThanRefRate,
+        NotOkKyberExpectedRateIsNotSmallerThanRefRate,
         KyberGetExpectedRateError
     }
 
@@ -49,26 +47,18 @@ contract KovanTriggerKyberRate is IGelatoTrigger {
             _dest,
             _srcAmt
         )
-            returns(uint256 expectedRate, uint256 slippageRate)
+            returns(uint256 expectedRate, uint256)
         {
             if (_greaterElseSmaller) {  // greaterThan
-                uint256 buffer = expectedRate.sub(slippageRate);
-                uint256 bufferedRefRate = _refRate.sub(buffer);
                 if (expectedRate >= _refRate)
                     return (true, uint8(Reason.OkKyberExpectedRateIsGreaterThanRefRate));
-                else if (expectedRate >= bufferedRefRate)
-                    return (true, uint8(Reason.OkKyberExpectedRateIsGreaterThanBufferedRefRate));
                 else
-                    return (false, uint8(Reason.NotOkKyberSlippageRateIsNotGreaterThanRefRate));
+                    return (false, uint8(Reason.NotOkKyberExpectedRateIsNotGreaterThanRefRate));
             } else {  // smallerThan
-                uint256 buffer = expectedRate.sub(slippageRate);
-                uint256 bufferedRefRate = _refRate.add(buffer);
                 if (expectedRate <= _refRate)
                     return (true, uint8(Reason.OkKyberExpectedRateIsSmallerThanRefRate));
-                else if (expectedRate <= bufferedRefRate)
-                    return (true, uint8(Reason.OkKyberExpectedRateIsSmallerThanBufferedRefRate));
                 else
-                    return(false, uint8(Reason.NotOkKyberExpectedRateIsNotSmallerThanBufferedRefRate));
+                    return(false, uint8(Reason.NotOkKyberExpectedRateIsNotSmallerThanRefRate));
             }
         } catch {
             return(false, uint8(Reason.KyberGetExpectedRateError));

@@ -5,7 +5,7 @@ import "./default_payloads/triggers/sTask.defaultpayload.TriggerBalance";
 // TriggerTimestampPassed
 import "./default_payloads/triggers/sTask.defaultpayload.TriggerTimestampPassed";
 // == Kyber ==
-import "./default_payloads/triggers/sTask.defaultpayload.KovanTriggerKyberRate";
+import "./default_payloads/triggers/sTask.defaultpayload.TriggerKyberRateKovan";
 import "./default_payloads/triggers/sTask.defaultpayload.RopstenTriggerKyberRate";
 
 // === Actions ==

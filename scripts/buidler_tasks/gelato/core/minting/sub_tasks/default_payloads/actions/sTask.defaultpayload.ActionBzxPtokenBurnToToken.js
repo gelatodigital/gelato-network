@@ -17,7 +17,7 @@ export default internalTask(
       const { luis: userProxy } = await run("bre-config", {
         addressbookcategory: "userProxy"
       });
-      const { DAI: burnTokenAddress, dsETH2x: pTokenAddress } = await run(
+      const { KNC: burnTokenAddress, dsETH2x: pTokenAddress } = await run(
         "bre-config",
         {
           addressbookcategory: "erc20"
@@ -37,10 +37,9 @@ export default internalTask(
       const inputs = [
         user, // receiver
         userProxy,
-        burnTokenAddress,
-        burnAmount,
         pTokenAddress,
-        0 // minPriceAllowed
+        burnAmount,
+        burnTokenAddress
       ];
       // Encoding
       const payloadWithSelector = await run("abi-encode-withselector", {

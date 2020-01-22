@@ -25,8 +25,7 @@ contract ActionBzxPtokenBurnToToken is GelatoActionsStandard {
         // Specific Action Params
         address _pTokenAddress,
         uint256 _burnAmount,
-        address _burnTokenAddress,
-        uint256 _minPriceAllowed
+        address _burnTokenAddress
     )
         external
         virtual
@@ -47,7 +46,7 @@ contract ActionBzxPtokenBurnToToken is GelatoActionsStandard {
             _user,  // receiver
             _burnTokenAddress,
             _burnAmount,
-            _minPriceAllowed
+            0 // minPriceAllowed - 0 ignores slippage
         ) {} catch {
            revert("ActionBzxPtokenBurnToToken: ErrorPtokenBurnToToken");
         }
@@ -78,9 +77,9 @@ contract ActionBzxPtokenBurnToToken is GelatoActionsStandard {
         (address _user,
          address _userProxy,
          address _pTokenAddress,
-         uint256 _burnAmount, , ) = abi.decode(
+         uint256 _burnAmount, ) = abi.decode(
             payload,
-            (address, address, address, uint256, address, uint256)
+            (address, address, address, uint256, address)
         );
 
         if (!_isUserOwnerOfUserProxy(_user, _userProxy))
@@ -116,8 +115,7 @@ contract ActionBzxPtokenBurnToToken is GelatoActionsStandard {
         // Specific Action Params
         address _pTokenAddress,
         uint256,
-        address,
-        uint256
+        address
     )
         external
         view

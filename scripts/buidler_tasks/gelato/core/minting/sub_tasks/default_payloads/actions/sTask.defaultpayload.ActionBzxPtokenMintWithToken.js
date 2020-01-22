@@ -17,13 +17,13 @@ export default internalTask(
       const { luis: userProxy } = await run("bre-config", {
         addressbookcategory: "userProxy"
       });
-      const { DAI: depositTokenAddress, dsETH2x: pTokenAddress } = await run(
+      const { KNC: depositTokenAddress, dsETH2x: pTokenAddress } = await run(
         "bre-config",
         {
           addressbookcategory: "erc20"
         }
       );
-      const depositAmt = utils.parseUnits("50", 18);
+      const depositAmt = utils.parseUnits("10", 18);
 
       // Params as sorted array of inputs for abi.encoding
       // action(_user, _userProxy, _depositTokenAddress, _depositAmount, _pTokenAddress)
@@ -32,8 +32,7 @@ export default internalTask(
         userProxy,
         depositTokenAddress,
         depositAmt,
-        pTokenAddress,
-        0  // maxPriceAllowed
+        pTokenAddress
       ];
       // Encoding
       const payloadWithSelector = await run("abi-encode-withselector", {
