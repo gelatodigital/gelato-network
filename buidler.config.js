@@ -82,7 +82,7 @@ module.exports = {
         },
         userProxy: {
           // Kovan
-          luis: "0x3BcD06215aFF61a1f7F58A3D03FA5c14916090a0"
+          luis: "0x59cD883052e3bF011E247966f0412c232D47358f"
         }
       },
       contracts: [
@@ -114,7 +114,7 @@ module.exports = {
         // ==== Gelato Core ===
         GelatoCore: "0x6449992895c36BE20b356D85E3A1411135D46a7b",
         // Luis User Proxy
-        GelatoUserProxy: "0x3BcD06215aFF61a1f7F58A3D03FA5c14916090a0",
+        GelatoUserProxy: "0x59cD883052e3bF011E247966f0412c232D47358f",
         // === Triggers ===
         // balance
         TriggerBalance: "0xc0993255E46FD2E911d92fa63477e061b917aA14",

@@ -1,2 +1,2 @@
 import "./task.createUserProxy";
-import "./task.getProxyOfUser";
+import "./task.proxyByUser";
