@@ -8,15 +8,16 @@ import "./gas_tests/GelatoGasTestUserProxyManager.sol";
 /// @dev find all NatSpecs inside IGelatoUserProxyManager
 abstract contract GelatoUserProxyManager is IGelatoUserProxyManager, GelatoGasTestUserProxyManager {
 
-    uint256 internal userCount;
-    mapping(address => IGelatoUserProxy) internal userToProxy;
-    mapping(address => address) internal proxyToUser;
-    address[] internal users;
-    IGelatoUserProxy[] internal userProxies;
+    uint256 public override userCount;
+    mapping(address => address) public override userByProxy;
+    mapping(address => IGelatoUserProxy) public override proxyByUser;
+    // public override doesnt work for storage arrays
+    address[] public users;
+    IGelatoUserProxy[] public userProxies;
 
     modifier userHasNoProxy {
         require(
-            userToProxy[msg.sender] == IGelatoUserProxy(0),
+            userByProxy[msg.sender] == address(0),
             "GelatoUserProxyManager: user already has a proxy"
         );
         _;
@@ -37,8 +38,8 @@ abstract contract GelatoUserProxyManager is IGelatoUserProxyManager, GelatoGasTe
         returns(IGelatoUserProxy userProxy)
     {
         userProxy = new GelatoUserProxy(msg.sender);
-        userToProxy[msg.sender] = userProxy;
-        proxyToUser[address(userProxy)] = msg.sender;
+        userByProxy[address(userProxy)] = msg.sender;
+        proxyByUser[msg.sender] = userProxy;
         users.push(msg.sender);
         userProxies.push(userProxy);
         userCount++;
@@ -46,17 +47,6 @@ abstract contract GelatoUserProxyManager is IGelatoUserProxyManager, GelatoGasTe
     }
 
     // ______ State Read APIs __________________
-    function getUserCount() external view override returns(uint256) {return userCount;}
-
-    function getUserOfProxy(IGelatoUserProxy _proxy)
-        external
-        view
-        override
-        returns(address)
-    {
-        return proxyToUser[address(_proxy)];
-    }
-
     function isUser(address _user)
         external
         view
@@ -66,40 +56,13 @@ abstract contract GelatoUserProxyManager is IGelatoUserProxyManager, GelatoGasTe
         return _isUser(_user);
     }
 
-    function getProxyOfUser(address _user)
-        external
-        view
-        override
-        returns(IGelatoUserProxy)
-    {
-        return userToProxy[_user];
-    }
-
-    function isUserProxy(IGelatoUserProxy _userProxy)
+    function isUserProxy(address _userProxy)
         external
         view
         override
         returns(bool)
     {
-        return _isUserProxy(address(_userProxy));
-    }
-
-    function getUsers()
-        external
-        view
-        override
-        returns(address[] memory)
-    {
-        return users;
-    }
-
-    function getUserProxies()
-        external
-        view
-        override
-        returns(IGelatoUserProxy[] memory)
-    {
-        return userProxies;
+        return _isUserProxy(_userProxy);
     }
 
     // ______________ State Readers ______________________________________
@@ -108,7 +71,7 @@ abstract contract GelatoUserProxyManager is IGelatoUserProxyManager, GelatoGasTe
         view
         returns(bool)
     {
-        return userToProxy[_user] != IGelatoUserProxy(0);
+        return proxyByUser[_user] != IGelatoUserProxy(0);
     }
 
     function _isUserProxy(address _userProxy)
@@ -116,7 +79,7 @@ abstract contract GelatoUserProxyManager is IGelatoUserProxyManager, GelatoGasTe
         view
         returns(bool)
     {
-        return proxyToUser[_userProxy] != address(0);
+        return userByProxy[_userProxy] != address(0);
     }
     // =========================
 }

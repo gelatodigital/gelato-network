@@ -14,12 +14,12 @@ interface IGelatoUserProxyManager {
     function createUserProxy() external returns(IGelatoUserProxy);
 
     // ______ State Read APIs __________________
-    function getUserCount() external view returns(uint256);
-    function getUserOfProxy(IGelatoUserProxy _proxy) external view returns(address);
+    function userCount() external view returns(uint256);
+    function userByProxy(address _userProxy) external view returns(address);
+    function proxyByUser(address _user) external view returns(IGelatoUserProxy);
     function isUser(address _user) external view returns(bool);
-    function getProxyOfUser(address _user) external view returns(IGelatoUserProxy);
-    function isUserProxy(IGelatoUserProxy _userProxy) external view returns(bool);
-    function getUsers() external view returns(address[] memory);
-    function getUserProxies() external view returns(IGelatoUserProxy[] memory);
+    function isUserProxy(address _userProxy) external view returns(bool);
+    //function users() external view returns(address[] memory);
+    //function userProxies() external view returns(IGelatoUserProxy[] memory);
     // =========================
 }

@@ -18,6 +18,6 @@ interface IGelatoUserProxy {
         external
         payable;
 
-    function getUser() external view returns(address);
-    function getGelatoCore() external view returns(address);
+    function user() external view returns(address);
+    function gelatoCore() external view returns(address);
 }

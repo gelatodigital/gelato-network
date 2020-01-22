@@ -20,7 +20,7 @@ abstract contract GelatoCoreAccounting is IGelatoCoreAccounting {
     // the minimum executionClaimLifespan imposed upon executors
     uint256 public constant override minExecutionClaimLifespan = 10 minutes;
     //_____________ Gas values for executionClaim cost calculations _______
-    uint256 public constant override gelatoCoreExecGasOverhead = 100000;
+    uint256 public constant override gelatoCoreExecGasOverhead = 80000;
     uint256 public constant override userProxyExecGasOverhead = 40000;
     uint256 public constant override totalExecutionGasOverhead = (
         gelatoCoreExecGasOverhead + userProxyExecGasOverhead

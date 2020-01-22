@@ -6,10 +6,10 @@ import "../actions/IGelatoAction.sol";
 /// @title GelatoUserProxy
 /// @dev find all NatSpecs inside IGelatoUserProxy
 contract GelatoUserProxy is IGelatoUserProxy {
-    address internal user;
-    address internal gelatoCore;
+    address public override user;
+    address public override gelatoCore;
 
-    constructor(address payable _user)
+    constructor(address _user)
         public
         noZeroAddress(_user)
     {
@@ -86,7 +86,4 @@ contract GelatoUserProxy is IGelatoUserProxy {
         );
         if (!success) revert(string(revertReason));
     }
-
-    function getUser() external view override returns(address) {return user;}
-    function getGelatoCore() external view override returns(address) {return gelatoCore;}
 }
