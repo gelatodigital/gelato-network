@@ -23,7 +23,7 @@ export default internalTask(
           addressbookcategory: "erc20"
         }
       );
-      const depositAmt = utils.parseUnits("50", 18);
+      const depositAmt = utils.parseUnits("10", 18);
 
       // Params as sorted array of inputs for abi.encoding
       // action(_user, _userProxy, _depositTokenAddress, _depositAmount, _pTokenAddress)
