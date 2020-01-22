@@ -103,7 +103,7 @@ module.exports = {
         // === Actions ===
         // BzX
         ActionBzxPtokenBurnToToken:
-          "0x986F7247Be7768B6fB4DA3D35f8e77234E040F34",
+          "0xED99374e459c09255D16F11fDe3b673C2Ca3Cce3",
         ActionBzxPtokenMintWithToken:
           "0x9998E4d31440460296C912d74111B9Ef8f0f5429",
         // erc20
