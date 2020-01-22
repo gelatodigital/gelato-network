@@ -32,7 +32,8 @@ export default internalTask(
         userProxy,
         depositTokenAddress,
         depositAmt,
-        pTokenAddress
+        pTokenAddress,
+        0  // maxPriceAllowed
       ];
       // Encoding
       const payloadWithSelector = await run("abi-encode-withselector", {

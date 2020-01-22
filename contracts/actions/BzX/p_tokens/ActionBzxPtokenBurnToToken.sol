@@ -1,127 +1,85 @@
 pragma solidity ^0.6.0;
 
 import "../../GelatoActionsStandard.sol";
-import "../../../helpers/SplitFunctionSelector.sol";
 import "../../../external/IERC20.sol";
 // import "../../external/SafeERC20.sol";
 import "../../../dapp_interfaces/bZx/IBzxPtoken.sol";
-import "../../../gelato_core/GelatoCoreEnums.sol";
 import "../../../external/SafeMath.sol";
+import "../../../external/Address.sol";
 
-contract ActionBzxPtokenBurnToToken is GelatoActionsStandard, SplitFunctionSelector {
+contract ActionBzxPtokenBurnToToken is GelatoActionsStandard {
     // using SafeERC20 for IERC20; <- internal library methods vs. try/catch
     using SafeMath for uint256;
-
-    // Extends IGelatoCoreEnums.StandardReason (no overrides for enums in solc yet)
-    enum Reason {
-        // StandardReason Fields
-        Ok,  // 0: Standard Field for Fulfilled Conditions and No Errors
-        NotOk,  // 1: Standard Field for Unfulfilled Conditions or Caught/Handled Errors
-        UnhandledError,  // 2: Standard Field for Uncaught/Unhandled Errors
-        // Ok
-        OkPtokensBurntForTokens,
-        // NotOk: Unfulfilled Conditions
-        NotOkUserPtokenBalance,
-        NotOkUserProxyPtokenAllowance,
-        // NotOk: Caught/Handled Errors
-        ErrorTransferFromPToken,
-        ErrorPtokenBurnToToken
-    }
+    using Address for address;
 
     // actionSelector public state variable np due to this.actionSelector constant issue
     function actionSelector() external pure override returns(bytes4) {
         return this.action.selector;
     }
-    uint256 public constant override actionConditionsCheckGas = 2000000;
-    uint256 public constant override actionGas = 4000000;
-    uint256 public constant override actionTotalGas = actionConditionsCheckGas + actionGas;
-
-    event LogAction(
-        address indexed user,
-        address indexed userProxy,
-        address burnTokenAddress,
-        uint256 burnAmount,
-        address indexed pTokenAddress,
-        uint256 minPriceAllowed,
-        uint256 tokensReceivable
-    );
+    uint256 public constant override actionGas = 4200000;
 
     function action(
         // Standard Action Params
         address _user,  // "receiver"
         address _userProxy,
         // Specific Action Params
-        address _burnTokenAddress,
+        address _pTokenAddress,
         uint256 _burnAmount,
-        address _pTokenAddress
+        address _burnTokenAddress,
+        uint256 _minPriceAllowed
     )
         external
-        returns (GelatoCoreEnums.ExecutionResult, Reason)
     {
         IERC20 pToken = IERC20(_pTokenAddress);
-        {
-            try pToken.transferFrom(_user, address(this), _burnAmount) {} catch {
-                return (
-                    GelatoCoreEnums.ExecutionResult.ActionNotOk,
-                    Reason.ErrorTransferFromPToken
-                );
-            }
+
+        try pToken.transferFrom(_user, address(this), _burnAmount) {} catch {
+           revert("ActionBzxPtokenBurnToToken: ErrorTransferFromPToken");
         }
 
         // !! Dapp Interaction !!
-        // Fetch the pToken's price and allow for maxi
-        /* uint256 minConversionRate;
-        try IBzxPtoken(_pTokenAddress).tokenPrice(
-            _burnTokenAddress,
-            _dest,
-            _burnAmount
-        )
-            returns(uint256 expectedRate, uint256 slippageRate)
-        {
-           minConversionRate = slippageRate;
-        } catch {
-            _transferBackToUser(burnToken, _user, _burnAmount);
-            _revokePtokenApproval(burnToken, _pTokenAddress, _burnAmount);
-            return(
-                GelatoCoreEnums.ExecutionResult.DappNotOk,
-                Reason.KyberGetExpectedRateError
-            );
-        } */
-
-        // !! Dapp Interaction !!
+        uint256 burnTokensReceivable;
         try IBzxPtoken(_pTokenAddress).burnToToken(
             _user,  // receiver
             _burnTokenAddress,
             _burnAmount,
-            0  // minPriceAllowed - 0 ignores slippage limit
-        )
-            returns (uint256 tokensReceivable)
-        {
-            // Success on Dapp (pToken)
-            emit LogAction(
-                _user,
-                _userProxy,
-                _burnTokenAddress,
-                _burnAmount,
-                _pTokenAddress,
-                0,  // minPriceAllowed
-                tokensReceivable
-            );
-            return (GelatoCoreEnums.ExecutionResult.Success, Reason.OkPtokensBurntForTokens);
+            _minPriceAllowed
+        ) {} catch {
+           revert("ActionBzxPtokenBurnToToken: ErrorPtokenBurnToToken");
+        }
+    }
+
+
+    // ============ API for FrontEnds ===========
+    function getUsersSourceTokenBalance(bytes calldata _actionPayloadWithSelector)
+        external
+        view
+        override
+        returns(uint256)
+    {
+        (, bytes memory payload) = SplitFunctionSelector.split(
+            _actionPayloadWithSelector
+        );
+        (address _user, address _userProxy, address _src,,) = abi.decode(
+            payload,
+            (address, address, address, uint256, address)
+        );
+        IERC20 srcERC20 = IERC20(_src);
+        try srcERC20.balanceOf(_user) returns(uint256 userSrcBalance) {
+            return userSrcBalance;
         } catch {
-            return (
-                GelatoCoreEnums.ExecutionResult.DappNotOk,
-                Reason.ErrorPtokenBurnToToken
+            revert(
+                "Error: ActionBzxPtokenBurnToToken.getUsersSourceTokenBalance: balanceOf: balanceOf"
             );
         }
     }
 
+    // ======= ACTION CONDITIONS CHECK =========
     // Overriding and extending GelatoActionsStandard's function (optional)
     function actionConditionsCheck(bytes calldata _actionPayloadWithSelector)
         external
         view
         override
-        returns(bool, uint8)  // executable?, reason
+        returns(string memory)  // actionCondition
     {
         return _actionConditionsCheck(_actionPayloadWithSelector);
     }
@@ -129,7 +87,7 @@ contract ActionBzxPtokenBurnToToken is GelatoActionsStandard, SplitFunctionSelec
     function _actionConditionsCheck(bytes memory _actionPayloadWithSelector)
         internal
         view
-        returns(bool, uint8)  // executable?, reason
+        returns(string memory)  // actionCondition
     {
         (, bytes memory payload) = SplitFunctionSelector.split(
             _actionPayloadWithSelector
@@ -137,24 +95,32 @@ contract ActionBzxPtokenBurnToToken is GelatoActionsStandard, SplitFunctionSelec
 
         (address _user,
          address _userProxy,
-         address _,
-         uint256 _burnAmount,
-         address _pTokenAddress) = abi.decode(
+         address _pTokenAddress,
+         uint256 _burnAmount, , ) = abi.decode(
             payload,
-            (address, address, address, uint256, address)
+            (address, address, address, uint256, address, uint256)
         );
+
+        if(!_pTokenAddress.isContract())
+            return "ActionBzxPtokenBurnToToken: NotOkPTokenAddress";
 
         IERC20 pToken = IERC20(_pTokenAddress);
 
-        uint256 userPtokenBalance = pToken.balanceOf(_user);
-        if (userPtokenBalance < _burnAmount)
-            return (false, uint8(Reason.NotOkUserPtokenBalance));
+        try pToken.balanceOf(_user) returns(uint256 userPtokenBalance) {
+            if (userPtokenBalance < _burnAmount)
+                return "ActionBzxPtokenBurnToToken: NotOkUserPtokenBalance";
+        } catch {
+            return "ActionBzxPtokenBurnToToken: ErrorBalanceOf";
+        }
 
-        uint256 userProxyPtokenAllowance = pToken.allowance(_user, _userProxy);
-        if (userProxyPtokenAllowance < _burnAmount)
-            return (false, uint8(Reason.NotOkUserProxyPtokenAllowance));
+        try pToken.allowance(_user, _userProxy) returns(uint256 userProxyAllowance) {
+            if (userProxyAllowance < _burnAmount)
+                return "ActionBzxPtokenBurnToToken: NotOkUserProxyPtokenAllowance";
+        } catch {
+            return "ActionBzxPtokenBurnToToken: ErrorAllowance";
+        }
 
-        // All conditions fulfilled
-        return (true, uint8(Reason.Ok));
+        // STANDARD return string to signal actionConditions Ok
+        return "ok";
     }
 }

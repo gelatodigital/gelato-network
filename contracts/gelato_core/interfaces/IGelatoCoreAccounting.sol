@@ -134,9 +134,9 @@ interface IGelatoCoreAccounting {
 
     /// @dev calculates gas requirements based off _actionGasTotal
     /// @param _triggerGas the gas forwared to trigger.staticcall inside gelatoCore.execute
-    /// @param _actionGasTotal the gas forwarded with the action call
+    /// @param _actionGas the gas forwarded with the action call
     /// @return the minimum gas required for calls to gelatoCore.execute()
-    function getMinExecutionGas(uint256 _triggerGas, uint256 _actionGasTotal)
+    function getMinExecutionGas(uint256 _triggerGas, uint256 _actionGas)
         external
         pure
         returns(uint256);

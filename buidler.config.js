@@ -82,7 +82,7 @@ module.exports = {
         },
         userProxy: {
           // Kovan
-          luis: "0xbEb2CfD15Fd188634f2f94A7471d194b80D80b12"
+          luis: "0x3BcD06215aFF61a1f7F58A3D03FA5c14916090a0"
         }
       },
       contracts: [
@@ -107,21 +107,21 @@ module.exports = {
         ActionBzxPtokenMintWithToken:
           "0xECD9a96B4D4Ec5Bbc1bb8839424e04bd79347054",
         // erc20
-        ActionERC20Transfer: "0x00eC0c566e16d03b089ff38DD38BA933279886D8",
-        ActionERC20TransferFrom: "0x83D85e7b95eAe643Dc58c6C397701Bf3dd3Dff91",
+        ActionERC20Transfer: "0x61309D44243183570d4043E093CC35b85811C51A",
+        ActionERC20TransferFrom: "0x8042D433CbB8FBa68A9E12475fAD9205bAA74746",
         // kyber
-        KovanActionKyberTrade: "0xf0FBC8a0C751399984950569C246c4BA866107dE",
+        KovanActionKyberTrade: "0x853A4A656FA4e8f6b503d7EE4a43eD09e59C8AA0",
         // ==== Gelato Core ===
-        GelatoCore: "0xaD944A44Bd6d2BEAa15c49BF300AeDde5d2936B9",
+        GelatoCore: "0x21F7908734A147e084DBEe58C616fd59CE2A0a02",
         // Luis User Proxy
-        GelatoUserProxy: "0xbEb2CfD15Fd188634f2f94A7471d194b80D80b12",
+        GelatoUserProxy: "0x3BcD06215aFF61a1f7F58A3D03FA5c14916090a0",
         // === Triggers ===
         // balance
-        TriggerBalance: "0xe4bD22dfdfcD88df04944be0c745e9961e8dc22b",
+        TriggerBalance: "0xc0993255E46FD2E911d92fa63477e061b917aA14",
         // kyber
-        KovanTriggerKyberRate: "0x49A791153dbEe3fBc081Ce159d51C70A89323e73",
+        KovanTriggerKyberRate: "0x91BdF21dE574451fdc0c2a5859D6E91FD984f3cc",
         // time
-        TriggerTimestampPassed: "0x591DB4982dD2E184b8F4b8DA9599295Dd379F732"
+        TriggerTimestampPassed: "0x328eAA9C817383e0A2fc815F810BCA7FF3ea6288"
       }
     },
     ropsten: {
@@ -163,30 +163,11 @@ module.exports = {
       },
       contracts: [
         // Ropsten
-        "ActionBzxPtokenMintWithToken",
-        "ActionERC20Transfer",
-        "ActionERC20TransferFrom",
-        "RopstenActionKyberTrade",
-        "ActionMultiMintForTriggerTimestampPassed",
-        "GelatoCore",
-        "TriggerBalance",
-        "RopstenTriggerKyberRate",
-        "TriggerTimestampPassed"
+        "TriggerBalance"
       ],
       deployments: {
         // Ropsten
-        ActionBzxPtokenMintWithToken:
-          "0x732033F075b60114E3C0392A621f10F2E8EE0D13",
-        ActionERC20Transfer: "0xF48Fc3D81EFc8415dB2daF644cab7F192Da1C42d",
-        ActionERC20TransferFrom: "0x8FdAf109e391C304939CF64C9B9912b320AdfE56",
-        RopstenActionKyberTrade: "0x67f647bDF012A718d5F9bD9C7bEd6e5a2023ccC6",
-        ActionMultiMintForTriggerTimestampPassed:
-          "0x87b9f40e569C3a58C1F07a5E929a5b27edE74D27",
-        GelatoCore: "0x563700A8A6740C8a474DF8F289716afDc30ED07a",
-        GelatoUserProxy: "0x1631B08A31Ecc1e125939002326E4b281E9eCd75",
-        TriggerBalance: "0xaf4c11A90e98D0C5ecFb403C62Cc8Dfe8DF11030",
-        RopstenTriggerKyberRate: "0xbcb765cb4FF012B019068626320c9c577f3D6327",
-        TriggerTimestampPassed: "0x20F8EE3153F11Da43137478B6897c9c4cC438B50"
+        TriggerBalance: "0xaFa77E70C22F5Ab583A9Eae6Dc7290e6264832Af"
       }
     }
   },
