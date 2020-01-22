@@ -1,5 +1,6 @@
 import { internalTask } from "@nomiclabs/buidler/config";
 import { utils } from "ethers";
+import sleep from "../../../../../../../helpers/async/sleep";
 
 export default internalTask(
   "gc-mint:defaultpayload:KovanTriggerKyberRate",
@@ -25,8 +26,10 @@ export default internalTask(
       });
       const refRate = utils
         .bigNumberify(expectedRate)
-        .add(utils.parseUnits("1", 17));
+        .sub(utils.parseUnits("2", 16));
       const greaterElseSmaller = false;
+      /*console.log(refRate.toString());
+      await sleep(10000)*/
 
       // Params as sorted array of inputs for abi.encoding
       // action(_user, _userProxy, _src, _srcAmt, _dest)

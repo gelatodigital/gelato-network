@@ -2,8 +2,11 @@ pragma solidity ^0.6.0;
 
 import "../../IGelatoTrigger.sol";
 import "../../../dapp_interfaces/kyber/IKyber.sol";
+import "../../../external/SafeMath.sol";
 
 contract KovanTriggerKyberRate is IGelatoTrigger {
+
+    using SafeMath for uint256;
 
     enum Reason {
         // StandardReason Fields
@@ -11,11 +14,13 @@ contract KovanTriggerKyberRate is IGelatoTrigger {
         NotOk,  // 1: Standard Field for Unfulfilled Conditions or Caught/Handled Errors
         UnhandledError,  // 2: Standard Field for Uncaught/Unhandled Errors
         // Ok: Fulfilled Conditions
-        OkKyberRateIsGreaterThanRefRate,
-        OkKyberRateIsSmallerThanRefRate,
+        OkKyberExpectedRateIsGreaterThanRefRate,
+        OkKyberSlippageRateIsGreaterThanRefRate,
+        OkKyberExpectedRateIsSmallerThanRefRate,
+        OkKyberExpectedRateIsSmallerThanBufferedRefRate,
         // NotOk: Unfulfilled Conditions
-        NotOkKyberRateIsNotGreaterThanRefRate,
-        NotOkKyberRateIsNotSmallerThanRefRate,
+        NotOkKyberSlippageRateIsNotGreaterThanRefRate,
+        NotOkKyberExpectedRateIsNotSmallerThanBufferedRefRate,
         KyberGetExpectedRateError
     }
 
@@ -44,18 +49,24 @@ contract KovanTriggerKyberRate is IGelatoTrigger {
             _dest,
             _srcAmt
         )
-            returns(uint256 expectedRate, uint256)
+            returns(uint256 expectedRate, uint256 slippageRate)
         {
             if (_greaterElseSmaller) {  // greaterThan
                 if (expectedRate >= _refRate)
-                    return (true, uint8(Reason.OkKyberRateIsGreaterThanRefRate));
+                    return (true, uint8(Reason.OkKyberExpectedRateIsGreaterThanRefRate));
+                else if (slippageRate >= _refRate)
+                    return (true, uint8(Reason.OkKyberSlippageRateIsGreaterThanRefRate));
                 else
-                    return (false, uint8(Reason.NotOkKyberRateIsNotGreaterThanRefRate));
+                    return (false, uint8(Reason.NotOkKyberSlippageRateIsNotGreaterThanRefRate));
             } else {  // smallerThan
+                uint256 buffer = expectedRate.sub(slippageRate);
+                uint256 bufferedRefRate = _refRate.add(buffer);
                 if (expectedRate <= _refRate)
-                    return (true, uint8(Reason.OkKyberRateIsSmallerThanRefRate));
+                    return (true, uint8(Reason.OkKyberExpectedRateIsSmallerThanRefRate));
+                else if (expectedRate <= bufferedRefRate)
+                    return (true, uint8(Reason.OkKyberExpectedRateIsSmallerThanBufferedRefRate));
                 else
-                    return(false, uint8(Reason.NotOkKyberRateIsNotSmallerThanRefRate));
+                    return(false, uint8(Reason.NotOkKyberExpectedRateIsNotSmallerThanBufferedRefRate));
             }
         } catch {
             return(false, uint8(Reason.KyberGetExpectedRateError));
