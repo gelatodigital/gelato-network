@@ -5,8 +5,8 @@ import "./GelatoGasTestUserProxy.sol";
 
 abstract contract GelatoGasTestUserProxyManager is IGelatoGasTestUserProxyManager {
 
-    mapping(address => address) internal userToGasTestProxy;
-    mapping(address => address) internal gasTestProxyToUser;
+    mapping(address => address) public override userByGasTestProxy;
+    mapping(address => address) public override gasTestProxyByUser;
 
     modifier gasTestProxyCheck(address _) {
         require(_isGasTestProxy(_), "GelatoGasTestUserProxyManager.isGasTestProxy");
@@ -19,29 +19,11 @@ abstract contract GelatoGasTestUserProxyManager is IGelatoGasTestUserProxyManage
         returns(address gasTestUserProxy)
     {
         gasTestUserProxy = address(new GelatoGasTestUserProxy(msg.sender));
-        userToGasTestProxy[msg.sender] = gasTestUserProxy;
-        gasTestProxyToUser[gasTestUserProxy] = msg.sender;
-    }
-
-    function getUserOfGasTestProxy(address _gasTestProxy)
-        external
-        view
-        override
-        returns(address)
-    {
-        return gasTestProxyToUser[_gasTestProxy];
-    }
-
-    function getGasTestProxyOfUser(address _user)
-        external
-        view
-        override
-        returns(address)
-    {
-        return userToGasTestProxy[_user];
+        userByGasTestProxy[msg.sender] = gasTestUserProxy;
+        gasTestProxyByUser[gasTestUserProxy] = msg.sender;
     }
 
     function _isGasTestProxy(address _) private view returns(bool) {
-        return gasTestProxyToUser[_] != address(0);
+        return gasTestProxyByUser[_] != address(0);
     }
 }

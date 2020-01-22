@@ -36,7 +36,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
     {
         // ______ Authenticate msg.sender is proxied user or a proxy _______
         IGelatoUserProxy userProxy;
-        if (_isUser(msg.sender)) userProxy = userToProxy[msg.sender];
+        if (_isUser(msg.sender)) userProxy = proxyByUser[msg.sender];
         else if (_isUserProxy(msg.sender)) userProxy = IGelatoUserProxy(msg.sender);
         // solhint-disable-next-line
         else revert("GelatoCore.mintExecutionClaim: msg.sender is not proxied");
@@ -177,7 +177,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         override
     {
         bool executionClaimExpired = _executionClaimExpiryDate <= now;
-        if (msg.sender != proxyToUser[address(_userProxy)]) {
+        if (msg.sender != userByProxy[address(_userProxy)]) {
             require(
                 executionClaimExpired && msg.sender == _selectedExecutor,
                 "GelatoCore.cancelExecutionClaim: msgSender problem"
@@ -230,7 +230,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         returns(address)
     {
         IGelatoUserProxy userProxy = userProxyWithExecutionClaimId[_executionClaimId];
-        return proxyToUser[address(userProxy)];
+        return userByProxy[address(userProxy)];
     }
 
 
@@ -329,17 +329,16 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         private
     {
         uint256 startGas = gasleft();
-        // CAUTION NEEDS FIXING <= need to account for gas overhead otherwise reverts
         require(
-            startGas >= _triggerGasActionGasMinExecutionGas[2],
+            startGas >= _triggerGasActionGasMinExecutionGas[2].sub(30000),
             "GelatoCore._execute: Insufficient gas sent"
         );
 
         // _______ canExecute() CHECK ______________________________________________
         {
             GelatoCoreEnums.CanExecuteResults canExecuteResult;
-            uint8 reason;
-            (canExecuteResult, reason) = _canExecute(
+            uint8 canExecuteReason;
+            (canExecuteResult, canExecuteReason) = _canExecute(
                 _executionClaimId,
                 _userProxy,
                 _trigger,
@@ -351,15 +350,23 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
                 _mintingDeposit
             );
 
-            if (canExecuteResult != GelatoCoreEnums.CanExecuteResults.Executable) {
+            if (canExecuteResult == GelatoCoreEnums.CanExecuteResults.Executable) {
+                emit LogCanExecuteSuccess(
+                    msg.sender,
+                    _executionClaimId,
+                    _user,
+                    _trigger,
+                    canExecuteResult,
+                    canExecuteReason
+                );
+            } else {
                 emit LogCanExecuteFailed(
                     msg.sender,
                     _executionClaimId,
                     _user,
                     _trigger,
-                    _action,
                     canExecuteResult,
-                    reason
+                    canExecuteReason
                 );
                 return;  // END OF EXECUTION
             }

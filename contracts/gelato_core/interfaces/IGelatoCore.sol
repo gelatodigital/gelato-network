@@ -26,12 +26,20 @@ interface IGelatoCore {
 
     // Caution: there are no guarantees that CanExecuteResult and/or reason
     //  are implemented in a logical fashion by trigger/action developers.
+    event LogCanExecuteSuccess(
+        address indexed executor,
+        uint256 indexed executionClaimId,
+        address indexed user,
+        IGelatoTrigger trigger,
+        GelatoCoreEnums.CanExecuteResults canExecuteResult,
+        uint8 reason
+    );
+
     event LogCanExecuteFailed(
         address indexed executor,
         uint256 indexed executionClaimId,
         address indexed user,
         IGelatoTrigger trigger,
-        IGelatoAction action,
         GelatoCoreEnums.CanExecuteResults canExecuteResult,
         uint8 reason
     );

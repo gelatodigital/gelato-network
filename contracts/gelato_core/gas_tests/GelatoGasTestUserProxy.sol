@@ -4,7 +4,7 @@ import "../GelatoUserProxy.sol";
 
 contract GelatoGasTestUserProxy is GelatoUserProxy {
 
-    constructor(address payable _user) public GelatoUserProxy(_user) {}
+    constructor(address _user) public GelatoUserProxy(_user) {}
 
     function delegatecallGelatoAction(
         IGelatoAction _action,
@@ -32,7 +32,7 @@ contract GelatoGasTestUserProxy is GelatoUserProxy {
         if (!success) {
             // error during action execution
             revertReason;  // silence compiler warning
-            revert("GelatoGasTestUserProxy.delegatecallGelatoAction: unhandled error");
+            revert("GelatoGasTestUserProxy.delegatecallGelatoAction: unsuccessful");
         } else { // success
             revert(string(abi.encodePacked(startGas - gasleft())));
         }
