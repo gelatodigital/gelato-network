@@ -37,9 +37,9 @@ export default internalTask(
       const inputs = [
         user, // receiver
         userProxy,
-        burnTokenAddress,
-        burnAmount,
         pTokenAddress,
+        burnAmount,
+        burnTokenAddress,
         0 // minPriceAllowed
       ];
       // Encoding
