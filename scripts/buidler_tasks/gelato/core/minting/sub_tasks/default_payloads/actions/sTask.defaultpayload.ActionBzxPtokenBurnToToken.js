@@ -39,8 +39,7 @@ export default internalTask(
         userProxy,
         pTokenAddress,
         burnAmount,
-        burnTokenAddress,
-        0 // minPriceAllowed
+        burnTokenAddress
       ];
       // Encoding
       const payloadWithSelector = await run("abi-encode-withselector", {
