@@ -99,6 +99,7 @@ interface IGelatoCore {
      */
     function canExecute(
         uint256 _executionClaimId,
+        address _user,
         IGelatoUserProxy _userProxy,
         IGelatoTrigger _trigger,
         bytes calldata _triggerPayloadWithSelector,
@@ -191,6 +192,7 @@ interface IGelatoCore {
 
     function gasTestCanExecute(
         uint256 _executionClaimId,
+        address _user,
         IGelatoUserProxy _userProxy,
         IGelatoTrigger _trigger,
         bytes calldata _triggerPayloadWithSelector,
@@ -222,7 +224,7 @@ interface IGelatoCore {
 
     function gasTestExecute(
         uint256 _executionClaimId,
-        address payable _user,
+        address _user,
         IGelatoUserProxy _userProxy,
         IGelatoTrigger _trigger,
         bytes calldata _triggerPayloadWithSelector,

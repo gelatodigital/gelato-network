@@ -74,6 +74,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         executionClaimHash[executionClaimId] = _computeExecutionClaimHash(
             _selectedExecutor,
             executionClaimId,
+            msg.sender, // user
             userProxy,
             _trigger,
             _triggerPayloadWithSelector,
@@ -103,6 +104,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
     // ================  CAN EXECUTE EXECUTOR API ============================
     function canExecute(
         uint256 _executionClaimId,
+        address _user,
         IGelatoUserProxy _userProxy,
         IGelatoTrigger _trigger,
         bytes calldata _triggerPayloadWithSelector,
@@ -119,6 +121,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
     {
         return _canExecute(
             _executionClaimId,
+            _user,
             _userProxy,
             _trigger,
             _triggerPayloadWithSelector,
@@ -177,7 +180,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         override
     {
         bool executionClaimExpired = _executionClaimExpiryDate <= now;
-        if (msg.sender != userByProxy[address(_userProxy)]) {
+        if (msg.sender != _user) {
             require(
                 executionClaimExpired && msg.sender == _selectedExecutor,
                 "GelatoCore.cancelExecutionClaim: msgSender problem"
@@ -186,6 +189,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         bytes32 computedExecutionClaimHash = _computeExecutionClaimHash(
             _selectedExecutor,
             _executionClaimId,
+            _user,
             _userProxy,
             _trigger,
             _triggerPayloadWithSelector,
@@ -237,6 +241,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
     // ================  CAN EXECUTE IMPLEMENTATION ==================================
     function _canExecute(
         uint256 _executionClaimId,
+        address _user,
         IGelatoUserProxy _userProxy,
         IGelatoTrigger _trigger,
         bytes memory _triggerPayloadWithSelector,
@@ -275,6 +280,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         bytes32 computedExecutionClaimHash = _computeExecutionClaimHash(
             msg.sender,  // selected? executor
             _executionClaimId,
+            _user,
             _userProxy,
             _trigger,
             _triggerPayloadWithSelector,
@@ -340,6 +346,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
             uint8 canExecuteReason;
             (canExecuteResult, canExecuteReason) = _canExecute(
                 _executionClaimId,
+                _user,
                 _userProxy,
                 _trigger,
                 _triggerPayloadWithSelector,
@@ -424,6 +431,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
     function _computeExecutionClaimHash(
         address _selectedExecutor,
         uint256 _executionClaimId,
+        address _user,
         IGelatoUserProxy _userProxy,
         IGelatoTrigger _trigger,
         bytes memory _triggerPayloadWithSelector,
@@ -441,6 +449,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
             abi.encodePacked(
                 _selectedExecutor,
                 _executionClaimId,
+                _user,
                 _userProxy,
                 _trigger,
                 _triggerPayloadWithSelector,
@@ -479,6 +488,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
 
     function gasTestCanExecute(
         uint256 _executionClaimId,
+        address _user,
         IGelatoUserProxy _userProxy,
         IGelatoTrigger _trigger,
         bytes calldata _triggerPayloadWithSelector,
@@ -496,6 +506,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
         uint256 startGas = gasleft();
         (canExecuteResult, reason) = _canExecute(
             _executionClaimId,
+            _user,
             _userProxy,
             _trigger,
             _triggerPayloadWithSelector,
@@ -559,7 +570,7 @@ contract GelatoCore is IGelatoCore, GelatoUserProxyManager, GelatoCoreAccounting
 
     function gasTestExecute(
         uint256 _executionClaimId,
-        address payable _user,
+        address _user,
         IGelatoUserProxy _userProxy,
         IGelatoTrigger _trigger,
         bytes calldata _triggerPayloadWithSelector,
