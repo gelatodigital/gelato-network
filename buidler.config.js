@@ -95,7 +95,7 @@ module.exports = {
         "ActionMultiMintForTriggerTimestampPassed",
         "GelatoCore",
         "TriggerBalance",
-        "KovanTriggerKyberRate",
+        "TriggerKyberRateKovan",
         "TriggerTimestampPassed"
       ],
       deployments: {
@@ -119,7 +119,7 @@ module.exports = {
         // balance
         TriggerBalance: "0xc0993255E46FD2E911d92fa63477e061b917aA14",
         // kyber
-        KovanTriggerKyberRate: "0x91BdF21dE574451fdc0c2a5859D6E91FD984f3cc",
+        TriggerKyberRateKovan: "0xfEe2C4Fd7Be69AC4353230e56EAe6a156c9d4dC4",
         // time
         TriggerTimestampPassed: "0x328eAA9C817383e0A2fc815F810BCA7FF3ea6288"
       }

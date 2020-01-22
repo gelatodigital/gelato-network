@@ -17,7 +17,7 @@ export default internalTask(
       const { luis: userProxy } = await run("bre-config", {
         addressbookcategory: "userProxy"
       });
-      const { DAI: depositTokenAddress, dsETH2x: pTokenAddress } = await run(
+      const { KNC: depositTokenAddress, dsETH2x: pTokenAddress } = await run(
         "bre-config",
         {
           addressbookcategory: "erc20"
