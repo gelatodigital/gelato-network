@@ -163,9 +163,11 @@ module.exports = {
       },
       contracts: [
         // Ropsten
+        "TriggerBalance"
       ],
       deployments: {
         // Ropsten
+        TriggerBalance: "0xaFa77E70C22F5Ab583A9Eae6Dc7290e6264832Af"
       }
     }
   },
