@@ -23,36 +23,21 @@ contract ActionERC20Transfer is GelatoActionsStandard {
         address _user,
         address _userProxy,
         // Specific Action Params
-        IERC20 _src,
+        address _src,
         uint256 _srcAmt,
         address _beneficiary
     )
         external
+        virtual
     {
-        try _src.transfer(_beneficiary, _srcAmt) {} catch {
-            revert("ActionERC20Transfer: ErrorTransfer");
-        }
-    }
-
-    // ============ API for FrontEnds ===========
-    function getUsersSourceTokenBalance(bytes calldata _actionPayloadWithSelector)
-        external
-        view
-        override
-        returns(uint256)
-    {
-        (, bytes memory payload) = SplitFunctionSelector.split(
-            _actionPayloadWithSelector
+        require(
+            _isUserOwnerOfUserProxy(_user, _userProxy),
+            "ActionERC20Transfer: NotOkUserProxyOwner"
         );
-        (address _user, address _userProxy, address _src,,) = abi.decode(
-            payload,
-            (address, address, address, uint256, address)
-        );
+        require(address(this) == _userProxy, "ActionERC20Transfer: NotOkUserProxy");
         IERC20 srcERC20 = IERC20(_src);
-        try srcERC20.balanceOf(_user) returns(uint256 userSrcBalance) {
-            return userSrcBalance;
-        } catch {
-            revert("Error: ActionERC20Transfer.getUsersSourceTokenBalance: balanceOf");
+        try srcERC20.transfer(_beneficiary, _srcAmt) {} catch {
+            revert("ActionERC20Transfer: ErrorTransfer");
         }
     }
 
@@ -62,6 +47,7 @@ contract ActionERC20Transfer is GelatoActionsStandard {
         external
         view
         override
+        virtual
         returns(string memory)  // actionCondition
     {
         return _actionConditionsCheck(_actionPayloadWithSelector);
@@ -70,6 +56,7 @@ contract ActionERC20Transfer is GelatoActionsStandard {
     function _actionConditionsCheck(bytes memory _actionPayloadWithSelector)
         internal
         view
+        virtual
         returns(string memory)  // // actionCondition
     {
         (, bytes memory payload) = SplitFunctionSelector.split(
@@ -80,6 +67,9 @@ contract ActionERC20Transfer is GelatoActionsStandard {
             payload,
             (address, address, address, uint256, address)
         );
+
+        if (!_isUserOwnerOfUserProxy(_user, _userProxy))
+            return "ActionERC20Transfer: NotOkUserProxyOwner";
 
         if (!_src.isContract()) return "ActionERC20Transfer: NotOkERC20Address";
 
@@ -92,5 +82,29 @@ contract ActionERC20Transfer is GelatoActionsStandard {
         }
         // STANDARD return string to signal actionConditions Ok
         return "ok";
+    }
+
+    // ============ API for FrontEnds ===========
+    function getUserProxysSourceTokenBalance(
+        // Standard Action Params
+        address _user,
+        address _userProxy,
+        // Specific Action Params
+        address _src,
+        uint256,
+        address
+    )
+        external
+        view
+        virtual
+        returns(uint256)
+    {
+        _user;  // silence warning
+        IERC20 srcERC20 = IERC20(_src);
+        try srcERC20.balanceOf(_userProxy) returns(uint256 userProxySrcBalance) {
+            return userProxySrcBalance;
+        } catch {
+            revert("Error: ActionERC20Transfer.getUserProxysSourceTokenBalance: balanceOf");
+        }
     }
 }

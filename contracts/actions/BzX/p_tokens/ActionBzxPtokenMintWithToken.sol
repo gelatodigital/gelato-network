@@ -29,13 +29,18 @@ contract ActionBzxPtokenMintWithToken is GelatoActionsStandard {
         uint256 _maxPriceAllowed
     )
         external
+        virtual
     {
-        IERC20 depositToken = IERC20(_depositTokenAddress);
+        require(
+            _isUserOwnerOfUserProxy(_user, _userProxy),
+            "ActionBzxPtokenMintWithToken: NotOkUserProxyOwner"
+        );
+        require(address(this) == _userProxy, "ActionBzxPtokenMintWithToken: ErrorUserProxy");
 
-        try depositToken.transferFrom(_user, address(this), _depositAmount) {} catch {
+        IERC20 depositToken = IERC20(_depositTokenAddress);
+        try depositToken.transferFrom(_user, _userProxy, _depositAmount) {} catch {
             revert("ActionBzxPtokenMintWithToken: ErrorTransferFromUser");
         }
-
         try depositToken.approve(_pTokenAddress, _depositAmount) {} catch {
             revert("ActionBzxPtokenMintWithToken: ErrorApprovePtoken");
         }
@@ -51,36 +56,13 @@ contract ActionBzxPtokenMintWithToken is GelatoActionsStandard {
         }
     }
 
-    // ============ API for FrontEnds ===========
-    function getUsersSourceTokenBalance(bytes calldata _actionPayloadWithSelector)
-        external
-        view
-        override
-        returns(uint256)
-    {
-        (, bytes memory payload) = SplitFunctionSelector.split(
-            _actionPayloadWithSelector
-        );
-        (address _user, address _userProxy, address _src,,) = abi.decode(
-            payload,
-            (address, address, address, uint256, address)
-        );
-        IERC20 srcERC20 = IERC20(_src);
-        try srcERC20.balanceOf(_user) returns(uint256 userSrcBalance) {
-            return userSrcBalance;
-        } catch {
-            revert(
-                "Error: ActionBzxPtokenMintWithToken.getUsersSourceTokenBalance: balanceOf"
-            );
-        }
-    }
-
     // ======= ACTION CONDITIONS CHECK =========
     // Overriding and extending GelatoActionsStandard's function (optional)
     function actionConditionsCheck(bytes calldata _actionPayloadWithSelector)
         external
         view
         override
+        virtual
         returns(string memory)  // actionCondition
     {
         return _actionConditionsCheck(_actionPayloadWithSelector);
@@ -89,6 +71,7 @@ contract ActionBzxPtokenMintWithToken is GelatoActionsStandard {
     function _actionConditionsCheck(bytes memory _actionPayloadWithSelector)
         internal
         view
+        virtual
         returns(string memory)  // actionCondition
     {
         (, bytes memory payload) = SplitFunctionSelector.split(
@@ -104,18 +87,19 @@ contract ActionBzxPtokenMintWithToken is GelatoActionsStandard {
             (address, address, address, uint256, address, uint256)
         );
 
+        if (!_isUserOwnerOfUserProxy(_user, _userProxy))
+            return "ActionBzxPtokenMintWithToken: NotOkUserProxyOwner";
+
         if (!_depositTokenAddress.isContract())
             return "ActionBzxPtokenMintWithToken: NotOkDepositTokenAddress";
 
         IERC20 depositToken = IERC20(_depositTokenAddress);
-
         try depositToken.balanceOf(_user) returns(uint256 userDepositTokenBalance) {
             if (userDepositTokenBalance < _depositAmount)
                 return "ActionBzxPtokenMintWithToken: NotOkUserDepositTokenBalance";
         } catch {
             return "ActionBzxPtokenMintWithToken: ErrorBalanceOf";
         }
-
         try depositToken.allowance(_user, _userProxy)
             returns(uint256 userProxyDepositTokenAllowance)
         {
@@ -137,5 +121,33 @@ contract ActionBzxPtokenMintWithToken is GelatoActionsStandard {
 
         // STANDARD return string to signal actionConditions Ok
         return "ok";
+    }
+
+
+    // ============ API for FrontEnds ===========
+    function getUsersSourceTokenBalance(
+        // Standard Action Params
+        address _user,  // "receiver"
+        address _userProxy,
+        // Specific Action Params
+        address _depositTokenAddress,
+        uint256,
+        address,
+        uint256
+    )
+        external
+        view
+        virtual
+        returns(uint256)
+    {
+        _userProxy;  // silence warning
+        IERC20 depositToken = IERC20(_depositTokenAddress);
+        try depositToken.balanceOf(_user) returns(uint256 userDepositTokenBalance) {
+            return userDepositTokenBalance;
+        } catch {
+            revert(
+                "Error: ActionBzxPtokenMintWithToken.getUsersSourceTokenBalance: balanceOf"
+            );
+        }
     }
 }
