@@ -17,7 +17,7 @@ export default internalTask(
       const { luis: userProxy } = await run("bre-config", {
         addressbookcategory: "userProxy"
       });
-      const { KNC: depositTokenAddress, dsETH2x: pTokenAddress } = await run(
+      const { DAI: depositTokenAddress, dsETH2x: pTokenAddress } = await run(
         "bre-config",
         {
           addressbookcategory: "erc20"
@@ -32,8 +32,7 @@ export default internalTask(
         userProxy,
         depositTokenAddress,
         depositAmt,
-        pTokenAddress,
-        0  // maxPriceAllowed
+        pTokenAddress
       ];
       // Encoding
       const payloadWithSelector = await run("abi-encode-withselector", {

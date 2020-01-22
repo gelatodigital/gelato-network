@@ -25,8 +25,7 @@ contract ActionBzxPtokenMintWithToken is GelatoActionsStandard {
         // Specific Action Params
         address _depositTokenAddress,
         uint256 _depositAmount,
-        address _pTokenAddress,
-        uint256 _maxPriceAllowed
+        address _pTokenAddress
     )
         external
         virtual
@@ -50,7 +49,7 @@ contract ActionBzxPtokenMintWithToken is GelatoActionsStandard {
             _user,  // receiver
             _depositTokenAddress,
             _depositAmount,
-            _maxPriceAllowed  // maxPriceAllowed - 0 ignores slippage limit
+            0  // maxPriceAllowed - 0 ignores slippage limit
         ) {} catch {
             revert("ActionBzxPtokenMintWithToken: ErrorPtokenMintWithToken");
         }
@@ -82,9 +81,9 @@ contract ActionBzxPtokenMintWithToken is GelatoActionsStandard {
          address _userProxy,
          address _depositTokenAddress,
          uint256 _depositAmount,
-         address _pTokenAddress, ) = abi.decode(
+         address _pTokenAddress) = abi.decode(
             payload,
-            (address, address, address, uint256, address, uint256)
+            (address, address, address, uint256, address)
         );
 
         if (!_isUserOwnerOfUserProxy(_user, _userProxy))
@@ -132,8 +131,7 @@ contract ActionBzxPtokenMintWithToken is GelatoActionsStandard {
         // Specific Action Params
         address _depositTokenAddress,
         uint256,
-        address,
-        uint256
+        address
     )
         external
         view
