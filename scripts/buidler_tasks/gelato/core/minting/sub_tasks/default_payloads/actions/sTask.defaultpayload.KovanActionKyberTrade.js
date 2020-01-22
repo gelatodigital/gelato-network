@@ -20,10 +20,10 @@ export default internalTask(
       const { luis: userProxy } = await run("bre-config", {
         addressbookcategory: "userProxy"
       });
-      const { DAI: src, KNC: dest } = await run("bre-config", {
+      const { KNC: src, DAI: dest } = await run("bre-config", {
         addressbookcategory: "erc20"
       });
-      const srcAmt = utils.parseUnits("10", 18);
+      const srcAmt = utils.parseUnits("50", 18);
 
       // Params as sorted array of inputs for abi.encoding
       // action(_user, _userProxy, _src, _srcAmt, _dest)
