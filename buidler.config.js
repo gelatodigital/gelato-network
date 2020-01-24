@@ -78,6 +78,7 @@ module.exports = {
         },
         kyber: {
           // Kovan
+          ETH: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
           proxy: "0x692f391bCc85cefCe8C237C01e1f636BbD70EA4D"
         },
         userProxy: {
