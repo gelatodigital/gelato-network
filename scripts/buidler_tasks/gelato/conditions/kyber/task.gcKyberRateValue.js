@@ -3,19 +3,21 @@ import { defaultNetwork } from "../../../../../buidler.config";
 import { utils } from "ethers";
 
 export default task(
-  "gt-kyberrate-reached",
-  `Calls <trigername>.reached(<conditionpayloadwithselector>) on [--network] (default: ${defaultNetwork})`
+  "gc-kyberrate-value",
+  `Calls <trigername>.value(<conditionpayloadwithselector>) on [--network] (default: ${defaultNetwork})`
 )
   .addFlag("log", "Logs return values to stdout")
   .setAction(async ({ log }) => {
     try {
-      // Handle condition payloadsWithSelector
+      // To avoid mistakes default log to true
+      log = true;
+
       // Params
       const { DAI: src, KNC: dest } = await run("bre-config", {
         addressbookcategory: "erc20"
       });
       const srcamt = utils.parseUnits("10", 18);
-      const [expectedRate] = await run("gt-kyber-getexpectedrate", {
+      const [expectedRate] = await run("gc-kyber-getexpectedrate", {
         src,
         dest,
         srcamt
@@ -31,7 +33,7 @@ export default task(
         read: true
       });
       // mintExecutionClaim TX (payable)
-      const reached = await conditionContract.reached(
+      const value = await conditionContract.getConditionValue(
         src,
         srcamt,
         dest,
@@ -39,12 +41,14 @@ export default task(
         greaterElseSmaller
       );
 
-      if (log)
+      if (log) {
         console.log(
           `\nCondition: ConditionKyberRate\
-           \nFired?: ${reached}\n`
+           \nValue:     ${value}\
+           \nFormatted: ${utils.formatUnits(value, 18)}`
         );
-      return reached;
+      }
+      return value;
     } catch (error) {
       console.error(error);
       process.exit(1);

@@ -3,49 +3,46 @@ import { defaultNetwork } from "../../../../../buidler.config";
 import { utils } from "ethers";
 
 export default task(
-  "gt-kyberrate-value",
+  "gc-balance-value",
   `Calls <trigername>.value(<conditionpayloadwithselector>) on [--network] (default: ${defaultNetwork})`
 )
   .addFlag("log", "Logs return values to stdout")
   .setAction(async ({ log }) => {
     try {
-      // To avoid mistakes default log to true
-      log = true;
-
       // Params
-      const { DAI: src, KNC: dest } = await run("bre-config", {
+      const { luis: account } = await run("bre-config", {
+        addressbookcategory: "EOA"
+      });
+      /*const { DAI: coin } = await run("bre-config", {
         addressbookcategory: "erc20"
-      });
-      const srcamt = utils.parseUnits("10", 18);
-      const [expectedRate] = await run("gt-kyber-getexpectedrate", {
-        src,
-        dest,
-        srcamt
-      });
-      const refRate = utils
-        .bigNumberify(expectedRate)
-        .add(utils.parseUnits("1", 17));
-      const greaterElseSmaller = false;
+      }); */
+      const coin = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"; // ETH
+
+      const refBalance = utils.parseUnits("24", 18);
+      const greaterElseSmaller = true;
 
       // ConditionRead Instance
+      const contractname = "ConditionBalance"
       const conditionContract = await run("instantiateContract", {
-        contractname: "ConditionKyberRate",
+        contractname,
         read: true
       });
       // mintExecutionClaim TX (payable)
       const value = await conditionContract.getConditionValue(
-        src,
-        srcamt,
-        dest,
-        refRate,
+        account,
+        coin,
+        refBalance,
         greaterElseSmaller
       );
 
       if (log) {
         console.log(
-          `\nCondition: ConditionKyberRate\
-           \nValue:     ${value}\
-           \nFormatted: ${utils.formatUnits(value, 18)}`
+          `\nContractName:     ${contractname}\
+           \nContractAddress:  ${conditionContract.address}\
+           \nAccount:          ${account}\
+           \nCoin:             ${coin}\
+           \nValue:            ${value}\
+           \nFormatted:        ${utils.formatUnits(value, 18)}`
         );
       }
       return value;

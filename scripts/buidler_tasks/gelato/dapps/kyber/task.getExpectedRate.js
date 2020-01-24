@@ -3,7 +3,7 @@ import { defaultNetwork } from "../../../../../buidler.config";
 import { utils } from "ethers";
 
 export default task(
-  "gt-kyber-getexpectedrate",
+  "gc-kyber-getexpectedrate",
   `Calls kyber.getExpectedRate(src, dest, srcamt) on [--network] (default: ${defaultNetwork})`
 )
   .addPositionalParam("src", "SellToken")

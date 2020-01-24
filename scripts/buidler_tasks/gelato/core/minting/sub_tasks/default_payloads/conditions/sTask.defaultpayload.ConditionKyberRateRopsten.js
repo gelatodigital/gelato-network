@@ -2,15 +2,15 @@ import { internalTask } from "@nomiclabs/buidler/config";
 import { utils } from "ethers";
 
 export default internalTask(
-  "gc-mint:defaultpayload:ConditionKyberRateKovan",
-  `Returns a hardcoded actionPayloadWithSelector of ConditionKyberRateKovan`
+  "gc-mint:defaultpayload:ConditionKyberRateRopsten",
+  `Returns a hardcoded actionPayloadWithSelector of ConditionKyberRateRopsten`
 )
   .addFlag("log")
   .setAction(async ({ log }) => {
     try {
-      if (network.name != "kovan") throw new Error("wrong network!");
+      if (network.name != "ropsten") throw new Error("wrong network!");
 
-      const contractname = "ConditionKyberRateKovan";
+      const contractname = "ConditionKyberRateRopsten";
       // action(_user, _userProxy, _src, _srcAmt, _dest, _minConversionRate)
       const functionname = "reached";
       // Params
@@ -18,7 +18,7 @@ export default internalTask(
         addressbookcategory: "erc20"
       });
       const srcamt = utils.parseUnits("10", 18);
-      const [expectedRate] = await run("gt-kyber-getexpectedrate", {
+      const [expectedRate] = await run("gc-kyber-getexpectedrate", {
         src,
         dest,
         srcamt

@@ -3,8 +3,8 @@ import { defaultNetwork } from "../../../../../buidler.config";
 import { utils } from "ethers";
 
 export default task(
-  "gt-balance-value",
-  `Calls <trigername>.value(<conditionpayloadwithselector>) on [--network] (default: ${defaultNetwork})`
+  "gc-balance-reached",
+  `Calls <trigername>.reached(<conditionpayloadwithselector>) on [--network] (default: ${defaultNetwork})`
 )
   .addFlag("log", "Logs return values to stdout")
   .setAction(async ({ log }) => {
@@ -13,39 +13,33 @@ export default task(
       const { luis: account } = await run("bre-config", {
         addressbookcategory: "EOA"
       });
-      /*const { DAI: coin } = await run("bre-config", {
+      const { DAI: coin } = await run("bre-config", {
         addressbookcategory: "erc20"
-      }); */
-      const coin = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"; // ETH
+      });
+      /* const coin = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"; // ETH */
 
       const refBalance = utils.parseUnits("24", 18);
       const greaterElseSmaller = true;
 
       // ConditionRead Instance
-      const contractname = "ConditionBalance"
       const conditionContract = await run("instantiateContract", {
-        contractname,
+        contractname: "ConditionBalance",
         read: true
       });
       // mintExecutionClaim TX (payable)
-      const value = await conditionContract.getConditionValue(
+      const reached = await conditionContract.reached(
         account,
         coin,
         refBalance,
         greaterElseSmaller
       );
 
-      if (log) {
+      if (log)
         console.log(
-          `\nContractName:     ${contractname}\
-           \nContractAddress:  ${conditionContract.address}\
-           \nAccount:          ${account}\
-           \nCoin:             ${coin}\
-           \nValue:            ${value}\
-           \nFormatted:        ${utils.formatUnits(value, 18)}`
+          `\nCondition: ConditionBalance\
+           \nReached?: ${reached}\n`
         );
-      }
-      return value;
+      return reached;
     } catch (error) {
       console.error(error);
       process.exit(1);
