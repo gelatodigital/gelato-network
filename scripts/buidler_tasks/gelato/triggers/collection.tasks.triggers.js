@@ -1,12 +1,12 @@
-// ===== TriggerBalance =====
+// ===== ConditionBalance =====
 // Fired
 import "./balance/task.gtBalanceFired";
-// getTriggerValue
+// getConditionValue
 import "./balance/task.gtBalanceValue";
 
-// ===== TriggerKyber ===========
-// == TriggerKyberRate
+// ===== ConditionKyber ===========
+// == ConditionKyberRate
 // Fired
 import "./kyber/task.gtKyberRateFired";
-// getTriggerValue
+// getConditionValue
 import "./kyber/task.gtKyberRateValue";

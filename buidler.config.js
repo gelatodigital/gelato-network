@@ -93,11 +93,11 @@ module.exports = {
         "ActionERC20Transfer",
         "ActionERC20TransferFrom",
         "KovanActionKyberTrade",
-        "ActionMultiMintForTriggerTimestampPassed",
+        "ActionMultiMintForConditionTimestampPassed",
         "GelatoCore",
-        "TriggerBalance",
-        "TriggerKyberRateKovan",
-        "TriggerTimestampPassed"
+        "ConditionBalance",
+        "ConditionKyberRateKovan",
+        "ConditionTimestampPassed"
       ],
       deployments: {
         // ========== KOVAN ===========
@@ -116,13 +116,13 @@ module.exports = {
         GelatoCore: "0x8456FEcB4F2FbcB5992b3533428F82f98C40f55C",
         // Luis User Proxy
         GelatoUserProxy: "0x9a0Bf55Fc1781609032c856D54e9089F4224198b",
-        // === Triggers ===
+        // === Conditions ===
         // balance
-        TriggerBalance: "0xc0993255E46FD2E911d92fa63477e061b917aA14",
+        ConditionBalance: "0xc0993255E46FD2E911d92fa63477e061b917aA14",
         // kyber
-        TriggerKyberRateKovan: "0xfEe2C4Fd7Be69AC4353230e56EAe6a156c9d4dC4",
+        ConditionKyberRateKovan: "0xfEe2C4Fd7Be69AC4353230e56EAe6a156c9d4dC4",
         // time
-        TriggerTimestampPassed: "0x328eAA9C817383e0A2fc815F810BCA7FF3ea6288"
+        ConditionTimestampPassed: "0x328eAA9C817383e0A2fc815F810BCA7FF3ea6288"
       }
     },
     ropsten: {
@@ -164,11 +164,11 @@ module.exports = {
       },
       contracts: [
         // Ropsten
-        "TriggerBalance"
+        "ConditionBalance"
       ],
       deployments: {
         // Ropsten
-        TriggerBalance: "0xaFa77E70C22F5Ab583A9Eae6Dc7290e6264832Af"
+        ConditionBalance: "0xaFa77E70C22F5Ab583A9Eae6Dc7290e6264832Af"
       }
     }
   },
@@ -242,8 +242,8 @@ require("./scripts/buidler_tasks/gelato/actions/collection.tasks.actions");
 require("./scripts/buidler_tasks/gelato/core/collection.gelato-core.tasks");
 // _____ DAPPS ______________________
 require("./scripts/buidler_tasks/gelato/dapps/collection.tasks.dapps");
-// _____ Triggers ______________________
-require("./scripts/buidler_tasks/gelato/triggers/collection.tasks.triggers");
+// _____ Conditions ______________________
+require("./scripts/buidler_tasks/gelato/conditions/collection.tasks.conditions");
 
 // ============== INTERNAL HELPER TASKS ================================================
 // encoding, naming ....

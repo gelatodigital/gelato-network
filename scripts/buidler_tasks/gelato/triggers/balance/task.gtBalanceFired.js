@@ -3,8 +3,8 @@ import { defaultNetwork } from "../../../../../buidler.config";
 import { utils } from "ethers";
 
 export default task(
-  "gt-balance-fired",
-  `Calls <trigername>.fired(<triggerpayloadwithselector>) on [--network] (default: ${defaultNetwork})`
+  "gt-balance-reached",
+  `Calls <trigername>.reached(<conditionpayloadwithselector>) on [--network] (default: ${defaultNetwork})`
 )
   .addFlag("log", "Logs return values to stdout")
   .setAction(async ({ log }) => {
@@ -21,13 +21,13 @@ export default task(
       const refBalance = utils.parseUnits("24", 18);
       const greaterElseSmaller = true;
 
-      // Trigger Read Instance
-      const triggerContract = await run("instantiateContract", {
-        contractname: "TriggerBalance",
+      // ConditionRead Instance
+      const conditionContract = await run("instantiateContract", {
+        contractname: "ConditionBalance",
         read: true
       });
       // mintExecutionClaim TX (payable)
-      const fired = await triggerContract.fired(
+      const reached = await conditionContract.reached(
         account,
         coin,
         refBalance,
@@ -36,10 +36,10 @@ export default task(
 
       if (log)
         console.log(
-          `\nTrigger: TriggerBalance\
-           \nFired?: ${fired}\n`
+          `\nCondition: ConditionBalance\
+           \nFired?: ${reached}\n`
         );
-      return fired;
+      return reached;
     } catch (error) {
       console.error(error);
       process.exit(1);

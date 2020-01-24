@@ -1,9 +1,12 @@
 pragma solidity ^0.6.0;
 
-import "../../IGelatoTrigger.sol";
+import "../../IGelatoCondition.sol";
 import "../../../dapp_interfaces/kyber/IKyber.sol";
+import "../../../external/SafeMath.sol";
 
-contract RopstenTriggerKyberRate is IGelatoTrigger {
+contract ConditionKyberRateKovan is IGelatoCondition {
+
+    using SafeMath for uint256;
 
     enum Reason {
         // StandardReason Fields
@@ -11,21 +14,21 @@ contract RopstenTriggerKyberRate is IGelatoTrigger {
         NotOk,  // 1: Standard Field for Unfulfilled Conditions or Caught/Handled Errors
         UnhandledError,  // 2: Standard Field for Uncaught/Unhandled Errors
         // Ok: Fulfilled Conditions
-        OkKyberRateIsGreaterThanRefRate,
-        OkKyberRateIsSmallerThanRefRate,
+        OkKyberExpectedRateIsGreaterThanRefRate,
+        OkKyberExpectedRateIsSmallerThanRefRate,
         // NotOk: Unfulfilled Conditions
-        NotOkKyberRateIsNotGreaterThanRefRate,
-        NotOkKyberRateIsNotSmallerThanRefRate,
+        NotOkKyberExpectedRateIsNotGreaterThanRefRate,
+        NotOkKyberExpectedRateIsNotSmallerThanRefRate,
         KyberGetExpectedRateError
     }
 
-    // triggerSelector public state variable np due to this.actionSelector constant issue
-    function triggerSelector() external pure override returns(bytes4) {
-        return this.fired.selector;
+    // conditionSelector public state variable np due to this.actionSelector constant issue
+    function conditionSelector() external pure override returns(bytes4) {
+        return this.reached.selector;
     }
-    uint256 public constant override triggerGas = 600000;
+    uint256 public constant override conditionGas = 300000;
 
-    function fired(
+    function reached(
         address _src,
         uint256 _srcAmt,
         address _dest,
@@ -36,8 +39,8 @@ contract RopstenTriggerKyberRate is IGelatoTrigger {
         view
         returns(bool, uint8)  // executable?, reason
     {
-        // !!!!!!!!! ROPSTEN !!!!!!
-        address kyberAddress = 0x818E6FECD516Ecc3849DAf6845e3EC868087B755;
+        // !!!!!!!!! KOVAN !!!!!!
+        address kyberAddress = 0x692f391bCc85cefCe8C237C01e1f636BbD70EA4D;
 
         try IKyber(kyberAddress).getExpectedRate(
             _src,
@@ -48,27 +51,27 @@ contract RopstenTriggerKyberRate is IGelatoTrigger {
         {
             if (_greaterElseSmaller) {  // greaterThan
                 if (expectedRate >= _refRate)
-                    return (true, uint8(Reason.OkKyberRateIsGreaterThanRefRate));
+                    return (true, uint8(Reason.OkKyberExpectedRateIsGreaterThanRefRate));
                 else
-                    return (false, uint8(Reason.NotOkKyberRateIsNotGreaterThanRefRate));
+                    return (false, uint8(Reason.NotOkKyberExpectedRateIsNotGreaterThanRefRate));
             } else {  // smallerThan
                 if (expectedRate <= _refRate)
-                    return (true, uint8(Reason.OkKyberRateIsSmallerThanRefRate));
+                    return (true, uint8(Reason.OkKyberExpectedRateIsSmallerThanRefRate));
                 else
-                    return(false, uint8(Reason.NotOkKyberRateIsNotSmallerThanRefRate));
+                    return(false, uint8(Reason.NotOkKyberExpectedRateIsNotSmallerThanRefRate));
             }
         } catch {
             return(false, uint8(Reason.KyberGetExpectedRateError));
         }
     }
 
-    function getTriggerValue(address _src, uint256 _srcAmt, address _dest, uint256, bool)
+    function getConditionValue(address _src, uint256 _srcAmt, address _dest, uint256, bool)
         external
         view
         returns(uint256)
     {
         // !!!!!!!!! ROPSTEN !!!!!!
-        address kyberAddress = 0x818E6FECD516Ecc3849DAf6845e3EC868087B755;
+        address kyberAddress = 0x692f391bCc85cefCe8C237C01e1f636BbD70EA4D;
 
         (uint256 expectedRate,) = IKyber(kyberAddress).getExpectedRate(_src, _dest, _srcAmt);
         return expectedRate;

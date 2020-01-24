@@ -1,8 +1,8 @@
 import { internalTask } from "@nomiclabs/buidler/config";
 
 export default internalTask(
-  "gc-mint:defaultpayload:ActionMultiMintForTriggerTimestampPassed",
-  `Returns a hardcoded actionPayloadWithSelector of ActionMultiMintForTriggerTimestampPassed`
+  "gc-mint:defaultpayload:ActionMultiMintForConditionTimestampPassed",
+  `Returns a hardcoded actionPayloadWithSelector of ActionMultiMintForConditionTimestampPassed`
 )
   .addParam(
     "selectedexecutor",
@@ -15,13 +15,13 @@ export default internalTask(
   .addFlag("log")
   .setAction(async ({ selectedexecutor, numberofmints, log }) => {
     try {
-      const contractname = "ActionMultiMintForTriggerTimestampPassed";
-      // action(_gelatoCore, _selectedExecutor, _triggerTimestampPassed, _startTime, _action, _actionPayloadWithSelector, _intervalSpan, _numberOfMints)
+      const contractname = "ActionMultiMintForConditionTimestampPassed";
+      // action(_gelatoCore, _selectedExecutor, _conditionTimestampPassed, _startTime, _action, _actionPayloadWithSelector, _intervalSpan, _numberOfMints)
       const functionname = "action";
       // Params
       const {
         GelatoCore: gelatoCoreAddress,
-        TriggerTimestampPassed: triggerTimestampPassedAddress
+        ConditionTimestampPassed: conditionTimestampPassedAddress
       } = await run("bre-config", {
         deployments: true
       });
@@ -39,7 +39,7 @@ export default internalTask(
       const inputs = [
         gelatoCoreAddress,
         selectedexecutor,
-        triggerTimestampPassedAddress,
+        conditionTimestampPassedAddress,
         startTime,
         actionAddress,
         actionPayloadWithSelector,

@@ -6,15 +6,15 @@ export default task(
   "gc-getmintingdepositpayable",
   `Return GelatoCore.getMintingDepositPayable() on [--network] (default: ${defaultNetwork})`
 )
-  .addPositionalParam("triggername", "must exist inside buidler.config")
+  .addPositionalParam("conditionname", "must exist inside buidler.config")
   .addPositionalParam("actionname", "must exist inside buidler.config")
   .addOptionalPositionalParam("selectedexecutor", "address")
   .addFlag("log", "Logs return values to stdout")
   .setAction(async taskArgs => {
     try {
-      const triggerAddress = await run("bre-config", {
+      const conditionAddress = await run("bre-config", {
         deployments: true,
-        contractname: taskArgs.triggername
+        contractname: taskArgs.conditionname
       });
       const actionAddress = await run("bre-config", {
         deployments: true,
@@ -34,7 +34,7 @@ export default task(
       // Contract Call
       const mintingDepositPayable = await gelatoCoreContract.getMintingDepositPayable(
         selectedexecutor,
-        triggerAddress,
+        conditionAddress,
         actionAddress
       );
 
@@ -44,7 +44,7 @@ export default task(
           "ether"
         );
         console.log(
-          `\nTrigger-Action-Combo: ${taskArgs.triggername}-${taskArgs.actionname}`
+          `\nCondition-Action-Combo: ${taskArgs.conditionname}-${taskArgs.actionname}`
         );
         console.log(
           `MintingDepositPayable:        ${mintingDepositPayableETH} ETH`

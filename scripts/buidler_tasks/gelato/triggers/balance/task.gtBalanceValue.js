@@ -4,7 +4,7 @@ import { utils } from "ethers";
 
 export default task(
   "gt-balance-value",
-  `Calls <trigername>.value(<triggerpayloadwithselector>) on [--network] (default: ${defaultNetwork})`
+  `Calls <trigername>.value(<conditionpayloadwithselector>) on [--network] (default: ${defaultNetwork})`
 )
   .addFlag("log", "Logs return values to stdout")
   .setAction(async ({ log }) => {
@@ -21,14 +21,14 @@ export default task(
       const refBalance = utils.parseUnits("24", 18);
       const greaterElseSmaller = true;
 
-      // Trigger Read Instance
-      const contractname = "TriggerBalance"
-      const triggerContract = await run("instantiateContract", {
+      // ConditionRead Instance
+      const contractname = "ConditionBalance"
+      const conditionContract = await run("instantiateContract", {
         contractname,
         read: true
       });
       // mintExecutionClaim TX (payable)
-      const value = await triggerContract.getTriggerValue(
+      const value = await conditionContract.getConditionValue(
         account,
         coin,
         refBalance,
@@ -38,7 +38,7 @@ export default task(
       if (log) {
         console.log(
           `\nContractName:     ${contractname}\
-           \nContractAddress:  ${triggerContract.address}\
+           \nContractAddress:  ${conditionContract.address}\
            \nAccount:          ${account}\
            \nCoin:             ${coin}\
            \nValue:            ${value}\

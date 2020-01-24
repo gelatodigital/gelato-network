@@ -7,7 +7,7 @@ import { utils } from "ethers";
 
 export default task(
   "ga-multimint",
-  `TX to ActionMultiMintForTriggerTimestampPassed on [--network] (default: ${defaultNetwork})`
+  `TX to ActionMultiMintForConditionTimestampPassed on [--network] (default: ${defaultNetwork})`
 )
   .addFlag("log", "Logs return values to stdout")
   .setAction(async ({ log }) => {
@@ -19,18 +19,18 @@ export default task(
 
       // Contract Addresses
       const {
-        ActionMultiMintForTriggerTimestampPassed: actionMultiMintTimeTriggerAddress
+        ActionMultiMintForConditionTimestampPassed: actionMultiMintTimeConditionAddress
       } = await run("bre-config", { deployments: true });
 
-      // Non-Default Params for ActionMultiMintForTriggerTimestampPassed
+      // Non-Default Params for ActionMultiMintForConditionTimestampPassed
       const { default: selectedexecutor } = await run("bre-config", {
         addressbookcategory: "executor"
       });
       const numberofmints = "2";
 
-      // Encode the payload for the call to MultiMintForTimeTrigger.multiMint
-      const actionMultiMintForTriggerTimestampPassedPayloadWithSelector = await run(
-        "gc-mint:defaultpayload:ActionMultiMintForTriggerTimestampPassed",
+      // Encode the payload for the call to MultiMintForTimeCondition.multiMint
+      const actionMultiMintForConditionTimestampPassedPayloadWithSelector = await run(
+        "gc-mint:defaultpayload:ActionMultiMintForConditionTimestampPassed",
         {
           selectedexecutor,
           numberofmints,
@@ -41,7 +41,7 @@ export default task(
       // ReadInstance of GelatoCore
       const mintinDepositPerMint = await run("gc-getmintingdepositpayable", {
         selectedexecutor,
-        triggername: "TriggerTimestampPassed",
+        conditionname: "ConditionTimestampPassed",
         actionname: "ActionKyberTrade",
         log
       });
@@ -71,8 +71,8 @@ export default task(
 
       // ❗Send TX To MultiMint
       const multiMintTx = await userProxyContract.delegatecall(
-        actionMultiMintTimeTriggerAddress,
-        actionMultiMintForTriggerTimestampPassedPayloadWithSelector,
+        actionMultiMintTimeConditionAddress,
+        actionMultiMintForConditionTimestampPassedPayloadWithSelector,
         {
           value: msgValue,
           gasLimit: 3500000
@@ -80,7 +80,7 @@ export default task(
       );
       if (log)
         console.log(
-          `\nuserProxy.executeDelegatecall(multiMintForTimeTrigger) txHash:\n${multiMintTx.hash}`
+          `\nuserProxy.executeDelegatecall(multiMintForTimeCondition) txHash:\n${multiMintTx.hash}`
         );
       if (log) console.log("\nwaiting for transaction to get mined\n");
 

@@ -1,12 +1,12 @@
 // ======= Default Payloads ========
-// === Triggers ===
-// TriggerMinBalanceIncrease
-import "./default_payloads/triggers/sTask.defaultpayload.TriggerBalance";
-// TriggerTimestampPassed
-import "./default_payloads/triggers/sTask.defaultpayload.TriggerTimestampPassed";
+// === Conditions ===
+// ConditionBalance
+import "./default_payloads/conditions/sTask.defaultpayload.ConditionBalance";
+// ConditionTimestampPassed
+import "./default_payloads/conditions/sTask.defaultpayload.ConditionTimestampPassed";
 // == Kyber ==
-import "./default_payloads/triggers/sTask.defaultpayload.TriggerKyberRateKovan";
-import "./default_payloads/triggers/sTask.defaultpayload.RopstenTriggerKyberRate";
+import "./default_payloads/conditions/sTask.defaultpayload.ConditionKyberRateKovan";
+import "./default_payloads/conditions/sTask.defaultpayload.ConditionKyberRateRopsten";
 
 // === Actions ==
 // ActionBzxPtokenMintWithToken
@@ -20,5 +20,5 @@ import "./default_payloads/actions/sTask.defaultpayload.ActionERC20TransferFrom"
 // ActionKyberTrade
 import "./default_payloads/actions/sTask.defaultpayload.KovanActionKyberTrade";
 import "./default_payloads/actions/sTask.defaultpayload.RopstenActionKyberTrade";
-// ActionMultiMintForTriggerTimestampPassed
-import "./default_payloads/actions/sTask.defaultpayload.ActionMultiMintForTriggerTimestampPassed";
+// ActionMultiMintForConditionTimestampPassed
+import "./default_payloads/actions/sTask.defaultpayload.ActionMultiMintForConditionTimestampPassed";

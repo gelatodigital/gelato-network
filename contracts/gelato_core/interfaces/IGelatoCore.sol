@@ -2,7 +2,7 @@ pragma solidity ^0.6.0;
 
 import "../GelatoCoreEnums.sol";
 import "./IGelatoUserProxy.sol";
-import "../../triggers/IGelatoTrigger.sol";
+import "../../conditions/IGelatoCondition.sol";
 import "../../actions/IGelatoAction.sol";
 
 /// @title IGelatoCore - solidity interface of GelatoCore
@@ -15,22 +15,22 @@ interface IGelatoCore {
         uint256 indexed executionClaimId,
         address indexed user,
         IGelatoUserProxy userProxy,
-        IGelatoTrigger trigger,
-        bytes triggerPayloadWithSelector,
+        IGelatoCondition condition,
+        bytes conditionPayloadWithSelector,
         IGelatoAction action,
         bytes actionPayloadWithSelector,
-        uint256[3] triggerGasActionTotalGasMinExecutionGas,
+        uint256[3] conditionGasActionTotalGasMinExecutionGas,
         uint256 executionClaimExpiryDate,
         uint256 mintingDeposit
     );
 
     // Caution: there are no guarantees that CanExecuteResult and/or reason
-    //  are implemented in a logical fashion by trigger/action developers.
+    //  are implemented in a logical fashion by condition/action developers.
     event LogCanExecuteSuccess(
         address indexed executor,
         uint256 indexed executionClaimId,
         address indexed user,
-        IGelatoTrigger trigger,
+        IGelatoCondition condition,
         GelatoCoreEnums.CanExecuteResults canExecuteResult,
         uint8 reason
     );
@@ -39,7 +39,7 @@ interface IGelatoCore {
         address indexed executor,
         uint256 indexed executionClaimId,
         address indexed user,
-        IGelatoTrigger trigger,
+        IGelatoCondition condition,
         GelatoCoreEnums.CanExecuteResults canExecuteResult,
         uint8 reason
     );
@@ -48,7 +48,7 @@ interface IGelatoCore {
         address indexed executor,
         uint256 indexed executionClaimId,
         address indexed user,
-        IGelatoTrigger trigger,
+        IGelatoCondition condition,
         IGelatoAction action,
         uint256 gasPriceUsed,
         uint256 executionCostEstimate,
@@ -56,12 +56,12 @@ interface IGelatoCore {
     );
 
     // Caution: there are no guarantees that ExecutionResult and/or reason
-    //  are implemented in a logical fashion by trigger/action developers.
+    //  are implemented in a logical fashion by condition/action developers.
     event LogExecutionFailure(
         address indexed executor,
         uint256 indexed executionClaimId,
         address payable indexed user,
-        IGelatoTrigger trigger,
+        IGelatoCondition condition,
         IGelatoAction action,
         string executionFailureReason
     );
@@ -81,8 +81,8 @@ interface IGelatoCore {
      */
     function mintExecutionClaim(
         address _selectedExecutor,
-        IGelatoTrigger _trigger,
-        bytes calldata _triggerPayloadWithSelector,
+        IGelatoCondition _condition,
+        bytes calldata _conditionPayloadWithSelector,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector
     )
@@ -93,7 +93,7 @@ interface IGelatoCore {
      * @notice If return value == 6, the claim is executable
      * @dev The API for executors to check whether a claim is executable.
      *       Caution: there are no guarantees that CanExecuteResult and/or reason
-     *       are implemented in a logical fashion by trigger/action developers.
+     *       are implemented in a logical fashion by condition/action developers.
      * @return GelatoCoreEnums.CanExecuteResults The outcome of the canExecuteCheck
      * @return reason The reason for the outcome of the canExecute Check
      */
@@ -101,11 +101,11 @@ interface IGelatoCore {
         uint256 _executionClaimId,
         address _user,
         IGelatoUserProxy _userProxy,
-        IGelatoTrigger _trigger,
-        bytes calldata _triggerPayloadWithSelector,
+        IGelatoCondition _condition,
+        bytes calldata _conditionPayloadWithSelector,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
-        uint256[3] calldata _triggerGasActionTotalGasMinExecutionGas,
+        uint256[3] calldata _conditionGasActionTotalGasMinExecutionGas,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
     )
@@ -122,11 +122,11 @@ interface IGelatoCore {
         uint256 _executionClaimId,
         address _user,
         IGelatoUserProxy _userProxy,
-        IGelatoTrigger _trigger,
-        bytes calldata _triggerPayloadWithSelector,
+        IGelatoCondition _condition,
+        bytes calldata _conditionPayloadWithSelector,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
-        uint256[3] calldata _triggerGasActionTotalGasMinExecutionGas,
+        uint256[3] calldata _conditionGasActionTotalGasMinExecutionGas,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
     )
@@ -145,11 +145,11 @@ interface IGelatoCore {
         uint256 _executionClaimId,
         address _user,
         IGelatoUserProxy _userProxy,
-        IGelatoTrigger _trigger,
-        bytes calldata _triggerPayloadWithSelector,
+        IGelatoCondition _condition,
+        bytes calldata _conditionPayloadWithSelector,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
-        uint256[3] calldata _triggerGasActionTotalGasMinExecutionGas,
+        uint256[3] calldata _conditionGasActionTotalGasMinExecutionGas,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
     )
@@ -181,10 +181,10 @@ interface IGelatoCore {
         returns(bytes32);
 
     // = GAS_BENCHMARKING ==============
-    function gasTestTriggerCheck(
-        IGelatoTrigger _trigger,
-        bytes calldata _triggerPayloadWithSelector,
-        uint256 _triggerGas
+    function gasTestConditionCheck(
+        IGelatoCondition _condition,
+        bytes calldata _conditionPayloadWithSelector,
+        uint256 _conditionGas
     )
         external
         view
@@ -194,11 +194,11 @@ interface IGelatoCore {
         uint256 _executionClaimId,
         address _user,
         IGelatoUserProxy _userProxy,
-        IGelatoTrigger _trigger,
-        bytes calldata _triggerPayloadWithSelector,
+        IGelatoCondition _condition,
+        bytes calldata _conditionPayloadWithSelector,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
-        uint256[3] calldata _triggerGasActionTotalGasMinExecutionGas,
+        uint256[3] calldata _conditionGasActionTotalGasMinExecutionGas,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
     )
@@ -226,11 +226,11 @@ interface IGelatoCore {
         uint256 _executionClaimId,
         address _user,
         IGelatoUserProxy _userProxy,
-        IGelatoTrigger _trigger,
-        bytes calldata _triggerPayloadWithSelector,
+        IGelatoCondition _condition,
+        bytes calldata _conditionPayloadWithSelector,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
-        uint256[3] calldata _triggerGasActionTotalGasMinExecutionGas,
+        uint256[3] calldata _conditionGasActionTotalGasMinExecutionGas,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
     )

@@ -2,15 +2,15 @@ import { internalTask } from "@nomiclabs/buidler/config";
 import { utils } from "ethers";
 
 export default internalTask(
-  "gc-mint:defaultpayload:TriggerBalance",
-  `Returns a hardcoded triggerPayloadWithSelector of TriggerBalance`
+  "gc-mint:defaultpayload:ConditionBalance",
+  `Returns a hardcoded conditionPayloadWithSelector of ConditionBalance`
 )
   .addFlag("log")
   .setAction(async ({ log }) => {
     try {
-      const contractname = "TriggerBalance";
-      // fired(address _coin, address _account, uint256 _refBalance)
-      const functionname = "fired";
+      const contractname = "ConditionBalance";
+      // reached(address _coin, address _account, uint256 _refBalance)
+      const functionname = "reached";
       // Params
       const { luis: account } = await run("bre-config", {
         addressbookcategory: "EOA"

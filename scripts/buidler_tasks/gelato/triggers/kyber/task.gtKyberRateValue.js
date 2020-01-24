@@ -4,7 +4,7 @@ import { utils } from "ethers";
 
 export default task(
   "gt-kyberrate-value",
-  `Calls <trigername>.value(<triggerpayloadwithselector>) on [--network] (default: ${defaultNetwork})`
+  `Calls <trigername>.value(<conditionpayloadwithselector>) on [--network] (default: ${defaultNetwork})`
 )
   .addFlag("log", "Logs return values to stdout")
   .setAction(async ({ log }) => {
@@ -27,13 +27,13 @@ export default task(
         .add(utils.parseUnits("1", 17));
       const greaterElseSmaller = false;
 
-      // Trigger Read Instance
-      const triggerContract = await run("instantiateContract", {
-        contractname: "TriggerKyberRate",
+      // ConditionRead Instance
+      const conditionContract = await run("instantiateContract", {
+        contractname: "ConditionKyberRate",
         read: true
       });
       // mintExecutionClaim TX (payable)
-      const value = await triggerContract.getTriggerValue(
+      const value = await conditionContract.getConditionValue(
         src,
         srcamt,
         dest,
@@ -43,7 +43,7 @@ export default task(
 
       if (log) {
         console.log(
-          `\nTrigger: TriggerKyberRate\
+          `\nCondition: ConditionKyberRate\
            \nValue:     ${value}\
            \nFormatted: ${utils.formatUnits(value, 18)}`
         );

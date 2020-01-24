@@ -53,14 +53,14 @@ export default task(
             selectedExecutor: parsedLog.values.selectedExecutor,
             executionClaimId,
             userProxy: parsedLog.values.userProxy,
-            trigger: parsedLog.values.trigger,
-            triggerPayloadWithSelector:
-              parsedLog.values.triggerPayloadWithSelector,
+            condition: parsedLog.values.condition,
+            conditionPayloadWithSelector:
+              parsedLog.values.conditionPayloadWithSelector,
             action: parsedLog.values.action,
             actionPayloadWithSelector:
               parsedLog.values.actionPayloadWithSelector,
-            triggerGasActionTotalGasMinExecutionGas:
-              parsedLog.values.triggerGasActionTotalGasMinExecutionGas,
+            conditionGasActionTotalGasMinExecutionGas:
+              parsedLog.values.conditionGasActionTotalGasMinExecutionGas,
             executionClaimExpiryDate: parsedLog.values.executionClaimExpiryDate,
             mintingDeposit: parsedLog.values.mintingDeposit
           };
@@ -89,11 +89,11 @@ export default task(
       const [canExecuteResult, reason] = await gelatoCoreContract.canExecute(
         queriedExecutionClaim.executionClaimId,
         queriedExecutionClaim.userProxy,
-        queriedExecutionClaim.trigger,
-        queriedExecutionClaim.triggerPayloadWithSelector,
+        queriedExecutionClaim.condition,
+        queriedExecutionClaim.conditionPayloadWithSelector,
         queriedExecutionClaim.action,
         queriedExecutionClaim.actionPayloadWithSelector,
-        queriedExecutionClaim.triggerGasActionTotalGasMinExecutionGas,
+        queriedExecutionClaim.conditionGasActionTotalGasMinExecutionGas,
         actionConditionsCheckGas,
         queriedExecutionClaim.executionClaimExpiryDate,
         queriedExecutionClaim.mintingDeposit
@@ -105,8 +105,8 @@ export default task(
           "ExecutionClaimNonExistant",
           "ExecutionClaimExpired",
           "WrongCalldata",
-          "TriggerNotOk",
-          "UnhandledTriggerError",
+          "ConditionNotOk",
+          "UnhandledConditionError",
           "ActionConditionsNotOk",
           "UnhandledActionConditionsError",
           "Executable"

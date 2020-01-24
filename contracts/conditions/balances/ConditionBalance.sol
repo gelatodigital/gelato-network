@@ -1,9 +1,9 @@
 pragma solidity ^0.6.0;
 
-import "../IGelatoTrigger.sol";
+import "../IGelatoCondition.sol";
 import "../../external/IERC20.sol";
 
-contract TriggerBalance is IGelatoTrigger {
+contract ConditionBalance is IGelatoCondition {
 
     enum Reason {
         // StandardReason Fields
@@ -23,15 +23,15 @@ contract TriggerBalance is IGelatoTrigger {
         ERC20Error
     }
 
-    // triggerSelector public state variable np due to this.actionSelector constant issue
-    function triggerSelector() external pure override returns(bytes4) {
-        return this.fired.selector;
+    // conditionSelector public state variable np due to this.actionSelector constant issue
+    function conditionSelector() external pure override returns(bytes4) {
+        return this.reached.selector;
     }
-    uint256 public constant override triggerGas = 30000;
+    uint256 public constant override conditionGas = 30000;
 
     /// @dev Caution: use 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE for ETH _coin
     /// @param _coin ETH (0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) or ERC20
-    function fired(
+    function reached(
         address _account,
         address _coin,
         uint256 _refBalance,
@@ -75,7 +75,7 @@ contract TriggerBalance is IGelatoTrigger {
         }
     }
 
-    function getTriggerValue(address _account, address _coin, uint256, bool)
+    function getConditionValue(address _account, address _coin, uint256, bool)
         external
         view
         returns(uint256)

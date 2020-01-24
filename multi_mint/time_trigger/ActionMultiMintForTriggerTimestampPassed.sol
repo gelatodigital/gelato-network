@@ -2,13 +2,13 @@ pragma solidity ^0.6.0;
 
 import "../../GelatoActionsStandard.sol";
 import "../../../external/SafeMath.sol";
-import "../../../triggers/IGelatoTrigger.sol";
+import "../../../conditions/IGelatoCondition.sol";
 import "../../../gelato_core/interfaces/IGelatoCore.sol";
 import "../../../gelato_core/interfaces/IGelatoCoreAccounting.sol";
 
 // CAUTION this contract is not up to date with Action standards due to missing return values
 //  (GelatoCore.Enums.ExecutionResult, uint8 reason) - not possible due to stack too deep
-contract ActionMultiMintForTriggerTimestampPassed is GelatoActionsStandard {
+contract ActionMultiMintForConditionTimestampPassed is GelatoActionsStandard {
     using SafeMath for uint256;
 
     // actionSelector public state variable np due to this.actionSelector constant issue
@@ -23,7 +23,7 @@ contract ActionMultiMintForTriggerTimestampPassed is GelatoActionsStandard {
         address _gelatoCore,
         // gelatoCore.mintExecutionClaim params
         address _selectedExecutor,
-        IGelatoTrigger _triggerTimestampPassed,
+        IGelatoCondition _conditionTimestampPassed,
         uint256 _startTime,  // will be encoded here
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
@@ -38,7 +38,7 @@ contract ActionMultiMintForTriggerTimestampPassed is GelatoActionsStandard {
             _gelatoCore
         ).getMintingDepositPayable(
             _selectedExecutor,
-            _triggerTimestampPassed,
+            _conditionTimestampPassed,
             _action
         );
 
@@ -49,14 +49,14 @@ contract ActionMultiMintForTriggerTimestampPassed is GelatoActionsStandard {
 
         for (uint256 i = 0; i < _numberOfMints; i++) {
             uint256 timestamp = _startTime.add(_intervalSpan.mul(i));
-            bytes memory triggerPayloadWithSelector = abi.encodeWithSelector(
-                _triggerTimestampPassed.triggerSelector(),
+            bytes memory conditionPayloadWithSelector = abi.encodeWithSelector(
+                _conditionTimestampPassed.conditionSelector(),
                 timestamp
             );
             IGelatoCore(_gelatoCore).mintExecutionClaim.value(mintingDepositPerMint)(
                 _selectedExecutor,
-                _triggerTimestampPassed,
-                triggerPayloadWithSelector,
+                _conditionTimestampPassed,
+                conditionPayloadWithSelector,
                 _action,
                 _actionPayloadWithSelector
             );

@@ -1,6 +1,6 @@
 pragma solidity ^0.6.0;
 
-import "../../triggers/IGelatoTrigger.sol";
+import "../../conditions/IGelatoCondition.sol";
 import "../../actions/IGelatoAction.sol";
 
 /// @title IGelatoCoreAccounting - solidity interface of GelatoCoreAccounting
@@ -125,7 +125,7 @@ interface IGelatoCoreAccounting {
      */
     function getMintingDepositPayable(
         address _selectedExecutor,
-        IGelatoTrigger _trigger,
+        IGelatoCondition _condition,
         IGelatoAction _action
     )
         external
@@ -133,10 +133,10 @@ interface IGelatoCoreAccounting {
         returns(uint256 mintingDepositPayable);
 
     /// @dev calculates gas requirements based off _actionGasTotal
-    /// @param _triggerGas the gas forwared to trigger.staticcall inside gelatoCore.execute
+    /// @param _conditionGas the gas forwared to condition.staticcall inside gelatoCore.execute
     /// @param _actionGas the gas forwarded with the action call
     /// @return the minimum gas required for calls to gelatoCore.execute()
-    function getMinExecutionGas(uint256 _triggerGas, uint256 _actionGas)
+    function getMinExecutionGas(uint256 _conditionGas, uint256 _actionGas)
         external
         pure
         returns(uint256);

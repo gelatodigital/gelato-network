@@ -5,9 +5,9 @@ export default task(
   "gc-mint",
   `Sends tx to GelatoCore.mintExecutionClaim() on [--network] (default: ${defaultNetwork})`
 )
-  .addPositionalParam("triggername", "must exist inside buidler.config")
+  .addPositionalParam("conditionname", "must exist inside buidler.config")
   .addPositionalParam("actionname", "must exist inside buidler.config")
-  .addOptionalPositionalParam("triggerpayloadwithselector", "abi.encoded bytes")
+  .addOptionalPositionalParam("conditionpayloadwithselector", "abi.encoded bytes")
   .addOptionalPositionalParam("actionpayloadwithselector", "abi.encoded bytes")
   .addOptionalParam("selectedexecutor", "address")
   .addFlag("log", "Logs return values to stdout")
@@ -21,24 +21,24 @@ export default task(
         selectedexecutor: taskArgs.selectedexecutor
       });
 
-      // Handle trigger action addresses
-      const triggerAddress = await run("bre-config", {
+      // Handle condition action addresses
+      const conditionAddress = await run("bre-config", {
         deployments: true,
-        contractname: taskArgs.triggername
+        contractname: taskArgs.conditionname
       });
       const actionAddress = await run("bre-config", {
         deployments: true,
         contractname: taskArgs.actionname
       });
 
-      // Handle trigger payloadsWithSelector
-      let triggerPayloadWithSelector;
-      if (!taskArgs.triggerpayloadwithselector) {
-        triggerPayloadWithSelector = await run(
-          `gc-mint:defaultpayload:${taskArgs.triggername}`
+      // Handle condition payloadsWithSelector
+      let conditionPayloadWithSelector;
+      if (!taskArgs.conditionpayloadwithselector) {
+        conditionPayloadWithSelector = await run(
+          `gc-mint:defaultpayload:${taskArgs.conditionname}`
         );
       } else {
-        triggerPayloadWithSelector = taskArgs.triggerpayloadwithselector;
+        conditionPayloadWithSelector = taskArgs.conditionpayloadwithselector;
       }
       // Handle action payloadsWithSelector
       let actionPayloadWithSelector;
@@ -55,7 +55,7 @@ export default task(
         "gc-getmintingdepositpayable",
         {
           selectedexecutor,
-          triggername: taskArgs.triggername,
+          conditionname: taskArgs.conditionname,
           actionname: taskArgs.actionname,
           log: taskArgs.log
         }
@@ -69,8 +69,8 @@ export default task(
       // mintExecutionClaim TX (payable)
       const mintTx = await gelatoCoreContract.mintExecutionClaim(
         selectedexecutor,
-        triggerAddress,
-        triggerPayloadWithSelector,
+        conditionAddress,
+        conditionPayloadWithSelector,
         actionAddress,
         actionPayloadWithSelector,
         { value: mintingDepositPayable }

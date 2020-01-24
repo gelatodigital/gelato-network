@@ -7,8 +7,8 @@ abstract contract GelatoCoreEnums {
         ExecutionClaimNonExistant,
         ExecutionClaimExpired,
         WrongCalldata,  // also returns if a not-selected executor calls fn
-        TriggerNotOk,
-        UnhandledTriggerError,
+        ConditionNotOk,
+        UnhandledConditionError,
         Executable
     }
 

@@ -1,15 +1,15 @@
 import { internalTask } from "@nomiclabs/buidler/config";
 
 export default internalTask(
-  "gc-mint:defaultpayload:TriggerTimestampPassed",
-  `Returns a hardcoded triggerPayloadWithSelector of TriggerTimestampPassed`
+  "gc-mint:defaultpayload:ConditionTimestampPassed",
+  `Returns a hardcoded conditionPayloadWithSelector of ConditionTimestampPassed`
 )
   .addFlag("log")
   .setAction(async ({ log }) => {
     try {
-      const contractname = "TriggerTimestampPassed";
-      // fired(_timestamp)
-      const functionname = "fired";
+      const contractname = "ConditionTimestampPassed";
+      // reached(_timestamp)
+      const functionname = "reached";
       // Params
       const timestamp = (Math.floor(Date.now() / 1000)); // now
       const inputs = [timestamp];

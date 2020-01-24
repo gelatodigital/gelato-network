@@ -37,7 +37,7 @@ if (searchFromBlock === "" || searchFromBlock === undefined) {
 
 // Read Instance of GelatoCore
 const gelatoCoreContractABI = [
-  "event LogNewExecutionClaimMinted(address indexed selectedExecutor, uint256 indexed executionClaimId, address indexed userProxy, address trigger, bytes triggerPayloadWithSelector, address action, bytes actionPayloadWithSelector, uint256 executeGas, uint256 executionClaimExpiryDate, uint256 mintingDeposit)"
+  "event LogNewExecutionClaimMinted(address indexed selectedExecutor, uint256 indexed executionClaimId, address indexed userProxy, address condition, bytes conditionPayloadWithSelector, address action, bytes actionPayloadWithSelector, uint256 executeGas, uint256 executionClaimExpiryDate, uint256 mintingDeposit)"
 ];
 
 async function main() {
@@ -69,9 +69,9 @@ async function main() {
           selectedExecutor: parsedLog.values.selectedExecutor,
           executionClaimId: parsedLog.values.executionClaimId,
           userProxy: parsedLog.values.userProxy,
-          trigger: parsedLog.values.trigger,
-          triggerPayloadWithSelector:
-            parsedLog.values.triggerPayloadWithSelector,
+          condition: parsedLog.values.condition,
+          conditionPayloadWithSelector:
+            parsedLog.values.conditionPayloadWithSelector,
           action: parsedLog.values.action,
           actionPayloadWithSelector: parsedLog.values.actionPayloadWithSelector,
           executeGas: parsedLog.values.executeGas,

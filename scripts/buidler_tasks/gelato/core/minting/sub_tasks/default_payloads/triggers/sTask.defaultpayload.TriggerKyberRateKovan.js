@@ -2,17 +2,17 @@ import { internalTask } from "@nomiclabs/buidler/config";
 import { utils } from "ethers";
 
 export default internalTask(
-  "gc-mint:defaultpayload:TriggerKyberRateKovan",
-  `Returns a hardcoded actionPayloadWithSelector of TriggerKyberRateKovan`
+  "gc-mint:defaultpayload:ConditionKyberRateKovan",
+  `Returns a hardcoded actionPayloadWithSelector of ConditionKyberRateKovan`
 )
   .addFlag("log")
   .setAction(async ({ log }) => {
     try {
       if (network.name != "kovan") throw new Error("wrong network!");
 
-      const contractname = "TriggerKyberRateKovan";
+      const contractname = "ConditionKyberRateKovan";
       // action(_user, _userProxy, _src, _srcAmt, _dest, _minConversionRate)
-      const functionname = "fired";
+      const functionname = "reached";
       // Params
       const { DAI: src, KNC: dest } = await run("bre-config", {
         addressbookcategory: "erc20"

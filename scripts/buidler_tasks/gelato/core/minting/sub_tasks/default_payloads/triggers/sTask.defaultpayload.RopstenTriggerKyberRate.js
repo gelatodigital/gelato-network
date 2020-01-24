@@ -2,17 +2,17 @@ import { internalTask } from "@nomiclabs/buidler/config";
 import { utils } from "ethers";
 
 export default internalTask(
-  "gc-mint:defaultpayload:RopstenTriggerKyberRate",
-  `Returns a hardcoded actionPayloadWithSelector of RopstenTriggerKyberRate`
+  "gc-mint:defaultpayload:ConditionKyberRateRopsten",
+  `Returns a hardcoded actionPayloadWithSelector of ConditionKyberRateRopsten`
 )
   .addFlag("log")
   .setAction(async ({ log }) => {
     try {
       if (network.name != "ropsten") throw new Error("wrong network!");
 
-      const contractname = "RopstenTriggerKyberRate";
+      const contractname = "ConditionKyberRateRopsten";
       // action(_user, _userProxy, _src, _srcAmt, _dest, _minConversionRate)
-      const functionname = "fired";
+      const functionname = "reached";
       // Params
       const { DAI: src, KNC: dest } = await run("bre-config", {
         addressbookcategory: "erc20"

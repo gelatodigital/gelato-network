@@ -109,7 +109,7 @@ abstract contract GelatoCoreAccounting is IGelatoCoreAccounting {
     // _______ APIs for executionClaim pricing ______________________________________
     function getMintingDepositPayable(
         address _selectedExecutor,
-        IGelatoTrigger _trigger,
+        IGelatoCondition _condition,
         IGelatoAction _action
     )
         external
@@ -118,27 +118,27 @@ abstract contract GelatoCoreAccounting is IGelatoCoreAccounting {
         onlyRegisteredExecutors(_selectedExecutor)
         returns(uint256 mintingDepositPayable)
     {
-        uint256 triggerGas = _trigger.triggerGas();
+        uint256 conditionGas = _condition.conditionGas();
         uint256 actionGas = _action.actionGas();
-        uint256 executionMinGas = _getMinExecutionGas(triggerGas, actionGas);
+        uint256 executionMinGas = _getMinExecutionGas(conditionGas, actionGas);
         mintingDepositPayable = executionMinGas.mul(executorPrice[_selectedExecutor]);
     }
 
-    function getMinExecutionGas(uint256 _triggerGas, uint256 _actionGas)
+    function getMinExecutionGas(uint256 _conditionGas, uint256 _actionGas)
         external
         pure
         override
         returns(uint256)
     {
-        return _getMinExecutionGas(_triggerGas, _actionGas);
+        return _getMinExecutionGas(_conditionGas, _actionGas);
     }
 
-    function _getMinExecutionGas(uint256 _triggerGas, uint256 _actionGas)
+    function _getMinExecutionGas(uint256 _conditionGas, uint256 _actionGas)
         internal
         pure
         returns(uint256)
     {
-        return totalExecutionGasOverhead.add(_triggerGas).add(_actionGas);
+        return totalExecutionGasOverhead.add(_conditionGas).add(_actionGas);
     }
     // =======
 }

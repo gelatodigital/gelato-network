@@ -54,7 +54,7 @@ contract RopstenActionKyberTrade is GelatoActionsStandard {
             _dest,
             _user,
             2**255,
-            0,  // minConversionRate (if price trigger, limit order still possible)
+            0,  // minConversionRate (if price condition, limit order still possible)
             address(0)  // fee-sharing
         ) {} catch {
             revert("RopstenActionKyberTrade: KyberTradeError");
