@@ -96,7 +96,7 @@ module.exports = {
         },
         userProxy: {
           // Kovan
-          luis: "0x9a0Bf55Fc1781609032c856D54e9089F4224198b"
+          luis: "0x5392364b493ba4043C168b7a33906381B9255689"
         }
       },
       contracts: [
@@ -126,9 +126,9 @@ module.exports = {
         // kyber
         ActionKyberTradeKovan: "0xE5656d2dAAbF6a94F7B05315735D33193246289a",
         // ==== Gelato Core ===
-        GelatoCore: "0x8456FEcB4F2FbcB5992b3533428F82f98C40f55C",
+        GelatoCore: "0xDc120c2AB8722FE3C8eda0Ce481be59C4dD9e6d2",
         // Luis User Proxy
-        GelatoUserProxy: "0x9a0Bf55Fc1781609032c856D54e9089F4224198b",
+        GelatoUserProxy: "0x5392364b493ba4043C168b7a33906381B9255689",
         // === Conditions ===
         // balance
         ConditionBalance: "0xc0993255E46FD2E911d92fa63477e061b917aA14",
