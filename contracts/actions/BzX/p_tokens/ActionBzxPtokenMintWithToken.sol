@@ -2,10 +2,10 @@ pragma solidity ^0.6.0;
 
 import "../../GelatoActionsStandard.sol";
 import "../../../external/IERC20.sol";
-// import "../../external/SafeERC20.sol";
 import "../../../dapp_interfaces/bZx/IBzxPtoken.sol";
 import "../../../external/SafeMath.sol";
 import "../../../external/Address.sol";
+import "@nomiclabs/buidler/console.sol";
 
 contract ActionBzxPtokenMintWithToken is GelatoActionsStandard {
     // using SafeERC20 for IERC20; <- internal library methods vs. try/catch
@@ -22,36 +22,43 @@ contract ActionBzxPtokenMintWithToken is GelatoActionsStandard {
         // Standard Action Params
         address _user,  // "receiver"
         address _userProxy,
-        // Specific Action Params
-        address _depositTokenAddress,
-        uint256 _depositAmount,
-        address _pTokenAddress
+        address _sendToken, // depositToken
+        uint256 _sendAmt,  // depositAmount
+        address _destination  // pToken
     )
         external
         virtual
     {
-        require(
-            _isUserOwnerOfUserProxy(_user, _userProxy),
-            "ActionBzxPtokenMintWithToken: NotOkUserProxyOwner"
-        );
-        require(address(this) == _userProxy, "ActionBzxPtokenMintWithToken: ErrorUserProxy");
+        require(address(this) == _userProxy, "ErrorUserProxy");
 
-        IERC20 depositToken = IERC20(_depositTokenAddress);
-        try depositToken.transferFrom(_user, _userProxy, _depositAmount) {} catch {
-            revert("ActionBzxPtokenMintWithToken: ErrorTransferFromUser");
+        IERC20 sendToken = IERC20(_sendToken);
+        try sendToken.transferFrom(_user, _userProxy, _sendAmt) {} catch {
+            revert("ErrorTransferFromUser");
         }
-        try depositToken.approve(_pTokenAddress, _depositAmount) {} catch {
-            revert("ActionBzxPtokenMintWithToken: ErrorApprovePtoken");
+        try sendToken.approve(_destination, _sendAmt) {} catch {
+            revert("ErrorApprovePtoken");
         }
 
         // !! Dapp Interaction !!
-        try IBzxPtoken(_pTokenAddress).mintWithToken(
+        try IBzxPtoken(_destination).mintWithToken(
             _user,  // receiver
-            _depositTokenAddress,
-            _depositAmount,
+            _sendToken,
+            _sendAmt,
             0  // maxPriceAllowed - 0 ignores slippage limit
-        ) {} catch {
-            revert("ActionBzxPtokenMintWithToken: ErrorPtokenMintWithToken");
+        )
+            returns(uint256 receiveAmt)
+        {
+            emit LogTwoWay(
+                _user,  // origin
+                _sendToken,
+                _sendAmt,
+                _destination,  // pToken
+                _destination,  // receiveToken == minted pToken
+                receiveAmt,  // minted pTokens
+                _user  // receiver
+            );
+        } catch {
+            revert("ErrorPtokenMintWithToken");
         }
     }
 
@@ -64,56 +71,57 @@ contract ActionBzxPtokenMintWithToken is GelatoActionsStandard {
         virtual
         returns(string memory)  // actionCondition
     {
-        return _actionConditionsCheck(_actionPayloadWithSelector);
+        (address _user,
+         address _userProxy,
+         address _sendToken,
+         uint256 _sendAmt,
+         address _destination) = abi.decode(
+            _actionPayloadWithSelector[4:164],
+            (address,address,address,uint256,address)
+        );
+        return _actionConditionsCheck(_user, _userProxy, _sendToken, _sendAmt, _destination);
     }
 
-    function _actionConditionsCheck(bytes memory _actionPayloadWithSelector)
+    function _actionConditionsCheck(
+        address _user,
+        address _userProxy,
+        address _sendToken,  // depositToken
+        uint256 _sendAmt,  // depositAmount
+        address _destination  // pToken
+    )
         internal
         view
         virtual
         returns(string memory)  // actionCondition
     {
-        (, bytes memory payload) = SplitFunctionSelector.split(
-            _actionPayloadWithSelector
-        );
-
-        (address _user,
-         address _userProxy,
-         address _depositTokenAddress,
-         uint256 _depositAmount,
-         address _pTokenAddress) = abi.decode(
-            payload,
-            (address, address, address, uint256, address)
-        );
-
         if (!_isUserOwnerOfUserProxy(_user, _userProxy))
             return "ActionBzxPtokenMintWithToken: NotOkUserProxyOwner";
 
-        if (!_depositTokenAddress.isContract())
-            return "ActionBzxPtokenMintWithToken: NotOkDepositTokenAddress";
+        if (!_sendToken.isContract())
+            return "ActionBzxPtokenMintWithToken: NotOkSendTokenAddress";
 
-        IERC20 depositToken = IERC20(_depositTokenAddress);
-        try depositToken.balanceOf(_user) returns(uint256 userDepositTokenBalance) {
-            if (userDepositTokenBalance < _depositAmount)
-                return "ActionBzxPtokenMintWithToken: NotOkUserDepositTokenBalance";
+        IERC20 sendToken = IERC20(_sendToken);
+        try sendToken.balanceOf(_user) returns(uint256 userSendTokenBalance) {
+            if (userSendTokenBalance < _sendAmt)
+                return "ActionBzxPtokenMintWithToken: NotOkUserSendTokenBalance";
         } catch {
             return "ActionBzxPtokenMintWithToken: ErrorBalanceOf";
         }
-        try depositToken.allowance(_user, _userProxy)
-            returns(uint256 userProxyDepositTokenAllowance)
+        try sendToken.allowance(_user, _userProxy)
+            returns(uint256 userProxySendTokenAllowance)
         {
-            if (userProxyDepositTokenAllowance < _depositAmount)
-                return "ActionBzxPtokenMintWithToken: NotOkUserProxyDepositTokenAllowance";
+            if (userProxySendTokenAllowance < _sendAmt)
+                return "ActionBzxPtokenMintWithToken: NotOkUserProxySendTokenAllowance";
         } catch {
             return "ActionBzxPtokenMintWithToken: ErrorAllowance";
         }
 
         // !! Dapp Interaction !!
-        try IBzxPtoken(_pTokenAddress).marketLiquidityForLoan()
+        try IBzxPtoken(_destination).marketLiquidityForLoan()
             returns (uint256 maxDepositAmount)
         {
-            if (maxDepositAmount < _depositAmount)
-                return "ActionBzxPtokenMintWithToken: NotOkDepositAmount";
+            if (maxDepositAmount < _sendAmt)
+                return "ActionBzxPtokenMintWithToken: NotOkSendAmount";
         } catch {
            return "ActionBzxPtokenMintWithToken: ErrorMarketLiquidityForLoan";
         }
@@ -124,12 +132,12 @@ contract ActionBzxPtokenMintWithToken is GelatoActionsStandard {
 
 
     // ============ API for FrontEnds ===========
-    function getUsersSourceTokenBalance(
+    function getUsersSendTokenBalance(
         // Standard Action Params
         address _user,  // "receiver"
         address _userProxy,
         // Specific Action Params
-        address _depositTokenAddress,
+        address _sendToken,  // depositToken
         uint256,
         address
     )
@@ -139,12 +147,12 @@ contract ActionBzxPtokenMintWithToken is GelatoActionsStandard {
         returns(uint256)
     {
         _userProxy;  // silence warning
-        IERC20 depositToken = IERC20(_depositTokenAddress);
-        try depositToken.balanceOf(_user) returns(uint256 userDepositTokenBalance) {
-            return userDepositTokenBalance;
+        IERC20 sendToken = IERC20(_sendToken);
+        try sendToken.balanceOf(_user) returns(uint256 userSendTokenBalance) {
+            return userSendTokenBalance;
         } catch {
             revert(
-                "Error: ActionBzxPtokenMintWithToken.getUsersSourceTokenBalance: balanceOf"
+                "Error: ActionBzxPtokenMintWithToken.getUsersSendTokenBalance: balanceOf"
             );
         }
     }

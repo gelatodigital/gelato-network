@@ -32,7 +32,20 @@ module.exports = {
   defaultNetwork: DEFAULT_NETWORK,
   networks: {
     buidlerevm: {
-      hardfork: "istanbul"
+      hardfork: "istanbul",
+      contracts: [
+        // BuidlerEVM
+        "ActionBzxPtokenBurnToToken",
+        "ActionBzxPtokenMintWithToken",
+        "ActionERC20Transfer",
+        "ActionERC20TransferFrom",
+        "ActionKyberTradeKovan",
+        "ActionMultiMintForConditionTimestampPassed",
+        "GelatoCore",
+        "ConditionBalance",
+        "ConditionKyberRateKovan",
+        "ConditionTimestampPassed"
+      ]
     },
     kovan: {
       // Standard
@@ -92,7 +105,7 @@ module.exports = {
         "ActionBzxPtokenMintWithToken",
         "ActionERC20Transfer",
         "ActionERC20TransferFrom",
-        "KovanActionKyberTrade",
+        "ActionKyberTradeKovan",
         "ActionMultiMintForConditionTimestampPassed",
         "GelatoCore",
         "ConditionBalance",
@@ -111,7 +124,7 @@ module.exports = {
         ActionERC20Transfer: "0x83a9a1B430e1d738D85859B9Ec509426b4B36058",
         ActionERC20TransferFrom: "0x3E9665BB5C3bBa2A89a14c289fE503D50fE44319",
         // kyber
-        KovanActionKyberTrade: "0x48c8BCD7aB7ACf9A485643262D1b0e447C156BA1",
+        ActionKyberTradeKovan: "0x48c8BCD7aB7ACf9A485643262D1b0e447C156BA1",
         // ==== Gelato Core ===
         GelatoCore: "0x8456FEcB4F2FbcB5992b3533428F82f98C40f55C",
         // Luis User Proxy
@@ -248,3 +261,34 @@ require("./scripts/buidler_tasks/gelato/conditions/collection.tasks.conditions")
 // ============== INTERNAL HELPER TASKS ================================================
 // encoding, naming ....
 require("./scripts/buidler_tasks/internal/collection.internalTasks");
+
+task("slice")
+  .addOptionalPositionalParam("payload")
+  .setAction(async ({ payload }) => {
+    try {
+      if (network.name != "buidlerevm") throw new Error("buidlerevm only");
+
+      const contractname = "ActionBzxPtokenMintWithToken";
+
+      if (!payload)
+        payload = await run(`gc-mint:defaultpayload:${contractname}`);
+
+      const contractaddress = await run("deploy", {
+        contractname,
+        network: "buidlerevm"
+      });
+
+      const contract = await run("instantiateContract", {
+        contractname,
+        contractaddress,
+        read: true
+      });
+
+      const result = await contract.actionConditionsCheck(payload);
+
+      console.log(result);
+    } catch (error) {
+      console.error(error);
+      process.exit(1);
+    }
+  });

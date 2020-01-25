@@ -20,23 +20,21 @@ contract ActionERC20Transfer is GelatoActionsStandard {
 
     function action(
         // Standard Action Params
-        address _user,
+        address,  // user
         address _userProxy,
+        address _sendToken,
+        uint256 _sendAmount,
         // Specific Action Params
-        address _src,
-        uint256 _srcAmt,
-        address _beneficiary
+        address _destination
     )
         external
         virtual
     {
-        require(
-            _isUserOwnerOfUserProxy(_user, _userProxy),
-            "ActionERC20Transfer: NotOkUserProxyOwner"
-        );
-        require(address(this) == _userProxy, "ActionERC20Transfer: NotOkUserProxy");
-        IERC20 srcERC20 = IERC20(_src);
-        try srcERC20.transfer(_beneficiary, _srcAmt) {} catch {
+        require(address(this) == _userProxy, "NotOkUserProxy");
+        IERC20 sendERC20 = IERC20(_sendToken);
+        try sendERC20.transfer(_destination, _sendAmount) {
+            emit LogOneWay(_userProxy, _sendToken, _sendAmount, _destination);
+        } catch {
             revert("ActionERC20Transfer: ErrorTransfer");
         }
     }
@@ -50,33 +48,39 @@ contract ActionERC20Transfer is GelatoActionsStandard {
         virtual
         returns(string memory)  // actionCondition
     {
-        return _actionConditionsCheck(_actionPayloadWithSelector);
+        (address _user,
+         address _userProxy,
+         address _sendToken,
+         uint256 _sendAmount) = abi.decode(
+            _actionPayloadWithSelector[4:132],
+            (address,address,address,uint256)
+        );
+        return _actionConditionsCheck(_user, _userProxy, _sendToken, _sendAmount);
     }
 
-    function _actionConditionsCheck(bytes memory _actionPayloadWithSelector)
+    function _actionConditionsCheck(
+        // Standard Action Params
+        address _user,
+        address _userProxy,
+        // Specific Action Params
+        address _sendToken,
+        uint256 _sendAmount
+    )
         internal
         view
         virtual
         returns(string memory)  // // actionCondition
     {
-        (, bytes memory payload) = SplitFunctionSelector.split(
-            _actionPayloadWithSelector
-        );
-
-        (address _user, address _userProxy, address _src, uint256 _srcAmt,) = abi.decode(
-            payload,
-            (address, address, address, uint256, address)
-        );
-
         if (!_isUserOwnerOfUserProxy(_user, _userProxy))
             return "ActionERC20Transfer: NotOkUserProxyOwner";
 
-        if (!_src.isContract()) return "ActionERC20Transfer: NotOkERC20Address";
+        if (!_sendToken.isContract()) return "ActionERC20Transfer: NotOkERC20Address";
 
-        IERC20 srcERC20 = IERC20(_src);
+        IERC20 sendERC20 = IERC20(_sendToken);
 
-        try srcERC20.balanceOf(_userProxy) returns(uint256 srcBalance) {
-            if (srcBalance < _srcAmt) return "ActionERC20Transfer: NotOkUserProxyBalance";
+        try sendERC20.balanceOf(_userProxy) returns(uint256 sendERC20Balance) {
+            if (sendERC20Balance < _sendAmount)
+                return "ActionERC20Transfer: NotOkUserProxyBalance";
         } catch {
             return "ActionERC20Transfer: ErrorBalanceOf";
         }
@@ -90,7 +94,7 @@ contract ActionERC20Transfer is GelatoActionsStandard {
         address _user,
         address _userProxy,
         // Specific Action Params
-        address _src,
+        address _sendToken,
         uint256,
         address
     )
@@ -100,9 +104,9 @@ contract ActionERC20Transfer is GelatoActionsStandard {
         returns(uint256)
     {
         _user;  // silence warning
-        IERC20 srcERC20 = IERC20(_src);
-        try srcERC20.balanceOf(_userProxy) returns(uint256 userProxySrcBalance) {
-            return userProxySrcBalance;
+        IERC20 sendERC20 = IERC20(_sendToken);
+        try sendERC20.balanceOf(_userProxy) returns(uint256 userProxySendERC20Balance) {
+            return userProxySendERC20Balance;
         } catch {
             revert("Error: ActionERC20Transfer.getUserProxysSourceTokenBalance: balanceOf");
         }

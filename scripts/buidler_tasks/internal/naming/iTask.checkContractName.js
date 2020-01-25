@@ -1,4 +1,5 @@
 import { internalTask } from "@nomiclabs/buidler/config";
+import checkNestedObj from "../../../helpers/nestedObjects/checkNestedObj";
 
 export default internalTask(
   "checkContractName",
@@ -9,11 +10,14 @@ export default internalTask(
   .setAction(async ({ contractname, networkname }) => {
     try {
       networkname = await run("handleNetworkName", { networkname });
+      if (!checkNestedObj(config.networks, networkname, "contracts"))
+        throw new Error(`No config.networks.${networkname}.contracts exists`);
       const contracts = getNestedObj(config.networks, networkname, "contracts");
-      if (!contracts.includes(contractname))
+      if (!contracts.includes(contractname)) {
         throw new Error(
           `contractname: ${contractname} does not exist in config.networks.${networkname}.contracts`
         );
+      }
     } catch (err) {
       console.error(err);
       process.exit(1);

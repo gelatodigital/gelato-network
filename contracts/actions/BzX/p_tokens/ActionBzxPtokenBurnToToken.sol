@@ -2,7 +2,6 @@ pragma solidity ^0.6.0;
 
 import "../../GelatoActionsStandard.sol";
 import "../../../external/IERC20.sol";
-// import "../../external/SafeERC20.sol";
 import "../../../dapp_interfaces/bZx/IBzxPtoken.sol";
 import "../../../external/SafeMath.sol";
 import "../../../external/Address.sol";
@@ -22,33 +21,41 @@ contract ActionBzxPtokenBurnToToken is GelatoActionsStandard {
         // Standard Action Params
         address _user,  // "receiver"
         address _userProxy,
+        address _sendToken,  // pToken
+        uint256 _sendAmt,
         // Specific Action Params
-        address _pTokenAddress,
-        uint256 _burnAmount,
-        address _burnTokenAddress
+        address _receiveToken
     )
         external
         virtual
     {
-        require(
-            _isUserOwnerOfUserProxy(_user, _userProxy),
-            "ActionBzxPtokenBurnToToken: NotOkUserProxyOwner"
-        );
         require(address(this) == _userProxy, "ActionBzxPtokenBurnToToken: ErrorUserProxy");
 
-        IERC20 pToken = IERC20(_pTokenAddress);
-        try pToken.transferFrom(_user, _userProxy, _burnAmount) {} catch {
-           revert("ActionBzxPtokenBurnToToken: ErrorTransferFromPToken");
+        IERC20 sendToken = IERC20(_sendToken);  // pToken!
+        try sendToken.transferFrom(_user, _userProxy, _sendAmt) {} catch {
+           revert("ErrorTransferFromPToken");
         }
 
         // !! Dapp Interaction !!
-        try IBzxPtoken(_pTokenAddress).burnToToken(
+        try IBzxPtoken(_sendToken).burnToToken(
             _user,  // receiver
-            _burnTokenAddress,
-            _burnAmount,
+            _receiveToken,
+            _sendAmt,
             0 // minPriceAllowed - 0 ignores slippage
-        ) {} catch {
-           revert("ActionBzxPtokenBurnToToken: ErrorPtokenBurnToToken");
+        )
+            returns(uint256 receiveAmt)
+        {
+            emit LogTwoWay(
+                _user, // origin
+                _sendToken,  // sendToken
+                _sendAmt,
+                address(0),  // destination (burn)
+                _receiveToken,
+                receiveAmt,
+                _user  // receiver
+            );
+        } catch {
+           revert("ErrorPtokenBurnToToken");
         }
     }
 
@@ -61,42 +68,39 @@ contract ActionBzxPtokenBurnToToken is GelatoActionsStandard {
         virtual
         returns(string memory)  // actionCondition
     {
-        return _actionConditionsCheck(_actionPayloadWithSelector);
+        (address _user, address _userProxy, address _sendToken, uint256 _sendAmt) = abi.decode(
+            _actionPayloadWithSelector[4:132],
+            (address,address,address,uint256)
+        );
+        return _actionConditionsCheck(_user, _userProxy, _sendToken, _sendAmt);
     }
 
-    function _actionConditionsCheck(bytes memory _actionPayloadWithSelector)
+    function _actionConditionsCheck(
+        address _user,
+        address _userProxy,
+        address _sendToken,
+        uint256 _sendAmt
+    )
         internal
         view
         virtual
         returns(string memory)  // actionCondition
     {
-        (, bytes memory payload) = SplitFunctionSelector.split(
-            _actionPayloadWithSelector
-        );
-
-        (address _user,
-         address _userProxy,
-         address _pTokenAddress,
-         uint256 _burnAmount, ) = abi.decode(
-            payload,
-            (address, address, address, uint256, address)
-        );
-
         if (!_isUserOwnerOfUserProxy(_user, _userProxy))
             return "ActionBzxPtokenBurnToToken: NotOkUserProxyOwner";
 
-        if(!_pTokenAddress.isContract())
+        if(!_sendToken.isContract())
             return "ActionBzxPtokenBurnToToken: NotOkPTokenAddress";
 
-        IERC20 pToken = IERC20(_pTokenAddress);
-        try pToken.balanceOf(_user) returns(uint256 userPtokenBalance) {
-            if (userPtokenBalance < _burnAmount)
+        IERC20 sendToken = IERC20(_sendToken);  // pToken!
+        try sendToken.balanceOf(_user) returns(uint256 userPtokenBalance) {
+            if (userPtokenBalance < _sendAmt)
                 return "ActionBzxPtokenBurnToToken: NotOkUserPtokenBalance";
         } catch {
             return "ActionBzxPtokenBurnToToken: ErrorBalanceOf";
         }
-        try pToken.allowance(_user, _userProxy) returns(uint256 userProxyAllowance) {
-            if (userProxyAllowance < _burnAmount)
+        try sendToken.allowance(_user, _userProxy) returns(uint256 userProxyPtokenAllowance) {
+            if (userProxyPtokenAllowance < _sendAmt)
                 return "ActionBzxPtokenBurnToToken: NotOkUserProxyPtokenAllowance";
         } catch {
             return "ActionBzxPtokenBurnToToken: ErrorAllowance";
@@ -108,12 +112,12 @@ contract ActionBzxPtokenBurnToToken is GelatoActionsStandard {
 
 
     // ============ API for FrontEnds ===========
-    function getUsersSourceTokenBalance(
+    function getUsersSendTokenBalance(
         // Standard Action Params
         address _user,  // "receiver"
         address _userProxy,
         // Specific Action Params
-        address _pTokenAddress,
+        address _sendToken,
         uint256,
         address
     )
@@ -123,12 +127,12 @@ contract ActionBzxPtokenBurnToToken is GelatoActionsStandard {
         returns(uint256)
     {
         _userProxy;  // silence warning
-        IERC20 pToken = IERC20(_pTokenAddress);
-        try pToken.balanceOf(_user) returns(uint256 userPTokenBalance) {
+        IERC20 sendToken = IERC20(_sendToken);
+        try sendToken.balanceOf(_user) returns(uint256 userPTokenBalance) {
             return userPTokenBalance;
         } catch {
             revert(
-                "Error: ActionBzxPtokenBurnToToken.getUsersSourceTokenBalance: balanceOf: balanceOf"
+                "Error: ActionBzxPtokenBurnToToken.getUsersSendTokenBalance: balanceOf: balanceOf"
             );
         }
     }

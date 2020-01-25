@@ -34,7 +34,7 @@ interface IGelatoAction {
         returns(string memory);
 
     /// All actions must override this with their own implementation
-    /*function getUsersSourceTokenBalance(
+    /*function getUsersSendTokenBalance(
         address _user,
         address _userProxy,
         address _source,
@@ -47,7 +47,7 @@ interface IGelatoAction {
         override
         virtual
         returns(uint256 userSrcBalance);
-    getUsersSourceTokenBalance not defined here because non-overridable, due to
+    getUsersSendTokenBalance not defined here because non-overridable, due to
     different arguments passed across different actions
     */
 }

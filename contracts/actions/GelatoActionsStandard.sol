@@ -1,12 +1,28 @@
 pragma solidity ^0.6.0;
 
 import "./IGelatoAction.sol";
-import "../helpers/SplitFunctionSelector.sol";
 import "../gelato_core/interfaces/IGelatoUserProxy.sol";
 
 /// @title GelatoActionsStandard
 /// @dev find all the NatSpecs inside IGelatoAction
-abstract contract GelatoActionsStandard is IGelatoAction, SplitFunctionSelector {
+abstract contract GelatoActionsStandard is IGelatoAction {
+
+    event LogOneWay(
+        address origin,
+        address sendToken,
+        uint256 sendAmount,
+        address destination
+    );
+
+    event LogTwoWay(
+        address origin,
+        address sendToken,
+        uint256 sendAmount,
+        address destination,
+        address receiveToken,
+        uint256 receiveAmount,
+        address receiver
+    );
 
     /* CAUTION: all actions must have their action() function according to the
     following standard format:
@@ -36,7 +52,7 @@ abstract contract GelatoActionsStandard is IGelatoAction, SplitFunctionSelector 
     }
 
     /// All actions must override this with their own implementation
-    /*function getUsersSourceTokenBalance(
+    /*function getUsersSendTokenBalance(
         address _user,
         address _userProxy,
         address _source,
@@ -49,7 +65,7 @@ abstract contract GelatoActionsStandard is IGelatoAction, SplitFunctionSelector 
         override
         virtual
         returns(uint256 userSrcBalance);
-    getUsersSourceTokenBalance not defined here because non-overridable, due to
+    getUsersSendTokenBalance not defined here because non-overridable, due to
     different arguments passed across different actions
     */
 

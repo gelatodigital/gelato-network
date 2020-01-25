@@ -2,15 +2,15 @@ import { internalTask } from "@nomiclabs/buidler/config";
 import { utils } from "ethers";
 
 export default internalTask(
-  "gc-mint:defaultpayload:RopstenActionKyberTrade",
-  `Returns a hardcoded actionPayloadWithSelector of RopstenActionKyberTrade`
+  "gc-mint:defaultpayload:ActionKyberTradeKovan",
+  `Returns a hardcoded actionPayloadWithSelector of ActionKyberTradeKovan`
 )
   .addFlag("log")
   .setAction(async ({ log }) => {
     try {
-      if (network.name != "ropsten") throw new Error("wrong network!");
+      if (network.name != "kovan") throw new Error("wrong network!");
 
-      const contractname = "RopstenActionKyberTrade";
+      const contractname = "ActionKyberTradeKovan";
       // action(_user, _userProxy, _src, _srcAmt, _dest, _minConversionRate)
       const functionname = "action";
       // Params
@@ -20,10 +20,13 @@ export default internalTask(
       const { luis: userProxy } = await run("bre-config", {
         addressbookcategory: "userProxy"
       });
-      const { DAI: src, KNC: dest } = await run("bre-config", {
+      const { KNC: src } = await run("bre-config", {
         addressbookcategory: "erc20"
       });
-      const srcAmt = utils.parseUnits("10", 18);
+      const { ETH: dest } = await run("bre-config", {
+        addressbookcategory: "kyber"
+      });
+      const srcAmt = utils.parseUnits("100", 18);
 
       // Params as sorted array of inputs for abi.encoding
       // action(_user, _userProxy, _src, _srcAmt, _dest)

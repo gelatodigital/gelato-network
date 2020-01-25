@@ -7,7 +7,7 @@ import "../../dapp_interfaces/kyber/IKyber.sol";
 import "../../external/SafeMath.sol";
 import "../../external/Address.sol";
 
-contract ActionERC20TransferFrom is GelatoActionsStandard {
+contract ActionKyberTradeKovan is GelatoActionsStandard {
     // using SafeERC20 for IERC20; <- internal library methods vs. try/catch
     using SafeMath for uint256;
     using Address for address;
@@ -16,30 +16,60 @@ contract ActionERC20TransferFrom is GelatoActionsStandard {
     function actionSelector() external pure override returns(bytes4) {
         return this.action.selector;
     }
-    uint256 public constant override actionGas = 80000;
+    uint256 public constant override actionGas = 700000;
 
     function action(
         // Standard Action Params
         address _user,
         address _userProxy,
-        // Specific Action Params
         address _sendToken,
-        uint256 _sendAmount,
-        address _destination
+        uint256 _sendAmt,
+        // Specific Action Params
+        address _receiveToken
     )
         external
         virtual
     {
         require(address(this) == _userProxy, "ErrorUserProxy");
+
+        // !!!!!!!!! ROPSTEN !!!!!!
+        address kyberAddress = 0x692f391bCc85cefCe8C237C01e1f636BbD70EA4D;
+
         IERC20 sendERC20 = IERC20(_sendToken);
-        try sendERC20.transferFrom(_user, _destination, _sendAmount) {
-            emit LogOneWay(_user, _sendToken, _sendAmount, _destination);
-        } catch {
+        try sendERC20.transferFrom(_user, _userProxy, _sendAmt) {} catch {
             revert("ErrorTransferFromUser");
+        }
+        try sendERC20.approve(kyberAddress, _sendAmt) {} catch {
+            revert("ErrorApproveKyber");
+        }
+
+        // !! Dapp Interaction !!
+        try IKyber(kyberAddress).trade(
+            _sendToken,
+            _sendAmt,
+            _receiveToken,
+            _user,  // receiver
+            2**255,
+            0,  // minConversionRate (if price condition, limit order still possible)
+            address(0)  // fee-sharing
+        )
+            returns(uint256 receiveAmt)
+        {
+            emit LogTwoWay(
+                _user,  // origin
+                _sendToken,
+                _sendAmt,
+                kyberAddress,  // destination
+                _receiveToken,
+                receiveAmt,
+                _user  // receiver
+            );
+        } catch {
+            revert("KyberTradeError");
         }
     }
 
-    // ======= ACTION CONDITIONS CHECK =========
+    // ====== ACTION CONDITIONS CHECK ==========
     // Overriding and extending GelatoActionsStandard's function (optional)
     function actionConditionsCheck(bytes calldata _actionPayloadWithSelector)
         external
@@ -48,21 +78,18 @@ contract ActionERC20TransferFrom is GelatoActionsStandard {
         virtual
         returns(string memory)  // actionCondition
     {
-        (address _user,
-         address _userProxy,
-         address _sendToken,
-         uint256 _sendAmount) = abi.decode(
+        (address _user, address _userProxy, address _sendToken, uint256 _sendAmt) = abi.decode(
             _actionPayloadWithSelector[4:132],
             (address,address,address,uint256)
         );
-        return _actionConditionsCheck(_user, _userProxy, _sendToken, _sendAmount);
+        return _actionConditionsCheck(_user, _userProxy, _sendToken, _sendAmt);
     }
 
     function _actionConditionsCheck(
         address _user,
         address _userProxy,
         address _sendToken,
-        uint256 _sendAmount
+        uint256 _sendAmt
     )
         internal
         view
@@ -70,21 +97,22 @@ contract ActionERC20TransferFrom is GelatoActionsStandard {
         returns(string memory)  // actionCondition
     {
         if (!_isUserOwnerOfUserProxy(_user, _userProxy))
-            return "ActionERC20Transfer: NotOkUserProxyOwner";
+            return "ActionKyberTradeKovan: NotOkUserProxyOwner";
 
-        if (!_sendToken.isContract()) return "ActionERC20TransferFrom: NotOkSrcAddress";
+        if (!_sendToken.isContract()) return "ActionKyberTradeKovan: NotOkSrcAddress";
 
         IERC20 sendERC20 = IERC20(_sendToken);
-        try sendERC20.balanceOf(_user) returns(uint256 sendERC20Balance) {
-            if (sendERC20Balance < _sendAmount) return "ActionERC20TransferFrom: NotOkUserBalance";
+        try sendERC20.balanceOf(_user) returns(uint256 userSendTokenBalance) {
+            if (userSendTokenBalance < _sendAmt)
+                return "ActionKyberTradeKovan: NotOkUserBalance";
         } catch {
-            return "ActionERC20TransferFrom: ErrorBalanceOf";
+            return "ActionKyberTradeKovan: ErrorBalanceOf";
         }
         try sendERC20.allowance(_user, _userProxy) returns(uint256 userProxySendTokenAllowance) {
-            if (userProxySendTokenAllowance < _sendAmount)
-                return "ActionERC20TransferFrom: NotOkUserProxySendTokenAllowance";
+            if (userProxySendTokenAllowance < _sendAmt)
+                return "ActionKyberTradeKovan: NotOkUserProxySendTokenAllowance";
         } catch {
-            return "ActionERC20TransferFrom: ErrorAllowance";
+            return "ActionKyberTradeKovan: ErrorAllowance";
         }
 
         // STANDARD return string to signal actionConditions Ok
@@ -97,7 +125,7 @@ contract ActionERC20TransferFrom is GelatoActionsStandard {
         address _user,
         address _userProxy,
         // Specific Action Params
-        address _sendToken,
+        address _sendToken,  // sendToken
         uint256,
         address
     )
@@ -108,10 +136,12 @@ contract ActionERC20TransferFrom is GelatoActionsStandard {
     {
         _userProxy;  // silence warning
         IERC20 sendERC20 = IERC20(_sendToken);
-        try sendERC20.balanceOf(_user) returns(uint256 sendERC20Balance) {
-            return sendERC20Balance;
+        try sendERC20.balanceOf(_user) returns(uint256 userSendTokenBalance) {
+            return userSendTokenBalance;
         } catch {
-            revert("Error: ActionERC20TransferFrom.getUsersSendTokenBalance: balanceOf");
+            revert(
+                "Error: ActionKyberTradeKovan.getUsersSendTokenBalance: balanceOf"
+            );
         }
     }
 }
