@@ -124,7 +124,7 @@ module.exports = {
         ActionERC20Transfer: "0x83a9a1B430e1d738D85859B9Ec509426b4B36058",
         ActionERC20TransferFrom: "0x3E9665BB5C3bBa2A89a14c289fE503D50fE44319",
         // kyber
-        ActionKyberTradeKovan: "0x48c8BCD7aB7ACf9A485643262D1b0e447C156BA1",
+        ActionKyberTradeKovan: "0xE5656d2dAAbF6a94F7B05315735D33193246289a",
         // ==== Gelato Core ===
         GelatoCore: "0x8456FEcB4F2FbcB5992b3533428F82f98C40f55C",
         // Luis User Proxy
@@ -135,7 +135,7 @@ module.exports = {
         // kyber
         ConditionKyberRateKovan: "0xfEe2C4Fd7Be69AC4353230e56EAe6a156c9d4dC4",
         // time
-        ConditionTimestampPassed: "0x328eAA9C817383e0A2fc815F810BCA7FF3ea6288"
+        ConditionTimestampPassed: "0x036810290a0D1d07a3329baaE54FE65E720e4491"
       }
     },
     ropsten: {
