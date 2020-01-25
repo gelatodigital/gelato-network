@@ -20,12 +20,12 @@ export default internalTask(
       const { luis: userProxy } = await run("bre-config", {
         addressbookcategory: "userProxy"
       });
-      const { KNC: src } = await run("bre-config", {
+      const { DAI: src, KNC: dest } = await run("bre-config", {
         addressbookcategory: "erc20"
       });
-      const { ETH: dest } = await run("bre-config", {
+      /*const { ETH: dest } = await run("bre-config", {
         addressbookcategory: "kyber"
-      });
+      });*/
       const srcAmt = utils.parseUnits("100", 18);
 
       // Params as sorted array of inputs for abi.encoding

@@ -117,12 +117,12 @@ module.exports = {
         // === Actions ===
         // BzX
         ActionBzxPtokenBurnToToken:
-          "0xA5d7aFfBe3049efa9BC5DC23A16946cd7CE70061",
+          "0x62CC3fC9Cf620a48a6587Fd0e3c548bAcEFfAd21",
         ActionBzxPtokenMintWithToken:
-          "0x10C06Ab7F13E9Ae1e3c8cD82370C2Fc01002a9EF",
+          "0x1e2E09a49bda3fc44b792D4aa607Fa301698A91f",
         // erc20
-        ActionERC20Transfer: "0x83a9a1B430e1d738D85859B9Ec509426b4B36058",
-        ActionERC20TransferFrom: "0x3E9665BB5C3bBa2A89a14c289fE503D50fE44319",
+        ActionERC20Transfer: "0xE989890AC8eF57B0CBd1b951cEfd327b2727e490",
+        ActionERC20TransferFrom: "0x99cB92f9f853918773de899EBCd942f50f9A6ABb",
         // kyber
         ActionKyberTradeKovan: "0xE5656d2dAAbF6a94F7B05315735D33193246289a",
         // ==== Gelato Core ===
@@ -131,9 +131,9 @@ module.exports = {
         GelatoUserProxy: "0x5392364b493ba4043C168b7a33906381B9255689",
         // === Conditions ===
         // balance
-        ConditionBalance: "0xc0993255E46FD2E911d92fa63477e061b917aA14",
+        ConditionBalance: "0xA5EA265F49A574BA5CfeEdB7cE5fc9E330DF1441",
         // kyber
-        ConditionKyberRateKovan: "0xfEe2C4Fd7Be69AC4353230e56EAe6a156c9d4dC4",
+        ConditionKyberRateKovan: "0x4c741109e77D579754AcA15753fa34FA02CBb154",
         // time
         ConditionTimestampPassed: "0x036810290a0D1d07a3329baaE54FE65E720e4491"
       }
