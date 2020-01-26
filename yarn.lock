@@ -750,14 +750,14 @@
     to-fast-properties "^2.0.0"
 
 "@nomiclabs/buidler-ethers@^1.1.0":
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/@nomiclabs/buidler-ethers/-/buidler-ethers-1.1.1.tgz#20ca2d688888aefa2bbde2447814effce5b6f361"
-  integrity sha512-8WrWgBRdoUlL4+ysBbKxTy/obD3PWgjzt9Palv7U9Q91GbKBxgU3g3kCjOUaxgIuuKzBN88Cu317Q2p/i8qoQA==
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/@nomiclabs/buidler-ethers/-/buidler-ethers-1.1.2.tgz#f04ed66dec71c2f70b4925b6ba46ab5d07948974"
+  integrity sha512-kLa4v3aYx4rB8kydHnCZM61WiedYC+AM6sMjpGxRdwbXjHutdman3BHnm3d+TsO/kFL3F5rBGcB1zLCo+R1enQ==
 
 "@nomiclabs/buidler@^1.1.0":
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/@nomiclabs/buidler/-/buidler-1.1.1.tgz#5da8b039e79d3c98d9d7a8f19c45cc665d5373fb"
-  integrity sha512-jM93F3Kk4gHg0cfpVNueTy2QxnVn7hDiTEoU379XSKyNkjZ7lB/6VkHXZdNjHuJDiO5EzuBHIXJol9uKwuQYHQ==
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/@nomiclabs/buidler/-/buidler-1.1.2.tgz#570b45674938dd40bae0cbdf9d83754b2b0963e9"
+  integrity sha512-yDtTzp8x3enUo3CsKIneUqikd9fb7N/8IsUWVQywDNzVi9Bc+1Xp3lYTfG+qdusZVOYuf48GGZxWG4iohzIgZg==
   dependencies:
     "@nomiclabs/ethereumjs-vm" "^4.1.1"
     "@types/bn.js" "^4.11.5"
