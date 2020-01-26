@@ -130,7 +130,7 @@ module.exports = {
         // kyber
         ActionKyberTradeKovan: "0xE5656d2dAAbF6a94F7B05315735D33193246289a",
         // ==== Gelato Core ===
-        GelatoCore: "0xDc120c2AB8722FE3C8eda0Ce481be59C4dD9e6d2",
+        GelatoCore: "0xEFD00E5Ce7b62CA41190Da3818d2427f04427117",
         // Luis User Proxy
         GelatoUserProxy: "0x5392364b493ba4043C168b7a33906381B9255689",
         // === Conditions ===
