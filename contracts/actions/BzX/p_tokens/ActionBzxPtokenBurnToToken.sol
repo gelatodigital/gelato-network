@@ -47,9 +47,9 @@ contract ActionBzxPtokenBurnToToken is GelatoActionsStandard {
         {
             emit LogTwoWay(
                 _user, // origin
-                _sendToken,  // sendToken
+                _sendToken,  // pToken
                 _sendAmt,
-                address(0),  // destination (burn)
+                address(0),  // destination pToken -> burn
                 _receiveToken,
                 receiveAmt,
                 _user  // receiver
