@@ -18,7 +18,7 @@ export default internalTask(
       const { DAI: coin } = await run("bre-config", {
         addressbookcategory: "erc20"
       });
-      const refBalance = utils.parseUnits("162", 18);
+      const refBalance = utils.parseUnits("10000", 18);
       const greaterElseSmaller = false;
       const inputs = [account, coin, refBalance, greaterElseSmaller];
       // Encoding
