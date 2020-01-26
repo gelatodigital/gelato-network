@@ -14,10 +14,9 @@ contract UserProxy {
         payable
     {
         bytes memory payload = abi.encodeWithSelector(_action.revertMessage.selector);
-        (bool success, bytes memory returndata) = address(_action).delegatecall(payload);
-        bytes memory revertReason;
+        (bool success, bytes memory revertReason) = address(_action).delegatecall(payload);
         assembly {
-            revertReason := add(returndata, 68)
+            revertReason := add(revertReason, 68)
         }
         console.log("Hi");
         console.logBytes(revertReason);

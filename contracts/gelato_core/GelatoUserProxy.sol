@@ -41,7 +41,7 @@ contract GelatoUserProxy is IGelatoUserProxy {
         _;
     }
 
-    function call(address _account, bytes calldata _payload)
+    function callAccount(address _account, bytes calldata _payload)
         external
         payable
         override
@@ -53,7 +53,7 @@ contract GelatoUserProxy is IGelatoUserProxy {
         require(success, "GelatoUserProxy.call(): failed");
     }
 
-    function delegatecall(address _account, bytes calldata _payload)
+    function delegatecallAccount(address _account, bytes calldata _payload)
         external
         payable
         override
@@ -84,6 +84,9 @@ contract GelatoUserProxy is IGelatoUserProxy {
          bytes memory revertReason) = address(_action).delegatecall.gas(_actionGas)(
              _actionPayloadWithSelector
         );
+        assembly {
+            revertReason := add(revertReason, 68)
+        }
         if (!success) revert(string(revertReason));
     }
 }

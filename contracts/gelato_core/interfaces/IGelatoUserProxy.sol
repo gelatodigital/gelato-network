@@ -7,8 +7,8 @@ import "../GelatoCoreEnums.sol";
 /// @notice GelatoUserProxy.execute() API called by gelatoCore during .execute()
 /// @dev all the APIs are implemented inside GelatoUserProxy
 interface IGelatoUserProxy {
-    function call(address, bytes calldata) external payable returns(bool, bytes memory);
-    function delegatecall(address, bytes calldata) external payable returns(bool, bytes memory);
+    function callAccount(address, bytes calldata) external payable returns(bool, bytes memory);
+    function delegatecallAccount(address, bytes calldata) external payable returns(bool, bytes memory);
 
     function delegatecallGelatoAction(
         IGelatoAction _action,
