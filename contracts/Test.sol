@@ -15,10 +15,12 @@ contract UserProxy {
     {
         bytes memory payload = abi.encodeWithSelector(_action.revertMessage.selector);
         (bool success, bytes memory revertReason) = address(_action).delegatecall(payload);
+        console.log("Unmodified revertReason bytes");
+        console.logBytes(revertReason);
         assembly {
             revertReason := add(revertReason, 68)
         }
-        console.log("Hi");
+        console.log("String decoded revertReason bytes");
         console.logBytes(revertReason);
         if (!success) revert(string(revertReason));
     }
