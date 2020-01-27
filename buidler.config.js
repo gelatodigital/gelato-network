@@ -56,9 +56,8 @@ module.exports = {
       // Standard
       accounts: { mnemonic: MAINNET_MNEMONIC },
       chainId: 1,
-      from: "0x4B7363b8a7DaB76ff73dFbA00801bdDcE699F3A2", // gelato-luis-main
       gas: "auto",
-      gasPrice: parseInt(utils.parseUnits("1.2", "gwei")), // 1 gwei
+      gasPrice: parseInt(utils.parseUnits("3", "gwei")), // 1 gwei
       gasMultiplier: 1.5,
       url: `https://mainnet.infura.io/v3/${INFURA_ID}`,
       // Custom
@@ -124,21 +123,21 @@ module.exports = {
         ActionERC20Transfer: "",
         ActionERC20TransferFrom: "",
         // kyber
-        ActionKyberTradeKovan: "",
+        ActionKyberTrade: "0xF829B506c378AaD11dB7Efe8d626cc7d0e015CBA",
         // ==== Gelato Core ===
-        GelatoCore: "",
+        GelatoCore: "0x4E2Ca0093028C8401C93AaCcCaF59288CA6fb728",
         // === Conditions ===
         // balance
         ConditionBalance: "",
         // kyber
-        ConditionKyberRateKovan: "",
+        ConditionKyberRate: "",
         // time
-        ConditionTimestampPassed: ""
+        ConditionTimestampPassed: "0x10A46c633adfe5a6719f3DBd2c162676779fE70B"
       }
     },
     kovan: {
       // Standard
-      accounts: { mnemonic: DEV_MNEMONIC },
+      accounts: { mnemonic: MAINNET_MNEMONIC },
       chainId: 42,
       gasPrice: 1000000000, // 1 gwei
       url: `https://kovan.infura.io/v3/${INFURA_ID}`,
@@ -213,16 +212,16 @@ module.exports = {
         ActionERC20Transfer: "0xE989890AC8eF57B0CBd1b951cEfd327b2727e490",
         ActionERC20TransferFrom: "0x99cB92f9f853918773de899EBCd942f50f9A6ABb",
         // kyber
-        ActionKyberTradeKovan: "0xE5656d2dAAbF6a94F7B05315735D33193246289a",
+        ActionKyberTradeKovan: "0xF829B506c378AaD11dB7Efe8d626cc7d0e015CBA",
         // ==== Gelato Core ===
-        GelatoCore: "0x2b4Bd5d0df60aaE4D68B5a4e315be0bdf72cf765",
+        GelatoCore: "0x4E2Ca0093028C8401C93AaCcCaF59288CA6fb728",
         // === Conditions ===
         // balance
         ConditionBalance: "0xA5EA265F49A574BA5CfeEdB7cE5fc9E330DF1441",
         // kyber
         ConditionKyberRateKovan: "0x4c741109e77D579754AcA15753fa34FA02CBb154",
         // time
-        ConditionTimestampPassed: "0x036810290a0D1d07a3329baaE54FE65E720e4491"
+        ConditionTimestampPassed: "0x10A46c633adfe5a6719f3DBd2c162676779fE70B"
       }
     },
     ropsten: {
