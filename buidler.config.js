@@ -58,8 +58,8 @@ module.exports = {
       chainId: 1,
       from: "0x4B7363b8a7DaB76ff73dFbA00801bdDcE699F3A2", // gelato-luis-main
       gas: "auto",
-      gasPrice: parseInt(utils.parseUnits("5", "gwei")), // 1 gwei
-      gasMultiplier: 1.2,
+      gasPrice: parseInt(utils.parseUnits("1.2", "gwei")), // 1 gwei
+      gasMultiplier: 1.5,
       url: `https://mainnet.infura.io/v3/${INFURA_ID}`,
       // Custom
       addressBook: {
