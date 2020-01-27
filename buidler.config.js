@@ -57,7 +57,7 @@ module.exports = {
       accounts: { mnemonic: MAINNET_MNEMONIC },
       chainId: 1,
       gas: "auto",
-      gasPrice: parseInt(utils.parseUnits("3", "gwei")), // 1 gwei
+      gasPrice: parseInt(utils.parseUnits("2", "gwei")), // 1 gwei
       gasMultiplier: 1.5,
       url: `https://mainnet.infura.io/v3/${INFURA_ID}`,
       // Custom
@@ -106,31 +106,37 @@ module.exports = {
         }
       },
       contracts: [
-        // Kovan
-        "ActionKyberTrade",
-        "GelatoCore",
-        "ConditionTimestampPassed"
+        // Mainnet
+        //"ActionBzxPtokenBurnToToken",
+        //"ActionBzxPtokenMintWithToken",
+        //"ActionERC20Transfer",
+        //"ActionERC20TransferFrom",
+        //"ActionKyberTrade",
+        //"GelatoCore",
+        //"ConditionBalance",
+        //"ConditionKyberRate",
+        //"ConditionTimestampPassed"
       ],
       deployments: {
         // ========== MAINNET ===========
         // === Actions ===
         // BzX
         ActionBzxPtokenBurnToToken:
-          "",
+          "0x43dFFE6f0C2029e397Fa47DD27587Ef6297660C3",
         ActionBzxPtokenMintWithToken:
-          "",
+          "0x080d3059b30D3B7EDffa1B0B9AE981f0Ce94168E",
         // erc20
-        ActionERC20Transfer: "",
-        ActionERC20TransferFrom: "",
+        ActionERC20Transfer: "0x213719cD7c69DCA764E336bEb8D735DA01FD6c83",
+        ActionERC20TransferFrom: "0x24b7b219E903d11489227c5Bed0718D90C03eBc2",
         // kyber
         ActionKyberTrade: "0xF829B506c378AaD11dB7Efe8d626cc7d0e015CBA",
         // ==== Gelato Core ===
         GelatoCore: "0x4E2Ca0093028C8401C93AaCcCaF59288CA6fb728",
         // === Conditions ===
         // balance
-        ConditionBalance: "",
+        ConditionBalance: "0x60621bf3F7132838b27972084eaa56E87395D44B",
         // kyber
-        ConditionKyberRate: "",
+        ConditionKyberRate: "0xD8eBB69Dc566E86eA6e09A15EBe6Fd9c65c4A698",
         // time
         ConditionTimestampPassed: "0x10A46c633adfe5a6719f3DBd2c162676779fE70B"
       }
@@ -205,21 +211,21 @@ module.exports = {
         // === Actions ===
         // BzX
         ActionBzxPtokenBurnToToken:
-          "0x62CC3fC9Cf620a48a6587Fd0e3c548bAcEFfAd21",
+          "0x43dFFE6f0C2029e397Fa47DD27587Ef6297660C3",
         ActionBzxPtokenMintWithToken:
-          "0x1e2E09a49bda3fc44b792D4aa607Fa301698A91f",
+          "0x080d3059b30D3B7EDffa1B0B9AE981f0Ce94168E",
         // erc20
-        ActionERC20Transfer: "0xE989890AC8eF57B0CBd1b951cEfd327b2727e490",
-        ActionERC20TransferFrom: "0x99cB92f9f853918773de899EBCd942f50f9A6ABb",
+        ActionERC20Transfer: "0x213719cD7c69DCA764E336bEb8D735DA01FD6c83",
+        ActionERC20TransferFrom: "0x24b7b219E903d11489227c5Bed0718D90C03eBc2",
         // kyber
         ActionKyberTradeKovan: "0xF829B506c378AaD11dB7Efe8d626cc7d0e015CBA",
         // ==== Gelato Core ===
         GelatoCore: "0x4E2Ca0093028C8401C93AaCcCaF59288CA6fb728",
         // === Conditions ===
         // balance
-        ConditionBalance: "0xA5EA265F49A574BA5CfeEdB7cE5fc9E330DF1441",
+        ConditionBalance: "0x60621bf3F7132838b27972084eaa56E87395D44B",
         // kyber
-        ConditionKyberRateKovan: "0x4c741109e77D579754AcA15753fa34FA02CBb154",
+        ConditionKyberRateKovan: "0xD8eBB69Dc566E86eA6e09A15EBe6Fd9c65c4A698",
         // time
         ConditionTimestampPassed: "0x10A46c633adfe5a6719f3DBd2c162676779fE70B"
       }
