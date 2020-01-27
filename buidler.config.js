@@ -21,6 +21,7 @@ extendEnvironment(bre => {
 // Env Variables
 require("dotenv").config();
 const DEV_MNEMONIC = process.env.DEV_MNEMONIC;
+const MAINNET_MNEMONIC = process.env.MAINNET_MNEMONIC;
 const INFURA_ID = process.env.INFURA_ID;
 assert.ok(DEV_MNEMONIC, "no mnenomic in process.env");
 assert.ok(INFURA_ID, "no Infura ID in process.env");
@@ -50,6 +51,90 @@ module.exports = {
         "Core",
         "UserProxy"
       ]
+    },
+    mainnet: {
+      // Standard
+      accounts: { mnemonic: MAINNET_MNEMONIC },
+      chainId: 1,
+      from: "0x4B7363b8a7DaB76ff73dFbA00801bdDcE699F3A2", // gelato-luis-main
+      gas: "auto",
+      gasPrice: parseInt(utils.parseUnits("5", "gwei")), // 1 gwei
+      gasMultiplier: 1.2,
+      url: `https://mainnet.infura.io/v3/${INFURA_ID}`,
+      // Custom
+      addressBook: {
+        EOA: {
+          // Mainnet
+          luis: "0x4B7363b8a7DaB76ff73dFbA00801bdDcE699F3A2"
+        },
+        erc20: {
+          // Mainnet
+          // Tokens
+          DAI: "0x6b175474e89094c44da98b954eedeac495271d0f",
+          "0x6b175474e89094c44da98b954eedeac495271d0f": "DAI",
+          KNC: "0xdd974d5c2e2928dea5f71b9825b8b646686bd200",
+          "0xdd974d5c2e2928dea5f71b9825b8b646686bd200": "KNC",
+          // ==== BzX pTokens ====
+          // Long
+          /*dLETH2x: "0x934b43143e984052961EB46f5bDE633F33bCDB80",
+          "0x934b43143e984052961EB46f5bDE633F33bCDB80": "dLETH2x",
+          dLETH3x: "0x0015Cfd9722B43ac277f37887df14a00109fc689",
+          "0x0015Cfd9722B43ac277f37887df14a00109fc689": "dLETH3x",
+          dLETH4x: "0x0E5f87BDcD6285F930b6bbcC3E21CA9d985e12fE",
+          "0x0E5f87BDcD6285F930b6bbcC3E21CA9d985e12fE": "dLETH4x",
+          // Short
+          dsETH: "0xD4Fd1467c867808dc7B393dBc863f34783F37d3E",
+          "0xD4Fd1467c867808dc7B393dBc863f34783F37d3E": "dsETH",
+          dsETH2x: "0x2EBfbCf2d67867a05BCAC0FbCA54019163253988",
+          "0x2EBfbCf2d67867a05BCAC0FbCA54019163253988": "dsETH2x",
+          dsETH3x: "0xB56EA362eA9B1D030213A47eAA452dFfd84CB5a2",
+          "0xB56EA362eA9B1D030213A47eAA452dFfd84CB5a2": "dsETH3x",
+          dsETH4x: "0x9486ac55ed81758787fcdda98e6Ce35b01CDBE72",
+          "0x9486ac55ed81758787fcdda98e6Ce35b01CDBE72": "dsETH4x"*/
+        },
+        executor: {
+          // Mainnet
+          default: "0xe1F076849B781b1395Fd332dC1758Dbc129be6EC"
+        },
+        kyber: {
+          // Mainnet
+          ETH: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          proxy: "0x818E6FECD516Ecc3849DAf6845e3EC868087B755"
+        },
+        userProxy: {
+          // Mainnet
+          luis: ""
+        }
+      },
+      contracts: [
+        // Kovan
+        "ActionKyberTrade",
+        "GelatoCore",
+        "ConditionTimestampPassed"
+      ],
+      deployments: {
+        // ========== MAINNET ===========
+        // === Actions ===
+        // BzX
+        ActionBzxPtokenBurnToToken:
+          "",
+        ActionBzxPtokenMintWithToken:
+          "",
+        // erc20
+        ActionERC20Transfer: "",
+        ActionERC20TransferFrom: "",
+        // kyber
+        ActionKyberTradeKovan: "",
+        // ==== Gelato Core ===
+        GelatoCore: "",
+        // === Conditions ===
+        // balance
+        ConditionBalance: "",
+        // kyber
+        ConditionKyberRateKovan: "",
+        // time
+        ConditionTimestampPassed: ""
+      }
     },
     kovan: {
       // Standard
