@@ -1,6 +1,7 @@
 import { task } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../../../buidler.config";
 import { Contract } from "ethers";
+import sleep from "../../../../../helpers/async/sleep";
 
 export default task(
   "gc-registerexecutor",
@@ -19,7 +20,7 @@ export default task(
     try {
       // To avoid mistakes default log to true
       log = true;
-      const [signer] = await ethers.signers();
+      const [signer1, signer2, ...rest] = await ethers.signers();
       const gelatoCoreAdddress = await run("bre-config", {
         deployments: true,
         contractname: "GelatoCore"
@@ -30,7 +31,7 @@ export default task(
       const gelatoCoreContract = new Contract(
         gelatoCoreAdddress,
         gelatoCoreAccountingABI,
-        signer
+        signer2
       );
       const tx = await gelatoCoreContract.registerExecutor(
         price,

@@ -72,7 +72,7 @@ module.exports = {
           DAI: "0x6b175474e89094c44da98b954eedeac495271d0f",
           "0x6b175474e89094c44da98b954eedeac495271d0f": "DAI",
           KNC: "0xdd974d5c2e2928dea5f71b9825b8b646686bd200",
-          "0xdd974d5c2e2928dea5f71b9825b8b646686bd200": "KNC",
+          "0xdd974d5c2e2928dea5f71b9825b8b646686bd200": "KNC"
           // ==== BzX pTokens ====
           // Long
           /*dLETH2x: "0x934b43143e984052961EB46f5bDE633F33bCDB80",
@@ -107,15 +107,15 @@ module.exports = {
       },
       contracts: [
         // Mainnet
-        //"ActionBzxPtokenBurnToToken",
-        //"ActionBzxPtokenMintWithToken",
-        //"ActionERC20Transfer",
-        //"ActionERC20TransferFrom",
-        //"ActionKyberTrade",
-        //"GelatoCore",
-        //"ConditionBalance",
-        //"ConditionKyberRate",
-        //"ConditionTimestampPassed"
+        "ActionBzxPtokenBurnToToken",
+        "ActionBzxPtokenMintWithToken",
+        "ActionERC20Transfer",
+        "ActionERC20TransferFrom",
+        "ActionKyberTrade",
+        "GelatoCore",
+        "ConditionBalance",
+        "ConditionKyberRate",
+        "ConditionTimestampPassed"
       ],
       deployments: {
         // ========== MAINNET ===========
