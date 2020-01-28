@@ -69,8 +69,8 @@ module.exports = {
         erc20: {
           // Mainnet
           // Tokens
-          DAI: "0x6b175474e89094c44da98b954eedeac495271d0f",
-          "0x6b175474e89094c44da98b954eedeac495271d0f": "DAI",
+          DAI: "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+          "0x6B175474E89094C44Da98b954EedeAC495271d0F": "DAI",
           KNC: "0xdd974d5c2e2928dea5f71b9825b8b646686bd200",
           "0xdd974d5c2e2928dea5f71b9825b8b646686bd200": "KNC"
           // ==== BzX pTokens ====
