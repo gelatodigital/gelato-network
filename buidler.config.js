@@ -40,7 +40,7 @@ module.exports = {
         "ActionBzxPtokenMintWithToken",
         "ActionERC20Transfer",
         "ActionERC20TransferFrom",
-        "ActionKyberTradeKovan",
+        "ActionKyberTrade",
         "ActionMultiMintForConditionTimestampPassed",
         "GelatoCore",
         "ConditionBalance",
@@ -354,68 +354,8 @@ require("./scripts/buidler_tasks/gelato/conditions/collection.tasks.conditions")
 // encoding, naming ....
 require("./scripts/buidler_tasks/internal/collection.internalTasks");
 
-task("slice")
-  .addOptionalPositionalParam("payload")
-  .setAction(async ({ payload }) => {
-    try {
-      if (network.name != "buidlerevm") throw new Error("buidlerevm only");
 
-      const contractname = "ActionBzxPtokenMintWithToken";
+// debugging
+require("./scripts/buidler_tasks/debugging/collection.tasks.debugging")
 
-      if (!payload)
-        payload = await run(`gc-mint:defaultpayload:${contractname}`);
 
-      const contractaddress = await run("deploy", {
-        contractname,
-        network: "buidlerevm"
-      });
-
-      const contract = await run("instantiateContract", {
-        contractname,
-        contractaddress,
-        read: true
-      });
-
-      const result = await contract.actionConditionsCheck(payload);
-
-      console.log(result);
-    } catch (error) {
-      console.error(error);
-      process.exit(1);
-    }
-  });
-
-task("revert").setAction(async () => {
-  try {
-    if (network.name != "buidlerevm") throw new Error("buidlerevm only");
-
-    let contractname = "Action";
-    const actionAddress = await run("deploy", {
-      contractname,
-      network: "buidlerevm"
-    });
-
-    contractname = "UserProxy";
-    const userProxyAddress = await run("deploy", {
-      contractname,
-      network: "buidlerevm"
-    });
-
-    contractname = "Core";
-    const coreAddress = await run("deploy", {
-      contractname,
-      network: "buidlerevm"
-    });
-
-    const coreContract = await run("instantiateContract", {
-      contractname,
-      contractaddress: coreAddress,
-      write: true
-    });
-
-    await coreContract.catchErrorString(userProxyAddress, actionAddress);
-  } catch (error) {
-    console.error(error);
-    process.exit(1);
-  }
-});
