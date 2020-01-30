@@ -93,7 +93,7 @@ module.exports = {
         },
         executor: {
           // Mainnet
-          default: "0xe1F076849B781b1395Fd332dC1758Dbc129be6EC"
+          default: "0x4B7363b8a7DaB76ff73dFbA00801bdDcE699F3A2"
         },
         kyber: {
           // Mainnet
