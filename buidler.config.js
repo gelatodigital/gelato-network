@@ -299,6 +299,9 @@ require("./scripts/buidler_tasks/block/collection.tasks.block");
 // BRE, BRE-CONFIG(:networks), BRE-NETWORK
 require("./scripts/buidler_tasks/bre/collection.tasks.bre");
 
+// ============= DEBUGGING ============================
+require("./scripts/buidler_tasks/debugging/collection.tasks.debugging");
+
 // ============= DEPLOY ============================
 require("./scripts/buidler_tasks/deploy/task.deploy");
 
@@ -353,9 +356,3 @@ require("./scripts/buidler_tasks/gelato/conditions/collection.tasks.conditions")
 // ============== INTERNAL HELPER TASKS ================================================
 // encoding, naming ....
 require("./scripts/buidler_tasks/internal/collection.internalTasks");
-
-
-// debugging
-require("./scripts/buidler_tasks/debugging/collection.tasks.debugging")
-
-
