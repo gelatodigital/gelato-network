@@ -7,6 +7,7 @@ Developers, you can use gelato to build out cool end-user products, such as limi
 It contains the gelato protocol, condition and action smart contracts and uses @nomiclabs/buidler and ethers.js.
 
 # Want to build a condition and action on top of gelato?
+We will create a documentation for our protocol soon, stay tuned!
 
 # Want to reach out?
 Reach out to us in our official Telegram Community chat: http://tiny.cc/gelatotelegtram
