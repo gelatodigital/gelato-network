@@ -181,7 +181,7 @@ module.exports = {
         },
         executor: {
           // Kovan
-          default: "0x4B7363b8a7DaB76ff73dFbA00801bdDcE699F3A2"
+          default: "0xfcc7858eb0a80e719229740f4C1152e39bfED15A"
         },
         kyber: {
           // Kovan
