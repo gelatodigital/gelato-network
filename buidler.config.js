@@ -190,7 +190,7 @@ module.exports = {
         },
         userProxy: {
           // Kovan
-          luis: "0x1d3a74c02A6CEf185F9D6a6C1fbbf5D71813Edc6"
+          luis: "0xDBFd09475CDB2263193545743EE3930c9ce4BbbC"
         }
       },
       contracts: [
