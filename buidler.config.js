@@ -151,7 +151,7 @@ module.exports = {
       addressBook: {
         EOA: {
           // Kovan
-          luis: "0x66Fe7c362D8A8519dabb88b92C8834E47012AF68",
+          luis: "0x7015763d0a8F04263633106DE7a8F33B2334E51e",
           hilmar: "0xe2A8950bC498e19457BE5bBe2C25bC1f535C743e"
         },
         erc20: {
@@ -181,7 +181,7 @@ module.exports = {
         },
         executor: {
           // Kovan
-          default: "0x2Ad64A975Df11cCfE09F30A67aA8C33D9ad3C3bA"
+          default: "0x4d671CD743027fB5Af1b2D2a3ccbafA97b5B1B80"
         },
         kyber: {
           // Kovan
