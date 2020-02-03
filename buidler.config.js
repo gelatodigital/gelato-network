@@ -64,7 +64,7 @@ module.exports = {
       addressBook: {
         EOA: {
           // Mainnet
-          luis: "0x4B7363b8a7DaB76ff73dFbA00801bdDcE699F3A2"
+          luis: "0xe1F076849B781b1395Fd332dC1758Dbc129be6EC"
         },
         erc20: {
           // Mainnet
@@ -143,7 +143,7 @@ module.exports = {
     },
     kovan: {
       // Standard
-      accounts: { mnemonic: MAINNET_MNEMONIC },
+      accounts: { mnemonic: DEV_MNEMONIC },
       chainId: 42,
       gasPrice: 1000000000, // 1 gwei
       url: `https://kovan.infura.io/v3/${INFURA_ID}`,
@@ -181,7 +181,7 @@ module.exports = {
         },
         executor: {
           // Kovan
-          default: "0x203AdbbA2402a36C202F207caA8ce81f1A4c7a72"
+          default: "0x4B7363b8a7DaB76ff73dFbA00801bdDcE699F3A2"
         },
         kyber: {
           // Kovan
@@ -190,7 +190,7 @@ module.exports = {
         },
         userProxy: {
           // Kovan
-          luis: "0x38CEEd828056934686d6A0Ead2EeC1e49849d9c5"
+          luis: "0x1d3a74c02A6CEf185F9D6a6C1fbbf5D71813Edc6"
         }
       },
       contracts: [
@@ -228,52 +228,6 @@ module.exports = {
         ConditionKyberRateKovan: "0xD8eBB69Dc566E86eA6e09A15EBe6Fd9c65c4A698",
         // time
         ConditionTimestampPassed: "0x10A46c633adfe5a6719f3DBd2c162676779fE70B"
-      }
-    },
-    ropsten: {
-      // Standard
-      accounts: { mnemonic: DEV_MNEMONIC },
-      chainId: 3,
-      gasPrice: 20000000000, // 20 gwei
-      url: `https://ropsten.infura.io/v3/${INFURA_ID}`,
-      // Custom
-      addressBook: {
-        EOA: {
-          // Ropsten
-          luis: "0x203AdbbA2402a36C202F207caA8ce81f1A4c7a72",
-          hilmar: "0xe2A8950bC498e19457BE5bBe2C25bC1f535C743e"
-        },
-        erc20: {
-          // Ropsten
-          DAI: "0xad6d458402f60fd3bd25163575031acdce07538d",
-          "0xad6d458402f60fd3bd25163575031acdce07538d": "DAI",
-          KNC: "0x4e470dc7321e84ca96fcaedd0c8abcebbaeb68c6",
-          "0x4e470dc7321e84ca96fcaedd0c8abcebbaeb68c6": "KNC",
-          MANA: "0x72fd6C7C1397040A66F33C2ecC83A0F71Ee46D5c",
-          "0x72fd6C7C1397040A66F33C2ecC83A0F71Ee46D5c": "MANA",
-          WETH: "0xbca556c912754bc8e7d4aad20ad69a1b1444f42d",
-          "0xbca556c912754bc8e7d4aad20ad69a1b1444f42d": "WETH"
-        },
-        executor: {
-          // Ropsten
-          default: "0x203AdbbA2402a36C202F207caA8ce81f1A4c7a72"
-        },
-        kyber: {
-          // Ropsten
-          proxy: "0x818E6FECD516Ecc3849DAf6845e3EC868087B755"
-        },
-        userProxy: {
-          // Ropsten
-          luis: "0x1631B08A31Ecc1e125939002326E4b281E9eCd75"
-        }
-      },
-      contracts: [
-        // Ropsten
-        "ConditionBalance"
-      ],
-      deployments: {
-        // Ropsten
-        ConditionBalance: "0xaFa77E70C22F5Ab583A9Eae6Dc7290e6264832Af"
       }
     }
   },
