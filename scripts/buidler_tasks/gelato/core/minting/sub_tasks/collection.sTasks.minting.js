@@ -17,7 +17,10 @@ import "./default_payloads/actions/sTask.defaultpayload.ActionBzxPtokenMintWithT
 import "./default_payloads/actions/sTask.defaultpayload.ActionERC20Transfer";
 // ActionERC20TransferFrom
 import "./default_payloads/actions/sTask.defaultpayload.ActionERC20TransferFrom";
-// ActionKyberTrade
+// == ActionKyberTrade
+// mainnet
+import "./default_payloads/actions/sTask.defaultpayload.ActionKyberTrade";
+// Kovan
 import "./default_payloads/actions/sTask.defaultpayload.ActionKyberTradeKovan";
 // ActionMultiMintForConditionTimestampPassed
 import "./default_payloads/actions/sTask.defaultpayload.ActionMultiMintForConditionTimestampPassed";

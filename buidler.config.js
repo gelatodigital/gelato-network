@@ -57,7 +57,7 @@ module.exports = {
       accounts: { mnemonic: MAINNET_MNEMONIC },
       chainId: 1,
       gas: "auto",
-      gasPrice: parseInt(utils.parseUnits("2", "gwei")), // 2 gwei
+      gasPrice: parseInt(utils.parseUnits("3", "gwei")), // 3 gwei
       gasMultiplier: 1.5,
       url: `https://mainnet.infura.io/v3/${INFURA_ID}`,
       // Custom
@@ -102,7 +102,7 @@ module.exports = {
         },
         userProxy: {
           // Mainnet
-          luis: ""
+          luis: "0x1d3a74c02A6CEf185F9D6a6C1fbbf5D71813Edc6"
         }
       },
       contracts: [
