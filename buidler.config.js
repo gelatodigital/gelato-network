@@ -139,6 +139,10 @@ module.exports = {
         ConditionKyberRate: "0xD8eBB69Dc566E86eA6e09A15EBe6Fd9c65c4A698",
         // time
         ConditionTimestampPassed: "0x10A46c633adfe5a6719f3DBd2c162676779fE70B"
+      },
+      filters: {
+        defaultFromBlock: 9387000,
+        defaultToBlock: "latest"
       }
     },
     kovan: {
@@ -295,6 +299,9 @@ task("eth-price", "Logs the etherscan ether-USD price", async () => {
 
 // ============== ETHERS ==============================================================
 require("./scripts/buidler_tasks/ethers/collection.tasks.ethers");
+
+// ============== ETHERS ==============================================================
+require("./scripts/buidler_tasks/events/collection.tasks.events");
 
 // ============= GELATO ===============================================================
 // _____ ACTIONS ______________________
