@@ -16,11 +16,13 @@ export default task(
   .addOptionalParam(
     "fromblock",
     "the block number to search for event logs from",
+    undefined,  // default
     types.number
   )
   .addOptionalParam(
     "toblock",
     "the block number up until which to look for",
+    undefined,  // default
     types.number
   )
   .addOptionalParam("blockhash", "the blockhash in which")
@@ -41,7 +43,7 @@ export default task(
           deployments: true,
           contractname
         });
-        const contractInterface = await run("getEthersInterface", {
+        const contractInterface = await run("ethers-interface-new", {
           contractname
         });
 
@@ -70,7 +72,7 @@ export default task(
 
         let logWithTxHash;
         if (txhash)
-          [logWithTxHash] = logs.filter(log => log.transactionHash == txhash);
+          logWithTxHash = logs.filter(log => log.transactionHash == txhash);
 
         if (log) {
           if (!logs.length) {
@@ -89,7 +91,7 @@ export default task(
               for (const aLog of logs) console.log("\n", aLog);
             } else {
               console.log(
-                `Logs for ${contractname}.${eventname} from block ${
+                `Log for ${contractname}.${eventname} from block ${
                   fromblock ? fromblock : blockhash
                 } to block ${toblock} with tx-Hash ${txhash}`
               );

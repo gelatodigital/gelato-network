@@ -2,7 +2,7 @@ import { internalTask } from "@nomiclabs/buidler/config";
 import { Interface } from "ethers/utils";
 
 export default internalTask(
-  "getEthersInterface",
+  "ethers-interface-new",
   "Returns the ethers.utils.Interface for <contractname>"
 )
   .addParam("contractname")

@@ -46,10 +46,11 @@ module.exports = {
         "ConditionBalance",
         "ConditionKyberRateKovan",
         "ConditionTimestampPassed",
-        // Testing
+        // Debugging
         "Action",
         "Core",
-        "UserProxy"
+        "UserProxy",
+        "ConditionKyberRatePayloadDecoding"
       ]
     },
     mainnet: {
