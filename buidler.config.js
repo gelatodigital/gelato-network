@@ -58,7 +58,7 @@ module.exports = {
       accounts: { mnemonic: MAINNET_MNEMONIC },
       chainId: 1,
       gas: "auto",
-      gasPrice: parseInt(utils.parseUnits("3", "gwei")), // 3 gwei
+      gasPrice: parseInt(utils.parseUnits("5", "gwei")), 
       gasMultiplier: 1.5,
       url: `https://mainnet.infura.io/v3/${INFURA_ID}`,
       // Custom
