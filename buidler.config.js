@@ -142,7 +142,7 @@ module.exports = {
         ConditionTimestampPassed: "0x10A46c633adfe5a6719f3DBd2c162676779fE70B"
       },
       filters: {
-        defaultFromBlock: 9387000,
+        defaultFromBlock: 9417973,
         defaultToBlock: "latest"
       }
     },

@@ -29,11 +29,14 @@ export default task(
   .addOptionalParam("txhash", "filter for a specific tx")
   .addOptionalParam("value", "a specific value to search for")
   .addFlag("values")
+  .addFlag("stringify")
   .addFlag("log", "Logs return values to stdout")
   .setAction(async taskArgs => {
     try {
       if (taskArgs.value && taskArgs.values)
         throw new Error("Cannot search for --value and --values");
+      if (taskArgs.stringify && !taskArgs.value)
+        throw new Error("--stringify only supplements --value");
 
       let loggingActivated;
       if (taskArgs.log) {
@@ -65,6 +68,7 @@ export default task(
           console.log(
             `No logs for ${taskArgs.contractname}.${taskArgs.eventname}`
           );
+          return [];
         }
       } else {
         if (!taskArgs.txhash) {
@@ -86,10 +90,16 @@ export default task(
               if (taskArgs.log) {
                 console.log(
                   `\n ${taskArgs.value}: `,
-                  parsedLog.values[taskArgs.value]
+                  taskArgs.stringify
+                    ? parsedLog.values[taskArgs.value].toString()
+                    : parsedLog.values[taskArgs.value]
                 );
               }
-              parsedLogsValue.push(parsedLog.values[taskArgs.value]);
+              parsedLogsValue.push(
+                taskArgs.stringify
+                  ? parsedLog.values[taskArgs.value].toString()
+                  : parsedLog.values[taskArgs.value]
+              );
             }
             return parsedLogsValue;
           } else {
@@ -106,10 +116,14 @@ export default task(
             if (taskArgs.log) {
               console.log(
                 `\n ${taskArgs.value}: `,
-                parsedLogWithTxHash[0].values[taskArgs.value]
+                taskArgs.stringify
+                  ? parsedLogWithTxHash[0].values[taskArgs.value].toString()
+                  : parsedLogWithTxHash[0].values[taskArgs.value]
               );
             }
-            return parsedLogWithTxHash[0].values[taskArgs.value];
+            return taskArgs.stringify
+              ? parsedLogWithTxHash[0].values[taskArgs.value].toString()
+              : parsedLogWithTxHash[0].values[taskArgs.value];
           } else {
             if (taskArgs.log) {
               console.log(
