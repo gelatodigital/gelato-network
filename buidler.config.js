@@ -142,7 +142,7 @@ module.exports = {
         // balance
         ConditionBalance: "0x60621bf3F7132838b27972084eaa56E87395D44B",
         // kyber
-        ConditionKyberRate: "0xD8eBB69Dc566E86eA6e09A15EBe6Fd9c65c4A698",
+        ConditionKyberRate: "0x1a6074a167c346949a6839a20F8211b1480444a2",
         // time
         ConditionTimestampPassed: "0x10A46c633adfe5a6719f3DBd2c162676779fE70B",
         // === Debugging ===

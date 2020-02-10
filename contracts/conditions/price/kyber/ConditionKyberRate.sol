@@ -26,7 +26,7 @@ contract ConditionKyberRate is IGelatoCondition {
     function conditionSelector() external pure override returns(bytes4) {
         return this.reached.selector;
     }
-    uint256 public constant override conditionGas = 500000;
+    uint256 public constant override conditionGas = 1000000;
 
     function reached(
         address _src,
