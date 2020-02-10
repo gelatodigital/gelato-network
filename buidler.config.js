@@ -58,7 +58,7 @@ module.exports = {
       accounts: { mnemonic: MAINNET_MNEMONIC },
       chainId: 1,
       gas: "auto",
-      gasPrice: parseInt(utils.parseUnits("5", "gwei")), 
+      gasPrice: parseInt(utils.parseUnits("5", "gwei")),
       gasMultiplier: 1.5,
       url: `https://mainnet.infura.io/v3/${INFURA_ID}`,
       // Custom
@@ -107,16 +107,21 @@ module.exports = {
         }
       },
       contracts: [
-        // Mainnet
+        // ==== Mainnet
+        // Actions
         "ActionBzxPtokenBurnToToken",
         "ActionBzxPtokenMintWithToken",
         "ActionERC20Transfer",
         "ActionERC20TransferFrom",
         "ActionKyberTrade",
+        // Core
         "GelatoCore",
+        // Conditions
         "ConditionBalance",
         "ConditionKyberRate",
-        "ConditionTimestampPassed"
+        "ConditionTimestampPassed",
+        // Debugging
+        "ConditionKyberRateError"
       ],
       deployments: {
         // ========== MAINNET ===========
@@ -139,7 +144,10 @@ module.exports = {
         // kyber
         ConditionKyberRate: "0xD8eBB69Dc566E86eA6e09A15EBe6Fd9c65c4A698",
         // time
-        ConditionTimestampPassed: "0x10A46c633adfe5a6719f3DBd2c162676779fE70B"
+        ConditionTimestampPassed: "0x10A46c633adfe5a6719f3DBd2c162676779fE70B",
+        // === Debugging ===
+        // Conditions
+        ConditionKyberRateError: "0xe0EFd26650D020cc03489D4E7FB5106E119683c8"
       },
       filters: {
         defaultFromBlock: 9417973,
