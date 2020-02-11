@@ -4,7 +4,7 @@ import "@nomiclabs/buidler/console.sol";
 
 contract ConditionKyberRatePayloadDecoding {
 
-    function decodePayload(bytes calldata conditionKyberRatePayload)
+    function decodePayload(bytes calldata conditionKyberRatePayloadWithSelector)
         external
         view
     {
@@ -14,7 +14,7 @@ contract ConditionKyberRatePayloadDecoding {
          address _dest,
          uint256 _refRate,
          bool _greaterElseSmaller) = abi.decode(
-             conditionKyberRatePayload[4:],
+             conditionKyberRatePayloadWithSelector[4:],
              (address,uint256,address,uint256,bool)
         );
         console.logAddress(_src);
