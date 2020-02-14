@@ -1,7 +1,6 @@
-pragma solidity ^0.6.0;
+pragma solidity ^0.6.2;
 
 import "../GelatoCoreEnums.sol";
-import "./IGelatoUserProxy.sol";
 import "../../conditions/IGelatoCondition.sol";
 import "../../actions/IGelatoAction.sol";
 
@@ -13,8 +12,7 @@ interface IGelatoCore {
     event LogExecutionClaimMinted(
         address indexed selectedExecutor,
         uint256 indexed executionClaimId,
-        address indexed user,
-        IGelatoUserProxy userProxy,
+        address indexed gnosisSafeProxy,
         IGelatoCondition condition,
         bytes conditionPayloadWithSelector,
         IGelatoAction action,
@@ -29,7 +27,7 @@ interface IGelatoCore {
     event LogCanExecuteSuccess(
         address indexed executor,
         uint256 indexed executionClaimId,
-        address indexed user,
+        address indexed gnosisSafeProxy,
         IGelatoCondition condition,
         GelatoCoreEnums.CanExecuteResults canExecuteResult,
         uint8 reason
@@ -38,7 +36,7 @@ interface IGelatoCore {
     event LogCanExecuteFailed(
         address indexed executor,
         uint256 indexed executionClaimId,
-        address indexed user,
+        address indexed gnosisSafeProxy,
         IGelatoCondition condition,
         GelatoCoreEnums.CanExecuteResults canExecuteResult,
         uint8 reason
@@ -47,7 +45,7 @@ interface IGelatoCore {
     event LogSuccessfulExecution(
         address indexed executor,
         uint256 indexed executionClaimId,
-        address indexed user,
+        address indexed gnosisSafeProxy,
         IGelatoCondition condition,
         IGelatoAction action,
         uint256 gasPriceUsed,
@@ -60,7 +58,7 @@ interface IGelatoCore {
     event LogExecutionFailure(
         address indexed executor,
         uint256 indexed executionClaimId,
-        address payable indexed user,
+        address indexed gnosisSafeProxy,
         IGelatoCondition condition,
         IGelatoAction action,
         string executionFailureReason
@@ -68,7 +66,7 @@ interface IGelatoCore {
 
     event LogExecutionClaimCancelled(
         uint256 indexed executionClaimId,
-        address indexed user,
+        address indexed gnosisSafeProxy,
         address indexed cancelor,
         bool executionClaimExpired
     );
@@ -99,8 +97,7 @@ interface IGelatoCore {
      */
     function canExecute(
         uint256 _executionClaimId,
-        address _user,
-        IGelatoUserProxy _userProxy,
+        address _gnosisSafeProxy,
         IGelatoCondition _condition,
         bytes calldata _conditionPayloadWithSelector,
         IGelatoAction _action,
@@ -120,8 +117,7 @@ interface IGelatoCore {
      */
     function execute(
         uint256 _executionClaimId,
-        address _user,
-        IGelatoUserProxy _userProxy,
+        address _gnosisSafeProxy,
         IGelatoCondition _condition,
         bytes calldata _conditionPayloadWithSelector,
         IGelatoAction _action,
@@ -135,7 +131,7 @@ interface IGelatoCore {
     /**
      * @dev API for canceling executionClaims
      * @notice re-entrancy protection due to accounting operations and interactions
-     * @notice prior to executionClaim expiry, only owner of _userProxy can cancel
+     * @notice prior to executionClaim expiry, only owner of _gnosisSafeProxy can cancel
         for a refund. Post executionClaim expiry, _selectedExecutor can also cancel,
         for a reward.
      * @notice .sendValue instead of .transfer due to IstanbulHF
@@ -143,8 +139,7 @@ interface IGelatoCore {
     function cancelExecutionClaim(
         address _selectedExecutor,
         uint256 _executionClaimId,
-        address _user,
-        IGelatoUserProxy _userProxy,
+        address _gnosisSafeProxy,
         IGelatoCondition _condition,
         bytes calldata _conditionPayloadWithSelector,
         IGelatoAction _action,
@@ -161,13 +156,8 @@ interface IGelatoCore {
 
     /// @dev api to read from the userProxyByExecutionClaimId state variable
     /// @param _executionClaimId TO DO
-    /// @return address of the userProxy behind _executionClaimId
-    function userProxyWithExecutionClaimId(uint256 _executionClaimId)
-        external
-        view
-        returns(IGelatoUserProxy);
-
-    function getUserWithExecutionClaimId(uint256 _executionClaimId)
+    /// @return address of the gnosisSafeProxy behind _executionClaimId
+    function gnosisSafeProxyByExecutionClaimId(uint256 _executionClaimId)
         external
         view
         returns(address);
@@ -192,8 +182,7 @@ interface IGelatoCore {
 
     function gasTestCanExecute(
         uint256 _executionClaimId,
-        address _user,
-        IGelatoUserProxy _userProxy,
+        address _gnosisSafeProxy,
         IGelatoCondition _condition,
         bytes calldata _conditionPayloadWithSelector,
         IGelatoAction _action,
@@ -207,25 +196,17 @@ interface IGelatoCore {
         returns (GelatoCoreEnums.CanExecuteResults canExecuteResult, uint8 reason);
 
     function gasTestActionViaGasTestUserProxy(
-        IGelatoUserProxy _gasTestUserProxy,
+        address _gasTestUserProxy,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
         uint256 _actionGas
     )
         external;
 
-    function gasTestGasTestUserProxyExecute(
-        IGelatoUserProxy _userProxy,
-        IGelatoAction _action,
-        bytes calldata _actionPayloadWithSelector,
-        uint256 _actionGas
-    )
-        external;
 
     function gasTestExecute(
         uint256 _executionClaimId,
-        address _user,
-        IGelatoUserProxy _userProxy,
+        address _gnosisSafeProxy,
         IGelatoCondition _condition,
         bytes calldata _conditionPayloadWithSelector,
         IGelatoAction _action,

@@ -1,4 +1,4 @@
-pragma solidity ^0.6.0;
+pragma solidity ^0.6.2;
 
 import "./interfaces/IGelatoUserProxy.sol";
 import "../actions/IGelatoAction.sol";

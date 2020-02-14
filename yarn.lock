@@ -4311,7 +4311,7 @@ solc@0.5.15:
     semver "^5.5.0"
     tmp "0.0.33"
 
-solc@^0.6.1:
+solc@^0.6.2:
   version "0.6.2"
   resolved "https://registry.yarnpkg.com/solc/-/solc-0.6.2.tgz#0340520782caef3e8230af6785aba17625415c73"
   integrity sha512-PIFb/i7HSQXXfsXHlGDR+B2BCaQ+Bx7gpZ7bz+zLz2rPePyxkIJgLmb4rgRKYxEnIp5dKilcjKRPbrz8GNlIHQ==

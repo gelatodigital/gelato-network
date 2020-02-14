@@ -1,4 +1,4 @@
-pragma solidity ^0.6.0;
+pragma solidity ^0.6.2;
 
 import "../GelatoActionsStandard.sol";
 import "../../external/IERC20.sol";
