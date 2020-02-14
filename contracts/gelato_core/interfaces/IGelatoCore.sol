@@ -45,7 +45,8 @@ interface IGelatoCore {
     event LogSuccessfulExecution(
         address indexed executor,
         uint256 indexed executionClaimId,
-        address indexed gnosisSafeProxy,
+        address indexed user,
+        address gnosisSafeProxy,
         IGelatoCondition condition,
         IGelatoAction action,
         uint256 gasPriceUsed,
@@ -58,7 +59,8 @@ interface IGelatoCore {
     event LogExecutionFailure(
         address indexed executor,
         uint256 indexed executionClaimId,
-        address indexed gnosisSafeProxy,
+        address indexed user,
+        address gnosisSafeProxy,
         IGelatoCondition condition,
         IGelatoAction action,
         string executionFailureReason

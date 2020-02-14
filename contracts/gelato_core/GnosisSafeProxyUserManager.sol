@@ -11,6 +11,17 @@ abstract contract GnosisSafeProxyUserManager is IGnosisSafeProxyUserManager {
     mapping(address => address) public override userByGnosisSafeProxy;
     mapping(address => IGnosisSafe) public override gnosisSafeProxyByUser;
 
+    modifier gnosisSafeProxyUserMatch(address _gnosisSafeProxy, address _user) {
+        require(
+            _gnosisSafeProxy != address(0) && _user != address(0),
+            "GnosisSafeProxyUserManager.gnosisSafeProxyUserMatch: no zero values allowed"
+        );
+        require(
+            userByGnosisSafeProxy[_gnosisSafeProxy] == _user
+            "GnosisSafeProxyUserManager. "
+        );
+    }
+
     modifier onlyGnosisSafeProxyOwner(address _gnosisSafeProxy) {
         IGnosisSafe gnosisSafeProxy = IGnosisSafe(_gnosisSafeProxy);
         require(

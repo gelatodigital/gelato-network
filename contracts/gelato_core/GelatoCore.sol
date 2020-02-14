@@ -24,6 +24,7 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
     // ================  MINTING ==============================================
     function mintExecutionClaim(
         address _selectedExecutor,
+        address _user,
         IGelatoCondition _condition,
         bytes calldata _conditionPayloadWithSelector,
         IGelatoAction _action,
@@ -220,8 +221,8 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
         override
         returns(address)
     {
-        IGelatoUserProxy gnosisSafeProxy = gnosisSafeProxyByExecutionClaimId[_executionClaimId];
-        return userByProxy[address(gnosisSafeProxy)];
+        address gnosisSafeProxy = gnosisSafeProxyByExecutionClaimId[_executionClaimId];
+        return userByGnosisSafeProxy[gnosisSafeProxy];
     }
 
 
@@ -283,14 +284,14 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
             );
         }
 
-        // Self-Conditional Actions pass
+        // Self-Conditional Actions pass and return
         if (address(_condition) == address(0)) {
             return (
                 GelatoCoreEnums.CanExecuteResults.Executable,
                 uint8(GelatoCoreEnums.StandardReason.Ok)
             );
         } else {
-            // Dynamic Check for Conditional Actions
+            // Dynamic Checks needed for Conditional Actions
             (bool success, bytes memory returndata) = address(_condition).staticcall.gas(
                 _conditionGasActionGasMinExecutionGas[0])(
                 _conditionPayloadWithSelector
@@ -377,12 +378,13 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
         bool actionExecuted;
         string memory executionFailureReason;
 
-        try gnosisSafeProxy.execTransactionFromModule(
-            _action,
-            msg.value,
-            _actionPayloadWithSelector,
-            gnosisSafeProxy.Operation.DelegateCall,
-            _conditionGasActionGasMinExecutionGas[1]
+        uint256 executionGas = _conditionGasActionGasMinExecutionGas[1].add(21000);
+
+        try gnosisSafeProxy.execTransactionFromModule{gas: }(
+            _action,  // to
+            0,  // value
+            _actionPayloadWithSelector,  // data
+            gnosisSafeProxy.Operation.DelegateCall
         ) {
             actionExecuted = true;
         } catch Error(string memory revertReason) {
@@ -393,7 +395,7 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
 
         if (actionExecuted) {
             emit LogSuccessfulExecution(
-                msg.sender,  // executor
+                msg.sender,  // selectedExecutor
                 _executionClaimId,
                 _user,
                 _condition,
@@ -406,18 +408,35 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
             // Executor gets full reward only if Execution was successful
             executorBalance[msg.sender] = executorBalance[msg.sender].add(_mintingDeposit);
         } else {
-            emit LogExecutionFailure(
-                msg.sender,
-                _executionClaimId,
-                payable(_user),
-                _condition,
-                _action,
-                executionFailureReason
-            );
-            // Transfer Minting deposit back to user
-            payable(_user).sendValue(_mintingDeposit);
+
         }
     }
+
+
+    function _executionFailure(
+        uint256 _executionClaimId,
+        address _gnosisSafeProxy,
+        IGelatoCondition condition,
+        IGelatoAction action,
+        uint256 _mintingDeposit,
+        string memory executionFailureReason
+    )
+        internal
+    {
+        address payable user = payable(userByGnosisSafeProxy[_gnosisSafeProxy]);
+        emit LogExecutionFailure(
+            msg.sender,  // selectedExecutor
+            _executionClaimId,
+            _gnosisSafeProxy,
+            user,
+            _condition,
+            _action,
+            executionFailureReason
+        );
+        // Transfer Minting deposit back to user
+        user.sendValue(_mintingDeposit);
+    }
+
 
     // ================ EXECUTION CLAIM HASHING ========================================
     function _computeExecutionClaimHash(
@@ -479,7 +498,7 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
     function gasTestCanExecute(
         uint256 _executionClaimId,
         address _user,
-        IGelatoUserProxy _gnosisSafeProxy,
+        IGnosisSafe _gnosisSafeProxy,
         IGelatoCondition _condition,
         bytes calldata _conditionPayloadWithSelector,
         IGelatoAction _action,
@@ -512,7 +531,7 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
     }
 
     function gasTestActionViaGasTestUserProxy(
-        IGelatoUserProxy _gasTestUserProxy,
+        IGnosisSafe _gasTestUserProxy,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
         uint256 _actionGas
@@ -531,7 +550,7 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
     }
 
     function gasTestGasTestUserProxyExecute(
-        IGelatoUserProxy _gnosisSafeProxy,
+        IGnosisSafe _gnosisSafeProxy,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
         uint256 _actionGas
@@ -561,7 +580,7 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
     function gasTestExecute(
         uint256 _executionClaimId,
         address _user,
-        IGelatoUserProxy _gnosisSafeProxy,
+        IGnosisSafe _gnosisSafeProxy,
         IGelatoCondition _condition,
         bytes calldata _conditionPayloadWithSelector,
         IGelatoAction _action,
