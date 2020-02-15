@@ -1,5 +1,7 @@
 pragma solidity ^0.6.2;
 
+import "./IGnosisSafe.sol";
+
 interface IGnosisSafeProxyFactory {
 
     event ProxyCreation(address proxy);
@@ -11,7 +13,7 @@ interface IGnosisSafeProxyFactory {
     /// @return proxy address
     function createProxy(address masterCopy, bytes calldata data)
         external
-        returns (address proxy);
+        returns (IGnosisSafe proxy);
 
     /// @dev Allows to create new proxy contact and execute a message call to the
     ///      new proxy within one transaction. Emits ProxyCreation.
@@ -26,7 +28,7 @@ interface IGnosisSafeProxyFactory {
         uint256 saltNonce
     )
         external
-        returns (address proxy);
+        returns (IGnosisSafe proxy);
 
     /// @dev Allows to create new proxy contact, execute a message call to the
     //       new proxy and call a specified callback within one transaction
@@ -43,7 +45,7 @@ interface IGnosisSafeProxyFactory {
         IProxyCreationCallback callback
     )
         external
-        returns (address proxy);
+        returns (IGnosisSafe proxy);
 
     /// @dev Allows to get the address for a new proxy contact created via `createProxyWithNonce`
     ///      This method is only meant for address calculation purpose when you use an

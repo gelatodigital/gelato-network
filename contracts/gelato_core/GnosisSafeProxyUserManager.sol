@@ -11,16 +11,15 @@ abstract contract GnosisSafeProxyUserManager is IGnosisSafeProxyUserManager {
     mapping(address => address) public override userByGnosisSafeProxy;
     mapping(address => IGnosisSafe) public override gnosisSafeProxyByUser;
 
-    modifier onlyGnosisSafeProxyOwner(address _gnosisSafeProxy) {
-        IGnosisSafe gnosisSafeProxy = IGnosisSafe(_gnosisSafeProxy);
+    modifier onlyGnosisSafeProxyOwner(IGnosisSafe _gnosisSafeProxy) {
         require(
-            gnosisSafeProxy.isOwner(msg.sender),
+            _gnosisSafeProxy.isOwner(msg.sender),
             "GnosisSafeProxyUserManager.onlyGnosisSafeProxyOwner can call"
         );
         _;
     }
 
-    function registerAsGnosisSafeProxyUser(address _gnosisSafeProxy)
+    function registerAsGnosisSafeProxyUser(IGnosisSafe _gnosisSafeProxy)
         public
         override
         onlyGnosisSafeProxyOwner(_gnosisSafeProxy)
@@ -30,7 +29,7 @@ abstract contract GnosisSafeProxyUserManager is IGnosisSafeProxyUserManager {
             !isRegisteredGnosisSafeProxy(_gnosisSafeProxy),
             "GnosisSafeProxyUserManager.registerAsGnosisSafeProxyUser: proxy occupied "
         );
-        userByGnosisSafeProxy[_gnosisSafeProxy] = msg.sender;
+        userByGnosisSafeProxy[address(_gnosisSafeProxy)] = msg.sender;
     }
 
     function registerAsGnosisSafeProxy() public override {
@@ -45,15 +44,15 @@ abstract contract GnosisSafeProxyUserManager is IGnosisSafeProxyUserManager {
     function createGnosisSafeProxy(address _mastercopy, bytes calldata _initializer)
         external
         override
-        returns(address proxy)
+        returns(IGnosisSafe proxy)
     {
         IGnosisSafeProxyFactory factory = IGnosisSafeProxyFactory(
             0x76E2cFc1F5Fa8F6a5b3fC4c8F4788F0116861F9B
         );
         proxy = factory.createProxy(_mastercopy, _initializer);
-        userByGnosisSafeProxy[proxy] = msg.sender; // registerAsGnosisSafeProxyUser
+        userByGnosisSafeProxy[address(proxy)] = msg.sender; // registerAsGnosisSafeProxyUser
         gnosisSafeProxyByUser[msg.sender] = IGnosisSafe(proxy); // registerAsGnosisSafeProxy
-        emit LogGnosisSafeProxyUserCreation(msg.sender, proxy);
+        emit LogGnosisSafeProxyUserCreation(msg.sender, address(proxy));
     }
 
     function createGnosisSafeProxyWithNonce(
@@ -63,15 +62,15 @@ abstract contract GnosisSafeProxyUserManager is IGnosisSafeProxyUserManager {
     )
         external
         override
-        returns(address proxy)
+        returns(IGnosisSafe proxy)
     {
         IGnosisSafeProxyFactory factory = IGnosisSafeProxyFactory(
             0x76E2cFc1F5Fa8F6a5b3fC4c8F4788F0116861F9B
         );
         proxy = factory.createProxyWithNonce(_mastercopy, _initializer, _saltNonce);
-        userByGnosisSafeProxy[proxy] = msg.sender; // registerAsGnosisSafeProxyUser
-        gnosisSafeProxyByUser[msg.sender] = IGnosisSafe(proxy); // registerAsGnosisSafeProxy
-        emit LogGnosisSafeProxyUserCreation(msg.sender, proxy);
+        userByGnosisSafeProxy[address(proxy)] = msg.sender; // registerAsGnosisSafeProxyUser
+        gnosisSafeProxyByUser[msg.sender] = proxy; // registerAsGnosisSafeProxy
+        emit LogGnosisSafeProxyUserCreation(msg.sender, address(proxy));
     }
 
     // ______ State Read APIs __________________
@@ -84,16 +83,16 @@ abstract contract GnosisSafeProxyUserManager is IGnosisSafeProxyUserManager {
         return gnosisSafeProxyByUser[_user] != IGnosisSafe(0);
     }
 
-    function isRegisteredGnosisSafeProxy(address _gnosisSafeProxy)
+    function isRegisteredGnosisSafeProxy(IGnosisSafe _gnosisSafeProxy)
         public
         view
         override
         returns(bool)
     {
-        return userByGnosisSafeProxy[_gnosisSafeProxy] != address(0);
+        return userByGnosisSafeProxy[address(_gnosisSafeProxy)] != address(0);
     }
 
-    modifier onlyRegisteredGnosisSafeProxies(address _gnosisSafeProxy) {
+    modifier onlyRegisteredGnosisSafeProxies(IGnosisSafe _gnosisSafeProxy) {
         require(
             isRegisteredGnosisSafeProxy(_gnosisSafeProxy),
             "GnosisSafeProxyUserManager.onlyRegisteredGnosisSafeProxies can call."

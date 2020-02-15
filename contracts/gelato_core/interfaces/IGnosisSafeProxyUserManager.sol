@@ -11,7 +11,7 @@ interface IGnosisSafeProxyUserManager {
         address indexed gnosisSafeProxy
     );
 
-    function registerAsGnosisSafeProxyUser(address _gnosisSafeProxy) external;
+    function registerAsGnosisSafeProxyUser(IGnosisSafe _gnosisSafeProxy) external;
     function registerAsGnosisSafeProxy() external;
 
 
@@ -22,7 +22,7 @@ interface IGnosisSafeProxyUserManager {
     /// @return gnosisSafeProxy address
     function createGnosisSafeProxy(address _mastercopy, bytes calldata _initializer)
         external
-        returns(address gnosisSafeProxy);
+        returns(IGnosisSafe gnosisSafeProxy);
 
 
     /// @notice Deploys gnosis safe proxy for users that dont have a registered one yet
@@ -37,13 +37,13 @@ interface IGnosisSafeProxyUserManager {
         uint256 _saltNonce
     )
         external
-        returns(address gnosisSafeProxy);
+        returns(IGnosisSafe gnosisSafeProxy);
 
     // ______ State Read APIs __________________
     function userByGnosisSafeProxy(address _userGnosisSafeProxy) external view returns(address);
     function gnosisSafeProxyByUser(address _user) external view returns(IGnosisSafe);
     function isRegisteredUser(address _user) external view returns(bool);
-    function isRegisteredGnosisSafeProxy(address _gnosisSafeProxy)
+    function isRegisteredGnosisSafeProxy(IGnosisSafe _gnosisSafeProxy)
         external
         view
         returns(bool);

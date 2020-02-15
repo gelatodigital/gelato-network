@@ -514,7 +514,7 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
     )
         external
         override
-        onlyRegisteredGnosisSafeProxies(address(_userGnosisSafeProxy))
+        onlyRegisteredGnosisSafeProxies(_userGnosisSafeProxy)
     {
         uint256 startGas = gasleft();
         bool actionExecuted;
