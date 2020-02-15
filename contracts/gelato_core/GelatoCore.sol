@@ -211,7 +211,7 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
             "GelatoCore._execute: Insufficient gas sent"
         );
 
-        // _______ canExecute() CHECK ______________________________________________
+        // CHECK canExecute() (own scope due to stack too deep)
         {
             GelatoCoreEnums.CanExecuteResults canExecuteResult;
             uint8 canExecuteReason;

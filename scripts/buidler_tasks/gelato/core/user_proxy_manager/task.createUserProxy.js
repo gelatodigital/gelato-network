@@ -1,9 +1,8 @@
 import { task } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../../buidler.config";
-import { Contract } from "ethers";
 
 export default task(
-  "gc-createuserproxy",
+  "gc-creategnosissafeproxy",
   `Sends tx to GelatoCore.createUserProxy() on [--network] (default: ${defaultNetwork})`
 )
   .addFlag("log", "Logs return values to stdout")

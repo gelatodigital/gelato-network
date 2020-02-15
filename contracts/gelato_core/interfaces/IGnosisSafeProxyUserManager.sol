@@ -15,6 +15,16 @@ interface IGnosisSafeProxyUserManager {
     function registerAsGnosisSafeProxy() external;
 
 
+    /// @dev Allows to create new proxy contact and execute a message call to the
+    ///      new proxy within one transaction. Emits ProxyCreation.
+    /// @param _mastercopy Address of master copy.
+    /// @param _initializer Payload for message call sent to new proxy contract.
+    /// @return gnosisSafeProxy address
+    function createGnosisSafeProxy(address _mastercopy, bytes calldata _initializer)
+        external
+        returns(address gnosisSafeProxy);
+
+
     /// @notice Deploys gnosis safe proxy for users that dont have a registered one yet
     /// @dev The initializer data is important for setup magic and UX tricks.
     /// @param _mastercopy the GnosisSafe mastercopy the proxy should point to
@@ -26,8 +36,8 @@ interface IGnosisSafeProxyUserManager {
         bytes calldata _initializer,
         uint256 _saltNonce
     )
-     external
-     returns(address gnosisSafeProxy);
+        external
+        returns(address gnosisSafeProxy);
 
     // ______ State Read APIs __________________
     function userByGnosisSafeProxy(address _userGnosisSafeProxy) external view returns(address);

@@ -237,7 +237,7 @@ module.exports = {
         // kyber
         ActionKyberTradeKovan: "0xF829B506c378AaD11dB7Efe8d626cc7d0e015CBA",
         // ==== Gelato Core ===
-        GelatoCore: "0x4E2Ca0093028C8401C93AaCcCaF59288CA6fb728",
+        GelatoCore: "0x0EE1e41750acf86bd1A76F575CF899e226138159",
         // === Conditions ===
         // balance
         ConditionBalance: "0x60621bf3F7132838b27972084eaa56E87395D44B",
