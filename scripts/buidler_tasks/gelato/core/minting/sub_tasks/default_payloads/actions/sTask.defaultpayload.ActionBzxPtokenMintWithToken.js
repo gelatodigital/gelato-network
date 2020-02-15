@@ -26,7 +26,7 @@ export default internalTask(
       const depositAmt = utils.parseUnits("10", 18);
 
       // Params as sorted array of inputs for abi.encoding
-      // action(_user, _userProxy, _depositTokenAddress, _depositAmount, _pTokenAddress)
+      // action(_user, _userGnosisSafeProxy, _depositTokenAddress, _depositAmount, _pTokenAddress)
       const inputs = [
         user,
         userProxy,

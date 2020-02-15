@@ -11,7 +11,7 @@ interface IGelatoAction {
     following standard format:
         function action(
             address _user,
-            address _userProxy,
+            address _userGnosisSafeProxy,
             address _source,
             uint256 _sourceAmount,
             address _destination,
@@ -36,7 +36,7 @@ interface IGelatoAction {
     /// All actions must override this with their own implementation
     /*function getUsersSendTokenBalance(
         address _user,
-        address _userProxy,
+        address _userGnosisSafeProxy,
         address _source,
         uint256 _sourceAmount,
         address _destination,

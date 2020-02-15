@@ -27,8 +27,8 @@ contract UserProxy {
 }
 
 contract Core {
-    function catchErrorString(UserProxy _userProxy, Action _action) external {
-        try _userProxy.delegatecallGelatoAction(_action) {
+    function catchErrorString(UserProxy _userGnosisSafeProxy, Action _action) external {
+        try _userGnosisSafeProxy.delegatecallGelatoAction(_action) {
             console.log("Failed: Should have reverted!");
         } catch Error(string memory revertReason) {
             console.log(revertReason);

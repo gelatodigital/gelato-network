@@ -1,7 +1,7 @@
 pragma solidity ^0.6.2;
 
 import "./IGelatoAction.sol";
-import "../gelato_core/interfaces/IGelatoUserProxy.sol";
+import "../gelato_core/interfaces/IGnosisSafe.sol";
 
 /// @title GelatoActionsStandard
 /// @dev find all the NatSpecs inside IGelatoAction
@@ -28,7 +28,7 @@ abstract contract GelatoActionsStandard is IGelatoAction {
     following standard format:
         function action(
             address _user,
-            address _userProxy,
+            address _userGnosisSafeProxy,
             address _source,
             uint256 _sourceAmount,
             address _destination,
@@ -54,7 +54,7 @@ abstract contract GelatoActionsStandard is IGelatoAction {
     /// All actions must override this with their own implementation
     /*function getUsersSendTokenBalance(
         address _user,
-        address _userProxy,
+        address _userGnosisSafeProxy,
         address _source,
         uint256 _sourceAmount,
         address _destination,
@@ -69,13 +69,12 @@ abstract contract GelatoActionsStandard is IGelatoAction {
     different arguments passed across different actions
     */
 
-    function _isUserOwnerOfUserProxy(address _user, address _userProxy)
+    function _isUserOwnerOfGnosisSafeProxy(address _user, address _userGnosisSafeProxy)
         internal
         view
         virtual
         returns(bool)
     {
-        address owner = IGelatoUserProxy(_userProxy).user();
-        return _user == owner;
+        return IGnosisSafe(_userGnosisSafeProxy).isOwner(_user);
     }
 }

@@ -3,6 +3,7 @@ pragma solidity ^0.6.2;
 import "../GelatoCoreEnums.sol";
 import "../../conditions/IGelatoCondition.sol";
 import "../../actions/IGelatoAction.sol";
+import "./IGnosisSafe.sol";
 
 /// @title IGelatoCore - solidity interface of GelatoCore
 /// @notice canExecute API and minting, execution, cancellation of ExecutionClaims
@@ -12,7 +13,8 @@ interface IGelatoCore {
     event LogExecutionClaimMinted(
         address indexed selectedExecutor,
         uint256 indexed executionClaimId,
-        address indexed gnosisSafeProxy,
+        address indexed user,
+        IGnosisSafe gnosisSafeProxy,
         IGelatoCondition condition,
         bytes conditionPayloadWithSelector,
         IGelatoAction action,
@@ -27,7 +29,7 @@ interface IGelatoCore {
     event LogCanExecuteSuccess(
         address indexed executor,
         uint256 indexed executionClaimId,
-        address indexed gnosisSafeProxy,
+        address indexed user,
         IGelatoCondition condition,
         GelatoCoreEnums.CanExecuteResults canExecuteResult,
         uint8 reason
@@ -36,7 +38,7 @@ interface IGelatoCore {
     event LogCanExecuteFailed(
         address indexed executor,
         uint256 indexed executionClaimId,
-        address indexed gnosisSafeProxy,
+        address indexed user,
         IGelatoCondition condition,
         GelatoCoreEnums.CanExecuteResults canExecuteResult,
         uint8 reason
@@ -46,7 +48,6 @@ interface IGelatoCore {
         address indexed executor,
         uint256 indexed executionClaimId,
         address indexed user,
-        address gnosisSafeProxy,
         IGelatoCondition condition,
         IGelatoAction action,
         uint256 gasPriceUsed,
@@ -59,8 +60,7 @@ interface IGelatoCore {
     event LogExecutionFailure(
         address indexed executor,
         uint256 indexed executionClaimId,
-        address indexed user,
-        address gnosisSafeProxy,
+        address payable indexed user,
         IGelatoCondition condition,
         IGelatoAction action,
         string executionFailureReason
@@ -68,7 +68,7 @@ interface IGelatoCore {
 
     event LogExecutionClaimCancelled(
         uint256 indexed executionClaimId,
-        address indexed gnosisSafeProxy,
+        address indexed user,
         address indexed cancelor,
         bool executionClaimExpired
     );
@@ -99,7 +99,8 @@ interface IGelatoCore {
      */
     function canExecute(
         uint256 _executionClaimId,
-        address _gnosisSafeProxy,
+        address _user,
+        IGnosisSafe _gnosisSafeProxy,
         IGelatoCondition _condition,
         bytes calldata _conditionPayloadWithSelector,
         IGelatoAction _action,
@@ -119,7 +120,8 @@ interface IGelatoCore {
      */
     function execute(
         uint256 _executionClaimId,
-        address _gnosisSafeProxy,
+        address _user,
+        IGnosisSafe _gnosisSafeProxy,
         IGelatoCondition _condition,
         bytes calldata _conditionPayloadWithSelector,
         IGelatoAction _action,
@@ -141,7 +143,8 @@ interface IGelatoCore {
     function cancelExecutionClaim(
         address _selectedExecutor,
         uint256 _executionClaimId,
-        address _gnosisSafeProxy,
+        address _user,
+        IGnosisSafe _gnosisSafeProxy,
         IGelatoCondition _condition,
         bytes calldata _conditionPayloadWithSelector,
         IGelatoAction _action,
@@ -160,6 +163,11 @@ interface IGelatoCore {
     /// @param _executionClaimId TO DO
     /// @return address of the gnosisSafeProxy behind _executionClaimId
     function gnosisSafeProxyByExecutionClaimId(uint256 _executionClaimId)
+        external
+        view
+        returns(IGnosisSafe);
+
+    function getUserWithExecutionClaimId(uint256 _executionClaimId)
         external
         view
         returns(address);
@@ -184,7 +192,8 @@ interface IGelatoCore {
 
     function gasTestCanExecute(
         uint256 _executionClaimId,
-        address _gnosisSafeProxy,
+        address _user,
+        IGnosisSafe _gnosisSafeProxy,
         IGelatoCondition _condition,
         bytes calldata _conditionPayloadWithSelector,
         IGelatoAction _action,
@@ -197,18 +206,19 @@ interface IGelatoCore {
         view
         returns (GelatoCoreEnums.CanExecuteResults canExecuteResult, uint8 reason);
 
-    function gasTestActionViaGasTestUserProxy(
-        address _gasTestUserProxy,
+    function gasTestGnosisSafeExecuteFromModule(
+        IGnosisSafe _userGnosisSafeProxy,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
-        uint256 _actionGas
+        uint256 _executionGas
     )
         external;
 
 
     function gasTestExecute(
         uint256 _executionClaimId,
-        address _gnosisSafeProxy,
+        address _user,
+        IGnosisSafe _gnosisSafeProxy,
         IGelatoCondition _condition,
         bytes calldata _conditionPayloadWithSelector,
         IGelatoAction _action,

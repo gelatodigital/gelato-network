@@ -30,7 +30,7 @@ interface IGnosisSafeProxyUserManager {
      returns(address gnosisSafeProxy);
 
     // ______ State Read APIs __________________
-    function userByGnosisSafeProxy(address _userProxy) external view returns(address);
+    function userByGnosisSafeProxy(address _userGnosisSafeProxy) external view returns(address);
     function gnosisSafeProxyByUser(address _user) external view returns(IGnosisSafe);
     function isRegisteredUser(address _user) external view returns(bool);
     function isRegisteredGnosisSafeProxy(address _gnosisSafeProxy)

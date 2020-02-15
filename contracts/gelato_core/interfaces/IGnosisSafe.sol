@@ -6,16 +6,14 @@ interface IGnosisSafe {
         DelegateCall
     }
 
-    function execTransactionFromModule(
+    function execTransactionFromModuleReturnData(
         address to,
         uint256 value,
         bytes calldata data,
         Operation operation
     )
         external
-        returns (bool success);
+        returns (bool success, bytes memory returndata);
 
     function isOwner(address owner) external view returns (bool);
-
-    function NAME() external pure returns(string memory);
 }
