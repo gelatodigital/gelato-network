@@ -18,6 +18,9 @@ interface IGnosisSafe {
     )
         external;
 
+    function enableModule(address module) external;
+    function disableModule(address prevModule, address module) external;
+
     function execTransactionFromModuleReturnData(
         address to,
         uint256 value,
@@ -28,4 +31,6 @@ interface IGnosisSafe {
         returns (bool success, bytes memory returndata);
 
     function isOwner(address owner) external view returns (bool);
+
+    function getModules() external view returns (address[] memory);
 }
