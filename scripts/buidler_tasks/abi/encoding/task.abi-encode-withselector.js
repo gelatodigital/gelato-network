@@ -1,5 +1,6 @@
 import { task } from "@nomiclabs/buidler/config";
 import { utils } from "ethers";
+import checkNestedObj from "../../../helpers/nestedObjects/checkNestedObj";
 
 export default task("abi-encode-withselector")
   .addPositionalParam("contractname")
@@ -10,6 +11,10 @@ export default task("abi-encode-withselector")
     try {
       const abi = await run("abi-get", { contractname });
       const interFace = new utils.Interface(abi);
+
+      if (!checkNestedObj(interFace, "functions", functionname))
+        throw new Error("functionname is not on contract's interface");
+
       const payloadWithSelector = interFace.functions[functionname].encode([
         ...inputs
       ]);

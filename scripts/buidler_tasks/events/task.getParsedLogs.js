@@ -50,6 +50,15 @@ export default task(
 
       if (loggingActivated) taskArgs.log = true;
 
+      if (!logs && !logWithTxHash) {
+        if (taskArgs.log) {
+          console.log(
+            `No logs for ${taskArgs.contractname}.${taskArgs.eventname}`
+          );
+        }
+        return undefined;
+      }
+
       let parsedLogs, parsedLogWithTxHash;
       if (logWithTxHash) {
         parsedLogWithTxHash = await run("ethers-interface-parseLogs", {
@@ -68,7 +77,7 @@ export default task(
           console.log(
             `No logs for ${taskArgs.contractname}.${taskArgs.eventname}`
           );
-          return [];
+          return undefined;
         }
       } else {
         if (!taskArgs.txhash) {
@@ -110,24 +119,24 @@ export default task(
         } else {
           // txhash
           if (taskArgs.values) {
-            if (taskArgs.log) console.log("\n", parsedLogWithTxHash[0].values);
-            return parsedLogWithTxHash[0].values;
+            if (taskArgs.log) console.log("\n", parsedLogWithTxHash.values);
+            return parsedLogWithTxHash.values;
           } else if (taskArgs.value) {
             if (taskArgs.log) {
               console.log(
                 `\n ${taskArgs.value}: `,
                 taskArgs.stringify
-                  ? parsedLogWithTxHash[0].values[taskArgs.value].toString()
-                  : parsedLogWithTxHash[0].values[taskArgs.value]
+                  ? parsedLogWithTxHash.values[taskArgs.value].toString()
+                  : parsedLogWithTxHash.values[taskArgs.value]
               );
             }
             return taskArgs.stringify
-              ? parsedLogWithTxHash[0].values[taskArgs.value].toString()
-              : parsedLogWithTxHash[0].values[taskArgs.value];
+              ? parsedLogWithTxHash.values[taskArgs.value].toString()
+              : parsedLogWithTxHash.values[taskArgs.value];
           } else {
             if (taskArgs.log) {
               console.log(
-                `Parsed Log for ${taskArgs.contractname}.${taskArgs.eventname} with tx-Hash ${taskArgs.txhash}:\
+                `\nParsed Log for ${taskArgs.contractname}.${taskArgs.eventname} with tx-Hash ${taskArgs.txhash}:\
                  \n`,
                 parsedLogWithTxHash
               );

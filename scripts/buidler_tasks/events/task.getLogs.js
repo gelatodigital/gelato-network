@@ -16,13 +16,13 @@ export default task(
   .addOptionalParam(
     "fromblock",
     "the block number to search for event logs from",
-    undefined,  // default
+    undefined, // default
     types.number
   )
   .addOptionalParam(
     "toblock",
     "the block number up until which to look for",
-    undefined,  // default
+    undefined, // default
     types.number
   )
   .addOptionalParam("blockhash", "the blockhash in which")
@@ -72,7 +72,7 @@ export default task(
 
         let logWithTxHash;
         if (txhash)
-          logWithTxHash = logs.filter(log => log.transactionHash == txhash);
+          [logWithTxHash] = logs.filter(log => log.transactionHash == txhash);
 
         if (log) {
           if (!logs.length) {
@@ -100,8 +100,8 @@ export default task(
             }
           }
         }
-        if (txhash) return logWithTxHash;
-        else return logs;
+        if (txhash) return logWithTxHash ? logWithTxHash : undefined;
+        else return logs.length ? logs : undefined;
       } catch (error) {
         console.error(error);
         process.exit(1);

@@ -200,6 +200,12 @@ module.exports = {
           // Kovan
           default: "0x4d671CD743027fB5Af1b2D2a3ccbafA97b5B1B80"
         },
+        gnosisSafe: {
+          mastercopy: "0x34CfAC646f301356fAa8B21e94227e3583Fe3F5F",
+          proxies: {
+            luis: "0xb31359c466Cd874aA16016751F5c40E9209D2d69"
+          }
+        },
         kyber: {
           // Kovan
           ETH: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
@@ -237,7 +243,7 @@ module.exports = {
         // kyber
         ActionKyberTradeKovan: "0xF829B506c378AaD11dB7Efe8d626cc7d0e015CBA",
         // ==== Gelato Core ===
-        GelatoCore: "0x0EE1e41750acf86bd1A76F575CF899e226138159",
+        GelatoCore: "0xa77F13322089f30411F20B157b3B04f641C408eE",
         // === Conditions ===
         // balance
         ConditionBalance: "0x60621bf3F7132838b27972084eaa56E87395D44B",
@@ -245,6 +251,11 @@ module.exports = {
         ConditionKyberRateKovan: "0xD8eBB69Dc566E86eA6e09A15EBe6Fd9c65c4A698",
         // time
         ConditionTimestampPassed: "0x10A46c633adfe5a6719f3DBd2c162676779fE70B"
+      },
+      // ========== KOVAN ===========
+      filters: {
+        defaultFromBlock: 16799100,
+        defaultToBlock: "latest"
       }
     }
   },
@@ -321,7 +332,7 @@ require("./scripts/buidler_tasks/events/collection.tasks.events");
 require("./scripts/buidler_tasks/gelato/actions/collection.tasks.actions");
 // _____ CORE ______________________
 // Accounting, UserProxyManager, Minting, ...
-require("./scripts/buidler_tasks/gelato/core/collection.gelato-core.tasks");
+require("./scripts/buidler_tasks/gelato/core/collection.tasks.gelato-core");
 // _____ DAPPS ______________________
 require("./scripts/buidler_tasks/gelato/dapps/collection.tasks.dapps");
 // _____ Conditions ______________________

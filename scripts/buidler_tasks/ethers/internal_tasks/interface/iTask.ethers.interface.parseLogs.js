@@ -8,8 +8,9 @@ export default internalTask("ethers-interface-parseLogs")
       const contractInterface = await run("ethers-interface-new", {
         contractname
       });
-      const parsedLogs = logs.map(log => contractInterface.parseLog(log));
-      return parsedLogs;
+      if (Array.isArray(logs))
+        return logs.map(log => contractInterface.parseLog(log));
+      else return contractInterface.parseLog(logs);
     } catch (err) {
       console.error(err);
       process.exit(1);
