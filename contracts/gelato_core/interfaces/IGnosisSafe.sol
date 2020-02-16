@@ -1,10 +1,7 @@
 pragma solidity ^0.6.2;
 
 interface IGnosisSafe {
-    enum Operation {
-        Call,
-        DelegateCall
-    }
+    enum Operation {Call, DelegateCall}
 
     function setup(
         address[] calldata _owners,
@@ -15,8 +12,7 @@ interface IGnosisSafe {
         address paymentToken,
         uint256 payment,
         address payable paymentReceiver
-    )
-        external;
+    ) external;
 
     function enableModule(address module) external;
     function disableModule(address prevModule, address module) external;
@@ -26,11 +22,10 @@ interface IGnosisSafe {
         uint256 value,
         bytes calldata data,
         Operation operation
-    )
-        external
-        returns (bool success, bytes memory returndata);
+    ) external returns (bool success, bytes memory returndata);
 
     function isOwner(address owner) external view returns (bool);
+    function getOwners() external view returns (address[] memory);
 
     function getModules() external view returns (address[] memory);
 }

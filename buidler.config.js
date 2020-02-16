@@ -331,12 +331,15 @@ require("./scripts/buidler_tasks/events/collection.tasks.events");
 // _____ ACTIONS ______________________
 require("./scripts/buidler_tasks/gelato/actions/collection.tasks.actions");
 // _____ CORE ______________________
-// Accounting, UserProxyManager, Minting, ...
+// Accounting, GnosisSafeProxyManager, Minting, ...
 require("./scripts/buidler_tasks/gelato/core/collection.tasks.gelato-core");
 // _____ DAPPS ______________________
 require("./scripts/buidler_tasks/gelato/dapps/collection.tasks.dapps");
 // _____ Conditions ______________________
 require("./scripts/buidler_tasks/gelato/conditions/collection.tasks.conditions");
+
+// ============= GNOSIS SAFE PROXY =====================================
+require("./scripts/buidler_tasks/gnosis_safe_proxy/collection.tasks.gnosis-safe-proxy")
 
 // ============== INTERNAL HELPER TASKS ================================================
 // encoding, naming ....

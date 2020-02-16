@@ -12,13 +12,14 @@ export default task(
   )
   .setAction(async ({ user, log }) => {
     try {
+      let userAddress;
+      if (user) userAddress = user;
+      else userAddress = await run("ethers", { signer: true, address: true });
+
       const gelatoCoreContract = await run("instantiateContract", {
         contractname: "GelatoCore",
         read: true
       });
-      let userAddress;
-      if (user) userAddress = user;
-      else userAddress = await run("ethers", { signer: true, address: true });
 
       const userProxyAddress = await gelatoCoreContract.proxyByUser(
         userAddress
