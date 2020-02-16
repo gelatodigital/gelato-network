@@ -1,9 +1,9 @@
 import { task } from "@nomiclabs/buidler/config";
-import { defaultNetwork } from "../../../buidler.config";
+import { defaultNetwork } from "../../../../buidler.config";
 
 export default task(
   "gsp-isowner",
-  `Calls proxy.proxyByUser([<user>: defaults to ethers signer]) on [--network] (default: ${defaultNetwork})`
+  `Calls gnosisSafeProxy.isOwner([<address>: defaults to ethers signer]) on [--network] (default: ${defaultNetwork})`
 )
   .addPositionalParam(
     "gnosissafeproxyaddress",

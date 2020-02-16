@@ -1,2 +1,6 @@
-import "./task.isOwner";
-import "./task.getOwners";
+// ==== Owner Manager ====
+import "./owner_manager/task.isOwner";
+import "./owner_manager/task.getOwners";
+
+// === Module Manager ===
+import "./module_manager/task.getModules";

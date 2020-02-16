@@ -1,9 +1,9 @@
 import { task } from "@nomiclabs/buidler/config";
-import { defaultNetwork } from "../../../buidler.config";
+import { defaultNetwork } from "../../../../buidler.config";
 
 export default task(
-  "gsp-getowners",
-  `Calls gnosisSafeProxy.getOwners([<user>: defaults to ethers signer]) on [--network] (default: ${defaultNetwork})`
+  "gsp-getmodules",
+  `Calls gnosisSafeProxy.getModules() on [--network] (default: ${defaultNetwork})`
 )
   .addPositionalParam(
     "gnosissafeproxyaddress",
@@ -18,11 +18,11 @@ export default task(
         read: true
       });
 
-      const owners = await gnosisSafeProxy.getOwners();
+      const modules = await gnosisSafeProxy.getModules();
 
-      if (log) console.log(owners);
+      if (log) console.log("\n", modules, "\n");
 
-      return owners;
+      return modules;
     } catch (error) {
       console.error(error);
       process.exit(1);
