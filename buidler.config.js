@@ -23,7 +23,8 @@ require("dotenv").config();
 const DEV_MNEMONIC = process.env.DEV_MNEMONIC;
 const MAINNET_MNEMONIC = process.env.MAINNET_MNEMONIC;
 const INFURA_ID = process.env.INFURA_ID;
-assert.ok(DEV_MNEMONIC, "no mnenomic in process.env");
+assert.ok(DEV_MNEMONIC, "no DEV_MNEMONIC in process.env");
+assert.ok(MAINNET_MNEMONIC, "no MAINNET_MNEMONIC in process.env");
 assert.ok(INFURA_ID, "no Infura ID in process.env");
 
 // Defaults
@@ -271,76 +272,48 @@ usePlugin("@nomiclabs/buidler-ethers");
 // ================================= TASKS =========================================
 // task action function receives the Buidler Runtime Environment as second argument
 
-// ============= ABI ============================
+// ============== ABI
 require("./scripts/buidler_tasks/abi/collection.tasks.abi");
 
-// ============= BLOCK ============================
+// ============== BLOCK
 require("./scripts/buidler_tasks/block/collection.tasks.block");
 
-// ============= BRE ============================
+// ============== BRE
 // BRE, BRE-CONFIG(:networks), BRE-NETWORK
 require("./scripts/buidler_tasks/bre/collection.tasks.bre");
 
-// ============= DEBUGGING ============================
+// ============== DEBUGGING
 require("./scripts/buidler_tasks/debugging/collection.tasks.debugging");
 
-// ============= DEPLOY ============================
+// ============== DEPLOY
 require("./scripts/buidler_tasks/deploy/task.deploy");
 
-// ============= ERC20 ============================
+// ============== ERC20
 require("./scripts/buidler_tasks/erc20/collection.tasks.erc20");
 
-// ============== ETH =================================================================
-task(
-  "eth-balance",
-  `Return or (--log) an [--address] ETH balance on [--network] (default: ${DEFAULT_NETWORK})`
-)
-  .addParam("address", "The account's address")
-  .addFlag("log", "Logs return values to stdout")
-  .setAction(async ({ address, log }, { ethers, network }) => {
-    try {
-      const balance = await ethers.provider.getBalance(address);
-      if (log)
-        console.log(`\n${utils.formatEther(balance)} ETH (on ${network.name})`);
-      return balance;
-    } catch (error) {
-      console.error(error);
-      process.exit(1);
-    }
-  });
+// ============== ETH
+require("./scripts/buidler_tasks/eth/collection.tasks.eth");
 
-task("eth-price", "Logs the etherscan ether-USD price", async () => {
-  try {
-    const etherscanProvider = new providers.EtherscanProvider();
-    const ethUSDPrice = await etherscanProvider.getEtherPrice();
-    console.log(`\nETH price in USD: ${ethUSDPrice}$\n`);
-    return ethUSDPrice;
-  } catch (err) {
-    console.error(err);
-    process.exit(1);
-  }
-});
-
-// ============== ETHERS ==============================================================
+// ============== ETHERS
 require("./scripts/buidler_tasks/ethers/collection.tasks.ethers");
 
-// ============== ETHERS ==============================================================
+// ============== EVENTS
 require("./scripts/buidler_tasks/events/collection.tasks.events");
 
-// ============= GELATO ===============================================================
-// _____ ACTIONS ______________________
+// ============= GELATO
+// _____ ACTIONS
 require("./scripts/buidler_tasks/gelato/actions/collection.tasks.actions");
-// _____ CORE ______________________
+// _____ CORE
 // Accounting, GnosisSafeProxyManager, Minting, ...
 require("./scripts/buidler_tasks/gelato/core/collection.tasks.gelato-core");
-// _____ DAPPS ______________________
+// _____ DAPPS
 require("./scripts/buidler_tasks/gelato/dapps/collection.tasks.dapps");
-// _____ Conditions ______________________
+// _____ Conditions
 require("./scripts/buidler_tasks/gelato/conditions/collection.tasks.conditions");
 
-// ============= GNOSIS SAFE PROXY =====================================
-require("./scripts/buidler_tasks/gnosis_safe_proxy/collection.tasks.gnosis-safe-proxy")
+// ============= GNOSIS SAFE PROXY
+require("./scripts/buidler_tasks/gnosis_safe_proxy/collection.tasks.gnosis-safe-proxy");
 
-// ============== INTERNAL HELPER TASKS ================================================
+// ======================== INTERNAL HELPER TASKS ======================================
 // encoding, naming ....
 require("./scripts/buidler_tasks/internal/collection.internalTasks");
