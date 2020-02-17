@@ -13,6 +13,10 @@ export default task(
     "eventname",
     "The name of the event in the <contractname>'s abi"
   )
+  .addOptionalPositionalParam(
+    "contractaddress",
+    "An address of a deployed instance of <contractname>. Defaults to network.deployments.<contractname>"
+  )
   .addOptionalParam(
     "fromblock",
     "the block number to search for event logs from",
@@ -32,6 +36,7 @@ export default task(
     async ({
       contractname,
       eventname,
+      contractaddress,
       blockhash,
       fromblock,
       toblock,
@@ -39,10 +44,12 @@ export default task(
       log
     }) => {
       try {
-        const contractAddress = await run("bre-config", {
-          deployments: true,
-          contractname
-        });
+        if (!contractaddress) {
+          contractaddress = await run("bre-config", {
+            deployments: true,
+            contractname
+          });
+        }
         const contractInterface = await run("ethers-interface-new", {
           contractname
         });
@@ -61,7 +68,7 @@ export default task(
         if (!toblock && !blockhash) toblock = defaultToBlock;
 
         const filter = {
-          address: contractAddress,
+          address: contractaddress,
           blockHash: blockhash,
           fromBlock: fromblock,
           toBlock: toblock,

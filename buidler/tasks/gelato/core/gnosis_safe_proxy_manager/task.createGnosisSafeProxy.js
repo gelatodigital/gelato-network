@@ -1,6 +1,6 @@
-import { constants } from "ethers";
 import { task } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../../buidler.config";
+import { constants } from "ethers";
 
 export default task(
   "gc-creategnosissafeproxy",

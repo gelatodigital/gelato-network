@@ -51,7 +51,7 @@ export default task(
 
       if (log) {
         const msgValueETH = utils.formatUnits(msgValue, "ether");
-        const ethUSDPrice = await run("eth-price");
+        const ethUSDPrice = await run("eth", { usd: true, log });
         const msgValueUSD = (ethUSDPrice * parseFloat(msgValueETH)).toFixed(2);
         console.log(
           `\nMinting Deposit for ${numberofmints} mints: ${msgValueETH}ETH (${msgValueUSD}$)\n`

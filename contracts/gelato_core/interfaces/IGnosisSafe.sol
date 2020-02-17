@@ -3,6 +3,9 @@ pragma solidity ^0.6.2;
 interface IGnosisSafe {
     enum Operation {Call, DelegateCall}
 
+    event ExecutionFailure(bytes32 txHash, uint256 payment);
+    event ExecutionSuccess(bytes32 txHash, uint256 payment);
+
     function setup(
         address[] calldata _owners,
         uint256 _threshold,
@@ -13,6 +16,19 @@ interface IGnosisSafe {
         uint256 payment,
         address payable paymentReceiver
     ) external;
+
+    function execTransaction(
+        address to,
+        uint256 value,
+        bytes calldata data,
+        Operation operation,
+        uint256 safeTxGas,
+        uint256 baseGas,
+        uint256 gasPrice,
+        address gasToken,
+        address payable refundReceiver,
+        bytes calldata signatures
+    ) external returns (bool success);
 
     function enableModule(address module) external;
     function disableModule(address prevModule, address module) external;

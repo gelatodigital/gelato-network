@@ -11,6 +11,9 @@ export default internalTask(
   .addFlag("write")
   .setAction(async ({ contractname, contractaddress, read, write }) => {
     try {
+      if (!read && !write)
+        throw new Error("instantiateContract: must specify read or write");
+
       if (!contractaddress)
         contractaddress = await run("bre-config", {
           deployments: true,

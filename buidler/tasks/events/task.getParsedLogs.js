@@ -13,6 +13,10 @@ export default task(
     "eventname",
     "The name of the event in the <contractname>'s abi"
   )
+  .addOptionalPositionalParam(
+    "contractaddress",
+    "An address of a deployed instance of <contractname>. Defaults to network.deployments.<contractname>"
+  )
   .addOptionalParam(
     "fromblock",
     "the block number to search for event logs from",
