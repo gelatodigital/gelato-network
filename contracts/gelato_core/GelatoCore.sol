@@ -34,12 +34,14 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
         override
         onlyRegisteredExecutors(_selectedExecutor)
     {
-        // Get user AND make sure only registered Gnosis Safe Proxies can call
-        address user = userByGnosisSafeProxy[msg.sender];
-        require(
-            user != address(0),
-            "GelatoCore.mintExecutionClaim: only registered GnosisSafeProxies can call."
-        );
+        // We should get user here too but np due to stack too deep
+        IGnosisSafe userGnosisSafeProxy;
+        if (isRegisteredUser(msg.sender))
+            userGnosisSafeProxy = gnosisSafeProxyByUser[msg.sender];
+        else if (isRegisteredGnosisSafeProxy(IGnosisSafe(msg.sender)))
+            userGnosisSafeProxy = IGnosisSafe(msg.sender);
+        else
+            revert("GelatoCore.mintExecutionClaim: caller must be registered user or proxy");
 
         // Read Gas Values & Charge Minting Deposit
         uint256[3] memory conditionGasActionGasMinExecutionGas;
@@ -67,7 +69,7 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
         // Mint new executionClaim
         executionClaimIds.increment();
         uint256 executionClaimId = executionClaimIds.current();
-        gnosisSafeProxyByExecutionClaimId[executionClaimId] = IGnosisSafe(msg.sender);
+        gnosisSafeProxyByExecutionClaimId[executionClaimId] = userGnosisSafeProxy;
 
         uint256 executionClaimExpiryDate = now.add(executorClaimLifespan[_selectedExecutor]);
 
@@ -75,8 +77,8 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
         executionClaimHash[executionClaimId] = _computeExecutionClaimHash(
             _selectedExecutor,
             executionClaimId,  // To avoid hash collisions
-            user,
-            IGnosisSafe(msg.sender),
+            userByGnosisSafeProxy[address(userGnosisSafeProxy)],  // user
+            userGnosisSafeProxy,
             _condition,
             _conditionPayloadWithSelector,
             _action,
@@ -89,8 +91,8 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
         emit LogExecutionClaimMinted(
             _selectedExecutor,
             executionClaimId,
-            user,
-            IGnosisSafe(msg.sender),
+            userByGnosisSafeProxy[address(userGnosisSafeProxy)],  // user
+            userGnosisSafeProxy,
             _condition,
             _conditionPayloadWithSelector,
             _action,

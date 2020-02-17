@@ -11,7 +11,7 @@ export const addressBook = {
     default: "0x4d671CD743027fB5Af1b2D2a3ccbafA97b5B1B80"
   },
   gnosisSafe: gnosisSafe,
-  gnosisSafeProxies: gnosisSafeProxies,
+  gnosisSafeProxy: gnosisSafeProxies,
   kyber: {
     // Kovan
     ETH: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",

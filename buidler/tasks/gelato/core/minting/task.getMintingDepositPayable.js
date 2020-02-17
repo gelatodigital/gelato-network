@@ -49,7 +49,7 @@ export default task(
         console.log(
           `MintingDepositPayable:        ${mintingDepositPayableETH} ETH`
         );
-        const ethUSDPrice = await run("eth", { usd: true, log: taskArgs.log });
+        const ethUSDPrice = await run("eth", { usd: true });
         console.log(
           `MintingDepositPayable in USD: ${(
             ethUSDPrice * parseFloat(mintingDepositPayableETH)
