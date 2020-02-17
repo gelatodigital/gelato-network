@@ -1,7 +1,7 @@
-import { task } from "@nomiclabs/buidler/config";
+import { internalTask } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../buidler.config";
 
-export default task(
+export default internalTask(
   "eth:balance",
   `Return ([<account>: defaults to ethers signer]) ETH balance on [--network] (default: ${defaultNetwork})`
 )
