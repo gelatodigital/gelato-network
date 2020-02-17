@@ -1,2 +1,3 @@
 import "./task.createGnosisSafeProxy";
-import "./task.proxyByUser";
+import "./task.gnosisSafeProxyByUser";
+import "./task.userByGnosisSafeProxy";

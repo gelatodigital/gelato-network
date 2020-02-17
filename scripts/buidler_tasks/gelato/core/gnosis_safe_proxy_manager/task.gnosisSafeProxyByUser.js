@@ -2,33 +2,33 @@ import { task } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../../buidler.config";
 
 export default task(
-  "gc-proxybyuser",
-  `Calls GelatoCore.proxyByUser([<user>: defaults to ethers signer]) on [--network] (default: ${defaultNetwork})`
+  "gc-gnosissafeproxybyuser",
+  `Calls GelatoCore.gnosisSafeProxyByUser([<user>: defaults to ethers signer]) on [--network] (default: ${defaultNetwork})`
 )
-  .addFlag("log", "Logs return values to stdout")
   .addOptionalPositionalParam(
     "user",
     "The address of the user, whose proxy address we query"
   )
+  .addFlag("log", "Logs return values to stdout")
   .setAction(async ({ user, log }) => {
     try {
-      let userAddress;
-      if (user) userAddress = user;
-      else userAddress = await run("ethers", { signer: true, address: true });
+      if (!user) user = await run("ethers", { signer: true, address: true });
 
       const gelatoCoreContract = await run("instantiateContract", {
         contractname: "GelatoCore",
         read: true
       });
 
-      const userProxyAddress = await gelatoCoreContract.proxyByUser(
-        userAddress
+      const gnosisSafeProxyAddress = await gelatoCoreContract.gnosisSafeProxyByUser(
+        user
       );
-      if (log)
+      if (log) {
         console.log(
-          `\nuserProxyAddress of user: ${userAddress}:\n${userProxyAddress}\n`
+          `\n User:            ${user}\
+           \n GnosisSafeProxy: ${gnosisSafeProxyAddress}\n`
         );
-      return userProxyAddress;
+      }
+      return gnosisSafeProxyAddress;
     } catch (error) {
       console.error(error);
       process.exit(1);

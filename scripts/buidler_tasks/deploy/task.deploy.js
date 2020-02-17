@@ -24,20 +24,20 @@ export default task(
       taskArgs.compile = true;
 
       const { contractname } = taskArgs;
-      const networkName = network.name;
+      const networkname = network.name;
 
-      if (networkName == "mainnet") {
+      if (networkname == "mainnet") {
         console.log(
-          "MAINNET action: are you sure you want to proceed? - hit 'ctrl + c' to abort"
+          "\nMAINNET action: are you sure you want to proceed? - hit 'ctrl + c' to abort\n"
         );
         await sleep(10000);
       }
 
-      await run("checkContractName", { contractname, networkName });
+      await run("checkContractName", { contractname, networkname });
 
       if (taskArgs.log)
         console.log(
-          `\nStarting deployment on ${networkName.toUpperCase()} sequence for ${contractname}\n`
+          `\nStarting deployment on ${networkname.toUpperCase()} sequence for ${contractname}\n`
         );
 
       if (taskArgs.clean) {
@@ -63,10 +63,11 @@ export default task(
 
       await contract.deployed();
 
-      if (taskArgs.log)
+      if (taskArgs.log) {
         console.log(
-          `\n${contractname} instantiated on ${networkName} at: ${contract.address}\n`
+          `\n${contractname} instantiated on ${networkname} at: ${contract.address}\n`
         );
+      }
 
       return contract.address;
     } catch (err) {

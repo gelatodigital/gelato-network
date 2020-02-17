@@ -163,7 +163,7 @@ module.exports = {
       // Standard
       accounts: { mnemonic: DEV_MNEMONIC },
       chainId: 42,
-      gasPrice: 1000000000, // 1 gwei
+      gasPrice: parseInt(utils.parseUnits("1", "gwei")),
       url: `https://kovan.infura.io/v3/${INFURA_ID}`,
       // Custom
       addressBook: {

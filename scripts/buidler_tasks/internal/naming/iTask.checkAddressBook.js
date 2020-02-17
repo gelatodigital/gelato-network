@@ -30,10 +30,11 @@ export default internalTask("checkAddressBook")
             category,
             entry
           )
-        )
+        ) {
           throw new Error(
             `Entry: ${entry} does not exist in config.networks.${networkname}.addressBook.${category}`
           );
+        }
       }
     } catch (err) {
       console.error(err);
