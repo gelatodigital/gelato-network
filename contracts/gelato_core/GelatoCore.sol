@@ -117,27 +117,27 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
         public
         view
         override
-        returns (GelatoCoreEnums.CanExecuteResults, uint8 reason)
+        returns (CanExecuteResult, uint8 reason)
     {
         // _____________ Static CHECKS __________________________________________
         if (executionClaimHash[_executionClaimId] == bytes32(0)) {
             if (_executionClaimId <= executionClaimIds.current()) {
                 return (
-                    GelatoCoreEnums.CanExecuteResults.ExecutionClaimAlreadyExecutedOrCancelled,
-                    uint8(GelatoCoreEnums.StandardReason.NotOk)
+                    CanExecuteResult.ExecutionClaimAlreadyExecutedOrCancelled,
+                    uint8(StandardReason.NotOk)
                 );
             } else {
                 return (
-                    GelatoCoreEnums.CanExecuteResults.ExecutionClaimNonExistant,
-                    uint8(GelatoCoreEnums.StandardReason.NotOk)
+                    CanExecuteResult.ExecutionClaimNonExistant,
+                    uint8(StandardReason.NotOk)
                 );
             }
         }
 
         if (_executionClaimExpiryDate < now) {
             return (
-                GelatoCoreEnums.CanExecuteResults.ExecutionClaimExpired,
-                uint8(GelatoCoreEnums.StandardReason.NotOk)
+                CanExecuteResult.ExecutionClaimExpired,
+                uint8(StandardReason.NotOk)
             );
         }
 
@@ -157,16 +157,16 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
 
         if (computedExecutionClaimHash != executionClaimHash[_executionClaimId]) {
             return (
-                GelatoCoreEnums.CanExecuteResults.WrongCalldataOrMsgSender,
-                uint8(GelatoCoreEnums.StandardReason.NotOk)
+                CanExecuteResult.WrongCalldataOrMsgSender,
+                uint8(StandardReason.NotOk)
             );
         }
 
         // Self-Conditional Actions pass and return
         if (address(_condition) == address(0)) {
             return (
-                GelatoCoreEnums.CanExecuteResults.Executable,
-                uint8(GelatoCoreEnums.StandardReason.Ok)
+                CanExecuteResult.Executable,
+                uint8(StandardReason.Ok)
             );
         } else {
             // Dynamic Checks needed for Conditional Actions
@@ -176,15 +176,15 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
             );
             if (!success) {
                 return (
-                    GelatoCoreEnums.CanExecuteResults.UnhandledConditionError,
-                    uint8(GelatoCoreEnums.StandardReason.UnhandledError)
+                    CanExecuteResult.UnhandledConditionError,
+                    uint8(StandardReason.UnhandledError)
                 );
             } else {
                 bool conditionReached;
                 (conditionReached, reason) = abi.decode(returndata, (bool, uint8));
                 if (!conditionReached)
-                    return (GelatoCoreEnums.CanExecuteResults.ConditionNotOk, reason);
-                else return (GelatoCoreEnums.CanExecuteResults.Executable, reason);
+                    return (CanExecuteResult.ConditionNotOk, reason);
+                else return (CanExecuteResult.Executable, reason);
             }
         }
     }
@@ -213,7 +213,7 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
 
         // CHECK canExecute() (own scope due to stack too deep)
         {
-            GelatoCoreEnums.CanExecuteResults canExecuteResult;
+            CanExecuteResult canExecuteResult;
             uint8 canExecuteReason;
             (canExecuteResult, canExecuteReason) = canExecute(
                 _executionClaimId,
@@ -228,7 +228,7 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
                 _mintingDeposit
             );
 
-            if (canExecuteResult == GelatoCoreEnums.CanExecuteResults.Executable) {
+            if (canExecuteResult == CanExecuteResult.Executable) {
                 emit LogCanExecuteSuccess(
                     msg.sender,
                     _executionClaimId,
@@ -486,7 +486,7 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
         external
         view
         override
-        returns (GelatoCoreEnums.CanExecuteResults canExecuteResult, uint8 reason)
+        returns (CanExecuteResult canExecuteResult, uint8 reason)
     {
         uint256 startGas = gasleft();
         (canExecuteResult, reason) = canExecute(
@@ -501,7 +501,7 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
             _executionClaimExpiryDate,
             _mintingDeposit
         );
-        if (canExecuteResult == GelatoCoreEnums.CanExecuteResults.Executable)
+        if (canExecuteResult == CanExecuteResult.Executable)
             revert(string(abi.encodePacked(startGas - gasleft())));
         revert("GelatoCore.gasTestCanExecute: Not Executable/Wrong Args");
     }

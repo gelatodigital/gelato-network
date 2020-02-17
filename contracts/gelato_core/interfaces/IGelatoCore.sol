@@ -1,6 +1,5 @@
 pragma solidity ^0.6.2;
 
-import "../GelatoCoreEnums.sol";
 import "../../conditions/IGelatoCondition.sol";
 import "../../actions/IGelatoAction.sol";
 import "./IGnosisSafe.sol";
@@ -9,6 +8,18 @@ import "./IGnosisSafe.sol";
 /// @notice canExecute API and minting, execution, cancellation of ExecutionClaims
 /// @dev all the APIs and events are implemented inside GelatoCore
 interface IGelatoCore {
+
+    enum CanExecuteResult {
+        ExecutionClaimAlreadyExecutedOrCancelled,
+        ExecutionClaimNonExistant,
+        ExecutionClaimExpired,
+        WrongCalldataOrMsgSender,  // also returns if a not-selected executor calls fn
+        ConditionNotOk,
+        UnhandledConditionError,
+        Executable
+    }
+
+    enum StandardReason { Ok, NotOk, UnhandledError }
 
     event LogExecutionClaimMinted(
         address indexed selectedExecutor,
@@ -31,7 +42,7 @@ interface IGelatoCore {
         uint256 indexed executionClaimId,
         address indexed user,
         IGelatoCondition condition,
-        GelatoCoreEnums.CanExecuteResults canExecuteResult,
+        CanExecuteResult canExecuteResult,
         uint8 reason
     );
 
@@ -40,7 +51,7 @@ interface IGelatoCore {
         uint256 indexed executionClaimId,
         address indexed user,
         IGelatoCondition condition,
-        GelatoCoreEnums.CanExecuteResults canExecuteResult,
+        CanExecuteResult canExecuteResult,
         uint8 reason
     );
 
@@ -94,7 +105,7 @@ interface IGelatoCore {
      * @dev The API for executors to check whether a claim is executable.
      *       Caution: there are no guarantees that CanExecuteResult and/or reason
      *       are implemented in a logical fashion by condition/action developers.
-     * @return GelatoCoreEnums.CanExecuteResults The outcome of the canExecuteCheck
+     * @return CanExecuteResult The outcome of the canExecuteCheck
      * @return reason The reason for the outcome of the canExecute Check
      */
     function canExecute(
@@ -111,7 +122,7 @@ interface IGelatoCore {
     )
         external
         view
-        returns (GelatoCoreEnums.CanExecuteResults, uint8 reason);
+        returns (CanExecuteResult, uint8 reason);
 
 
     /**
@@ -204,7 +215,7 @@ interface IGelatoCore {
     )
         external
         view
-        returns (GelatoCoreEnums.CanExecuteResults canExecuteResult, uint8 reason);
+        returns (CanExecuteResult canExecuteResult, uint8 reason);
 
     function gasTestGnosisSafeExecuteFromModule(
         IGnosisSafe _userGnosisSafeProxy,
