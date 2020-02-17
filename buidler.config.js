@@ -2,7 +2,7 @@
 require("@babel/register");
 // Libraries
 const assert = require("assert");
-const { providers, utils } = require("ethers");
+const { utils } = require("ethers");
 // Helpers
 const checkNestedObj = require("./scripts/helpers/nestedObjects/checkNestedObj")
   .default;
@@ -273,47 +273,47 @@ usePlugin("@nomiclabs/buidler-ethers");
 // task action function receives the Buidler Runtime Environment as second argument
 
 // ============== ABI
-require("./scripts/buidler_tasks/abi/collection.tasks.abi");
+require("./buidler/tasks/abi/collection.tasks.abi");
 
 // ============== BLOCK
-require("./scripts/buidler_tasks/block/collection.tasks.block");
+require("./buidler/tasks/block/collection.tasks.block");
 
 // ============== BRE
 // BRE, BRE-CONFIG(:networks), BRE-NETWORK
-require("./scripts/buidler_tasks/bre/collection.tasks.bre");
+require("./buidler/tasks/bre/collection.tasks.bre");
 
 // ============== DEBUGGING
-require("./scripts/buidler_tasks/debugging/collection.tasks.debugging");
+require("./buidler/tasks/debugging/collection.tasks.debugging");
 
 // ============== DEPLOY
-require("./scripts/buidler_tasks/deploy/task.deploy");
+require("./buidler/tasks/deploy/task.deploy");
 
 // ============== ERC20
-require("./scripts/buidler_tasks/erc20/collection.tasks.erc20");
+require("./buidler/tasks/erc20/collection.tasks.erc20");
 
 // ============== ETH
-require("./scripts/buidler_tasks/eth/collection.tasks.eth");
+require("./buidler/tasks/eth/collection.tasks.eth");
 
 // ============== ETHERS
-require("./scripts/buidler_tasks/ethers/collection.tasks.ethers");
+require("./buidler/tasks/ethers/collection.tasks.ethers");
 
 // ============== EVENTS
-require("./scripts/buidler_tasks/events/collection.tasks.events");
+require("./buidler/tasks/events/collection.tasks.events");
 
 // ============= GELATO
 // _____ ACTIONS
-require("./scripts/buidler_tasks/gelato/actions/collection.tasks.actions");
+require("./buidler/tasks/gelato/actions/collection.tasks.actions");
 // _____ CORE
 // Accounting, GnosisSafeProxyManager, Minting, ...
-require("./scripts/buidler_tasks/gelato/core/collection.tasks.gelato-core");
+require("./buidler/tasks/gelato/core/collection.tasks.gelato-core");
 // _____ DAPPS
-require("./scripts/buidler_tasks/gelato/dapps/collection.tasks.dapps");
+require("./buidler/tasks/gelato/dapps/collection.tasks.dapps");
 // _____ Conditions
-require("./scripts/buidler_tasks/gelato/conditions/collection.tasks.conditions");
+require("./buidler/tasks/gelato/conditions/collection.tasks.conditions");
 
 // ============= GNOSIS SAFE PROXY
-require("./scripts/buidler_tasks/gnosis_safe_proxy/collection.tasks.gnosis-safe-proxy");
+require("./buidler/tasks/gnosis_safe_proxy/collection.tasks.gnosis-safe-proxy");
 
 // ======================== INTERNAL HELPER TASKS ======================================
 // encoding, naming ....
-require("./scripts/buidler_tasks/internal/collection.internalTasks");
+require("./buidler/tasks/internal/collection.internalTasks");

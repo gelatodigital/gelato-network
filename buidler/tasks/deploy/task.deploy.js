@@ -1,6 +1,5 @@
 import { task } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../buidler.config";
-import sleep from "../../helpers/async/sleep";
 
 export default task(
   "deploy",

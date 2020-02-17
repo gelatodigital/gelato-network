@@ -1,6 +1,6 @@
 import { task } from "@nomiclabs/buidler/config";
 import { utils } from "ethers";
-import checkNestedObj from "../../../helpers/nestedObjects/checkNestedObj";
+import checkNestedObj from "../../../../scripts/helpers/nestedObjects/checkNestedObj";
 
 export default task("abi-encode-withselector")
   .addPositionalParam("contractname")
