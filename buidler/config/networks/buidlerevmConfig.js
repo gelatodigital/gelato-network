@@ -1,1 +1,1 @@
-export * from "./buidlerevm/collection.config.buidlerevm"
+export * from "./buidlerevm/collection.configs.buidlerevm"
