@@ -27,6 +27,9 @@ assert.ok(DEV_MNEMONIC, "no DEV_MNEMONIC in process.env");
 assert.ok(MAINNET_MNEMONIC, "no MAINNET_MNEMONIC in process.env");
 assert.ok(INFURA_ID, "no Infura ID in process.env");
 
+// Config Files
+const buidlerevmConfig = require("./buidler/config/networks/buidlerevmConfig");
+
 // Defaults
 const DEFAULT_NETWORK = "kovan";
 
@@ -35,28 +38,7 @@ module.exports = {
   networks: {
     buidlerevm: {
       hardfork: "istanbul",
-      contracts: [
-        // BuidlerEVM
-        "ActionBzxPtokenBurnToToken",
-        "ActionBzxPtokenMintWithToken",
-        "ActionERC20Transfer",
-        "ActionERC20TransferFrom",
-        "ActionKyberTrade",
-        "ActionMultiMintForConditionTimestampPassed",
-        "GelatoCore",
-        "ConditionBalance",
-        "ConditionKyberRateKovan",
-        "ConditionTimestampPassed",
-        // === Debugging
-        // Action
-        "ActionKyberTradePayloadDecoding",
-        // Conditions
-        "ConditionKyberRatePayloadDecoding",
-        // ReverStringDecoding
-        "Action",
-        "Core",
-        "UserProxy"
-      ]
+      contracts: buidlerevmConfig.contracts
     },
     mainnet: {
       // Standard
