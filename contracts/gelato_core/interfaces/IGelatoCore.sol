@@ -114,7 +114,6 @@ interface IGelatoCore {
         bytes calldata _conditionPayloadWithSelector,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
-        uint256[3] calldata _conditionGasActionTotalGasMinExecutionGas,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
     )

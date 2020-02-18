@@ -1,50 +1,86 @@
 pragma solidity ^0.6.2;
 
 import "./interfaces/IGelatoCoreAccounting.sol";
+import "../external/Ownable.sol";
 import "../external/Address.sol";
 import "../external/SafeMath.sol";
 
 /// @title GelatoCoreAccounting
 /// @notice APIs for GelatoCore Owner and executorClaimLifespan
 /// @dev Find all NatSpecs inside IGelatoCoreAccounting
-abstract contract GelatoCoreAccounting is IGelatoCoreAccounting {
+abstract contract GelatoCoreAccounting is IGelatoCoreAccounting, Ownable {
 
     using Address for address payable;  /// for oz's sendValue method
     using SafeMath for uint256;
 
-    //_____________ Gelato Executor Economics _______________________
-    mapping(address => uint256) public override executorPrice;
+    // ===== Protocol Admin ======
+    uint256 public override adminGasPrice = 9000000000;  // 9 gwei
+
+    // Gelato Manager Economics
+    mapping(address => uint256) public override benefactorBalance;
+
+    // Gelato Executor Economics
     mapping(address => uint256) public override executorClaimLifespan;
     mapping(address => uint256) public override executorBalance;
-    // =========================
-    // the minimum executionClaimLifespan imposed upon executors
-    uint256 public constant override minExecutionClaimLifespan = 10 minutes;
-    //_____________ Gas values for executionClaim cost calculations _______
-    uint256 public constant override gelatoCoreExecGasOverhead = 80000;
-    uint256 public constant override userProxyExecGasOverhead = 40000;
-    uint256 public constant override totalExecutionGasOverhead = (
-        gelatoCoreExecGasOverhead + userProxyExecGasOverhead
-    );
 
-    // __ Executor De/Registrations _______
-    function registerExecutor(
-        uint256 _executorPrice,
-        uint256 _executorClaimLifespan
-    )
+    // ===== Protocol Admin ======
+    function setAdminGasPrice(uint256 _newGasPrice) external onlyOwner {
+        emit LogSetAdminGasPrice(adminGasPrice, _newGasPrice, msg.sender);
+        adminGasPrice = _gasPrice;
+    }
+
+    // Benefactor Economics
+    function addBenefactorBalance(uint256 _amount) external override {
+        uint256 currentBenefactorBalance = benefactorBalance[msg.sender];
+        benefactorBalance[msg.sender] = currentBenefactorBalance.add(_amount);
+        emit LogAddBenefactorBalance(
+            msg.sender,
+            currentBenefactorBalance,
+            benefactorBalance[msg.sender]
+        );
+    }
+
+    function withdrawBenefactorBalance(uint256 _withdrawAmount)
         external
         override
     {
+        // Checks
+        uint256 currentBenefactorBalance = benefactorBalance[msg.sender];
+        require(
+            _withdrawAmount > 0,
+            "GelatoCoreAccounting.withdrawManagerBalance: zero _withdrawAmount"
+        );
+        require(
+            currentBenefactorBalance > _withdrawAmount,
+            "GelatoCoreAccounting.withdrawManagerBalance: zero balance"
+        );
+        // Effects
+        benefactorBalance[msg.sender] = currentBenefactorBalance - _withdrawAmount;
+        // Interaction
+        msg.sender.sendValue(_withdrawAmount);
+        emit LogWithdrawBenefactorBalance(
+            msg.sender,
+            currentBenefactorBalance,
+            benefactorBalance[msg.sender]
+        );
+    }
+
+    modifier onlyStakedBenefactors(address _benefactor) {
+        require(
+            benefactorBalance[_benefactor] != 0,
+            "GelatoCoreAccounting.onlyStakedBenefactors: failed"
+        );
+        _;
+    }
+
+    // Executor De/Registrations
+    function registerExecutor(uint256 _executorClaimLifespan) external override {
         require(
             _executorClaimLifespan >= minExecutionClaimLifespan,
             "GelatoCoreAccounting.registerExecutor: _executorClaimLifespan cannot be 0"
         );
-        executorPrice[msg.sender] = _executorPrice;
         executorClaimLifespan[msg.sender] = _executorClaimLifespan;
-        emit LogRegisterExecutor(
-            msg.sender,
-            _executorPrice,
-            _executorClaimLifespan
-        );
+        emit LogRegisterExecutor(msg.sender, _executorClaimLifespan);
     }
 
     modifier onlyRegisteredExecutors(address _executor) {
@@ -60,18 +96,8 @@ abstract contract GelatoCoreAccounting is IGelatoCoreAccounting {
         override
         onlyRegisteredExecutors(msg.sender)
     {
-        executorPrice[msg.sender] = 0;
         executorClaimLifespan[msg.sender] = 0;
         emit LogDeregisterExecutor(msg.sender);
-    }
-
-    // __ Executor Economics _______
-    function setExecutorPrice(uint256 _newExecutorGasPrice)
-        external
-        override
-    {
-        emit LogSetExecutorPrice(executorPrice[msg.sender], _newExecutorGasPrice);
-        executorPrice[msg.sender] = _newExecutorGasPrice;
     }
 
     function setExecutorClaimLifespan(uint256 _newExecutorClaimLifespan)
@@ -79,7 +105,7 @@ abstract contract GelatoCoreAccounting is IGelatoCoreAccounting {
         override
     {
         require(
-            _newExecutorClaimLifespan >= minExecutionClaimLifespan,
+            _newExecutorClaimLifespan > 0,
             "GelatoCoreAccounting.setExecutorClaimLifespan: failed"
         );
         emit LogSetExecutorClaimLifespan(
@@ -89,56 +115,22 @@ abstract contract GelatoCoreAccounting is IGelatoCoreAccounting {
         executorClaimLifespan[msg.sender] = _newExecutorClaimLifespan;
     }
 
-    function withdrawExecutorBalance()
-        external
-        override
-    {
+    // Executor Economics
+    function withdrawExecutorBalance(_withdrawAmount) external override {
         // Checks
         uint256 currentExecutorBalance = executorBalance[msg.sender];
         require(
-            currentExecutorBalance > 0,
-            "GelatoCoreAccounting.withdrawExecutorBalance: failed"
+            _withdrawAmount > 0,
+            "GelatoCoreAccounting.withdrawExecutorBalance: zero _withdrawAmount"
+        );
+        require(
+            currentExecutorBalance > _withdrawAmount,
+            "GelatoCoreAccounting.withdrawExecutorBalance: zero balance"
         );
         // Effects
-        executorBalance[msg.sender] = 0;
+        executorBalance[msg.sender] = currentExecutorBalance - _withdrawAmount;
         // Interaction
-        msg.sender.sendValue(currentExecutorBalance);
-        emit LogWithdrawExecutorBalance(msg.sender, currentExecutorBalance);
+        msg.sender.sendValue(_withdrawAmount);
+        emit LogWithdrawExecutorBalance(msg.sender, _withdrawAmount);
     }
-
-    // _______ APIs for executionClaim pricing ______________________________________
-    function getMintingDepositPayable(
-        address _selectedExecutor,
-        IGelatoCondition _condition,
-        IGelatoAction _action
-    )
-        external
-        view
-        override
-        onlyRegisteredExecutors(_selectedExecutor)
-        returns(uint256 mintingDepositPayable)
-    {
-        uint256 conditionGas = _condition.conditionGas();
-        uint256 actionGas = _action.actionGas();
-        uint256 executionMinGas = _getMinExecutionGas(conditionGas, actionGas);
-        mintingDepositPayable = executionMinGas.mul(executorPrice[_selectedExecutor]);
-    }
-
-    function getMinExecutionGas(uint256 _conditionGas, uint256 _actionGas)
-        external
-        pure
-        override
-        returns(uint256)
-    {
-        return _getMinExecutionGas(_conditionGas, _actionGas);
-    }
-
-    function _getMinExecutionGas(uint256 _conditionGas, uint256 _actionGas)
-        internal
-        pure
-        returns(uint256)
-    {
-        return totalExecutionGasOverhead.add(_conditionGas).add(_actionGas);
-    }
-    // =======
 }

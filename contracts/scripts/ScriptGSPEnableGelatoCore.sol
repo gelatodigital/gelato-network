@@ -8,17 +8,17 @@ import "../gelato_core/interfaces/IGnosisSafe.sol";
 //  their message. see ModuleManager.setupModules require expression:
 // https://github.com/gnosis/safe-contracts/blob/aa0f3345b609a816ace6c448960ddb852b8a1bbd/contracts/base/ModuleManager.sol#L29
 
-/// @title CreateAndMint
+/// @title ScriptGnosisSafeEnableGelatoCore
 /// @notice Script to be run during Gnosis Safe Proxy setup for Gelato integration
 /// @dev Should be delegatecalled from gnosisSafeProxy.setup.setupModules(to,data):
-///       - <to> should be the address of this contract: GnosisSafeProxyGelatoCoreSetup
-///       - <data> should be the encodedPayload for whitelistAndMint
-contract GnosisSafeProxyEnableGelatoCore {
+///       - <to> should be the address of this contract: ScriptGnosisSafeEnableGelatoCore
+///       - <data> should be the encodedPayload for enableGelatoCoreModule
+contract ScriptGnosisSafeEnableGelatoCore {
 
     event LogFailure(string error);
 
     /// @dev This function should be delegatecalled
-    function whitelist(address _gelatoCore) external {
+    function enableGelatoCoreModule(address _gelatoCore) external {
         // Whitelist GelatoCore as module on delegatecaller (Gnosis Safe Proxy)
         try IGnosisSafe(address(this)).enableModule(_gelatoCore) {
         } catch Error(string memory error) {

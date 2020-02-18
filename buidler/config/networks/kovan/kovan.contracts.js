@@ -11,5 +11,6 @@ export const contracts = [
   "ConditionKyberRateKovan",
   "ConditionTimestampPassed",
   // Scripts
-  "GnosisSafeProxyEnableGelatoCore"
+  "ScriptGnosisSafeEnableGelatoCore",
+  "ScriptGnosisSafeEnableGelatoCoreAndMint"
 ];
