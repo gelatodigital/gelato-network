@@ -17,58 +17,58 @@ abstract contract GelatoCoreAccounting is IGelatoCoreAccounting, Ownable {
     uint256 public override adminGasPrice = 9000000000;  // 9 gwei
 
     // Gelato Manager Economics
-    mapping(address => uint256) public override benefactorBalance;
+    mapping(address => uint256) public override sponsorBalance;
 
     // Gelato Executor Economics
     mapping(address => uint256) public override executorClaimLifespan;
     mapping(address => uint256) public override executorBalance;
 
     // ===== Protocol Admin ======
-    function setAdminGasPrice(uint256 _newGasPrice) external onlyOwner {
+    function setAdminGasPrice(uint256 _newGasPrice) external override onlyOwner {
         emit LogSetAdminGasPrice(adminGasPrice, _newGasPrice, msg.sender);
-        adminGasPrice = _gasPrice;
+        adminGasPrice = _newGasPrice;
     }
 
-    // Benefactor Economics
-    function addBenefactorBalance(uint256 _amount) external override {
-        uint256 currentBenefactorBalance = benefactorBalance[msg.sender];
-        benefactorBalance[msg.sender] = currentBenefactorBalance.add(_amount);
-        emit LogAddBenefactorBalance(
+    // Sponsor Economics
+    function addSponsorBalance(uint256 _amount) external override {
+        uint256 currentSponsorBalance = sponsorBalance[msg.sender];
+        sponsorBalance[msg.sender] = currentSponsorBalance.add(_amount);
+        emit LogAddSponsorBalance(
             msg.sender,
-            currentBenefactorBalance,
-            benefactorBalance[msg.sender]
+            currentSponsorBalance,
+            sponsorBalance[msg.sender]
         );
     }
 
-    function withdrawBenefactorBalance(uint256 _withdrawAmount)
+    function withdrawSponsorBalance(uint256 _withdrawAmount)
         external
         override
     {
         // Checks
-        uint256 currentBenefactorBalance = benefactorBalance[msg.sender];
+        uint256 currentSponsorBalance = sponsorBalance[msg.sender];
         require(
             _withdrawAmount > 0,
             "GelatoCoreAccounting.withdrawManagerBalance: zero _withdrawAmount"
         );
         require(
-            currentBenefactorBalance > _withdrawAmount,
+            currentSponsorBalance > _withdrawAmount,
             "GelatoCoreAccounting.withdrawManagerBalance: zero balance"
         );
         // Effects
-        benefactorBalance[msg.sender] = currentBenefactorBalance - _withdrawAmount;
+        sponsorBalance[msg.sender] = currentSponsorBalance - _withdrawAmount;
         // Interaction
         msg.sender.sendValue(_withdrawAmount);
-        emit LogWithdrawBenefactorBalance(
+        emit LogWithdrawSponsorBalance(
             msg.sender,
-            currentBenefactorBalance,
-            benefactorBalance[msg.sender]
+            currentSponsorBalance,
+            sponsorBalance[msg.sender]
         );
     }
 
-    modifier onlyStakedBenefactors(address _benefactor) {
+    modifier onlyStakedSponsors(address _sponsor) {
         require(
-            benefactorBalance[_benefactor] != 0,
-            "GelatoCoreAccounting.onlyStakedBenefactors: failed"
+            sponsorBalance[_sponsor] != 0,
+            "GelatoCoreAccounting.onlyStakedSponsors: failed"
         );
         _;
     }
@@ -76,8 +76,8 @@ abstract contract GelatoCoreAccounting is IGelatoCoreAccounting, Ownable {
     // Executor De/Registrations
     function registerExecutor(uint256 _executorClaimLifespan) external override {
         require(
-            _executorClaimLifespan >= minExecutionClaimLifespan,
-            "GelatoCoreAccounting.registerExecutor: _executorClaimLifespan cannot be 0"
+            _executorClaimLifespan > 0,
+            "GelatoCoreAccounting.registerExecutor: 0 _executorClaimLifespan disallowed"
         );
         executorClaimLifespan[msg.sender] = _executorClaimLifespan;
         emit LogRegisterExecutor(msg.sender, _executorClaimLifespan);
@@ -106,7 +106,7 @@ abstract contract GelatoCoreAccounting is IGelatoCoreAccounting, Ownable {
     {
         require(
             _newExecutorClaimLifespan > 0,
-            "GelatoCoreAccounting.setExecutorClaimLifespan: failed"
+            "GelatoCoreAccounting.setExecutorClaimLifespan: 0 disallowed"
         );
         emit LogSetExecutorClaimLifespan(
             executorClaimLifespan[msg.sender],
@@ -116,7 +116,7 @@ abstract contract GelatoCoreAccounting is IGelatoCoreAccounting, Ownable {
     }
 
     // Executor Economics
-    function withdrawExecutorBalance(_withdrawAmount) external override {
+    function withdrawExecutorBalance(uint256 _withdrawAmount) external override {
         // Checks
         uint256 currentExecutorBalance = executorBalance[msg.sender];
         require(

@@ -8,25 +8,18 @@ import "../../actions/IGelatoAction.sol";
 /// @dev all the APIs and events are implemented inside GelatoCoreAccounting
 interface IGelatoCoreAccounting {
 
-    // Ownable
-    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
-    function owner() external view returns (address);
-    function isOwner() external view returns (bool);
-    function renounceOwnership() external;
-    function transferOwnership(address newOwner) external;
-
     event LogSetAdminGasPrice(uint256 oldGasPrice, uint256 newGasPrice, address admin);
 
-    event LogAddBenefactorBalance(
-        address indexed benefactor,
-        uint256 previousBenefactorBalance,
-        uint256 newBenefactorBalance
+    event LogAddSponsorBalance(
+        address indexed sponsor,
+        uint256 previousSponsorBalance,
+        uint256 newSponsorBalance
     );
 
-    event LogWithdrawBenefactorBalance(
-        address indexed benefactor,
-        uint256 previousBenefactorBalance,
-        uint256 newBenefactorBalance
+    event LogWithdrawSponsorBalance(
+        address indexed sponsor,
+        uint256 previousSponsorBalance,
+        uint256 newSponsorBalance
     );
 
     event LogRegisterExecutor(
@@ -49,11 +42,12 @@ interface IGelatoCoreAccounting {
     /// @dev onlyOwner can call
     function setAdminGasPrice(uint256 _newGasPrice) external;
 
-    function withdrawBenefactorBalance(uint256 _withdrawAmount) external;
+
+    function addSponsorBalance(uint256 _amount) external;
+    function withdrawSponsorBalance(uint256 _withdrawAmount) external;
 
     /**
      * @dev fn to register as an executorClaimLifespan
-     * @param _executorPrice the price factor the executor charges for its services
      * @param _executorClaimLifespan the lifespan of claims minted for this executor
      * @notice while executorPrice could be 0, executorClaimLifespan must be at least
        what the core protocol defines as the minimum (e.g. 10 minutes).
@@ -82,13 +76,13 @@ interface IGelatoCoreAccounting {
      * @notice funds withdrawal => re-entrancy protection.
      * @notice new: we use .sendValue instead of .transfer due to IstanbulHF
      */
-    function withdrawExecutorBalance() external;
+    function withdrawExecutorBalance(uint256 _withdrawAmount) external;
 
     /// @dev returns the protocol enforced executor gas price
     /// @return uint256 executor's price factor
     function adminGasPrice() external view returns(uint256);
 
-    function benefactorBalance(address _benefactor) external view returns(uint256);
+    function sponsorBalance(address _sponsor) external view returns(uint256);
 
     /// @dev get an executor's executionClaim lifespan
     /// @param _executor TO DO

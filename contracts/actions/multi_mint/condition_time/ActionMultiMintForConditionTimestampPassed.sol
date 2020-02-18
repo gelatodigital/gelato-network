@@ -22,6 +22,7 @@ contract ActionMultiMintForConditionTimestampPassed is GelatoActionsStandard {
         // multi mint delegatecall requirement
         address _gelatoCore,
         // gelatoCore.mintExecutionClaim params
+        address _sponsor,
         address _selectedExecutor,
         IGelatoCondition _conditionTimestampPassed,
         uint256 _startTime,  // will be encoded here
@@ -34,26 +35,14 @@ contract ActionMultiMintForConditionTimestampPassed is GelatoActionsStandard {
         external
         payable
     {
-        uint256 mintingDepositPerMint = IGelatoCoreAccounting(
-            _gelatoCore
-        ).getMintingDepositPayable(
-            _selectedExecutor,
-            _conditionTimestampPassed,
-            _action
-        );
-
-        require(
-            msg.value == mintingDepositPerMint.mul(_numberOfMints),
-            "MultiMintTimeBased.multiMint: incorrect msg.value"
-        );
-
         for (uint256 i = 0; i < _numberOfMints; i++) {
             uint256 timestamp = _startTime.add(_intervalSpan.mul(i));
             bytes memory conditionPayloadWithSelector = abi.encodeWithSelector(
                 _conditionTimestampPassed.conditionSelector(),
                 timestamp
             );
-            IGelatoCore(_gelatoCore).mintExecutionClaim.value(mintingDepositPerMint)(
+            IGelatoCore(_gelatoCore).mintExecutionClaim(
+                _sponsor,
                 _selectedExecutor,
                 _conditionTimestampPassed,
                 conditionPayloadWithSelector,
