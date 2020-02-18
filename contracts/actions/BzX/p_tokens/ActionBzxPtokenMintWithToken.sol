@@ -95,7 +95,7 @@ contract ActionBzxPtokenMintWithToken is GelatoActionsStandard {
         returns(string memory)  // actionCondition
     {
         if (!_isUserOwnerOfGnosisSafeProxy(_user, _userGnosisSafeProxy))
-            return "ActionBzxPtokenMintWithToken: NotOkUserProxyOwner";
+            return "ActionBzxPtokenMintWithToken: NotOkUserGnosisSafeProxyOwner";
 
         if (!_sendToken.isContract())
             return "ActionBzxPtokenMintWithToken: NotOkSendTokenAddress";
@@ -111,7 +111,7 @@ contract ActionBzxPtokenMintWithToken is GelatoActionsStandard {
             returns(uint256 userProxySendTokenAllowance)
         {
             if (userProxySendTokenAllowance < _sendAmt)
-                return "ActionBzxPtokenMintWithToken: NotOkUserProxySendTokenAllowance";
+                return "ActionBzxPtokenMintWithToken: NotOkUserGnosisSafeProxySendTokenAllowance";
         } catch {
             return "ActionBzxPtokenMintWithToken: ErrorAllowance";
         }

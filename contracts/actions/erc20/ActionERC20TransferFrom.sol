@@ -70,19 +70,19 @@ contract ActionERC20TransferFrom is GelatoActionsStandard {
         returns(string memory)  // actionCondition
     {
         if (!_isUserOwnerOfGnosisSafeProxy(_user, _userGnosisSafeProxy))
-            return "ActionERC20Transfer: NotOkUserProxyOwner";
+            return "ActionERC20Transfer: NotOkUserGnosisSafeProxyOwner";
 
         if (!_sendToken.isContract()) return "ActionERC20TransferFrom: NotOkSrcAddress";
 
         IERC20 sendERC20 = IERC20(_sendToken);
         try sendERC20.balanceOf(_user) returns(uint256 sendERC20Balance) {
-            if (sendERC20Balance < _sendAmount) return "ActionERC20TransferFrom: NotOkUserBalance";
+            if (sendERC20Balance < _sendAmount) return "ActionERC20TransferFrom: NotOkUserSendTokenBalance";
         } catch {
             return "ActionERC20TransferFrom: ErrorBalanceOf";
         }
         try sendERC20.allowance(_user, _userGnosisSafeProxy) returns(uint256 userProxySendTokenAllowance) {
             if (userProxySendTokenAllowance < _sendAmount)
-                return "ActionERC20TransferFrom: NotOkUserProxySendTokenAllowance";
+                return "ActionERC20TransferFrom: NotOkUserGnosisSafeProxySendTokenAllowance";
         } catch {
             return "ActionERC20TransferFrom: ErrorAllowance";
         }

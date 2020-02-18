@@ -97,20 +97,20 @@ contract ActionKyberTrade is GelatoActionsStandard {
         returns(string memory)  // actionCondition
     {
         if (!_isUserOwnerOfGnosisSafeProxy(_user, _userGnosisSafeProxy))
-            return "ActionKyberTrade: NotOkUserProxyOwner";
+            return "ActionKyberTrade: NotOkUserGnosisSafeProxyOwner";
 
         if (!_sendToken.isContract()) return "ActionKyberTrade: NotOkSrcAddress";
 
         IERC20 sendERC20 = IERC20(_sendToken);
         try sendERC20.balanceOf(_user) returns(uint256 userSendTokenBalance) {
             if (userSendTokenBalance < _sendAmt)
-                return "ActionKyberTrade: NotOkUserBalance";
+                return "ActionKyberTrade: NotOkUserSendTokenBalance";
         } catch {
             return "ActionKyberTrade: ErrorBalanceOf";
         }
         try sendERC20.allowance(_user, _userGnosisSafeProxy) returns(uint256 userProxySendTokenAllowance) {
             if (userProxySendTokenAllowance < _sendAmt)
-                return "ActionKyberTrade: NotOkUserProxySendTokenAllowance";
+                return "ActionKyberTrade: NotOkUserGnosisSafeProxySendTokenAllowance";
         } catch {
             return "ActionKyberTrade: ErrorAllowance";
         }

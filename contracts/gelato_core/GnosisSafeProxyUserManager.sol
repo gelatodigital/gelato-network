@@ -11,36 +11,7 @@ abstract contract GnosisSafeProxyUserManager is IGnosisSafeProxyUserManager {
     mapping(address => address) public override userByGnosisSafeProxy;
     mapping(address => IGnosisSafe) public override gnosisSafeProxyByUser;
 
-    modifier onlyGnosisSafeProxyOwner(IGnosisSafe _gnosisSafeProxy) {
-        require(
-            _gnosisSafeProxy.isOwner(msg.sender),
-            "GnosisSafeProxyUserManager.onlyGnosisSafeProxyOwner can call"
-        );
-        _;
-    }
-
-    function registerAsGnosisSafeProxyUser(IGnosisSafe _gnosisSafeProxy)
-        public
-        override
-        onlyGnosisSafeProxyOwner(_gnosisSafeProxy)
-    {
-        // We need to do this unless we allow 1 proxy to many users
-        require(
-            !isRegisteredGnosisSafeProxy(_gnosisSafeProxy),
-            "GnosisSafeProxyUserManager.registerAsGnosisSafeProxyUser: proxy occupied "
-        );
-        userByGnosisSafeProxy[address(_gnosisSafeProxy)] = msg.sender;
-    }
-
-    function registerAsGnosisSafeProxy() public override {
-        address user = userByGnosisSafeProxy[msg.sender];
-        require(
-            user != address(0),  // isRegisterdUser(user)
-            "GnosisSafeProxyUserManager.registerAsProxy: Must register user of proxy first."
-        );
-        gnosisSafeProxyByUser[user] = IGnosisSafe(msg.sender);
-    }
-
+    // ======= Create
     function createGnosisSafeProxy(address _mastercopy, bytes calldata _initializer)
         external
         override
@@ -73,7 +44,37 @@ abstract contract GnosisSafeProxyUserManager is IGnosisSafeProxyUserManager {
         emit LogGnosisSafeProxyUserCreation(msg.sender, address(proxy));
     }
 
-    // ______ State Read APIs __________________
+    // ======== Register
+    modifier onlyGnosisSafeProxyOwner(IGnosisSafe _gnosisSafeProxy) {
+        require(
+            _gnosisSafeProxy.isOwner(msg.sender),
+            "GnosisSafeProxyUserManager.onlyGnosisSafeProxyOwner can call"
+        );
+        _;
+    }
+
+    function registerAsGnosisSafeProxyUser(IGnosisSafe _gnosisSafeProxy)
+        public
+        override
+        onlyGnosisSafeProxyOwner(_gnosisSafeProxy)
+    {
+        // We need to do this unless we allow 1 proxy to many users
+        require(
+            !isRegisteredGnosisSafeProxy(_gnosisSafeProxy),
+            "GnosisSafeProxyUserManager.registerAsGnosisSafeProxyUser: proxy occupied "
+        );
+        userByGnosisSafeProxy[address(_gnosisSafeProxy)] = msg.sender;
+    }
+
+    function registerAsGnosisSafeProxy() public override {
+        address user = userByGnosisSafeProxy[msg.sender];
+        require(
+            user != address(0),  // isRegisterdUser(user)
+            "GnosisSafeProxyUserManager.registerAsProxy: Must register user of proxy first."
+        );
+        gnosisSafeProxyByUser[user] = IGnosisSafe(msg.sender);
+    }
+
     function isRegisteredUser(address _user)
         public
         view

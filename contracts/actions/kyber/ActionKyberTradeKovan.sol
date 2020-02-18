@@ -97,20 +97,20 @@ contract ActionKyberTradeKovan is GelatoActionsStandard {
         returns(string memory)  // actionCondition
     {
         if (!_isUserOwnerOfGnosisSafeProxy(_user, _userGnosisSafeProxy))
-            return "ActionKyberTradeKovan: NotOkUserProxyOwner";
+            return "ActionKyberTradeKovan: NotOkUserGnosisSafeProxyOwner";
 
-        if (!_sendToken.isContract()) return "ActionKyberTradeKovan: NotOkSrcAddress";
+        if (!_sendToken.isContract()) return "ActionKyberTradeKovan: NotOkSendTokenAddress";
 
         IERC20 sendERC20 = IERC20(_sendToken);
         try sendERC20.balanceOf(_user) returns(uint256 userSendTokenBalance) {
             if (userSendTokenBalance < _sendAmt)
-                return "ActionKyberTradeKovan: NotOkUserBalance";
+                return "ActionKyberTradeKovan: NotOkUserSendTokenBalance";
         } catch {
             return "ActionKyberTradeKovan: ErrorBalanceOf";
         }
         try sendERC20.allowance(_user, _userGnosisSafeProxy) returns(uint256 userProxySendTokenAllowance) {
             if (userProxySendTokenAllowance < _sendAmt)
-                return "ActionKyberTradeKovan: NotOkUserProxySendTokenAllowance";
+                return "ActionKyberTradeKovan: NotOkUserGnosisSafeProxySendTokenAllowance";
         } catch {
             return "ActionKyberTradeKovan: ErrorAllowance";
         }

@@ -8,7 +8,7 @@ export default task(
 )
   .addPositionalParam(
     "gnosissafeproxyaddress",
-    "the executor's price per gas unit of mintingDepositPayable"
+    "The address of the gnosis safe proxy we call"
   )
   .addPositionalParam("contractname", "The contract whose abi has the function")
   .addPositionalParam("functionname", "The function we want to call")
@@ -119,6 +119,7 @@ export default task(
       if (taskArgs.log) {
         const executionSuccess = await run("event-getparsedlogs", {
           contractname: "IGnosisSafe",
+          contractaddress: taskArgs.gnosissafeproxyaddress,
           eventname: "ExecutionSuccess",
           txhash: executeTx.hash,
           blockhash: executeTxReceipt.blockHash
@@ -127,6 +128,7 @@ export default task(
 
         const executionFailure = await run("event-getparsedlogs", {
           contractname: "IGnosisSafe",
+          contractaddress: taskArgs.gnosissafeproxyaddress,
           eventname: "ExecutionFailure",
           txhash: executeTx.hash,
           blockhash: executeTxReceipt.blockHash
