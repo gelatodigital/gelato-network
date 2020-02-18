@@ -30,39 +30,21 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
         bytes calldata _actionPayloadWithSelector
     )
         external
-        payable
         override
         onlyRegisteredExecutors(_selectedExecutor)
     {
         // We should get user here too but np due to stack too deep
+        address user;
         IGnosisSafe userGnosisSafeProxy;
-        if (isRegisteredUser(msg.sender))
+        if (isRegisteredUser(msg.sender)) {
+            user = msg.sender;
             userGnosisSafeProxy = gnosisSafeProxyByUser[msg.sender];
-        else if (isRegisteredGnosisSafeProxy(IGnosisSafe(msg.sender)))
+        } else if (isRegisteredGnosisSafeProxy(IGnosisSafe(msg.sender))) {
+            user = userByGnosisSafeProxy[msg.sender];
             userGnosisSafeProxy = IGnosisSafe(msg.sender);
-        else
-            revert("GelatoCore.mintExecutionClaim: caller must be registered user or proxy");
-
-        // Read Gas Values & Charge Minting Deposit
-        uint256[3] memory conditionGasActionGasMinExecutionGas;
-        {
-            uint256 conditionGas;
-            if (address(_condition) != address(0)) {
-                conditionGas = _condition.conditionGas();
-                require(conditionGas != 0, "GelatoCore.mintExecutionClaim: 0 conditionGas");
-                conditionGasActionGasMinExecutionGas[0] = conditionGas;
-            }
-
-            uint256 actionGas = _action.actionGas();
-            require(actionGas != 0, "GelatoCore.mintExecutionClaim: 0 actionGas");
-            conditionGasActionGasMinExecutionGas[1] = actionGas;
-
-            uint256 minExecutionGas = _getMinExecutionGas(conditionGas, actionGas);
-            conditionGasActionGasMinExecutionGas[2] = minExecutionGas;
-
-            require(
-                msg.value == minExecutionGas.mul(executorPrice[_selectedExecutor]),
-                "GelatoCore.mintExecutionClaim: msg.value failed"
+        } else {
+            revert(
+                "GelatoCore.mintExecutionClaim: caller must be registered user or proxy"
             );
         }
 
@@ -77,13 +59,12 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
         executionClaimHash[executionClaimId] = _computeExecutionClaimHash(
             _selectedExecutor,
             executionClaimId,  // To avoid hash collisions
-            userByGnosisSafeProxy[address(userGnosisSafeProxy)],  // user
+            user,
             userGnosisSafeProxy,
             _condition,
             _conditionPayloadWithSelector,
             _action,
             _actionPayloadWithSelector,
-            conditionGasActionGasMinExecutionGas,
             executionClaimExpiryDate,
             msg.value
         );
@@ -91,13 +72,12 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
         emit LogExecutionClaimMinted(
             _selectedExecutor,
             executionClaimId,
-            userByGnosisSafeProxy[address(userGnosisSafeProxy)],  // user
+            user,
             userGnosisSafeProxy,
             _condition,
             _conditionPayloadWithSelector,
             _action,
             _actionPayloadWithSelector,
-            conditionGasActionGasMinExecutionGas,
             executionClaimExpiryDate,
             msg.value
         );
@@ -112,9 +92,7 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
         bytes memory _conditionPayloadWithSelector,
         IGelatoAction _action,
         bytes memory _actionPayloadWithSelector,
-        uint256[3] memory _conditionGasActionGasMinExecutionGas,
-        uint256 _executionClaimExpiryDate,
-        uint256 _mintingDeposit
+        uint256 _executionClaimExpiryDate
     )
         public
         view
@@ -152,9 +130,7 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
             _conditionPayloadWithSelector,
             _action,
             _actionPayloadWithSelector,
-            _conditionGasActionGasMinExecutionGas,
-            _executionClaimExpiryDate,
-            _mintingDeposit
+            _executionClaimExpiryDate
         );
 
         if (computedExecutionClaimHash != executionClaimHash[_executionClaimId]) {
@@ -350,8 +326,7 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
             _action,
             _actionPayloadWithSelector,
             _conditionGasActionGasMinExecutionGas,
-            _executionClaimExpiryDate,
-            _mintingDeposit
+            _executionClaimExpiryDate
         );
         // Checks
         require(
@@ -424,7 +399,6 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
         bytes memory _conditionPayloadWithSelector,
         IGelatoAction _action,
         bytes memory _actionPayloadWithSelector,
-        uint256[3] memory _conditionGasActionGasMinExecutionGas,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
     )
@@ -442,7 +416,6 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
                 _conditionPayloadWithSelector,
                 _action,
                 _actionPayloadWithSelector,
-                _conditionGasActionGasMinExecutionGas,
                 _executionClaimExpiryDate,
                 _mintingDeposit
             )

@@ -9,5 +9,7 @@ export const contracts = [
   "GelatoCore",
   "ConditionBalance",
   "ConditionKyberRateKovan",
-  "ConditionTimestampPassed"
+  "ConditionTimestampPassed",
+  // Scripts
+  "GnosisSafeProxyEnableGelatoCore"
 ];

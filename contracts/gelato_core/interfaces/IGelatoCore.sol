@@ -30,7 +30,6 @@ interface IGelatoCore {
         bytes conditionPayloadWithSelector,
         IGelatoAction action,
         bytes actionPayloadWithSelector,
-        uint256[3] conditionGasActionTotalGasMinExecutionGas,
         uint256 executionClaimExpiryDate,
         uint256 mintingDeposit
     );
@@ -97,8 +96,7 @@ interface IGelatoCore {
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector
     )
-        external
-        payable;
+        external;
 
     /**
      * @notice If return value == 6, the claim is executable
