@@ -126,7 +126,7 @@ export default task(
         });
         const { user, gnosisSafeProxy } = parsedLog;
         console.log(
-          `\n LogGnosisSafeProxyCreation\
+          `\n LogGnosisSafeProxyUserCreation\
            \n User:            ${user}\
            \n GnosisSafeProxy: ${gnosisSafeProxy}\n`
         );
