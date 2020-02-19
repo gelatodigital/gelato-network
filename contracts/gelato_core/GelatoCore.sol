@@ -51,6 +51,8 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
         uint256 executionClaimId = executionClaimIds.current();
         gnosisSafeProxyByExecutionClaimId[executionClaimId] = userGnosisSafeProxy;
 
+        uint256 executionClaimExpiryDate = now.add(executorClaimLifespan[_executor]);
+
         // ExecutionClaim Hashing
         executionClaimHash[executionClaimId] = _computeExecutionClaimHash(
             _sponsor,
@@ -61,7 +63,7 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
             _conditionPayloadWithSelector,
             _action,
             _actionPayloadWithSelector,
-            now.add(executorClaimLifespan[_executor])  // expirationDate (STD)
+            executionClaimExpiryDate
         );
 
         emit LogExecutionClaimMinted(
@@ -73,7 +75,7 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
             _conditionPayloadWithSelector,
             _action,
             _actionPayloadWithSelector,
-            now.add(executorClaimLifespan[_executor])  // expirationDate (STD)
+            executionClaimExpiryDate
         );
     }
 
@@ -183,47 +185,47 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
         uint256 startGas = gasleft();
 
         // CHECK canExecute()
-        (CanExecuteResult canExecuteResult, uint8 canExecuteReason) = canExecute(
-            _sponsor,
-            _executionClaimId,
-            _userGnosisSafeProxy,
-            _condition,
-            _conditionPayloadWithSelector,
-            _action,
-            _actionPayloadWithSelector,
-            _executionClaimExpiryDate
-        );
+        {
+            (CanExecuteResult canExecuteResult, uint8 canExecuteReason) = canExecute(
+                _sponsor,
+                _executionClaimId,
+                _userGnosisSafeProxy,
+                _condition,
+                _conditionPayloadWithSelector,
+                _action,
+                _actionPayloadWithSelector,
+                _executionClaimExpiryDate
+            );
 
-        if (canExecuteResult == CanExecuteResult.Executable) {
-            emit LogCanExecuteSuccess(
-                _sponsor,
-                msg.sender,
-                _executionClaimId,
-                _userGnosisSafeProxy,
-                _condition,
-                canExecuteResult,
-                canExecuteReason
-            );
-        } else {
-            emit LogCanExecuteFailed(
-                _sponsor,
-                msg.sender,
-                _executionClaimId,
-                _userGnosisSafeProxy,
-                _condition,
-                canExecuteResult,
-                canExecuteReason
-            );
-            return;  // END OF EXECUTION
+            if (canExecuteResult == CanExecuteResult.Executable) {
+                emit LogCanExecuteSuccess(
+                    _sponsor,
+                    msg.sender,
+                    _executionClaimId,
+                    _userGnosisSafeProxy,
+                    _condition,
+                    canExecuteResult,
+                    canExecuteReason
+                );
+            } else {
+                emit LogCanExecuteFailed(
+                    _sponsor,
+                    msg.sender,
+                    _executionClaimId,
+                    _userGnosisSafeProxy,
+                    _condition,
+                    canExecuteResult,
+                    canExecuteReason
+                );
+                return;  // END OF EXECUTION
+            }
         }
-
 
         // EFFECTS
         delete executionClaimHash[_executionClaimId];
         delete gnosisSafeProxyByExecutionClaimId[_executionClaimId];
 
         // INTERACTIONS
-        bool actionExecuted;
         string memory executionFailureReason;
 
         try _userGnosisSafeProxy.execTransactionFromModuleReturnData(
@@ -231,9 +233,22 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
             0,  // value
             _actionPayloadWithSelector,  // data
             IGnosisSafe.Operation.DelegateCall
-        ) returns (bool success, bytes memory actionRevertReason) {
-            actionExecuted = success;
-            if (!actionExecuted) {
+        ) returns (bool actionExecuted, bytes memory actionRevertReason) {
+            // Success
+            if (actionExecuted) {
+                emit LogSuccessfulExecution(
+                    _sponsor,
+                    msg.sender,
+                    _executionClaimId,
+                    _userGnosisSafeProxy,
+                    _condition,
+                    _action
+                );
+
+                _sponsorRewardsExecutor(_sponsor, startGas);
+
+                return;  // END OF EXECUTION: SUCCESS!
+            } else {
                 // 68: 32-location, 32-length, 4-ErrorSelector, UTF-8 revertReason
                 if (actionRevertReason.length % 32 == 4) {
                     bytes4 selector;
@@ -255,45 +270,36 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
             executionFailureReason = "UndefinedGnosisSafeProxyError";
         }
 
-        // Success
-        if (actionExecuted) {
-            emit LogSuccessfulExecution(
-                _sponsor,
-                msg.sender,
-                _executionClaimId,
-                _userGnosisSafeProxy,
-                _condition,
-                _action
-            );
+        // Failure
+        emit LogExecutionFailure(
+            _sponsor,
+            msg.sender,  // executor
+            _executionClaimId,
+            _userGnosisSafeProxy,
+            _condition,
+            _action,
+            executionFailureReason
+        );
 
-            uint256 executionCostEstimate = (startGas - gasleft()) * adminGasPrice;
+        _sponsorRefundsExecutor(_sponsor, startGas);
+    }
 
-            // Sponsor pays Refund + 5 finney Reward to Executor for SuccessfulExecution
-            sponsorBalance[_sponsor] = sponsorBalance[_sponsor].sub(
-                executionCostEstimate.add(5 finney)
-            );
-            executorBalance[msg.sender] = executorBalance[msg.sender].add(
-                executionCostEstimate.add(5 finney)
-            );
-        } else {  // Failure
-            emit LogExecutionFailure(
-                _sponsor,
-                msg.sender,  // executor
-                _executionClaimId,
-                _userGnosisSafeProxy,
-                _condition,
-                _action,
-                executionFailureReason
-            );
+    // Executor Refund + Reward. Refund is not in full due to 2 state writes.
+    function _sponsorRewardsExecutor(address _sponsor, uint256 _startGas)
+        private
+    {
+        uint256 executorReward = (_startGas - gasleft()).mul(adminGasPrice).add(5 finney);
+        sponsorBalance[_sponsor] = sponsorBalance[_sponsor] - executorReward;
+        executorBalance[msg.sender] = executorBalance[msg.sender] + executorReward;
+    }
 
-            uint256 executionCostEstimate = (startGas - gasleft()) * adminGasPrice;
-
-            // Sponsor pays Refund to Executor for ExecutionFailure
-            sponsorBalance[_sponsor] = sponsorBalance[_sponsor].sub(executionCostEstimate);
-            executorBalance[msg.sender] = executorBalance[msg.sender].add(
-                executionCostEstimate
-            );
-        }
+    // Executor Refund is not in full due to 2 state writes: incentivises success
+    function _sponsorRefundsExecutor(address _sponsor, uint256 _startGas)
+        private
+    {
+        uint256 executorRefund = (_startGas - gasleft()).mul(adminGasPrice);
+        sponsorBalance[_sponsor] = sponsorBalance[_sponsor] - executorRefund;
+        executorBalance[msg.sender] = executorBalance[msg.sender] + executorRefund;
     }
 
     // ================  CANCEL USER / EXECUTOR API ============================
