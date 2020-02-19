@@ -68,7 +68,7 @@ interface IGelatoCore {
     // Caution: there are no guarantees that ExecutionResult and/or reason
     //  are implemented in a logical fashion by condition/action developers.
     event LogExecutionFailure(
-        address indexed benefactor,
+        address indexed sponsor,
         address indexed executor,
         uint256 indexed executionClaimId,
         IGnosisSafe userGnosisSafeProxy,

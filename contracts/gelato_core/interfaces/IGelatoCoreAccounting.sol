@@ -42,7 +42,9 @@ interface IGelatoCoreAccounting {
     /// @dev onlyOwner can call
     function setAdminGasPrice(uint256 _newGasPrice) external;
 
-
+    // Sponsor Economics
+    function sponsorCondition(address _sponsor, IGelatoCondition _condition) external;
+    function sponsorAction(address _sponsor, IGelatoAction _action) external;
     function addSponsorBalance(uint256 _amount) external;
     function withdrawSponsorBalance(uint256 _withdrawAmount) external;
 
@@ -82,15 +84,23 @@ interface IGelatoCoreAccounting {
     /// @return uint256 executor's price factor
     function adminGasPrice() external view returns(uint256);
 
+    function isConditionSponsored(address _sponsor, IGelatoCondition _condition)
+        external
+        view
+        returns(bool);
+    function isActionSponsored(address _sponsor, IGelatoAction _action)
+        external
+        view
+        returns(bool);
     function sponsorBalance(address _sponsor) external view returns(uint256);
-
-    /// @dev get an executor's executionClaim lifespan
-    /// @param _executor TO DO
-    /// @return uint256 executor's executionClaim lifespan
-    function executorClaimLifespan(address _executor) external view returns(uint256);
 
     /// @dev get the gelato-internal wei balance of an executor
     /// @param _executor z
     /// @return uint256 wei amount of _executor's gelato-internal deposit
     function executorBalance(address _executor) external view returns(uint256);
+
+    /// @dev get an executor's executionClaim lifespan
+    /// @param _executor TO DO
+    /// @return uint256 executor's executionClaim lifespan
+    function executorClaimLifespan(address _executor) external view returns(uint256);
 }

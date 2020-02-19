@@ -16,8 +16,10 @@ abstract contract GelatoCoreAccounting is IGelatoCoreAccounting, Ownable {
     // ===== Protocol Admin ======
     uint256 public override adminGasPrice = 9000000000;  // 9 gwei
 
-    // Gelato Manager Economics
+    // Gelato Sponsor Economics
     mapping(address => uint256) public override sponsorBalance;
+    mapping(address => mapping(address => bool)) public override sponsorConditions;
+    mapping(address => mapping(address => bool)) public override sponsorActions;
 
     // Gelato Executor Economics
     mapping(address => uint256) public override executorClaimLifespan;
@@ -30,6 +32,18 @@ abstract contract GelatoCoreAccounting is IGelatoCoreAccounting, Ownable {
     }
 
     // Sponsor Economics
+    function sponsorCondition(address _condition)
+        external
+        onlyStakedSponsors(msg.sender)
+    {
+        sponsorConditions[msg.sender][_condition] = true;
+    }
+
+    function sponsorAction(address _sponsor, IGelatoAction _action) external {
+
+    }
+
+
     function addSponsorBalance(uint256 _amount) external override {
         uint256 currentSponsorBalance = sponsorBalance[msg.sender];
         sponsorBalance[msg.sender] = currentSponsorBalance.add(_amount);

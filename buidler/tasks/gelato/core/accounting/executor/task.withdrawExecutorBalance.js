@@ -6,8 +6,9 @@ export default task(
   "gc-withdrawexecutorbalance",
   `Sends tx to GelatoCore.withdrawExecutorBalance() on [--network] (default: ${defaultNetwork})`
 )
+  .addPositionalParam("amount", "The amount to withdraw")
   .addFlag("log", "Logs return values to stdout")
-  .setAction(async ({ log }) => {
+  .setAction(async ({ amount, log }) => {
     try {
       const [signer1, signer2, ...rest] = await ethers.signers();
       const gelatoCoreAdddress = await run("bre-config", {
@@ -22,7 +23,7 @@ export default task(
         gelatoCoreAbi,
         signer2
       );
-      const tx = await gelatoCoreContract.withdrawExecutorBalance();
+      const tx = await gelatoCoreContract.withdrawExecutorBalance(amount);
       if (log) console.log(`\n\ntxHash withdrawExecutorBalance: ${tx.hash}`);
       await tx.wait();
       return tx.hash;

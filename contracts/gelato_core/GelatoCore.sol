@@ -32,7 +32,7 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
     )
         external
         override
-        onlyStakedSponsors(_sponsor)
+        sponsorCheck(_sponsor, address(_action))
         onlyRegisteredExecutors(_executor)
     {
         // We should get user here too but np due to stack too deep
@@ -221,10 +221,6 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
             }
         }
 
-        // EFFECTS
-        delete executionClaimHash[_executionClaimId];
-        delete gnosisSafeProxyByExecutionClaimId[_executionClaimId];
-
         // INTERACTIONS
         string memory executionFailureReason;
 
@@ -245,7 +241,16 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
                     _action
                 );
 
-                _sponsorRewardsExecutor(_sponsor, startGas);
+                // EFFECTS
+                delete executionClaimHash[_executionClaimId];
+                delete gnosisSafeProxyByExecutionClaimId[_executionClaimId];
+
+                // Executor Refund + Reward. Refund is not in full due to 2 state writes.
+                uint256 executorReward = (_startGas - gasleft()).mul(adminGasPrice).add(
+                    5 finney
+                );
+                sponsorBalance[_sponsor] = sponsorBalance[_sponsor] - executorReward;
+                executorBalance[msg.sender] = executorBalance[msg.sender] + executorReward;
 
                 return;  // END OF EXECUTION: SUCCESS!
             } else {
@@ -280,26 +285,6 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
             _action,
             executionFailureReason
         );
-
-        _sponsorRefundsExecutor(_sponsor, startGas);
-    }
-
-    // Executor Refund + Reward. Refund is not in full due to 2 state writes.
-    function _sponsorRewardsExecutor(address _sponsor, uint256 _startGas)
-        private
-    {
-        uint256 executorReward = (_startGas - gasleft()).mul(adminGasPrice).add(5 finney);
-        sponsorBalance[_sponsor] = sponsorBalance[_sponsor] - executorReward;
-        executorBalance[msg.sender] = executorBalance[msg.sender] + executorReward;
-    }
-
-    // Executor Refund is not in full due to 2 state writes: incentivises success
-    function _sponsorRefundsExecutor(address _sponsor, uint256 _startGas)
-        private
-    {
-        uint256 executorRefund = (_startGas - gasleft()).mul(adminGasPrice);
-        sponsorBalance[_sponsor] = sponsorBalance[_sponsor] - executorRefund;
-        executorBalance[msg.sender] = executorBalance[msg.sender] + executorRefund;
     }
 
     // ================  CANCEL USER / EXECUTOR API ============================

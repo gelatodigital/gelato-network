@@ -17,6 +17,9 @@ export const addressBook = {
     ETH: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
     proxy: "0x692f391bCc85cefCe8C237C01e1f636BbD70EA4D"
   },
+  sponsor: {
+    default: "0x7015763d0a8F04263633106DE7a8F33B2334E51e" // luis DEV
+  },
   userProxy: {
     // Kovan
     luis: "0xDBFd09475CDB2263193545743EE3930c9ce4BbbC"
