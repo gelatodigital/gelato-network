@@ -1,14 +1,15 @@
 pragma solidity ^0.6.2;
 
 import "./interfaces/IGelatoCore.sol";
-import "./GnosisSafeProxyUserManager.sol";
-import "./GelatoCoreAccounting.sol";
+import "./GelatoGasPriceOracle.sol";
+import "./GelatoExecutor.sol";
+import "./GelatoProvider.sol";
 import "../external/Counters.sol";
 
 /// @title GelatoCore
 /// @notice Execution Claim: minting, checking, execution, and cancellation
 /// @dev Find all NatSpecs inside IGelatoCore
-contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccounting {
+contract GelatoCore is IGelatoCore, GelatoGasPriceOracle, GelatoProvider, GelatoExecutor {
 
     // Library for unique ExecutionClaimIds
     using Counters for Counters.Counter;
@@ -16,14 +17,14 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
 
     // ================  STATE VARIABLES ======================================
     Counters.Counter private executionClaimIds;
-    // executionClaimId => userGnosisSafeProxy
-    mapping(uint256 => IGnosisSafe) public override gnosisSafeProxyByExecutionClaimId;
+    // executionClaimId => userProxy
+    mapping(uint256 => IGnosisSafe) public override userProxyByExecutionClaimId;
     // executionClaimId => bytes32 executionClaimHash
     mapping(uint256 => bytes32) public override executionClaimHash;
 
     // ================  MINTING ==============================================
     function mintExecutionClaim(
-        address _sponsor,
+        address _provider,
         address _executor,
         IGelatoCondition _condition,
         bytes calldata _conditionPayloadWithSelector,
@@ -32,15 +33,15 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
     )
         external
         override
-        sponsorCheck(_sponsor, address(_action))
+        isPCA(_provider, address(_condition), address(_action))
         onlyRegisteredExecutors(_executor)
     {
         // We should get user here too but np due to stack too deep
-        IGnosisSafe userGnosisSafeProxy;
+        IGnosisSafe userProxy;
         if (isRegisteredUser(msg.sender))
-            userGnosisSafeProxy = gnosisSafeProxyByUser[msg.sender];
+            userProxy = gnosisSafeProxyByUser[msg.sender];
         else if (isRegisteredGnosisSafeProxy(IGnosisSafe(msg.sender)))
-            userGnosisSafeProxy = IGnosisSafe(msg.sender);
+            userProxy = IGnosisSafe(msg.sender);
         else
             revert(
                 "GelatoCore.mintExecutionClaim: caller must be registered user or proxy"
@@ -49,16 +50,16 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
         // Mint new executionClaim
         executionClaimIds.increment();
         uint256 executionClaimId = executionClaimIds.current();
-        gnosisSafeProxyByExecutionClaimId[executionClaimId] = userGnosisSafeProxy;
+        userProxyByExecutionClaimId[executionClaimId] = userProxy;
 
         uint256 executionClaimExpiryDate = now.add(executorClaimLifespan[_executor]);
 
         // ExecutionClaim Hashing
         executionClaimHash[executionClaimId] = _computeExecutionClaimHash(
-            _sponsor,
+            _provider,
             _executor,
             executionClaimId,  // To avoid hash collisions
-            userGnosisSafeProxy,
+            userProxy,
             _condition,
             _conditionPayloadWithSelector,
             _action,
@@ -67,10 +68,10 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
         );
 
         emit LogExecutionClaimMinted(
-            _sponsor,
+            _provider,
             _executor,
             executionClaimId,
-            userGnosisSafeProxy,
+            userProxy,
             _condition,
             _conditionPayloadWithSelector,
             _action,
@@ -81,7 +82,7 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
 
     // ================  CAN EXECUTE EXECUTOR API ============================
     function canExecute(
-        address _sponsor,
+        address _provider,
         uint256 _executionClaimId,
         IGnosisSafe _userGnosisSafeProxy,
         IGelatoCondition _condition,
@@ -95,9 +96,9 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
         override
         returns (CanExecuteResult, uint8 reason)
     {
-        if (sponsorBalance[_sponsor] < gasleft().mul(adminGasPrice)) {
+        if (providerFunding[_provider] < gasleft().mul(gelatoGasPrice)) {
             return (
-                CanExecuteResult.InsufficientSponsorBalance,
+                CanExecuteResult.InsufficientProviderBalance,
                 uint8(StandardReason.NotOk)
             );
         }
@@ -124,7 +125,7 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
         }
 
         bytes32 computedExecutionClaimHash = _computeExecutionClaimHash(
-            _sponsor,
+            _provider,
             msg.sender,  // executor
             _executionClaimId,
             _userGnosisSafeProxy,
@@ -170,7 +171,7 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
 
     // ================  EXECUTE EXECUTOR API ============================
     function execute(
-        address _sponsor,
+        address _provider,
         uint256 _executionClaimId,
         IGnosisSafe _userGnosisSafeProxy,
         IGelatoCondition _condition,
@@ -187,7 +188,7 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
         // CHECK canExecute()
         {
             (CanExecuteResult canExecuteResult, uint8 canExecuteReason) = canExecute(
-                _sponsor,
+                _provider,
                 _executionClaimId,
                 _userGnosisSafeProxy,
                 _condition,
@@ -199,7 +200,7 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
 
             if (canExecuteResult == CanExecuteResult.Executable) {
                 emit LogCanExecuteSuccess(
-                    _sponsor,
+                    _provider,
                     msg.sender,
                     _executionClaimId,
                     _userGnosisSafeProxy,
@@ -209,7 +210,7 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
                 );
             } else {
                 emit LogCanExecuteFailed(
-                    _sponsor,
+                    _provider,
                     msg.sender,
                     _executionClaimId,
                     _userGnosisSafeProxy,
@@ -233,7 +234,7 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
             // Success
             if (actionExecuted) {
                 emit LogSuccessfulExecution(
-                    _sponsor,
+                    _provider,
                     msg.sender,
                     _executionClaimId,
                     _userGnosisSafeProxy,
@@ -243,13 +244,13 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
 
                 // EFFECTS
                 delete executionClaimHash[_executionClaimId];
-                delete gnosisSafeProxyByExecutionClaimId[_executionClaimId];
+                delete userProxyByExecutionClaimId[_executionClaimId];
 
                 // Executor Refund + Reward. Refund is not in full due to 2 state writes.
-                uint256 executorReward = (_startGas - gasleft()).mul(adminGasPrice).add(
+                uint256 executorReward = (_startGas - gasleft()).mul(gelatoGasPrice).add(
                     5 finney
                 );
-                sponsorBalance[_sponsor] = sponsorBalance[_sponsor] - executorReward;
+                providerFunding[_provider] = providerFunding[_provider] - executorReward;
                 executorBalance[msg.sender] = executorBalance[msg.sender] + executorReward;
 
                 return;  // END OF EXECUTION: SUCCESS!
@@ -277,7 +278,7 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
 
         // Failure
         emit LogExecutionFailure(
-            _sponsor,
+            _provider,
             msg.sender,  // executor
             _executionClaimId,
             _userGnosisSafeProxy,
@@ -289,7 +290,7 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
 
     // ================  CANCEL USER / EXECUTOR API ============================
     function cancelExecutionClaim(
-        address _sponsor,
+        address _provider,
         address _executor,
         uint256 _executionClaimId,
         IGnosisSafe _userGnosisSafeProxy,
@@ -313,7 +314,7 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
             );
         }
         bytes32 computedExecutionClaimHash = _computeExecutionClaimHash(
-            _sponsor,
+            _provider,
             _executor,
             _executionClaimId,
             _userGnosisSafeProxy,
@@ -329,7 +330,7 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
             "GelatoCore.cancelExecutionClaim: hash compare failed"
         );
         // Effects
-        delete gnosisSafeProxyByExecutionClaimId[_executionClaimId];
+        delete userProxyByExecutionClaimId[_executionClaimId];
         delete executionClaimHash[_executionClaimId];
         emit LogExecutionClaimCancelled(
             _executionClaimId,
@@ -355,13 +356,13 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
         override
         returns(address)
     {
-        IGnosisSafe gnosisSafeProxy = gnosisSafeProxyByExecutionClaimId[_executionClaimId];
+        IGnosisSafe gnosisSafeProxy = userProxyByExecutionClaimId[_executionClaimId];
         return userByGnosisSafeProxy[address(gnosisSafeProxy)];
     }
 
     // ================ PRIVATE HELPERS ========================================
     function _computeExecutionClaimHash(
-        address _sponsor,
+        address _provider,
         address _executor,
         uint256 _executionClaimId,
         IGnosisSafe _userGnosisSafeProxy,
@@ -377,7 +378,7 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
     {
         return keccak256(
             abi.encodePacked(
-                _sponsor,
+                _provider,
                 _executor,
                 _executionClaimId,
                 _userGnosisSafeProxy,

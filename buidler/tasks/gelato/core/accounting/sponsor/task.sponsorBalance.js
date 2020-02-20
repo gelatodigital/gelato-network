@@ -4,18 +4,18 @@ import { utils } from "ethers";
 
 export default task(
   "gc-executorbalance",
-  `Return (or --log) GelatoCore.sponsorBalance([<sponsor>: defaults to default sponsor]) on [--network] (default: ${defaultNetwork})`
+  `Return (or --log) GelatoCore.providerFunding([<provider>: defaults to default provider]) on [--network] (default: ${defaultNetwork})`
 )
   .addFlag("log", "Logs return values to stdout")
   .addOptionalPositionalParam(
-    "sponsor",
-    "The address of the sponsor, whose balance we query"
+    "provider",
+    "The address of the provider, whose balance we query"
   )
-  .setAction(async ({ sponsor, log }) => {
+  .setAction(async ({ provider, log }) => {
     try {
-      if (!sponsor) {
-        sponsor = await run("bre-config", {
-          addressbookcategory: "sponsor",
+      if (!provider) {
+        provider = await run("bre-config", {
+          addressbookcategory: "provider",
           addressbookentry: "default"
         });
       }
@@ -25,17 +25,17 @@ export default task(
         write: true
       });
 
-      const sponsorBalance = await gelatoCoreContract.sponsorBalance(sponsor);
-      const sponsorBalanceETH = utils.formatEther(sponsorBalance);
+      const providerFunding = await gelatoCoreContract.providerFunding(provider);
+      const providerBalanceETH = utils.formatEther(providerFunding);
 
       if (log) {
         console.log(
-          `\n Sponsor:        ${sponsor}\
-           \n SponsorBalance: ${sponsorBalanceETH} ETH\
+          `\n Provider:        ${provider}\
+           \n ProviderBalance: ${providerBalanceETH} ETH\
            \n Network:        ${network.name}\n`
         );
       }
-      return sponsorBalance;
+      return providerFunding;
     } catch (error) {
       console.error(error);
       process.exit(1);

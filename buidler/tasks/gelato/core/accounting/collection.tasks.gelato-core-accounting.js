@@ -1,10 +1,10 @@
 // Admin
 import "./admin/task.setAdminGasPrice";
 
-// Sponsor
-import "./sponsor/task.sponsorBalance";
-import "./sponsor/task.addSponsorBalance";
-import "./sponsor/task.withdrawSponsorBalance";
+// Provider
+import "./provider/task.providerFunding";
+import "./provider/task.addProviderBalance";
+import "./provider/task.withdrawProviderBalance";
 
 // Executor
 import "./executor/task.executorBalance";

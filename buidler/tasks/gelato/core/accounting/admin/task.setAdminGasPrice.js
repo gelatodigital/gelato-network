@@ -8,7 +8,7 @@ export default task(
 )
   .addPositionalParam(
     "gasprice",
-    "The new gasPrice which is used to settle payments between sponsors and executors"
+    "The new gasPrice which is used to settle payments between providers and executors"
   )
   .addFlag("log", "Logs return values to stdout")
   .setAction(async ({ gasprice, log }) => {

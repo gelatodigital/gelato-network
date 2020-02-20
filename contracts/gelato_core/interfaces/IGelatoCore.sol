@@ -10,7 +10,7 @@ import "./IGnosisSafe.sol";
 interface IGelatoCore {
 
     enum CanExecuteResult {
-        InsufficientSponsorBalance,
+        InsufficientProviderBalance,
         ExecutionClaimAlreadyExecutedOrCancelled,
         ExecutionClaimNonExistant,
         ExecutionClaimExpired,
@@ -23,10 +23,10 @@ interface IGelatoCore {
     enum StandardReason { Ok, NotOk, UnhandledError }
 
     event LogExecutionClaimMinted(
-        address indexed sponsor,
+        address indexed provider,
         address indexed executor,
         uint256 indexed executionClaimId,
-        IGnosisSafe userGnosisSafeProxy,
+        IGnosisSafe userProxy,
         IGelatoCondition condition,
         bytes conditionPayloadWithSelector,
         IGelatoAction action,
@@ -37,30 +37,30 @@ interface IGelatoCore {
     // Caution: there are no guarantees that CanExecuteResult and/or reason
     //  are implemented in a logical fashion by condition/action developers.
     event LogCanExecuteSuccess(
-        address indexed sponsor,
+        address indexed provider,
         address indexed executor,
         uint256 indexed executionClaimId,
-        IGnosisSafe userGnosisSafeProxy,
+        IGnosisSafe userProxy,
         IGelatoCondition condition,
         CanExecuteResult canExecuteResult,
         uint8 reason
     );
 
     event LogCanExecuteFailed(
-        address indexed sponsor,
+        address indexed provider,
         address indexed executor,
         uint256 indexed executionClaimId,
-        IGnosisSafe userGnosisSafeProxy,
+        IGnosisSafe userProxy,
         IGelatoCondition condition,
         CanExecuteResult canExecuteResult,
         uint8 reason
     );
 
     event LogSuccessfulExecution(
-        address indexed sponsor,
+        address indexed provider,
         address indexed executor,
         uint256 indexed executionClaimId,
-        IGnosisSafe userGnosisSafeProxy,
+        IGnosisSafe userProxy,
         IGelatoCondition condition,
         IGelatoAction action
     );
@@ -68,10 +68,10 @@ interface IGelatoCore {
     // Caution: there are no guarantees that ExecutionResult and/or reason
     //  are implemented in a logical fashion by condition/action developers.
     event LogExecutionFailure(
-        address indexed sponsor,
+        address indexed provider,
         address indexed executor,
         uint256 indexed executionClaimId,
-        IGnosisSafe userGnosisSafeProxy,
+        IGnosisSafe userProxy,
         IGelatoCondition condition,
         IGelatoAction action,
         string executionFailureReason
@@ -79,7 +79,7 @@ interface IGelatoCore {
 
     event LogExecutionClaimCancelled(
         uint256 indexed executionClaimId,
-        IGnosisSafe indexed userGnosisSafeProxy,
+        IGnosisSafe indexed userProxy,
         address indexed cancelor,
         bool executionClaimExpired
     );
@@ -91,7 +91,7 @@ interface IGelatoCore {
      * @notice minting event split into two, due to stack too deep issue
      */
     function mintExecutionClaim(
-        address _sponsor,
+        address _provider,
         address _executor,
         IGelatoCondition _condition,
         bytes calldata _conditionPayloadWithSelector,
@@ -109,7 +109,7 @@ interface IGelatoCore {
      * @return reason The reason for the outcome of the canExecute Check
      */
     function canExecute(
-        address _sponsor,
+        address _provider,
         uint256 _executionClaimId,
         IGnosisSafe _userGnosisSafeProxy,
         IGelatoCondition _condition,
@@ -128,7 +128,7 @@ interface IGelatoCore {
      * @dev if return value == 0 the claim got executed
      */
     function execute(
-        address _sponsor,
+        address _provider,
         uint256 _executionClaimId,
         IGnosisSafe _userGnosisSafeProxy,
         IGelatoCondition _condition,
@@ -148,7 +148,7 @@ interface IGelatoCore {
      * @notice .sendValue instead of .transfer due to IstanbulHF
      */
     function cancelExecutionClaim(
-        address _sponsor,
+        address _provider,
         address _executor,
         uint256 _executionClaimId,
         IGnosisSafe _userGnosisSafeProxy,
@@ -174,8 +174,8 @@ interface IGelatoCore {
 
     /// @dev api to read from the userProxyByExecutionClaimId state variable
     /// @param _executionClaimId TO DO
-    /// @return address of the userGnosisSafeProxy behind _executionClaimId
-    function gnosisSafeProxyByExecutionClaimId(uint256 _executionClaimId)
+    /// @return address of the userProxy behind _executionClaimId
+    function userProxyByExecutionClaimId(uint256 _executionClaimId)
         external
         view
         returns(IGnosisSafe);

@@ -3,8 +3,8 @@ import { defaultNetwork } from "../../../../../../buidler.config";
 import { Contract } from "ethers";
 
 export default task(
-  "gc-withdrawsponsorrbalance",
-  `Sends tx to GelatoCore.withdrawSponsorBalance([<amount>]) on [--network] (default: ${defaultNetwork})`
+  "gc-withdrawproviderrbalance",
+  `Sends tx to GelatoCore.withdrawProviderBalance([<amount>]) on [--network] (default: ${defaultNetwork})`
 )
   .addPositionalParam("amount", "The amount to withdraw")
   .addFlag("log", "Logs return values to stdout")
@@ -24,9 +24,9 @@ export default task(
         signer
       );
 
-      const tx = await gelatoCoreContract.withdrawSponsorBalance(amount);
+      const tx = await gelatoCoreContract.withdrawProviderBalance(amount);
 
-      if (log) console.log(`\n\ntxHash withdrawSponsorBalance: ${tx.hash}`);
+      if (log) console.log(`\n\ntxHash withdrawProviderBalance: ${tx.hash}`);
 
       await tx.wait();
 

@@ -3,20 +3,20 @@ import { defaultNetwork } from "../../../../../../buidler.config";
 import { Contract } from "ethers";
 
 export default task(
-  "gc-addsponsorbalance",
-  `Sends tx to GelatoCore.addSponsorBalance(<) on [--network] (default: ${defaultNetwork})`
+  "gc-addproviderbalance",
+  `Sends tx to GelatoCore.addProviderBalance(<) on [--network] (default: ${defaultNetwork})`
 )
-  .addPositionalParam("amount", "The amount to add to the sponsor's balance")
+  .addPositionalParam("amount", "The amount to add to the provider's balance")
   .addOptionalPositionalParam(
-    "sponsor",
-    "The sponsor to add balance to."
+    "provider",
+    "The provider to add balance to."
   )
   .addFlag("log", "Logs return values to stdout")
-  .setAction(async ({ amount, sponsor, log }) => {
+  .setAction(async ({ amount, provider, log }) => {
     try {
-      if (!sponsor) {
-        sponsor = await run("bre-config", {
-          addressbookcategory: "sponsor",
+      if (!provider) {
+        provider = await run("bre-config", {
+          addressbookcategory: "provider",
           addressbookentry: "default"
         });
       }
@@ -32,8 +32,8 @@ export default task(
         gelatoCoreAbi,
         signer2
       );
-      const tx = await gelatoCoreContract.addSponsorBalance(amount);
-      if (log) console.log(`\n\ntxHash addsponsorbalance: ${tx.hash}`);
+      const tx = await gelatoCoreContract.addProviderBalance(amount);
+      if (log) console.log(`\n\ntxHash addproviderbalance: ${tx.hash}`);
       await tx.wait();
       return tx.hash;
     } catch (error) {
