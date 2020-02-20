@@ -13,20 +13,34 @@ abstract contract GelatoExecutor is IGelatoExecutor {
     // Executor Accounting
     mapping(address => uint256) public override executorBalance;
 
-    modifier onlyRegisteredExecutors(address _executor) {
+    modifier registeredExecutor(address _executor) {
+        require(executorClaimLifespan[_executor] != 0, "GelatoExecutor.registeredExecutor");
+        _;
+    }
+
+    modifier minMaxExecutorClaimLifespan(uint256 _executorClaimLifespan) {
         require(
-            executorClaimLifespan[_executor] != 0,
-            "GelatoExecutor.onlyRegisteredExecutors: failed"
+            _executorClaimLifespan > 20 seconds &&
+            _executorClaimLifespan < 1000 days,
+            "GelatoExecutor.minMaxExecutorClaimLifespan"
+        );
+        _;
+    }
+
+    modifier maxExecutionClaimLifespan(address _executor, uint256 _expiryDate) {
+        require(
+            _expiryDate <= now + executorClaimLifespan[_executor],
+            "GelatoExecutor.maxExecutionClaimLifespan"
         );
         _;
     }
 
     // Executor De/Registrations
-    function registerExecutor(uint256 _executorClaimLifespan) external override {
-        require(
-            _executorClaimLifespan > 0,
-            "GelatoExecutor.registerExecutor: 0 _executorClaimLifespan disallowed"
-        );
+    function registerExecutor(uint256 _executorClaimLifespan)
+        external
+        override
+        minMaxExecutorClaimLifespan(_executorClaimLifespan)
+    {
         executorClaimLifespan[msg.sender] = _executorClaimLifespan;
         emit LogRegisterExecutor(msg.sender, _executorClaimLifespan);
     }
@@ -34,7 +48,7 @@ abstract contract GelatoExecutor is IGelatoExecutor {
     function deregisterExecutor()
         external
         override
-        onlyRegisteredExecutors(msg.sender)
+        registeredExecutor(msg.sender)
     {
         executorClaimLifespan[msg.sender] = 0;
         emit LogDeregisterExecutor(msg.sender);
@@ -43,11 +57,8 @@ abstract contract GelatoExecutor is IGelatoExecutor {
     function setExecutorClaimLifespan(uint256 _newExecutorClaimLifespan)
         external
         override
+        minMaxExecutorClaimLifespan(_newExecutorClaimLifespan)
     {
-        require(
-            _newExecutorClaimLifespan > 0,
-            "GelatoExecutor.setExecutorClaimLifespan: 0 disallowed"
-        );
         emit LogSetExecutorClaimLifespan(
             executorClaimLifespan[msg.sender],
             _newExecutorClaimLifespan

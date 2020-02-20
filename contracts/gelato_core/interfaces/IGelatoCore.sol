@@ -10,7 +10,7 @@ import "./IGnosisSafe.sol";
 interface IGelatoCore {
 
     enum CanExecuteResult {
-        InsufficientProviderBalance,
+        ProviderIlliquidity,
         ExecutionClaimAlreadyExecutedOrCancelled,
         ExecutionClaimNonExistant,
         ExecutionClaimExpired,

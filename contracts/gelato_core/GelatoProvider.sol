@@ -23,21 +23,18 @@ abstract contract GelatoProvider is IGelatoProvider {
     //      provider(p) =>     Condition(C) =>    Action(A) => yes/no
     mapping(address => mapping(address => mapping(address => bool))) public override pCA;
 
-    modifier liquidProvider(address _provider) {
-        require(isProviderLiquid(_provider), "GelatoProvider.liquidProvider");
+    modifier liquidProvider(address _provider, uint256 _gasPrice) {
+        require(isProviderLiquid(_provider, _gasPrice), "GelatoProvider.liquidProvider");
         _;
     }
 
     modifier isPCA(address _provider, address _condition, address _action) {
-        require(pCA[_provider][_condition][_action], "GelatoProvider.isPCA: !provided");
+        require(pCA[_provider][_condition][_action], "GelatoProvider.isPCA");
         _;
     }
 
     modifier registeredProvider(address _provider) {
-        require(
-                isRegisteredProvider[_provider],
-                "GelatoProvider.registeredProvider: not registered"
-        );
+        require(isRegisteredProvider[_provider], "GelatoProvider.registeredProvider");
         _;
     }
 
@@ -124,13 +121,29 @@ abstract contract GelatoProvider is IGelatoProvider {
         providerGasPriceCeiling[msg.sender] = _gasPriceCeiling;
     }
 
-    // Checks if provider has unlocked funds worth 7 mio gas * providerGasPriceCeil
-    function isProviderLiquid(address _provider) public view override returns(bool) {
+    // Returns the liquidity a provider currently provides for 1 ExecutionClaim
+    function providerLiquidityPerExecutionClaim(address _provider, uint256 _gasPrice)
+        public
+        view
+        override
+        minMaxProviderGasPriceCeiling(_gasPrice)
+        returns(uint256)
+    {
+        if (_gasPrice == 0) _gasPrice = providerGasPriceCeiling[_provider];
+        return 7000000 * _gasPrice;
+    }
+
+    function isProviderLiquid(address _provider, uint256 _gasPrice)
+        public
+        view
+        override
+        returns(bool)
+    {
         return (
             providerFunding[_provider].sub(
                 lockedProviderFunds[_provider],
-                "GelatoProvider.liquidProvider: providerFunding < lockedProviderFunds"
-            ) > 7000000 * providerGasPriceCeiling[_provider]
+                "GelatoProvider.liquidProvider: providerLiquidity underflow"
+            ) > providerLiquidityPerExecutionClaim(_provider, _gasPrice)
         );
     }
 

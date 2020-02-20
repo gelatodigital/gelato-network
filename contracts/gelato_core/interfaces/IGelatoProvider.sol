@@ -54,8 +54,17 @@ interface IGelatoProvider {
         view
         returns (uint256);
 
+    // Returns the liquidity a provider currently provides for 1 ExecutionClaim
+    function providerLiquidityPerExecutionClaim(address _provider, uint256 _gasPrice)
+        external
+        view
+        returns(uint256);
+
     // Must return true in order to be able to GelatoCore.mintExecutionClaim(provider, ...)
-    function isProviderLiquid(address _provider) external view returns(bool);
+    function isProviderLiquid(address _provider, uint256 _gasPrice)
+        external
+        view
+        returns(bool);
 
     // Provider's Condition Action Pair Whitelist
     function provideCA(address _condition, address _action) external;
