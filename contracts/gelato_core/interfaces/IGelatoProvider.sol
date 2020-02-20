@@ -34,7 +34,7 @@ interface IGelatoProvider {
     event LogSetProviderGasPriceCeiling(uint256 newGasPriceCeiling);
 
     // Provider Registration
-    function registerProvider(address _condition, address _action)
+    function registerProvider(uint256 _gasPriceCeiling, address _condition, address _action)
         external
         payable;
     function isRegisteredProvider(address _provider) external view returns(bool);
@@ -42,7 +42,7 @@ interface IGelatoProvider {
     // Provider Funding
     function provideFunds() external payable;
     function unprovideFunds(uint256 _withdrawAmount) external;
-    function providerFunding(address _provider) external view returns (uint256);
+    function providerFunds(address _provider) external view returns (uint256);
 
     /// @notice providerGasPriceCeiling of 0 defaults to gelatoGasPrice oracle
     function setProviderGasPriceCeiling(uint256 _ceiling) external;
@@ -55,7 +55,7 @@ interface IGelatoProvider {
         returns (uint256);
 
     // Returns the liquidity a provider currently provides for 1 ExecutionClaim
-    function providerLiquidityPerExecutionClaim(address _provider, uint256 _gasPrice)
+    function provisionPerExecutionClaim(address _provider, uint256 _gasPrice)
         external
         view
         returns(uint256);

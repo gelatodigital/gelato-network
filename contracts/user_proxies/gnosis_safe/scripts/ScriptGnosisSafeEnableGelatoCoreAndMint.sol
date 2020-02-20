@@ -1,6 +1,7 @@
 pragma solidity ^0.6.2;
 
-import "../gelato_core/interfaces/IGelatoCore.sol";
+import "../IGnosisSafe.sol";
+import "../../../gelato_core/interfaces/IGelatoCore.sol";
 
 // For debugging purposes we do not revert if anything goes wrong
 //  so that we can emit the LogFailure event. This is necessary because the
@@ -25,7 +26,8 @@ contract ScriptGnosisSafeEnableGelatoCoreAndMint {
         IGelatoCondition _condition,
         bytes calldata _conditionPayloadWithSelector,
         IGelatoAction _action,
-        bytes calldata _actionPayloadWithSelector
+        bytes calldata _actionPayloadWithSelector,
+        uint256 _executionClaimExpiryDate
     )
         external
     {
@@ -44,7 +46,8 @@ contract ScriptGnosisSafeEnableGelatoCoreAndMint {
             _condition,
             _conditionPayloadWithSelector,
             _action,
-            _actionPayloadWithSelector
+            _actionPayloadWithSelector,
+            _executionClaimExpiryDate
         )  {
         } catch Error(string memory error) {
             emit LogFailure(error);

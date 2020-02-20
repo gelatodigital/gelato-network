@@ -4,7 +4,6 @@ import "../../GelatoActionsStandard.sol";
 import "../../../external/SafeMath.sol";
 import "../../../conditions/IGelatoCondition.sol";
 import "../../../gelato_core/interfaces/IGelatoCore.sol";
-import "../../../gelato_core/interfaces/IGelatoCoreAccounting.sol";
 
 // CAUTION this contract is not up to date with Action standards due to missing return values
 //  (GelatoCore.Enums.ExecutionResult, uint8 reason) - not possible due to stack too deep
@@ -28,6 +27,7 @@ contract ActionMultiMintForConditionTimestampPassed is GelatoActionsStandard {
         uint256 _startTime,  // will be encoded here
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
+        uint256 _executionClaimExpiryDate,
         // MultiMintTimeBased params
         uint256 _intervalSpan,
         uint256 _numberOfMints
@@ -47,7 +47,8 @@ contract ActionMultiMintForConditionTimestampPassed is GelatoActionsStandard {
                 _conditionTimestampPassed,
                 conditionPayloadWithSelector,
                 _action,
-                _actionPayloadWithSelector
+                _actionPayloadWithSelector,
+                _executionClaimExpiryDate
             );
         }
     }

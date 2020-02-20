@@ -3,8 +3,8 @@ import { defaultNetwork } from "../../../../../../buidler.config";
 import { utils } from "ethers";
 
 export default task(
-  "gc-executorbalance",
-  `Return (or --log) GelatoCore.providerFunding([<provider>: defaults to default provider]) on [--network] (default: ${defaultNetwork})`
+  "gc-providerfunds",
+  `Return (or --log) GelatoCore.providerFunds([<provider>: defaults to default provider]) on [--network] (default: ${defaultNetwork})`
 )
   .addFlag("log", "Logs return values to stdout")
   .addOptionalPositionalParam(
@@ -25,8 +25,8 @@ export default task(
         write: true
       });
 
-      const providerFunding = await gelatoCoreContract.providerFunding(provider);
-      const providerBalanceETH = utils.formatEther(providerFunding);
+      const providerFunds = await gelatoCoreContract.providerFunds(provider);
+      const providerBalanceETH = utils.formatEther(providerFunds);
 
       if (log) {
         console.log(
@@ -35,7 +35,7 @@ export default task(
            \n Network:        ${network.name}\n`
         );
       }
-      return providerFunding;
+      return providerFunds;
     } catch (error) {
       console.error(error);
       process.exit(1);

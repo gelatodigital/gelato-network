@@ -1,6 +1,6 @@
 pragma solidity ^0.6.2;
 
-import "../gelato_core/interfaces/IGnosisSafe.sol";
+import "../IGnosisSafe.sol";
 
 // For debugging purposes we do not revert if anything goes wrong
 //  so that we can emit the LogFailure event. This is necessary because the

@@ -96,9 +96,6 @@ contract ActionKyberTradeRopsten is GelatoActionsStandard {
         virtual
         returns(string memory)  // actionCondition
     {
-        if (!_isUserOwnerOfGnosisSafeProxy(_user, _userProxy))
-            return "ActionKyberTradeRopsten: NotOkUserGnosisSafeProxyOwner";
-
         if (!_sendToken.isContract()) return "ActionKyberTradeRopsten: NotOkSrcAddress";
 
         IERC20 sendERC20 = IERC20(_sendToken);

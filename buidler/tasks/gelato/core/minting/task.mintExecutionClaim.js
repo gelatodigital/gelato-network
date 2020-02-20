@@ -5,7 +5,7 @@ export default task(
   "gc-mint",
   `Sends tx to GelatoCore.mintExecutionClaim() on [--network] (default: ${defaultNetwork})`
 )
-  .addPositionalParam("provider", "The selected provider", "")
+  .addPositionalParam("provider", "The selected provider")
   .addPositionalParam("conditionname", "must exist inside buidler.config")
   .addPositionalParam("actionname", "must exist inside buidler.config")
   .addOptionalPositionalParam("conditionpayloadwithselector", "abi.encoded bytes")

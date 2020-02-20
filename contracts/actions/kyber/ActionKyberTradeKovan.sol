@@ -96,9 +96,6 @@ contract ActionKyberTradeKovan is GelatoActionsStandard {
         virtual
         returns(string memory)  // actionCondition
     {
-        if (!_isUserOwnerOfGnosisSafeProxy(_user, _userProxy))
-            return "ActionKyberTradeKovan: NotOkUserGnosisSafeProxyOwner";
-
         if (!_sendToken.isContract()) return "ActionKyberTradeKovan: NotOkSendTokenAddress";
 
         IERC20 sendERC20 = IERC20(_sendToken);

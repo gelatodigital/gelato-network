@@ -1,7 +1,6 @@
 pragma solidity ^0.6.2;
 
 import "./IGelatoAction.sol";
-import "../gelato_core/interfaces/IGnosisSafe.sol";
 
 /// @title GelatoActionsStandard
 /// @dev find all the NatSpecs inside IGelatoAction
@@ -68,13 +67,4 @@ abstract contract GelatoActionsStandard is IGelatoAction {
     getUsersSendTokenBalance not defined here because non-overridable, due to
     different arguments passed across different actions
     */
-
-    function _isUserOwnerOfGnosisSafeProxy(address _user, address _userProxy)
-        internal
-        view
-        virtual
-        returns(bool)
-    {
-        return IGnosisSafe(_userProxy).isOwner(_user);
-    }
 }

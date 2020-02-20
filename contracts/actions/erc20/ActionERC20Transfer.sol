@@ -71,9 +71,6 @@ contract ActionERC20Transfer is GelatoActionsStandard {
         virtual
         returns(string memory)  // // actionCondition
     {
-        if (!_isUserOwnerOfGnosisSafeProxy(_user, _userProxy))
-            return "ActionERC20Transfer: NotOkUserGnosisSafeProxyOwner";
-
         if (!_sendToken.isContract()) return "ActionERC20Transfer: NotOkERC20Address";
 
         IERC20 sendERC20 = IERC20(_sendToken);

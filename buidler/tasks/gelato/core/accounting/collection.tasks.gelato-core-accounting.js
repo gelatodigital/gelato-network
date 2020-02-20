@@ -2,7 +2,7 @@
 import "./admin/task.setAdminGasPrice";
 
 // Provider
-import "./provider/task.providerFunding";
+import "./provider/task.providerFunds";
 import "./provider/task.addProviderBalance";
 import "./provider/task.withdrawProviderBalance";
 

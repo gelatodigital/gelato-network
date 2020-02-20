@@ -15,18 +15,13 @@ abstract contract GelatoProvider is IGelatoProvider {
     // One time tracker of registered providers
     mapping(address => bool) public override isRegisteredProvider;
     // Funds that the provider makes available for any of his condition-action executions
-    mapping(address => uint256) public override providerFunding;
+    mapping(address => uint256) public override providerFunds;
     // What the provider must keep on GelatoCore for all their outstanding ExecutionClaims
     mapping(address => uint256) public override lockedProviderFunds;
     // The max GasPrice a provider is willing to pay to executors
     mapping(address => uint256) public override providerGasPriceCeiling;
     //      provider(p) =>     Condition(C) =>    Action(A) => yes/no
     mapping(address => mapping(address => mapping(address => bool))) public override pCA;
-
-    modifier liquidProvider(address _provider, uint256 _gasPrice) {
-        require(isProviderLiquid(_provider, _gasPrice), "GelatoProvider.liquidProvider");
-        _;
-    }
 
     modifier isPCA(address _provider, address _condition, address _action) {
         require(pCA[_provider][_condition][_action], "GelatoProvider.isPCA");
@@ -38,24 +33,32 @@ abstract contract GelatoProvider is IGelatoProvider {
         _;
     }
 
-   modifier minMaxProviderGasPriceCeiling(uint256 _gasPriceCeiling) {
-        require(
-            _gasPriceCeiling >= 1000000000 &&  // 1 gwei
-            _gasPriceCeiling <= 999000000000,  // 999 gwei
-            "GelatoProvider.minMaxProviderGasPriceCeiling"
-        );
-        _;
-   }
+    modifier minProviderGasPriceCeiling(uint256 _gasPriceCeiling) {
+            require(
+                _gasPriceCeiling >= 1000000000, // 1 gwei
+                "GelatoProvider.minMaxProviderGasPriceCeiling"
+            );
+            _;
+    }
+
+    modifier maxProviderGasPriceCeiling(uint256 _gasPriceCeiling) {
+            require(
+                _gasPriceCeiling <= 999000000000,  // 999 gwei
+                "GelatoProvider.minMaxProviderGasPriceCeiling"
+            );
+            _;
+    }
 
    // Provider Registration
    function registerProvider(
+       uint256 _gasPriceCeiling,
        address _condition,
-       address _action,
-       uint256 _gasPriceCeiling
+       address _action
     )
         external
         payable
-        minMaxProviderGasPriceCeiling(_gasPriceCeiling)
+        override
+        maxProviderGasPriceCeiling(_gasPriceCeiling)
     {
         isRegisteredProvider[msg.sender] = true;
         provideFunds();
@@ -67,7 +70,7 @@ abstract contract GelatoProvider is IGelatoProvider {
     // Provider Funding
     function provideFunds() public payable override registeredProvider(msg.sender) {
         require(msg.value > 0, "GelatoProvider.provideFunds: zero value");
-        uint256 previousProviderFunding = providerFunding[msg.sender];
+        uint256 previousProviderFunding = providerFunds[msg.sender];
         uint256 newProviderFunding = previousProviderFunding.add(msg.value);
         require(
             newProviderFunding >= lockedProviderFunds[msg.sender],
@@ -88,7 +91,7 @@ abstract contract GelatoProvider is IGelatoProvider {
     {
         require(_amount > 0, "GelatoProvider.unprovideFunds: zero _amount");
         // Checks
-        uint256 previousProviderFunding = providerFunding[msg.sender];
+        uint256 previousProviderFunding = providerFunds[msg.sender];
         require(
             previousProviderFunding >= _amount,
             "GelatoProvider.unprovideFunds: out of funds"
@@ -99,7 +102,7 @@ abstract contract GelatoProvider is IGelatoProvider {
             "GelatoProvider.unprovideFunds: locked funds"
         );
         // Effects
-        providerFunding[msg.sender] = newProviderFunding;
+        providerFunds[msg.sender] = newProviderFunding;
         // Interaction
         msg.sender.sendValue(_amount);
         emit LogUnprovideFunds(
@@ -115,22 +118,32 @@ abstract contract GelatoProvider is IGelatoProvider {
         public
         override
         registeredProvider(msg.sender)
-        minMaxProviderGasPriceCeiling(_gasPriceCeiling)
+        minProviderGasPriceCeiling(_gasPriceCeiling)
+        maxProviderGasPriceCeiling(_gasPriceCeiling)
     {
         emit LogSetProviderGasPriceCeiling(_gasPriceCeiling);
         providerGasPriceCeiling[msg.sender] = _gasPriceCeiling;
     }
 
+    // Returns the liquidity a provider can provide
+    function availableProviderLiquidity(address _provider) public view returns(uint256) {
+        return providerFunds[_provider].sub(lockedProviderFunds[_provider],
+            "GelatoProvider.availableProviderLiquidity: underflow"
+        );
+    }
+
     // Returns the liquidity a provider currently provides for 1 ExecutionClaim
-    function providerLiquidityPerExecutionClaim(address _provider, uint256 _gasPrice)
+    function provisionPerExecutionClaim(address _provider, uint256 _gasPrice)
         public
         view
         override
-        minMaxProviderGasPriceCeiling(_gasPrice)
+        maxProviderGasPriceCeiling(_gasPrice)
         returns(uint256)
     {
         if (_gasPrice == 0) _gasPrice = providerGasPriceCeiling[_provider];
-        return 7000000 * _gasPrice;
+        uint256 availableLiquidity = availableProviderLiquidity(_provider);
+        uint256 provision = 7000000 * _gasPrice;
+        return  provision <= availableLiquidity ? provision : 0;
     }
 
     function isProviderLiquid(address _provider, uint256 _gasPrice)
@@ -139,12 +152,7 @@ abstract contract GelatoProvider is IGelatoProvider {
         override
         returns(bool)
     {
-        return (
-            providerFunding[_provider].sub(
-                lockedProviderFunds[_provider],
-                "GelatoProvider.liquidProvider: providerLiquidity underflow"
-            ) > providerLiquidityPerExecutionClaim(_provider, _gasPrice)
-        );
+        return provisionPerExecutionClaim(_provider, _gasPrice) != 0;
     }
 
     // Provider's Condition Action Pair Whitelist

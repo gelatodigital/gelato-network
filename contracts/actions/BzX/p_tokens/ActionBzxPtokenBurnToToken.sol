@@ -86,9 +86,6 @@ contract ActionBzxPtokenBurnToToken is GelatoActionsStandard {
         virtual
         returns(string memory)  // actionCondition
     {
-        if (!_isUserOwnerOfGnosisSafeProxy(_user, _userProxy))
-            return "ActionBzxPtokenBurnToToken: NotOkUserGnosisSafeProxyOwner";
-
         if(!_sendToken.isContract())
             return "ActionBzxPtokenBurnToToken: NotOkPTokenAddress";
 

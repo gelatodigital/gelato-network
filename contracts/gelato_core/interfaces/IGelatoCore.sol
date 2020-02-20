@@ -2,7 +2,6 @@ pragma solidity ^0.6.2;
 
 import "../../conditions/IGelatoCondition.sol";
 import "../../actions/IGelatoAction.sol";
-import "./IGnosisSafe.sol";
 
 /// @title IGelatoCore - solidity interface of GelatoCore
 /// @notice canExecute API and minting, execution, cancellation of ExecutionClaims
@@ -26,12 +25,13 @@ interface IGelatoCore {
         address indexed provider,
         address indexed executor,
         uint256 indexed executionClaimId,
-        IGnosisSafe userProxy,
+        address userProxy,
         IGelatoCondition condition,
         bytes conditionPayloadWithSelector,
         IGelatoAction action,
         bytes actionPayloadWithSelector,
-        uint256 executionClaimExpiryDate
+        uint256 executionClaimExpiryDate,
+        uint256 claimedProviderLiquidity
     );
 
     // Caution: there are no guarantees that CanExecuteResult and/or reason
@@ -40,7 +40,7 @@ interface IGelatoCore {
         address indexed provider,
         address indexed executor,
         uint256 indexed executionClaimId,
-        IGnosisSafe userProxy,
+        address userProxy,
         IGelatoCondition condition,
         CanExecuteResult canExecuteResult,
         uint8 reason
@@ -50,7 +50,7 @@ interface IGelatoCore {
         address indexed provider,
         address indexed executor,
         uint256 indexed executionClaimId,
-        IGnosisSafe userProxy,
+        address userProxy,
         IGelatoCondition condition,
         CanExecuteResult canExecuteResult,
         uint8 reason
@@ -60,7 +60,7 @@ interface IGelatoCore {
         address indexed provider,
         address indexed executor,
         uint256 indexed executionClaimId,
-        IGnosisSafe userProxy,
+        address userProxy,
         IGelatoCondition condition,
         IGelatoAction action
     );
@@ -71,17 +71,19 @@ interface IGelatoCore {
         address indexed provider,
         address indexed executor,
         uint256 indexed executionClaimId,
-        IGnosisSafe userProxy,
+        address userProxy,
         IGelatoCondition condition,
         IGelatoAction action,
         string executionFailureReason
     );
 
     event LogExecutionClaimCancelled(
+        address indexed provider,
         uint256 indexed executionClaimId,
-        IGnosisSafe indexed userProxy,
-        address indexed cancelor,
-        bool executionClaimExpired
+        address indexed userProxy,
+        address cancelor,
+        bool executionClaimExpired,
+        uint256 claimedProviderLiquidity
     );
 
     /**
@@ -96,7 +98,8 @@ interface IGelatoCore {
         IGelatoCondition _condition,
         bytes calldata _conditionPayloadWithSelector,
         IGelatoAction _action,
-        bytes calldata _actionPayloadWithSelector
+        bytes calldata _actionPayloadWithSelector,
+        uint256 _executionClaimExpiryDate
     )
         external;
 
@@ -111,12 +114,13 @@ interface IGelatoCore {
     function canExecute(
         address _provider,
         uint256 _executionClaimId,
-        IGnosisSafe _userProxy,
+        address _userProxy,
         IGelatoCondition _condition,
         bytes calldata _conditionPayloadWithSelector,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
-        uint256 _executionClaimExpiryDate
+        uint256 _executionClaimExpiryDate,
+        uint256 claimedProviderLiquidity
     )
         external
         view
@@ -130,12 +134,13 @@ interface IGelatoCore {
     function execute(
         address _provider,
         uint256 _executionClaimId,
-        IGnosisSafe _userProxy,
+        address _userProxy,
         IGelatoCondition _condition,
         bytes calldata _conditionPayloadWithSelector,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
-        uint256 _executionClaimExpiryDate
+        uint256 _executionClaimExpiryDate,
+        uint256 claimedProviderLiquidity
     )
         external;
 
@@ -151,18 +156,19 @@ interface IGelatoCore {
         address _provider,
         address _executor,
         uint256 _executionClaimId,
-        IGnosisSafe _userProxy,
+        address _userProxy,
         IGelatoCondition _condition,
         bytes calldata _conditionPayloadWithSelector,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
-        uint256 _executionClaimExpiryDate
+        uint256 _executionClaimExpiryDate,
+        uint256 claimedProviderLiquidity
     )
         external;
 
     /// @dev get the current executionClaimId
     /// @return currentId uint256 current executionClaim Id
-    function getCurrentExecutionClaimId() external view returns(uint256 currentId);
+    function currentExecutionClaimId() external view returns(uint256 currentId);
 
     /// @dev interface to read from the hashedExecutionClaims state variable
     /// @param _executionClaimId TO DO
@@ -176,11 +182,6 @@ interface IGelatoCore {
     /// @param _executionClaimId TO DO
     /// @return address of the userProxy behind _executionClaimId
     function userProxyByExecutionClaimId(uint256 _executionClaimId)
-        external
-        view
-        returns(IGnosisSafe);
-
-    function getUserWithExecutionClaimId(uint256 _executionClaimId)
         external
         view
         returns(address);
