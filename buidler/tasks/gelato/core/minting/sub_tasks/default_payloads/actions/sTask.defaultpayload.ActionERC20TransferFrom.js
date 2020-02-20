@@ -9,7 +9,7 @@ export default internalTask(
   .setAction(async ({ log }) => {
     try {
       const contractname = "ActionERC20TransferFrom";
-      // action(_user, _userGnosisSafeProxy, _src, _srcAmt, _dest, _minConversionRate)
+      // action(_user, _userProxy, _src, _srcAmt, _dest, _minConversionRate)
       const functionname = "action";
       // Params
       const { luis: user } = await run("bre-config", {
@@ -26,7 +26,7 @@ export default internalTask(
       const beneficiary = userProxy;
 
       // Params as sorted array of inputs for abi.encoding
-      // action(_user, _userGnosisSafeProxy, _src, _srcAmt, _beneficiary)
+      // action(_user, _userProxy, _src, _srcAmt, _beneficiary)
       const inputs = [user, userProxy, src, srcAmt, beneficiary];
       // Encoding
       const payloadWithSelector = await run("abi-encode-withselector", {

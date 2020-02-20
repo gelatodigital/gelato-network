@@ -28,7 +28,7 @@ abstract contract GelatoActionsStandard is IGelatoAction {
     following standard format:
         function action(
             address _user,
-            address _userGnosisSafeProxy,
+            address _userProxy,
             address _source,
             uint256 _sourceAmount,
             address _destination,
@@ -54,7 +54,7 @@ abstract contract GelatoActionsStandard is IGelatoAction {
     /// All actions must override this with their own implementation
     /*function getUsersSendTokenBalance(
         address _user,
-        address _userGnosisSafeProxy,
+        address _userProxy,
         address _source,
         uint256 _sourceAmount,
         address _destination,
@@ -69,12 +69,12 @@ abstract contract GelatoActionsStandard is IGelatoAction {
     different arguments passed across different actions
     */
 
-    function _isUserOwnerOfGnosisSafeProxy(address _user, address _userGnosisSafeProxy)
+    function _isUserOwnerOfGnosisSafeProxy(address _user, address _userProxy)
         internal
         view
         virtual
         returns(bool)
     {
-        return IGnosisSafe(_userGnosisSafeProxy).isOwner(_user);
+        return IGnosisSafe(_userProxy).isOwner(_user);
     }
 }

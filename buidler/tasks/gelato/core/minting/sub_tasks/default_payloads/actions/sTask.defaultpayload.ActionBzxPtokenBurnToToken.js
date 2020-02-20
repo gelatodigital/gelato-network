@@ -32,7 +32,7 @@ export default internalTask(
       const burnAmount = await pTokenContract.balanceOf(user);
 
       // Params as sorted array of inputs for abi.encoding
-      // action(_user, _userGnosisSafeProxy, _burnTokenAddress, _burnAmount, _pTokenAddress)
+      // action(_user, _userProxy, _burnTokenAddress, _burnAmount, _pTokenAddress)
       const inputs = [
         user, // receiver
         userProxy,

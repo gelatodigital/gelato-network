@@ -11,7 +11,7 @@ export default internalTask(
       if (network.name != "mainnet") throw new Error("wrong network!");
 
       const contractname = "ActionKyberTrade";
-      // action(_user, _userGnosisSafeProxy, _src, _srcAmt, _dest, _minConversionRate)
+      // action(_user, _userProxy, _src, _srcAmt, _dest, _minConversionRate)
       const functionname = "action";
       // Params
       const { luis: user } = await run("bre-config", {
@@ -29,7 +29,7 @@ export default internalTask(
       const srcAmt = utils.parseUnits("5", 18);
 
       // Params as sorted array of inputs for abi.encoding
-      // action(_user, _userGnosisSafeProxy, _src, _srcAmt, _dest)
+      // action(_user, _userProxy, _src, _srcAmt, _dest)
       const inputs = [user, userProxy, src, srcAmt, dest];
       // Encoding
       const payloadWithSelector = await run("abi-encode-withselector", {

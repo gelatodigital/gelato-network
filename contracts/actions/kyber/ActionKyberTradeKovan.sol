@@ -21,7 +21,7 @@ contract ActionKyberTradeKovan is GelatoActionsStandard {
     function action(
         // Standard Action Params
         address _user,
-        address _userGnosisSafeProxy,
+        address _userProxy,
         address _sendToken,
         uint256 _sendAmt,
         // Specific Action Params
@@ -30,13 +30,13 @@ contract ActionKyberTradeKovan is GelatoActionsStandard {
         external
         virtual
     {
-        require(address(this) == _userGnosisSafeProxy, "ErrorUserProxy");
+        require(address(this) == _userProxy, "ErrorUserProxy");
 
         // !!!!!!!!! ROPSTEN !!!!!!
         address kyberAddress = 0x692f391bCc85cefCe8C237C01e1f636BbD70EA4D;
 
         IERC20 sendERC20 = IERC20(_sendToken);
-        try sendERC20.transferFrom(_user, _userGnosisSafeProxy, _sendAmt) {} catch {
+        try sendERC20.transferFrom(_user, _userProxy, _sendAmt) {} catch {
             revert("ErrorTransferFromUser");
         }
         try sendERC20.approve(kyberAddress, _sendAmt) {} catch {
@@ -78,16 +78,16 @@ contract ActionKyberTradeKovan is GelatoActionsStandard {
         virtual
         returns(string memory)  // actionCondition
     {
-        (address _user, address _userGnosisSafeProxy, address _sendToken, uint256 _sendAmt) = abi.decode(
+        (address _user, address _userProxy, address _sendToken, uint256 _sendAmt) = abi.decode(
             _actionPayloadWithSelector[4:132],
             (address,address,address,uint256)
         );
-        return _actionConditionsCheck(_user, _userGnosisSafeProxy, _sendToken, _sendAmt);
+        return _actionConditionsCheck(_user, _userProxy, _sendToken, _sendAmt);
     }
 
     function _actionConditionsCheck(
         address _user,
-        address _userGnosisSafeProxy,
+        address _userProxy,
         address _sendToken,
         uint256 _sendAmt
     )
@@ -96,7 +96,7 @@ contract ActionKyberTradeKovan is GelatoActionsStandard {
         virtual
         returns(string memory)  // actionCondition
     {
-        if (!_isUserOwnerOfGnosisSafeProxy(_user, _userGnosisSafeProxy))
+        if (!_isUserOwnerOfGnosisSafeProxy(_user, _userProxy))
             return "ActionKyberTradeKovan: NotOkUserGnosisSafeProxyOwner";
 
         if (!_sendToken.isContract()) return "ActionKyberTradeKovan: NotOkSendTokenAddress";
@@ -108,7 +108,7 @@ contract ActionKyberTradeKovan is GelatoActionsStandard {
         } catch {
             return "ActionKyberTradeKovan: ErrorBalanceOf";
         }
-        try sendERC20.allowance(_user, _userGnosisSafeProxy) returns(uint256 userProxySendTokenAllowance) {
+        try sendERC20.allowance(_user, _userProxy) returns(uint256 userProxySendTokenAllowance) {
             if (userProxySendTokenAllowance < _sendAmt)
                 return "ActionKyberTradeKovan: NotOkUserGnosisSafeProxySendTokenAllowance";
         } catch {
@@ -123,7 +123,7 @@ contract ActionKyberTradeKovan is GelatoActionsStandard {
     function getUsersSendTokenBalance(
         // Standard Action Params
         address _user,
-        address _userGnosisSafeProxy,
+        address _userProxy,
         // Specific Action Params
         address _sendToken,  // sendToken
         uint256,
@@ -134,7 +134,7 @@ contract ActionKyberTradeKovan is GelatoActionsStandard {
         virtual
         returns(uint256)
     {
-        _userGnosisSafeProxy;  // silence warning
+        _userProxy;  // silence warning
         IERC20 sendERC20 = IERC20(_sendToken);
         try sendERC20.balanceOf(_user) returns(uint256 userSendTokenBalance) {
             return userSendTokenBalance;

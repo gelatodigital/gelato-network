@@ -18,12 +18,13 @@ contract GelatoCore is IGelatoCore, GelatoGasPriceOracle, GelatoProvider, Gelato
     // ================  STATE VARIABLES ======================================
     Counters.Counter private executionClaimIds;
     // executionClaimId => userProxy
-    mapping(uint256 => IGnosisSafe) public override userProxyByExecutionClaimId;
+    mapping(uint256 => address) public override userProxyByExecutionClaimId;
     // executionClaimId => bytes32 executionClaimHash
     mapping(uint256 => bytes32) public override executionClaimHash;
 
     // ================  MINTING ==============================================
     function mintExecutionClaim(
+        address _userProxy,
         address _provider,
         address _executor,
         IGelatoCondition _condition,
@@ -33,24 +34,14 @@ contract GelatoCore is IGelatoCore, GelatoGasPriceOracle, GelatoProvider, Gelato
     )
         external
         override
+        liquidProvider(_provider)
         isPCA(_provider, address(_condition), address(_action))
         onlyRegisteredExecutors(_executor)
     {
-        // We should get user here too but np due to stack too deep
-        IGnosisSafe userProxy;
-        if (isRegisteredUser(msg.sender))
-            userProxy = gnosisSafeProxyByUser[msg.sender];
-        else if (isRegisteredGnosisSafeProxy(IGnosisSafe(msg.sender)))
-            userProxy = IGnosisSafe(msg.sender);
-        else
-            revert(
-                "GelatoCore.mintExecutionClaim: caller must be registered user or proxy"
-            );
-
         // Mint new executionClaim
         executionClaimIds.increment();
         uint256 executionClaimId = executionClaimIds.current();
-        userProxyByExecutionClaimId[executionClaimId] = userProxy;
+        userProxyByExecutionClaimId[executionClaimId] = _userProxy;
 
         uint256 executionClaimExpiryDate = now.add(executorClaimLifespan[_executor]);
 
@@ -59,7 +50,7 @@ contract GelatoCore is IGelatoCore, GelatoGasPriceOracle, GelatoProvider, Gelato
             _provider,
             _executor,
             executionClaimId,  // To avoid hash collisions
-            userProxy,
+            _userProxy,
             _condition,
             _conditionPayloadWithSelector,
             _action,
@@ -71,7 +62,7 @@ contract GelatoCore is IGelatoCore, GelatoGasPriceOracle, GelatoProvider, Gelato
             _provider,
             _executor,
             executionClaimId,
-            userProxy,
+            _userProxy,
             _condition,
             _conditionPayloadWithSelector,
             _action,
@@ -84,7 +75,7 @@ contract GelatoCore is IGelatoCore, GelatoGasPriceOracle, GelatoProvider, Gelato
     function canExecute(
         address _provider,
         uint256 _executionClaimId,
-        IGnosisSafe _userGnosisSafeProxy,
+        IGnosisSafe _userProxy,
         IGelatoCondition _condition,
         bytes memory _conditionPayloadWithSelector,
         IGelatoAction _action,
@@ -128,7 +119,7 @@ contract GelatoCore is IGelatoCore, GelatoGasPriceOracle, GelatoProvider, Gelato
             _provider,
             msg.sender,  // executor
             _executionClaimId,
-            _userGnosisSafeProxy,
+            _userProxy,
             _condition,
             _conditionPayloadWithSelector,
             _action,
@@ -173,7 +164,7 @@ contract GelatoCore is IGelatoCore, GelatoGasPriceOracle, GelatoProvider, Gelato
     function execute(
         address _provider,
         uint256 _executionClaimId,
-        IGnosisSafe _userGnosisSafeProxy,
+        IGnosisSafe _userProxy,
         IGelatoCondition _condition,
         bytes calldata _conditionPayloadWithSelector,
         IGelatoAction _action,
@@ -190,7 +181,7 @@ contract GelatoCore is IGelatoCore, GelatoGasPriceOracle, GelatoProvider, Gelato
             (CanExecuteResult canExecuteResult, uint8 canExecuteReason) = canExecute(
                 _provider,
                 _executionClaimId,
-                _userGnosisSafeProxy,
+                _userProxy,
                 _condition,
                 _conditionPayloadWithSelector,
                 _action,
@@ -203,7 +194,7 @@ contract GelatoCore is IGelatoCore, GelatoGasPriceOracle, GelatoProvider, Gelato
                     _provider,
                     msg.sender,
                     _executionClaimId,
-                    _userGnosisSafeProxy,
+                    _userProxy,
                     _condition,
                     canExecuteResult,
                     canExecuteReason
@@ -213,7 +204,7 @@ contract GelatoCore is IGelatoCore, GelatoGasPriceOracle, GelatoProvider, Gelato
                     _provider,
                     msg.sender,
                     _executionClaimId,
-                    _userGnosisSafeProxy,
+                    _userProxy,
                     _condition,
                     canExecuteResult,
                     canExecuteReason
@@ -225,7 +216,7 @@ contract GelatoCore is IGelatoCore, GelatoGasPriceOracle, GelatoProvider, Gelato
         // INTERACTIONS
         string memory executionFailureReason;
 
-        try _userGnosisSafeProxy.execTransactionFromModuleReturnData(
+        try _userProxy.execTransactionFromModuleReturnData(
             address(_action),  // to
             0,  // value
             _actionPayloadWithSelector,  // data
@@ -237,7 +228,7 @@ contract GelatoCore is IGelatoCore, GelatoGasPriceOracle, GelatoProvider, Gelato
                     _provider,
                     msg.sender,
                     _executionClaimId,
-                    _userGnosisSafeProxy,
+                    _userProxy,
                     _condition,
                     _action
                 );
@@ -281,7 +272,7 @@ contract GelatoCore is IGelatoCore, GelatoGasPriceOracle, GelatoProvider, Gelato
             _provider,
             msg.sender,  // executor
             _executionClaimId,
-            _userGnosisSafeProxy,
+            _userProxy,
             _condition,
             _action,
             executionFailureReason
@@ -293,7 +284,7 @@ contract GelatoCore is IGelatoCore, GelatoGasPriceOracle, GelatoProvider, Gelato
         address _provider,
         address _executor,
         uint256 _executionClaimId,
-        IGnosisSafe _userGnosisSafeProxy,
+        IGnosisSafe _userProxy,
         IGelatoCondition _condition,
         bytes calldata _conditionPayloadWithSelector,
         IGelatoAction _action,
@@ -305,8 +296,8 @@ contract GelatoCore is IGelatoCore, GelatoGasPriceOracle, GelatoProvider, Gelato
     {
         bool executionClaimExpired = _executionClaimExpiryDate <= now;
         if (
-            msg.sender != userByGnosisSafeProxy[address(_userGnosisSafeProxy)] &&
-            IGnosisSafe(msg.sender) != _userGnosisSafeProxy
+            msg.sender != userByGnosisSafeProxy[address(_userProxy)] &&
+            IGnosisSafe(msg.sender) != _userProxy
         ) {
             require(
                 executionClaimExpired && msg.sender == _executor,
@@ -317,7 +308,7 @@ contract GelatoCore is IGelatoCore, GelatoGasPriceOracle, GelatoProvider, Gelato
             _provider,
             _executor,
             _executionClaimId,
-            _userGnosisSafeProxy,
+            _userProxy,
             _condition,
             _conditionPayloadWithSelector,
             _action,
@@ -334,7 +325,7 @@ contract GelatoCore is IGelatoCore, GelatoGasPriceOracle, GelatoProvider, Gelato
         delete executionClaimHash[_executionClaimId];
         emit LogExecutionClaimCancelled(
             _executionClaimId,
-            _userGnosisSafeProxy,
+            _userProxy,
             msg.sender,
             executionClaimExpired
         );
@@ -365,7 +356,7 @@ contract GelatoCore is IGelatoCore, GelatoGasPriceOracle, GelatoProvider, Gelato
         address _provider,
         address _executor,
         uint256 _executionClaimId,
-        IGnosisSafe _userGnosisSafeProxy,
+        IGnosisSafe _userProxy,
         IGelatoCondition _condition,
         bytes memory _conditionPayloadWithSelector,
         IGelatoAction _action,
@@ -381,7 +372,7 @@ contract GelatoCore is IGelatoCore, GelatoGasPriceOracle, GelatoProvider, Gelato
                 _provider,
                 _executor,
                 _executionClaimId,
-                _userGnosisSafeProxy,
+                _userProxy,
                 _condition,
                 _conditionPayloadWithSelector,
                 _action,

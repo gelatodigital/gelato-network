@@ -111,7 +111,7 @@ interface IGelatoCore {
     function canExecute(
         address _provider,
         uint256 _executionClaimId,
-        IGnosisSafe _userGnosisSafeProxy,
+        IGnosisSafe _userProxy,
         IGelatoCondition _condition,
         bytes calldata _conditionPayloadWithSelector,
         IGelatoAction _action,
@@ -130,7 +130,7 @@ interface IGelatoCore {
     function execute(
         address _provider,
         uint256 _executionClaimId,
-        IGnosisSafe _userGnosisSafeProxy,
+        IGnosisSafe _userProxy,
         IGelatoCondition _condition,
         bytes calldata _conditionPayloadWithSelector,
         IGelatoAction _action,
@@ -142,7 +142,7 @@ interface IGelatoCore {
     /**
      * @dev API for canceling executionClaims
      * @notice re-entrancy protection due to accounting operations and interactions
-     * @notice prior to executionClaim expiry, only owner of _userGnosisSafeProxy can cancel
+     * @notice prior to executionClaim expiry, only owner of _userProxy can cancel
         for a refund. Post executionClaim expiry, _executor can also cancel,
         for a reward.
      * @notice .sendValue instead of .transfer due to IstanbulHF
@@ -151,7 +151,7 @@ interface IGelatoCore {
         address _provider,
         address _executor,
         uint256 _executionClaimId,
-        IGnosisSafe _userGnosisSafeProxy,
+        IGnosisSafe _userProxy,
         IGelatoCondition _condition,
         bytes calldata _conditionPayloadWithSelector,
         IGelatoAction _action,
