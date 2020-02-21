@@ -24,38 +24,36 @@ contract GelatoCore is IGelatoCore, GelatoGasPriceOracle, GelatoProvider, Gelato
 
     // ================  MINTING ==============================================
     function mintExecutionClaim(
-        address _provider,
-        address _executor,
-        IGelatoCondition _condition,
+        address[2] calldata _providerAndExecutor,
+        address[2] calldata _conditionAndAction,
         bytes calldata _conditionPayload,
-        IGelatoAction _action,
         bytes calldata _executionPayload,
         uint256 _executionClaimExpiryDate
     )
         external
         override
-        isPCA(_provider, address(_condition), address(_action))
-        registeredExecutor(_executor)
-        maxExecutionClaimLifespan(_executor, _executionClaimExpiryDate)
+        isPCA(_providerAndExecutor[0], _conditionAndAction[0], _conditionAndAction[1])
+        registeredExecutor(_providerAndExecutor[1])
+        maxExecutionClaimLifespan(_providerAndExecutor[1], _executionClaimExpiryDate)
     {
         // Claim liquidity from provider
         uint256 claimedProviderLiquidity = provisionPerExecutionClaim(
-            _provider,
+            _providerAndExecutor[0],
             0  // 0 for providerGasPriceCeiling
         );
 
         // Ensure Provider Liquidity
         require(
-            providerFunds[_provider].sub(
-                lockedProviderFunds[_provider],
+            providerFunds[_providerAndExecutor[0]].sub(
+                lockedProviderFunds[_providerAndExecutor[0]],
                 "GelatoCore.mintExecutionClaim: providerLiquidity underflow"
             ) > claimedProviderLiquidity,
             "GelatoCore.mintExecutionClaim: provider illiquid"
         );
 
         // Lock Providers Funds attributed to this ExecutionClaim
-        lockedProviderFunds[_provider] = (
-            lockedProviderFunds[_provider] + claimedProviderLiquidity
+        lockedProviderFunds[_providerAndExecutor[0]] = (
+            lockedProviderFunds[_providerAndExecutor[0]] + claimedProviderLiquidity
         );
 
         // Mint new executionClaim
@@ -65,26 +63,22 @@ contract GelatoCore is IGelatoCore, GelatoGasPriceOracle, GelatoProvider, Gelato
 
         // ExecutionClaim Hashing
         executionClaimHash[executionClaimId] = _computeExecutionClaimHash(
-            _provider,
-            _executor,
+            _providerAndExecutor,
             executionClaimId,  // To avoid hash collisions
             msg.sender,  // userProxy
-            _condition,
+            _conditionAndAction,
             _conditionPayload,
-            _action,
             _executionPayload,
             _executionClaimExpiryDate,
             claimedProviderLiquidity
         );
 
         emit LogExecutionClaimMinted(
-            _provider,
-            _executor,
+            _providerAndExecutor,
             executionClaimId,
             msg.sender,  // userProxy
-            _condition,
+            _conditionAndAction,
             _conditionPayload,
-            _action,
             _executionPayload,
             _executionClaimExpiryDate,
             claimedProviderLiquidity
@@ -93,12 +87,11 @@ contract GelatoCore is IGelatoCore, GelatoGasPriceOracle, GelatoProvider, Gelato
 
     // ================  CAN EXECUTE EXECUTOR API ============================
     function canExecute(
-        address _provider,
+        address[2] memory _providerAndExecutor,
         uint256 _executionClaimId,
         address _userProxy,
-        IGelatoCondition _condition,
+        address[2] memory _conditionAndAction,
         bytes memory _conditionPayload,
-        IGelatoAction _action,
         bytes memory _executionPayload,
         uint256 _executionClaimExpiryDate,
         uint256 _claimedProviderLiquidity
@@ -108,7 +101,7 @@ contract GelatoCore is IGelatoCore, GelatoGasPriceOracle, GelatoProvider, Gelato
         override
         returns (CanExecuteResult, uint8 reason)
     {
-        if (availableProviderLiquidity(_provider) < _claimedProviderLiquidity) {
+        if (availableProviderLiquidity(_providerAndExecutor[0]) < _claimedProviderLiquidity) {
             return (
                 CanExecuteResult.ProviderIlliquidity,
                 uint8(StandardReason.NotOk)
@@ -137,13 +130,11 @@ contract GelatoCore is IGelatoCore, GelatoGasPriceOracle, GelatoProvider, Gelato
         }
 
         bytes32 computedExecutionClaimHash = _computeExecutionClaimHash(
-            _provider,
-            msg.sender,  // executor
+            _providerAndExecutor,
             _executionClaimId,
             _userProxy,
-            _condition,
+            _conditionAndAction,
             _conditionPayload,
-            _action,
             _executionPayload,
             _executionClaimExpiryDate,
             _claimedProviderLiquidity
@@ -157,14 +148,14 @@ contract GelatoCore is IGelatoCore, GelatoGasPriceOracle, GelatoProvider, Gelato
         }
 
         // Self-Conditional Actions pass and return
-        if (address(_condition) == address(0)) {
+        if (_conditionAndAction[0] == address(0)) {
             return (
                 CanExecuteResult.Executable,
                 uint8(StandardReason.Ok)
             );
         } else {
             // Dynamic Checks needed for Conditional Actions
-            (bool success, bytes memory returndata) = address(_condition).staticcall(
+            (bool success, bytes memory returndata) = _conditionAndAction[0].staticcall(
                 _conditionPayload
             );
             if (!success) {
@@ -184,12 +175,11 @@ contract GelatoCore is IGelatoCore, GelatoGasPriceOracle, GelatoProvider, Gelato
 
     // ================  EXECUTE EXECUTOR API ============================
     function execute(
-        address _provider,
+        address[2] calldata _providerAndExecutor,
         uint256 _executionClaimId,
         address _userProxy,
-        IGelatoCondition _condition,
+        address[2] calldata _conditionAndAction,
         bytes calldata _conditionPayload,
-        IGelatoAction _action,
         bytes calldata _executionPayload,
         uint256 _executionClaimExpiryDate,
         uint256 _claimedProviderLiquidity
@@ -202,12 +192,11 @@ contract GelatoCore is IGelatoCore, GelatoGasPriceOracle, GelatoProvider, Gelato
         // CHECK canExecute()
         {
             (CanExecuteResult canExecuteResult, uint8 canExecuteReason) = canExecute(
-                _provider,
+                _providerAndExecutor,
                 _executionClaimId,
                 _userProxy,
-                _condition,
+                _conditionAndAction,
                 _conditionPayload,
-                _action,
                 _executionPayload,
                 _executionClaimExpiryDate,
                 _claimedProviderLiquidity
@@ -215,21 +204,19 @@ contract GelatoCore is IGelatoCore, GelatoGasPriceOracle, GelatoProvider, Gelato
 
             if (canExecuteResult == CanExecuteResult.Executable) {
                 emit LogCanExecuteSuccess(
-                    _provider,
-                    msg.sender,
+                    _providerAndExecutor,
                     _executionClaimId,
                     _userProxy,
-                    _condition,
+                    _conditionAndAction,
                     canExecuteResult,
                     canExecuteReason
                 );
             } else {
                 emit LogCanExecuteFailed(
-                    _provider,
-                    msg.sender,
+                    _providerAndExecutor,
                     _executionClaimId,
                     _userProxy,
-                    _condition,
+                    _conditionAndAction,
                     canExecuteResult,
                     canExecuteReason
                 );
@@ -243,11 +230,10 @@ contract GelatoCore is IGelatoCore, GelatoGasPriceOracle, GelatoProvider, Gelato
         // Success
         if (executed) {
             emit LogSuccessfulExecution(
-                _provider,
-                msg.sender,
+                _providerAndExecutor,
                 _executionClaimId,
                 _userProxy,
-                _condition,
+                _conditionAndAction,
                 _action
             );
 
@@ -256,7 +242,7 @@ contract GelatoCore is IGelatoCore, GelatoGasPriceOracle, GelatoProvider, Gelato
             delete userProxyByExecutionClaimId[_executionClaimId];
 
             // Use gelatoGasPrice if provider default or if below provider ceiling
-            uint256 billedGasPrice = providerGasPriceCeiling[_provider];
+            uint256 billedGasPrice = providerGasPriceCeiling[_providerAndExecutor[0]];
             if (billedGasPrice == 0 || gelatoGasPrice < billedGasPrice)
                 billedGasPrice = gelatoGasPrice;
 
@@ -265,12 +251,12 @@ contract GelatoCore is IGelatoCore, GelatoGasPriceOracle, GelatoProvider, Gelato
                 5 finney
             );
 
-            providerFunds[_provider] = providerFunds[_provider].sub(
+            providerFunds[_providerAndExecutor[0]] = providerFunds[_providerAndExecutor[0]].sub(
                 executorReward,
                 "GelatoCore.execute: providerFunds underflow"
             );
 
-            lockedProviderFunds[_provider] = lockedProviderFunds[_provider].sub(
+            lockedProviderFunds[_providerAndExecutor[0]] = lockedProviderFunds[_providerAndExecutor[0]].sub(
                 executorReward,
                 "GelatoCore.execute: lockedProviderFunds underflow"
             );
@@ -296,11 +282,10 @@ contract GelatoCore is IGelatoCore, GelatoGasPriceOracle, GelatoProvider, Gelato
             }
 
             emit LogExecutionFailure(
-                _provider,
-                msg.sender,  // executor
+                _providerAndExecutor,
                 _executionClaimId,
                 _userProxy,
-                _condition,
+                _conditionAndAction[0],
                 _action,
                 executionFailureReason
             );
@@ -309,13 +294,11 @@ contract GelatoCore is IGelatoCore, GelatoGasPriceOracle, GelatoProvider, Gelato
 
     // ================  CANCEL USER / EXECUTOR API ============================
     function cancelExecutionClaim(
-        address _provider,
-        address _executor,
+        address[2] calldata _providerAndExecutor,
         uint256 _executionClaimId,
         address _userProxy,
-        IGelatoCondition _condition,
+        address[2] memory _conditionAndAction,
         bytes calldata _conditionPayload,
-        IGelatoAction _action,
         bytes calldata _executionPayload,
         uint256 _executionClaimExpiryDate,
         uint256 _claimedProviderLiquidity
@@ -331,11 +314,10 @@ contract GelatoCore is IGelatoCore, GelatoGasPriceOracle, GelatoProvider, Gelato
             );
         }
         bytes32 computedExecutionClaimHash = _computeExecutionClaimHash(
-            _provider,
-            _executor,
+            _providerAndExecutor,
             _executionClaimId,
             _userProxy,
-            _condition,
+            _conditionAndAction[0],
             _conditionPayload,
             _action,
             _executionPayload,
@@ -354,13 +336,13 @@ contract GelatoCore is IGelatoCore, GelatoGasPriceOracle, GelatoProvider, Gelato
 
 
         // Interactions
-        lockedProviderFunds[_provider] = lockedProviderFunds[_provider].sub(
+        lockedProviderFunds[_providerAndExecutor[0]] = lockedProviderFunds[_providerAndExecutor[0]].sub(
             _claimedProviderLiquidity,
             "GelatoCore.cancelExecutionClaim: lockedProviderFunds underflow"
         );
 
         emit LogExecutionClaimCancelled(
-            _provider,
+            _providerAndExecutor,
             _executionClaimId,
             _userProxy,
             msg.sender,
@@ -371,13 +353,11 @@ contract GelatoCore is IGelatoCore, GelatoGasPriceOracle, GelatoProvider, Gelato
 
     // ================ PRIVATE HELPERS ========================================
     function _computeExecutionClaimHash(
-        address _provider,
-        address _executor,
+        address[2] memory _providerAndExecutor,
         uint256 _executionClaimId,
         address _userProxy,
-        IGelatoCondition _condition,
+        address[2] memory _conditionAndAction,
         bytes memory _conditionPayload,
-        IGelatoAction _action,
         bytes memory _executionPayload,
         uint256 _executionClaimExpiryDate,
         uint256 _claimedProviderLiquidity
@@ -388,11 +368,11 @@ contract GelatoCore is IGelatoCore, GelatoGasPriceOracle, GelatoProvider, Gelato
     {
         return keccak256(
             abi.encodePacked(
-                _provider,
-                _executor,
+                _providerAndExecutor[0],
+                _providerAndExecutor[1],
                 _executionClaimId,
                 _userProxy,
-                _condition,
+                _conditionAndAction[0],
                 _conditionPayload,
                 _action,
                 _executionPayload,

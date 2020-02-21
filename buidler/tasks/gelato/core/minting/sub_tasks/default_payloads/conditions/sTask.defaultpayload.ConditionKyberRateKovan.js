@@ -3,7 +3,7 @@ import { utils } from "ethers";
 
 export default internalTask(
   "gc-mint:defaultpayload:ConditionKyberRateKovan",
-  `Returns a hardcoded actionPayloadWithSelector of ConditionKyberRateKovan`
+  `Returns a hardcoded executionPayload of ConditionKyberRateKovan`
 )
   .addFlag("log")
   .setAction(async ({ log }) => {

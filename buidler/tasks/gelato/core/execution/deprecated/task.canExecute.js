@@ -54,11 +54,11 @@ export default task(
             executionClaimId,
             userProxy: parsedLog.values.userProxy,
             condition: parsedLog.values.condition,
-            conditionPayloadWithSelector:
-              parsedLog.values.conditionPayloadWithSelector,
+            conditionPayload:
+              parsedLog.values.conditionPayload,
             action: parsedLog.values.action,
-            actionPayloadWithSelector:
-              parsedLog.values.actionPayloadWithSelector,
+            executionPayload:
+              parsedLog.values.executionPayload,
             conditionGasActionTotalGasMinExecutionGas:
               parsedLog.values.conditionGasActionTotalGasMinExecutionGas,
             executionClaimExpiryDate: parsedLog.values.executionClaimExpiryDate,
@@ -90,9 +90,9 @@ export default task(
         queriedExecutionClaim.executionClaimId,
         queriedExecutionClaim.userProxy,
         queriedExecutionClaim.condition,
-        queriedExecutionClaim.conditionPayloadWithSelector,
+        queriedExecutionClaim.conditionPayload,
         queriedExecutionClaim.action,
-        queriedExecutionClaim.actionPayloadWithSelector,
+        queriedExecutionClaim.executionPayload,
         queriedExecutionClaim.conditionGasActionTotalGasMinExecutionGas,
         actionConditionsCheckGas,
         queriedExecutionClaim.executionClaimExpiryDate,

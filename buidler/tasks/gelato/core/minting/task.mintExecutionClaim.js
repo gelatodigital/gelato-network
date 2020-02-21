@@ -8,8 +8,8 @@ export default task(
   .addPositionalParam("provider", "The selected provider")
   .addPositionalParam("conditionname", "must exist inside buidler.config")
   .addPositionalParam("actionname", "must exist inside buidler.config")
-  .addOptionalPositionalParam("conditionpayloadwithselector", "abi.encoded bytes")
-  .addOptionalPositionalParam("actionpayloadwithselector", "abi.encoded bytes")
+  .addOptionalPositionalParam("conditionPayload", "abi.encoded bytes")
+  .addOptionalPositionalParam("executionPayload", "abi.encoded bytes")
   .addOptionalParam("selectedexecutor", "address")
   .addFlag("log", "Logs return values to stdout")
   .setAction(async taskArgs => {
@@ -33,22 +33,22 @@ export default task(
       });
 
       // Handle condition payloadsWithSelector
-      let conditionPayloadWithSelector;
-      if (!taskArgs.conditionpayloadwithselector) {
-        conditionPayloadWithSelector = await run(
+      let conditionPayload;
+      if (!taskArgs.conditionPayload) {
+        conditionPayload = await run(
           `gc-mint:defaultpayload:${taskArgs.conditionname}`
         );
       } else {
-        conditionPayloadWithSelector = taskArgs.conditionpayloadwithselector;
+        conditionPayload = taskArgs.conditionPayload;
       }
       // Handle action payloadsWithSelector
-      let actionPayloadWithSelector;
-      if (!taskArgs.actionpayloadwithselector) {
-        actionPayloadWithSelector = await run(
+      let executionPayload;
+      if (!taskArgs.executionPayload) {
+        executionPayload = await run(
           `gc-mint:defaultpayload:${taskArgs.actionname}`
         );
       } else {
-        actionPayloadWithSelector = taskArgs.actionpayloadwithselector;
+        executionPayload = taskArgs.executionPayload;
       }
 
       // MintingDepositPayable
@@ -71,9 +71,9 @@ export default task(
       const mintTx = await gelatoCoreContract.mintExecutionClaim(
         selectedexecutor,
         conditionAddress,
-        conditionPayloadWithSelector,
+        conditionPayload,
         actionAddress,
-        actionPayloadWithSelector,
+        executionPayload,
         { value: mintingDepositPayable }
       );
 

@@ -3,7 +3,7 @@ import { utils } from "ethers";
 
 export default internalTask(
   "gc-mint:defaultpayload:ActionERC20TransferFrom",
-  `Returns a hardcoded actionPayloadWithSelector of ActionERC20TransferFrom`
+  `Returns a hardcoded executionPayload of ActionERC20TransferFrom`
 )
   .addFlag("log")
   .setAction(async ({ log }) => {

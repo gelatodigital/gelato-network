@@ -21,8 +21,7 @@ contract ScriptGnosisSafeEnableGelatoCoreAndMint {
     /// @dev This function should be delegatecalled
     function enableModuleAndMint(
         address _gelatoCore,
-        address _provider,
-        address _selectedExecutor,
+        address[2] calldata _providerAndExecutor,
         IGelatoCondition _condition,
         bytes calldata _conditionPayloadWithSelector,
         IGelatoAction _action,
@@ -41,8 +40,7 @@ contract ScriptGnosisSafeEnableGelatoCoreAndMint {
 
         // Mint on GelatoCore from delegatecaller (Gnosis Safe Proxy)
         try IGelatoCore(_gelatoCore).mintExecutionClaim(
-            _provider,
-            _selectedExecutor,
+            _providerAndExecutor,
             _condition,
             _conditionPayloadWithSelector,
             _action,

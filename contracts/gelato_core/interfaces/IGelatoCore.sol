@@ -22,14 +22,12 @@ interface IGelatoCore {
     enum StandardReason { Ok, NotOk, UnhandledError }
 
     event LogExecutionClaimMinted(
-        address indexed provider,
-        address indexed executor,
+        address[2] indexed providerAndExecutor,
         uint256 indexed executionClaimId,
-        address userProxy,
-        IGelatoCondition condition,
-        bytes conditionPayloadWithSelector,
-        IGelatoAction action,
-        bytes actionPayloadWithSelector,
+        address indexed userProxy,
+        address[2] conditionAndAction,
+        bytes conditionPayload,
+        bytes executionPayload,
         uint256 executionClaimExpiryDate,
         uint256 claimedProviderLiquidity
     );
@@ -37,48 +35,43 @@ interface IGelatoCore {
     // Caution: there are no guarantees that CanExecuteResult and/or reason
     //  are implemented in a logical fashion by condition/action developers.
     event LogCanExecuteSuccess(
-        address indexed provider,
-        address indexed executor,
+        address[2] indexed providerAndExecutor,
         uint256 indexed executionClaimId,
-        address userProxy,
-        IGelatoCondition condition,
+        address indexed userProxy,
+        address[2] conditionAndAction,
         CanExecuteResult canExecuteResult,
         uint8 reason
     );
 
     event LogCanExecuteFailed(
-        address indexed provider,
-        address indexed executor,
+        address[2] indexed providerAndExecutor,
         uint256 indexed executionClaimId,
-        address userProxy,
-        IGelatoCondition condition,
+        address indexed userProxy,
+        address[2] conditionAndAction,
         CanExecuteResult canExecuteResult,
         uint8 reason
     );
 
     event LogSuccessfulExecution(
-        address indexed provider,
-        address indexed executor,
+        address[2] indexed providerAndExecutor,
         uint256 indexed executionClaimId,
-        address userProxy,
-        IGelatoCondition condition,
+        address indexed userProxy,
+        address[2] conditionAndAction,
         IGelatoAction action
     );
 
     // Caution: there are no guarantees that ExecutionResult and/or reason
     //  are implemented in a logical fashion by condition/action developers.
     event LogExecutionFailure(
-        address indexed provider,
-        address indexed executor,
+        address[2] indexed providerAndExecutor,
         uint256 indexed executionClaimId,
-        address userProxy,
-        IGelatoCondition condition,
-        IGelatoAction action,
+        address indexed userProxy,
+        address[2] conditionAndAction,
         string executionFailureReason
     );
 
     event LogExecutionClaimCancelled(
-        address indexed provider,
+        address[2] indexed providerAndExecutor,
         uint256 indexed executionClaimId,
         address indexed userProxy,
         address cancelor,
@@ -93,11 +86,9 @@ interface IGelatoCore {
      * @notice minting event split into two, due to stack too deep issue
      */
     function mintExecutionClaim(
-        address _provider,
-        address _executor,
-        IGelatoCondition _condition,
+        address[2] calldata _providerAndExecutor,
+        address[2] calldata _conditionAndAction,
         bytes calldata _conditionPayloadWithSelector,
-        IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
         uint256 _executionClaimExpiryDate
     )
@@ -112,12 +103,11 @@ interface IGelatoCore {
      * @return reason The reason for the outcome of the canExecute Check
      */
     function canExecute(
-        address _provider,
+        address[2] calldata _providerAndExecutor,
         uint256 _executionClaimId,
         address _userProxy,
-        IGelatoCondition _condition,
+        address[2] calldata _conditionAndAction,
         bytes calldata _conditionPayloadWithSelector,
-        IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
         uint256 _executionClaimExpiryDate,
         uint256 claimedProviderLiquidity
@@ -132,12 +122,11 @@ interface IGelatoCore {
      * @dev if return value == 0 the claim got executed
      */
     function execute(
-        address _provider,
+        address[2] calldata _providerAndExecutor,
         uint256 _executionClaimId,
         address _userProxy,
-        IGelatoCondition _condition,
+        address[2] calldata _conditionAndAction,
         bytes calldata _conditionPayloadWithSelector,
-        IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
         uint256 _executionClaimExpiryDate,
         uint256 claimedProviderLiquidity
@@ -153,13 +142,11 @@ interface IGelatoCore {
      * @notice .sendValue instead of .transfer due to IstanbulHF
      */
     function cancelExecutionClaim(
-        address _provider,
-        address _executor,
+        address[2] calldata _providerAndExecutor,
         uint256 _executionClaimId,
         address _userProxy,
-        IGelatoCondition _condition,
+        address[2] calldata _conditionAndAction,
         bytes calldata _conditionPayloadWithSelector,
-        IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
         uint256 _executionClaimExpiryDate,
         uint256 claimedProviderLiquidity
