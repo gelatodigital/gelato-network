@@ -1,3 +1,3 @@
-import "./task.createGnosisSafeProxy";
-import "./task.gnosisSafeProxyByUser";
-import "./task.userByGnosisSafeProxy";
+import "./task.createGelatoProxy";
+import "./task.gelatoProxyByUser";
+import "./task.userByGelatoProxy";

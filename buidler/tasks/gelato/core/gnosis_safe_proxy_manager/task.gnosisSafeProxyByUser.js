@@ -3,7 +3,7 @@ import { defaultNetwork } from "../../../../../buidler.config";
 
 export default task(
   "gc-gnosissafeproxybyuser",
-  `Calls GelatoCore.gnosisSafeProxyByUser([<user>: defaults to ethers signer]) on [--network] (default: ${defaultNetwork})`
+  `Calls GelatoCore.gelatoProxyByUser([<user>: defaults to ethers signer]) on [--network] (default: ${defaultNetwork})`
 )
   .addOptionalPositionalParam(
     "user",
@@ -19,7 +19,7 @@ export default task(
         read: true
       });
 
-      const gnosisSafeProxyAddress = await gelatoCoreContract.gnosisSafeProxyByUser(
+      const gnosisSafeProxyAddress = await gelatoCoreContract.gelatoProxyByUser(
         user
       );
       if (log) {

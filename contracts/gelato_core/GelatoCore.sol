@@ -4,13 +4,15 @@ import "./interfaces/IGelatoCore.sol";
 import "./GelatoGasPriceOracle.sol";
 import "./GelatoExecutor.sol";
 import "./GelatoProvider.sol";
+import "./GelatoUserProxyFactory.sol";
 import "../external/Counters.sol";
 
 /// @title GelatoCore
 /// @notice Execution Claim: minting, checking, execution, and cancellation
 /// @dev Find all NatSpecs inside IGelatoCore
-contract GelatoCore is IGelatoCore, GelatoGasPriceOracle, GelatoProvider, GelatoExecutor {
-
+contract GelatoCore is
+    IGelatoCore, GelatoGasPriceOracle, GelatoProvider, GelatoExecutor, GelatoUserProxyFactory
+{
     // Library for unique ExecutionClaimIds
     using Counters for Counters.Counter;
     using Address for address payable;  /// for oz's sendValue method

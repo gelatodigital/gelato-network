@@ -1,8 +1,8 @@
 pragma solidity ^0.6.2;
 
-import "./interfaces/IGelatoProvider.sol";
-import "../external/Address.sol";
-import "../external/SafeMath.sol";
+import "../interfaces/IGelatoProvider.sol";
+import "../../external/Address.sol";
+import "../../external/SafeMath.sol";
 
 /// @title GelatoProvider
 /// @notice APIs for GelatoCore Owner and executorClaimLifespan
@@ -16,10 +16,6 @@ abstract contract GelatoProvider is IGelatoProvider {
     mapping(address => bool) public override isRegisteredProvider;
     // Funds that the provider makes available for any of his condition-action executions
     mapping(address => uint256) public override providerFunds;
-    // What the provider must keep on GelatoCore for all their outstanding ExecutionClaims
-    mapping(address => uint256) public override lockedProviderFunds;
-    // The max GasPrice a provider is willing to pay to executors
-    mapping(address => uint256) public override providerGasPriceCeiling;
     //      provider(p) =>     Condition(C) =>    Action(A) => yes/no
     mapping(address => mapping(address => mapping(address => bool))) public override pCA;
 
