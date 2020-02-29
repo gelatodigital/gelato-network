@@ -32,6 +32,14 @@ abstract contract GelatoProvider is IGelatoProvider {
         _;
     }
 
+    modifier liquidProvider(address _provider, uint256 _gasPrice, uint256 _gas) {
+        require(
+            isProviderLiquid(_provider, _gasPrice, _gas),
+            "ProviderWhitelistModule.liquidProvider"
+        );
+        _;
+    }
+
     // Provide Conditions
     function provideCondition(address _condition) external override {
         require(

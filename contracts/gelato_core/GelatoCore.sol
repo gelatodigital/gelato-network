@@ -23,67 +23,63 @@ contract GelatoCore is
     mapping(uint256 => address) public override userProxyByExecutionClaimId;
     // executionClaimId => bytes32 executionClaimHash
     mapping(uint256 => bytes32) public override executionClaimHash;
+    uint256 public constant override MAXGAS = 6000000;
 
     // ================  MINTING ==============================================
     function mintExecutionClaim(
         address[2] calldata _providerAndExecutor,
         address[2] calldata _conditionAndAction,
         bytes calldata _conditionPayload,
-        bytes calldata _executionPayload,
-        uint256 _executionClaimExpiryDate
+        bytes calldata _actionPayload
     )
         external
         override
-        isPCA(_providerAndExecutor[0], _conditionAndAction[0], _conditionAndAction[1])
+        liquidProvider(_providerAndExecutor[0], gelatoGasPrice, MAXGAS)
         registeredExecutor(_providerAndExecutor[1])
-        maxExecutionClaimLifespan(_providerAndExecutor[1], _executionClaimExpiryDate)
+        providedCondition(_conditionAndAction[0])
+        providedAction(_conditionAndAction[1])
     {
-        // Claim liquidity from provider
-        uint256 claimedProviderLiquidity = provisionPerExecutionClaim(
-            _providerAndExecutor[0],
-            0  // 0 for providerGasPriceCeiling
-        );
-
-        // Ensure Provider Liquidity
-        require(
-            providerFunds[_providerAndExecutor[0]].sub(
-                lockedProviderFunds[_providerAndExecutor[0]],
-                "GelatoCore.mintExecutionClaim: providerLiquidity underflow"
-            ) > claimedProviderLiquidity,
-            "GelatoCore.mintExecutionClaim: provider illiquid"
-        );
-
-        // Lock Providers Funds attributed to this ExecutionClaim
-        lockedProviderFunds[_providerAndExecutor[0]] = (
-            lockedProviderFunds[_providerAndExecutor[0]] + claimedProviderLiquidity
-        );
+        address user;
+        IGnosisSafe userProxy;
+        if (isGelatoProxyUser(msg.sender)) {
+            user = msg.sender;
+            userProxy = gelatoProxyByUser[msg.sender];
+        } else if (isGelatoUserProxy(msg.sender)) {
+            user = userByGelatoProxy[msg.sender];
+            userProxy = IGnosisSafe(msg.sender);
+        } else {
+            revert(
+                "GelatoCore.mintExecutionClaim: caller must be registered user or proxy"
+            );
+        }
 
         // Mint new executionClaim
-        currentExecutionClaimId.increment();
-        uint256 executionClaimId = currentExecutionClaimId.current();
-        userProxyByExecutionClaimId[executionClaimId] = msg.sender;
+        executionClaimIds.increment();
+        uint256 executionClaimId = executionClaimIds.current();
+        userProxyByExecutionClaimId[executionClaimId] = userProxy;
+
+        uint256 executionClaimExpiryDate = now.add(executorClaimLifespan[_selectedExecutor]);
 
         // ExecutionClaim Hashing
         executionClaimHash[executionClaimId] = _computeExecutionClaimHash(
             _providerAndExecutor,
             executionClaimId,  // To avoid hash collisions
-            msg.sender,  // userProxy
+            userProxy,
             _conditionAndAction,
             _conditionPayload,
-            _executionPayload,
-            _executionClaimExpiryDate,
-            claimedProviderLiquidity
+            _actionPayload,
+            executionClaimExpiryDate
         );
 
         emit LogExecutionClaimMinted(
             _providerAndExecutor,
             executionClaimId,
-            msg.sender,  // userProxy
+            user,
+            userProxy,
             _conditionAndAction,
             _conditionPayload,
-            _executionPayload,
-            _executionClaimExpiryDate,
-            claimedProviderLiquidity
+            _actionPayload,
+            executionClaimExpiryDate
         );
     }
 
@@ -94,42 +90,24 @@ contract GelatoCore is
         address _userProxy,
         address[2] memory _conditionAndAction,
         bytes memory _conditionPayload,
-        bytes memory _executionPayload,
-        uint256 _executionClaimExpiryDate,
-        uint256 _claimedProviderLiquidity
+        bytes memory _actionPayload,
+        uint256 _executionClaimExpiryDate
     )
         public
         view
         override
-        returns (CanExecuteResult, uint8 reason)
+        returns (string memory canExecuteResult)
     {
-        if (availableProviderLiquidity(_providerAndExecutor[0]) < _claimedProviderLiquidity) {
-            return (
-                CanExecuteResult.ProviderIlliquidity,
-                uint8(StandardReason.NotOk)
-            );
-        }
+        if (!isProviderLiquid(_providerAndExecutor[0], gelatoGasPrice, MAXGAS))
+            return "ProviderIlliquidity";
 
         if (executionClaimHash[_executionClaimId] == bytes32(0)) {
-            if (_executionClaimId <= currentExecutionClaimId.current()) {
-                return (
-                    CanExecuteResult.ExecutionClaimAlreadyExecutedOrCancelled,
-                    uint8(StandardReason.NotOk)
-                );
-            } else {
-                return (
-                    CanExecuteResult.ExecutionClaimNonExistant,
-                    uint8(StandardReason.NotOk)
-                );
-            }
+            if (_executionClaimId <= currentExecutionClaimId.current())
+                return "AlreadyExecutedOrCancelled";
+            else return "NonExistant";
         }
 
-        if (_executionClaimExpiryDate < now) {
-            return (
-                CanExecuteResult.ExecutionClaimExpired,
-                uint8(StandardReason.NotOk)
-            );
-        }
+        if (_executionClaimExpiryDate < now) return "Expired";
 
         bytes32 computedExecutionClaimHash = _computeExecutionClaimHash(
             _providerAndExecutor,
@@ -137,40 +115,27 @@ contract GelatoCore is
             _userProxy,
             _conditionAndAction,
             _conditionPayload,
-            _executionPayload,
-            _executionClaimExpiryDate,
-            _claimedProviderLiquidity
+            _actionPayload,
+            _executionClaimExpiryDate
         );
 
-        if (computedExecutionClaimHash != executionClaimHash[_executionClaimId]) {
-            return (
-                CanExecuteResult.WrongCalldataOrMsgSender,
-                uint8(StandardReason.NotOk)
-            );
-        }
+        if (computedExecutionClaimHash != executionClaimHash[_executionClaimId])
+            return "WrongCalldataOrMsgSender";
 
         // Self-Conditional Actions pass and return
-        if (_conditionAndAction[0] == address(0)) {
-            return (
-                CanExecuteResult.Executable,
-                uint8(StandardReason.Ok)
-            );
-        } else {
+        if (_conditionAndAction[0] == address(0)) return "ok";
+        else {
             // Dynamic Checks needed for Conditional Actions
             (bool success, bytes memory returndata) = _conditionAndAction[0].staticcall(
                 _conditionPayload
             );
-            if (!success) {
-                return (
-                    CanExecuteResult.UnhandledConditionError,
-                    uint8(StandardReason.UnhandledError)
-                );
-            } else {
+            if (!success) return "UnhandledConditionError";
+            else {
                 bool conditionReached;
-                (conditionReached, reason) = abi.decode(returndata, (bool, uint8));
-                if (!conditionReached)
-                    return (CanExecuteResult.ConditionNotOk, reason);
-                else return (CanExecuteResult.Executable, reason);
+                string memory reason;
+                (conditionReached, reason) = abi.decode(returndata, (bool, string));
+                if (conditionReached) return "ok";
+                return abi.encodePacked("ConditionNotOk: ", reason);
             }
         }
     }
@@ -182,36 +147,42 @@ contract GelatoCore is
         address _userProxy,
         address[2] calldata _conditionAndAction,
         bytes calldata _conditionPayload,
-        bytes calldata _executionPayload,
-        uint256 _executionClaimExpiryDate,
-        uint256 _claimedProviderLiquidity
+        bytes calldata _actionPayload,
+        uint256 _executionClaimExpiryDate
     )
         external
         override
+        txGasPriceCheck
     {
         uint256 startGas = gasleft();
+        require(
+            startGas < MAXGAS,
+            "GelatoCore.execute: too much gas sent"
+        );
+        require(
+            startGas > MAXGAS - 100000,  // 100k overhead buffer
+            "GelatoCore.execute: insufficient gas sent"
+        );
 
         // CHECK canExecute()
         {
-            (CanExecuteResult canExecuteResult, uint8 canExecuteReason) = canExecute(
+            string memory canExecuteResult  = canExecute(
                 _providerAndExecutor,
                 _executionClaimId,
                 _userProxy,
                 _conditionAndAction,
                 _conditionPayload,
-                _executionPayload,
-                _executionClaimExpiryDate,
-                _claimedProviderLiquidity
+                _actionPayload,
+                _executionClaimExpiryDate
             );
 
-            if (canExecuteResult == CanExecuteResult.Executable) {
+            if (canExecuteResult == "ok") {
                 emit LogCanExecuteSuccess(
                     _providerAndExecutor,
                     _executionClaimId,
                     _userProxy,
                     _conditionAndAction,
-                    canExecuteResult,
-                    canExecuteReason
+                    canExecuteResult
                 );
             } else {
                 emit LogCanExecuteFailed(
@@ -219,79 +190,79 @@ contract GelatoCore is
                     _executionClaimId,
                     _userProxy,
                     _conditionAndAction,
-                    canExecuteResult,
-                    canExecuteReason
+                    canExecuteResult
                 );
                 return;  // END OF EXECUTION
             }
         }
 
         // INTERACTIONS
-        (bool executed, bytes memory returndata) = _userProxy.call(_executionPayload);
+        string memory executionFailureReason;
 
-        // Success
-        if (executed) {
-            emit LogSuccessfulExecution(
-                _providerAndExecutor,
-                _executionClaimId,
-                _userProxy,
-                _conditionAndAction,
-                _action
-            );
+        try _userProxy.execTransactionFromModuleReturnData(
+            _conditionAndAction[1],  // to
+            0,  // value
+            _actionPayload,  // data
+            IGnosisSafe.Operation.DelegateCall
+        ) returns (bool actionExecuted, bytes memory actionRevertReason) {
+            // Success
+            if (actionExecuted) {
+                emit LogSuccessfulExecution(
+                    _providerAndExecutor[0],
+                    msg.sender,
+                    _executionClaimId,
+                    _userProxy,
+                    _conditionAndAction
+                );
 
-            // EFFECTS
-            delete executionClaimHash[_executionClaimId];
-            delete userProxyByExecutionClaimId[_executionClaimId];
+                // EFFECTS
+                delete executionClaimHash[_executionClaimId];
+                delete userProxyByExecutionClaimId[_executionClaimId];
 
-            // Use gelatoGasPrice if provider default or if below provider ceiling
-            uint256 billedGasPrice = providerGasPriceCeiling[_providerAndExecutor[0]];
-            if (billedGasPrice == 0 || gelatoGasPrice < billedGasPrice)
-                billedGasPrice = gelatoGasPrice;
+                // ExecutionCost (- consecutive state writes + gas refund from deletion)
+                uint256 estExecutionCost = (_startGas - gasleft()).mul(gelatoGasPrice);
+                // Executors get 3% on their estimated Execution Cost
+                uint256 executorReward = SafeMath.div(estExecutionCost.mul(103), 100);
 
-            // Executor Refund + Reward. Refund is not in full due to 3 state writes.
-            uint256 executorReward = (startGas - gasleft()).mul(billedGasPrice).add(
-                5 finney
-            );
+                providerFunds[_providerAndExecutor[0]] = providerFunding[_provider].sub(
+                    estExecutionCost,
+                    "GelatoCore.execute: providerFunds underflow"
+                );
+                executorBalance[msg.sender] = executorBalance[msg.sender] + executionCost;
 
-            providerFunds[_providerAndExecutor[0]] = providerFunds[_providerAndExecutor[0]].sub(
-                executorReward,
-                "GelatoCore.execute: providerFunds underflow"
-            );
-
-            lockedProviderFunds[_providerAndExecutor[0]] = lockedProviderFunds[_providerAndExecutor[0]].sub(
-                executorReward,
-                "GelatoCore.execute: lockedProviderFunds underflow"
-            );
-
-            executorBalance[msg.sender] = executorBalance[msg.sender].add(executorReward);
-        } else {
-            // Failure
-            string memory executionFailureReason;
-
-            // 68: 32-location, 32-length, 4-ErrorSelector, UTF-8 revertReason
-            if (returndata.length % 32 == 4) {
-                bytes4 selector;
-                assembly { selector := returndata }
-
-                if (selector == 0x08c379a0) {  // Function selector for Error(string)
-                    assembly { returndata := add(returndata, 68) }
-                    executionFailureReason = string(returndata);
-                } else {
-                    executionFailureReason = "NoErrorSelector";
-                }
+                return;  // END OF EXECUTION: SUCCESS!
             } else {
-                executionFailureReason = "UnexpectedReturndata";
-            }
+                // 68: 32-location, 32-length, 4-ErrorSelector, UTF-8 revertReason
+                if (actionRevertReason.length % 32 == 4) {
+                    bytes4 selector;
+                    assembly { selector := actionRevertReason }
 
-            emit LogExecutionFailure(
-                _providerAndExecutor,
-                _executionClaimId,
-                _userProxy,
-                _conditionAndAction[0],
-                _action,
-                executionFailureReason
-            );
+                    if (selector == 0x08c379a0) {  // Function selector for Error(string)
+                        assembly { actionRevertReason := add(actionRevertReason, 68) }
+                        executionFailureReason = string(actionRevertReason);
+                    } else {
+                        executionFailureReason = "NoErrorSelector";
+                    }
+                } else {
+                    executionFailureReason = "UnexpectedReturndata";
+                }
+            }
+        } catch Error(string memory gnosisSafeProxyRevertReason) {
+            executionFailureReason = gnosisSafeProxyRevertReason;
+        } catch {
+            executionFailureReason = "UndefinedGnosisSafeProxyError";
         }
+
+        // Failure
+        emit LogExecutionFailure(
+            _provider,
+            msg.sender,  // executor
+            _executionClaimId,
+            _userProxy,
+            _condition,
+            _action,
+            executionFailureReason
+        );
     }
 
     // ================  CANCEL USER / EXECUTOR API ============================
@@ -301,7 +272,7 @@ contract GelatoCore is
         address _userProxy,
         address[2] memory _conditionAndAction,
         bytes calldata _conditionPayload,
-        bytes calldata _executionPayload,
+        bytes calldata _actionPayload,
         uint256 _executionClaimExpiryDate,
         uint256 _claimedProviderLiquidity
     )
@@ -322,7 +293,7 @@ contract GelatoCore is
             _conditionAndAction[0],
             _conditionPayload,
             _action,
-            _executionPayload,
+            _actionPayload,
             _executionClaimExpiryDate,
             _claimedProviderLiquidity
         );
@@ -360,7 +331,7 @@ contract GelatoCore is
         address _userProxy,
         address[2] memory _conditionAndAction,
         bytes memory _conditionPayload,
-        bytes memory _executionPayload,
+        bytes memory _actionPayload,
         uint256 _executionClaimExpiryDate,
         uint256 _claimedProviderLiquidity
     )
@@ -377,7 +348,7 @@ contract GelatoCore is
                 _conditionAndAction[0],
                 _conditionPayload,
                 _action,
-                _executionPayload,
+                _actionPayload,
                 _executionClaimExpiryDate,
                 _claimedProviderLiquidity
             )
