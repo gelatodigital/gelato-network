@@ -37,8 +37,9 @@ interface IGelatoCore {
 
     event LogSuccessfulExecution(
         address[2] indexed providerAndExecutor,
+        address indexed executor,
         uint256 indexed executionClaimId,
-        address indexed userProxy,
+        address userProxy,
         address[2] conditionAndAction
     );
 
@@ -46,8 +47,9 @@ interface IGelatoCore {
     //  are implemented in a logical fashion by condition/action developers.
     event LogExecutionFailure(
         address[2] indexed providerAndExecutor,
+        address indexed executor,
         uint256 indexed executionClaimId,
-        address indexed userProxy,
+        address userProxy,
         address[2] conditionAndAction,
         string executionFailureReason
     );
@@ -64,8 +66,7 @@ interface IGelatoCore {
         address[2] calldata _providerAndExecutor,
         address[2] calldata _conditionAndAction,
         bytes calldata _conditionPayload,
-        bytes calldata _actionPayload,
-        uint256 _executionClaimExpiryDate
+        bytes calldata _actionPayload
     )
         external;
 

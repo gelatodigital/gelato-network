@@ -37,14 +37,11 @@ contract GelatoCore is
         override
         liquidProvider(_providerAndExecutor[0], gelatoGasPrice, MAXGAS)
         registeredExecutor(_providerAndExecutor[1])
-        providedCondition(_conditionAndAction[0])
-        providedAction(_conditionAndAction[1])
+        providedCondition(_providerAndExecutor[0], _conditionAndAction[0])
+        providedAction(_providerAndExecutor[0], _conditionAndAction[1])
     {
-        address user;
         address userProxy;
-        if (isGelatoProxyUser(msg.sender)) {
-            user = msg.sender;
-            userProxy = gelatoProxyByUser[msg.sender];
+        if (isGelatoProxyUser(msg.sender)) userProxy = gelatoProxyByUser[msg.sender];
         } else if (isGelatoUserProxy(msg.sender)) {
             user = userByGelatoProxy[msg.sender];
             userProxy = msg.sender;
@@ -55,11 +52,13 @@ contract GelatoCore is
         }
 
         // Mint new executionClaim
-        executionClaimIds.increment();
-        uint256 executionClaimId = executionClaimIds.current();
+        currentExecutionClaimId.increment();
+        uint256 executionClaimId = currentExecutionClaimId.current();
         userProxyByExecutionClaimId[executionClaimId] = userProxy;
 
-        uint256 executionClaimExpiryDate = now.add(executorClaimLifespan[_selectedExecutor]);
+        uint256 executionClaimExpiryDate = now.add(
+            executorClaimLifespan[_providerAndExecutor[1]]
+        );
 
         // ExecutionClaim Hashing
         executionClaimHash[executionClaimId] = _computeExecutionClaimHash(
@@ -75,7 +74,6 @@ contract GelatoCore is
         emit LogExecutionClaimMinted(
             _providerAndExecutor,
             executionClaimId,
-            user,
             userProxy,
             _conditionAndAction,
             _conditionPayload,
@@ -136,12 +134,17 @@ contract GelatoCore is
                 string memory reason;
                 (conditionReached, reason) = abi.decode(returndata, (bool, string));
                 if (conditionReached) return "ok";
-                return abi.encodePacked("ConditionNotOk: ", reason);
+                return string(abi.encodePacked("ConditionNotOk: ", reason));
             }
         }
     }
 
     // ================  EXECUTE EXECUTOR API ============================
+    enum ExecutorPayout {
+        Reward,
+        Refund
+    }
+
     function execute(
         address[2] calldata _providerAndExecutor,
         uint256 _executionClaimId,
@@ -177,7 +180,10 @@ contract GelatoCore is
                 _executionClaimExpiryDate
             );
 
-            if (canExecuteResult == "ok") {
+            if (
+                keccak256(abi.encodePacked(canExecuteResult)) ==
+                keccak256(abi.encodePacked("ok"))
+            ) {
                 emit LogCanExecuteSuccess(
                     _providerAndExecutor,
                     _executionClaimId,
@@ -197,6 +203,10 @@ contract GelatoCore is
             }
         }
 
+        // EFFECTS
+        delete executionClaimHash[_executionClaimId];
+        delete userProxyByExecutionClaimId[_executionClaimId];
+
         // INTERACTIONS
         string memory executionFailureReason;
 
@@ -215,29 +225,12 @@ contract GelatoCore is
                     _userProxy,
                     _conditionAndAction
                 );
-
-                // EFFECTS
-                delete executionClaimHash[_executionClaimId];
-                delete userProxyByExecutionClaimId[_executionClaimId];
-
-                // ExecutionCost (- consecutive state writes + gas refund from deletion)
-                uint256 estExecutionCost = (_startGas - gasleft()).mul(gelatoGasPrice);
-                // Executors get 3% on their estimated Execution Cost
-                uint256 executorReward = SafeMath.div(estExecutionCost.mul(103), 100);
-
-                providerFunds[_providerAndExecutor[0]] = providerFunds[_provider].sub(
-                    estExecutionCost,
-                    "GelatoCore.execute: providerFunds underflow"
-                );
-                executorBalance[msg.sender] = executorBalance[msg.sender] + executorReward;
-
-                return;  // END OF EXECUTION: SUCCESS!
+                _executorPayout(startGas, ExecutorPayout.Reward, _providerAndExecutor[0]);
             } else {
                 // 68: 32-location, 32-length, 4-ErrorSelector, UTF-8 revertReason
                 if (actionRevertReason.length % 32 == 4) {
                     bytes4 selector;
                     assembly { selector := actionRevertReason }
-
                     if (selector == 0x08c379a0) {  // Function selector for Error(string)
                         assembly { actionRevertReason := add(actionRevertReason, 68) }
                         executionFailureReason = string(actionRevertReason);
@@ -254,16 +247,47 @@ contract GelatoCore is
             executionFailureReason = "UndefinedGnosisSafeProxyError";
         }
 
+        _executorPayout(startGas, ExecutorPayout.Refund, _providerAndExecutor[0]);
+
         // Failure
         emit LogExecutionFailure(
             _providerAndExecutor,
             msg.sender,  // executor
             _executionClaimId,
             _userProxy,
-            _condition,
-            _action,
+            _conditionAndAction,
             executionFailureReason
         );
+    }
+
+    function _executorPayout(
+        uint256 _startGas,
+        ExecutorPayout _payoutType,
+        address _provider
+    )
+        private
+    {
+        // ExecutionCost (- consecutive state writes + gas refund from deletion)
+        uint256 estExecutionCost = (_startGas - gasleft()).mul(gelatoGasPrice);
+
+        if (_payoutType == ExecutorPayout.Reward) {
+            // Provider refunds cost + 3% reward to executor
+            providerFunds[_provider] = providerFunds[_provider].sub(
+                estExecutionCost,
+                "GelatoCore._executorPayout: providerFunds underflow"
+            );
+            executorBalance[msg.sender] = executorBalance[msg.sender] + SafeMath.div(
+                estExecutionCost.mul(103),
+                100
+            );
+        } else {
+            // Provider refunds cost to executor
+            providerFunds[_provider] = providerFunds[_provider].sub(
+                estExecutionCost,
+                "GelatoCore._executorPayout: providerFunds underflow"
+            );
+            executorBalance[msg.sender] = executorBalance[msg.sender] + estExecutionCost;
+        }
     }
 
     // ================  CANCEL USER / EXECUTOR API ============================
@@ -271,7 +295,7 @@ contract GelatoCore is
         address[2] calldata _providerAndExecutor,
         uint256 _executionClaimId,
         address _userProxy,
-        address[2] memory _conditionAndAction,
+        address[2] calldata _conditionAndAction,
         bytes calldata _conditionPayload,
         bytes calldata _actionPayload,
         uint256 _executionClaimExpiryDate

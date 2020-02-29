@@ -106,7 +106,7 @@ abstract contract GelatoProvider is IGelatoProvider {
     }
 
     function isProviderLiquid(address _provider, uint256 _gasPrice, uint256 _gasDemand)
-        external
+        public
         view
         override
         returns(bool)

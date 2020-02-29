@@ -38,7 +38,7 @@ abstract contract GelatoActionsStandard is IGelatoAction {
     different arguments passed across different actions
     */
 
-    function actionConditionsCheck(bytes calldata)  // _actionPayloadWithSelector
+    function actionConditionsCheck(bytes calldata)  // _actionPayload
         external
         view
         override

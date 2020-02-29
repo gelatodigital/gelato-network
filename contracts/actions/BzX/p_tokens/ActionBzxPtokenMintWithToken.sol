@@ -64,7 +64,7 @@ contract ActionBzxPtokenMintWithToken is GelatoActionsStandard {
 
     // ======= ACTION CONDITIONS CHECK =========
     // Overriding and extending GelatoActionsStandard's function (optional)
-    function actionConditionsCheck(bytes calldata _actionPayloadWithSelector)
+    function actionConditionsCheck(bytes calldata _actionPayload)
         external
         view
         override
@@ -76,7 +76,7 @@ contract ActionBzxPtokenMintWithToken is GelatoActionsStandard {
          address _sendToken,
          uint256 _sendAmt,
          address _destination) = abi.decode(
-            _actionPayloadWithSelector[4:164],
+            _actionPayload[4:164],
             (address,address,address,uint256,address)
         );
         return _actionConditionsCheck(_user, _userProxy, _sendToken, _sendAmt, _destination);

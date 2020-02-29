@@ -4,7 +4,7 @@ import { constants } from "ethers";
 
 export default task(
   "gc-creategnosissafeproxy",
-  `Sends tx to GelatoCore.createGelatoProxy() on [--network] (default: ${defaultNetwork})`
+  `Sends tx to GelatoCore.createGelatoUserProxy() on [--network] (default: ${defaultNetwork})`
 )
   .addOptionalParam(
     "mastercopy",
@@ -106,7 +106,7 @@ export default task(
         write: true
       });
 
-      const creationTx = await gelatoCoreContract.createGelatoProxy(
+      const creationTx = await gelatoCoreContract.createGelatoUserProxy(
         taskArgs.mastercopy,
         taskArgs.initializer
       );

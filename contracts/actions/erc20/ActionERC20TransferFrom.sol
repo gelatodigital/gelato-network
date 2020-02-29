@@ -41,7 +41,7 @@ contract ActionERC20TransferFrom is GelatoActionsStandard {
 
     // ======= ACTION CONDITIONS CHECK =========
     // Overriding and extending GelatoActionsStandard's function (optional)
-    function actionConditionsCheck(bytes calldata _actionPayloadWithSelector)
+    function actionConditionsCheck(bytes calldata _actionPayload)
         external
         view
         override
@@ -52,7 +52,7 @@ contract ActionERC20TransferFrom is GelatoActionsStandard {
          address _userProxy,
          address _sendToken,
          uint256 _sendAmount) = abi.decode(
-            _actionPayloadWithSelector[4:132],
+            _actionPayload[4:132],
             (address,address,address,uint256)
         );
         return _actionConditionsCheck(_user, _userProxy, _sendToken, _sendAmount);

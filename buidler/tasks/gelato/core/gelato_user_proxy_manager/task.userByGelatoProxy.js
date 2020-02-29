@@ -2,15 +2,15 @@ import { task } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../../buidler.config";
 
 export default task(
-  "gc-userbygnosissafeproxy",
+  "gc-userbygelatoproxy",
   `Calls GelatoCore.userByGelatoProxy() on [--network] (default: ${defaultNetwork})`
 )
   .addPositionalParam(
-    "gnosisSafeProxyAddress",
+    "gelatoproxyaddress",
     "The address of the Gnosis Safe Proxy, whose user address we query"
   )
   .addFlag("log", "Logs return values to stdout")
-  .setAction(async ({ gnosisSafeProxyAddress, log }) => {
+  .setAction(async ({ gelatoproxyaddress, log }) => {
     try {
       const gelatoCoreContract = await run("instantiateContract", {
         contractname: "GelatoCore",
@@ -18,12 +18,12 @@ export default task(
       });
 
       const user = await gelatoCoreContract.userByGelatoProxy(
-        gnosisSafeProxyAddress
+        gelatoproxyaddress
       );
       if (log) {
         console.log(
-          `\n GnosisSafeProxy: ${gnosisSafeProxyAddress}\
-           \n User:            ${user}\n`
+          `\n GelatoUserProxy:     ${gelatoproxyaddress}\
+           \n User:                ${user}\n`
         );
       }
       return user;

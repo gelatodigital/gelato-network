@@ -16,7 +16,7 @@ export default internalTask(
   .setAction(async ({ selectedexecutor, numberofmints, log }) => {
     try {
       const contractname = "ActionMultiMintForConditionTimestampPassed";
-      // action(_gelatoCore, _selectedExecutor, _conditionTimestampPassed, _startTime, _action, _actionPayloadWithSelector, _intervalSpan, _numberOfMints)
+      // action(_gelatoCore, _selectedExecutor, _conditionTimestampPassed, _startTime, _action, _actionPayload, _intervalSpan, _numberOfMints)
       const functionname = "action";
       // Params
       const {

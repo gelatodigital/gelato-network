@@ -3,6 +3,7 @@ pragma solidity ^0.6.2;
 import "../../GelatoActionsStandard.sol";
 import "../../../external/SafeMath.sol";
 import "../../../conditions/IGelatoCondition.sol";
+import "../../../conditions/eth_utils/eth_time/ConditionTimestampPassed.sol";
 import "../../../gelato_core/interfaces/IGelatoCore.sol";
 
 // CAUTION this contract is not up to date with Action standards due to missing return values
@@ -22,11 +23,10 @@ contract ActionMultiMintForConditionTimestampPassed is GelatoActionsStandard {
         address _gelatoCore,
         // gelatoCore.mintExecutionClaim params
         address[2] calldata _providerAndExecutor,
-        IGelatoCondition _conditionTimestampPassed,
+        address _conditionTimestampPassed,
         uint256 _startTime,  // will be encoded here
-        IGelatoAction _action,
-        bytes calldata _actionPayloadWithSelector,
-        uint256 _executionClaimExpiryDate,
+        address _action,
+        bytes calldata _actionPayload,
         // MultiMintTimeBased params
         uint256 _intervalSpan,
         uint256 _numberOfMints
@@ -37,16 +37,18 @@ contract ActionMultiMintForConditionTimestampPassed is GelatoActionsStandard {
         for (uint256 i = 0; i < _numberOfMints; i++) {
             uint256 timestamp = _startTime.add(_intervalSpan.mul(i));
             bytes memory conditionPayload = abi.encodeWithSelector(
-                _conditionTimestampPassed.conditionSelector(),
+                ConditionTimestampPassed.reached.selector,
                 timestamp
             );
+            address[] memory conditionAndAction = new address[](2);
+            conditionAndAction[0] = _conditionTimestampPassed;
+            conditionAndAction[1] = _action;
+
             IGelatoCore(_gelatoCore).mintExecutionClaim(
                 _providerAndExecutor,
-                _conditionTimestampPassed,
+                conditionAndAction,
                 conditionPayload,
-                _action,
-                _actionPayloadWithSelector,
-                _executionClaimExpiryDate
+                _actionPayload
             );
         }
     }
