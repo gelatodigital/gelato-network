@@ -25,6 +25,8 @@ contract ConditionFearGreedIndex is Ownable, IGelatoCondition {
         return this.reached.selector;
     }
 
+    event logNewIndex(uint256 indexed newIndex);
+
 
     // State
     uint256 public fearAndGreedIndex;
@@ -42,6 +44,7 @@ contract ConditionFearGreedIndex is Ownable, IGelatoCondition {
         require(_newValue >= 0 && _newValue <= 100, "fearAndGreedIndex has to be a value between 0 and 100");
         require(_newValue.mod(10) == 0 , "only accept increments of 10");
         fearAndGreedIndex = _newValue;
+        emit logNewIndex(_newValue);
     }
 
 
