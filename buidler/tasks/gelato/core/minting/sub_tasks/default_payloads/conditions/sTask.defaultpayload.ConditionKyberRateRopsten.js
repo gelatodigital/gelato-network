@@ -3,7 +3,7 @@ import { utils } from "ethers";
 
 export default internalTask(
   "gc-mint:defaultpayload:ConditionKyberRateRopsten",
-  `Returns a hardcoded actionPayloadWithSelector of ConditionKyberRateRopsten`
+  `Returns a hardcoded executionPayload of ConditionKyberRateRopsten`
 )
   .addFlag("log")
   .setAction(async ({ log }) => {
@@ -11,7 +11,7 @@ export default internalTask(
       if (network.name != "ropsten") throw new Error("wrong network!");
 
       const contractname = "ConditionKyberRateRopsten";
-      // action(_user, _userGnosisSafeProxy, _src, _srcAmt, _dest, _minConversionRate)
+      // action(_user, _userProxy, _src, _srcAmt, _dest, _minConversionRate)
       const functionname = "reached";
       // Params
       const { DAI: src, KNC: dest } = await run("bre-config", {
@@ -29,7 +29,7 @@ export default internalTask(
       const greaterElseSmaller = false;
 
       // Params as sorted array of inputs for abi.encoding
-      // action(_user, _userGnosisSafeProxy, _src, _srcAmt, _dest)
+      // action(_user, _userProxy, _src, _srcAmt, _dest)
       const inputs = [src, srcamt, dest, refRate, greaterElseSmaller];
       // Encoding
       const payloadWithSelector = await run("abi-encode-withselector", {

@@ -4,18 +4,16 @@ import { Contract } from "ethers";
 
 export default task(
   "gc-registerexecutor",
-  `Sends tx to GelatoCore.registerExecutor(_executorPrice, _executorClaimLifespan) on [--network] (default: ${defaultNetwork})`
+  `Sends tx to GelatoCore.registerExecutor([<_executorClaimLifespan>]) on [--network] (default: ${defaultNetwork})`
 )
   .addPositionalParam(
-    "price",
-    "the executor's price per gas unit of mintingDepositPayable"
-  )
-  .addPositionalParam(
     "executorclaimlifespan",
-    "executor's max executionClaim lifespan"
+    "executor's max executionClaim lifespan",
+    600, // 10 minutes,
+    types.int
   )
   .addFlag("log", "Logs return values to stdout")
-  .setAction(async ({ price, executorclaimlifespan, log }) => {
+  .setAction(async ({ executorclaimlifespan, log }) => {
     try {
       const [signer1, signer2, ...rest] = await ethers.signers();
       const gelatoCoreAdddress = await run("bre-config", {
@@ -31,7 +29,6 @@ export default task(
         signer2
       );
       const tx = await gelatoCoreContract.registerExecutor(
-        price,
         executorclaimlifespan
       );
       if (log) console.log(`\n\ntxHash registerExecutor: ${tx.hash}`);

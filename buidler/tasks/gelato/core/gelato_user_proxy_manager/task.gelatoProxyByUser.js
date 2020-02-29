@@ -2,8 +2,8 @@ import { task } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../../buidler.config";
 
 export default task(
-  "gc-gnosissafeproxybyuser",
-  `Calls GelatoCore.gnosisSafeProxyByUser([<user>: defaults to ethers signer]) on [--network] (default: ${defaultNetwork})`
+  "gc-gelatoproxybyuser",
+  `Calls GelatoCore.gelatoProxyByUser([<user>: defaults to ethers signer]) on [--network] (default: ${defaultNetwork})`
 )
   .addOptionalPositionalParam(
     "user",
@@ -19,13 +19,13 @@ export default task(
         read: true
       });
 
-      const gnosisSafeProxyAddress = await gelatoCoreContract.gnosisSafeProxyByUser(
+      const gnosisSafeProxyAddress = await gelatoCoreContract.gelatoProxyByUser(
         user
       );
       if (log) {
         console.log(
           `\n User:            ${user}\
-           \n GnosisSafeProxy: ${gnosisSafeProxyAddress}\n`
+           \n GelatoUserProxy: ${gnosisSafeProxyAddress}\n`
         );
       }
       return gnosisSafeProxyAddress;

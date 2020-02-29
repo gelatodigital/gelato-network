@@ -4,7 +4,7 @@ import { utils } from "ethers";
 
 export default task(
   "gc-kyberrate-value",
-  `Calls <trigername>.value(<conditionpayloadwithselector>) on [--network] (default: ${defaultNetwork})`
+  `Calls <trigername>.value(<conditionPayload>) on [--network] (default: ${defaultNetwork})`
 )
   .addFlag("log", "Logs return values to stdout")
   .setAction(async ({ log }) => {

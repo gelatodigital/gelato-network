@@ -20,7 +20,7 @@ contract ActionBzxPtokenBurnToToken is GelatoActionsStandard {
     function action(
         // Standard Action Params
         address _user,  // "receiver"
-        address _userGnosisSafeProxy,
+        address _userProxy,
         address _sendToken,  // pToken
         uint256 _sendAmt,
         // Specific Action Params
@@ -29,10 +29,10 @@ contract ActionBzxPtokenBurnToToken is GelatoActionsStandard {
         external
         virtual
     {
-        require(address(this) == _userGnosisSafeProxy, "ActionBzxPtokenBurnToToken: ErrorUserProxy");
+        require(address(this) == _userProxy, "ActionBzxPtokenBurnToToken: ErrorUserProxy");
 
         IERC20 sendToken = IERC20(_sendToken);  // pToken!
-        try sendToken.transferFrom(_user, _userGnosisSafeProxy, _sendAmt) {} catch {
+        try sendToken.transferFrom(_user, _userProxy, _sendAmt) {} catch {
            revert("ErrorTransferFromPToken");
         }
 
@@ -61,23 +61,23 @@ contract ActionBzxPtokenBurnToToken is GelatoActionsStandard {
 
     // ======= ACTION CONDITIONS CHECK =========
     // Overriding and extending GelatoActionsStandard's function (optional)
-    function actionConditionsCheck(bytes calldata _actionPayloadWithSelector)
+    function actionConditionsCheck(bytes calldata _actionPayload)
         external
         view
         override
         virtual
         returns(string memory)  // actionCondition
     {
-        (address _user, address _userGnosisSafeProxy, address _sendToken, uint256 _sendAmt) = abi.decode(
-            _actionPayloadWithSelector[4:132],
+        (address _user, address _userProxy, address _sendToken, uint256 _sendAmt) = abi.decode(
+            _actionPayload[4:132],
             (address,address,address,uint256)
         );
-        return _actionConditionsCheck(_user, _userGnosisSafeProxy, _sendToken, _sendAmt);
+        return _actionConditionsCheck(_user, _userProxy, _sendToken, _sendAmt);
     }
 
     function _actionConditionsCheck(
         address _user,
-        address _userGnosisSafeProxy,
+        address _userProxy,
         address _sendToken,
         uint256 _sendAmt
     )
@@ -86,9 +86,6 @@ contract ActionBzxPtokenBurnToToken is GelatoActionsStandard {
         virtual
         returns(string memory)  // actionCondition
     {
-        if (!_isUserOwnerOfGnosisSafeProxy(_user, _userGnosisSafeProxy))
-            return "ActionBzxPtokenBurnToToken: NotOkUserGnosisSafeProxyOwner";
-
         if(!_sendToken.isContract())
             return "ActionBzxPtokenBurnToToken: NotOkPTokenAddress";
 
@@ -99,7 +96,7 @@ contract ActionBzxPtokenBurnToToken is GelatoActionsStandard {
         } catch {
             return "ActionBzxPtokenBurnToToken: ErrorBalanceOf";
         }
-        try sendToken.allowance(_user, _userGnosisSafeProxy) returns(uint256 userProxyPtokenAllowance) {
+        try sendToken.allowance(_user, _userProxy) returns(uint256 userProxyPtokenAllowance) {
             if (userProxyPtokenAllowance < _sendAmt)
                 return "ActionBzxPtokenBurnToToken: NotOkUserProxyPtokenAllowance";
         } catch {
@@ -115,7 +112,7 @@ contract ActionBzxPtokenBurnToToken is GelatoActionsStandard {
     function getUsersSendTokenBalance(
         // Standard Action Params
         address _user,  // "receiver"
-        address _userGnosisSafeProxy,
+        address _userProxy,
         // Specific Action Params
         address _sendToken,
         uint256,
@@ -126,7 +123,7 @@ contract ActionBzxPtokenBurnToToken is GelatoActionsStandard {
         virtual
         returns(uint256)
     {
-        _userGnosisSafeProxy;  // silence warning
+        _userProxy;  // silence warning
         IERC20 sendToken = IERC20(_sendToken);
         try sendToken.balanceOf(_user) returns(uint256 userPTokenBalance) {
             return userPTokenBalance;

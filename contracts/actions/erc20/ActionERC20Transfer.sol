@@ -21,7 +21,7 @@ contract ActionERC20Transfer is GelatoActionsStandard {
     function action(
         // Standard Action Params
         address,  // user
-        address _userGnosisSafeProxy,
+        address _userProxy,
         address _sendToken,
         uint256 _sendAmount,
         // Specific Action Params
@@ -30,10 +30,10 @@ contract ActionERC20Transfer is GelatoActionsStandard {
         external
         virtual
     {
-        require(address(this) == _userGnosisSafeProxy, "NotOkUserProxy");
+        require(address(this) == _userProxy, "NotOkUserProxy");
         IERC20 sendERC20 = IERC20(_sendToken);
         try sendERC20.transfer(_destination, _sendAmount) {
-            emit LogOneWay(_userGnosisSafeProxy, _sendToken, _sendAmount, _destination);
+            emit LogOneWay(_userProxy, _sendToken, _sendAmount, _destination);
         } catch {
             revert("ActionERC20Transfer: ErrorTransfer");
         }
@@ -41,7 +41,7 @@ contract ActionERC20Transfer is GelatoActionsStandard {
 
     // ===== ACTION CONDITIONS CHECK ========
     // Overriding and extending GelatoActionsStandard's function (optional)
-    function actionConditionsCheck(bytes calldata _actionPayloadWithSelector)
+    function actionConditionsCheck(bytes calldata _actionPayload)
         external
         view
         override
@@ -49,19 +49,19 @@ contract ActionERC20Transfer is GelatoActionsStandard {
         returns(string memory)  // actionCondition
     {
         (address _user,
-         address _userGnosisSafeProxy,
+         address _userProxy,
          address _sendToken,
          uint256 _sendAmount) = abi.decode(
-            _actionPayloadWithSelector[4:132],
+            _actionPayload[4:132],
             (address,address,address,uint256)
         );
-        return _actionConditionsCheck(_user, _userGnosisSafeProxy, _sendToken, _sendAmount);
+        return _actionConditionsCheck(_user, _userProxy, _sendToken, _sendAmount);
     }
 
     function _actionConditionsCheck(
         // Standard Action Params
-        address _user,
-        address _userGnosisSafeProxy,
+        address,  // user
+        address _userProxy,
         // Specific Action Params
         address _sendToken,
         uint256 _sendAmount
@@ -71,14 +71,11 @@ contract ActionERC20Transfer is GelatoActionsStandard {
         virtual
         returns(string memory)  // // actionCondition
     {
-        if (!_isUserOwnerOfGnosisSafeProxy(_user, _userGnosisSafeProxy))
-            return "ActionERC20Transfer: NotOkUserGnosisSafeProxyOwner";
-
         if (!_sendToken.isContract()) return "ActionERC20Transfer: NotOkERC20Address";
 
         IERC20 sendERC20 = IERC20(_sendToken);
 
-        try sendERC20.balanceOf(_userGnosisSafeProxy) returns(uint256 sendERC20Balance) {
+        try sendERC20.balanceOf(_userProxy) returns(uint256 sendERC20Balance) {
             if (sendERC20Balance < _sendAmount)
                 return "ActionERC20Transfer: NotOkUserProxyBalance";
         } catch {
@@ -92,7 +89,7 @@ contract ActionERC20Transfer is GelatoActionsStandard {
     function getUserProxysSourceTokenBalance(
         // Standard Action Params
         address _user,
-        address _userGnosisSafeProxy,
+        address _userProxy,
         // Specific Action Params
         address _sendToken,
         uint256,
@@ -105,7 +102,7 @@ contract ActionERC20Transfer is GelatoActionsStandard {
     {
         _user;  // silence warning
         IERC20 sendERC20 = IERC20(_sendToken);
-        try sendERC20.balanceOf(_userGnosisSafeProxy) returns(uint256 userProxySendERC20Balance) {
+        try sendERC20.balanceOf(_userProxy) returns(uint256 userProxySendERC20Balance) {
             return userProxySendERC20Balance;
         } catch {
             revert("Error: ActionERC20Transfer.getUserProxysSourceTokenBalance: balanceOf");

@@ -4,7 +4,7 @@ import { constants } from "ethers";
 
 export default task(
   "gc-creategnosissafeproxy",
-  `Sends tx to GelatoCore.createGnosisSafeProxy() on [--network] (default: ${defaultNetwork})`
+  `Sends tx to GelatoCore.createGelatoUserProxy() on [--network] (default: ${defaultNetwork})`
 )
   .addOptionalParam(
     "mastercopy",
@@ -106,7 +106,7 @@ export default task(
         write: true
       });
 
-      const creationTx = await gelatoCoreContract.createGnosisSafeProxy(
+      const creationTx = await gelatoCoreContract.createGelatoUserProxy(
         taskArgs.mastercopy,
         taskArgs.initializer
       );
@@ -119,14 +119,14 @@ export default task(
       if (taskArgs.log) {
         const parsedLog = await run("event-getparsedlogs", {
           contractname: "GelatoCore",
-          eventname: "LogGnosisSafeProxyUserCreation",
+          eventname: "LogGelatoUserProxyCreation",
           txhash: creationTx.hash,
           blockHash,
           values: true
         });
         const { user, gnosisSafeProxy } = parsedLog;
         console.log(
-          `\n LogGnosisSafeProxyUserCreation\
+          `\n LogGelatoUserProxyCreation\
            \n User:            ${user}\
            \n GnosisSafeProxy: ${gnosisSafeProxy}\n`
         );

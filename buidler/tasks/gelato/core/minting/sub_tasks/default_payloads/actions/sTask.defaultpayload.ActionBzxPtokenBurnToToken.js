@@ -2,7 +2,7 @@ import { internalTask } from "@nomiclabs/buidler/config";
 
 export default internalTask(
   "gc-mint:defaultpayload:ActionBzxPtokenBurnToToken",
-  `Returns a hardcoded actionPayloadWithSelector of ActionBzxPtokenBurnToToken`
+  `Returns a hardcoded executionPayload of ActionBzxPtokenBurnToToken`
 )
   .addFlag("log")
   .setAction(async ({ log }) => {
@@ -32,7 +32,7 @@ export default internalTask(
       const burnAmount = await pTokenContract.balanceOf(user);
 
       // Params as sorted array of inputs for abi.encoding
-      // action(_user, _userGnosisSafeProxy, _burnTokenAddress, _burnAmount, _pTokenAddress)
+      // action(_user, _userProxy, _burnTokenAddress, _burnAmount, _pTokenAddress)
       const inputs = [
         user, // receiver
         userProxy,

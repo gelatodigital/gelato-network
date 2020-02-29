@@ -1,252 +1,186 @@
 pragma solidity ^0.6.2;
 
 import "./interfaces/IGelatoCore.sol";
-import "./GnosisSafeProxyUserManager.sol";
-import "./GelatoCoreAccounting.sol";
+import "./GelatoGasPriceOracle.sol";
+import "./GelatoExecutor.sol";
+import "./GelatoProvider.sol";
+import "./GelatoUserProxyFactory.sol";
 import "../external/Counters.sol";
+import "./interfaces/IGnosisSafe.sol";
 
 /// @title GelatoCore
 /// @notice Execution Claim: minting, checking, execution, and cancellation
 /// @dev Find all NatSpecs inside IGelatoCore
-contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccounting {
-
+contract GelatoCore is
+    IGelatoCore, GelatoGasPriceOracle, GelatoProvider, GelatoExecutor, GelatoUserProxyFactory
+{
     // Library for unique ExecutionClaimIds
     using Counters for Counters.Counter;
     using Address for address payable;  /// for oz's sendValue method
 
     // ================  STATE VARIABLES ======================================
-    Counters.Counter private executionClaimIds;
-    // executionClaimId => userGnosisSafeProxy
-    mapping(uint256 => IGnosisSafe) public override gnosisSafeProxyByExecutionClaimId;
+    Counters.Counter public override currentExecutionClaimId;
+    // executionClaimId => _userProxyProviderAndExecutor[0]
+    mapping(uint256 => address) public override userProxyByExecutionClaimId;
     // executionClaimId => bytes32 executionClaimHash
     mapping(uint256 => bytes32) public override executionClaimHash;
+    uint256 public constant override MAXGAS = 6000000;
 
     // ================  MINTING ==============================================
     function mintExecutionClaim(
-        address _selectedExecutor,
-        IGelatoCondition _condition,
-        bytes calldata _conditionPayloadWithSelector,
-        IGelatoAction _action,
-        bytes calldata _actionPayloadWithSelector
+        address[3] calldata _userProxyProviderAndExecutor,
+        address[2] calldata _conditionAndAction,
+        bytes calldata _conditionPayload,
+        bytes calldata _actionPayload
     )
         external
-        payable
         override
-        onlyRegisteredExecutors(_selectedExecutor)
     {
-        // We should get user here too but np due to stack too deep
-        IGnosisSafe userGnosisSafeProxy;
-        if (isRegisteredUser(msg.sender))
-            userGnosisSafeProxy = gnosisSafeProxyByUser[msg.sender];
-        else if (isRegisteredGnosisSafeProxy(IGnosisSafe(msg.sender)))
-            userGnosisSafeProxy = IGnosisSafe(msg.sender);
-        else
-            revert("GelatoCore.mintExecutionClaim: caller must be registered user or proxy");
-
-        // Read Gas Values & Charge Minting Deposit
-        uint256[3] memory conditionGasActionGasMinExecutionGas;
-        {
-            uint256 conditionGas;
-            if (address(_condition) != address(0)) {
-                conditionGas = _condition.conditionGas();
-                require(conditionGas != 0, "GelatoCore.mintExecutionClaim: 0 conditionGas");
-                conditionGasActionGasMinExecutionGas[0] = conditionGas;
-            }
-
-            uint256 actionGas = _action.actionGas();
-            require(actionGas != 0, "GelatoCore.mintExecutionClaim: 0 actionGas");
-            conditionGasActionGasMinExecutionGas[1] = actionGas;
-
-            uint256 minExecutionGas = _getMinExecutionGas(conditionGas, actionGas);
-            conditionGasActionGasMinExecutionGas[2] = minExecutionGas;
-
-            require(
-                msg.value == minExecutionGas.mul(executorPrice[_selectedExecutor]),
-                "GelatoCore.mintExecutionClaim: msg.value failed"
-            );
-        }
+        _userProxyCheck(_userProxyProviderAndExecutor[0]);
+        _liquidProvider(_userProxyProviderAndExecutor[1], gelatoGasPrice, MAXGAS);
+        _providedCondition(_userProxyProviderAndExecutor[1], _conditionAndAction[0]);
+        _providedAction(_userProxyProviderAndExecutor[1], _conditionAndAction[1]);
+        _registeredExecutor(_userProxyProviderAndExecutor[2]);
 
         // Mint new executionClaim
-        executionClaimIds.increment();
-        uint256 executionClaimId = executionClaimIds.current();
-        gnosisSafeProxyByExecutionClaimId[executionClaimId] = userGnosisSafeProxy;
+        currentExecutionClaimId.increment();
+        uint256 executionClaimId = currentExecutionClaimId.current();
+        userProxyByExecutionClaimId[executionClaimId] = _userProxyProviderAndExecutor[0];
 
-        uint256 executionClaimExpiryDate = now.add(executorClaimLifespan[_selectedExecutor]);
+        uint256 executionClaimExpiryDate = now.add(
+            executorClaimLifespan[_userProxyProviderAndExecutor[2]]
+        );
 
         // ExecutionClaim Hashing
         executionClaimHash[executionClaimId] = _computeExecutionClaimHash(
-            _selectedExecutor,
+            _userProxyProviderAndExecutor,
             executionClaimId,  // To avoid hash collisions
-            userByGnosisSafeProxy[address(userGnosisSafeProxy)],  // user
-            userGnosisSafeProxy,
-            _condition,
-            _conditionPayloadWithSelector,
-            _action,
-            _actionPayloadWithSelector,
-            conditionGasActionGasMinExecutionGas,
-            executionClaimExpiryDate,
-            msg.value
+            _conditionAndAction,
+            _conditionPayload,
+            _actionPayload,
+            executionClaimExpiryDate
         );
 
         emit LogExecutionClaimMinted(
-            _selectedExecutor,
+            _userProxyProviderAndExecutor,
             executionClaimId,
-            userByGnosisSafeProxy[address(userGnosisSafeProxy)],  // user
-            userGnosisSafeProxy,
-            _condition,
-            _conditionPayloadWithSelector,
-            _action,
-            _actionPayloadWithSelector,
-            conditionGasActionGasMinExecutionGas,
-            executionClaimExpiryDate,
-            msg.value
+            _conditionAndAction,
+            _conditionPayload,
+            _actionPayload,
+            executionClaimExpiryDate
         );
     }
 
     // ================  CAN EXECUTE EXECUTOR API ============================
     function canExecute(
+        address[3] memory _userProxyProviderAndExecutor,
         uint256 _executionClaimId,
-        address _user,
-        IGnosisSafe _userGnosisSafeProxy,
-        IGelatoCondition _condition,
-        bytes memory _conditionPayloadWithSelector,
-        IGelatoAction _action,
-        bytes memory _actionPayloadWithSelector,
-        uint256[3] memory _conditionGasActionGasMinExecutionGas,
-        uint256 _executionClaimExpiryDate,
-        uint256 _mintingDeposit
+        address[2] memory _conditionAndAction,
+        bytes memory _conditionPayload,
+        bytes memory _actionPayload,
+        uint256 _executionClaimExpiryDate
     )
         public
         view
         override
-        returns (CanExecuteResult, uint8 reason)
+        returns (string memory canExecuteResult)
     {
-        // _____________ Static CHECKS __________________________________________
+        if (!isProviderLiquid(_userProxyProviderAndExecutor[1], gelatoGasPrice, MAXGAS))
+            return "ProviderIlliquidity";
+
         if (executionClaimHash[_executionClaimId] == bytes32(0)) {
-            if (_executionClaimId <= executionClaimIds.current()) {
-                return (
-                    CanExecuteResult.ExecutionClaimAlreadyExecutedOrCancelled,
-                    uint8(StandardReason.NotOk)
-                );
-            } else {
-                return (
-                    CanExecuteResult.ExecutionClaimNonExistant,
-                    uint8(StandardReason.NotOk)
-                );
-            }
+            if (_executionClaimId <= currentExecutionClaimId.current())
+                return "AlreadyExecutedOrCancelled";
+            else return "NonExistant";
         }
 
-        if (_executionClaimExpiryDate < now) {
-            return (
-                CanExecuteResult.ExecutionClaimExpired,
-                uint8(StandardReason.NotOk)
-            );
-        }
+        if (_executionClaimExpiryDate < now) return "Expired";
 
         bytes32 computedExecutionClaimHash = _computeExecutionClaimHash(
-            msg.sender,  // selected? executor
+            _userProxyProviderAndExecutor,
             _executionClaimId,
-            _user,
-            _userGnosisSafeProxy,
-            _condition,
-            _conditionPayloadWithSelector,
-            _action,
-            _actionPayloadWithSelector,
-            _conditionGasActionGasMinExecutionGas,
-            _executionClaimExpiryDate,
-            _mintingDeposit
+            _conditionAndAction,
+            _conditionPayload,
+            _actionPayload,
+            _executionClaimExpiryDate
         );
 
-        if (computedExecutionClaimHash != executionClaimHash[_executionClaimId]) {
-            return (
-                CanExecuteResult.WrongCalldataOrMsgSender,
-                uint8(StandardReason.NotOk)
-            );
-        }
+        if (computedExecutionClaimHash != executionClaimHash[_executionClaimId])
+            return "WrongCalldataOrMsgSender";
 
         // Self-Conditional Actions pass and return
-        if (address(_condition) == address(0)) {
-            return (
-                CanExecuteResult.Executable,
-                uint8(StandardReason.Ok)
-            );
-        } else {
+        if (_conditionAndAction[0] == address(0)) return "ok";
+        else {
             // Dynamic Checks needed for Conditional Actions
-            (bool success, bytes memory returndata) = address(_condition).staticcall.gas(
-                _conditionGasActionGasMinExecutionGas[0])(
-                _conditionPayloadWithSelector
+            (bool success, bytes memory returndata) = _conditionAndAction[0].staticcall(
+                _conditionPayload
             );
-            if (!success) {
-                return (
-                    CanExecuteResult.UnhandledConditionError,
-                    uint8(StandardReason.UnhandledError)
-                );
-            } else {
+            if (!success) return "UnhandledConditionError";
+            else {
                 bool conditionReached;
-                (conditionReached, reason) = abi.decode(returndata, (bool, uint8));
-                if (!conditionReached)
-                    return (CanExecuteResult.ConditionNotOk, reason);
-                else return (CanExecuteResult.Executable, reason);
+                string memory reason;
+                (conditionReached, reason) = abi.decode(returndata, (bool, string));
+                if (conditionReached) return "ok";
+                return string(abi.encodePacked("ConditionNotOk: ", reason));
             }
         }
     }
 
     // ================  EXECUTE EXECUTOR API ============================
+    enum ExecutorPayout {
+        Reward,
+        Refund
+    }
+
     function execute(
+        address[3] calldata _userProxyProviderAndExecutor,
         uint256 _executionClaimId,
-        address _user,
-        IGnosisSafe _userGnosisSafeProxy,
-        IGelatoCondition _condition,
-        bytes memory _conditionPayloadWithSelector,
-        IGelatoAction _action,
-        bytes memory _actionPayloadWithSelector,
-        uint256[3] memory _conditionGasActionGasMinExecutionGas,
-        uint256 _executionClaimExpiryDate,
-        uint256 _mintingDeposit
+        address[2] calldata _conditionAndAction,
+        bytes calldata _conditionPayload,
+        bytes calldata _actionPayload,
+        uint256 _executionClaimExpiryDate
     )
-        public
+        external
         override
+        txGasPriceCheck
     {
         uint256 startGas = gasleft();
         require(
-            startGas >= _conditionGasActionGasMinExecutionGas[2].sub(30000),
-            "GelatoCore._execute: Insufficient gas sent"
+            startGas < MAXGAS,
+            "GelatoCore.execute: too much gas sent"
+        );
+        require(
+            startGas > MAXGAS - 100000,  // 100k overhead buffer
+            "GelatoCore.execute: insufficient gas sent"
         );
 
-        // CHECK canExecute() (own scope due to stack too deep)
+        // CHECK canExecute()
         {
-            CanExecuteResult canExecuteResult;
-            uint8 canExecuteReason;
-            (canExecuteResult, canExecuteReason) = canExecute(
+            string memory canExecuteResult  = canExecute(
+                _userProxyProviderAndExecutor,
                 _executionClaimId,
-                _user,
-                _userGnosisSafeProxy,
-                _condition,
-                _conditionPayloadWithSelector,
-                _action,
-                _actionPayloadWithSelector,
-                _conditionGasActionGasMinExecutionGas,
-                _executionClaimExpiryDate,
-                _mintingDeposit
+                _conditionAndAction,
+                _conditionPayload,
+                _actionPayload,
+                _executionClaimExpiryDate
             );
 
-            if (canExecuteResult == CanExecuteResult.Executable) {
+            if (
+                keccak256(abi.encodePacked(canExecuteResult)) ==
+                keccak256(abi.encodePacked("ok"))
+            ) {
                 emit LogCanExecuteSuccess(
-                    msg.sender,
+                    _userProxyProviderAndExecutor,
                     _executionClaimId,
-                    _user,
-                    _condition,
-                    canExecuteResult,
-                    canExecuteReason
+                    _conditionAndAction,
+                    canExecuteResult
                 );
             } else {
                 emit LogCanExecuteFailed(
-                    msg.sender,
+                    _userProxyProviderAndExecutor,
                     _executionClaimId,
-                    _user,
-                    _condition,
-                    canExecuteResult,
-                    canExecuteReason
+                    _conditionAndAction,
+                    canExecuteResult
                 );
                 return;  // END OF EXECUTION
             }
@@ -254,179 +188,150 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
 
         // EFFECTS
         delete executionClaimHash[_executionClaimId];
-        delete gnosisSafeProxyByExecutionClaimId[_executionClaimId];
+        delete userProxyByExecutionClaimId[_executionClaimId];
 
         // INTERACTIONS
-        uint256 executionGas = _conditionGasActionGasMinExecutionGas[1].add(30000);
-        if (gasleft() < executionGas) {
-            _executionFailure(
-                _executionClaimId,
-                payable(_user),
-                _condition,
-                _action,
-                _mintingDeposit,
-                "InsufficientExecutionGas"
-            );
-        } else {
-            bool actionExecuted;
-            string memory executionFailureReason;
+        string memory executionFailureReason;
 
-            try _userGnosisSafeProxy.execTransactionFromModuleReturnData{ gas: executionGas }(
-                address(_action),  // to
-                0,  // value
-                _actionPayloadWithSelector,  // data
-                IGnosisSafe.Operation.DelegateCall
-            ) returns (bool success, bytes memory actionRevertReason) {
-                actionExecuted = success;
-                if (!actionExecuted) {
-                    // 68: 32-location, 32-length, 4-ErrorSelector, UTF-8 revertReason
-                    assembly { actionRevertReason := add(actionRevertReason, 68) }
-                    executionFailureReason = string(actionRevertReason);
-                }
-            } catch Error(string memory gnosisSafeProxyRevertReason) {
-                executionFailureReason = gnosisSafeProxyRevertReason;
-            } catch {
-                executionFailureReason = "UndefinedGnosisSafeProxyError";
-            }
-
+        try IGnosisSafe(_userProxyProviderAndExecutor[0]).execTransactionFromModuleReturnData(
+            _conditionAndAction[1],  // to
+            0,  // value
+            _actionPayload,  // data
+            IGnosisSafe.Operation.DelegateCall
+        ) returns (bool actionExecuted, bytes memory actionRevertReason) {
+            // Success
             if (actionExecuted) {
                 emit LogSuccessfulExecution(
-                    msg.sender,  // selectedExecutor
+                    _userProxyProviderAndExecutor,
+                    msg.sender,
                     _executionClaimId,
-                    _user,
-                    _condition,
-                    _action,
-                    tx.gasprice,
-                    // ExecutionCost Estimate: ignore fn call overhead, due to delete gas refunds
-                    (startGas.sub(gasleft())).mul(tx.gasprice),
-                    _mintingDeposit  // executorReward
+                    _conditionAndAction
                 );
-                // Executor gets full reward only if Execution was successful
-                executorBalance[msg.sender] = executorBalance[msg.sender].add(_mintingDeposit);
+                _executorPayout(
+                    startGas,
+                    ExecutorPayout.Reward,
+                    _userProxyProviderAndExecutor[1]
+                );
             } else {
-                _executionFailure(
-                    _executionClaimId,
-                    payable(_user),
-                    _condition,
-                    _action,
-                    _mintingDeposit,
-                    executionFailureReason
-                );
+                // 68: 32-location, 32-length, 4-ErrorSelector, UTF-8 revertReason
+                if (actionRevertReason.length % 32 == 4) {
+                    bytes4 selector;
+                    assembly { selector := actionRevertReason }
+                    if (selector == 0x08c379a0) {  // Function selector for Error(string)
+                        assembly { actionRevertReason := add(actionRevertReason, 68) }
+                        executionFailureReason = string(actionRevertReason);
+                    } else {
+                        executionFailureReason = "NoErrorSelector";
+                    }
+                } else {
+                    executionFailureReason = "UnexpectedReturndata";
+                }
             }
+        } catch Error(string memory gnosisSafeProxyRevertReason) {
+            executionFailureReason = gnosisSafeProxyRevertReason;
+        } catch {
+            executionFailureReason = "UndefinedGnosisSafeProxyError";
+        }
+
+        _executorPayout(startGas, ExecutorPayout.Refund, _userProxyProviderAndExecutor[1]);
+
+        // Failure
+        emit LogExecutionFailure(
+            _userProxyProviderAndExecutor,
+            msg.sender,  // executor
+            _executionClaimId,
+            _conditionAndAction,
+            executionFailureReason
+        );
+    }
+
+    function _executorPayout(
+        uint256 _startGas,
+        ExecutorPayout _payoutType,
+        address _provider
+    )
+        private
+    {
+        // ExecutionCost (- consecutive state writes + gas refund from deletion)
+        uint256 estExecutionCost = (_startGas - gasleft()).mul(gelatoGasPrice);
+
+        if (_payoutType == ExecutorPayout.Reward) {
+            // Provider refunds cost + 3% reward to executor
+            providerFunds[_provider] = providerFunds[_provider].sub(
+                estExecutionCost,
+                "GelatoCore._executorPayout: providerFunds underflow"
+            );
+            executorBalance[msg.sender] = executorBalance[msg.sender] + SafeMath.div(
+                estExecutionCost.mul(103),
+                100
+            );
+        } else {
+            // Provider refunds cost to executor
+            providerFunds[_provider] = providerFunds[_provider].sub(
+                estExecutionCost,
+                "GelatoCore._executorPayout: providerFunds underflow"
+            );
+            executorBalance[msg.sender] = executorBalance[msg.sender] + estExecutionCost;
         }
     }
 
     // ================  CANCEL USER / EXECUTOR API ============================
     function cancelExecutionClaim(
-        address _selectedExecutor,
+        address[3] calldata _userProxyProviderAndExecutor,
         uint256 _executionClaimId,
-        address _user,
-        IGnosisSafe _userGnosisSafeProxy,
-        IGelatoCondition _condition,
-        bytes calldata _conditionPayloadWithSelector,
-        IGelatoAction _action,
-        bytes calldata _actionPayloadWithSelector,
-        uint256[3] calldata _conditionGasActionGasMinExecutionGas,
-        uint256 _executionClaimExpiryDate,
-        uint256 _mintingDeposit
+        address[2] calldata _conditionAndAction,
+        bytes calldata _conditionPayload,
+        bytes calldata _actionPayload,
+        uint256 _executionClaimExpiryDate
     )
         external
         override
     {
+        // Checks
         bool executionClaimExpired = _executionClaimExpiryDate <= now;
-        if (msg.sender != _user && IGnosisSafe(msg.sender) != _userGnosisSafeProxy) {
+        if (
+            msg.sender != userByGelatoProxy[_userProxyProviderAndExecutor[0]] &&
+            msg.sender != _userProxyProviderAndExecutor[0]
+        ) {
             require(
-                executionClaimExpired && msg.sender == _selectedExecutor,
+                executionClaimExpired,
                 "GelatoCore.cancelExecutionClaim: msgSender problem"
             );
         }
         bytes32 computedExecutionClaimHash = _computeExecutionClaimHash(
-            _selectedExecutor,
+            _userProxyProviderAndExecutor,
             _executionClaimId,
-            _user,
-            _userGnosisSafeProxy,
-            _condition,
-            _conditionPayloadWithSelector,
-            _action,
-            _actionPayloadWithSelector,
-            _conditionGasActionGasMinExecutionGas,
-            _executionClaimExpiryDate,
-            _mintingDeposit
+            _conditionAndAction,
+            _conditionPayload,
+            _actionPayload,
+            _executionClaimExpiryDate
         );
-        // Checks
+
         require(
             computedExecutionClaimHash == executionClaimHash[_executionClaimId],
             "GelatoCore.cancelExecutionClaim: hash compare failed"
         );
+
         // Effects
-        delete gnosisSafeProxyByExecutionClaimId[_executionClaimId];
+        delete userProxyByExecutionClaimId[_executionClaimId];
         delete executionClaimHash[_executionClaimId];
+
         emit LogExecutionClaimCancelled(
+            _userProxyProviderAndExecutor,
             _executionClaimId,
-            _user,
             msg.sender,
             executionClaimExpired
         );
-        // Interactions
-        msg.sender.sendValue(_mintingDeposit);
-    }
-
-    // ================  STATE READERS ======================================
-    function getCurrentExecutionClaimId()
-        external
-        view
-        override
-        returns(uint256 currentId)
-    {
-        currentId = executionClaimIds.current();
-    }
-
-    function getUserWithExecutionClaimId(uint256 _executionClaimId)
-        external
-        view
-        override
-        returns(address)
-    {
-        IGnosisSafe gnosisSafeProxy = gnosisSafeProxyByExecutionClaimId[_executionClaimId];
-        return userByGnosisSafeProxy[address(gnosisSafeProxy)];
     }
 
     // ================ PRIVATE HELPERS ========================================
-    function _executionFailure(
-        uint256 _executionClaimId,
-        address payable _user,
-        IGelatoCondition _condition,
-        IGelatoAction _action,
-        uint256  _mintingDeposit,
-        string memory executionFailureReason
-    )
-        private
-    {
-        emit LogExecutionFailure(
-            msg.sender,  // selectedExecutor
-            _executionClaimId,
-            _user,
-            _condition,
-            _action,
-            executionFailureReason
-        );
-        // Transfer Minting deposit back to user
-        _user.sendValue(_mintingDeposit);
-    }
-
-
     function _computeExecutionClaimHash(
-        address _selectedExecutor,
+        address[3] memory _userProxyProviderAndExecutor,
         uint256 _executionClaimId,
-        address _user,
-        IGnosisSafe _userGnosisSafeProxy,
-        IGelatoCondition _condition,
-        bytes memory _conditionPayloadWithSelector,
-        IGelatoAction _action,
-        bytes memory _actionPayloadWithSelector,
-        uint256[3] memory _conditionGasActionGasMinExecutionGas,
-        uint256 _executionClaimExpiryDate,
-        uint256 _mintingDeposit
+        address[2] memory _conditionAndAction,
+        bytes memory _conditionPayload,
+        bytes memory _actionPayload,
+        uint256 _executionClaimExpiryDate
     )
         private
         pure
@@ -434,143 +339,13 @@ contract GelatoCore is IGelatoCore, GnosisSafeProxyUserManager, GelatoCoreAccoun
     {
         return keccak256(
             abi.encodePacked(
-                _selectedExecutor,
+                _userProxyProviderAndExecutor,
                 _executionClaimId,
-                _user,
-                _userGnosisSafeProxy,
-                _condition,
-                _conditionPayloadWithSelector,
-                _action,
-                _actionPayloadWithSelector,
-                _conditionGasActionGasMinExecutionGas,
-                _executionClaimExpiryDate,
-                _mintingDeposit
+                _conditionAndAction,
+                _conditionPayload,
+                _actionPayload,
+                _executionClaimExpiryDate
             )
         );
-    }
-
-    // ================ GAS BENCHMARKING ==============================================
-    function gasTestConditionCheck(
-        IGelatoCondition _condition,
-        bytes calldata _conditionPayloadWithSelector,
-        uint256 _conditionGas
-    )
-        external
-        view
-        override
-        returns(bool conditionReached, uint8 reason)
-    {
-        uint256 startGas = gasleft();
-        /* solhint-disable indent */
-        (bool success,
-         bytes memory returndata) = address(_condition).staticcall.gas(_conditionGas)(
-            _conditionPayloadWithSelector
-        );
-        /* solhint-enable indent */
-        if (!success) revert("GelatoCore.gasTestConditionCheck: Unhandled Error/wrong Args");
-        else (conditionReached, reason) = abi.decode(returndata, (bool, uint8));
-        if (conditionReached) revert(string(abi.encodePacked(startGas - gasleft())));
-        else revert("GelatoCore.gasTestConditionCheck: Not Executable/wrong Args");
-    }
-
-    function gasTestCanExecute(
-        uint256 _executionClaimId,
-        address _user,
-        IGnosisSafe _userGnosisSafeProxy,
-        IGelatoCondition _condition,
-        bytes calldata _conditionPayloadWithSelector,
-        IGelatoAction _action,
-        bytes calldata _actionPayloadWithSelector,
-        uint256[3] calldata _conditionGasActionGasMinExecutionGas,
-        uint256 _executionClaimExpiryDate,
-        uint256 _mintingDeposit
-    )
-        external
-        view
-        override
-        returns (CanExecuteResult canExecuteResult, uint8 reason)
-    {
-        uint256 startGas = gasleft();
-        (canExecuteResult, reason) = canExecute(
-            _executionClaimId,
-            _user,
-            _userGnosisSafeProxy,
-            _condition,
-            _conditionPayloadWithSelector,
-            _action,
-            _actionPayloadWithSelector,
-            _conditionGasActionGasMinExecutionGas,
-            _executionClaimExpiryDate,
-            _mintingDeposit
-        );
-        if (canExecuteResult == CanExecuteResult.Executable)
-            revert(string(abi.encodePacked(startGas - gasleft())));
-        revert("GelatoCore.gasTestCanExecute: Not Executable/Wrong Args");
-    }
-
-    function gasTestGnosisSafeExecuteFromModule(
-        IGnosisSafe _userGnosisSafeProxy,
-        IGelatoAction _action,
-        bytes calldata _actionPayloadWithSelector,
-        uint256 _executionGas
-    )
-        external
-        override
-        onlyRegisteredGnosisSafeProxies(_userGnosisSafeProxy)
-    {
-        uint256 startGas = gasleft();
-        bool actionExecuted;
-        string memory executionFailureReason;
-
-        try _userGnosisSafeProxy.execTransactionFromModuleReturnData{ gas: _executionGas }(
-            address(_action),  // to
-            0,  // value
-            _actionPayloadWithSelector,  // data
-            IGnosisSafe.Operation.DelegateCall
-        ) returns (bool success, bytes memory actionRevertReason) {
-            actionExecuted = success;
-            if (!actionExecuted) {
-                // 68: 32-location, 32-length, 4-ErrorSelector, UTF-8 revertReason
-                assembly { actionRevertReason := add(actionRevertReason, 68) }
-                executionFailureReason = string(actionRevertReason);
-            }
-            revert(string(abi.encodePacked(startGas - gasleft())));
-        } catch Error(string memory gnosisSafeProxyRevertReason) {
-            executionFailureReason = gnosisSafeProxyRevertReason;
-            revert("GelatoCore.gasTestTestUserProxyExecute: Defined Error Caught");
-        } catch {
-            revert("GelatoCore.gasTestTestUserProxyExecute: Undefined Error Caught");
-        }
-    }
-
-    function gasTestExecute(
-        uint256 _executionClaimId,
-        address _user,
-        IGnosisSafe _userGnosisSafeProxy,
-        IGelatoCondition _condition,
-        bytes calldata _conditionPayloadWithSelector,
-        IGelatoAction _action,
-        bytes calldata _actionPayloadWithSelector,
-        uint256[3] calldata _conditionGasActionGasMinExecutionGas,
-        uint256 _executionClaimExpiryDate,
-        uint256 _mintingDeposit
-    )
-        external
-        override
-    {
-        uint256 startGas = gasleft();
-        execute(
-            _executionClaimId,
-            _user,
-            _userGnosisSafeProxy,
-            _condition,
-            _conditionPayloadWithSelector,
-            _action,
-            _actionPayloadWithSelector,
-            _conditionGasActionGasMinExecutionGas,
-            _executionClaimExpiryDate,
-            _mintingDeposit
-        );
-        revert(string(abi.encodePacked(startGas - gasleft())));
     }
 }

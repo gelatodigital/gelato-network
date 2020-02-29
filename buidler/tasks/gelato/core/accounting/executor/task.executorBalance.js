@@ -15,11 +15,12 @@ export default task(
     try {
       let executorAddress;
       if (executor) executorAddress = executor;
-      else
+      else {
         executorAddress = await run("bre-config", {
           addressbookcategory: "executor",
           addressbookentry: "default"
         });
+      }
 
       const gelatoCoreContract = await run("instantiateContract", {
         contractname: "GelatoCore",
@@ -29,12 +30,13 @@ export default task(
         executorAddress
       );
       const executorBalanceETH = utils.formatEther(executorBalance);
-      if (log)
+      if (log) {
         console.log(
           `\nExecutor: ${executorAddress}\
            \nExecutorBalance: ${executorBalanceETH} ETH\
            \nNetwork: ${network.name}\n`
         );
+      }
       return executorBalance;
     } catch (error) {
       console.error(error);
