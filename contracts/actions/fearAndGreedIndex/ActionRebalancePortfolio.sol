@@ -14,7 +14,7 @@ contract ActionRebalancePortfolio is GelatoActionsStandard {
     using SafeMath for uint256;
     using Address for address;
 
-    // !!!!!!!!! ROPSTEN !!!!!!
+    // !!!!!!!!! Kovan !!!!!!
     address public constant DAI = 0xC4375B7De8af5a38a93548eb8453a498222C4fF2;
 
     address public constant CONDITION_FEAR_GREED_INDEX_ADDRESS = 0x57e4025276e693e270EAE8900b94666e4721a657;
