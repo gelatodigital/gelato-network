@@ -1,14 +1,13 @@
 pragma solidity ^0.6.0;
 
-import "./IGnosisSafe.sol";
-
 /// @title IGelatoUserProxyManager - solidity interface of GelatoUserProxyManager
 /// @notice APIs for GelatoUserProxy creation and registry.
 /// @dev all the APIs and events are implemented inside GelatoUserProxyManager
 interface IGelatoUserProxyFactory {
     event LogGelatoUserProxyCreation(
         address indexed user,
-        IGnosisSafe indexed gelatoUserProxy
+        address indexed gelatoUserProxy,
+        uint256 userProxyFunding
     );
 
     /// @dev Allows to create new proxy contact and execute a message call to the
@@ -18,7 +17,8 @@ interface IGelatoUserProxyFactory {
     /// @return gelatoUserProxy address
     function createGelatoUserProxy(address _mastercopy, bytes calldata _initializer)
         external
-        returns(IGnosisSafe gelatoUserProxy);
+        payable
+        returns(address gelatoUserProxy);
 
 
     /// @notice Deploys gnosis safe proxy for users that dont have a registered one yet
@@ -33,11 +33,12 @@ interface IGelatoUserProxyFactory {
         uint256 _saltNonce
     )
         external
-        returns(IGnosisSafe gelatoUserProxy);
+        payable
+        returns(address gelatoUserProxy);
 
     // ______ State Read APIs __________________
     function userByGelatoProxy(address _gelatoProxy) external view returns(address);
-    function gelatoProxyByUser(address _user) external view returns(IGnosisSafe);
+    function gelatoProxyByUser(address _user) external view returns(address);
     function isGelatoProxyUser(address _user) external view returns(bool);
     function isGelatoUserProxy(address _userPoxy) external view returns(bool);
 }

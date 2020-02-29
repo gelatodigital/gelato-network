@@ -2,28 +2,33 @@ pragma solidity ^0.6.2;
 
 import "./interfaces/IGelatoUserProxyFactory.sol";
 import "./interfaces/IGnosisSafeProxyFactory.sol";
+import "../external/Address.sol";
 
 /// @title GnosisSafeProxyUserManager
 /// @notice registry and factory for GnosisSafeProxies
 /// @dev find all NatSpecs inside IGelatoProxyFactory
 abstract contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
 
+    using Address for address payable;  /// for oz's sendValue method
+
     mapping(address => address) public override userByGelatoProxy;
-    mapping(address => IGnosisSafe) public override gelatoProxyByUser;
+    mapping(address => address) public override gelatoProxyByUser;
 
     // create
     function createGelatoUserProxy(address _mastercopy, bytes calldata _initializer)
         external
+        payable
         override
-        returns(IGnosisSafe userProxy)
+        returns(address userProxy)
     {
         IGnosisSafeProxyFactory factory = IGnosisSafeProxyFactory(
             0x76E2cFc1F5Fa8F6a5b3fC4c8F4788F0116861F9B
         );
-        userProxy = factory.createProxy(_mastercopy, _initializer);
+        userProxy = address(factory.createProxy(_mastercopy, _initializer));
+        if (msg.value > 0) payable(userProxy).sendValue(msg.value);
         userByGelatoProxy[address(userProxy)] = msg.sender;
         gelatoProxyByUser[msg.sender] = userProxy;
-        emit LogGelatoUserProxyCreation(msg.sender, userProxy);
+        emit LogGelatoUserProxyCreation(msg.sender, userProxy, msg.value);
     }
 
     // create2
@@ -33,16 +38,22 @@ abstract contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         uint256 _saltNonce
     )
         external
+        payable
         override
-        returns(IGnosisSafe userProxy)
+        returns(address userProxy)
     {
         IGnosisSafeProxyFactory factory = IGnosisSafeProxyFactory(
             0x76E2cFc1F5Fa8F6a5b3fC4c8F4788F0116861F9B
         );
-        userProxy = factory.createProxyWithNonce(_mastercopy, _initializer, _saltNonce);
-        userByGelatoProxy[address(userProxy)] = msg.sender;
+        userProxy = address(factory.createProxyWithNonce(
+            _mastercopy,
+            _initializer,
+            _saltNonce)
+        );
+        if (msg.value > 0) payable(userProxy).sendValue(msg.value);
+        userByGelatoProxy[userProxy] = msg.sender;
         gelatoProxyByUser[msg.sender] = userProxy;
-        emit LogGelatoUserProxyCreation(msg.sender, userProxy);
+        emit LogGelatoUserProxyCreation(msg.sender, userProxy, msg.value);
     }
 
     // Checks
@@ -52,7 +63,7 @@ abstract contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         override
         returns(bool)
     {
-        return gelatoProxyByUser[_user] != IGnosisSafe(0);
+        return gelatoProxyByUser[_user] != address(0);
     }
 
     function isGelatoUserProxy(address userPoxy)

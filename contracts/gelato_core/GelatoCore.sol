@@ -6,6 +6,7 @@ import "./GelatoExecutor.sol";
 import "./GelatoProvider.sol";
 import "./GelatoUserProxyFactory.sol";
 import "../external/Counters.sol";
+import "./interfaces/IGnosisSafe.sol";
 
 /// @title GelatoCore
 /// @notice Execution Claim: minting, checking, execution, and cancellation
@@ -40,13 +41,13 @@ contract GelatoCore is
         providedAction(_conditionAndAction[1])
     {
         address user;
-        IGnosisSafe userProxy;
+        address userProxy;
         if (isGelatoProxyUser(msg.sender)) {
             user = msg.sender;
             userProxy = gelatoProxyByUser[msg.sender];
         } else if (isGelatoUserProxy(msg.sender)) {
             user = userByGelatoProxy[msg.sender];
-            userProxy = IGnosisSafe(msg.sender);
+            userProxy = msg.sender;
         } else {
             revert(
                 "GelatoCore.mintExecutionClaim: caller must be registered user or proxy"
@@ -199,7 +200,7 @@ contract GelatoCore is
         // INTERACTIONS
         string memory executionFailureReason;
 
-        try _userProxy.execTransactionFromModuleReturnData(
+        try IGnosisSafe(_userProxy).execTransactionFromModuleReturnData(
             _conditionAndAction[1],  // to
             0,  // value
             _actionPayload,  // data
@@ -208,7 +209,7 @@ contract GelatoCore is
             // Success
             if (actionExecuted) {
                 emit LogSuccessfulExecution(
-                    _providerAndExecutor[0],
+                    _providerAndExecutor,
                     msg.sender,
                     _executionClaimId,
                     _userProxy,
@@ -224,11 +225,11 @@ contract GelatoCore is
                 // Executors get 3% on their estimated Execution Cost
                 uint256 executorReward = SafeMath.div(estExecutionCost.mul(103), 100);
 
-                providerFunds[_providerAndExecutor[0]] = providerFunding[_provider].sub(
+                providerFunds[_providerAndExecutor[0]] = providerFunds[_provider].sub(
                     estExecutionCost,
                     "GelatoCore.execute: providerFunds underflow"
                 );
-                executorBalance[msg.sender] = executorBalance[msg.sender] + executionCost;
+                executorBalance[msg.sender] = executorBalance[msg.sender] + executorReward;
 
                 return;  // END OF EXECUTION: SUCCESS!
             } else {
@@ -255,7 +256,7 @@ contract GelatoCore is
 
         // Failure
         emit LogExecutionFailure(
-            _provider,
+            _providerAndExecutor,
             msg.sender,  // executor
             _executionClaimId,
             _userProxy,
@@ -273,29 +274,30 @@ contract GelatoCore is
         address[2] memory _conditionAndAction,
         bytes calldata _conditionPayload,
         bytes calldata _actionPayload,
-        uint256 _executionClaimExpiryDate,
-        uint256 _claimedProviderLiquidity
+        uint256 _executionClaimExpiryDate
     )
         external
         override
     {
         // Checks
-        if (msg.sender != _userProxy) {
+        bool executionClaimExpired = _executionClaimExpiryDate <= now;
+        if (
+            msg.sender != userByGelatoProxy[_userProxy] &&
+            msg.sender != _userProxy
+        ) {
             require(
-                _executionClaimExpiryDate <= now,
-                "GelatoCore.cancelExecutionClaim: not expired"
+                executionClaimExpired,
+                "GelatoCore.cancelExecutionClaim: msgSender problem"
             );
         }
         bytes32 computedExecutionClaimHash = _computeExecutionClaimHash(
             _providerAndExecutor,
             _executionClaimId,
             _userProxy,
-            _conditionAndAction[0],
+            _conditionAndAction,
             _conditionPayload,
-            _action,
             _actionPayload,
-            _executionClaimExpiryDate,
-            _claimedProviderLiquidity
+            _executionClaimExpiryDate
         );
 
         require(
@@ -307,20 +309,12 @@ contract GelatoCore is
         delete userProxyByExecutionClaimId[_executionClaimId];
         delete executionClaimHash[_executionClaimId];
 
-
-        // Interactions
-        lockedProviderFunds[_providerAndExecutor[0]] = lockedProviderFunds[_providerAndExecutor[0]].sub(
-            _claimedProviderLiquidity,
-            "GelatoCore.cancelExecutionClaim: lockedProviderFunds underflow"
-        );
-
         emit LogExecutionClaimCancelled(
             _providerAndExecutor,
             _executionClaimId,
             _userProxy,
             msg.sender,
-            _executionClaimExpiryDate <= now,
-            _claimedProviderLiquidity
+            executionClaimExpired
         );
     }
 
@@ -332,8 +326,7 @@ contract GelatoCore is
         address[2] memory _conditionAndAction,
         bytes memory _conditionPayload,
         bytes memory _actionPayload,
-        uint256 _executionClaimExpiryDate,
-        uint256 _claimedProviderLiquidity
+        uint256 _executionClaimExpiryDate
     )
         private
         pure
@@ -346,11 +339,10 @@ contract GelatoCore is
                 _executionClaimId,
                 _userProxy,
                 _conditionAndAction[0],
+                _conditionAndAction[1],
                 _conditionPayload,
-                _action,
                 _actionPayload,
-                _executionClaimExpiryDate,
-                _claimedProviderLiquidity
+                _executionClaimExpiryDate
             )
         );
     }
