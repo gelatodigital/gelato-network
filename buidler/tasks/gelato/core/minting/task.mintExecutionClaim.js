@@ -9,7 +9,7 @@ export default task(
   .addPositionalParam("conditionname", "must exist inside buidler.config")
   .addPositionalParam("actionname", "must exist inside buidler.config")
   .addOptionalPositionalParam("conditionPayload", "abi.encoded bytes")
-  .addOptionalPositionalParam("executionPayload", "abi.encoded bytes")
+  .addOptionalPositionalParam("actionPayload", "abi.encoded bytes")
   .addOptionalParam("selectedexecutor", "address")
   .addFlag("log", "Logs return values to stdout")
   .setAction(async taskArgs => {
@@ -42,13 +42,13 @@ export default task(
         conditionPayload = taskArgs.conditionPayload;
       }
       // Handle action payloadsWithSelector
-      let executionPayload;
-      if (!taskArgs.executionPayload) {
-        executionPayload = await run(
+      let actionPayload;
+      if (!taskArgs.actionPayload) {
+        actionPayload = await run(
           `gc-mint:defaultpayload:${taskArgs.actionname}`
         );
       } else {
-        executionPayload = taskArgs.executionPayload;
+        actionPayload = taskArgs.actionPayload;
       }
 
       // MintingDepositPayable
@@ -73,7 +73,7 @@ export default task(
         conditionAddress,
         conditionPayload,
         actionAddress,
-        executionPayload,
+        actionPayload,
         { value: mintingDepositPayable }
       );
 

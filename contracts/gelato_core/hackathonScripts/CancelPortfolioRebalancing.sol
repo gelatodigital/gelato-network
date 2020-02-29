@@ -35,7 +35,7 @@ contract CancelPortfolioRebalancing {
     /// @dev This function should be delegatecalled
     function cancelPortfolioRebalancingAndWithdraw(
         address _gelatoCore,
-        address[2] calldata _providerAndExecutor,
+        address[2] calldata _selectedProviderAndExecutor,
         uint256 _executionClaimId,
         address _userProxy,
         address[2] calldata _conditionAndAction,
@@ -76,7 +76,7 @@ contract CancelPortfolioRebalancing {
 
         // 3. Cancel Execution Claim
         try IGelatoCore(_gelatoCore).cancelExecutionClaim(
-            _providerAndExecutor,
+            _selectedProviderAndExecutor,
             _executionClaimId,
             _userProxy,
             _conditionAndAction,

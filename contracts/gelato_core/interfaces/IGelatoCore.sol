@@ -8,19 +8,19 @@ import "../../actions/IGelatoAction.sol";
 /// @dev all the APIs and events are implemented inside GelatoCore
 interface IGelatoCore {
     event LogExecutionClaimMinted(
-        address[2] indexed providerAndExecutor,
+        address[2] indexed selectedProviderAndExecutor,
         uint256 indexed executionClaimId,
         address indexed userProxy,
         address[2] conditionAndAction,
         bytes conditionPayload,
-        bytes executionPayload,
+        bytes actionPayload,
         uint256 executionClaimExpiryDate
     );
 
     // Caution: there are no guarantees that CanExecuteResult and/or reason
     //  are implemented in a logical fashion by condition/action developers.
     event LogCanExecuteSuccess(
-        address[2] indexed providerAndExecutor,
+        address[2] indexed selectedProviderAndExecutor,
         uint256 indexed executionClaimId,
         address indexed userProxy,
         address[2] conditionAndAction,
@@ -28,7 +28,7 @@ interface IGelatoCore {
     );
 
     event LogCanExecuteFailed(
-        address[2] indexed providerAndExecutor,
+        address[2] indexed selectedProviderAndExecutor,
         uint256 indexed executionClaimId,
         address indexed userProxy,
         address[2] conditionAndAction,
@@ -36,7 +36,7 @@ interface IGelatoCore {
     );
 
     event LogSuccessfulExecution(
-        address[2] indexed providerAndExecutor,
+        address[2] indexed selectedProviderAndExecutor,
         address executor,
         uint256 indexed executionClaimId,
         address indexed userProxy,
@@ -46,7 +46,7 @@ interface IGelatoCore {
     // Caution: there are no guarantees that ExecutionResult and/or reason
     //  are implemented in a logical fashion by condition/action developers.
     event LogExecutionFailure(
-        address[2] indexed providerAndExecutor,
+        address[2] indexed selectedProviderAndExecutor,
         address executor,
         uint256 indexed executionClaimId,
         address indexed userProxy,
@@ -55,7 +55,7 @@ interface IGelatoCore {
     );
 
     event LogExecutionClaimCancelled(
-        address[2] indexed providerAndExecutor,
+        address[2] indexed selectedProviderAndExecutor,
         uint256 indexed executionClaimId,
         address indexed userProxy,
         address cancelor,
@@ -63,14 +63,14 @@ interface IGelatoCore {
     );
 
     function mintExecutionClaim(
-        address[2] calldata _providerAndExecutor,
+        address[2] calldata _selectedProviderAndExecutor,
         address[2] calldata _conditionAndAction,
         bytes calldata _conditionPayload,
         bytes calldata _actionPayload
     ) external;
 
     function canExecute(
-        address[2] calldata _providerAndExecutor,
+        address[2] calldata _selectedProviderAndExecutor,
         uint256 _executionClaimId,
         address _userProxy,
         address[2] calldata _conditionAndAction,
@@ -80,7 +80,7 @@ interface IGelatoCore {
     ) external view returns (string memory);
 
     function execute(
-        address[2] calldata _providerAndExecutor,
+        address[2] calldata _selectedProviderAndExecutor,
         uint256 _executionClaimId,
         address _userProxy,
         address[2] calldata _conditionAndAction,
@@ -90,7 +90,7 @@ interface IGelatoCore {
     ) external;
 
     function cancelExecutionClaim(
-        address[2] calldata _providerAndExecutor,
+        address[2] calldata _selectedProviderAndExecutor,
         uint256 _executionClaimId,
         address _userProxy,
         address[2] calldata _conditionAndAction,

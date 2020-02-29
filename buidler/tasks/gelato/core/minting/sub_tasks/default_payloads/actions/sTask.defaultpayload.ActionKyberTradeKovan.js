@@ -3,7 +3,7 @@ import { utils } from "ethers";
 
 export default internalTask(
   "gc-mint:defaultpayload:ActionKyberTradeKovan",
-  `Returns a hardcoded executionPayload of ActionKyberTradeKovan`
+  `Returns a hardcoded actionPayload of ActionKyberTradeKovan`
 )
   .addFlag("log")
   .setAction(async ({ log }) => {

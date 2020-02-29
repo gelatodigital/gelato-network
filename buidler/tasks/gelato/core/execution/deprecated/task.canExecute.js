@@ -57,8 +57,8 @@ export default task(
             conditionPayload:
               parsedLog.values.conditionPayload,
             action: parsedLog.values.action,
-            executionPayload:
-              parsedLog.values.executionPayload,
+            actionPayload:
+              parsedLog.values.actionPayload,
             conditionGasActionTotalGasMinExecutionGas:
               parsedLog.values.conditionGasActionTotalGasMinExecutionGas,
             executionClaimExpiryDate: parsedLog.values.executionClaimExpiryDate,
@@ -92,7 +92,7 @@ export default task(
         queriedExecutionClaim.condition,
         queriedExecutionClaim.conditionPayload,
         queriedExecutionClaim.action,
-        queriedExecutionClaim.executionPayload,
+        queriedExecutionClaim.actionPayload,
         queriedExecutionClaim.conditionGasActionTotalGasMinExecutionGas,
         actionConditionsCheckGas,
         queriedExecutionClaim.executionClaimExpiryDate,

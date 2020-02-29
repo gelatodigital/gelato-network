@@ -139,7 +139,7 @@ contract ActionRebalancePortfolio is GelatoActionsStandard {
 
 
     /*
-    address[2] calldata _providerAndExecutor,
+    address[2] calldata _selectedProviderAndExecutor,
     address[2] calldata _conditionAndAction,
     bytes calldata _conditionPayload,
     bytes calldata _actionPayload
