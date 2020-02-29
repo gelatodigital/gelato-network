@@ -1,4 +1,4 @@
-// pragma solidity ^0.6.2;
+pragma solidity ^0.6.2;
 
 // import "../gelato_core/interfaces/IGelatoCore.sol";
 // import "../gelato_core/interfaces/IGnosisSafe.sol";
@@ -14,7 +14,7 @@
 // /// @dev Should be delegatecalled from gnosisSafeProxy.setup.setupModules(to,data):
 // ///       - <to> should be the address of this contract: GnosisSafeProxyGelatoCoreSetup
 // ///       - <data> should be the encodedPayload for whitelistAndMint
-// contract GnosisSafeProxyGelatoCoreSetup {
+contract GnosisSafeProxyGelatoCoreSetup {
 
 //     event LogFailure(string error);
 
@@ -51,4 +51,4 @@
 //             emit LogFailure("mintExecutionClaim error");
 //         }
 //     }
-// }
+}

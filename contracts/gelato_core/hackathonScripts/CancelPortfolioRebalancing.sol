@@ -35,8 +35,9 @@ contract CancelPortfolioRebalancing {
     /// @dev This function should be delegatecalled
     function cancelPortfolioRebalancingAndWithdraw(
         address _gelatoCore,
-        address[3] calldata _userProxyProviderAndExecutor,
+        address[2] calldata _providerAndExecutor,
         uint256 _executionClaimId,
+        address _userProxy,
         address[2] calldata _conditionAndAction,
         bytes calldata _conditionPayload,
         bytes calldata _actionPayload,
@@ -44,37 +45,40 @@ contract CancelPortfolioRebalancing {
     )
         external
     {
-
-
         IERC20 exchangeToken = IERC20(DAI);
         uint256 safeOwnerDaiBalance = exchangeToken.balanceOf(address(this));
 
         // 1. Withdraw all ETH to owner
-        address safeOwner = IGelatoUserProxyFactory(_gelatoCore).userByGelatoProxy(address(this));
+        address safeOwner = IGelatoUserProxyFactory(_gelatoCore).userByGelatoProxy(
+            address(this)
+        );
         address payable payableOwner = address(uint160(safeOwner));
         // safeOwner.toPayable()
         if(address(this).balance > 0) payableOwner.sendValue(address(this).balance);
 
 
         // 2. Withdraw all DAI to owner if there is balance
-        if(safeOwnerDaiBalance > 0)
-        {
+        if(safeOwnerDaiBalance > 0) {
             // try exchangeToken.transfer(safeOwner, safeOwnerDaiBalance){}
             // catch{revert("failed to send remaining DAI");}
 
             // Convert DAI to ETH
-            try getUniswapExchange(exchangeToken).tokenToEthTransferInput(safeOwnerDaiBalance, 1, now, safeOwner)
-            {}
-            catch {
+            try getUniswapExchange(exchangeToken).tokenToEthTransferInput(
+                safeOwnerDaiBalance,
+                1,
+                now,
+                safeOwner
+            ) {
+            } catch {
                 revert("Error tokenToEthTransferInput");
             }
-
         }
 
         // 3. Cancel Execution Claim
         try IGelatoCore(_gelatoCore).cancelExecutionClaim(
-            _userProxyProviderAndExecutor,
+            _providerAndExecutor,
             _executionClaimId,
+            _userProxy,
             _conditionAndAction,
             _conditionPayload,
             _actionPayload,
@@ -94,7 +98,9 @@ contract CancelPortfolioRebalancing {
         view
         returns(IUniswapExchange)
     {
-        IUniswapFactory uniswapFactory = IUniswapFactory(0xD3E51Ef092B2845f10401a0159B2B96e8B6c3D30);
+        IUniswapFactory uniswapFactory = IUniswapFactory(
+            0xD3E51Ef092B2845f10401a0159B2B96e8B6c3D30
+        );
         uniswapFactory.getExchange(_token);
     }
 }

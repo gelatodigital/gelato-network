@@ -20,7 +20,7 @@ contract GelatoCore is
 
     // ================  STATE VARIABLES ======================================
     Counters.Counter public override currentExecutionClaimId;
-    // executionClaimId => _userProxyProviderAndExecutor[0]
+    // executionClaimId => _providerAndExecutor[0]
     mapping(uint256 => address) public override userProxyByExecutionClaimId;
     // executionClaimId => bytes32 executionClaimHash
     mapping(uint256 => bytes32) public override executionClaimHash;
@@ -28,7 +28,7 @@ contract GelatoCore is
 
     // ================  MINTING ==============================================
     function mintExecutionClaim(
-        address[3] calldata _userProxyProviderAndExecutor,
+        address[2] calldata _providerAndExecutor,
         address[2] calldata _conditionAndAction,
         bytes calldata _conditionPayload,
         bytes calldata _actionPayload
@@ -36,25 +36,26 @@ contract GelatoCore is
         external
         override
     {
-        _userProxyCheck(_userProxyProviderAndExecutor[0]);
-        _liquidProvider(_userProxyProviderAndExecutor[1], gelatoGasPrice, MAXGAS);
-        _providedCondition(_userProxyProviderAndExecutor[1], _conditionAndAction[0]);
-        _providedAction(_userProxyProviderAndExecutor[1], _conditionAndAction[1]);
-        _registeredExecutor(_userProxyProviderAndExecutor[2]);
+        _userProxyCheck(msg.sender);
+        _liquidProvider(_providerAndExecutor[0], gelatoGasPrice, MAXGAS);
+        _providedCondition(_providerAndExecutor[0], _conditionAndAction[0]);
+        _providedAction(_providerAndExecutor[0], _conditionAndAction[1]);
+        _registeredExecutor(_providerAndExecutor[1]);
 
         // Mint new executionClaim
         currentExecutionClaimId.increment();
         uint256 executionClaimId = currentExecutionClaimId.current();
-        userProxyByExecutionClaimId[executionClaimId] = _userProxyProviderAndExecutor[0];
+        userProxyByExecutionClaimId[executionClaimId] = msg.sender;
 
         uint256 executionClaimExpiryDate = now.add(
-            executorClaimLifespan[_userProxyProviderAndExecutor[2]]
+            executorClaimLifespan[_providerAndExecutor[1]]
         );
 
         // ExecutionClaim Hashing
         executionClaimHash[executionClaimId] = _computeExecutionClaimHash(
-            _userProxyProviderAndExecutor,
+            _providerAndExecutor,
             executionClaimId,  // To avoid hash collisions
+            msg.sender,
             _conditionAndAction,
             _conditionPayload,
             _actionPayload,
@@ -62,8 +63,9 @@ contract GelatoCore is
         );
 
         emit LogExecutionClaimMinted(
-            _userProxyProviderAndExecutor,
+            _providerAndExecutor,
             executionClaimId,
+            msg.sender,
             _conditionAndAction,
             _conditionPayload,
             _actionPayload,
@@ -73,8 +75,9 @@ contract GelatoCore is
 
     // ================  CAN EXECUTE EXECUTOR API ============================
     function canExecute(
-        address[3] memory _userProxyProviderAndExecutor,
+        address[2] memory _providerAndExecutor,
         uint256 _executionClaimId,
+        address _userProxy,
         address[2] memory _conditionAndAction,
         bytes memory _conditionPayload,
         bytes memory _actionPayload,
@@ -85,7 +88,7 @@ contract GelatoCore is
         override
         returns (string memory canExecuteResult)
     {
-        if (!isProviderLiquid(_userProxyProviderAndExecutor[1], gelatoGasPrice, MAXGAS))
+        if (!isProviderLiquid(_providerAndExecutor[0], gelatoGasPrice, MAXGAS))
             return "ProviderIlliquidity";
 
         if (executionClaimHash[_executionClaimId] == bytes32(0)) {
@@ -97,8 +100,9 @@ contract GelatoCore is
         if (_executionClaimExpiryDate < now) return "Expired";
 
         bytes32 computedExecutionClaimHash = _computeExecutionClaimHash(
-            _userProxyProviderAndExecutor,
+            _providerAndExecutor,
             _executionClaimId,
+            _userProxy,
             _conditionAndAction,
             _conditionPayload,
             _actionPayload,
@@ -133,8 +137,9 @@ contract GelatoCore is
     }
 
     function execute(
-        address[3] calldata _userProxyProviderAndExecutor,
+        address[2] calldata _providerAndExecutor,
         uint256 _executionClaimId,
+        address _userProxy,
         address[2] calldata _conditionAndAction,
         bytes calldata _conditionPayload,
         bytes calldata _actionPayload,
@@ -157,8 +162,9 @@ contract GelatoCore is
         // CHECK canExecute()
         {
             string memory canExecuteResult  = canExecute(
-                _userProxyProviderAndExecutor,
+                _providerAndExecutor,
                 _executionClaimId,
+                _userProxy,
                 _conditionAndAction,
                 _conditionPayload,
                 _actionPayload,
@@ -170,15 +176,17 @@ contract GelatoCore is
                 keccak256(abi.encodePacked("ok"))
             ) {
                 emit LogCanExecuteSuccess(
-                    _userProxyProviderAndExecutor,
+                    _providerAndExecutor,
                     _executionClaimId,
+                    _userProxy,
                     _conditionAndAction,
                     canExecuteResult
                 );
             } else {
                 emit LogCanExecuteFailed(
-                    _userProxyProviderAndExecutor,
+                    _providerAndExecutor,
                     _executionClaimId,
+                    _userProxy,
                     _conditionAndAction,
                     canExecuteResult
                 );
@@ -193,7 +201,7 @@ contract GelatoCore is
         // INTERACTIONS
         string memory executionFailureReason;
 
-        try IGnosisSafe(_userProxyProviderAndExecutor[0]).execTransactionFromModuleReturnData(
+        try IGnosisSafe(_userProxy).execTransactionFromModuleReturnData(
             _conditionAndAction[1],  // to
             0,  // value
             _actionPayload,  // data
@@ -202,15 +210,16 @@ contract GelatoCore is
             // Success
             if (actionExecuted) {
                 emit LogSuccessfulExecution(
-                    _userProxyProviderAndExecutor,
+                    _providerAndExecutor,
                     msg.sender,
                     _executionClaimId,
+                    _userProxy,
                     _conditionAndAction
                 );
                 _executorPayout(
                     startGas,
                     ExecutorPayout.Reward,
-                    _userProxyProviderAndExecutor[1]
+                    _providerAndExecutor[0]
                 );
             } else {
                 // 68: 32-location, 32-length, 4-ErrorSelector, UTF-8 revertReason
@@ -233,13 +242,14 @@ contract GelatoCore is
             executionFailureReason = "UndefinedGnosisSafeProxyError";
         }
 
-        _executorPayout(startGas, ExecutorPayout.Refund, _userProxyProviderAndExecutor[1]);
+        _executorPayout(startGas, ExecutorPayout.Refund, _providerAndExecutor[0]);
 
         // Failure
         emit LogExecutionFailure(
-            _userProxyProviderAndExecutor,
+            _providerAndExecutor,
             msg.sender,  // executor
             _executionClaimId,
+            _userProxy,
             _conditionAndAction,
             executionFailureReason
         );
@@ -277,8 +287,9 @@ contract GelatoCore is
 
     // ================  CANCEL USER / EXECUTOR API ============================
     function cancelExecutionClaim(
-        address[3] calldata _userProxyProviderAndExecutor,
+        address[2] calldata _providerAndExecutor,
         uint256 _executionClaimId,
+        address _userProxy,
         address[2] calldata _conditionAndAction,
         bytes calldata _conditionPayload,
         bytes calldata _actionPayload,
@@ -290,8 +301,7 @@ contract GelatoCore is
         // Checks
         bool executionClaimExpired = _executionClaimExpiryDate <= now;
         if (
-            msg.sender != userByGelatoProxy[_userProxyProviderAndExecutor[0]] &&
-            msg.sender != _userProxyProviderAndExecutor[0]
+            msg.sender != userByGelatoProxy[_userProxy] && msg.sender != _userProxy
         ) {
             require(
                 executionClaimExpired,
@@ -299,8 +309,9 @@ contract GelatoCore is
             );
         }
         bytes32 computedExecutionClaimHash = _computeExecutionClaimHash(
-            _userProxyProviderAndExecutor,
+            _providerAndExecutor,
             _executionClaimId,
+            _userProxy,
             _conditionAndAction,
             _conditionPayload,
             _actionPayload,
@@ -317,17 +328,19 @@ contract GelatoCore is
         delete executionClaimHash[_executionClaimId];
 
         emit LogExecutionClaimCancelled(
-            _userProxyProviderAndExecutor,
+            _providerAndExecutor,
             _executionClaimId,
             msg.sender,
+            _userProxy,
             executionClaimExpired
         );
     }
 
     // ================ PRIVATE HELPERS ========================================
     function _computeExecutionClaimHash(
-        address[3] memory _userProxyProviderAndExecutor,
+        address[2] memory _providerAndExecutor,
         uint256 _executionClaimId,
+        address _userProxy,
         address[2] memory _conditionAndAction,
         bytes memory _conditionPayload,
         bytes memory _actionPayload,
@@ -339,8 +352,9 @@ contract GelatoCore is
     {
         return keccak256(
             abi.encodePacked(
-                _userProxyProviderAndExecutor,
+                _providerAndExecutor,
                 _executionClaimId,
+                _userProxy,
                 _conditionAndAction,
                 _conditionPayload,
                 _actionPayload,
