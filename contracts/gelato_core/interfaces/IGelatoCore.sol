@@ -61,8 +61,7 @@ interface IGelatoCore {
         address[2] calldata _conditionAndAction,
         bytes calldata _conditionPayload,
         bytes calldata _actionPayload
-    )
-        external;
+    ) external;
 
     function canExecute(
         address[3] calldata _userProxyProviderAndExecutor,
@@ -71,11 +70,7 @@ interface IGelatoCore {
         bytes calldata _conditionPayload,
         bytes calldata _actionPayload,
         uint256 _executionClaimExpiryDate
-    )
-        external
-        view
-        returns (string memory);
-
+    ) external view returns (string memory);
 
     function execute(
         address[3] calldata _userProxyProviderAndExecutor,
@@ -84,9 +79,7 @@ interface IGelatoCore {
         bytes calldata _conditionPayload,
         bytes calldata _actionPayload,
         uint256 _executionClaimExpiryDate
-    )
-        external;
-
+    ) external;
 
     function cancelExecutionClaim(
         address[3] calldata _userProxyProviderAndExecutor,
@@ -95,21 +88,22 @@ interface IGelatoCore {
         bytes calldata _conditionPayload,
         bytes calldata _actionPayload,
         uint256 _executionClaimExpiryDate
-    )
-        external;
+    ) external;
 
-    function currentExecutionClaimId() external view returns(uint256 currentId);
+    function currentExecutionClaimId()
+        external
+        view
+        returns (uint256 currentId);
 
     function executionClaimHash(uint256 _executionClaimId)
         external
         view
-        returns(bytes32);
+        returns (bytes32);
 
     function userProxyByExecutionClaimId(uint256 _executionClaimId)
         external
         view
-        returns(address);
+        returns (address);
 
-
-    function MAXGAS() external pure returns(uint256);
+    function MAXGAS() external pure returns (uint256);
 }
