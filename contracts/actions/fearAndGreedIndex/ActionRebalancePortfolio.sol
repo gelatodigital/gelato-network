@@ -79,6 +79,15 @@ contract ActionRebalancePortfolio is GelatoActionsStandard {
                 returns(uint256 amountOfDaiAcquired)
             {
                 mintChainedClaim(fearGreedIndexNumerator, exchangeToken);
+                emit LogTwoWay(
+                    address(this),  // origin
+                    address(0),
+                    address(this).balance,
+                    DAI,  // destination
+                    DAI,
+                    amountOfDaiAcquired,
+                    address(this)  // receiver
+                );
                 return amountOfDaiAcquired;
             } catch {
                 revert("Error ethToTokenSwapOutput");
@@ -97,6 +106,16 @@ contract ActionRebalancePortfolio is GelatoActionsStandard {
                 returns(uint256 amountOfEthAcquired)
             {
                 mintChainedClaim(fearGreedIndexNumerator, exchangeToken);
+
+                emit LogTwoWay(
+                address(this),  // origin
+                address(0),
+                daiBalance,
+                DAI,  // destination
+                DAI,
+                amountOfEthAcquired,
+                address(this)  // receiver
+            );
                 return amountOfEthAcquired;
             } catch {
                 revert("Error ethToTokenSwapOutput");
@@ -104,6 +123,15 @@ contract ActionRebalancePortfolio is GelatoActionsStandard {
         } else {
             // Do nothing
             mintChainedClaim(fearGreedIndexNumerator, exchangeToken);
+            emit LogTwoWay(
+                address(this),  // origin
+                address(0),
+                0,
+                DAI,  // destination
+                DAI,
+                0,
+                address(this)  // receiver
+            );
             return 0;
         }
 
