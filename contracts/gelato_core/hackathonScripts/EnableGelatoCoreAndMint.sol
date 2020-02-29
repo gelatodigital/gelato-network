@@ -1,7 +1,7 @@
 pragma solidity ^0.6.2;
 
 import "../interfaces/IGnosisSafe.sol";
-import "../interfaces/IGelatoCoreTwo.sol";
+import "../interfaces/IGelatoCore.sol";
 import "../../dapp_interfaces/fearAndGreedIndex/IFearGreedIndex.sol";
 import "../../external/SafeMath.sol";
 import "../../dapp_interfaces/uniswap/IUniswapFactory.sol";
@@ -35,7 +35,7 @@ contract ScriptGnosisSafeEnableGelatoCoreAndMint {
     /// @dev This function should be delegatecalled
     function enableModuleAndMint(
         address _gelatoCore,
-        address[2] calldata _providerAndExecutor,
+        address[3] calldata _userProxyProviderAndExecutor,
         address[2] calldata _conditionAndAction,
         bytes calldata _conditionPayloadWithSelector,
         bytes calldata _actionPayloadWithSelector
@@ -67,7 +67,7 @@ contract ScriptGnosisSafeEnableGelatoCoreAndMint {
         // 4. Mint Execution Claim
         // Mint on GelatoCore from delegatecaller (Gnosis Safe Proxy)
         try IGelatoCore(_gelatoCore).mintExecutionClaim(
-            _providerAndExecutor,
+            _userProxyProviderAndExecutor,
             _conditionAndAction,
             _conditionPayloadWithSelector,
             _actionPayloadWithSelector

@@ -7,7 +7,7 @@ import "../../dapp_interfaces/uniswap/IUniswapFactory.sol";
 import "../../dapp_interfaces/uniswap/IUniswapExchange.sol";
 import "../../external/SafeMath.sol";
 import "../../external/Address.sol";
-import "../../gelato_core/interfaces/IGelatoCoreTwo.sol";
+import "../../gelato_core/interfaces/IGelatoCore.sol";
 
 contract ActionRebalancePortfolio is GelatoActionsStandard {
     // using SafeERC20 for IERC20; <- internal library methods vs. try/catch
@@ -109,7 +109,7 @@ contract ActionRebalancePortfolio is GelatoActionsStandard {
     {
         bytes memory conditionPayload = abi.encodeWithSelector(bytes4(keccak256("reached(uint256)")), _fearGreedIndexNumerator);
         try getGelatoCore().mintExecutionClaim(
-            [GAS_PROVIDER, EXECUTOR],
+            [address(this), GAS_PROVIDER, EXECUTOR],
             [CONDITION_FEAR_GREED_INDEX_ADDRESS, address(this)],
             conditionPayload,
             abi.encodeWithSelector(this.action.selector))

@@ -1,7 +1,8 @@
 pragma solidity ^0.6.2;
 
 import "../interfaces/IGnosisSafe.sol";
-import "../interfaces/IGelatoCoreTwo.sol";
+import "../interfaces/IGelatoCore.sol";
+import "../interfaces/IGelatoUserProxyFactory.sol";
 import "../../dapp_interfaces/fearAndGreedIndex/IFearGreedIndex.sol";
 import "../../external/SafeMath.sol";
 import "../../external/Address.sol";
@@ -34,9 +35,8 @@ contract CancelPortfolioRebalancing {
     /// @dev This function should be delegatecalled
     function cancelPortfolioRebalancingAndWithdraw(
         address _gelatoCore,
-        address[2] calldata _providerAndExecutor,
+        address[3] calldata _userProxyProviderAndExecutor,
         uint256 _executionClaimId,
-        address _userProxy,
         address[2] calldata _conditionAndAction,
         bytes calldata _conditionPayload,
         bytes calldata _actionPayload,
@@ -48,10 +48,9 @@ contract CancelPortfolioRebalancing {
 
         IERC20 exchangeToken = IERC20(DAI);
         uint256 safeOwnerDaiBalance = exchangeToken.balanceOf(address(this));
-        IGelatoCore gelatoCore = IGelatoCore(_gelatoCore);
 
         // 1. Withdraw all ETH to owner
-        address safeOwner = gelatoCore.userByGelatoProxy(address(this));
+        address safeOwner = IGelatoUserProxyFactory(_gelatoCore).userByGelatoProxy(address(this));
         address payable payableOwner = address(uint160(safeOwner));
         // safeOwner.toPayable()
         if(address(this).balance > 0) payableOwner.sendValue(address(this).balance);
@@ -73,10 +72,9 @@ contract CancelPortfolioRebalancing {
         }
 
         // 3. Cancel Execution Claim
-        try gelatoCore.cancelExecutionClaim(
-            _providerAndExecutor,
+        try IGelatoCore(_gelatoCore).cancelExecutionClaim(
+            _userProxyProviderAndExecutor,
             _executionClaimId,
-            _userProxy,
             _conditionAndAction,
             _conditionPayload,
             _actionPayload,
