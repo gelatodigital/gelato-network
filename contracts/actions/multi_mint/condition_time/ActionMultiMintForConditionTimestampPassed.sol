@@ -47,19 +47,19 @@ contract ActionMultiMintForConditionTimestampPassed is GelatoActionsStandard {
             "MultiMintTimeBased.multiMint: incorrect msg.value"
         );
 
-        for (uint256 i = 0; i < _numberOfMints; i++) {
-            uint256 timestamp = _startTime.add(_intervalSpan.mul(i));
-            bytes memory conditionPayloadWithSelector = abi.encodeWithSelector(
-                _conditionTimestampPassed.conditionSelector(),
-                timestamp
-            );
-            IGelatoCore(_gelatoCore).mintExecutionClaim.value(mintingDepositPerMint)(
-                _selectedExecutor,
-                _conditionTimestampPassed,
-                conditionPayloadWithSelector,
-                _action,
-                _actionPayloadWithSelector
-            );
-        }
+        // for (uint256 i = 0; i < _numberOfMints; i++) {
+        //     uint256 timestamp = _startTime.add(_intervalSpan.mul(i));
+        //     bytes memory conditionPayloadWithSelector = abi.encodeWithSelector(
+        //         _conditionTimestampPassed.conditionSelector(),
+        //         timestamp
+        //     );
+        //     IGelatoCore(_gelatoCore).mintExecutionClaim.value(mintingDepositPerMint)(
+        //         _selectedExecutor,
+        //         _conditionTimestampPassed,
+        //         conditionPayloadWithSelector,
+        //         _action,
+        //         _actionPayloadWithSelector
+        //     );
+        // }
     }
 }

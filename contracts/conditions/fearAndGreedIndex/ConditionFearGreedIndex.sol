@@ -40,7 +40,7 @@ contract ConditionFearGreedIndex is Ownable, IGelatoCondition {
         onlyOwner
     {
         require(_newValue >= 0 && _newValue <= 100, "fearAndGreedIndex has to be a value between 0 and 100");
-        require(_newValue % 10 == 0 , "only accept increments of 10");
+        require(_newValue.mod(10) == 0 , "only accept increments of 10");
         fearAndGreedIndex = _newValue;
     }
 
@@ -54,7 +54,7 @@ contract ConditionFearGreedIndex is Ownable, IGelatoCondition {
         view
         returns(bool, uint8)  // executable?, reason
     {
-        require(_oldFearAndGreedIndex % 10 == 0 , "only accept increments of 10");
+        require(_oldFearAndGreedIndex.mod(10) == 0 , "only accept increments of 10");
         if (fearAndGreedIndex >= _oldFearAndGreedIndex.add(10)) {
             return (true, uint8(Reason.OkNewIndexIsGreaterBy10));
         }

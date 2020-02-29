@@ -8,18 +8,17 @@ import "./IGnosisSafe.sol";
 /// @notice canExecute API and minting, execution, cancellation of ExecutionClaims
 /// @dev all the APIs and events are implemented inside GelatoCore
 interface IGelatoCore {
-
     enum CanExecuteResult {
         ExecutionClaimAlreadyExecutedOrCancelled,
         ExecutionClaimNonExistant,
         ExecutionClaimExpired,
-        WrongCalldataOrMsgSender,  // also returns if a not-selected executor calls fn
+        WrongCalldataOrMsgSender, // also returns if a not-selected executor calls fn
         ConditionNotOk,
         UnhandledConditionError,
         Executable
     }
 
-    enum StandardReason { Ok, NotOk, UnhandledError }
+    enum StandardReason {Ok, NotOk, UnhandledError}
 
     event LogExecutionClaimMinted(
         address indexed selectedExecutor,
@@ -71,7 +70,7 @@ interface IGelatoCore {
     event LogExecutionFailure(
         address indexed executor,
         uint256 indexed executionClaimId,
-        address payable indexed user,
+        address indexed user,
         IGelatoCondition condition,
         IGelatoAction action,
         string executionFailureReason
@@ -96,9 +95,7 @@ interface IGelatoCore {
         bytes calldata _conditionPayloadWithSelector,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector
-    )
-        external
-        payable;
+    ) external payable;
 
     /**
      * @notice If return value == 6, the claim is executable
@@ -119,11 +116,7 @@ interface IGelatoCore {
         uint256[3] calldata _conditionGasActionTotalGasMinExecutionGas,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
-    )
-        external
-        view
-        returns (CanExecuteResult, uint8 reason);
-
+    ) external view returns (CanExecuteResult, uint8 reason);
 
     /**
      * @notice the API executors call when they execute an executionClaim
@@ -140,8 +133,7 @@ interface IGelatoCore {
         uint256[3] calldata _conditionGasActionTotalGasMinExecutionGas,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
-    )
-        external;
+    ) external;
 
     /**
      * @dev API for canceling executionClaims
@@ -163,12 +155,14 @@ interface IGelatoCore {
         uint256[3] calldata _conditionGasActionTotalGasMinExecutionGas,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
-    )
-        external;
+    ) external;
 
     /// @dev get the current executionClaimId
     /// @return currentId uint256 current executionClaim Id
-    function getCurrentExecutionClaimId() external view returns(uint256 currentId);
+    function getCurrentExecutionClaimId()
+        external
+        view
+        returns (uint256 currentId);
 
     /// @dev api to read from the userProxyByExecutionClaimId state variable
     /// @param _executionClaimId TO DO
@@ -176,12 +170,12 @@ interface IGelatoCore {
     function gnosisSafeProxyByExecutionClaimId(uint256 _executionClaimId)
         external
         view
-        returns(IGnosisSafe);
+        returns (IGnosisSafe);
 
     function getUserWithExecutionClaimId(uint256 _executionClaimId)
         external
         view
-        returns(address);
+        returns (address);
 
     /// @dev interface to read from the hashedExecutionClaims state variable
     /// @param _executionClaimId TO DO
@@ -189,17 +183,14 @@ interface IGelatoCore {
     function executionClaimHash(uint256 _executionClaimId)
         external
         view
-        returns(bytes32);
+        returns (bytes32);
 
     // = GAS_BENCHMARKING ==============
     function gasTestConditionCheck(
         IGelatoCondition _condition,
         bytes calldata _conditionPayloadWithSelector,
         uint256 _conditionGas
-    )
-        external
-        view
-        returns(bool executable, uint8 reason);
+    ) external view returns (bool executable, uint8 reason);
 
     function gasTestCanExecute(
         uint256 _executionClaimId,
@@ -212,19 +203,14 @@ interface IGelatoCore {
         uint256[3] calldata _conditionGasActionTotalGasMinExecutionGas,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
-    )
-        external
-        view
-        returns (CanExecuteResult canExecuteResult, uint8 reason);
+    ) external view returns (CanExecuteResult canExecuteResult, uint8 reason);
 
     function gasTestGnosisSafeExecuteFromModule(
         IGnosisSafe _userGnosisSafeProxy,
         IGelatoAction _action,
         bytes calldata _actionPayloadWithSelector,
         uint256 _executionGas
-    )
-        external;
-
+    ) external;
 
     function gasTestExecute(
         uint256 _executionClaimId,
@@ -237,6 +223,5 @@ interface IGelatoCore {
         uint256[3] calldata _conditionGasActionTotalGasMinExecutionGas,
         uint256 _executionClaimExpiryDate,
         uint256 _mintingDeposit
-    )
-        external;
+    ) external;
 }
