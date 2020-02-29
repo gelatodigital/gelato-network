@@ -12,122 +12,41 @@ abstract contract ProviderWhitelistModule is IGelatoProviderModule,
                                              IProviderWhitelistModule,
                                              Ownable
 {
-    using EnumerableSet for EnumerableSet.AddressSet;
-
     // Proxy Registries
-    EnumerableSet.AddressSet private override userProxyRegistries;
+    mapping(address => bytes4) public override providedUserProxyRegistrySelector;
 
-    // Linked Lists for Conditions and Actions
-    EnumerableSet.AddressSet private override providedConditions;
-    EnumerableSet.AddressSet private override providedActions;
-
-
-    // ======================= SETTERS ==============================
-    function addUserProxyRegistry(address _registry) external override onlyOwner {
+    modifier providedUserProxyRegistry(address _registry) {
         require(
-            userProxyRegistries.add(_registry),
-            "ProviderWhitelistModule.addUserProxyRegistry: already listed"
+            providedUserProxyRegistrySelector[_registry] != bytes4(0),
+            "ProviderWhitelistModule.providedUserProxyRegistry"
         );
-        emit LogAddUserProxyRegistry(_registry);
+        _;
     }
 
-    function removeUserProxyRegistry(address _registry) external override onlyOwner {
-        require(
-            userProxyRegistries.remove(_registry),
-            "ProviderWhitelistModule.removeUserProxyRegistry: already not listed"
-        );
-        emit LogRemoveUserProxyRegistry(_registry);
-    }
-
-
-    function provideCondition(address _condition) external override onlyOwner {
-        require(
-            providedConditions.add(_condition),
-            "ProviderWhitelistModule.provideCondition: already provided"
-        );
-        emit LogProvideCondition(_condition);
-    }
-
-    function unprovideCondition(address _condition) external override onlyOwner {
-        require(
-            providedConditions.remove(_condition),
-            "ProviderWhitelistModule.unprovideCondition: already not provided"
-        );
-        emit LogUnprovideCondition(_condition);
-    }
-
-    function provideAction(address _action) external override onlyOwner {
-        require(
-            providedActions.add(_action),
-            "ProviderWhitelistModule.provideAction: already provided"
-        );
-        emit LogProvideAction(_action);
-    }
-
-    function unprovideAction(address _action) external override onlyOwner {
-        require(
-            providedActions.remove(_action),
-            "ProviderWhitelistModule.provideAction: already not provided"
-        );
-        emit LogUnprovideAction(_action);
-    }
-
-
-    // ======================= GETTERS ==============================
-    function isUserProxyRegistry(address _registry) external view override returns(bool) {
-        return userProxyRegistries.contains(_registry);
-    }
-
-    function isProvidedCondition(address _condition) public view override returns(bool) {
-        return providedConditions.contains(_condition);
-    }
-
-    function isProvidedAction(address _action) public view override returns(bool) {
-        return providedActions.contains(_action);
-    }
-
-    function getUserProxyRegistryByIndex(uint256 _index)
-        public
-        view
-        override
-        returns(address)
-    {
-        return userProxyRegistries.get(_index);
-    }
-
-    function getProvidedConditionByIndex(uint256 _index)
+    function provideUserProxyRegistry(address _registry, bytes4 _selector)
         external
-        view
         override
-        returns(address)
+        onlyOwner
     {
-        return providedConditions.get(_index);
+        require(
+            providedUserProxyRegistrySelector != bytes4(0),
+            "ProviderWhitelistModule.provideUserProxyRegistry"
+        );
+        providedUserProxyRegistrySelector[_registry] = _selector;
+        emit LogProvideUserProxyRegistry(_registry, _selector);
     }
 
-    function getProvidedActionByIndex(uint256 _index)
-        external
-        view
-        override
-        returns(address)
-    {
-        return providedActions.get(_index);
+    function unprovideUserProxyRegistry(address _registry) external override onlyOwner {
+        require(
+            !isProvidedUserProxyRegistry,
+            "ProviderWhitelistModule.unprovideUserProxyRegistry"
+        );
+        isProvidedUserProxyRegistry[_registry] = false;
+        emit LogUnprovideUserProxyRegistry(_registry);
     }
-
-    function getUserProxyRegistries() external view override returns(address[] memory) {
-        return userProxyRegistries.enumerate();
-    }
-
-    function getProvidedConditions() external view override returns(address[] memory) {
-        return providedConditions.enumerate();
-    }
-
-    function getProvidedActions() external view override returns(address[] memory) {
-        return providedActions.enumerate();
-    }
-
 
     // ======================= CHECK ==============================
-    function isProvidedUserProxy(uint256 _userProxyRegistryIndex, bytes memory data)
+    function isProvidedUserProxy(address _userProxy)
         public
         view
         override
@@ -152,9 +71,7 @@ abstract contract ProviderWhitelistModule is IGelatoProviderModule,
     // ======================= GELATO STANDARD ==============================
     function canMint(
         uint256 _userProxyRegistryIndex,
-        bytes calldata _userProxyCheckData,
-        address _condition,
-        address _action
+        bytes calldata _userProxyCheckData
     )
         external
         view
@@ -164,14 +81,6 @@ abstract contract ProviderWhitelistModule is IGelatoProviderModule,
         require(
             userProxyCheck(_userProxyRegistryIndex, _userProxyCheckData),
             "ProviderWhitelistModule.canMint.userProxyCheck"
-        );
-        require(
-            isProvidedCondition(_condition),
-            "ProviderWhitelistModule.canMint.isProvidedCondition"
-        );
-        require(
-            isProvidedCondition(_action),
-            "ProviderWhitelistModule.canMint.isProvidedCondition"
         );
         return true;
     }

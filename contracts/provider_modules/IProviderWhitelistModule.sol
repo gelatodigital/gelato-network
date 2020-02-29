@@ -3,20 +3,14 @@ pragma solidity ^0.6.2;
 /// @title IProviderWhitelistModule
 /// @notice An example provider module that whitelists conditions and actions
 interface IProviderWhitelistModule {
-    event LogAddUserProxyRegistry(address indexed registry);
-    event LogRemoveUserProxyRegistry(address indexed registry);
+    event LogProvideUserProxyRegistry(
+        address indexed registry,
+        bytes4 indexed proxyCheckSelector
+    );
+    event LogUnprovideUserProxyRegistry(address indexed registry);
 
-    event LogProvideCondition(address indexed condition);
-    event LogUnprovideCondition(address indexed condition);
-
-    event LogProvideAction(address indexed action);
-    event LogUnprovideAction(address indexed action);
-
-    function provideCondition(address _condition) external;
-    function unprovideCondition(address _action) external;
-
-    function provideAction(address _action) external;
-    function unprovideAction(address _action) external;
+    function provideUserProxyRegistry(address _registry) external;
+    function unprovideUserProxyRegistry(address _registry) external;
 
     function isUserProxyRegistry(address _registry) external view returns(bool);
     function isProvidedCondition(address _condition) external view returns(bool);
