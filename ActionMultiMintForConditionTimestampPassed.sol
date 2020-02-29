@@ -22,7 +22,7 @@ contract ActionMultiMintForConditionTimestampPassed is GelatoActionsStandard {
         // multi mint delegatecall requirement
         address _gelatoCore,
         // gelatoCore.mintExecutionClaim params
-        address[2] calldata _providerAndExecutor,
+        address[3] calldata _userProxyProviderAndExecutor,
         address _conditionTimestampPassed,
         uint256 _startTime,  // will be encoded here
         address _action,
@@ -45,7 +45,7 @@ contract ActionMultiMintForConditionTimestampPassed is GelatoActionsStandard {
             conditionAndAction[1] = _action;
 
             IGelatoCore(_gelatoCore).mintExecutionClaim(
-                _providerAndExecutor,
+                _userProxyProviderAndExecutor,
                 conditionAndAction,
                 conditionPayload,
                 _actionPayload

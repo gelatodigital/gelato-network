@@ -74,4 +74,20 @@ abstract contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
     {
         return userByGelatoProxy[userPoxy] != address(0);
     }
+
+    function _userProxyCheck(address _userProxy) internal view {
+        if (isGelatoProxyUser(msg.sender)) {
+            require(
+                _userProxy == gelatoProxyByUser[msg.sender],
+                "GelatoUserProxyFactory.userProxyCheck: wrong _user"
+            );
+        } else if (isGelatoUserProxy(msg.sender)) {
+            require(
+                _userProxy == msg.sender,
+                "GelatoUserProxyFactory.userProxyCheck: wrong _userProxy"
+            );
+        } else {
+            revert("GelatoCore.mintExecutionClaim: unregistered caller");
+        }
+    }
 }

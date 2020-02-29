@@ -60,7 +60,7 @@ contract ActionERC20Transfer is GelatoActionsStandard {
 
     function _actionConditionsCheck(
         // Standard Action Params
-        address _user,
+        address,  // user
         address _userProxy,
         // Specific Action Params
         address _sendToken,

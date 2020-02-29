@@ -13,11 +13,6 @@ abstract contract GelatoExecutor is IGelatoExecutor {
     // Executor Accounting
     mapping(address => uint256) public override executorBalance;
 
-    modifier registeredExecutor(address _executor) {
-        require(executorClaimLifespan[_executor] != 0, "GelatoExecutor.registeredExecutor");
-        _;
-    }
-
     modifier minMaxExecutorClaimLifespan(uint256 _executorClaimLifespan) {
         require(
             _executorClaimLifespan > 20 seconds &&
@@ -48,8 +43,8 @@ abstract contract GelatoExecutor is IGelatoExecutor {
     function deregisterExecutor()
         external
         override
-        registeredExecutor(msg.sender)
     {
+        _registeredExecutor(msg.sender);
         executorClaimLifespan[msg.sender] = 0;
         emit LogDeregisterExecutor(msg.sender);
     }
@@ -83,5 +78,12 @@ abstract contract GelatoExecutor is IGelatoExecutor {
         // Interaction
         msg.sender.sendValue(_withdrawAmount);
         emit LogWithdrawExecutorBalance(msg.sender, _withdrawAmount);
+    }
+
+    function _registeredExecutor(address _executor) internal view{
+        require(
+            executorClaimLifespan[_executor] != 0,
+            "GelatoExecutor.registeredExecutor"
+        );
     }
 }
