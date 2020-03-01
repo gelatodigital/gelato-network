@@ -7,50 +7,40 @@ export default task(
 )
   .addPositionalParam("conditionname", "must exist inside buidler.config")
   .addPositionalParam("actionname", "must exist inside buidler.config")
-  .addPositionalParam("provider", "The selected provider")
-  .addOptionalPositionalParam("conditionPayload", "abi.encoded bytes")
-  .addOptionalPositionalParam("actionPayload", "abi.encoded bytes")
-  .addOptionalParam("selectedexecutor", "address")
   .addFlag("log", "Logs return values to stdout")
   .setAction(async taskArgs => {
     try {
       // To avoid mistakes default log to true
       taskArgs.log = true;
 
+      // ======== ETH LONDON
       const selectedProvider = await run("bre-config", {
         addressbookcategory: "provider",
         addressbookentry: "default"
       });
-
-      // Handle executor
-      const selectedexecutor = await run("handleExecutor", {
-        selectedexecutor: taskArgs.selectedexecutor
+      const selectedExecutor = await run("bre-config", {
+        addressbookcategory: "executor",
+        addressbookentry: "default"
+      });
+      const { ConditionFearGreedIndex: condition } = await run("bre-config", {
+        deployments:true
+      });
+      const { ActionRebalancePortfolio: action } = await run("bre-config", {
+        deployments:true
       });
 
-      // Handle condition action addresses
-      const conditionAddress = await run("bre-config", {
-        deployments: true,
-        contractname: taskArgs.conditionname
-      });
-      const actionAddress = await run("bre-config", {
-        deployments: true,
-        contractname: taskArgs.actionname
+      const conditionPayload = await run("abi-encode-withselector", {
+        contractname: "ConditionFearGreedIndex",
+        functionname: "reached",
+        inputs: [50]
       });
 
-      // Handle condition payloadsWithSelector
-      let conditionPayload;
-      if (!taskArgs.conditionPayload) {
-        taskArgs.conditionPayload = await run(
-          `gc-mint:defaultpayload:${taskArgs.conditionname}`
-        );
-      }
-      // Handle action payloadsWithSelector
-      let actionPayload;
-      if (!taskArgs.actionPayload) {
-        taskArgs.actionPayload = await run(
-          `gc-mint:defaultpayload:${taskArgs.actionname}`
-        );
-      }
+      const actionPayload = await run("abi-encode-withselector", {
+        contractname: "ActionRebalancePortfolio",
+        functionname: "action",
+        inputs: []
+      });
+      // ====================
 
       // GelatoCore write Instance
       const gelatoCoreContract = await run("instantiateContract", {
@@ -59,10 +49,10 @@ export default task(
       });
       // mintExecutionClaim TX (payable)
       const mintTx = await gelatoCoreContract.mintExecutionClaim(
-        [selectedProvider, selectedexecutor],
-        [conditionAddress, actionAddress],
+        [selectedProvider, selectedExecutor],
+        [condition, action],
         conditionPayload,
-        actionPayload
+        actionPayload,
       );
 
       if (taskArgs.log)

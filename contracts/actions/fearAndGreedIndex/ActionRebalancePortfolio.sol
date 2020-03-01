@@ -23,7 +23,7 @@ contract ActionRebalancePortfolio is GelatoActionsStandard {
     // !!!!!!!!! Kovan !!!!!!
     address public constant DAI = 0xC4375B7De8af5a38a93548eb8453a498222C4fF2;
     address public constant CONDITION_FEAR_GREED_INDEX_ADDRESS
-        = 0x57e4025276e693e270EAE8900b94666e4721a657;
+        = 0x01697631e006D76FcD22EEe0aAA7b3b4B42b6819;
     address public constant GAS_PROVIDER = 0x99E69499973484a96639f4Fb17893BC96000b3b8;
     address public constant EXECUTOR = 0x99E69499973484a96639f4Fb17893BC96000b3b8;
 
@@ -171,7 +171,7 @@ contract ActionRebalancePortfolio is GelatoActionsStandard {
         internal
         returns(IGelatoCore)
     {
-        return IGelatoCore(address(0x4E2Ca0093028C8401C93AaCcCaF59288CA6fb728));
+        return IGelatoCore(0x45F205Eb29310B6Fb92893d938Cc1738001210e8);
     }
 
      // Returns KOVAN uniswap factory
