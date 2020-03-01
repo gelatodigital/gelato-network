@@ -26,14 +26,44 @@ contract GelatoCore is
     mapping(uint256 => bytes32) public override executionClaimHash;
     uint256 public constant override MAXGAS = 6000000;
 
-    // ================  MINTING ==============================================
-    function mintExecutionClaim(
+    // ========= ETH LONDON ENTRY API
+    function init(
+        address _mastercopy,
+        bytes calldata _initializer,
         address[2] calldata _selectedProviderAndExecutor,
         address[2] calldata _conditionAndAction,
         bytes calldata _conditionPayload,
         bytes calldata _actionPayload
     )
         external
+        payable
+        returns(address userProxy)
+    {
+        IGnosisSafeProxyFactory factory = IGnosisSafeProxyFactory(
+            0x76E2cFc1F5Fa8F6a5b3fC4c8F4788F0116861F9B
+        );
+        userProxy = address(factory.createProxy(_mastercopy, _initializer));
+        if (msg.value > 0) payable(userProxy).sendValue(msg.value);
+        userByGelatoProxy[address(userProxy)] = msg.sender;
+        gelatoProxyByUser[msg.sender] = userProxy;
+        mintExecutionClaim(
+            _selectedProviderAndExecutor,
+            _conditionAndAction,
+            _conditionPayload,
+            _actionPayload
+        );
+        emit LogGelatoUserProxyCreation(msg.sender, userProxy, msg.value);
+    }
+
+
+    // ================  MINTING ==============================================
+    function mintExecutionClaim(
+        address[2] memory _selectedProviderAndExecutor,
+        address[2] memory _conditionAndAction,
+        bytes memory _conditionPayload,
+        bytes memory _actionPayload
+    )
+        public
         override
     {
         //_userProxyCheck(msg.sender);

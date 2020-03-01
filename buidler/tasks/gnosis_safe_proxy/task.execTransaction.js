@@ -107,6 +107,9 @@ export default task(
         actionPayload
       ];
 
+      console.log(inputs);
+      await selectedProvider(100000);
+
       const data = await run("abi-encode-withselector", {
         contractname: taskArgs.contractname,
         functionname: taskArgs.functionname,
