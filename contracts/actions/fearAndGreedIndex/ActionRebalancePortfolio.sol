@@ -27,11 +27,7 @@ contract ActionRebalancePortfolio is GelatoActionsStandard {
     address public constant GAS_PROVIDER = 0x99E69499973484a96639f4Fb17893BC96000b3b8;
     address public constant EXECUTOR = 0x99E69499973484a96639f4Fb17893BC96000b3b8;
 
-    function action()
-        external
-        virtual
-        returns(uint256)
-    {
+    function action() external virtual returns(uint256) {
         IERC20 exchangeToken = IERC20(DAI);
 
         IFearGreedIndex fearGreedIndexContract = IFearGreedIndex(

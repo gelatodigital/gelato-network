@@ -87,7 +87,7 @@ export default task(
 
       if (taskArgs.log) console.log("\nTaskArgs:\n", taskArgs, "\n");
 
-      // ETH LONDON
+      // ======== ETH LONDON
       const selectedProvider = await run("bre-config", {
         addressbookcategory: "provider",
         addressbookentry: "default"
@@ -96,16 +96,37 @@ export default task(
         addressbookcategory: "executor",
         addressbookentry: "default"
       });
-      const condition = await run("")
-      const data = await run("abi-encode-withselector", {
+      const { ConditionFearGreedIndex: condition } = await run("bre-config", {
+        deployments
+      });
+      const { ActionRebalancePortfolio: action } = await run("bre-config", {
+        deployments
+      });
+
+      const conditionPayload = await run("abi-encode-withselector", {
+        contractname: "ActionRebalancePortfolio",
+        functionname: "reached",
+        inputs: [50]
+      });
+
+      const actionPayload = await run("abi-encode-withselector", {
+        contractname: "ActionRebalancePortfolio",
+        functionname: "action",
+        inputs: []
+      });
+
+      taskArgs.data = await run("abi-encode-withselector", {
         contractname: "ScriptGnosisSafeEnableGelatoCoreAndMint",
         functionname: "enableModuleAndMint",
         inputs: [
           gelatoCoreContract.address,
           [selectedProvider, selectedExecutor],
-          [selectedProvider, selectedExecutor],
+          [condition, action],
+          conditionPayload,
+          actionPayload
         ]
       });
+      // ====================
 
       if (taskArgs.setup) {
         const inputs = [
