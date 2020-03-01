@@ -8,7 +8,7 @@ export const deployments = {
 	ActionERC20Transfer: "0x213719cD7c69DCA764E336bEb8D735DA01FD6c83",
 	ActionERC20TransferFrom: "0x24b7b219E903d11489227c5Bed0718D90C03eBc2",
 	// ETHLONDON
-	ActionRebalancePortfolio: "0x8FEb96c37AAFE8980176D70Ac39dAf10b4121e8E",
+	ActionRebalancePortfolio: "0x40B3ec3abD5F109AfCAF0F707DD67aAD67ee529b",
 	// kyber
 	ActionKyberTradeKovan: "0xF829B506c378AaD11dB7Efe8d626cc7d0e015CBA",
 	// ==== Gelato Core ===
@@ -17,7 +17,7 @@ export const deployments = {
 	// balance
 	ConditionBalance: "0x60621bf3F7132838b27972084eaa56E87395D44B",
 	// greed
-	ConditionFearGreedIndex: "0x4131A080145F39424cdeb4645bA673b53570CAB3",
+	ConditionFearGreedIndex: "0x01697631e006D76FcD22EEe0aAA7b3b4B42b6819",
 	// kyber
 	ConditionKyberRateKovan: "0xD8eBB69Dc566E86eA6e09A15EBe6Fd9c65c4A698",
 	// time
