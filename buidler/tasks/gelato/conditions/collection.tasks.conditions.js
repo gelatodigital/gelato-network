@@ -12,6 +12,6 @@ import './kyber/task.gCKyberRateReached';
 import './kyber/task.gCKyberRateValue';
 
 // ===== ConditionFearGreedIndex ===========
-import './fearAndGreed/task.gCFearAndGreedIndex.current';
-import './fearAndGreed/task.gCFearAndGreedIndex.reached';
-import './fearAndGreed/task.gCFearAndGreedIndex.set';
+import './fearAndGreed/task.gCFearGreedIndex.current';
+import './fearAndGreed/task.gCFearGreedIndex.reached';
+import './fearAndGreed/task.gCFearGreedIndex.set';
