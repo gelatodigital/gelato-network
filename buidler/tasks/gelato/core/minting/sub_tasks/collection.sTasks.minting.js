@@ -2,6 +2,8 @@
 // === Conditions ===
 // ConditionBalance
 import "./default_payloads/conditions/sTask.defaultpayload.ConditionBalance";
+// ConditionFearGreedIndex
+import "./default_payloads/conditions/sTask.defaultpayload.ConditionFearGreedIndex";
 // ConditionTimestampPassed
 import "./default_payloads/conditions/sTask.defaultpayload.ConditionTimestampPassed";
 // == Kyber ==
@@ -24,3 +26,5 @@ import "./default_payloads/actions/sTask.defaultpayload.ActionKyberTrade";
 import "./default_payloads/actions/sTask.defaultpayload.ActionKyberTradeKovan";
 // ActionMultiMintForConditionTimestampPassed
 import "./default_payloads/actions/sTask.defaultpayload.ActionMultiMintForConditionTimestampPassed";
+// ActionRebalancePortfolio
+import "./default_payloads/actions/sTask.defaultpayload.ActionRebalancePortfolio";

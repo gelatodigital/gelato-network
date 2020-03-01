@@ -40,20 +40,16 @@ export default task(
       // Handle condition payloadsWithSelector
       let conditionPayload;
       if (!taskArgs.conditionPayload) {
-        conditionPayload = await run(
+        taskArgs.conditionPayload = await run(
           `gc-mint:defaultpayload:${taskArgs.conditionname}`
         );
-      } else {
-        conditionPayload = taskArgs.conditionPayload;
       }
       // Handle action payloadsWithSelector
       let actionPayload;
       if (!taskArgs.actionPayload) {
-        actionPayload = await run(
+        taskArgs.actionPayload = await run(
           `gc-mint:defaultpayload:${taskArgs.actionname}`
         );
-      } else {
-        actionPayload = taskArgs.actionPayload;
       }
 
       // GelatoCore write Instance
