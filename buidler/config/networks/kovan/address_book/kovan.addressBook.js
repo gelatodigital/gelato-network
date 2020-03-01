@@ -1,7 +1,6 @@
 import { eoas } from "./kovan.eoas";
 import { erc20s } from "./kovan.erc20s";
-import { gnosisSafe } from "./kovan.gnosisSafe";
-import { gnosisSafeProxies } from "./kovan.gnosisSafe";
+import { gnosisSafe, gnosisSafeProxies } from "./kovan.gnosisSafe";
 
 export const addressBook = {
   EOA: eoas,
