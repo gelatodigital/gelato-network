@@ -1,17 +1,14 @@
 import { task } from "@nomiclabs/buidler/config";
-import { defaultNetwork } from "../../../../../../buidler.config";
+import { defaultNetwork } from "../../../../../buidler.config";
 import { Contract } from "ethers";
 
 export default task(
-  "gc-setexecutorclaimlifespan",
-  `Sends tx to GelatoCore.setExecutorClaimLifespan(<lifespan>) on [--network] (default: ${defaultNetwork})`
+  "gc-withdrawexecutorbalance",
+  `Sends tx to GelatoCore.withdrawExecutorBalance() on [--network] (default: ${defaultNetwork})`
 )
-  .addPositionalParam(
-    "lifespan",
-    "the executor's lifespan limit on execution claims minted for them"
-  )
+  .addPositionalParam("amount", "The amount to withdraw")
   .addFlag("log", "Logs return values to stdout")
-  .setAction(async ({ lifespan, log }) => {
+  .setAction(async ({ amount, log }) => {
     try {
       const [signer1, signer2, ...rest] = await ethers.signers();
       const gelatoCoreAdddress = await run("bre-config", {
@@ -26,8 +23,8 @@ export default task(
         gelatoCoreAbi,
         signer2
       );
-      const tx = await gelatoCoreContract.setExecutorClaimLifespan(lifespan);
-      if (log) console.log(`\n\ntxHash setExecutorClaimLifespan: ${tx.hash}`);
+      const tx = await gelatoCoreContract.withdrawExecutorBalance(amount);
+      if (log) console.log(`\n\ntxHash withdrawExecutorBalance: ${tx.hash}`);
       await tx.wait();
       return tx.hash;
     } catch (error) {
