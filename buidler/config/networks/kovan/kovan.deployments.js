@@ -14,12 +14,12 @@ export const deployments = {
 	// === Conditions ===
 	// balance
 	ConditionBalance: "0x60621bf3F7132838b27972084eaa56E87395D44B",
+	// greed
+	ConditionFearGreedIndex: "0xDBA24Ed60DC7964e1495A57d3769B6D745e45511",
 	// kyber
 	ConditionKyberRateKovan: "0xD8eBB69Dc566E86eA6e09A15EBe6Fd9c65c4A698",
 	// time
 	ConditionTimestampPassed: "0x10A46c633adfe5a6719f3DBd2c162676779fE70B",
-	// greed
-	ConditionFearGreedIndex: "0x57e4025276e693e270EAE8900b94666e4721a657",
 	// ==== Scripts ====
 	ScriptGnosisSafeEnableGelatoCore: "0xf53f625aDE4d53905081cC390845a5f9C2EC137a"
 };
