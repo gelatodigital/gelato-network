@@ -1,6 +1,8 @@
 // Core
 import "./task.getCurrentExecutionClaimId";
 
+import "./task.init";
+
 // GelatoUserProxyFactory
 import "./gelato_user_proxy_factory/collection.tasks.gelato-user-proxy-factory";
 

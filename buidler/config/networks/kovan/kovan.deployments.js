@@ -12,7 +12,7 @@ export const deployments = {
 	// kyber
 	ActionKyberTradeKovan: "0xF829B506c378AaD11dB7Efe8d626cc7d0e015CBA",
 	// ==== Gelato Core ===
-	GelatoCore: "0xf8aC5393609eD48930e86B8648e1BF84DB79af2E",
+	GelatoCore: "0x862434d726Db236Ea52DE14df8616924297CC363",
 	// === Conditions ===
 	// balance
 	ConditionBalance: "0x60621bf3F7132838b27972084eaa56E87395D44B",

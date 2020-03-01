@@ -72,6 +72,17 @@ contract GelatoCore is
         _providedAction(_selectedProviderAndExecutor[0], _conditionAndAction[1]);
         _registeredExecutor(_selectedProviderAndExecutor[1]);
 
+        address userProxy;
+        if (isGelatoProxyUser(msg.sender)) {
+            userProxy = gelatoProxyByUser[msg.sender];
+        } else if (isGelatoUserProxy(msg.sender)) {
+            userProxy = msg.sender;
+        } else {
+            revert(
+                "GelatoCore.mintExecutionClaim: caller must be registered user or proxy"
+            );
+        }
+
         // Mint new executionClaim
         currentExecutionClaimId.increment();
         uint256 executionClaimId = currentExecutionClaimId.current();
@@ -85,7 +96,7 @@ contract GelatoCore is
         executionClaimHash[executionClaimId] = _computeExecutionClaimHash(
             _selectedProviderAndExecutor,
             executionClaimId,  // To avoid hash collisions
-            msg.sender,
+            userProxy,
             _conditionAndAction,
             _conditionPayload,
             _actionPayload,
@@ -95,7 +106,7 @@ contract GelatoCore is
         emit LogExecutionClaimMinted(
             _selectedProviderAndExecutor,
             executionClaimId,
-            msg.sender,
+            userProxy,
             _conditionAndAction,
             _conditionPayload,
             _actionPayload,
