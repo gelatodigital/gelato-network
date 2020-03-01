@@ -3,8 +3,8 @@ import { defaultNetwork } from "../../../../../buidler.config";
 // import { Contract } from 'ethers';
 
 export default task(
-  "g-cfeargreedindex-fearAndGreedIndex",
-  `Sends tx to ConditionFearGreedIndex.fearAndGreedIndex() on [--network] (default: ${defaultNetwork})`
+  "g-cfeargreedindex-current",
+  `Sends tx to ConditionFearGreedIndex.current() on [--network] (default: ${defaultNetwork})`
 )
   .addFlag("log", "Logs return values to stdout")
   .setAction(async ({ log }) => {
@@ -13,11 +13,12 @@ export default task(
         contractname: "ConditionFearGreedIndex",
         read: true
       });
-      const fearAndGreedIndexValue = await condition.fearAndGreedIndex();
-      if (log)
+      const fearAndGreedIndexValue = await condition.current();
+      if (log) {
         console.log(
           `\n ConditionFearGreedIndex.fearAndGreedIndex: ${fearAndGreedIndexValue}\n`
         );
+      }
       return fearAndGreedIndexValue;
     } catch (error) {
       console.error(error);
