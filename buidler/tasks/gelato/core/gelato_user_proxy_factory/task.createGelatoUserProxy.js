@@ -1,6 +1,7 @@
 import { task, types } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../../buidler.config";
-import { constants } from "ethers";
+import { constants, utils } from "ethers";
+import { ScriptGnosisSafeEnableGelatoCoreAndMint } from "../../../../config/networks/kovan/kovan.deployments";
 
 export default task(
   "gc-creategelatouserproxy",
@@ -25,7 +26,7 @@ export default task(
   .addOptionalParam(
     "to",
     "Supply with --setup: contract address for optional delegatecall.",
-    constants.AddressZero
+    ScriptGnosisSafeEnableGelatoCoreAndMint
   )
   .addOptionalParam(
     "data",
@@ -53,6 +54,12 @@ export default task(
     "Supply with --setup:  Adddress that should receive the payment (or 0 if tx.origin)t",
     constants.AddressZero
   )
+  .addOptionalParam(
+    "funding",
+    "ETH value to be sent to newly created gelato user proxy",
+    utils.parseEther("0.25"),
+    types.int
+  )
   .addFlag("log", "Logs return values to stdout")
   .setAction(async taskArgs => {
     try {
@@ -79,6 +86,26 @@ export default task(
       }
 
       if (taskArgs.log) console.log("\nTaskArgs:\n", taskArgs, "\n");
+
+      // ETH LONDON
+      const selectedProvider = await run("bre-config", {
+        addressbookcategory: "provider",
+        addressbookentry: "default"
+      });
+      const selectedExecutor = await run("bre-config", {
+        addressbookcategory: "executor",
+        addressbookentry: "default"
+      });
+      const condition = await run("")
+      const data = await run("abi-encode-withselector", {
+        contractname: "ScriptGnosisSafeEnableGelatoCoreAndMint",
+        functionname: "enableModuleAndMint",
+        inputs: [
+          gelatoCoreContract.address,
+          [selectedProvider, selectedExecutor],
+          [selectedProvider, selectedExecutor],
+        ]
+      });
 
       if (taskArgs.setup) {
         const inputs = [
@@ -108,7 +135,8 @@ export default task(
 
       const creationTx = await gelatoCoreContract.createGelatoUserProxy(
         taskArgs.mastercopy,
-        taskArgs.initializer
+        taskArgs.initializer,
+        { value: taskArgs.funding }
       );
 
       if (taskArgs.log)
