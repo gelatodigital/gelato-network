@@ -8,7 +8,7 @@ contract ConditionFearGreedIndex is IGelatoCondition, Ownable {
 
     using SafeMath for uint256;
 
-    event LogNewIndex(uint256 indexed newIndex);
+    event LogSetFearAndGreedIndex(uint256 indexed oldIndex, uint256 indexed newIndex);
 
     // conditionSelector public state variable np due to this.actionSelector constant issue
     function conditionSelector() external pure override returns(bytes4) {
@@ -22,7 +22,7 @@ contract ConditionFearGreedIndex is IGelatoCondition, Ownable {
     uint256 public fearAndGreedIndex;
 
     // FearAndGreedIndex Oracle
-    function setOracle(uint256 _newValue)
+    function setFearAndGreedIndex(uint256 _newValue)
         external
         onlyOwner
     {
@@ -34,38 +34,36 @@ contract ConditionFearGreedIndex is IGelatoCondition, Ownable {
             _newValue.mod(10) == 0 ,
             "ConditionFearGreedIndex.setOracle: only accept increments of 10"
         );
+        emit LogSetFearAndGreedIndex(fearAndGreedIndex, _newValue);
         fearAndGreedIndex = _newValue;
-        emit LogNewIndex(_newValue);
     }
 
 
     /// @dev Caution: use 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE for ETH _coin
-    function reached(uint256 _oldFearAndGreedIndex)
+    function reached(uint256 _prevFearAndGreedIndex)
         external
         view
         returns(bool, string memory)  // executable?, reason
     {
         require(
-            _oldFearAndGreedIndex.mod(10) == 0 ,
-            "ConditionFearGreedIndex.reached: only accept increments of 10"
+            _prevFearAndGreedIndex >= 0 && _prevFearAndGreedIndex <= 100,
+            "ConditionFearGreedIndex.reached: _prevFearAndGreedIndex between 0 and 100"
         );
-        if (fearAndGreedIndex >= _oldFearAndGreedIndex.add(10)) {
-            return (true, "OkNewIndexIsGreaterBy10");
-        } else if (_oldFearAndGreedIndex == 0) {
-            if (fearAndGreedIndex >= 10) return (true, "OkNewIndexIsGreaterBy10");
-            else return(false, "NotOkNewIndexIsNotSmallerOrGreaterBy10");
-        } else if (fearAndGreedIndex <= _oldFearAndGreedIndex.sub(10)) {
-            return (true, "OkNewIndexIsSmallerBy10");
-        } else {
-            return(false, "NotOkNewIndexIsNotSmallerOrGreaterBy10");
-        }
+        require(
+            _prevFearAndGreedIndex.mod(10) == 0 ,
+            "ConditionFearGreedIndex.reached: _prevFearAndGreedIndex increments of 10"
+        );
+
+        bool prevIndexIsZero = _prevFearAndGreedIndex == 0;
+
+        if (fearAndGreedIndex >= _prevFearAndGreedIndex + 10)
+            return (true, "OkNewIndexIsGreater");
+        else if (!prevIndexIsZero && fearAndGreedIndex <= _prevFearAndGreedIndex - 10)
+            return (true, "OkNewIndexIsSmaller");
+        else return(false, "NotOkNewIndexIsNotSmallerOrGreater");
     }
 
-    function getConditionValue()
-        external
-        view
-        returns(uint256)
-    {
+    function getConditionValue() external view returns(uint256) {
         return fearAndGreedIndex;
     }
 }

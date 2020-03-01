@@ -15,7 +15,7 @@ export const deployments = {
 	// balance
 	ConditionBalance: "0x60621bf3F7132838b27972084eaa56E87395D44B",
 	// greed
-	ConditionFearGreedIndex: "0xDBA24Ed60DC7964e1495A57d3769B6D745e45511",
+	ConditionFearGreedIndex: "0xdfb96B97528bF8D430d809C7f9147457bf4f9A0E",
 	// kyber
 	ConditionKyberRateKovan: "0xD8eBB69Dc566E86eA6e09A15EBe6Fd9c65c4A698",
 	// time
