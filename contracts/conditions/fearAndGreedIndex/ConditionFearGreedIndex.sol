@@ -8,7 +8,7 @@ contract ConditionFearGreedIndex is IGelatoCondition, Ownable {
 
     using SafeMath for uint256;
 
-    event LogSetFearAndGreedIndex(uint256 indexed oldIndex, uint256 indexed newIndex);
+    event LogSet(uint256 indexed oldIndex, uint256 indexed newIndex);
 
     // conditionSelector public state variable np due to this.actionSelector constant issue
     function conditionSelector() external pure override returns(bytes4) {
@@ -31,31 +31,30 @@ contract ConditionFearGreedIndex is IGelatoCondition, Ownable {
             _newValue.mod(10) == 0 ,
             "ConditionFearGreedIndex.setOracle: only accept increments of 10"
         );
-        emit LogSetFearAndGreedIndex(current, _newValue);
+        emit LogSet(current, _newValue);
         current = _newValue;
     }
 
 
     /// @dev Caution: use 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE for ETH _coin
-    function reached(uint256 _prevFearAndGreedIndex)
+    function reached(uint256 _prevIndex)
         external
         view
         returns(bool, string memory)  // executable?, reason
     {
         require(
-            _prevFearAndGreedIndex >= 0 && _prevFearAndGreedIndex <= 100,
-            "ConditionFearGreedIndex.reached: _prevFearAndGreedIndex between 0 and 100"
+            _prevIndex >= 0 && _prevIndex <= 100,
+            "ConditionFearGreedIndex.reached: _prevIndex between 0 and 100"
         );
         require(
-            _prevFearAndGreedIndex.mod(10) == 0 ,
-            "ConditionFearGreedIndex.reached: _prevFearAndGreedIndex increments of 10"
+            _prevIndex.mod(10) == 0 ,
+            "ConditionFearGreedIndex.reached: _prevIndex increments of 10"
         );
 
-        bool prevIndexIsZero = _prevFearAndGreedIndex == 0;
+        bool prevIndexIsZero = _prevIndex == 0;
 
-        if (current >= _prevFearAndGreedIndex + 10)
-            return (true, "OkNewIndexIsGreater");
-        else if (!prevIndexIsZero && current <= _prevFearAndGreedIndex - 10)
+        if (current >= _prevIndex + 10) return (true, "OkNewIndexIsGreater");
+        else if (!prevIndexIsZero && current <= _prevIndex - 10)
             return (true, "OkNewIndexIsSmaller");
         else return(false, "NotOkNewIndexIsNotSmallerOrGreater");
     }

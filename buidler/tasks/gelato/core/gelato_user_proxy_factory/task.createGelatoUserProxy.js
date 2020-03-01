@@ -3,7 +3,7 @@ import { defaultNetwork } from "../../../../../buidler.config";
 import { constants } from "ethers";
 
 export default task(
-  "gc-creategnosissafeproxy",
+  "gc-creategelatouserproxy",
   `Sends tx to GelatoCore.createGelatoUserProxy() on [--network] (default: ${defaultNetwork})`
 )
   .addOptionalParam(

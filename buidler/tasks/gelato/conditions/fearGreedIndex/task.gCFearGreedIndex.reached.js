@@ -5,7 +5,7 @@ export default task(
   "g-cfeargreedindex-reached",
   `Sends tx to ConditionFearGreedIndex.reached(<oldFearAndGreedIndex>) on [--network] (default: ${defaultNetwork})`
 )
-  .addPositionalParam("oldfearandgreedindex", "is the condition activated")
+  .addPositionalParam("previndex", "is the condition activated")
   .addFlag("log", "Logs return values to stdout")
   .setAction(async ({ oldfearandgreedindex, log }) => {
     try {
