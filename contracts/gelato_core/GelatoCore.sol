@@ -36,8 +36,8 @@ contract GelatoCore is
         external
         override
     {
-        _userProxyCheck(msg.sender);
-        _liquidProvider(_selectedProviderAndExecutor[0], gelatoGasPrice, MAXGAS);
+        //_userProxyCheck(msg.sender);
+        //_liquidProvider(_selectedProviderAndExecutor[0], gelatoGasPrice, MAXGAS);
         _providedCondition(_selectedProviderAndExecutor[0], _conditionAndAction[0]);
         _providedAction(_selectedProviderAndExecutor[0], _conditionAndAction[1]);
         _registeredExecutor(_selectedProviderAndExecutor[1]);

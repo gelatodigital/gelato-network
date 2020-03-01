@@ -9,7 +9,7 @@ export default task(
   .addPositionalParam(
     "executorclaimlifespan",
     "executor's max executionClaim lifespan",
-    600, // 10 minutes,
+    21600000,
     types.int
   )
   .addFlag("log", "Logs return values to stdout")

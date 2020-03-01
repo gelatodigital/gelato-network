@@ -1,7 +1,7 @@
 import { task, types } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../../buidler.config";
 import { constants, utils } from "ethers";
-import { ScriptGnosisSafeEnableGelatoCoreAndMint } from "../../../../config/networks/kovan/kovan.deployments";
+import { deployments } from "../../../../config/networks/kovan/kovan.deployments";
 
 export default task(
   "gc-creategelatouserproxy",
@@ -26,7 +26,7 @@ export default task(
   .addOptionalParam(
     "to",
     "Supply with --setup: contract address for optional delegatecall.",
-    ScriptGnosisSafeEnableGelatoCoreAndMint
+    deployments.ScriptGnosisSafeEnableGelatoCoreAndMint
   )
   .addOptionalParam(
     "data",
@@ -87,6 +87,11 @@ export default task(
 
       if (taskArgs.log) console.log("\nTaskArgs:\n", taskArgs, "\n");
 
+      const gelatoCoreContract = await run("instantiateContract", {
+        contractname: "GelatoCore",
+        write: true
+      });
+
       // ======== ETH LONDON
       const selectedProvider = await run("bre-config", {
         addressbookcategory: "provider",
@@ -104,7 +109,7 @@ export default task(
       });
 
       const conditionPayload = await run("abi-encode-withselector", {
-        contractname: "ActionRebalancePortfolio",
+        contractname: "ConditionFearGreedIndex",
         functionname: "reached",
         inputs: [50]
       });
@@ -148,11 +153,6 @@ export default task(
 
       if (taskArgs.log)
         console.log(`\nInitializer payload:\n${taskArgs.initializer}\n`);
-
-      const gelatoCoreContract = await run("instantiateContract", {
-        contractname: "GelatoCore",
-        write: true
-      });
 
       const creationTx = await gelatoCoreContract.createGelatoUserProxy(
         taskArgs.mastercopy,
