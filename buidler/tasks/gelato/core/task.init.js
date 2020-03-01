@@ -63,6 +63,7 @@ export default task(
   .addFlag("log", "Logs return values to stdout")
   .setAction(async taskArgs => {
     try {
+      taskArgs.log = true;
       if (!taskArgs.initializer && !taskArgs.setup)
         throw new Error("Must provide initializer payload or --setup args");
       else if (taskArgs.initializer && taskArgs.setup)
@@ -187,7 +188,7 @@ export default task(
           blockHash,
           values: true
         });
-        console.log("\n LogExecutionClaimMinted\n", parsedLog);
+        console.log("\n LogExecutionClaimMinted\n", parsedMintLog);
       }
 
       return creationTx.hash;

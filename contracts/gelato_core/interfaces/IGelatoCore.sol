@@ -8,7 +8,7 @@ import "../../actions/IGelatoAction.sol";
 /// @dev all the APIs and events are implemented inside GelatoCore
 interface IGelatoCore {
     event LogExecutionClaimMinted(
-        address[2] indexed selectedProviderAndExecutor,
+        address[2] selectedProviderAndExecutor,
         uint256 indexed executionClaimId,
         address indexed userProxy,
         address[2] conditionAndAction,
@@ -20,7 +20,7 @@ interface IGelatoCore {
     // Caution: there are no guarantees that CanExecuteResult and/or reason
     //  are implemented in a logical fashion by condition/action developers.
     event LogCanExecuteSuccess(
-        address[2] indexed selectedProviderAndExecutor,
+        address[2] selectedProviderAndExecutor,
         uint256 indexed executionClaimId,
         address indexed userProxy,
         address[2] conditionAndAction,
@@ -28,7 +28,7 @@ interface IGelatoCore {
     );
 
     event LogCanExecuteFailed(
-        address[2] indexed selectedProviderAndExecutor,
+        address[2] selectedProviderAndExecutor,
         uint256 indexed executionClaimId,
         address indexed userProxy,
         address[2] conditionAndAction,
@@ -36,7 +36,7 @@ interface IGelatoCore {
     );
 
     event LogSuccessfulExecution(
-        address[2] indexed selectedProviderAndExecutor,
+        address[2] selectedProviderAndExecutor,
         address executor,
         uint256 indexed executionClaimId,
         address indexed userProxy,
@@ -46,7 +46,7 @@ interface IGelatoCore {
     // Caution: there are no guarantees that ExecutionResult and/or reason
     //  are implemented in a logical fashion by condition/action developers.
     event LogExecutionFailure(
-        address[2] indexed selectedProviderAndExecutor,
+        address[2] selectedProviderAndExecutor,
         address executor,
         uint256 indexed executionClaimId,
         address indexed userProxy,
@@ -55,7 +55,7 @@ interface IGelatoCore {
     );
 
     event LogExecutionClaimCancelled(
-        address[2] indexed selectedProviderAndExecutor,
+        address[2] selectedProviderAndExecutor,
         uint256 indexed executionClaimId,
         address indexed userProxy,
         address cancelor,
