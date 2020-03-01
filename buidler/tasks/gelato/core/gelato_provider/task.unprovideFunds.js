@@ -1,21 +1,20 @@
 import { task } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../../buidler.config";
-import { Contract } from "ethers";
 
 export default task(
-  "gc-withdrawproviderrbalance",
-  `Sends tx to GelatoCore.withdrawProviderBalance([<amount>]) on [--network] (default: ${defaultNetwork})`
+  "gc-unprovidefunds",
+  `Sends tx to GelatoCore.unprovideFunds([<amount>]) on [--network] (default: ${defaultNetwork})`
 )
-  .addPositionalParam("amount", "The amount to withdraw")
+  .addPositionalParam("withdrawamount", "The amount to withdraw")
   .addFlag("log", "Logs return values to stdout")
-  .setAction(async ({ amount, log }) => {
+  .setAction(async ({ withdrawamount, log }) => {
     try {
       const gelatoCoreContract = await run("instantiateContract", {
         contractname: "GelatoCore",
         write: true
       });
-      const tx = await gelatoCoreContract.withdrawProviderBalance(amount);
-      if (log) console.log(`\n\ntxHash withdrawProviderBalance: ${tx.hash}`);
+      const tx = await gelatoCoreContract.unprovideFunds(withdrawamount);
+      if (log) console.log(`\n\ntxHash unprovideFunds: ${tx.hash}`);
       await tx.wait();
       return tx.hash;
     } catch (error) {

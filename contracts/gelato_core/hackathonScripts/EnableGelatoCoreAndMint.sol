@@ -26,7 +26,8 @@ contract ScriptGnosisSafeEnableGelatoCoreAndMint {
 
 
     // !!!!!!!!! Kovan !!!!!!
-    address public constant CONDITION_FEAR_GREED_INDEX_ADDRESS = 0x57e4025276e693e270EAE8900b94666e4721a657;
+    address public constant CONDITION_FEAR_GREED_INDEX_ADDRESS
+        = 0x57e4025276e693e270EAE8900b94666e4721a657;
     address public constant DAI = 0xC4375B7De8af5a38a93548eb8453a498222C4fF2;
 
     event LogFailure(string error);
@@ -42,18 +43,21 @@ contract ScriptGnosisSafeEnableGelatoCoreAndMint {
     )
         external
     {
-
         // 1. Fetch greedFearIndexNumerator
-        IFearGreedIndex fearGreedIndexContract = IFearGreedIndex(CONDITION_FEAR_GREED_INDEX_ADDRESS);
+        IFearGreedIndex fearGreedIndexContract = IFearGreedIndex(
+            CONDITION_FEAR_GREED_INDEX_ADDRESS
+        );
 
         uint256 fearGreedIndexNumerator = fearGreedIndexContract.getConditionValue();
 
-        uint256 ethAmountToSell = address(this).balance.mul(fearGreedIndexNumerator).div(100);
+        uint256 ethAmountToSell
+            = address(this).balance.mul(fearGreedIndexNumerator).div(100);
 
         // 2, Swap the respective amount of ETH to DAI
-        try getUniswapExchange().ethToTokenSwapInput.value(ethAmountToSell)(1,now)
-        {}
-        catch {revert("Error ethToTokenInput");}
+        try getUniswapExchange().ethToTokenSwapInput{ value: ethAmountToSell }(1, now) {
+        } catch {
+            revert("Error ethToTokenInput");
+        }
 
         // 3. Whitelist Gelato Core
         // Whitelist GelatoCore as module on delegatecaller (Gnosis Safe Proxy)
@@ -87,7 +91,9 @@ contract ScriptGnosisSafeEnableGelatoCoreAndMint {
         returns(IUniswapExchange)
     {
         IERC20 exchangeToken = IERC20(DAI);
-        IUniswapFactory uniswapFactory = IUniswapFactory(0xD3E51Ef092B2845f10401a0159B2B96e8B6c3D30);
+        IUniswapFactory uniswapFactory = IUniswapFactory(
+            0xD3E51Ef092B2845f10401a0159B2B96e8B6c3D30
+        );
         uniswapFactory.getExchange(exchangeToken);
     }
 }
