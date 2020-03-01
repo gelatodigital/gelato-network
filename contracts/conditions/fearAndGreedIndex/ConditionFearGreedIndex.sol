@@ -19,13 +19,10 @@ contract ConditionFearGreedIndex is IGelatoCondition, Ownable {
     uint256 public constant override conditionGas = 500000;
 
     // State
-    uint256 public fearAndGreedIndex;
+    uint256 public current;  // between 0 - 100
 
     // FearAndGreedIndex Oracle
-    function setFearAndGreedIndex(uint256 _newValue)
-        external
-        onlyOwner
-    {
+    function set(uint256 _newValue) external onlyOwner {
         require(
             _newValue >= 0 && _newValue <= 100,
             "ConditionFearGreedIndex.setOracle: not between 0 and 100"
@@ -34,8 +31,8 @@ contract ConditionFearGreedIndex is IGelatoCondition, Ownable {
             _newValue.mod(10) == 0 ,
             "ConditionFearGreedIndex.setOracle: only accept increments of 10"
         );
-        emit LogSetFearAndGreedIndex(fearAndGreedIndex, _newValue);
-        fearAndGreedIndex = _newValue;
+        emit LogSetFearAndGreedIndex(current, _newValue);
+        current = _newValue;
     }
 
 
@@ -56,14 +53,14 @@ contract ConditionFearGreedIndex is IGelatoCondition, Ownable {
 
         bool prevIndexIsZero = _prevFearAndGreedIndex == 0;
 
-        if (fearAndGreedIndex >= _prevFearAndGreedIndex + 10)
+        if (current >= _prevFearAndGreedIndex + 10)
             return (true, "OkNewIndexIsGreater");
-        else if (!prevIndexIsZero && fearAndGreedIndex <= _prevFearAndGreedIndex - 10)
+        else if (!prevIndexIsZero && current <= _prevFearAndGreedIndex - 10)
             return (true, "OkNewIndexIsSmaller");
         else return(false, "NotOkNewIndexIsNotSmallerOrGreater");
     }
 
     function getConditionValue() external view returns(uint256) {
-        return fearAndGreedIndex;
+        return current;
     }
 }

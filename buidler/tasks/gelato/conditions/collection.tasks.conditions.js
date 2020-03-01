@@ -1,17 +1,17 @@
 // ===== ConditionBalance =====
 // Reached
-import './balance/task.gcBalanceReached';
+import './balance/task.gCBalanceReached';
 // getConditionValue
-import './balance/task.gcBalanceValue';
+import './balance/task.gCBalanceValue';
 
 // ===== ConditionKyber ===========
 // == ConditionKyberRate
 // Reached
-import './kyber/task.gcKyberRateReached';
+import './kyber/task.gCKyberRateReached';
 // getConditionValue
-import './kyber/task.gcKyberRateValue';
+import './kyber/task.gCKyberRateValue';
 
-// fearGreedIndex
-import './fearAndGreed/task.gcFearAndGreedSetOracle';
-import './fearAndGreed/task.gcFearAndGreedReadOracle';
-import './fearAndGreed/task.gcFearAndGreedReached';
+// ===== ConditionFearGreedIndex ===========
+import './fearAndGreed/task.gCFearAndGreedIndex';
+import './fearAndGreed/task.gCFearAndGreedIndex.reached';
+import './fearAndGreed/task.gCFearAndGreedIndex.setOracle';
