@@ -55,11 +55,11 @@ abstract contract GelatoProvider is IGelatoProvider {
     }
 
     // Provider Funding
-    function provideFunds() public payable override {
+    function provideFunds(address _provider) public payable override {
         require(msg.value > 0, "GelatoProvider.provideFunds: zero value");
-        uint256 newProviderFunds = providerFunds[msg.sender].add(msg.value);
-        emit LogProvideFunds(msg.sender, providerFunds[msg.sender], newProviderFunds);
-        providerFunds[msg.sender] = newProviderFunds;
+        uint256 newProviderFunds = providerFunds[_provider].add(msg.value);
+        emit LogProvideFunds(_provider, providerFunds[_provider], newProviderFunds);
+        providerFunds[_provider] = newProviderFunds;
     }
 
     function unprovideFunds(uint256 _withdrawAmount)

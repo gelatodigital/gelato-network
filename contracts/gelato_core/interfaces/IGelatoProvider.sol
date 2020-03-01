@@ -24,7 +24,7 @@ interface IGelatoProvider {
     function provideAction(address _action) external;
     function unprovideAction(address _action) external;
 
-    function provideFunds() external payable;
+    function provideFunds(address _provider) external payable;
     function unprovideFunds(uint256 _withdrawAmount) external;
 
     function providerFunds(address _provider) external view returns (uint256);
