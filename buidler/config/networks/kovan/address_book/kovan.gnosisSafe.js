@@ -3,5 +3,5 @@ export const gnosisSafe = {
 };
 
 export const gnosisSafeProxies = {
-  luis: "0xEb816988fe48c6D39bDC4FF700b52B1Aa199E801"
+  luis: "0x7c3B61896bD3E7c909f73d74fEBaEa4945Ed1877"
 };

@@ -5,9 +5,9 @@ export default task(
   "gc-mint",
   `Sends tx to GelatoCore.mintExecutionClaim() on [--network] (default: ${defaultNetwork})`
 )
-  .addPositionalParam("provider", "The selected provider")
   .addPositionalParam("conditionname", "must exist inside buidler.config")
   .addPositionalParam("actionname", "must exist inside buidler.config")
+  .addPositionalParam("provider", "The selected provider")
   .addOptionalPositionalParam("conditionPayload", "abi.encoded bytes")
   .addOptionalPositionalParam("actionPayload", "abi.encoded bytes")
   .addOptionalParam("selectedexecutor", "address")
@@ -16,6 +16,11 @@ export default task(
     try {
       // To avoid mistakes default log to true
       taskArgs.log = true;
+
+      const selectedProvider = await run("bre-config", {
+        addressbookcategory: "provider",
+        addressbookentry: "default"
+      });
 
       // Handle executor
       const selectedexecutor = await run("handleExecutor", {
@@ -51,17 +56,6 @@ export default task(
         actionPayload = taskArgs.actionPayload;
       }
 
-      // MintingDepositPayable
-      const mintingDepositPayable = await run(
-        "gc-getmintingdepositpayable",
-        {
-          selectedexecutor,
-          conditionname: taskArgs.conditionname,
-          actionname: taskArgs.actionname,
-          log: taskArgs.log
-        }
-      );
-
       // GelatoCore write Instance
       const gelatoCoreContract = await run("instantiateContract", {
         contractname: "GelatoCore",
@@ -69,12 +63,10 @@ export default task(
       });
       // mintExecutionClaim TX (payable)
       const mintTx = await gelatoCoreContract.mintExecutionClaim(
-        selectedexecutor,
-        conditionAddress,
+        [selectedProvider, selectedexecutor],
+        [conditionAddress, actionAddress],
         conditionPayload,
-        actionAddress,
-        actionPayload,
-        { value: mintingDepositPayable }
+        actionPayload
       );
 
       if (taskArgs.log)

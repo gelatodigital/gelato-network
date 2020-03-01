@@ -23,6 +23,6 @@ export const deployments = {
 	// time
 	ConditionTimestampPassed: "0x10A46c633adfe5a6719f3DBd2c162676779fE70B",
 	// ==== Scripts ====
-	ScriptGnosisSafeEnableGelatoCore: "0xf53f625aDE4d53905081cC390845a5f9C2EC137a",
+	ScriptGnosisSafeEnableGelatoCore: "0x99D081a6c07043e9E78A231Ae2c41fa811AD856C",
 	ScriptGnosisSafeEnableGelatoCoreAndMint: "0x5993ff30b943dE4c3fDA59d88D87d1661412D101"
 };

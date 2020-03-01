@@ -26,7 +26,7 @@ export default task(
   .addOptionalParam(
     "to",
     "Supply with --setup: contract address for optional delegatecall.",
-    deployments.ScriptGnosisSafeEnableGelatoCoreAndMint
+    constants.AddressZero
   )
   .addOptionalParam(
     "data",
@@ -57,7 +57,7 @@ export default task(
   .addOptionalParam(
     "funding",
     "ETH value to be sent to newly created gelato user proxy",
-    utils.parseEther("0.25"),
+    utils.parseEther("0.01"),
     types.int
   )
   .addFlag("log", "Logs return values to stdout")
@@ -129,15 +129,22 @@ export default task(
           [condition, action],
           conditionPayload,
           actionPayload
-        ]
+        ],
+        log: true
       });
       // ====================
+
+      /*taskArgs.data = await run("abi-encode-withselector", {
+        contractname: "ScriptGnosisSafeEnableGelatoCore",
+        functionname: "enableGelatoCoreModule",
+        inputs: [gelatoCoreContract.address]
+      });*/
 
       if (taskArgs.setup) {
         const inputs = [
           taskArgs.owners,
           taskArgs.threshold,
-          taskArgs.to,
+          "0x5993ff30b943dE4c3fDA59d88D87d1661412D101",
           taskArgs.data,
           taskArgs.fallbackHandler,
           taskArgs.paymentToken,
@@ -157,7 +164,7 @@ export default task(
       const creationTx = await gelatoCoreContract.createGelatoUserProxy(
         taskArgs.mastercopy,
         taskArgs.initializer,
-        { value: taskArgs.funding }
+        { value: taskArgs.funding, gasLimit: 6000000 }
       );
 
       if (taskArgs.log)
@@ -173,11 +180,14 @@ export default task(
           blockHash,
           values: true
         });
-        const { user, gnosisSafeProxy } = parsedLog;
+        const { user, gelatoUserProxy, userProxyFunding } = parsedLog;
         console.log(
           `\n LogGelatoUserProxyCreation\
            \n User:            ${user}\
-           \n GnosisSafeProxy: ${gnosisSafeProxy}\n`
+           \n GnosisSafeProxy: ${gelatoUserProxy}\
+           \n Funding          ${utils.formatEther(
+             userProxyFunding.toString()
+           )} ETH`
         );
       }
 
