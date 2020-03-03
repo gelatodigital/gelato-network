@@ -8,7 +8,7 @@ export const deployments = {
 	ActionERC20Transfer: "0x213719cD7c69DCA764E336bEb8D735DA01FD6c83",
 	ActionERC20TransferFrom: "0x24b7b219E903d11489227c5Bed0718D90C03eBc2",
 	// ETHLONDON
-	ActionRebalancePortfolio: "0x1f4Ab3778e3FeB06A3D4702B31CE56a561080986",
+	ActionRebalancePortfolio: "0x52DfF1E40D080f65aC7A7ed06D00EC73A4182E47",
 	// kyber
 	ActionKyberTradeKovan: "0xF829B506c378AaD11dB7Efe8d626cc7d0e015CBA",
 	// ==== Gelato Core ===
