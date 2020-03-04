@@ -13,26 +13,18 @@ export default task(
   )
   .setAction(async ({ provider, log }) => {
     try {
-      if (!provider) {
-        provider = await run("bre-config", {
-          addressbookcategory: "provider",
-          addressbookentry: "default"
-        });
-      }
-
+      provider = await run("handleProvider", { provider });
       const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
         write: true
       });
-
       const providerFunds = await gelatoCore.providerFunds(provider);
       const providerBalanceETH = utils.formatEther(providerFunds);
-
       if (log) {
         console.log(
           `\n Provider:        ${provider}\
            \n ProviderBalance: ${providerBalanceETH} ETH\
-           \n Network:        ${network.name}\n`
+           \n Network:         ${network.name}\n`
         );
       }
       return providerFunds;

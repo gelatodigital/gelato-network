@@ -13,7 +13,7 @@ export default task(
   .addFlag("log", "Logs return values to stdout")
   .setAction(async ({ price, log }) => {
     try {
-      const [signer1, signer2, ...rest] = await ethers.signers();
+      const { 1: signer2 } = await ethers.signers();
       const gelatoCoreAdddress = await run("bre-config", {
         deployments: true,
         contractname: "GelatoCore"

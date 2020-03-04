@@ -22,4 +22,4 @@ import "./minting/collection.tasks.minting";
 //import "./execution/task.canExecute";
 
 // === Internal Tasks ===
-import "./internal_helpers/collection.iTasks.gelato-core";
+import "./internal/collection.iTasks.gelato-core";

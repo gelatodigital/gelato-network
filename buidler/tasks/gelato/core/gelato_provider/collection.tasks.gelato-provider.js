@@ -1,4 +1,5 @@
 // GelatoProvider
+import "./task.registerProvider";
 import "./task.providerFunds";
 import "./task.provideFunds";
 import "./task.unprovideFunds";
