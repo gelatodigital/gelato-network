@@ -41,7 +41,8 @@ contract ScriptGnosisSafeEnableGelatoCoreAndMint {
             _selectedProviderAndExecutor,
             _conditionAndAction,
             _conditionPayload,
-            _actionPayload
+            _actionPayload,
+            0  // executionClaimExpiryDate defaults to executor's max allowance
         )  {
         } catch Error(string memory error) {
             emit LogFailure(error);

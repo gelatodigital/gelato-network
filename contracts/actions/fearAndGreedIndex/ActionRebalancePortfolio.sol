@@ -151,7 +151,8 @@ contract ActionRebalancePortfolio is GelatoActionsStandard {
             [GAS_PROVIDER, EXECUTOR],
             [CONDITION_FEAR_GREED_INDEX_ADDRESS, address(this)],
             conditionPayload,
-            abi.encodeWithSelector(this.action.selector)
+            abi.encodeWithSelector(this.action.selector),
+            0  // executionClaimExpiryDate defaults to executor's max allowance
         ) {
             // Take 1 % Fee for gas provider
             try _exchangeToken.transfer(

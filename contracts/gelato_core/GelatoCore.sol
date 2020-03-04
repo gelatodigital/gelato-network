@@ -34,7 +34,8 @@ contract GelatoCore is
         address[2] calldata _selectedProviderAndExecutor,
         address[2] calldata _conditionAndAction,
         bytes calldata _conditionPayload,
-        bytes calldata _actionPayload
+        bytes calldata _actionPayload,
+        uint256 _executionClaimExpiryDate
     )
         external
         payable
@@ -46,7 +47,8 @@ contract GelatoCore is
             _selectedProviderAndExecutor,
             _conditionAndAction,
             _conditionPayload,
-            _actionPayload
+            _actionPayload,
+            _executionClaimExpiryDate
         );
     }
 
@@ -89,9 +91,12 @@ contract GelatoCore is
         uint256 executionClaimId = currentExecutionClaimId.current();
         userProxyByExecutionClaimId[executionClaimId] = userProxy;
 
-        uint256 executionClaimExpiryDate = now.add(
-            executorClaimLifespan[_selectedProviderAndExecutor[1]]
-        );
+        // ExecutionClaim Expiry Date defaults to executor's maximum allowance
+        if (_executionClaimExpiryDate == 0) {
+            _executionClaimExpiryDate = now.add(
+                executorClaimLifespan[_selectedProviderAndExecutor[1]]
+            );
+        }
 
         // ExecutionClaim Hashing
         executionClaimHash[executionClaimId] = _computeExecutionClaimHash(
@@ -101,7 +106,7 @@ contract GelatoCore is
             _conditionAndAction,
             _conditionPayload,
             _actionPayload,
-            executionClaimExpiryDate
+            _executionClaimExpiryDate
         );
 
         emit LogExecutionClaimMinted(
@@ -111,7 +116,7 @@ contract GelatoCore is
             _conditionAndAction,
             _conditionPayload,
             _actionPayload,
-            executionClaimExpiryDate
+            _executionClaimExpiryDate
         );
     }
 
@@ -191,9 +196,10 @@ contract GelatoCore is
         override
     {
         uint256 startGas = gasleft();
+        // CHECKS
         require(
             tx.gasprice == gelatoGasPrice,
-            "GelatoGasPriceOracle.txGasPriceCheck"
+            "GelatoCore.execute: tx.gasprice must be gelatoGasPrice"
         );
         require(
             startGas < MAXGAS,
@@ -204,7 +210,7 @@ contract GelatoCore is
             "GelatoCore.execute: insufficient gas sent"
         );
 
-        // CHECK canExecute()
+        // canExecute()
         {
             string memory canExecuteResult  = canExecute(
                 _selectedProviderAndExecutor,
@@ -261,6 +267,7 @@ contract GelatoCore is
                     _userProxy,
                     _conditionAndAction
                 );
+                // Executor is REWARDED for SUCCESSFUL execution
                 _executorPayout(
                     startGas,
                     ExecutorPayout.Reward,
@@ -287,6 +294,7 @@ contract GelatoCore is
             executionFailureReason = "UndefinedGnosisSafeProxyError";
         }
 
+        // Executor is REFUNDED for FAILED attempt
         _executorPayout(startGas, ExecutorPayout.Refund, _selectedProviderAndExecutor[0]);
 
         // Failure
@@ -318,7 +326,8 @@ contract GelatoCore is
             );
             executorBalance[msg.sender] = executorBalance[msg.sender] + SafeMath.div(
                 estExecutionCost.mul(103),
-                100
+                100,
+                "GelatoCore._executorPayout: division error"
             );
         } else {
             // Provider refunds cost to executor
