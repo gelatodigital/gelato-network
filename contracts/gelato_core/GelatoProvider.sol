@@ -25,13 +25,13 @@ abstract contract GelatoProvider is IGelatoProvider {
         payable
         override
     {
-        for (uint8 i = 0; i++; i < _conditions.length) provideCondition(_conditions[i]);
-        for (uint8 i = 0; i++; i < _actions.length) provideAction(_actions[i]);
-        provideFunds{ value: msg.value }(msg.sender);
+        for (uint8 i = 0; i < _conditions.length; i++) provideCondition(_conditions[i]);
+        for (uint8 i = 0; i < _actions.length; i++) provideAction(_actions[i]);
+        provideFunds(msg.sender);
     }
 
     // Provide Conditions
-    function provideCondition(address _condition) external override {
+    function provideCondition(address _condition) public override {
         require(
             !isProvidedCondition[msg.sender][_condition],
             "ProviderWhitelistModule.unprovideCondition: already provided"
@@ -50,7 +50,7 @@ abstract contract GelatoProvider is IGelatoProvider {
     }
 
     // Provide Actions
-    function provideAction(address _action) external override {
+    function provideAction(address _action) public override {
         require(
             !isProvidedAction[msg.sender][_action],
             "ProviderWhitelistModule.provideAction: already provided"

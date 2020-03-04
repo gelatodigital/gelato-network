@@ -1,7 +1,7 @@
 import { task } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../../buidler.config";
 
-const date = Date.now();
+const date = new Date(Date.now());
 // Default to 3 months from now
 const expirationDateDefault = new Date(
   date.getFullYear(),
