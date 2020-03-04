@@ -40,15 +40,14 @@ contract ActionMultiMintForConditionTimestampPassed is GelatoActionsStandard {
                 ConditionTimestampPassed.reached.selector,
                 timestamp
             );
-            address[] memory conditionAndAction = new address[](2);
-            conditionAndAction[0] = _conditionTimestampPassed;
-            conditionAndAction[1] = _action;
+            address[2] memory conditionAndAction = [_conditionTimestampPassed, _action];
 
             IGelatoCore(_gelatoCore).mintExecutionClaim(
                 _selectedProviderAndExecutor,
                 conditionAndAction,
                 conditionPayload,
-                _actionPayload
+                _actionPayload,
+                0  // defaults to executor's maximum executionClaimLifespan
             );
         }
     }
