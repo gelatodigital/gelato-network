@@ -20,14 +20,14 @@ contract ActionRebalancePortfolio is GelatoActionsStandard {
     }
     uint256 public constant override actionGas = 700000;
 
+    uint256 public balance;
+
     // !!!!!!!!! Kovan !!!!!!
     address public constant DAI = 0xC4375B7De8af5a38a93548eb8453a498222C4fF2;
     address public constant CONDITION_FEAR_GREED_INDEX_ADDRESS
         = 0x01697631e006D76FcD22EEe0aAA7b3b4B42b6819;
-    address public constant GAS_PROVIDER = 0x99E69499973484a96639f4Fb17893BC96000b3b8;
-    address public constant EXECUTOR = 0x99E69499973484a96639f4Fb17893BC96000b3b8;
 
-    function action() external virtual returns(uint256) {
+    function action(address _executor, address _gasProvider) external virtual returns(uint256) {
         IERC20 exchangeToken = IERC20(DAI);
 
         IFearGreedIndex fearGreedIndexContract = IFearGreedIndex(
@@ -35,8 +35,8 @@ contract ActionRebalancePortfolio is GelatoActionsStandard {
         );
 
         // 1. Fetch Current fearGreedIndex
-        uint256 fearGreedIndexNumerator = fearGreedIndexContract.getConditionValue();
-        uint256 inverseFearGreedIndexNumerator = uint256(100).sub(fearGreedIndexNumerator);
+        uint256 newDaiNum = fearGreedIndexContract.getConditionValue();
+        uint256 newDaiDen = 100;
 
         // 2. Calculate ETH's DAI Value
         IUniswapExchange uniswapExchange = getUniswapExchange(exchangeToken);
@@ -45,94 +45,97 @@ contract ActionRebalancePortfolio is GelatoActionsStandard {
             address(this).balance
         );
 
-        uint256 scalingFactor = uint256(100000);
-
         // 3. Calculate total portfolio value in DAI
         uint256 daiBalance = exchangeToken.balanceOf(address(this));
         uint256 totalDaiBalance = daiBalance.add(ethAmountInDai);
 
         // 4. Calculate weights without underflowing using scaling factor
-        uint256 currentDaiWeight = uint256(scalingFactor).mul(daiBalance).div(
-            totalDaiBalance
-        );
-        uint256 currentEthWeight = uint256(scalingFactor).sub(currentDaiWeight);
-
-        // 5. Calculate the adjustment metrics
         // @DEV If no change is necessary, skip
-        if (
-            scalingFactor.mul(fearGreedIndexNumerator).div(100) >= currentDaiWeight
-            && currentEthWeight >= scalingFactor.mul(inverseFearGreedIndexNumerator).div(
-                100
-            )
-        ) {
-            uint256 newDaiToAcquire
-                = totalDaiBalance.mul(fearGreedIndexNumerator).div(100).sub(daiBalance);
+        // Find out if new DAI weight is greater than old DAI weight, and if so, sell ETH, otherwise sell DAI
+        // IF e.g. 100 * 80 / 100 > 100 * 10000000 / 20000000 => Sell ETH for DAI
+        uint256 newDaiAmountWeighted = totalDaiBalance.mul(newDaiNum).div(newDaiDen, "ActionRebalancePortfolio._action: newDaiWeight underflow");
 
-            try uniswapExchange.ethToTokenSwapOutput{ value: address(this).balance }(
-                newDaiToAcquire,
+        uint256 oldDaiAmountWeighted = totalDaiBalance.mul(daiBalance).div(totalDaiBalance, "ActionRebalancePortfolio._action: newDaiWeight underflow");
+
+        // What happens if DAI Balance === 0? => Should be fine
+
+        if (newDaiAmountWeighted == oldDaiAmountWeighted) {
+            // skip rebalancing, portfolio has correct weights
+        }
+        // Portfolio needs to acquire more DAI
+        else if (
+            newDaiAmountWeighted > oldDaiAmountWeighted
+        ) {
+            uint256 howMuchEthToSellDaiDenominated =  ethAmountInDai.sub(newDaiAmountWeighted, "ActionRebalancePortfolio._action: howMuchEthToSellEthDenominated underflow");
+
+            uint256 howMuchEthToSellEthDenominated = address(this).balance.mul(howMuchEthToSellDaiDenominated).div(ethAmountInDai, "ActionRebalancePortfolio._action: howMuchEthToSellEthDenominated underflow");
+
+            try uniswapExchange.ethToTokenSwapInput{ value: howMuchEthToSellEthDenominated }(
+                howMuchEthToSellDaiDenominated,
                 now
             )
                 returns(uint256 amountOfDaiAcquired)
             {
-                mintChainedClaim(fearGreedIndexNumerator, exchangeToken);
-                emit LogTwoWay(
-                    address(this),  // origin
-                    address(0),
-                    address(this).balance,
-                    DAI,  // destination
-                    DAI,
-                    amountOfDaiAcquired,
-                    address(this)  // receiver
-                );
+                // mintChainedClaim(newDaiNum, exchangeToken, _executor);
+                // emit LogTwoWay(
+                //     address(this),  // origin
+                //     address(0),
+                //     address(this).balance,
+                //     DAI,  // destination
+                //     DAI,
+                //     amountOfDaiAcquired,
+                //     address(this)  // receiver
+                // );
                 return amountOfDaiAcquired;
             } catch {
                 revert("Error ethToTokenSwapOutput");
             }
-        } else if (
-            scalingFactor.mul(fearGreedIndexNumerator).div(100)
-            <= currentDaiWeight && currentEthWeight
-            <= scalingFactor.mul(inverseFearGreedIndexNumerator).div(100)
+        }
+        // Portfolio needs to acquire more ETH
+        else if (
+            newDaiAmountWeighted < oldDaiAmountWeighted
         ) {
-            uint256 newEthToAcquire = totalDaiBalance.mul(inverseFearGreedIndexNumerator).div(100).sub(ethAmountInDai);
+            // Calculate how much DAI needs to be sol
+            uint256 howMuchDaiToSell = daiBalance.sub(newDaiAmountWeighted, "ActionRebalancePortfolio._action: howMuchEthToSellEthDenominated underflow");
 
-            try exchangeToken.approve(address(uniswapExchange), daiBalance) {
+
+            try exchangeToken.approve(address(uniswapExchange), howMuchDaiToSell) {
             } catch { revert("Approval failed"); }
 
-            try uniswapExchange.tokenToEthSwapOutput(newEthToAcquire, daiBalance, now)
+            // min ETH return can be 1, as we fetch the price atomically anyway.
+            try uniswapExchange.tokenToEthSwapInput(howMuchDaiToSell, 1, now)
                 returns(uint256 amountOfEthAcquired)
             {
-                mintChainedClaim(fearGreedIndexNumerator, exchangeToken);
+            //     mintChainedClaim(newDaiNum, exchangeToken, _executor);
 
-                emit LogTwoWay(
-                address(this),  // origin
-                address(0),
-                daiBalance,
-                DAI,  // destination
-                DAI,
-                amountOfEthAcquired,
-                address(this)  // receiver
-            );
+            //     emit LogTwoWay(
+            //     address(this),  // origin
+            //     address(0),
+            //     daiBalance,
+            //     DAI,  // destination
+            //     DAI,
+            //     amountOfEthAcquired,
+            //     address(this)  // receiver
+            // );
                 return amountOfEthAcquired;
             } catch {
                 revert("Error ethToTokenSwapOutput");
             }
         } else {
             // Do nothing
-            mintChainedClaim(fearGreedIndexNumerator, exchangeToken);
-            emit LogTwoWay(
-                address(this),  // origin
-                address(0),
-                0,
-                DAI,  // destination
-                DAI,
-                0,
-                address(this)  // receiver
-            );
+            // mintChainedClaim(newDaiNum, exchangeToken, _executor);
+            // emit LogTwoWay(
+            //     address(this),  // origin
+            //     address(0),
+            //     0,
+            //     DAI,  // destination
+            //     DAI,
+            //     0,
+            //     address(this)  // receiver
+            // );
             return 0;
         }
-
     }
-
 
     /*
     address[2] calldata _selectedProviderAndExecutor,
@@ -140,23 +143,23 @@ contract ActionRebalancePortfolio is GelatoActionsStandard {
     bytes calldata _conditionPayload,
     bytes calldata _actionPayload
     */
-    function mintChainedClaim(uint256 _fearGreedIndexNumerator, IERC20 _exchangeToken)
+    function mintChainedClaim(uint256 _newDaiNum, IERC20 _exchangeToken, address _executor, address _gasProvider)
         internal
     {
         bytes memory conditionPayload = abi.encodeWithSelector(
             bytes4(keccak256("reached(uint256)")),
-            _fearGreedIndexNumerator
+            _newDaiNum
         );
         try getGelatoCore().mintExecutionClaim(
-            [GAS_PROVIDER, EXECUTOR],
+            [_gasProvider, _executor],
             [CONDITION_FEAR_GREED_INDEX_ADDRESS, address(this)],
             conditionPayload,
-            abi.encodeWithSelector(this.action.selector),
+            abi.encodeWithSelector(this.action.selector, _executor, _gasProvider),
             0  // executionClaimExpiryDate defaults to executor's max allowance
         ) {
             // Take 1 % Fee for gas provider
             try _exchangeToken.transfer(
-                GAS_PROVIDER,
+                _gasProvider,
                 _exchangeToken.balanceOf(address(this)).div(100)
             ) {
             } catch {
@@ -185,6 +188,14 @@ contract ActionRebalancePortfolio is GelatoActionsStandard {
             0xD3E51Ef092B2845f10401a0159B2B96e8B6c3D30
         );
         uniswapFactory.getExchange(_token);
+    }
+
+
+    function inputEth()
+        external
+        payable
+    {
+        balance += msg.value;
     }
 
 }
