@@ -6,15 +6,15 @@ export default task(
   "gc-mint",
   `Sends tx to GelatoCore.mintExecutionClaim() on [--network] (default: ${defaultNetwork})`
 )
+  .addPositionalParam(
+    "actionname",
+    "This param MUST be supplied. Must exist inside buidler.config"
+  )
   .addOptionalPositionalParam(
     "conditionname",
     "Must exist inside buidler.config. Defaults to address 0 for self-conditional actions",
     constants.AddressZero,
     types.string
-  )
-  .addOptionalPositionalParam(
-    "actionname",
-    "This param MUST be supplied. Must exist inside buidler.config"
   )
   .addOptionalPositionalParam(
     "selectedprovider",
@@ -41,10 +41,17 @@ export default task(
   .addFlag("log", "Logs return values to stdout")
   .setAction(async taskArgs => {
     try {
-      if (!taskArgs.actionname) throw new Error("Must supply <actionname>");
-
       // To avoid mistakes default log to true
       taskArgs.log = true;
+
+      // Command Line Argument Checks
+      if (
+        taskArgs.conditionname != constants.AddressZero &&
+        !taskArgs.conditionname.startsWith("Condition")
+      )
+        throw new Error(`Invalid condition: ${taskArgs.conditionname}`);
+      if (!taskArgs.actionname.startsWith("Action"))
+        throw new Error(`Invalid action: ${taskArgs.actionname}`);
 
       // Selected Provider and Executor
       const selectedProvider = await run("handleProvider", {

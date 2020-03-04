@@ -6,13 +6,13 @@ export default task(
   "gc-createProxyAndMint",
   `Sends tx to GelatoCore.createProxyAndMint() on [--network] (default: ${defaultNetwork})`
 )
+  .addPositionalParam("actionname", "This param MUST be supplied.")
   .addOptionalPositionalParam(
     "conditionname",
     "defaults to address 0 for self-conditional actions",
     constants.AddressZero,
     types.string
   )
-  .addOptionalPositionalParam("actionname", "This param MUST be supplied.")
   .addOptionalPositionalParam(
     "selectedprovider",
     "defaults to network addressbook default"
@@ -59,7 +59,7 @@ export default task(
   .addOptionalParam(
     "data",
     "Supply with --setup: payload for optional delegate call",
-    "0x0"
+    constants.HashZero
   )
   .addOptionalParam(
     "defaultdata",
@@ -96,7 +96,15 @@ export default task(
   .setAction(async taskArgs => {
     try {
       // Command Line Argument Checks
-      if (!taskArgs.actionname) throw new Error("Must supply <actionname>");
+      // Condition and Action for minting
+      if (
+        taskArgs.conditionname != constants.AddressZero &&
+        !taskArgs.conditionname.startsWith("Condition")
+      )
+        throw new Error(`Invalid condition: ${taskArgs.conditionname}`);
+      if (!taskArgs.actionname.startsWith("Action"))
+        throw new Error(`Invalid action: ${taskArgs.actionname}`);
+      // Gnosis Safe creation
       if (!taskArgs.initializer && !taskArgs.setup)
         throw new Error("Must provide initializer payload or --setup args");
       else if (taskArgs.initializer && taskArgs.setup)
