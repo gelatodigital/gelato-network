@@ -12,10 +12,7 @@ export default task(
   )
   .addPositionalParam("contractname", "The contract whose abi has the function")
   .addPositionalParam("functionname", "The function we want to call")
-  .addOptionalVariadicPositionalParam(
-    "inputs",
-    "The parameters for the function call"
-  )
+  .addVariadicPositionalParam("inputs", "The parameters for the function call")
   .addOptionalParam(
     "to",
     "The address which to call/delegatecall. Defaults to <gnosissafeproxyaddress>"
@@ -69,51 +66,10 @@ export default task(
     try {
       if (!taskArgs.to) taskArgs.to = taskArgs.gnosissafeproxyaddress;
 
-      // ============= ETH LONDON
-      const selectedProvider = await run("bre-config", {
-        addressbookcategory: "provider",
-        addressbookentry: "default"
-      });
-
-      // Handle executor
-      const selectedexecutor = await run("handleExecutor", {
-        selectedexecutor: taskArgs.selectedexecutor
-      });
-
-      // Handle condition action addresses
-      const conditionAddress = await run("bre-config", {
-        deployments: true,
-        contractname: "ConditionFearGreedIndex"
-      });
-      const actionAddress = await run("bre-config", {
-        deployments: true,
-        contractname: "ActionRebalancePortfolio"
-      });
-
-      // Handle condition payloadsWithSelector
-      const conditionPayload = await run(
-        `gc-mint:defaultpayload:ConditionFearGreedIndex`
-      );
-
-      // Handle action payloadsWithSelector
-      const actionPayload = await run(
-        `gc-mint:defaultpayload:ActionRebalancePortfolio`
-      );
-
-      const inputs = [
-        [selectedProvider, selectedexecutor],
-        [conditionAddress, actionAddress],
-        conditionPayload,
-        actionPayload
-      ];
-
-      console.log(inputs);
-      await selectedProvider(100000);
-
       const data = await run("abi-encode-withselector", {
         contractname: taskArgs.contractname,
         functionname: taskArgs.functionname,
-        inputs
+        inputs: taskArgs.inputs
       });
 
       const signer = await run("ethers", { signer: true, address: true });
@@ -152,7 +108,7 @@ export default task(
         taskArgs.gastoken,
         taskArgs.refundreceiver,
         taskArgs.signatures,
-        { gasLimit: 3000000 }
+        { gasLimit: 200000 }
       );
 
       if (taskArgs.log)
