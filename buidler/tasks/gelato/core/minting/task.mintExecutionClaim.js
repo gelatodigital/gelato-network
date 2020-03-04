@@ -50,10 +50,6 @@ export default task(
         deployments: true,
         contractname: taskArgs.actionname
       });
-      const actionPayload = await run("handlePayload", {
-        contractname: taskArgs.contractname,
-        payload: taskArgs.payload
-      });
       const conditionPayload = await run("handlePayload", {
         contractname: taskArgs.conditionname,
         payload: taskArgs.conditionpayload
