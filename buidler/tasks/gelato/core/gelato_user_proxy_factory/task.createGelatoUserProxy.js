@@ -60,7 +60,7 @@ export default task(
   .addOptionalParam(
     "funding",
     "ETH value to be sent to newly created gelato user proxy",
-    utils.parseEther("0.01"),
+    "0",
     types.int
   )
   .addFlag("log", "Logs return values to stdout")
@@ -82,8 +82,11 @@ export default task(
         throw new Error("No taskArgs.mastercopy for proxy defined");
 
       if (taskArgs.setup && !taskArgs.owners) {
-        const signer = await run("ethers", { signer: true, address: true });
-        taskArgs.owners = [signer];
+        const signerAddress = await run("ethers", {
+          signer: true,
+          address: true
+        });
+        taskArgs.owners = [signerAddress];
         if (!Array.isArray(taskArgs.owners))
           throw new Error("Failed to convert taskArgs.owners into Array");
       }
