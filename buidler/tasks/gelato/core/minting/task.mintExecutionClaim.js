@@ -7,52 +7,75 @@ export default task(
 )
   .addPositionalParam("conditionname", "must exist inside buidler.config")
   .addPositionalParam("actionname", "must exist inside buidler.config")
+  .addOptionalPositionalParam(
+    "selectedprovider",
+    "defaults to network addressbook default"
+  )
+  .addOptionalPositionalParam(
+    "selectedexecutor",
+    "defaults to network addressbook default"
+  )
+  .addOptionalPositionalParam(
+    "conditionpayload",
+    "If not provided, must have a default returned from handlePayload()"
+  )
+  .addOptionalPositionalParam(
+    "actionpayload",
+    "If not provided, must have a default returned from handlePayload()"
+  )
+  .addOptionalPositionalParam(
+    "executionclaimexpirydate",
+    "defaults to 0 for selectedexecutor's maximum",
+    0,
+    types.int
+  )
   .addFlag("log", "Logs return values to stdout")
   .setAction(async taskArgs => {
     try {
       // To avoid mistakes default log to true
       taskArgs.log = true;
 
-      // ======== ETH LONDON
-      const selectedProvider = await run("bre-config", {
-        addressbookcategory: "provider",
-        addressbookentry: "default"
+      // Sanitize commandline input
+      const selectedProvider = await run("handleProvider", {
+        selectedprovider: taskArgs.selectedprovider
       });
-      const selectedExecutor = await run("bre-config", {
-        addressbookcategory: "executor",
-        addressbookentry: "default"
+      const selectedExecutor = await run("handleExecutor", {
+        selectedprovider: taskArgs.selectedexecutor
       });
-      const { ConditionFearGreedIndex: condition } = await run("bre-config", {
-        deployments:true
+      const conditionAddress = await run("bre-config", {
+        deployments: true,
+        contractname: taskArgs.conditionname
       });
-      const { ActionRebalancePortfolio: action } = await run("bre-config", {
-        deployments:true
+      const actionAddress = await run("bre-config", {
+        deployments: true,
+        contractname: taskArgs.actionname
       });
-
-      const conditionPayload = await run("abi-encode-withselector", {
-        contractname: "ConditionFearGreedIndex",
-        functionname: "reached",
-        inputs: [50]
+      const actionPayload = await run("handlePayload", {
+        contractname: taskArgs.contractname,
+        payload: taskArgs.payload
       });
-
-      const actionPayload = await run("abi-encode-withselector", {
-        contractname: "ActionRebalancePortfolio",
-        functionname: "action",
-        inputs: []
+      const conditionPayload = await run("handlePayload", {
+        contractname: taskArgs.conditionname,
+        payload: taskArgs.conditionpayload
       });
-      // ====================
+      const actionPayload = await run("handlePayload", {
+        contractname: taskArgs.actionname,
+        payload: taskArgs.actionpayload
+      });
 
       // GelatoCore write Instance
       const gelatoCoreContract = await run("instantiateContract", {
         contractname: "GelatoCore",
         write: true
       });
-      // mintExecutionClaim TX (payable)
+
+      // mintExecutionClaim TX
       const mintTx = await gelatoCoreContract.mintExecutionClaim(
         [selectedProvider, selectedExecutor],
-        [condition, action],
+        [conditionAddress, actionAddress],
         conditionPayload,
         actionPayload,
+        taskArgs.executionclaimexpirydate
       );
 
       if (taskArgs.log)
