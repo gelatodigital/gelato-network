@@ -24,7 +24,8 @@ contract ScriptGnosisSafeEnableGelatoCoreAndMint {
         address[2] calldata _selectedProviderAndExecutor,
         address[2] calldata _conditionAndAction,
         bytes calldata _conditionPayload,
-        bytes calldata _actionPayload
+        bytes calldata _actionPayload,
+        uint256 _executionClaimExpiryDate
     )
         external
     {
@@ -42,7 +43,7 @@ contract ScriptGnosisSafeEnableGelatoCoreAndMint {
             _conditionAndAction,
             _conditionPayload,
             _actionPayload,
-            0  // executionClaimExpiryDate defaults to executor's max allowance
+            _executionClaimExpiryDate 
         )  {
         } catch Error(string memory error) {
             emit LogFailure(error);

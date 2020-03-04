@@ -1,7 +1,6 @@
 import { task, types } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../../buidler.config";
 import { constants, utils } from "ethers";
-import { deployments } from "../../../../config/networks/kovan/kovan.deployments";
 
 export default task(
   "gc-creategelatouserproxy",
@@ -32,6 +31,10 @@ export default task(
     "data",
     "Supply with --setup: payload for optional delegate call",
     "0x0"
+  )
+  .addOptionalParam(
+    "defaultdata",
+    "The name of the defaultpayload to retrieve for the 'data' field"
   )
   .addOptionalParam(
     "fallbackHandler",
@@ -85,66 +88,16 @@ export default task(
           throw new Error("Failed to convert taskArgs.owners into Array");
       }
 
+      if (!taskArgs.data && taskArgs.defaultdata)
+        taskArgs.data = await run(`gsp:scripts:defaultpayload:${defaultdata}`);
+
       if (taskArgs.log) console.log("\nTaskArgs:\n", taskArgs, "\n");
-
-      const gelatoCore = await run("instantiateContract", {
-        contractname: "GelatoCore",
-        write: true
-      });
-
-      // ======== ETH LONDON
-      const selectedProvider = await run("bre-config", {
-        addressbookcategory: "provider",
-        addressbookentry: "default"
-      });
-      const selectedExecutor = await run("bre-config", {
-        addressbookcategory: "executor",
-        addressbookentry: "default"
-      });
-      const { ConditionFearGreedIndex: condition } = await run("bre-config", {
-        deployments
-      });
-      const { ActionRebalancePortfolio: action } = await run("bre-config", {
-        deployments
-      });
-
-      const conditionPayload = await run("abi-encode-withselector", {
-        contractname: "ConditionFearGreedIndex",
-        functionname: "reached",
-        inputs: [50]
-      });
-
-      const actionPayload = await run("abi-encode-withselector", {
-        contractname: "ActionRebalancePortfolio",
-        functionname: "action",
-        inputs: []
-      });
-
-      taskArgs.data = await run("abi-encode-withselector", {
-        contractname: "ScriptGnosisSafeEnableGelatoCoreAndMint",
-        functionname: "enableModuleAndMint",
-        inputs: [
-          gelatoCore.address,
-          [selectedProvider, selectedExecutor],
-          [condition, action],
-          conditionPayload,
-          actionPayload
-        ],
-        log: true
-      });
-      // ====================
-
-      /*taskArgs.data = await run("abi-encode-withselector", {
-        contractname: "ScriptGnosisSafeEnableGelatoCore",
-        functionname: "enableGelatoCoreModule",
-        inputs: [gelatoCore.address]
-      });*/
 
       if (taskArgs.setup) {
         const inputs = [
           taskArgs.owners,
           taskArgs.threshold,
-          "0x5993ff30b943dE4c3fDA59d88D87d1661412D101",
+          taskArgs.to,
           taskArgs.data,
           taskArgs.fallbackHandler,
           taskArgs.paymentToken,
@@ -161,10 +114,15 @@ export default task(
       if (taskArgs.log)
         console.log(`\nInitializer payload:\n${taskArgs.initializer}\n`);
 
+      const gelatoCore = await run("instantiateContract", {
+        contractname: "GelatoCore",
+        write: true
+      });
+
       const creationTx = await gelatoCore.createGelatoUserProxy(
         taskArgs.mastercopy,
         taskArgs.initializer,
-        { value: taskArgs.funding, gasLimit: 6000000 }
+        { value: taskArgs.funding, gasLimit: 3000000 }
       );
 
       if (taskArgs.log)

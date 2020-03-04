@@ -7,3 +7,6 @@ import "./owner_manager/task.getOwners";
 
 // === Module Manager ===
 import "./module_manager/task.getModules";
+
+// === Internal ===
+import "./internal/collection.iTasks.gnosis-safe-proxy";

@@ -16,10 +16,7 @@ export default task(
         contractname: "GelatoCore",
         read: true
       });
-
-      const user = await gelatoCore.userByGelatoProxy(
-        gelatoproxyaddress
-      );
+      const user = await gelatoCore.userByGelatoProxy(gelatoproxyaddress);
       if (log) {
         console.log(
           `\n GelatoUserProxy:     ${gelatoproxyaddress}\

@@ -13,22 +13,18 @@ export default task(
   .setAction(async ({ user, log }) => {
     try {
       if (!user) user = await run("ethers", { signer: true, address: true });
-
       const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
         read: true
       });
-
-      const gnosisSafeProxyAddress = await gelatoCore.gelatoProxyByUser(
-        user
-      );
+      const gelatoUserProxyAddress = await gelatoCore.gelatoProxyByUser(user);
       if (log) {
         console.log(
           `\n User:            ${user}\
-           \n GelatoUserProxy: ${gnosisSafeProxyAddress}\n`
+           \n GelatoUserProxy: ${gelatoUserProxyAddress}\n`
         );
       }
-      return gnosisSafeProxyAddress;
+      return gelatoUserProxyAddress;
     } catch (error) {
       console.error(error);
       process.exit(1);
