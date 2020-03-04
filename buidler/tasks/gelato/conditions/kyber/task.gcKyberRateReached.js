@@ -3,7 +3,7 @@ import { defaultNetwork } from "../../../../../buidler.config";
 import { utils } from "ethers";
 
 export default task(
-  "gc-kyberrate-reached",
+  "g-ckyberrate-reached",
   `Calls <trigername>.reached(<conditionPayload>) on [--network] (default: ${defaultNetwork})`
 )
   .addFlag("log", "Logs return values to stdout")

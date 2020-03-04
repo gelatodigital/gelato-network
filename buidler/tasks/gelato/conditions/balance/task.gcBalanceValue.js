@@ -3,8 +3,8 @@ import { defaultNetwork } from "../../../../../buidler.config";
 import { utils } from "ethers";
 
 export default task(
-  "gc-balance-value",
-  `Calls <trigername>.value(<conditionPayload>) on [--network] (default: ${defaultNetwork})`
+  "g-cbalance-value",
+  `Calls <condition>.value(<conditionPayload>) on [--network] (default: ${defaultNetwork})`
 )
   .addFlag("log", "Logs return values to stdout")
   .setAction(async ({ log }) => {
