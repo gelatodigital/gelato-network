@@ -15,8 +15,8 @@ abstract contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
     mapping(address => address) public override gelatoProxyByUser;
 
     // create
-    function createGelatoUserProxy(address _mastercopy, bytes calldata _initializer)
-        external
+    function createGelatoUserProxy(address _mastercopy, bytes memory _initializer)
+        public
         payable
         override
         returns(address userProxy)

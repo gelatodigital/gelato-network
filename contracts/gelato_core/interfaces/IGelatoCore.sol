@@ -62,6 +62,15 @@ interface IGelatoCore {
         bool executionClaimExpired
     );
 
+    function createProxyAndMint(
+        address _mastercopy,
+        bytes calldata _initializer,
+        address[2] calldata _selectedProviderAndExecutor,
+        address[2] calldata _conditionAndAction,
+        bytes calldata _conditionPayload,
+        bytes calldata _actionPayload
+    ) external payable returns (address); // address userProxy
+
     function mintExecutionClaim(
         address[2] calldata _selectedProviderAndExecutor,
         address[2] calldata _conditionAndAction,

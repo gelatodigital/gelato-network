@@ -26,8 +26,8 @@ contract GelatoCore is
     mapping(uint256 => bytes32) public override executionClaimHash;
     uint256 public constant override MAXGAS = 6000000;
 
-    // ========= ETH LONDON ENTRY API
-    function init(
+    // ========= Proxy Creation and Minting in 1 tx
+    function createProxyAndMint(
         address _mastercopy,
         bytes calldata _initializer,
         address[2] calldata _selectedProviderAndExecutor,
@@ -37,22 +37,15 @@ contract GelatoCore is
     )
         external
         payable
-        returns(address userProxy)
+        returns(address)  // address userProxy
     {
-        IGnosisSafeProxyFactory factory = IGnosisSafeProxyFactory(
-            0x76E2cFc1F5Fa8F6a5b3fC4c8F4788F0116861F9B
-        );
-        userProxy = address(factory.createProxy(_mastercopy, _initializer));
-        if (msg.value > 0) payable(userProxy).sendValue(msg.value);
-        userByGelatoProxy[address(userProxy)] = msg.sender;
-        gelatoProxyByUser[msg.sender] = userProxy;
+        createGelatoUserProxy(_mastercopy, _initializer);
         mintExecutionClaim(
             _selectedProviderAndExecutor,
             _conditionAndAction,
             _conditionPayload,
             _actionPayload
         );
-        emit LogGelatoUserProxyCreation(msg.sender, userProxy, msg.value);
     }
 
 
