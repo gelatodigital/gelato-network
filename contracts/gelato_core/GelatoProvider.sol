@@ -34,7 +34,7 @@ abstract contract GelatoProvider is IGelatoProvider {
     function provideCondition(address _condition) public override {
         require(
             !isProvidedCondition[msg.sender][_condition],
-            "ProviderWhitelistModule.unprovideCondition: already provided"
+            "ProviderWhitelistModule.provideCondition: already provided"
         );
         isProvidedCondition[msg.sender][_condition] = true;
         emit LogProvideCondition(msg.sender, _condition);
@@ -105,20 +105,6 @@ abstract contract GelatoProvider is IGelatoProvider {
         if (_gasDemand == 0) _gasDemand = 6000000;
         uint256 fundsDemand = _gasDemand.mul(_gasPrice);
         return  fundsDemand <= providerFunds[_provider] ? true : false;
-    }
-
-    function _providedCondition(address _provider, address _condition) internal view {
-        require(
-            isProvidedCondition[_provider][_condition],
-            "ProviderWhitelistModule.providedCondition"
-        );
-    }
-
-    function _providedAction(address _provider, address _action) internal view {
-        require(
-            isProvidedAction[_provider][_action],
-            "ProviderWhitelistModule.providedAction"
-        );
     }
 
     function _liquidProvider(

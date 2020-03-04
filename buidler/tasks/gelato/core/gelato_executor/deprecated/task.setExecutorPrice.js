@@ -13,7 +13,7 @@ export default task(
   .addFlag("log", "Logs return values to stdout")
   .setAction(async ({ price, log }) => {
     try {
-      const { 1: signer2 } = await ethers.signers();
+      const { 1: executor } = await ethers.signers();
       const gelatoCoreAdddress = await run("bre-config", {
         deployments: true,
         contractname: "GelatoCore"
@@ -24,7 +24,7 @@ export default task(
       const gelatoCore = new Contract(
         gelatoCoreAdddress,
         gelatoCoreAbi,
-        signer2
+        executor
       );
       const tx = await gelatoCore.setExecutorPrice(price);
       if (log) console.log(`\n\ntxHash setExecutorPrice: ${tx.hash}`);

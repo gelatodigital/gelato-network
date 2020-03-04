@@ -5,15 +5,16 @@ export default task(
   "gc-unprovidefunds",
   `Sends tx to GelatoCore.unprovideFunds([<amount>]) on [--network] (default: ${defaultNetwork})`
 )
-  .addPositionalParam("withdrawamount", "The amount to withdraw")
+  .addOptionalPositionalParam("withdrawamount", "The amount to withdraw")
   .addFlag("log", "Logs return values to stdout")
   .setAction(async ({ withdrawamount, log }) => {
     try {
-      // Provider is the 3rd signer account
-      const { 2: signer3 } = await ethers.signers();
+      if (!withdrawamount) withdrawamount = await run("gc-providerfunds");
+      // Gelato Provider is the 3rd signer account
+      const { 2: gelatoProvider } = await ethers.signers();
       const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
-        signer: signer3,
+        signer: gelatoProvider,
         write: true
       });
       const tx = await gelatoCore.unprovideFunds(withdrawamount);

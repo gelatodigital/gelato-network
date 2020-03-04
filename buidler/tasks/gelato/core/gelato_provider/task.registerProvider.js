@@ -1,5 +1,6 @@
 import { task } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../../buidler.config";
+import { utils } from "ethers";
 
 export default task(
   "gc-registerprovider",
@@ -13,23 +14,45 @@ export default task(
   .addFlag("log", "Logs return values to stdout")
   .setAction(async ({ ethamount, conditionsandactions, log }) => {
     try {
-      // Provider is the 3rd signer account
-      const { 2: signer3 } = await ethers.signers();
+      // Sanitize Conditions and Actions into address[]
+      const conditions = conditionsandactions.filter(contract =>
+        contract.startsWith("Condition")
+      );
+      const actions = conditionsandactions.filter(contract =>
+        contract.startsWith("Action")
+      );
+      const conditionAddresses = await Promise.all(
+        conditions.map(async condition => {
+          return await run("bre-config", {
+            deployments: true,
+            contractname: condition
+          });
+        })
+      );
+      const actionAddresses = await Promise.all(
+        actions.map(async action => {
+          return await run("bre-config", {
+            deployments: true,
+            contractname: action
+          });
+        })
+      );
+      // Gelato Provider is the 3rd signer account
+      const { 2: gelatoProvider } = await ethers.signers();
       const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
-        signer: signer3,
+        signer: gelatoProvider,
         write: true
       });
-      const conditions = conditionsandactions.filter(contract => {
-        contract.startsWith("Condition");
-      });
-      const actions = conditionsandactions.filter(contract => {
-        contract.startsWith("Action");
-      });
-      const tx = await gelatoCore.registerProvider(conditions, actions, {
-        value: ethamount,
-        gasLimit: 2000000
-      });
+      // GelatoCore contract call from provider account
+      const tx = await gelatoCore.registerProvider(
+        conditionAddresses,
+        actionAddresses,
+        {
+          value: utils.parseEther(ethamount),
+          gasLimit: 2000000
+        }
+      );
       if (log) console.log(`\n\ntxHash registerProvider: ${tx.hash}`);
       await tx.wait();
       return tx.hash;
