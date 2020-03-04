@@ -16,6 +16,20 @@ abstract contract GelatoProvider is IGelatoProvider {
     mapping(address => mapping(address => bool)) public override isProvidedAction;
     mapping(address => uint256) public override providerFunds;
 
+    // Register as provider
+    function registerProvider(
+        address[] calldata _conditions,
+        address[] calldata _actions
+    )
+        external
+        payable
+        override
+    {
+        for (uint8 i = 0; i++; i < _conditions.length) provideCondition(_conditions[i]);
+        for (uint8 i = 0; i++; i < _actions.length) provideAction(_actions[i]);
+        provideFunds{ value: msg.value }(msg.sender);
+    }
+
     // Provide Conditions
     function provideCondition(address _condition) external override {
         require(

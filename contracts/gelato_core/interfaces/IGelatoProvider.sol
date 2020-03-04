@@ -1,8 +1,14 @@
 pragma solidity ^0.6.2;
 
 interface IGelatoProvider {
-    event LogProvideCondition(address indexed provider, address indexed condition);
-    event LogUnprovideCondition(address indexed provider, address indexed condition);
+    event LogProvideCondition(
+        address indexed provider,
+        address indexed condition
+    );
+    event LogUnprovideCondition(
+        address indexed provider,
+        address indexed condition
+    );
 
     event LogProvideAction(address indexed provider, address indexed action);
     event LogUnprovideAction(address indexed provider, address indexed action);
@@ -18,6 +24,11 @@ interface IGelatoProvider {
         uint256 newProviderFunding
     );
 
+    function registerProvider(
+        address[] calldata _conditions,
+        address[] calldata _actions
+    ) external payable;
+
     function provideCondition(address _condition) external;
     function unprovideCondition(address _condition) external;
 
@@ -32,14 +43,15 @@ interface IGelatoProvider {
     function isProvidedCondition(address _provider, address _condition)
         external
         view
-        returns(bool);
+        returns (bool);
     function isProvidedAction(address _provider, address _action)
         external
         view
-        returns(bool);
+        returns (bool);
 
-    function isProviderLiquid(address _provider, uint256 _gasPrice, uint256 _gasDemand)
-        external
-        view
-        returns(bool);
+    function isProviderLiquid(
+        address _provider,
+        uint256 _gasPrice,
+        uint256 _gasDemand
+    ) external view returns (bool);
 }
