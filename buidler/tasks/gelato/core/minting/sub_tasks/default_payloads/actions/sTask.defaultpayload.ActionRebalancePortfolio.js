@@ -1,5 +1,4 @@
 import { internalTask } from "@nomiclabs/buidler/config";
-import { utils } from "ethers";
 
 export default internalTask(
   "gc-mint:defaultpayload:ActionRebalancePortfolio",

@@ -72,10 +72,10 @@ export default task(
         inputs: taskArgs.inputs
       });
 
-      const signer = await run("ethers", { signer: true, address: true });
+      const signerAddr = await run("ethers", { signer: true, address: true });
 
       if (!taskArgs.signatures) {
-        taskArgs.signatures = `0x000000000000000000000000${signer.replace(
+        taskArgs.signatures = `0x000000000000000000000000${signerAddr.replace(
           "0x",
           ""
         )}000000000000000000000000000000000000000000000000000000000000000001`;
