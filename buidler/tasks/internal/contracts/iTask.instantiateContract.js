@@ -7,9 +7,13 @@ export default internalTask(
 )
   .addParam("contractname")
   .addOptionalParam("contractaddress")
+  .addOptionalParam(
+    "signer",
+    "The signer object (private key) that will be used to send tx to the contract"
+  )
   .addFlag("read")
   .addFlag("write")
-  .setAction(async ({ contractname, contractaddress, read, write }) => {
+  .setAction(async ({ contractname, contractaddress, signer, read, write }) => {
     try {
       if (!read && !write)
         throw new Error("instantiateContract: must specify read or write");
@@ -25,7 +29,7 @@ export default internalTask(
       if (read) {
         instance = new Contract(contractaddress, abi, ethers.provider);
       } else if (write) {
-        const [signer] = await ethers.signers();
+        if (!signer) [signer] = await ethers.signers();
         instance = new Contract(contractaddress, abi, signer);
       }
       return instance;

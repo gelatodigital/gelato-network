@@ -23,7 +23,7 @@ export default task(
 
       // Handle selected executor default
       const selectedexecutor = await run("handleExecutor", {
-        selectedexecutor: taskArgs.selectedexecutor
+        executor: taskArgs.selectedexecutor
       });
 
       // Read Instance

@@ -1,6 +1,5 @@
 import { task } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../../buidler.config";
-import { utils } from "ethers";
 
 export default task(
   "gc-executorclaimlifespan",
@@ -13,28 +12,22 @@ export default task(
   )
   .setAction(async ({ executor, log }) => {
     try {
-      let executorAddress;
-      if (executor) executorAddress = executor;
-      else
-        executorAddress = await run("bre-config", {
-          addressbookcategory: "executor",
-          addressbookentry: "default"
-        });
-
+      executor = await run("handleExecutor", { executor });
       const gelatoCoreContract = await run("instantiateContract", {
         contractname: "GelatoCore",
         write: true
       });
       const executorClaimLifespan = await gelatoCoreContract.executorClaimLifespan(
-        executorAddress
+        executor
       );
       const executorClaimLifespanDays = executorClaimLifespan / 86400;
-      if (log)
+      if (log) {
         console.log(
-          `\nExecutor: ${executorAddress}\
+          `\nExecutor: ${executor}\
            \nExecutorClaimLifespan: ${executorClaimLifespanDays} days\
            \nNetwork: ${network.name}\n`
         );
+      }
       return executorClaimLifespan;
     } catch (error) {
       console.error(error);

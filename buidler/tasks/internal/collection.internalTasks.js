@@ -1,5 +1,5 @@
 // === Contracts ===
-import "./contracts/collection.contracts.iTasks";
+import "./contracts/collection.iTasks.contracts";
 
 // === Naming ===
 import "./naming/iTask.checkAddressBook";

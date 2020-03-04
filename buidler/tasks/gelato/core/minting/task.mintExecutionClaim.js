@@ -37,10 +37,10 @@ export default task(
 
       // Sanitize commandline input
       const selectedProvider = await run("handleProvider", {
-        selectedprovider: taskArgs.selectedprovider
+        provider: taskArgs.selectedprovider
       });
       const selectedExecutor = await run("handleExecutor", {
-        selectedprovider: taskArgs.selectedexecutor
+        executor: taskArgs.selectedexecutor
       });
       const conditionAddress = await run("bre-config", {
         deployments: true,

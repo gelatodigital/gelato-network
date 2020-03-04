@@ -1,6 +1,13 @@
 import { task } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../../buidler.config";
-import { Contract } from "ethers";
+
+const date = Date.now();
+// Default to 3 months from now
+const expirationDateDefault = new Date(
+  date.getFullYear(),
+  date.getMonth() + 3,
+  date.getDate()
+);
 
 export default task(
   "gc-registerexecutor",
@@ -9,25 +16,18 @@ export default task(
   .addPositionalParam(
     "executorclaimlifespan",
     "executor's max executionClaim lifespan",
-    21600000,
+    expirationDateDefault,
     types.int
   )
   .addFlag("log", "Logs return values to stdout")
   .setAction(async ({ executorclaimlifespan, log }) => {
     try {
-      const [signer1, signer2, ...rest] = await ethers.signers();
-      const gelatoCoreAdddress = await run("bre-config", {
-        deployments: true,
-        contractname: "GelatoCore"
+      // We use the 2nd account generated from mnemonic for the executor
+      const [, signer2, ...rest] = await ethers.signers();
+      const gelatoCoreContract = await run("instantiateContract", {
+        contractname: "GelatoCore",
+        signer: signer2
       });
-      const gelatoCoreAbi = await run("abi-get", {
-        contractname: "GelatoCore"
-      });
-      const gelatoCoreContract = new Contract(
-        gelatoCoreAdddress,
-        gelatoCoreAbi,
-        signer2
-      );
       const tx = await gelatoCoreContract.registerExecutor(
         executorclaimlifespan
       );

@@ -4,15 +4,15 @@ export default internalTask(
   "handleExecutor",
   "Returns default executor, if no executor is passed"
 )
-  .addOptionalParam("selectedexecutor")
-  .setAction(async ({ selectedexecutor }) => {
+  .addOptionalParam("executor")
+  .setAction(async ({ executor }) => {
     try {
-      if (selectedexecutor) return selectedexecutor;
-      selectedexecutor = await run("bre-config", {
+      if (executor) return executor;
+      executor = await run("bre-config", {
         addressbookcategory: "executor",
         addressbookentry: "default"
       });
-      return selectedexecutor;
+      return executor;
     } catch (err) {
       console.error(err);
       process.exit(1);

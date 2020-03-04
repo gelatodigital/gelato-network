@@ -4,15 +4,15 @@ export default internalTask(
   "handleProvider",
   "Returns default provider from network addresbook, if no provider is passed"
 )
-  .addOptionalParam("selectedprovider")
-  .setAction(async ({ selectedprovider }) => {
+  .addOptionalParam("provider")
+  .setAction(async ({ provider }) => {
     try {
-      if (selectedprovider) return selectedprovider;
-      selectedprovider = await run("bre-config", {
-        addressbookcategory: "executor",
+      if (provider) return provider;
+      provider = await run("bre-config", {
+        addressbookcategory: "provider",
         addressbookentry: "default"
       });
-      return selectedprovider;
+      return provider;
     } catch (err) {
       console.error(err);
       process.exit(1);
