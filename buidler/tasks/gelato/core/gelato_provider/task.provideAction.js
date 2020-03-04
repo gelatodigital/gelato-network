@@ -13,11 +13,11 @@ export default task(
         deployments: true,
         contractname: actionname
       });
-      const gelatoCoreContract = await run("instantiateContract", {
+      const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
         write: true
       });
-      const tx = await gelatoCoreContract.provideAction(action);
+      const tx = await gelatoCore.provideAction(action);
       if (log) console.log(`\n txHash provideAction: ${tx.hash}\n`);
       await tx.wait();
       return tx.hash;

@@ -21,12 +21,12 @@ export default task(
       const gelatoCoreAbi = await run("abi-get", {
         contractname: "GelatoCore"
       });
-      const gelatoCoreContract = new Contract(
+      const gelatoCore = new Contract(
         gelatoCoreAdddress,
         gelatoCoreAbi,
         signer2
       );
-      const tx = await gelatoCoreContract.setExecutorPrice(price);
+      const tx = await gelatoCore.setExecutorPrice(price);
       if (log) console.log(`\n\ntxHash setExecutorPrice: ${tx.hash}`);
       await tx.wait();
       return tx.hash;

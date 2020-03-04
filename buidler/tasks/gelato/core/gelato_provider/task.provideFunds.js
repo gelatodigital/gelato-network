@@ -14,17 +14,12 @@ export default task(
   .addFlag("log", "Logs return values to stdout")
   .setAction(async ({ ethamount, provider, log }) => {
     try {
-      if (!provider) {
-        provider = await run("bre-config", {
-          addressbookcategory: "provider",
-          addressbookentry: "default"
-        });
-      }
-      const gelatoCoreContract = await run("instantiateContract", {
+      provider = await run("handleProvider", { provider });
+      const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
         write: true
       });
-      const tx = await gelatoCoreContract.provideFunds(provider, {
+      const tx = await gelatoCore.provideFunds(provider, {
         value: utils.parseEther(ethamount)
       });
       if (log) console.log(`\n\ntxHash providefunds: ${tx.hash}`);

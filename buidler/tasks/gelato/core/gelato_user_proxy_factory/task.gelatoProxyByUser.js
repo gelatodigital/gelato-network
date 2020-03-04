@@ -14,12 +14,12 @@ export default task(
     try {
       if (!user) user = await run("ethers", { signer: true, address: true });
 
-      const gelatoCoreContract = await run("instantiateContract", {
+      const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
         read: true
       });
 
-      const gnosisSafeProxyAddress = await gelatoCoreContract.gelatoProxyByUser(
+      const gnosisSafeProxyAddress = await gelatoCore.gelatoProxyByUser(
         user
       );
       if (log) {

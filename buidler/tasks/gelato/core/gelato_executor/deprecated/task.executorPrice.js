@@ -21,11 +21,11 @@ export default task(
           addressbookentry: "default"
         });
 
-      const gelatoCoreContract = await run("instantiateContract", {
+      const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
         write: true
       });
-      const executorPrice = await gelatoCoreContract.executorPrice(
+      const executorPrice = await gelatoCore.executorPrice(
         executorAddress
       );
       const executorPriceGwei = utils.formatUnits(executorPrice, "gwei");

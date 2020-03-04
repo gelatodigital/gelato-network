@@ -27,12 +27,12 @@ export default task(
       });
 
       // Read Instance
-      const gelatoCoreContract = await run("instantiateContract", {
+      const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
         read: true
       });
       // Contract Call
-      const mintingDepositPayable = await gelatoCoreContract.getMintingDepositPayable(
+      const mintingDepositPayable = await gelatoCore.getMintingDepositPayable(
         selectedexecutor,
         conditionAddress,
         actionAddress

@@ -7,7 +7,7 @@ export const addressBook = {
   erc20: erc20s,
   executor: {
     // Kovan
-    default: "0x4d671CD743027fB5Af1b2D2a3ccbafA97b5B1B80"
+    default: "0x4d671CD743027fB5Af1b2D2a3ccbafA97b5B1B80"  // Luis Dev-Account2
   },
   gnosisSafe: gnosisSafe,
   gnosisSafeProxy: gnosisSafeProxies,
@@ -17,6 +17,6 @@ export const addressBook = {
     proxy: "0x692f391bCc85cefCe8C237C01e1f636BbD70EA4D"
   },
   provider: {
-    default: "0x7015763d0a8F04263633106DE7a8F33B2334E51e" // luis DEV
+    default: "0x8d95104c9d834932B24799630013fA377b732141" // Luis Dev-Account3
   }
 };

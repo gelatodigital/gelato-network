@@ -88,7 +88,7 @@ export default task(
 
       if (taskArgs.log) console.log("\nTaskArgs:\n", taskArgs, "\n");
 
-      const gelatoCoreContract = await run("instantiateContract", {
+      const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
         write: true
       });
@@ -125,7 +125,7 @@ export default task(
       taskArgs.data = await run("abi-encode-withselector", {
         contractname: "ScriptGnosisSafeEnableGelatoCore",
         functionname: "enableGelatoCoreModule",
-        inputs: [gelatoCoreContract.address]
+        inputs: [gelatoCore.address]
       });
 
       if (taskArgs.setup) {
@@ -149,7 +149,7 @@ export default task(
       if (taskArgs.log)
         console.log(`\nInitializer payload:\n${taskArgs.initializer}\n`);
 
-      const creationTx = await gelatoCoreContract.init(
+      const creationTx = await gelatoCore.init(
         taskArgs.mastercopy,
         taskArgs.initializer,
         [selectedProvider, selectedExecutor],

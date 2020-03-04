@@ -12,11 +12,11 @@ export default task(
   .addFlag("log", "Logs return values to stdout")
   .setAction(async ({ gasprice, log }) => {
     try {
-      const gelatoCoreContract = await run("instantiateContract", {
+      const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
         write: true
       });
-      const tx = await gelatoCoreContract.setGelatoGasPrice(gasprice);
+      const tx = await gelatoCore.setGelatoGasPrice(gasprice);
       if (log) console.log(`\n\ntxHash setGelatoGasPrice: ${tx.hash}`);
       await tx.wait();
       return tx.hash;

@@ -87,7 +87,7 @@ export default task(
 
       if (taskArgs.log) console.log("\nTaskArgs:\n", taskArgs, "\n");
 
-      const gelatoCoreContract = await run("instantiateContract", {
+      const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
         write: true
       });
@@ -124,7 +124,7 @@ export default task(
         contractname: "ScriptGnosisSafeEnableGelatoCoreAndMint",
         functionname: "enableModuleAndMint",
         inputs: [
-          gelatoCoreContract.address,
+          gelatoCore.address,
           [selectedProvider, selectedExecutor],
           [condition, action],
           conditionPayload,
@@ -137,7 +137,7 @@ export default task(
       /*taskArgs.data = await run("abi-encode-withselector", {
         contractname: "ScriptGnosisSafeEnableGelatoCore",
         functionname: "enableGelatoCoreModule",
-        inputs: [gelatoCoreContract.address]
+        inputs: [gelatoCore.address]
       });*/
 
       if (taskArgs.setup) {
@@ -161,7 +161,7 @@ export default task(
       if (taskArgs.log)
         console.log(`\nInitializer payload:\n${taskArgs.initializer}\n`);
 
-      const creationTx = await gelatoCoreContract.createGelatoUserProxy(
+      const creationTx = await gelatoCore.createGelatoUserProxy(
         taskArgs.mastercopy,
         taskArgs.initializer,
         { value: taskArgs.funding, gasLimit: 6000000 }

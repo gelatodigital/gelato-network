@@ -20,12 +20,12 @@ export default task(
         });
       }
 
-      const gelatoCoreContract = await run("instantiateContract", {
+      const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
         write: true
       });
 
-      const providerFunds = await gelatoCoreContract.providerFunds(provider);
+      const providerFunds = await gelatoCore.providerFunds(provider);
       const providerBalanceETH = utils.formatEther(providerFunds);
 
       if (log) {

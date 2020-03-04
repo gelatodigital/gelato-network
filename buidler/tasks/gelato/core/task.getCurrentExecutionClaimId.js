@@ -8,12 +8,12 @@ export default task(
   .addFlag("log", "Logs return values to stdout")
   .setAction(async ({ log }) => {
     try {
-      const gelatoCoreContract = await run("instantiateContract", {
+      const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
         read: true
       });
 
-      const currentExecutionClaimId = await gelatoCoreContract.getCurrentExecutionClaimId();
+      const currentExecutionClaimId = await gelatoCore.getCurrentExecutionClaimId();
       if (log) {
         console.log(
           `\n GelatoCore current ExecutionClaimId: ${currentExecutionClaimId}`

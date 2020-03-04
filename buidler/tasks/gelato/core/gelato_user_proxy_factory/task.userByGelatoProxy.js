@@ -12,12 +12,12 @@ export default task(
   .addFlag("log", "Logs return values to stdout")
   .setAction(async ({ gelatoproxyaddress, log }) => {
     try {
-      const gelatoCoreContract = await run("instantiateContract", {
+      const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
         read: true
       });
 
-      const user = await gelatoCoreContract.userByGelatoProxy(
+      const user = await gelatoCore.userByGelatoProxy(
         gelatoproxyaddress
       );
       if (log) {

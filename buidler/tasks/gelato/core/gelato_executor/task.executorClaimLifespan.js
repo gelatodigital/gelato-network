@@ -13,11 +13,11 @@ export default task(
   .setAction(async ({ executor, log }) => {
     try {
       executor = await run("handleExecutor", { executor });
-      const gelatoCoreContract = await run("instantiateContract", {
+      const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
         write: true
       });
-      const executorClaimLifespan = await gelatoCoreContract.executorClaimLifespan(
+      const executorClaimLifespan = await gelatoCore.executorClaimLifespan(
         executor
       );
       const executorClaimLifespanDays = executorClaimLifespan / 86400;

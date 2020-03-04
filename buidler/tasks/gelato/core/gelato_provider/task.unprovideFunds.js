@@ -9,11 +9,11 @@ export default task(
   .addFlag("log", "Logs return values to stdout")
   .setAction(async ({ withdrawamount, log }) => {
     try {
-      const gelatoCoreContract = await run("instantiateContract", {
+      const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
         write: true
       });
-      const tx = await gelatoCoreContract.unprovideFunds(withdrawamount);
+      const tx = await gelatoCore.unprovideFunds(withdrawamount);
       if (log) console.log(`\n\ntxHash unprovideFunds: ${tx.hash}`);
       await tx.wait();
       return tx.hash;

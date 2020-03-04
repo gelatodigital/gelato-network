@@ -80,13 +80,13 @@ export default task(
       const actionConditionsCheckGas = await actionContract.actionConditionsCheckGas();
 
       // GelatoCore read Instance
-      const gelatoCoreContract = await run("instantiateContract", {
+      const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
         read: true
       });
 
       // call to canExecute
-      const [canExecuteResult, reason] = await gelatoCoreContract.canExecute(
+      const [canExecuteResult, reason] = await gelatoCore.canExecute(
         queriedExecutionClaim.executionClaimId,
         queriedExecutionClaim.userProxy,
         queriedExecutionClaim.condition,

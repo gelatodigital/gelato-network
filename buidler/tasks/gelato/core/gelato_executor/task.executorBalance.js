@@ -14,11 +14,11 @@ export default task(
   .setAction(async ({ executor, log }) => {
     try {
       executor = await run("handleExecutor", { executor });
-      const gelatoCoreContract = await run("instantiateContract", {
+      const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
         write: true
       });
-      const executorBalance = await gelatoCoreContract.executorBalance(
+      const executorBalance = await gelatoCore.executorBalance(
         executor
       );
       const executorBalanceETH = utils.formatEther(executorBalance);

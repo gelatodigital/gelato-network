@@ -60,13 +60,13 @@ export default task(
       });
 
       // GelatoCore write Instance
-      const gelatoCoreContract = await run("instantiateContract", {
+      const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
         write: true
       });
 
       // mintExecutionClaim TX
-      const mintTx = await gelatoCoreContract.mintExecutionClaim(
+      const mintTx = await gelatoCore.mintExecutionClaim(
         [selectedProvider, selectedExecutor],
         [conditionAddress, actionAddress],
         conditionPayload,
