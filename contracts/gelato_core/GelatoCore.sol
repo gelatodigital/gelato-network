@@ -24,6 +24,7 @@ contract GelatoCore is
     mapping(uint256 => address) public override userProxyByExecutionClaimId;
     // executionClaimId => bytes32 executionClaimHash
     mapping(uint256 => bytes32) public override executionClaimHash;
+    // The maximum gas an executor can consume on behalf of a provider
     uint256 public constant override MAXGAS = 6000000;
 
     // ========= Proxy Creation and Minting in 1 tx
@@ -37,6 +38,7 @@ contract GelatoCore is
     )
         external
         payable
+        override
         returns(address)  // address userProxy
     {
         createGelatoUserProxy(_mastercopy, _initializer);
@@ -54,17 +56,23 @@ contract GelatoCore is
         address[2] memory _selectedProviderAndExecutor,
         address[2] memory _conditionAndAction,
         bytes memory _conditionPayload,
-        bytes memory _actionPayload
+        bytes memory _actionPayload,
+        uint256 _executionClaimExpiryDate
     )
         public
         override
     {
-        //_userProxyCheck(msg.sender);
-        //_liquidProvider(_selectedProviderAndExecutor[0], gelatoGasPrice, MAXGAS);
+        // Standard core checks
+        _liquidProvider(_selectedProviderAndExecutor[0], gelatoGasPrice, MAXGAS);
+        _registeredExecutor(_selectedProviderAndExecutor[1]);
+        _maxExecutionClaimLifespan(_selectedProviderAndExecutor[1], _executionClaimExpiryDate);
+
+        // Checks below will be separated onto provider module
+        // msgSenderCheck();
         _providedCondition(_selectedProviderAndExecutor[0], _conditionAndAction[0]);
         _providedAction(_selectedProviderAndExecutor[0], _conditionAndAction[1]);
-        _registeredExecutor(_selectedProviderAndExecutor[1]);
 
+        // We cut this after initial testing
         address userProxy;
         if (isGelatoProxyUser(msg.sender)) {
             userProxy = gelatoProxyByUser[msg.sender];
@@ -79,7 +87,7 @@ contract GelatoCore is
         // Mint new executionClaim
         currentExecutionClaimId.increment();
         uint256 executionClaimId = currentExecutionClaimId.current();
-        userProxyByExecutionClaimId[executionClaimId] = msg.sender;
+        userProxyByExecutionClaimId[executionClaimId] = userProxy;
 
         uint256 executionClaimExpiryDate = now.add(
             executorClaimLifespan[_selectedProviderAndExecutor[1]]
@@ -181,9 +189,12 @@ contract GelatoCore is
     )
         external
         override
-        txGasPriceCheck
     {
         uint256 startGas = gasleft();
+        require(
+            tx.gasprice == gelatoGasPrice,
+            "GelatoGasPriceOracle.txGasPriceCheck"
+        );
         require(
             startGas < MAXGAS,
             "GelatoCore.execute: too much gas sent"

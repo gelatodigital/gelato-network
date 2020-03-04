@@ -74,11 +74,4 @@ abstract contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
     {
         return userByGelatoProxy[userPoxy] != address(0);
     }
-
-    function _userProxyCheck(address _userProxy) internal view {
-        require(
-            isGelatoUserProxy(_userProxy),
-            "GelatoUserProxyFactory.userProxyCheck: invalid _userProxy"
-        );
-    }
 }

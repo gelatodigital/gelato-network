@@ -9,14 +9,6 @@ abstract contract GelatoGasPriceOracle is IGelatoGasPriceOracle {
     uint256 public override gelatoGasPrice = 9000000000;  // 9 gwei initial
     uint256 public override gelatoGasPriceLimit = 100000000000;  // 100 gwei initial
 
-    modifier txGasPriceCheck {
-        require(
-            tx.gasprice == gelatoGasPrice,
-            "GelatoGasPriceOracle.txGasPriceCheck"
-        );
-        _;
-    }
-
     modifier onlyOracle {
         require(msg.sender == oracle, "GelatoGasPriceOracle.onlyOracle");
         _;

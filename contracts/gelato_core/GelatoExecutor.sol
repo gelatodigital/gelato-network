@@ -22,14 +22,6 @@ abstract contract GelatoExecutor is IGelatoExecutor {
         _;
     }
 
-    modifier maxExecutionClaimLifespan(address _executor, uint256 _expiryDate) {
-        require(
-            _expiryDate <= now + executorClaimLifespan[_executor],
-            "GelatoExecutor.maxExecutionClaimLifespan"
-        );
-        _;
-    }
-
     // Executor De/Registrations
     function registerExecutor(uint256 _executorClaimLifespan)
         external
@@ -80,10 +72,25 @@ abstract contract GelatoExecutor is IGelatoExecutor {
         emit LogWithdrawExecutorBalance(msg.sender, _withdrawAmount);
     }
 
-    function _registeredExecutor(address _executor) internal view{
+
+    // Check functions (not modifiers due to stack too deep)
+    function _registeredExecutor(address _executor) internal view {
         require(
             executorClaimLifespan[_executor] != 0,
-            "GelatoExecutor.registeredExecutor"
+            "GelatoExecutor._registeredExecutor"
+        );
+    }
+
+    function _maxExecutionClaimLifespan(
+        address _executor,
+        uint256 _executionClaimExpiryDate
+    )
+        internal
+        view
+    {
+        require(
+            _executionClaimExpiryDate <= now + executorClaimLifespan[_executor],
+            "GelatoExecutor._maxExecutionClaimLifespan"
         );
     }
 }

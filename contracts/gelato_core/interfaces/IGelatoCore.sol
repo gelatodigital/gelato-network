@@ -68,14 +68,16 @@ interface IGelatoCore {
         address[2] calldata _selectedProviderAndExecutor,
         address[2] calldata _conditionAndAction,
         bytes calldata _conditionPayload,
-        bytes calldata _actionPayload
+        bytes calldata _actionPayload,
+        uint256 _executionClaimExpiryDate
     ) external payable returns (address); // address userProxy
 
     function mintExecutionClaim(
         address[2] calldata _selectedProviderAndExecutor,
         address[2] calldata _conditionAndAction,
         bytes calldata _conditionPayload,
-        bytes calldata _actionPayload
+        bytes calldata _actionPayload,
+        uint256 _executionClaimExpiryDate
     ) external;
 
     function canExecute(
