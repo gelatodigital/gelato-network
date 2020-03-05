@@ -35,9 +35,6 @@ export default task(
           });
         })
       );
-      console.log(conditionAddresses);
-      console.log(actionAddresses);
-      await sleep(100000);
       // Gelato Provider is the 3rd signer account
       const { 2: gelatoProvider } = await ethers.signers();
       const gelatoCore = await run("instantiateContract", {
