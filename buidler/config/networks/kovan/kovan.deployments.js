@@ -7,7 +7,7 @@ export const deployments = {
 	// erc20
 	ActionERC20Transfer: "0x213719cD7c69DCA764E336bEb8D735DA01FD6c83",
 	ActionERC20TransferFrom: "0x24b7b219E903d11489227c5Bed0718D90C03eBc2",
-	ActionChainedERC20TransferFrom: "0x16146e1457007870e444D611937C303c9695448c",
+	ActionChainedTimedERC20TransferFrom: "0xd41Ba730090e731806E0146e203d92F8b5107d12",
 	// ETHLONDON
 	ActionRebalancePortfolio: "0x3e709fd3A0Cf9919916C847F5b3cf722e61b76Bf",
 	// kyber
