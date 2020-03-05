@@ -8,7 +8,7 @@ export const deployments = {
 	ActionERC20Transfer: "0x213719cD7c69DCA764E336bEb8D735DA01FD6c83",
 	ActionERC20TransferFrom: "0x24b7b219E903d11489227c5Bed0718D90C03eBc2",
 	// ETHLONDON
-	ActionRebalancePortfolio: "0x52DfF1E40D080f65aC7A7ed06D00EC73A4182E47",
+	ActionRebalancePortfolio: "0x3e709fd3A0Cf9919916C847F5b3cf722e61b76Bf",
 	// kyber
 	ActionKyberTradeKovan: "0xF829B506c378AaD11dB7Efe8d626cc7d0e015CBA",
 	// ==== Gelato Core ===
@@ -23,6 +23,8 @@ export const deployments = {
 	// time
 	ConditionTimestampPassed: "0x10A46c633adfe5a6719f3DBd2c162676779fE70B",
 	// ==== Scripts ====
-	ScriptGnosisSafeEnableGelatoCore: "0x99D081a6c07043e9E78A231Ae2c41fa811AD856C",
-	ScriptGnosisSafeEnableGelatoCoreAndMint: "0x5993ff30b943dE4c3fDA59d88D87d1661412D101"
+	ScriptGnosisSafeEnableGelatoCore:
+		"0x99D081a6c07043e9E78A231Ae2c41fa811AD856C",
+	ScriptGnosisSafeEnableGelatoCoreAndMint:
+		"0x5993ff30b943dE4c3fDA59d88D87d1661412D101"
 };
