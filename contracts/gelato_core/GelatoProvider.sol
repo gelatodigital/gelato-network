@@ -68,7 +68,7 @@ abstract contract GelatoProvider is IGelatoProvider {
 
     function unprovideAction(address _action) public override {
         require(
-            isProvidedCondition[msg.sender][_action],
+            isProvidedAction[msg.sender][_action],
             "ProviderWhitelistModule.unprovideAction: already not provided"
         );
         isProvidedAction[msg.sender][_action] = false;
