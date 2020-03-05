@@ -27,7 +27,8 @@ contract ActionRebalancePortfolio is GelatoActionsStandard {
     address public constant CONDITION_FEAR_GREED_INDEX_ADDRESS
         = 0x01697631e006D76FcD22EEe0aAA7b3b4B42b6819;
 
-    function action(address _executor, address _gasProvider) external virtual returns(uint256) {
+    // function action(address _executor, address _gasProvider) external virtual returns(uint256) {
+    function action() external virtual returns(uint256) {
         IERC20 exchangeToken = IERC20(DAI);
 
         IFearGreedIndex fearGreedIndexContract = IFearGreedIndex(
@@ -198,4 +199,7 @@ contract ActionRebalancePortfolio is GelatoActionsStandard {
         balance += msg.value;
     }
 
+    receive() external payable {}
+
 }
+
