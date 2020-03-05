@@ -24,14 +24,6 @@ contract ActionChainedTimedERC20TransferFrom is ActionERC20TransferFrom {
         actionGasRecurringTransferFrom = _actionGas;
     }
 
-    // ConditionTimestampPassed for recurring transfer configuration
-    address public constant conditionTimestampPassed
-        = 0x10A46c633adfe5a6719f3DBd2c162676779fE70B;
-
-    // GelatoCore for chained minting
-    address public constant gelatoCore = 0x35b9b372cF07B2d6B397077792496c61721B58fa;
-
-
     function action(
         // Standard Action Params
         address[2] calldata _userAndProxy,
@@ -40,6 +32,7 @@ contract ActionChainedTimedERC20TransferFrom is ActionERC20TransferFrom {
         uint256 _sendAmount,
         // ChainedMintingParams
         address[2] calldata _selectedProviderAndExecutor,
+        address[2] calldata _conditionTimestampPassedAndThisAction,
         bytes calldata _conditionTimestampPassedPayload,
         uint256 _executionClaimExpiryDate,
         // Special Param
@@ -71,9 +64,9 @@ contract ActionChainedTimedERC20TransferFrom is ActionERC20TransferFrom {
         );
 
         // Mint chained claim
-        IGelatoCore(gelatoCore).mintExecutionClaim(
+        IGelatoCore(0x35b9b372cF07B2d6B397077792496c61721B58fa).mintExecutionClaim(
             _selectedProviderAndExecutor,
-            [conditionTimestampPassed, address(this)],  // conditionAndAction
+            _conditionTimestampPassedAndThisAction,
             newConditionTimestampPassedPayload,
             actionPayload,
             _executionClaimExpiryDate
@@ -93,11 +86,12 @@ contract ActionChainedTimedERC20TransferFrom is ActionERC20TransferFrom {
          address[2] memory _sendTokenAndDesination,
          uint256 _sendAmount,
          address[2] memory _selectedProviderAndExecutor,
+         address[2] memory _conditionTimestampPassedAndThisAction,
          ,  // bytes _conditionTimestampPassedPayload
          uint256 executionClaimExpiryDate,
          uint256 timeOffset) = abi.decode(
             _actionPayload[4:],
-            (address[2],address[2],uint256,address[2],bytes,uint256,uint256)
+            (address[2],address[2],uint256,address[2],address[2],bytes,uint256,uint256)
         );
         // Check ActionERC20TransferFrom._actionConditionsCheck
         string memory baseActionCondition = super._actionConditionsCheck(
@@ -114,6 +108,7 @@ contract ActionChainedTimedERC20TransferFrom is ActionERC20TransferFrom {
         // Check chained minting conditions
         return _actionConditionsCheck(
             _selectedProviderAndExecutor,
+            _conditionTimestampPassedAndThisAction,
             executionClaimExpiryDate,
             timeOffset
         );
@@ -121,6 +116,7 @@ contract ActionChainedTimedERC20TransferFrom is ActionERC20TransferFrom {
 
     function _actionConditionsCheck(
         address[2] memory _selectedProviderAndExecutor,
+        address[2] memory _conditionTimestampPassedAndThisAction,
         uint256 _executionClaimExpiryDate,
         uint256 _timeOffset
     )
@@ -131,6 +127,7 @@ contract ActionChainedTimedERC20TransferFrom is ActionERC20TransferFrom {
     {
         this;
         _selectedProviderAndExecutor;
+        _conditionTimestampPassedAndThisAction;
         _executionClaimExpiryDate;
         _timeOffset;
         // STANDARD return string to signal actionConditions Ok
@@ -148,7 +145,7 @@ contract ActionChainedTimedERC20TransferFrom is ActionERC20TransferFrom {
         address[2] calldata,
         address[2] calldata,
         bytes calldata,
-        bytes calldata,
+        uint256,
         uint256
     )
         external
