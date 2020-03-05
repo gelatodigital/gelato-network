@@ -1,7 +1,10 @@
-// Core
+// ==== GelatoCore ====
+// create & mint
+import "./task.createProxyAndMint";
+// executionClaims
 import "./task.getCurrentExecutionClaimId";
-
-import "./task.init";
+// canExecute
+//import "./execution/task.canExecute";
 
 // GelatoUserProxyFactory
 import "./gelato_user_proxy_factory/collection.tasks.gelato-user-proxy-factory";
@@ -19,7 +22,7 @@ import "./gelato_executor/collection.tasks.gelato-executor";
 import "./minting/collection.tasks.minting";
 
 // === Execution Tasks ===
-//import "./execution/task.canExecute";
+
 
 // === Internal Tasks ===
 import "./internal/collection.iTasks.gelato-core";

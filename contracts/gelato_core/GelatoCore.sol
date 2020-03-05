@@ -71,8 +71,8 @@ contract GelatoCore is
 
         // Checks below will be separated onto provider module
         // msgSenderCheck();
-        _providedCondition(_selectedProviderAndExecutor[0], _conditionAndAction[0]);
-        _providedAction(_selectedProviderAndExecutor[0], _conditionAndAction[1]);
+        isProvidedCondition[_selectedProviderAndExecutor[0]][_conditionAndAction[0]];
+        isProvidedAction[_selectedProviderAndExecutor[0]][_conditionAndAction[1]];
 
         // We cut this after initial testing
         address userProxy;

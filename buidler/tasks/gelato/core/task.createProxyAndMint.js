@@ -1,12 +1,40 @@
 import { task, types } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../buidler.config";
 import { constants, utils } from "ethers";
-import { deployments } from "../../../config/networks/kovan/kovan.deployments";
 
 export default task(
-  "gc-init",
-  `Sends tx to GelatoCore.createGelatoUserProxy() on [--network] (default: ${defaultNetwork})`
+  "gc-createProxyAndMint",
+  `Sends tx to GelatoCore.createProxyAndMint() on [--network] (default: ${defaultNetwork})`
 )
+  .addPositionalParam("actionname", "This param MUST be supplied.")
+  .addOptionalPositionalParam(
+    "conditionname",
+    "defaults to address 0 for self-conditional actions",
+    constants.AddressZero,
+    types.string
+  )
+  .addOptionalPositionalParam(
+    "selectedprovider",
+    "defaults to network addressbook default"
+  )
+  .addOptionalPositionalParam(
+    "selectedexecutor",
+    "defaults to network addressbook default"
+  )
+  .addOptionalPositionalParam(
+    "conditionpayload",
+    "If not provided, must have a default returned from handlePayload()"
+  )
+  .addOptionalPositionalParam(
+    "actionpayload",
+    "If not provided, must have a default returned from handlePayload()"
+  )
+  .addOptionalPositionalParam(
+    "executionclaimexpirydate",
+    "defaults to 0 for selectedexecutor's maximum",
+    0,
+    types.int
+  )
   .addOptionalParam(
     "mastercopy",
     "The deployed implementation code the created proxy should point to"
@@ -26,12 +54,16 @@ export default task(
   .addOptionalParam(
     "to",
     "Supply with --setup: contract address for optional delegatecall.",
-    deployments.ScriptGnosisSafeEnableGelatoCore
+    constants.AddressZero
   )
   .addOptionalParam(
     "data",
     "Supply with --setup: payload for optional delegate call",
-    "0x0"
+    constants.HashZero
+  )
+  .addOptionalParam(
+    "defaultdata",
+    "The name of the defaultpayload to retrieve for the 'data' field"
   )
   .addOptionalParam(
     "fallbackHandler",
@@ -57,18 +89,28 @@ export default task(
   .addOptionalParam(
     "funding",
     "ETH value to be sent to newly created gelato user proxy",
-    utils.parseEther("0.01"),
+    "0",
     types.int
   )
   .addFlag("log", "Logs return values to stdout")
   .setAction(async taskArgs => {
     try {
-      taskArgs.log = true;
+      // Command Line Argument Checks
+      // Condition and Action for minting
+      if (
+        taskArgs.conditionname != constants.AddressZero &&
+        !taskArgs.conditionname.startsWith("Condition")
+      )
+        throw new Error(`Invalid condition: ${taskArgs.conditionname}`);
+      if (!taskArgs.actionname.startsWith("Action"))
+        throw new Error(`Invalid action: ${taskArgs.actionname}`);
+      // Gnosis Safe creation
       if (!taskArgs.initializer && !taskArgs.setup)
         throw new Error("Must provide initializer payload or --setup args");
       else if (taskArgs.initializer && taskArgs.setup)
         throw new Error("Provide EITHER initializer payload OR --setup args");
 
+      // Gelato User Proxy (GnosisSafeProxy) creation params
       if (!taskArgs.mastercopy) {
         taskArgs.mastercopy = await run("bre-config", {
           addressbookcategory: "gnosisSafe",
@@ -80,53 +122,19 @@ export default task(
         throw new Error("No taskArgs.mastercopy for proxy defined");
 
       if (taskArgs.setup && !taskArgs.owners) {
-        const signer = await run("ethers", { signer: true, address: true });
-        taskArgs.owners = [signer];
+        const signerAddress = await run("ethers", {
+          signer: true,
+          address: true
+        });
+        taskArgs.owners = [signerAddress];
         if (!Array.isArray(taskArgs.owners))
           throw new Error("Failed to convert taskArgs.owners into Array");
       }
 
+      if (taskArgs.setup && !taskArgs.data && taskArgs.defaultdata)
+        taskArgs.data = await run(`gsp:scripts:defaultpayload:${defaultdata}`);
+
       if (taskArgs.log) console.log("\nTaskArgs:\n", taskArgs, "\n");
-
-      const gelatoCore = await run("instantiateContract", {
-        contractname: "GelatoCore",
-        write: true
-      });
-
-      // ======== ETH LONDON
-      const selectedProvider = await run("bre-config", {
-        addressbookcategory: "provider",
-        addressbookentry: "default"
-      });
-      const selectedExecutor = await run("bre-config", {
-        addressbookcategory: "executor",
-        addressbookentry: "default"
-      });
-      const { ConditionFearGreedIndex: condition } = await run("bre-config", {
-        deployments
-      });
-      const { ActionRebalancePortfolio: action } = await run("bre-config", {
-        deployments
-      });
-
-      const conditionPayload = await run("abi-encode-withselector", {
-        contractname: "ConditionFearGreedIndex",
-        functionname: "reached",
-        inputs: [50]
-      });
-
-      const actionPayload = await run("abi-encode-withselector", {
-        contractname: "ActionRebalancePortfolio",
-        functionname: "action",
-        inputs: []
-      });
-      // ====================
-
-      taskArgs.data = await run("abi-encode-withselector", {
-        contractname: "ScriptGnosisSafeEnableGelatoCore",
-        functionname: "enableGelatoCoreModule",
-        inputs: [gelatoCore.address]
-      });
 
       if (taskArgs.setup) {
         const inputs = [
@@ -148,21 +156,62 @@ export default task(
 
       if (taskArgs.log)
         console.log(`\nInitializer payload:\n${taskArgs.initializer}\n`);
+      // ============
 
-      const creationTx = await gelatoCore.init(
+      // ==== GelatoCore.mintExecutionClaim Params ====
+      // Selected Provider and Executor
+      const selectedProvider = await run("handleProvider", {
+        provider: taskArgs.selectedprovider
+      });
+      const selectedExecutor = await run("handleExecutor", {
+        executor: taskArgs.selectedexecutor
+      });
+      // Condition and ConditionPayload (optional)
+      let conditionAddress;
+      let conditionPayload = constants.HashZero;
+      if (conditionname != constants.AddressZero) {
+        conditionAddress = await run("bre-config", {
+          deployments: true,
+          contractname: taskArgs.conditionname
+        });
+        conditionPayload = await run("handlePayload", {
+          contractname: taskArgs.conditionname
+        });
+      }
+      // Action and ActionPayload
+      const actionAddress = await run("bre-config", {
+        deployments: true,
+        contractname: taskArgs.actionname
+      });
+      const actionPayload = await run("bre-config", {
+        deployments: true,
+        contractname: taskArgs.actionname
+      });
+      // ============
+
+      // GelatoCore interaction
+      const gelatoCore = await run("instantiateContract", {
+        contractname: "GelatoCore",
+        write: true
+      });
+
+      const creationTx = await gelatoCore.createProxyAndMint(
         taskArgs.mastercopy,
         taskArgs.initializer,
         [selectedProvider, selectedExecutor],
-        [condition, action],
+        [conditionAddress, actionAddress],
         conditionPayload,
         actionPayload,
-        { value: taskArgs.funding, gasLimit: 6000000 }
+        taskArgs.executionclaimexpirydate,
+        { value: taskArgs.funding, gasLimit: 3000000 }
       );
 
-      if (taskArgs.log) console.log(`\ntxHash init: ${creationTx.hash}\n`);
+      if (taskArgs.log)
+        console.log(`\ntxHash createProxyAndMint: ${creationTx.hash}\n`);
 
       const { blockHash } = await creationTx.wait();
 
+      // Event Emission verification
       if (taskArgs.log) {
         const parsedCreateLog = await run("event-getparsedlogs", {
           contractname: "GelatoCore",

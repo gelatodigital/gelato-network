@@ -13,10 +13,11 @@ export default task(
   .setAction(async ({ lifespan, log }) => {
     try {
       // We use the 2nd account generated from mnemonic for the executor
-      const { 1: signer2 } = await ethers.signers();
+      const { 1: executor } = await ethers.signers();
       const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
-        signer: signer2
+        signer: executor,
+        write: true
       });
       const tx = await gelatoCore.setExecutorClaimLifespan(lifespan);
       if (log) console.log(`\n\ntxHash setExecutorClaimLifespan: ${tx.hash}`);

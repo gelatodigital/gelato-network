@@ -6,11 +6,11 @@ export default task(
   "gc-providerfunds",
   `Return (or --log) GelatoCore.providerFunds([<provider>: defaults to default provider]) on [--network] (default: ${defaultNetwork})`
 )
-  .addFlag("log", "Logs return values to stdout")
   .addOptionalPositionalParam(
     "provider",
     "The address of the provider, whose balance we query"
   )
+  .addFlag("log", "Logs return values to stdout")
   .setAction(async ({ provider, log }) => {
     try {
       provider = await run("handleProvider", { provider });
