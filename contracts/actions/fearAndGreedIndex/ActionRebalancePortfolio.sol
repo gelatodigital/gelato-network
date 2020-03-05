@@ -1,6 +1,7 @@
 pragma solidity ^0.6.2;
 
 import "../GelatoActionsStandard.sol";
+import "../../external/Ownable.sol";
 import "../../external/IERC20.sol";
 import "../../dapp_interfaces/fearAndGreedIndex/IFearGreedIndex.sol";
 import "../../dapp_interfaces/uniswap/IUniswapFactory.sol";
@@ -9,7 +10,7 @@ import "../../external/SafeMath.sol";
 import "../../external/Address.sol";
 import "../../gelato_core/interfaces/IGelatoCore.sol";
 
-contract ActionRebalancePortfolio is GelatoActionsStandard {
+contract ActionRebalancePortfolio is GelatoActionsStandard, Ownable {
     // using SafeERC20 for IERC20; <- internal library methods vs. try/catch
     using SafeMath for uint256;
     using Address for address;
@@ -21,7 +22,13 @@ contract ActionRebalancePortfolio is GelatoActionsStandard {
         return this.action.selector;
     }
 
-    uint256 public constant override actionGas = 700000;
+    uint256 public actionGas = 700000;
+    function getActionGas() external view override virtual returns(uint256) {
+        return actionGas;
+    }
+    function setActionGas(uint256 _actionGas) external virtual onlyOwner {
+        actionGas = _actionGas;
+    }
 
     uint256 public balance;
 

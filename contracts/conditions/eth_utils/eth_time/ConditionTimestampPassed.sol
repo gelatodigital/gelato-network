@@ -24,10 +24,10 @@ contract ConditionTimestampPassed is IGelatoCondition {
     function reached(uint256 _timestamp)
         external
         view
-        returns(bool, uint8)  // executable?, reason
+        returns(bool, string memory)  // executable?, reason
     {
-        if (_timestamp <= block.timestamp) return (true, uint8(Reason.OkTimestampPassed));
-        else return(false, uint8(Reason.NotOkTimestampDidNotPass));
+        if (_timestamp <= block.timestamp) return (true, "Ok");
+        else return(false, "NotOkTimestampDidNotPass");
     }
 
     function getConditionValue(uint256) external view returns(uint256) {

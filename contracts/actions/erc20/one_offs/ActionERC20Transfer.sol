@@ -1,30 +1,34 @@
 pragma solidity ^0.6.2;
 
-import "../GelatoActionsStandard.sol";
-import "../../external/IERC20.sol";
-// import "../../external/SafeERC20.sol";
-import "../../dapp_interfaces/kyber/IKyber.sol";
-import "../../external/SafeMath.sol";
-import "../../external/Address.sol";
+import "../../GelatoActionsStandard.sol";
+import "../../../external/Ownable.sol";
+import "../../../external/IERC20.sol";
+// import "../../../external/SafeERC20.sol";
+import "../../../external/Address.sol";
 
-contract ActionERC20Transfer is GelatoActionsStandard {
+/// @dev This action does not abide by GelatoActionsStandard because
+///      this action is for user proxies that store funds.
+contract ActionERC20Transfer is GelatoActionsStandard, Ownable {
     // using SafeERC20 for IERC20; <- internal library methods vs. try/catch
-    using SafeMath for uint256;
     using Address for address;
 
     // actionSelector public state variable np due to this.actionSelector constant issue
     function actionSelector() external pure override returns(bytes4) {
         return this.action.selector;
     }
-    uint256 public constant override actionGas = 80000;
+
+    uint256 public actionGas = 200000;
+    function getActionGas() external view override virtual returns(uint256) {
+        return actionGas;
+    }
+    function setActionGas(uint256 _actionGas) external virtual onlyOwner {
+        actionGas = _actionGas;
+    }
 
     function action(
-        // Standard Action Params
-        address,  // user
         address _userProxy,
         address _sendToken,
         uint256 _sendAmount,
-        // Specific Action Params
         address _destination
     )
         external
@@ -48,21 +52,17 @@ contract ActionERC20Transfer is GelatoActionsStandard {
         virtual
         returns(string memory)  // actionCondition
     {
-        (address _user,
-         address _userProxy,
+        (address _userProxy,
          address _sendToken,
          uint256 _sendAmount) = abi.decode(
-            _actionPayload[4:132],
-            (address,address,address,uint256)
+            _actionPayload[4:100],
+            (address,address,uint256)
         );
-        return _actionConditionsCheck(_user, _userProxy, _sendToken, _sendAmount);
+        return _actionConditionsCheck(_userProxy, _sendToken, _sendAmount);
     }
 
     function _actionConditionsCheck(
-        // Standard Action Params
-        address,  // user
         address _userProxy,
-        // Specific Action Params
         address _sendToken,
         uint256 _sendAmount
     )
@@ -86,11 +86,9 @@ contract ActionERC20Transfer is GelatoActionsStandard {
     }
 
     // ============ API for FrontEnds ===========
-    function getUserProxysSourceTokenBalance(
+    function getUserProxysSendTokenBalance(
         // Standard Action Params
-        address _user,
         address _userProxy,
-        // Specific Action Params
         address _sendToken,
         uint256,
         address
@@ -100,12 +98,13 @@ contract ActionERC20Transfer is GelatoActionsStandard {
         virtual
         returns(uint256)
     {
-        _user;  // silence warning
         IERC20 sendERC20 = IERC20(_sendToken);
         try sendERC20.balanceOf(_userProxy) returns(uint256 userProxySendERC20Balance) {
             return userProxySendERC20Balance;
         } catch {
-            revert("Error: ActionERC20Transfer.getUserProxysSourceTokenBalance: balanceOf");
+            revert(
+                "Error: ActionERC20Transfer.getUserProxysSendTokenBalance: balanceOf"
+            );
         }
     }
 }

@@ -1,12 +1,13 @@
 pragma solidity ^0.6.2;
 
 import "../../GelatoActionsStandard.sol";
+import "../../../external/Ownable.sol";
 import "../../../external/IERC20.sol";
 import "../../../dapp_interfaces/bZx/IBzxPtoken.sol";
 import "../../../external/SafeMath.sol";
 import "../../../external/Address.sol";
 
-contract ActionBzxPtokenBurnToToken is GelatoActionsStandard {
+contract ActionBzxPtokenBurnToToken is GelatoActionsStandard, Ownable {
     // using SafeERC20 for IERC20; <- internal library methods vs. try/catch
     using SafeMath for uint256;
     using Address for address;
@@ -15,7 +16,13 @@ contract ActionBzxPtokenBurnToToken is GelatoActionsStandard {
     function actionSelector() external pure override returns(bytes4) {
         return this.action.selector;
     }
-    uint256 public constant override actionGas = 4200000;
+    uint256 public actionGas = 4200000;
+    function getActionGas() external view override virtual returns(uint256) {
+        return actionGas;
+    }
+    function setActionGas(uint256 _actionGas) external virtual onlyOwner {
+        actionGas = _actionGas;
+    }
 
     function action(
         // Standard Action Params

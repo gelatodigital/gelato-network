@@ -1,6 +1,7 @@
 pragma solidity ^0.6.0;
 
 import "../GelatoActionsStandard.sol";
+import "../../external/Ownable.sol";
 import "../../external/IERC20.sol";
 // import "../../external/SafeERC20.sol";
 import "../../dapp_interfaces/uniswap/IUniswapExchange.sol";
@@ -8,7 +9,7 @@ import "../../dapp_interfaces/uniswap/IUniswapFactory.sol";
 import "../../external/SafeMath.sol";
 import "../../external/Address.sol";
 
-contract ActionUniswapTradeKovan is GelatoActionsStandard {
+contract ActionUniswapTradeKovan is GelatoActionsStandard, Ownable {
     using SafeMath for uint256;
     using Address for address;
 
@@ -17,8 +18,17 @@ contract ActionUniswapTradeKovan is GelatoActionsStandard {
         return this.action.selector;
     }
 
-    uint256 public constant override actionGas = 150000;
-    address public constant ETH_ADDRESS = address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
+    uint256 public actionGas = 600000;
+    function getActionGas() external view override virtual returns(uint256) {
+        return actionGas;
+    }
+    function setActionGas(uint256 _actionGas) external virtual onlyOwner {
+        actionGas = _actionGas;
+    }
+
+    address public constant ETH_ADDRESS = address(
+        0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE
+    );
 
     function action(
         // Standard Action Params

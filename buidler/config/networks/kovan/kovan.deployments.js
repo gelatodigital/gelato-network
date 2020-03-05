@@ -7,12 +7,13 @@ export const deployments = {
 	// erc20
 	ActionERC20Transfer: "0x213719cD7c69DCA764E336bEb8D735DA01FD6c83",
 	ActionERC20TransferFrom: "0x24b7b219E903d11489227c5Bed0718D90C03eBc2",
+	ActionChainedTimedERC20TransferFrom: "0xbd2Fd3Ea42C8451CCF50E8BCE535cfF48F1F488B",
 	// ETHLONDON
 	ActionRebalancePortfolio: "0xbF7eFeBc8C15813A69a2AF967020d0FCB214B963",
 	// kyber
 	ActionKyberTradeKovan: "0xF829B506c378AaD11dB7Efe8d626cc7d0e015CBA",
 	// ==== Gelato Core ===
-	GelatoCore: "0x163d104E97129b4ED13e00AC55AF305ea8089f75",
+	GelatoCore: "0x35b9b372cF07B2d6B397077792496c61721B58fa",
 	// === Conditions ===
 	// balance
 	ConditionBalance: "0x60621bf3F7132838b27972084eaa56E87395D44B",

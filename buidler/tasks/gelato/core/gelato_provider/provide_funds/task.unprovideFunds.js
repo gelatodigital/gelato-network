@@ -1,18 +1,15 @@
 import { task } from "@nomiclabs/buidler/config";
-import { defaultNetwork } from "../../../../../buidler.config";
+import { defaultNetwork } from "../../../../../../buidler.config";
 
 export default task(
-  "gc-provideaction",
-  `Sends tx to GelatoCore.provideAction(<actionname>) on [--network] (default: ${defaultNetwork})`
+  "gc-unprovidefunds",
+  `Sends tx to GelatoCore.unprovideFunds([<amount>]) on [--network] (default: ${defaultNetwork})`
 )
-  .addPositionalParam("actionname")
+  .addOptionalPositionalParam("withdrawamount", "The amount to withdraw")
   .addFlag("log", "Logs return values to stdout")
-  .setAction(async ({ actionname, log }) => {
+  .setAction(async ({ withdrawamount, log }) => {
     try {
-      const action = await run("bre-config", {
-        deployments: true,
-        contractname: actionname
-      });
+      if (!withdrawamount) withdrawamount = await run("gc-providerfunds");
       // Gelato Provider is the 3rd signer account
       const { 2: gelatoProvider } = await ethers.signers();
       const gelatoCore = await run("instantiateContract", {
@@ -20,8 +17,8 @@ export default task(
         signer: gelatoProvider,
         write: true
       });
-      const tx = await gelatoCore.provideAction(action);
-      if (log) console.log(`\n txHash provideAction: ${tx.hash}\n`);
+      const tx = await gelatoCore.unprovideFunds(withdrawamount);
+      if (log) console.log(`\n\ntxHash unprovideFunds: ${tx.hash}`);
       await tx.wait();
       return tx.hash;
     } catch (error) {

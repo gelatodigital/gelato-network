@@ -4,6 +4,7 @@ export const contracts = [
 	"ActionBzxPtokenMintWithToken",
 	"ActionERC20Transfer",
 	"ActionERC20TransferFrom",
+	"ActionChainedTimedERC20TransferFrom",
 	"ActionRebalancePortfolio",
 	"ActionKyberTradeKovan",
 	"ActionMultiMintForConditionTimestampPassed",

@@ -1,6 +1,7 @@
 pragma solidity ^0.6.2;
 
 import "../../GelatoActionsStandard.sol";
+import "../../../external/Ownable.sol";
 import "../../../external/SafeMath.sol";
 import "../../../conditions/IGelatoCondition.sol";
 import "../../../conditions/eth_utils/eth_time/ConditionTimestampPassed.sol";
@@ -8,14 +9,21 @@ import "../../../gelato_core/interfaces/IGelatoCore.sol";
 
 // CAUTION this contract is not up to date with Action standards due to missing return values
 //  (GelatoCore.Enums.ExecutionResult, uint8 reason) - not possible due to stack too deep
-contract ActionMultiMintForConditionTimestampPassed is GelatoActionsStandard {
+contract ActionMultiMintForConditionTimestampPassed is GelatoActionsStandard, Ownable {
     using SafeMath for uint256;
 
     // actionSelector public state variable np due to this.actionSelector constant issue
     function actionSelector() external pure override returns(bytes4) {
         return this.action.selector;
     }
-    uint256 public constant override actionGas = 1000000;
+
+    uint256 public actionGas = 1000000;
+    function getActionGas() external view override virtual returns(uint256) {
+        return actionGas;
+    }
+    function setActionGas(uint256 _actionGas) external virtual onlyOwner {
+        actionGas = _actionGas;
+    }
 
     // Caution when using storage in delegatecall
     function action(

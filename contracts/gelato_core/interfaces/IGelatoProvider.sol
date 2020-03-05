@@ -29,6 +29,11 @@ interface IGelatoProvider {
         address[] calldata _actions
     ) external payable;
 
+    function unregisterProvider(
+        address[] calldata _conditions,
+        address[] calldata _actions
+    ) external;
+
     function provideCondition(address _condition) external;
     function unprovideCondition(address _condition) external;
 
