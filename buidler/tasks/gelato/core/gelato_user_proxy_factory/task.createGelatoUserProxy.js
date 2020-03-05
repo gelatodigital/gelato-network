@@ -60,7 +60,7 @@ export default task(
   .addOptionalParam(
     "funding",
     "ETH value to be sent to newly created gelato user proxy",
-    "0",
+    constants.HashZero,
     types.int
   )
   .addFlag("log", "Logs return values to stdout")
