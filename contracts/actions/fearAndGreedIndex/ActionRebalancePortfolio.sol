@@ -28,25 +28,24 @@ contract ActionRebalancePortfolio is GelatoActionsStandard {
     // !!!!!!!!! Kovan !!!!!!
     address public constant DAI = 0xC4375B7De8af5a38a93548eb8453a498222C4fF2;
     address public constant CONDITION_FEAR_GREED_INDEX_ADDRESS
-        = 0x01697631e006D76FcD22EEe0aAA7b3b4B42b6819;
+        = 0x7792AB86a89D653fb45fA64708fe5172eEbDB5C1;
 
     // function action(address _executor, address _gasProvider) external virtual returns(uint256) {
     function action() external virtual returns(uint256) {
         IERC20 exchangeToken = IERC20(DAI);
 
-        // IFearGreedIndex fearGreedIndexContract = IFearGreedIndex(
-        //     CONDITION_FEAR_GREED_INDEX_ADDRESS
-        // );
+        IFearGreedIndex fearGreedIndexContract = IFearGreedIndex(
+            CONDITION_FEAR_GREED_INDEX_ADDRESS
+        );
 
         // 1. Fetch Current fearGreedIndex
-        // uint256 newDaiNum = fearGreedIndexContract.getConditionValue();
-        // @DEV delete Later
+        uint256 newDaiNum = fearGreedIndexContract.getConditionValue();
+        uint256 newDaiDen = 100;
         uint256 daiBalance;
         uint256 totalDaiBalance;
         uint256 newDaiAmountWeighted;
         uint256 oldDaiAmountWeighted;
-        uint256 newDaiNum = 80;
-        uint256 newDaiDen = 100;
+
 
         // 2. Calculate ETH's DAI Value
         IUniswapExchange uniswapExchange = getUniswapExchange(exchangeToken);
@@ -70,6 +69,8 @@ contract ActionRebalancePortfolio is GelatoActionsStandard {
         // IF e.g. 100 * 80 / 100 > 100 * 10000000 / 20000000 => Sell ETH for DAI
         newDaiAmountWeighted = totalDaiBalance.mul(newDaiNum).div(newDaiDen, "ActionRebalancePortfolio._action: newDaiWeight underflow");
 
+
+
         oldDaiAmountWeighted = totalDaiBalance.mul(daiBalance).div(totalDaiBalance, "ActionRebalancePortfolio._action: newDaiWeight underflow");
 
         // What happens if DAI Balance === 0? => Should be fine
@@ -82,9 +83,13 @@ contract ActionRebalancePortfolio is GelatoActionsStandard {
         else if (
             newDaiAmountWeighted > oldDaiAmountWeighted
         ) {
-            uint256 howMuchEthToKeepDaiDenominated =  ethAmountInDai.sub(newDaiAmountWeighted, "ActionRebalancePortfolio._action: howMuchEthToKeepDaiDenominated underflow");
+            // uint256 howMuchEthToKeepDaiDenominated =  ethAmountInDai.sub(newDaiAmountWeighted, "ActionRebalancePortfolio._action: howMuchEthToKeepDaiDenominated underflow");
 
-            uint256 howMuchEthToSellDaiDenominated =  ethAmountInDai.sub(howMuchEthToKeepDaiDenominated, "ActionRebalancePortfolio._action: howMuchEthToKeepDaiDenominated underflow");
+            // uint256 howMuchEthToSellDaiDenominated =  ethAmountInDai.sub(howMuchEthToKeepDaiDenominated, "ActionRebalancePortfolio._action: howMuchEthToKeepDaiDenominated underflow");
+
+            uint256 newEthPortfolioWeight = totalDaiBalance.mul(100 - newDaiNum).div(newDaiDen, "ActionRebalancePortfolio._action: newEthPortfolioWeight underflow");
+
+            uint256 howMuchEthToSellDaiDenominated =  ethAmountInDai.sub(newEthPortfolioWeight, "ActionRebalancePortfolio._action: howMuchEthToSellDaiDenominated underflow");
 
             uint256 howMuchEthToSellEthDenominated = address(this).balance.mul(howMuchEthToSellDaiDenominated).div(ethAmountInDai, "ActionRebalancePortfolio._action: howMuchEthToSellEthDenominated underflow");
 

@@ -18,6 +18,18 @@ export default task(
 			const provider = await ethers.getDefaultProvider("kovan");
 			const preBalance = await provider.getBalance(action.address);
 
+			// Fetch Condition Value from FearAndGreed Condition
+			const fearAndGreedContract = await run("instantiateContract", {
+				contractname: "ConditionFearGreedIndex",
+				write: true
+			});
+
+			const newDaiWeight = await fearAndGreedContract.getConditionValue();
+			console.log(
+				`\nNew weight of Dai portfolio part: ${parseFloat(newDaiWeight) /
+					100}\n`
+			);
+
 			// Get  ETH and DAI balances before
 
 			const daiAddress = "0xC4375B7De8af5a38a93548eb8453a498222C4fF2";
@@ -26,7 +38,7 @@ export default task(
 			];
 
 			const daiContract = new ethers.Contract(daiAddress, erc20Abi, provider);
-			console.log("1");
+
 			const preDaiBalance = await daiContract.balanceOf(action.address);
 			if (log) {
 				console.log(`ETH & DAI Balances before`);
@@ -72,17 +84,17 @@ export default task(
 			const preDaiWeight =
 				parseFloat(preDaiBalance) / parseFloat(preTotalDaiBalance);
 
-			if (preDaiWeight > parseFloat(0.8)) {
-				console.log(
-					`DAI that should be sold: ${parseFloat(preDaiBalance) -
-						parseFloat(0.8) * preTotalDaiBalance}`
-				);
-			} else {
-				console.log(
-					`ETH that should be sold: ${parseFloat(preContractEthValueInDai) -
-						parseFloat(0.2) * preTotalDaiBalance}`
-				);
-			}
+			// if (preDaiWeight > parseFloat(0.8)) {
+			// 	console.log(
+			// 		`DAI that should be sold: ${parseFloat(preDaiBalance) -
+			// 			parseFloat(0.8) * preTotalDaiBalance}`
+			// 	);
+			// } else {
+			// 	console.log(
+			// 		`ETH that should be sold: ${parseFloat(preContractEthValueInDai) -
+			// 			parseFloat(0.2) * preTotalDaiBalance}`
+			// 	);
+			// }
 
 			if (log) {
 				console.log(
@@ -106,9 +118,14 @@ export default task(
 				console.log(`DAI Balance: ${postDaiBalance}`);
 			}
 
-			const postContractEthValueInDai = await uniswapExchangeContract.getEthToTokenInputPrice(
-				postBalance
-			);
+			let postContractEthValueInDai = 0;
+			try {
+				postContractEthValueInDai = await uniswapExchangeContract.getEthToTokenInputPrice(
+					postBalance
+				);
+			} catch (error) {
+				// console.log(error);
+			}
 
 			const postTotalDaiBalance =
 				parseFloat(postContractEthValueInDai) + parseFloat(postDaiBalance);
@@ -126,10 +143,10 @@ export default task(
 				console.log(`\Total Contract Balance in DAI ${postTotalDaiBalance}\n`);
 				console.log(`\ETH Portfolio Weight ${postEthWeight}\n`);
 				console.log(`\DAI Portfolio Weight ${postDaiWeight}\n`);
-				console.log(
-					`\n DAI sold: ${parseFloat(preDaiBalance) -
-						parseFloat(postDaiBalance)}\n`
-				);
+				// console.log(
+				// 	`\n DAI sold: ${parseFloat(preDaiBalance) -
+				// 		parseFloat(postDaiBalance)}\n`
+				// );
 			}
 		} catch (error) {
 			console.error(error);
