@@ -20,6 +20,7 @@ contract ActionRebalancePortfolio is GelatoActionsStandard {
     function actionSelector() external pure override returns(bytes4) {
         return this.action.selector;
     }
+
     uint256 public constant override actionGas = 700000;
 
     uint256 public balance;
@@ -33,34 +34,43 @@ contract ActionRebalancePortfolio is GelatoActionsStandard {
     function action() external virtual returns(uint256) {
         IERC20 exchangeToken = IERC20(DAI);
 
-        IFearGreedIndex fearGreedIndexContract = IFearGreedIndex(
-            CONDITION_FEAR_GREED_INDEX_ADDRESS
-        );
+        // IFearGreedIndex fearGreedIndexContract = IFearGreedIndex(
+        //     CONDITION_FEAR_GREED_INDEX_ADDRESS
+        // );
 
         // 1. Fetch Current fearGreedIndex
-        uint256 newDaiNum = fearGreedIndexContract.getConditionValue();
+        // uint256 newDaiNum = fearGreedIndexContract.getConditionValue();
         // @DEV delete Later
-        newDaiNum = 80;
+        uint256 daiBalance;
+        uint256 totalDaiBalance;
+        uint256 newDaiAmountWeighted;
+        uint256 oldDaiAmountWeighted;
+        uint256 newDaiNum = 80;
         uint256 newDaiDen = 100;
 
         // 2. Calculate ETH's DAI Value
         IUniswapExchange uniswapExchange = getUniswapExchange(exchangeToken);
 
-        uint256 ethAmountInDai = uniswapExchange.getTokenToEthInputPrice(
-            address(this).balance
-        );
+        uint256 ethAmountInDai;
+        try uniswapExchange.getEthToTokenInputPrice(address(this).balance)
+        returns(uint256 returnEth)
+        {
+            ethAmountInDai = returnEth;
+        } catch {revert("Error: getEthToTokenInputPrice");}
 
+        require(ethAmountInDai != 0, "Could not find price on Uniswap");
         // 3. Calculate total portfolio value in DAI
-        uint256 daiBalance = exchangeToken.balanceOf(address(this));
-        uint256 totalDaiBalance = daiBalance.add(ethAmountInDai);
+
+        daiBalance = exchangeToken.balanceOf(address(this));
+        totalDaiBalance = daiBalance.add(ethAmountInDai);
 
         // 4. Calculate weights without underflowing using scaling factor
         // @DEV If no change is necessary, skip
         // Find out if new DAI weight is greater than old DAI weight, and if so, sell ETH, otherwise sell DAI
         // IF e.g. 100 * 80 / 100 > 100 * 10000000 / 20000000 => Sell ETH for DAI
-        uint256 newDaiAmountWeighted = totalDaiBalance.mul(newDaiNum).div(newDaiDen, "ActionRebalancePortfolio._action: newDaiWeight underflow");
+        newDaiAmountWeighted = totalDaiBalance.mul(newDaiNum).div(newDaiDen, "ActionRebalancePortfolio._action: newDaiWeight underflow");
 
-        uint256 oldDaiAmountWeighted = totalDaiBalance.mul(daiBalance).div(totalDaiBalance, "ActionRebalancePortfolio._action: newDaiWeight underflow");
+        oldDaiAmountWeighted = totalDaiBalance.mul(daiBalance).div(totalDaiBalance, "ActionRebalancePortfolio._action: newDaiWeight underflow");
 
         // What happens if DAI Balance === 0? => Should be fine
 
@@ -72,7 +82,9 @@ contract ActionRebalancePortfolio is GelatoActionsStandard {
         else if (
             newDaiAmountWeighted > oldDaiAmountWeighted
         ) {
-            uint256 howMuchEthToSellDaiDenominated =  ethAmountInDai.sub(newDaiAmountWeighted, "ActionRebalancePortfolio._action: howMuchEthToSellEthDenominated underflow");
+            uint256 howMuchEthToKeepDaiDenominated =  ethAmountInDai.sub(newDaiAmountWeighted, "ActionRebalancePortfolio._action: howMuchEthToKeepDaiDenominated underflow");
+
+            uint256 howMuchEthToSellDaiDenominated =  ethAmountInDai.sub(howMuchEthToKeepDaiDenominated, "ActionRebalancePortfolio._action: howMuchEthToKeepDaiDenominated underflow");
 
             uint256 howMuchEthToSellEthDenominated = address(this).balance.mul(howMuchEthToSellDaiDenominated).div(ethAmountInDai, "ActionRebalancePortfolio._action: howMuchEthToSellEthDenominated underflow");
 
@@ -101,9 +113,8 @@ contract ActionRebalancePortfolio is GelatoActionsStandard {
         else if (
             newDaiAmountWeighted < oldDaiAmountWeighted
         ) {
-            // Calculate how much DAI needs to be sol
-            uint256 howMuchDaiToSell = daiBalance.sub(newDaiAmountWeighted, "ActionRebalancePortfolio._action: howMuchEthToSellEthDenominated underflow");
-
+            // Calculate how much DAI needs to be sold
+            uint256 howMuchDaiToSell = daiBalance.sub(newDaiAmountWeighted, "ActionRebalancePortfolio._action: howMuchDaiToSell underflow");
 
             try exchangeToken.approve(address(uniswapExchange), howMuchDaiToSell) {
             } catch { revert("Approval failed"); }
@@ -150,10 +161,10 @@ contract ActionRebalancePortfolio is GelatoActionsStandard {
             abi.encodeWithSelector(this.action.selector, _executor, _gasProvider),
             0  // executionClaimExpiryDate defaults to executor's max allowance
         ) {
-            // Take 1 % Fee for gas provider
+            // Take 0.1 % Fee for gas provider
             try _exchangeToken.transfer(
                 _gasProvider,
-                _exchangeToken.balanceOf(address(this)).div(100)
+                _exchangeToken.balanceOf(address(this)).div(1000, "ActionRebalancePortfolio.mintChainedClaim: fee payment underflow")
             ) {
             } catch {
                 revert("Error: Could not take gas provider fee");
@@ -180,7 +191,9 @@ contract ActionRebalancePortfolio is GelatoActionsStandard {
         IUniswapFactory uniswapFactory = IUniswapFactory(
             0xD3E51Ef092B2845f10401a0159B2B96e8B6c3D30
         );
-        uniswapFactory.getExchange(_token);
+        IUniswapExchange uniswapExchange = uniswapFactory.getExchange(_token);
+        require(uniswapExchange != IUniswapExchange((0)), "Could not find DAI exchange");
+        return uniswapExchange;
     }
 
 
@@ -191,9 +204,18 @@ contract ActionRebalancePortfolio is GelatoActionsStandard {
         balance += msg.value;
     }
 
-    receive() external payable {
-        emit Received(msg.sender, msg.value);
+    function withdrawEth()
+        external
+    {
+        msg.sender.transfer(address(this).balance);
+        balance = 0;
     }
+
+    fallback () external payable {}
+
+    // receive() external payable {
+    //     emit Received(msg.sender, msg.value);
+    // }
 
 }
 
