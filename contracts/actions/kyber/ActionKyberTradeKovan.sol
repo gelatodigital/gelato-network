@@ -1,13 +1,14 @@
 pragma solidity ^0.6.2;
 
 import "../GelatoActionsStandard.sol";
+import "../../external/Ownable.sol";
 import "../../external/IERC20.sol";
 // import "../../external/SafeERC20.sol";
 import "../../dapp_interfaces/kyber/IKyber.sol";
 import "../../external/SafeMath.sol";
 import "../../external/Address.sol";
 
-contract ActionKyberTradeKovan is GelatoActionsStandard {
+contract ActionKyberTradeKovan is GelatoActionsStandard, Ownable {
     // using SafeERC20 for IERC20; <- internal library methods vs. try/catch
     using SafeMath for uint256;
     using Address for address;
@@ -16,7 +17,14 @@ contract ActionKyberTradeKovan is GelatoActionsStandard {
     function actionSelector() external pure override returns(bytes4) {
         return this.action.selector;
     }
-    uint256 public constant override actionGas = 700000;
+
+    uint256 public actionGas = 1200000;
+    function getActionGas() external view override virtual returns(uint256) {
+        return actionGas;
+    }
+    function setActionGas(uint256 _actionGas) external virtual onlyOwner {
+        actionGas = _actionGas;
+    }
 
     function action(
         // Standard Action Params
@@ -107,7 +115,7 @@ contract ActionKyberTradeKovan is GelatoActionsStandard {
         }
         try sendERC20.allowance(_user, _userProxy) returns(uint256 userProxySendTokenAllowance) {
             if (userProxySendTokenAllowance < _sendAmt)
-                return "ActionKyberTradeKovan: NotOkUserGnosisSafeProxySendTokenAllowance";
+                return "ActionKyberTradeKovan: NotOkUserProxySendTokenAllowance";
         } catch {
             return "ActionKyberTradeKovan: ErrorAllowance";
         }

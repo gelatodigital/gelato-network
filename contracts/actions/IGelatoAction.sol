@@ -5,15 +5,15 @@ pragma solidity ^0.6.2;
 /// @dev all the APIs are implemented inside GelatoActionsStandard
 interface IGelatoAction {
     function actionSelector() external pure returns(bytes4);
-    function actionGas() external pure returns(uint256);
+    function getActionGas() external view returns(uint256);
 
     /* CAUTION: all actions must have their action() function according to the
     following standard format:
         function action(
             address _user,
             address _userProxy,
-            address _source,
-            uint256 _sourceAmount,
+            address _sendToken,
+            uint256 _sendAmount,
             address _destination,
             ...
         )
@@ -37,8 +37,8 @@ interface IGelatoAction {
     /*function getUsersSendTokenBalance(
         address _user,
         address _userProxy,
-        address _source,
-        uint256 _sourceAmount,
+        address _sendToken,
+        uint256 _sendAmount,
         address _destination,
         ...
     )
@@ -46,7 +46,7 @@ interface IGelatoAction {
         view
         override
         virtual
-        returns(uint256 userSrcBalance);
+        returns(uint256 userSendTokenBalance);
     getUsersSendTokenBalance not defined here because non-overridable, due to
     different arguments passed across different actions
     */
