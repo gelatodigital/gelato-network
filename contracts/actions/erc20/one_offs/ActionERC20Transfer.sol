@@ -4,13 +4,10 @@ import "../../GelatoActionsStandard.sol";
 import "../../../external/Ownable.sol";
 import "../../../external/IERC20.sol";
 // import "../../../external/SafeERC20.sol";
-import "../../../dapp_interfaces/kyber/IKyber.sol";
-import "../../../external/SafeMath.sol";
 import "../../../external/Address.sol";
 
 contract ActionERC20Transfer is GelatoActionsStandard, Ownable {
     // using SafeERC20 for IERC20; <- internal library methods vs. try/catch
-    using SafeMath for uint256;
     using Address for address;
 
     // actionSelector public state variable np due to this.actionSelector constant issue
