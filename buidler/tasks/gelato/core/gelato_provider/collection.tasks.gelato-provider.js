@@ -1,12 +1,14 @@
-// GelatoProvider
+// ==== GelatoProvider ===
+// Registration
 import "./task.registerProvider";
+import "./task.unregisterProvider";
 // Funding
-import "./task.providerFunds";
-import "./task.provideFunds";
-import "./task.unprovideFunds";
+import "./provide_funds/task.providerFunds";
+import "./provide_funds/task.provideFunds";
+import "./provide_funds/task.unprovideFunds";
 // Condition Provision
-import "./task.provideCondition";
-import "./task.isProvidedCondition";
+import "./provide_conditions/task.provideCondition";
+import "./provide_conditions/task.isProvidedCondition";
 // Action Provision
-import "./task.provideAction";
-import "./task.isProvidedAction";
+import "./provide_actions/task.provideAction";
+import "./provide_actions/task.isProvidedAction";

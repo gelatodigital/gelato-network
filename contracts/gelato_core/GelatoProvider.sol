@@ -17,10 +17,7 @@ abstract contract GelatoProvider is IGelatoProvider {
     mapping(address => uint256) public override providerFunds;
 
     // Register as provider
-    function registerProvider(
-        address[] calldata _conditions,
-        address[] calldata _actions
-    )
+    function registerProvider(address[] calldata _conditions, address[] calldata _actions)
         external
         payable
         override
@@ -28,6 +25,16 @@ abstract contract GelatoProvider is IGelatoProvider {
         for (uint8 i = 0; i < _conditions.length; i++) provideCondition(_conditions[i]);
         for (uint8 i = 0; i < _actions.length; i++) provideAction(_actions[i]);
         provideFunds(msg.sender);
+    }
+
+    // Unregister as provider
+    function unregisterProvider(address[] calldata _conditions, address[] calldata _actions)
+        external
+        override
+    {
+        for (uint8 i = 0; i < _conditions.length; i++) unprovideCondition(_conditions[i]);
+        for (uint8 i = 0; i < _actions.length; i++) unprovideAction(_actions[i]);
+        unprovideFunds(providerFunds[msg.sender]);
     }
 
     // Provide Conditions
@@ -40,7 +47,7 @@ abstract contract GelatoProvider is IGelatoProvider {
         emit LogProvideCondition(msg.sender, _condition);
     }
 
-    function unprovideCondition(address _condition) external override {
+    function unprovideCondition(address _condition) public override {
         require(
             isProvidedCondition[msg.sender][_condition],
             "ProviderWhitelistModule.unprovideCondition: already not provided"
@@ -59,7 +66,7 @@ abstract contract GelatoProvider is IGelatoProvider {
         emit LogProvideAction(msg.sender, _action);
     }
 
-    function unprovideAction(address _action) external override {
+    function unprovideAction(address _action) public override {
         require(
             isProvidedCondition[msg.sender][_action],
             "ProviderWhitelistModule.unprovideAction: already not provided"
@@ -77,7 +84,7 @@ abstract contract GelatoProvider is IGelatoProvider {
     }
 
     function unprovideFunds(uint256 _withdrawAmount)
-        external
+        public
         override
     {
         require(_withdrawAmount > 0, "GelatoProvider.unprovideFunds: zero _amount");
@@ -107,11 +114,7 @@ abstract contract GelatoProvider is IGelatoProvider {
         return  fundsDemand <= providerFunds[_provider] ? true : false;
     }
 
-    function _liquidProvider(
-        address _provider,
-        uint256 _gasPrice,
-        uint256 _gas
-    )
+    function _liquidProvider(address _provider, uint256 _gasPrice, uint256 _gas)
         internal
         view
     {
