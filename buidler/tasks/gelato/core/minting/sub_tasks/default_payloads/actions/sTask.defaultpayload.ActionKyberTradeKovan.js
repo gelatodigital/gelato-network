@@ -17,8 +17,8 @@ export default internalTask(
       const { luis: user } = await run("bre-config", {
         addressbookcategory: "EOA"
       });
-      const { luis: gnosisSafeProxy } = await run("bre-config", {
-        addressbookcategory: "gnosisSafeProxy"
+      const { luis: userProxy } = await run("bre-config", {
+        addressbookcategory: "userProxy"
       });
       const { KNC: src, DAI: dest } = await run("bre-config", {
         addressbookcategory: "erc20"
@@ -30,7 +30,7 @@ export default internalTask(
 
       // Params as sorted array of inputs for abi.encoding
       // action(_user, _userProxy, _src, _srcAmt, _dest)
-      const inputs = [user, gnosisSafeProxy, src, srcAmt, dest];
+      const inputs = [user, userProxy, src, srcAmt, dest];
       // Encoding
       const payloadWithSelector = await run("abi-encode-withselector", {
         contractname,
