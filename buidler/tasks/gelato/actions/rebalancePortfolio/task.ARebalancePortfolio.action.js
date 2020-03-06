@@ -71,9 +71,12 @@ export default task(
 				provider
 			);
 
-			const preContractEthValueInDai = await uniswapExchangeContract.getEthToTokenInputPrice(
-				preBalance
-			);
+			let preContractEthValueInDai = 0;
+			try {
+				preContractEthValueInDai = await uniswapExchangeContract.getEthToTokenInputPrice(
+					preBalance
+				);
+			} catch {}
 
 			const preTotalDaiBalance =
 				parseFloat(preContractEthValueInDai) + parseFloat(preDaiBalance);

@@ -47,7 +47,6 @@ contract ActionRebalancePortfolio is GelatoActionsStandard, Ownable {
 
         // 1. Fetch Current fearGreedIndex
         uint256 newDaiNum = fearGreedIndexContract.getConditionValue();
-        uint256 newDaiDen = 100;
         uint256 daiBalance;
         uint256 totalDaiBalance;
         uint256 newDaiAmountWeighted;
@@ -58,13 +57,20 @@ contract ActionRebalancePortfolio is GelatoActionsStandard, Ownable {
         IUniswapExchange uniswapExchange = getUniswapExchange(exchangeToken);
 
         uint256 ethAmountInDai;
-        try uniswapExchange.getEthToTokenInputPrice(address(this).balance)
-        returns(uint256 returnEth)
         {
-            ethAmountInDai = returnEth;
-        } catch {revert("Error: getEthToTokenInputPrice");}
+            uint256 ethBalance = address(this).balance;
+            if (ethBalance != 0)
+            {
+                try uniswapExchange.getEthToTokenInputPrice(ethBalance)
+                returns(uint256 returnEth)
+                {
+                    ethAmountInDai = returnEth;
+                } catch {
+                    revert("Error: getEthToTokenInputPrice");
+                }
+            }
+        }
 
-        require(ethAmountInDai != 0, "Could not find price on Uniswap");
         // 3. Calculate total portfolio value in DAI
 
         daiBalance = exchangeToken.balanceOf(address(this));
@@ -74,7 +80,7 @@ contract ActionRebalancePortfolio is GelatoActionsStandard, Ownable {
         // @DEV If no change is necessary, skip
         // Find out if new DAI weight is greater than old DAI weight, and if so, sell ETH, otherwise sell DAI
         // IF e.g. 100 * 80 / 100 > 100 * 10000000 / 20000000 => Sell ETH for DAI
-        newDaiAmountWeighted = totalDaiBalance.mul(newDaiNum).div(newDaiDen, "ActionRebalancePortfolio._action: newDaiWeight underflow");
+        newDaiAmountWeighted = totalDaiBalance.mul(newDaiNum).div(100, "ActionRebalancePortfolio._action: newDaiWeight underflow");
 
 
 
@@ -94,7 +100,7 @@ contract ActionRebalancePortfolio is GelatoActionsStandard, Ownable {
 
             // uint256 howMuchEthToSellDaiDenominated =  ethAmountInDai.sub(howMuchEthToKeepDaiDenominated, "ActionRebalancePortfolio._action: howMuchEthToKeepDaiDenominated underflow");
 
-            uint256 newEthPortfolioWeight = totalDaiBalance.mul(100 - newDaiNum).div(newDaiDen, "ActionRebalancePortfolio._action: newEthPortfolioWeight underflow");
+            uint256 newEthPortfolioWeight = totalDaiBalance.mul(100 - newDaiNum).div(100, "ActionRebalancePortfolio._action: newEthPortfolioWeight underflow");
 
             uint256 howMuchEthToSellDaiDenominated =  ethAmountInDai.sub(newEthPortfolioWeight, "ActionRebalancePortfolio._action: howMuchEthToSellDaiDenominated underflow");
 

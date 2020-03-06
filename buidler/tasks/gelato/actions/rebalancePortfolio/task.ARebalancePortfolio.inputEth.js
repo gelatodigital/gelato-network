@@ -18,7 +18,12 @@ export default task(
 			const halfEth = ethers.utils.parseEther("0.01");
 
 			const tx = await action.inputEth({ value: halfEth });
-			if (log) console.log(`\ntxHash set: ${tx.hash}\n`);
+			if (log) {
+				console.log(`\ntxHash set: ${tx.hash}\n`);
+				console.log(
+					`\nSuccessfully inputted  ${halfEth} into the smart contract\n`
+				);
+			}
 			await tx.wait();
 			return tx.hash;
 		} catch (error) {
