@@ -213,7 +213,7 @@ contract GelatoCore is
         // canExecute()
         {
             string memory canExecuteResult  = canExecute(
-                _selectedProviderAndExecutor,
+                [_selectedProviderAndExecutor[0], msg.sender],
                 _executionClaimId,
                 _userProxy,
                 _conditionAndAction,

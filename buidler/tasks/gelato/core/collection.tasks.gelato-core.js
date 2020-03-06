@@ -22,7 +22,8 @@ import "./gelato_executor/collection.tasks.gelato-executor";
 import "./minting/collection.tasks.minting";
 
 // === Execution Tasks ===
-
+// CanExcute
+import "./execution/task.canExecute";
 
 // === Internal Tasks ===
 import "./internal/collection.iTasks.gelato-core";
