@@ -13,6 +13,10 @@ export default task(
     types.int
   )
   .addOptionalParam(
+    "executionclaim",
+    "Supply LogExecutionClaimMinted values in an obj"
+  )
+  .addOptionalParam(
     "fromblock",
     "The block number to search for event logs from",
     undefined, // default
@@ -26,10 +30,6 @@ export default task(
   )
   .addOptionalParam("blockhash", "Search a specific block")
   .addOptionalParam("txhash", "Filter for a specific tx")
-  .addOptionalParam(
-    "executionclaim",
-    "Supply LogExecutionClaimMinted values in an obj"
-  )
   .addFlag("log", "Logs return values to stdout")
   .setAction(
     async ({
@@ -45,12 +45,15 @@ export default task(
       try {
         if (!executionclaim) {
           // Fetch Execution Claim from LogExecutionClaimMinted values
-          executionclaim = await run("gc-fetchexecutionclaim", {
+          executionclaim = await run("gc-fetchparsedexecutionclaimevent", {
             executionclaimid,
+            contractname: "GelatoCore",
+            eventname: "LogExecutionClaimMinted",
             fromblock,
             toblock,
             blockhash,
             txhash,
+            values: true,
             log
           });
         }

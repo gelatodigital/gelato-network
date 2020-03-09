@@ -1,2 +1,2 @@
 import "./task.getCurrentExecutionClaimId";
-import "./task.fetchExecutionClaim";
+import "./task.fetchParsedExecutionClaimEvent";

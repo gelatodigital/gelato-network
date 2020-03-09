@@ -1,12 +1,14 @@
 import { task } from "@nomiclabs/buidler/config";
-import { defaultNetwork } from "../../../../../buidler.config";
+import { defaultNetwork } from "../../../../../../buidler.config";
 
 export default task(
-  "gc-fetchexecutionclaim",
-  `Queries the --network (default: ${defaultNetwork}) [--fromblock] for LogExecutionClaimMinted
+  "fetchexecutionclaimeventvalues",
+  `Queries the --network (default: ${defaultNetwork}) [--fromblock] for <eventname>
    values for <executionclaimid>. Returns undefined if none were found.`
 )
   .addPositionalParam("executionclaimid")
+  .addPositionalParam("contractname")
+  .addPositionalParam("eventname")
   .addOptionalParam(
     "fromblock",
     "The block number to search for event logs from",
@@ -21,10 +23,13 @@ export default task(
   )
   .addOptionalParam("blockhash", "Search a specific block")
   .addOptionalParam("txhash", "Filter for a specific tx")
+  .addFlag("values", "Only get the values of the parsed Event Log")
   .addFlag("log", "Logs return values to stdout")
   .setAction(
     async ({
       executionclaimid,
+      contractname,
+      eventname,
       fromblock,
       toblock,
       blockhash,
@@ -33,34 +38,33 @@ export default task(
     }) => {
       try {
         // Fetch current gelatoCore
-        const mintedExecutionClaims = await run("event-getparsedlogs", {
-          contractname: "GelatoCore",
-          eventname: "LogExecutionClaimMinted",
+        const executionClaimEventValues = await run("event-getparsedlogs", {
+          contractname,
+          eventname,
           fromblock,
           toblock,
           blockhash,
           txhash,
-          values: true
+          values
         });
 
-        const executionClaim = mintedExecutionClaims.find(mintedClaim =>
-          ethers.utils
-            .bigNumberify(executionclaimid)
-            .eq(mintedClaim.executionClaimId)
+        const executionClaimEvent = executionClaimEventValues.find(event =>
+          ethers.utils.bigNumberify(executionclaimid).eq(event.executionClaimId)
         );
 
-        if (executionClaim) {
+        if (executionClaimEvent) {
           if (log) {
             console.log(
-              `\n Execution Claim ID-${executionclaimid}:\n`,
-              executionClaim
+              `\n ExecutionClaimId: ${executionclaimid}\
+               \n Event:            ${eventname}:\n Values:\n`,
+              executionClaimEvent
             );
           }
-          return executionClaim;
+          return executionClaimEvent;
         } else {
           if (log) {
             console.log(
-              `\n ❌ No Execution Claim with Id ${executionclaimid} found\n`
+              `\n ❌ ExecutionClaim Event "${eventname}" not found for ExecutionClaim-${executionclaimid}\n`
             );
           }
         }
