@@ -1,95 +1,88 @@
-import { task } from "@nomiclabs/buidler/config";
+import { task, types } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../../buidler.config";
 
 export default task(
-	"gc-canexecute",
-	`Calls GelatoCore.canExecute() on [--network] (default: ${defaultNetwork})`
+  "gc-canexecute",
+  `Calls GelatoCore.canExecute() on [--network] (default: ${defaultNetwork})`
 )
-	.addPositionalParam("executionclaimid")
-	.addPositionalParam(
-		"executorindex",
-		"which mnemoric index should be selected for executor msg.sender (default index 1)",
-		1,
-		types.int
-	)
-	.addOptionalPositionalParam(
-		"fromblock",
-		"the block from which to search for executionclaimid data"
-	)
-	.addFlag("log", "Logs return values to stdout")
-	.setAction(async ({ executionclaimid, executorindex, fromblock, log }) => {
-		try {
-			// To avoid mistakes default log to true
-			log = true;
+  .addPositionalParam("executionclaimid")
+  .addOptionalPositionalParam(
+    "executorindex",
+    "which mnemonic index should be selected for executor msg.sender (default index 1)",
+    1,
+    types.int
+  )
+  .addOptionalPositionalParam(
+    "fromblock",
+    "the block from which to search for executionclaimid data"
+  )
+  .addFlag("log", "Logs return values to stdout")
+  .setAction(async ({ executionclaimid, executorindex, fromblock, log }) => {
+    try {
+      /*
+	  event LogExecutionClaimMinted(
+			address[2] selectedProviderAndExecutor,
+			uint256 indexed executionClaimId,
+			address indexed userProxy,
+			address[2] conditionAndAction,
+			bytes conditionPayload,
+			bytes actionPayload,
+			uint256 executionClaimExpiryDate
+	  );*/
 
-			/*
+      // Fetch current gelatoCore
+      const mintedExecutionClaims = await run("event-getparsedlogs", {
+        contractname: "GelatoCore",
+        eventname: "LogExecutionClaimMinted",
+        fromblock,
+        values: true
+      });
 
-			event LogExecutionClaimMinted(
-				address[2] selectedProviderAndExecutor,
-				uint256 indexed executionClaimId,
-				address indexed userProxy,
-				address[2] conditionAndAction,
-				bytes conditionPayload,
-				bytes actionPayload,
-				uint256 executionClaimExpiryDate
-			);
+      const executionClaim = mintedExecutionClaims.find(mintedClaim =>
+        ethers.utils
+          .bigNumberify(executionclaimid)
+          .eq(mintedClaim.executionClaimId)
+      );
 
-			*/
+      if (executionClaim) {
+        if (log) {
+          console.log(
+            `\n Execution Claim ID-${executionclaimid}:\n`,
+            executionClaim
+          );
+        }
 
-			// Fetch current gelatoCore
-			const mintedExecutionClaims = await run("event-getparsedlogs", {
-				contractname: "GelatoCore",
-				eventname: "LogExecutionClaimMinted",
-				values: true
-			});
+        const { [executorindex]: executor } = await ethers.signers();
 
-			try {
-				const executionClaim = mintedExecutionClaims.find(foundExecutionClaim =>
-					ethers.utils
-						.bigNumberify(executionclaimid)
-						.eq(foundExecutionClaim.executionClaimId)
-				);
+        if (log) console.log(`\n Executor: ${executor._address}\n`);
 
-				if (log) {
-					console.log(`\n Claim Id: ${executionclaimid}`);
-					// console.log(`\n Execution Claim: `, executionClaim);
-				}
+        const gelatoCore = await run("instantiateContract", {
+          contractname: "GelatoCore",
+          signer: executor,
+          write: true
+        });
 
-				const signers = await ethers.signers();
-				const signer = signers[parseInt(executorindex)];
-				const gelatoCore = await run("instantiateContract", {
-					contractname: "GelatoCore",
-					signer: signer,
-					write: true
-				});
-
-				try {
-					console.log(`Executor: ${signer._address}\n`);
-					// console.log(...executionClaim);
-					const isExecutable = await gelatoCore.canExecute(
-						executionClaim.selectedProviderAndExecutor,
-						executionClaim.executionClaimId,
-						executionClaim.userProxy,
-						executionClaim.conditionAndAction,
-						executionClaim.conditionPayload,
-						executionClaim.actionPayload,
-						executionClaim.executionClaimExpiryDate
-					);
-					console.log(`Can Excute Result: ${isExecutable}`);
-					if (isExecutable === "ok") return [true, executionClaim, gelatoCore];
-					else [false, executionClaim, gelatoCore];
-				} catch (error) {
-					console.log(`Can execute failed`);
-					console.log(error);
-				}
-			} catch (error) {
-				console.log(error);
-				console.log(`No execution claim found with id: ${executionclaimid}`);
-			}
-
-			// return [canExecuteResult, reason];
-		} catch (error) {
-			console.error(error);
-			process.exit(1);
-		}
-	});
+        try {
+          const canExecuteResult = await gelatoCore.canExecute(
+            executionClaim.selectedProviderAndExecutor,
+            executionClaim.executionClaimId,
+            executionClaim.userProxy,
+            executionClaim.conditionAndAction,
+            executionClaim.conditionPayload,
+            executionClaim.actionPayload,
+            executionClaim.executionClaimExpiryDate
+          );
+          if (log) console.log(`\n Can Execute Result: ${canExecuteResult}`);
+          return canExecuteResult;
+        } catch (error) {
+          console.error(`\n canExecute error`, error);
+        }
+      } else {
+        if (log)
+          console.log(`\n Execution Claim Id ${executionclaimid} not found\n`);
+      }
+    } catch (error) {
+      console.error(error);
+      process.exit(1);
+    }
+  });
