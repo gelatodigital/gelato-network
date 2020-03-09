@@ -110,7 +110,7 @@ export default task(
 
 			// Event Emission verification
 			if (taskArgs.log) {
-				const parsedMintLog = await run("event-getparsedlogs", {
+				let parsedMintLog = await run("event-getparsedlogs", {
 					contractname: "GelatoCore",
 					eventname: "LogExecutionClaimMinted",
 					txhash: mintTx.hash,

@@ -63,16 +63,6 @@ export default task(
 					write: true
 				});
 
-				/*
-				address[2] memory _selectedProviderAndExecutor,
-				uint256 _executionClaimId,
-				address _userProxy,
-				address[2] memory _conditionAndAction,
-				bytes memory _conditionPayload,
-				bytes memory _actionPayload,
-				uint256 _executionClaimExpiryDate
-				*/
-
 				try {
 					console.log(`Executor: ${signer._address}\n`);
 					// console.log(...executionClaim);
@@ -86,6 +76,8 @@ export default task(
 						executionClaim.executionClaimExpiryDate
 					);
 					console.log(`Can Excute Result: ${isExecutable}`);
+					if (isExecutable === "ok") return [true, executionClaim, gelatoCore];
+					else [false, executionClaim, gelatoCore];
 				} catch (error) {
 					console.log(`Can execute failed`);
 					console.log(error);

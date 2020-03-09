@@ -24,6 +24,7 @@ import "./minting/collection.tasks.minting";
 // === Execution Tasks ===
 // CanExcute
 import "./execution/task.canExecute";
+import "./execution/task.execute";
 
 // === Internal Tasks ===
 import "./internal/collection.iTasks.gelato-core";
