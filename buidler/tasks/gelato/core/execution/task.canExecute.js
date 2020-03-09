@@ -12,44 +12,47 @@ export default task(
     1,
     types.int
   )
-  .addOptionalPositionalParam(
+  .addOptionalParam(
     "fromblock",
-    "the block from which to search for executionclaimid data"
+    "The block number to search for event logs from",
+    undefined, // default
+    types.number
+  )
+  .addOptionalParam(
+    "toblock",
+    "The block number up until which to look for",
+    undefined, // default
+    types.number
+  )
+  .addOptionalParam("blockhash", "Search a specific block")
+  .addOptionalParam("txhash", "Filter for a specific tx")
+  .addOptionalParam(
+    "executionclaim",
+    "Supply LogExecutionClaimMinted values in an obj"
   )
   .addFlag("log", "Logs return values to stdout")
-  .setAction(async ({ executionclaimid, executorindex, fromblock, log }) => {
-    try {
-      /*
-	  event LogExecutionClaimMinted(
-			address[2] selectedProviderAndExecutor,
-			uint256 indexed executionClaimId,
-			address indexed userProxy,
-			address[2] conditionAndAction,
-			bytes conditionPayload,
-			bytes actionPayload,
-			uint256 executionClaimExpiryDate
-	  );*/
-
-      // Fetch current gelatoCore
-      const mintedExecutionClaims = await run("event-getparsedlogs", {
-        contractname: "GelatoCore",
-        eventname: "LogExecutionClaimMinted",
-        fromblock,
-        values: true
-      });
-
-      const executionClaim = mintedExecutionClaims.find(mintedClaim =>
-        ethers.utils
-          .bigNumberify(executionclaimid)
-          .eq(mintedClaim.executionClaimId)
-      );
-
-      if (executionClaim) {
-        if (log) {
-          console.log(
-            `\n Execution Claim ID-${executionclaimid}:\n`,
-            executionClaim
-          );
+  .setAction(
+    async ({
+      executionclaimid,
+      executorindex,
+      fromblock,
+      toblock,
+      blockhash,
+      txhash,
+      executionclaim,
+      log
+    }) => {
+      try {
+        if (!executionclaim) {
+          // Fetch Execution Claim from LogExecutionClaimMinted values
+          executionclaim = await run("gc-fetchexecutionclaim", {
+            executionclaimid,
+            fromblock,
+            toblock,
+            blockhash,
+            txhash,
+            log
+          });
         }
 
         const { [executorindex]: executor } = await ethers.signers();
@@ -64,25 +67,22 @@ export default task(
 
         try {
           const canExecuteResult = await gelatoCore.canExecute(
-            executionClaim.selectedProviderAndExecutor,
-            executionClaim.executionClaimId,
-            executionClaim.userProxy,
-            executionClaim.conditionAndAction,
-            executionClaim.conditionPayload,
-            executionClaim.actionPayload,
-            executionClaim.executionClaimExpiryDate
+            executionclaim.selectedProviderAndExecutor,
+            executionclaim.executionClaimId,
+            executionclaim.userProxy,
+            executionclaim.conditionAndAction,
+            executionclaim.conditionPayload,
+            executionclaim.actionPayload,
+            executionclaim.executionClaimExpiryDate
           );
           if (log) console.log(`\n Can Execute Result: ${canExecuteResult}`);
           return canExecuteResult;
         } catch (error) {
           console.error(`\n canExecute error`, error);
         }
-      } else {
-        if (log)
-          console.log(`\n Execution Claim Id ${executionclaimid} not found\n`);
+      } catch (error) {
+        console.error(error);
+        process.exit(1);
       }
-    } catch (error) {
-      console.error(error);
-      process.exit(1);
     }
-  });
+  );

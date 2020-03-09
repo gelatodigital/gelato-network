@@ -1,5 +1,6 @@
-import { task } from "@nomiclabs/buidler/config";
+import { task, types } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../../buidler.config";
+import { utils } from "ethers";
 
 export default task(
   "gc-execute",
@@ -19,25 +20,40 @@ export default task(
   .addFlag("log", "Logs return values to stdout")
   .setAction(async ({ executionclaimid, executorindex, fromblock, log }) => {
     try {
-      const [isExecutable, executionClaim, gelatoCore] = await run(
-        "gc-canexecute",
-        {
-          executionclaimid,
-          executorindex
-        }
-      );
+      // Fetch Execution Claim from LogExecutionClaimMinted values
+      const executionClaim = await run("gc-fetchexecutionclaim", {
+        executionclaimid,
+        fromblock,
+        log
+      });
 
-      if (isExecutable) {
+      // canExecute
+      const canExecuteResult = await run("gc-canexecute", {
+        executionclaimid,
+        executorindex,
+        executionclaim: executionClaim,
+        fromblock,
+        log
+      });
+
+      if (canExecuteResult === "ok") {
+        const { [executorindex]: executor } = await ethers.signers();
+        const gelatoCore = await run("instantiateContract", {
+          contractname: "GelatoCore",
+          signer: executor,
+          write: true
+        });
         try {
           const gelatoGasPrice = await gelatoCore.gelatoGasPrice();
+          const gelatoGasPriceGwei = utils.formatUnits(gelatoGasPrice, "gwei");
           const gelatoMAXGAS = await gelatoCore.MAXGAS();
-          if (log)
-            console.log(`
-						\nGelato Gas Price: ${gelatoGasPrice}
-						Gelato MAX GAS: ${gelatoMAXGAS}\n
-						\nUser Proxy Address: ${executionClaim.userProxy}
-
-					`);
+          if (log) {
+            console.log(
+              `\n Gelato Gas Price:  ${gelatoGasPriceGwei} gwei\
+               \n Gelato MAX GAS:    ${gelatoMAXGAS}\
+               \n UserProxy Address: ${executionClaim.userProxy}\n`
+            );
+          }
           const tx = await gelatoCore.execute(
             executionClaim.selectedProviderAndExecutor,
             executionClaim.executionClaimId,
@@ -51,11 +67,15 @@ export default task(
               gasLimit: gelatoMAXGAS
             }
           );
+
           if (log) console.log(`\ntxHash execTransaction: ${tx.hash}\n`);
 
-          const executeTxReceipt = await tx.wait();
-          if (log)
-            console.log(`
+          await tx.wait();
+
+          if (log) {
+
+          }
+          console.log(`
 						\nExecution Claim: ${executionclaimid} succesfully executed!
 
 					`);
