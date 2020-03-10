@@ -20,6 +20,11 @@ export default task(
 	.setAction(async ({ executionclaimid, executorindex, fromblock, log }) => {
 		try {
 			// Fetch current gelatoCore
+
+			const signers = ethers.signers();
+
+			const signer = signers[executorindex];
+
 			const mintedExecutionClaims = await run("event-getparsedlogs", {
 				contractname: "GelatoCore",
 				eventname: "LogExecutionClaimMinted",
@@ -84,8 +89,10 @@ export default task(
 			} else {
 				if (log)
 					console.log(`
-						\nClaim not executed
-
+						\nClaim not executable
+					`);
+				console.log(`
+						\nReason: ${canExecuteReturn}
 					`);
 			}
 		} catch (error) {
