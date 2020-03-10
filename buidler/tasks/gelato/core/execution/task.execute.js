@@ -1,81 +1,155 @@
-import { task } from "@nomiclabs/buidler/config";
+import { task, types } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../../buidler.config";
+import { utils } from "ethers";
 
 export default task(
-	"gc-execute",
-	`Calls GelatoCore.execute() on [--network] (default: ${defaultNetwork})`
+  "gc-execute",
+  `Calls GelatoCore.execute() on [--network] (default: ${defaultNetwork})`
 )
-	.addPositionalParam("executionclaimid")
-	.addPositionalParam(
-		"executorindex",
-		"which mnemoric index should be selected for executor msg.sender (default index 1)",
-		1,
-		types.int
-	)
-	.addOptionalPositionalParam(
-		"fromblock",
-		"the block from which to search for executionclaimid data"
-	)
-	.addFlag("log", "Logs return values to stdout")
-	.setAction(async ({ executionclaimid, executorindex, fromblock, log }) => {
-		try {
-			const [isExecutable, executionClaim, gelatoCore] = await run(
-				"gc-canexecute",
-				{
-					executionclaimid,
-					executorindex
-				}
-			);
+  .addPositionalParam("executionclaimid")
+  .addOptionalPositionalParam(
+    "executorindex",
+    "Which mnemonic index should be selected for executor msg.sender (default index 1)",
+    1,
+    types.int
+  )
+  .addOptionalParam(
+    "executionclaim",
+    "Supply LogExecutionClaimMinted values in an obj"
+  )
+  .addOptionalParam(
+    "fromblock",
+    "The block number to search for event logs from",
+    undefined, // default
+    types.number
+  )
+  .addOptionalParam(
+    "toblock",
+    "The block number up until which to look for",
+    undefined, // default
+    types.number
+  )
+  .addOptionalParam("blockhash", "Search a specific block")
+  .addOptionalParam("txhash", "Filter for a specific tx")
+  .addFlag("log", "Logs return values to stdout")
+  .setAction(
+    async ({
+      executionclaimid,
+      executorindex,
+      fromblock,
+      toblock,
+      blockhash,
+      txhash,
+      executionclaim,
+      log
+    }) => {
+      try {
+        if (!executionclaim) {
+          // Fetch Execution Claim from LogExecutionClaimMinted values
+          executionclaim = await run("gc-fetchparsedexecutionclaimevent", {
+            executionclaimid,
+            contractname: "GelatoCore",
+            eventname: "LogExecutionClaimMinted",
+            fromblock,
+            toblock,
+            blockhash,
+            txhash,
+            values: true,
+            log
+          });
+        }
 
-			if (isExecutable) {
-				try {
-					const gelatoGasPrice = await gelatoCore.gelatoGasPrice();
-					const gelatoMAXGAS = await gelatoCore.MAXGAS();
-					if (log)
-						console.log(`
-						\nGelato Gas Price: ${gelatoGasPrice}
-						Gelato MAX GAS: ${gelatoMAXGAS}\n
-						\nUser Proxy Address: ${executionClaim.userProxy}
+        const { [executorindex]: executor } = await ethers.signers();
+        const gelatoCore = await run("instantiateContract", {
+          contractname: "GelatoCore",
+          signer: executor,
+          write: true
+        });
 
-					`);
-					const tx = await gelatoCore.execute(
-						executionClaim.selectedProviderAndExecutor,
-						executionClaim.executionClaimId,
-						executionClaim.userProxy,
-						executionClaim.conditionAndAction,
-						executionClaim.conditionPayload,
-						executionClaim.actionPayload,
-						executionClaim.executionClaimExpiryDate,
-						{
-							gasPrice: gelatoGasPrice,
-							gasLimit: gelatoMAXGAS
-						}
-					);
-					if (log) console.log(`\ntxHash execTransaction: ${tx.hash}\n`);
+        let gelatoGasPrice;
+        try {
+          gelatoGasPrice = await gelatoCore.gelatoGasPrice();
+        } catch (error) {
+          console.error(`gelatoCore.gelatoGasPrice() error\n`, error);
+        }
 
-					const executeTxReceipt = await tx.wait();
-					if (log)
-						console.log(`
-						\nExecution Claim: ${executionclaimid} succesfully executed!
+        const gelatoGasPriceGwei = utils.formatUnits(gelatoGasPrice, "gwei");
+        let gelatoMAXGAS;
+        try {
+          gelatoMAXGAS = await gelatoCore.MAXGAS();
+        } catch (error) {
+          console.error(`gelatoCore.MAXGAS() error\n`, error);
+        }
 
-					`);
-				} catch (error) {
-					if (log) {
-						console.log("Estimate Gas failed");
-						console.log(error);
-					}
-				}
-			} else {
-				if (log)
-					console.log(`
-						\nClaim not executed
+        if (log) {
+          console.log(
+            `\n Gelato Gas Price:  ${gelatoGasPriceGwei} gwei\
+             \n Gelato MAX GAS:    ${gelatoMAXGAS}\
+             \n UserProxy Address: ${executionclaim.userProxy}\n`
+          );
+        }
 
-					`);
-			}
+        let executeTx;
+        try {
+          executeTx = await gelatoCore.execute(
+            executionclaim.selectedProviderAndExecutor,
+            executionclaim.executionClaimId,
+            executionclaim.userProxy,
+            executionclaim.conditionAndAction,
+            executionclaim.conditionPayload,
+            executionclaim.actionPayload,
+            executionclaim.executionClaimExpiryDate,
+            {
+              gasPrice: gelatoGasPrice,
+              gasLimit: gelatoMAXGAS
+            }
+          );
+        } catch (error) {
+          console.error(`gelatoCore.execute() PRE-EXECUTION error\n`, error);
+        }
 
-			// return [canExecuteResult, reason];
-		} catch (error) {
-			console.error(error);
-			process.exit(1);
-		}
-	});
+        if (log) console.log(`\ntxHash execTransaction: ${executeTx.hash}\n`);
+
+        let executeTxReceipt;
+        try {
+          executeTxReceipt = await executeTx.wait();
+        } catch (error) {
+          console.error(`gelatoCore.execute() EXECUTION error\n`, error);
+        }
+
+        if (executeTxReceipt && log) {
+          const eventNames = [
+            "LogCanExecuteSuccess",
+            "LogCanExecuteFailure",
+            "LogExecutionSuccess",
+            "LogExecutionFailure"
+          ];
+
+          const executionEvents = [];
+
+          for (const eventname of eventNames) {
+            const executionEvent = await run(
+              "gc-fetchparsedexecutionclaimevent",
+              {
+                executionclaimid,
+                contractname: "GelatoCore",
+                eventname,
+                blockhash: executeTxReceipt.blockHash,
+                values: true
+              }
+            );
+            executionEvents.push(executionEvent);
+          }
+          console.log(
+            `\nExecution Events emitted for execute-tx: ${executeTx.hash}:`
+          );
+          for (const event of executionEvents) console.log(event);
+        }
+
+        return executeTx.hash;
+      } catch (error) {
+        console.error(error);
+        process.exit(1);
+      }
+    }
+  );

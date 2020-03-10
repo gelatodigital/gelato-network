@@ -48,10 +48,16 @@ export default task(
 			if (
 				taskArgs.conditionname != constants.AddressZero &&
 				!taskArgs.conditionname.startsWith("Condition")
-			)
-				throw new Error(`Invalid condition: ${taskArgs.conditionname}`);
-			if (!taskArgs.actionname.startsWith("Action"))
-				throw new Error(`Invalid action: ${taskArgs.actionname}`);
+			) {
+				throw new Error(
+					`Invalid condition: ${taskArgs.conditionname}: enter <actionname> <conditionname>`
+				);
+			}
+			if (!taskArgs.actionname.startsWith("Action")) {
+				throw new Error(
+					`Invalid action: ${taskArgs.actionname}: enter <actionname> <conditionname>`
+				);
+			}
 
 			// Selected Provider and Executor
 			const selectedProvider = await run("handleProvider", {

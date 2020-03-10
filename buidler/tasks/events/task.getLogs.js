@@ -19,18 +19,18 @@ export default task(
   )
   .addOptionalParam(
     "fromblock",
-    "the block number to search for event logs from",
+    "The block number to search for event logs from",
     undefined, // default
     types.number
   )
   .addOptionalParam(
     "toblock",
-    "the block number up until which to look for",
+    "The block number up until which to look for",
     undefined, // default
     types.number
   )
-  .addOptionalParam("blockhash", "the blockhash in which")
-  .addOptionalParam("txhash", "filter for a specific tx")
+  .addOptionalParam("blockhash", "Search a specific block")
+  .addOptionalParam("txhash", "Filter for a specific tx")
   .addFlag("log", "Logs return values to stdout")
   .setAction(
     async ({

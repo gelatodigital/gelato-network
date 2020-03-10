@@ -71,6 +71,7 @@ contract GelatoCore is
 
         // Checks below will be separated onto provider module
         // msgSenderCheck();
+        // @DEV add require later !
         isProvidedCondition[_selectedProviderAndExecutor[0]][_conditionAndAction[0]];
         isProvidedAction[_selectedProviderAndExecutor[0]][_conditionAndAction[1]];
 
