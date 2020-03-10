@@ -31,16 +31,22 @@ export default task(
   )
   .addOptionalParam("blockhash", "Search a specific block")
   .addOptionalParam("txhash", "Filter for a specific tx")
-  .addOptionalParam("value", "a specific value to search for")
+  .addOptionalParam("property", "A specific key-value pair to search for")
+  .addOptionalParam("filterkey", "A key to filter for")
+  .addOptionalParam("filtervalue", "A value to filter for")
   .addFlag("values")
   .addFlag("stringify")
   .addFlag("log", "Logs return values to stdout")
   .setAction(async taskArgs => {
     try {
-      if (taskArgs.value && taskArgs.values)
-        throw new Error("Cannot search for --value and --values");
-      if (taskArgs.stringify && !taskArgs.value)
-        throw new Error("--stringify only supplements --value");
+      if (taskArgs.property && taskArgs.values)
+        throw new Error("Cannot search for --property and --values");
+      if (taskArgs.filtervalue && !taskArgs.filterkey && !taskArgs.property)
+        throw new Error("--filtervalue with a --filterkey or --property");
+      if (taskArgs.filterkey && !taskArgs.values)
+        throw new Error("--filter-key/value with --values");
+      if (taskArgs.stringify && !taskArgs.property)
+        throw new Error("--stringify --property");
 
       let loggingActivated;
       if (taskArgs.log) {
@@ -85,58 +91,114 @@ export default task(
         }
       } else {
         if (!taskArgs.txhash) {
+          // No txhash filter
           if (taskArgs.log) {
             console.log(
-              `Parsed Logs for ${taskArgs.contractname}.${taskArgs.eventname}`
+              `\n Parsed Logs for ${taskArgs.contractname}.${taskArgs.eventname}\n`
             );
           }
           if (taskArgs.values) {
-            const parsedLogsValues = [];
-            for (const parsedLog of parsedLogs) {
-              if (taskArgs.log) console.log("\n", parsedLog.values);
-              parsedLogsValues.push(parsedLog.values);
+            // filterkey/value
+            if (taskArgs.filterkey) {
+              parsedLogs = parsedLogs.filter(parsedLog =>
+                checkNestedObj(parsedLog, "values", taskArgs.filterkey)
+              );
+              if (taskArgs.filtervalue) {
+                parsedLogs = parsedLogs.filter(parsedLog => {
+                  const filteredValue = getNestedObj(
+                    parsedLog,
+                    "values",
+                    taskArgs.filterkey
+                  );
+                  return filteredValue == taskArgs.filtervalue;
+                });
+              }
             }
-            return parsedLogsValues;
-          } else if (taskArgs.value) {
-            const parsedLogsValue = [];
-            for (const parsedLog of parsedLogs) {
+            for (const index in parsedLogs)
+              parsedLogs[index] = parsedLogs[index].values;
+            if (taskArgs.log)
+              for (const values of parsedLogs) console.log("\n", values);
+            return parsedLogs;
+          } else if (taskArgs.property) {
+            if (taskArgs.filtervalue) {
+              parsedLogs = parsedLogs.filter(parsedLog => {
+                const filteredValue = getNestedObj(
+                  parsedLog,
+                  "values",
+                  taskArgs.property
+                );
+                return filteredValue == taskArgs.filtervalue;
+              });
+            }
+            for (const [index, parsedLog] of parsedLogs.entries()) {
               if (taskArgs.log) {
                 console.log(
-                  `\n ${taskArgs.value}: `,
+                  `\n ${taskArgs.property}: `,
                   taskArgs.stringify
-                    ? parsedLog.values[taskArgs.value].toString()
-                    : parsedLog.values[taskArgs.value]
+                    ? parsedLog.values[taskArgs.property].toString()
+                    : parsedLog.values[taskArgs.property]
                 );
               }
-              parsedLogsValue.push(
-                taskArgs.stringify
-                  ? parsedLog.values[taskArgs.value].toString()
-                  : parsedLog.values[taskArgs.value]
-              );
+              parsedLogs[index] = taskArgs.stringify
+                ? parsedLog.values[taskArgs.property].toString()
+                : parsedLog.values[taskArgs.property];
             }
-            return parsedLogsValue;
+            return parsedLogs;
           } else {
             for (const parsedLog of parsedLogs)
               if (taskArgs.log) console.log("\n", parsedLog);
             return parsedLogs;
           }
         } else {
-          // txhash
+          // txhash filter
           if (taskArgs.values) {
-            if (taskArgs.log) console.log("\n", parsedLogWithTxHash.values);
-            return parsedLogWithTxHash.values;
-          } else if (taskArgs.value) {
-            if (taskArgs.log) {
-              console.log(
-                `\n ${taskArgs.value}: `,
-                taskArgs.stringify
-                  ? parsedLogWithTxHash.values[taskArgs.value].toString()
-                  : parsedLogWithTxHash.values[taskArgs.value]
-              );
+            // Filtering
+            if (taskArgs.filterkey) {
+              if (
+                !checkNestedObj(
+                  parsedLogWithTxHash,
+                  "values",
+                  taskArgs.filterkey
+                )
+              )
+                parsedLogWithTxHash = undefined;
+              if (taskArgs.filtervalue) {
+                const filteredValue = getNestedObj(
+                  parsedLogWithTxHash,
+                  "values",
+                  taskArgs.filterkey
+                );
+                if (filteredValue != taskArgs.filtervalue)
+                  parsedLogWithTxHash = undefined;
+              }
             }
-            return taskArgs.stringify
-              ? parsedLogWithTxHash.values[taskArgs.value].toString()
-              : parsedLogWithTxHash.values[taskArgs.value];
+            if (parsedLogWithTxHash) {
+              if (taskArgs.log) console.log("\n", parsedLogWithTxHash.values);
+              return parsedLogWithTxHash.values;
+            }
+          } else if (taskArgs.property) {
+            if (taskArgs.filtervalue) {
+              const filteredValue = getNestedObj(
+                parsedLogWithTxHash,
+                "values",
+                taskArgs.property
+              );
+              if (filteredValue != taskArgs.filtervalue)
+                parsedLogWithTxHash = undefined;
+            }
+            if (parsedLogWithTxHash) {
+              if (taskArgs.log) {
+                console.log(
+                  `\n ${taskArgs.property}: `,
+                  taskArgs.stringify
+                    ? parsedLogWithTxHash.values[taskArgs.property].toString()
+                    : parsedLogWithTxHash.values[taskArgs.property]
+                );
+              }
+              return taskArgs.stringify
+                ? parsedLogWithTxHash.values[taskArgs.property].toString()
+                : parsedLogWithTxHash.values[taskArgs.property];
+            }
           } else {
             if (taskArgs.log) {
               console.log(
