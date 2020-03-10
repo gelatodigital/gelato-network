@@ -13,9 +13,7 @@ import "../../gelato_core/interfaces/IGelatoCore.sol";
 contract ActionRebalancePortfolio is GelatoActionsStandard, Ownable {
     // using SafeERC20 for IERC20; <- internal library methods vs. try/catch
     using SafeMath for uint256;
-    using Address for address;
-
-    event Received(address indexed sender,  uint256 indexed value);
+    using Address for address payable;
 
     // actionSelector public state variable np due to this.actionSelector constant issue
     function actionSelector() public pure override virtual returns(bytes4) {
@@ -32,13 +30,13 @@ contract ActionRebalancePortfolio is GelatoActionsStandard, Ownable {
     }
 
     // !!!!!!!!! Kovan !!!!!!
-    address public constant DAI = 0xC4375B7De8af5a38a93548eb8453a498222C4fF2;
+    // DAI
+    IERC20 public constant exchangeToken = IERC20(0xC4375B7De8af5a38a93548eb8453a498222C4fF2);
     address public constant CONDITION_FEAR_GREED_INDEX_ADDRESS
         = 0x7792AB86a89D653fb45fA64708fe5172eEbDB5C1;
 
     // function action(address _executor, address _gasProvider) external virtual returns(uint256) {
-    function action() public virtual returns(uint256) {
-        IERC20 exchangeToken = IERC20(DAI);
+    function action(address payable _provider) public virtual returns(uint256) {
 
         IFearGreedIndex fearGreedIndexContract = IFearGreedIndex(
             CONDITION_FEAR_GREED_INDEX_ADDRESS
@@ -72,6 +70,7 @@ contract ActionRebalancePortfolio is GelatoActionsStandard, Ownable {
         try fearGreedIndexContract.getConditionValue()
         returns(uint256 _newDaiNum)
         {
+            require(_newDaiNum >= 0 && _newDaiNum <= 100, "_newDaiNum has to be between 0 and 100");
             newDaiNum = _newDaiNum;
         }
         catch{revert("ActionRebalancePortfolio: fearGreedIndexContract.getConditionValue");}
@@ -98,13 +97,13 @@ contract ActionRebalancePortfolio is GelatoActionsStandard, Ownable {
                     address(this),  // origin
                     address(0),
                     address(this).balance,
-                    DAI,  // destination
-                    DAI,
+                    address(exchangeToken),  // destination
+                    address(exchangeToken),
                     0,
                     address(this)  // receiver
                 );
         }
-        // Portfolio needs to acquire more DAI
+        // Portfolio )needs to acquire more exchangeToken
         else if (
             newDaiAmountWeighted > oldDaiAmountWeighted
         ) {
@@ -118,7 +117,12 @@ contract ActionRebalancePortfolio is GelatoActionsStandard, Ownable {
 
             uint256 howMuchEthToSellEthDenominated = address(this).balance.mul(howMuchEthToSellDaiDenominated).div(ethAmountInDai, "ActionRebalancePortfolio._action: howMuchEthToSellEthDenominated underflow");
 
-            try uniswapExchange.ethToTokenSwapInput{ value: howMuchEthToSellEthDenominated }(
+            // Provider receives 0.3% fee
+            uint256 fee = howMuchEthToSellEthDenominated.div(3000, "ActionRebalancePortfolio._action: eth fee underflow");
+
+            _provider.sendValue(fee);
+
+            try uniswapExchange.ethToTokenSwapInput{ value: howMuchEthToSellEthDenominated.sub(fee, "ActionRebalancePortfolio._action: eth fee underflow 2") }(
                 howMuchEthToSellDaiDenominated,
                 now
             )
@@ -129,8 +133,8 @@ contract ActionRebalancePortfolio is GelatoActionsStandard, Ownable {
                     address(this),  // origin
                     address(0),
                     address(this).balance,
-                    DAI,  // destination
-                    DAI,
+                    address(exchangeToken),  // destination
+                    address(exchangeToken),
                     amountOfDaiAcquired,
                     address(this)  // receiver
                 );
@@ -142,14 +146,18 @@ contract ActionRebalancePortfolio is GelatoActionsStandard, Ownable {
         else if (
             newDaiAmountWeighted < oldDaiAmountWeighted
         ) {
-            // Calculate how much DAI needs to be sold
+            // Calculate how much exchangeToken needs to be sold
             uint256 howMuchDaiToSell = daiBalance.sub(newDaiAmountWeighted, "ActionRebalancePortfolio._action: howMuchDaiToSell underflow");
 
-            try exchangeToken.approve(address(uniswapExchange), howMuchDaiToSell) {
+            // Provider receives 0.3% fee
+            uint256 fee = howMuchDaiToSell.div(3000, "ActionRebalancePortfolio._action: dai fee underflow");
+            exchangeToken.transfer(_provider, fee);
+
+            try exchangeToken.approve(address(uniswapExchange), howMuchDaiToSell.sub(fee, "ActionRebalancePortfolio._action: howMuchDaiToSellSubFee underflow1")) {
             } catch { revert("Approval failed"); }
 
             // min ETH return can be 1, as we fetch the price atomically anyway.
-            try uniswapExchange.tokenToEthSwapInput(howMuchDaiToSell, 1, now)
+            try uniswapExchange.tokenToEthSwapInput(howMuchDaiToSell.sub(fee, "ActionRebalancePortfolio._action: howMuchDaiToSellSubFee underflow2"), 1, now)
                 returns(uint256 amountOfEthAcquired)
             {
             //     mintChainedClaim(newDaiNum, exchangeToken, _executor);
@@ -158,8 +166,8 @@ contract ActionRebalancePortfolio is GelatoActionsStandard, Ownable {
                 address(this),  // origin
                 address(0),
                 daiBalance,
-                DAI,  // destination
-                DAI,
+                address(exchangeToken),  // destination
+                address(exchangeToken),
                 amountOfEthAcquired,
                 address(this)  // receiver
             );

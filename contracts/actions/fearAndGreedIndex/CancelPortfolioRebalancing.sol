@@ -1,8 +1,8 @@
 pragma solidity ^0.6.2;
 
-import "../interfaces/IGnosisSafe.sol";
-import "../interfaces/IGelatoCore.sol";
-import "../interfaces/IGelatoUserProxyFactory.sol";
+import "../../gelato_core/interfaces/IGnosisSafe.sol";
+import "../../gelato_core/interfaces/IGelatoCore.sol";
+import "../../gelato_core/interfaces/IGelatoUserProxyFactory.sol";
 import "../../dapp_interfaces/fearAndGreedIndex/IFearGreedIndex.sol";
 import "../../external/SafeMath.sol";
 import "../../external/Address.sol";

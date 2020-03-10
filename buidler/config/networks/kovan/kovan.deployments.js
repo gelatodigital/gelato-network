@@ -11,7 +11,7 @@ export const deployments = {
 		"0xbd2Fd3Ea42C8451CCF50E8BCE535cfF48F1F488B",
 	// ETHLONDON
 	ActionRebalancePortfolio: "0x5903825931C39d2F01C749A692E138cA8cF8d2ae",
-	ActionChainedRebalancePortfolio: "0x4eE596a2f0e6700079C10346a8F69e33E3114d06",
+	ActionChainedRebalancePortfolio: "0xbe19A1007A787E80852e5a914D1d559D564E5A98",
 	// kyber
 	ActionKyberTradeKovan: "0xF829B506c378AaD11dB7Efe8d626cc7d0e015CBA",
 	// ==== Gelato Core ===

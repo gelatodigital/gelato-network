@@ -45,7 +45,7 @@ contract ActionChainedRebalancePortfolio is ActionRebalancePortfolio {
         address[2] calldata _conditionAndAction
     ) external {
         // Execute Rebalancing action
-        uint256 newFearAndGreedIndex = super.action();
+        uint256 newFearAndGreedIndex = super.action(address(_selectedProviderAndExecutor[0]).toPayable());
 
         // Encode FearAndGreedIndex Condition
         bytes memory conditionPayload = abi.encodeWithSelector(
