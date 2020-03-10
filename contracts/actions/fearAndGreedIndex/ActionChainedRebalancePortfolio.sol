@@ -60,8 +60,6 @@ contract ActionChainedRebalancePortfolio is ActionRebalancePortfolio {
             _conditionAndAction
         );
 
-        // bytes memory actionPayload;
-
         // Mint new Claim
         try getGelatoCore().mintExecutionClaim(
             _selectedProviderAndExecutor,
