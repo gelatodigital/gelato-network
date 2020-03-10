@@ -16,33 +16,36 @@ contract ActionChainedRebalancePortfolio is ActionRebalancePortfolio {
     using SafeMath for uint256;
     using Address for address;
 
-    event Received(address indexed sender,  uint256 indexed value);
+    event Received(address indexed sender, uint256 indexed value);
 
     // actionSelector public state variable np due to this.actionSelector constant issue
-    function actionSelector() external pure override virtual returns(bytes4) {
+    function actionSelector() public pure override virtual returns (bytes4) {
         return ActionChainedRebalancePortfolio.chainedAction.selector;
     }
 
     uint256 public actionGasChainned = 1000000;
 
-    function getActionGas() external view override virtual returns(uint256) {
+    function getActionGas() external view override virtual returns (uint256) {
         return actionGasChainned;
     }
 
-    function setActionGas(uint256 _actionGas) external override virtual onlyOwner {
+    function setActionGas(uint256 _actionGas)
+        external
+        override
+        virtual
+        onlyOwner
+    {
         actionGasChainned = _actionGas;
     }
 
     // function action(address _executor, address _gasProvider) external virtual returns(uint256) {
     function chainedAction(
         // ChainedMintingParams
-        address[2] calldata _selectedProviderAndExecutor
-    ) external returns(uint256) {
-
+        address[2] calldata _selectedProviderAndExecutor,
+        address[2] calldata _conditionAndAction
+    ) external {
         // Execute Rebalancing action
-        // uint256 newFearAndGreedIndex = super.action();
-        super.action();
-        uint256 newFearAndGreedIndex = 10;
+        uint256 newFearAndGreedIndex = super.action();
 
         // Encode FearAndGreedIndex Condition
         bytes memory conditionPayload = abi.encodeWithSelector(
@@ -50,16 +53,19 @@ contract ActionChainedRebalancePortfolio is ActionRebalancePortfolio {
             newFearAndGreedIndex
         );
 
-        // Encode This Action
+        // // Encode This Action
         bytes memory actionPayload = abi.encodeWithSelector(
-            this.actionSelector(),
-            _selectedProviderAndExecutor
+            actionSelector(),
+            _selectedProviderAndExecutor,
+            _conditionAndAction
         );
+
+        // bytes memory actionPayload;
 
         // Mint new Claim
         try getGelatoCore().mintExecutionClaim(
             _selectedProviderAndExecutor,
-            [CONDITION_FEAR_GREED_INDEX_ADDRESS, address(this)],
+            _conditionAndAction,
             conditionPayload,
             actionPayload,
             0  // executionClaimExpiryDate defaults to executor's max allowance
@@ -71,4 +77,3 @@ contract ActionChainedRebalancePortfolio is ActionRebalancePortfolio {
     }
 
 }
-

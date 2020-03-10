@@ -18,19 +18,18 @@ contract ActionRebalancePortfolio is GelatoActionsStandard, Ownable {
     event Received(address indexed sender,  uint256 indexed value);
 
     // actionSelector public state variable np due to this.actionSelector constant issue
-    function actionSelector() external pure override virtual returns(bytes4) {
+    function actionSelector() public pure override virtual returns(bytes4) {
         return this.action.selector;
     }
 
     uint256 public actionGas = 700000;
+
     function getActionGas() external view override virtual returns(uint256) {
         return actionGas;
     }
     function setActionGas(uint256 _actionGas) external virtual onlyOwner {
         actionGas = _actionGas;
     }
-
-    uint256 public balance;
 
     // !!!!!!!!! Kovan !!!!!!
     address public constant DAI = 0xC4375B7De8af5a38a93548eb8453a498222C4fF2;
@@ -45,15 +44,13 @@ contract ActionRebalancePortfolio is GelatoActionsStandard, Ownable {
             CONDITION_FEAR_GREED_INDEX_ADDRESS
         );
 
-        // 1. Fetch Current fearGreedIndex
-        uint256 newDaiNum = fearGreedIndexContract.getConditionValue();
+        uint256 newDaiNum;
         uint256 daiBalance;
         uint256 totalDaiBalance;
         uint256 newDaiAmountWeighted;
         uint256 oldDaiAmountWeighted;
 
-
-        // 2. Calculate ETH's DAI Value
+        // 1. Calculate ETH's DAI Value
         IUniswapExchange uniswapExchange = getUniswapExchange(exchangeToken);
 
         uint256 ethAmountInDai;
@@ -70,6 +67,15 @@ contract ActionRebalancePortfolio is GelatoActionsStandard, Ownable {
                 }
             }
         }
+
+        // 2. Fetch Current fearGreedIndex
+        try fearGreedIndexContract.getConditionValue()
+        returns(uint256 _newDaiNum)
+        {
+            newDaiNum = _newDaiNum;
+        }
+        catch{revert("ActionRebalancePortfolio: fearGreedIndexContract.getConditionValue");}
+
 
         // 3. Calculate total portfolio value in DAI
 
@@ -161,6 +167,7 @@ contract ActionRebalancePortfolio is GelatoActionsStandard, Ownable {
                 revert("Error ethToTokenSwapOutput");
             }
         }
+
         return newDaiNum;
     }
 
@@ -170,7 +177,7 @@ contract ActionRebalancePortfolio is GelatoActionsStandard, Ownable {
         internal
         returns(IGelatoCore)
     {
-        return IGelatoCore(0x45F205Eb29310B6Fb92893d938Cc1738001210e8);
+        return IGelatoCore(0x35b9b372cF07B2d6B397077792496c61721B58fa);
     }
 
      // Returns KOVAN uniswap factory

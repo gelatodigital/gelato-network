@@ -26,10 +26,27 @@ export default internalTask(
 			const provider = signers[parseInt(providerindex)];
 			const providerAndExecutor = [provider._address, executor._address];
 
+			const actionContract = await run("instantiateContract", {
+				contractname: "ActionChainedRebalancePortfolio",
+				read: true,
+				log
+			});
+
+			const conditionContract = await run("instantiateContract", {
+				contractname: "ConditionFearGreedIndex",
+				read: true,
+				log
+			});
+
+			const conditionAndAction = [
+				conditionContract.address,
+				actionContract.address
+			];
+
 			const actionPayload = await run("abi-encode-withselector", {
 				contractname: "ActionChainedRebalancePortfolio",
 				functionname: "chainedAction",
-				inputs: [providerAndExecutor],
+				inputs: [providerAndExecutor, conditionAndAction],
 				log
 			});
 

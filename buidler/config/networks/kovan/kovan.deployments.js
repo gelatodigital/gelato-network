@@ -10,8 +10,8 @@ export const deployments = {
 	ActionChainedTimedERC20TransferFrom:
 		"0xbd2Fd3Ea42C8451CCF50E8BCE535cfF48F1F488B",
 	// ETHLONDON
-	ActionRebalancePortfolio: "0xaD28727f7c1c4F4713f7359F3089bdDDdD074b04",
-	ActionChainedRebalancePortfolio: "0xA7B33869Ea37d4d4FF752f5Df402C13C4cAaf889",
+	ActionRebalancePortfolio: "0x5903825931C39d2F01C749A692E138cA8cF8d2ae",
+	ActionChainedRebalancePortfolio: "0x4eE596a2f0e6700079C10346a8F69e33E3114d06",
 	// kyber
 	ActionKyberTradeKovan: "0xF829B506c378AaD11dB7Efe8d626cc7d0e015CBA",
 	// ==== Gelato Core ===
