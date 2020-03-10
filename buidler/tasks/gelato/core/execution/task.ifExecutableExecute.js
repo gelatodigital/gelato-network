@@ -19,15 +19,31 @@ export default task(
 	.addFlag("log", "Logs return values to stdout")
 	.setAction(async ({ executionclaimid, executorindex, fromblock, log }) => {
 		try {
-			const [isExecutable, executionClaim, gelatoCore] = await run(
-				"gc-canexecute",
-				{
-					executionclaimid,
-					executorindex
-				}
+			// Fetch current gelatoCore
+			const mintedExecutionClaims = await run("event-getparsedlogs", {
+				contractname: "GelatoCore",
+				eventname: "LogExecutionClaimMinted",
+				values: true
+			});
+
+			const executionClaim = mintedExecutionClaims.find(foundExecutionClaim =>
+				ethers.utils
+					.bigNumberify(executionclaimid)
+					.eq(foundExecutionClaim.executionClaimId)
 			);
 
-			if (isExecutable) {
+			const gelatoCore = await run("instantiateContract", {
+				contractname: "GelatoCore",
+				signer: signer,
+				write: true
+			});
+
+			const canExecuteReturn = await run("gc-canexecute", {
+				executionclaimid,
+				executorindex
+			});
+
+			if (canExecuteReturn === "ok") {
 				try {
 					const gelatoGasPrice = await gelatoCore.gelatoGasPrice();
 					const gelatoMAXGAS = await gelatoCore.MAXGAS();
@@ -72,8 +88,6 @@ export default task(
 
 					`);
 			}
-
-			// return [canExecuteResult, reason];
 		} catch (error) {
 			console.error(error);
 			process.exit(1);
