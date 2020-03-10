@@ -118,8 +118,8 @@ export default task(
 					values: true
 				});
 				// Make execution claim Id human readable
-				parsedMintLog.executionClaimId = parsedMintLog.executionClaimId.toString();
-				console.log("\n LogExecutionClaimMinted\n", parsedMintLog);
+				console.log("\nId: ", parsedMintLog.executionClaimId.toString());
+				console.log("\nLogExecutionClaimMinted\n", parsedMintLog);
 			}
 
 			return mintTx.hash;

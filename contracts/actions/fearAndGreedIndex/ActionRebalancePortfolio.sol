@@ -18,7 +18,7 @@ contract ActionRebalancePortfolio is GelatoActionsStandard, Ownable {
     event Received(address indexed sender,  uint256 indexed value);
 
     // actionSelector public state variable np due to this.actionSelector constant issue
-    function actionSelector() external pure override returns(bytes4) {
+    function actionSelector() external pure override virtual returns(bytes4) {
         return this.action.selector;
     }
 
@@ -38,7 +38,7 @@ contract ActionRebalancePortfolio is GelatoActionsStandard, Ownable {
         = 0x7792AB86a89D653fb45fA64708fe5172eEbDB5C1;
 
     // function action(address _executor, address _gasProvider) external virtual returns(uint256) {
-    function action() external virtual returns(uint256) {
+    function action() public virtual returns(uint256) {
         IERC20 exchangeToken = IERC20(DAI);
 
         IFearGreedIndex fearGreedIndexContract = IFearGreedIndex(
@@ -82,15 +82,21 @@ contract ActionRebalancePortfolio is GelatoActionsStandard, Ownable {
         // IF e.g. 100 * 80 / 100 > 100 * 10000000 / 20000000 => Sell ETH for DAI
         newDaiAmountWeighted = totalDaiBalance.mul(newDaiNum).div(100, "ActionRebalancePortfolio._action: newDaiWeight underflow");
 
-
-
         oldDaiAmountWeighted = totalDaiBalance.mul(daiBalance).div(totalDaiBalance, "ActionRebalancePortfolio._action: newDaiWeight underflow");
 
         // What happens if DAI Balance === 0? => Should be fine
 
         if (newDaiAmountWeighted == oldDaiAmountWeighted) {
             // skip rebalancing, portfolio has correct weights
-            return 0;
+            emit LogTwoWay(
+                    address(this),  // origin
+                    address(0),
+                    address(this).balance,
+                    DAI,  // destination
+                    DAI,
+                    0,
+                    address(this)  // receiver
+                );
         }
         // Portfolio needs to acquire more DAI
         else if (
@@ -122,7 +128,6 @@ contract ActionRebalancePortfolio is GelatoActionsStandard, Ownable {
                     amountOfDaiAcquired,
                     address(this)  // receiver
                 );
-                return amountOfDaiAcquired;
             } catch {
                 revert("Error ethToTokenSwapOutput");
             }
@@ -152,45 +157,13 @@ contract ActionRebalancePortfolio is GelatoActionsStandard, Ownable {
                 amountOfEthAcquired,
                 address(this)  // receiver
             );
-                return amountOfEthAcquired;
             } catch {
                 revert("Error ethToTokenSwapOutput");
             }
         }
+        return newDaiNum;
     }
 
-    /*
-    address[2] calldata _selectedProviderAndExecutor,
-    address[2] calldata _conditionAndAction,
-    bytes calldata _conditionPayload,
-    bytes calldata _actionPayload
-    */
-    function mintChainedClaim(uint256 _newDaiNum, IERC20 _exchangeToken, address _executor, address _gasProvider)
-        internal
-    {
-        bytes memory conditionPayload = abi.encodeWithSelector(
-            bytes4(keccak256("reached(uint256)")),
-            _newDaiNum
-        );
-        try getGelatoCore().mintExecutionClaim(
-            [_gasProvider, _executor],
-            [CONDITION_FEAR_GREED_INDEX_ADDRESS, address(this)],
-            conditionPayload,
-            abi.encodeWithSelector(this.action.selector, _executor, _gasProvider),
-            0  // executionClaimExpiryDate defaults to executor's max allowance
-        ) {
-            // Take 0.1 % Fee for gas provider
-            try _exchangeToken.transfer(
-                _gasProvider,
-                _exchangeToken.balanceOf(address(this)).div(1000, "ActionRebalancePortfolio.mintChainedClaim: fee payment underflow")
-            ) {
-            } catch {
-                revert("Error: Could not take gas provider fee");
-            }
-        } catch {
-            revert("Minting chainedClaim unsuccessful");
-        }
-    }
 
     function getGelatoCore()
         pure
@@ -213,27 +186,6 @@ contract ActionRebalancePortfolio is GelatoActionsStandard, Ownable {
         require(uniswapExchange != IUniswapExchange((0)), "Could not find DAI exchange");
         return uniswapExchange;
     }
-
-
-    function inputEth()
-        external
-        payable
-    {
-        balance += msg.value;
-    }
-
-    function withdrawEth()
-        external
-    {
-        msg.sender.transfer(address(this).balance);
-        balance = 0;
-    }
-
-    fallback () external payable {}
-
-    // receive() external payable {
-    //     emit Received(msg.sender, msg.value);
-    // }
 
 }
 

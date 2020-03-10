@@ -6,6 +6,7 @@ export const contracts = [
 	"ActionERC20TransferFrom",
 	"ActionChainedTimedERC20TransferFrom",
 	"ActionRebalancePortfolio",
+	"ActionChainedRebalancePortfolio",
 	"ActionKyberTradeKovan",
 	"ActionMultiMintForConditionTimestampPassed",
 	"GelatoCore",

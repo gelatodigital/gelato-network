@@ -51,7 +51,7 @@ export default task(
 				);
 
 				if (log) {
-					console.log(`\n Claim Id: ${executionclaimid}`);
+					console.log(`\nClaim Id: ${executionclaimid}`);
 					// console.log(`\n Execution Claim: `, executionClaim);
 				}
 
