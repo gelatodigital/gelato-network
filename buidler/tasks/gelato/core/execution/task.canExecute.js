@@ -44,21 +44,36 @@ export default task(
     }) => {
       try {
         if (!executionclaim) {
-          // Fetch Execution Claim from LogExecutionClaimMinted values
-          executionclaim = await run("gc-fetchparsedexecutionclaimevent", {
-            executionclaimid,
-            contractname: "GelatoCore",
-            eventname: "LogExecutionClaimMinted",
-            fromblock,
-            toblock: 17209449,
-            blockhash,
-            txhash,
-            values: true,
-            log
-          });
+          if (txhash) {
+            // Search Log with txhash
+            executionclaim = await run("event-getparsedlog", {
+              executionclaimid,
+              contractname: "GelatoCore",
+              eventname: "LogExecutionClaimMinted",
+              txhash,
+              fromblock,
+              toblock,
+              blockhash,
+              values: true,
+              filterkey: "executionClaimId",
+              filtervalue: executionclaimid
+            });
+          } else {
+            // Search Logs
+            [executionclaim] = await run("event-getparsedlogs", {
+              executionclaimid,
+              contractname: "GelatoCore",
+              eventname: "LogExecutionClaimMinted",
+              fromblock,
+              toblock,
+              blockhash,
+              values: true,
+              filterkey: "executionClaimId",
+              filtervalue: executionclaimid
+            });
+          }
         }
-        console.log(executionclaim);
-        await sleep(10000);
+
         if (!executionclaim)
           throw new Error("Unable to fetch executionClaim from events");
 
@@ -82,7 +97,7 @@ export default task(
             executionclaim.actionPayload,
             executionclaim.executionClaimExpiryDate
           );
-          if (log) console.log(`\n Can Execute Result: ${canExecuteResult}`);
+          if (log) console.log(`\n Can Execute Result: ${canExecuteResult}\n`);
           return canExecuteResult;
         } catch (error) {
           console.error(`\n canExecute error`, error);
