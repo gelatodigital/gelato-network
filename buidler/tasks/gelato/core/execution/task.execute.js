@@ -31,35 +31,36 @@ export default task(
   )
   .addOptionalParam("blockhash", "Search a specific block")
   .addOptionalParam("txhash", "Filter for a specific tx")
+  .addFlag("stringify")
   .addFlag("log", "Logs return values to stdout")
   .setAction(
     async ({
       executionclaimid,
       executorindex,
+      executionclaim,
       fromblock,
       toblock,
       blockhash,
       txhash,
-      executionclaim,
+      stringify,
       log
     }) => {
       try {
         if (!executionclaim) {
-          // Fetch Execution Claim from LogExecutionClaimMinted values
-          executionclaim = await run("gc-fetchparsedexecutionclaimevent", {
+          executionclaim = await run("fetchExecutionClaim", {
             executionclaimid,
-            contractname: "GelatoCore",
-            eventname: "LogExecutionClaimMinted",
+            executionclaim,
             fromblock,
             toblock,
             blockhash,
             txhash,
-            values: true,
+            stringify,
             log
           });
         }
 
         const { [executorindex]: executor } = await ethers.signers();
+
         const gelatoCore = await run("instantiateContract", {
           contractname: "GelatoCore",
           signer: executor,
@@ -117,34 +118,32 @@ export default task(
           console.error(`gelatoCore.execute() EXECUTION error\n`, error);
         }
 
-        // if (executeTxReceipt && log) {
-        //   const eventNames = [
-        //     "LogCanExecuteSuccess",
-        //     "LogCanExecuteFailure",
-        //     "LogExecutionSuccess",
-        //     "LogExecutionFailure"
-        //   ];
+        if (executeTxReceipt && log) {
+          const eventNames = [
+            "LogCanExecuteSuccess",
+            "LogCanExecuteFailure",
+            "LogExecutionSuccess",
+            "LogExecutionFailure"
+          ];
 
-        //   const executionEvents = [];
+          const executionEvents = [];
 
-        //   for (const eventname of eventNames) {
-        //     const executionEvent = await run(
-        //       "gc-fetchparsedexecutionclaimevent",
-        //       {
-        //         executionclaimid,
-        //         contractname: "GelatoCore",
-        //         eventname,
-        //         blockhash: executeTxReceipt.blockHash,
-        //         values: true
-        //       }
-        //     );
-        //     executionEvents.push(executionEvent);
-        //   }
-        //   console.log(
-        //     `\nExecution Events emitted for execute-tx: ${executeTx.hash}:`
-        //   );
-        //   for (const event of executionEvents) console.log(event);
-        // }
+          for (const eventname of eventNames) {
+            const executionEvent = await run("event-getparsedlogs", {
+              executionclaimid,
+              contractname: "GelatoCore",
+              eventname,
+              blockhash: executeTxReceipt.blockHash,
+              values: true,
+              stringify
+            });
+            executionEvents.push(executionEvent);
+          }
+          console.log(
+            `\nExecution Events emitted for execute-tx: ${executeTx.hash}:`
+          );
+          for (const event of executionEvents) console.log(event);
+        }
 
         return executeTx.hash;
       } catch (error) {

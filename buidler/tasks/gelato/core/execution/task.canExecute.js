@@ -30,48 +30,32 @@ export default task(
   )
   .addOptionalParam("blockhash", "Search a specific block")
   .addOptionalParam("txhash", "Filter for a specific tx")
+  .addFlag("stringify")
   .addFlag("log", "Logs return values to stdout")
   .setAction(
     async ({
       executionclaimid,
       executorindex,
+      executionclaim,
       fromblock,
       toblock,
       blockhash,
       txhash,
-      executionclaim,
+      stringify,
       log
     }) => {
       try {
         if (!executionclaim) {
-          if (txhash) {
-            // Search Log with txhash
-            executionclaim = await run("event-getparsedlog", {
-              executionclaimid,
-              contractname: "GelatoCore",
-              eventname: "LogExecutionClaimMinted",
-              txhash,
-              fromblock,
-              toblock,
-              blockhash,
-              values: true,
-              filterkey: "executionClaimId",
-              filtervalue: executionclaimid
-            });
-          } else {
-            // Search Logs
-            [executionclaim] = await run("event-getparsedlogs", {
-              executionclaimid,
-              contractname: "GelatoCore",
-              eventname: "LogExecutionClaimMinted",
-              fromblock,
-              toblock,
-              blockhash,
-              values: true,
-              filterkey: "executionClaimId",
-              filtervalue: executionclaimid
-            });
-          }
+          executionclaim = await run("fetchExecutionClaim", {
+            executionclaimid,
+            executionclaim,
+            fromblock,
+            toblock,
+            blockhash,
+            txhash,
+            stringify,
+            log
+          });
         }
 
         if (!executionclaim)
