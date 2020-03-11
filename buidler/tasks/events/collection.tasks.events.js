@@ -1,3 +1,5 @@
 //  Many logs
-import "./task.getLogs"
-import "./task.getParsedLogs"
+import "./task.getLog";
+import "./task.getLogs";
+import "./task.getParsedLog";
+import "./task.getParsedLogs";

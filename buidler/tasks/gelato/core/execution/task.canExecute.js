@@ -50,14 +50,19 @@ export default task(
             contractname: "GelatoCore",
             eventname: "LogExecutionClaimMinted",
             fromblock,
-            toblock,
+            toblock: 17209449,
             blockhash,
             txhash,
             values: true,
-            filtervalue: utils.bigNumberify(executionclaimid),
+            filterkey: "executionClaimId",
+            filtervalue: executionclaimid,
             log
           });
         }
+        console.log(executionclaim);
+        await sleep(10000);
+        if (!executionclaim)
+          throw new Error("Unable to fetch executionClaim from events");
 
         const { [executorindex]: executor } = await ethers.signers();
 
