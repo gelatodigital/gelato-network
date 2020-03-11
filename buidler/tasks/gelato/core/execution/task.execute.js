@@ -41,7 +41,6 @@ export default task(
       toblock,
       blockhash,
       txhash,
-      stringify,
       log
     }) => {
       try {
