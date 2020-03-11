@@ -30,3 +30,5 @@ import "./default_payloads/actions/sTask.defaultpayload.ActionKyberTradeKovan";
 import "./default_payloads/actions/sTask.defaultpayload.ActionMultiMintForConditionTimestampPassed";
 // ActionRebalancePortfolio
 import "./default_payloads/actions/sTask.defaultpayload.ActionRebalancePortfolio";
+// ActionChainedRebalancePortfolio
+import "./default_payloads/actions/sTask.defaultpayload.ActionChainedRebalancePortfolio";

@@ -1,6 +1,5 @@
 import { task, types } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../../buidler.config";
-import { utils } from "ethers";
 
 export default task(
   "gc-canexecute",
@@ -46,7 +45,8 @@ export default task(
       try {
         if (!executionclaim) {
           // Fetch Execution Claim from LogExecutionClaimMinted values
-          executionclaim = await run("event-getparsedlogs", {
+          executionclaim = await run("gc-fetchparsedexecutionclaimevent", {
+            executionclaimid,
             contractname: "GelatoCore",
             eventname: "LogExecutionClaimMinted",
             fromblock,
@@ -54,8 +54,6 @@ export default task(
             blockhash,
             txhash,
             values: true,
-            filterkey: "executionClaimId",
-            filtervalue: executionclaimid,
             log
           });
         }

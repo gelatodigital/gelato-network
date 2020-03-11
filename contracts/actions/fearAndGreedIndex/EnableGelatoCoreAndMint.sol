@@ -1,7 +1,7 @@
 pragma solidity ^0.6.2;
 
-import "../interfaces/IGnosisSafe.sol";
-import "../interfaces/IGelatoCore.sol";
+import "../../gelato_core/interfaces/IGnosisSafe.sol";
+import "../../gelato_core/interfaces/IGelatoCore.sol";
 import "../../dapp_interfaces/fearAndGreedIndex/IFearGreedIndex.sol";
 import "../../external/SafeMath.sol";
 import "../../dapp_interfaces/uniswap/IUniswapFactory.sol";
