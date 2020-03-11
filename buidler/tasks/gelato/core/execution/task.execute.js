@@ -31,7 +31,6 @@ export default task(
   )
   .addOptionalParam("blockhash", "Search a specific block")
   .addOptionalParam("txhash", "Filter for a specific tx")
-  .addFlag("stringify")
   .addFlag("log", "Logs return values to stdout")
   .setAction(
     async ({
@@ -54,7 +53,6 @@ export default task(
             toblock,
             blockhash,
             txhash,
-            stringify,
             log
           });
         }
@@ -121,8 +119,8 @@ export default task(
         if (executeTxReceipt && log) {
           const eventNames = [
             "LogCanExecuteSuccess",
-            "LogCanExecuteFailure",
-            "LogExecutionSuccess",
+            "LogCanExecuteFailed",
+            "LogSuccessfulExecution",
             "LogExecutionFailure"
           ];
 
@@ -135,9 +133,10 @@ export default task(
               eventname,
               blockhash: executeTxReceipt.blockHash,
               values: true,
-              stringify
+              stringify: true
             });
-            executionEvents.push(executionEvent);
+            if (executionEvent)
+              executionEvents.push({ [eventname]: executionEvent });
           }
           console.log(
             `\nExecution Events emitted for execute-tx: ${executeTx.hash}:`

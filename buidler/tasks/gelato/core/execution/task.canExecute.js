@@ -30,7 +30,6 @@ export default task(
   )
   .addOptionalParam("blockhash", "Search a specific block")
   .addOptionalParam("txhash", "Filter for a specific tx")
-  .addFlag("stringify")
   .addFlag("log", "Logs return values to stdout")
   .setAction(
     async ({
@@ -41,7 +40,6 @@ export default task(
       toblock,
       blockhash,
       txhash,
-      stringify,
       log
     }) => {
       try {
@@ -53,7 +51,6 @@ export default task(
             toblock,
             blockhash,
             txhash,
-            stringify,
             log
           });
         }
