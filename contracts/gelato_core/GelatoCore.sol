@@ -71,9 +71,14 @@ contract GelatoCore is
 
         // Checks below will be separated onto provider module
         // msgSenderCheck();
-        // @DEV add require later !
-        isProvidedCondition[_selectedProviderAndExecutor[0]][_conditionAndAction[0]];
-        isProvidedAction[_selectedProviderAndExecutor[0]][_conditionAndAction[1]];
+        require(
+            isProvidedCondition[_selectedProviderAndExecutor[0]][_conditionAndAction[0]],
+            "GelatoCore.mintExecutionClaim: condition not provided"
+        );
+        require(
+            isProvidedAction[_selectedProviderAndExecutor[0]][_conditionAndAction[1]],
+            "GelatoCore.mintExecutionClaim: action not provided"
+        );
 
         // We cut this after initial testing
         address userProxy;
@@ -242,7 +247,7 @@ contract GelatoCore is
                     _conditionAndAction,
                     canExecuteResult
                 );
-                return;  // END OF EXECUTION
+                return;  // FAILURE: END OF EXECUTION
             }
         }
 
@@ -274,8 +279,9 @@ contract GelatoCore is
                     ExecutorPayout.Reward,
                     _selectedProviderAndExecutor[0]
                 );
-                // @DEV must RETURN here.
+                return;  // SUCCESS: END OF EXECUTION
             } else {
+                // FAILURE
                 // 68: 32-location, 32-length, 4-ErrorSelector, UTF-8 revertReason
                 if (actionRevertReason.length % 32 == 4) {
                     bytes4 selector;
@@ -295,11 +301,9 @@ contract GelatoCore is
         } catch {
             executionFailureReason = "UndefinedGnosisSafeProxyError";
         }
-
-        // Executor is REFUNDED for FAILED attempt
+        // FAILURE: Executor is REFUNDED for failed attempt
         _executorPayout(startGas, ExecutorPayout.Refund, _selectedProviderAndExecutor[0]);
 
-        // Failure
         emit LogExecutionFailure(
             _selectedProviderAndExecutor,
             msg.sender,  // executor
