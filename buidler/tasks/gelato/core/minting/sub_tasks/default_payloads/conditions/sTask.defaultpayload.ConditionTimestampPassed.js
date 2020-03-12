@@ -7,16 +7,13 @@ export default internalTask(
   .addFlag("log")
   .setAction(async ({ log }) => {
     try {
-      const contractname = "ConditionTimestampPassed";
-      // reached(_timestamp)
-      const functionname = "reached";
       // Params
-      const timestamp = (Math.floor(Date.now() / 1000)); // now
+      const timestamp = Math.floor(Date.now() / 1000); // now
       const inputs = [timestamp];
       // Encoding
       const payloadWithSelector = await run("abi-encode-withselector", {
-        contractname,
-        functionname,
+        contractname: "ConditionTimestampPassed",
+        functionname: "reached",
         inputs,
         log
       });

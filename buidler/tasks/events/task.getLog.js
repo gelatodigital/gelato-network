@@ -78,11 +78,13 @@ export default task(
           blockHash: blockhash,
           fromBlock: fromblock,
           toBlock: toblock,
-          transactionHash: txhash,
           topics: [contractInterface.events[eventname].topic]
         };
 
-        const [logWithTxHash] = await ethers.provider.getLogs(filter);
+        const filteredLogs = await ethers.provider.getLogs(filter);
+        const logWithTxHash = filteredLogs.find(
+          log => log.transactionHash == txhash
+        );
 
         if (log) {
           console.log(

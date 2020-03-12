@@ -1,5 +1,5 @@
 // === GelatoCore ===
-import "./task.getCurrentExecutionClaimId";
+import "./task.currentExecutionClaimId";
 
 // === Internal ===
 import "./internal/iTask.fetchExecutionClaim";

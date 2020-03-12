@@ -116,16 +116,17 @@ export default task(
 
       // Event Emission verification
       if (taskArgs.log) {
-        let parsedMintLog = await run("event-getparsedlogs", {
+        const parsedMintingLog = await run("event-getparsedlog", {
           contractname: "GelatoCore",
           eventname: "LogExecutionClaimMinted",
           txhash: mintTx.hash,
           blockHash,
-          values: true
+          values: true,
+          stringify: true
         });
-        // Make execution claim Id human readable
-        console.log("\nId: ", parsedMintLog.executionClaimId.toString());
-        console.log("\nLogExecutionClaimMinted\n", parsedMintLog);
+        if (parsedMintingLog)
+          console.log("\n✅ LogExecutionClaimMinted\n", parsedMintingLog);
+        else console.log("\n❌ LogExecutionClaimMinted not found");
       }
 
       return mintTx.hash;
