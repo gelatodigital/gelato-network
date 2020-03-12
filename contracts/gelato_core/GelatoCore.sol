@@ -274,6 +274,7 @@ contract GelatoCore is
                     ExecutorPayout.Reward,
                     _selectedProviderAndExecutor[0]
                 );
+                // @DEV must RETURN here.
             } else {
                 // 68: 32-location, 32-length, 4-ErrorSelector, UTF-8 revertReason
                 if (actionRevertReason.length % 32 == 4) {
