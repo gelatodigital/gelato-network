@@ -95,7 +95,7 @@ contract ActionKyberTrade is GelatoActionsStandard {
         virtual
         returns(string memory)  // actionCondition
     {
-        if (!_sendToken.isContract()) return "ActionKyberTrade: NotOkSrcAddress";
+        if (!_sendToken.isContract()) return "ActionKyberTrade: NotOkSendTokenAddress";
 
         IERC20 sendERC20 = IERC20(_sendToken);
         try sendERC20.balanceOf(_user) returns(uint256 userSendTokenBalance) {

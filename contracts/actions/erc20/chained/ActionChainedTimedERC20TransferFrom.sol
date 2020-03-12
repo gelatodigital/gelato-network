@@ -11,7 +11,7 @@ contract ActionChainedTimedERC20TransferFrom is ActionERC20TransferFrom {
     using Address for address;
 
     // ActionSelector public state variable np due to this.actionSelector constant issue
-    function actionSelector() external pure override virtual returns(bytes4) {
+    function actionSelector() public pure override virtual returns(bytes4) {
         return ActionChainedTimedERC20TransferFrom.action.selector;
     }
 
@@ -25,42 +25,44 @@ contract ActionChainedTimedERC20TransferFrom is ActionERC20TransferFrom {
         address[2] calldata _selectedProviderAndExecutor,
         address[2] calldata _conditionTimestampPassedAndThisAction,
         bytes calldata _conditionTimestampPassedPayload,
-        uint256 _executionClaimExpiryDate,
         // Special Param
         uint256 _timeOffset
     )
         external
         virtual
     {
-        // Call to ActionERC20TransferFrom.action()
+        // Internal Call: ActionERC20TransferFrom.action()
         super.action(_userAndProxy, _sendTokenAndDesination, _sendAmount);
 
-        // Update ConditionTimestampPassed payload params
-        uint256 _dueDate =  abi.decode(_conditionTimestampPassedPayload, (uint256));
-        bytes memory newConditionTimestampPassedPayload = abi.encodeWithSelector(
+        // Decode: ConditionTimestampPassed Payload and update value
+        uint256 currentDueDate = abi.decode(_conditionTimestampPassedPayload, (uint256));
+        uint256 nextDueDate = currentDueDate.add(_timeOffset);
+
+        // Encode: Update ConditionTimestampPassed Payload
+        bytes memory nextConditionTimestampPassedPayload = abi.encodeWithSelector(
             ConditionTimestampPassed.reached.selector,
-            _dueDate.add(_timeOffset)
+            nextDueDate
         );
 
-        // ABI Encode actionPayload for minting on GelatoCore
+        // Encode: updated ActionChainedTimedERC20TransferFrom payload
         bytes memory actionPayload = abi.encodeWithSelector(
             ActionChainedTimedERC20TransferFrom.action.selector,
             _userAndProxy,
             _sendTokenAndDesination,
             _sendAmount,
             _selectedProviderAndExecutor,
-            _conditionTimestampPassedPayload,
-            _executionClaimExpiryDate,
+            _conditionTimestampPassedAndThisAction,
+            nextConditionTimestampPassedPayload,
             _timeOffset
         );
 
-        // Mint chained claim
+        // Mint: ExecutionClaim Chain continues with Updated Payloads
         IGelatoCore(0x35b9b372cF07B2d6B397077792496c61721B58fa).mintExecutionClaim(
             _selectedProviderAndExecutor,
             _conditionTimestampPassedAndThisAction,
-            newConditionTimestampPassedPayload,
+            nextConditionTimestampPassedPayload,
             actionPayload,
-            _executionClaimExpiryDate
+            nextDueDate + 3 days  // executionClaimExpiryDate: max 3 day delay
         );
     }
 
@@ -73,34 +75,37 @@ contract ActionChainedTimedERC20TransferFrom is ActionERC20TransferFrom {
         virtual
         returns(string memory)  // actionCondition
     {
+        // Decode: Calldata Array actionPayload without Selector
         (address[2] memory _userAndProxy,
          address[2] memory _sendTokenAndDesination,
          uint256 _sendAmount,
          address[2] memory _selectedProviderAndExecutor,
          address[2] memory _conditionTimestampPassedAndThisAction,
-         ,  // bytes _conditionTimestampPassedPayload
-         uint256 executionClaimExpiryDate,
+         bytes memory _conditionTimestampPassedPayload,
          uint256 timeOffset) = abi.decode(
             _actionPayload[4:],
-            (address[2],address[2],uint256,address[2],address[2],bytes,uint256,uint256)
+            (address[2],address[2],uint256,address[2],address[2],bytes,uint256)
         );
-        // Check ActionERC20TransferFrom._actionConditionsCheck
+
+        // Check: ActionERC20TransferFrom._actionConditionsCheck
         string memory baseActionCondition = super._actionConditionsCheck(
             _userAndProxy,
             _sendTokenAndDesination,
             _sendAmount
         );
+
+        // If: Base actionCondition: NOT OK => Return
         if (
             keccak256(abi.encodePacked(baseActionCondition))
             != keccak256(abi.encodePacked("ok"))
         )
             return baseActionCondition;
 
-        // Check chained minting conditions
+        // Else: Check and Return current contract actionCondition
         return _actionConditionsCheck(
             _selectedProviderAndExecutor,
             _conditionTimestampPassedAndThisAction,
-            executionClaimExpiryDate,
+            _conditionTimestampPassedPayload,
             timeOffset
         );
     }
@@ -108,7 +113,7 @@ contract ActionChainedTimedERC20TransferFrom is ActionERC20TransferFrom {
     function _actionConditionsCheck(
         address[2] memory _selectedProviderAndExecutor,
         address[2] memory _conditionTimestampPassedAndThisAction,
-        uint256 _executionClaimExpiryDate,
+        bytes memory _conditionTimestampPassedPayload,
         uint256 _timeOffset
     )
         internal
@@ -119,31 +124,9 @@ contract ActionChainedTimedERC20TransferFrom is ActionERC20TransferFrom {
         this;
         _selectedProviderAndExecutor;
         _conditionTimestampPassedAndThisAction;
-        _executionClaimExpiryDate;
+        _conditionTimestampPassedPayload;
         _timeOffset;
         // STANDARD return string to signal actionConditions Ok
         return "ok";
-    }
-
-    // ============ API for FrontEnds ===========
-    function getUsersSendTokenBalance(
-        // Standard Action Params
-        address[2] calldata _userAndProxy,
-        // Specific Action Params
-        address[2] calldata _sendTokenAndDesination,
-        uint256,
-        // ChainedMintingParams
-        address[2] calldata,
-        address[2] calldata,
-        bytes calldata,
-        uint256,
-        uint256
-    )
-        external
-        view
-        virtual
-        returns(uint256)
-    {
-        return super.getUsersSendTokenBalance(_userAndProxy, _sendTokenAndDesination, 0);
     }
 }
