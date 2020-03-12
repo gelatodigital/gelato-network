@@ -72,14 +72,14 @@ contract GelatoCore is
         // Checks below will be separated onto provider module
         // msgSenderCheck();
         // THE CURRENT DEPLOYED INSTANCE DOESNT REQUIRE THIS
-        require(
+        /*require(
             isProvidedCondition[_selectedProviderAndExecutor[0]][_conditionAndAction[0]],
             "GelatoCore.mintExecutionClaim: condition not provided"
         );
         require(
             isProvidedAction[_selectedProviderAndExecutor[0]][_conditionAndAction[1]],
             "GelatoCore.mintExecutionClaim: action not provided"
-        );
+        );*/
 
         // We cut this after initial testing
         address userProxy;
@@ -287,7 +287,7 @@ contract GelatoCore is
                 // 68: 32-location, 32-length, 4-ErrorSelector, UTF-8 revertReason
                 if (actionRevertReason.length % 32 == 4) {
                     bytes4 selector;
-                    assembly { selector := actionRevertReason }
+                    assembly { selector := mload(add(0x20, actionRevertReason)) }
                     if (selector == 0x08c379a0) {  // Function selector for Error(string)
                         assembly { actionRevertReason := add(actionRevertReason, 68) }
                         executionFailureReason = string(actionRevertReason);
