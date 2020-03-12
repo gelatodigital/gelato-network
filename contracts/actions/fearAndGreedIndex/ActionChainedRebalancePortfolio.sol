@@ -2,7 +2,6 @@ pragma solidity ^0.6.2;
 
 import "../GelatoActionsStandard.sol";
 import "./ActionRebalancePortfolio.sol";
-import "../../external/Ownable.sol";
 import "../../external/IERC20.sol";
 import "../../dapp_interfaces/fearAndGreedIndex/IFearGreedIndex.sol";
 import "../../dapp_interfaces/uniswap/IUniswapFactory.sol";
@@ -21,21 +20,6 @@ contract ActionChainedRebalancePortfolio is ActionRebalancePortfolio {
     // actionSelector public state variable np due to this.actionSelector constant issue
     function actionSelector() public pure override virtual returns (bytes4) {
         return ActionChainedRebalancePortfolio.chainedAction.selector;
-    }
-
-    uint256 public actionGasChainned = 1000000;
-
-    function getActionGas() external view override virtual returns (uint256) {
-        return actionGasChainned;
-    }
-
-    function setActionGas(uint256 _actionGas)
-        external
-        override
-        virtual
-        onlyOwner
-    {
-        actionGasChainned = _actionGas;
     }
 
     // function action(address _executor, address _gasProvider) external virtual returns(uint256) {

@@ -15,15 +15,6 @@ contract ActionChainedTimedERC20TransferFrom is ActionERC20TransferFrom {
         return ActionChainedTimedERC20TransferFrom.action.selector;
     }
 
-    // ActionGas
-    uint256 public actionGasRecurringTransferFrom = 450000;
-    function getActionGas() external view override virtual returns(uint256) {
-        return actionGasRecurringTransferFrom;
-    }
-    function setActionGas(uint256 _actionGas) external override virtual onlyOwner {
-        actionGasRecurringTransferFrom = _actionGas;
-    }
-
     function action(
         // Standard Action Params
         address[2] calldata _userAndProxy,
