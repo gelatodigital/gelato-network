@@ -71,6 +71,7 @@ contract GelatoCore is
 
         // Checks below will be separated onto provider module
         // msgSenderCheck();
+        // THE CURRENT DEPLOYED INSTANCE DOESNT REQUIRE THIS
         require(
             isProvidedCondition[_selectedProviderAndExecutor[0]][_conditionAndAction[0]],
             "GelatoCore.mintExecutionClaim: condition not provided"
@@ -279,6 +280,7 @@ contract GelatoCore is
                     ExecutorPayout.Reward,
                     _selectedProviderAndExecutor[0]
                 );
+                // THE CURRENT DEPLOYED INSTANCE DOESNT RETURN HERE
                 return;  // SUCCESS: END OF EXECUTION
             } else {
                 // FAILURE

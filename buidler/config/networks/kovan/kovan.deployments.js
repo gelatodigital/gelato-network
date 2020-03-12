@@ -30,7 +30,7 @@ export const deployments = {
   ConditionFearGreedIndex: "0x7792AB86a89D653fb45fA64708fe5172eEbDB5C1",
   // == Price ==
   // Kyber
-  ConditionKyberRateKovan: "0xD8eBB69Dc566E86eA6e09A15EBe6Fd9c65c4A698",
+  ConditionKyberRateKovan: "0x427a09F19Fb92B7Dcb180a66085A2a6d450aD916",
   // == Time ==
   // Timestamps
   ConditionTimestampPassed: "0xD5C21B1928d9EBc252d6aa98636F1e53B18796B8",
