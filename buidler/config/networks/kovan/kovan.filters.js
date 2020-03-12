@@ -1,4 +1,4 @@
 export const filters = {
-  defaultFromBlock: 17341401,
+  defaultFromBlock: 17341300,
   defaultToBlock: "latest"
 };
