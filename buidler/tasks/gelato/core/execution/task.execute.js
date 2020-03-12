@@ -126,10 +126,10 @@ export default task(
           const executionEvents = [];
 
           for (const eventname of eventNames) {
-            const executionEvent = await run("event-getparsedlogs", {
-              executionclaimid,
+            const executionEvent = await run("event-getparsedlog", {
               contractname: "GelatoCore",
               eventname,
+              txhash: executeTxReceipt.transactionHash,
               blockhash: executeTxReceipt.blockHash,
               values: true,
               stringify: true
