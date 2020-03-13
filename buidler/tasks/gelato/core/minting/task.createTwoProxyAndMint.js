@@ -3,8 +3,8 @@ import { defaultNetwork } from "../../../../../buidler.config";
 import { constants, utils } from "ethers";
 
 export default task(
-  "gc-createproxyandmint",
-  `Sends tx to GelatoCore.createProxyAndMint() or if --createtwo to .createTwoProxyAndMint()  on [--network] (default: ${defaultNetwork})`
+  "gc-createtwoproxyandmint",
+  `Sends tx to GelatoCore.createTwoProxyAndMint() on [--network] (default: ${defaultNetwork})`
 )
   .addOptionalPositionalParam(
     "conditionname",
@@ -16,12 +16,7 @@ export default task(
     "actionname",
     "This param MUST be supplied. Must exist inside buidler.config"
   )
-  .addOptionalParam(
-    "saltnonce",
-    "Supply for createTwoProxyAndMint()",
-    42069,
-    types.int
-  )
+  .addOptionalParam("saltnonce", "Defaults to 42069", 42069, types.int)
   .addOptionalParam(
     "selectedprovider",
     "Defaults to network addressbook default"
@@ -100,7 +95,6 @@ export default task(
     "ETH value to be sent to newly created gelato user proxy",
     constants.HashZero
   )
-  .addFlag("createtwo", "Call gelatoCore.createTwoProxyAndMint()")
   .addFlag("log", "Logs return values to stdout")
   .setAction(async taskArgs => {
     try {
@@ -209,31 +203,16 @@ export default task(
         write: true
       });
 
-      let creationTx;
-      if (taskArgs.createtwo) {
-        creationTx = await gelatoCore.createTwoProxyAndMint(
-          taskArgs.mastercopy,
-          taskArgs.initializer,
-          taskArgs.saltnonce,
-          [taskArgs.selectedprovider, taskArgs.selectedexecutor],
-          [conditionAddress, actionAddress],
-          taskArgs.conditionpayload,
-          taskArgs.actionpayload,
-          taskArgs.executionclaimexpirydate,
-          { value: utils.parseEther(taskArgs.funding), gasLimit: 3000000 }
-        );
-      } else {
-        creationTx = await gelatoCore.createProxyAndMint(
-          taskArgs.mastercopy,
-          taskArgs.initializer,
-          [taskArgs.selectedprovider, taskArgs.selectedexecutor],
-          [conditionAddress, actionAddress],
-          taskArgs.conditionpayload,
-          taskArgs.actionpayload,
-          taskArgs.executionclaimexpirydate,
-          { value: utils.parseEther(taskArgs.funding), gasLimit: 3000000 }
-        );
-      }
+      const creationTx = await gelatoCore.createProxyAndMint(
+        taskArgs.mastercopy,
+        taskArgs.initializer,
+        [taskArgs.selectedprovider, taskArgs.selectedexecutor],
+        [conditionAddress, actionAddress],
+        taskArgs.conditionpayload,
+        taskArgs.actionpayload,
+        taskArgs.executionclaimexpirydate,
+        { value: utils.parseEther(taskArgs.funding), gasLimit: 3000000 }
+      );
 
       if (taskArgs.log)
         console.log(`\ntxHash createProxyAndMint: ${creationTx.hash}\n`);
