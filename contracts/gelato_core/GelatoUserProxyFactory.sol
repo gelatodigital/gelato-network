@@ -60,9 +60,10 @@ abstract contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         ))));
         // Prefund undeployed proxy
         if (msg.value > 0) {
+            uint256 previousBalance = predictedAddress.balance;
             payable(predictedAddress).sendValue(msg.value);
             require(
-                predictedAddress.balance == msg.value,
+                predictedAddress.balance == previousBalance + msg.value,
                 "GelatoCore.createTwoGelatoUserProxy: prefunding error"
             );
         }
