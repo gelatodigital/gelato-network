@@ -210,7 +210,7 @@ export default task(
         taskArgs.conditionpayload,
         taskArgs.actionpayload,
         taskArgs.executionclaimexpirydate,
-        { value: taskArgs.funding, gasLimit: 3000000 }
+        { value: utils.parseEther(taskArgs.funding), gasLimit: 3000000 }
       );
 
       if (taskArgs.log)
