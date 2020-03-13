@@ -9,17 +9,17 @@ export default task(
   .addPositionalParam("actionname", "This param MUST be supplied.")
   .addOptionalPositionalParam(
     "conditionname",
-    "defaults to address 0 for self-conditional actions",
+    "Defaults to address 0 for self-conditional actions",
     constants.AddressZero,
     types.string
   )
   .addOptionalPositionalParam(
     "selectedprovider",
-    "defaults to network addressbook default"
+    "Defaults to network addressbook default"
   )
   .addOptionalPositionalParam(
     "selectedexecutor",
-    "defaults to network addressbook default"
+    "Defaults to network addressbook default"
   )
   .addOptionalPositionalParam(
     "conditionpayload",
@@ -31,7 +31,7 @@ export default task(
   )
   .addOptionalPositionalParam(
     "executionclaimexpirydate",
-    "defaults to 0 for selectedexecutor's maximum",
+    "Defaults to 0 for selectedexecutor's maximum",
     0,
     types.int
   )
@@ -131,8 +131,11 @@ export default task(
           throw new Error("Failed to convert taskArgs.owners into Array");
       }
 
-      if (taskArgs.setup && !taskArgs.data && taskArgs.defaultdata)
-        taskArgs.data = await run(`gsp:scripts:defaultpayload:${defaultdata}`);
+      if (taskArgs.setup && !taskArgs.data && taskArgs.defaultpayloadscript) {
+        taskArgs.data = await run(
+          `gsp:scripts:defaultpayload:${defaultpayloadscript}`
+        );
+      }
 
       if (taskArgs.log) console.log("\nTaskArgs:\n", taskArgs, "\n");
 
