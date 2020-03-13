@@ -7,11 +7,28 @@ export default task(
 )
   .addOptionalPositionalParam("withdrawamount", "The amount to withdraw")
   .addFlag("log", "Logs return values to stdout")
-  .setAction(async ({ withdrawamount, log }) => {
+  .addOptionalParam(
+    "providerindex",
+    "Index of tx Signer account generated from mnemonic available inside BRE",
+    2,
+    types.int
+  )
+  .setAction(async ({ withdrawamount, providerindex, log }) => {
     try {
-      if (!withdrawamount) withdrawamount = await run("gc-providerfunds");
+      const availableFunds = await run("gc-providerfunds");
+      if (availableFunds.toString() === "0")
+        throw new Error(`\n Provider Out Of Funds\n`);
+      if (!withdrawamount) withdrawamount = availableFunds;
+      else if (withdrawamount > availableFunds)
+        throw new Error(`\n Insufficient Provider Funds\n`);
       // Gelato Provider is the 3rd signer account
-      const { 2: gelatoProvider } = await ethers.signers();
+      const { [providerindex]: gelatoProvider } = await ethers.signers();
+      if (log) {
+        console.log(
+          `\n Taking account with index: ${providerindex}\
+		       \n Provider Address: ${gelatoProvider._address}\n`
+        );
+      }
       const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
         signer: gelatoProvider,
