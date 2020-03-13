@@ -24,7 +24,7 @@ contract ActionRebalancePortfolio is GelatoActionsStandard {
     // DAI
     IERC20 public constant exchangeToken = IERC20(0xC4375B7De8af5a38a93548eb8453a498222C4fF2);
     address public constant CONDITION_FEAR_GREED_INDEX_ADDRESS
-        = 0x7792AB86a89D653fb45fA64708fe5172eEbDB5C1;
+        = 0xf5aF30e4022698314e07514CE649fa7f45Cc8F87;
 
     // function action(address _executor, address _gasProvider) external virtual returns(uint256) {
     function action(address payable _provider) public virtual returns(uint256) {
@@ -34,7 +34,7 @@ contract ActionRebalancePortfolio is GelatoActionsStandard {
         );
 
         uint256 newDaiNum;
-        uint256 daiBalance;
+        uint256 daiBalance = exchangeToken.balanceOf(address(this));
         uint256 totalDaiBalance;
         uint256 newDaiAmountWeighted;
         uint256 oldDaiAmountWeighted;
@@ -45,6 +45,7 @@ contract ActionRebalancePortfolio is GelatoActionsStandard {
         uint256 ethAmountInDai;
         {
             uint256 ethBalance = address(this).balance;
+            require(ethBalance != 0 || daiBalance != 0, "ActionRebalancePortfolio: User requires either DAI or ETH balance");
             if (ethBalance != 0)
             {
                 try uniswapExchange.getEthToTokenInputPrice(ethBalance)
@@ -68,7 +69,6 @@ contract ActionRebalancePortfolio is GelatoActionsStandard {
 
 
         // 3. Calculate total portfolio value in DAI
-
         daiBalance = exchangeToken.balanceOf(address(this));
         totalDaiBalance = daiBalance.add(ethAmountInDai);
 
@@ -130,7 +130,7 @@ contract ActionRebalancePortfolio is GelatoActionsStandard {
                     address(this)  // receiver
                 );
             } catch {
-                revert("Error ethToTokenSwapOutput");
+                revert("Error ethToTokenSwapInput");
             }
         }
         // Portfolio needs to acquire more ETH
@@ -163,7 +163,7 @@ contract ActionRebalancePortfolio is GelatoActionsStandard {
                 address(this)  // receiver
             );
             } catch {
-                revert("Error ethToTokenSwapOutput");
+                revert("Error tokenToEthSwapInput");
             }
         }
 
@@ -176,7 +176,7 @@ contract ActionRebalancePortfolio is GelatoActionsStandard {
         internal
         returns(IGelatoCore)
     {
-        return IGelatoCore(0x35b9b372cF07B2d6B397077792496c61721B58fa);
+        return IGelatoCore(0x0fD9e353ff5D68221C7BBE511EF304c4c8DED48f);
     }
 
      // Returns KOVAN uniswap factory

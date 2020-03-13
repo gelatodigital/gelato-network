@@ -46,6 +46,7 @@ export default task(
 
       if (taskArgs.compile) await run("compile");
 
+      // const { [2]: provider } = await ethers.signers();
       const ContractFactory = await ethers.getContract(contractname);
       let contract;
       if (taskArgs.constructorargs) {

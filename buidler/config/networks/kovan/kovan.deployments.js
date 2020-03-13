@@ -10,24 +10,24 @@ export const deployments = {
   // kyber
   ActionKyberTradeKovan: "0xF829B506c378AaD11dB7Efe8d626cc7d0e015CBA",
   // Portfolio Mgmt
-  ActionRebalancePortfolio: "0x5903825931C39d2F01C749A692E138cA8cF8d2ae",
+  ActionRebalancePortfolio: "0xeb7AA218faD35cE401114203722ee1b6506cD5b1",
 
   // ==== Actions - Chained ====
   // erc20
   ActionChainedTimedERC20TransferFrom:
     "0xb36ecc4AFe578883251c0e2D8D66416C498F3b07",
   // Portfolio Mgmt
-  ActionChainedRebalancePortfolio: "0xbe19A1007A787E80852e5a914D1d559D564E5A98",
+  ActionChainedRebalancePortfolio: "0xD998ff6AcF7f0054Cb2278F75ff8d2c7473ce869",
 
   // ===== Gelato Core ====
-  GelatoCore: "0x2697737506CCe5225d498Bd1C8e03AB8227042eA",
+  GelatoCore: "0x0fD9e353ff5D68221C7BBE511EF304c4c8DED48f",
 
   // ==== Conditions ====
   // == Balances ==
   ConditionBalance: "0xE600cA727070EE624894da9A0bc6dFA0b22A39b8",
   // == Indices ==
   // fearAndGreed
-  ConditionFearGreedIndex: "0x7ce0ffd7986Ec98AD5b978CFf94e3928e89c5594",
+  ConditionFearGreedIndex: "0xf5aF30e4022698314e07514CE649fa7f45Cc8F87",
   // == Price ==
   // Kyber
   ConditionKyberRateKovan: "0x7830FC46fB5Bc4E2036bE841a735308AbFfCa1DF",

@@ -7,7 +7,7 @@ export default internalTask(
   .addOptionalParam("executorindex", "mnemoric index of executor", 1, types.int)
   .addOptionalParam("providerindex", "mnemoric index of provider", 2, types.int)
   .addFlag("log")
-  .setAction(async ({ log = true, providerindex, executorindex }) => {
+  .setAction(async ({ log = true, providerindex = 2, executorindex = 1 }) => {
     try {
       const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",

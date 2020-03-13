@@ -60,11 +60,7 @@ export default task(
     1,
     types.int
   )
-  .addOptionalParam(
-    "to",
-    "Supply with --setup: to address",
-    constants.AddressZero
-  )
+  .addOptionalParam("to", "Supply with --setup: to address")
   .addOptionalParam(
     "data",
     "Supply with --setup: payload for optional delegate call",
@@ -150,16 +146,16 @@ export default task(
 
       if (
         taskArgs.setup &&
-        !taskArgs.data &&
+        taskArgs.data === constants.HashZero &&
         taskArgs.defaultpayloadscript &&
         !taskArgs.to
       ) {
         taskArgs.data = await run(
-          `gsp:scripts:defaultpayload:${defaultpayloadscript}`
+          `gsp:scripts:defaultpayload:${taskArgs.defaultpayloadscript}`
         );
         taskArgs.to = await run("bre-config", {
           deployments: true,
-          contractname: `${tasksArgs.defaultpayloadscript}`
+          contractname: `${taskArgs.defaultpayloadscript}`
         });
       }
 
@@ -184,12 +180,9 @@ export default task(
 
       // ==== GelatoCore.mintExecutionClaim Params ====
       // Selected Provider and Executor
-      taskArgs.selectedprovider = await run("handleProvider", {
-        provider: taskArgs.selectedprovider
-      });
-      taskArgs.selectedexecutor = await run("handleExecutor", {
-        executor: taskArgs.selectedexecutor
-      });
+      const signers = await ethers.signers();
+      taskArgs.selectedprovider = signers[2]._address;
+      taskArgs.selectedexecutor = signers[1]._address;
       // const { [1]: selectedExecutor } = await ethers.signers();
       // Condition and ConditionPayload (optional)
       let conditionAddress;
@@ -237,10 +230,11 @@ export default task(
 
       let creationTx;
       if (taskArgs.createtwo) {
-        creationTx = await gelatoCore.createTwoProxyAndMint(
+        creationTx = await gelatoCore.createThreeProxyAndMint(
           taskArgs.mastercopy,
           taskArgs.initializer,
-          taskArgs.saltnonce,
+          11,
+          // taskArgs.saltnonce,
           [taskArgs.selectedprovider, taskArgs.selectedexecutor],
           [conditionAddress, actionAddress],
           taskArgs.conditionpayload,

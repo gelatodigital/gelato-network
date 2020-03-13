@@ -75,6 +75,30 @@ contract GelatoCore is
         );
     }
 
+    function createThreeProxyAndMint(
+        address _mastercopy,
+        bytes calldata _initializer,
+        uint256 _saltNonce,
+        address[2] calldata _selectedProviderAndExecutor,
+        address[2] calldata _conditionAndAction,
+        bytes calldata _conditionPayload,
+        bytes calldata _actionPayload,
+        uint256 _executionClaimExpiryDate
+    )
+        external
+        payable
+        override
+    {
+        createThreeGelatoUserProxy(_mastercopy, _initializer, _saltNonce);
+        mintExecutionClaim(
+            _selectedProviderAndExecutor,
+            _conditionAndAction,
+            _conditionPayload,
+            _actionPayload,
+            _executionClaimExpiryDate
+        );
+    }
+
 
     // ================  MINTING ==============================================
     function mintExecutionClaim(

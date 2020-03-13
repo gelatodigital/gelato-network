@@ -14,6 +14,10 @@ abstract contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
     mapping(address => address) public override userByGelatoProxy;
     mapping(address => address) public override gelatoProxyByUser;
 
+    IGnosisSafeProxyFactory factory = IGnosisSafeProxyFactory(
+            0x76E2cFc1F5Fa8F6a5b3fC4c8F4788F0116861F9B
+    );
+
     // create
     function createGelatoUserProxy(address _mastercopy, bytes memory _initializer)
         public
@@ -21,9 +25,6 @@ abstract contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         override
         returns(address userProxy)
     {
-        IGnosisSafeProxyFactory factory = IGnosisSafeProxyFactory(
-            0x76E2cFc1F5Fa8F6a5b3fC4c8F4788F0116861F9B
-        );
         userProxy = address(factory.createProxy(_mastercopy, _initializer));
         if (msg.value > 0) payable(userProxy).sendValue(msg.value);
         userByGelatoProxy[address(userProxy)] = msg.sender;
@@ -42,10 +43,6 @@ abstract contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         override
         returns(address userProxy)
     {
-        IGnosisSafeProxyFactory factory = IGnosisSafeProxyFactory(
-            0x76E2cFc1F5Fa8F6a5b3fC4c8F4788F0116861F9B
-        );
-
         // Salt used by GnosisSafeProxyFactory
         bytes32 salt = keccak256(abi.encodePacked(keccak256(_initializer), _saltNonce));
         // Get GnosisSafeProxy.CreationCode used by deployed Factory
@@ -68,6 +65,53 @@ abstract contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
             _initializer,
             _saltNonce
         ));
+        require(
+            userProxy == predictedAddress,
+            "GelatoCore.createTwoGelatoUserProxy: wrong address prediction"
+        );
+
+        // Map userProxy onto User
+        userByGelatoProxy[userProxy] = msg.sender;
+        gelatoProxyByUser[msg.sender] = userProxy;
+
+        // Success
+        emit LogGelatoUserProxyCreation(msg.sender, userProxy, msg.value);
+    }
+
+    // create2
+    function createThreeGelatoUserProxy(
+        address _mastercopy,
+        bytes memory _initializer,
+        uint256 _saltNonce
+    )
+        public
+        payable
+        override
+        returns(address userProxy)
+    {
+
+        // fetch return bytes containing predicted proxy address
+        bytes memory payload = abi.encodeWithSelector(factory.calculateCreateProxyWithNonceAddress.selector, _mastercopy, _initializer, _saltNonce);
+        (, bytes memory actionRevertMessage) = address(factory).call(payload);
+
+        // Derive undeployed userProxy address
+        address predictedAddress;
+        assembly {
+            // 68 + 20
+            predictedAddress := mload(add(actionRevertMessage, 88))
+        }
+
+        // Prefund undeployed proxy
+        if (msg.value > 0) payable(predictedAddress).sendValue(msg.value);
+
+        // Deploy userProxy with create2
+        userProxy = address(factory.createProxyWithNonce(
+            _mastercopy,
+            _initializer,
+            _saltNonce
+        ));
+
+        // Check if predicted addresses equals actual proxy address
         require(
             userProxy == predictedAddress,
             "GelatoCore.createTwoGelatoUserProxy: wrong address prediction"
