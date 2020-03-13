@@ -3,23 +3,26 @@ import { defaultNetwork } from "../../../../../buidler.config";
 import { constants, utils } from "ethers";
 
 export default task(
-  "gc-createProxyAndMint",
+  "gc-createproxyandmint",
   `Sends tx to GelatoCore.createProxyAndMint() on [--network] (default: ${defaultNetwork})`
 )
-  .addPositionalParam("actionname", "This param MUST be supplied.")
-  .addPositionalParam(
+  .addOptionalPositionalParam(
     "conditionname",
-    "defaults to address 0 for self-conditional actions",
+    "Must exist inside buidler.config. Defaults to address 0 for self-conditional actions",
     constants.AddressZero,
     types.string
   )
   .addOptionalPositionalParam(
+    "actionname",
+    "This param MUST be supplied. Must exist inside buidler.config"
+  )
+  .addOptionalPositionalParam(
     "selectedprovider",
-    "defaults to network addressbook default"
+    "Defaults to network addressbook default"
   )
   .addOptionalPositionalParam(
     "selectedexecutor",
-    "defaults to network addressbook default"
+    "Defaults to network addressbook default"
   )
   .addOptionalPositionalParam(
     "conditionpayload",
@@ -31,9 +34,8 @@ export default task(
   )
   .addOptionalPositionalParam(
     "executionclaimexpirydate",
-    "defaults to 0 for selectedexecutor's maximum",
-    0,
-    types.int
+    "Defaults to 0 for selectedexecutor's maximum",
+    constants.HashZero
   )
   .addOptionalParam(
     "mastercopy",
@@ -62,16 +64,16 @@ export default task(
     constants.HashZero
   )
   .addOptionalParam(
-    "defaultdata",
-    "The name of the defaultpayload to retrieve for the 'data' field"
+    "defaultpayloadscript",
+    "The name of the defaultpayload script to retrieve 'data'"
   )
   .addOptionalParam(
-    "fallbackHandler",
+    "fallbackhandler",
     "Supply with --setup:  Handler for fallback calls to this contract",
     constants.AddressZero
   )
   .addOptionalParam(
-    "paymentToken",
+    "paymenttoken",
     "Supply with --setup:  Token that should be used for the payment (0 is ETH)",
     constants.AddressZero
   )
@@ -82,28 +84,34 @@ export default task(
     types.int
   )
   .addOptionalParam(
-    "paymentReceiver",
+    "paymentreceiver",
     "Supply with --setup:  Adddress that should receive the payment (or 0 if tx.origin)t",
     constants.AddressZero
   )
   .addOptionalParam(
     "funding",
-    "ETH value (in wei) to be sent to newly created gelato user proxy",
-    "0",
-    types.int
+    "ETH value to be sent to newly created gelato user proxy",
+    constants.HashZero
   )
   .addFlag("log", "Logs return values to stdout")
   .setAction(async taskArgs => {
     try {
       // Command Line Argument Checks
       // Condition and Action for minting
+      if (!taskArgs.actionname) throw new Error(`\n Must supply Action Name`);
       if (
         taskArgs.conditionname != constants.AddressZero &&
         !taskArgs.conditionname.startsWith("Condition")
-      )
-        throw new Error(`Invalid condition: ${taskArgs.conditionname}`);
-      if (!taskArgs.actionname.startsWith("Action"))
-        throw new Error(`Invalid action: ${taskArgs.actionname}`);
+      ) {
+        throw new Error(
+          `\nInvalid condition: ${taskArgs.conditionname}: 1.<conditionname> 2.<actionname>\n`
+        );
+      }
+      if (!taskArgs.actionname.startsWith("Action")) {
+        throw new Error(
+          `\nInvalid action: ${taskArgs.actionname}: 1.<conditionname> 2.<actionname>\n`
+        );
+      }
       // Gnosis Safe creation
       if (!taskArgs.initializer && !taskArgs.setup)
         throw new Error("Must provide initializer payload or --setup args");
@@ -131,8 +139,11 @@ export default task(
           throw new Error("Failed to convert taskArgs.owners into Array");
       }
 
-      if (taskArgs.setup && !taskArgs.data && taskArgs.defaultdata)
-        taskArgs.data = await run(`gsp:scripts:defaultpayload:${defaultdata}`);
+      if (taskArgs.setup && !taskArgs.data && taskArgs.defaultpayloadscript) {
+        taskArgs.data = await run(
+          `gsp:scripts:defaultpayload:${defaultpayloadscript}`
+        );
+      }
 
       if (taskArgs.log) console.log("\nTaskArgs:\n", taskArgs, "\n");
 
@@ -142,10 +153,10 @@ export default task(
           taskArgs.threshold,
           taskArgs.to,
           taskArgs.data,
-          taskArgs.fallbackHandler,
-          taskArgs.paymentToken,
+          taskArgs.fallbackhandler,
+          taskArgs.paymenttoken,
           taskArgs.payment,
-          taskArgs.paymentReceiver
+          taskArgs.paymentreceiver
         ];
         taskArgs.initializer = await run("abi-encode-withselector", {
           contractname: "IGnosisSafe",
@@ -172,10 +183,9 @@ export default task(
       let conditionAddress;
       let conditionPayload = constants.HashZero;
       if (taskArgs.conditionname != constants.AddressZero) {
-        const condition = await run("instantiateContract", {
-          contractname: `${taskArgs.conditionname}`,
-          signer: selectedExecutor,
-          write: true
+        conditionAddress = await run("bre-config", {
+          deployments: true,
+          contractname: taskArgs.conditionname
         });
         conditionAddress = condition.address;
         conditionPayload = await run("handlePayload", {
@@ -183,10 +193,12 @@ export default task(
         });
       }
       // Action and ActionPayload
-      const action = await run("instantiateContract", {
-        contractname: `${taskArgs.actionname}`,
-        signer: selectedExecutor,
-        write: true
+      const actionAddress = await run("bre-config", {
+        deployments: true,
+        contractname: taskArgs.actionname
+      });
+      const actionPayload = await run("handlePayload", {
+        contractname: taskArgs.actionname
       });
       /*
       function createProxyAndMint(
@@ -244,7 +256,7 @@ export default task(
 
       // Event Emission verification
       if (taskArgs.log) {
-        const parsedCreateLog = await run("event-getparsedlogs", {
+        const parsedCreateLog = await run("event-getparsedlog", {
           contractname: "GelatoCore",
           eventname: "LogGelatoUserProxyCreation",
           txhash: creationTx.hash,
@@ -261,7 +273,7 @@ export default task(
            )} ETH`
         );
 
-        const parsedMintLog = await run("event-getparsedlogs", {
+        const parsedMintLog = await run("event-getparsedlog", {
           contractname: "GelatoCore",
           eventname: "LogExecutionClaimMinted",
           txhash: creationTx.hash,
