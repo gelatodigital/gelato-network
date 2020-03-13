@@ -26,7 +26,8 @@ export default task(
   )
   .addOptionalPositionalParam(
     "conditionpayload",
-    "If not provided, must have a default returned from handlePayload()"
+    "Payload for optional condition",
+    constants.HashZero
   )
   .addOptionalPositionalParam(
     "actionpayload",
@@ -145,8 +146,6 @@ export default task(
         );
       }
 
-      if (taskArgs.log) console.log("\nTaskArgs:\n", taskArgs, "\n");
-
       if (taskArgs.setup) {
         const inputs = [
           taskArgs.owners,
@@ -164,28 +163,24 @@ export default task(
           inputs
         });
       }
-
-      if (taskArgs.log)
-        console.log(`\nInitializer payload:\n${taskArgs.initializer}\n`);
       // ============
 
       // ==== GelatoCore.mintExecutionClaim Params ====
       // Selected Provider and Executor
-      const selectedProvider = await run("handleProvider", {
+      taskArgs.selectedprovider = await run("handleProvider", {
         provider: taskArgs.selectedprovider
       });
-      const selectedExecutor = await run("handleExecutor", {
+      taskArgs.selectedexecutor = await run("handleExecutor", {
         executor: taskArgs.selectedexecutor
       });
       // Condition and ConditionPayload (optional)
       let conditionAddress;
-      let conditionPayload = constants.HashZero;
       if (taskArgs.conditionname != constants.AddressZero) {
         conditionAddress = await run("bre-config", {
           deployments: true,
           contractname: taskArgs.conditionname
         });
-        conditionPayload = await run("handlePayload", {
+        taskArgs.conditionpayload = await run("handlePayload", {
           contractname: taskArgs.conditionname
         });
       }
@@ -194,10 +189,12 @@ export default task(
         deployments: true,
         contractname: taskArgs.actionname
       });
-      const actionPayload = await run("handlePayload", {
+      taskArgs.actionpayload = await run("handlePayload", {
         contractname: taskArgs.actionname
       });
       // ============
+
+      if (taskArgs.log) console.log("\nTaskArgs:\n", taskArgs, "\n");
 
       // GelatoCore interaction
       const gelatoCore = await run("instantiateContract", {
@@ -208,10 +205,10 @@ export default task(
       const creationTx = await gelatoCore.createProxyAndMint(
         taskArgs.mastercopy,
         taskArgs.initializer,
-        [selectedProvider, selectedExecutor],
+        [taskArgs.selectedprovider, taskArgs.selectedexecutor],
         [conditionAddress, actionAddress],
-        conditionPayload,
-        actionPayload,
+        taskArgs.conditionpayload,
+        taskArgs.actionpayload,
         taskArgs.executionclaimexpirydate,
         { value: taskArgs.funding, gasLimit: 3000000 }
       );
