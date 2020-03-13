@@ -187,7 +187,6 @@ export default task(
         contractname: taskArgs.actionname
       });
       const actionPayload = await run("handlePayload", {
-        deployments: true,
         contractname: taskArgs.actionname
       });
       // ============
