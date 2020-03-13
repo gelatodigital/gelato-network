@@ -2,7 +2,6 @@ pragma solidity ^0.6.2;
 
 import "./interfaces/IGelatoUserProxyFactory.sol";
 import "./interfaces/IGnosisSafeProxyFactory.sol";
-import "./gelato_user_proxies/GnosisSafeProxy.sol";
 import "../external/Address.sol";
 
 /// @title GnosisSafeProxyUserManager
@@ -61,14 +60,7 @@ abstract contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         ))));
 
         // Prefund undeployed proxy
-        if (msg.value > 0) {
-            uint256 previousBalance = predictedAddress.balance;
-            payable(predictedAddress).sendValue(msg.value);
-            require(
-                predictedAddress.balance == previousBalance + msg.value,
-                "GelatoCore.createTwoGelatoUserProxy: prefunding error"
-            );
-        }
+        if (msg.value > 0) payable(predictedAddress).sendValue(msg.value);
 
         // Deploy userProxy with create2
         userProxy = address(factory.createProxyWithNonce(
