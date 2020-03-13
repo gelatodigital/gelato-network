@@ -24,16 +24,16 @@ export const deployments = {
 
   // ==== Conditions ====
   // == Balances ==
-  ConditionBalance: "0x60621bf3F7132838b27972084eaa56E87395D44B",
+  ConditionBalance: "0xE600cA727070EE624894da9A0bc6dFA0b22A39b8",
   // == Indices ==
   // fearAndGreed
-  ConditionFearGreedIndex: "0x7792AB86a89D653fb45fA64708fe5172eEbDB5C1",
+  ConditionFearGreedIndex: "0x7ce0ffd7986Ec98AD5b978CFf94e3928e89c5594",
   // == Price ==
   // Kyber
-  ConditionKyberRateKovan: "0x427a09F19Fb92B7Dcb180a66085A2a6d450aD916",
+  ConditionKyberRateKovan: "0x7830FC46fB5Bc4E2036bE841a735308AbFfCa1DF",
   // == Time ==
   // Timestamps
-  ConditionTimestampPassed: "0xD5C21B1928d9EBc252d6aa98636F1e53B18796B8",
+  ConditionTimestampPassed: "0xbd2938223d6c26BC592b82FbdD62DF19a3FE79DF",
 
   // ==== Scripts ====
   // == GnosisSafe ==

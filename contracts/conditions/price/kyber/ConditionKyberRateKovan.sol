@@ -8,25 +8,10 @@ contract ConditionKyberRateKovan is IGelatoCondition {
 
     using SafeMath for uint256;
 
-    enum Reason {
-        // StandardReason Fields
-        Ok,  // 0: Standard Field for Fulfilled Conditions and No Errors
-        NotOk,  // 1: Standard Field for Unfulfilled Conditions or Caught/Handled Errors
-        UnhandledError,  // 2: Standard Field for Uncaught/Unhandled Errors
-        // Ok: Fulfilled Conditions
-        OkKyberExpectedRateIsGreaterThanRefRate,
-        OkKyberExpectedRateIsSmallerThanRefRate,
-        // NotOk: Unfulfilled Conditions
-        NotOkKyberExpectedRateIsNotGreaterThanRefRate,
-        NotOkKyberExpectedRateIsNotSmallerThanRefRate,
-        KyberGetExpectedRateError
-    }
-
     // conditionSelector public state variable np due to this.actionSelector constant issue
     function conditionSelector() external pure override returns(bytes4) {
         return this.reached.selector;
     }
-    uint256 public constant override conditionGas = 300000;
 
     function reached(
         address _src,
@@ -37,7 +22,7 @@ contract ConditionKyberRateKovan is IGelatoCondition {
     )
         external
         view
-        returns(bool, uint8)  // executable?, reason
+        returns(bool, string memory)  // executable?, reason
     {
         // !!!!!!!!! KOVAN !!!!!!
         address kyberAddress = 0x692f391bCc85cefCe8C237C01e1f636BbD70EA4D;
@@ -50,18 +35,14 @@ contract ConditionKyberRateKovan is IGelatoCondition {
             returns(uint256 expectedRate, uint256)
         {
             if (_greaterElseSmaller) {  // greaterThan
-                if (expectedRate >= _refRate)
-                    return (true, uint8(Reason.OkKyberExpectedRateIsGreaterThanRefRate));
-                else
-                    return (false, uint8(Reason.NotOkKyberExpectedRateIsNotGreaterThanRefRate));
+                if (expectedRate >= _refRate) return (true, "0");
+                else return (false, "NotOkKyberExpectedRateIsNotGreaterThanRefRate");
             } else {  // smallerThan
-                if (expectedRate <= _refRate)
-                    return (true, uint8(Reason.OkKyberExpectedRateIsSmallerThanRefRate));
-                else
-                    return(false, uint8(Reason.NotOkKyberExpectedRateIsNotSmallerThanRefRate));
+                if (expectedRate <= _refRate) return (true, "1");
+                else return(false, "NotOkKyberExpectedRateIsNotSmallerThanRefRate");
             }
         } catch {
-            return(false, uint8(Reason.KyberGetExpectedRateError));
+            return(false, "KyberGetExpectedRateError");
         }
     }
 
