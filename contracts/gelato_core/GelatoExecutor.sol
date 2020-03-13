@@ -62,7 +62,7 @@ abstract contract GelatoExecutor is IGelatoExecutor {
         );
         uint256 currentExecutorBalance = executorBalance[msg.sender];
         require(
-            currentExecutorBalance > _withdrawAmount,
+            currentExecutorBalance >= _withdrawAmount,
             "GelatoExecutor.withdrawExecutorBalance: out of balance"
         );
         // Effects

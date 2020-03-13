@@ -202,7 +202,9 @@ contract GelatoCore is
         external
         override
     {
+        // Store startGas for gas-consumption based cost and payout calcs
         uint256 startGas = gasleft();
+
         // CHECKS
         require(
             tx.gasprice == gelatoGasPrice,
@@ -216,7 +218,6 @@ contract GelatoCore is
             startGas > MAXGAS - 100000,  // 100k overhead buffer
             "GelatoCore.execute: insufficient gas sent"
         );
-
         // canExecute()
         {
             string memory canExecuteResult  = canExecute(
@@ -280,7 +281,6 @@ contract GelatoCore is
                     ExecutorPayout.Reward,
                     _selectedProviderAndExecutor[0]
                 );
-                // THE CURRENT DEPLOYED INSTANCE DOESNT RETURN HERE
                 return;  // SUCCESS: END OF EXECUTION
             } else {
                 // FAILURE
