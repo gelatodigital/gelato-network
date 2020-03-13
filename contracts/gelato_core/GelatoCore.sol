@@ -40,9 +40,32 @@ contract GelatoCore is
         external
         payable
         override
-        returns(address)  // address userProxy
     {
         createGelatoUserProxy(_mastercopy, _initializer);
+        mintExecutionClaim(
+            _selectedProviderAndExecutor,
+            _conditionAndAction,
+            _conditionPayload,
+            _actionPayload,
+            _executionClaimExpiryDate
+        );
+    }
+
+    function createTwoProxyAndMint(
+        address _mastercopy,
+        bytes calldata _initializer,
+        uint256 _saltNonce,
+        address[2] calldata _selectedProviderAndExecutor,
+        address[2] calldata _conditionAndAction,
+        bytes calldata _conditionPayload,
+        bytes calldata _actionPayload,
+        uint256 _executionClaimExpiryDate
+    )
+        external
+        payable
+        override
+    {
+        createTwoGelatoUserProxy(_mastercopy, _initializer, _saltNonce);
         mintExecutionClaim(
             _selectedProviderAndExecutor,
             _conditionAndAction,

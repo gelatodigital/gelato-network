@@ -34,10 +34,10 @@ abstract contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
     // create2
     function createTwoGelatoUserProxy(
         address _mastercopy,
-        bytes calldata _initializer,
+        bytes memory _initializer,
         uint256 _saltNonce
     )
-        external
+        public
         payable
         override
         returns(address userProxy)
@@ -45,14 +45,39 @@ abstract contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         IGnosisSafeProxyFactory factory = IGnosisSafeProxyFactory(
             0x76E2cFc1F5Fa8F6a5b3fC4c8F4788F0116861F9B
         );
+
+        // Salt used by GnosisSafeProxyFactory
+        bytes32 salt = keccak256(abi.encodePacked(keccak256(_initializer), _saltNonce));
+        // Get GnosisSafeProxy.CreationCode used by deployed Factory
+        bytes memory creationCode = factory.proxyCreationCode();
+
+        // Derive undeployed userProxy address
+        address predictedAddress = address(uint(keccak256(abi.encodePacked(
+            byte(0xff),
+            address(factory),
+            salt,
+            keccak256(abi.encodePacked(creationCode, _mastercopy))
+        ))));
+
+        // Prefund undeployed proxy
+        if (msg.value > 0) payable(predictedAddress).sendValue(msg.value);
+
+        // Deploy userProxy with create2
         userProxy = address(factory.createProxyWithNonce(
             _mastercopy,
             _initializer,
-            _saltNonce)
+            _saltNonce
+        ));
+        require(
+            userProxy == predictedAddress,
+            "GelatoCore.createTwoGelatoUserProxy: wrong address prediction"
         );
-        if (msg.value > 0) payable(userProxy).sendValue(msg.value);
+
+        // Map userProxy onto User
         userByGelatoProxy[userProxy] = msg.sender;
         gelatoProxyByUser[msg.sender] = userProxy;
+
+        // Success
         emit LogGelatoUserProxyCreation(msg.sender, userProxy, msg.value);
     }
 
@@ -75,3 +100,4 @@ abstract contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         return userByGelatoProxy[userPoxy] != address(0);
     }
 }
+

@@ -1,3 +1,3 @@
 export const userProxies = {
-  luis: "0xED7e330ec63d66EDa6A8Ac772bEd0416214c76C3"
+  luis: "0x6f8143Df5d422b8C79acc5058F9Cb5B237Af50cd"
 };
