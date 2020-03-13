@@ -233,8 +233,7 @@ export default task(
         creationTx = await gelatoCore.createThreeProxyAndMint(
           taskArgs.mastercopy,
           taskArgs.initializer,
-          11,
-          // taskArgs.saltnonce,
+          taskArgs.saltnonce,
           [taskArgs.selectedprovider, taskArgs.selectedexecutor],
           [conditionAddress, actionAddress],
           taskArgs.conditionpayload,
