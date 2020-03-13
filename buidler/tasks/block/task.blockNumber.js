@@ -2,18 +2,23 @@ import { task } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../buidler.config";
 
 export default task(
-  "block-number",
-  `Logs the current block number on [--network] (default: ${defaultNetwork})`
+  "block",
+  `Return or --log block info from [--network] (default: ${defaultNetwork})`
 )
+  .addFlag("number")
   .addFlag("log", "Logs return values to stdout")
-  .setAction(async ({ log }, { ethers }) => {
+  .setAction(async taskArgs => {
     try {
-      const blockNumber = await ethers.provider.getBlockNumber();
-      if (log)
-        console.log(
-          `\n${ethers.provider._buidlerProvider._networkName}: ${blockNumber}\n`
-        );
-      return blockNumber;
+      if (Object.keys(taskArgs).length === 0)
+        throw new Error(`\n Must supply task arguments or flags\n`);
+
+      const returnObj = {};
+
+      if (taskArgs.number)
+        returnObj.blockNumber = await ethers.provider.getBlockNumber();
+
+      if (taskArgs.log) console.log(`\nNetwork: ${network.name}\n`, returnObj);
+      return returnObj;
     } catch (err) {
       console.error(err);
       process.exit(1);

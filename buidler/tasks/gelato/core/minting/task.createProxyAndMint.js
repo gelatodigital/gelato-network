@@ -62,16 +62,16 @@ export default task(
     constants.HashZero
   )
   .addOptionalParam(
-    "defaultdata",
-    "The name of the defaultpayload to retrieve for the 'data' field"
+    "defaultpayloadscript",
+    "The name of the defaultpayload script to retrieve 'data'"
   )
   .addOptionalParam(
-    "fallbackHandler",
+    "fallbackhandler",
     "Supply with --setup:  Handler for fallback calls to this contract",
     constants.AddressZero
   )
   .addOptionalParam(
-    "paymentToken",
+    "paymenttoken",
     "Supply with --setup:  Token that should be used for the payment (0 is ETH)",
     constants.AddressZero
   )
@@ -82,7 +82,7 @@ export default task(
     types.int
   )
   .addOptionalParam(
-    "paymentReceiver",
+    "paymentreceiver",
     "Supply with --setup:  Adddress that should receive the payment (or 0 if tx.origin)t",
     constants.AddressZero
   )
