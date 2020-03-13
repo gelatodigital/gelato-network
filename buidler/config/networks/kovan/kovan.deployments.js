@@ -43,6 +43,6 @@ export const deployments = {
   // Enable GelatoCore Module and Mint
   ScriptGnosisSafeEnableGelatoCoreAndMint:
     "0x5993ff30b943dE4c3fDA59d88D87d1661412D101",
-  ScriptEnableGelatoCoreAndExecuteChainedAction:
-    "0x4B7171F69E2c89C6899527F411446DC1D9c65bf4"
+  // Enter the Rebalancing Chained Action
+  ScriptEnterPortfolioRebalancing: "0x7a0986883e84DB63A18b1AA96F8B4EC25fD904a6"
 };

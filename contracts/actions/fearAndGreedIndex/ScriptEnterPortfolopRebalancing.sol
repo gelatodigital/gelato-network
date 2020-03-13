@@ -4,7 +4,7 @@ import "../../gelato_core/interfaces/IGnosisSafe.sol";
 import "../../gelato_core/interfaces/IGelatoCore.sol";
 import "../../gelato_core/gelato_user_proxies/scripts/ScriptGnosisSafeEnableGelatoCore.sol";
 import "../../dapp_interfaces/fearAndGreedIndex/IFearGreedIndex.sol";
-import "../../actions/fearAndGreedIndex/ActionChainedRebalancePortfolio.sol";
+import "../../actions/fearAndGreedIndex/ActionRebalancePortfolio.sol";
 import "../../external/SafeMath.sol";
 import "../../external/Address.sol";
 import "../../dapp_interfaces/uniswap/IUniswapFactory.sol";
@@ -21,29 +21,25 @@ import "../../dapp_interfaces/uniswap/IUniswapExchange.sol";
 /// @dev Should be delegatecalled from gnosisSafeProxy.setup.setupModules(to,data):
 ///       - <to> address of this contract: ScriptGnosisSafeEnableGelatoCoreAndMint
 ///       - <data> encodedPayload for enableModuleAndMint
-contract ScriptEnableGelatoCoreAndExecuteChainedAction is
+contract ScriptEnterPortfolioRebalancing is
     ScriptGnosisSafeEnableGelatoCore,
-    ActionChainedRebalancePortfolio
+    ActionRebalancePortfolio
 {
     using SafeMath for uint256;
     using Address for address;
     // using Address for address;
 
-    // !!!!!!!!! Kovan !!!!!!
-    event LogFailure(string error);
-
     /// @dev This function should be delegatecalled
-    function enableModuleAndExecuteChainedAction(
+    function enterPortfolioRebalancing(
         address _gelatoCore,
-        address[2] calldata _selectedProviderAndExecutor,
-        address[2] calldata _conditionAndAction
+        address[2] calldata _selectedProviderAndExecutor
     ) external {
         // 1. Whitelist Gelato Core
         // Whitelist GelatoCore as module on delegatecaller (Gnosis Safe Proxy)
         super.enableGelatoCoreModule(_gelatoCore);
 
-        // 2. Execute ActionChainedRebalancePortfolio.chainedAction => Swaps ETH into DAI and mints new claim
-        this.chainedAction(_selectedProviderAndExecutor, _conditionAndAction);
+        // 2. Execute ActionRebalancePortfolio.action => Swaps ETH into DAI
+        super.action(payable(_selectedProviderAndExecutor[0]));
 
     }
 

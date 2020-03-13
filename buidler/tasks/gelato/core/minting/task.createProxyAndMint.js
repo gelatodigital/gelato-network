@@ -7,7 +7,7 @@ export default task(
   `Sends tx to GelatoCore.createProxyAndMint() on [--network] (default: ${defaultNetwork})`
 )
   .addPositionalParam("actionname", "This param MUST be supplied.")
-  .addOptionalPositionalParam(
+  .addPositionalParam(
     "conditionname",
     "defaults to address 0 for self-conditional actions",
     constants.AddressZero,
@@ -88,7 +88,7 @@ export default task(
   )
   .addOptionalParam(
     "funding",
-    "ETH value to be sent to newly created gelato user proxy",
+    "ETH value (in wei) to be sent to newly created gelato user proxy",
     "0",
     types.int
   )
@@ -160,33 +160,51 @@ export default task(
 
       // ==== GelatoCore.mintExecutionClaim Params ====
       // Selected Provider and Executor
-      const selectedProvider = await run("handleProvider", {
-        provider: taskArgs.selectedprovider
-      });
-      const selectedExecutor = await run("handleExecutor", {
-        executor: taskArgs.selectedexecutor
-      });
+      // const selectedProvider = await run("handleProvider", {
+      //   provider: taskArgs.selectedprovider
+      // });
+      const { [2]: selectedProvider } = await ethers.signers();
+      // const selectedExecutor = await run("handleExecutor", {
+      //   selectedExecutor: taskArgs.selectedexecutor
+      // });
+      const { [1]: selectedExecutor } = await ethers.signers();
       // Condition and ConditionPayload (optional)
       let conditionAddress;
       let conditionPayload = constants.HashZero;
-      if (conditionname != constants.AddressZero) {
-        conditionAddress = await run("bre-config", {
-          deployments: true,
-          contractname: taskArgs.conditionname
+      if (taskArgs.conditionname != constants.AddressZero) {
+        const condition = await run("instantiateContract", {
+          contractname: `${taskArgs.conditionname}`,
+          signer: selectedExecutor,
+          write: true
         });
+        conditionAddress = condition.address;
         conditionPayload = await run("handlePayload", {
           contractname: taskArgs.conditionname
         });
       }
       // Action and ActionPayload
-      const actionAddress = await run("bre-config", {
-        deployments: true,
-        contractname: taskArgs.actionname
+      const action = await run("instantiateContract", {
+        contractname: `${taskArgs.actionname}`,
+        signer: selectedExecutor,
+        write: true
       });
-      const actionPayload = await run("bre-config", {
-        deployments: true,
-        contractname: taskArgs.actionname
-      });
+      /*
+      function createProxyAndMint(
+        address _mastercopy,
+        bytes calldata _initializer,
+        address[2] calldata _selectedProviderAndExecutor,
+        address[2] calldata _conditionAndAction,
+        bytes calldata _conditionPayload,
+        bytes calldata _actionPayload,
+        uint256 _executionClaimExpiryDate
+    )
+    */
+
+      const actionAddress = action.address;
+
+      const actionPayload = await run(
+        `gc-mint:defaultpayload:${taskArgs.actionname}`
+      );
       // ============
 
       // GelatoCore interaction
@@ -195,10 +213,23 @@ export default task(
         write: true
       });
 
+      if (taskArgs.log)
+        console.log(`
+          \MasterCopy: ${taskArgs.mastercopy}\n
+          \Initializer: ${taskArgs.initializer}\n
+          \providerAndSelector: ${(selectedProvider._address,
+          selectedExecutor._address)}\n
+          \conditionAction: ${(conditionAddress, actionAddress)}\n
+          \conditionPayload: ${conditionPayload}\n
+          \actionPayload: ${actionPayload}\n
+          \ExecutionclaimExpiryDate: ${taskArgs.executionclaimexpirydate}\n
+          \Funding: ${taskArgs.funding}\n
+        `);
+
       const creationTx = await gelatoCore.createProxyAndMint(
         taskArgs.mastercopy,
         taskArgs.initializer,
-        [selectedProvider, selectedExecutor],
+        [selectedProvider._address, selectedExecutor._address],
         [conditionAddress, actionAddress],
         conditionPayload,
         actionPayload,
