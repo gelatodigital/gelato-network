@@ -46,18 +46,20 @@ abstract contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         IGnosisSafeProxyFactory factory = IGnosisSafeProxyFactory(
             0x76E2cFc1F5Fa8F6a5b3fC4c8F4788F0116861F9B
         );
+
         // Salt used by GnosisSafeProxyFactory
         bytes32 salt = keccak256(abi.encodePacked(keccak256(_initializer), _saltNonce));
+        // Get GnosisSafeProxy.CreationCode used by deployed Factory
+        bytes memory creationCode = factory.proxyCreationCode();
+
         // Derive undeployed userProxy address
         address predictedAddress = address(uint(keccak256(abi.encodePacked(
             byte(0xff),
             address(factory),
             salt,
-            keccak256(abi.encodePacked(
-                type(GnosisSafeProxy).creationCode,
-                _mastercopy
-            ))
+            keccak256(abi.encodePacked(creationCode, _mastercopy))
         ))));
+
         // Prefund undeployed proxy
         if (msg.value > 0) {
             uint256 previousBalance = predictedAddress.balance;
@@ -67,6 +69,7 @@ abstract contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
                 "GelatoCore.createTwoGelatoUserProxy: prefunding error"
             );
         }
+
         // Deploy userProxy with create2
         userProxy = address(factory.createProxyWithNonce(
             _mastercopy,
@@ -77,9 +80,11 @@ abstract contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
             userProxy == predictedAddress,
             "GelatoCore.createTwoGelatoUserProxy: wrong address prediction"
         );
+
         // Map userProxy onto User
         userByGelatoProxy[userProxy] = msg.sender;
         gelatoProxyByUser[msg.sender] = userProxy;
+
         // Success
         emit LogGelatoUserProxyCreation(msg.sender, userProxy, msg.value);
     }
