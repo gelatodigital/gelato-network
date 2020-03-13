@@ -186,7 +186,7 @@ export default task(
         deployments: true,
         contractname: taskArgs.actionname
       });
-      const actionPayload = await run("bre-config", {
+      const actionPayload = await run("handlePayload", {
         deployments: true,
         contractname: taskArgs.actionname
       });
