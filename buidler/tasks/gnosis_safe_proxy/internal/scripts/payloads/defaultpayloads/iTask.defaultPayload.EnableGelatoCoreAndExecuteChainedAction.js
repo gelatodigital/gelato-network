@@ -4,10 +4,10 @@ export default internalTask(
   "gsp:scripts:defaultpayload:ScriptEnterPortfolioRebalancing",
   `Returns a hardcoded payload for ScriptEnterPortfolioRebalancing`
 )
-  .addOptionalParam("executorindex", "mnemoric index of executor", 0, types.int)
-  .addOptionalParam("providerindex", "mnemoric index of provider", 0, types.int)
+  .addOptionalParam("executorindex", "mnemoric index of executor", 1, types.int)
+  .addOptionalParam("providerindex", "mnemoric index of provider", 2, types.int)
   .addFlag("log")
-  .setAction(async ({ log, providerindex, executorindex }) => {
+  .setAction(async ({ log = true, providerindex, executorindex }) => {
     try {
       const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
@@ -19,10 +19,10 @@ export default internalTask(
       const provider = signers[parseInt(providerindex)]._address;
 
       const inputs = [gelatoCore.address, [provider, executor]];
-
+      if (log) console.log(inputs);
       const payload = await run("abi-encode-withselector", {
         contractname: "ScriptEnterPortfolioRebalancing",
-        functionname: "enableModuleAndExecuteChainedAction",
+        functionname: "enterPortfolioRebalancing",
         inputs
       });
 

@@ -6,8 +6,8 @@ export default internalTask(
 )
   .addOptionalPositionalParam(
     "providerindex",
-    "which mnemoric index should be selected for provider (default index 0)",
-    0,
+    "which mnemoric index should be selected for provider (default index 2)",
+    2,
     types.int
   )
   .addFlag("log")

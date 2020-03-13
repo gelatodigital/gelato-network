@@ -10,7 +10,8 @@ export const addressBook = {
     default: "0x4d671CD743027fB5Af1b2D2a3ccbafA97b5B1B80" // Luis Dev-Account2
   },
   gnosisSafe: {
-    mastercopy: "0x34CfAC646f301356fAa8B21e94227e3583Fe3F5F"
+    mastercopy: "0x34CfAC646f301356fAa8B21e94227e3583Fe3F5F",
+    gnosisSafeProxyFactory: "0x76E2cFc1F5Fa8F6a5b3fC4c8F4788F0116861F9B"
   },
   kyber: {
     // Kovan

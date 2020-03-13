@@ -9,17 +9,17 @@ export default internalTask(
   .addOptionalPositionalParam(
     "executorindex",
     "which mnemoric index should be selected for executor msg.sender (default index 0)",
-    0,
+    1,
     types.int
   )
   .addOptionalPositionalParam(
     "providerindex",
     "which mnemoric index should be selected for provider (default index 0)",
-    0,
+    2,
     types.int
   )
   .addFlag("log")
-  .setAction(async ({ executorindex = 0, providerindex = 0, log = true }) => {
+  .setAction(async ({ executorindex = 1, providerindex = 2, log = true }) => {
     try {
       const signers = await ethers.signers();
       const executor = signers[parseInt(executorindex)];

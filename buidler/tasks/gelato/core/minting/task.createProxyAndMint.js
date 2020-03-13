@@ -55,7 +55,7 @@ export default task(
   )
   .addOptionalParam(
     "to",
-    "Supply with --setup: contract address for optional delegatecall.",
+    "Supply with --setup: to address",
     constants.AddressZero
   )
   .addOptionalParam(
@@ -91,7 +91,8 @@ export default task(
   .addOptionalParam(
     "funding",
     "ETH value to be sent to newly created gelato user proxy",
-    constants.HashZero
+    "0",
+    types.string
   )
   .addFlag("log", "Logs return values to stdout")
   .setAction(async taskArgs => {
@@ -139,13 +140,20 @@ export default task(
           throw new Error("Failed to convert taskArgs.owners into Array");
       }
 
-      if (taskArgs.setup && !taskArgs.data && taskArgs.defaultpayloadscript) {
+      if (
+        taskArgs.setup &&
+        !taskArgs.data &&
+        taskArgs.defaultpayloadscript &&
+        !taskArgs.to
+      ) {
         taskArgs.data = await run(
           `gsp:scripts:defaultpayload:${defaultpayloadscript}`
         );
+        taskArgs.to = await run("bre-config", {
+          deployments: true,
+          contractname: `${tasksArgs.defaultpayloadscript}`
+        });
       }
-
-      if (taskArgs.log) console.log("\nTaskArgs:\n", taskArgs, "\n");
 
       if (taskArgs.setup) {
         const inputs = [
@@ -171,14 +179,14 @@ export default task(
 
       // ==== GelatoCore.mintExecutionClaim Params ====
       // Selected Provider and Executor
-      // const selectedProvider = await run("handleProvider", {
-      //   provider: taskArgs.selectedprovider
-      // });
-      const { [2]: selectedProvider } = await ethers.signers();
-      // const selectedExecutor = await run("handleExecutor", {
-      //   selectedExecutor: taskArgs.selectedexecutor
-      // });
-      const { [1]: selectedExecutor } = await ethers.signers();
+      const selectedProvider = await run("handleProvider", {
+        provider: taskArgs.selectedprovider
+      });
+      // const { [2]: selectedProvider } = await ethers.signers();
+      const selectedExecutor = await run("handleExecutor", {
+        selectedExecutor: taskArgs.selectedexecutor
+      });
+      // const { [1]: selectedExecutor } = await ethers.signers();
       // Condition and ConditionPayload (optional)
       let conditionAddress;
       let conditionPayload = constants.HashZero;
@@ -187,7 +195,7 @@ export default task(
           deployments: true,
           contractname: taskArgs.conditionname
         });
-        conditionAddress = condition.address;
+        // conditionAddress = condition.address;
         conditionPayload = await run("handlePayload", {
           contractname: taskArgs.conditionname
         });
@@ -212,11 +220,9 @@ export default task(
     )
     */
 
-      const actionAddress = action.address;
-
-      const actionPayload = await run(
-        `gc-mint:defaultpayload:${taskArgs.actionname}`
-      );
+      // const actionPayload = await run(
+      //   `gc-mint:defaultpayload:${taskArgs.actionname}`
+      // );
       // ============
 
       // GelatoCore interaction
@@ -229,24 +235,29 @@ export default task(
         console.log(`
           \MasterCopy: ${taskArgs.mastercopy}\n
           \Initializer: ${taskArgs.initializer}\n
-          \providerAndSelector: ${(selectedProvider._address,
-          selectedExecutor._address)}\n
-          \conditionAction: ${(conditionAddress, actionAddress)}\n
+          \providerAndSelector: ${[selectedProvider, selectedExecutor]}\n
+          \conditionAction: ${[conditionAddress, actionAddress]}\n
           \conditionPayload: ${conditionPayload}\n
           \actionPayload: ${actionPayload}\n
           \ExecutionclaimExpiryDate: ${taskArgs.executionclaimexpirydate}\n
           \Funding: ${taskArgs.funding}\n
+          \Script Address: ${taskArgs.to}\n
         `);
+
+      if (taskArgs.log) console.log("\nTaskArgs:\n", taskArgs, "\n");
 
       const creationTx = await gelatoCore.createProxyAndMint(
         taskArgs.mastercopy,
         taskArgs.initializer,
-        [selectedProvider._address, selectedExecutor._address],
+        [selectedProvider, selectedExecutor],
         [conditionAddress, actionAddress],
         conditionPayload,
         actionPayload,
         taskArgs.executionclaimexpirydate,
-        { value: taskArgs.funding, gasLimit: 3000000 }
+        {
+          value: ethers.utils.bigNumberify(taskArgs.funding),
+          gasLimit: 3000000
+        }
       );
 
       if (taskArgs.log)
