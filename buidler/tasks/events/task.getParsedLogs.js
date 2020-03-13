@@ -30,11 +30,11 @@ export default task(
     types.number
   )
   .addOptionalParam("blockhash", "Search a specific block")
-  .addOptionalParam("txhash", "Filter for a specific tx")
   .addOptionalParam("property", "A specific key-value pair to search for")
   .addOptionalParam("filterkey", "A key to filter for")
   .addOptionalParam("filtervalue", "A value to filter for")
-  .addFlag("values")
+  .addFlag("strcmp", "Filters based on string comparison")
+  .addFlag("values", "Only return the values property of the parsedLog")
   .addFlag("stringify")
   .addFlag("log", "Logs return values to stdout")
   .setAction(async taskArgs => {
@@ -45,8 +45,13 @@ export default task(
         throw new Error("--filtervalue with a --filterkey or --property");
       if (taskArgs.filterkey && !taskArgs.values)
         throw new Error("--filter-key/value with --values");
-      if (taskArgs.stringify && !taskArgs.property)
-        throw new Error("--stringify --property");
+      if (
+        taskArgs.stringify &&
+        !taskArgs.values &&
+        !taskArgs.filtervalue &&
+        !taskArgs.property
+      )
+        throw new Error("--stringify --values [--filtervalue] or --property");
 
       let loggingActivated;
       if (taskArgs.log) {
@@ -54,163 +59,97 @@ export default task(
         taskArgs.log = false;
       }
 
-      let logs, logWithTxHash;
-      if (taskArgs.txhash) logWithTxHash = await run("event-getlogs", taskArgs);
-      else logs = await run("event-getlogs", taskArgs);
+      const logs = await run("event-getlogs", taskArgs);
 
       if (loggingActivated) taskArgs.log = true;
 
-      if (!logs && !logWithTxHash) {
+      if (!logs) {
         if (taskArgs.log) {
           console.log(
-            `No logs for ${taskArgs.contractname}.${taskArgs.eventname}`
+            `❌  No Logs for ${taskArgs.contractname}.${taskArgs.eventname}`
           );
         }
         return undefined;
       }
 
-      let parsedLogs, parsedLogWithTxHash;
-      if (logWithTxHash) {
-        parsedLogWithTxHash = await run("ethers-interface-parseLogs", {
-          contractname: taskArgs.contractname,
-          logs: logWithTxHash
-        });
-      } else {
-        parsedLogs = await run("ethers-interface-parseLogs", {
-          contractname: taskArgs.contractname,
-          logs
-        });
-      }
+      let parsedLogs = await run("ethers-interface-parseLogs", {
+        contractname: taskArgs.contractname,
+        logs
+      });
 
-      if (!parsedLogs && !parsedLogWithTxHash) {
+      // Filter/Mutate parsedLogs
+      if (!parsedLogs.length) {
         if (taskArgs.log) {
           console.log(
-            `No logs for ${taskArgs.contractname}.${taskArgs.eventname}`
+            `❌  No Parsed Logs for ${taskArgs.contractname}.${taskArgs.eventname}`
           );
           return undefined;
         }
       } else {
-        if (!taskArgs.txhash) {
-          // No txhash filter
-          if (taskArgs.log) {
-            console.log(
-              `\n Parsed Logs for ${taskArgs.contractname}.${taskArgs.eventname}\n`
+        if (taskArgs.values) {
+          // filterkey/value
+          if (taskArgs.filterkey) {
+            parsedLogs = parsedLogs.filter(parsedLog =>
+              checkNestedObj(parsedLog, "values", taskArgs.filterkey)
             );
-          }
-          if (taskArgs.values) {
-            // filterkey/value
-            if (taskArgs.filterkey) {
-              parsedLogs = parsedLogs.filter(parsedLog =>
-                checkNestedObj(parsedLog, "values", taskArgs.filterkey)
-              );
-              if (taskArgs.filtervalue) {
-                parsedLogs = parsedLogs.filter(parsedLog => {
-                  const filteredValue = getNestedObj(
-                    parsedLog,
-                    "values",
-                    taskArgs.filterkey
-                  );
-                  return filteredValue == taskArgs.filtervalue;
-                });
-              }
-            }
-            for (const index in parsedLogs)
-              parsedLogs[index] = parsedLogs[index].values;
-            if (taskArgs.log)
-              for (const values of parsedLogs) console.log("\n", values);
-            return parsedLogs;
-          } else if (taskArgs.property) {
             if (taskArgs.filtervalue) {
               parsedLogs = parsedLogs.filter(parsedLog => {
-                const filteredValue = getNestedObj(
-                  parsedLog,
-                  "values",
-                  taskArgs.property
-                );
-                return filteredValue == taskArgs.filtervalue;
+                const filteredValue = parsedLog.values[taskArgs.filterkey];
+                return taskArgs.strcmp
+                  ? filteredValue.toString() === taskArgs.filtervalue.toString()
+                  : filteredValue == taskArgs.filtervalue;
               });
             }
-            for (const [index, parsedLog] of parsedLogs.entries()) {
-              if (taskArgs.log) {
-                console.log(
-                  `\n ${taskArgs.property}: `,
-                  taskArgs.stringify
-                    ? parsedLog.values[taskArgs.property].toString()
-                    : parsedLog.values[taskArgs.property]
-                );
-              }
-              parsedLogs[index] = taskArgs.stringify
-                ? parsedLog.values[taskArgs.property].toString()
-                : parsedLog.values[taskArgs.property];
-            }
-            return parsedLogs;
-          } else {
-            for (const parsedLog of parsedLogs)
-              if (taskArgs.log) console.log("\n", parsedLog);
-            return parsedLogs;
           }
-        } else {
-          // txhash filter
-          if (taskArgs.values) {
-            // Filtering
-            if (taskArgs.filterkey) {
-              if (
-                !checkNestedObj(
-                  parsedLogWithTxHash,
-                  "values",
-                  taskArgs.filterkey
-                )
-              )
-                parsedLogWithTxHash = undefined;
-              if (taskArgs.filtervalue) {
-                const filteredValue = getNestedObj(
-                  parsedLogWithTxHash,
-                  "values",
-                  taskArgs.filterkey
-                );
-                if (filteredValue != taskArgs.filtervalue)
-                  parsedLogWithTxHash = undefined;
-              }
+          // Mutate parsedLog to contain values only
+          for (const [index, parsedLog] of parsedLogs.entries()) {
+            const copy = {};
+            for (const key in parsedLog.values) {
+              copy[key] = taskArgs.stringify
+                ? parsedLog.values[key].toString()
+                : parsedLog.values[key];
             }
-            if (parsedLogWithTxHash) {
-              if (taskArgs.log) console.log("\n", parsedLogWithTxHash.values);
-              return parsedLogWithTxHash.values;
-            }
-          } else if (taskArgs.property) {
-            if (taskArgs.filtervalue) {
+            parsedLogs[index] = copy;
+          }
+        } else if (taskArgs.property) {
+          if (taskArgs.filtervalue) {
+            parsedLogs = parsedLogs.filter(parsedLog => {
               const filteredValue = getNestedObj(
-                parsedLogWithTxHash,
+                parsedLog,
                 "values",
                 taskArgs.property
               );
-              if (filteredValue != taskArgs.filtervalue)
-                parsedLogWithTxHash = undefined;
-            }
-            if (parsedLogWithTxHash) {
-              if (taskArgs.log) {
-                console.log(
-                  `\n ${taskArgs.property}: `,
-                  taskArgs.stringify
-                    ? parsedLogWithTxHash.values[taskArgs.property].toString()
-                    : parsedLogWithTxHash.values[taskArgs.property]
-                );
-              }
-              return taskArgs.stringify
-                ? parsedLogWithTxHash.values[taskArgs.property].toString()
-                : parsedLogWithTxHash.values[taskArgs.property];
-            }
-          } else {
-            if (taskArgs.log) {
-              console.log(
-                `\nParsed Log for ${taskArgs.contractname}.${taskArgs.eventname} with tx-Hash ${taskArgs.txhash}:\
-                 \n`,
-                parsedLogWithTxHash
-              );
-            }
-            return parsedLogWithTxHash;
+              return taskArgs.strcmp
+                ? filteredValue.toString() === taskArgs.filtervalue.toString()
+                : filteredValue == taskArgs.filtervalue;
+            });
+          }
+          for (const [index, parsedLog] of parsedLogs.entries()) {
+            parsedLogs[index] = {
+              [taskArgs.property]: taskArgs.stringify
+                ? parsedLog.values[taskArgs.property].toString()
+                : parsedLog.values[taskArgs.property]
+            };
           }
         }
       }
+      // Logging
+      if (taskArgs.log) {
+        if (parsedLogs.length) {
+          console.log(
+            `\n Parsed Logs for ${taskArgs.contractname}.${taskArgs.eventname}\n`
+          );
+          for (const parsedLog of parsedLogs) console.log("\n", parsedLog);
+        } else {
+          console.log(
+            `\n ❌ No Parsed Logs for ${taskArgs.contractname}.${taskArgs.eventname}\
+             \n taskArgs:\n`,
+            taskArgs
+          );
+        }
+      }
+      // Return (filtered) (mutated) parsedLogs
+      return parsedLogs.length ? parsedLogs : undefined;
     } catch (error) {
       console.error(error);
       process.exit(1);

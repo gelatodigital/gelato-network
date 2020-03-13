@@ -71,9 +71,15 @@ contract GelatoCore is
 
         // Checks below will be separated onto provider module
         // msgSenderCheck();
-        // @DEV add require later !
-        isProvidedCondition[_selectedProviderAndExecutor[0]][_conditionAndAction[0]];
-        isProvidedAction[_selectedProviderAndExecutor[0]][_conditionAndAction[1]];
+        // THE CURRENT DEPLOYED INSTANCE DOESNT REQUIRE THIS
+        /*require(
+            isProvidedCondition[_selectedProviderAndExecutor[0]][_conditionAndAction[0]],
+            "GelatoCore.mintExecutionClaim: condition not provided"
+        );
+        require(
+            isProvidedAction[_selectedProviderAndExecutor[0]][_conditionAndAction[1]],
+            "GelatoCore.mintExecutionClaim: action not provided"
+        );*/
 
         // We cut this after initial testing
         address userProxy;
@@ -196,7 +202,9 @@ contract GelatoCore is
         external
         override
     {
+        // Store startGas for gas-consumption based cost and payout calcs
         uint256 startGas = gasleft();
+
         // CHECKS
         require(
             tx.gasprice == gelatoGasPrice,
@@ -210,7 +218,6 @@ contract GelatoCore is
             startGas > MAXGAS - 100000,  // 100k overhead buffer
             "GelatoCore.execute: insufficient gas sent"
         );
-
         // canExecute()
         {
             string memory canExecuteResult  = canExecute(
@@ -242,7 +249,7 @@ contract GelatoCore is
                     _conditionAndAction,
                     canExecuteResult
                 );
-                return;  // END OF EXECUTION
+                return;  // FAILURE: END OF EXECUTION
             }
         }
 
@@ -274,11 +281,13 @@ contract GelatoCore is
                     ExecutorPayout.Reward,
                     _selectedProviderAndExecutor[0]
                 );
+                return;  // SUCCESS: END OF EXECUTION
             } else {
+                // FAILURE
                 // 68: 32-location, 32-length, 4-ErrorSelector, UTF-8 revertReason
                 if (actionRevertReason.length % 32 == 4) {
                     bytes4 selector;
-                    assembly { selector := actionRevertReason }
+                    assembly { selector := mload(add(0x20, actionRevertReason)) }
                     if (selector == 0x08c379a0) {  // Function selector for Error(string)
                         assembly { actionRevertReason := add(actionRevertReason, 68) }
                         executionFailureReason = string(actionRevertReason);
@@ -294,11 +303,9 @@ contract GelatoCore is
         } catch {
             executionFailureReason = "UndefinedGnosisSafeProxyError";
         }
-
-        // Executor is REFUNDED for FAILED attempt
+        // FAILURE: Executor is REFUNDED for failed attempt
         _executorPayout(startGas, ExecutorPayout.Refund, _selectedProviderAndExecutor[0]);
 
-        // Failure
         emit LogExecutionFailure(
             _selectedProviderAndExecutor,
             msg.sender,  // executor

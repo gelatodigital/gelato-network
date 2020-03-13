@@ -2,8 +2,8 @@ import { task, types } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../buidler.config";
 
 export default task(
-  "event-getlogs",
-  `Return (or --log) the provider's logs for <contractname> <eventname> --fromBlock --toBlock or --blockHash  [--network] (default: ${defaultNetwork})`
+  "event-getlog",
+  `Return (or --log) the provider's Log for <contractname> <eventname> <txhash> --fromBlock --toBlock or --blockHash  [--network] (default: ${defaultNetwork})`
 )
   .addPositionalParam(
     "contractname",
@@ -13,6 +13,7 @@ export default task(
     "eventname",
     "The name of the event in the <contractname>'s abi"
   )
+  .addPositionalParam("txhash", "The tx from which to get the Log")
   .addOptionalPositionalParam(
     "contractaddress",
     "An address of a deployed instance of <contractname>. Defaults to network.deployments.<contractname>"
@@ -35,6 +36,7 @@ export default task(
     async ({
       contractname,
       eventname,
+      txhash,
       contractaddress,
       blockhash,
       fromblock,
@@ -62,7 +64,7 @@ export default task(
           if (fromblock > toblock) throw new Error("\n fromblock > toblock");
 
         if ((fromblock || toblock) && blockhash)
-          throw new Error("\n cannot specify blocknums alongside blockHash");
+          throw new Error("\n Cannot specify blocknums alongside blockHash");
 
         const {
           filters: { defaultFromBlock, defaultToBlock }
@@ -79,25 +81,20 @@ export default task(
           topics: [contractInterface.events[eventname].topic]
         };
 
-        const logs = await ethers.provider.getLogs(filter);
+        const filteredLogs = await ethers.provider.getLogs(filter);
+        const logWithTxHash = filteredLogs.find(
+          log => log.transactionHash == txhash
+        );
 
         if (log) {
-          if (!logs.length) {
-            console.log(
-              `\n❌  No logs for ${contractname}.${eventname} from block ${
-                fromblock ? fromblock : blockhash
-              } ${toblock ? `to block ${toblock}` : "to latest block"}`
-            );
-          } else {
-            console.log(
-              `\nLogs for ${contractname}.${eventname} from block ${
-                fromblock ? fromblock : blockhash
-              } to block ${toblock}`
-            );
-            for (const aLog of logs) console.log("\n", aLog);
-          }
+          console.log(
+            `\nLog for ${contractname}.${eventname} from block ${
+              fromblock ? fromblock : blockhash
+            } to block ${toblock} with tx-Hash ${txhash}:`
+          );
+          console.log(logWithTxHash ? logWithTxHash : "❌ Not found");
         }
-        return logs.length ? logs : undefined;
+        return logWithTxHash;
       } catch (error) {
         console.error(error);
         process.exit(1);

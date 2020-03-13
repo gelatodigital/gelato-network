@@ -2,8 +2,8 @@ import { task } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../../buidler.config";
 
 export default task(
-  "gc-getcurrentexecutionclaimid",
-  `Calls GelatoCore.getCurrentExecutionClaimId() on [--network] (default: ${defaultNetwork})`
+  "gc-currentexecutionclaimid",
+  `Calls GelatoCore.currentExecutionClaimId() on [--network] (default: ${defaultNetwork})`
 )
   .addFlag("log", "Logs return values to stdout")
   .setAction(async ({ log }) => {

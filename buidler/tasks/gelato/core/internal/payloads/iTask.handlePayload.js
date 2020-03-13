@@ -2,7 +2,7 @@ import { internalTask } from "@nomiclabs/buidler/config";
 
 export default internalTask(
   "handlePayload",
-  "Returns default payload for Action or Condition <contractname>, if no payload is passed"
+  "Returns default payload for Condition or Action <contractname>, if no payload is passed"
 )
   .addPositionalParam("contractname")
   .addOptionalParam("payload")

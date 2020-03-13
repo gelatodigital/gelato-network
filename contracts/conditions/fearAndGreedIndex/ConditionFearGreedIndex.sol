@@ -15,9 +15,6 @@ contract ConditionFearGreedIndex is IGelatoCondition, Ownable {
         return this.reached.selector;
     }
 
-    // @ Dev allocated randomly
-    uint256 public constant override conditionGas = 500000;
-
     // State
     uint256 public current;  // between 0 - 100
 
@@ -53,9 +50,8 @@ contract ConditionFearGreedIndex is IGelatoCondition, Ownable {
 
         bool prevIndexIsZero = _prevIndex == 0;
 
-        if (current >= _prevIndex + 10) return (true, "OkNewIndexIsGreater");
-        else if (!prevIndexIsZero && current <= _prevIndex - 10)
-            return (true, "OkNewIndexIsSmaller");
+        if (current >= _prevIndex + 10) return (true, "0");
+        else if (!prevIndexIsZero && current <= _prevIndex - 10) return (true, "1");
         else return(false, "NotOkNewIndexIsNotSmallerOrGreater");
     }
 

@@ -1,25 +1,17 @@
 pragma solidity ^0.6.2;
 
 import "../../GelatoActionsStandard.sol";
-import "../../../external/Ownable.sol";
 import "../../../external/IERC20.sol";
 // import "../../../external/SafeERC20.sol";
 import "../../../external/Address.sol";
 
-contract ActionERC20TransferFrom is GelatoActionsStandard, Ownable {
+contract ActionERC20TransferFrom is GelatoActionsStandard {
     // using SafeERC20 for IERC20; <- internal library methods vs. try/catch
     using Address for address;
 
     // actionSelector public state variable np due to this.actionSelector constant issue
-    function actionSelector() external pure override virtual returns(bytes4) {
+    function actionSelector() public pure override virtual returns(bytes4) {
         return this.action.selector;
-    }
-    uint256 public actionGasTransferFrom = 300000;
-    function getActionGas() external view override virtual returns(uint256) {
-        return actionGasTransferFrom;
-    }
-    function setActionGas(uint256 _actionGas) external virtual onlyOwner {
-        actionGasTransferFrom = _actionGas;
     }
 
     function action(
@@ -40,10 +32,10 @@ contract ActionERC20TransferFrom is GelatoActionsStandard, Ownable {
             _sendAmount
         ) {
             emit LogOneWay(
-                _userAndProxy[0],
-                _sendTokenAndDesination[0],
+                _userAndProxy[0],  // origin
+                _sendTokenAndDesination[0],  // sendToken
                 _sendAmount,
-                _sendTokenAndDesination[1]
+                _sendTokenAndDesination[1]  // destination
             );
         } catch {
             revert("ErrorTransferFromUser");
@@ -85,7 +77,7 @@ contract ActionERC20TransferFrom is GelatoActionsStandard, Ownable {
         returns(string memory)  // actionCondition
     {
         if (!_sendTokenAndDesination[0].isContract())
-            return "ActionERC20TransferFrom: NotOkSrcAddress";
+            return "ActionERC20TransferFrom: NotOkSendTokenAddress";
 
         IERC20 sendERC20 = IERC20(_sendTokenAndDesination[0]);
         try sendERC20.balanceOf(_userAndProxy[0]) returns(uint256 sendERC20Balance) {
@@ -105,28 +97,5 @@ contract ActionERC20TransferFrom is GelatoActionsStandard, Ownable {
 
         // STANDARD return string to signal actionConditions Ok
         return "ok";
-    }
-
-    // ============ API for FrontEnds ===========
-    function getUsersSendTokenBalance(
-        // Standard Action Params
-        address[2] memory _userAndProxy,
-        // Specific Action Params
-        address[2] memory _sendTokenAndDesination,
-        uint256
-    )
-        public
-        view
-        virtual
-        returns(uint256)
-    {
-        IERC20 sendERC20 = IERC20(_sendTokenAndDesination[0]);
-        try sendERC20.balanceOf(_userAndProxy[0])
-            returns(uint256 userSendERC20Balance)
-        {
-            return userSendERC20Balance;
-        } catch {
-            revert("Error: ActionERC20TransferFrom.getUsersSendTokenBalance: balanceOf");
-        }
     }
 }

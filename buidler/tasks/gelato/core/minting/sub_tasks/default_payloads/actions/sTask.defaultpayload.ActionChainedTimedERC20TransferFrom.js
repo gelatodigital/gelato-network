@@ -34,7 +34,6 @@ export default internalTask(
       const conditionTimestampPassedPayload = await run("handlePayload", {
         contractname: "ConditionTimestampPassed"
       });
-      const executionClaimExpirtyDate = 0; // defaults to executor's maximum
       const timeOffset = 300; // 5 minutes
 
       // Params as sorted array of inputs for abi.encoding
@@ -45,7 +44,6 @@ export default internalTask(
         [selectedProvider, selectedExecutor],
         [conditionTimestampPassed, actionChainedTimedERC20TransferFrom],
         conditionTimestampPassedPayload,
-        executionClaimExpirtyDate,
         timeOffset
       ];
       // Encoding

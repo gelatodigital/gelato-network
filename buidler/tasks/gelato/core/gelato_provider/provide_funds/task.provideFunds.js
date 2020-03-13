@@ -11,13 +11,27 @@ export default task(
     "The amount of eth to add to the provider's balance"
   )
   .addOptionalPositionalParam("provider", "The provider to add balance to.")
+  .addOptionalParam(
+    "funderindex",
+    "Index of tx Signer account generated from mnemonic available inside BRE",
+    2,
+    types.int
+  )
   .addFlag("log", "Logs return values to stdout")
-  .setAction(async ({ ethamount, provider, log }) => {
+  .setAction(async ({ ethamount, provider, funderindex, log }) => {
     try {
-      provider = await run("handleProvider", { provider });
+      if (!provider) provider = await run("handleProvider", { provider });
+      const { [funderindex]: gelatoProvider } = await ethers.signers();
+      if (log) {
+        console.log(
+          `\n Funding from account with index: ${funderindex}\
+		       \n Funding Provider with Address:   ${provider}\n`
+        );
+      }
       const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
-        write: true
+        write: true,
+        signer: gelatoProvider
       });
       const tx = await gelatoCore.provideFunds(provider, {
         value: utils.parseEther(ethamount)

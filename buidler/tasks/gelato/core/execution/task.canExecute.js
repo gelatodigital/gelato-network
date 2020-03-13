@@ -35,28 +35,28 @@ export default task(
     async ({
       executionclaimid,
       executorindex,
+      executionclaim,
       fromblock,
       toblock,
       blockhash,
       txhash,
-      executionclaim,
       log
     }) => {
       try {
         if (!executionclaim) {
-          // Fetch Execution Claim from LogExecutionClaimMinted values
-          executionclaim = await run("gc-fetchparsedexecutionclaimevent", {
+          executionclaim = await run("fetchExecutionClaim", {
             executionclaimid,
-            contractname: "GelatoCore",
-            eventname: "LogExecutionClaimMinted",
+            executionclaim,
             fromblock,
             toblock,
             blockhash,
             txhash,
-            values: true,
             log
           });
         }
+
+        if (!executionclaim)
+          throw new Error("Unable to fetch executionClaim from events");
 
         const { [executorindex]: executor } = await ethers.signers();
 
@@ -78,7 +78,7 @@ export default task(
             executionclaim.actionPayload,
             executionclaim.executionClaimExpiryDate
           );
-          if (log) console.log(`\n Can Execute Result: ${canExecuteResult}`);
+          if (log) console.log(`\n Can Execute Result: ${canExecuteResult}\n`);
           return canExecuteResult;
         } catch (error) {
           console.error(`\n canExecute error`, error);

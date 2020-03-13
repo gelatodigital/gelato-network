@@ -1,14 +1,13 @@
 pragma solidity ^0.6.2;
 
 import "../GelatoActionsStandard.sol";
-import "../../external/Ownable.sol";
 import "../../external/IERC20.sol";
 // import "../../external/SafeERC20.sol";
 import "../../dapp_interfaces/kyber/IKyber.sol";
 import "../../external/SafeMath.sol";
 import "../../external/Address.sol";
 
-contract ActionKyberTrade is GelatoActionsStandard, Ownable {
+contract ActionKyberTrade is GelatoActionsStandard {
     // using SafeERC20 for IERC20; <- internal library methods vs. try/catch
     using SafeMath for uint256;
     using Address for address;
@@ -16,14 +15,6 @@ contract ActionKyberTrade is GelatoActionsStandard, Ownable {
     // actionSelector public state variable np due to this.actionSelector constant issue
     function actionSelector() external pure override returns(bytes4) {
         return this.action.selector;
-    }
-
-    uint256 public actionGas = 1200000;
-    function getActionGas() external view override virtual returns(uint256) {
-        return actionGas;
-    }
-    function setActionGas(uint256 _actionGas) external virtual onlyOwner {
-        actionGas = _actionGas;
     }
 
     function action(
@@ -104,7 +95,7 @@ contract ActionKyberTrade is GelatoActionsStandard, Ownable {
         virtual
         returns(string memory)  // actionCondition
     {
-        if (!_sendToken.isContract()) return "ActionKyberTrade: NotOkSrcAddress";
+        if (!_sendToken.isContract()) return "ActionKyberTrade: NotOkSendTokenAddress";
 
         IERC20 sendERC20 = IERC20(_sendToken);
         try sendERC20.balanceOf(_user) returns(uint256 userSendTokenBalance) {

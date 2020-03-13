@@ -6,15 +6,15 @@ export default task(
   "gc-mint",
   `Sends tx to GelatoCore.mintExecutionClaim() on [--network] (default: ${defaultNetwork})`
 )
-  .addPositionalParam(
-    "actionname",
-    "This param MUST be supplied. Must exist inside buidler.config"
-  )
   .addOptionalPositionalParam(
     "conditionname",
     "Must exist inside buidler.config. Defaults to address 0 for self-conditional actions",
     constants.AddressZero,
     types.string
+  )
+  .addOptionalPositionalParam(
+    "actionname",
+    "This param MUST be supplied. Must exist inside buidler.config"
   )
   .addOptionalPositionalParam(
     "selectedprovider",
@@ -41,21 +41,19 @@ export default task(
   .addFlag("log", "Logs return values to stdout")
   .setAction(async taskArgs => {
     try {
-      // To avoid mistakes default log to true
-      taskArgs.log = true;
-
       // Command Line Argument Checks
+      if (!taskArgs.actionname) throw new Error(`\n Must supply Action Name`);
       if (
         taskArgs.conditionname != constants.AddressZero &&
         !taskArgs.conditionname.startsWith("Condition")
       ) {
         throw new Error(
-          `Invalid condition: ${taskArgs.conditionname}: enter <actionname> <conditionname>`
+          `\nInvalid condition: ${taskArgs.conditionname}: 1.<conditionname> 2.<actionname>\n`
         );
       }
       if (!taskArgs.actionname.startsWith("Action")) {
         throw new Error(
-          `Invalid action: ${taskArgs.actionname}: enter <actionname> <conditionname>`
+          `\nInvalid action: ${taskArgs.actionname}: 1.<conditionname> 2.<actionname>\n`
         );
       }
 
@@ -116,16 +114,17 @@ export default task(
 
       // Event Emission verification
       if (taskArgs.log) {
-        let parsedMintLog = await run("event-getparsedlogs", {
+        const parsedMintingLog = await run("event-getparsedlog", {
           contractname: "GelatoCore",
           eventname: "LogExecutionClaimMinted",
           txhash: mintTx.hash,
           blockHash,
-          values: true
+          values: true,
+          stringify: true
         });
-        // Make execution claim Id human readable
-        console.log("\nId: ", parsedMintLog.executionClaimId.toString());
-        console.log("\nLogExecutionClaimMinted\n", parsedMintLog);
+        if (parsedMintingLog)
+          console.log("\n✅ LogExecutionClaimMinted\n", parsedMintingLog);
+        else console.log("\n❌ LogExecutionClaimMinted not found");
       }
 
       return mintTx.hash;

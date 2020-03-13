@@ -1,14 +1,13 @@
 pragma solidity ^0.6.2;
 
 import "../../GelatoActionsStandard.sol";
-import "../../../external/Ownable.sol";
 import "../../../external/IERC20.sol";
 import "../../../dapp_interfaces/bZx/IBzxPtoken.sol";
 import "../../../external/SafeMath.sol";
 import "../../../external/Address.sol";
 import "@nomiclabs/buidler/console.sol";
 
-contract ActionBzxPtokenMintWithToken is GelatoActionsStandard, Ownable {
+contract ActionBzxPtokenMintWithToken is GelatoActionsStandard {
     // using SafeERC20 for IERC20; <- internal library methods vs. try/catch
     using SafeMath for uint256;
     using Address for address;
@@ -16,13 +15,6 @@ contract ActionBzxPtokenMintWithToken is GelatoActionsStandard, Ownable {
     // actionSelector public state variable np due to this.actionSelector constant issue
     function actionSelector() external pure override returns(bytes4) {
         return this.action.selector;
-    }
-    uint256 public actionGas = 4200000;
-    function getActionGas() external view override virtual returns(uint256) {
-        return actionGas;
-    }
-    function setActionGas(uint256 _actionGas) external virtual onlyOwner {
-        actionGas = _actionGas;
     }
 
     function action(

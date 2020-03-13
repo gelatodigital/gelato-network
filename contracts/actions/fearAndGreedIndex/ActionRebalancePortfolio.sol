@@ -10,7 +10,7 @@ import "../../external/SafeMath.sol";
 import "../../external/Address.sol";
 import "../../gelato_core/interfaces/IGelatoCore.sol";
 
-contract ActionRebalancePortfolio is GelatoActionsStandard, Ownable {
+contract ActionRebalancePortfolio is GelatoActionsStandard {
     // using SafeERC20 for IERC20; <- internal library methods vs. try/catch
     using SafeMath for uint256;
     using Address for address payable;
@@ -18,15 +18,6 @@ contract ActionRebalancePortfolio is GelatoActionsStandard, Ownable {
     // actionSelector public state variable np due to this.actionSelector constant issue
     function actionSelector() public pure override virtual returns(bytes4) {
         return this.action.selector;
-    }
-
-    uint256 public actionGas = 700000;
-
-    function getActionGas() external view override virtual returns(uint256) {
-        return actionGas;
-    }
-    function setActionGas(uint256 _actionGas) external virtual onlyOwner {
-        actionGas = _actionGas;
     }
 
     // !!!!!!!!! Kovan !!!!!!

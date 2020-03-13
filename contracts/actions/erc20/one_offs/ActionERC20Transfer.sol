@@ -1,28 +1,19 @@
 pragma solidity ^0.6.2;
 
 import "../../GelatoActionsStandard.sol";
-import "../../../external/Ownable.sol";
 import "../../../external/IERC20.sol";
 // import "../../../external/SafeERC20.sol";
 import "../../../external/Address.sol";
 
 /// @dev This action does not abide by GelatoActionsStandard because
 ///      this action is for user proxies that store funds.
-contract ActionERC20Transfer is GelatoActionsStandard, Ownable {
+contract ActionERC20Transfer is GelatoActionsStandard {
     // using SafeERC20 for IERC20; <- internal library methods vs. try/catch
     using Address for address;
 
     // actionSelector public state variable np due to this.actionSelector constant issue
     function actionSelector() external pure override returns(bytes4) {
         return this.action.selector;
-    }
-
-    uint256 public actionGas = 200000;
-    function getActionGas() external view override virtual returns(uint256) {
-        return actionGas;
-    }
-    function setActionGas(uint256 _actionGas) external virtual onlyOwner {
-        actionGas = _actionGas;
     }
 
     function action(
