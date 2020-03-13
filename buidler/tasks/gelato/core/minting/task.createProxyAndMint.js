@@ -3,15 +3,18 @@ import { defaultNetwork } from "../../../../../buidler.config";
 import { constants, utils } from "ethers";
 
 export default task(
-  "gc-createProxyAndMint",
+  "gc-createproxyandmint",
   `Sends tx to GelatoCore.createProxyAndMint() on [--network] (default: ${defaultNetwork})`
 )
-  .addPositionalParam("actionname", "This param MUST be supplied.")
   .addOptionalPositionalParam(
     "conditionname",
-    "Defaults to address 0 for self-conditional actions",
+    "Must exist inside buidler.config. Defaults to address 0 for self-conditional actions",
     constants.AddressZero,
     types.string
+  )
+  .addOptionalPositionalParam(
+    "actionname",
+    "This param MUST be supplied. Must exist inside buidler.config"
   )
   .addOptionalPositionalParam(
     "selectedprovider",
@@ -32,8 +35,7 @@ export default task(
   .addOptionalPositionalParam(
     "executionclaimexpirydate",
     "Defaults to 0 for selectedexecutor's maximum",
-    0,
-    types.int
+    constants.HashZero
   )
   .addOptionalParam(
     "mastercopy",
@@ -89,21 +91,27 @@ export default task(
   .addOptionalParam(
     "funding",
     "ETH value to be sent to newly created gelato user proxy",
-    "0",
-    types.int
+    constants.HashZero
   )
   .addFlag("log", "Logs return values to stdout")
   .setAction(async taskArgs => {
     try {
       // Command Line Argument Checks
       // Condition and Action for minting
+      if (!taskArgs.actionname) throw new Error(`\n Must supply Action Name`);
       if (
         taskArgs.conditionname != constants.AddressZero &&
         !taskArgs.conditionname.startsWith("Condition")
-      )
-        throw new Error(`Invalid condition: ${taskArgs.conditionname}`);
-      if (!taskArgs.actionname.startsWith("Action"))
-        throw new Error(`Invalid action: ${taskArgs.actionname}`);
+      ) {
+        throw new Error(
+          `\nInvalid condition: ${taskArgs.conditionname}: 1.<conditionname> 2.<actionname>\n`
+        );
+      }
+      if (!taskArgs.actionname.startsWith("Action")) {
+        throw new Error(
+          `\nInvalid action: ${taskArgs.actionname}: 1.<conditionname> 2.<actionname>\n`
+        );
+      }
       // Gnosis Safe creation
       if (!taskArgs.initializer && !taskArgs.setup)
         throw new Error("Must provide initializer payload or --setup args");
@@ -145,10 +153,10 @@ export default task(
           taskArgs.threshold,
           taskArgs.to,
           taskArgs.data,
-          taskArgs.fallbackHandler,
-          taskArgs.paymentToken,
+          taskArgs.fallbackhandler,
+          taskArgs.paymenttoken,
           taskArgs.payment,
-          taskArgs.paymentReceiver
+          taskArgs.paymentreceiver
         ];
         taskArgs.initializer = await run("abi-encode-withselector", {
           contractname: "IGnosisSafe",
@@ -172,7 +180,7 @@ export default task(
       // Condition and ConditionPayload (optional)
       let conditionAddress;
       let conditionPayload = constants.HashZero;
-      if (conditionname != constants.AddressZero) {
+      if (taskArgs.conditionname != constants.AddressZero) {
         conditionAddress = await run("bre-config", {
           deployments: true,
           contractname: taskArgs.conditionname
@@ -215,7 +223,7 @@ export default task(
 
       // Event Emission verification
       if (taskArgs.log) {
-        const parsedCreateLog = await run("event-getparsedlogs", {
+        const parsedCreateLog = await run("event-getparsedlog", {
           contractname: "GelatoCore",
           eventname: "LogGelatoUserProxyCreation",
           txhash: creationTx.hash,
@@ -232,7 +240,7 @@ export default task(
            )} ETH`
         );
 
-        const parsedMintLog = await run("event-getparsedlogs", {
+        const parsedMintLog = await run("event-getparsedlog", {
           contractname: "GelatoCore",
           eventname: "LogExecutionClaimMinted",
           txhash: creationTx.hash,
