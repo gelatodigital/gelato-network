@@ -12,9 +12,15 @@ export default task(
   )
   .addOptionalParam("initializer", "Payload for gnosis safe proxy setup tasks")
   .addFlag("setup", "Initialize gnosis safe by calling its setup function")
-  .addOptionalVariadicPositionalParam(
-    "owners",
-    "Supply with --setup: List of owners. Defaults to ethers signer."
+  .addOptionalParam(
+    "owner",
+    "Supply with --setup: owner. Defaults to ethers signer."
+  )
+  .addOptionalParam(
+    "userindex",
+    "Supply with --setup: User index",
+    1,
+    types.int
   )
   .addOptionalParam(
     "threshold",
@@ -34,7 +40,7 @@ export default task(
   )
   .addOptionalParam(
     "defaultdata",
-    "The name of the defaultpayload to retrieve for the 'data' field"
+    "The name of the contract to retrieve for the 'data' field"
   )
   .addOptionalParam(
     "fallbackHandler",
@@ -81,24 +87,40 @@ export default task(
       if (!taskArgs.mastercopy)
         throw new Error("No taskArgs.mastercopy for proxy defined");
 
-      if (taskArgs.setup && !taskArgs.owners) {
+      if (taskArgs.setup && !taskArgs.owner && !taskArgs.userindex) {
         const signerAddress = await run("ethers", {
           signer: true,
           address: true
         });
-        taskArgs.owners = [signerAddress];
-        if (!Array.isArray(taskArgs.owners))
-          throw new Error("Failed to convert taskArgs.owners into Array");
+        taskArgs.owner = [signerAddress];
+        if (!Array.isArray(taskArgs.owner))
+          throw new Error("Failed to convert taskArgs.owner into Array 1");
       }
+
+      if (taskArgs.setup && taskArgs.userindex && !taskArgs.owner) {
+        const { [taskArgs.userindex]: signer } = await ethers.signers();
+        taskArgs.owner = [signer._address];
+        if (!Array.isArray(taskArgs.owner))
+          throw new Error("Failed to convert taskArgs.owner into Array 2");
+      }
+      if (taskArgs.log) console.log(`Owner: ${taskArgs.owner}`);
 
       if (!taskArgs.data && taskArgs.defaultdata)
         taskArgs.data = await run(`gsp:scripts:defaultpayload:${defaultdata}`);
+
+      if (!taskArgs.to) {
+        const toContract = await run("instantiateContract", {
+          contractname: `${taskArgs.defaultdata}`,
+          read: true
+        });
+        taskArgs.to = toContract.address;
+      }
 
       if (taskArgs.log) console.log("\nTaskArgs:\n", taskArgs, "\n");
 
       if (taskArgs.setup) {
         const inputs = [
-          taskArgs.owners,
+          taskArgs.owner,
           taskArgs.threshold,
           taskArgs.to,
           taskArgs.data,

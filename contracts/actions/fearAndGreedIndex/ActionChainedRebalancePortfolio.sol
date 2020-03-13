@@ -38,6 +38,8 @@ contract ActionChainedRebalancePortfolio is ActionRebalancePortfolio {
         actionGasChainned = _actionGas;
     }
 
+    function test() public {}
+
     // function action(address _executor, address _gasProvider) external virtual returns(uint256) {
     function chainedAction(
         // ChainedMintingParams

@@ -18,7 +18,7 @@ contract ScriptGnosisSafeEnableGelatoCore {
     event LogFailure(string error);
 
     /// @dev This function should be delegatecalled
-    function enableGelatoCoreModule(address _gelatoCore) external {
+    function enableGelatoCoreModule(address _gelatoCore) public {
         // Whitelist GelatoCore as module on delegatecaller (Gnosis Safe Proxy)
         try IGnosisSafe(address(this)).enableModule(_gelatoCore) {
         } catch Error(string memory error) {

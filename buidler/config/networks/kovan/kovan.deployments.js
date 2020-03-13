@@ -29,5 +29,7 @@ export const deployments = {
 	ScriptGnosisSafeEnableGelatoCore:
 		"0x99D081a6c07043e9E78A231Ae2c41fa811AD856C",
 	ScriptGnosisSafeEnableGelatoCoreAndMint:
-		"0x5993ff30b943dE4c3fDA59d88D87d1661412D101"
+		"0x5993ff30b943dE4c3fDA59d88D87d1661412D101",
+	ScriptEnableGelatoCoreAndExecuteChainedAction:
+		"0x4B7171F69E2c89C6899527F411446DC1D9c65bf4"
 };

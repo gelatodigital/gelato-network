@@ -13,7 +13,7 @@ export default task(
         read: true
       });
 
-      const currentExecutionClaimId = await gelatoCore.getCurrentExecutionClaimId();
+      const currentExecutionClaimId = await gelatoCore.currentExecutionClaimId();
       if (log) {
         console.log(
           `\n GelatoCore current ExecutionClaimId: ${currentExecutionClaimId}`

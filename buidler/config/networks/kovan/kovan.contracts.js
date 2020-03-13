@@ -16,5 +16,7 @@ export const contracts = [
 	"ConditionTimestampPassed",
 	// Scripts
 	"ScriptGnosisSafeEnableGelatoCore",
-	"ScriptGnosisSafeEnableGelatoCoreAndMint"
+	"ScriptGnosisSafeEnableGelatoCoreAndMint",
+	// For Chained Rebalancing Action
+	"ScriptEnableGelatoCoreAndExecuteChainedAction"
 ];
