@@ -18,11 +18,20 @@ abstract contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
             0x76E2cFc1F5Fa8F6a5b3fC4c8F4788F0116861F9B
     );
 
+    modifier firstTimeUser {
+        require(
+            gelatoProxyByUser[msg.sender] == address(0),
+            "GelatoUserProxyFactory.firstTimeUser: user already has a gelato proxy"
+        );
+        _;
+    }
+
     // create
     function createGelatoUserProxy(address _mastercopy, bytes memory _initializer)
         public
         payable
         override
+        firstTimeUser
         returns(address userProxy)
     {
         userProxy = address(factory.createProxy(_mastercopy, _initializer));
@@ -41,6 +50,7 @@ abstract contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         public
         payable
         override
+        firstTimeUser
         returns(address userProxy)
     {
         // Salt used by GnosisSafeProxyFactory
@@ -87,6 +97,7 @@ abstract contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         public
         payable
         override
+        firstTimeUser
         returns(address userProxy)
     {
         address predictedProxyAddress;
