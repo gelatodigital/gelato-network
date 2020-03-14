@@ -20,7 +20,7 @@ export const deployments = {
   ActionChainedRebalancePortfolio: "0xD998ff6AcF7f0054Cb2278F75ff8d2c7473ce869",
 
   // ===== Gelato Core ====
-  GelatoCore: "0x0fD9e353ff5D68221C7BBE511EF304c4c8DED48f",
+  GelatoCore: "0x7fb6baBF2F215718e3A7CE7205BdA9ae5F8E45ca",
 
   // ==== Conditions ====
   // == Balances ==

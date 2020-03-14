@@ -17,6 +17,11 @@ export default task(
     "This param MUST be supplied. Must exist inside buidler.config"
   )
   .addOptionalParam(
+    "mastercopy",
+    "The deployed implementation code the created proxy should point to"
+  )
+  .addOptionalParam("initializer", "Payload for gnosis safe proxy setup tasks")
+  .addOptionalParam(
     "saltnonce",
     "Supply for createTwoProxyAndMint()",
     42069,
@@ -44,11 +49,6 @@ export default task(
     "Defaults to 0 for selectedexecutor's maximum",
     constants.HashZero
   )
-  .addOptionalParam(
-    "mastercopy",
-    "The deployed implementation code the created proxy should point to"
-  )
-  .addOptionalParam("initializer", "Payload for gnosis safe proxy setup tasks")
   .addFlag("setup", "Initialize gnosis safe by calling its setup function")
   .addOptionalVariadicPositionalParam(
     "owners",
@@ -60,7 +60,11 @@ export default task(
     1,
     types.int
   )
-  .addOptionalParam("to", "Supply with --setup: to address")
+  .addOptionalParam(
+    "to",
+    "Supply with --setup: to address",
+    constants.AddressZero
+  )
   .addOptionalParam(
     "data",
     "Supply with --setup: payload for optional delegate call",
@@ -148,14 +152,14 @@ export default task(
         taskArgs.setup &&
         taskArgs.data === constants.HashZero &&
         taskArgs.defaultpayloadscript &&
-        !taskArgs.to
+        taskArgs.to === constants.HashZero
       ) {
         taskArgs.data = await run(
           `gsp:scripts:defaultpayload:${taskArgs.defaultpayloadscript}`
         );
         taskArgs.to = await run("bre-config", {
           deployments: true,
-          contractname: `${taskArgs.defaultpayloadscript}`
+          contractname: taskArgs.defaultpayloadscript
         });
       }
 
@@ -180,10 +184,13 @@ export default task(
 
       // ==== GelatoCore.mintExecutionClaim Params ====
       // Selected Provider and Executor
-      const signers = await ethers.signers();
-      taskArgs.selectedprovider = signers[2]._address;
-      taskArgs.selectedexecutor = signers[1]._address;
-      // const { [1]: selectedExecutor } = await ethers.signers();
+      taskArgs.selectedprovider = await run("handleProvider", {
+        provider: taskArgs.selectedprovider
+      });
+      taskArgs.selectedexecutor = await run("handleExecutor", {
+        executor: taskArgs.selectedexecutor
+      });
+
       // Condition and ConditionPayload (optional)
       let conditionAddress;
       if (taskArgs.conditionname != constants.AddressZero) {
@@ -203,21 +210,6 @@ export default task(
       taskArgs.actionpayload = await run("handlePayload", {
         contractname: taskArgs.actionname
       });
-      /*
-      function createProxyAndMint(
-        address _mastercopy,
-        bytes calldata _initializer,
-        address[2] calldata _selectedProviderAndExecutor,
-        address[2] calldata _conditionAndAction,
-        bytes calldata _conditionPayload,
-        bytes calldata _actionPayload,
-        uint256 _executionClaimExpiryDate
-    )
-    */
-
-      // const actionPayload = await run(
-      //   `gc-mint:defaultpayload:${taskArgs.actionname}`
-      // );
       // ============
 
       if (taskArgs.log) console.log("\nTaskArgs:\n", taskArgs, "\n");
@@ -255,7 +247,7 @@ export default task(
       }
 
       if (taskArgs.log)
-        console.log(`\ntxHash createProxyAndMint: ${creationTx.hash}\n`);
+        console.log(`\n Creation Tx Hash: ${creationTx.hash}\n`);
 
       const { blockHash } = await creationTx.wait();
 

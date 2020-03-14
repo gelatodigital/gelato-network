@@ -4,23 +4,23 @@ import { constants, utils } from "ethers";
 
 export default task(
   "gc-creategelatouserproxy",
-  `Sends tx to GelatoCore.createGelatoUserProxy() on [--network] (default: ${defaultNetwork})`
+  `Sends tx to GelatoCore.createGelatoUserProxy() or if --createtwo to .createTwoGelatoUserProxy()  on [--network] (default: ${defaultNetwork})`
 )
   .addOptionalParam(
     "mastercopy",
     "The deployed implementation code the created proxy should point to"
   )
+  .addOptionalParam(
+    "saltnonce",
+    "Supply for createTwoProxyAndMint()",
+    42069,
+    types.int
+  )
   .addOptionalParam("initializer", "Payload for gnosis safe proxy setup tasks")
   .addFlag("setup", "Initialize gnosis safe by calling its setup function")
-  .addOptionalParam(
-    "owner",
-    "Supply with --setup: owner. Defaults to ethers signer."
-  )
-  .addOptionalParam(
-    "userindex",
-    "Supply with --setup: User index",
-    1,
-    types.int
+  .addOptionalVariadicPositionalParam(
+    "owners",
+    "Supply with --setup: List of owners. Defaults to ethers signer."
   )
   .addOptionalParam(
     "threshold",
@@ -30,25 +30,25 @@ export default task(
   )
   .addOptionalParam(
     "to",
-    "Supply with --setup: contract address for optional delegatecall.",
+    "Supply with --setup: to address",
     constants.AddressZero
   )
   .addOptionalParam(
     "data",
     "Supply with --setup: payload for optional delegate call",
-    "0x0"
+    constants.HashZero
   )
   .addOptionalParam(
-    "defaultdata",
-    "The name of the contract to retrieve for the 'data' field"
+    "defaultpayloadscript",
+    "The name of the defaultpayload script to retrieve 'data'"
   )
   .addOptionalParam(
-    "fallbackHandler",
+    "fallbackhandler",
     "Supply with --setup:  Handler for fallback calls to this contract",
     constants.AddressZero
   )
   .addOptionalParam(
-    "paymentToken",
+    "paymenttoken",
     "Supply with --setup:  Token that should be used for the payment (0 is ETH)",
     constants.AddressZero
   )
@@ -59,24 +59,28 @@ export default task(
     types.int
   )
   .addOptionalParam(
-    "paymentReceiver",
+    "paymentreceiver",
     "Supply with --setup:  Adddress that should receive the payment (or 0 if tx.origin)t",
     constants.AddressZero
   )
   .addOptionalParam(
     "funding",
     "ETH value to be sent to newly created gelato user proxy",
-    constants.HashZero,
-    types.int
+    "0",
+    types.string
   )
+  .addFlag("createtwo", "Call gelatoCore.createTwoGelatoUserProxy()")
   .addFlag("log", "Logs return values to stdout")
   .setAction(async taskArgs => {
     try {
+      // Command Line Argument Checks
+      // Gnosis Safe creation
       if (!taskArgs.initializer && !taskArgs.setup)
         throw new Error("Must provide initializer payload or --setup args");
       else if (taskArgs.initializer && taskArgs.setup)
         throw new Error("Provide EITHER initializer payload OR --setup args");
 
+      // Gelato User Proxy (GnosisSafeProxy) creation params
       if (!taskArgs.mastercopy) {
         taskArgs.mastercopy = await run("bre-config", {
           addressbookcategory: "gnosisSafe",
@@ -87,47 +91,41 @@ export default task(
       if (!taskArgs.mastercopy)
         throw new Error("No taskArgs.mastercopy for proxy defined");
 
-      if (taskArgs.setup && !taskArgs.owner && !taskArgs.userindex) {
+      if (taskArgs.setup && !taskArgs.owners) {
         const signerAddress = await run("ethers", {
           signer: true,
           address: true
         });
-        taskArgs.owner = [signerAddress];
-        if (!Array.isArray(taskArgs.owner))
-          throw new Error("Failed to convert taskArgs.owner into Array 1");
+        taskArgs.owners = [signerAddress];
+        if (!Array.isArray(taskArgs.owners))
+          throw new Error("Failed to convert taskArgs.owners into Array");
       }
 
-      if (taskArgs.setup && taskArgs.userindex && !taskArgs.owner) {
-        const { [taskArgs.userindex]: signer } = await ethers.signers();
-        taskArgs.owner = [signer._address];
-        if (!Array.isArray(taskArgs.owner))
-          throw new Error("Failed to convert taskArgs.owner into Array 2");
-      }
-      if (taskArgs.log) console.log(`Owner: ${taskArgs.owner}`);
-
-      if (!taskArgs.data && taskArgs.defaultdata)
-        taskArgs.data = await run(`gsp:scripts:defaultpayload:${defaultdata}`);
-
-      if (!taskArgs.to) {
-        const toContract = await run("instantiateContract", {
-          contractname: `${taskArgs.defaultdata}`,
-          read: true
+      if (
+        taskArgs.setup &&
+        taskArgs.data === constants.HashZero &&
+        taskArgs.defaultpayloadscript &&
+        taskArgs.to === constants.HashZero
+      ) {
+        taskArgs.data = await run(
+          `gsp:scripts:defaultpayload:${taskArgs.defaultpayloadscript}`
+        );
+        taskArgs.to = await run("bre-config", {
+          deployments: true,
+          contractname: taskArgs.defaultpayloadscript
         });
-        taskArgs.to = toContract.address;
       }
-
-      if (taskArgs.log) console.log("\nTaskArgs:\n", taskArgs, "\n");
 
       if (taskArgs.setup) {
         const inputs = [
-          taskArgs.owner,
+          taskArgs.owners,
           taskArgs.threshold,
           taskArgs.to,
           taskArgs.data,
-          taskArgs.fallbackHandler,
-          taskArgs.paymentToken,
+          taskArgs.fallbackhandler,
+          taskArgs.paymenttoken,
           taskArgs.payment,
-          taskArgs.paymentReceiver
+          taskArgs.paymentreceiver
         ];
         taskArgs.initializer = await run("abi-encode-withselector", {
           contractname: "IGnosisSafe",
@@ -135,35 +133,47 @@ export default task(
           inputs
         });
       }
+      // ============
 
-      if (taskArgs.log)
-        console.log(`\nInitializer payload:\n${taskArgs.initializer}\n`);
+      if (taskArgs.log) console.log("\nTaskArgs:\n", taskArgs, "\n");
 
+      // GelatoCore interaction
       const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
         write: true
       });
 
-      const creationTx = await gelatoCore.createGelatoUserProxy(
-        taskArgs.mastercopy,
-        taskArgs.initializer,
-        { value: taskArgs.funding, gasLimit: 3000000 }
-      );
+      let creationTx;
+      if (taskArgs.createtwo) {
+        creationTx = await gelatoCore.createTwoGelatoUserProxy(
+          taskArgs.mastercopy,
+          taskArgs.initializer,
+          taskArgs.saltnonce,
+          { value: utils.parseEther(taskArgs.funding), gasLimit: 3000000 }
+        );
+      } else {
+        creationTx = await gelatoCore.createGelatoUserProxy(
+          taskArgs.mastercopy,
+          taskArgs.initializer,
+          { value: utils.parseEther(taskArgs.funding), gasLimit: 3000000 }
+        );
+      }
 
       if (taskArgs.log)
-        console.log(`\ntxHash createUserProxy: ${creationTx.hash}\n`);
+        console.log(`\n Creation Tx Hash: ${creationTx.hash}\n`);
 
       const { blockHash } = await creationTx.wait();
 
+      // Event Emission verification
       if (taskArgs.log) {
-        const parsedLog = await run("event-getparsedlogs", {
+        const parsedCreateLog = await run("event-getparsedlog", {
           contractname: "GelatoCore",
           eventname: "LogGelatoUserProxyCreation",
           txhash: creationTx.hash,
           blockHash,
           values: true
         });
-        const { user, gelatoUserProxy, userProxyFunding } = parsedLog;
+        const { user, gelatoUserProxy, userProxyFunding } = parsedCreateLog;
         console.log(
           `\n LogGelatoUserProxyCreation\
            \n User:            ${user}\

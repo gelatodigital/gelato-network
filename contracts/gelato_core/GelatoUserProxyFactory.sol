@@ -53,7 +53,7 @@ abstract contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
             byte(0xff),
             address(factory),
             salt,
-            keccak256(abi.encodePacked(creationCode, _mastercopy))
+            keccak256(abi.encodePacked(creationCode, uint256(_mastercopy)))
         ))));
 
         // Prefund undeployed proxy
@@ -89,20 +89,21 @@ abstract contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         override
         returns(address userProxy)
     {
+        address predictedProxyAddress;
 
-        // fetch return bytes containing predicted proxy address
-        bytes memory payload = abi.encodeWithSelector(factory.calculateCreateProxyWithNonceAddress.selector, _mastercopy, _initializer, _saltNonce);
-        (, bytes memory actionRevertMessage) = address(factory).call(payload);
-
-        // Derive undeployed userProxy address
-        address predictedAddress;
-        assembly {
-            // 68 + 20
-            predictedAddress := mload(add(actionRevertMessage, 88))
+        // This method returns predictedProxyAddress as a revert string
+        try factory.calculateCreateProxyWithNonceAddress(
+            _mastercopy,
+            _initializer,
+            _saltNonce
+        ) {
+            // Always reverts with proxy address as string
+        } catch (bytes memory _predictedProxyAddress) {
+            assembly {predictedProxyAddress := mload(add(_predictedProxyAddress, 88))}
         }
 
         // Prefund undeployed proxy
-        if (msg.value > 0) payable(predictedAddress).sendValue(msg.value);
+        if (msg.value > 0) payable(predictedProxyAddress).sendValue(msg.value);
 
         // Deploy userProxy with create2
         userProxy = address(factory.createProxyWithNonce(
@@ -113,7 +114,7 @@ abstract contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
 
         // Check if predicted addresses equals actual proxy address
         require(
-            userProxy == predictedAddress,
+            userProxy == predictedProxyAddress,
             "GelatoCore.createTwoGelatoUserProxy: wrong address prediction"
         );
 
