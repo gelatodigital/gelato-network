@@ -12,7 +12,7 @@ export default task(
   )
   .addPositionalParam("contractname", "The contract whose abi has the function")
   .addPositionalParam("functionname", "The function we want to call")
-  .addVariadicPositionalParam("inputs", "The parameters for the function call")
+  .addOptionalVariadicPositionalParam("inputs", "The parameters for the function call")
   .addOptionalParam(
     "to",
     "The address which to call/delegatecall. Defaults to <gnosissafeproxyaddress>"
