@@ -6,6 +6,7 @@ export default task(
   "gc-createproxyandmint",
   `Sends tx to GelatoCore.createProxyAndMint() or if --createtwo to .createTwoProxyAndMint()  on [--network] (default: ${defaultNetwork})`
 )
+  .addFlag("createtwo", "Call gelatoCore.createTwoProxyAndMint()")
   .addOptionalPositionalParam(
     "conditionname",
     "Must exist inside buidler.config. Defaults to address 0 for self-conditional actions",
@@ -101,7 +102,6 @@ export default task(
     "0",
     types.string
   )
-  .addFlag("createtwo", "Call gelatoCore.createTwoProxyAndMint()")
   .addFlag("log", "Logs return values to stdout")
   .setAction(async taskArgs => {
     try {

@@ -6,6 +6,7 @@ export default task(
   "gc-creategelatouserproxy",
   `Sends tx to GelatoCore.createGelatoUserProxy() or if --createtwo to .createTwoGelatoUserProxy()  on [--network] (default: ${defaultNetwork})`
 )
+  .addFlag("createtwo", "Call gelatoCore.createTwoGelatoUserProxy()")
   .addOptionalParam(
     "mastercopy",
     "The deployed implementation code the created proxy should point to"
@@ -69,7 +70,6 @@ export default task(
     "0",
     types.string
   )
-  .addFlag("createtwo", "Call gelatoCore.createTwoGelatoUserProxy()")
   .addFlag("log", "Logs return values to stdout")
   .setAction(async taskArgs => {
     try {

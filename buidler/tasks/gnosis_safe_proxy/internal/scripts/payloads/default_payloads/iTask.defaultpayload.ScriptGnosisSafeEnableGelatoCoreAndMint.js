@@ -1,7 +1,7 @@
 import { internalTask } from "@nomiclabs/buidler/config";
 
 export default internalTask(
-  "gsp:scripts:payload:ScriptGnosisSafeEnableGelatoCoreAndMint",
+  "gsp:scripts:defaultpayload:ScriptGnosisSafeEnableGelatoCoreAndMint",
   `Returns a hardcoded payload for the 'data' field of the initializer payload`
 )
   .addPositionalParam("conditionname")
