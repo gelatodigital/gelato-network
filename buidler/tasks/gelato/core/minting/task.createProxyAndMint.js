@@ -222,7 +222,7 @@ export default task(
 
       let creationTx;
       if (taskArgs.createtwo) {
-        creationTx = await gelatoCore.createThreeProxyAndMint(
+        creationTx = await gelatoCore.createTwoProxyAndMint(
           taskArgs.mastercopy,
           taskArgs.initializer,
           taskArgs.saltnonce,
