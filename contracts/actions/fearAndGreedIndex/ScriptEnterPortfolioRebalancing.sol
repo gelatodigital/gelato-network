@@ -33,14 +33,14 @@ contract ScriptEnterPortfolioRebalancing is
     function enterPortfolioRebalancing(
         address _gelatoCore,
         address[2] calldata _selectedProviderAndExecutor
-    ) external {
+    )
+        external
+    {
         // 1. Whitelist Gelato Core
         // Whitelist GelatoCore as module on delegatecaller (Gnosis Safe Proxy)
-        super.enableGelatoCoreModule(_gelatoCore);
+        enableGelatoCoreModule(_gelatoCore);
 
         // 2. Execute ActionRebalancePortfolio.action => Swaps ETH into DAI
-        super.action(payable(_selectedProviderAndExecutor[0]));
-
+        action(payable(_selectedProviderAndExecutor[0]));
     }
-
 }
