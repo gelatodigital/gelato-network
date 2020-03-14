@@ -126,6 +126,8 @@ export default task(
         throw new Error("Must provide initializer payload or --setup args");
       else if (taskArgs.initializer && taskArgs.setup)
         throw new Error("Provide EITHER initializer payload OR --setup args");
+      if (taskArgs.data !== constants.HashZero && taskArgs.defaultpayloadscript)
+        throw new Error("Provide EITHER --data OR --defaultpayloadscript");
 
       // Gelato User Proxy (GnosisSafeProxy) creation params
       if (!taskArgs.mastercopy) {
@@ -148,19 +150,16 @@ export default task(
           throw new Error("Failed to convert taskArgs.owners into Array");
       }
 
-      if (
-        taskArgs.setup &&
-        taskArgs.data === constants.HashZero &&
-        taskArgs.defaultpayloadscript &&
-        taskArgs.to === constants.HashZero
-      ) {
+      if (taskArgs.setup && taskArgs.defaultpayloadscript) {
         taskArgs.data = await run(
           `gsp:scripts:defaultpayload:${taskArgs.defaultpayloadscript}`
         );
-        taskArgs.to = await run("bre-config", {
-          deployments: true,
-          contractname: taskArgs.defaultpayloadscript
-        });
+        if (taskArgs.to === constants.HashZero) {
+          taskArgs.to = await run("bre-config", {
+            deployments: true,
+            contractname: taskArgs.defaultpayloadscript
+          });
+        }
       }
 
       if (taskArgs.setup) {
