@@ -3,17 +3,17 @@ import { defaultNetwork } from "../../../../../../buidler.config";
 
 export default task(
   "gc-isprovidedcondition",
-  `Return (or --log) GelatoCore.isProvidedCondition([<provider>: defaults to default provider], conditionname) on [--network] (default: ${defaultNetwork})`
+  `Return (or --log) GelatoCore.isProvidedCondition([<gelatoprovider>: defaults to default gelatoprovider], conditionname) on [--network] (default: ${defaultNetwork})`
 )
   .addPositionalParam("conditionname")
   .addOptionalPositionalParam(
-    "provider",
-    "The address of the provider, whose condition provision we query"
+    "gelatoprovider",
+    "The address of the gelatoprovider, whose condition provision we query"
   )
   .addFlag("log", "Logs return values to stdout")
-  .setAction(async ({ conditionname, provider, log }) => {
+  .setAction(async ({ conditionname, gelatoprovider, log }) => {
     try {
-      provider = await run("handleGelatoProvider", { provider });
+      gelatoprovider = await run("handleGelatoProvider", { gelatoprovider });
       const conditionAddress = await run("bre-config", {
         deployments: true,
         contractname: conditionname
@@ -23,12 +23,12 @@ export default task(
         write: true
       });
       const isProvidedCondition = await gelatoCore.isProvidedCondition(
-        provider,
+        gelatoprovider,
         conditionAddress
       );
       if (log) {
         console.log(
-          `\n Provider:        ${provider}\
+          `\n Provider:        ${gelatoprovider}\
            \n Condition:       ${conditionname} at ${conditionAddress}\
            \n Network:         ${network.name}\
            \n IsProvided?:     ${isProvidedCondition ? "✅" : "❌"}\n`

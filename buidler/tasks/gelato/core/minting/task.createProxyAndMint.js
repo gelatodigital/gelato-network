@@ -6,17 +6,31 @@ export default task(
   "gc-createproxyandmint",
   `Sends tx to GelatoCore.createProxyAndMint() or if --createtwo to .createTwoProxyAndMint()  on [--network] (default: ${defaultNetwork})`
 )
-  .addFlag("createtwo", "Call gelatoCore.createTwoProxyAndMint()")
+  // GelatoCore.mintExecutionClaim params
   .addOptionalPositionalParam(
     "conditionname",
-    "Must exist inside buidler.config. Defaults to address 0 for self-conditional actions",
-    constants.AddressZero,
-    types.string
+    "Must exist inside buidler.config. Defaults to address 0 for self-conditional actions"
   )
   .addOptionalPositionalParam(
     "actionname",
-    "This param MUST be supplied. Must exist inside buidler.config"
+    "Actionname (must be inside buidler.config) OR --actionaddress MUST be supplied."
   )
+  .addOptionalParam("gelatoprovider", "Defaults to network addressbook default")
+  .addOptionalParam("gelatoexecutor", "Defaults to network addressbook default")
+  .addOptionalParam("conditionaddress", "", constants.AddressZero)
+  .addOptionalParam("actionaddress", "Must be supplied if not <actionname>")
+  .addOptionalParam("conditionpayload", "Payload for optional condition")
+  .addOptionalParam(
+    "actionpayload",
+    "If not provided, must have a default returned from handleGelatoPayload()"
+  )
+  .addOptionalParam(
+    "executionclaimexpirydate",
+    "Defaults to 0 for gelatoexecutor's maximum",
+    constants.HashZero
+  )
+  // GnosisSafeProxy Setup
+  .addFlag("createtwo", "Call gelatoCore.createTwoProxyAndMint()")
   .addOptionalParam(
     "mastercopy",
     "The deployed implementation code the created proxy should point to"
@@ -27,28 +41,6 @@ export default task(
     "Supply for createTwoProxyAndMint()",
     42069,
     types.int
-  )
-  .addOptionalParam(
-    "gelatoprovider",
-    "Defaults to network addressbook default"
-  )
-  .addOptionalParam(
-    "gelatoexecutor",
-    "Defaults to network addressbook default"
-  )
-  .addOptionalParam(
-    "conditionpayload",
-    "Payload for optional condition",
-    constants.HashZero
-  )
-  .addOptionalParam(
-    "actionpayload",
-    "If not provided, must have a default returned from handleGelatoPayload()"
-  )
-  .addOptionalParam(
-    "executionclaimexpirydate",
-    "Defaults to 0 for gelatoexecutor's maximum",
-    constants.HashZero
   )
   .addFlag("setup", "Initialize gnosis safe by calling its setup function")
   .addOptionalVariadicPositionalParam(
@@ -107,16 +99,17 @@ export default task(
     try {
       // Command Line Argument Checks
       // Condition and Action for minting
-      if (!taskArgs.actionname) throw new Error(`\n Must supply Action Name`);
+      if (!taskArgs.actionname && !taskArgs.actionaddress)
+        throw new Error(`\n Must supply <actionname> or --actionaddress`);
       if (
-        taskArgs.conditionname != constants.AddressZero &&
+        taskArgs.conditionname &&
         !taskArgs.conditionname.startsWith("Condition")
       ) {
         throw new Error(
           `\nInvalid condition: ${taskArgs.conditionname}: 1.<conditionname> 2.<actionname>\n`
         );
       }
-      if (!taskArgs.actionname.startsWith("Action")) {
+      if (taskArgs.actionname && !taskArgs.actionname.startsWith("Action")) {
         throw new Error(
           `\nInvalid action: ${taskArgs.actionname}: 1.<conditionname> 2.<actionname>\n`
         );
@@ -184,31 +177,40 @@ export default task(
       // ==== GelatoCore.mintExecutionClaim Params ====
       // Selected Provider and Executor
       taskArgs.gelatoprovider = await run("handleGelatoProvider", {
-        provider: taskArgs.gelatoprovider
+        gelatoprovider: taskArgs.gelatoprovider
       });
       taskArgs.gelatoexecutor = await run("handleGelatoExecutor", {
-        executor: taskArgs.gelatoexecutor
+        gelatoexecutor: taskArgs.gelatoexecutor
       });
 
       // Condition and ConditionPayload (optional)
-      let conditionAddress;
-      if (taskArgs.conditionname != constants.AddressZero) {
-        conditionAddress = await run("bre-config", {
+      if (taskArgs.conditionname) {
+        if (taskArgs.conditionaddress === constants.AddressZero) {
+          taskArgs.conditionaddress = await run("bre-config", {
+            deployments: true,
+            contractname: taskArgs.conditionname
+          });
+        }
+        if (!taskArgs.conditionpayload) {
+          taskArgs.conditionpayload = await run("handleGelatoPayload", {
+            contractname: taskArgs.conditionname
+          });
+        }
+      }
+
+      // Action and ActionPayload
+      if (!taskArgs.actionaddress) {
+        taskArgs.actionaddress = await run("bre-config", {
           deployments: true,
-          contractname: taskArgs.conditionname
-        });
-        taskArgs.conditionpayload = await run("handleGelatoPayload", {
-          contractname: taskArgs.conditionname
+          contractname: taskArgs.actionname
         });
       }
-      // Action and ActionPayload
-      const actionAddress = await run("bre-config", {
-        deployments: true,
-        contractname: taskArgs.actionname
-      });
-      taskArgs.actionpayload = await run("handleGelatoPayload", {
-        contractname: taskArgs.actionname
-      });
+      if (!taskArgs.actionpayload) {
+        taskArgs.actionpayload = await run("handleGelatoPayload", {
+          contractname: taskArgs.actionname,
+          payload: taskArgs.actionpayload
+        });
+      }
       // ============
 
       if (taskArgs.log) console.log("\nTaskArgs:\n", taskArgs, "\n");
@@ -226,7 +228,7 @@ export default task(
           taskArgs.initializer,
           taskArgs.saltnonce,
           [taskArgs.gelatoprovider, taskArgs.gelatoexecutor],
-          [conditionAddress, actionAddress],
+          [taskArgs.conditionaddress, taskArgs.actionaddress],
           taskArgs.conditionpayload,
           taskArgs.actionpayload,
           taskArgs.executionclaimexpirydate,
@@ -237,7 +239,7 @@ export default task(
           taskArgs.mastercopy,
           taskArgs.initializer,
           [taskArgs.gelatoprovider, taskArgs.gelatoexecutor],
-          [conditionAddress, actionAddress],
+          [taskArgs.conditionaddress, taskArgs.actionaddress],
           taskArgs.conditionpayload,
           taskArgs.actionpayload,
           taskArgs.executionclaimexpirydate,
@@ -257,26 +259,24 @@ export default task(
           eventname: "LogGelatoUserProxyCreation",
           txhash: creationTx.hash,
           blockHash,
-          values: true
+          values: true,
+          stringify: true
         });
-        const { user, gelatoUserProxy, userProxyFunding } = parsedCreateLog;
-        console.log(
-          `\n LogGelatoUserProxyCreation\
-           \n User:            ${user}\
-           \n GnosisSafeProxy: ${gelatoUserProxy}\
-           \n Funding          ${utils.formatEther(
-             userProxyFunding.toString()
-           )} ETH`
-        );
+        if (parsedCreateLog)
+          console.log("\n✅ LogGelatoUserProxyCreation\n", parsedCreateLog);
+        else console.log("\n❌ LogGelatoUserProxyCreation not found");
 
-        const parsedMintLog = await run("event-getparsedlog", {
+        const parsedMintingLog = await run("event-getparsedlog", {
           contractname: "GelatoCore",
           eventname: "LogExecutionClaimMinted",
           txhash: creationTx.hash,
           blockHash,
-          values: true
+          values: true,
+          stringify: true
         });
-        console.log("\n LogExecutionClaimMinted\n", parsedMintLog);
+        if (parsedMintingLog)
+          console.log("\n✅ LogExecutionClaimMinted\n", parsedMintingLog);
+        else console.log("\n❌ LogExecutionClaimMinted not found");
       }
 
       return creationTx.hash;

@@ -3,29 +3,29 @@ import { defaultNetwork } from "../../../../../buidler.config";
 
 export default task(
   "gc-executorclaimlifespan",
-  `Return (or --log) GelatoCore.executorClaimLifespan([<executor>: defaults to default executor]) on [--network] (default: ${defaultNetwork})`
+  `Return (or --log) GelatoCore.executorClaimLifespan([<gelatoexecutor>: defaults to default gelatoexecutor]) on [--network] (default: ${defaultNetwork})`
 )
   .addFlag("log", "Logs return values to stdout")
   .addOptionalPositionalParam(
-    "executor",
-    "The address of the executor, whose price we query"
+    "gelatoexecutor",
+    "The address of the gelatoexecutor, whose price we query"
   )
-  .setAction(async ({ executor, log }) => {
+  .setAction(async ({ gelatoexecutor, log }) => {
     try {
-      executor = await run("handleGelatoExecutor", { executor });
+      gelatoexecutor = await run("handleGelatoExecutor", { gelatoexecutor });
       const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
         write: true
       });
       const executorClaimLifespan = await gelatoCore.executorClaimLifespan(
-        executor
+        gelatoexecutor
       );
       const executorClaimLifespanDays = executorClaimLifespan / 86400;
       if (log) {
         console.log(
-          `\nExecutor: ${executor}\
+          `\nExecutor:              ${gelatoexecutor}\
            \nExecutorClaimLifespan: ${executorClaimLifespanDays} days\
-           \nNetwork: ${network.name}\n`
+           \nNetwork:               ${network.name}\n`
         );
       }
       return executorClaimLifespan;

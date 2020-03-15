@@ -3,17 +3,17 @@ import { defaultNetwork } from "../../../../../../buidler.config";
 
 export default task(
   "gc-isprovidedaction",
-  `Return (or --log) GelatoCore.isProvidedAction([<provider>: defaults to default provider], actionname) on [--network] (default: ${defaultNetwork})`
+  `Return (or --log) GelatoCore.isProvidedAction([<gelatoprovider>: defaults to default gelatoprovider], actionname) on [--network] (default: ${defaultNetwork})`
 )
   .addPositionalParam("actionname")
   .addOptionalPositionalParam(
-    "provider",
-    "The address of the provider, whose action provision we query"
+    "gelatoprovider",
+    "The address of the gelatoprovider, whose action provision we query"
   )
   .addFlag("log", "Logs return values to stdout")
-  .setAction(async ({ actionname, provider, log }) => {
+  .setAction(async ({ actionname, gelatoprovider, log }) => {
     try {
-      provider = await run("handleGelatoProvider", { provider });
+      gelatoprovider = await run("handleGelatoProvider", { gelatoprovider });
       const actionAddress = await run("bre-config", {
         deployments: true,
         contractname: actionname
@@ -23,12 +23,12 @@ export default task(
         write: true
       });
       const isProvidedAction = await gelatoCore.isProvidedAction(
-        provider,
+        gelatoprovider,
         actionAddress
       );
       if (log) {
         console.log(
-          `\n Provider:        ${provider}\
+          `\n Provider:        ${gelatoprovider}\
            \n Condition:       ${actionname} at ${actionAddress}\
            \n Network:         ${network.name}\
            \n IsProvided?:     ${isProvidedAction ? "✅" : "❌"}\n`

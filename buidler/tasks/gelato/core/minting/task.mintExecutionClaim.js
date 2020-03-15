@@ -8,9 +8,7 @@ export default task(
 )
   .addOptionalPositionalParam(
     "conditionname",
-    "Must exist inside buidler.config. Defaults to address 0 for self-conditional actions",
-    constants.AddressZero,
-    types.string
+    "Must exist inside buidler.config. Defaults to address 0 for self-conditional actions"
   )
   .addOptionalPositionalParam(
     "actionname",
@@ -35,58 +33,66 @@ export default task(
   .addOptionalPositionalParam(
     "executionclaimexpirydate",
     "Defaults to 0 for gelatoexecutor's maximum",
-    0,
-    types.int
+    constants.HashZero
   )
+  .addOptionalParam("conditionaddress", "", constants.AddressZero)
+  .addOptionalParam("actionaddress")
   .addFlag("log", "Logs return values to stdout")
   .setAction(async taskArgs => {
     try {
       // Command Line Argument Checks
-      if (!taskArgs.actionname) throw new Error(`\n Must supply Action Name`);
+      if (!taskArgs.actionname && !taskArgs.actionaddress)
+        throw new Error(`\n Must supply <actionname> or --actionaddress`);
       if (
-        taskArgs.conditionname != constants.AddressZero &&
+        taskArgs.conditionname &&
         !taskArgs.conditionname.startsWith("Condition")
       ) {
         throw new Error(
           `\nInvalid condition: ${taskArgs.conditionname}: 1.<conditionname> 2.<actionname>\n`
         );
       }
-      if (!taskArgs.actionname.startsWith("Action")) {
+      if (taskArgs.actionname && !taskArgs.actionname.startsWith("Action")) {
         throw new Error(
           `\nInvalid action: ${taskArgs.actionname}: 1.<conditionname> 2.<actionname>\n`
         );
       }
 
       // Selected Provider and Executor
-      const gelatoProvider = await run("handleGelatoProvider", {
-        provider: taskArgs.gelatoprovider
+      taskArgs.gelatoprovider = await run("handleGelatoProvider", {
+        gelatoprovider: taskArgs.gelatoprovider
       });
-      const gelatoExecutor = await run("handleGelatoExecutor", {
-        executor: taskArgs.gelatoexecutor
+      taskArgs.gelatoexecutor = await run("handleGelatoExecutor", {
+        gelatoexecutor: taskArgs.gelatoexecutor
       });
 
       // Condition and ConditionPayload (optional)
-      let conditionAddress;
-      let conditionPayload = constants.HashZero;
-      if (taskArgs.conditionname != constants.AddressZero) {
-        conditionAddress = await run("bre-config", {
-          deployments: true,
-          contractname: taskArgs.conditionname
-        });
-        conditionPayload = await run("handleGelatoPayload", {
-          contractname: taskArgs.conditionname
-        });
+      if (taskArgs.conditionname) {
+        if (taskArgs.conditionaddress === constants.AddressZero) {
+          taskArgs.conditionAddress = await run("bre-config", {
+            deployments: true,
+            contractname: taskArgs.conditionname
+          });
+        }
+        if (!taskArgs.conditionpayload) {
+          taskArgs.conditionpayload = await run("handleGelatoPayload", {
+            contractname: taskArgs.conditionname
+          });
+        }
       }
 
       // Action and ActionPayload
-      const actionAddress = await run("bre-config", {
-        deployments: true,
-        contractname: taskArgs.actionname
-      });
-      const actionPayload = await run("handleGelatoPayload", {
-        contractname: taskArgs.actionname,
-        payload: taskArgs.actionpayload
-      });
+      if (!taskArgs.actionaddress) {
+        taskArgs.actionaddress = await run("bre-config", {
+          deployments: true,
+          contractname: taskArgs.actionname
+        });
+      }
+      if (!taskArgs.actionpayload) {
+        taskArgs.actionpayload = await run("handleGelatoPayload", {
+          contractname: taskArgs.actionname,
+          payload: taskArgs.actionpayload
+        });
+      }
 
       // GelatoCore write Instance
       const gelatoCore = await run("instantiateContract", {
@@ -96,10 +102,10 @@ export default task(
 
       // mintExecutionClaim TX
       const mintTx = await gelatoCore.mintExecutionClaim(
-        [gelatoProvider, gelatoExecutor],
-        [conditionAddress, actionAddress],
-        conditionPayload,
-        actionPayload,
+        [taskArgs.gelatoprovider, taskArgs.gelatoexecutor],
+        [taskArgs.conditionaddress, taskArgs.actionaddress],
+        taskArgs.actionaddress,
+        taskArgs.conditionaddress,
         taskArgs.executionclaimexpirydate
       );
 

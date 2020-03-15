@@ -17,11 +17,11 @@ export default internalTask(
     async ({ conditionname, actionname, executionclaimexpirydate, log }) => {
       try {
         const gelatoProvider = await run("bre-config", {
-          addressbookcategory: "provider",
+          addressbookcategory: "gelatoProvider",
           addressbookentry: "default"
         });
         const gelatoExecutor = await run("bre-config", {
-          addressbookcategory: "executor",
+          addressbookcategory: "gelatoExecutor",
           addressbookentry: "default"
         });
         const conditionAddress = await run("bre-config", {

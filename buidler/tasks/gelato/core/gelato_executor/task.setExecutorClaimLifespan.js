@@ -21,10 +21,10 @@ export default task(
       // We use the 2nd account (index 1) generated from mnemonic for the executor by default
       const { [executorindex]: executor } = await ethers.signers();
       if (log) {
-        console.log(
-          `\n Taking account with index: ${executorindex}\
-		   \n Executor Address: ${executor._address}\n`
-        );
+        console.log(`
+          \n Taking account with index: ${executorindex}\
+          \n Executor Address: ${executor._address}\n
+        `);
       }
       const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",

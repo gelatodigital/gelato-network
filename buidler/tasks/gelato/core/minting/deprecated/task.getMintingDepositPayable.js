@@ -22,8 +22,8 @@ export default task(
       });
 
       // Handle selected executor default
-      const gelatoexecutor = await run("handleGelatoExecutor", {
-        executor: taskArgs.gelatoexecutor
+      taskArgs.gelatoexecutor = await run("handleGelatoExecutor", {
+        gelatoexecutor: taskArgs.gelatoexecutor
       });
 
       // Read Instance
@@ -33,7 +33,7 @@ export default task(
       });
       // Contract Call
       const mintingDepositPayable = await gelatoCore.getMintingDepositPayable(
-        gelatoexecutor,
+        taskArgs.gelatoexecutor,
         conditionAddress,
         actionAddress
       );
@@ -56,7 +56,7 @@ export default task(
           ).toFixed(2)}$`
         );
         await run("gc-executorprice", {
-          executor: taskArgs.gelatoexecutor,
+          gelatoexecutor: taskArgs.gelatoexecutor,
           log: taskArgs.log
         });
       }
