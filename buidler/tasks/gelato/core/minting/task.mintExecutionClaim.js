@@ -68,7 +68,7 @@ export default task(
       // Condition and ConditionPayload (optional)
       if (taskArgs.conditionname) {
         if (taskArgs.conditionaddress === constants.AddressZero) {
-          taskArgs.conditionAddress = await run("bre-config", {
+          taskArgs.conditionaddress = await run("bre-config", {
             deployments: true,
             contractname: taskArgs.conditionname
           });
@@ -104,8 +104,8 @@ export default task(
       const mintTx = await gelatoCore.mintExecutionClaim(
         [taskArgs.gelatoprovider, taskArgs.gelatoexecutor],
         [taskArgs.conditionaddress, taskArgs.actionaddress],
-        taskArgs.actionaddress,
-        taskArgs.conditionaddress,
+        taskArgs.conditionpayload,
+        taskArgs.actionpayload,
         taskArgs.executionclaimexpirydate
       );
 

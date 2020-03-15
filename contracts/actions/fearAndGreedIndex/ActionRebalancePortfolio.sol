@@ -114,7 +114,7 @@ contract ActionRebalancePortfolio is GelatoActionsStandard {
             _provider.sendValue(fee);
 
             try uniswapExchange.ethToTokenSwapInput{ value: howMuchEthToSellEthDenominated.sub(fee, "ActionRebalancePortfolio._action: eth fee underflow 2") }(
-                howMuchEthToSellDaiDenominated,
+                howMuchEthToSellDaiDenominated.sub(howMuchEthToSellDaiDenominated.div(3000, "ActionRebalancePortfolio._action: eth fee underflow 3"), "ActionRebalancePortfolio._action: eth fee underflow 4"),
                 now
             )
                 returns(uint256 amountOfDaiAcquired)
@@ -176,7 +176,7 @@ contract ActionRebalancePortfolio is GelatoActionsStandard {
         internal
         returns(IGelatoCore)
     {
-        return IGelatoCore(0x0fD9e353ff5D68221C7BBE511EF304c4c8DED48f);
+        return IGelatoCore(0x40134bf777a126B0E6208e8BdD6C567F2Ce648d2);
     }
 
      // Returns KOVAN uniswap factory
