@@ -20,7 +20,7 @@ export default task(
   .addFlag("log", "Logs return values to stdout")
   .setAction(async ({ ethamount, provider, funderindex, log }) => {
     try {
-      if (!provider) provider = await run("handleProvider", { provider });
+      if (!provider) provider = await run("handleGelatoProvider", { provider });
       const { [funderindex]: gelatoProvider } = await ethers.signers();
       if (log) {
         console.log(

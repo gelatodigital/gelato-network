@@ -16,11 +16,11 @@ export default internalTask(
   .setAction(
     async ({ conditionname, actionname, executionclaimexpirydate, log }) => {
       try {
-        const selectedProvider = await run("bre-config", {
+        const gelatoProvider = await run("bre-config", {
           addressbookcategory: "provider",
           addressbookentry: "default"
         });
-        const selectedExecutor = await run("bre-config", {
+        const gelatoExecutor = await run("bre-config", {
           addressbookcategory: "executor",
           addressbookentry: "default"
         });
@@ -43,7 +43,7 @@ export default internalTask(
           functionname: "enableModuleAndMint",
           inputs: [
             gelatoCore.address,
-            [selectedProvider, selectedExecutor],
+            [gelatoProvider, gelatoExecutor],
             [conditionAddress, actionAddress],
             conditionPayload,
             actionPayload,
@@ -54,8 +54,8 @@ export default internalTask(
           console.log(
             `\n Payload for ScriptGnosisSafeEnableGelatoCoreAndMint\
              \n GelatoCore: ${gelatoCore.address}\
-             \n Provider:   ${selectedProvider}\
-             \n Executor    ${selectedExecutor}\
+             \n Provider:   ${gelatoProvider}\
+             \n Executor    ${gelatoExecutor}\
              \n Condition:  ${conditionname} at ${conditionAddress}\
              \n Action:     ${actionname} at ${actionAddress}\
              \n ExpiryDate: ${executionclaimexpirydate}\

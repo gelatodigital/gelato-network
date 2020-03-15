@@ -5,15 +5,15 @@ export default internalTask(
   `Returns a hardcoded actionPayload of ActionMultiMintForConditionTimestampPassed`
 )
   .addParam(
-    "selectedexecutor",
-    "CAUTION: selectedexecutor cannot be a safe default"
+    "gelatoexecutor",
+    "CAUTION: gelatoexecutor cannot be a safe default"
   )
   .addParam(
     "numberofmints",
     "CAUTION: number of mints cannot be a safe default"
   )
   .addFlag("log")
-  .setAction(async ({ selectedexecutor, numberofmints, log }) => {
+  .setAction(async ({ gelatoexecutor, numberofmints, log }) => {
     try {
       const contractname = "ActionMultiMintForConditionTimestampPassed";
       // action(_gelatoCore, _selectedExecutor, _conditionTimestampPassed, _startTime, _action, _actionPayload, _intervalSpan, _numberOfMints)
@@ -38,7 +38,7 @@ export default internalTask(
       // Params as sorted array of inputs for abi.encoding
       const inputs = [
         gelatoCoreAddress,
-        selectedexecutor,
+        gelatoexecutor,
         conditionTimestampPassedAddress,
         startTime,
         actionAddress,

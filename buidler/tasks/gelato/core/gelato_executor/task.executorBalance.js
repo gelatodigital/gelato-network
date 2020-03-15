@@ -13,7 +13,7 @@ export default task(
   )
   .setAction(async ({ executor, log }) => {
     try {
-      executor = await run("handleExecutor", { executor });
+      executor = await run("handleGelatoExecutor", { executor });
       const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
         write: true

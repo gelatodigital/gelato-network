@@ -1,6 +1,6 @@
 // Executor
-import "./executors/iTask.handleExecutor";
+import "./executors/iTask.handleGelatoExecutor";
 // Payload
-import "./payloads/iTask.handlePayload";
+import "./payloads/iTask.handleGelatoPayload";
 // Provider
-import "./providers/iTask.handleProvider";
+import "./providers/iTask.handleGelatoProvider";

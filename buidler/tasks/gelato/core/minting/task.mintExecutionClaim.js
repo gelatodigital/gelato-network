@@ -17,24 +17,24 @@ export default task(
     "This param MUST be supplied. Must exist inside buidler.config"
   )
   .addOptionalPositionalParam(
-    "selectedprovider",
+    "gelatoprovider",
     "Defaults to network addressbook default"
   )
   .addOptionalPositionalParam(
-    "selectedexecutor",
+    "gelatoexecutor",
     "Defaults to network addressbook default"
   )
   .addOptionalPositionalParam(
     "conditionpayload",
-    "If not provided, must have a default returned from handlePayload()"
+    "If not provided, must have a default returned from handleGelatoPayload()"
   )
   .addOptionalPositionalParam(
     "actionpayload",
-    "If not provided, must have a default returned from handlePayload()"
+    "If not provided, must have a default returned from handleGelatoPayload()"
   )
   .addOptionalPositionalParam(
     "executionclaimexpirydate",
-    "Defaults to 0 for selectedexecutor's maximum",
+    "Defaults to 0 for gelatoexecutor's maximum",
     0,
     types.int
   )
@@ -58,11 +58,11 @@ export default task(
       }
 
       // Selected Provider and Executor
-      const selectedProvider = await run("handleProvider", {
-        provider: taskArgs.selectedprovider
+      const gelatoProvider = await run("handleGelatoProvider", {
+        provider: taskArgs.gelatoprovider
       });
-      const selectedExecutor = await run("handleExecutor", {
-        executor: taskArgs.selectedexecutor
+      const gelatoExecutor = await run("handleGelatoExecutor", {
+        executor: taskArgs.gelatoexecutor
       });
 
       // Condition and ConditionPayload (optional)
@@ -73,7 +73,7 @@ export default task(
           deployments: true,
           contractname: taskArgs.conditionname
         });
-        conditionPayload = await run("handlePayload", {
+        conditionPayload = await run("handleGelatoPayload", {
           contractname: taskArgs.conditionname
         });
       }
@@ -83,7 +83,7 @@ export default task(
         deployments: true,
         contractname: taskArgs.actionname
       });
-      const actionPayload = await run("handlePayload", {
+      const actionPayload = await run("handleGelatoPayload", {
         contractname: taskArgs.actionname,
         payload: taskArgs.actionpayload
       });
@@ -96,7 +96,7 @@ export default task(
 
       // mintExecutionClaim TX
       const mintTx = await gelatoCore.mintExecutionClaim(
-        [selectedProvider, selectedExecutor],
+        [gelatoProvider, gelatoExecutor],
         [conditionAddress, actionAddress],
         conditionPayload,
         actionPayload,

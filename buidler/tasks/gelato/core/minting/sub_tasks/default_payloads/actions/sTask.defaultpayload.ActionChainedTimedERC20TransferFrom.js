@@ -21,8 +21,8 @@ export default internalTask(
       const sendAmount = utils.parseUnits("10", 18);
 
       // ActionChainedERC20TransferFrom additional Params
-      const selectedProvider = await run("handleProvider");
-      const selectedExecutor = await run("handleExecutor");
+      const gelatoProvider = await run("handleGelatoProvider");
+      const gelatoExecutor = await run("handleGelatoExecutor");
       const conditionTimestampPassed = await run("bre-config", {
         deployments: true,
         contractname: "ConditionTimestampPassed"
@@ -31,7 +31,7 @@ export default internalTask(
         deployments: true,
         contractname: "ActionChainedTimedERC20TransferFrom"
       });
-      const conditionTimestampPassedPayload = await run("handlePayload", {
+      const conditionTimestampPassedPayload = await run("handleGelatoPayload", {
         contractname: "ConditionTimestampPassed"
       });
       const timeOffset = 300; // 5 minutes
@@ -41,7 +41,7 @@ export default internalTask(
         [user, userProxy],
         [sendToken, destination],
         sendAmount,
-        [selectedProvider, selectedExecutor],
+        [gelatoProvider, gelatoExecutor],
         [conditionTimestampPassed, actionChainedTimedERC20TransferFrom],
         conditionTimestampPassedPayload,
         timeOffset

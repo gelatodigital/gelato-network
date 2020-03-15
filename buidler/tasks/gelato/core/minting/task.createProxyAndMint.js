@@ -29,11 +29,11 @@ export default task(
     types.int
   )
   .addOptionalParam(
-    "selectedprovider",
+    "gelatoprovider",
     "Defaults to network addressbook default"
   )
   .addOptionalParam(
-    "selectedexecutor",
+    "gelatoexecutor",
     "Defaults to network addressbook default"
   )
   .addOptionalParam(
@@ -43,11 +43,11 @@ export default task(
   )
   .addOptionalParam(
     "actionpayload",
-    "If not provided, must have a default returned from handlePayload()"
+    "If not provided, must have a default returned from handleGelatoPayload()"
   )
   .addOptionalParam(
     "executionclaimexpirydate",
-    "Defaults to 0 for selectedexecutor's maximum",
+    "Defaults to 0 for gelatoexecutor's maximum",
     constants.HashZero
   )
   .addFlag("setup", "Initialize gnosis safe by calling its setup function")
@@ -183,11 +183,11 @@ export default task(
 
       // ==== GelatoCore.mintExecutionClaim Params ====
       // Selected Provider and Executor
-      taskArgs.selectedprovider = await run("handleProvider", {
-        provider: taskArgs.selectedprovider
+      taskArgs.gelatoprovider = await run("handleGelatoProvider", {
+        provider: taskArgs.gelatoprovider
       });
-      taskArgs.selectedexecutor = await run("handleExecutor", {
-        executor: taskArgs.selectedexecutor
+      taskArgs.gelatoexecutor = await run("handleGelatoExecutor", {
+        executor: taskArgs.gelatoexecutor
       });
 
       // Condition and ConditionPayload (optional)
@@ -197,7 +197,7 @@ export default task(
           deployments: true,
           contractname: taskArgs.conditionname
         });
-        taskArgs.conditionpayload = await run("handlePayload", {
+        taskArgs.conditionpayload = await run("handleGelatoPayload", {
           contractname: taskArgs.conditionname
         });
       }
@@ -206,7 +206,7 @@ export default task(
         deployments: true,
         contractname: taskArgs.actionname
       });
-      taskArgs.actionpayload = await run("handlePayload", {
+      taskArgs.actionpayload = await run("handleGelatoPayload", {
         contractname: taskArgs.actionname
       });
       // ============
@@ -225,7 +225,7 @@ export default task(
           taskArgs.mastercopy,
           taskArgs.initializer,
           taskArgs.saltnonce,
-          [taskArgs.selectedprovider, taskArgs.selectedexecutor],
+          [taskArgs.gelatoprovider, taskArgs.gelatoexecutor],
           [conditionAddress, actionAddress],
           taskArgs.conditionpayload,
           taskArgs.actionpayload,
@@ -236,7 +236,7 @@ export default task(
         creationTx = await gelatoCore.createProxyAndMint(
           taskArgs.mastercopy,
           taskArgs.initializer,
-          [taskArgs.selectedprovider, taskArgs.selectedexecutor],
+          [taskArgs.gelatoprovider, taskArgs.gelatoexecutor],
           [conditionAddress, actionAddress],
           taskArgs.conditionpayload,
           taskArgs.actionpayload,

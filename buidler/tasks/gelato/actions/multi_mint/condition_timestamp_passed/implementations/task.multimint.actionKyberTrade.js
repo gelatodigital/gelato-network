@@ -23,7 +23,7 @@ export default task(
       } = await run("bre-config", { deployments: true });
 
       // Non-Default Params for ActionMultiMintForConditionTimestampPassed
-      const { default: selectedexecutor } = await run("bre-config", {
+      const { default: gelatoexecutor } = await run("bre-config", {
         addressbookcategory: "executor"
       });
       const numberofmints = "2";
@@ -32,7 +32,7 @@ export default task(
       const actionMultiMintForConditionTimestampPassedPayloadWithSelector = await run(
         "gc-mint:defaultpayload:ActionMultiMintForConditionTimestampPassed",
         {
-          selectedexecutor,
+          gelatoexecutor,
           numberofmints,
           log
         }
@@ -40,7 +40,7 @@ export default task(
 
       // ReadInstance of GelatoCore
       const mintinDepositPerMint = await run("gc-getmintingdepositpayable", {
-        selectedexecutor,
+        gelatoexecutor,
         conditionname: "ConditionTimestampPassed",
         actionname: "ActionKyberTrade",
         log

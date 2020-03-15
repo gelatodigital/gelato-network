@@ -13,7 +13,7 @@ export default task(
   .addFlag("log", "Logs return values to stdout")
   .setAction(async ({ actionname, provider, log }) => {
     try {
-      provider = await run("handleProvider", { provider });
+      provider = await run("handleGelatoProvider", { provider });
       const actionAddress = await run("bre-config", {
         deployments: true,
         contractname: actionname
