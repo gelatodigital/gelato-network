@@ -57,7 +57,7 @@ contract ActionChainedTimedERC20TransferFrom is ActionERC20TransferFrom {
         );
 
         // Mint: ExecutionClaim Chain continues with Updated Payloads
-        IGelatoCore(0x35b9b372cF07B2d6B397077792496c61721B58fa).mintExecutionClaim(
+        IGelatoCore(0x2394902678c30De1335Df6DD00FF940e18649963).mintExecutionClaim(
             _selectedProviderAndExecutor,
             _conditionTimestampPassedAndThisAction,
             nextConditionTimestampPassedPayload,

@@ -12,7 +12,7 @@ export default task(
   )
   .addOptionalPositionalParam(
     "actionname",
-    "This param MUST be supplied. Must exist inside buidler.config"
+    "Actionname (must be inside buidler.config) OR --actionaddress MUST be supplied."
   )
   .addOptionalPositionalParam(
     "gelatoprovider",
@@ -22,6 +22,8 @@ export default task(
     "gelatoexecutor",
     "Defaults to network addressbook default"
   )
+  .addOptionalParam("conditionaddress", "", constants.AddressZero)
+  .addOptionalParam("actionaddress")
   .addOptionalPositionalParam(
     "conditionpayload",
     "If not provided, must have a default returned from handleGelatoPayload()"
@@ -35,8 +37,6 @@ export default task(
     "Defaults to 0 for gelatoexecutor's maximum",
     constants.HashZero
   )
-  .addOptionalParam("conditionaddress", "", constants.AddressZero)
-  .addOptionalParam("actionaddress")
   .addFlag("log", "Logs return values to stdout")
   .setAction(async taskArgs => {
     try {
@@ -68,7 +68,7 @@ export default task(
       // Condition and ConditionPayload (optional)
       if (taskArgs.conditionname) {
         if (taskArgs.conditionaddress === constants.AddressZero) {
-          taskArgs.conditionAddress = await run("bre-config", {
+          taskArgs.conditionaddress = await run("bre-config", {
             deployments: true,
             contractname: taskArgs.conditionname
           });
@@ -104,8 +104,8 @@ export default task(
       const mintTx = await gelatoCore.mintExecutionClaim(
         [taskArgs.gelatoprovider, taskArgs.gelatoexecutor],
         [taskArgs.conditionaddress, taskArgs.actionaddress],
-        taskArgs.actionaddress,
-        taskArgs.conditionaddress,
+        taskArgs.conditionpayload,
+        taskArgs.actionpayload,
         taskArgs.executionclaimexpirydate
       );
 
