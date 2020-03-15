@@ -6,7 +6,7 @@ export const deployments = {
   ActionBzxPtokenMintWithToken: "0x080d3059b30D3B7EDffa1B0B9AE981f0Ce94168E",
   // erc20
   ActionERC20Transfer: "0x213719cD7c69DCA764E336bEb8D735DA01FD6c83",
-  ActionERC20TransferFrom: "0x0bd3305f42DFd1F367aADefeC12a15548bB53329",
+  ActionERC20TransferFrom: "0xC46095e97F1C0756b852EaE04f4D5De301351113",
   // kyber
   ActionKyberTradeKovan: "0xF829B506c378AaD11dB7Efe8d626cc7d0e015CBA",
   // Portfolio Mgmt
@@ -15,7 +15,7 @@ export const deployments = {
   // ==== Actions - Chained ====
   // erc20
   ActionChainedTimedERC20TransferFrom:
-    "0x9b55e13615008e43C798A280E7e059d1b9797c49",
+    "0x08208d3af7453E23A183D7Cd74D0257faEbF93A7",
   // Portfolio Mgmt
   ActionChainedRebalancePortfolio: "0xBcB7492164066E5B5DD5D74c9Ae3c5DfbACcde69",
 

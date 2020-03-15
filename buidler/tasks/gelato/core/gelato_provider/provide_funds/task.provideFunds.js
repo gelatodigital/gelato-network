@@ -28,7 +28,7 @@ export default task(
       if (log) {
         console.log(`
           \n Funding from account with index: ${funderindex}\
-          \n Funder:                          ${funder}\
+          \n Funder:                          ${funder._address}\
           \n Funding Provider with Address:   ${gelatoprovider}\n
         `);
       }

@@ -1,7 +1,7 @@
 import { internalTask } from "@nomiclabs/buidler/config";
 
 export default internalTask(
-  "gsp:payload:ScriptGnosisSafeEnableGelatoCore",
+  "gsp:scripts:defaultpayload:ScriptGnosisSafeEnableGelatoCore",
   `Returns a hardcoded payload for the 'data' field of the initializer payload`
 )
   .addFlag("log")
