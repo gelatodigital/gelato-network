@@ -55,7 +55,7 @@ export default task(
   )
   .addOptionalParam(
     "to",
-    "Supply with --setup: to address",
+    "Supply with --setup: to address.",
     constants.AddressZero
   )
   .addOptionalParam(
@@ -65,7 +65,7 @@ export default task(
   )
   .addOptionalParam(
     "defaultpayloadscript",
-    "The name of the defaultpayload script to retrieve 'data'"
+    "Deployed contract Script's (also --to if no --to) default --data"
   )
   .addOptionalParam(
     "fallbackhandler",

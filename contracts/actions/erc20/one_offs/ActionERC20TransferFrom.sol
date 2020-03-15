@@ -24,7 +24,10 @@ contract ActionERC20TransferFrom is GelatoActionsStandard {
         public
         virtual
     {
-        require(address(this) == _userAndProxy[1], "ErrorUserProxy");
+        require(
+            address(this) == _userAndProxy[1],
+            "ActionERC20TransferFrom: ErrorUserProxy"
+        );
         IERC20 sendERC20 = IERC20(_sendTokenAndDesination[0]);
         try sendERC20.transferFrom(
             _userAndProxy[0],
@@ -38,7 +41,7 @@ contract ActionERC20TransferFrom is GelatoActionsStandard {
                 _sendTokenAndDesination[1]  // destination
             );
         } catch {
-            revert("ErrorTransferFromUser");
+            revert("ActionERC20TransferFrom: ErrorTransferFromUser");
         }
     }
 

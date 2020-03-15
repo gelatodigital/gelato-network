@@ -3,6 +3,7 @@ pragma solidity ^0.6.2;
 import "../one_offs/ActionERC20TransferFrom.sol";
 import "../../../conditions/eth_utils/eth_time/ConditionTimestampPassed.sol";
 import "../../../gelato_core/interfaces/IGelatoCore.sol";
+import "../../../gelato_core/interfaces/IGelatoExecutor.sol";
 import "../../../external/SafeMath.sol";
 import "../../../external/Address.sol";
 
@@ -32,7 +33,7 @@ contract ActionChainedTimedERC20TransferFrom is ActionERC20TransferFrom {
         virtual
     {
         // Internal Call: ActionERC20TransferFrom.action()
-        super.action(_userAndProxy, _sendTokenAndDesination, _sendAmount);
+        action(_userAndProxy, _sendTokenAndDesination, _sendAmount);
 
         // Decode: ConditionTimestampPassed Payload and update value
         uint256 currentDueDate = abi.decode(_conditionTimestampPassedPayload, (uint256));
@@ -57,12 +58,12 @@ contract ActionChainedTimedERC20TransferFrom is ActionERC20TransferFrom {
         );
 
         // Mint: ExecutionClaim Chain continues with Updated Payloads
-        IGelatoCore(0x35b9b372cF07B2d6B397077792496c61721B58fa).mintExecutionClaim(
+        IGelatoCore(0x40134bf777a126B0E6208e8BdD6C567F2Ce648d2).mintExecutionClaim(
             _selectedProviderAndExecutor,
             _conditionTimestampPassedAndThisAction,
             nextConditionTimestampPassedPayload,
             actionPayload,
-            nextDueDate + 3 days  // executionClaimExpiryDate: max 3 day delay
+            0
         );
     }
 
@@ -121,11 +122,21 @@ contract ActionChainedTimedERC20TransferFrom is ActionERC20TransferFrom {
         virtual
         returns(string memory)  // actionCondition
     {
-        this;
-        _selectedProviderAndExecutor;
         _conditionTimestampPassedAndThisAction;
-        _conditionTimestampPassedPayload;
-        _timeOffset;
+
+        // Check ExecutionClaimExpiryDate maximum
+        uint256 executorClaimLifespan = IGelatoExecutor(
+            0x40134bf777a126B0E6208e8BdD6C567F2Ce648d2
+        ).executorClaimLifespan(_selectedProviderAndExecutor[1]);
+        uint256 currentDueDate = abi.decode(_conditionTimestampPassedPayload, (uint256));
+        uint256 nextDueDate = currentDueDate.add(_timeOffset);
+
+        if (false) {
+            return (
+                "ActionChainedTimedERC20TransferFrom._actionConditionsCheck: expirydate"
+            );
+        }
+
         // STANDARD return string to signal actionConditions Ok
         return "ok";
     }
