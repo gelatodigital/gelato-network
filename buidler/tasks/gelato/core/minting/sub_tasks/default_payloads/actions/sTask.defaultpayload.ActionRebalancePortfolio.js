@@ -11,16 +11,16 @@ export default internalTask(
     types.int
   )
   .addFlag("log")
-  .setAction(async ({ log, providerindex }) => {
+  .setAction(async ({ log = true, providerindex }) => {
     try {
-      const signers = await ethers.signers();
-      const provider = signers[parseInt(providerindex)];
+      const provider = await run("handleGelatoProvider");
+
       const actionPayload = await run("abi-encode-withselector", {
         contractname: "ActionRebalancePortfolio",
         functionname: "action",
-        inputs: [provider._address]
+        inputs: [provider]
       });
-      if (log) console.log(actionPayload);
+
       return actionPayload;
     } catch (err) {
       console.error(err);

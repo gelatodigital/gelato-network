@@ -147,7 +147,7 @@ export default task(
         taskArgs.data = await run(
           `gsp:scripts:defaultpayload:${taskArgs.defaultpayloadscript}`
         );
-        if (taskArgs.to === constants.HashZero) {
+        if (taskArgs.to === constants.AddressZero) {
           taskArgs.to = await run("bre-config", {
             deployments: true,
             contractname: taskArgs.defaultpayloadscript
