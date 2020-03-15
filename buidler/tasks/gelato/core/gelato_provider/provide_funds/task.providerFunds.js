@@ -4,28 +4,28 @@ import { utils } from "ethers";
 
 export default task(
   "gc-providerfunds",
-  `Return (or --log) GelatoCore.providerFunds([<provider>: defaults to default provider]) on [--network] (default: ${defaultNetwork})`
+  `Return (or --log) GelatoCore.providerFunds([<gelatoprovider>: defaults to default gelatoprovider]) on [--network] (default: ${defaultNetwork})`
 )
   .addOptionalPositionalParam(
-    "provider",
-    "The address of the provider, whose balance we query"
+    "gelatoprovider",
+    "The address of the gelatoprovider, whose balance we query"
   )
   .addFlag("log", "Logs return values to stdout")
-  .setAction(async ({ provider, log }) => {
+  .setAction(async ({ gelatoprovider, log }) => {
     try {
-      provider = await run("handleProvider", { provider });
+      gelatoprovider = await run("handleGelatoProvider", { gelatoprovider });
       const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
         write: true
       });
-      const providerFunds = await gelatoCore.providerFunds(provider);
+      const providerFunds = await gelatoCore.providerFunds(gelatoprovider);
       const providerBalanceETH = utils.formatEther(providerFunds);
       if (log) {
-        console.log(
-          `\n Provider:        ${provider}\
-           \n ProviderBalance: ${providerBalanceETH} ETH\
-           \n Network:         ${network.name}\n`
-        );
+        console.log(`
+          \n Provider:        ${gelatoprovider}\
+          \n ProviderBalance: ${providerBalanceETH} ETH\
+          \n Network:         ${network.name}\n
+        `);
       }
       return providerFunds;
     } catch (error) {

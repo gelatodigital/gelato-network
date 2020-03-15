@@ -8,9 +8,12 @@ export default task(
 )
   .addPositionalParam(
     "ethamount",
-    "The amount of eth to add to the provider's balance"
+    "The amount of eth to add to the gelatoprovider's balance"
   )
-  .addOptionalPositionalParam("provider", "The provider to add balance to.")
+  .addOptionalPositionalParam(
+    "gelatoprovider",
+    "The gelatoprovider to add balance to."
+  )
   .addOptionalParam(
     "funderindex",
     "Index of tx Signer account generated from mnemonic available inside BRE",
@@ -18,22 +21,23 @@ export default task(
     types.int
   )
   .addFlag("log", "Logs return values to stdout")
-  .setAction(async ({ ethamount, provider, funderindex, log }) => {
+  .setAction(async ({ ethamount, gelatoprovider, funderindex, log }) => {
     try {
-      if (!provider) provider = await run("handleProvider", { provider });
-      const { [funderindex]: gelatoProvider } = await ethers.signers();
+      gelatoprovider = await run("handleGelatoProvider", { gelatoprovider });
+      const { [funderindex]: funder } = await ethers.signers();
       if (log) {
-        console.log(
-          `\n Funding from account with index: ${funderindex}\
-		       \n Funding Provider with Address:   ${provider}\n`
-        );
+        console.log(`
+          \n Funding from account with index: ${funderindex}\
+          \n Funder:                          ${funder}\
+          \n Funding Provider with Address:   ${gelatoprovider}\n
+        `);
       }
       const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
         write: true,
-        signer: gelatoProvider
+        signer: funder
       });
-      const tx = await gelatoCore.provideFunds(provider, {
+      const tx = await gelatoCore.provideFunds(gelatoprovider, {
         value: utils.parseEther(ethamount)
       });
       if (log) console.log(`\n\ntxHash providefunds: ${tx.hash}`);

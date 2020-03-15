@@ -4,29 +4,27 @@ import { utils } from "ethers";
 
 export default task(
   "gc-executorbalance",
-  `Return (or --log) GelatoCore.executorBalance([<executor>: defaults to default executor]) on [--network] (default: ${defaultNetwork})`
+  `Return (or --log) GelatoCore.executorBalance([<gelatoexecutor>: defaults to default gelatoexecutor]) on [--network] (default: ${defaultNetwork})`
 )
   .addFlag("log", "Logs return values to stdout")
   .addOptionalPositionalParam(
-    "executor",
-    "The address of the executor, whose balance we query"
+    "gelatoexecutor",
+    "The address of the gelatoexecutor, whose balance we query"
   )
-  .setAction(async ({ executor, log }) => {
+  .setAction(async ({ gelatoexecutor, log }) => {
     try {
-      executor = await run("handleExecutor", { executor });
+      gelatoexecutor = await run("handleGelatoExecutor", { gelatoexecutor });
       const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
         write: true
       });
-      const executorBalance = await gelatoCore.executorBalance(
-        executor
-      );
+      const executorBalance = await gelatoCore.executorBalance(gelatoexecutor);
       const executorBalanceETH = utils.formatEther(executorBalance);
       if (log) {
         console.log(
-          `\nExecutor: ${executor}\
+          `\nExecutor:        ${gelatoexecutor}\
            \nExecutorBalance: ${executorBalanceETH} ETH\
-           \nNetwork: ${network.name}\n`
+           \nNetwork:         ${network.name}\n`
         );
       }
       return executorBalance;

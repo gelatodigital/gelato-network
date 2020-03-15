@@ -4,29 +4,43 @@ export default internalTask(
   "gsp:scripts:defaultpayload:ScriptEnterPortfolioRebalancing",
   `Returns a hardcoded payload for ScriptEnterPortfolioRebalancing`
 )
-  .addOptionalParam("executorindex", "mnemoric index of executor", 1, types.int)
-  .addOptionalParam("providerindex", "mnemoric index of provider", 2, types.int)
+  .addOptionalParam("gelatocoreaddress")
+  .addOptionalParam("gelatoprovider")
+  .addOptionalParam("gelatoexecutor")
   .addFlag("log")
-  .setAction(async ({ log = true, providerindex = 2, executorindex = 1 }) => {
+  .setAction(async taskArgs => {
     try {
-      const gelatoCore = await run("instantiateContract", {
-        contractname: "GelatoCore",
-        read: true
+      // Handle taskArgs defaults
+      if (!taskArgs.gelatocoreaddress) {
+        taskArgs.gelatocoreaddress = await run("bre-config", {
+          deployments: true,
+          contractname: "GelatoCore"
+        });
+      }
+      taskArgs.gelatoprovider = await run("handleGelatoProvider", {
+        gelatoprovider: taskArgs.gelatoprovider
+      });
+      taskArgs.gelatoexecutor = await run("handleGelatoExecutor", {
+        gelatoexecutor: taskArgs.gelatoexecutor
       });
 
-      const signers = await ethers.signers();
-      const executor = signers[parseInt(executorindex)]._address;
-      const provider = signers[parseInt(providerindex)]._address;
+      const inputs = [
+        taskArgs.gelatocoreaddress,
+        [taskArgs.gelatoprovider, taskArgs.gelatoexecutor]
+      ];
 
-      const inputs = [gelatoCore.address, [provider, executor]];
-      if (log) console.log(inputs);
+      if (taskArgs.log)
+        console.log("\nScriptEnterPortfolioRebalancing Inputs:\n", taskArgs);
+
       const payload = await run("abi-encode-withselector", {
         contractname: "ScriptEnterPortfolioRebalancing",
         functionname: "enterPortfolioRebalancing",
         inputs
       });
 
-      if (log) console.log(payload);
+      if (taskArgs.log)
+        console.log("\nScriptEnterPortfolioRebalancing Payload:\n", payload);
+
       return payload;
     } catch (err) {
       console.error(err);

@@ -170,17 +170,12 @@ export default task(
           eventname: "LogGelatoUserProxyCreation",
           txhash: creationTx.hash,
           blockHash,
-          values: true
+          values: true,
+          stringify: true
         });
-        const { user, gelatoUserProxy, userProxyFunding } = parsedCreateLog;
-        console.log(
-          `\n LogGelatoUserProxyCreation\
-           \n User:            ${user}\
-           \n GnosisSafeProxy: ${gelatoUserProxy}\
-           \n Funding          ${utils.formatEther(
-             userProxyFunding.toString()
-           )} ETH`
-        );
+        if (parsedCreateLog)
+          console.log("\n✅ LogGelatoUserProxyCreation\n", parsedCreateLog);
+        else console.log("\n❌ LogGelatoUserProxyCreation not found");
       }
 
       return creationTx.hash;

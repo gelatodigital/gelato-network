@@ -5,7 +5,7 @@ import { userProxies } from "./kovan.userProxies";
 export const addressBook = {
   EOA: eoas,
   erc20: erc20s,
-  executor: {
+  gelatoExecutor: {
     // Kovan
     default: "0x4d671CD743027fB5Af1b2D2a3ccbafA97b5B1B80" // Luis Dev-Account2
   },
@@ -18,7 +18,7 @@ export const addressBook = {
     ETH: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
     proxy: "0x692f391bCc85cefCe8C237C01e1f636BbD70EA4D"
   },
-  provider: {
+  gelatoProvider: {
     default: "0x8d95104c9d834932B24799630013fA377b732141" // Luis Dev-Account3
   },
   userProxy: userProxies

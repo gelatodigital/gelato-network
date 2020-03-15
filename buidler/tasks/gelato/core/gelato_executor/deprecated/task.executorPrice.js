@@ -4,37 +4,30 @@ import { utils } from "ethers";
 
 export default task(
   "gc-executorprice",
-  `Return (or --log) GelatoCore.executorPrice([<executor>: defaults to default executor]) on [--network] (default: ${defaultNetwork})`
+  `Return (or --log) GelatoCore.executorPrice([<gelatoexecutor>: defaults to default gelatoexecutor]) on [--network] (default: ${defaultNetwork})`
 )
   .addFlag("log", "Logs return values to stdout")
   .addOptionalPositionalParam(
-    "executor",
-    "The address of the executor, whose price we query"
+    "gelatoexecutor",
+    "The address of the gelatoexecutor, whose price we query"
   )
-  .setAction(async ({ executor, log }) => {
+  .setAction(async ({ gelatoexecutor, log }) => {
     try {
-      let executorAddress;
-      if (executor) executorAddress = executor;
-      else
-        executorAddress = await run("bre-config", {
-          addressbookcategory: "executor",
-          addressbookentry: "default"
-        });
+      gelatoexecutor = await run("handleGelatoExecutor", { gelatoexecutor });
 
       const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
         write: true
       });
-      const executorPrice = await gelatoCore.executorPrice(
-        executorAddress
-      );
+      const executorPrice = await gelatoCore.executorPrice(gelatoexecutor);
       const executorPriceGwei = utils.formatUnits(executorPrice, "gwei");
-      if (log)
-        console.log(
-          `\nExecutor: ${executorAddress}\
-           \nExecutorPrice: ${executorPriceGwei} gwei\
-           \nNetwork: ${network.name}\n`
-        );
+      if (log) {
+        console.log(`
+          \nExecutor:      ${gelatoexecutor}\
+          \nExecutorPrice: ${executorPriceGwei} gwei\
+          \nNetwork:       ${network.name}\n
+        `);
+      }
       return executorPrice;
     } catch (error) {
       console.error(error);
