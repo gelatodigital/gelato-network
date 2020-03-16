@@ -47,7 +47,7 @@ export default task(
       if (!taskArgs.actionname && !taskArgs.actionaddress)
         throw new Error(`\n Must supply <actionname> or --actionaddress`);
       if (
-        taskArgs.conditionname &&
+        taskArgs.conditionname !== constants.AddressZero &&
         !taskArgs.conditionname.startsWith("Condition")
       ) {
         throw new Error(
@@ -69,7 +69,7 @@ export default task(
       });
 
       // Condition and ConditionPayload (optional)
-      if (taskArgs.conditionname) {
+      if (taskArgs.conditionname !== constants.AddressZero) {
         if (taskArgs.conditionaddress === constants.AddressZero) {
           taskArgs.conditionaddress = await run("bre-config", {
             deployments: true,
