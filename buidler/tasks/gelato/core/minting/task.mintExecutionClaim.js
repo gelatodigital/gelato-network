@@ -8,7 +8,7 @@ export default task(
 )
   .addOptionalPositionalParam(
     "conditionname",
-    "Must exist inside buidler.config. Defaults to address 0 for self-conditional actions"
+    "Must exist inside buidler.config. Supply '0' for self-conditional Actions"
   )
   .addOptionalPositionalParam(
     "actionname",
@@ -26,7 +26,8 @@ export default task(
   .addOptionalParam("actionaddress")
   .addOptionalPositionalParam(
     "conditionpayload",
-    "If not provided, must have a default returned from handleGelatoPayload()"
+    "If not provided, must have a default returned from handleGelatoPayload()",
+    constants.HashZero
   )
   .addOptionalPositionalParam(
     "actionpayload",
@@ -41,10 +42,12 @@ export default task(
   .setAction(async taskArgs => {
     try {
       // Command Line Argument Checks
+      if (taskArgs.conditionname === "0")
+        taskArgs.conditionname = constants.AddressZero;
       if (!taskArgs.actionname && !taskArgs.actionaddress)
         throw new Error(`\n Must supply <actionname> or --actionaddress`);
       if (
-        taskArgs.conditionname &&
+        taskArgs.conditionname !== constants.AddressZero &&
         !taskArgs.conditionname.startsWith("Condition")
       ) {
         throw new Error(
@@ -66,7 +69,7 @@ export default task(
       });
 
       // Condition and ConditionPayload (optional)
-      if (taskArgs.conditionname) {
+      if (taskArgs.conditionname !== constants.AddressZero) {
         if (taskArgs.conditionaddress === constants.AddressZero) {
           taskArgs.conditionaddress = await run("bre-config", {
             deployments: true,

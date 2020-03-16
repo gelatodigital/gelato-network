@@ -7,13 +7,13 @@ import "../../../gelato_core/interfaces/IGelatoExecutor.sol";
 import "../../../external/SafeMath.sol";
 import "../../../external/Address.sol";
 
-contract ActionChainedTimedERC20TransferFrom is ActionERC20TransferFrom {
+contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
     using SafeMath for uint256;
     using Address for address;
 
     // ActionSelector public state variable np due to this.actionSelector constant issue
     function actionSelector() public pure override virtual returns(bytes4) {
-        return ActionChainedTimedERC20TransferFrom.action.selector;
+        return ActionChainedTimedERC20TransferFromKovan.action.selector;
     }
 
     function action(
@@ -24,8 +24,8 @@ contract ActionChainedTimedERC20TransferFrom is ActionERC20TransferFrom {
         uint256 _sendAmount,
         // ChainedMintingParams
         address[2] calldata _selectedProviderAndExecutor,
-        address[2] calldata _conditionTimestampPassedAndThisAction,
-        bytes calldata _conditionTimestampPassedPayload,
+        address _actionChainedTimedERC20TransferFromKovan,
+        uint256 _dueDate,
         // Special Param
         uint256 _timeOffset
     )
@@ -36,34 +36,27 @@ contract ActionChainedTimedERC20TransferFrom is ActionERC20TransferFrom {
         action(_userAndProxy, _sendTokenAndDesination, _sendAmount);
 
         // Decode: ConditionTimestampPassed Payload and update value
-        uint256 currentDueDate = abi.decode(_conditionTimestampPassedPayload, (uint256));
-        uint256 nextDueDate = currentDueDate.add(_timeOffset);
+        uint256 nextDueDate = _dueDate.add(_timeOffset);
 
-        // Encode: Update ConditionTimestampPassed Payload
-        bytes memory nextConditionTimestampPassedPayload = abi.encodeWithSelector(
-            ConditionTimestampPassed.reached.selector,
-            nextDueDate
-        );
-
-        // Encode: updated ActionChainedTimedERC20TransferFrom payload
+        // Encode: updated ActionChainedTimedERC20TransferFromKovan payload
         bytes memory actionPayload = abi.encodeWithSelector(
-            ActionChainedTimedERC20TransferFrom.action.selector,
+            ActionChainedTimedERC20TransferFromKovan.action.selector,
             _userAndProxy,
             _sendTokenAndDesination,
             _sendAmount,
             _selectedProviderAndExecutor,
-            _conditionTimestampPassedAndThisAction,
-            nextConditionTimestampPassedPayload,
+            _actionChainedTimedERC20TransferFromKovan,
+            nextDueDate,
             _timeOffset
         );
 
         // Mint: ExecutionClaim Chain continues with Updated Payloads
         IGelatoCore(0x40134bf777a126B0E6208e8BdD6C567F2Ce648d2).mintExecutionClaim(
             _selectedProviderAndExecutor,
-            _conditionTimestampPassedAndThisAction,
-            nextConditionTimestampPassedPayload,
+            [address(0), _actionChainedTimedERC20TransferFromKovan],
+            "",  // empty conditionPayload
             actionPayload,
-            0
+            nextDueDate.add(3 days)  // Max 3 days delay, else automatic expiry
         );
     }
 
@@ -81,15 +74,15 @@ contract ActionChainedTimedERC20TransferFrom is ActionERC20TransferFrom {
          address[2] memory _sendTokenAndDesination,
          uint256 _sendAmount,
          address[2] memory _selectedProviderAndExecutor,
-         address[2] memory _conditionTimestampPassedAndThisAction,
-         bytes memory _conditionTimestampPassedPayload,
+         address _actionChainedTimedERC20TransferFromKovan,
+         uint256 _dueDate,
          uint256 timeOffset) = abi.decode(
             _actionPayload[4:],
-            (address[2],address[2],uint256,address[2],address[2],bytes,uint256)
+            (address[2],address[2],uint256,address[2],address,uint256,uint256)
         );
 
         // Check: ActionERC20TransferFrom._actionConditionsCheck
-        string memory baseActionCondition = super._actionConditionsCheck(
+        string memory baseActionCondition = _actionConditionsCheck(
             _userAndProxy,
             _sendTokenAndDesination,
             _sendAmount
@@ -105,16 +98,16 @@ contract ActionChainedTimedERC20TransferFrom is ActionERC20TransferFrom {
         // Else: Check and Return current contract actionCondition
         return _actionConditionsCheck(
             _selectedProviderAndExecutor,
-            _conditionTimestampPassedAndThisAction,
-            _conditionTimestampPassedPayload,
+            _actionChainedTimedERC20TransferFromKovan,
+            _dueDate,
             timeOffset
         );
     }
 
     function _actionConditionsCheck(
         address[2] memory _selectedProviderAndExecutor,
-        address[2] memory _conditionTimestampPassedAndThisAction,
-        bytes memory _conditionTimestampPassedPayload,
+        address _actionChainedTimedERC20TransferFromKovan,
+        uint256 _dueDate,
         uint256 _timeOffset
     )
         internal
@@ -122,20 +115,18 @@ contract ActionChainedTimedERC20TransferFrom is ActionERC20TransferFrom {
         virtual
         returns(string memory)  // actionCondition
     {
-        _conditionTimestampPassedAndThisAction;
+        _actionChainedTimedERC20TransferFromKovan;
+
+        if (_dueDate >= block.timestamp) return "NotOkTimestampDidNotPass";
 
         // Check ExecutionClaimExpiryDate maximum
+        uint256 nextDueDate = _dueDate.add(_timeOffset);
         uint256 executorClaimLifespan = IGelatoExecutor(
             0x40134bf777a126B0E6208e8BdD6C567F2Ce648d2
         ).executorClaimLifespan(_selectedProviderAndExecutor[1]);
-        uint256 currentDueDate = abi.decode(_conditionTimestampPassedPayload, (uint256));
-        uint256 nextDueDate = currentDueDate.add(_timeOffset);
 
-        if (false) {
-            return (
-                "ActionChainedTimedERC20TransferFrom._actionConditionsCheck: expirydate"
-            );
-        }
+        if (nextDueDate > (now + executorClaimLifespan))
+            return "ActionChainedTimedERC20TransferFromKovan._actionConditionsCheck: exp";
 
         // STANDARD return string to signal actionConditions Ok
         return "ok";
