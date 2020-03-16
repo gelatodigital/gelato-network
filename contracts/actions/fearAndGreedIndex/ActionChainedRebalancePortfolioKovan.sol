@@ -1,7 +1,7 @@
 pragma solidity ^0.6.2;
 
 import "../GelatoActionsStandard.sol";
-import "./ActionRebalancePortfolio.sol";
+import "./ActionRebalancePortfolioKovan.sol";
 import "../../external/IERC20.sol";
 import "../../dapp_interfaces/fearAndGreedIndex/IFearGreedIndex.sol";
 import "../../dapp_interfaces/uniswap/IUniswapFactory.sol";
@@ -10,7 +10,7 @@ import "../../external/SafeMath.sol";
 import "../../external/Address.sol";
 import "../../gelato_core/interfaces/IGelatoCore.sol";
 
-contract ActionChainedRebalancePortfolio is ActionRebalancePortfolio {
+contract ActionChainedRebalancePortfolioKovan is ActionRebalancePortfolioKovan {
     // using SafeERC20 for IERC20; <- internal library methods vs. try/catch
     using SafeMath for uint256;
     using Address for address;
@@ -19,7 +19,7 @@ contract ActionChainedRebalancePortfolio is ActionRebalancePortfolio {
 
     // actionSelector public state variable np due to this.actionSelector constant issue
     function actionSelector() public pure override virtual returns (bytes4) {
-        return ActionChainedRebalancePortfolio.chainedAction.selector;
+        return ActionChainedRebalancePortfolioKovan.chainedAction.selector;
     }
 
     // function action(address _executor, address _gasProvider) external virtual returns(uint256) {
@@ -45,7 +45,7 @@ contract ActionChainedRebalancePortfolio is ActionRebalancePortfolio {
         );
 
         // Mint new Claim
-        try getGelatoCore().mintExecutionClaim(
+        try gelatoCore.mintExecutionClaim(
             _selectedProviderAndExecutor,
             _conditionAndAction,
             conditionPayload,

@@ -4,7 +4,7 @@ import "../../gelato_core/interfaces/IGnosisSafe.sol";
 import "../../gelato_core/interfaces/IGelatoCore.sol";
 import "../../gelato_core/gelato_user_proxies/scripts/ScriptGnosisSafeEnableGelatoCore.sol";
 import "../../dapp_interfaces/fearAndGreedIndex/IFearGreedIndex.sol";
-import "../../actions/fearAndGreedIndex/ActionRebalancePortfolio.sol";
+import "../../actions/fearAndGreedIndex/ActionRebalancePortfolioKovan.sol";
 import "../../external/SafeMath.sol";
 import "../../external/Address.sol";
 import "../../dapp_interfaces/uniswap/IUniswapFactory.sol";
@@ -23,7 +23,7 @@ import "../../dapp_interfaces/uniswap/IUniswapExchange.sol";
 ///       - <data> encodedPayload for enableModuleAndMint
 contract ScriptEnterPortfolioRebalancing is
     ScriptGnosisSafeEnableGelatoCore,
-    ActionRebalancePortfolio
+    ActionRebalancePortfolioKovan
 {
     using SafeMath for uint256;
     using Address for address;
@@ -40,7 +40,7 @@ contract ScriptEnterPortfolioRebalancing is
         // Whitelist GelatoCore as module on delegatecaller (Gnosis Safe Proxy)
         enableGelatoCoreModule(_gelatoCore);
 
-        // 2. Execute ActionRebalancePortfolio.action => Swaps ETH into DAI
+        // 2. Execute ActionRebalancePortfolioKovan.action => Swaps ETH into DAI
         action(payable(_selectedProviderAndExecutor[0]));
     }
 }

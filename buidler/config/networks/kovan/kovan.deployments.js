@@ -10,14 +10,15 @@ export const deployments = {
   // kyber
   ActionKyberTradeKovan: "0xF829B506c378AaD11dB7Efe8d626cc7d0e015CBA",
   // Portfolio Mgmt
-  ActionRebalancePortfolio: "0xB4Fa9846811309347C0B86805D96F4E171C2EFbF",
+  ActionRebalancePortfolioKovan: "0xBd9d77788B6828e397B09cC61CB078449B1978c0",
 
   // ==== Actions - Chained ====
   // erc20
   ActionChainedTimedERC20TransferFrom:
     "0xb36ecc4AFe578883251c0e2D8D66416C498F3b07",
   // Portfolio Mgmt
-  ActionChainedRebalancePortfolio: "0xBcB7492164066E5B5DD5D74c9Ae3c5DfbACcde69",
+  ActionChainedRebalancePortfolioKovan:
+    "0xA4B6e3cAeD6280015925889092D802E556786385",
 
   // ===== Gelato Core ====
   GelatoCore: "0x40134bf777a126B0E6208e8BdD6C567F2Ce648d2",

@@ -13,13 +13,13 @@ export const contracts = [
   // Multimint
   "ActionMultiMintForConditionTimestampPassed",
   // Portfolio Mgmt
-  "ActionRebalancePortfolio",
+  "ActionRebalancePortfolioKovan",
 
   // = Chained =
   // ERC20
   "ActionChainedTimedERC20TransferFrom",
   // Portfolio Mgmt
-  "ActionChainedRebalancePortfolio",
+  "ActionChainedRebalancePortfolioKovan",
 
   // === GelatoCore ===
   "GelatoCore",
