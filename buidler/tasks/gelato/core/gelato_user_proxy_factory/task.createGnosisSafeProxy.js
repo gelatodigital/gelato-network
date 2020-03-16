@@ -4,9 +4,9 @@ import { constants, utils } from "ethers";
 
 export default task(
   "gc-creategelatouserproxy",
-  `Sends tx to GelatoCore.createGelatoUserProxy() or if --createtwo to .createTwoGelatoUserProxy()  on [--network] (default: ${defaultNetwork})`
+  `Sends tx to GelatoCore.createGnosisSafeProxy() or if --createtwo to .createTwoGnosisSafeProxy()  on [--network] (default: ${defaultNetwork})`
 )
-  .addFlag("createtwo", "Call gelatoCore.createTwoGelatoUserProxy()")
+  .addFlag("createtwo", "Call gelatoCore.createTwoGnosisSafeProxy()")
   .addOptionalParam(
     "mastercopy",
     "The deployed implementation code the created proxy should point to"
@@ -144,14 +144,14 @@ export default task(
 
       let creationTx;
       if (taskArgs.createtwo) {
-        creationTx = await gelatoCore.createTwoGelatoUserProxy(
+        creationTx = await gelatoCore.createTwoGnosisSafeProxy(
           taskArgs.mastercopy,
           taskArgs.initializer,
           taskArgs.saltnonce,
           { value: utils.parseEther(taskArgs.funding), gasLimit: 3000000 }
         );
       } else {
-        creationTx = await gelatoCore.createGelatoUserProxy(
+        creationTx = await gelatoCore.createGnosisSafeProxy(
           taskArgs.mastercopy,
           taskArgs.initializer,
           { value: utils.parseEther(taskArgs.funding), gasLimit: 3000000 }
@@ -167,15 +167,15 @@ export default task(
       if (taskArgs.log) {
         const parsedCreateLog = await run("event-getparsedlog", {
           contractname: "GelatoCore",
-          eventname: "LogGelatoUserProxyCreation",
+          eventname: "LogGnosisSafeProxyCreation",
           txhash: creationTx.hash,
           blockHash,
           values: true,
           stringify: true
         });
         if (parsedCreateLog)
-          console.log("\n✅ LogGelatoUserProxyCreation\n", parsedCreateLog);
-        else console.log("\n❌ LogGelatoUserProxyCreation not found");
+          console.log("\n✅ LogGnosisSafeProxyCreation\n", parsedCreateLog);
+        else console.log("\n❌ LogGnosisSafeProxyCreation not found");
       }
 
       return creationTx.hash;

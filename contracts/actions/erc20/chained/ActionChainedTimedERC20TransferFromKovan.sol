@@ -1,9 +1,9 @@
-pragma solidity ^0.6.2;
+pragma solidity ^0.6.4;
 
 import "../one_offs/ActionERC20TransferFrom.sol";
 import "../../../conditions/eth_utils/eth_time/ConditionTimestampPassed.sol";
 import "../../../gelato_core/interfaces/IGelatoCore.sol";
-import "../../../gelato_core/interfaces/IGelatoExecutor.sol";
+import "../../../gelato_core/interfaces/IGelatoExecutors.sol";
 import "../../../external/SafeMath.sol";
 import "../../../external/Address.sol";
 
@@ -121,7 +121,7 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
 
         // Check ExecutionClaimExpiryDate maximum
         uint256 nextDueDate = _dueDate.add(_timeOffset);
-        uint256 executorClaimLifespan = IGelatoExecutor(
+        uint256 executorClaimLifespan = IGelatoExecutors(
             0x40134bf777a126B0E6208e8BdD6C567F2Ce648d2
         ).executorClaimLifespan(_selectedProviderAndExecutor[1]);
 

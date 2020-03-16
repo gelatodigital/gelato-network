@@ -1,4 +1,4 @@
-pragma solidity ^0.6.2;
+pragma solidity ^0.6.4;
 
 import "../../interfaces/IGnosisSafe.sol";
 import "../../interfaces/IGelatoCore.sol";
@@ -43,7 +43,7 @@ contract ScriptGnosisSafeEnableGelatoCoreAndMint {
             _conditionAndAction,
             _conditionPayload,
             _actionPayload,
-            _executionClaimExpiryDate 
+            _executionClaimExpiryDate
         )  {
         } catch Error(string memory error) {
             emit LogFailure(error);

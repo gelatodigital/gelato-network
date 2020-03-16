@@ -1,4 +1,4 @@
-// GelatoExecutor
+// GelatoExecutors
 import "./task.executorBalance";
 import "./task.executorClaimLifespan";
 import "./task.registerExecutor";

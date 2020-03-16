@@ -1,6 +1,6 @@
-pragma solidity ^0.6.2;
+pragma solidity ^0.6.4;
 
-interface IGelatoExecutor {
+interface IGelatoExecutors {
 
     event LogRegisterExecutor(address indexed executor, uint256 executorClaimLifespan);
     event LogDeregisterExecutor(address indexed executor);

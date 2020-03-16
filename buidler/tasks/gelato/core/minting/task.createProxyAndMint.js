@@ -256,15 +256,15 @@ export default task(
       if (taskArgs.log) {
         const parsedCreateLog = await run("event-getparsedlog", {
           contractname: "GelatoCore",
-          eventname: "LogGelatoUserProxyCreation",
+          eventname: "LogGnosisSafeProxyCreation",
           txhash: creationTx.hash,
           blockHash,
           values: true,
           stringify: true
         });
         if (parsedCreateLog)
-          console.log("\n✅ LogGelatoUserProxyCreation\n", parsedCreateLog);
-        else console.log("\n❌ LogGelatoUserProxyCreation not found");
+          console.log("\n✅ LogGnosisSafeProxyCreation\n", parsedCreateLog);
+        else console.log("\n❌ LogGnosisSafeProxyCreation not found");
 
         const parsedMintingLog = await run("event-getparsedlog", {
           contractname: "GelatoCore",

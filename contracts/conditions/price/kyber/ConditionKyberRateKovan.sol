@@ -1,4 +1,4 @@
-pragma solidity ^0.6.2;
+pragma solidity ^0.6.4;
 
 import "../../IGelatoCondition.sol";
 import "../../../dapp_interfaces/kyber/IKyber.sol";

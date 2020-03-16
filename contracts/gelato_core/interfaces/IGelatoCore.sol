@@ -1,4 +1,4 @@
-pragma solidity ^0.6.2;
+pragma solidity ^0.6.4;
 
 import "../../conditions/IGelatoCondition.sol";
 import "../../actions/IGelatoAction.sol";
@@ -61,38 +61,6 @@ interface IGelatoCore {
         address cancelor,
         bool executionClaimExpired
     );
-
-    function createProxyAndMint(
-        address _mastercopy,
-        bytes calldata _initializer,
-        address[2] calldata _selectedProviderAndExecutor,
-        address[2] calldata _conditionAndAction,
-        bytes calldata _conditionPayload,
-        bytes calldata _actionPayload,
-        uint256 _executionClaimExpiryDate
-    ) external payable; // address userProxy
-
-    function createTwoProxyAndMint(
-        address _mastercopy,
-        bytes calldata _initializer,
-        uint256 _saltNonce,
-        address[2] calldata _selectedProviderAndExecutor,
-        address[2] calldata _conditionAndAction,
-        bytes calldata _conditionPayload,
-        bytes calldata _actionPayload,
-        uint256 _executionClaimExpiryDate
-    ) external payable;
-
-    function createThreeProxyAndMint(
-        address _mastercopy,
-        bytes calldata _initializer,
-        uint256 _saltNonce,
-        address[2] calldata _selectedProviderAndExecutor,
-        address[2] calldata _conditionAndAction,
-        bytes calldata _conditionPayload,
-        bytes calldata _actionPayload,
-        uint256 _executionClaimExpiryDate
-    ) external payable;
 
     function mintExecutionClaim(
         address[2] calldata _selectedProviderAndExecutor,

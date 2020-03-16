@@ -1,4 +1,4 @@
-pragma solidity ^0.6.2;
+pragma solidity ^0.6.4;
 
 import "../../gelato_core/interfaces/IGnosisSafe.sol";
 import "../../gelato_core/interfaces/IGelatoCore.sol";

@@ -6,9 +6,9 @@ import "./gelato_user_proxy_factory/collection.tasks.gelato-user-proxy-factory";
 import "./gelato_gas_price_oracle/collection.tasks.gelato-gas-price-oracle";
 
 // GelatoProvider
-import "./gelato_provider/collection.tasks.gelato-provider";
+import "./gelato_providers/collection.tasks.gelato-provider";
 
-// GelatoExecutor
+// GelatoExecutors
 import "./gelato_executor/collection.tasks.gelato-executor";
 
 // Minting
