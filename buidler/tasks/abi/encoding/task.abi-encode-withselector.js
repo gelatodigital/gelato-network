@@ -7,23 +7,21 @@ export default task("abi-encode-withselector")
   .addPositionalParam("functionname")
   .addOptionalVariadicPositionalParam("inputs")
   .addFlag("log")
-  .setAction(async ({ contractname, functionname, inputs, log }) => {
+  .setAction(async taskArgs => {
     try {
-      const abi = await run("abi-get", { contractname });
+      const abi = await run("abi-get", { contractname: taskArgs.contractname });
       const interFace = new utils.Interface(abi);
 
-      if (!checkNestedObj(interFace, "functions", functionname))
+      if (!checkNestedObj(interFace, "functions", taskArgs.functionname))
         throw new Error("functionname is not on contract's interface");
 
-      const payloadWithSelector = interFace.functions[functionname].encode([
-        ...inputs
-      ]);
+      const payloadWithSelector = interFace.functions[
+        taskArgs.functionname
+      ].encode([...taskArgs.inputs]);
 
-      if (log) {
-        console.log(`\nContractName:  ${contractname}`);
-        console.log(`FunctionName:    ${functionname}`);
-        console.log(`Inputs:\n${inputs}`);
-        console.log(`EncodedPayloadWithSelector:\n${payloadWithSelector}\n`);
+      if (taskArgs.log) {
+        console.log(taskArgs);
+        console.log(`\nEncodedPayloadWithSelector:\n${payloadWithSelector}\n`);
       }
       return payloadWithSelector;
     } catch (err) {

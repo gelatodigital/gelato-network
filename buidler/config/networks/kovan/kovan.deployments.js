@@ -14,8 +14,8 @@ export const deployments = {
 
   // ==== Actions - Chained ====
   // erc20
-  ActionChainedTimedERC20TransferFrom:
-    "0x08208d3af7453E23A183D7Cd74D0257faEbF93A7",
+  ActionChainedTimedERC20TransferFromKovan:
+    "0xBeB2257A57Ad97a51841eBd05CB3f17a1141b2b8",
   // Portfolio Mgmt
   ActionChainedRebalancePortfolio: "0xBcB7492164066E5B5DD5D74c9Ae3c5DfbACcde69",
 
