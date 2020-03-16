@@ -10,12 +10,12 @@ export const deployments = {
   // kyber
   ActionKyberTradeKovan: "0xF829B506c378AaD11dB7Efe8d626cc7d0e015CBA",
   // Portfolio Mgmt
-  ActionRebalancePortfolioKovan: "0xBd9d77788B6828e397B09cC61CB078449B1978c0",
+  ActionRebalancePortfolioKovan: "0xCb6Ff084d8efA2A1Fd987566E60d454CF2473E4B",
 
   // ==== Actions - Chained ====
   // erc20
   ActionChainedTimedERC20TransferFromKovan:
-    "0xBeB2257A57Ad97a51841eBd05CB3f17a1141b2b8",
+    "0x9Ba17D7D573f79e7663C8758d484A1D2D35Cf762",
   // Portfolio Mgmt
   ActionChainedRebalancePortfolioKovan:
     "0xA4B6e3cAeD6280015925889092D802E556786385",

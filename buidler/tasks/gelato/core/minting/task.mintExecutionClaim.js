@@ -47,7 +47,7 @@ export default task(
       if (!taskArgs.actionname && !taskArgs.actionaddress)
         throw new Error(`\n Must supply <actionname> or --actionaddress`);
       if (
-        taskArgs.conditionname !== constants.AddressZero &&
+        taskArgs.conditionname &&
         !taskArgs.conditionname.startsWith("Condition")
       ) {
         throw new Error(
@@ -69,14 +69,14 @@ export default task(
       });
 
       // Condition and ConditionPayload (optional)
-      if (taskArgs.conditionname !== constants.AddressZero) {
+      if (taskArgs.conditionname) {
         if (taskArgs.conditionaddress === constants.AddressZero) {
           taskArgs.conditionaddress = await run("bre-config", {
             deployments: true,
             contractname: taskArgs.conditionname
           });
         }
-        if (!taskArgs.conditionpayload) {
+        if (taskArgs.conditionpayload === constants.HashZero) {
           taskArgs.conditionpayload = await run("handleGelatoPayload", {
             contractname: taskArgs.conditionname
           });

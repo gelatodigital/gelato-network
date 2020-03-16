@@ -42,11 +42,15 @@ contract ActionRebalancePortfolioKovan is GelatoActionsStandard {
             0xD3E51Ef092B2845f10401a0159B2B96e8B6c3D30
     );
 
+    // Uniswap Factory
+    address payable public constant provider = 0x518eAa8f962246bCe2FA49329Fe998B66d67cbf8;
+
     // Fee denominator = 0.3%
     uint256 public constant feeDenomiator = 3000;
 
     // !!!!!!!!! Kovan Constants END !!!!!!!!!!
-    function action(address payable _provider)
+
+    function action()
         public
         virtual
         returns(uint256 newDaiNum)
@@ -91,9 +95,15 @@ contract ActionRebalancePortfolioKovan is GelatoActionsStandard {
         // 4. Calculate weights without underflowing using scaling factor
         // Find out if new DAI weight is greater than old DAI weight, and if so, sell ETH, otherwise sell DAI
         // IF e.g. 100 * 80 / 100 > 100 * 10000000 / 20000000 => Sell ETH for DAI
-        newDaiAmountWeighted = totalDaiBalance.mul(newDaiNum).div(100, "ActionRebalancePortfolioKovan._action: newDaiWeight underflow");
+        newDaiAmountWeighted = totalDaiBalance.mul(newDaiNum).div(
+            100, "ActionRebalancePortfolioKovan._action: newDaiWeight underflow"
+        );
 
-        oldDaiAmountWeighted = totalDaiBalance.mul(daiBalance).div(totalDaiBalance, "ActionRebalancePortfolioKovan._action: newDaiWeight underflow");
+        oldDaiAmountWeighted = totalDaiBalance.mul(
+            daiBalance
+        ).div(
+            totalDaiBalance, "ActionRebalancePortfolioKovan._action: newDaiWeight underflow"
+        );
 
         // What happens if DAI Balance === 0? => Should be fine
 
@@ -101,18 +111,32 @@ contract ActionRebalancePortfolioKovan is GelatoActionsStandard {
             // skip rebalancing, portfolio has correct weights
         }  else if (newDaiAmountWeighted > oldDaiAmountWeighted) {
             // Portfolio needs to acquire more exchangeToken
-            uint256 newEthPortfolioWeight = totalDaiBalance.mul(100 - newDaiNum).div(100, "ActionRebalancePortfolioKovan._action: newEthPortfolioWeight underflow");
+            uint256 newEthPortfolioWeight = totalDaiBalance.mul(
+                100 - newDaiNum)
+            .div(
+                100, "ActionRebalancePortfolioKovan._action: newEthPortfolioWeight underflow"
+            );
 
-            uint256 howMuchEthToSellDaiDenominated =  ethAmountInDai.sub(newEthPortfolioWeight, "ActionRebalancePortfolioKovan._action: howMuchEthToSellDaiDenominated underflow");
+            uint256 howMuchEthToSellDaiDenominated =  ethAmountInDai.sub(
+                newEthPortfolioWeight, "ActionRebalancePortfolioKovan._action: howMuchEthToSellDaiDenominated underflow"
+            );
 
-            uint256 howMuchEthToSellEthDenominated = address(this).balance.mul(howMuchEthToSellDaiDenominated).div(ethAmountInDai, "ActionRebalancePortfolioKovan._action: howMuchEthToSellEthDenominated underflow");
+            uint256 howMuchEthToSellEthDenominated = address(this).balance.mul(
+                howMuchEthToSellDaiDenominated
+            ).div(
+                ethAmountInDai, "ActionRebalancePortfolioKovan._action: howMuchEthToSellEthDenominated underflow"
+            );
 
             // Provider receives 0.3% fee
-            uint256 fee = howMuchEthToSellEthDenominated.div(feeDenomiator, "ActionRebalancePortfolioKovan._action: eth fee underflow");
+            uint256 fee = howMuchEthToSellEthDenominated.div(
+                feeDenomiator, "ActionRebalancePortfolioKovan._action: eth fee underflow"
+            );
 
-            _provider.sendValue(fee);
+            provider.sendValue(fee);
 
-            try uniswapExchange.ethToTokenSwapInput{ value: howMuchEthToSellEthDenominated.sub(fee, "ActionRebalancePortfolioKovan._action: eth fee underflow 2") }(
+            try uniswapExchange.ethToTokenSwapInput{ value: howMuchEthToSellEthDenominated.sub(
+                fee, "ActionRebalancePortfolioKovan._action: eth fee underflow 2"
+            ) }(
                 // Amount we are exepected to get back
                 howMuchEthToSellDaiDenominated.sub(
                     howMuchEthToSellDaiDenominated.div(
@@ -140,21 +164,32 @@ contract ActionRebalancePortfolioKovan is GelatoActionsStandard {
             // Portfolio needs to acquire more ETH
 
             // Calculate how much exchangeToken needs to be sold
-            uint256 howMuchDaiToSell = daiBalance.sub(newDaiAmountWeighted, "ActionRebalancePortfolioKovan._action: howMuchDaiToSell underflow");
+            uint256 howMuchDaiToSell = daiBalance.sub(
+                newDaiAmountWeighted, "ActionRebalancePortfolioKovan._action: howMuchDaiToSell underflow"
+            );
 
             // Provider receives 0.3% fee
-            uint256 fee = howMuchDaiToSell.div(feeDenomiator, "ActionRebalancePortfolioKovan._action: dai fee underflow");
-            exchangeToken.transfer(_provider, fee);
+            uint256 fee = howMuchDaiToSell.div(
+                feeDenomiator, "ActionRebalancePortfolioKovan._action: dai fee underflow"
+            );
 
-            try exchangeToken.approve(address(uniswapExchange), howMuchDaiToSell.sub(fee, "ActionRebalancePortfolioKovan._action: howMuchDaiToSellSubFee underflow1")) {
-            } catch { revert("Approval failed"); }
+            // Pay provider
+            exchangeToken.transfer(provider, fee);
+
+            try exchangeToken.approve(
+                address(uniswapExchange),
+                howMuchDaiToSell.sub(
+                    fee, "ActionRebalancePortfolioKovan._action: howMuchDaiToSellSubFee underflow1"
+                    )
+                ) {} catch { revert("Approval failed"); }
 
             // min ETH return can be 1, as we fetch the price atomically anyway.
             try uniswapExchange.tokenToEthSwapInput(
-                howMuchDaiToSell.sub(fee, "ActionRebalancePortfolioKovan._action: howMuchDaiToSellSubFee underflow2"),
+                howMuchDaiToSell.sub(
+                    fee, "ActionRebalancePortfolioKovan._action: howMuchDaiToSellSubFee underflow2"
+                ),
                 1,
                 now)
-
             returns (uint256 amountOfEthAcquired) {
                 emit LogTwoWay(
                     address(this),  // origin
@@ -179,7 +214,7 @@ contract ActionRebalancePortfolioKovan is GelatoActionsStandard {
         returns(IUniswapExchange)
     {
         IUniswapExchange uniswapExchange = uniswapFactory.getExchange(_token);
-        require(uniswapExchange != IUniswapExchange((0)), "Could not find DAI exchange");
+        require(uniswapExchange != IUniswapExchange((0)), "Could not find exchangeToken exchange");
         return uniswapExchange;
     }
 

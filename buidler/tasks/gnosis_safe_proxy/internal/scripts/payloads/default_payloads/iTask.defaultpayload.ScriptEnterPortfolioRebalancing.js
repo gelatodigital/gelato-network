@@ -17,17 +17,14 @@ export default internalTask(
           contractname: "GelatoCore"
         });
       }
-      taskArgs.gelatoprovider = await run("handleGelatoProvider", {
-        gelatoprovider: taskArgs.gelatoprovider
-      });
-      taskArgs.gelatoexecutor = await run("handleGelatoExecutor", {
-        gelatoexecutor: taskArgs.gelatoexecutor
-      });
+      // taskArgs.gelatoprovider = await run("handleGelatoProvider", {
+      //   gelatoprovider: taskArgs.gelatoprovider
+      // });
+      // taskArgs.gelatoexecutor = await run("handleGelatoExecutor", {
+      //   gelatoexecutor: taskArgs.gelatoexecutor
+      // });
 
-      const inputs = [
-        taskArgs.gelatocoreaddress,
-        [taskArgs.gelatoprovider, taskArgs.gelatoexecutor]
-      ];
+      const inputs = [taskArgs.gelatocoreaddress];
 
       if (taskArgs.log)
         console.log("\nScriptEnterPortfolioRebalancing Inputs:\n", taskArgs);

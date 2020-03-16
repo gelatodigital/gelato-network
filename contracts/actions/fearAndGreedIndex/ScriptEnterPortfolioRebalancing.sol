@@ -30,17 +30,12 @@ contract ScriptEnterPortfolioRebalancing is
     // using Address for address;
 
     /// @dev This function should be delegatecalled
-    function enterPortfolioRebalancing(
-        address _gelatoCore,
-        address[2] calldata _selectedProviderAndExecutor
-    )
-        external
-    {
+    function enterPortfolioRebalancing(address _gelatoCore) external {
         // 1. Whitelist Gelato Core
         // Whitelist GelatoCore as module on delegatecaller (Gnosis Safe Proxy)
         enableGelatoCoreModule(_gelatoCore);
 
         // 2. Execute ActionRebalancePortfolioKovan.action => Swaps ETH into DAI
-        action(payable(_selectedProviderAndExecutor[0]));
+        action();
     }
 }

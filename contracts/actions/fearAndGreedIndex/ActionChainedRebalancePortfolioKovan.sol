@@ -29,7 +29,7 @@ contract ActionChainedRebalancePortfolioKovan is ActionRebalancePortfolioKovan {
         address[2] calldata _conditionAndAction
     ) external {
         // Execute Rebalancing action
-        uint256 newFearAndGreedIndex = super.action(address(_selectedProviderAndExecutor[0]).toPayable());
+        uint256 newFearAndGreedIndex = super.action();
 
         // Encode FearAndGreedIndex Condition
         bytes memory conditionPayload = abi.encodeWithSelector(

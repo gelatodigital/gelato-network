@@ -13,12 +13,12 @@ export default internalTask(
   .addFlag("log")
   .setAction(async ({ log = true, providerindex }) => {
     try {
-      const provider = await run("handleGelatoProvider");
+      // const provider = await run("handleGelatoProvider");
 
       const actionPayload = await run("abi-encode-withselector", {
         contractname: "ActionRebalancePortfolioKovan",
         functionname: "action",
-        inputs: [provider]
+        inputs: []
       });
 
       return actionPayload;
