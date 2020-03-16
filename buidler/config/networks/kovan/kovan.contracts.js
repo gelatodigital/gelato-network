@@ -17,7 +17,7 @@ export const contracts = [
 
   // = Chained =
   // ERC20
-  "ActionChainedTimedERC20TransferFrom",
+  "ActionChainedTimedERC20TransferFromKovan",
   // Portfolio Mgmt
   "ActionChainedRebalancePortfolioKovan",
 

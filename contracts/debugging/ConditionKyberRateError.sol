@@ -50,7 +50,7 @@ contract ConditionKyberRateError {
 
         (bool success,
          bytes memory returndata)
-            = address(_conditionKyberRate).staticcall.gas(conditionGas)(reachedPayload);
+            = address(_conditionKyberRate).staticcall{gas: conditionGas}(reachedPayload);
 
         if (!success) return "Unhandled Condition Error";
         else {

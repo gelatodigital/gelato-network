@@ -8,11 +8,11 @@ export default task(
 )
   .addOptionalPositionalParam(
     "conditionname",
-    "Must exist inside buidler.config. Defaults to address 0 for self-conditional actions"
+    "Must exist inside buidler.config. Supply '0' for self-conditional Actions"
   )
   .addOptionalPositionalParam(
     "actionname",
-    "This param MUST be supplied. Must exist inside buidler.config"
+    "Actionname (must be inside buidler.config) OR --actionaddress MUST be supplied."
   )
   .addOptionalPositionalParam(
     "gelatoprovider",
@@ -22,9 +22,12 @@ export default task(
     "gelatoexecutor",
     "Defaults to network addressbook default"
   )
+  .addOptionalParam("conditionaddress", "", constants.AddressZero)
+  .addOptionalParam("actionaddress")
   .addOptionalPositionalParam(
     "conditionpayload",
-    "If not provided, must have a default returned from handleGelatoPayload()"
+    "If not provided, must have a default returned from handleGelatoPayload()",
+    constants.HashZero
   )
   .addOptionalPositionalParam(
     "actionpayload",
@@ -35,16 +38,16 @@ export default task(
     "Defaults to 0 for gelatoexecutor's maximum",
     constants.HashZero
   )
-  .addOptionalParam("conditionaddress", "", constants.AddressZero)
-  .addOptionalParam("actionaddress")
   .addFlag("log", "Logs return values to stdout")
   .setAction(async taskArgs => {
     try {
       // Command Line Argument Checks
+      if (taskArgs.conditionname === "0")
+        taskArgs.conditionname = constants.AddressZero;
       if (!taskArgs.actionname && !taskArgs.actionaddress)
         throw new Error(`\n Must supply <actionname> or --actionaddress`);
       if (
-        taskArgs.conditionname &&
+        taskArgs.conditionname !== constants.AddressZero &&
         !taskArgs.conditionname.startsWith("Condition")
       ) {
         throw new Error(
@@ -66,7 +69,7 @@ export default task(
       });
 
       // Condition and ConditionPayload (optional)
-      if (taskArgs.conditionname) {
+      if (taskArgs.conditionname !== constants.AddressZero) {
         if (taskArgs.conditionaddress === constants.AddressZero) {
           taskArgs.conditionaddress = await run("bre-config", {
             deployments: true,

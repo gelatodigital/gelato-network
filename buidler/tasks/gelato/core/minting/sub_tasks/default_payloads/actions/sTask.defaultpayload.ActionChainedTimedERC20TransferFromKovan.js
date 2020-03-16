@@ -2,8 +2,8 @@ import { internalTask } from "@nomiclabs/buidler/config";
 import { utils } from "ethers";
 
 export default internalTask(
-  "gc-mint:defaultpayload:ActionChainedTimedERC20TransferFrom",
-  `Returns a hardcoded actionPayload of ActionChainedTimedERC20TransferFrom`
+  "gc-mint:defaultpayload:ActionChainedTimedERC20TransferFromKovan",
+  `Returns a hardcoded actionPayload of ActionChainedTimedERC20TransferFromKovan`
 )
   .addFlag("log")
   .setAction(async ({ log }) => {
@@ -23,18 +23,12 @@ export default internalTask(
       // ActionChainedERC20TransferFrom additional Params
       const gelatoProvider = await run("handleGelatoProvider");
       const gelatoExecutor = await run("handleGelatoExecutor");
-      const conditionTimestampPassed = await run("bre-config", {
-        deployments: true,
-        contractname: "ConditionTimestampPassed"
-      });
       const actionChainedTimedERC20TransferFrom = await run("bre-config", {
         deployments: true,
-        contractname: "ActionChainedTimedERC20TransferFrom"
+        contractname: "ActionChainedTimedERC20TransferFromKovan"
       });
-      const conditionTimestampPassedPayload = await run("handleGelatoPayload", {
-        contractname: "ConditionTimestampPassed"
-      });
-      const timeOffset = 300; // 5 minutes
+      const dueDate = Math.floor(Date.now() / 1000); // now
+      const timeOffset = 60; // 60 seconds
 
       // Params as sorted array of inputs for abi.encoding
       const inputs = [
@@ -42,15 +36,15 @@ export default internalTask(
         [sendToken, destination],
         sendAmount,
         [gelatoProvider, gelatoExecutor],
-        [conditionTimestampPassed, actionChainedTimedERC20TransferFrom],
-        conditionTimestampPassedPayload,
+        actionChainedTimedERC20TransferFrom,
+        dueDate,
         timeOffset
       ];
       // Encoding
       const actionChainedTimedERC20TransferFromPayload = await run(
         "abi-encode-withselector",
         {
-          contractname: "ActionChainedTimedERC20TransferFrom",
+          contractname: "ActionChainedTimedERC20TransferFromKovan",
           functionname: "action",
           inputs,
           log

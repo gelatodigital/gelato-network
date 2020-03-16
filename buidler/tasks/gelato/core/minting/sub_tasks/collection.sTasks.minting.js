@@ -19,8 +19,8 @@ import "./default_payloads/actions/sTask.defaultpayload.ActionBzxPtokenMintWithT
 import "./default_payloads/actions/sTask.defaultpayload.ActionERC20Transfer";
 // ActionERC20TransferFrom
 import "./default_payloads/actions/sTask.defaultpayload.ActionERC20TransferFrom";
-// ActionChainedTimedERC20TransferFrom
-import "./default_payloads/actions/sTask.defaultpayload.ActionChainedTimedERC20TransferFrom";
+// ActionChainedTimedERC20TransferFromKovan
+import "./default_payloads/actions/sTask.defaultpayload.ActionChainedTimedERC20TransferFromKovan";
 // == ActionKyberTrade
 // mainnet
 import "./default_payloads/actions/sTask.defaultpayload.ActionKyberTrade";
