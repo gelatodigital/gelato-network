@@ -6,9 +6,9 @@ export default task(
   "gc-mint",
   `Sends tx to GelatoCore.mintExecutionClaim() on [--network] (default: ${defaultNetwork})`
 )
-  .addOptionalParam(
+  .addOptionalPositionalParam(
     "conditionname",
-    "Must exist inside buidler.config. Supply '0' for self-conditional Actions"
+    "Must exist inside buidler.config or supply '0' for AddressZero Condition."
   )
   .addOptionalPositionalParam(
     "actionname",
@@ -68,18 +68,18 @@ export default task(
       });
 
       // Condition and ConditionPayload (optional)
-      if (taskArgs.conditionname) {
-          if (taskArgs.conditionaddress === constants.AddressZero) {
-            taskArgs.conditionaddress = await run("bre-config", {
-              deployments: true,
-              contractname: taskArgs.conditionname
-            });
-          }
-          if (taskArgs.conditionpayload === constants.HashZero) {
-            taskArgs.conditionpayload = await run("handleGelatoPayload", {
-              contractname: taskArgs.conditionname
-            });
-          }
+      if (taskArgs.conditionname !== "0") {
+        if (taskArgs.conditionaddress === constants.AddressZero) {
+          taskArgs.conditionaddress = await run("bre-config", {
+            deployments: true,
+            contractname: taskArgs.conditionname
+          });
+        }
+        if (taskArgs.conditionpayload === constants.HashZero) {
+          taskArgs.conditionpayload = await run("handleGelatoPayload", {
+            contractname: taskArgs.conditionname
+          });
+        }
       }
 
       // Action and ActionPayload

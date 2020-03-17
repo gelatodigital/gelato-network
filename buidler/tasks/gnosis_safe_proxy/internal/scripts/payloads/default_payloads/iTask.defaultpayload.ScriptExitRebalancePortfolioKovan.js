@@ -1,42 +1,33 @@
 import { internalTask } from "@nomiclabs/buidler/config";
-import { ethers } from "ethers";
 
 export default internalTask(
   "gsp:scripts:defaultpayload:ScriptExitRebalancePortfolioKovan",
   `Returns a hardcoded payload for ScriptExitRebalancePortfolioKovan`
 )
-  .addOptionalVariadicPositionalParam(
+  .addVariadicPositionalParam(
     "inputs",
-    "The parameters for the function call"
+    "The ORDERED params for ScriptExitRebalancePortfolioKovan.exitRebalancingPortfolio"
   )
   .addOptionalParam(
-    "withdrawAddress",
-    "where to withdraw the funds to"
-    // Defaults to mnemonic 0
+    "recipient",
+    "Address of recipient of fund withdrawal - defaults to Signer account 0."
   )
   .addFlag("log")
   .setAction(async taskArgs => {
     try {
-
-
-      if(!taskArgs.inputs) {
-        throw Error("Need to provde execution claim as input in execTransaction script")
-      }
-
-      const executionclaimid = taskArgs.inputs[0];
       const executionClaim = await run("fetchExecutionClaim", {
-          executionclaimid: executionclaimid
-        });
+        executionclaimid: taskArgs.inputs[0]
+      });
 
-      if (!taskArgs.withdrawAddress) {
-        taskArgs.withdrawAddress = await run("ethers", {
+      if (!taskArgs.recipient) {
+        taskArgs.recipient = await run("ethers", {
           signer: true,
           address: true
         });
       }
 
       // console.log(`
-      //   \n Withdraw Address: ${taskArgs.withdrawAddress}\n
+      //   \n Withdraw Address: ${taskArgs.recipient}\n
       //   \n ProviderExecutor: ${executionClaim.selectedProviderAndExecutor}\n
       //   \n ExecutionClaimId: ${executionClaim.executionClaimId}\n
       //   \n ConditionAction: ${executionClaim.conditionAndAction}\n
@@ -46,7 +37,7 @@ export default internalTask(
       // `);
 
       const inputs = [
-        taskArgs.withdrawAddress,
+        taskArgs.recipient,
         executionClaim.selectedProviderAndExecutor,
         executionClaim.executionClaimId,
         executionClaim.conditionAndAction,
