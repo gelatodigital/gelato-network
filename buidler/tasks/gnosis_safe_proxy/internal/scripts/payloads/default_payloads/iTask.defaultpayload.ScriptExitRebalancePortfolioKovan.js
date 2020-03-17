@@ -18,7 +18,6 @@ export default internalTask(
   .setAction(async taskArgs => {
     try {
 
-
       if(!taskArgs.inputs) {
         throw Error("Need to provde execution claim as input in execTransaction script")
       }
