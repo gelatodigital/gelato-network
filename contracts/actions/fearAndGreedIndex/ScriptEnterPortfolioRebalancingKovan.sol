@@ -21,7 +21,7 @@ import "../../dapp_interfaces/uniswap/IUniswapExchange.sol";
 /// @dev Should be delegatecalled from gnosisSafeProxy.setup.setupModules(to,data):
 ///       - <to> address of this contract: ScriptGnosisSafeEnableGelatoCoreAndMint
 ///       - <data> encodedPayload for enableModuleAndMint
-contract ScriptEnterPortfolioRebalancing is
+contract ScriptEnterPortfolioRebalancingKovan is
     ScriptGnosisSafeEnableGelatoCore,
     ActionRebalancePortfolioKovan
 {

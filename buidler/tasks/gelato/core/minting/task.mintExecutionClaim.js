@@ -6,7 +6,7 @@ export default task(
   "gc-mint",
   `Sends tx to GelatoCore.mintExecutionClaim() on [--network] (default: ${defaultNetwork})`
 )
-  .addOptionalPositionalParam(
+  .addOptionalParam(
     "conditionname",
     "Must exist inside buidler.config. Supply '0' for self-conditional Actions"
   )
@@ -42,8 +42,7 @@ export default task(
   .setAction(async taskArgs => {
     try {
       // Command Line Argument Checks
-      if (taskArgs.conditionname === "0")
-        taskArgs.conditionname = constants.AddressZero;
+
       if (!taskArgs.actionname && !taskArgs.actionaddress)
         throw new Error(`\n Must supply <actionname> or --actionaddress`);
       if (
@@ -69,18 +68,18 @@ export default task(
       });
 
       // Condition and ConditionPayload (optional)
-      if (taskArgs.conditionname !== constants.AddressZero) {
-        if (taskArgs.conditionaddress === constants.AddressZero) {
-          taskArgs.conditionaddress = await run("bre-config", {
-            deployments: true,
-            contractname: taskArgs.conditionname
-          });
-        }
-        if (taskArgs.conditionpayload === constants.HashZero) {
-          taskArgs.conditionpayload = await run("handleGelatoPayload", {
-            contractname: taskArgs.conditionname
-          });
-        }
+      if (taskArgs.conditionname) {
+          if (taskArgs.conditionaddress === constants.AddressZero) {
+            taskArgs.conditionaddress = await run("bre-config", {
+              deployments: true,
+              contractname: taskArgs.conditionname
+            });
+          }
+          if (taskArgs.conditionpayload === constants.HashZero) {
+            taskArgs.conditionpayload = await run("handleGelatoPayload", {
+              contractname: taskArgs.conditionname
+            });
+          }
       }
 
       // Action and ActionPayload

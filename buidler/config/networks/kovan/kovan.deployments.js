@@ -45,5 +45,8 @@ export const deployments = {
   ScriptGnosisSafeEnableGelatoCoreAndMint:
     "0x5993ff30b943dE4c3fDA59d88D87d1661412D101",
   // Enter the Rebalancing Chained Action
-  ScriptEnterPortfolioRebalancing: "0x57de907e200B214A6A6EfA6C723891069999D2Cc"
+  ScriptEnterPortfolioRebalancingKovan:
+    "0x57de907e200B214A6A6EfA6C723891069999D2Cc",
+  ScriptExitRebalancePortfolioKovan:
+    "0x1b3f567c4a6f064FE770498F734C4C25F4C0239e"
 };

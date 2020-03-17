@@ -29,7 +29,7 @@ contract ActionRebalancePortfolioKovan is GelatoActionsStandard {
 
     // Oracle
     IFearGreedIndex public constant fearGreedIndexContract = IFearGreedIndex(
-            0xf5aF30e4022698314e07514CE649fa7f45Cc8F87
+        0xf5aF30e4022698314e07514CE649fa7f45Cc8F87
     );
 
     // Gelato Core
@@ -39,7 +39,7 @@ contract ActionRebalancePortfolioKovan is GelatoActionsStandard {
 
     // Uniswap Factory
     IUniswapFactory public constant uniswapFactory = IUniswapFactory(
-            0xD3E51Ef092B2845f10401a0159B2B96e8B6c3D30
+        0xD3E51Ef092B2845f10401a0159B2B96e8B6c3D30
     );
 
     // Uniswap Factory
