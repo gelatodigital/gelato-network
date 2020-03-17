@@ -39,5 +39,6 @@ export const contracts = [
   "ScriptGnosisSafeEnableGelatoCore",
   "ScriptGnosisSafeEnableGelatoCoreAndMint",
   // Action specific scripts
-  "ScriptEnterPortfolioRebalancing"
+  "ScriptEnterPortfolioRebalancingKovan",
+  "ScriptExitRebalancePortfolioKovan"
 ];

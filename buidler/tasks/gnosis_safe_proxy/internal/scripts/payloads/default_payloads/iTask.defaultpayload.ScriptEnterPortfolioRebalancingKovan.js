@@ -1,8 +1,8 @@
 import { internalTask } from "@nomiclabs/buidler/config";
 
 export default internalTask(
-  "gsp:scripts:defaultpayload:ScriptEnterPortfolioRebalancing",
-  `Returns a hardcoded payload for ScriptEnterPortfolioRebalancing`
+  "gsp:scripts:defaultpayload:ScriptEnterPortfolioRebalancingKovan",
+  `Returns a hardcoded payload for ScriptEnterPortfolioRebalancingKovan`
 )
   .addOptionalParam("gelatocoreaddress")
   .addOptionalParam("gelatoprovider")
@@ -27,16 +27,22 @@ export default internalTask(
       const inputs = [taskArgs.gelatocoreaddress];
 
       if (taskArgs.log)
-        console.log("\nScriptEnterPortfolioRebalancing Inputs:\n", taskArgs);
+        console.log(
+          "\nScriptEnterPortfolioRebalancingKovan Inputs:\n",
+          taskArgs
+        );
 
       const payload = await run("abi-encode-withselector", {
-        contractname: "ScriptEnterPortfolioRebalancing",
+        contractname: "ScriptEnterPortfolioRebalancingKovan",
         functionname: "enterPortfolioRebalancing",
         inputs
       });
 
       if (taskArgs.log)
-        console.log("\nScriptEnterPortfolioRebalancing Payload:\n", payload);
+        console.log(
+          "\nScriptEnterPortfolioRebalancingKovan Payload:\n",
+          payload
+        );
 
       return payload;
     } catch (err) {

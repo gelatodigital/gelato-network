@@ -11,8 +11,11 @@ export default task(
     "The address of the gnosis safe proxy we call"
   )
   .addPositionalParam("contractname", "The contract whose abi has the function")
-  .addPositionalParam("functionname", "The function we want to call")
-  .addOptionalVariadicPositionalParam("inputs", "The parameters for the function call")
+  .addOptionalParam("functionname", "The function we want to call")
+  .addOptionalVariadicPositionalParam(
+    "inputs",
+    "The parameters for the function call"
+  )
   .addOptionalParam(
     "to",
     "The address which to call/delegatecall. Defaults to <gnosissafeproxyaddress>"
@@ -31,7 +34,7 @@ export default task(
   )
   .addOptionalParam(
     "safetxgas",
-    "Max gas for relay service. 0 for gasleft or nor relay",
+    "Max gas for relay service. 0 for gasleft or no relay",
     0,
     types.int
   )
@@ -64,13 +67,31 @@ export default task(
   .addFlag("log", "Logs return values to stdout")
   .setAction(async taskArgs => {
     try {
-      if (!taskArgs.to) taskArgs.to = taskArgs.gnosissafeproxyaddress;
+      if (!taskArgs.to && !taskArgs.contractname)
+        taskArgs.to = taskArgs.gnosissafeproxyaddress;
+      else if (!taskArgs.to && taskArgs.contractname) {
+        const scriptContract = await run("instantiateContract", {
+          contractname: taskArgs.contractname,
+          read: true
+        });
+        taskArgs.to = scriptContract.address;
+      }
 
-      const data = await run("abi-encode-withselector", {
-        contractname: taskArgs.contractname,
-        functionname: taskArgs.functionname,
-        inputs: taskArgs.inputs
-      });
+      let data;
+      if (taskArgs.functionname) {
+        data = await run("abi-encode-withselector", {
+          contractname: taskArgs.contractname,
+          functionname: taskArgs.functionname,
+          inputs: taskArgs.inputs
+        });
+      } else {
+        data = await run(
+          `gsp:scripts:defaultpayload:${taskArgs.contractname}`,
+          {
+            inputs: taskArgs.inputs
+          }
+        );
+      }
 
       const signerAddr = await run("ethers", { signer: true, address: true });
 
@@ -87,9 +108,20 @@ export default task(
            \n To: ${taskArgs.contractname} at ${taskArgs.to}\
            \n Function: ${taskArgs.functionname}\
            \n Data:\n ${data}\
-           \n Signatures:\n ${taskArgs.signatures}\n`
+           \n Signatures:\n ${taskArgs.signatures}\n
+          `
         );
       }
+
+      /*
+           ${taskArgs.value}\n
+           ${taskArgs.operation}\n
+           ${taskArgs.safetxgas}\n
+           ${taskArgs.gasprice}\n
+           ${taskArgs.gastoken}\n
+           ${taskArgs.refundreceiver}\n
+           ${taskArgs.gastoken}\n
+      */
 
       const gnosisSafeProxy = await run("instantiateContract", {
         contractname: "IGnosisSafe",
@@ -108,7 +140,7 @@ export default task(
         taskArgs.gastoken,
         taskArgs.refundreceiver,
         taskArgs.signatures,
-        { gasLimit: 200000 }
+        { gasLimit: 2000000 }
       );
 
       if (taskArgs.log)
@@ -133,7 +165,10 @@ export default task(
           txhash: executeTx.hash,
           blockhash: executeTxReceipt.blockHash
         });
-        if (executionFailure) console.log(`\n ExecutionFailure ❌`);
+        if (executionFailure) {
+          console.log(`\n ExecutionFailure ❌`);
+          console.log(executionFailure);
+        }
 
         if (!executionSuccess && !executionFailure) {
           console.log(`
