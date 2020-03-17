@@ -14,37 +14,9 @@ export default internalTask(
     "where to withdraw the funds to"
     // Defaults to mnemonic 0
   )
-  // .addPositionalParam("proxy", "users gnosis safe proxy address")
   .addFlag("log")
   .setAction(async taskArgs => {
     try {
-      // Handle taskArgs defaults
-      // if (!taskArgs.gelatocoreaddress) {
-      //   taskArgs.gelatocoreaddress = await run("bre-config", {
-      //     deployments: true,
-      //     contractname: "GelatoCore"
-      //   });
-      // }
-      // taskArgs.gelatoprovider = await run("handleGelatoProvider", {
-      //   gelatoprovider: taskArgs.gelatoprovider
-      // });
-      // taskArgs.gelatoexecutor = await run("handleGelatoExecutor", {
-      //   gelatoexecutor: taskArgs.gelatoexecutor
-      // });
-
-      // const inputs = [taskArgs.gelatocoreaddress];
-
-      // if (taskArgs.log)
-      //   console.log("\nScriptExitRebalancePortfolioKovan Inputs:\n", taskArgs);
-
-      // const payload = await run("abi-encode-withselector", {
-      //   contractname: "ScriptExitRebalancePortfolioKovan",
-      //   functionname: "enterPortfolioRebalancing",
-      //   inputs
-      // });
-
-      // if (taskArgs.log)
-      //   console.log("\nScriptExitRebalancePortfolioKovan Payload:\n", payload);
 
 
       if(!taskArgs.inputs) {
@@ -55,17 +27,6 @@ export default internalTask(
       const executionClaim = await run("fetchExecutionClaim", {
           executionclaimid: executionclaimid
         });
-
-
-      /*
-      address payable _withdrawAddress,
-      address[2] calldata _selectedProviderAndExecutor,
-      uint256 _executionClaimId,
-      address[2] calldata ,
-      bytes calldata _conditionPayload,
-      bytes calldata _actionPayload,
-      uint256 _executionClaimExpiryDate
-      */
 
       if (!taskArgs.withdrawAddress) {
         taskArgs.withdrawAddress = await run("ethers", {
@@ -101,13 +62,6 @@ export default internalTask(
         log: taskArgs.log
       });
 
-      // const gnosisSafeProxy = await run("instantiateContract", {
-      //   contractname: "IGnosisSafe",
-      //   contractaddress: taskArgs.proxy,
-      //   write: true
-      // });
-
-      // const proxyOwners = await gnosisSafeProxy.getOwners();
       if (taskArgs.log) console.log(payloadWithSelector);
 
       return payloadWithSelector;

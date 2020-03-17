@@ -66,12 +66,11 @@ contract ScriptExitRebalancePortfolioKovan {
         // 1. Withdraw all DAI to owner if there is balance
         uint256 safeOwnerDaiBalance = exchangeToken.balanceOf(address(this));
         if ( safeOwnerDaiBalance > 0 ) {
-            // try exchangeToken.transfer(safeOwner, safeOwnerDaiBalance){}
-            // catch{revert("failed to send remaining DAI");}
 
             IUniswapExchange uniswapExchange = getUniswapExchange(exchangeToken);
             //  Check that uniswapExchange exists
             if (address(uniswapExchange) != address(0)) {
+
                 // Convert DAI to ETH
                 try exchangeToken.approve(
                     address(uniswapExchange),
