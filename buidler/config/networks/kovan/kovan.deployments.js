@@ -10,14 +10,15 @@ export const deployments = {
   // kyber
   ActionKyberTradeKovan: "0xF829B506c378AaD11dB7Efe8d626cc7d0e015CBA",
   // Portfolio Mgmt
-  ActionRebalancePortfolio: "0xB4Fa9846811309347C0B86805D96F4E171C2EFbF",
+  ActionRebalancePortfolioKovan: "0xCb6Ff084d8efA2A1Fd987566E60d454CF2473E4B",
 
   // ==== Actions - Chained ====
   // erc20
   ActionChainedTimedERC20TransferFromKovan:
-    "0xBeB2257A57Ad97a51841eBd05CB3f17a1141b2b8",
+    "0x9Ba17D7D573f79e7663C8758d484A1D2D35Cf762",
   // Portfolio Mgmt
-  ActionChainedRebalancePortfolio: "0xBcB7492164066E5B5DD5D74c9Ae3c5DfbACcde69",
+  ActionChainedRebalancePortfolioKovan:
+    "0xA4B6e3cAeD6280015925889092D802E556786385",
 
   // ===== Gelato Core ====
   GelatoCore: "0x40134bf777a126B0E6208e8BdD6C567F2Ce648d2",
@@ -44,5 +45,8 @@ export const deployments = {
   ScriptGnosisSafeEnableGelatoCoreAndMint:
     "0x5993ff30b943dE4c3fDA59d88D87d1661412D101",
   // Enter the Rebalancing Chained Action
-  ScriptEnterPortfolioRebalancing: "0x57de907e200B214A6A6EfA6C723891069999D2Cc"
+  ScriptEnterPortfolioRebalancingKovan:
+    "0x57de907e200B214A6A6EfA6C723891069999D2Cc",
+  ScriptExitRebalancePortfolioKovan:
+    "0x1b3f567c4a6f064FE770498F734C4C25F4C0239e"
 };

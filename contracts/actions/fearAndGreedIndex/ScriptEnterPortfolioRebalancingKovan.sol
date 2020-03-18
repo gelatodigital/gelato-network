@@ -4,7 +4,7 @@ import "../../gelato_core/interfaces/IGnosisSafe.sol";
 import "../../gelato_core/interfaces/IGelatoCore.sol";
 import "../../gelato_core/gelato_user_proxies/scripts/ScriptGnosisSafeEnableGelatoCore.sol";
 import "../../dapp_interfaces/fearAndGreedIndex/IFearGreedIndex.sol";
-import "../../actions/fearAndGreedIndex/ActionRebalancePortfolio.sol";
+import "../../actions/fearAndGreedIndex/ActionRebalancePortfolioKovan.sol";
 import "../../external/SafeMath.sol";
 import "../../external/Address.sol";
 import "../../dapp_interfaces/uniswap/IUniswapFactory.sol";
@@ -21,26 +21,21 @@ import "../../dapp_interfaces/uniswap/IUniswapExchange.sol";
 /// @dev Should be delegatecalled from gnosisSafeProxy.setup.setupModules(to,data):
 ///       - <to> address of this contract: ScriptGnosisSafeEnableGelatoCoreAndMint
 ///       - <data> encodedPayload for enableModuleAndMint
-contract ScriptEnterPortfolioRebalancing is
+contract ScriptEnterPortfolioRebalancingKovan is
     ScriptGnosisSafeEnableGelatoCore,
-    ActionRebalancePortfolio
+    ActionRebalancePortfolioKovan
 {
     using SafeMath for uint256;
     using Address for address;
     // using Address for address;
 
     /// @dev This function should be delegatecalled
-    function enterPortfolioRebalancing(
-        address _gelatoCore,
-        address[2] calldata _selectedProviderAndExecutor
-    )
-        external
-    {
+    function enterPortfolioRebalancing(address _gelatoCore) external {
         // 1. Whitelist Gelato Core
         // Whitelist GelatoCore as module on delegatecaller (Gnosis Safe Proxy)
         enableGelatoCoreModule(_gelatoCore);
 
-        // 2. Execute ActionRebalancePortfolio.action => Swaps ETH into DAI
-        action(payable(_selectedProviderAndExecutor[0]));
+        // 2. Execute ActionRebalancePortfolioKovan.action => Swaps ETH into DAI
+        action();
     }
 }

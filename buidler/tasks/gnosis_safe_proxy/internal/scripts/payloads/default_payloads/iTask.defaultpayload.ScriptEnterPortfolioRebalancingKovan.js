@@ -1,8 +1,8 @@
 import { internalTask } from "@nomiclabs/buidler/config";
 
 export default internalTask(
-  "gsp:scripts:defaultpayload:ScriptEnterPortfolioRebalancing",
-  `Returns a hardcoded payload for ScriptEnterPortfolioRebalancing`
+  "gsp:scripts:defaultpayload:ScriptEnterPortfolioRebalancingKovan",
+  `Returns a hardcoded payload for ScriptEnterPortfolioRebalancingKovan`
 )
   .addOptionalParam("gelatocoreaddress")
   .addOptionalParam("gelatoprovider")
@@ -17,29 +17,32 @@ export default internalTask(
           contractname: "GelatoCore"
         });
       }
-      taskArgs.gelatoprovider = await run("handleGelatoProvider", {
-        gelatoprovider: taskArgs.gelatoprovider
-      });
-      taskArgs.gelatoexecutor = await run("handleGelatoExecutor", {
-        gelatoexecutor: taskArgs.gelatoexecutor
-      });
+      // taskArgs.gelatoprovider = await run("handleGelatoProvider", {
+      //   gelatoprovider: taskArgs.gelatoprovider
+      // });
+      // taskArgs.gelatoexecutor = await run("handleGelatoExecutor", {
+      //   gelatoexecutor: taskArgs.gelatoexecutor
+      // });
 
-      const inputs = [
-        taskArgs.gelatocoreaddress,
-        [taskArgs.gelatoprovider, taskArgs.gelatoexecutor]
-      ];
+      const inputs = [taskArgs.gelatocoreaddress];
 
       if (taskArgs.log)
-        console.log("\nScriptEnterPortfolioRebalancing Inputs:\n", taskArgs);
+        console.log(
+          "\nScriptEnterPortfolioRebalancingKovan Inputs:\n",
+          taskArgs
+        );
 
       const payload = await run("abi-encode-withselector", {
-        contractname: "ScriptEnterPortfolioRebalancing",
+        contractname: "ScriptEnterPortfolioRebalancingKovan",
         functionname: "enterPortfolioRebalancing",
         inputs
       });
 
       if (taskArgs.log)
-        console.log("\nScriptEnterPortfolioRebalancing Payload:\n", payload);
+        console.log(
+          "\nScriptEnterPortfolioRebalancingKovan Payload:\n",
+          payload
+        );
 
       return payload;
     } catch (err) {

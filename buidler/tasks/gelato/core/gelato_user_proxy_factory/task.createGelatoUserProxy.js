@@ -41,7 +41,7 @@ export default task(
   )
   .addOptionalParam(
     "defaultpayloadscript",
-    "The name of the defaultpayload script to retrieve 'data'"
+    "Script to retrieve --data and to be --to (if not --to supplied)"
   )
   .addOptionalParam(
     "fallbackhandler",
