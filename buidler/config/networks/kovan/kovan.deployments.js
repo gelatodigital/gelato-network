@@ -21,7 +21,7 @@ export const deployments = {
     "0xA4B6e3cAeD6280015925889092D802E556786385",
 
   // ===== Gelato Core ====
-  GelatoCore: "0x40134bf777a126B0E6208e8BdD6C567F2Ce648d2",
+  GelatoCore: "0x80Ea0F4F32475a4E59EBaD70fa60B44414d982c2",
 
   // ==== Conditions ====
   // == Balances ==

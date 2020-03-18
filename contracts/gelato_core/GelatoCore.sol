@@ -127,9 +127,10 @@ contract GelatoCore is
         require(
             isProvidedAction[_selectedProviderAndExecutor[0]][_conditionAndAction[1]],
             "GelatoCore.mintExecutionClaim: action not provided"
-        );*/
+        );
 
         // We cut this after initial testing
+
         address userProxy;
         if (isGelatoProxyUser(msg.sender)) {
             userProxy = gelatoProxyByUser[msg.sender];
@@ -140,6 +141,8 @@ contract GelatoCore is
                 "GelatoCore.mintExecutionClaim: caller must be registered user or proxy"
             );
         }
+        */
+        address userProxy = msg.sender;
 
         // Mint new executionClaim
         currentExecutionClaimId.increment();
