@@ -65,7 +65,7 @@ export default task(
   )
   .addOptionalParam(
     "defaultpayloadscript",
-    "Deployed contract Script's (also --to if no --to) default --data"
+    "Script to retrieve --data and to be --to (if not --to supplied)"
   )
   .addOptionalParam(
     "fallbackhandler",

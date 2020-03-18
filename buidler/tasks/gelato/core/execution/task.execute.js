@@ -104,6 +104,7 @@ export default task(
           );
         } catch (error) {
           console.error(`gelatoCore.execute() PRE-EXECUTION error\n`, error);
+          process.exit(1);
         }
 
         if (log) console.log(`\ntxHash execTransaction: ${executeTx.hash}\n`);
@@ -113,6 +114,7 @@ export default task(
           executeTxReceipt = await executeTx.wait();
         } catch (error) {
           console.error(`gelatoCore.execute() EXECUTION error\n`, error);
+          process.exit(1);
         }
 
         if (executeTxReceipt && log) {
