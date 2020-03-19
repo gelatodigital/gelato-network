@@ -1,6 +1,6 @@
 pragma solidity ^0.6.4;
 
-import "../../interfaces/IGnosisSafe.sol";
+import "../interfaces/IGnosisSafe.sol";
 
 // For debugging purposes we do not revert if anything goes wrong
 //  so that we can emit the LogFailure event. This is necessary because the

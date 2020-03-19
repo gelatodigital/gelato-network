@@ -1,17 +1,15 @@
 pragma solidity ^0.6.4;
+pragma experimental ABIEncoderV2;
 
-import "../../../gelato_core/interfaces/IGelatoCore.sol";
+import { IGelatoCore, ExecClaim } from "../../../interfaces/IGelatoCore.sol";
 
 interface IScriptsCreateGnosisSafeProxyAndMint {
     function create(
         address _mastercopy,
         bytes calldata _initializer,
         IGelatoCore _gelatoCore,
-        address[2] calldata _selectedProviderAndExecutor,
-        address[2] calldata _conditionAndAction,
-        bytes calldata _conditionPayload,
-        bytes calldata _actionPayload,
-        uint256 _executionClaimExpiryDate
+        address _executor,
+        ExecClaim calldata _execClaim
     ) external payable; // address userProxy
 
     function createTwo(
@@ -19,10 +17,7 @@ interface IScriptsCreateGnosisSafeProxyAndMint {
         bytes calldata _initializer,
         uint256 _saltNonce,
         IGelatoCore _gelatoCore,
-        address[2] calldata _selectedProviderAndExecutor,
-        address[2] calldata _conditionAndAction,
-        bytes calldata _conditionPayload,
-        bytes calldata _actionPayload,
-        uint256 _executionClaimExpiryDate
+        address _executor,
+        ExecClaim calldata _execClaim
     ) external payable;
 }

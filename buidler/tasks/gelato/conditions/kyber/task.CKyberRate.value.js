@@ -32,8 +32,8 @@ export default task(
         contractname: "ConditionKyberRate",
         read: true
       });
-      // mintExecutionClaim TX (payable)
-      const value = await conditionContract.getConditionValue(
+      // mintExecClaim TX (payable)
+      const value = await conditionContract.value(
         src,
         srcamt,
         dest,

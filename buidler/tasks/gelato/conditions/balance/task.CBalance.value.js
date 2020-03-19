@@ -27,8 +27,8 @@ export default task(
         contractname,
         read: true
       });
-      // mintExecutionClaim TX (payable)
-      const value = await conditionContract.getConditionValue(
+      // mintExecClaim TX (payable)
+      const value = await conditionContract.value(
         account,
         coin,
         refBalance,

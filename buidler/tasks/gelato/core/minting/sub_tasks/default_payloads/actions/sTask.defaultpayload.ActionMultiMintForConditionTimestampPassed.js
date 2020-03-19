@@ -2,7 +2,7 @@ import { internalTask } from "@nomiclabs/buidler/config";
 
 export default internalTask(
   "gc-mint:defaultpayload:ActionMultiMintForConditionTimestampPassed",
-  `Returns a hardcoded actionPayload of ActionMultiMintForConditionTimestampPassed`
+  `Returns a hardcoded execPayload of ActionMultiMintForConditionTimestampPassed`
 )
   .addParam(
     "gelatoexecutor",
@@ -16,7 +16,7 @@ export default internalTask(
   .setAction(async ({ gelatoexecutor, numberofmints, log }) => {
     try {
       const contractname = "ActionMultiMintForConditionTimestampPassed";
-      // action(_gelatoCore, _selectedExecutor, _conditionTimestampPassed, _startTime, _action, _actionPayload, _intervalSpan, _numberOfMints)
+      // action(_gelatoCore, _gelatoExecutor, _conditionTimestampPassed, _startTime, _action, _actionPayload, _intervalSpan, _numberOfMints)
       const functionname = "action";
       // Params
       const {
@@ -30,7 +30,7 @@ export default internalTask(
         deployments: true,
         contractname: "ActionKyberTrade"
       });
-      const actionPayload = await run(
+      const execPayload = await run(
         "gc-mint:defaultpayload:ActionKyberTrade",
         { log }
       );
@@ -42,7 +42,7 @@ export default internalTask(
         conditionTimestampPassedAddress,
         startTime,
         actionAddress,
-        actionPayload,
+        execPayload,
         intervalSpan,
         numberofmints
       ];

@@ -1,119 +1,97 @@
 pragma solidity ^0.6.4;
+pragma experimental ABIEncoderV2;
 
-import "../../conditions/IGelatoCondition.sol";
-import "../../actions/IGelatoAction.sol";
+import { EnumerableSet } from "../../external/EnumerableSet.sol";
 
-/// @title IGelatoCore - solidity interface of GelatoCore
-/// @notice canExecute API and minting, execution, cancellation of ExecutionClaims
-/// @dev all the APIs and events are implemented inside GelatoCore
+struct ExecClaim {
+    uint256 id;
+    address provider;
+    address userProxy;
+    address condition;
+    address action;
+    bytes conditionPayload;
+    bytes actionPayload;
+    bytes execPayload;
+    uint256 expiryDate;
+    uint256 executorSuccessFeeFactor;
+    uint256 oracleSuccessFeeFactor;
+}
+
 interface IGelatoCore {
-    event LogExecutionClaimMinted(
-        address[2] selectedProviderAndExecutor,
-        uint256 indexed executionClaimId,
-        address indexed userProxy,
-        address[2] conditionAndAction,
-        bytes conditionPayload,
-        bytes actionPayload,
-        uint256 executionClaimExpiryDate
+    event LogExecClaimMinted(
+        address indexed executor,
+        ExecClaim execClaim,
+        bytes32 indexed execClaimHash
     );
 
-    // Caution: there are no guarantees that CanExecuteResult and/or reason
-    //  are implemented in a logical fashion by condition/action developers.
-    event LogCanExecuteSuccess(
-        address[2] selectedProviderAndExecutor,
-        uint256 indexed executionClaimId,
-        address indexed userProxy,
-        address[2] conditionAndAction,
-        string canExecuteResult
+    event LogCanExecSuccess(
+        address indexed executor,
+        uint256 indexed execClaimId,
+        string canExecResult
+    );
+    event LogCanExecFailed(
+        address indexed executor,
+        uint256 indexed execClaimId,
+        string canExecResult
     );
 
-    event LogCanExecuteFailed(
-        address[2] selectedProviderAndExecutor,
-        uint256 indexed executionClaimId,
-        address indexed userProxy,
-        address[2] conditionAndAction,
-        string canExecuteResult
+    event LogExecSuccess(address indexed executor, uint256 indexed execClaimId);
+    event LogExecFailed(
+        address indexed executor,
+        uint256 indexed execClaimId,
+        string reason
     );
 
-    event LogSuccessfulExecution(
-        address[2] selectedProviderAndExecutor,
+    event LogExecClaimCancelled(
+        uint256 indexed execClaimId,
         address executor,
-        uint256 indexed executionClaimId,
-        address indexed userProxy,
-        address[2] conditionAndAction
-    );
-
-    // Caution: there are no guarantees that ExecutionResult and/or reason
-    //  are implemented in a logical fashion by condition/action developers.
-    event LogExecutionFailure(
-        address[2] selectedProviderAndExecutor,
-        address executor,
-        uint256 indexed executionClaimId,
-        address indexed userProxy,
-        address[2] conditionAndAction,
-        string executionFailureReason
-    );
-
-    event LogExecutionClaimCancelled(
-        address[2] selectedProviderAndExecutor,
-        uint256 indexed executionClaimId,
-        address indexed userProxy,
         address cancelor,
-        bool executionClaimExpired
+        bool expired
     );
 
-    function mintExecutionClaim(
-        address[2] calldata _selectedProviderAndExecutor,
-        address[2] calldata _conditionAndAction,
-        bytes calldata _conditionPayload,
-        bytes calldata _actionPayload,
-        uint256 _executionClaimExpiryDate
-    ) external;
+    function mintExecClaim(address _executor, ExecClaim calldata _execClaim)
+        external;
 
-    function canExecute(
-        address[2] calldata _selectedProviderAndExecutor,
-        uint256 _executionClaimId,
-        address _userProxy,
-        address[2] calldata _conditionAndAction,
-        bytes calldata _conditionPayload,
-        bytes calldata _actionPayload,
-        uint256 _executionClaimExpiryDate
-    ) external view returns (string memory);
-
-    function execute(
-        address[2] calldata _selectedProviderAndExecutor,
-        uint256 _executionClaimId,
-        address _userProxy,
-        address[2] calldata _conditionAndAction,
-        bytes calldata _conditionPayload,
-        bytes calldata _actionPayload,
-        uint256 _executionClaimExpiryDate
-    ) external;
-
-    function cancelExecutionClaim(
-        address[2] calldata _selectedProviderAndExecutor,
-        uint256 _executionClaimId,
-        address _userProxy,
-        address[2] calldata _conditionAndAction,
-        bytes calldata _conditionPayload,
-        bytes calldata _actionPayload,
-        uint256 _executionClaimExpiryDate
-    ) external;
-
-    function currentExecutionClaimId()
+    function canExec(ExecClaim calldata _execClaim, bytes32 _execClaimHash)
         external
         view
-        returns (uint256 currentId);
+        returns(string memory canExecResult);
 
-    function executionClaimHash(uint256 _executionClaimId)
+    function exec(ExecClaim calldata _execClaim, bytes32 _execClaimHash)
+        external;
+
+    function cancelExecClaim(
+        address _executor,
+        ExecClaim calldata _execClaim,
+        bytes32 _execClaimHash
+    ) external;
+
+    // ================  GETTER APIs =========================
+    function currentExecClaimId() external view returns(uint256 currentId);
+
+    function isSecondExecAttempt(uint256 _execClaimId)
         external
         view
-        returns (bytes32);
+        returns(bool);
 
-    function userProxyByExecutionClaimId(uint256 _executionClaimId)
+    function execClaimHashCmp(ExecClaim calldata _execClaim, bytes32 _hash)
+        external
+        pure
+        returns(bool);
+
+    function isProviderLiquid(address _provider) external view returns(bool);
+
+    // ================  Executors' Claims GETTER APIs =========================
+    function isExecutorClaim(address _executor, bytes32 _execClaimHash)
         external
         view
-        returns (address);
-
-    function MAXGAS() external pure returns (uint256);
+        returns(bool);
+    function numOfExecutorClaims(address _executor)
+        external
+        view
+        returns(uint256);
+    function executorClaims(address _executor)
+        external
+        view
+        returns(bytes32[] memory);
 }

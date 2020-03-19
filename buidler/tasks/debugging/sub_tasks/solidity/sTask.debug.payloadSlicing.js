@@ -28,7 +28,7 @@ export default internalTask("debug:payloadslicing")
         read: true
       });
 
-      const result = await contract.actionConditionsCheck(payload);
+      const result = await contract.ok(payload);
       console.log(`Result:\n ${result}`);
     } catch (error) {
       console.error(error);

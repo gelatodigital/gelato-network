@@ -1,7 +1,9 @@
 pragma solidity ^0.6.4;
+pragma experimental ABIEncoderV2;
 
 import "../interfaces/IScriptsCreateGnosisSafeProxyAndMint.sol";
 import "./ScriptsCreateGnosisSafeProxy.sol";
+import { IGelatoCore, ExecClaim } from "../../../interfaces/IGelatoCore.sol";
 
 contract ScriptsCreateGnosisSafeProxyAndMint is
     IScriptsCreateGnosisSafeProxyAndMint,
@@ -12,24 +14,15 @@ contract ScriptsCreateGnosisSafeProxyAndMint is
         address _mastercopy,
         bytes calldata _initializer,
         IGelatoCore _gelatoCore,
-        address[2] calldata _selectedProviderAndExecutor,
-        address[2] calldata _conditionAndAction,
-        bytes calldata _conditionPayload,
-        bytes calldata _actionPayload,
-        uint256 _executionClaimExpiryDate
+        address _executor,
+        ExecClaim calldata _execClaim
     )
         external
         payable
         override
     {
         create(_mastercopy, _initializer);
-        _gelatoCore.mintExecutionClaim(
-            _selectedProviderAndExecutor,
-            _conditionAndAction,
-            _conditionPayload,
-            _actionPayload,
-            _executionClaimExpiryDate
-        );
+        _gelatoCore.mintExecClaim(_executor, _execClaim);
     }
 
     function createTwo(
@@ -37,23 +30,14 @@ contract ScriptsCreateGnosisSafeProxyAndMint is
         bytes calldata _initializer,
         uint256 _saltNonce,
         IGelatoCore _gelatoCore,
-        address[2] calldata _selectedProviderAndExecutor,
-        address[2] calldata _conditionAndAction,
-        bytes calldata _conditionPayload,
-        bytes calldata _actionPayload,
-        uint256 _executionClaimExpiryDate
+        address _executor,
+        ExecClaim calldata _execClaim
     )
         external
         payable
         override
     {
         createTwo(_mastercopy, _initializer, _saltNonce);
-        _gelatoCore.mintExecutionClaim(
-            _selectedProviderAndExecutor,
-            _conditionAndAction,
-            _conditionPayload,
-            _actionPayload,
-            _executionClaimExpiryDate
-        );
+        _gelatoCore.mintExecClaim(_executor, _execClaim);
     }
 }

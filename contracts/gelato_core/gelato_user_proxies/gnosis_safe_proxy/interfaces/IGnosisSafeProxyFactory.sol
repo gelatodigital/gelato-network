@@ -6,7 +6,7 @@ interface IGnosisSafeProxyFactory {
 
     event ProxyCreation(address proxy);
 
-    /// @dev Allows to create new proxy contact and execute a message call to the
+    /// @dev Allows to create new proxy contact and exec a message call to the
     ///      new proxy within one transaction. Emits ProxyCreation.
     /// @param masterCopy Address of master copy.
     /// @param data Payload for message call sent to new proxy contract.
@@ -15,7 +15,7 @@ interface IGnosisSafeProxyFactory {
         external
         returns (IGnosisSafe proxy);
 
-    /// @dev Allows to create new proxy contact and execute a message call to the
+    /// @dev Allows to create new proxy contact and exec a message call to the
     ///      new proxy within one transaction. Emits ProxyCreation.
     /// @param _mastercopy Address of master copy.
     /// @param initializer Payload for message call sent to new proxy contract.
@@ -30,7 +30,7 @@ interface IGnosisSafeProxyFactory {
         external
         returns (IGnosisSafe proxy);
 
-    /// @dev Allows to create new proxy contact, execute a message call to the
+    /// @dev Allows to create new proxy contact, exec a message call to the
     //       new proxy and call a specified callback within one transaction
     /// @param _mastercopy Address of master copy.
     /// @param initializer Payload for message call sent to new proxy contract.

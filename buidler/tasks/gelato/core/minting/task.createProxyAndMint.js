@@ -6,7 +6,7 @@ export default task(
   "gc-createproxyandmint",
   `Sends tx to GelatoCore.createProxyAndMint() or if --createtwo to .createTwoProxyAndMint()  on [--network] (default: ${defaultNetwork})`
 )
-  // GelatoCore.mintExecutionClaim params
+  // GelatoCore.mintExecClaim params
   .addOptionalPositionalParam(
     "conditionname",
     "Must exist inside buidler.config. Defaults to address 0 for self-conditional actions"
@@ -21,11 +21,11 @@ export default task(
   .addOptionalParam("actionaddress", "Must be supplied if not <actionname>")
   .addOptionalParam("conditionpayload", "Payload for optional condition")
   .addOptionalParam(
-    "actionpayload",
+    "execpayload",
     "If not provided, must have a default returned from handleGelatoPayload()"
   )
   .addOptionalParam(
-    "executionclaimexpirydate",
+    "execclaimexpirydate",
     "Defaults to 0 for gelatoexecutor's maximum",
     constants.HashZero
   )
@@ -174,7 +174,7 @@ export default task(
       }
       // ============
 
-      // ==== GelatoCore.mintExecutionClaim Params ====
+      // ==== GelatoCore.mintExecClaim Params ====
       // Selected Provider and Executor
       taskArgs.gelatoprovider = await run("handleGelatoProvider", {
         gelatoprovider: taskArgs.gelatoprovider
@@ -205,10 +205,10 @@ export default task(
           contractname: taskArgs.actionname
         });
       }
-      if (!taskArgs.actionpayload) {
-        taskArgs.actionpayload = await run("handleGelatoPayload", {
+      if (!taskArgs.execpayload) {
+        taskArgs.execpayload = await run("handleGelatoPayload", {
           contractname: taskArgs.actionname,
-          payload: taskArgs.actionpayload
+          payload: taskArgs.execpayload
         });
       }
       // ============
@@ -230,8 +230,8 @@ export default task(
           [taskArgs.gelatoprovider, taskArgs.gelatoexecutor],
           [taskArgs.conditionaddress, taskArgs.actionaddress],
           taskArgs.conditionpayload,
-          taskArgs.actionpayload,
-          taskArgs.executionclaimexpirydate,
+          taskArgs.execpayload,
+          taskArgs.execclaimexpirydate,
           { value: utils.parseEther(taskArgs.funding), gasLimit: 3000000 }
         );
       } else {
@@ -241,8 +241,8 @@ export default task(
           [taskArgs.gelatoprovider, taskArgs.gelatoexecutor],
           [taskArgs.conditionaddress, taskArgs.actionaddress],
           taskArgs.conditionpayload,
-          taskArgs.actionpayload,
-          taskArgs.executionclaimexpirydate,
+          taskArgs.execpayload,
+          taskArgs.execclaimexpirydate,
           { value: utils.parseEther(taskArgs.funding), gasLimit: 3000000 }
         );
       }
@@ -268,15 +268,15 @@ export default task(
 
         const parsedMintingLog = await run("event-getparsedlog", {
           contractname: "GelatoCore",
-          eventname: "LogExecutionClaimMinted",
+          eventname: "LogExecClaimMinted",
           txhash: creationTx.hash,
           blockHash,
           values: true,
           stringify: true
         });
         if (parsedMintingLog)
-          console.log("\n✅ LogExecutionClaimMinted\n", parsedMintingLog);
-        else console.log("\n❌ LogExecutionClaimMinted not found");
+          console.log("\n✅ LogExecClaimMinted\n", parsedMintingLog);
+        else console.log("\n❌ LogExecClaimMinted not found");
       }
 
       return creationTx.hash;

@@ -1,9 +1,11 @@
 pragma solidity ^0.6.4;
+pragma experimental ABIEncoderV2;
 
 import { IGelatoProviders } from "../interfaces/IGelatoProviders.sol";
 import { Address } from "../../external/Address.sol";
 import { SafeMath } from "../../external/SafeMath.sol";
 import { IGelatoProviderModule } from "./provider_module/IGelatoProviderModule.sol";
+import { ExecClaim } from "../interfaces/IGelatoCore.sol";
 
 /// @title GelatoProviders
 /// @notice APIs for GelatoCore Owner and executorClaimLifespan
@@ -61,8 +63,7 @@ abstract contract GelatoProviders is IGelatoProviders {
         emit LogUnprovideFunds(msg.sender, previousProviderFunding, newProviderFunding);
     }
 
-
-    // Provider Whitelist
+    // Provider Module
     function setProviderModule(IGelatoProviderModule _module) public override {
         require(
             _module != IGelatoProviderModule(0),
@@ -72,20 +73,17 @@ abstract contract GelatoProviders is IGelatoProviders {
         providerModule[msg.sender] = _module;
     }
 
-    function isProvided(
-        address _provider,
-        address _userProxy,
-        address _condition,
-        address _action
-    )
+    function isProvided(address _executor, ExecClaim memory _execClaim)
         public
         view
         override
         returns(bool)  // userProxy
     {
-        _requireRegisteredProvider(_provider);
-        IGelatoProviderModule module = IGelatoProviderModule(providerModule[_provider]);
-        return module.isProvided(_userProxy, _condition, _action);
+        _requireRegisteredProvider(_execClaim.provider);
+        IGelatoProviderModule module = IGelatoProviderModule(
+            providerModule[_execClaim.provider]
+        );
+        return module.isProvided(_executor, _execClaim);
     }
 
     // Internal Helpers

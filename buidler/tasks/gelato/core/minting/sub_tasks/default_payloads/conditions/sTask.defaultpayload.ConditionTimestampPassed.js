@@ -13,7 +13,7 @@ export default internalTask(
       // Encoding
       const payloadWithSelector = await run("abi-encode-withselector", {
         contractname: "ConditionTimestampPassed",
-        functionname: "reached",
+        functionname: "ok",
         inputs,
         log
       });

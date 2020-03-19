@@ -28,7 +28,7 @@ export default task(
         signer: executor,
         write: true
       });
-      if (!amount) amount = await gelatoCore.executorBalance(executor._address);
+      if (!amount) amount = await gelatoCore.executorFunds(executor._address);
       const tx = await gelatoCore.withdrawExecutorBalance(amount);
       if (log) console.log(`\n\ntxHash withdrawExecutorBalance: ${tx.hash}`);
       await tx.wait();

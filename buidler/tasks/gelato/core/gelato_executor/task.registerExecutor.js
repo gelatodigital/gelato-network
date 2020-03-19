@@ -9,7 +9,7 @@ export default task(
 )
   .addOptionalPositionalParam(
     "executorclaimlifespan",
-    "executor's max executionClaim lifespan",
+    "executor's max execClaim lifespan",
     SIXY_DAYS,
     types.int
   )

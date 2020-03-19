@@ -1,7 +1,8 @@
 pragma solidity ^0.6.4;
+pragma experimental ABIEncoderV2;
 
-import "../../interfaces/IGnosisSafe.sol";
-import "../../interfaces/IGelatoCore.sol";
+import "../interfaces/IGnosisSafe.sol";
+import { IGelatoCore, ExecClaim } from "../../../interfaces/IGelatoCore.sol";
 
 // For debugging purposes we do not revert if anything goes wrong
 //  so that we can emit the LogFailure event. This is necessary because the
@@ -21,11 +22,8 @@ contract ScriptGnosisSafeEnableGelatoCoreAndMint {
     /// @dev This function should be delegatecalled
     function enableModuleAndMint(
         address _gelatoCore,
-        address[2] calldata _selectedProviderAndExecutor,
-        address[2] calldata _conditionAndAction,
-        bytes calldata _conditionPayload,
-        bytes calldata _actionPayload,
-        uint256 _executionClaimExpiryDate
+        address _executor,
+        ExecClaim calldata _execClaim
     )
         external
     {
@@ -38,17 +36,11 @@ contract ScriptGnosisSafeEnableGelatoCoreAndMint {
         }
 
         // Mint on GelatoCore from delegatecaller (Gnosis Safe Proxy)
-        try IGelatoCore(_gelatoCore).mintExecutionClaim(
-            _selectedProviderAndExecutor,
-            _conditionAndAction,
-            _conditionPayload,
-            _actionPayload,
-            _executionClaimExpiryDate
-        )  {
+        try IGelatoCore(_gelatoCore).mintExecClaim(_executor, _execClaim) {
         } catch Error(string memory error) {
             emit LogFailure(error);
         } catch {
-            emit LogFailure("mintExecutionClaim error");
+            emit LogFailure("mintExecClaim error");
         }
     }
 }

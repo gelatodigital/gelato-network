@@ -2,7 +2,7 @@ pragma solidity ^0.6.4;
 
 import "../interfaces/IScriptsCreateGnosisSafeProxy.sol";
 import "../interfaces/IGnosisSafeProxyFactory.sol";
-import "../../../external/Address.sol";
+import "../../../../external/Address.sol";
 
 contract ScriptsCreateGnosisSafeProxy is IScriptsCreateGnosisSafeProxy {
 

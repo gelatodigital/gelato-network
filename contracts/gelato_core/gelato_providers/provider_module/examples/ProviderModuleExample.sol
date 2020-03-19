@@ -1,9 +1,11 @@
 pragma solidity ^0.6.4;
+pragma experimental ABIEncoderV2;
 
 import { IGelatoProviderModule } from "../IGelatoProviderModule.sol";
 import { IProviderModuleExample } from "./IProviderModuleExample.sol";
 import { Ownable } from "../../../../external/Ownable.sol";
 import { IGnosisSafeProxy } from "../../../gelato_user_proxies/gnosis_safe_proxy/interfaces/IGnosisSafeProxy.sol";
+import { ExecClaim } from "../../../interfaces/IGelatoCore.sol";
 
 contract ProviderGnosisSafeProxyModule is
     IGelatoProviderModule,
@@ -16,19 +18,20 @@ contract ProviderGnosisSafeProxyModule is
     mapping(address => bool) public override isActionProvided;
 
     // ================= GELATO PROVIDER MODULE STANDARD ================
-    function isProvided(address _userProxy, address _condition, address _action)
+    function isProvided(address _executor, ExecClaim calldata _execClaim)
         external
         view
         override
         returns (bool)
     {
-        requireValidGnosisSafeProxy(_userProxy);
+        _executor; // no logic needed because we accept any executor
+        requireValidGnosisSafeProxy(_execClaim.userProxy);
         require(
-            isConditionProvided[_condition],
+            isConditionProvided[_execClaim.condition],
             "ProviderGnosisSafeProxyModule.isProvided: _condition"
         );
         require(
-            isActionProvided[_action],
+            isActionProvided[_execClaim.action],
             "ProviderGnosisSafeProxyModule.isProvided: _action"
         );
         return true;
@@ -120,10 +123,10 @@ contract ProviderGnosisSafeProxyModule is
         override
         onlyOwner
     {
-        for (uint8 i = 0; i < _hashes.length; i++) provideProxyExtcodehash(_hashes[i]);
-        for (uint8 i = 0; i < _mastercopies.length; i++) provideMastercopy(_mastercopies[i]);
-        for (uint8 i = 0; i < _conditions.length; i++) provideCondition(_conditions[i]);
-        for (uint8 i = 0; i < _actions.length; i++) provideAction(_actions[i]);
+        for (uint256 i = 0; i < _hashes.length; i++) provideProxyExtcodehash(_hashes[i]);
+        for (uint256 i = 0; i < _mastercopies.length; i++) provideMastercopy(_mastercopies[i]);
+        for (uint256 i = 0; i < _conditions.length; i++) provideCondition(_conditions[i]);
+        for (uint256 i = 0; i < _actions.length; i++) provideAction(_actions[i]);
     }
 
     function batchUnprovide(
@@ -136,10 +139,10 @@ contract ProviderGnosisSafeProxyModule is
         override
         onlyOwner
     {
-        for (uint8 i = 0; i < _hashes.length; i++) unprovideProxyExtcodehash(_hashes[i]);
-        for (uint8 i = 0; i < _mastercopies.length; i++) unprovideMastercopy(_mastercopies[i]);
-        for (uint8 i = 0; i < _conditions.length; i++) unprovideCondition(_conditions[i]);
-        for (uint8 i = 0; i < _actions.length; i++) unprovideAction(_actions[i]);
+        for (uint256 i = 0; i < _hashes.length; i++) unprovideProxyExtcodehash(_hashes[i]);
+        for (uint256 i = 0; i < _mastercopies.length; i++) unprovideMastercopy(_mastercopies[i]);
+        for (uint256 i = 0; i < _conditions.length; i++) unprovideCondition(_conditions[i]);
+        for (uint256 i = 0; i < _actions.length; i++) unprovideAction(_actions[i]);
     }
 
     // GnosisSafeProxy Check

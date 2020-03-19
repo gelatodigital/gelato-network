@@ -9,8 +9,8 @@ export default internalTask(
   .setAction(async ({ log }) => {
     try {
       const contractname = "ConditionBalance";
-      // reached(address _coin, address _account, uint256 _refBalance)
-      const functionname = "reached";
+      // ok(address _coin, address _account, uint256 _refBalance)
+      const functionname = "ok";
       // Params
       const { luis: account } = await run("bre-config", {
         addressbookcategory: "EOA"

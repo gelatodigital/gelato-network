@@ -15,7 +15,7 @@ export default internalTask(
 			read: true
 		});
 
-		const currentFearGreedIndex = await conditionFearGreedIndex.getConditionValue();
+		const currentFearGreedIndex = await conditionFearGreedIndex.value();
 
 		if (log)
 			console.log(`
@@ -25,7 +25,7 @@ export default internalTask(
 		try {
 			const conditionPayload = await run("abi-encode-withselector", {
 				contractname: "ConditionFearGreedIndex",
-				functionname: "reached",
+				functionname: "ok",
 				inputs: [currentFearGreedIndex]
 			});
 			if (log) console.log(conditionPayload);

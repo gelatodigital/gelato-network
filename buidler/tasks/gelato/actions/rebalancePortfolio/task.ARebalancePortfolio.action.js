@@ -24,7 +24,7 @@ export default task(
 				write: true
 			});
 
-			const newDaiWeight = await fearAndGreedContract.getConditionValue();
+			const newDaiWeight = await fearAndGreedContract.value();
 			console.log(
 				`\nNew weight of Dai portfolio part: ${parseFloat(newDaiWeight) /
 					100}\n`

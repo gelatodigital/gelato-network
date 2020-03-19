@@ -1,6 +1,8 @@
 pragma solidity ^0.6.4;
+pragma experimental ABIEncoderV2;
 
 import "../gelato_providers/provider_module/IGelatoProviderModule.sol";
+import { ExecClaim } from "../interfaces/IGelatoCore.sol";
 
 interface IGelatoProviders {
     // Registration
@@ -50,10 +52,8 @@ interface IGelatoProviders {
         returns (IGelatoProviderModule);
 
     // IGelatoProviderModule Standard wrapper
-    function isProvided(
-        address _providerModule,
-        address _userProxy,
-        address _condition,
-        address _action
-    ) external view returns (bool);
+    function isProvided(address _executor, ExecClaim calldata _execClaim)
+        external
+        view
+        returns (bool);
 }

@@ -1,6 +1,6 @@
 // CanExecute
-import "./task.canExecute";
-// Execute
-import "./task.execute";
+import "./task.canExec";
+// Exec
+import "./task.exec";
 // ifExecutableExecute
-import "./task.canExecute-Execute";
+import "./task.canExec-Exec";

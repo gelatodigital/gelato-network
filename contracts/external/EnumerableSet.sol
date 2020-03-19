@@ -18,21 +18,22 @@ pragma solidity ^0.6.4;
  * _Available since v2.5.0._
  *
  * @author Alberto Cuesta Cañada
+ * @author Luis Schliessske (modified to WordSet)
  */
 library EnumerableSet {
 
-    struct AddressSet {
+    struct WordSet {
         // Position of the value in the `values` array, plus 1 because index 0
         // means a value is not in the set.
-        mapping (address => uint256) index;
-        address[] values;
+        mapping (bytes32 => uint256) index;
+        bytes32[] values;
     }
 
     /**
      * @dev Add a value to a set. O(1).
      * Returns false if the value was already in the set.
      */
-    function add(AddressSet storage set, address value)
+    function add(WordSet storage set, bytes32 value)
         internal
         returns (bool)
     {
@@ -51,7 +52,7 @@ library EnumerableSet {
      * @dev Removes a value from a set. O(1).
      * Returns false if the value was not present in the set.
      */
-    function remove(AddressSet storage set, address value)
+    function remove(WordSet storage set, bytes32 value)
         internal
         returns (bool)
     {
@@ -61,7 +62,7 @@ library EnumerableSet {
 
             // If the element we're deleting is the last one, we can just remove it without doing a swap
             if (lastIndex != toDeleteIndex) {
-                address lastValue = set.values[lastIndex];
+                bytes32 lastValue = set.values[lastIndex];
 
                 // Move the last value to the index where the deleted value is
                 set.values[toDeleteIndex] = lastValue;
@@ -84,7 +85,7 @@ library EnumerableSet {
     /**
      * @dev Returns true if the value is in the set. O(1).
      */
-    function contains(AddressSet storage set, address value)
+    function contains(WordSet storage set, bytes32 value)
         internal
         view
         returns (bool)
@@ -100,22 +101,20 @@ library EnumerableSet {
      * WARNING: This function may run out of gas on large sets: use {length} and
      * {get} instead in these cases.
      */
-    function enumerate(AddressSet storage set)
+    function enumerate(WordSet storage set)
         internal
         view
-        returns (address[] memory)
+        returns (bytes32[] memory)
     {
-        address[] memory output = new address[](set.values.length);
-        for (uint256 i; i < set.values.length; i++){
-            output[i] = set.values[i];
-        }
+        bytes32[] memory output = new bytes32[](set.values.length);
+        for (uint256 i; i < set.values.length; i++) output[i] = set.values[i];
         return output;
     }
 
     /**
      * @dev Returns the number of elements on the set. O(1).
      */
-    function length(AddressSet storage set)
+    function length(WordSet storage set)
         internal
         view
         returns (uint256)
@@ -131,10 +130,10 @@ library EnumerableSet {
     *
     * - `index` must be strictly less than {length}.
     */
-    function get(AddressSet storage set, uint256 index)
+    function get(WordSet storage set, uint256 index)
         internal
         view
-        returns (address)
+        returns (bytes32)
     {
         return set.values[index];
     }

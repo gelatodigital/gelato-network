@@ -3,7 +3,7 @@ import { utils } from "ethers";
 
 export default internalTask(
   "gc-mint:defaultpayload:ConditionKyberRateRopsten",
-  `Returns a hardcoded actionPayload of ConditionKyberRateRopsten`
+  `Returns a hardcoded execPayload of ConditionKyberRateRopsten`
 )
   .addFlag("log")
   .setAction(async ({ log }) => {
@@ -12,7 +12,7 @@ export default internalTask(
 
       const contractname = "ConditionKyberRateRopsten";
       // action(_user, _userProxy, _src, _srcAmt, _dest, _minConversionRate)
-      const functionname = "reached";
+      const functionname = "ok";
       // Params
       const { DAI: src, KNC: dest } = await run("bre-config", {
         addressbookcategory: "erc20"

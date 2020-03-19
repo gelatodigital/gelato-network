@@ -7,7 +7,7 @@ interface IScriptsCreateGnosisSafeProxy {
         uint256 userProxyFunding
     );
 
-    /// @dev Allows to create new proxy contact and execute a message call to the
+    /// @dev Allows to create new proxy contact and exec a message call to the
     ///      new proxy within one transaction. Emits ProxyCreation.
     /// @param _mastercopy Address of master copy.
     /// @param _initializer Payload for message call sent to new proxy contract.

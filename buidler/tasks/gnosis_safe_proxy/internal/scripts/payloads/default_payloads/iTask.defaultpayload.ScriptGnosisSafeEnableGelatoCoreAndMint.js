@@ -7,14 +7,14 @@ export default internalTask(
   .addPositionalParam("conditionname")
   .addPositionalParam("actionname")
   .addOptionalPositionalParam(
-    "executionclaimexpirydate",
+    "execclaimexpirydate",
     "Defaults to 0 for selected executor's maximum",
     0,
     types.int
   )
   .addFlag("log")
   .setAction(
-    async ({ conditionname, actionname, executionclaimexpirydate, log }) => {
+    async ({ conditionname, actionname, execclaimexpirydate, log }) => {
       try {
         const gelatoProvider = await run("bre-config", {
           addressbookcategory: "gelatoProvider",
@@ -35,7 +35,7 @@ export default internalTask(
         const conditionPayload = await run(
           "gc-mint:defaultpayload:ConditionTimestampPassed"
         );
-        const actionPayload = await run(
+        const execPayload = await run(
           "gc-mint:defaultpayload:ActionERC20TransferFrom"
         );
         const payload = await run("abi-encode-withselector", {
@@ -46,8 +46,8 @@ export default internalTask(
             [gelatoProvider, gelatoExecutor],
             [conditionAddress, actionAddress],
             conditionPayload,
-            actionPayload,
-            executionclaimexpirydate
+            execPayload,
+            execclaimexpirydate
           ]
         });
         if (log) {
@@ -58,7 +58,7 @@ export default internalTask(
              \n Executor    ${gelatoExecutor}\
              \n Condition:  ${conditionname} at ${conditionAddress}\
              \n Action:     ${actionname} at ${actionAddress}\
-             \n ExpiryDate: ${executionclaimexpirydate}\
+             \n ExpiryDate: ${execclaimexpirydate}\
              \n Payload:\n ${payload}\n`
           );
         }
