@@ -64,6 +64,18 @@ module.exports = {
       contracts: kovanConfig.contracts,
       deployments: kovanConfig.deployments,
       filters: kovanConfig.filters
+    },
+    rinkeby: {
+      // Standard
+      accounts: { mnemonic: DEV_MNEMONIC },
+      chainId: 4,
+      gasPrice: parseInt(utils.parseUnits("8", "gwei")),
+      url: `https://rinkeby.infura.io/v3/${INFURA_ID}`,
+      // Custom
+      addressBook: rinkebyConfig.addressBook,
+      contracts: rinkebyConfig.contracts,
+      deployments: rinkebyConfig.deployments,
+      filters: rinkebyConfig.filters
     }
   },
   solc: {

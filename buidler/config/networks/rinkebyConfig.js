@@ -1,0 +1,1 @@
+export * from "./rinkeby/collection.configs.rinkeby"
