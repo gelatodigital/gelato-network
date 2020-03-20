@@ -19,17 +19,18 @@ contract ActionChainedRebalancePortfolioKovan is ActionRebalancePortfolioKovan {
 
     // actionSelector public state variable np due to this.actionSelector constant issue
     function actionSelector() public pure override virtual returns (bytes4) {
-        return ActionChainedRebalancePortfolioKovan.chainedAction.selector;
+        // return ActionChainedRebalancePortfolioKovan.chainedAction.selector;
+        return bytes4(keccak256("chainedAction(address[2],address[2])"));
     }
 
     // function action(address _executor, address _gasProvider) external virtual returns(uint256) {
     function chainedAction(
         // ChainedMintingParams
-        address[2] calldata _selectedProviderAndExecutor,
-        address[2] calldata _conditionAndAction
-    ) external {
+        address[2] memory _selectedProviderAndExecutor,
+        address[2] memory _conditionAndAction
+    ) public {
         // Execute Rebalancing action
-        uint256 newFearAndGreedIndex = super.action();
+        uint256 newFearAndGreedIndex = action();
 
         // Encode FearAndGreedIndex Condition
         bytes memory conditionPayload = abi.encodeWithSelector(

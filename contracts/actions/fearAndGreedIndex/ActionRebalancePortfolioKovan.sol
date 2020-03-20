@@ -34,7 +34,7 @@ contract ActionRebalancePortfolioKovan is GelatoActionsStandard {
 
     // Gelato Core
     IGelatoCore public constant gelatoCore = IGelatoCore(
-        0x40134bf777a126B0E6208e8BdD6C567F2Ce648d2)
+        0x4e4f3d95CC4920f1D6e8fb433a9Feed3C8f3CC31)
     ;
 
     // Uniswap Factory

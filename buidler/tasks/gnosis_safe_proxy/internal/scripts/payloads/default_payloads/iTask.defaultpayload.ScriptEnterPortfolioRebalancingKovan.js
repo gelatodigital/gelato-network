@@ -17,14 +17,46 @@ export default internalTask(
           contractname: "GelatoCore"
         });
       }
-      // taskArgs.gelatoprovider = await run("handleGelatoProvider", {
-      //   gelatoprovider: taskArgs.gelatoprovider
-      // });
-      // taskArgs.gelatoexecutor = await run("handleGelatoExecutor", {
-      //   gelatoexecutor: taskArgs.gelatoexecutor
-      // });
+      if( !taskArgs.gelatoprovider) {
+        taskArgs.gelatoprovider = await run("handleGelatoProvider", {
+          gelatoprovider: taskArgs.gelatoprovider
+        });
 
-      const inputs = [taskArgs.gelatocoreaddress];
+      }
+
+      if( !taskArgs.gelatoprovider) {
+        taskArgs.gelatoexecutor = await run("handleGelatoExecutor", {
+          gelatoexecutor: taskArgs.gelatoexecutor
+        });
+
+      }
+
+      const providerAndExecutor = [
+        taskArgs.gelatoprovider,
+        taskArgs.gelatoexecutor
+      ]
+
+      const conditionAddress = await run("bre-config", {
+        deployments: true,
+        contractname: 'ConditionFearGreedIndex'
+      });
+
+      const actiomAddress = await run("bre-config", {
+        deployments: true,
+        contractname: 'ActionChainedRebalancePortfolioKovan'
+      });
+
+      const conditionAndAction = [
+        conditionAddress,
+        actiomAddress
+      ]
+
+
+      const inputs = [
+        taskArgs.gelatocoreaddress,
+        providerAndExecutor,
+        conditionAndAction
+      ];
 
       if (taskArgs.log)
         console.log(

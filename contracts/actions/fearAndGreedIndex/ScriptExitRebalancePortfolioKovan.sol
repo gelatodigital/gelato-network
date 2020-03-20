@@ -33,6 +33,8 @@ contract ScriptExitRebalancePortfolioKovan {
         address receiver
     );
 
+    event LogExit();
+
     // !!!!!!!!! Kovan !!!!!!
     // DAI
     IERC20 public constant exchangeToken = IERC20(
@@ -46,7 +48,7 @@ contract ScriptExitRebalancePortfolioKovan {
 
     // GelatoCore
     IGelatoCore public constant gelatoCore = IGelatoCore(
-        0x40134bf777a126B0E6208e8BdD6C567F2Ce648d2
+        0x4e4f3d95CC4920f1D6e8fb433a9Feed3C8f3CC31
     );
 
     event LogFailure(string error);
@@ -107,7 +109,7 @@ contract ScriptExitRebalancePortfolioKovan {
         if (etherBalance > 0) _withdrawAddress.sendValue(etherBalance);
 
 
-        // // 3. Cancel Execution Claim
+        // 3. Cancel Execution Claim
         try gelatoCore.cancelExecutionClaim(
             _selectedProviderAndExecutor,
             _executionClaimId,
@@ -122,6 +124,8 @@ contract ScriptExitRebalancePortfolioKovan {
         } catch {
             emit LogFailure("cancelExecutionClaim error");
         }
+
+        emit LogExit();
     }
 
     // Returns KOVAN uniswap factory

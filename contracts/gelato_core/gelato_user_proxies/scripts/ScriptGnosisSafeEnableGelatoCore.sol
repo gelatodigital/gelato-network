@@ -22,9 +22,15 @@ contract ScriptGnosisSafeEnableGelatoCore {
         // Whitelist GelatoCore as module on delegatecaller (Gnosis Safe Proxy)
         try IGnosisSafe(address(this)).enableModule(_gelatoCore) {
         } catch Error(string memory error) {
-            emit LogFailure(error);
+            // If error is the following:
+            // "Module has already been added"
+            // It's ok as gelatoCore is already enabled
+            string memory errorMessage = "Module has already been added";
+            if (keccak256(bytes(error)) != keccak256(bytes(errorMessage))) {
+                revert(error);
+            }
         } catch {
-            emit LogFailure("enableModule error");
+            revert("enableModule error");
         }
     }
 }

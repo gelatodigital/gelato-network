@@ -414,7 +414,7 @@ contract GelatoCore is
         // Checks
         bool executionClaimExpired = _executionClaimExpiryDate <= now;
         if (
-            msg.sender != userByGelatoProxy[_userProxy] && msg.sender != _userProxy
+            msg.sender != _userProxy
         ) {
             require(
                 executionClaimExpired,
