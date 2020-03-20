@@ -126,7 +126,7 @@ contract ActionUniswapTradeKovan is GelatoActionsStandard {
         IUniswapExchange receiveTokenExchange = uniswapFactory.getExchange(receiveERC20);
         if (receiveTokenExchange != IUniswapExchange(0)) {
             // !! Dapp Interaction !!
-            try receiveTokenExchange.ethToTokenTransferInput.value(_sendAmount)(
+            try receiveTokenExchange.ethToTokenTransferInput{value: _sendAmount}(
                 1,
                 now,
                 _user
