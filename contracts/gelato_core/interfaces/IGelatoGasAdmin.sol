@@ -15,7 +15,7 @@ interface IGelatoGasAdmin {
     // Oracle (only Oracle can change state)
     function setGelatoGasPrice(uint256 _newGasPrice) external;
     function changeOracle(address _newOracle) external;
-    function setOracleFeeFactor(uint256 _newFeeFactor) external;
+    function setOracleFeeFactor(uint256 _feeFactor) external;
     function withdrawOracleFunds(uint256 _amount) external;
 
     // Regulator (only Regulator can change state)

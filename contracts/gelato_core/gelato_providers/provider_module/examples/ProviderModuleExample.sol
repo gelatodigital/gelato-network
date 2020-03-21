@@ -18,23 +18,21 @@ contract ProviderGnosisSafeProxyModule is
     mapping(address => bool) public override isActionProvided;
 
     // ================= GELATO PROVIDER MODULE STANDARD ================
-    function isProvided(address _executor, ExecClaim memory _execClaim)
+    function isProvided(ExecClaim memory _execClaim)
         public
         view
         override
-        returns (bool)
+        returns (string memory)
     {
-        _executor; // no logic needed because we accept any executor
-        requireValidGnosisSafeProxy(_execClaim.userProxy);
-        require(
-            isConditionProvided[_execClaim.condition],
-            "ProviderGnosisSafeProxyModule.isProvided: _condition"
-        );
-        require(
-            isActionProvided[_execClaim.action],
-            "ProviderGnosisSafeProxyModule.isProvided: _action"
-        );
-        return true;
+        address userProxy = _execClaim.user;
+        bytes32 codehash;
+        assembly { codehash := extcodehash(userProxy) }
+        if (!isProxyExtcodehashProvided[codehash]) return "InvalidGSPCodehash";
+        address mastercopy = IGnosisSafeProxy(userProxy).masterCopy();
+        if (!isMastercopyProvided[mastercopy]) return "InvalidGSPMastercopy";
+        if (!isConditionProvided[_execClaim.action]) return "ConditionNotProvided";
+        if (!isActionProvided[_execClaim.action]) return "ActionNotProvided";
+        return "ok";
     }
 
     // GnosisSafeProxy
@@ -143,20 +141,5 @@ contract ProviderGnosisSafeProxyModule is
         for (uint256 i = 0; i < _mastercopies.length; i++) unprovideMastercopy(_mastercopies[i]);
         for (uint256 i = 0; i < _conditions.length; i++) unprovideCondition(_conditions[i]);
         for (uint256 i = 0; i < _actions.length; i++) unprovideAction(_actions[i]);
-    }
-
-    // GnosisSafeProxy Check
-    function requireValidGnosisSafeProxy(address _proxy) public view override {
-        bytes32 codehash;
-        assembly { codehash := extcodehash(_proxy) }
-        require(
-            isProxyExtcodehashProvided[codehash],
-            "ProviderGnosisSafeProxyModule.requireValidGnosisSafeProxy: codehash"
-        );
-        address mastercopy = IGnosisSafeProxy(_proxy).masterCopy();
-        require(
-            isMastercopyProvided[mastercopy],
-            "ProviderGnosisSafeProxyModule.requireValidGnosisSafeProxy: mastercopy"
-        );
     }
 }

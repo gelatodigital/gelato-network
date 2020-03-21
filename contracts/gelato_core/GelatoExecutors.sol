@@ -53,13 +53,14 @@ abstract contract GelatoExecutors is IGelatoExecutors {
     }
 
     // Executor Accounting
-    function setExecutorFeeFactor(uint256 _newFeeFactor) external override {
+    function setExecutorFeeFactor(uint256 _feeFactor) external override {
+        require(_feeFactor < 100, "GelatoExecutors.setExecutorFeeFactor: over 100");
         emit LogSetExecutorFeeFactor(
             msg.sender,
             executorSuccessFeeFactor[msg.sender],
-            _newFeeFactor
+            _feeFactor
         );
-        executorSuccessFeeFactor[msg.sender] = _newFeeFactor;
+        executorSuccessFeeFactor[msg.sender] = _feeFactor;
     }
 
     function withdrawExecutorBalance(uint256 _withdrawAmount) external override {

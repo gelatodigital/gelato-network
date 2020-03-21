@@ -20,7 +20,7 @@ pragma solidity ^0.6.4;
  * @author Alberto Cuesta Cañada
  * @author Luis Schliessske (modified to WordSet)
  */
-library EnumerableSet {
+library EnumerableWordSet {
 
     struct WordSet {
         // Position of the value in the `values` array, plus 1 because index 0

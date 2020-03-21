@@ -36,7 +36,7 @@ interface IGelatoExecutors {
         returns (uint256);
 
     // Executor Accounting
-    function setExecutorFeeFactor(uint256 _newFeeFactor) external;
+    function setExecutorFeeFactor(uint256 _feeFactor) external;
     function withdrawExecutorBalance(uint256 _withdrawAmount) external;
     function executorSuccessFeeFactor(address _executor) external view returns (uint256);
     function executorSuccessFee(address _executor, uint256 _gas, uint256 _gasPrice)

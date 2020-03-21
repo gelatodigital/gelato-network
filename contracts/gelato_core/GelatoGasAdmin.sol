@@ -56,9 +56,10 @@ abstract contract GelatoGasAdmin is IGelatoGasAdmin {
         emit LogWithdrawOracleFunds(currentBalance, newBalance);
     }
 
-    function setOracleFeeFactor(uint256 _newFeeFactor) external override onlyOracle {
-        emit LogSetOracleFeeFactor(oracleSuccessFeeFactor, _newFeeFactor);
-        oracleSuccessFeeFactor = _newFeeFactor;
+    function setOracleFeeFactor(uint256 _feeFactor) external override onlyOracle {
+        require(_feeFactor < 100, "GelatoGasAdmin.setOracleFeeFactor: over 100");
+        emit LogSetOracleFeeFactor(oracleSuccessFeeFactor, _feeFactor);
+        oracleSuccessFeeFactor = _feeFactor;
     }
 
     function oracleSuccessFee(uint256 _gas, uint256 _gasPrice)

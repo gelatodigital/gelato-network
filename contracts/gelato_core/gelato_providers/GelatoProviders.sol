@@ -5,6 +5,8 @@ import { IGelatoProviders } from "../interfaces/IGelatoProviders.sol";
 import { Address } from "../../external/Address.sol";
 import { SafeMath } from "../../external/SafeMath.sol";
 import { IGelatoProviderModule } from "./provider_module/IGelatoProviderModule.sol";
+import { EnumerableAddressSet } from "../../external/EnumerableAddressSet.sol";
+import { EnumerableWordSet } from "../../external/EnumerableWordSet.sol";
 import { ExecClaim } from "../interfaces/IGelatoCore.sol";
 
 /// @title GelatoProviders
@@ -13,29 +15,51 @@ import { ExecClaim } from "../interfaces/IGelatoCore.sol";
 abstract contract GelatoProviders is IGelatoProviders {
 
     using Address for address payable;  /// for sendValue method
+    using EnumerableAddressSet for EnumerableAddressSet.AddressSet;
+    using EnumerableWordSet for EnumerableWordSet.WordSet;
     using SafeMath for uint256;
 
-    mapping(address => bool) public override isRegisteredProvider;
     mapping(address => uint256) public override providerFunds;
-    mapping(address => IGelatoProviderModule) public override providerModule;
+    mapping(address => address) public override providerExecutor;
+    mapping(address => EnumerableAddressSet.AddressSet) internal providerModules;
+    mapping(address => EnumerableWordSet.WordSet) internal execClaimHashesByProvider;
+
+    // Gelato Minting/Execution Gate
+    function isProvided(address _executor, ExecClaim memory _execClaim)
+        public
+        view
+        override
+        returns(string memory)
+    {
+        if (providerExecutor[_execClaim.provider] != _executor) return "InvalidExecutor";
+        if (!isProviderModule(_execClaim.provider, _execClaim.providerModule))
+            return "InvalidProviderModule";
+        IGelatoProviderModule _providerModule = IGelatoProviderModule(
+            _execClaim.providerModule
+        );
+        return _providerModule.isProvided(_execClaim);
+    }
 
     // Registration
-    function registerProvider(IGelatoProviderModule _module) external payable override {
-        require(
-            !isRegisteredProvider[msg.sender],
-            "GelatoProviders.registerProvider: already registered"
-        );
+    function registerProvider(address _executor, address[] calldata _modules)
+        external
+        payable
+        override
+    {
+        setProviderExecutor(_executor);
         provideFunds(msg.sender);
-        setProviderModule(_module);
-        isRegisteredProvider[msg.sender] = true;
+        batchAddProviderModules(_modules);
         emit LogRegisterProvider(msg.sender);
     }
 
-    function unregisterProvider() external override {
-        _requireRegisteredProvider(msg.sender);
-        isRegisteredProvider[msg.sender] = false;
+    function unregisterProvider(address[] calldata _modules)
+        external
+        override
+    {
+        delete providerExecutor[msg.sender];
         unprovideFunds(providerFunds[msg.sender]);
-        providerModule[msg.sender] = IGelatoProviderModule(0);
+        delete(providerFunds[msg.sender]);
+        batchRemoveProviderModules(_modules);
         emit LogUnregisterProvider(msg.sender);
     }
 
@@ -63,34 +87,75 @@ abstract contract GelatoProviders is IGelatoProviders {
         emit LogUnprovideFunds(msg.sender, previousProviderFunding, newProviderFunding);
     }
 
-    // Provider Module
-    function setProviderModule(IGelatoProviderModule _module) public override {
+    // Provider Executor
+    function setProviderExecutor(address _executor) public override {
         require(
-            _module != IGelatoProviderModule(0),
-            "GelatoProviders.setProviderModule: no _module provided"
+            providerExecutor[msg.sender] != _executor,
+            "GelatoProviders.setProviderExecutor: _executor already set"
         );
-        emit LogSetProviderWhitelist(providerModule[msg.sender], _module);
-        providerModule[msg.sender] = _module;
+        emit LogSetProviderExecutor(providerExecutor[msg.sender], _executor);
+        providerExecutor[msg.sender] = _executor;
     }
 
-    function isProvided(address _executor, ExecClaim memory _execClaim)
+    // Provider Module
+    function addProviderModule(address _module) public override {
+        require(_module != address(0), "GelatoProviders.addProviderModule: _module");
+        providerModules[msg.sender].add(_module);
+        emit LogAddProviderModule(_module);
+    }
+
+    function removeProviderModule(address _module) public override {
+        require(_module != address(0), "GelatoProviders.removeProviderModule: _module");
+        providerModules[msg.sender].remove(_module);
+        emit LogRemoveProviderModule(_module);
+    }
+
+    function batchAddProviderModules(address[] memory _modules) public override {
+        for (uint i = 0; i < _modules.length; i++) addProviderModule(_modules[i]);
+    }
+
+    function batchRemoveProviderModules(address[] memory _modules) public override {
+        for (uint i = 0; i < _modules.length; i++) removeProviderModule(_modules[i]);
+    }
+
+    // Providers' Module Getters
+    function isProviderModule(address _provider, address _module)
         public
         view
         override
-        returns(bool)  // userProxy
+        returns(bool)
     {
-        _requireRegisteredProvider(_execClaim.provider);
-        IGelatoProviderModule module = IGelatoProviderModule(
-            providerModule[_execClaim.provider]
-        );
-        return module.isProvided(_executor, _execClaim);
+        return providerModules[_provider].contains(_module);
     }
 
-    // Internal Helpers
-    function _requireRegisteredProvider(address _provider) internal view {
-        require(
-            isRegisteredProvider[_provider],
-            "GelatoProviders._isRegisteredProvider"
-        );
+    function numOfProviderModules(address _provider) external view override returns(uint256) {
+        return providerModules[_provider].length();
+    }
+
+    function getProviderModules(address _provider)
+        external
+        view
+        override
+        returns(address[] memory)
+    {
+        return providerModules[_provider].enumerate();
+    }
+
+    // Providers' Claims Getters
+    function isProviderClaim(address _provider, bytes32 _execClaimHash)
+        public
+        view
+        override
+        returns(bool)
+    {
+        return execClaimHashesByProvider[_provider].contains(_execClaimHash);
+    }
+
+    function numOfProviderClaims(address _provider) external view override returns(uint256) {
+        return execClaimHashesByProvider[_provider].length();
+    }
+
+    function providerClaims(address _provider) external view override returns(bytes32[] memory) {
+        return execClaimHashesByProvider[_provider].enumerate();
     }
 }

@@ -56,6 +56,4 @@ interface IProviderModuleExample {
         view
         returns (bool);
     function isActionProvided(address _action) external view returns (bool);
-
-    function requireValidGnosisSafeProxy(address _proxy) external view;
 }
