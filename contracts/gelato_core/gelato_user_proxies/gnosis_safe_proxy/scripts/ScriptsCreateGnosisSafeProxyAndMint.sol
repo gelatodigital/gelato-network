@@ -12,12 +12,12 @@ contract ScriptsCreateGnosisSafeProxyAndMint is
     // ========= Proxy Creation and Minting in 1 tx
     function create(
         address _mastercopy,
-        bytes calldata _initializer,
+        bytes memory _initializer,
         IGelatoCore _gelatoCore,
         address _executor,
-        ExecClaim calldata _execClaim
+        ExecClaim memory _execClaim
     )
-        external
+        public
         payable
         override
     {
@@ -27,13 +27,13 @@ contract ScriptsCreateGnosisSafeProxyAndMint is
 
     function createTwo(
         address _mastercopy,
-        bytes calldata _initializer,
+        bytes memory _initializer,
         uint256 _saltNonce,
         IGelatoCore _gelatoCore,
         address _executor,
-        ExecClaim calldata _execClaim
+        ExecClaim memory _execClaim
     )
-        external
+        public
         payable
         override
     {

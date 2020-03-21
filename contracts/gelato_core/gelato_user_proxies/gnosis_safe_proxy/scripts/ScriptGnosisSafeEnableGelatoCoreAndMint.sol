@@ -23,9 +23,9 @@ contract ScriptGnosisSafeEnableGelatoCoreAndMint {
     function enableModuleAndMint(
         address _gelatoCore,
         address _executor,
-        ExecClaim calldata _execClaim
+        ExecClaim memory _execClaim
     )
-        external
+        public
     {
         // Whitelist GelatoCore as module on delegatecaller (Gnosis Safe Proxy)
         try IGnosisSafe(address(this)).enableModule(_gelatoCore) {

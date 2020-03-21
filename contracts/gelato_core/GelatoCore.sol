@@ -127,7 +127,7 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
         Refund
     }
 
-    function exec(ExecClaim calldata _execClaim, bytes32 _execClaimHash) external override {
+    function exec(ExecClaim memory _execClaim, bytes32 _execClaimHash) public override {
         // Store startGas for gas-consumption based cost and payout calcs
         uint256 startGas = gasleft();
 
@@ -249,10 +249,10 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
     // ================  CANCEL USER / EXECUTOR API ============================
     function cancelExecClaim(
         address _executor,
-        ExecClaim calldata _execClaim,
+        ExecClaim memory _execClaim,
         bytes32 _execClaimHash
     )
-        external
+        public
         override
     {
         // Checks
@@ -275,10 +275,10 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
     function reassignExecClaim(
         address _oldExecutor,
         address _newExecutor,
-        ExecClaim calldata _execClaim,
+        ExecClaim memory _execClaim,
         bytes32 _execClaimHash
     )
-        external
+        public
     {
         require(msg.sender == _execClaim.provider, "GelatoCore.reassignExecClaim: sender");
         require(

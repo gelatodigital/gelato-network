@@ -18,8 +18,8 @@ contract ProviderGnosisSafeProxyModule is
     mapping(address => bool) public override isActionProvided;
 
     // ================= GELATO PROVIDER MODULE STANDARD ================
-    function isProvided(address _executor, ExecClaim calldata _execClaim)
-        external
+    function isProvided(address _executor, ExecClaim memory _execClaim)
+        public
         view
         override
         returns (bool)
