@@ -9,7 +9,7 @@ const signer = ethers.Wallet.fromMnemonic(DEV_MNEMONIC);
 const signerProvider = signer.connect(provider);
 
 const abi = [
-  "function getTriggerValue(address _account, address _coin, uint256, bool) view returns(uint256)"
+  "function getTriggerValue(address _account, address _token, uint256, bool) view returns(uint256)"
 ];
 
 // A provided bad address that causes problems

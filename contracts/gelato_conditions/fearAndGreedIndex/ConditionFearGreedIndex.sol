@@ -1,6 +1,7 @@
 pragma solidity ^0.6.4;
+pragma experimental ABIEncoderV2;
 
-import "../IGelatoCondition.sol";
+import { IGelatoCondition, ConditionValues } from "../IGelatoCondition.sol";
 import "../../external/Ownable.sol";
 import "../../external/SafeMath.sol";
 
@@ -10,13 +11,8 @@ contract ConditionFearGreedIndex is IGelatoCondition, Ownable {
 
     event LogSet(uint256 indexed oldIndex, uint256 indexed newIndex);
 
-    // conditionSelector public state variable np due to this.actionSelector constant issue
-    function conditionSelector() external pure override returns(bytes4) {
-        return this.ok.selector;
-    }
-
-    // State
-    uint256 public current;  // between 0 - 100
+    // Specific Implementation
+    uint256 public value;  // between 0 - 100
 
     // FearAndGreedIndex Oracle
     function set(uint256 _newValue) external onlyOwner {
@@ -28,17 +24,25 @@ contract ConditionFearGreedIndex is IGelatoCondition, Ownable {
             _newValue.mod(10) == 0 ,
             "ConditionFearGreedIndex.setOracle: only accept increments of 10"
         );
-        emit LogSet(current, _newValue);
-        current = _newValue;
+        emit LogSet(value, _newValue);
+        value = _newValue;
     }
 
 
-    /// @dev Caution: use 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE for ETH _coin
-    function ok(uint256 _prevIndex)
+    // STANDARD Interface
+    function ok(bytes calldata _conditionPayload)
         external
         view
-        returns(bool, string memory)  // executable?, reason
+        override
+        virtual
+        returns(string memory)
     {
+        uint256 prevIndex = abi.decode(_conditionPayload[4:], (uint256));
+        return ok(prevIndex);
+    }
+
+    // Specific implementation
+    function ok(uint256 _prevIndex) public view virtual returns(string memory) {
         require(
             _prevIndex >= 0 && _prevIndex <= 100,
             "ConditionFearGreedIndex.ok: _prevIndex between 0 and 100"
@@ -50,12 +54,19 @@ contract ConditionFearGreedIndex is IGelatoCondition, Ownable {
 
         bool prevIndexIsZero = _prevIndex == 0;
 
-        if (current >= _prevIndex + 10) return (true, "0");
-        else if (!prevIndexIsZero && current <= _prevIndex - 10) return (true, "1");
-        else return(false, "NotOkNewIndexIsNotSmallerOrGreater");
+        if (value >= _prevIndex + 10) return "ok0";
+        else if (!prevIndexIsZero && value <= _prevIndex - 10) return "ok1";
+        return "NotOkNewIndexIsNotSmallerOrGreater";
     }
 
-    function value() external view returns(uint256) {
-        return current;
+    // STANDARD Interface
+    function currentState(bytes calldata)
+        external
+        view
+        override
+        virtual
+        returns(ConditionValues memory _values)
+    {
+        _values.uints[0] = value;
     }
 }

@@ -4,6 +4,7 @@ pragma experimental ABIEncoderV2;
 import { ActionERC20TransferFrom, ActionPayload as SuperActionPayload } from "../one_offs/ActionERC20TransferFrom.sol";
 import { ConditionTimestampPassed } from "../../../gelato_conditions/eth_utils/eth_time/ConditionTimestampPassed.sol";
 import { ExecClaim, IGelatoCore } from "../../../gelato_core/interfaces/IGelatoCore.sol";
+import { IGelatoAction } from "../../IGelatoAction.sol";
 import { IGelatoExecutors } from "../../../gelato_core/interfaces/IGelatoExecutors.sol";
 import { SafeMath } from "../../../external/SafeMath.sol";
 import { Address } from "../../../external/Address.sol";
@@ -20,21 +21,27 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
 
     address public constant GELATO_CORE = 0x40134bf777a126B0E6208e8BdD6C567F2Ce648d2;
 
-    // ActionSelector public state variable np due to this.actionSelector constant issue
-    function actionSelector() public pure override virtual returns(bytes4) {
-        return this.chainedAction.selector;
+    function action(bytes calldata _actionPayload) external payable override virtual {
+        (SuperActionPayload memory superActionPayload,
+         ActionData memory actionData,
+         ExecClaim memory execClaim) = abi.decode(
+             _actionPayload[4:],
+             (SuperActionPayload,ActionData,ExecClaim)
+         );
+         action(superActionPayload, actionData, execClaim);
     }
 
-    function chainedAction(
+    function action(
         SuperActionPayload memory _superActionPayload,
         ActionData memory _actionData,
         ExecClaim memory _execClaim
     )
         public
+        payable
         virtual
     {
         // Internal Call: ActionERC20TransferFrom.action()
-        action(_superActionPayload);
+        super.action(_superActionPayload);
 
         // Duedate for next chained action call
          _actionData.dueDate = _actionData.dueDate.add(_actionData.timeOffset);
@@ -45,7 +52,7 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
         // @DEV we could maybe use some assembly here to only swap the dueDateValue
         // @DEV we need to check whether we actually need to update _execClaim.execPayload
         _execClaim.actionPayload = abi.encodeWithSelector(
-            actionSelector(),
+            IGelatoAction.action.selector,
             _superActionPayload,
             _actionData,
             _execClaim
@@ -62,36 +69,33 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
         view
         override
         virtual
-        returns(string memory)  // actionCondition
+        returns(string memory)
     {
         // Decode: Calldata Array execPayload without Selector
-        (SuperActionPayload memory _superActionPayload,
-         ActionData memory _actionData,
-         ExecClaim memory _execClaim) = abi.decode(
+        (SuperActionPayload memory superActionPayload,
+         ActionData memory actionData,
+         ExecClaim memory execClaim) = abi.decode(
              _actionPayload[4:],
              (SuperActionPayload,ActionData,ExecClaim)
         );
 
         // Check: ActionERC20TransferFrom._actionConditionsCheck
-        string memory baseActionCondition = _actionConditionsCheck(_superActionPayload);
+        string memory transferStatus = super.ok(superActionPayload);
 
         // If: Base actionCondition: NOT OK => Return
         if (
-            bytes(baseActionCondition).length >= 2 &&
-            bytes(baseActionCondition)[0] != "o"
-            && bytes(baseActionCondition)[1] != "k"
+            bytes(transferStatus).length >= 2 &&
+            bytes(transferStatus)[0] != "o" &&
+            bytes(transferStatus)[1] != "k"
         )
-            return baseActionCondition;
+            return transferStatus;
 
         // Else: Check and Return current contract actionCondition
-        return _actionConditionsCheck(_actionData, _execClaim);
+        return ok(actionData, execClaim);
     }
 
-    function _actionConditionsCheck(
-        ActionData memory _actionData,
-        ExecClaim memory _execClaim
-    )
-        internal
+    function ok(ActionData memory _actionData, ExecClaim memory _execClaim)
+        public
         view
         virtual
         returns(string memory)  // actionCondition

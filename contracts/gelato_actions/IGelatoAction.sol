@@ -21,10 +21,8 @@ interface IGelatoAction {
         address receiver
     );
 
-    /// @notice The selector for an action contract's single action function
-    /// @dev Inheriting action contracts must override this properly
-    /// @return The function selector for whatever the action's implementation fn is.
-    function actionSelector() external pure returns (bytes4);
+    function action(bytes calldata _actionPayload) external payable;
+
     /**
      * @notice Returns whether the action-specific conditions are fulfilled
      * @dev if actions have specific conditions they should override and extend this fn

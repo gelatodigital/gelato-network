@@ -9,7 +9,7 @@ export default internalTask(
   .setAction(async ({ log }) => {
     try {
       const contractname = "ConditionBalance";
-      // ok(address _coin, address _account, uint256 _refBalance)
+      // ok(address _token, address _account, uint256 _refBalance)
       const functionname = "ok";
       // Params
       const { luis: account } = await run("bre-config", {

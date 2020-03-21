@@ -18,12 +18,12 @@ contract ActionERC20TransferFrom is GelatoActionsStandard {
     // using SafeERC20 for IERC20; <- internal library methods vs. try/catch
     using Address for address;
 
-    // actionSelector public state variable np due to this.actionSelector constant issue
-    function actionSelector() public pure override virtual returns(bytes4) {
-        return this.action.selector;
+    function action(bytes calldata _actionPayload) external payable override virtual {
+        (ActionPayload memory _p) = abi.decode(_actionPayload[4:], (ActionPayload));
+         action(_p);
     }
 
-    function action(ActionPayload memory _p) public virtual {
+    function action(ActionPayload memory _p) public payable virtual {
         require(address(this) == _p.userProxy, "ActionERC20TransferFrom: UserProxy");
         IERC20 sendERC20 = IERC20(_p.sendToken);
         try sendERC20.transferFrom(_p.user, _p.destination, _p.sendAmount) {
@@ -43,15 +43,10 @@ contract ActionERC20TransferFrom is GelatoActionsStandard {
         returns(string memory)  // actionCondition
     {
         (ActionPayload memory _p) = abi.decode(_actionPayload[4:], (ActionPayload));
-        return _actionConditionsCheck(_p);
+        return ok(_p);
     }
 
-    function _actionConditionsCheck(ActionPayload memory _p)
-        internal
-        view
-        virtual
-        returns(string memory)  // actionCondition
-    {
+    function ok(ActionPayload memory _p) public view virtual returns(string memory) {
         if (!_p.sendToken.isContract())
             return "ActionERC20TransferFrom: NotOkSendTokenAddress";
 
