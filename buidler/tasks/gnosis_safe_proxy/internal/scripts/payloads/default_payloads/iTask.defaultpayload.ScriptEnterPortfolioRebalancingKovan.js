@@ -17,10 +17,9 @@ export default internalTask(
           contractname: "GelatoCore"
         });
       }
-      if( !taskArgs.gelatoprovider) {
-        taskArgs.gelatoprovider = await run("handleGelatoProvider", {
-          gelatoprovider: taskArgs.gelatoprovider
-        });
+      taskArgs.gelatoprovider = await run("handleGelatoProvider", { 
+        gelatoprovider: taskArgs.gelatoprovider 
+      })
 
       }
 
