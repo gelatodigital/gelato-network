@@ -18,6 +18,9 @@ export const addressBook = {
     ETH: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
     proxy: "0x0"
   },
+  gnosisProtocol: {
+    batchExchange: "0xC576eA7bd102F7E476368a5E98FA455d1Ea34dE2"
+  },
   gelatoProvider: {
     default: "0x518eAa8f962246bCe2FA49329Fe998B66d67cbf8" // Hil Index 2
   },
