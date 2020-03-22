@@ -21,8 +21,6 @@ export default internalTask(
         gelatoprovider: taskArgs.gelatoprovider 
       })
 
-      }
-
       if( !taskArgs.gelatoprovider) {
         taskArgs.gelatoexecutor = await run("handleGelatoExecutor", {
           gelatoexecutor: taskArgs.gelatoexecutor
