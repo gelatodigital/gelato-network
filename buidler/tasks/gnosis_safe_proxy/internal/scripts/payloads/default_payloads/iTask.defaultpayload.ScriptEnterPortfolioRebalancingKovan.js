@@ -35,7 +35,7 @@ export default internalTask(
         contractname: 'ConditionFearGreedIndex'
       });
 
-      const actiomAddress = await run("bre-config", {
+      const actionAddress = await run("bre-config", {
         deployments: true,
         contractname: 'ActionChainedRebalancePortfolioKovan'
       });
