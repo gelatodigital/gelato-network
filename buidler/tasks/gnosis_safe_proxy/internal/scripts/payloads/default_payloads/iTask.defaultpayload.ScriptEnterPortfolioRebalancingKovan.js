@@ -17,19 +17,13 @@ export default internalTask(
           contractname: "GelatoCore"
         });
       }
-      if( !taskArgs.gelatoprovider) {
-        taskArgs.gelatoprovider = await run("handleGelatoProvider", {
-          gelatoprovider: taskArgs.gelatoprovider
-        });
+      taskArgs.gelatoprovider = await run("handleGelatoProvider", { 
+        gelatoprovider: taskArgs.gelatoprovider 
+      })
 
-      }
-
-      if( !taskArgs.gelatoprovider) {
-        taskArgs.gelatoexecutor = await run("handleGelatoExecutor", {
-          gelatoexecutor: taskArgs.gelatoexecutor
-        });
-
-      }
+      taskArgs.gelatoexecutor = await run("handleGelatoExecutor", {
+        gelatoexecutor: taskArgs.gelatoexecutor
+      });
 
       const providerAndExecutor = [
         taskArgs.gelatoprovider,
@@ -41,14 +35,14 @@ export default internalTask(
         contractname: 'ConditionFearGreedIndex'
       });
 
-      const actiomAddress = await run("bre-config", {
+      const actionAddress = await run("bre-config", {
         deployments: true,
         contractname: 'ActionChainedRebalancePortfolioKovan'
       });
 
       const conditionAndAction = [
         conditionAddress,
-        actiomAddress
+        actionAddress
       ]
 
 

@@ -28,7 +28,9 @@ contract ActionChainedRebalancePortfolioKovan is ActionRebalancePortfolioKovan {
         // ChainedMintingParams
         address[2] memory _selectedProviderAndExecutor,
         address[2] memory _conditionAndAction
-    ) public {
+    ) 
+        public 
+    {
         // Execute Rebalancing action
         uint256 newFearAndGreedIndex = action();
 
