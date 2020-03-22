@@ -42,7 +42,7 @@ export default internalTask(
 
       const conditionAndAction = [
         conditionAddress,
-        actiomAddress
+        actionAddress
       ]
 
 
