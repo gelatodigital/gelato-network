@@ -33,7 +33,7 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
         virtual
     {
         // Internal Call: ActionERC20TransferFrom.action()
-        action(_userAndProxy, _sendTokenAndDesination, _sendAmount);
+        action(_userAndProxy[0], _sendTokenAndDesination[0], _sendTokenAndDesination[1], _sendAmount);
 
         // Decode: ConditionTimestampPassed Payload and update value
         uint256 nextDueDate = _dueDate.add(_timeOffset);
@@ -83,8 +83,8 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
 
         // Check: ActionERC20TransferFrom._actionConditionsCheck
         string memory baseActionCondition = _actionConditionsCheck(
-            _userAndProxy,
-            _sendTokenAndDesination,
+            _userAndProxy[0],
+            _sendTokenAndDesination[0],
             _sendAmount
         );
 

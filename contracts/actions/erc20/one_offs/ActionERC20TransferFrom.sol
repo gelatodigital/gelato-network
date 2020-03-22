@@ -16,29 +16,26 @@ contract ActionERC20TransferFrom is GelatoActionsStandard {
 
     function action(
         // Standard Action Params
-        address[2] memory _userAndProxy,
+        address _user,
         // Specific Action Params
-        address[2] memory _sendTokenAndDesination,
+        address _sendToken,
+        address _destination,
         uint256 _sendAmount
     )
         public
         virtual
     {
-        require(
-            address(this) == _userAndProxy[1],
-            "ActionERC20TransferFrom: ErrorUserProxy"
-        );
-        IERC20 sendERC20 = IERC20(_sendTokenAndDesination[0]);
+        IERC20 sendERC20 = IERC20(_sendToken);
         try sendERC20.transferFrom(
-            _userAndProxy[0],
-            _sendTokenAndDesination[1],
+            _user,
+            _destination,
             _sendAmount
         ) {
             emit LogOneWay(
-                _userAndProxy[0],  // origin
-                _sendTokenAndDesination[0],  // sendToken
+                _user,  // origin
+                _sendToken,  // sendToken
                 _sendAmount,
-                _sendTokenAndDesination[1]  // destination
+                _destination  // destination
             );
         } catch {
             revert("ActionERC20TransferFrom: ErrorTransferFromUser");
@@ -54,24 +51,21 @@ contract ActionERC20TransferFrom is GelatoActionsStandard {
         virtual
         returns(string memory)  // actionCondition
     {
-        (address[2] memory _userAndProxy,
-         address[2] memory _sendTokenAndDesination,
-         uint256 _sendAmount) = abi.decode(
+        (address _user, address _sendToken,
+        , uint256 _sendAmount) = abi.decode(
             _actionPayload[4:],
-            (address[2],address[2],uint256)
+            (address,address,address,uint256)
         );
         return _actionConditionsCheck(
-            _userAndProxy,
-            _sendTokenAndDesination,
+            _user,
+            _sendToken,
             _sendAmount
         );
     }
 
     function _actionConditionsCheck(
-        // Standard Action Params
-        address[2] memory _userAndProxy,
-        // Specific Action Params
-        address[2] memory _sendTokenAndDesination,
+         address _user,
+        address _sendToken,
         uint256 _sendAmount
     )
         internal
@@ -79,17 +73,17 @@ contract ActionERC20TransferFrom is GelatoActionsStandard {
         virtual
         returns(string memory)  // actionCondition
     {
-        if (!_sendTokenAndDesination[0].isContract())
+        if (_user.isContract())
             return "ActionERC20TransferFrom: NotOkSendTokenAddress";
 
-        IERC20 sendERC20 = IERC20(_sendTokenAndDesination[0]);
-        try sendERC20.balanceOf(_userAndProxy[0]) returns(uint256 sendERC20Balance) {
+        IERC20 sendERC20 = IERC20(_sendToken);
+        try sendERC20.balanceOf(_user) returns(uint256 sendERC20Balance) {
             if (sendERC20Balance < _sendAmount)
                 return "ActionERC20TransferFrom: NotOkUserSendTokenBalance";
         } catch {
             return "ActionERC20TransferFrom: ErrorBalanceOf";
         }
-        try sendERC20.allowance(_userAndProxy[0], _userAndProxy[1])
+        try sendERC20.allowance(_user, address(this))
             returns(uint256 userProxySendTokenAllowance)
         {
             if (userProxySendTokenAllowance < _sendAmount)

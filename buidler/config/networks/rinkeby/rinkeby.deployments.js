@@ -6,7 +6,7 @@ export const deployments = {
   ActionBzxPtokenMintWithToken: "0x0",
   // erc20
   ActionERC20Transfer: "0x0",
-  ActionERC20TransferFrom: "0x0",
+  ActionERC20TransferFrom: "0xAE2681CA4E898bEc0bFAa850D1E9bC3f9bA06fE0",
   // kyber
   ActionKyberTradeRinkeby: "0x0",
   // Portfolio Mgmt
@@ -21,7 +21,7 @@ export const deployments = {
     "0x0",
 
   // ===== Gelato Core ====
-  GelatoCore: "0x0",
+  GelatoCore: "0xff54516a7bC1c1ea952A688E72d5B93a80620074",
 
   // ==== Conditions ====
   // == Balances ==
@@ -40,7 +40,7 @@ export const deployments = {
   // == GnosisSafe ==
   // Enable GelatoCore Module
   ScriptGnosisSafeEnableGelatoCore:
-    "0x0",
+    "0x5EF44De4b98F2bcE0E29c344E7B2Fb8f0282A0Cf",
   // Enable GelatoCore Module and Mint
   ScriptGnosisSafeEnableGelatoCoreAndMint:
     "0x0",
