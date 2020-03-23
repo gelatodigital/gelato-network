@@ -68,11 +68,15 @@ export default task(
   .addFlag("log", "Logs return values to stdout")
   .setAction(async taskArgs => {
     try {
+
       // taskArgs sanitzation
       if (taskArgs.functionname && taskArgs.data)
         throw new Error("Provide EITHER --functionname OR --data");
 
-      // --to address defaults to Contractname
+
+      if (!taskArgs.inputs) taskArgs.inputs = []
+
+        // --to address defaults to Contractname
       if (!taskArgs.to) {
         taskArgs.to = await run("bre-config", {
           deployments: true,

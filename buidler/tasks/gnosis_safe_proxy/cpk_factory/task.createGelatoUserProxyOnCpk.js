@@ -1,12 +1,11 @@
 import { task, types } from "@nomiclabs/buidler/config";
-import { defaultNetwork } from "../../../../../buidler.config";
+import { defaultNetwork } from "../../../../buidler.config";
 import { constants, utils } from "ethers";
 
 export default task(
-  "gc-creategelatouserproxy",
-  `Sends tx to GelatoCore.createGelatoUserProxy() or if --createtwo to .createTwoGelatoUserProxy()  on [--network] (default: ${defaultNetwork})`
+  "gc-creategelatouserproxyoncpk",
+  `Sends tx to CPKFactory.createProxyAndExecTransaction() on [--network] (default: ${defaultNetwork})`
 )
-  .addFlag("createtwo", "Call gelatoCore.createTwoGelatoUserProxy()")
   .addOptionalParam(
     "mastercopy",
     "The deployed implementation code the created proxy should point to"
@@ -14,8 +13,9 @@ export default task(
   .addOptionalParam(
     "saltnonce",
     "Supply for createTwoProxyAndMint()",
-    42069,
-    types.int
+    // CPK global salt
+    '0xcfe33a586323e7325be6aa6ecd8b4600d232a9037e83c8ece69413b777dabe65',
+    types.string
   )
   .addOptionalParam("initializer", "Payload for gnosis safe proxy setup tasks")
   .addFlag("setup", "Initialize gnosis safe by calling its setup function")
@@ -35,6 +35,12 @@ export default task(
     constants.AddressZero
   )
   .addOptionalParam(
+    "value",
+    "Supply with --setup: value for execTransactions",
+    0,
+    types.int
+  )
+  .addOptionalParam(
     "data",
     "Supply with --setup: payload for optional delegate call",
     constants.HashZero
@@ -44,9 +50,16 @@ export default task(
     "Script to retrieve --data and to be --to (if not --to supplied)"
   )
   .addOptionalParam(
+    "operation",
+    "Supply with --setup: oepration type, default 1 delegate call",
+    1,
+    types.int
+  )
+  .addOptionalParam(
     "fallbackhandler",
     "Supply with --setup:  Handler for fallback calls to this contract",
-    constants.AddressZero
+    "0x40A930851BD2e590Bd5A5C981b436de25742E980",
+    types.string
   )
   .addOptionalParam(
     "paymenttoken",
@@ -64,12 +77,7 @@ export default task(
     "Supply with --setup:  Adddress that should receive the payment (or 0 if tx.origin)t",
     constants.AddressZero
   )
-  .addOptionalParam(
-    "funding",
-    "ETH value to be sent to newly created gelato user proxy",
-    "0",
-    types.string
-  )
+
   .addFlag("log", "Logs return values to stdout")
   .setAction(async taskArgs => {
     try {
@@ -136,27 +144,30 @@ export default task(
 
       if (taskArgs.log) console.log("\nTaskArgs:\n", taskArgs, "\n");
 
-      // GelatoCore interaction
-      const gelatoCore = await run("instantiateContract", {
-        contractname: "GelatoCore",
+      // CPKFactory interaction
+      const cpkFactoryAddress = await run("bre-config", {
+        addressbookcategory: "gnosisSafe",
+        addressbookentry: "cpkFactory"
+      })
+
+      if(taskArgs.log) console.log(`CPK Factory: ${cpkFactoryAddress}`)
+
+      const cpkFactory = await run("instantiateContract", {
+        contractaddress: cpkFactoryAddress,
+        contractname: 'CPKFactory',
         write: true
       });
 
-      let creationTx;
-      if (taskArgs.createtwo) {
-        creationTx = await gelatoCore.createTwoGelatoUserProxy(
-          taskArgs.mastercopy,
-          taskArgs.initializer,
-          taskArgs.saltnonce,
-          { value: utils.parseEther(taskArgs.funding), gasLimit: 3000000 }
-        );
-      } else {
-        creationTx = await gelatoCore.createGelatoUserProxy(
-          taskArgs.mastercopy,
-          taskArgs.initializer,
-          { value: utils.parseEther(taskArgs.funding), gasLimit: 3000000 }
-        );
-      }
+      let creationTx = await cpkFactory.createProxyAndExecTransaction(
+        taskArgs.mastercopy,
+        taskArgs.saltnonce,
+        taskArgs.fallbackhandler,
+        taskArgs.to,
+        taskArgs.value,
+        taskArgs.data,
+        taskArgs.operation,
+        {  gasLimit: 3000000 }
+      );
 
       if (taskArgs.log)
         console.log(`\n Creation Tx Hash: ${creationTx.hash}\n`);
@@ -166,16 +177,17 @@ export default task(
       // Event Emission verification
       if (taskArgs.log) {
         const parsedCreateLog = await run("event-getparsedlog", {
-          contractname: "GelatoCore",
-          eventname: "LogGelatoUserProxyCreation",
+          contractname: "CPKFactory",
+          contractaddress: cpkFactoryAddress,
+          eventname: "ProxyCreation",
           txhash: creationTx.hash,
           blockHash,
           values: true,
           stringify: true
         });
         if (parsedCreateLog)
-          console.log("\n✅ LogGelatoUserProxyCreation\n", parsedCreateLog);
-        else console.log("\n❌ LogGelatoUserProxyCreation not found");
+          console.log("\n✅ ProxyCreation\n", parsedCreateLog);
+        else console.log("\n❌ ProxyCreation not found");
       }
 
       return creationTx.hash;

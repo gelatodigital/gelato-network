@@ -14,6 +14,8 @@ export const contracts = [
   "ActionMultiMintForConditionTimestampPassed",
   // Portfolio Mgmt
   "ActionRebalancePortfolioRinkeby",
+  // Gnosis Batch Exchange
+  "ActionWithdrawBatchExchangeRinkeby",
 
   // = Chained =
   // ERC20

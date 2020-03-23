@@ -136,3 +136,6 @@ require("./buidler/tasks/gnosis_safe_proxy/collection.tasks.gnosis-safe-proxy");
 // ======================== INTERNAL HELPER TASKS ======================================
 // encoding, naming ....
 require("./buidler/tasks/internal/collection.internalTasks");
+
+// ======================== VIEW FUNCS ======================================
+require("./buidler/tasks/view/collection.viewTasks");
