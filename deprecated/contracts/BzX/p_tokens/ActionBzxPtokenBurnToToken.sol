@@ -103,7 +103,7 @@ contract ActionBzxPtokenBurnToToken is GelatoActionsStandard {
         }
 
         // STANDARD return string to signal actionConditions Ok
-        return "ok";
+        return "Ok";
     }
 
 

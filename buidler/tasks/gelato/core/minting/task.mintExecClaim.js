@@ -30,7 +30,7 @@ export default task(
     constants.HashZero
   )
   .addOptionalPositionalParam(
-    "execpayload",
+    "actionpayload",
     "If not provided, must have a default returned from handleGelatoPayload()"
   )
   .addOptionalPositionalParam(
@@ -88,10 +88,10 @@ export default task(
           contractname: taskArgs.actionname
         });
       }
-      if (!taskArgs.execpayload) {
-        taskArgs.execpayload = await run("handleGelatoPayload", {
+      if (!taskArgs.actionpayload) {
+        taskArgs.actionpayload = await run("handleGelatoPayload", {
           contractname: taskArgs.actionname,
-          payload: taskArgs.execpayload
+          payload: taskArgs.actionpayload
         });
       }
 
@@ -106,7 +106,7 @@ export default task(
         [taskArgs.gelatoprovider, taskArgs.gelatoexecutor],
         [taskArgs.conditionaddress, taskArgs.actionaddress],
         taskArgs.conditionpayload,
-        taskArgs.execpayload,
+        taskArgs.actionpayload,
         taskArgs.execclaimexpirydate
       );
 

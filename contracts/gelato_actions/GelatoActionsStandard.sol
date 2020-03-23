@@ -14,6 +14,6 @@ abstract contract GelatoActionsStandard is IGelatoAction {
     {
         this;
         // Standard return value for actionConditions fulfilled and no erros:
-        return "ok";
+        return "Ok";
     }
 }

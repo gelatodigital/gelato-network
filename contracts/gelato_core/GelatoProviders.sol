@@ -21,23 +21,35 @@ abstract contract GelatoProviders is IGelatoProviders {
 
     mapping(address => uint256) public override providerFunds;
     mapping(address => address) public override providerExecutor;
-    mapping(address => EnumerableAddressSet.AddressSet) internal providerModules;
+    mapping(address => EnumerableAddressSet.AddressSet) internal _providerModules;
     mapping(address => EnumerableWordSet.WordSet) internal execClaimHashesByProvider;
 
-    // Gelato Minting/Execution Gate
-    function isProvided(address _executor, ExecClaim memory _execClaim)
+    // IGelatoProviderModule: Gelato Minting/Execution Gate
+    function isProvided(ExecClaim memory _execClaim)
         public
         view
         override
         returns(string memory)
     {
-        if (providerExecutor[_execClaim.provider] != _executor) return "InvalidExecutor";
         if (!isProviderModule(_execClaim.provider, _execClaim.providerModule))
             return "InvalidProviderModule";
         IGelatoProviderModule _providerModule = IGelatoProviderModule(
             _execClaim.providerModule
         );
         return _providerModule.isProvided(_execClaim);
+    }
+
+    // IGelatoProviderModule: execution payload encoding
+    function encodeExecPayload(ExecClaim memory _execClaim)
+        public
+        view
+        returns(bytes memory execPayload)
+    {
+        if (!isProviderModule(_execClaim.provider, _execClaim.providerModule))
+            return "InvalidProviderModule";
+        IGelatoProviderModule _providerModule = IGelatoProviderModule(
+            _execClaim.providerModule
+        );
     }
 
     // Registration
@@ -100,13 +112,13 @@ abstract contract GelatoProviders is IGelatoProviders {
     // Provider Module
     function addProviderModule(address _module) public override {
         require(_module != address(0), "GelatoProviders.addProviderModule: _module");
-        providerModules[msg.sender].add(_module);
+        _providerModules[msg.sender].add(_module);
         emit LogAddProviderModule(_module);
     }
 
     function removeProviderModule(address _module) public override {
         require(_module != address(0), "GelatoProviders.removeProviderModule: _module");
-        providerModules[msg.sender].remove(_module);
+        _providerModules[msg.sender].remove(_module);
         emit LogRemoveProviderModule(_module);
     }
 
@@ -125,20 +137,20 @@ abstract contract GelatoProviders is IGelatoProviders {
         override
         returns(bool)
     {
-        return providerModules[_provider].contains(_module);
+        return _providerModules[_provider].contains(_module);
     }
 
     function numOfProviderModules(address _provider) external view override returns(uint256) {
-        return providerModules[_provider].length();
+        return _providerModules[_provider].length();
     }
 
-    function getProviderModules(address _provider)
+    function providerModules(address _provider)
         external
         view
         override
         returns(address[] memory)
     {
-        return providerModules[_provider].enumerate();
+        return _providerModules[_provider].enumerate();
     }
 
     // Providers' Claims Getters

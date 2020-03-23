@@ -223,7 +223,7 @@ contract ActionUniswapTradeKovan is GelatoActionsStandard {
             }
         }
         // STANDARD return string to signal actionConditions Ok
-        return "ok";
+        return "Ok";
     }
 
     // ============ API for FrontEnds ===========

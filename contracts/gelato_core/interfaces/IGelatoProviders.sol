@@ -34,7 +34,7 @@ interface IGelatoProviders {
     event LogRemoveProviderModule(address module);
 
     // IGelatoProviderModule Standard wrapper
-    function isProvided(address _executor, ExecClaim calldata _execClaim)
+    function isProvided(ExecClaim calldata _execClaim)
         external
         view
         returns (string memory);
@@ -76,7 +76,7 @@ interface IGelatoProviders {
         external
         view
         returns (uint256);
-    function getProviderModules(address _provider)
+    function providerModules(address _provider)
         external
         view
         returns (address[] memory);
@@ -94,10 +94,4 @@ interface IGelatoProviders {
         external
         view
         returns (bytes32[] memory);
-
-    // Helper fn
-    function execClaimHashCmp(ExecClaim calldata _execClaim, bytes32 _hash)
-        external
-        pure
-        returns (bool);
 }

@@ -1,7 +1,7 @@
 import { internalTask } from "@nomiclabs/buidler/config";
 
-export default internalTask("debug:actionkybertradepayloaddecoding")
-  .addPositionalParam("execPayload")
+export default internalTask("g")
+  .addPositionalParam("actionPayload")
   .setAction(async (taskArgs) => {
     try {
       if (network.name != "buidlerevm") throw new Error("buidlerevm only");

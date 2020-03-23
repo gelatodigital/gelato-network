@@ -4,19 +4,20 @@ pragma experimental ABIEncoderV2;
 import { IGelatoCore, ExecClaim } from "./interfaces/IGelatoCore.sol";
 import { GelatoGasAdmin } from "./GelatoGasAdmin.sol";
 import { GelatoExecutors } from "./GelatoExecutors.sol";
-import { GelatoProviders } from "./gelato_providers/GelatoProviders.sol";
-import { Address } from "../external/Address.sol";
+import { GelatoProviders } from "./GelatoProviders.sol";
 import { SafeMath } from "../external/SafeMath.sol";
+import { GelatoString } from "../libraries/GelatoString.sol";
 import { IGelatoCondition } from "../gelato_conditions/IGelatoCondition.sol";
 import { IGelatoAction } from "../gelato_actions/IGelatoAction.sol";
+import { IGelatoProviderModule } from "./interfaces/IGelatoProviderModule.sol";
 
 /// @title GelatoCore
 /// @notice Exec Claim: minting, checking, execution, and cancellation
 /// @dev Find all NatSpecs inside IGelatoCore
 contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecutors {
-    // Library for unique ExecClaimIds
-    using Address for address payable;  /// for oz's sendValue method
+
     using SafeMath for uint256;
+    using GelatoString for string;
 
     // ================  STATE VARIABLES ======================================
     uint256 public override currentExecClaimId;
@@ -24,34 +25,44 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
     mapping(uint256 => bool) public override isSecondExecAttempt;
 
     // ================  MINTING ==============================================
-    function mintExecClaim(address _executor, ExecClaim memory _execClaim)
+    // Only pass _executor for self-providing users, else address(0)
+    function mintExecClaim(ExecClaim memory _execClaim, address _executor)
         public
         payable
         override
     {
-        // Smart Contract Account or EOA
-        _execClaim.user = msg.sender;
-
-        // Executor CHECKS
-        _requireRegisteredExecutor(_executor);
+        // EXECUTOR CHECKS
         _requireMaxExecutorClaimLifespan(_executor, _execClaim.expiryDate);
 
-        // Provider CHECKS - unless User self-provides
+        // Lock in Executor Success Fee
+        require(
+            _execClaim.executorSuccessFeeFactor == executorSuccessFeeFactor[_executor],
+            "GelatoCore.mintExecClaim: _execClaim.executorSuccessFeeFactor"
+        );
+
+        // Lock in Gelato Gas Price Oracle Success Fee
+        require(
+            _execClaim.oracleSuccessFeeFactor == oracleSuccessFeeFactor,
+            "GelatoCore.mintExecClaim: _execClaim.oracleSuccessFeeFactor"
+        );
+
+        // PROVIDER CHECKS - unless User self-provides
         if (msg.sender == _execClaim.provider) {
-            providerFunds[msg.sender] += msg.value;
-            providerExecutor[msg.sender] = _executor;
+            if (msg.value > 0) providerFunds[msg.sender] += msg.value;
+            if (providerExecutor[msg.sender] != _executor)
+                providerExecutor[msg.sender] = _executor;
         } else {
-            string memory isProvided = isProvided(_executor, _execClaim);
-            require(_okStr(isProvided), "GelatoCore.mintExecClaim.isProvided");
+            _executor = providerExecutor[_execClaim.provider];
+            string memory isProvided = isProvided(_execClaim);
+            require(isProvided.startsWithOk(), "GelatoCore.mintExecClaim.isProvided");
         }
+
+        // Smart Contract Account or EOA
+        _execClaim.user = msg.sender;
 
         // Mint new execClaim
         currentExecClaimId++;
         _execClaim.id = currentExecClaimId;
-
-        // Lock in Executor Success Fee and Gelato Gas Price Oracle Success Fee
-        _execClaim.executorSuccessFeeFactor = executorSuccessFeeFactor[_executor];
-        _execClaim.oracleSuccessFeeFactor = oracleSuccessFeeFactor;
 
         // ExecClaim Expiry Date defaults to executor's maximum allowance
         if (_execClaim.expiryDate == 0)
@@ -73,9 +84,11 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
         override
         returns (string memory)
     {
+        if (msg.sender != providerExecutor[_execClaim.provider]) return "InvalidExecutor";
+
         if (_execClaim.user != _execClaim.provider) {
-            string memory res = isProvided(msg.sender, _execClaim);
-            if (!_okStr(res)) return res;
+            string memory res = isProvided(_execClaim);
+            if (!res.startsWithOk()) return res;
         }
 
         if (!isProviderLiquid(_execClaim.provider)) return "ProviderIlliquid";
@@ -89,12 +102,10 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
 
         // CHECK for non-self-conditional Actions
         if (_execClaim.condition != address(0)) {
-            try IGelatoCondition(_execClaim.condition).ok(
-                _execClaim.conditionPayload
-            )
+            try IGelatoCondition(_execClaim.condition).ok(_execClaim.conditionPayload)
                 returns(string memory res)
             {
-                if (_okStr(res)) return "ok";
+                if (res.startsWithOk()) return "Ok";
                 return string(abi.encodePacked("ConditionNotOk:", res));
             } catch Error(string memory error) {
                 return string(abi.encodePacked("ConditionReverted:", error));
@@ -107,7 +118,7 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
         try IGelatoAction(_execClaim.action).ok(_execClaim.actionPayload)
             returns(string memory res)
         {
-            if (_okStr(res)) return "ok";
+            if (res.startsWithOk()) return "Ok";
             return string(abi.encodePacked("ActionConditionsNotOk:", res));
         } catch Error(string memory error) {
             return string(abi.encodePacked("ActionReverted:", error));
@@ -174,7 +185,7 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
         returns(bool)
     {
         string memory res  = canExec(_execClaim, _execClaimHash);
-        if (_okStr(res)) {
+        if (res.startsWithOk()) {
             emit LogCanExecSuccess(msg.sender, _execClaimHash, res);
             return true;  // SUCCESS: continue Execution
         } else {
@@ -188,8 +199,30 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
         returns(bool success)
     {
         // INTERACTIONS
-        bytes memory error;
-        (success, error) =  _execClaim.user.call(_execClaim.execPayload);
+        string memory error;
+        // For EOAs
+        if (_execClaim.user == _execClaim.provider) {
+            try IGelatoAction(_execClaim.action).action(_execClaim.actionPayload) {
+                success = true;
+            } catch Error(string memory _error) {
+                error = abi.encodePacked("GelatoCore._exec.action:", _error);
+            } catch {
+                error = "GelatoCore._exec.action.";
+            }
+        } else {
+            // For userProxies
+            try IGelatoProviderModule(_execClaim.providerModule).exec(
+                _execClaim.user,
+                _execClaim.action,
+                _execClaim.actionPayload
+            ) {
+                success = true;
+            } catch Error(string memory _error) {
+                error = abi.encodePacked("GelatoCore._exec.providerModule:", _error);
+            } catch {
+                error = "GelatoCore._exec.providerModule.";
+            }
+        }
 
         // SUCCESS
         if (success) {
@@ -198,22 +231,7 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
         }
 
         // FAILURE
-        string memory reason;
-        // 68: 32-location, 32-length, 4-ErrorSelector, UTF-8 revertReason
-        if (error.length % 32 == 4) {
-            bytes4 selector;
-            assembly { selector := mload(add(0x20, error)) }
-            if (selector == 0x08c379a0) {  // selector for Error(string)
-                assembly { error := add(error, 68) }
-                reason = string(error);
-            } else {
-                reason = "NoErrorSelector";
-            }
-        } else {
-            reason = "UnexpectedErrorFormat";
-        }
-
-        emit LogExecFailed(msg.sender, _execClaimHash, reason);
+        emit LogExecFailed(msg.sender, _execClaimHash, error);
     }
 
     function _processProviderPayables(
@@ -264,12 +282,5 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
         execClaimHashesByProvider[_execClaim.provider].remove(execClaimHash);
         if (isSecondExecAttempt[_execClaim.id]) delete isSecondExecAttempt[_execClaim.id];
         emit LogExecClaimCancelled(execClaimHash);
-    }
-
-    // ================ HELPERS ========================================
-    function _okStr(string memory _str) private pure returns(bool) {
-        if (bytes(_str).length >= 2 && bytes(_str)[0] == "o" && bytes(_str)[1] == "k")
-            return true;
-        return false;
     }
 }

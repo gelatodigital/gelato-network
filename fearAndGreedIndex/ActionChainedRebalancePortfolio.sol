@@ -38,7 +38,7 @@ contract ActionChainedRebalancePortfolio is ActionRebalancePortfolio {
         );
 
         // // Encode This Action
-        bytes memory execPayload = abi.encodeWithSelector(
+        bytes memory actionPayload = abi.encodeWithSelector(
             actionSelector(),
             _gelatoProviderAndExecutor,
             _conditionAndAction
@@ -49,7 +49,7 @@ contract ActionChainedRebalancePortfolio is ActionRebalancePortfolio {
             _gelatoProviderAndExecutor,
             _conditionAndAction,
             conditionPayload,
-            execPayload,
+            actionPayload,
             0  // execClaimExpiryDate defaults to executor's max allowance
         ) {
         } catch {

@@ -21,7 +21,7 @@ export default task(
   .addOptionalParam("actionaddress", "Must be supplied if not <actionname>")
   .addOptionalParam("conditionpayload", "Payload for optional condition")
   .addOptionalParam(
-    "execpayload",
+    "actionpayload",
     "If not provided, must have a default returned from handleGelatoPayload()"
   )
   .addOptionalParam(
@@ -205,10 +205,10 @@ export default task(
           contractname: taskArgs.actionname
         });
       }
-      if (!taskArgs.execpayload) {
-        taskArgs.execpayload = await run("handleGelatoPayload", {
+      if (!taskArgs.actionpayload) {
+        taskArgs.actionpayload = await run("handleGelatoPayload", {
           contractname: taskArgs.actionname,
-          payload: taskArgs.execpayload
+          payload: taskArgs.actionpayload
         });
       }
       // ============
@@ -230,7 +230,7 @@ export default task(
           [taskArgs.gelatoprovider, taskArgs.gelatoexecutor],
           [taskArgs.conditionaddress, taskArgs.actionaddress],
           taskArgs.conditionpayload,
-          taskArgs.execpayload,
+          taskArgs.actionpayload,
           taskArgs.execclaimexpirydate,
           { value: utils.parseEther(taskArgs.funding), gasLimit: 3000000 }
         );
@@ -241,7 +241,7 @@ export default task(
           [taskArgs.gelatoprovider, taskArgs.gelatoexecutor],
           [taskArgs.conditionaddress, taskArgs.actionaddress],
           taskArgs.conditionpayload,
-          taskArgs.execpayload,
+          taskArgs.actionpayload,
           taskArgs.execclaimexpirydate,
           { value: utils.parseEther(taskArgs.funding), gasLimit: 3000000 }
         );

@@ -19,7 +19,7 @@ contract ConditionTimestampPassed is IGelatoCondition {
 
     // Specific implementation
     function ok(uint256 _timestamp) public view virtual returns(string memory) {
-        if (_timestamp <= block.timestamp) return "ok";
+        if (_timestamp <= block.timestamp) return "Ok";
         return "NotOkTimestampDidNotPass";
     }
 

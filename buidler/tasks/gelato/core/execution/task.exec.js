@@ -95,7 +95,7 @@ export default task(
             execclaim.userProxy,
             execclaim.conditionAndAction,
             execclaim.conditionPayload,
-            execclaim.execPayload,
+            execclaim.actionPayload,
             execclaim.execClaimExpiryDate,
             {
               gasPrice: gelatoGasPrice,

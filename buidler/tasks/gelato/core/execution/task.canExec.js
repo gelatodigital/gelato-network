@@ -75,7 +75,7 @@ export default task(
             execclaim.userProxy,
             execclaim.conditionAndAction,
             execclaim.conditionPayload,
-            execclaim.execPayload,
+            execclaim.actionPayload,
             execclaim.execClaimExpiryDate
           );
           if (log) console.log(`\n Can Exec Result: ${canExecResult}\n`);

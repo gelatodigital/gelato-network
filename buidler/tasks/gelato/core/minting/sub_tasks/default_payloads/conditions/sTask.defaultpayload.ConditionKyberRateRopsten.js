@@ -3,7 +3,7 @@ import { utils } from "ethers";
 
 export default internalTask(
   "gc-mint:defaultpayload:ConditionKyberRateRopsten",
-  `Returns a hardcoded execPayload of ConditionKyberRateRopsten`
+  `Returns a hardcoded actionPayload of ConditionKyberRateRopsten`
 )
   .addFlag("log")
   .setAction(async ({ log }) => {

@@ -35,7 +35,7 @@ export default internalTask(
         const conditionPayload = await run(
           "gc-mint:defaultpayload:ConditionTimestampPassed"
         );
-        const execPayload = await run(
+        const actionPayload = await run(
           "gc-mint:defaultpayload:ActionERC20TransferFrom"
         );
         const payload = await run("abi-encode-withselector", {
@@ -46,7 +46,7 @@ export default internalTask(
             [gelatoProvider, gelatoExecutor],
             [conditionAddress, actionAddress],
             conditionPayload,
-            execPayload,
+            actionPayload,
             execclaimexpirydate
           ]
         });

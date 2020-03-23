@@ -1,11 +1,13 @@
 pragma solidity ^0.6.4;
 pragma experimental ABIEncoderV2;
 
-import { IGelatoProviderModule } from "../IGelatoProviderModule.sol";
+import { IGelatoProviderModule } from "../../interfaces/IGelatoProviderModule.sol";
 import { IProviderModuleExample } from "./IProviderModuleExample.sol";
-import { Ownable } from "../../../../external/Ownable.sol";
-import { IGnosisSafeProxy } from "../../../gelato_user_proxies/gnosis_safe_proxy/interfaces/IGnosisSafeProxy.sol";
-import { ExecClaim } from "../../../interfaces/IGelatoCore.sol";
+import { Ownable } from "../../../external/Ownable.sol";
+import { IGnosisSafe } from "../../gelato_user_proxies/gnosis_safe_proxy/interfaces/IGnosisSafe.sol";
+import { IGnosisSafeProxy } from "../../gelato_user_proxies/gnosis_safe_proxy/interfaces/IGnosisSafeProxy.sol";
+import { ExecClaim } from "../../interfaces/IGelatoCore.sol";
+import { Address } from "../../../external/Address.sol";
 
 contract ProviderGnosisSafeProxyModule is
     IGelatoProviderModule,
@@ -18,6 +20,51 @@ contract ProviderGnosisSafeProxyModule is
     mapping(address => bool) public override isActionProvided;
 
     // ================= GELATO PROVIDER MODULE STANDARD ================
+    function exec(address _userProxy, address _action, bytes calldata _actionPayload)
+        external
+        override
+    {
+        try IGnosisSafe(_userProxy).execTransactionFromModuleReturnData(
+            _action,  // to
+            0,  // value
+            _actionPayload,  // data
+            IGnosisSafe.Operation.DelegateCall
+        ) returns (bool actionExecuted, bytes memory actionRevertReason) {
+            if (!actionExecuted) {
+                // FAILURE
+                // 68: 32-location, 32-length, 4-ErrorSelector, UTF-8 revertReason
+                if (actionRevertReason.length % 32 == 4) {
+                    bytes4 selector;
+                    assembly { selector := mload(add(0x20, actionRevertReason)) }
+                    if (selector == 0x08c379a0) {  // Function selector for Error(string)
+                        assembly { actionRevertReason := add(actionRevertReason, 68) }
+                        revert(
+                            abi.encodePacked(
+                                "ProviderGnosisSafeProxyModule:",
+                                string(actionRevertReason)
+                            )
+                        );
+                    } else {
+                        revert("ProviderGnosisSafeProxyModule:NoErrorSelector");
+                    }
+                } else {
+                    revert("ProviderGnosisSafeProxyModule:UnexpectedReturndata");
+                }
+            }
+        } catch Error(string memory gnosisSafeProxyRevertReason) {
+            revert(
+                abi.encodePacked(
+                    "ProviderGnosisSafeProxyModule:",
+                    gnosisSafeProxyRevertReason
+                )
+            );
+        } catch {
+            revert("ProviderGnosisSafeProxyModule:UndefinedGnosisSafeProxyError");
+        }
+    }
+
+    // @dev since we check extcodehash prior to execution, we forego the execution option
+    //  where the userProxy is deployed at execution time.
     function isProvided(ExecClaim memory _execClaim)
         public
         view
@@ -25,6 +72,7 @@ contract ProviderGnosisSafeProxyModule is
         returns (string memory)
     {
         address userProxy = _execClaim.user;
+        if (!Address.isContract(userProxy)) return "InvalidUserProxy";
         bytes32 codehash;
         assembly { codehash := extcodehash(userProxy) }
         if (!isProxyExtcodehashProvided[codehash]) return "InvalidGSPCodehash";
@@ -32,7 +80,7 @@ contract ProviderGnosisSafeProxyModule is
         if (!isMastercopyProvided[mastercopy]) return "InvalidGSPMastercopy";
         if (!isConditionProvided[_execClaim.action]) return "ConditionNotProvided";
         if (!isActionProvided[_execClaim.action]) return "ActionNotProvided";
-        return "ok";
+        return "Ok";
     }
 
     // GnosisSafeProxy

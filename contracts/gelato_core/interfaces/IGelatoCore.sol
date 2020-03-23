@@ -10,7 +10,6 @@ struct ExecClaim {
     address action;
     bytes conditionPayload;
     bytes actionPayload;
-    bytes execPayload;
     uint256 expiryDate;
     uint256 gasPriceCeil;
     uint256 executorSuccessFeeFactor;
@@ -44,7 +43,7 @@ interface IGelatoCore {
 
     event LogExecClaimCancelled(bytes32 indexed execClaimHash);
 
-    function mintExecClaim(address _executor, ExecClaim calldata _execClaim)
+    function mintExecClaim(ExecClaim calldata _execClaim, address _executor)
         external
         payable;
 

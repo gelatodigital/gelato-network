@@ -26,7 +26,7 @@ interface IGelatoAction {
     /**
      * @notice Returns whether the action-specific conditions are fulfilled
      * @dev if actions have specific conditions they should override and extend this fn
-     * @param _actionPayload: the execPayload (with actionSelector)
+     * @param _actionPayload: the actionPayload (with actionSelector)
      * @return actionCondition
      */
     function ok(bytes calldata _actionPayload) external view returns (string memory);
