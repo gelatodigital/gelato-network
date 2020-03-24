@@ -43,7 +43,7 @@ contract ActionWithdrawBatchExchangeRinkeby is GelatoActionsStandard {
         uint256 preBuyTokenBalance = buyToken.balanceOf(address(this));
 
         // 3. Withdraw buy token
-        try batchExchange.withdraw(_user, _buyToken) {
+        try batchExchange.withdraw(address(this), _buyToken) {
             uint256 postBuyTokenBalance = buyToken.balanceOf(address(this));
             uint256 buyTokenWithdrawAmount = postBuyTokenBalance.sub(preBuyTokenBalance);
 
@@ -56,7 +56,7 @@ contract ActionWithdrawBatchExchangeRinkeby is GelatoActionsStandard {
         }
 
         // 5. Withdraw sell token
-        try batchExchange.withdraw(_user, _sellToken) {
+        try batchExchange.withdraw(address(this), _sellToken) {
             uint256 postSellTokenBalance = sellToken.balanceOf(address(this));
             uint256 sellTokenWithdrawAmount = postSellTokenBalance.sub(preSellTokenBalance);
 
