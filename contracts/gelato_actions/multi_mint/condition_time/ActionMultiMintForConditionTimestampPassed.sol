@@ -10,7 +10,6 @@ struct ActionPayload {
     // multi mint delegatecall requirement
     IGelatoCore gelatoCore;
     // gelatoCore.mintExecClaim params
-    address executor;
     ExecClaim execClaim;
     uint256 startTime;  // will be encoded here
     // MultiMintTimeBased params
@@ -37,7 +36,7 @@ contract ActionMultiMintForConditionTimestampPassed is GelatoActionsStandard {
                 IGelatoCondition.ok.selector,
                 timestamp
             );
-            _p.gelatoCore.mintExecClaim(_p.executor, _p.execClaim);
+            _p.gelatoCore.mintExecClaim(_p.execClaim, address(0));
         }
     }
 }

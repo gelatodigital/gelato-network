@@ -10,13 +10,13 @@ abstract contract GelatoGasAdmin is IGelatoGasAdmin {
     // Oracle
     address public override oracle = 0xe1F076849B781b1395Fd332dC1758Dbc129be6EC;  // luis initially
     uint256 public override oracleFunds;
-    uint256 public override oracleSuccessFeeFactor = 2;  // 2% per provider/executor top-up
+    uint256 public override oracleSuccessFeeFactor = 2;  // 2% on successful execution cost
     uint256 public override gelatoGasPrice = 9000000000;  // 9 gwei initial
     // Regulator
     address public override regulator = 0x8B3765eDA5207fB21690874B722ae276B96260E0;  // hilmar initially
-    uint256 public override gelatoGasPriceLimit = 100000000000;  // 100 gwei initial
+    uint256 public override gelatoGasPriceLimit = 300000000000;  // 300 gwei initial
     // The maximum gas an executor can consume on behalf of a provider
-    uint256 public override gelatoMaxGas = 6000000;  // 6 mio initial
+    uint256 public override gelatoMaxGas = 7000000;  // 7 mio initial
 
     // Oracle
     modifier onlyOracle {

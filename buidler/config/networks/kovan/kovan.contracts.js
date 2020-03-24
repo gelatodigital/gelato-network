@@ -21,10 +21,8 @@ export const contracts = [
   // Portfolio Mgmt
   "ActionChainedRebalancePortfolio",
 
-  // === GelatoCore ===
-  "GelatoCore",
-  // ProviderModules
-  "ProviderGnosisSafeProxyModule",
+  // Action specific scripts
+  "ScriptEnterPortfolioRebalancing",
 
   // === Conditions ===
   // Balances
@@ -36,10 +34,14 @@ export const contracts = [
   // Time
   "ConditionTimestampPassed",
 
-  // === Scripts ===
-  // GnosisSafe
+  // === GelatoCore ===
+  "GelatoCore",
+  // ProviderModules
+  "ProviderGnosisSafeProxyModule",
+
+  // === GelatoUserProxies ===
+  // == GnosisSafe ==
+  // Scripts
   "ScriptGnosisSafeEnableGelatoCore",
-  "ScriptGnosisSafeEnableGelatoCoreAndMint",
-  // Action specific scripts
-  "ScriptEnterPortfolioRebalancing"
+  "ScriptGnosisSafeEnableGelatoCoreAndMint"
 ];

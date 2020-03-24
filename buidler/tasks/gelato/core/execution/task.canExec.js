@@ -8,28 +8,16 @@ export default task(
   .addPositionalParam("execclaimid")
   .addOptionalPositionalParam(
     "executorindex",
-    "which mnemonic index should be selected for executor msg.sender (default index 1)",
+    "Mnenomic generated account to sign the tx",
     1,
     types.int
   )
-  .addOptionalParam(
-    "execclaim",
-    "Supply LogExecClaimMinted values in an obj"
-  )
-  .addOptionalParam(
-    "fromblock",
-    "The block number to search for event logs from",
-    undefined, // default
-    types.number
-  )
-  .addOptionalParam(
-    "toblock",
-    "The block number up until which to look for",
-    undefined, // default
-    types.number
-  )
+  .addOptionalParam("execclaim", "Supply LogExecClaimMinted values in an obj")
+  .addOptionalParam("fromblock", "Search for event logs from block number.")
+  .addOptionalParam("toblock", "Search for event logs to block number.")
   .addOptionalParam("blockhash", "Search a specific block")
   .addOptionalParam("txhash", "Filter for a specific tx")
+  .addFlag("stringify")
   .addFlag("log", "Logs return values to stdout")
   .setAction(
     async ({
@@ -40,17 +28,18 @@ export default task(
       toblock,
       blockhash,
       txhash,
+      stringify,
       log
     }) => {
       try {
         if (!execclaim) {
           execclaim = await run("fetchExecClaim", {
             execclaimid,
-            execclaim,
             fromblock,
             toblock,
             blockhash,
             txhash,
+            stringify,
             log
           });
         }

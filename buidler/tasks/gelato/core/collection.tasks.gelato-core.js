@@ -1,15 +1,12 @@
 // ==== GelatoCore ====
-// GelatoUserProxyFactory
-import "./gelato_user_proxy_factory/collection.tasks.gelato-user-proxy-factory";
-
 // GelatoGasAdmin
-import "./gelato_gas_price_oracle/collection.tasks.gelato-gas-price-oracle";
+import "./gelato_gas_admin/collection.tasks.gelato-gas-admin";
 
 // GelatoProvider
-import "./gelato_provider/collection.tasks.gelato-provider";
+import "./gelato_providers/collection.tasks.gelato-provider";
 
 // GelatoExecutors
-import "./gelato_executor/collection.tasks.gelato-executor";
+import "./gelato_executors/collection.tasks.gelato-executor";
 
 // Minting
 import "./minting/collection.tasks.minting";

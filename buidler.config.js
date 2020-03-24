@@ -68,7 +68,7 @@ module.exports = {
   },
   solc: {
     version: "0.6.4",
-    optimizer: { enabled: true, runs: 1000000 }
+    optimizer: { enabled: false }
   }
 };
 
@@ -110,15 +110,14 @@ require("./buidler/tasks/events/collection.tasks.events");
 // _____ ACTIONS
 require("./buidler/tasks/gelato/actions/collection.tasks.actions");
 // _____ CORE
-// Accounting, GnosisSafeProxyManager, Minting, ...
+// GasAdmin, Executors, Providers, Minting, ...
 require("./buidler/tasks/gelato/core/collection.tasks.gelato-core");
 // _____ DAPPS
 require("./buidler/tasks/gelato/dapps/collection.tasks.dapps");
-// _____ Conditions
+// _____ CONDITIONS
 require("./buidler/tasks/gelato/conditions/collection.tasks.conditions");
-
-// ============= GNOSIS SAFE PROXY
-require("./buidler/tasks/gnosis_safe_proxy/collection.tasks.gnosis-safe-proxy");
+// _____ USER PROXIES (GnosisSafeProxy,...)
+require("./buidler/tasks/gelato/user_proxies/collection.tasks.gelato-user-proxies");
 
 // ======================== INTERNAL HELPER TASKS ======================================
 // encoding, naming ....

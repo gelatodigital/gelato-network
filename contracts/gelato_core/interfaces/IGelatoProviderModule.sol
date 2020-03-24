@@ -1,17 +1,17 @@
 pragma solidity ^0.6.4;
 pragma experimental ABIEncoderV2;
 
-import {ExecClaim} from "../../interfaces/IGelatoCore.sol";
+import {ExecClaim} from "./IGelatoCore.sol";
 
 interface IGelatoProviderModule {
-    function exec(
-        address _userProxy,
-        address _action,
-        bytes calldata _actionPayload
-    ) external;
+    function isProvided(
+        ExecClaim calldata _execClaim,
+        address _executor,
+        uint256 _gelatoGasPrice
+    ) external view returns (string memory);
 
-    function isProvided(ExecClaim calldata _execClaim)
+    function execPayload(address _action, bytes calldata _actionPayload)
         external
-        view
-        returns (string memory);
+        pure
+        returns (bytes memory);
 }

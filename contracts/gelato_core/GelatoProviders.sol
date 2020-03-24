@@ -1,13 +1,13 @@
 pragma solidity ^0.6.4;
 pragma experimental ABIEncoderV2;
 
-import { IGelatoProviders } from "../interfaces/IGelatoProviders.sol";
-import { Address } from "../../external/Address.sol";
-import { SafeMath } from "../../external/SafeMath.sol";
-import { IGelatoProviderModule } from "./provider_module/IGelatoProviderModule.sol";
-import { EnumerableAddressSet } from "../../external/EnumerableAddressSet.sol";
-import { EnumerableWordSet } from "../../external/EnumerableWordSet.sol";
-import { ExecClaim } from "../interfaces/IGelatoCore.sol";
+import { IGelatoProviders } from "./interfaces/IGelatoProviders.sol";
+import { Address } from "../external/Address.sol";
+import { SafeMath } from "../external/SafeMath.sol";
+import { IGelatoProviderModule } from "./interfaces/IGelatoProviderModule.sol";
+import { EnumerableAddressSet } from "../external/EnumerableAddressSet.sol";
+import { EnumerableWordSet } from "../external/EnumerableWordSet.sol";
+import { ExecClaim } from "./interfaces/IGelatoCore.sol";
 
 /// @title GelatoProviders
 /// @notice APIs for GelatoCore Owner and executorClaimLifespan
@@ -21,11 +21,13 @@ abstract contract GelatoProviders is IGelatoProviders {
 
     mapping(address => uint256) public override providerFunds;
     mapping(address => address) public override providerExecutor;
+    mapping(address => uint256) public override providerExecutorFeeCeil;
+    mapping(address => uint256) public override providerOracleFeeCeil;
     mapping(address => EnumerableAddressSet.AddressSet) internal _providerModules;
     mapping(address => EnumerableWordSet.WordSet) internal execClaimHashesByProvider;
 
     // IGelatoProviderModule: Gelato Minting/Execution Gate
-    function isProvided(ExecClaim memory _execClaim)
+    function isProvided(ExecClaim memory _execClaim, uint256 _gelatoGasPrice)
         public
         view
         override
@@ -33,22 +35,13 @@ abstract contract GelatoProviders is IGelatoProviders {
     {
         if (!isProviderModule(_execClaim.provider, _execClaim.providerModule))
             return "InvalidProviderModule";
-        IGelatoProviderModule _providerModule = IGelatoProviderModule(
+        IGelatoProviderModule providerModule = IGelatoProviderModule(
             _execClaim.providerModule
         );
-        return _providerModule.isProvided(_execClaim);
-    }
-
-    // IGelatoProviderModule: execution payload encoding
-    function encodeExecPayload(ExecClaim memory _execClaim)
-        public
-        view
-        returns(bytes memory execPayload)
-    {
-        if (!isProviderModule(_execClaim.provider, _execClaim.providerModule))
-            return "InvalidProviderModule";
-        IGelatoProviderModule _providerModule = IGelatoProviderModule(
-            _execClaim.providerModule
+        return providerModule.isProvided(
+            _execClaim,
+            providerExecutor[_execClaim.provider],
+            _gelatoGasPrice
         );
     }
 
@@ -107,6 +100,19 @@ abstract contract GelatoProviders is IGelatoProviders {
         );
         emit LogSetProviderExecutor(providerExecutor[msg.sender], _executor);
         providerExecutor[msg.sender] = _executor;
+    }
+
+    function setProviderExecutorFeeCeil(uint256 _feeCeil) public override {
+        require(_feeCeil <= 100, "GelatoProviders.setProviderExecutorFeeCeil: _feeCeil");
+        emit LogSetProviderExecutorFeeCeil(providerExecutorFeeCeil[msg.sender], _feeCeil);
+        providerExecutorFeeCeil[msg.sender] = _feeCeil;
+    }
+
+    // Provider Oracle Fee Ceil
+    function setProviderOracleFeeCeil(uint256 _feeCeil) public override {
+        require(_feeCeil <= 100, "GelatoProviders.setProviderOracleFeeCeil: _feeCeil");
+        emit LogSetProviderOracleFeeCeil(providerOracleFeeCeil[msg.sender], _feeCeil);
+        providerOracleFeeCeil[msg.sender] = _feeCeil;
     }
 
     // Provider Module

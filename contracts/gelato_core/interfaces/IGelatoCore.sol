@@ -11,7 +11,6 @@ struct ExecClaim {
     bytes conditionPayload;
     bytes actionPayload;
     uint256 expiryDate;
-    uint256 gasPriceCeil;
     uint256 executorSuccessFeeFactor;
     uint256 oracleSuccessFeeFactor;
 }
@@ -19,35 +18,41 @@ struct ExecClaim {
 interface IGelatoCore {
     event LogExecClaimMinted(
         address indexed executor,
+        uint256 indexed execClaimId,
         bytes32 indexed execClaimHash,
         ExecClaim execClaim
     );
 
     event LogCanExecSuccess(
         address indexed executor,
-        bytes32 indexed execClaimHash,
+        uint256 indexed execClaimId,
         string canExecResult
     );
     event LogCanExecFailed(
         address indexed executor,
-        bytes32 indexed execClaimHash,
+        uint256 indexed execClaimId,
         string canExecResult
     );
 
-    event LogExecSuccess(address indexed executor, bytes32 indexed execClaimHash);
+    event LogExecSuccess(address indexed executor, uint256 indexed execClaimId);
     event LogExecFailed(
         address indexed executor,
-        bytes32 indexed execClaimHash,
+        uint256 indexed execClaimId,
         string reason
     );
 
-    event LogExecClaimCancelled(bytes32 indexed execClaimHash);
+    event LogExecClaimCancelled(uint256 indexed execClaimId);
 
     function mintExecClaim(ExecClaim calldata _execClaim, address _executor)
         external
         payable;
 
-    function canExec(ExecClaim calldata _execClaim, bytes32 _execClaimHash)
+    function canExec(
+        ExecClaim calldata _execClaim,
+        bytes32 _execClaimHash,
+        uint256 _gelatoGasPrice,
+        uint256 _gelatoMaxGas
+    )
         external
         view
         returns(string memory);
@@ -64,5 +69,8 @@ interface IGelatoCore {
         view
         returns(bool);
 
-    function isProviderLiquid(address _provider) external view returns(bool);
+    function isProviderLiquid(address _provider, uint256 _gas, uint256 _gasPrice)
+        external
+        view
+        returns(bool);
 }

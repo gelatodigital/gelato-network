@@ -1,3 +1,0 @@
-// Admin
-import "./task.setGelatoGasPrice";
-

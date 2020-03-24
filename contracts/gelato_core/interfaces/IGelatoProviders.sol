@@ -1,9 +1,7 @@
 pragma solidity ^0.6.4;
 pragma experimental ABIEncoderV2;
 
-import {
-    IGelatoProviderModule
-} from "../gelato_providers/provider_module/IGelatoProviderModule.sol";
+import {IGelatoProviderModule} from "./IGelatoProviderModule.sol";
 import {ExecClaim} from "../interfaces/IGelatoCore.sol";
 
 interface IGelatoProviders {
@@ -15,6 +13,16 @@ interface IGelatoProviders {
     event LogSetProviderExecutor(
         address indexed oldExecutor,
         address indexed newExecutor
+    );
+    event LogSetProviderExecutorFeeCeil(
+        uint256 indexed oldFeeCeil,
+        uint256 indexed newFeeCeil
+    );
+
+    // Provider Oracle Fee Ceil
+    event LogSetProviderOracleFeeCeil(
+        uint256 indexed oldFeeCeil,
+        uint256 indexed newFeeCeil
     );
 
     // Provider Funding
@@ -34,7 +42,7 @@ interface IGelatoProviders {
     event LogRemoveProviderModule(address module);
 
     // IGelatoProviderModule Standard wrapper
-    function isProvided(ExecClaim calldata _execClaim)
+    function isProvided(ExecClaim calldata _execClaim, uint256 _gelatoGasPrice)
         external
         view
         returns (string memory);
@@ -51,6 +59,10 @@ interface IGelatoProviders {
 
     // Provider Executor
     function setProviderExecutor(address _executor) external;
+    function setProviderExecutorFeeCeil(uint256 _feeCeil) external;
+
+    // Provider Oracle Fee ceil
+    function setProviderOracleFeeCeil(uint256 _feeCeil) external;
 
     // Provider Module
     function addProviderModule(address _module) external;
@@ -66,6 +78,17 @@ interface IGelatoProviders {
         external
         view
         returns (address);
+
+    function providerExecutorFeeCeil(address _provider)
+        external
+        view
+        returns (uint256);
+
+    // Provider Oracle Fee Ceil
+    function providerOracleFeeCeil(address _provider)
+        external
+        view
+        returns (uint256);
 
     // Providers' Module Getters
     function isProviderModule(address _provider, address _module)
