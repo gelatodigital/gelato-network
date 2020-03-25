@@ -40,7 +40,9 @@ export const contracts = [
   "ProviderGnosisSafeProxyModule",
 
   // === GelatoUserProxies ===
-  // == GnosisSafe ==
+  // == GnosisSafeProxy ==
+  // Factory
+
   // Scripts
   "ScriptGnosisSafeEnableGelatoCore",
   "ScriptGnosisSafeEnableGelatoCoreAndMint",
