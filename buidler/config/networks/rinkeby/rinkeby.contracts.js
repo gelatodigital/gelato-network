@@ -35,6 +35,8 @@ export const contracts = [
   "ConditionKyberRateRinkeby",
   // Time
   "ConditionTimestampPassed",
+  // Gnosis
+  "ConditionBatchExchangeFundsWithdrawable",
 
   // === Scripts ===
   // GnosisSafe
@@ -42,5 +44,7 @@ export const contracts = [
   "ScriptGnosisSafeEnableGelatoCoreAndMint",
   // Action specific scripts
   "ScriptEnterPortfolioRebalancingRinkeby",
-  "ScriptExitRebalancePortfolioRinkeby"
+  "ScriptExitRebalancePortfolioRinkeby",
+  // Gnosis BatchExchange
+  "ScriptEnterStableSwap"
 ];

@@ -12,7 +12,7 @@ contract ActionPlaceOrderBatchExchange {
 
     uint256 public constant MAX_UINT = uint256(-1);
 
-    IBatchExchange public constant batchExchange = IBatchExchange(0xC576eA7bd102F7E476368a5E98FA455d1Ea34dE2);
+    IBatchExchange private constant batchExchange = IBatchExchange(0xC576eA7bd102F7E476368a5E98FA455d1Ea34dE2);
 
 
     function placeOrderRequestWithdraw(
@@ -73,33 +73,6 @@ contract ActionPlaceOrderBatchExchange {
         catch {
             revert("batchExchange.requestFutureWithdraw _buyToken failed");
         }
-
-        /*
-        // Encode BatchId Condition
-        bytes memory conditionPayload = abi.encodeWithSelector(
-            bytes4(keccak256("reached(uint256)")),
-            newFearAndGreedIndex
-        );
-
-        // // Encode Withdraw Action
-        bytes memory actionPayload = abi.encodeWithSelector(
-            actionSelector(),
-            _selectedProviderAndExecutor,
-            _conditionAndAction
-        );
-
-        // Mint new Claim
-        try gelatoCore.mintExecutionClaim(
-            _selectedProviderAndExecutor,
-            _conditionAndAction,
-            conditionPayload,
-            actionPayload,
-            0  // executionClaimExpiryDate defaults to executor's max allowance
-        ) {
-        } catch {
-            revert("Minting chainedClaim unsuccessful");
-        }
-        */
 
     }
 

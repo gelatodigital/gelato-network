@@ -2,7 +2,7 @@ export const deployments = {
   // ========== Rinkeby ===========
   // ==== One-Off Actions ====
   // Gnosis
-  ActionWithdrawBatchExchangeRinkeby: "0x67C7433DE54D66A79F30D1B34DF6FE0936AB81a0",
+  ActionWithdrawBatchExchangeRinkeby: "0x677fd52A56D48a401EF72f5E7127C3D4CBb87074",
   ActionPlaceOrderBatchExchange: "0xDBF368e549604CC78684e83955C73346860D6EA2",
   // BzX
   ActionBzxPtokenBurnToToken: "0x0",
@@ -38,6 +38,8 @@ export const deployments = {
   // == Time ==
   // Timestamps
   ConditionTimestampPassed: "0x0",
+  // Gnosis
+  ConditionBatchExchangeFundsWithdrawable: "0x7FbbAE131b7855EDbbd8F3b74a4c5c6a2D24a3Db",
 
   // ==== Scripts ====
   // == GnosisSafe ==
@@ -51,5 +53,6 @@ export const deployments = {
   ScriptEnterPortfolioRebalancingRinkeby:
     "0x0",
   ScriptExitRebalancePortfolioRinkeby:
-    "0x0"
+    "0x0",
+  ScriptEnterStableSwap: "0x50ABb30ef85583198bc0E54fe18B3AA52B88e51B"
 };

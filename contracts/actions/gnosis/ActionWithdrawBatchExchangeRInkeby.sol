@@ -11,12 +11,10 @@ contract ActionWithdrawBatchExchangeRinkeby is GelatoActionsStandard {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
-    uint256 public constant MAX_UINT = uint256(-1);
-
     // $3 FEe
-    uint256 public constant FEE_USD = 3;
+    // uint256 public constant FEE_USD = 3;
 
-    IBatchExchange public constant batchExchange = IBatchExchange(0xC576eA7bd102F7E476368a5E98FA455d1Ea34dE2);
+    IBatchExchange private constant batchExchange = IBatchExchange(0xC576eA7bd102F7E476368a5E98FA455d1Ea34dE2);
 
     // actionSelector public state variable np due to this.actionSelector constant issue
     function actionSelector() public pure override virtual returns(bytes4) {
@@ -52,7 +50,7 @@ contract ActionWithdrawBatchExchangeRinkeby is GelatoActionsStandard {
         }
         catch {
            // Do not revert, as order might not have been fulfilled.
-           // revert("batchExchange.withdraw _buyToken failed");
+           revert("batchExchange.withdraw _buyToken failed");
         }
 
         // 5. Withdraw sell token
@@ -70,7 +68,7 @@ contract ActionWithdrawBatchExchangeRinkeby is GelatoActionsStandard {
         }
         catch {
             // Do not revert, as order might have been filled completely
-            // revert("batchExchange.withdraw _sellToken failed");
+            revert("batchExchange.withdraw _sellToken failed");
         }
 
     }
@@ -84,17 +82,16 @@ contract ActionWithdrawBatchExchangeRinkeby is GelatoActionsStandard {
         virtual
         returns(string memory)  // actionCondition
     {
-        (address _user, address _sellToken, address _buyToken) = abi.decode(
+        (, address _sellToken, address _buyToken) = abi.decode(
             _actionPayload[4:],
             (address,address,address)
         );
         return _actionConditionsCheck(
-            _user, _sellToken, _buyToken
+            _sellToken, _buyToken
         );
     }
 
     function _actionConditionsCheck(
-        address _user,
         address _sellToken,
         address _buyToken
     )
@@ -112,13 +109,13 @@ contract ActionWithdrawBatchExchangeRinkeby is GelatoActionsStandard {
 
         // @ DEV: Problem, as we dont have a way to on-chain check if there are actually funds that can be withdrawn, the business model relies on the assumption that sufficient funds are availabe to be withdrawn in order to compensate the executor
 
-        bool sellTokenWithdrawable = batchExchange.hasValidWithdrawRequest(_user, _sellToken);
+        bool sellTokenWithdrawable = batchExchange.hasValidWithdrawRequest(address(this), _sellToken);
 
         if (!sellTokenWithdrawable) {
             return "ActionWithdrawBatchExchangeRinkeby: Sell Token not withdrawable yet";
         }
 
-        bool buyTokenWithdrawable = batchExchange.hasValidWithdrawRequest(_user, _buyToken);
+        bool buyTokenWithdrawable = batchExchange.hasValidWithdrawRequest(address(this), _buyToken);
 
         if (!buyTokenWithdrawable) {
             return "ActionWithdrawBatchExchangeRinkeby: Buy Token not withdrawable yet";
