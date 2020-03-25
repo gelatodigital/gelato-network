@@ -66,12 +66,13 @@ export default task(
         if ((fromblock || toblock) && blockhash)
           throw new Error("\n Cannot specify blocknums alongside blockHash");
 
-        const {
-          filters: { defaultFromBlock, defaultToBlock }
-        } = await run("bre-network", { c: true });
-
-        if (!fromblock && !blockhash) fromblock = defaultFromBlock;
-        if (!toblock && !blockhash) toblock = defaultToBlock;
+        if (!blockhash) {
+          const {
+            filters: { defaultFromBlock, defaultToBlock }
+          } = await run("bre-network", { c: true });
+          if (!fromblock) fromblock = defaultFromBlock;
+          if (!toblock) toblock = defaultToBlock;
+        }
 
         const filter = {
           address: contractaddress,

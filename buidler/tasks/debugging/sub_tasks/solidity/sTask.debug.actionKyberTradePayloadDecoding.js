@@ -6,16 +6,9 @@ export default internalTask("debug:actionkybertradepayloaddecoding")
     try {
       if (network.name != "buidlerevm") throw new Error("buidlerevm only");
 
-      let contractname = "ActionKyberTradePayloadDecoding";
-      const actionAddress = await run("deploy", {
-        contractname,
+      const contract = await run("deploy", {
+        contractname: "ActionKyberTradePayloadDecoding",
         network: "buidlerevm"
-      });
-
-      const contract = await run("instantiateContract", {
-        contractname,
-        contractaddress: actionAddress,
-        write: true
       });
 
       await contract.decodePayload(taskArgs[0]);

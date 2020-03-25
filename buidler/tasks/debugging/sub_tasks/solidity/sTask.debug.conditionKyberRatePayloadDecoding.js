@@ -2,20 +2,13 @@ import { internalTask } from "@nomiclabs/buidler/config";
 
 export default internalTask("debug:conditionkyberratepayloaddecoding")
   .addPositionalParam("conditionPayload")
-  .setAction(async (taskArgs) => {
+  .setAction(async taskArgs => {
     try {
       if (network.name != "buidlerevm") throw new Error("buidlerevm only");
 
-      let contractname = "ConditionKyberRatePayloadDecoding";
-      const conditionAddress = await run("deploy", {
-        contractname,
+      const contract = await run("deploy", {
+        contractname: "ConditionKyberRatePayloadDecoding",
         network: "buidlerevm"
-      });
-
-      const contract = await run("instantiateContract", {
-        contractname,
-        contractaddress: conditionAddress,
-        write: true
       });
 
       await contract.decodePayload(taskArgs[0]);

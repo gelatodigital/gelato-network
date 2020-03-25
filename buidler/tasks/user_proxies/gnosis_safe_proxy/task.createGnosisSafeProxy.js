@@ -1,9 +1,9 @@
 import { task, types } from "@nomiclabs/buidler/config";
-import { defaultNetwork } from "../../../../../buidler.config";
+import { defaultNetwork } from "../../../../buidler.config";
 import { constants, utils } from "ethers";
 
 export default task(
-  "gup-creategnosissafeproxy",
+  "gsp-creategnosissafeproxy",
   `Sends tx to ScriptsCreateGnosisSafeProxy.create() or if --createtwo to .createTwo()  on [--network] (default: ${defaultNetwork})`
 )
   .addFlag("createtwo", "Call ScriptsCreateGnosisSafeProxy.createTwo()")

@@ -17,15 +17,9 @@ export default internalTask("debug:payloadslicing")
         payload = await run(`gc-mint:defaultpayload:${contractname}`);
       else payload = taskArgs[1];
 
-      const contractaddress = await run("deploy", {
+      const contract = await run("deploy", {
         contractname,
         network: "buidlerevm"
-      });
-
-      const contract = await run("instantiateContract", {
-        contractname,
-        contractaddress,
-        read: true
       });
 
       const result = await contract.ok(payload);

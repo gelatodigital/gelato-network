@@ -2,24 +2,39 @@ pragma solidity ^0.6.4;
 pragma experimental ABIEncoderV2;
 
 import { IGelatoProviderModule } from "../../interfaces/IGelatoProviderModule.sol";
-import { IProviderGnosisSafeProxyModule } from "./IProviderGnosisSafeProxyModule.sol";
+import { IProviderModuleGelatoUserProxy } from "./IProviderModuleGelatoUserProxy.sol";
 import { Ownable } from "../../../external/Ownable.sol";
-import { IGnosisSafe } from "../../../gelato_user_proxies/gnosis_safe_proxy/interfaces/IGnosisSafe.sol";
-import { IGnosisSafeProxy } from "../../../gelato_user_proxies/gnosis_safe_proxy/interfaces/IGnosisSafeProxy.sol";
+import {
+    IGelatoUserProxyFactory
+} from "../../../user_proxies/gelato_user_proxy/IGelatoUserProxyFactory.sol";
 import { ExecClaim } from "../../interfaces/IGelatoCore.sol";
 import { Address } from "../../../external/Address.sol";
+import {
+    IGelatoUserProxy
+} from "../../../user_proxies/gelato_user_proxy/IGelatoUserProxy.sol";
 
 
-contract ProviderGnosisSafeProxyModule is
+contract ProviderModuleGelatoUserProxy is
     IGelatoProviderModule,
-    IProviderGnosisSafeProxyModule,
+    IProviderModuleGelatoUserProxy,
     Ownable
 {
     mapping(bytes32 => bool) public override isProxyExtcodehashProvided;
-    mapping(address => bool) public override isMastercopyProvided;
     mapping(address => bool) public override isConditionProvided;
     mapping(address => bool) public override isActionProvided;
     mapping(address => uint256) public override actionGasPriceCeil;
+
+    constructor(
+        IGelatoUserProxyFactory _proxyFactory,
+        bytes32[] memory hashes,
+        address[] memory _conditions,
+        ActionWithGasPriceCeil[] memory _actions
+    )
+        public
+    {
+        isProxyExtcodehashProvided[_proxyFactory.proxyExtcodehash()] = true;
+        batchProvide(hashes, _conditions, _actions);
+    }
 
     // ================= GELATO PROVIDER MODULE STANDARD ================
     // @dev since we check extcodehash prior to execution, we forego the execution option
@@ -31,19 +46,15 @@ contract ProviderGnosisSafeProxyModule is
         returns (string memory)
     {
         if (actionGasPriceCeil[_execClaim.action] < _gelatoGasPrice)
-            return "ProviderGnosisSafeProxyModule.isProvided:gelatoGasPriceTooHigh";
+            return "ProviderModuleGelatoUserProxy.isProvided:gelatoGasPriceTooHigh";
         if (!isConditionProvided[_execClaim.condition])
-            return "ProviderGnosisSafeProxyModule.isProvided:ConditionNotProvided";
+            return "ProviderModuleGelatoUserProxy.isProvided:ConditionNotProvided";
         address userProxy = _execClaim.user;
-        if (!Address.isContract(userProxy))
-            return "ProviderGnosisSafeProxyModule.isProvided:InvalidUserProxy";
         bytes32 codehash;
         assembly { codehash := extcodehash(userProxy) }
         if (!isProxyExtcodehashProvided[codehash])
-            return "ProviderGnosisSafeProxyModule.isProvided:InvalidGSPCodehash";
-        address mastercopy = IGnosisSafeProxy(userProxy).masterCopy();
-        if (!isMastercopyProvided[mastercopy])
-            return "ProviderGnosisSafeProxyModule.isProvided:InvalidGSPMastercopy";
+            return "ProviderModuleGelatoUserProxy.isProvided:InvalidExtcodehash";
+
         return "Ok";
     }
 
@@ -54,11 +65,9 @@ contract ProviderGnosisSafeProxyModule is
         returns(bytes memory)
     {
         return abi.encodeWithSelector(
-            IGnosisSafe.execTransactionFromModuleReturnData.selector,
-            _action,  // to
-            0,  // value
-            _actionPayload,  // data
-            IGnosisSafe.Operation.DelegateCall
+            IGelatoUserProxy.delegatecallGelatoAction.selector,
+            _action,
+            _actionPayload
         );
     }
 
@@ -66,7 +75,7 @@ contract ProviderGnosisSafeProxyModule is
     function provideProxyExtcodehash(bytes32 _hash) public override onlyOwner {
         require(
             !isProxyExtcodehashProvided[_hash],
-            "ProviderGnosisSafeProxyModule.provideExtcodehash: already provided"
+            "ProviderModuleGelatoUserProxy.provideExtcodehash: already provided"
         );
         isProxyExtcodehashProvided[_hash] = true;
         emit LogProvideProxyExtcodehash(_hash);
@@ -75,35 +84,17 @@ contract ProviderGnosisSafeProxyModule is
     function unprovideProxyExtcodehash(bytes32 _hash) public override onlyOwner {
         require(
             isProxyExtcodehashProvided[_hash],
-            "ProviderGnosisSafeProxyModule.unprovideProxyExtcodehash: already not provided"
+            "ProviderModuleGelatoUserProxy.unprovideProxyExtcodehash: already not provided"
         );
         delete isProxyExtcodehashProvided[_hash];
         emit LogUnprovideProxyExtcodehash(_hash);
-    }
-
-    function provideMastercopy(address _mastercopy) public override onlyOwner {
-        require(
-            !isMastercopyProvided[_mastercopy],
-            "ProviderGnosisSafeProxyModule.provideMastercopy: already provided"
-        );
-        isMastercopyProvided[_mastercopy] = true;
-        emit LogProvideMastercopy(_mastercopy);
-    }
-
-    function unprovideMastercopy(address _mastercopy) public override onlyOwner {
-        require(
-            isMastercopyProvided[_mastercopy],
-            "ProviderGnosisSafeProxyModule.unprovideMastercopy: already not provided"
-        );
-        delete isMastercopyProvided[_mastercopy];
-        emit LogUnprovideMastercopy(_mastercopy);
     }
 
     // (Un-)provide Conditions
     function provideCondition(address _condition) public override onlyOwner {
         require(
             !isConditionProvided[_condition],
-            "ProviderGnosisSafeProxyModule.provideCondition: already provided"
+            "ProviderModuleGelatoUserProxy.provideCondition: already provided"
         );
         isConditionProvided[_condition] = true;
         emit LogProvideCondition(_condition);
@@ -112,7 +103,7 @@ contract ProviderGnosisSafeProxyModule is
     function unprovideCondition(address _condition) public override onlyOwner {
         require(
             isConditionProvided[_condition],
-            "ProviderGnosisSafeProxyModule.unprovideCondition: already not provided"
+            "ProviderModuleGelatoUserProxy.unprovideCondition: already not provided"
         );
         delete isConditionProvided[_condition];
         emit LogUnprovideCondition(_condition);
@@ -128,7 +119,7 @@ contract ProviderGnosisSafeProxyModule is
     function unprovideAction(address _action) public override onlyOwner {
         require(
             actionGasPriceCeil[_action] != 0,
-            "ProviderGnosisSafeProxyModule.unprovideAction: already not provided"
+            "ProviderModuleGelatoUserProxy.unprovideAction: already not provided"
         );
         delete isActionProvided[_action];
         delete actionGasPriceCeil[_action];
@@ -143,7 +134,7 @@ contract ProviderGnosisSafeProxyModule is
         require(
             actionGasPriceCeil[_action._address] != _action.gasPriceCeil &&
             actionGasPriceCeil[_action._address] != 0,
-            "ProviderGnosisSafeProxyModule.setActionGasPriceCeil: duplicate or 0"
+            "ProviderModuleGelatoUserProxy.setActionGasPriceCeil: duplicate or 0"
         );
         emit LogSetActionGasPriceCeil(
             _action._address,
@@ -156,7 +147,6 @@ contract ProviderGnosisSafeProxyModule is
     // Batch (un-)provide
     function batchProvide(
         bytes32[] memory _hashes,
-        address[] memory _mastercopies,
         address[] memory _conditions,
         ActionWithGasPriceCeil[] memory _actions
     )
@@ -165,14 +155,12 @@ contract ProviderGnosisSafeProxyModule is
         onlyOwner
     {
         for (uint256 i = 0; i < _hashes.length; i++) provideProxyExtcodehash(_hashes[i]);
-        for (uint256 i = 0; i < _mastercopies.length; i++) provideMastercopy(_mastercopies[i]);
         for (uint256 i = 0; i < _conditions.length; i++) provideCondition(_conditions[i]);
         for (uint256 i = 0; i < _actions.length; i++) setActionGasPriceCeil(_actions[i]);
     }
 
     function batchUnprovide(
         bytes32[] calldata _hashes,
-        address[] calldata _mastercopies,
         address[] calldata _conditions,
         address[] calldata _actions
     )
@@ -181,7 +169,6 @@ contract ProviderGnosisSafeProxyModule is
         onlyOwner
     {
         for (uint256 i = 0; i < _hashes.length; i++) unprovideProxyExtcodehash(_hashes[i]);
-        for (uint256 i = 0; i < _mastercopies.length; i++) unprovideMastercopy(_mastercopies[i]);
         for (uint256 i = 0; i < _conditions.length; i++) unprovideCondition(_conditions[i]);
         for (uint256 i = 0; i < _actions.length; i++) unprovideAction(_actions[i]);
     }

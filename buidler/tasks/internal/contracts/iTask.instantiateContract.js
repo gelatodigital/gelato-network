@@ -18,11 +18,12 @@ export default internalTask(
       if (!read && !write)
         throw new Error("instantiateContract: must specify read or write");
 
-      if (!contractaddress)
+      if (!contractaddress) {
         contractaddress = await run("bre-config", {
           deployments: true,
           contractname
         });
+      }
       const abi = await run("abi-get", { contractname });
 
       let instance;

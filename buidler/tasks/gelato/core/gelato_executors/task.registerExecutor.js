@@ -25,17 +25,26 @@ export default task(
     1,
     types.int
   )
+  .addOptionalParam("gelatocoreaddress")
   .addFlag("log", "Logs return values to stdout")
   .setAction(
     async ({
       executorsuccessfeefactor,
       executorclaimlifespan,
       executorindex,
+      gelatocoreaddress,
       log
     }) => {
       try {
         // We use the 2nd account (index 1) generated from mnemonic for the executor by default
+        const signers = await ethers.signers();
+        console.log(executorindex);
+        const { [executorindex]: signer } = await ethers.signers();
+        console.log(signer);
+        await sleep(10000);
         const { [executorindex]: executor } = await ethers.signers();
+        if (!executor)
+          throw new Error("\n Executor accounts from ethers.signers failed \n");
         if (log) {
           console.log(`
           \n Taking account with index: ${executorindex}\
@@ -44,6 +53,7 @@ export default task(
         }
         const gelatoCore = await run("instantiateContract", {
           contractname: "GelatoCore",
+          contractaddress: gelatocoreaddress,
           signer: executor,
           write: true
         });
@@ -52,7 +62,18 @@ export default task(
           executorsuccessfeefactor
         );
         if (log) console.log(`\n\ntxHash registerExecutor: ${tx.hash}`);
-        await tx.wait();
+        const { blockHash: blockhash } = await tx.wait();
+        if (log) {
+          await run("event-getparsedlog", {
+            contractname: "GelatoCore",
+            contractaddress: gelatoCore.address,
+            eventname: "LogRegisterExecutor",
+            blockhash,
+            txhash: tx.hash,
+            values: true,
+            log: true
+          });
+        }
         return tx.hash;
       } catch (error) {
         console.error(error);

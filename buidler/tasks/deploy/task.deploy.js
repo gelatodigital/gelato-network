@@ -19,11 +19,12 @@ export default task(
   .setAction(async taskArgs => {
     try {
       // Default for now to avoid accidentally losing addresses during deployment
-      taskArgs.log = true;
+      const networkname = network.name;
+      if (networkname !== "buidlerevm") taskArgs.log = true;
+
       taskArgs.compile = true;
 
       const { contractname } = taskArgs;
-      const networkname = network.name;
 
       if (networkname == "mainnet") {
         console.log(
@@ -46,7 +47,6 @@ export default task(
 
       if (taskArgs.compile) await run("compile");
 
-      // const { [2]: provider } = await ethers.signers();
       const ContractFactory = await ethers.getContract(contractname);
       let contract;
       if (taskArgs.constructorargs) {
@@ -56,10 +56,11 @@ export default task(
         contract = await ContractFactory.deploy();
       }
 
-      if (taskArgs.log)
+      if (taskArgs.log) {
         console.log(
           `\nDeployment-Tx Hash: ${contract.deployTransaction.hash}\n`
         );
+      }
 
       await contract.deployed();
 
@@ -69,7 +70,7 @@ export default task(
         );
       }
 
-      return contract.address;
+      return contract;
     } catch (err) {
       console.error(err);
       process.exit(1);

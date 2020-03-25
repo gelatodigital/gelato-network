@@ -1,7 +1,7 @@
 pragma solidity ^0.6.4;
 pragma experimental ABIEncoderV2;
 
-interface IProviderGnosisSafeProxyModule{
+interface IProviderModuleGnosisSafeProxy{
     struct ActionWithGasPriceCeil {
         address _address;
         uint256 gasPriceCeil;

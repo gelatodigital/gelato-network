@@ -1,5 +1,5 @@
 import { task } from "@nomiclabs/buidler/config";
-import { defaultNetwork } from "../../../../../../buidler.config";
+import { defaultNetwork } from "../../../../../buidler.config";
 
 export default task(
   "gsp-getowners",

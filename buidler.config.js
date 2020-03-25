@@ -68,7 +68,7 @@ module.exports = {
   },
   solc: {
     version: "0.6.4",
-    optimizer: { enabled: false }
+    optimizer: { enabled: true }
   }
 };
 
@@ -87,6 +87,9 @@ require("./buidler/tasks/block/collection.tasks.block");
 // ============== BRE
 // BRE, BRE-CONFIG(:networks), BRE-NETWORK
 require("./buidler/tasks/bre/collection.tasks.bre");
+
+// ============== DAPPS
+require("./buidler/tasks/dapps/collection.tasks.dapps");
 
 // ============== DEBUGGING
 require("./buidler/tasks/debugging/collection.tasks.debugging");
@@ -112,12 +115,11 @@ require("./buidler/tasks/gelato/actions/collection.tasks.actions");
 // _____ CORE
 // GasAdmin, Executors, Providers, Minting, ...
 require("./buidler/tasks/gelato/core/collection.tasks.gelato-core");
-// _____ DAPPS
-require("./buidler/tasks/gelato/dapps/collection.tasks.dapps");
 // _____ CONDITIONS
 require("./buidler/tasks/gelato/conditions/collection.tasks.conditions");
-// _____ USER PROXIES (GnosisSafeProxy,...)
-require("./buidler/tasks/gelato/user_proxies/collection.tasks.gelato-user-proxies");
+
+// ============= USER PROXIES (GelatoUserProxy, GnosisSafeProxy,...)
+require("./buidler/tasks/user_proxies/collection.tasks.gelato-user-proxies");
 
 // ======================== INTERNAL HELPER TASKS ======================================
 // encoding, naming ....

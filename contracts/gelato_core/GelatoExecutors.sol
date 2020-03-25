@@ -26,14 +26,21 @@ abstract contract GelatoExecutors is IGelatoExecutors {
     }
 
     // Executor De/Registrations
-    function registerExecutor(uint256 _executorClaimLifespan, uint256 _executorSuccessFeeFactor)
+    function registerExecutor(
+        uint256 _executorClaimLifespan,
+        uint256 _executorSuccessFeeFactor
+    )
         external
         override
         minMaxExecutorClaimLifespan(_executorClaimLifespan)
     {
         executorClaimLifespan[msg.sender] = _executorClaimLifespan;
         executorSuccessFeeFactor[msg.sender] = _executorSuccessFeeFactor;
-        emit LogRegisterExecutor(msg.sender, _executorClaimLifespan, _executorSuccessFeeFactor);
+        emit LogRegisterExecutor(
+            msg.sender,
+            _executorClaimLifespan,
+            _executorSuccessFeeFactor
+        );
     }
 
     function deregisterExecutor() external override {

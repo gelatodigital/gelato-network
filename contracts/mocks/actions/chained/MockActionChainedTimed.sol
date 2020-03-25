@@ -1,68 +1,55 @@
 pragma solidity ^0.6.4;
 pragma experimental ABIEncoderV2;
 
-import { ActionERC20TransferFrom, ActionPayload as SuperActionPayload } from "../one_offs/ActionERC20TransferFrom.sol";
+import { GelatoActionsStandard } from "../../../gelato_actions/GelatoActionsStandard.sol";
 import { ExecClaim, IGelatoCore } from "../../../gelato_core/interfaces/IGelatoCore.sol";
-import { IGelatoAction } from "../../IGelatoAction.sol";
+import { IGelatoAction } from "../../../gelato_actions/IGelatoAction.sol";
 import { SafeMath } from "../../../external/SafeMath.sol";
 import { GelatoString } from "../../../libraries/GelatoString.sol";
 import { GelatoCore } from "../../../gelato_core/GelatoCore.sol";
 
 struct ActionData { uint256 dueDate; uint256 timeOffset; }
 
-contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
+contract MockActionChainedTimed is GelatoActionsStandard {
     using SafeMath for uint256;
     using GelatoString for string;
 
-    address public constant GELATO_CORE = 0x40134bf777a126B0E6208e8BdD6C567F2Ce648d2;
+    GelatoCore public gelatoCore;
+
+    constructor(GelatoCore _gelatoCore) public { gelatoCore = _gelatoCore; }
 
     function action(bytes calldata _actionPayload) external payable override virtual {
-        (SuperActionPayload memory superActionPayload,
-         ActionData memory actionData,
-         ExecClaim memory execClaim) = abi.decode(
+        (ActionData memory actionData, ExecClaim memory execClaim) = abi.decode(
              _actionPayload[4:],
-             (SuperActionPayload,ActionData,ExecClaim)
+             (ActionData,ExecClaim)
          );
-         action(superActionPayload, actionData, execClaim);
+         action(actionData, execClaim);
     }
 
-    function action(
-        SuperActionPayload memory _superActionPayload,
-        ActionData memory _actionData,
-        ExecClaim memory _execClaim
-    )
+    function action(ActionData memory _actionData, ExecClaim memory _execClaim)
         public
         payable
         virtual
     {
-        // Internal Call: ActionERC20TransferFrom.action()
-        super.action(_superActionPayload);
-
         // Duedate for next chained action call
          _actionData.dueDate = _actionData.dueDate.add(_actionData.timeOffset);
          // Max 3 days delay, else automatic expiry
         _execClaim.expiryDate = _actionData.dueDate.add(3 days);
 
-        // Encode updated ActionChainedTimedERC20TransferFromKovan payload into actionPayload
+        // Encode updated MockActionChainedTimed payload into actionPayload
         // @DEV we could maybe use some assembly here to only swap the dueDateValue
         _execClaim.actionPayload = abi.encodeWithSelector(
             IGelatoAction.action.selector,
-            _superActionPayload,
             _actionData,
             _execClaim
         );
 
         // Mint: ExecClaim Chain continues with Updated Payloads
-        try IGelatoCore(GELATO_CORE).mintExecClaim(_execClaim, address(0)) {
+        try gelatoCore.mintExecClaim(_execClaim, address(0)) {
         } catch Error(string memory error) {
-            revert(
-                string(abi.encodePacked(
-                    "ActionChainedTimedERC20TransferFromKovan.mintExecClaim",
-                    error
-                ))
-            );
+            revert(string(abi.encodePacked("MockActionChainedTimed.mintExecClaim", error)));
         } catch {
-            revert("ActionChainedTimedERC20TransferFromKovan.mintExecClaim:undefined");
+            revert("MockActionChainedTimed:undefined");
         }
     }
 
@@ -76,18 +63,10 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
         returns(string memory)
     {
         // Decode: Calldata Array actionPayload without Selector
-        (SuperActionPayload memory superActionPayload,
-         ActionData memory actionData,
-         ExecClaim memory execClaim) = abi.decode(
-             _actionPayload[4:],
-             (SuperActionPayload,ActionData,ExecClaim)
+        (ActionData memory actionData, ExecClaim memory execClaim) = abi.decode(
+            _actionPayload[4:],
+            (ActionData,ExecClaim)
         );
-
-        // Check: ActionERC20TransferFrom._actionConditionsCheck
-        string memory transferStatus = super.ok(superActionPayload);
-
-        // If: Base actionCondition: NOT OK => Return
-        if (transferStatus.startsWithOk()) return transferStatus;
 
         // Else: Check and Return current contract actionCondition
         return ok(actionData, execClaim);
@@ -100,20 +79,18 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
         returns(string memory)  // actionCondition
     {
         if (_actionData.dueDate >= block.timestamp)
-            return "ActionChainedTimedERC20TransferFromKovan.ok: TimestampDidNotPass";
-
-        GelatoCore gelatoCore = GelatoCore(GELATO_CORE);
+            return "MockActionChainedTimed.ok: TimestampDidNotPass";
 
         address executor = gelatoCore.providerExecutor(_execClaim.provider);
 
         // Check fee factors
         uint256 executorSuccessFeeFactor = gelatoCore.executorSuccessFeeFactor(executor);
         if (_execClaim.executorSuccessFeeFactor != executorSuccessFeeFactor)
-            return "ActionChainedTimedERC20TransferFromKovan.ok: executorSuccessFeeFactor";
+            return "MockActionChainedTimed.ok: executorSuccessFeeFactor";
 
         uint256 oracleSuccessFeeFactor = gelatoCore.oracleSuccessFeeFactor();
         if (_execClaim.oracleSuccessFeeFactor != oracleSuccessFeeFactor)
-            return "ActionChainedTimedERC20TransferFromKovan.ok: oracleSuccessFeeFactor";
+            return "MockActionChainedTimed.ok: oracleSuccessFeeFactor";
 
         // Check ExecClaimExpiryDate maximum
         uint256 nextDueDate = _actionData.dueDate.add(_actionData.timeOffset);
@@ -121,7 +98,7 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
             executor
         );
         if (nextDueDate > (now + executorClaimLifespan))
-            return "ActionChainedTimedERC20TransferFromKovan.ok: executorClaimLifespan";
+            return "MockActionChainedTimed.ok: executorClaimLifespan";
 
         uint256 gelatoGasPrice = gelatoCore.gelatoGasPrice();
 
@@ -130,7 +107,7 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
             if (!isProvided.startsWithOk()) {
                 return string(
                     abi.encodePacked(
-                        "ActionChainedTimedERC20TransferFromKovan.ok:", isProvided
+                        "MockActionChainedTimed.ok:", isProvided
                     )
                 );
             }
