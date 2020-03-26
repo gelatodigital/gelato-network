@@ -1,8 +1,8 @@
 import { task } from "@nomiclabs/buidler/config";
 import { constants, utils } from "ethers";
 
-// const CONDITION_NAME = "ConditionTimestampPassed";
-const ACTION_NAME = "MockActionChainedTimed";
+const CONDITION_NAME = "MockConditionDummy";
+const ACTION_NAME = "MockActionDummy";
 
 export default task("gc-debug-newcore")
   .addFlag("log")

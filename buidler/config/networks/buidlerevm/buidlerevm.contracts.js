@@ -43,11 +43,20 @@ export const contracts = [
   // = GelatoUserProxy =
   // Factory
   "GelatoUserProxyFactory",
-  
+
   // = GnosisSafeProxy =
   // Scripts
   "ScriptGnosisSafeEnableGelatoCore",
   "ScriptGnosisSafeEnableGelatoCoreAndMint",
+
+  // === Mocks ====
+  // Conditions
+  "MockConditionDummy",
+  // = Actions =
+  // One-Off
+  "MockActionDummy",
+  // Chained
+  "MockActionChainedDummy",
 
   // === Debugging ===
   // Action
