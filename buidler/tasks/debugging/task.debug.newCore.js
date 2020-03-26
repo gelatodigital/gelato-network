@@ -1,6 +1,9 @@
 import { task } from "@nomiclabs/buidler/config";
 import { constants, utils } from "ethers";
 
+// const CONDITION_NAME = "ConditionTimestampPassed";
+const ACTION_NAME = "MockActionChainedTimed";
+
 export default task("gc-debug-newcore")
   .addFlag("log")
   .setAction(async ({ log }) => {
@@ -11,9 +14,11 @@ export default task("gc-debug-newcore")
       const gelatoCore = await run("deploy", {
         contractname: "GelatoCore"
       });
-      const mockActionChainedTimed = await run("deploy", {
-        contractname: "MockActionChainedTimed",
-        constructorargs: [gelatoCore.address]
+      const condition = await run("deploy", {
+        contractname: CONDITION_NAME
+      });
+      const action = await run("deploy", {
+        contractname: ACTION_NAME
       });
       const gelatoUserProxyFactory = await run("deploy", {
         contractname: "GelatoUserProxyFactory",
@@ -23,7 +28,7 @@ export default task("gc-debug-newcore")
       // ProviderModuleGelatoUserProxy
       const extcodehash = await gelatoUserProxyFactory.proxyExtcodehash();
       const actionWithGasPriceCeil = {
-        _address: mockActionChainedTimed.address,
+        _address: action.address,
         gasPriceCeil: utils.parseUnits(20, "gwei")
       };
       const providerModuleGelatoUserProxy = await run("deploy", {

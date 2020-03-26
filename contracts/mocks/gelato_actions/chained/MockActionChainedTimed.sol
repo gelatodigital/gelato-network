@@ -14,25 +14,27 @@ contract MockActionChainedTimed is GelatoActionsStandard {
     using SafeMath for uint256;
     using GelatoString for string;
 
-    GelatoCore public gelatoCore;
-
-    constructor(GelatoCore _gelatoCore) public { gelatoCore = _gelatoCore; }
-
     function action(bytes calldata _actionPayload) external payable override virtual {
-        (ActionData memory actionData, ExecClaim memory execClaim) = abi.decode(
-             _actionPayload[4:],
-             (ActionData,ExecClaim)
-         );
-         action(actionData, execClaim);
+        (ActionData memory actionData,
+         ExecClaim memory execClaim,
+         GelatoCore gelatoCore) = abi.decode(
+            _actionPayload[4:],
+            (ActionData,ExecClaim,GelatoCore)
+        );
+        action(actionData, execClaim, gelatoCore);
     }
 
-    function action(ActionData memory _actionData, ExecClaim memory _execClaim)
+    function action(
+        ActionData memory _actionData,
+        ExecClaim memory _execClaim,
+        GelatoCore _gelatoCore
+    )
         public
         payable
         virtual
     {
         // Duedate for next chained action call
-         _actionData.dueDate = _actionData.dueDate.add(_actionData.timeOffset);
+        _actionData.dueDate = _actionData.dueDate.add(_actionData.timeOffset);
          // Max 3 days delay, else automatic expiry
         _execClaim.expiryDate = _actionData.dueDate.add(3 days);
 
@@ -45,7 +47,7 @@ contract MockActionChainedTimed is GelatoActionsStandard {
         );
 
         // Mint: ExecClaim Chain continues with Updated Payloads
-        try gelatoCore.mintExecClaim(_execClaim, address(0)) {
+        try _gelatoCore.mintExecClaim(_execClaim, address(0)) {
         } catch Error(string memory error) {
             revert(string(abi.encodePacked("MockActionChainedTimed.mintExecClaim", error)));
         } catch {
@@ -63,16 +65,22 @@ contract MockActionChainedTimed is GelatoActionsStandard {
         returns(string memory)
     {
         // Decode: Calldata Array actionPayload without Selector
-        (ActionData memory actionData, ExecClaim memory execClaim) = abi.decode(
+        (ActionData memory actionData,
+         ExecClaim memory execClaim,
+         GelatoCore gelatoCore) = abi.decode(
             _actionPayload[4:],
-            (ActionData,ExecClaim)
+            (ActionData,ExecClaim,GelatoCore)
         );
 
         // Else: Check and Return current contract actionCondition
-        return ok(actionData, execClaim);
+        return ok(actionData, execClaim, gelatoCore);
     }
 
-    function ok(ActionData memory _actionData, ExecClaim memory _execClaim)
+    function ok(
+        ActionData memory _actionData,
+        ExecClaim memory _execClaim,
+        GelatoCore _gelatoCore
+    )
         public
         view
         virtual
@@ -81,29 +89,29 @@ contract MockActionChainedTimed is GelatoActionsStandard {
         if (_actionData.dueDate >= block.timestamp)
             return "MockActionChainedTimed.ok: TimestampDidNotPass";
 
-        address executor = gelatoCore.providerExecutor(_execClaim.provider);
+        address executor = _gelatoCore.providerExecutor(_execClaim.provider);
 
         // Check fee factors
-        uint256 executorSuccessFeeFactor = gelatoCore.executorSuccessFeeFactor(executor);
+        uint256 executorSuccessFeeFactor = _gelatoCore.executorSuccessFeeFactor(executor);
         if (_execClaim.executorSuccessFeeFactor != executorSuccessFeeFactor)
             return "MockActionChainedTimed.ok: executorSuccessFeeFactor";
 
-        uint256 oracleSuccessFeeFactor = gelatoCore.oracleSuccessFeeFactor();
+        uint256 oracleSuccessFeeFactor = _gelatoCore.oracleSuccessFeeFactor();
         if (_execClaim.oracleSuccessFeeFactor != oracleSuccessFeeFactor)
             return "MockActionChainedTimed.ok: oracleSuccessFeeFactor";
 
         // Check ExecClaimExpiryDate maximum
         uint256 nextDueDate = _actionData.dueDate.add(_actionData.timeOffset);
-        uint256 executorClaimLifespan = gelatoCore.executorClaimLifespan(
+        uint256 executorClaimLifespan = _gelatoCore.executorClaimLifespan(
             executor
         );
         if (nextDueDate > (now + executorClaimLifespan))
             return "MockActionChainedTimed.ok: executorClaimLifespan";
 
-        uint256 gelatoGasPrice = gelatoCore.gelatoGasPrice();
+        uint256 gelatoGasPrice = _gelatoCore.gelatoGasPrice();
 
         if (_execClaim.user != _execClaim.provider) {
-            string memory isProvided = gelatoCore.isProvided(_execClaim, gelatoGasPrice);
+            string memory isProvided = _gelatoCore.isProvided(_execClaim, gelatoGasPrice);
             if (!isProvided.startsWithOk()) {
                 return string(
                     abi.encodePacked(

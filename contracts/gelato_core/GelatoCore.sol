@@ -159,7 +159,7 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
         // Store startGas for gas-consumption based cost and payout calcs
         uint256 startGas = gasleft();
 
-        // memcopy of gelatoGasPrice and gelatoMaxGas
+        // memcopy of gelatoGasPrice and gelatoMaxGas, to avoid multiple storage reads
         uint256 _gelatoGasPrice = gelatoGasPrice;
         uint256 _gelatoMaxGas = gelatoMaxGas;
 
@@ -189,7 +189,7 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
                 return;  // R-0: 1st canExec() failed: NO REFUND
             if (!_exec(_execClaim)) {
                 isSecondExecAttempt[_execClaim.id] = true;
-                return;  // R-1: 1st exec() failed: NO REFUND but second attempt
+                return;  // R-1: 1st exec() failed: NO REFUND but second attempt left
             }
         }
 
