@@ -10,9 +10,14 @@ export default task(
     "useraddress",
     "address of EOA whose proxy to derive"
   )
+  .addOptionalParam(
+    "saltnonce",
+    "saltnonce that takes part in deriving the address - default to global CPK nonce",
+    "0xcfe33a586323e7325be6aa6ecd8b4600d232a9037e83c8ece69413b777dabe65"
+  )
 
   .addFlag("log", "Logs return values to stdout")
-  .setAction(async ({ useraddress, log })=> {
+  .setAction(async ({ useraddress, saltnonce, log })=> {
     try {
 
       if (!useraddress) {
@@ -23,12 +28,13 @@ export default task(
 
 
       // Generate CPK Gnosis Safe Proxy address
-      const predeterminedSaltNonce = "0xcfe33a586323e7325be6aa6ecd8b4600d232a9037e83c8ece69413b777dabe65"
+      if(!saltnonce) saltnonce = "0xcfe33a586323e7325be6aa6ecd8b4600d232a9037e83c8ece69413b777dabe65"
+      // const saltnonce = "0xcfe33a586323e7325be6aa6ecd8b4600d232a9037e83c8ece69413b777dabe65"
       // const proxyFactory = "0x336c19296d3989e9e0c2561ef21c964068657c38"
 
       const create2Salt = ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(
         ['address', 'uint256'],
-        [useraddress, predeterminedSaltNonce],
+        [useraddress, saltnonce],
       ));
 
       const proxyFactory = await run("bre-config", {

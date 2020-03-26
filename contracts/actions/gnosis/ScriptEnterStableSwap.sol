@@ -3,9 +3,10 @@ pragma solidity ^0.6.3;
 import "./ActionWithdrawBatchExchangeRinkeby.sol";
 import "./ActionPlaceOrderBatchExchange.sol";
 import "../../conditions/gnosis/ConditionBatchExchangeFundsWithdrawable.sol";
+import "../../gelato_core/gelato_user_proxies/scripts/ScriptGnosisSafeEnableGelatoCore.sol";
 import "../../gelato_core/interfaces/IGelatoCore.sol";
 
-contract ScriptEnterStableSwap is ActionPlaceOrderBatchExchange, ConditionBatchExchangeFundsWithdrawable {
+contract ScriptEnterStableSwap is ActionPlaceOrderBatchExchange, ConditionBatchExchangeFundsWithdrawable, ScriptGnosisSafeEnableGelatoCore {
 
     // Gelato Core
     IGelatoCore private constant gelatoCore = IGelatoCore(
@@ -28,7 +29,11 @@ contract ScriptEnterStableSwap is ActionPlaceOrderBatchExchange, ConditionBatchE
     )
         external
     {
-        // 1. Execute Trade on BatchExchange
+
+        // 1. Enable Gelato Core
+        enableGelatoCoreModule(address(gelatoCore));
+
+        // 2. Execute Trade on BatchExchange
         placeOrderRequestWithdraw(
             _user,
             _sellToken,
@@ -38,22 +43,19 @@ contract ScriptEnterStableSwap is ActionPlaceOrderBatchExchange, ConditionBatchE
             _orderExpirationBatchId
         );
 
-        // 2. Mint execution claim
-        bytes memory conditionPayload = abi.encodeWithSelector(conditionSelector(), address(this), _sellToken, _buyToken);
+        // 3. Mint execution claim
+        bytes memory conditionPayload = abi.encodeWithSelector(
+            conditionSelector(),
+            address(this),
+            _sellToken,
+            _buyToken
+        );
         bytes memory actionPayload = abi.encodeWithSignature(
             "withdrawFromBatchExchange(address,address,address)",
             _user,
             _sellToken,
             _buyToken
          );
-
-        /*
-        bytes4(keccak256("withdrawFromBatchExchange(address,address,address)")),
-        _user,
-        _sellToken,
-        _buyToken
-        */
-
 
         // Mint new Claim
         try gelatoCore.mintExecutionClaim(

@@ -54,5 +54,5 @@ export const deployments = {
     "0x0",
   ScriptExitRebalancePortfolioRinkeby:
     "0x0",
-  ScriptEnterStableSwap: "0x50ABb30ef85583198bc0E54fe18B3AA52B88e51B"
+  ScriptEnterStableSwap: "0xAD31E3C538152aD304F82EC4791cAC3977A98F64"
 };
