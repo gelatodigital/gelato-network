@@ -37,7 +37,9 @@ module.exports = {
   networks: {
     buidlerevm: {
       hardfork: "istanbul",
-      contracts: buidlerevmConfig.contracts
+      contracts: buidlerevmConfig.contracts,
+      gas: 15000000,
+      blockGasLimit: 20000000
     },
     mainnet: {
       // Standard
@@ -68,7 +70,7 @@ module.exports = {
   },
   solc: {
     version: "0.6.4",
-    optimizer: { enabled: false }
+    optimizer: { enabled: true }
   }
 };
 

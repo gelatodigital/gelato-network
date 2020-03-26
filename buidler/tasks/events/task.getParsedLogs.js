@@ -17,17 +17,18 @@ export default task(
     "contractaddress",
     "An address of a deployed instance of <contractname>. Defaults to network.deployments.<contractname>"
   )
+  .addOptionalParam("logs", "Provide the logs to be parsed")
   .addOptionalParam(
     "fromblock",
     "The block number to search for event logs from",
-    undefined, // default
-    types.number
+    undefined, // placeholder default ...
+    types.number // ... only to enforce type
   )
   .addOptionalParam(
     "toblock",
     "The block number up until which to look for",
-    undefined, // default
-    types.number
+    undefined, // placeholder default ...
+    types.number // ... only to enforce type
   )
   .addOptionalParam("blockhash", "Search a specific block")
   .addOptionalParam("property", "A specific key-value pair to search for")
@@ -53,23 +54,26 @@ export default task(
       )
         throw new Error("--stringify --values [--filtervalue] or --property");
 
-      let loggingActivated;
-      if (taskArgs.log) {
-        loggingActivated = true;
-        taskArgs.log = false;
-      }
-
-      const logs = await run("event-getlogs", taskArgs);
-
-      if (loggingActivated) taskArgs.log = true;
-
+      let logs = taskArgs.logs;
       if (!logs) {
+        let loggingActivated;
         if (taskArgs.log) {
-          console.log(
-            `❌  No Logs for ${taskArgs.contractname}.${taskArgs.eventname}`
-          );
+          loggingActivated = true;
+          taskArgs.log = false;
         }
-        return undefined;
+
+        logs = await run("event-getlogs", taskArgs);
+
+        if (loggingActivated) taskArgs.log = true;
+
+        if (!logs) {
+          if (taskArgs.log) {
+            console.log(
+              `❌  No Logs for ${taskArgs.contractname}.${taskArgs.eventname}`
+            );
+          }
+          return undefined;
+        }
       }
 
       let parsedLogs = await run("ethers-interface-parseLogs", {

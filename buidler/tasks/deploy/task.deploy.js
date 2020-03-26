@@ -16,6 +16,7 @@ export default task(
   .addFlag("clean")
   .addFlag("compile", "Compile before deploy")
   .addFlag("log", "Logs to stdout")
+  .addFlag("events", "Logs parsed Event Logs")
   .setAction(async taskArgs => {
     try {
       // Default for now to avoid accidentally losing addresses during deployment
@@ -62,12 +63,32 @@ export default task(
         );
       }
 
-      await contract.deployed();
+      const {
+        deployTransaction: { hash: txhash, blockHash: blockhash }
+      } = await contract.deployed();
 
       if (taskArgs.log) {
         console.log(
           `\n${contractname} instantiated on ${networkname} at: ${contract.address}\n`
         );
+      }
+
+      if (taskArgs.events) {
+        try {
+          await run("event-getparsedlogsallevents", {
+            contractname: taskArgs.contractname,
+            contractaddress: contract.address,
+            txhash,
+            blockhash,
+            values: true,
+            stringify: true,
+            log: true
+          });
+        } catch (error) {
+          console.error(
+            `\nDeployment: error during event-getparsedlogsallevents\n`
+          );
+        }
       }
 
       return contract;

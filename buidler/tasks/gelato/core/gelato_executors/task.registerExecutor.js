@@ -37,11 +37,6 @@ export default task(
     }) => {
       try {
         // We use the 2nd account (index 1) generated from mnemonic for the executor by default
-        const signers = await ethers.signers();
-        console.log(executorindex);
-        const { [executorindex]: signer } = await ethers.signers();
-        console.log(signer);
-        await sleep(10000);
         const { [executorindex]: executor } = await ethers.signers();
         if (!executor)
           throw new Error("\n Executor accounts from ethers.signers failed \n");

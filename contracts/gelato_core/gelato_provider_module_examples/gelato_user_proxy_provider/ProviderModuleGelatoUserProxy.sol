@@ -25,14 +25,12 @@ contract ProviderModuleGelatoUserProxy is
     mapping(address => uint256) public override actionGasPriceCeil;
 
     constructor(
-        IGelatoUserProxyFactory _proxyFactory,
         bytes32[] memory hashes,
         address[] memory _conditions,
         ActionWithGasPriceCeil[] memory _actions
     )
         public
     {
-        isProxyExtcodehashProvided[_proxyFactory.proxyExtcodehash()] = true;
         batchProvide(hashes, _conditions, _actions);
     }
 
@@ -133,7 +131,7 @@ contract ProviderModuleGelatoUserProxy is
     {
         require(
             actionGasPriceCeil[_action._address] != _action.gasPriceCeil &&
-            actionGasPriceCeil[_action._address] != 0,
+            _action.gasPriceCeil != 0,
             "ProviderModuleGelatoUserProxy.setActionGasPriceCeil: duplicate or 0"
         );
         emit LogSetActionGasPriceCeil(

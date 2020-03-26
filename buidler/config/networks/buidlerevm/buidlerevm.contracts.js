@@ -37,7 +37,7 @@ export const contracts = [
   // === GelatoCore ===
   "GelatoCore",
   // ProviderModules
-  "ProviderModuleGnosisSafeProxy",
+  "ProviderModuleGelatoUserProxy",
 
   // === GelatoUserProxies ===
   // = GelatoUserProxy =

@@ -10,35 +10,38 @@ export default task("gc-debug-newcore")
     try {
       if (network.name !== "buidlerevm") throw new Error(" buidlerevmonly\n");
 
-      // Deployments
+      // === Deployments ===
+      // GelatoCore
       const gelatoCore = await run("deploy", {
         contractname: "GelatoCore"
       });
+      // Condition
       const condition = await run("deploy", {
         contractname: CONDITION_NAME
       });
+      // Action
       const action = await run("deploy", {
         contractname: ACTION_NAME
       });
+      // GelatoUserProxy Factory
       const gelatoUserProxyFactory = await run("deploy", {
         contractname: "GelatoUserProxyFactory",
         constructorargs: [gelatoCore.address]
       });
-
-      // ProviderModuleGelatoUserProxy
+      // ProviderModule GelatoUserProxy
       const extcodehash = await gelatoUserProxyFactory.proxyExtcodehash();
       const actionWithGasPriceCeil = {
         _address: action.address,
-        gasPriceCeil: utils.parseUnits(20, "gwei")
+        gasPriceCeil: utils.parseUnits("20", "gwei")
       };
       const providerModuleGelatoUserProxy = await run("deploy", {
         contractname: "ProviderModuleGelatoUserProxy",
         constructorargs: [
-          gelatoUserProxyFactory.address,
-          [extcodehash], // hashes
+          [extcodehash],
           [constants.AddressZero], // conditions
           [actionWithGasPriceCeil]
-        ]
+        ],
+        events: true
       });
       if (log) {
         const eventnames = [
@@ -48,7 +51,7 @@ export default task("gc-debug-newcore")
           "LogSetActionGasPriceCeil"
         ];
         for (const eventname of eventnames) {
-          await run("event-getparsedlog", {
+          /*await run("event-getparsedlog", {
             contractname: "ProviderModuleGelatoUserProxy",
             contractaddress: providerModuleGelatoUserProxy.address,
             eventname,
@@ -56,10 +59,9 @@ export default task("gc-debug-newcore")
             txhash: createTx.hash,
             values: true,
             log
-          });
+          });*/
         }
       }
-      // ===
 
       // === GelatoCore setup ===
       // Executor
@@ -70,8 +72,6 @@ export default task("gc-debug-newcore")
       });
 
       // Provider
-
-      // ProviderModule
 
       // === GelatoUserProxy setup ===
       const createTx = await gelatoUserProxyFactory.create();
