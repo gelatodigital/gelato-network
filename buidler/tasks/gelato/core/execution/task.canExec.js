@@ -45,15 +45,15 @@ export default task(
         }
 
         if (!execclaim)
-          throw new Error("Unable to fetch execClaim from events");
+          throw new Error("\nUnable to fetch execClaim from events");
 
-        const { [executorindex]: executor } = await ethers.signers();
+        const { [executorindex]: gelatoExecutor } = await ethers.signers();
 
-        if (log) console.log(`\n Executor: ${executor._address}\n`);
+        if (log) console.log(`\n Executor: ${gelatoExecutor._address}\n`);
 
         const gelatoCore = await run("instantiateContract", {
           contractname: "GelatoCore",
-          signer: executor,
+          signer: gelatoExecutor,
           write: true
         });
 
@@ -73,7 +73,7 @@ export default task(
           console.error(`\n canExec error`, error);
         }
       } catch (error) {
-        console.error(error);
+        console.error(error, "\n");
         process.exit(1);
       }
     }

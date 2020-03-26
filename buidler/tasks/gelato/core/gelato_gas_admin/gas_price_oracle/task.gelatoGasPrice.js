@@ -24,7 +24,7 @@ export default task(
       }
       return gelatoGasPrice;
     } catch (error) {
-      console.error(error);
+      console.error(error, "\n");
       process.exit(1);
     }
   });

@@ -5,16 +5,16 @@ export default internalTask("debug:payloadslicing")
   .addOptionalPositionalParam("payload", "the payload to debug slicing for")
   .setAction(async taskArgs => {
     try {
-      if (network.name != "buidlerevm") throw new Error("buidlerevm only");
+      if (network.name != "buidlerevm") throw new Error("\nbuidlerevm only");
 
       const contractname = taskArgs[0];
       if (!contractname.startsWith("Action"))
-        throw new Error("Gelato Actions only");
+        throw new Error("\nGelato Actions only");
       await run("checkContractName", { contractname });
 
       let payload;
       if (!taskArgs[1])
-        payload = await run(`gc-mint:defaultpayload:${contractname}`);
+        payload = await run(`gc-mintexecclaim:defaultpayload:${contractname}`);
       else payload = taskArgs[1];
 
       const contract = await run("deploy", {
@@ -25,7 +25,7 @@ export default internalTask("debug:payloadslicing")
       const result = await contract.ok(payload);
       console.log(`Result:\n ${result}`);
     } catch (error) {
-      console.error(error);
+      console.error(error, "\n");
       process.exit(1);
     }
   });

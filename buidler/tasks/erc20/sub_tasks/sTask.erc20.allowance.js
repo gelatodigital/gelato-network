@@ -19,7 +19,7 @@ export default internalTask(
       const allowance = await erc20Contract.allowance(owner, spender);
       return allowance;
     } catch (error) {
-      console.error(error);
+      console.error(error, "\n");
       process.exit(1);
     }
   });

@@ -9,7 +9,7 @@ export default task(
   .addPositionalParam("execclaimid")
   .addOptionalPositionalParam(
     "executorindex",
-    "Which mnemonic index should be selected for executor msg.sender (default index 1)",
+    "Which mnemonic index should be selected for gelatoExecutor msg.sender (default index 1)",
     1,
     types.int
   )
@@ -56,11 +56,11 @@ export default task(
           });
         }
 
-        const { [executorindex]: executor } = await ethers.signers();
+        const { [executorindex]: gelatoExecutor } = await ethers.signers();
 
         const gelatoCore = await run("instantiateContract", {
           contractname: "GelatoCore",
-          signer: executor,
+          signer: gelatoExecutor,
           write: true
         });
 
@@ -145,7 +145,7 @@ export default task(
 
         return executeTx.hash;
       } catch (error) {
-        console.error(error);
+        console.error(error, "\n");
         process.exit(1);
       }
     }

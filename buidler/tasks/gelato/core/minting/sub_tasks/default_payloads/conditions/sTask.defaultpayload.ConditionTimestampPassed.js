@@ -1,7 +1,7 @@
 import { internalTask } from "@nomiclabs/buidler/config";
 
 export default internalTask(
-  "gc-mint:defaultpayload:ConditionTimestampPassed",
+  "gc-mintexecclaim:defaultpayload:ConditionTimestampPassed",
   `Returns a hardcoded conditionPayload of ConditionTimestampPassed`
 )
   .addFlag("log")

@@ -51,8 +51,8 @@ abstract contract GelatoProviders is IGelatoProviders {
         payable
         override
     {
-        setProviderExecutor(_executor);
         provideFunds(msg.sender);
+        setProviderExecutor(_executor);
         batchAddProviderModules(_modules);
         emit LogRegisterProvider(msg.sender);
     }
@@ -61,9 +61,9 @@ abstract contract GelatoProviders is IGelatoProviders {
         external
         override
     {
-        delete providerExecutor[msg.sender];
         unprovideFunds(providerFunds[msg.sender]);
         delete(providerFunds[msg.sender]);
+        delete providerExecutor[msg.sender];
         batchRemoveProviderModules(_modules);
         emit LogUnregisterProvider(msg.sender);
     }

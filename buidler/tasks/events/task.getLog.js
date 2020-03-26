@@ -21,14 +21,14 @@ export default task(
   .addOptionalParam(
     "fromblock",
     "The block number to search for event logs from",
-    undefined,  // placeholder default ...
-    types.number  // ... only to enforce type
+    undefined, // placeholder default ...
+    types.number // ... only to enforce type
   )
   .addOptionalParam(
     "toblock",
     "The block number up until which to look for",
-    undefined,  // placeholder default ...
-    types.number  // ... only to enforce type
+    undefined, // placeholder default ...
+    types.number // ... only to enforce type
   )
   .addOptionalParam("blockhash", "Search a specific block")
   .addFlag("log", "Logs return values to stdout")
@@ -95,10 +95,14 @@ export default task(
           );
           console.log(logWithTxHash ? logWithTxHash : "❌ Not found");
         }
+        if (!logWithTxHash) {
+          throw new Error(
+            `\n event-getlog: ${contractname}.${eventname} not found.`
+          );
+        }
         return logWithTxHash;
       } catch (error) {
-        console.error(error);
-        process.exit(1);
+        console.error(error, "\n");
       }
     }
   );

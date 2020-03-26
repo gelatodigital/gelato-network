@@ -7,7 +7,7 @@ export default task(
 )
   .addPositionalParam(
     "lifespan",
-    "the executor's lifespan limit on execution claims minted for them"
+    "the gelatoExecutor's lifespan limit on execution claims minted for them"
   )
   .addOptionalParam(
     "executorindex",
@@ -18,17 +18,17 @@ export default task(
   .addFlag("log", "Logs return values to stdout")
   .setAction(async ({ lifespan, executorindex, log }) => {
     try {
-      // We use the 2nd account (index 1) generated from mnemonic for the executor by default
-      const { [executorindex]: executor } = await ethers.signers();
+      // We use the 2nd account (index 1) generated from mnemonic for the gelatoExecutor by default
+      const { [executorindex]: gelatoExecutor } = await ethers.signers();
       if (log) {
         console.log(`
           \n Taking account with index: ${executorindex}\
-          \n Executor Address: ${executor._address}\n
+          \n Executor Address: ${gelatoExecutor._address}\n
         `);
       }
       const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
-        signer: executor,
+        signer: gelatoExecutor,
         write: true
       });
       const tx = await gelatoCore.setExecutorClaimLifespan(lifespan);
@@ -36,7 +36,7 @@ export default task(
       await tx.wait();
       return tx.hash;
     } catch (error) {
-      console.error(error);
+      console.error(error, "\n");
       process.exit(1);
     }
   });

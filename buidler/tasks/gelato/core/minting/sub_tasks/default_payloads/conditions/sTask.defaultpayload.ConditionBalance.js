@@ -2,7 +2,7 @@ import { internalTask } from "@nomiclabs/buidler/config";
 import { utils } from "ethers";
 
 export default internalTask(
-  "gc-mint:defaultpayload:ConditionBalance",
+  "gc-mintexecclaim:defaultpayload:ConditionBalance",
   `Returns a hardcoded conditionPayload of ConditionBalance`
 )
   .addFlag("log")

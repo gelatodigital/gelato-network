@@ -21,14 +21,14 @@ export default task(
   .addOptionalParam(
     "fromblock",
     "The block number to search for event logs from",
-    undefined,  // placeholder default ...
-    types.number  // ... only to enforce type
+    undefined, // placeholder default ...
+    types.number // ... only to enforce type
   )
   .addOptionalParam(
     "toblock",
     "The block number up until which to look for",
-    undefined,  // placeholder default ...
-    types.number  // ... only to enforce type
+    undefined, // placeholder default ...
+    types.number // ... only to enforce type
   )
   .addOptionalParam("blockhash", "Search a specific block")
   .addOptionalParam("property", "A specific key-value pair to search for")
@@ -73,12 +73,14 @@ export default task(
             `\n ❌  No Log for ${taskArgs.contractname}.${taskArgs.eventname}`
           );
         }
-        return undefined;
+        throw new Error(
+          `\n event-getparsedlog: ${taskArgs.contractname} ${taskArgs.eventname} logWithTxHash not found \n`
+        );
       }
 
       let parsedLogWithTxHash = await run("ethers-interface-parseLogs", {
         contractname: taskArgs.contractname,
-        logs: logWithTxHash
+        eventlogs: logWithTxHash
       });
 
       if (!parsedLogWithTxHash) {
@@ -86,7 +88,9 @@ export default task(
           console.log(
             `❌  No Parsed Log for ${taskArgs.contractname}.${taskArgs.eventname}`
           );
-          return undefined;
+          throw new Error(
+            `\n event-getparsedlog: ${taskArgs.contractname} ${taskArgs.eventname} not found \n`
+          );
         }
       } else {
         if (taskArgs.values) {
@@ -160,9 +164,13 @@ export default task(
         }
       }
       // Return (filtered) (mutated) parsedLog
+      if (!parsedLogWithTxHash) {
+        throw new Error(
+          `\n event-getparsedlog: ${taskArgs.contractname} ${taskArgs.eventname} not found \n`
+        );
+      }
       return parsedLogWithTxHash;
     } catch (error) {
-      console.error(error);
-      process.exit(1);
+      console.error(error, "\n");
     }
   });

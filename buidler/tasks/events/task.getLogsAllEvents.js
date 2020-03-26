@@ -87,14 +87,14 @@ export default task(
 
         const eventsLogs = [];
         for (const filter of eventFilters) {
-          const eventLogs = await ethers.provider.getLogs(filter);
+          const eventlogs = await ethers.provider.getLogs(filter);
           if (txhash) {
-            const logWithTxHash = eventLogs.find(
+            const logWithTxHash = eventlogs.find(
               log => log.transactionHash == txhash
             );
             if (logWithTxHash) eventsLogs.push(logWithTxHash);
           } else {
-            eventsLogs.push(eventLogs);
+            eventsLogs.push(eventlogs);
           }
         }
 
@@ -111,14 +111,19 @@ export default task(
                 fromblock ? fromblock : blockhash
               } to block ${toblock}`
             );
-            for (const eventLogs of eventsLogs) console.log("\n", eventLogs);
+            for (const eventlogs of eventsLogs) console.log("\n", eventlogs);
           }
         }
 
-        return eventsLogs.length ? eventsLogs : undefined;
+        if (!eventsLogs.length) {
+          throw new Error(
+            `\n event-getlogsallevents: ${contractname} no events found \n`
+          );
+        }
+
+        return eventsLogs;
       } catch (error) {
-        console.error(error);
-        process.exit(1);
+        console.error(error, "\n");
       }
     }
   );

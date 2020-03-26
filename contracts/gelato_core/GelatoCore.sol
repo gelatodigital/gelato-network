@@ -319,7 +319,7 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
     }
 
     // ================  CANCEL USER / EXECUTOR API ============================
-    function cancelExecClaim(ExecClaim memory _execClaim) public override {
+    function cancelExecClaim(ExecClaim calldata _execClaim) external override {
         // Checks
         if (msg.sender != _execClaim.user)
             require(_execClaim.expiryDate <= now, "GelatoCore.cancelExecClaim: sender");

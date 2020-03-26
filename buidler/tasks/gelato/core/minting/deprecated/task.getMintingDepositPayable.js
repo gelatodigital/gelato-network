@@ -21,7 +21,7 @@ export default task(
         contractname: taskArgs.actionname
       });
 
-      // Handle selected executor default
+      // Handle selected gelatoExecutor default
       taskArgs.gelatoexecutor = await run("handleGelatoExecutor", {
         gelatoexecutor: taskArgs.gelatoexecutor
       });
@@ -63,7 +63,7 @@ export default task(
 
       return mintingDepositPayable;
     } catch (error) {
-      console.error(error);
+      console.error(error, "\n");
       process.exit(1);
     }
   });

@@ -29,7 +29,7 @@ export default task(
       }
       return executorFunds;
     } catch (error) {
-      console.error(error);
+      console.error(error, "\n");
       process.exit(1);
     }
   });

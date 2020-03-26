@@ -1,7 +1,7 @@
 import { internalTask } from "@nomiclabs/buidler/config";
 
 export default internalTask(
-  "gc-mint:defaultpayload:ActionMultiMintForConditionTimestampPassed",
+  "gc-mintexecclaim:defaultpayload:ActionMultiMintForConditionTimestampPassed",
   `Returns a hardcoded actionPayload of ActionMultiMintForConditionTimestampPassed`
 )
   .addParam(
@@ -31,7 +31,7 @@ export default internalTask(
         contractname: "ActionKyberTrade"
       });
       const actionPayload = await run(
-        "gc-mint:defaultpayload:ActionKyberTrade",
+        "gc-mintexecclaim:defaultpayload:ActionKyberTrade",
         { log }
       );
       const intervalSpan = "300"; // seconds

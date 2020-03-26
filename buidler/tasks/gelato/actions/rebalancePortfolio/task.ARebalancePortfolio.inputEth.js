@@ -27,7 +27,7 @@ export default task(
 			await tx.wait();
 			return tx.hash;
 		} catch (error) {
-			console.error(error);
+			console.error(error, "\n");
 			process.exit(1);
 		}
 	});

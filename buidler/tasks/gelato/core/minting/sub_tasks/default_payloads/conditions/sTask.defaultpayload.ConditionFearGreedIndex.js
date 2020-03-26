@@ -1,7 +1,7 @@
 import { internalTask } from "@nomiclabs/buidler/config";
 
 export default internalTask(
-	"gc-mint:defaultpayload:ConditionFearGreedIndex",
+	"gc-mintexecclaim:defaultpayload:ConditionFearGreedIndex",
 	`Returns a hardcoded conditionPayload of ConditionFearGreedIndex`
 )
 	.addFlag("log")

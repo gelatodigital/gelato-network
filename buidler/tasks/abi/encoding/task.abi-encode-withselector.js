@@ -13,7 +13,7 @@ export default task("abi-encode-withselector")
       const interFace = new utils.Interface(abi);
 
       if (!checkNestedObj(interFace, "functions", taskArgs.functionname))
-        throw new Error("functionname is not on contract's interface");
+        throw new Error("\nfunctionname is not on contract's interface");
 
       const payloadWithSelector = interFace.functions[
         taskArgs.functionname

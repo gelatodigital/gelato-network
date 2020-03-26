@@ -4,7 +4,7 @@ export default internalTask("debug:conditionkyberratepayloaddecoding")
   .addPositionalParam("conditionPayload")
   .setAction(async taskArgs => {
     try {
-      if (network.name != "buidlerevm") throw new Error("buidlerevm only");
+      if (network.name != "buidlerevm") throw new Error("\nbuidlerevm only");
 
       const contract = await run("deploy", {
         contractname: "ConditionKyberRatePayloadDecoding",
@@ -13,7 +13,7 @@ export default internalTask("debug:conditionkyberratepayloaddecoding")
 
       await contract.decodePayload(taskArgs[0]);
     } catch (error) {
-      console.error(error);
+      console.error(error, "\n");
       process.exit(1);
     }
   });

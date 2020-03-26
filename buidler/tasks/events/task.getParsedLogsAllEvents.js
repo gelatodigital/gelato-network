@@ -3,7 +3,7 @@ import { defaultNetwork } from "../../../buidler.config";
 
 export default task(
   "event-getparsedlogsallevents",
-  `Return (or --log) the provider's parsed logs for all events on <contractname> for --txhash --fromBlock --toBlock or --blockHash  [--network] (default: ${defaultNetwork})`
+  `Return (or --log) the provider's parsed eventlogs for all events on <contractname> for --txhash --fromBlock --toBlock or --blockHash  [--network] (default: ${defaultNetwork})`
 )
   .addPositionalParam(
     "contractname",
@@ -16,7 +16,7 @@ export default task(
   .addOptionalParam("txhash", "The tx from which to get the Log")
   .addOptionalParam(
     "fromblock",
-    "The block number to search for event logs from",
+    "The block number to search for event eventlogs from",
     undefined, // placeholder default ...
     types.number // ... only to enforce type
   )
@@ -37,18 +37,18 @@ export default task(
   .setAction(async taskArgs => {
     try {
       if (taskArgs.property && taskArgs.values)
-        throw new Error("Cannot search for --property and --values");
+        throw new Error("\nCannot search for --property and --values");
       if (taskArgs.filtervalue && !taskArgs.filterkey && !taskArgs.property)
-        throw new Error("--filtervalue with a --filterkey or --property");
+        throw new Error("\n--filtervalue with a --filterkey or --property");
       if (taskArgs.filterkey && !taskArgs.values)
-        throw new Error("--filter-key/value with --values");
+        throw new Error("\n--filter-key/value with --values");
       if (
         taskArgs.stringify &&
         !taskArgs.values &&
         !taskArgs.filtervalue &&
         !taskArgs.property
       )
-        throw new Error("--stringify --values [--filtervalue] or --property");
+        throw new Error("\n--stringify --values [--filtervalue] or --property");
 
       let loggingActivated;
       if (taskArgs.log) {
@@ -56,14 +56,28 @@ export default task(
         taskArgs.log = false;
       }
 
-      const logs = await run("event-getlogsallevents", taskArgs);
-      taskArgs.logs = logs;
+      const eventlogs = await run("event-getlogsallevents", taskArgs);
+
+      if (!eventlogs) {
+        throw new Error(
+          `\n event-getparsedlogsallevents: ${taskArgs.contractname} no events found \n`
+        );
+      }
+
+      taskArgs.eventlogs = eventlogs;
 
       if (loggingActivated) taskArgs.log = true;
 
-      await run("event-getparsedlogs", taskArgs);
+      const parsedLogs = await run("event-getparsedlogs", taskArgs);
+
+      if (!parsedLogs.length) {
+        throw new Error(
+          `\n event-getparsedlogsallevents: ${taskArgs.contractname} no events found \n`
+        );
+      }
+
+      return parsedLogs;
     } catch (error) {
-      console.error(error);
-      process.exit(1);
+      console.error(error, "\n");
     }
   });

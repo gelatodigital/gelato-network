@@ -1,6 +1,8 @@
 pragma solidity ^0.6.0;
+pragma experimental ABIEncoderV2;
 
 import { IGelatoUserProxy } from "./IGelatoUserProxy.sol";
+import { IGelatoCore, ExecClaim } from "../../gelato_core/interfaces/IGelatoCore.sol";
 import { IGelatoAction } from "../../gelato_actions/IGelatoAction.sol";
 
 contract GelatoUserProxy is IGelatoUserProxy {
@@ -37,26 +39,13 @@ contract GelatoUserProxy is IGelatoUserProxy {
         _;
     }
 
-    function callAccount(address _account, bytes calldata _payload)
+    function mintExecClaim(ExecClaim calldata _execClaim, address _executor)
         external
         payable
         override
         onlyUser
-        noZeroAddress(_account)
-        returns(bool success, bytes memory returndata)
     {
-        (success, returndata) = _account.call{ value: msg.value }(_payload);
-    }
-
-    function delegatecallAccount(address _account, bytes calldata _payload)
-        external
-        payable
-        override
-        onlyUser
-        noZeroAddress(_account)
-        returns(bool success, bytes memory returndata)
-    {
-        (success, returndata) = _account.delegatecall(_payload);
+        IGelatoCore(gelatoCore).mintExecClaim(_execClaim, _executor);
     }
 
     function callGelatoAction(IGelatoAction _action, bytes calldata _actionPayload)
@@ -101,5 +90,27 @@ contract GelatoUserProxy is IGelatoUserProxy {
                 revert("GelatoUserProxy.delegatecallGelatoAction:UnexpectedReturndata");
             }
         }
+    }
+
+    function callAccount(address _account, bytes calldata _payload)
+        external
+        payable
+        override
+        onlyUser
+        noZeroAddress(_account)
+        returns(bool success, bytes memory returndata)
+    {
+        (success, returndata) = _account.call{ value: msg.value }(_payload);
+    }
+
+    function delegatecallAccount(address _account, bytes calldata _payload)
+        external
+        payable
+        override
+        onlyUser
+        noZeroAddress(_account)
+        returns(bool success, bytes memory returndata)
+    {
+        (success, returndata) = _account.delegatecall(_payload);
     }
 }

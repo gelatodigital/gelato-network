@@ -3,13 +3,13 @@ import { defaultNetwork } from "../../../buidler.config";
 
 export default task(
   "event-getparsedlogs",
-  `Return (or --log) the provider's parsed logs for <contractname> <eventname> --fromBlock --toBlock or --blockHash  [--network] (default: ${defaultNetwork})`
+  `Return (or --log) the provider's parsed eventlogs for <contractname> <eventname> --fromBlock --toBlock or --blockHash  [--network] (default: ${defaultNetwork})`
 )
   .addPositionalParam(
     "contractname",
     "Must be in config.networks.[--network].contracts"
   )
-  .addPositionalParam(
+  .addOptionalPositionalParam(
     "eventname",
     "The name of the event in the <contractname>'s abi"
   )
@@ -17,10 +17,10 @@ export default task(
     "contractaddress",
     "An address of a deployed instance of <contractname>. Defaults to network.deployments.<contractname>"
   )
-  .addOptionalParam("logs", "Provide the logs to be parsed")
+  .addOptionalParam("eventlogs", "Provide the event logs to be parsed")
   .addOptionalParam(
     "fromblock",
-    "The block number to search for event logs from",
+    "The block number to search for event eventlogs from",
     undefined, // placeholder default ...
     types.number // ... only to enforce type
   )
@@ -40,45 +40,49 @@ export default task(
   .addFlag("log", "Logs return values to stdout")
   .setAction(async taskArgs => {
     try {
+      if (!taskArgs.eventname && !taskArgs.eventlogs)
+        throw new Error("\n Must provide <eventname> or --eventlogs");
       if (taskArgs.property && taskArgs.values)
-        throw new Error("Cannot search for --property and --values");
+        throw new Error("\n Cannot search for --property and --values");
       if (taskArgs.filtervalue && !taskArgs.filterkey && !taskArgs.property)
-        throw new Error("--filtervalue with a --filterkey or --property");
+        throw new Error("\n --filtervalue with a --filterkey or --property");
       if (taskArgs.filterkey && !taskArgs.values)
-        throw new Error("--filter-key/value with --values");
+        throw new Error("\n --filter-key/value with --values");
       if (
         taskArgs.stringify &&
         !taskArgs.values &&
         !taskArgs.filtervalue &&
         !taskArgs.property
       )
-        throw new Error("--stringify --values [--filtervalue] or --property");
+        throw new Error("\n--stringify --values [--filtervalue] or --property");
 
-      let logs = taskArgs.logs;
-      if (!logs) {
+      let eventlogs = taskArgs.eventlogs;
+      if (!eventlogs) {
         let loggingActivated;
         if (taskArgs.log) {
           loggingActivated = true;
           taskArgs.log = false;
         }
 
-        logs = await run("event-getlogs", taskArgs);
+        eventlogs = await run("event-getlogs", taskArgs);
 
         if (loggingActivated) taskArgs.log = true;
 
-        if (!logs) {
+        if (!eventlogs) {
           if (taskArgs.log) {
             console.log(
               `❌  No Logs for ${taskArgs.contractname}.${taskArgs.eventname}`
             );
           }
-          return undefined;
+          throw new Error(
+            `\n event-getparsedlogs: ${taskArgs.contractname} ${taskArgs.eventname} no eventlog`
+          );
         }
       }
 
       let parsedLogs = await run("ethers-interface-parseLogs", {
         contractname: taskArgs.contractname,
-        logs
+        eventlogs
       });
 
       // Filter/Mutate parsedLogs
@@ -87,8 +91,10 @@ export default task(
           console.log(
             `❌  No Parsed Logs for ${taskArgs.contractname}.${taskArgs.eventname}`
           );
-          return undefined;
         }
+        throw new Error(
+          `\n event-getparsedlogsallevents: ${taskArgs.contractname}.${taskArgs.eventname}} no events found \n`
+        );
       } else {
         if (taskArgs.values) {
           // filterkey/value
@@ -137,25 +143,31 @@ export default task(
           }
         }
       }
+
       // Logging
       if (taskArgs.log) {
         if (parsedLogs.length) {
           console.log(
-            `\n Parsed Logs for ${taskArgs.contractname}.${taskArgs.eventname}\n`
+            `\n Parsed Logs for ${taskArgs.contractname} ${
+              taskArgs.eventname ? taskArgs.eventname : ""
+            }\n`
           );
           for (const parsedLog of parsedLogs) console.log("\n", parsedLog);
         } else {
           console.log(
             `\n ❌ No Parsed Logs for ${taskArgs.contractname}.${taskArgs.eventname}\
-             \n taskArgs:\n`,
+              \n taskArgs:\n`,
             taskArgs
+          );
+          throw new Error(
+            `\n event-getparsedlogsallevents: ${taskArgs.contractname}.${taskArgs.eventname}} no events found \n`
           );
         }
       }
+
       // Return (filtered) (mutated) parsedLogs
-      return parsedLogs.length ? parsedLogs : undefined;
+      return parsedLogs;
     } catch (error) {
-      console.error(error);
-      process.exit(1);
+      console.error(error, "\n");
     }
   });

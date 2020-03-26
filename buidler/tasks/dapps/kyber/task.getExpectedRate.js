@@ -53,7 +53,7 @@ export default task(
       }
       return [expectedRate, expectedMaxSlippageRate];
     } catch (error) {
-      console.error(error);
+      console.error(error, "\n");
       process.exit(1);
     }
   });

@@ -41,7 +41,7 @@ export default task(
         );
       return ok;
     } catch (error) {
-      console.error(error);
+      console.error(error, "\n");
       process.exit(1);
     }
   });

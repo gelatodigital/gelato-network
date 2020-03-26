@@ -20,7 +20,7 @@ export default task(
       }
       return fearAndGreedIndexValue;
     } catch (error) {
-      console.error(error);
+      console.error(error, "\n");
       process.exit(1);
     }
   });

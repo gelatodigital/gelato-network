@@ -14,14 +14,18 @@ export default task(
     constants.HashZero,
     types.string
   )
+  .addOptionalParam("factoryaddress")
+  .addFlag("events", "Logs parsed Event Logs to stdout")
   .addFlag("log", "Logs return values to stdout")
   .setAction(async taskArgs => {
     try {
-      if (taskArgs.log) console.log("\nTaskArgs:\n", taskArgs, "\n");
+      if (taskArgs.log)
+        console.log("\n gupf-creategelatouserproxy:\n", taskArgs, "\n");
 
       // GelatoCore interaction
       const gelatoUserProxyFactory = await run("instantiateContract", {
         contractname: "GelatoUserProxyFactory",
+        contractaddress: taskArgs.factoryaddress,
         write: true
       });
 
@@ -42,40 +46,49 @@ export default task(
             value: utils.parseEther(taskArgs.funding)
           });
         } catch (error) {
-          console.error("PRE creationTx submission error");
-          process.exit(1);
+          throw new Error("\n PRE creationTx submission error", error, "\n");
         }
       }
 
       if (taskArgs.log)
         console.log(`\n Creation Tx Hash: ${creationTx.hash}\n`);
 
-      let blockHash;
+      let blockhash;
       try {
-        const { blockHash: _blockHash } = await creationTx.wait();
-        blockHash = _blockHash;
+        ({ blockHash: blockhash } = await creationTx.wait());
       } catch (error) {
-        console.error(`\ncreationTx (${creationTx.hash}) REVERT\n`, error);
-        process.exit(1);
+        throw new Error(
+          `\ncreationTx (${creationTx.hash}) REVERT\n`,
+          error,
+          "\n"
+        );
       }
 
       // Event Emission verification
-      if (taskArgs.log) {
-        const parsedCreateLog = await run("event-getparsedlog", {
-          contractname: "GelatoUserProxyFactory",
-          eventname: "LogCreation",
-          txhash: creationTx.hash,
-          blockHash,
-          values: true,
-          stringify: true
-        });
+      const parsedCreateLog = await run("event-getparsedlog", {
+        contractname: "GelatoUserProxyFactory",
+        contractaddress: taskArgs.factoryaddress,
+        eventname: "LogCreation",
+        txhash: creationTx.hash,
+        blockhash,
+        values: true,
+        stringify: true
+      });
+
+      if (taskArgs.events) {
         if (parsedCreateLog) console.log("\n✅ LogCreation\n", parsedCreateLog);
         else console.log("\n❌ LogCreation not found");
       }
 
-      return creationTx.hash;
+      if (!parsedCreateLog.userProxy) {
+        throw new Error(
+          `\n gupf-creategelatouserproxy: no userProxy retrieved \n`
+        );
+      }
+
+      return parsedCreateLog.userProxy;
     } catch (error) {
-      console.error(error);
+      console.error(error, "\n");
       process.exit(1);
     }
   });

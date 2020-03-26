@@ -64,7 +64,7 @@ export default task(
         if (log) console.log(`\n ExecClaim:\n`, execClaim);
         return execClaim;
       } catch (error) {
-        console.error(error);
+        console.error(error, "\n");
         process.exit(1);
       }
     }

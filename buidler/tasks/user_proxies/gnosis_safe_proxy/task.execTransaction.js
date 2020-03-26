@@ -145,7 +145,7 @@ export default task(
 
       return executeTxReceipt.hash;
     } catch (error) {
-      console.error(error);
+      console.error(error, "\n");
       process.exit(1);
     }
   });

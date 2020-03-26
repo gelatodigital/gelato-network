@@ -9,7 +9,7 @@ export default internalTask(
   .setAction(async ({ contractname, payload }) => {
     try {
       if (payload) return payload;
-      payload = await run(`gc-mint:defaultpayload:${contractname}`);
+      payload = await run(`gc-mintexecclaim:defaultpayload:${contractname}`);
       return payload;
     } catch (err) {
       console.error(err);

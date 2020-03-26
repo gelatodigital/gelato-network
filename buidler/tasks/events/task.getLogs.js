@@ -3,7 +3,7 @@ import { defaultNetwork } from "../../../buidler.config";
 
 export default task(
   "event-getlogs",
-  `Return (or --log) the provider's logs for <contractname> <eventname> --fromBlock --toBlock or --blockHash  [--network] (default: ${defaultNetwork})`
+  `Return (or --log) the provider's eventlogs for <contractname> <eventname> --fromBlock --toBlock or --blockHash  [--network] (default: ${defaultNetwork})`
 )
   .addPositionalParam(
     "contractname",
@@ -19,15 +19,15 @@ export default task(
   )
   .addOptionalParam(
     "fromblock",
-    "The block number to search for event logs from",
-    undefined,  // placeholder default ...
-    types.number  // ... only to enforce type
+    "The block number to search for event eventlogs from",
+    undefined, // placeholder default ...
+    types.number // ... only to enforce type
   )
   .addOptionalParam(
     "toblock",
     "The block number up until which to look for",
-    undefined,  // placeholder default ...
-    types.number  // ... only to enforce type
+    undefined, // placeholder default ...
+    types.number // ... only to enforce type
   )
   .addOptionalParam("blockhash", "Search a specific block")
   .addFlag("log", "Logs return values to stdout")
@@ -79,12 +79,12 @@ export default task(
           topics: [contractInterface.events[eventname].topic]
         };
 
-        const logs = await ethers.provider.getLogs(filter);
+        const eventlogs = await ethers.provider.getLogs(filter);
 
         if (log) {
-          if (!logs.length) {
+          if (!eventlogs.length) {
             console.log(
-              `\n❌  No logs for ${contractname}.${eventname} from block ${
+              `\n❌  No eventlogs for ${contractname}.${eventname} from block ${
                 fromblock ? fromblock : blockhash
               } ${toblock ? `to block ${toblock}` : "to latest block"}`
             );
@@ -94,13 +94,19 @@ export default task(
                 fromblock ? fromblock : blockhash
               } to block ${toblock}`
             );
-            for (const aLog of logs) console.log("\n", aLog);
+            for (const aLog of eventlogs) console.log("\n", aLog);
           }
         }
-        return logs.length ? logs : undefined;
+
+        if (!eventlogs.length) {
+          throw new Error(
+            `\n event-getlogs: ${contractname}.${eventname} not found \n`
+          );
+        }
+
+        return eventlogs;
       } catch (error) {
-        console.error(error);
-        process.exit(1);
+        console.error(error, "\n");
       }
     }
   );

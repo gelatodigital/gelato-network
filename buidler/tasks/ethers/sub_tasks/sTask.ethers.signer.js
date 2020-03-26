@@ -30,7 +30,7 @@ export default internalTask(
       else if (returnValues.length == 1) return returnValues[0];
       else return returnValues;
     } catch (error) {
-      console.error(error);
+      console.error(error, "\n");
       process.exit(1);
     }
   });

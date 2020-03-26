@@ -3,7 +3,7 @@ import { internalTask } from "@nomiclabs/buidler/config";
 export default internalTask("debug:revertstringdecoding").setAction(
   async () => {
     try {
-      if (network.name != "buidlerevm") throw new Error("buidlerevm only");
+      if (network.name != "buidlerevm") throw new Error("\nbuidlerevm only");
 
       const actionAddress = await run("deploy", {
         contractname: "Action",
@@ -22,7 +22,7 @@ export default internalTask("debug:revertstringdecoding").setAction(
 
       await coreContract.catchErrorString(userProxyAddress, actionAddress);
     } catch (error) {
-      console.error(error);
+      console.error(error, "\n");
       process.exit(1);
     }
   }

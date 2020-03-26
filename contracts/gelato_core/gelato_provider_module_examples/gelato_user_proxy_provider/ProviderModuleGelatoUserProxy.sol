@@ -37,8 +37,8 @@ contract ProviderModuleGelatoUserProxy is
     // ================= GELATO PROVIDER MODULE STANDARD ================
     // @dev since we check extcodehash prior to execution, we forego the execution option
     //  where the userProxy is deployed at execution time.
-    function isProvided(ExecClaim memory _execClaim, address, uint256 _gelatoGasPrice)
-        public
+    function isProvided(ExecClaim calldata _execClaim, address, uint256 _gelatoGasPrice)
+        external
         view
         override
         returns (string memory)

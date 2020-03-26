@@ -1,7 +1,7 @@
 import { internalTask } from "@nomiclabs/buidler/config";
 
 export default internalTask(
-  "gc-mint:defaultpayload:ActionRebalancePortfolio",
+  "gc-mintexecclaim:defaultpayload:ActionRebalancePortfolio",
   `Returns a hardcoded actionPayload of ActionRebalancePortfolio`
 )
   .addOptionalPositionalParam(

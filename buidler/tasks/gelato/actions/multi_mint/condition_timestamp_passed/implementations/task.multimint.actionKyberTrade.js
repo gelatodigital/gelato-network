@@ -24,13 +24,13 @@ export default task(
 
       // Non-Default Params for ActionMultiMintForConditionTimestampPassed
       const { default: gelatoexecutor } = await run("bre-config", {
-        addressbookcategory: "executor"
+        addressbookcategory: "gelatoExecutor"
       });
       const numberofmints = "2";
 
       // Encode the payload for the call to MultiMintForTimeCondition.multiMint
       const actionMultiMintForConditionTimestampPassedPayloadWithSelector = await run(
-        "gc-mint:defaultpayload:ActionMultiMintForConditionTimestampPassed",
+        "gc-mintexecclaim:defaultpayload:ActionMultiMintForConditionTimestampPassed",
         {
           gelatoexecutor,
           numberofmints,

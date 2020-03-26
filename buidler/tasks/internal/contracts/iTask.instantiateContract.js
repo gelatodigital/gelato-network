@@ -16,7 +16,7 @@ export default internalTask(
   .setAction(async ({ contractname, contractaddress, signer, read, write }) => {
     try {
       if (!read && !write)
-        throw new Error("instantiateContract: must specify read or write");
+        throw new Error("\ninstantiateContract: must specify read or write");
 
       if (!contractaddress) {
         contractaddress = await run("bre-config", {

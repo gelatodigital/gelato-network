@@ -76,11 +76,11 @@ export default task(
       // Command Line Argument Checks
       // Gnosis Safe creation
       if (!taskArgs.initializer && !taskArgs.setup)
-        throw new Error("Must provide initializer payload or --setup args");
+        throw new Error("\nMust provide initializer payload or --setup args");
       else if (taskArgs.initializer && taskArgs.setup)
-        throw new Error("Provide EITHER initializer payload OR --setup args");
+        throw new Error("\nProvide EITHER initializer payload OR --setup args");
       if (taskArgs.data !== constants.HashZero && taskArgs.defaultpayloadscript)
-        throw new Error("Provide EITHER --data OR --defaultpayloadscript");
+        throw new Error("\nProvide EITHER --data OR --defaultpayloadscript");
 
       // Gelato User Proxy (GnosisSafeProxy) creation params
       if (!taskArgs.mastercopy) {
@@ -91,7 +91,7 @@ export default task(
       }
 
       if (!taskArgs.mastercopy)
-        throw new Error("No taskArgs.mastercopy for proxy defined");
+        throw new Error("\nNo taskArgs.mastercopy for proxy defined");
 
       if (taskArgs.setup && !taskArgs.owners) {
         const signerAddress = await run("ethers", {
@@ -100,7 +100,7 @@ export default task(
         });
         taskArgs.owners = [signerAddress];
         if (!Array.isArray(taskArgs.owners))
-          throw new Error("Failed to convert taskArgs.owners into Array");
+          throw new Error("\nFailed to convert taskArgs.owners into Array");
       }
 
       if (taskArgs.setup && taskArgs.defaultpayloadscript) {
@@ -180,7 +180,7 @@ export default task(
 
       return creationTx.hash;
     } catch (error) {
-      console.error(error);
+      console.error(error, "\n");
       process.exit(1);
     }
   });

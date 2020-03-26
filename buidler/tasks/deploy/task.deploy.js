@@ -15,8 +15,8 @@ export default task(
   )
   .addFlag("clean")
   .addFlag("compile", "Compile before deploy")
+  .addFlag("events", "Logs parsed Event Logs to stdout")
   .addFlag("log", "Logs to stdout")
-  .addFlag("events", "Logs parsed Event Logs")
   .setAction(async taskArgs => {
     try {
       // Default for now to avoid accidentally losing addresses during deployment
@@ -85,9 +85,7 @@ export default task(
             log: true
           });
         } catch (error) {
-          console.error(
-            `\nDeployment: error during event-getparsedlogsallevents\n`
-          );
+          console.error(`\n Error during event-getparsedlogsallevents \n`);
         }
       }
 

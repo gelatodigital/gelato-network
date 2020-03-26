@@ -9,13 +9,13 @@ export default task(
 )
   .addOptionalPositionalParam(
     "executorclaimlifespan",
-    "executor's max execClaim lifespan",
+    "gelatoExecutor's max execClaim lifespan",
     SIXY_DAYS,
     types.int
   )
   .addOptionalPositionalParam(
     "executorsuccessfeefactor",
-    "The percantage cut of total execution costs that the executor takes as profit.",
+    "The percantage cut of total execution costs that the gelatoExecutor takes as profit.",
     5,
     types.int
   )
@@ -26,53 +26,51 @@ export default task(
     types.int
   )
   .addOptionalParam("gelatocoreaddress")
+  .addFlag("events", "Logs parsed Event Logs to stdout")
   .addFlag("log", "Logs return values to stdout")
-  .setAction(
-    async ({
-      executorsuccessfeefactor,
-      executorclaimlifespan,
-      executorindex,
-      gelatocoreaddress,
-      log
-    }) => {
-      try {
-        // We use the 2nd account (index 1) generated from mnemonic for the executor by default
-        const { [executorindex]: executor } = await ethers.signers();
-        if (!executor)
-          throw new Error("\n Executor accounts from ethers.signers failed \n");
-        if (log) {
-          console.log(`
-          \n Taking account with index: ${executorindex}\
-          \n Executor Address:          ${executor._address}\n
-        `);
-        }
-        const gelatoCore = await run("instantiateContract", {
+  .setAction(async taskArgs => {
+    try {
+      // We use the 2nd account (index 1) generated from mnemonic for the gelatoExecutor by default
+      const {
+        [taskArgs.executorindex]: gelatoExecutor
+      } = await ethers.signers();
+
+      if (!gelatoExecutor)
+        throw new Error("\n Executor accounts from ethers.signers failed \n");
+
+      if (taskArgs.log) console.log("gc-registerexecutor:\n", taskArgs);
+
+      const gelatoCore = await run("instantiateContract", {
+        contractname: "GelatoCore",
+        contractaddress: taskArgs.gelatocoreaddress,
+        signer: gelatoExecutor,
+        write: true
+      });
+
+      const tx = await gelatoCore.registerExecutor(
+        taskArgs.executorclaimlifespan,
+        taskArgs.executorsuccessfeefactor
+      );
+
+      if (taskArgs.log) console.log(`\n\ntxHash registerExecutor: ${tx.hash}`);
+
+      const { blockHash: blockhash } = await tx.wait();
+
+      if (taskArgs.events) {
+        await run("event-getparsedlogsallevents", {
           contractname: "GelatoCore",
-          contractaddress: gelatocoreaddress,
-          signer: executor,
-          write: true
+          contractaddress: gelatoCore.address,
+          blockhash,
+          txhash: tx.hash,
+          values: true,
+          stringify: true,
+          log: true
         });
-        const tx = await gelatoCore.registerExecutor(
-          executorclaimlifespan,
-          executorsuccessfeefactor
-        );
-        if (log) console.log(`\n\ntxHash registerExecutor: ${tx.hash}`);
-        const { blockHash: blockhash } = await tx.wait();
-        if (log) {
-          await run("event-getparsedlog", {
-            contractname: "GelatoCore",
-            contractaddress: gelatoCore.address,
-            eventname: "LogRegisterExecutor",
-            blockhash,
-            txhash: tx.hash,
-            values: true,
-            log: true
-          });
-        }
-        return tx.hash;
-      } catch (error) {
-        console.error(error);
-        process.exit(1);
       }
+
+      return tx.hash;
+    } catch (error) {
+      console.error(error, "\n");
+      process.exit(1);
     }
-  );
+  });

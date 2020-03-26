@@ -2,13 +2,13 @@ import { internalTask } from "@nomiclabs/buidler/config";
 import { utils } from "ethers";
 
 export default internalTask(
-  "gc-mint:defaultpayload:ActionKyberTradeKovan",
+  "gc-mintexecclaim:defaultpayload:ActionKyberTradeKovan",
   `Returns a hardcoded actionPayload of ActionKyberTradeKovan`
 )
   .addFlag("log")
   .setAction(async ({ log }) => {
     try {
-      if (network.name != "kovan") throw new Error("wrong network!");
+      if (network.name != "kovan") throw new Error("\nwrong network!");
 
       const contractname = "ActionKyberTradeKovan";
       // action(_user, _userProxy, _src, _srcAmt, _dest, _minConversionRate)

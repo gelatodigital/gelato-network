@@ -8,7 +8,7 @@ export default internalTask(
   .addPositionalParam("actionname")
   .addOptionalPositionalParam(
     "execclaimexpirydate",
-    "Defaults to 0 for selected executor's maximum",
+    "Defaults to 0 for selected gelatoExecutor's maximum",
     0,
     types.int
   )
@@ -33,10 +33,10 @@ export default internalTask(
           contractname: actionname
         });
         const conditionPayload = await run(
-          "gc-mint:defaultpayload:ConditionTimestampPassed"
+          "gc-mintexecclaim:defaultpayload:ConditionTimestampPassed"
         );
         const actionPayload = await run(
-          "gc-mint:defaultpayload:ActionERC20TransferFrom"
+          "gc-mintexecclaim:defaultpayload:ActionERC20TransferFrom"
         );
         const payload = await run("abi-encode-withselector", {
           contractname: "ScriptGnosisSafeEnableGelatoCoreAndMint",

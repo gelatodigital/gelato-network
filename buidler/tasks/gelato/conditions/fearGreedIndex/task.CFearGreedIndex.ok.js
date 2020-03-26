@@ -18,7 +18,7 @@ export default task(
         console.log(`\n ConditionFearGreedIndex.ok: ${trueOrFalse}\n`);
       return trueOrFalse;
     } catch (error) {
-      console.error(error);
+      console.error(error, "\n");
       process.exit(1);
     }
   });

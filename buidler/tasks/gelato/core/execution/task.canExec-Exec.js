@@ -8,7 +8,7 @@ export default task(
   .addPositionalParam("execclaimid")
   .addOptionalPositionalParam(
     "executorindex",
-    "which mnemonic index should be selected for executor msg.sender (default index 1)",
+    "which mnemonic index should be selected for gelatoExecutor msg.sender (default index 1)",
     1,
     types.int
   )
@@ -36,7 +36,7 @@ export default task(
       const canExecuteReturn = await run("gc-canexec", taskArgs);
       if (canExecuteReturn === "ok") await run("gc-exec", taskArgs);
     } catch (error) {
-      console.error(error);
+      console.error(error, "\n");
       process.exit(1);
     }
   });

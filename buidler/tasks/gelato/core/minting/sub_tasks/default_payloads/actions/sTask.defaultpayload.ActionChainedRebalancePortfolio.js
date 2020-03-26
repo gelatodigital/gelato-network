@@ -3,12 +3,12 @@ import { AddressZero } from "ethers/constants";
 import { BigNumber } from "ethers/utils";
 
 export default internalTask(
-  "gc-mint:defaultpayload:ActionChainedRebalancePortfolio",
+  "gc-mintexecclaim:defaultpayload:ActionChainedRebalancePortfolio",
   `Returns a hardcoded actionPayload of ActionChainedRebalancePortfolio`
 )
   .addOptionalPositionalParam(
     "executorindex",
-    "which mnemoric index should be selected for executor msg.sender (default index 0)",
+    "which mnemoric index should be selected for gelatoExecutor msg.sender (default index 0)",
     1,
     types.int
   )
@@ -22,9 +22,9 @@ export default internalTask(
   .setAction(async ({ executorindex = 1, providerindex = 2, log = true }) => {
     try {
       const signers = await ethers.signers();
-      const executor = signers[parseInt(executorindex)];
+      const gelatoExecutor = signers[parseInt(executorindex)];
       const provider = signers[parseInt(providerindex)];
-      const providerAndExecutor = [provider._address, executor._address];
+      const providerAndExecutor = [provider._address, gelatoExecutor._address];
 
       const actionContract = await run("instantiateContract", {
         contractname: "ActionChainedRebalancePortfolio",
