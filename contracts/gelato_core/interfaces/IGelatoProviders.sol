@@ -48,7 +48,12 @@ interface IGelatoProviders {
         returns (string memory);
 
     // Registration
-    function registerProvider(address _executor, address[] calldata _modules)
+    function registerProvider(
+        address _executor,
+        address[] calldata _modules,
+        uint256 _executorFeeCeil,
+        uint256 _oracleFeeCeil
+    )
         external
         payable;
     function unregisterProvider(address[] calldata _modules) external;

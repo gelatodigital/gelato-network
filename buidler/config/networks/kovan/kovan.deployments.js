@@ -20,7 +20,8 @@ export const deployments = {
   ActionChainedRebalancePortfolio: "0xBcB7492164066E5B5DD5D74c9Ae3c5DfbACcde69",
 
   // ===== Gelato Core ====
-  GelatoCore: "0x40134bf777a126B0E6208e8BdD6C567F2Ce648d2",
+  GelatoCore: "0xeEa7e91EbDFF03432101590f976d3906b5352ef8",
+  ProviderModuleGelatoUserProxy: "0xA6D02eFA927639EDAFB34A0AeC2Ebe1152a50713",
 
   // ==== Conditions ====
   // == Balances ==
@@ -35,14 +36,24 @@ export const deployments = {
   // Timestamps
   ConditionTimestampPassed: "0xbd2938223d6c26BC592b82FbdD62DF19a3FE79DF",
 
-  // ==== Scripts ====
+  // === UserProxies ===
+  // == GelatoUserProxy ==
+  GelatoUserProxyFactory: "0x564ca0eBa8d0717f3E5beCEB9303888C16C8AC81",
+
   // == GnosisSafe ==
-  // Enable GelatoCore Module
+  // Scripts
   ScriptGnosisSafeEnableGelatoCore:
     "0x99D081a6c07043e9E78A231Ae2c41fa811AD856C",
-  // Enable GelatoCore Module and Mint
   ScriptGnosisSafeEnableGelatoCoreAndMint:
     "0x5993ff30b943dE4c3fDA59d88D87d1661412D101",
-  // Enter the Rebalancing Chained Action
-  ScriptEnterPortfolioRebalancing: "0x57de907e200B214A6A6EfA6C723891069999D2Cc"
+  ScriptEnterPortfolioRebalancing: "0x57de907e200B214A6A6EfA6C723891069999D2Cc",
+
+  // === Mocks ====
+  // Conditions
+  MockConditionDummy: "0x16A6292aC4c568B8e70006C39ACf86fcee542Ef2",
+  // = Actions =
+  // One-Off
+  MockActionDummy: "0xd9dC553CDCf4ff237B5D6a7025c85f7F096705B4",
+  // Chained
+  MockActionChainedDummy: ""
 };

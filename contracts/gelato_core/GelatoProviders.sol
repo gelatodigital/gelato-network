@@ -46,7 +46,12 @@ abstract contract GelatoProviders is IGelatoProviders {
     }
 
     // Registration
-    function registerProvider(address _executor, address[] calldata _modules)
+    function registerProvider(
+        address _executor,
+        address[] calldata _modules,
+        uint256 _executorFeeCeil,
+        uint256 _oracleFeeCeil
+    )
         external
         payable
         override
@@ -54,6 +59,8 @@ abstract contract GelatoProviders is IGelatoProviders {
         provideFunds(msg.sender);
         setProviderExecutor(_executor);
         batchAddProviderModules(_modules);
+        setProviderExecutorFeeCeil(_executorFeeCeil);
+        setProviderOracleFeeCeil(_oracleFeeCeil);
         emit LogRegisterProvider(msg.sender);
     }
 
@@ -65,6 +72,8 @@ abstract contract GelatoProviders is IGelatoProviders {
         delete(providerFunds[msg.sender]);
         delete providerExecutor[msg.sender];
         batchRemoveProviderModules(_modules);
+        delete providerExecutorFeeCeil[msg.sender];
+        delete providerOracleFeeCeil[msg.sender];
         emit LogUnregisterProvider(msg.sender);
     }
 

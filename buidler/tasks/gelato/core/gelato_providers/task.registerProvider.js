@@ -15,6 +15,18 @@ export default task(
     2,
     types.int
   )
+  .addOptionalParam(
+    "executorfeeceil",
+    "Upper Limit for executorSuccessFeeFactor",
+    5,
+    types.int
+  )
+  .addOptionalParam(
+    "oraclefeeceil",
+    "Upper Limit for oracleSuccessFeeFactor",
+    2,
+    types.int
+  )
   .addOptionalParam("gelatocoreaddress")
   .addFlag("events", "Logs parsed Event Logs to stdout")
   .addFlag("log", "Logs return values to stdout")
@@ -42,6 +54,8 @@ export default task(
       const tx = await gelatoCore.registerProvider(
         taskArgs.gelatoexecutor,
         taskArgs.modules,
+        taskArgs.executorfeeceil,
+        taskArgs.oraclefeeceil,
         {
           value: utils.parseEther(taskArgs.ethamount)
         }
@@ -56,8 +70,6 @@ export default task(
           contractaddress: gelatoCore.address,
           blockhash,
           txhash: tx.hash,
-          values: true,
-          stringify: true,
           log: true
         });
       }

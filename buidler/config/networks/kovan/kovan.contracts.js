@@ -47,5 +47,14 @@ export const contracts = [
   // == GnosisSafe ==
   // Scripts
   "ScriptGnosisSafeEnableGelatoCore",
-  "ScriptGnosisSafeEnableGelatoCoreAndMint"
+  "ScriptGnosisSafeEnableGelatoCoreAndMint",
+
+  // === Mocks ====
+  // Conditions
+  "MockConditionDummy",
+  // = Actions =
+  // One-Off
+  "MockActionDummy",
+  // Chained
+  "MockActionChainedDummy"
 ];

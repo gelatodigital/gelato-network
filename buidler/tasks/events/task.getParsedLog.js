@@ -57,6 +57,8 @@ export default task(
         );
       }
 
+      if (taskArgs.log) console.log("\n event-getparsedlog", taskArgs, "\n");
+
       let loggingActivated;
       if (taskArgs.log) {
         loggingActivated = true;

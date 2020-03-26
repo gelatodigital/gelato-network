@@ -19,7 +19,7 @@ contract GelatoUserProxy is IGelatoUserProxy {
         gelatoCore = _gelatoCore;
     }
 
-    receive() external payable {}
+    fallback() external payable {}
 
     modifier onlyUser() {
         require(msg.sender == user, "GelatoUserProxy.onlyUser: failed");

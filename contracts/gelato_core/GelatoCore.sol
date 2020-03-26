@@ -31,6 +31,9 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
         payable
         override
     {
+        // Smart Contract Account or EOA
+        _execClaim.user = msg.sender;
+
         // EXECUTOR Handling
         // Users self-provides (prepayment) and assigns _executor
         if (msg.sender == _execClaim.provider) {
@@ -44,7 +47,10 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
             _executor = providerExecutor[_execClaim.provider];
             // PROVIDER CHECKS
             string memory isProvided = isProvided(_execClaim, gelatoGasPrice);
-            require(isProvided.startsWithOk(), "GelatoCore.mintExecClaim.isProvided");
+            require(
+                isProvided.startsWithOk(),
+                string(abi.encodePacked("GelatoCore.mintExecClaim.isProvided:", isProvided))
+            );
         }
 
         // EXECUTOR CHECKS
@@ -63,9 +69,6 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
             _execClaim.oracleSuccessFeeFactor <= providerOracleFeeCeil[_execClaim.provider],
             "GelatoCore.mintExecClaim: _execClaim.oracleSuccessFeeFactor"
         );
-
-        // Smart Contract Account or EOA
-        _execClaim.user = msg.sender;
 
         // Mint new execClaim
         currentExecClaimId++;

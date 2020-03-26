@@ -100,6 +100,7 @@ export default task(
             `\n event-getlog: ${contractname}.${eventname} not found.`
           );
         }
+
         return logWithTxHash;
       } catch (error) {
         console.error(error, "\n");

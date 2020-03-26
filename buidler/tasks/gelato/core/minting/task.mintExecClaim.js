@@ -6,8 +6,6 @@ export default task(
   "gc-mintexecclaim",
   `Sends tx to GelatoCore.mintExecClaim() on [--network] (default: ${defaultNetwork})`
 )
-  .addPositionalParam("userproxycontractname")
-  .addPositionalParam("userproxyaddress")
   .addOptionalPositionalParam(
     "conditionname",
     "Must exist inside buidler.config. Supply '0' for AddressZero Conditions"

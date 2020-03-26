@@ -13,7 +13,6 @@ import {
     IGelatoUserProxy
 } from "../../../user_proxies/gelato_user_proxy/IGelatoUserProxy.sol";
 
-
 contract ProviderModuleGelatoUserProxy is
     IGelatoProviderModule,
     IProviderModuleGelatoUserProxy,
