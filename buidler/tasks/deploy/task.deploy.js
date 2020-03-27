@@ -80,8 +80,6 @@ export default task(
             contractaddress: contract.address,
             txhash,
             blockhash,
-            values: true,
-            stringify: true,
             log: true
           });
         } catch (error) {

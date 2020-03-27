@@ -93,7 +93,7 @@ export default task(
           );
         }
         throw new Error(
-          `\n event-getparsedlogsallevents: ${taskArgs.contractname}.${taskArgs.eventname}} no events found \n`
+          `\n event-getparsedlogs: ${taskArgs.contractname}.${taskArgs.eventname} no events found \n`
         );
       } else {
         if (taskArgs.values) {
@@ -160,7 +160,7 @@ export default task(
             taskArgs
           );
           throw new Error(
-            `\n event-getparsedlogsallevents: ${taskArgs.contractname}.${taskArgs.eventname}} no events found \n`
+            `\n event-getparsedlogs: ${taskArgs.contractname}.${taskArgs.eventname} no events found \n`
           );
         }
       }

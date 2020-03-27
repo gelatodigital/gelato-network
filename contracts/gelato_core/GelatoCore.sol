@@ -110,7 +110,7 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
             return "ProviderIlliquid";
 
         bytes32 execClaimHash = keccak256(abi.encode(_execClaim));
-        if (execClaimHash != _execClaimHash) return "_execClaimHashInvalid";
+        if (execClaimHash != _execClaimHash) return "ExecClaimHashInvalid";
         if (!execClaimHashesByProvider[_execClaim.provider].contains(execClaimHash))
             return "ExecClaimHashNotProvided";
 

@@ -9,7 +9,7 @@ export default task("gc-debug-newcore")
   .addFlag("log")
   .setAction(async ({ events, log }) => {
     try {
-      // if (network.name !== "buidlerevm") throw new Error("\n buidlerevmonly\n");
+      if (network.name !== "buidlerevm") throw new Error("\n buidlerevmonly\n");
 
       const testAccountIndex = 0;
       const [{ _address: testAccount }] = await ethers.signers();
@@ -126,6 +126,7 @@ export default task("gc-debug-newcore")
         throw new Error(`\n gelatoUserProxy.mintExecClaim: tx error \n`);
       }
 
+      /* buidlerEVM bug
       if (events) {
         await run("event-getparsedlog", {
           contractname: "GelatoCore",
@@ -135,7 +136,33 @@ export default task("gc-debug-newcore")
           blockhash: mintTxBlockHash,
           log: true
         });
-      }
+      } */
+
+      // === Execution ===
+      execClaim.id = utils.bigNumberify("1");
+      execClaim.user = gelatoUserProxy.address;
+      const iFace = await run("ethers-interface-new", {
+        contractname: "GelatoCore"
+      });
+      console.log(iFace.events.LogExecClaimMinted);
+      await sleep(100000);
+      const encodedExecClaim = iFace.events.LogExecClaimMinted.execClaim.encode(
+        execClaim
+      );
+      console.log(encodedExecClaim);
+      await sleep(100000);
+      const execClaimHash =
+        "0x51992e18c92053b7677003e2a86c5077a7ace82639873e8e63ef55ca806188fc";
+      const gelatoGasPrice = await gelatoCore.gelatoGasPrice();
+      const gelatoMaxGas = await gelatoCore.gelatoMaxGas();
+
+      const canExecResult = await gelatoCore.canExec(
+        execClaim,
+        execClaimHash,
+        gelatoGasPrice,
+        gelatoMaxGas
+      );
+      if (log) console.log(`\n canExecuteResult: ${canExecResult}`);
     } catch (error) {
       console.error(error, "\n");
       process.exit(1);

@@ -33,7 +33,7 @@ const kovanConfig = require("./buidler/config/networks/kovanConfig");
 const mainnetConfig = require("./buidler/config/networks/mainnetConfig");
 
 module.exports = {
-  defaultNetwork: "buidlerevm",
+  defaultNetwork: "kovan",
   networks: {
     buidlerevm: {
       hardfork: "istanbul",

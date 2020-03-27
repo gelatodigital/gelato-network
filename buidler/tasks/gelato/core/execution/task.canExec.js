@@ -19,62 +19,57 @@ export default task(
   .addOptionalParam("txhash", "Filter for a specific tx")
   .addFlag("stringify")
   .addFlag("log", "Logs return values to stdout")
-  .setAction(
-    async ({
-      execclaimid,
-      executorindex,
-      execclaim,
-      fromblock,
-      toblock,
-      blockhash,
-      txhash,
-      stringify,
-      log
-    }) => {
-      try {
-        if (!execclaim) {
-          execclaim = await run("fetchExecClaim", {
-            execclaimid,
-            fromblock,
-            toblock,
-            blockhash,
-            txhash,
-            stringify,
-            log
-          });
-        }
-
-        if (!execclaim)
-          throw new Error("\nUnable to fetch execClaim from events");
-
-        const { [executorindex]: gelatoExecutor } = await ethers.signers();
-
-        if (log) console.log(`\n Executor: ${gelatoExecutor._address}\n`);
-
-        const gelatoCore = await run("instantiateContract", {
-          contractname: "GelatoCore",
-          signer: gelatoExecutor,
-          write: true
+  .setAction(async taskArgs => {
+    try {
+      if (!taskArgs.execclaim) {
+        taskArgs.execclaim = await run("fetchExecClaim", {
+          execclaimid: taskArgs.execclaimid,
+          fromblock: taskArgs.fromblock,
+          toblock: taskArgs.toblock,
+          blockhash: taskArgs.blockhash,
+          txhash: taskArgs.txhash,
+          stringify: taskArgs.stringify
         });
-
-        try {
-          const canExecResult = await gelatoCore.canExec(
-            execclaim.gelatoProviderAndExecutor,
-            execclaim.execClaimId,
-            execclaim.userProxy,
-            execclaim.conditionAndAction,
-            execclaim.conditionPayload,
-            execclaim.actionPayload,
-            execclaim.execClaimExpiryDate
-          );
-          if (log) console.log(`\n Can Exec Result: ${canExecResult}\n`);
-          return canExecResult;
-        } catch (error) {
-          console.error(`\n canExec error`, error);
-        }
-      } catch (error) {
-        console.error(error, "\n");
-        process.exit(1);
       }
+
+      if (!taskArgs.execclaim)
+        throw new Error("\nUnable to fetch execClaim from events");
+
+      const {
+        [taskArgs.executorindex]: gelatoExecutor
+      } = await ethers.signers();
+
+      if (taskArgs.log) {
+        console.log(taskArgs);
+        console.log(`\n Executor: ${gelatoExecutor._address}\n`);
+      }
+
+      const gelatoCore = await run("instantiateContract", {
+        contractname: "GelatoCore",
+        signer: gelatoExecutor,
+        write: true
+      });
+
+      const { execClaimHash } = await run("event-getparsedlog", {
+        execclaimid: taskArgs.execclaimid,
+        fromblock: taskArgs.fromblock,
+        toblock: taskArgs.toblock,
+        blockhash: taskArgs.blockhash,
+        txhash: taskArgs.txhash,
+        stringify: taskArgs.stringify
+      });
+      const gelatoGasPrice = await gelatoCore.gelatoGasPrice();
+      const gelatoMaxGas = await gelatoCore.gelatoMaxGas();
+
+      try {
+        const canExecResult = await gelatoCore.canExec(taskArgs.execclaim);
+        if (log) console.log(`\n Can Exec Result: ${canExecResult}\n`);
+        return canExecResult;
+      } catch (error) {
+        console.error(`\n canExec error`, error);
+      }
+    } catch (error) {
+      console.error(error, "\n");
+      process.exit(1);
     }
-  );
+  });
