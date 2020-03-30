@@ -106,15 +106,6 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
 
         address executor = gelatoCore.providerExecutor(_execClaim.provider);
 
-        // Check fee factors
-        uint256 executorSuccessShare = gelatoCore.executorSuccessShare(executor);
-        if (_execClaim.executorSuccessShare != executorSuccessShare)
-            return "ActionChainedTimedERC20TransferFromKovan.ok: executorSuccessShare";
-
-        uint256 gasAdminSuccessShare = gelatoCore.gasAdminSuccessShare();
-        if (_execClaim.gasAdminSuccessShare != gasAdminSuccessShare)
-            return "ActionChainedTimedERC20TransferFromKovan.ok: gasAdminSuccessShare";
-
         // Check ExecClaimExpiryDate maximum
         uint256 nextDueDate = _actionData.dueDate.add(_actionData.timeOffset);
         uint256 executorClaimLifespan = gelatoCore.executorClaimLifespan(

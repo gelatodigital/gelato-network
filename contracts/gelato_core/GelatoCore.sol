@@ -56,20 +56,6 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
         // EXECUTOR CHECKS
         _requireMaxExecutorClaimLifespan(_executor, _execClaim.expiryDate);
 
-        // Lock in Executor Success Fee
-        require(
-            _execClaim.executorSuccessShare == executorSuccessShare[_executor] &&
-            _execClaim.executorSuccessShare <= providerExecutorShareCeil[_execClaim.provider],
-            "GelatoCore.mintExecClaim: _execClaim.executorSuccessShare"
-        );
-
-        // Lock in Gelato Gas Price Oracle Success Fee
-        require(
-            _execClaim.gasAdminSuccessShare == gasAdminSuccessShare &&
-            _execClaim.gasAdminSuccessShare <= providerGasAdminShareCeil[_execClaim.provider],
-            "GelatoCore.mintExecClaim: _execClaim.gasAdminSuccessShare"
-        );
-
         // Mint new execClaim
         currentExecClaimId++;
         _execClaim.id = currentExecClaimId;
@@ -113,6 +99,12 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
         if (execClaimHash != _execClaimHash) return "ExecClaimHashInvalid";
         if (!isProviderClaim(_execClaim.provider, _execClaimHash))
             return "ExecClaimHashNotProvided";
+
+        if (executorSuccessShare[msg.sender] > providerExecutorShareCeil[_execClaim.provider])
+            return "ProviderExecutorShareCeil";
+
+        if (gasAdminSuccessShare > providerGasAdminShareCeil[_execClaim.provider])
+            return "ProviderGasAdminShareCeil";
 
         if (_execClaim.expiryDate < now) return "Expired";
 
@@ -171,7 +163,12 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
                 // R-4: 2nd exec() failed. Executor REFUND and Claim deleted.
                 delete isSecondExecAttempt[_execClaim.id];
                 execClaimHashesByProvider[_execClaim.provider].remove(_execClaimHash);
-                _processProviderPayables(ExecutorPay.Refund, startGas, _execClaim);
+                _processProviderPayables(
+                    _execClaim.provider,
+                    ExecutorPay.Refund,
+                    startGas,
+                    _gelatoGasPrice
+                );
                 return;
             }
             // R-4: 2nd exec() success
@@ -188,7 +185,12 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
 
         // R-1 or -4: SUCCESS: ExecClaim deleted, Executor REWARD, Oracle paid
         execClaimHashesByProvider[_execClaim.provider].remove(_execClaimHash);
-        _processProviderPayables(ExecutorPay.Reward, startGas, _execClaim);
+        _processProviderPayables(
+            _execClaim.provider,
+            ExecutorPay.Refund,
+            startGas,
+            _gelatoGasPrice
+        );
     }
 
     function _canExec(
@@ -275,28 +277,25 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
     }
 
     function _processProviderPayables(
+        address _provider,
         ExecutorPay _payType,
         uint256 _startGas,
-        ExecClaim memory _execClaim
+        uint256 _gelatoGasPrice
     )
         private
     {
         // ExecutionCost (- consecutive state writes + gas refund from deletion)
-        uint256 estExecCost = (_startGas - gasleft()).mul(gelatoGasPrice);
+        uint256 estGasConsumed = _startGas - gasleft();
 
         if (_payType == ExecutorPay.Reward) {
-            uint256 executorSuccessFee = SafeMath.div(
-                estExecCost.mul(_execClaim.executorSuccessShare),
-                100,
-                "GelatoCore._processProviderPayables: div error executorSuccessFee"
+            uint256 executorSuccessFee = executorSuccessFee(
+                msg.sender,
+                estGasConsumed,
+                _gelatoGasPrice
             );
-            uint256 gasAdminSuccessFee = SafeMath.div(
-                estExecCost.mul(_execClaim.gasAdminSuccessShare),
-                100,
-                "GelatoCore._processProviderPayables:  div error gasAdminSuccessShare"
-            );
+            uint256 gasAdminSuccessFee = gasAdminSuccessFee(estGasConsumed, _gelatoGasPrice);
             // ExecSuccess: Provider pays ExecutorSuccessFee and OracleSuccessFee
-            providerFunds[_execClaim.provider] = providerFunds[_execClaim.provider].sub(
+            providerFunds[_provider] = providerFunds[_provider].sub(
                 executorSuccessFee.add(gasAdminSuccessFee),
                 "GelatoCore._processProviderPayables: providerFunds underflow"
             );
@@ -304,7 +303,8 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
             gasAdminFunds += gasAdminSuccessFee;
         } else {
             // ExecFailure: Provider REFUNDS estimated costs to executor
-            providerFunds[_execClaim.provider] = providerFunds[_execClaim.provider].sub(
+            uint256 estExecCost = estGasConsumed.mul(_gelatoGasPrice);
+            providerFunds[_provider] = providerFunds[_provider].sub(
                 estExecCost,
                 "GelatoCore._processProviderPayables:  providerFunds underflow"
             );
