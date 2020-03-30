@@ -131,11 +131,11 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
         }
 
         // CHECK Action Conditions
-        try IGelatoAction(_execClaim.action).ok(_execClaim.actionPayload)
-            returns(string memory actionCondition)
+        try IGelatoAction(_execClaim.action).termsOk(_execClaim.actionPayload)
+            returns(string memory actionTermsOk)
         {
-            if (actionCondition.startsWithOk()) return "Ok";
-            return string(abi.encodePacked("ActionConditionsNotOk:", actionCondition));
+            if (actionTermsOk.startsWithOk()) return "Ok";
+            return string(abi.encodePacked("ActionTermsNotOk:", actionTermsOk));
         } catch Error(string memory error) {
             return string(abi.encodePacked("ActionReverted:", error));
         } catch {
