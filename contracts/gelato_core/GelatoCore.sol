@@ -143,15 +143,6 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
         }
     }
 
-    function isProviderLiquid(address _provider, uint256 _gas, uint256 _gasPrice)
-        public
-        view
-        override
-        returns(bool)
-    {
-        return _gas.mul(_gasPrice) <= providerFunds[_provider] ? true : false;
-    }
-
     // ================  EXECUTE EXECUTOR API ============================
     enum ExecutorPay {
         Reward,

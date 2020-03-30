@@ -61,6 +61,10 @@ interface IGelatoProviders {
     // Provider Funding
     function provideFunds(address _provider) external payable;
     function unprovideFunds(uint256 _withdrawAmount) external;
+    function isProviderLiquid(address _provider, uint256 _gas, uint256 _gasPrice)
+        external
+        view
+        returns(bool);
 
     // Provider Executor
     function setProviderExecutor(address _executor) external;

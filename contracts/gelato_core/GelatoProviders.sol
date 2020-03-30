@@ -101,6 +101,15 @@ abstract contract GelatoProviders is IGelatoProviders {
         emit LogUnprovideFunds(msg.sender, previousProviderFunding, newProviderFunding);
     }
 
+    function isProviderLiquid(address _provider, uint256 _gas, uint256 _gasPrice)
+        public
+        view
+        override
+        returns(bool)
+    {
+        return _gas.mul(_gasPrice) <= providerFunds[_provider] ? true : false;
+    }
+
     // Provider Executor
     function setProviderExecutor(address _executor) public override {
         require(

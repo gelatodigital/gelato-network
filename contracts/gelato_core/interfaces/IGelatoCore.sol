@@ -68,9 +68,4 @@ interface IGelatoCore {
         external
         view
         returns(bool);
-
-    function isProviderLiquid(address _provider, uint256 _gas, uint256 _gasPrice)
-        external
-        view
-        returns(bool);
 }
