@@ -11,8 +11,8 @@ struct ExecClaim {
     bytes conditionPayload;
     bytes actionPayload;
     uint256 expiryDate;
-    uint256 executorSuccessFeeFactor;
-    uint256 oracleSuccessFeeFactor;
+    uint256 executorSuccessShare;
+    uint256 gasAdminSuccessShare;
 }
 
 interface IGelatoCore {

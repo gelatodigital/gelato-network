@@ -84,13 +84,13 @@ interface IGelatoProviders {
         view
         returns (address);
 
-    function providerExecutorFeeCeil(address _provider)
+    function providerExecutorShareCeil(address _provider)
         external
         view
         returns (uint256);
 
     // Provider Oracle Fee Ceil
-    function providerOracleFeeCeil(address _provider)
+    function providerGasAdminShareCeil(address _provider)
         external
         view
         returns (uint256);

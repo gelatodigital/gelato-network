@@ -59,13 +59,13 @@ contract MockActionChainedDummy is GelatoActionsStandard {
         address executor = _gelatoCore.providerExecutor(_execClaim.provider);
 
         // Check fee factors
-        uint256 executorSuccessFeeFactor = _gelatoCore.executorSuccessFeeFactor(executor);
-        if (_execClaim.executorSuccessFeeFactor != executorSuccessFeeFactor)
-            return "MockActionChainedDummy.ok: executorSuccessFeeFactor";
+        uint256 executorSuccessShare = _gelatoCore.executorSuccessShare(executor);
+        if (_execClaim.executorSuccessShare != executorSuccessShare)
+            return "MockActionChainedDummy.ok: executorSuccessShare";
 
-        uint256 oracleSuccessFeeFactor = _gelatoCore.oracleSuccessFeeFactor();
-        if (_execClaim.oracleSuccessFeeFactor != oracleSuccessFeeFactor)
-            return "MockActionChainedDummy.ok: oracleSuccessFeeFactor";
+        uint256 gasAdminSuccessShare = _gelatoCore.gasAdminSuccessShare();
+        if (_execClaim.gasAdminSuccessShare != gasAdminSuccessShare)
+            return "MockActionChainedDummy.ok: gasAdminSuccessShare";
 
         uint256 gelatoGasPrice = _gelatoCore.gelatoGasPrice();
 

@@ -58,16 +58,16 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
 
         // Lock in Executor Success Fee
         require(
-            _execClaim.executorSuccessFeeFactor == executorSuccessFeeFactor[_executor] &&
-            _execClaim.executorSuccessFeeFactor <= providerExecutorFeeCeil[_execClaim.provider],
-            "GelatoCore.mintExecClaim: _execClaim.executorSuccessFeeFactor"
+            _execClaim.executorSuccessShare == executorSuccessShare[_executor] &&
+            _execClaim.executorSuccessShare <= providerExecutorShareCeil[_execClaim.provider],
+            "GelatoCore.mintExecClaim: _execClaim.executorSuccessShare"
         );
 
         // Lock in Gelato Gas Price Oracle Success Fee
         require(
-            _execClaim.oracleSuccessFeeFactor == oracleSuccessFeeFactor &&
-            _execClaim.oracleSuccessFeeFactor <= providerOracleFeeCeil[_execClaim.provider],
-            "GelatoCore.mintExecClaim: _execClaim.oracleSuccessFeeFactor"
+            _execClaim.gasAdminSuccessShare == gasAdminSuccessShare &&
+            _execClaim.gasAdminSuccessShare <= providerGasAdminShareCeil[_execClaim.provider],
+            "GelatoCore.mintExecClaim: _execClaim.gasAdminSuccessShare"
         );
 
         // Mint new execClaim
@@ -167,7 +167,7 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
         uint256 _gelatoMaxGas = gelatoMaxGas;
 
         // CHECKS
-        require(tx.gasprice == _gelatoGasPrice, "GelatoCore.exec: tx.gasprice");
+        require(tx.gasprice >= _gelatoGasPrice, "GelatoCore.exec: tx.gasprice");
         require(startGas < _gelatoMaxGas, "GelatoCore.exec: gas surplus");
 
         // 2nd Attempt: requires gelatoMaxGas
@@ -294,22 +294,22 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
 
         if (_payType == ExecutorPay.Reward) {
             uint256 executorSuccessFee = SafeMath.div(
-                estExecCost.mul(_execClaim.executorSuccessFeeFactor),
+                estExecCost.mul(_execClaim.executorSuccessShare),
                 100,
                 "GelatoCore._processProviderPayables: div error executorSuccessFee"
             );
-            uint256 oracleSuccessFee = SafeMath.div(
-                estExecCost.mul(_execClaim.oracleSuccessFeeFactor),
+            uint256 gasAdminSuccessFee = SafeMath.div(
+                estExecCost.mul(_execClaim.gasAdminSuccessShare),
                 100,
-                "GelatoCore._processProviderPayables:  div error oracleSuccessFee"
+                "GelatoCore._processProviderPayables:  div error gasAdminSuccessShare"
             );
             // ExecSuccess: Provider pays ExecutorSuccessFee and OracleSuccessFee
             providerFunds[_execClaim.provider] = providerFunds[_execClaim.provider].sub(
-                executorSuccessFee.add(oracleSuccessFee),
+                executorSuccessFee.add(gasAdminSuccessFee),
                 "GelatoCore._processProviderPayables: providerFunds underflow"
             );
             executorFunds[msg.sender] += executorSuccessFee;
-            oracleFunds += oracleSuccessFee;
+            gasAdminFunds += gasAdminSuccessFee;
         } else {
             // ExecFailure: Provider REFUNDS estimated costs to executor
             providerFunds[_execClaim.provider] = providerFunds[_execClaim.provider].sub(

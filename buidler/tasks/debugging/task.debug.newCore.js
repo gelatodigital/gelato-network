@@ -99,8 +99,8 @@ export default task("gc-debug-newcore")
         conditionPayload: conditionPayload,
         actionPayload: actionPayload,
         expiryDate: constants.HashZero,
-        executorSuccessFeeFactor: 5,
-        oracleSuccessFeeFactor: 2
+        executorSuccessShare: 5,
+        gasAdminSuccessShare: 2
       };
 
       const gelatoUserProxy = await run("instantiateContract", {

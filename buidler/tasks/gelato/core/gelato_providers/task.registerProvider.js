@@ -17,13 +17,13 @@ export default task(
   )
   .addOptionalParam(
     "executorfeeceil",
-    "Upper Limit for executorSuccessFeeFactor",
+    "Upper Limit for executorSuccessShare",
     5,
     types.int
   )
   .addOptionalParam(
     "oraclefeeceil",
-    "Upper Limit for oracleSuccessFeeFactor",
+    "Upper Limit for gasAdminSuccessShare",
     2,
     types.int
   )
