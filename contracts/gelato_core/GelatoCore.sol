@@ -121,8 +121,8 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
             try IGelatoCondition(_execClaim.condition).ok(_execClaim.conditionPayload)
                 returns(string memory condition)
             {
-                if (condition.startsWithOk()) return "Ok";
-                return string(abi.encodePacked("ConditionNotOk:", condition));
+                if (!condition.startsWithOk())
+                    return string(abi.encodePacked("ConditionNotOk:", condition));
             } catch Error(string memory error) {
                 return string(abi.encodePacked("ConditionReverted:", error));
             } catch {
@@ -149,7 +149,7 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
         override
         returns(bool)
     {
-        return  _gas.mul(_gasPrice) <= providerFunds[_provider] ? true : false;
+        return _gas.mul(_gasPrice) <= providerFunds[_provider] ? true : false;
     }
 
     // ================  EXECUTE EXECUTOR API ============================
@@ -170,7 +170,7 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
         require(tx.gasprice == _gelatoGasPrice, "GelatoCore.exec: tx.gasprice");
         require(startGas < _gelatoMaxGas, "GelatoCore.exec: gas surplus");
 
-        // 2nd Attempt using gelatoMaxGas
+        // 2nd Attempt: requires gelatoMaxGas
         if (isSecondExecAttempt[_execClaim.id]) {
             // 100k call overhead buffer
             require(startGas > _gelatoMaxGas - 100000, "GelatoCore.exec2: gas shortage");
@@ -186,8 +186,7 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
             // R-4: 2nd exec() success
             delete isSecondExecAttempt[_execClaim.id];
         } else {
-            // 1st Attempt NOT using gelatoMaxGas
-            require(startGas < _gelatoMaxGas - 100000, "GelatoCore.exec1: gas surplus");
+            // 1st Attempt: no requirement of using gelatoMaxGas
             if (!_canExec(_execClaim, _execClaimHash, _gelatoGasPrice, _gelatoMaxGas))
                 return;  // R-0: 1st canExec() failed: NO REFUND
             if (!_exec(_execClaim)) {
