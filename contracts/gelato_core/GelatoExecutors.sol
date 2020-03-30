@@ -26,20 +26,17 @@ abstract contract GelatoExecutors is IGelatoExecutors {
     }
 
     // Executor De/Registrations
-    function registerExecutor(
-        uint256 _executorClaimLifespan,
-        uint256 _executorSuccessFeeFactor
-    )
+    function registerExecutor(uint256 _executorClaimLifespan, uint256 _executorSuccessShare)
         external
         override
         minMaxExecutorClaimLifespan(_executorClaimLifespan)
     {
         executorClaimLifespan[msg.sender] = _executorClaimLifespan;
-        executorSuccessShare[msg.sender] = _executorSuccessFeeFactor;
+        executorSuccessShare[msg.sender] = _executorSuccessShare;
         emit LogRegisterExecutor(
             msg.sender,
             _executorClaimLifespan,
-            _executorSuccessFeeFactor
+            _executorSuccessShare
         );
     }
 
@@ -70,6 +67,20 @@ abstract contract GelatoExecutors is IGelatoExecutors {
         executorSuccessShare[msg.sender] = _percentage;
     }
 
+    function executorSuccessFee(address _executor, uint256 _gas, uint256 _gasPrice)
+        public
+        view
+        override
+        returns(uint256)
+    {
+        uint256 estExecCost = _gas.mul(_gasPrice);
+        return SafeMath.div(
+            estExecCost.mul(executorSuccessShare[_executor]),
+            100,
+            "GelatoExecutors.executorSuccessFee: div error"
+        );
+    }
+
     function withdrawExecutorBalance(uint256 _withdrawAmount) external override {
         // Checks
         require(
@@ -86,20 +97,6 @@ abstract contract GelatoExecutors is IGelatoExecutors {
         // Interaction
         msg.sender.sendValue(_withdrawAmount);
         emit LogWithdrawExecutorBalance(msg.sender, _withdrawAmount);
-    }
-
-    function executorSuccessFee(address _executor, uint256 _gas, uint256 _gasPrice)
-        public
-        view
-        override
-        returns(uint256)
-    {
-        uint256 estExecCost = _gas.mul(_gasPrice);
-        return SafeMath.div(
-            estExecCost.mul(executorSuccessShare[_executor]),
-            100,
-            "GelatoExecutors.executorSuccessFee: div error"
-        );
     }
 
     // Check functions (not modifiers due to stack too deep)

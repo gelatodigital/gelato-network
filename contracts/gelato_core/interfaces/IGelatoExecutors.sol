@@ -23,7 +23,7 @@ interface IGelatoExecutors {
     // Executor Registration
     function registerExecutor(
         uint256 _executorClaimLifespan,
-        uint256 _executorSuccessFeeFactor
+        uint256 _executorSuccessShare
     ) external;
     function deregisterExecutor() external;
 
