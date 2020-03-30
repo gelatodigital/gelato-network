@@ -22,6 +22,7 @@ interface IGelatoAction {
     );
 
     function action(bytes calldata _actionPayload) external payable;
+    function actionStandardSelector() external pure returns(bytes4);
 
     /**
      * @notice Returns whether the action-specific conditions are fulfilled

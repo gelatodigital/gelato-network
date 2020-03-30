@@ -6,6 +6,7 @@ pragma experimental ABIEncoderV2;
 /// @dev all the APIs are implemented inside GelatoConditionsStandard
 interface IGelatoCondition {
     function ok(bytes calldata _conditionPayload) external view returns(string memory);
+    function okStandardSelector() external pure returns(bytes4);
     function currentState(bytes calldata _conditionPayload)
         external
         view

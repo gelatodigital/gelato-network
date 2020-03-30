@@ -1,11 +1,12 @@
 pragma solidity ^0.6.4;
 pragma experimental ABIEncoderV2;
 
-import { IGelatoCondition, ConditionValues } from "../IGelatoCondition.sol";
+import { GelatoConditionsStandard } from "../GelatoConditionsStandard.sol";
+import { ConditionValues } from "../IGelatoCondition.sol";
 import "../../external/Ownable.sol";
 import "../../external/SafeMath.sol";
 
-contract ConditionFearGreedIndex is IGelatoCondition, Ownable {
+contract ConditionFearGreedIndex is GelatoConditionsStandard, Ownable {
 
     using SafeMath for uint256;
 

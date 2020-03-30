@@ -1,11 +1,12 @@
 pragma solidity ^0.6.4;
 pragma experimental ABIEncoderV2;
 
-import { IGelatoCondition, ConditionValues } from "../../IGelatoCondition.sol";
+import { GelatoConditionsStandard } from "../../GelatoConditionsStandard.sol";
+import { ConditionValues } from "../../IGelatoCondition.sol";
 import { IKyber } from "../../../dapp_interfaces/kyber/IKyber.sol";
 import { SafeMath } from "../../../external/SafeMath.sol";
 
-contract ConditionKyberRateKovan is IGelatoCondition {
+contract ConditionKyberRateKovan is GelatoConditionsStandard {
 
     using SafeMath for uint256;
 

@@ -79,8 +79,8 @@ export default task("gc-debug-newcore")
 
       // === GelatoUserProxy setup ===
       const gelatoUserProxyAddress = await run("gupf-creategelatouserproxy", {
-        funding: "0",
         factoryaddress: gelatoUserProxyFactory.address,
+        funding: "0",
         events,
         log
       });

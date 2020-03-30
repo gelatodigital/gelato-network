@@ -1,10 +1,11 @@
 pragma solidity ^0.6.4;
 pragma experimental ABIEncoderV2;
 
-import { IGelatoCondition, ConditionValues } from "../IGelatoCondition.sol";
+import { GelatoConditionsStandard } from "../GelatoConditionsStandard.sol";
+import { ConditionValues } from "../IGelatoCondition.sol";
 import { IERC20 } from "../../external/IERC20.sol";
 
-contract ConditionBalance is IGelatoCondition {
+contract ConditionBalance is GelatoConditionsStandard {
 
     // STANDARD Interface
     // Caution: use 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE for ETH token
