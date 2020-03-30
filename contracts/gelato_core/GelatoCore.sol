@@ -244,9 +244,10 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
             else error = "GelatoCore._exec.actionPayload: invalid";
         }
 
-        if (!success) {
+        // Error string decoding for revertMsg from userProxy.call
+        if (!success && bytes(error).length == 0) {
             // FAILURE
-            // 68: 32-location, 32-length, 4-ErrorSelector, UTF-8 revertReason
+            // 32-length, 4-ErrorSelector, UTF-8 revertMsg
             if (revertMsg.length % 32 == 4) {
                 bytes4 selector;
                 assembly { selector := mload(add(revertMsg, 32)) }
