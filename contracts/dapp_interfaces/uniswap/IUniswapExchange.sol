@@ -8,6 +8,11 @@ interface IUniswapExchange {
         view
         returns (uint256 tokensBought);
 
+    function getTokenToEthOutputPrice(uint256 ethbought)
+        external
+        view
+        returns (uint256 tokensToBeSold);
+
     function getTokenToEthInputPrice(uint256 tokensSold)
         external
         view

@@ -11,12 +11,21 @@ contract ActionWithdrawBatchExchangeRinkeby is GelatoActionsStandard {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
-    // $3 FEe
-    // uint256 public constant FEE_USD = 3;
+    // $2 FEE
+    uint256 public constant FEE_USD = 2;
 
+    // 0.009 ETH FEE
+    uint256 public constant FEE_ETH = 9000000000000000;
+
+    // Gelato Provider // Pays execution cost and receives fee in return
+    address private constant gelatoProvider = address(0x518eAa8f962246bCe2FA49329Fe998B66d67cbf8);
+
+    // BatchExchange RINKEBY
     IBatchExchange private constant batchExchange = IBatchExchange(0xC576eA7bd102F7E476368a5E98FA455d1Ea34dE2);
 
-    // actionSelector public state variable np due to this.actionSelector constant issue
+    // WETH RINKEBY
+    address private constant WETH = 0xc778417E063141139Fce010982780140Aa0cD5Ab;
+
     function actionSelector() public pure override virtual returns(bytes4) {
         return this.withdrawFromBatchExchange.selector;
     }
@@ -30,7 +39,7 @@ contract ActionWithdrawBatchExchangeRinkeby is GelatoActionsStandard {
         virtual
     {
 
-        // bool paid;
+        bool paid;
 
         // 1. Fetch sellToken Balance
         IERC20 sellToken = IERC20(_sellToken);
@@ -40,35 +49,86 @@ contract ActionWithdrawBatchExchangeRinkeby is GelatoActionsStandard {
         IERC20 buyToken = IERC20(_buyToken);
         uint256 preBuyTokenBalance = buyToken.balanceOf(address(this));
 
-        // 3. Withdraw buy token
+        // 3. Withdraw buy token and pay provider fee (if possible)
         try batchExchange.withdraw(address(this), _buyToken) {
             uint256 postBuyTokenBalance = buyToken.balanceOf(address(this));
             uint256 buyTokenWithdrawAmount = postBuyTokenBalance.sub(preBuyTokenBalance);
 
-            // 4. Send buyToken to user
-            if (buyTokenWithdrawAmount > 0) buyToken.safeTransfer(_user, buyTokenWithdrawAmount);
+            // 4. Check if buy tokens got withdrawn
+            if (buyTokenWithdrawAmount > 0) {
+
+                uint256 fee;
+                // If _buyToken is WETH
+                if (_buyToken == WETH) {
+                    fee = FEE_ETH;
+                } else {
+                    uint256 buyTokenDecimals = getDecimals(_buyToken);
+                    fee = FEE_USD * 10 ** buyTokenDecimals;
+                }
+
+
+                // If enough buyToken got withdrawn, pay fee & pay rest to _user
+                // Else, transfer buy tokens to user, we will pay fee with _sellToken
+                if (fee <= buyTokenWithdrawAmount) {
+                    buyToken.safeTransfer(gelatoProvider, fee);
+                    buyToken.safeTransfer(_user, buyTokenWithdrawAmount - fee);
+                    paid = true;
+
+                } else {
+                    buyToken.safeTransfer(_user, buyTokenWithdrawAmount);
+                }
+            }
         }
         catch {
            // Do not revert, as order might not have been fulfilled.
-           revert("batchExchange.withdraw _buyToken failed");
+           revert("ActionWithdrawBatchExchangeRinkeby.withdraw _buyToken failed");
         }
 
-        // 5. Withdraw sell token
+        // 5. Withdraw sell token and pay fee (if not paid already)
         try batchExchange.withdraw(address(this), _sellToken) {
             uint256 postSellTokenBalance = sellToken.balanceOf(address(this));
             uint256 sellTokenWithdrawAmount = postSellTokenBalance.sub(preSellTokenBalance);
 
-            // 6. Send sellToken to user
+            // Check if some sell tokens got withdrawn
             if (sellTokenWithdrawAmount > 0) {
-                // uint256 decimals = getDecimals(_sellToken);
-                // uint256 feeToProvider = FEE_USD.mul(10**decimals);
 
-                sellToken.safeTransfer(_user, sellTokenWithdrawAmount);
+                // If user did not pay fee with _buyToken, pay with _sellToken
+                // Else if fee was paid, pay out rest to _user
+                if (!paid) {
+
+                    // Calculate fee
+                    uint256 fee;
+                    // If _buyToken is WETH
+                    if (_sellToken == WETH) {
+                        fee = FEE_ETH;
+                    } else {
+                        uint256 sellTokenDecimals = getDecimals(_sellToken);
+                        fee = FEE_USD * 10 ** sellTokenDecimals;
+                    }
+
+                    // If enough sellToken got withdrawn, pay fee & pay rest to _user
+                    // Else, revert as user does not have sufficient funds to pay provider
+                    if (fee <= sellTokenWithdrawAmount) {
+                        sellToken.safeTransfer(gelatoProvider, fee);
+                        sellToken.safeTransfer(_user, sellTokenWithdrawAmount - fee);
+
+                    } else {
+                        revert("ActionWithdrawBatchExchangeRinkeby: Insufficient balance for user to pay for withdrawal 1");
+                    }
+
+                } else {
+                    sellToken.safeTransfer(_user, sellTokenWithdrawAmount);
+                }
+
+            } else {
+                // If no sell token got withdrawn and user has not paid yet, revert
+                if (!paid) revert("ActionWithdrawBatchExchangeRinkeby: Insufficient balance for user to pay for withdrawal 2");
+
             }
         }
         catch {
             // Do not revert, as order might have been filled completely
-            revert("batchExchange.withdraw _sellToken failed");
+            revert("ActionWithdrawBatchExchangeRinkeby.withdraw _sellToken failed");
         }
 
     }
@@ -130,17 +190,22 @@ contract ActionWithdrawBatchExchangeRinkeby is GelatoActionsStandard {
         view
         returns(uint256)
     {
-        (bool success, bytes memory data) = address(_token).staticcall{gas: 10000}(
+        (bool success, bytes memory data) = address(_token).staticcall{gas: 20000}(
             abi.encodeWithSignature("decimals()")
         );
 
         if (!success) {
-            (success, data) = address(_token).staticcall{gas: 10000}(
+            (success, data) = address(_token).staticcall{gas: 20000}(
                 abi.encodeWithSignature("DECIMALS()")
             );
         }
 
-        return success ? abi.decode(data, (uint256)) : 18;
+        if (success) {
+            return abi.decode(data, (uint256));
+        } else {
+            revert("ActionWithdrawBatchExchangeRinkeby.getDecimals no decimals found");
+        }
+
 
     }
 

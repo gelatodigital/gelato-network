@@ -2,7 +2,7 @@ export const deployments = {
   // ========== Rinkeby ===========
   // ==== One-Off Actions ====
   // Gnosis
-  ActionWithdrawBatchExchangeRinkeby: "0x677fd52A56D48a401EF72f5E7127C3D4CBb87074",
+  ActionWithdrawBatchExchangeRinkeby: "0x4C9137958685bb0392651571a9Ca104e7C483b4E",
   ActionPlaceOrderBatchExchange: "0xDBF368e549604CC78684e83955C73346860D6EA2",
   // BzX
   ActionBzxPtokenBurnToToken: "0x0",

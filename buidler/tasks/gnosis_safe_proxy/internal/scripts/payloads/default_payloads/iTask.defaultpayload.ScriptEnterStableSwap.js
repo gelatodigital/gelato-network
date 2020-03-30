@@ -16,14 +16,14 @@ export default internalTask(
   )
   .addOptionalPositionalParam(
     "sellAmount",
-    "Amount to sell -default 1 (1000000 USDC) (1)",
-    "1000000",
+    "Amount to sell -default 4 (4000000 USDC) (4)",
+    "4000000",
 
   )
   .addOptionalPositionalParam(
     "buyAmount",
-    "Amount to buy -default 1 (500000000000000000 DAI (0.5))",
-    "500000000000000000",
+    "Amount to buy -default 3.8 (3800000000000000000 DAI (3.8))",
+    "3800000000000000000",
 
   )
   .addOptionalParam(
@@ -62,7 +62,7 @@ export default internalTask(
         console.log(`Current Batch Id: ${currentBatchIdBN}`)
 
         // Withdraw in 1 batches
-        taskArgs.orderExpirationBatchId = currentBatchIdBN.add(ethers.utils.bigNumberify("1"))
+        taskArgs.orderExpirationBatchId = currentBatchIdBN.add(ethers.utils.bigNumberify("4"))
         console.log(`Action will withdraw in Batch Id: ${taskArgs.orderExpirationBatchId}`)
 
       }
@@ -108,10 +108,17 @@ export default internalTask(
       address[2] memory _conditionAndAction
       */
 
-      if (!taskArgs.sellAmount) taskArgs.sellAmount = "1000000"
-      if (!taskArgs.buyAmount) taskArgs.buyAmount = "500000000000000000"
-      if (!taskArgs.sellToken) taskArgs.sellToken = "0x4dbcdf9b62e891a7cec5a2568c3f4faf9e8abe2b"
-      if (!taskArgs.buyToken) taskArgs.buyToken = "0x5592ec0cfb4dbc12d3ab100b257153436a1f0fea"
+      // if (!taskArgs.sellAmount) taskArgs.sellAmount = "4000000"
+      // if (!taskArgs.buyAmount) taskArgs.buyAmount = "3800000000000000000"
+      // if (!taskArgs.sellToken) taskArgs.sellToken = "0x4dbcdf9b62e891a7cec5a2568c3f4faf9e8abe2b"
+      // if (!taskArgs.buyToken) taskArgs.buyToken = "0x5592ec0cfb4dbc12d3ab100b257153436a1f0fea"
+
+
+      if (!taskArgs.sellAmount) taskArgs.sellAmount = "4000000000000000000"
+      if (!taskArgs.buyAmount) taskArgs.buyAmount = "3800000"
+      if (!taskArgs.sellToken) taskArgs.sellToken = "0x5592ec0cfb4dbc12d3ab100b257153436a1f0fea"
+      if (!taskArgs.buyToken) taskArgs.buyToken = "0x4dbcdf9b62e891a7cec5a2568c3f4faf9e8abe2b"
+
 
       const inputs = [
         useraddress,
