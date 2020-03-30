@@ -5,7 +5,7 @@ struct ExecClaim {
     uint256 id;
     address provider;
     address providerModule;
-    address user;
+    address userProxy;
     address condition;
     address action;
     bytes conditionPayload;

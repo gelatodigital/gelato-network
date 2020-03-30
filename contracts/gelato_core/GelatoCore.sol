@@ -32,7 +32,7 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
         override
     {
         // Smart Contract Account or EOA
-        _execClaim.user = msg.sender;
+        _execClaim.userProxy = msg.sender;
 
         // EXECUTOR Handling
         // Users self-provides (prepayment) and assigns _executor
@@ -101,7 +101,7 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
     {
         if (msg.sender != providerExecutor[_execClaim.provider]) return "InvalidExecutor";
 
-        if (_execClaim.user != _execClaim.provider) {
+        if (_execClaim.userProxy != _execClaim.provider) {
             string memory res = isProvided(_execClaim, _gelatoGasPrice);
             if (!res.startsWithOk()) return res;
         }
@@ -212,20 +212,13 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
 
     function _exec(ExecClaim memory _execClaim) private returns(bool success) {
         // INTERACTIONS
+        bytes memory revertMsg;
         string memory error;
-        // For EOAs
-        if (_execClaim.user == _execClaim.provider) {
-            try IGelatoAction(_execClaim.action).action(_execClaim.actionPayload) {
-                success = true;
-            } catch Error(string memory _error) {
-                error = string(abi.encodePacked("GelatoCore._exec.action:", _error));
-            } catch {
-                error = "GelatoCore._exec.action.";
-            }
-        } else {
-            // For userProxies
-            bytes memory execPayload;
 
+        // Provided Users vs. Self-Providing Users
+        if (_execClaim.userProxy != _execClaim.provider) {
+            // Provided Users: execPayload from ProviderModule
+            bytes memory execPayload;
             try IGelatoProviderModule(_execClaim.providerModule).execPayload(
                 _execClaim.action,
                 _execClaim.actionPayload
@@ -239,27 +232,34 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
                 error = "GelatoCore._exec.execPayload";
             }
 
-            if (execPayload.length != 0) {
-                bytes memory execRevertReason;
-                (success, execRevertReason) = _execClaim.user.call(execPayload);
-                if (!success) {
-                    // FAILURE
-                    // 68: 32-location, 32-length, 4-ErrorSelector, UTF-8 revertReason
-                    if (execRevertReason.length % 32 == 4) {
-                        bytes4 selector;
-                        assembly { selector := mload(add(0x20, execRevertReason)) }
-                        if (selector == 0x08c379a0) {  // Function selector for Error(string)
-                            assembly { execRevertReason := add(execRevertReason, 68) }
-                            error = string(
-                                abi.encodePacked("GelatoCore._exec:", string(execRevertReason))
-                            );
-                        } else {
-                            error = "GelatoCore._exec:NoErrorSelector";
-                        }
-                    } else {
-                        error = "GelatoCore._exec:UnexpectedReturndata";
-                    }
+            // Execution via UserProxy
+            if (execPayload.length >= 4)
+                (success, revertMsg) = _execClaim.userProxy.call(execPayload);
+            else error = "GelatoCore._exec.execPayload: invalid";
+        } else {
+            // Self-Providing Users: actionPayload == execPayload assumption
+            // Execution via UserProxy
+            if (_execClaim.actionPayload.length >= 4)
+                (success, revertMsg) = _execClaim.userProxy.call(_execClaim.actionPayload);
+            else error = "GelatoCore._exec.actionPayload: invalid";
+        }
+
+        if (!success) {
+            // FAILURE
+            // 68: 32-location, 32-length, 4-ErrorSelector, UTF-8 revertReason
+            if (revertMsg.length % 32 == 4) {
+                bytes4 selector;
+                assembly { selector := mload(add(revertMsg, 32)) }
+                if (selector == 0x08c379a0) {  // Function selector for Error(string)
+                    assembly { revertMsg := mload(add(revertMsg, 36)) }
+                    error = string(
+                        abi.encodePacked("GelatoCore._exec:", string(revertMsg))
+                    );
+                } else {
+                    error = "GelatoCore._exec:NoErrorSelector";
                 }
+            } else {
+                error = "GelatoCore._exec:UnexpectedReturndata";
             }
         }
 
@@ -314,7 +314,7 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
     // ================  CANCEL USER / EXECUTOR API ============================
     function cancelExecClaim(ExecClaim calldata _execClaim) external override {
         // Checks
-        if (msg.sender != _execClaim.user)
+        if (msg.sender != _execClaim.userProxy)
             require(_execClaim.expiryDate <= now, "GelatoCore.cancelExecClaim: sender");
         // Effects
         bytes32 execClaimHash = keccak256(abi.encode(_execClaim));

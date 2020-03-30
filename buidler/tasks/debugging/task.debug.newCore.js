@@ -140,7 +140,7 @@ export default task("gc-debug-newcore")
 
       // === Execution ===
       execClaim.id = utils.bigNumberify("1");
-      execClaim.user = gelatoUserProxy.address;
+      execClaim.userProxy = gelatoUserProxy.address;
       const iFace = await run("ethers-interface-new", {
         contractname: "GelatoCore"
       });

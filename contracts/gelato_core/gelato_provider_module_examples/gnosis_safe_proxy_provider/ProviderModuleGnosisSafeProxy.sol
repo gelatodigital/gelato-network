@@ -49,7 +49,7 @@ contract ProviderModuleGnosisSafeProxy is
             return "ProviderModuleGnosisSafeProxy.isProvided:gelatoGasPriceTooHigh";
         if (!isConditionProvided[_execClaim.condition])
             return "ProviderModuleGnosisSafeProxy.isProvided:ConditionNotProvided";
-        address userProxy = _execClaim.user;
+        address userProxy = _execClaim.userProxy;
         if (!Address.isContract(userProxy))
             return "ProviderModuleGnosisSafeProxy.isProvided:InvalidUserProxy";
         bytes32 codehash;

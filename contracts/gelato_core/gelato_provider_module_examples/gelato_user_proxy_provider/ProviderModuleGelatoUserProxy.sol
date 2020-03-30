@@ -46,7 +46,7 @@ contract ProviderModuleGelatoUserProxy is
             return "ProviderModuleGelatoUserProxy.isProvided:gelatoGasPriceTooHigh";
         if (!isConditionProvided[_execClaim.condition])
             return "ProviderModuleGelatoUserProxy.isProvided:ConditionNotProvided";
-        address userProxy = _execClaim.user;
+        address userProxy = _execClaim.userProxy;
         bytes32 codehash;
         assembly { codehash := extcodehash(userProxy) }
         if (!isProxyExtcodehashProvided[codehash])
