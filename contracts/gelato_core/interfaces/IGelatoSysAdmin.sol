@@ -7,6 +7,7 @@ interface IGelatoSysAdmin {
 
     event LogSetMinExecutorStake(uint256 oldMin, uint256 newMin);
 
+    event LogSetExecClaimRentPerLifespan(uint256 oldRent, uint256 newRent);
     event LogSetExecClaimLifespan(uint256 oldLifespan, uint256 newLifespan);
 
     event LogSetExecutorSuccessShare(uint256 oldShare, uint256 newShare);
@@ -20,6 +21,7 @@ interface IGelatoSysAdmin {
 
     function setMinExecutorStake(uint256 _newMin) external;
 
+    function setExecClaimRentPerLifespan(uint256 _rent) external;
     function setExecClaimLifespan(uint256 _lifespan) external;
 
     function setExecutorSuccessShare(uint256 _percentage) external;
@@ -33,6 +35,7 @@ interface IGelatoSysAdmin {
 
     function minExecutorStake() external view returns(uint256);
 
+    function execClaimRentPerLifespan() external view returns(uint256);
     function execClaimLifespan() external view returns(uint256);
 
     function executorSuccessShare() external view returns (uint256);

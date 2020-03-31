@@ -5,6 +5,7 @@ import { IGelatoExecutors } from "./interfaces/IGelatoExecutors.sol";
 import { GelatoProviders } from "./GelatoProviders.sol";
 import { Address } from  "../external/Address.sol";
 import { SafeMath } from "../external/SafeMath.sol";
+import { ExecClaim } from "./interfaces/IGelatoCore.sol";
 
 abstract contract GelatoExecutors is IGelatoExecutors, GelatoProviders {
 

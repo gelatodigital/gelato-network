@@ -2,9 +2,7 @@ pragma solidity ^0.6.4;
 pragma experimental ABIEncoderV2;
 
 import { IGelatoCore, ExecClaim } from "./interfaces/IGelatoCore.sol";
-import { GelatoSysAdmin } from "./GelatoSysAdmin.sol";
 import { GelatoExecutors } from "./GelatoExecutors.sol";
-import { GelatoProviders } from "./GelatoProviders.sol";
 import { SafeMath } from "../external/SafeMath.sol";
 import { GelatoString } from "../libraries/GelatoString.sol";
 import { IGelatoCondition } from "../gelato_conditions/IGelatoCondition.sol";
@@ -14,7 +12,7 @@ import { IGelatoProviderModule } from "./interfaces/IGelatoProviderModule.sol";
 /// @title GelatoCore
 /// @notice Exec Claim: minting, checking, execution, and cancellation
 /// @dev Find all NatSpecs inside IGelatoCore
-contract GelatoCore is IGelatoCore, GelatoSysAdmin, GelatoProviders, GelatoExecutors {
+contract GelatoCore is IGelatoCore, GelatoExecutors {
 
     using SafeMath for uint256;
     using GelatoString for string;
@@ -23,6 +21,8 @@ contract GelatoCore is IGelatoCore, GelatoSysAdmin, GelatoProviders, GelatoExecu
     uint256 public override currentExecClaimId;
     // execClaim.id => already attempted non-gelatoMaxGas or not?
     mapping(uint256 => bool) public override isSecondExecAttempt;
+    // Executors can charge Providers execClaimRentPerLifespan
+    mapping(uint256 => uint256) public override lastExecClaimRentPayment;
 
     // ================  MINTING ==============================================
     // Only pass _executor for self-providing users, else address(0)
@@ -40,9 +40,6 @@ contract GelatoCore is IGelatoCore, GelatoSysAdmin, GelatoProviders, GelatoExecu
             isExecutorMinStaked(executor),
             "GelatoCore.mintExecClaim: providerExecutor's stake is insufficient."
         );
-
-        // ExecClaim Expiry Date defaults to global maximum
-        if (_execClaim.expiryDate == 0) _execClaim.expiryDate = now + execClaimLifespan;
 
         // PROVIDER CHECKS (not for self-Providers)
         if (msg.sender != _execClaim.provider) {
@@ -115,7 +112,7 @@ contract GelatoCore is IGelatoCore, GelatoSysAdmin, GelatoProviders, GelatoExecu
         if (!isProviderClaim(_execClaim.provider, _execClaimHash))
             return "ExecClaimHashNotProvided";
 
-        if (_execClaim.expiryDate < now) return "Expired";
+        if (_execClaim.expiryDate != 0 && _execClaim.expiryDate < now) return "Expired";
 
         // CHECK for non-self-conditional Actions
         if (_execClaim.condition != address(0)) {
@@ -311,7 +308,7 @@ contract GelatoCore is IGelatoCore, GelatoSysAdmin, GelatoProviders, GelatoExecu
     }
 
     // ================  CANCEL USER / EXECUTOR API ============================
-    function cancelExecClaim(ExecClaim calldata _execClaim) external override {
+    function cancelExecClaim(ExecClaim memory _execClaim) public override {
         // Checks
         if (msg.sender != _execClaim.userProxy && msg.sender != _execClaim.provider)
             require(_execClaim.expiryDate <= now, "GelatoCore.cancelExecClaim: sender");
@@ -322,5 +319,55 @@ contract GelatoCore is IGelatoCore, GelatoSysAdmin, GelatoProviders, GelatoExecu
         emit LogExecClaimCancelled(_execClaim.id);
     }
 
-    // ================  PROVIDER <=> EXECUTOR Assignment APIs =================
+    function batchCancelExecClaim(ExecClaim[] memory _execClaims) public override {
+        for (uint i; i < _execClaims.length; i++) cancelExecClaim(_execClaims[i]);
+    }
+
+    // ================  EXECCLAIM RENT APIs =================
+    function extractExecClaimRent(ExecClaim memory _execClaim) public override {
+        // CHECKS
+        require(
+            providerExecutor[_execClaim.provider] == msg.sender,
+            "GelatoCore.extractExecutorRent: msg.sender not assigned Executor"
+        );
+        require(
+            lastExecClaimRentPayment[_execClaim.id] >= now - execClaimLifespan,
+            "GelatoCore.extractExecutorRent: rent is not due"
+        );
+        require(
+            isProviderClaim(_execClaim.provider, keccak256(abi.encode(_execClaim))),
+            "GelatoCore.extractExecutorRent: invalid ExecClaim Provider"
+        );
+        require(
+            (isProvided(_execClaim, address(0), 0)).startsWithOk(),
+            "GelatoCore.extractExecutorRent: execClaim not provided any more"
+        );
+        require(
+            providerFunds[_execClaim.provider] >= execClaimRentPerLifespan,
+            "GelatoCore.extractExecutorRent: insufficient providerFunds"
+        );
+
+        // EFFECTS: If the ExecClaim expired, automatic cancellation
+        if (_execClaim.expiryDate != 0 && _execClaim.expiryDate <= now) {
+            cancelExecClaim(_execClaim);
+            delete lastExecClaimRentPayment[_execClaim.id];
+        }
+        else lastExecClaimRentPayment[_execClaim.id] = now;
+
+        // INTERACTIONS: Provider pays Executor ExecClaim Rent
+        providerFunds[_execClaim.provider] -= execClaimRentPerLifespan;
+        executorFunds[msg.sender] += execClaimRentPerLifespan;
+
+        emit LogExtractExecClaimRent(
+            msg.sender,
+            _execClaim.provider,
+            _execClaim.id,
+            execClaimRentPerLifespan
+        );
+    }
+
+    function batchExtractExecClaimRent(ExecClaim[] memory _execClaims) public override {
+        for (uint i; i < _execClaims.length; i++) extractExecClaimRent(_execClaims[i]);
+    }
+
 }

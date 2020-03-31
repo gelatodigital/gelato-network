@@ -2,16 +2,19 @@ pragma solidity ^0.6.4;
 
 import "./interfaces/IGelatoSysAdmin.sol";
 import "../external/Ownable.sol";
+import "../external/Address.sol";
 import "../external/SafeMath.sol";
 
 abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
 
+    using Address for address payable;
     using SafeMath for uint256;
 
     uint256 public override gelatoGasPrice = 9000000000;  // 9 gwei initial
     uint256 public override gelatoMaxGas = 7000000;  // 7 mio initial
     uint256 public override minExecutorStake = 0.02 ether;
-    uint256 public override execClaimLifespan = 90 days;
+    uint256 public override execClaimLifespan = 30 days;
+    uint256 public override execClaimRentPerLifespan = 1 finney;
     uint256 public override executorSuccessShare = 50;  // 50% of successful execution cost
     uint256 public override sysAdminSuccessShare = 20;  // 20% of successful execution cost
     uint256 public override sysAdminFunds;
@@ -47,24 +50,36 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
     // execClaim lifespan
     function setExecClaimLifespan(uint256 _lifespan) external override onlyOwner {
         emit LogSetExecClaimLifespan(execClaimLifespan, _lifespan);
-        execClaimLifespan = _lifespan;
+        if (_lifespan == 0) delete execClaimLifespan;
+        else execClaimLifespan = _lifespan;
+    }
+
+    // execClaim rent per lifespan
+    function setExecClaimRentPerLifespan(uint256 _rent) external override onlyOwner {
+        emit LogSetExecClaimRentPerLifespan(execClaimRentPerLifespan, _rent);
+        if (_rent == 0) delete execClaimRentPerLifespan;
+        else execClaimRentPerLifespan = _rent;
     }
 
     // Sys Admin (DAO) Business Model
     function setSysAdminSuccessShare(uint256 _percentage) external override onlyOwner {
         require(_percentage < 100, "GelatoSysAdmin.setSysAdminSuccessShare: over 100");
         emit LogSetSysAdminSuccessShare(sysAdminSuccessShare, _percentage);
-        sysAdminSuccessShare = _percentage;
+        if (_percentage == 0) delete sysAdminSuccessShare;
+        else sysAdminSuccessShare = _percentage;
     }
 
     function withdrawSysAdminFunds(uint256 _amount) external override onlyOwner {
         uint256 currentBalance = sysAdminFunds;
-        uint256 newBalance = currentBalance.sub(
-            _amount,
-            "GelatoSysAdmin.withdrawSysAdminFunds: underflow"
-        );
-        sysAdminFunds = newBalance;
-        emit LogWithdrawOracleFunds(currentBalance, newBalance);
+        if (_amount == currentBalance) delete sysAdminFunds;
+        else {
+            sysAdminFunds = currentBalance.sub(
+                _amount,
+                "GelatoSysAdmin.withdrawSysAdminFunds: underflow"
+            );
+        }
+        msg.sender.sendValue(_amount);
+        emit LogWithdrawOracleFunds(currentBalance, sysAdminFunds);
     }
 
     // Executors' total fee for a successful exec

@@ -41,6 +41,13 @@ interface IGelatoCore {
 
     event LogExecClaimCancelled(uint256 indexed execClaimId);
 
+    event LogExtractExecClaimRent(
+        address indexed provider,
+        address indexed executor,
+        uint256 indexed execClaimId,
+        uint256 amount
+    );
+
     function mintExecClaim(ExecClaim calldata _execClaim) external;
     function mintSelfProvidedExecClaim(ExecClaim calldata _execClaim, address _executor)
         external
@@ -59,12 +66,13 @@ interface IGelatoCore {
     function exec(ExecClaim calldata _execClaim, bytes32 _execClaimHash) external;
 
     function cancelExecClaim(ExecClaim calldata _execClaim) external;
+    function batchCancelExecClaim(ExecClaim[] calldata _execClaims) external;
+
+    function extractExecClaimRent(ExecClaim calldata _execClaim) external;
+    function batchExtractExecClaimRent(ExecClaim[] calldata _execClaims) external;
 
     // ================  GETTER APIs =========================
     function currentExecClaimId() external view returns(uint256 currentId);
-
-    function isSecondExecAttempt(uint256 _execClaimId)
-        external
-        view
-        returns(bool);
+    function isSecondExecAttempt(uint256 _execClaimId) external view returns(bool);
+    function lastExecClaimRentPayment(uint256 _execClaimId) external view returns(uint256);
 }
