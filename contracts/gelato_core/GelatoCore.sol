@@ -324,7 +324,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     }
 
     // ================  EXECCLAIM RENT APIs =================
-    function extractExecClaimRent(ExecClaim memory _execClaim) public override {
+    function collectExecClaimRent(ExecClaim memory _execClaim) public override {
         // CHECKS
         require(
             providerExecutor[_execClaim.provider] == msg.sender,
@@ -366,8 +366,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         );
     }
 
-    function batchExtractExecClaimRent(ExecClaim[] memory _execClaims) public override {
-        for (uint i; i < _execClaims.length; i++) extractExecClaimRent(_execClaims[i]);
+    function batchCollectExecClaimRent(ExecClaim[] memory _execClaims) public override {
+        for (uint i; i < _execClaims.length; i++) collectExecClaimRent(_execClaims[i]);
     }
 
 }

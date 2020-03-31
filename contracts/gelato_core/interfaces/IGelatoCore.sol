@@ -68,8 +68,8 @@ interface IGelatoCore {
     function cancelExecClaim(ExecClaim calldata _execClaim) external;
     function batchCancelExecClaim(ExecClaim[] calldata _execClaims) external;
 
-    function extractExecClaimRent(ExecClaim calldata _execClaim) external;
-    function batchExtractExecClaimRent(ExecClaim[] calldata _execClaims) external;
+    function collectExecClaimRent(ExecClaim calldata _execClaim) external;
+    function batchCollectExecClaimRent(ExecClaim[] calldata _execClaims) external;
 
     // ================  GETTER APIs =========================
     function currentExecClaimId() external view returns(uint256 currentId);
