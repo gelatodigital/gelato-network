@@ -8,7 +8,7 @@ export default task(
   `Sends tx to GelatoCore.stakeExecutor([<_executorClaimLifespan>, <executorSuccessShare>]) on [--network] (default: ${defaultNetwork})`
 )
   .addOptionalPositionalParam(
-    "execclaimlifespan",
+    "execclaimtenancy",
     "gelatoExecutor's max execClaim lifespan",
     SIXY_DAYS,
     types.int
@@ -48,7 +48,7 @@ export default task(
       });
 
       const tx = await gelatoCore.stakeExecutor(
-        taskArgs.execclaimlifespan,
+        taskArgs.execclaimtenancy,
         taskArgs.executorsuccessfeefactor
       );
 

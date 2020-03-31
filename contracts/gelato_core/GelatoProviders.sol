@@ -11,7 +11,7 @@ import { EnumerableWordSet } from "../external/EnumerableWordSet.sol";
 import { ExecClaim } from "./interfaces/IGelatoCore.sol";
 
 /// @title GelatoProviders
-/// @notice APIs for GelatoCore Owner and execClaimLifespan
+/// @notice APIs for GelatoCore Owner and execClaimTenancy
 /// @dev Find all NatSpecs inside IGelatoCoreAccounting
 abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
 

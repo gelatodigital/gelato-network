@@ -21,7 +21,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     uint256 public override currentExecClaimId;
     // execClaim.id => already attempted non-gelatoMaxGas or not?
     mapping(uint256 => bool) public override isSecondExecAttempt;
-    // Executors can charge Providers execClaimRentPerLifespan
+    // Executors can charge Providers execClaimRent
     mapping(uint256 => uint256) public override lastExecClaimRentPayment;
 
     // ================  MINTING ==============================================
@@ -32,7 +32,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // EXECUTOR CHECKS
         require(
-            _execClaim.expiryDate <= now + execClaimLifespan,
+            _execClaim.expiryDate <= now + execClaimTenancy,
             "GelatoCore.mintExecClaim: execClaim.expiryDate"
         );
         address executor = providerExecutor[_execClaim.provider];
@@ -331,7 +331,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             "GelatoCore.extractExecutorRent: msg.sender not assigned Executor"
         );
         require(
-            lastExecClaimRentPayment[_execClaim.id] >= now - execClaimLifespan,
+            lastExecClaimRentPayment[_execClaim.id] >= now - execClaimTenancy,
             "GelatoCore.extractExecutorRent: rent is not due"
         );
         require(
@@ -343,7 +343,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             "GelatoCore.extractExecutorRent: execClaim not provided any more"
         );
         require(
-            providerFunds[_execClaim.provider] >= execClaimRentPerLifespan,
+            providerFunds[_execClaim.provider] >= execClaimRent,
             "GelatoCore.extractExecutorRent: insufficient providerFunds"
         );
 
@@ -355,14 +355,14 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         else lastExecClaimRentPayment[_execClaim.id] = now;
 
         // INTERACTIONS: Provider pays Executor ExecClaim Rent
-        providerFunds[_execClaim.provider] -= execClaimRentPerLifespan;
-        executorFunds[msg.sender] += execClaimRentPerLifespan;
+        providerFunds[_execClaim.provider] -= execClaimRent;
+        executorFunds[msg.sender] += execClaimRent;
 
         emit LogExtractExecClaimRent(
             msg.sender,
             _execClaim.provider,
             _execClaim.id,
-            execClaimRentPerLifespan
+            execClaimRent
         );
     }
 

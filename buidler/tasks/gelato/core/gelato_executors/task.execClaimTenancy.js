@@ -2,8 +2,8 @@ import { task } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../../buidler.config";
 
 export default task(
-  "gc-execclaimlifespan",
-  `Return (or --log) GelatoCore.execClaimLifespan([<gelatoexecutor>: defaults to default gelatoexecutor]) on [--network] (default: ${defaultNetwork})`
+  "gc-execclaimtenancy",
+  `Return (or --log) GelatoCore.execClaimTenancy([<gelatoexecutor>: defaults to default gelatoexecutor]) on [--network] (default: ${defaultNetwork})`
 )
   .addFlag("log", "Logs return values to stdout")
   .addOptionalPositionalParam(
@@ -17,10 +17,10 @@ export default task(
         contractname: "GelatoCore",
         write: true
       });
-      const execClaimLifespan = await gelatoCore.execClaimLifespan(
+      const execClaimTenancy = await gelatoCore.execClaimTenancy(
         gelatoexecutor
       );
-      const executorClaimLifespanDays = execClaimLifespan / 86400;
+      const executorClaimLifespanDays = execClaimTenancy / 86400;
       if (log) {
         console.log(
           `\nExecutor:              ${gelatoexecutor}\
@@ -28,7 +28,7 @@ export default task(
            \nNetwork:               ${network.name}\n`
         );
       }
-      return execClaimLifespan;
+      return execClaimTenancy;
     } catch (error) {
       console.error(error, "\n");
       process.exit(1);

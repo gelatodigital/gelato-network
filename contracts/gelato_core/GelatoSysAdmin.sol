@@ -13,8 +13,8 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
     uint256 public override gelatoGasPrice = 9000000000;  // 9 gwei initial
     uint256 public override gelatoMaxGas = 7000000;  // 7 mio initial
     uint256 public override minExecutorStake = 0.02 ether;
-    uint256 public override execClaimLifespan = 30 days;
-    uint256 public override execClaimRentPerLifespan = 1 finney;
+    uint256 public override execClaimTenancy = 30 days;
+    uint256 public override execClaimRent = 1 finney;
     uint256 public override executorSuccessShare = 50;  // 50% of successful execution cost
     uint256 public override sysAdminSuccessShare = 20;  // 20% of successful execution cost
     uint256 public override sysAdminFunds;
@@ -48,17 +48,17 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
     }
 
     // execClaim lifespan
-    function setExecClaimLifespan(uint256 _lifespan) external override onlyOwner {
-        emit LogSetExecClaimLifespan(execClaimLifespan, _lifespan);
-        if (_lifespan == 0) delete execClaimLifespan;
-        else execClaimLifespan = _lifespan;
+    function setExecClaimTenancy(uint256 _lifespan) external override onlyOwner {
+        emit LogSetExecClaimTenancy(execClaimTenancy, _lifespan);
+        if (_lifespan == 0) delete execClaimTenancy;
+        else execClaimTenancy = _lifespan;
     }
 
     // execClaim rent per lifespan
-    function setExecClaimRentPerLifespan(uint256 _rent) external override onlyOwner {
-        emit LogSetExecClaimRentPerLifespan(execClaimRentPerLifespan, _rent);
-        if (_rent == 0) delete execClaimRentPerLifespan;
-        else execClaimRentPerLifespan = _rent;
+    function setExecClaimRent(uint256 _rent) external override onlyOwner {
+        emit LogSetExecClaimRent(execClaimRent, _rent);
+        if (_rent == 0) delete execClaimRent;
+        else execClaimRent = _rent;
     }
 
     // Sys Admin (DAO) Business Model
