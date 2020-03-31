@@ -8,7 +8,7 @@ interface IGelatoExecutors {
     );
     event LogDeregisterExecutor(address indexed executor);
 
-    event LogSetExecutorClaimLifespan(uint256 oldLifespan, uint256 newLifespan);
+
 
     event LogSetExecutorSuccessShare(
         address indexed executor,

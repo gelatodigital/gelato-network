@@ -12,7 +12,7 @@ struct ExecClaim {
     bytes actionPayload;
     uint256 expiryDate;
     uint256 executorSuccessShare;
-    uint256 gasAdminSuccessShare;
+    uint256 sysAdminSuccessShare;
 }
 
 interface IGelatoCore {

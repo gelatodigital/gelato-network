@@ -63,9 +63,9 @@ contract MockActionChainedDummy is GelatoActionsStandard {
         if (_execClaim.executorSuccessShare != executorSuccessShare)
             return "MockActionChainedDummy.termsOk: executorSuccessShare";
 
-        uint256 gasAdminSuccessShare = _gelatoCore.gasAdminSuccessShare();
-        if (_execClaim.gasAdminSuccessShare != gasAdminSuccessShare)
-            return "MockActionChainedDummy.termsOk: gasAdminSuccessShare";
+        uint256 sysAdminSuccessShare = _gelatoCore.sysAdminSuccessShare();
+        if (_execClaim.sysAdminSuccessShare != sysAdminSuccessShare)
+            return "MockActionChainedDummy.termsOk: sysAdminSuccessShare";
 
         uint256 gelatoGasPrice = _gelatoCore.gelatoGasPrice();
 

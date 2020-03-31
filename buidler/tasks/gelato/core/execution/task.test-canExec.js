@@ -34,7 +34,7 @@ export default task("test-canexec")
         actionPayload: constants.HashZero,
         expiryDate: "0x5ecc1408",
         executorSuccessShare: 5,
-        gasAdminSuccessShare: 2
+        sysAdminSuccessShare: 2
       };
 
       const { execClaimHash } = await run("event-getparsedlog", {

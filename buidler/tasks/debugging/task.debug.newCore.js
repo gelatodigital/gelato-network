@@ -100,7 +100,7 @@ export default task("gc-debug-newcore")
         actionPayload: actionPayload,
         expiryDate: constants.HashZero,
         executorSuccessShare: 5,
-        gasAdminSuccessShare: 2
+        sysAdminSuccessShare: 2
       };
 
       const gelatoUserProxy = await run("instantiateContract", {
