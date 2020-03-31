@@ -14,7 +14,7 @@ export default internalTask(
       const balance = await ethers.provider.getBalance(account);
       return balance;
     } catch (error) {
-      console.error(error);
+      console.error(error, "\n");
       process.exit(1);
     }
   });

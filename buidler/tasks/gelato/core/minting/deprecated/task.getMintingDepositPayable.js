@@ -8,7 +8,7 @@ export default task(
 )
   .addPositionalParam("conditionname", "must exist inside buidler.config")
   .addPositionalParam("actionname", "must exist inside buidler.config")
-  .addOptionalPositionalParam("selectedexecutor", "address")
+  .addOptionalPositionalParam("gelatoexecutor", "address")
   .addFlag("log", "Logs return values to stdout")
   .setAction(async taskArgs => {
     try {
@@ -21,19 +21,19 @@ export default task(
         contractname: taskArgs.actionname
       });
 
-      // Handle selected executor default
-      const selectedexecutor = await run("handleExecutor", {
-        selectedexecutor: taskArgs.selectedexecutor
+      // Handle selected gelatoExecutor default
+      taskArgs.gelatoexecutor = await run("handleGelatoExecutor", {
+        gelatoexecutor: taskArgs.gelatoexecutor
       });
 
       // Read Instance
-      const gelatoCoreContract = await run("instantiateContract", {
+      const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
         read: true
       });
       // Contract Call
-      const mintingDepositPayable = await gelatoCoreContract.getMintingDepositPayable(
-        selectedexecutor,
+      const mintingDepositPayable = await gelatoCore.getMintingDepositPayable(
+        taskArgs.gelatoexecutor,
         conditionAddress,
         actionAddress
       );
@@ -56,14 +56,14 @@ export default task(
           ).toFixed(2)}$`
         );
         await run("gc-executorprice", {
-          executor: taskArgs.selectedexecutor,
+          gelatoexecutor: taskArgs.gelatoexecutor,
           log: taskArgs.log
         });
       }
 
       return mintingDepositPayable;
     } catch (error) {
-      console.error(error);
+      console.error(error, "\n");
       process.exit(1);
     }
   });

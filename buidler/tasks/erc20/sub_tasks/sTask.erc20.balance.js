@@ -18,7 +18,7 @@ export default internalTask(
       const balance = await erc20Contract.balanceOf(owner);
       return balance;
     } catch (error) {
-      console.error(error);
+      console.error(error, "\n");
       process.exit(1);
     }
   });

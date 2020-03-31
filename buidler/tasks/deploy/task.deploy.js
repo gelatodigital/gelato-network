@@ -15,15 +15,17 @@ export default task(
   )
   .addFlag("clean")
   .addFlag("compile", "Compile before deploy")
+  .addFlag("events", "Logs parsed Event Logs to stdout")
   .addFlag("log", "Logs to stdout")
   .setAction(async taskArgs => {
     try {
       // Default for now to avoid accidentally losing addresses during deployment
-      taskArgs.log = true;
+      const networkname = network.name;
+      if (networkname !== "buidlerevm") taskArgs.log = true;
+
       taskArgs.compile = true;
 
       const { contractname } = taskArgs;
-      const networkname = network.name;
 
       if (networkname == "mainnet") {
         console.log(
@@ -55,12 +57,15 @@ export default task(
         contract = await ContractFactory.deploy();
       }
 
-      if (taskArgs.log)
+      if (taskArgs.log) {
         console.log(
           `\nDeployment-Tx Hash: ${contract.deployTransaction.hash}\n`
         );
+      }
 
-      await contract.deployed();
+      const {
+        deployTransaction: { hash: txhash, blockHash: blockhash }
+      } = await contract.deployed();
 
       if (taskArgs.log) {
         console.log(
@@ -68,7 +73,21 @@ export default task(
         );
       }
 
-      return contract.address;
+      if (taskArgs.events) {
+        try {
+          await run("event-getparsedlogsallevents", {
+            contractname: taskArgs.contractname,
+            contractaddress: contract.address,
+            txhash,
+            blockhash,
+            log: true
+          });
+        } catch (error) {
+          console.error(`\n Error during event-getparsedlogsallevents \n`);
+        }
+      }
+
+      return contract;
     } catch (err) {
       console.error(err);
       process.exit(1);

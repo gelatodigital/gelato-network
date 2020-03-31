@@ -9,7 +9,6 @@
     "build": "babel ./scripts --out-dir dist",
     "solhint": "solhint contracts/**/*.sol",
     "clean": "rimraf dist",
-    "compile": "npx buidler clean && npx buidler compile",
     "rebuild": "yarn clean && yarn build"
   },
   "devDependencies": {
@@ -23,8 +22,7 @@
     "dotenv": "^8.2.0",
     "ethers": "^4.0.23",
     "prettier": "^1.19.1",
-    "solc": "^0.6.2",
-    "solhint": "^2.3.0"
+    "solc": "^0.6.4"
   },
   "dependencies": {
     "rimraf": "^3.0.0"

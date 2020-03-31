@@ -7,7 +7,7 @@ export default task(
 )
   .addPositionalParam(
     "scriptname",
-    "name of the debug subtask script to execute"
+    "name of the debug subtask script to exec"
   )
   .addOptionalVariadicPositionalParam(
     "args",

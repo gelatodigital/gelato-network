@@ -2,15 +2,15 @@ import { internalTask } from "@nomiclabs/buidler/config";
 import { utils } from "ethers";
 
 export default internalTask(
-  "gc-mint:defaultpayload:ConditionBalance",
+  "gc-mintexecclaim:defaultpayload:ConditionBalance",
   `Returns a hardcoded conditionPayload of ConditionBalance`
 )
   .addFlag("log")
   .setAction(async ({ log }) => {
     try {
       const contractname = "ConditionBalance";
-      // reached(address _coin, address _account, uint256 _refBalance)
-      const functionname = "reached";
+      // ok(address _token, address _account, uint256 _refBalance)
+      const functionname = "ok";
       // Params
       const { luis: account } = await run("bre-config", {
         addressbookcategory: "EOA"

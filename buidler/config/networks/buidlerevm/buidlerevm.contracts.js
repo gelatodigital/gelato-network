@@ -1,16 +1,64 @@
 export const contracts = [
-  // BuidlerEVM
+  // === Actions ===
+  // === Actions ===
+  // = One-Off =
+  // BzX
   "ActionBzxPtokenBurnToToken",
   "ActionBzxPtokenMintWithToken",
+  // ERC20
   "ActionERC20Transfer",
   "ActionERC20TransferFrom",
-  "ActionKyberTrade",
+  // Kyber
+  "ActionKyberTradeKovan",
+  // Multimint
   "ActionMultiMintForConditionTimestampPassed",
-  "GelatoCore",
+  // Portfolio Mgmt
+  "ActionRebalancePortfolio",
+
+  // = Chained =
+  // ERC20
+  "ActionChainedTimedERC20TransferFromKovan",
+  // Portfolio Mgmt
+  "ActionChainedRebalancePortfolio",
+
+  // Action specific scripts
+  "ScriptEnterPortfolioRebalancing",
+
+  // === Conditions ===
+  // Balances
   "ConditionBalance",
+  // Indices
+  "ConditionFearGreedIndex",
+  // Prices
   "ConditionKyberRateKovan",
+  // Time
   "ConditionTimestampPassed",
-  // === Debugging
+
+  // === GelatoCore ===
+  "GelatoCore",
+  // ProviderModules
+  "ProviderModuleGelatoUserProxy",
+
+  // === GelatoUserProxies ===
+  // = GelatoUserProxy =
+  // Factory
+  "GelatoUserProxyFactory",
+
+  // = GnosisSafeProxy =
+  // Scripts
+  "ScriptGnosisSafeEnableGelatoCore",
+  "ScriptGnosisSafeEnableGelatoCoreAndMint",
+
+  // === Mocks ====
+  // Conditions
+  "MockConditionDummy",
+  // = Actions =
+  // One-Off
+  "MockActionDummy",
+  // Chained
+  "MockActionChainedDummy",
+
+  // === Debugging ===
   // Action
   "ActionKyberTradePayloadDecoding",
   // Conditions

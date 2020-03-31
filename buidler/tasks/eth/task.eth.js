@@ -16,7 +16,7 @@ export default task(
   .setAction(async ({ account, balance, usd, log }) => {
     try {
       if (!balance && !usd)
-        throw new Error("Must call with --balance or --price or combo");
+        throw new Error("\nMust call with --balance or --price or combo");
 
       const returnValues = [];
       const returnObj = {};

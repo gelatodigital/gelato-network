@@ -1,386 +1,326 @@
-pragma solidity ^0.6.2;
+pragma solidity ^0.6.4;
+pragma experimental ABIEncoderV2;
 
-import "./interfaces/IGelatoCore.sol";
-import "./GelatoGasPriceOracle.sol";
-import "./GelatoExecutor.sol";
-import "./GelatoProvider.sol";
-import "./GelatoUserProxyFactory.sol";
-import "../external/Counters.sol";
+import { IGelatoCore, ExecClaim } from "./interfaces/IGelatoCore.sol";
+import { GelatoGasAdmin } from "./GelatoGasAdmin.sol";
+import { GelatoExecutors } from "./GelatoExecutors.sol";
+import { GelatoProviders } from "./GelatoProviders.sol";
+import { SafeMath } from "../external/SafeMath.sol";
+import { GelatoString } from "../libraries/GelatoString.sol";
+import { IGelatoCondition } from "../gelato_conditions/IGelatoCondition.sol";
+import { IGelatoAction } from "../gelato_actions/IGelatoAction.sol";
+import { IGelatoProviderModule } from "./interfaces/IGelatoProviderModule.sol";
 
 /// @title GelatoCore
-/// @notice Execution Claim: minting, checking, execution, and cancellation
+/// @notice Exec Claim: minting, checking, execution, and cancellation
 /// @dev Find all NatSpecs inside IGelatoCore
-contract GelatoCore is
-    IGelatoCore, GelatoGasPriceOracle, GelatoProvider, GelatoExecutor, GelatoUserProxyFactory
-{
-    // Library for unique ExecutionClaimIds
-    using Counters for Counters.Counter;
-    using Address for address payable;  /// for oz's sendValue method
+contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecutors {
+
+    using SafeMath for uint256;
+    using GelatoString for string;
 
     // ================  STATE VARIABLES ======================================
-    Counters.Counter public override currentExecutionClaimId;
-    // executionClaimId => userProxy
-    mapping(uint256 => address) public override userProxyByExecutionClaimId;
-    // executionClaimId => bytes32 executionClaimHash
-    mapping(uint256 => bytes32) public override executionClaimHash;
+    uint256 public override currentExecClaimId;
+    // execClaim.id => already attempted non-gelatoMaxGas or not?
+    mapping(uint256 => bool) public override isSecondExecAttempt;
 
     // ================  MINTING ==============================================
-    function mintExecutionClaim(
-        address[2] calldata _providerAndExecutor,
-        address[2] calldata _conditionAndAction,
-        bytes calldata _conditionPayload,
-        bytes calldata _executionPayload,
-        uint256 _executionClaimExpiryDate
-    )
-        external
+    // Only pass _executor for self-providing users, else address(0)
+    function mintExecClaim(ExecClaim memory _execClaim, address _executor)
+        public
+        payable
         override
-        isPCA(_providerAndExecutor[0], _conditionAndAction[0], _conditionAndAction[1])
-        registeredExecutor(_providerAndExecutor[1])
-        maxExecutionClaimLifespan(_providerAndExecutor[1], _executionClaimExpiryDate)
     {
-        // Claim liquidity from provider
-        uint256 claimedProviderLiquidity = provisionPerExecutionClaim(
-            _providerAndExecutor[0],
-            0  // 0 for providerGasPriceCeiling
-        );
+        // Smart Contract Account or EOA
+        _execClaim.userProxy = msg.sender;
 
-        // Ensure Provider Liquidity
+        // EXECUTOR Handling
+        // Users self-provides (prepayment) and assigns _executor
+        if (msg.sender == _execClaim.provider) {
+            if (_executor != address(0) && providerExecutor[msg.sender] != _executor)
+                providerExecutor[msg.sender] = _executor;  // assign new executor
+            else _executor = providerExecutor[msg.sender];  // default executor
+            // User prepayment
+            if (msg.value > 0) providerFunds[msg.sender] += msg.value;
+        } else {
+            // UserProxy mints: _executor always defaults to providerExecutor
+            _executor = providerExecutor[_execClaim.provider];
+            // PROVIDER CHECKS
+            string memory isProvided = isProvided(_execClaim, gelatoGasPrice);
+            require(
+                isProvided.startsWithOk(),
+                string(abi.encodePacked("GelatoCore.mintExecClaim.isProvided:", isProvided))
+            );
+        }
+
+        // EXECUTOR CHECKS
+        _requireMaxExecutorClaimLifespan(_executor, _execClaim.expiryDate);
+
+        // Lock in Executor Success Fee
         require(
-            providerFunds[_providerAndExecutor[0]].sub(
-                lockedProviderFunds[_providerAndExecutor[0]],
-                "GelatoCore.mintExecutionClaim: providerLiquidity underflow"
-            ) > claimedProviderLiquidity,
-            "GelatoCore.mintExecutionClaim: provider illiquid"
+            _execClaim.executorSuccessShare == executorSuccessShare[_executor] &&
+            _execClaim.executorSuccessShare <= providerExecutorShareCeil[_execClaim.provider],
+            "GelatoCore.mintExecClaim: _execClaim.executorSuccessShare"
         );
 
-        // Lock Providers Funds attributed to this ExecutionClaim
-        lockedProviderFunds[_providerAndExecutor[0]] = (
-            lockedProviderFunds[_providerAndExecutor[0]] + claimedProviderLiquidity
+        // Lock in Gelato Gas Price Oracle Success Fee
+        require(
+            _execClaim.gasAdminSuccessShare == gasAdminSuccessShare &&
+            _execClaim.gasAdminSuccessShare <= providerGasAdminShareCeil[_execClaim.provider],
+            "GelatoCore.mintExecClaim: _execClaim.gasAdminSuccessShare"
         );
 
-        // Mint new executionClaim
-        currentExecutionClaimId.increment();
-        uint256 executionClaimId = currentExecutionClaimId.current();
-        userProxyByExecutionClaimId[executionClaimId] = msg.sender;
+        // Mint new execClaim
+        currentExecClaimId++;
+        _execClaim.id = currentExecClaimId;
 
-        // ExecutionClaim Hashing
-        executionClaimHash[executionClaimId] = _computeExecutionClaimHash(
-            _providerAndExecutor,
-            executionClaimId,  // To avoid hash collisions
-            msg.sender,  // userProxy
-            _conditionAndAction,
-            _conditionPayload,
-            _executionPayload,
-            _executionClaimExpiryDate,
-            claimedProviderLiquidity
-        );
+        // ExecClaim Expiry Date defaults to executor's maximum allowance
+        if (_execClaim.expiryDate == 0)
+            _execClaim.expiryDate = now + executorClaimLifespan[_executor];
 
-        emit LogExecutionClaimMinted(
-            _providerAndExecutor,
-            executionClaimId,
-            msg.sender,  // userProxy
-            _conditionAndAction,
-            _conditionPayload,
-            _executionPayload,
-            _executionClaimExpiryDate,
-            claimedProviderLiquidity
-        );
+        // ExecClaim Hashing
+        bytes32 execClaimHash = keccak256(abi.encode(_execClaim));
+
+        // ProviderClaim registration
+        execClaimHashesByProvider[_execClaim.provider].add(execClaimHash);
+
+        emit LogExecClaimMinted(_executor, _execClaim.id, execClaimHash, _execClaim);
     }
 
     // ================  CAN EXECUTE EXECUTOR API ============================
-    function canExecute(
-        address[2] memory _providerAndExecutor,
-        uint256 _executionClaimId,
-        address _userProxy,
-        address[2] memory _conditionAndAction,
-        bytes memory _conditionPayload,
-        bytes memory _executionPayload,
-        uint256 _executionClaimExpiryDate,
-        uint256 _claimedProviderLiquidity
+    function canExec(
+        ExecClaim memory _execClaim,
+        bytes32 _execClaimHash,
+        uint256 _gelatoGasPrice,
+        uint256 _gelatoMaxGas
     )
         public
         view
         override
-        returns (CanExecuteResult, uint8 reason)
+        returns (string memory)
     {
-        if (availableProviderLiquidity(_providerAndExecutor[0]) < _claimedProviderLiquidity) {
-            return (
-                CanExecuteResult.ProviderIlliquidity,
-                uint8(StandardReason.NotOk)
-            );
+        if (msg.sender != providerExecutor[_execClaim.provider]) return "InvalidExecutor";
+
+        if (_execClaim.userProxy != _execClaim.provider) {
+            string memory res = isProvided(_execClaim, _gelatoGasPrice);
+            if (!res.startsWithOk()) return res;
         }
 
-        if (executionClaimHash[_executionClaimId] == bytes32(0)) {
-            if (_executionClaimId <= currentExecutionClaimId.current()) {
-                return (
-                    CanExecuteResult.ExecutionClaimAlreadyExecutedOrCancelled,
-                    uint8(StandardReason.NotOk)
-                );
-            } else {
-                return (
-                    CanExecuteResult.ExecutionClaimNonExistant,
-                    uint8(StandardReason.NotOk)
-                );
+        if (!isProviderLiquid(_execClaim.provider, _gelatoGasPrice, _gelatoMaxGas))
+            return "ProviderIlliquid";
+
+        bytes32 execClaimHash = keccak256(abi.encode(_execClaim));
+        if (execClaimHash != _execClaimHash) return "ExecClaimHashInvalid";
+        if (!isProviderClaim(_execClaim.provider, _execClaimHash))
+            return "ExecClaimHashNotProvided";
+
+        if (_execClaim.expiryDate < now) return "Expired";
+
+        // CHECK for non-self-conditional Actions
+        if (_execClaim.condition != address(0)) {
+            try IGelatoCondition(_execClaim.condition).ok(_execClaim.conditionPayload)
+                returns(string memory condition)
+            {
+                if (!condition.startsWithOk())
+                    return string(abi.encodePacked("ConditionNotOk:", condition));
+            } catch Error(string memory error) {
+                return string(abi.encodePacked("ConditionReverted:", error));
+            } catch {
+                return "ConditionRevertedNoMessage";
             }
         }
 
-        if (_executionClaimExpiryDate < now) {
-            return (
-                CanExecuteResult.ExecutionClaimExpired,
-                uint8(StandardReason.NotOk)
-            );
-        }
-
-        bytes32 computedExecutionClaimHash = _computeExecutionClaimHash(
-            _providerAndExecutor,
-            _executionClaimId,
-            _userProxy,
-            _conditionAndAction,
-            _conditionPayload,
-            _executionPayload,
-            _executionClaimExpiryDate,
-            _claimedProviderLiquidity
-        );
-
-        if (computedExecutionClaimHash != executionClaimHash[_executionClaimId]) {
-            return (
-                CanExecuteResult.WrongCalldataOrMsgSender,
-                uint8(StandardReason.NotOk)
-            );
-        }
-
-        // Self-Conditional Actions pass and return
-        if (_conditionAndAction[0] == address(0)) {
-            return (
-                CanExecuteResult.Executable,
-                uint8(StandardReason.Ok)
-            );
-        } else {
-            // Dynamic Checks needed for Conditional Actions
-            (bool success, bytes memory returndata) = _conditionAndAction[0].staticcall(
-                _conditionPayload
-            );
-            if (!success) {
-                return (
-                    CanExecuteResult.UnhandledConditionError,
-                    uint8(StandardReason.UnhandledError)
-                );
-            } else {
-                bool conditionReached;
-                (conditionReached, reason) = abi.decode(returndata, (bool, uint8));
-                if (!conditionReached)
-                    return (CanExecuteResult.ConditionNotOk, reason);
-                else return (CanExecuteResult.Executable, reason);
-            }
+        // CHECK Action Conditions
+        try IGelatoAction(_execClaim.action).termsOk(_execClaim.actionPayload)
+            returns(string memory actionTermsOk)
+        {
+            if (actionTermsOk.startsWithOk()) return "Ok";
+            return string(abi.encodePacked("ActionTermsNotOk:", actionTermsOk));
+        } catch Error(string memory error) {
+            return string(abi.encodePacked("ActionReverted:", error));
+        } catch {
+            return "ActionRevertedNoMessage";
         }
     }
 
     // ================  EXECUTE EXECUTOR API ============================
-    function execute(
-        address[2] calldata _providerAndExecutor,
-        uint256 _executionClaimId,
-        address _userProxy,
-        address[2] calldata _conditionAndAction,
-        bytes calldata _conditionPayload,
-        bytes calldata _executionPayload,
-        uint256 _executionClaimExpiryDate,
-        uint256 _claimedProviderLiquidity
-    )
-        external
-        override
-    {
+    enum ExecutorPay {
+        Reward,
+        Refund
+    }
+
+    function exec(ExecClaim memory _execClaim, bytes32 _execClaimHash) public override {
+        // Store startGas for gas-consumption based cost and payout calcs
         uint256 startGas = gasleft();
 
-        // CHECK canExecute()
-        {
-            (CanExecuteResult canExecuteResult, uint8 canExecuteReason) = canExecute(
-                _providerAndExecutor,
-                _executionClaimId,
-                _userProxy,
-                _conditionAndAction,
-                _conditionPayload,
-                _executionPayload,
-                _executionClaimExpiryDate,
-                _claimedProviderLiquidity
-            );
+        // memcopy of gelatoGasPrice and gelatoMaxGas, to avoid multiple storage reads
+        uint256 _gelatoGasPrice = gelatoGasPrice;
+        uint256 _gelatoMaxGas = gelatoMaxGas;
 
-            if (canExecuteResult == CanExecuteResult.Executable) {
-                emit LogCanExecuteSuccess(
-                    _providerAndExecutor,
-                    _executionClaimId,
-                    _userProxy,
-                    _conditionAndAction,
-                    canExecuteResult,
-                    canExecuteReason
-                );
-            } else {
-                emit LogCanExecuteFailed(
-                    _providerAndExecutor,
-                    _executionClaimId,
-                    _userProxy,
-                    _conditionAndAction,
-                    canExecuteResult,
-                    canExecuteReason
-                );
-                return;  // END OF EXECUTION
+        // CHECKS
+        require(tx.gasprice >= _gelatoGasPrice, "GelatoCore.exec: tx.gasprice");
+        require(startGas < _gelatoMaxGas, "GelatoCore.exec: gas surplus");
+
+        // 2nd Attempt: requires gelatoMaxGas
+        if (isSecondExecAttempt[_execClaim.id]) {
+            // 100k call overhead buffer
+            require(startGas > _gelatoMaxGas - 100000, "GelatoCore.exec2: gas shortage");
+            if (!_canExec(_execClaim, _execClaimHash, _gelatoGasPrice, _gelatoMaxGas))
+                return;  // R-3: 2nd canExec failed: NO REFUND
+            if(!_exec(_execClaim)) {
+                // R-4: 2nd exec() failed. Executor REFUND and Claim deleted.
+                delete isSecondExecAttempt[_execClaim.id];
+                execClaimHashesByProvider[_execClaim.provider].remove(_execClaimHash);
+                _processProviderPayables(ExecutorPay.Refund, startGas, _execClaim);
+                return;
+            }
+            // R-4: 2nd exec() success
+            delete isSecondExecAttempt[_execClaim.id];
+        } else {
+            // 1st Attempt: no requirement of using gelatoMaxGas
+            if (!_canExec(_execClaim, _execClaimHash, _gelatoGasPrice, _gelatoMaxGas))
+                return;  // R-0: 1st canExec() failed: NO REFUND
+            if (!_exec(_execClaim)) {
+                isSecondExecAttempt[_execClaim.id] = true;
+                return;  // R-1: 1st exec() failed: NO REFUND but second attempt left
             }
         }
 
-        // INTERACTIONS
-        (bool executed, bytes memory returndata) = _userProxy.call(_executionPayload);
+        // R-1 or -4: SUCCESS: ExecClaim deleted, Executor REWARD, Oracle paid
+        execClaimHashesByProvider[_execClaim.provider].remove(_execClaimHash);
+        _processProviderPayables(ExecutorPay.Reward, startGas, _execClaim);
+    }
 
-        // Success
-        if (executed) {
-            emit LogSuccessfulExecution(
-                _providerAndExecutor,
-                _executionClaimId,
-                _userProxy,
-                _conditionAndAction,
-                _action
-            );
-
-            // EFFECTS
-            delete executionClaimHash[_executionClaimId];
-            delete userProxyByExecutionClaimId[_executionClaimId];
-
-            // Use gelatoGasPrice if provider default or if below provider ceiling
-            uint256 billedGasPrice = providerGasPriceCeiling[_providerAndExecutor[0]];
-            if (billedGasPrice == 0 || gelatoGasPrice < billedGasPrice)
-                billedGasPrice = gelatoGasPrice;
-
-            // Executor Refund + Reward. Refund is not in full due to 3 state writes.
-            uint256 executorReward = (startGas - gasleft()).mul(billedGasPrice).add(
-                5 finney
-            );
-
-            providerFunds[_providerAndExecutor[0]] = providerFunds[_providerAndExecutor[0]].sub(
-                executorReward,
-                "GelatoCore.execute: providerFunds underflow"
-            );
-
-            lockedProviderFunds[_providerAndExecutor[0]] = lockedProviderFunds[_providerAndExecutor[0]].sub(
-                executorReward,
-                "GelatoCore.execute: lockedProviderFunds underflow"
-            );
-
-            executorBalance[msg.sender] = executorBalance[msg.sender].add(executorReward);
+    function _canExec(
+        ExecClaim memory _execClaim,
+        bytes32 _execClaimHash,
+        uint256 _gelatoGasPrice,
+        uint256 _gelatoMaxGas
+    )
+        private
+        returns(bool)
+    {
+        string memory res = canExec(_execClaim, _execClaimHash, _gelatoGasPrice, _gelatoMaxGas);
+        if (res.startsWithOk()) {
+            emit LogCanExecSuccess(msg.sender, _execClaim.id, res);
+            return true;  // SUCCESS: continue Execution
         } else {
-            // Failure
-            string memory executionFailureReason;
+            emit LogCanExecFailed(msg.sender, _execClaim.id, res);
+            return false;  // FAILURE: END Execution
+        }
+    }
 
-            // 68: 32-location, 32-length, 4-ErrorSelector, UTF-8 revertReason
-            if (returndata.length % 32 == 4) {
-                bytes4 selector;
-                assembly { selector := returndata }
+    function _exec(ExecClaim memory _execClaim) private returns(bool success) {
+        // INTERACTIONS
+        bytes memory revertMsg;
+        string memory error;
 
-                if (selector == 0x08c379a0) {  // Function selector for Error(string)
-                    assembly { returndata := add(returndata, 68) }
-                    executionFailureReason = string(returndata);
-                } else {
-                    executionFailureReason = "NoErrorSelector";
-                }
-            } else {
-                executionFailureReason = "UnexpectedReturndata";
+        // Provided Users vs. Self-Providing Users
+        if (_execClaim.userProxy != _execClaim.provider) {
+            // Provided Users: execPayload from ProviderModule
+            bytes memory execPayload;
+            try IGelatoProviderModule(_execClaim.providerModule).execPayload(
+                _execClaim.action,
+                _execClaim.actionPayload
+            )
+                returns(bytes memory _execPayload)
+            {
+                execPayload = _execPayload;
+            } catch Error(string memory _error) {
+                error = string(abi.encodePacked("GelatoCore._exec.execPayload:", _error));
+            } catch {
+                error = "GelatoCore._exec.execPayload";
             }
 
-            emit LogExecutionFailure(
-                _providerAndExecutor,
-                _executionClaimId,
-                _userProxy,
-                _conditionAndAction[0],
-                _action,
-                executionFailureReason
+            // Execution via UserProxy
+            if (execPayload.length >= 4)
+                (success, revertMsg) = _execClaim.userProxy.call(execPayload);
+            else error = "GelatoCore._exec.execPayload: invalid";
+        } else {
+            // Self-Providing Users: actionPayload == execPayload assumption
+            // Execution via UserProxy
+            if (_execClaim.actionPayload.length >= 4)
+                (success, revertMsg) = _execClaim.userProxy.call(_execClaim.actionPayload);
+            else error = "GelatoCore._exec.actionPayload: invalid";
+        }
+
+        // Error string decoding for revertMsg from userProxy.call
+        if (!success && bytes(error).length == 0) {
+            // FAILURE
+            // 32-length, 4-ErrorSelector, UTF-8 revertMsg
+            if (revertMsg.length % 32 == 4) {
+                bytes4 selector;
+                assembly { selector := mload(add(revertMsg, 32)) }
+                if (selector == 0x08c379a0) {  // Function selector for Error(string)
+                    assembly { revertMsg := mload(add(revertMsg, 36)) }
+                    error = string(
+                        abi.encodePacked("GelatoCore._exec:", string(revertMsg))
+                    );
+                } else {
+                    error = "GelatoCore._exec:NoErrorSelector";
+                }
+            } else {
+                error = "GelatoCore._exec:UnexpectedReturndata";
+            }
+        }
+
+        // SUCCESS
+        if (success) {
+            emit LogExecSuccess(msg.sender, _execClaim.id);
+            return success;  // END
+        }
+
+        // FAILURE
+        emit LogExecFailed(msg.sender, _execClaim.id, error);
+    }
+
+    function _processProviderPayables(
+        ExecutorPay _payType,
+        uint256 _startGas,
+        ExecClaim memory _execClaim
+    )
+        private
+    {
+        // ExecutionCost (- consecutive state writes + gas refund from deletion)
+        uint256 estExecCost = (_startGas - gasleft()).mul(gelatoGasPrice);
+
+        if (_payType == ExecutorPay.Reward) {
+            uint256 executorSuccessFee = SafeMath.div(
+                estExecCost.mul(_execClaim.executorSuccessShare),
+                100,
+                "GelatoCore._processProviderPayables: div error executorSuccessFee"
             );
+            uint256 gasAdminSuccessFee = SafeMath.div(
+                estExecCost.mul(_execClaim.gasAdminSuccessShare),
+                100,
+                "GelatoCore._processProviderPayables:  div error gasAdminSuccessShare"
+            );
+            // ExecSuccess: Provider pays ExecutorSuccessFee and OracleSuccessFee
+            providerFunds[_execClaim.provider] = providerFunds[_execClaim.provider].sub(
+                executorSuccessFee.add(gasAdminSuccessFee),
+                "GelatoCore._processProviderPayables: providerFunds underflow"
+            );
+            executorFunds[msg.sender] += executorSuccessFee;
+            gasAdminFunds += gasAdminSuccessFee;
+        } else {
+            // ExecFailure: Provider REFUNDS estimated costs to executor
+            providerFunds[_execClaim.provider] = providerFunds[_execClaim.provider].sub(
+                estExecCost,
+                "GelatoCore._processProviderPayables:  providerFunds underflow"
+            );
+            executorFunds[msg.sender] += estExecCost;
         }
     }
 
     // ================  CANCEL USER / EXECUTOR API ============================
-    function cancelExecutionClaim(
-        address[2] calldata _providerAndExecutor,
-        uint256 _executionClaimId,
-        address _userProxy,
-        address[2] memory _conditionAndAction,
-        bytes calldata _conditionPayload,
-        bytes calldata _executionPayload,
-        uint256 _executionClaimExpiryDate,
-        uint256 _claimedProviderLiquidity
-    )
-        external
-        override
-    {
+    function cancelExecClaim(ExecClaim calldata _execClaim) external override {
         // Checks
-        if (msg.sender != _userProxy) {
-            require(
-                _executionClaimExpiryDate <= now,
-                "GelatoCore.cancelExecutionClaim: not expired"
-            );
-        }
-        bytes32 computedExecutionClaimHash = _computeExecutionClaimHash(
-            _providerAndExecutor,
-            _executionClaimId,
-            _userProxy,
-            _conditionAndAction[0],
-            _conditionPayload,
-            _action,
-            _executionPayload,
-            _executionClaimExpiryDate,
-            _claimedProviderLiquidity
-        );
-
-        require(
-            computedExecutionClaimHash == executionClaimHash[_executionClaimId],
-            "GelatoCore.cancelExecutionClaim: hash compare failed"
-        );
-
+        if (msg.sender != _execClaim.userProxy)
+            require(_execClaim.expiryDate <= now, "GelatoCore.cancelExecClaim: sender");
         // Effects
-        delete userProxyByExecutionClaimId[_executionClaimId];
-        delete executionClaimHash[_executionClaimId];
-
-
-        // Interactions
-        lockedProviderFunds[_providerAndExecutor[0]] = lockedProviderFunds[_providerAndExecutor[0]].sub(
-            _claimedProviderLiquidity,
-            "GelatoCore.cancelExecutionClaim: lockedProviderFunds underflow"
-        );
-
-        emit LogExecutionClaimCancelled(
-            _providerAndExecutor,
-            _executionClaimId,
-            _userProxy,
-            msg.sender,
-            _executionClaimExpiryDate <= now,
-            _claimedProviderLiquidity
-        );
-    }
-
-    // ================ PRIVATE HELPERS ========================================
-    function _computeExecutionClaimHash(
-        address[2] memory _providerAndExecutor,
-        uint256 _executionClaimId,
-        address _userProxy,
-        address[2] memory _conditionAndAction,
-        bytes memory _conditionPayload,
-        bytes memory _executionPayload,
-        uint256 _executionClaimExpiryDate,
-        uint256 _claimedProviderLiquidity
-    )
-        private
-        pure
-        returns(bytes32)
-    {
-        return keccak256(
-            abi.encodePacked(
-                _providerAndExecutor[0],
-                _providerAndExecutor[1],
-                _executionClaimId,
-                _userProxy,
-                _conditionAndAction[0],
-                _conditionPayload,
-                _action,
-                _executionPayload,
-                _executionClaimExpiryDate,
-                _claimedProviderLiquidity
-            )
-        );
+        bytes32 execClaimHash = keccak256(abi.encode(_execClaim));
+        execClaimHashesByProvider[_execClaim.provider].remove(execClaimHash);
+        if (isSecondExecAttempt[_execClaim.id]) delete isSecondExecAttempt[_execClaim.id];
+        emit LogExecClaimCancelled(_execClaim.id);
     }
 }

@@ -2,8 +2,8 @@ import { internalTask } from "@nomiclabs/buidler/config";
 import { utils } from "ethers";
 
 export default internalTask(
-  "gc-mint:defaultpayload:ActionBzxPtokenMintWithToken",
-  `Returns a hardcoded executionPayload of ActionBzxPtokenMintWithToken`
+  "gc-mintexecclaim:defaultpayload:ActionBzxPtokenMintWithToken",
+  `Returns a hardcoded actionPayload of ActionBzxPtokenMintWithToken`
 )
   .addFlag("log")
   .setAction(async ({ log }) => {

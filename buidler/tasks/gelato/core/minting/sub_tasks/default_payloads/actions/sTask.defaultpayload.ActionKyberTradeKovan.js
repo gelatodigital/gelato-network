@@ -2,13 +2,13 @@ import { internalTask } from "@nomiclabs/buidler/config";
 import { utils } from "ethers";
 
 export default internalTask(
-  "gc-mint:defaultpayload:ActionKyberTradeKovan",
-  `Returns a hardcoded executionPayload of ActionKyberTradeKovan`
+  "gc-mintexecclaim:defaultpayload:ActionKyberTradeKovan",
+  `Returns a hardcoded actionPayload of ActionKyberTradeKovan`
 )
   .addFlag("log")
   .setAction(async ({ log }) => {
     try {
-      if (network.name != "kovan") throw new Error("wrong network!");
+      if (network.name != "kovan") throw new Error("\nwrong network!");
 
       const contractname = "ActionKyberTradeKovan";
       // action(_user, _userProxy, _src, _srcAmt, _dest, _minConversionRate)
@@ -17,8 +17,8 @@ export default internalTask(
       const { luis: user } = await run("bre-config", {
         addressbookcategory: "EOA"
       });
-      const { luis: gnosisSafeProxy } = await run("bre-config", {
-        addressbookcategory: "gnosisSafeProxy"
+      const { luis: userProxy } = await run("bre-config", {
+        addressbookcategory: "userProxy"
       });
       const { KNC: src, DAI: dest } = await run("bre-config", {
         addressbookcategory: "erc20"
@@ -30,7 +30,7 @@ export default internalTask(
 
       // Params as sorted array of inputs for abi.encoding
       // action(_user, _userProxy, _src, _srcAmt, _dest)
-      const inputs = [user, gnosisSafeProxy, src, srcAmt, dest];
+      const inputs = [user, userProxy, src, srcAmt, dest];
       // Encoding
       const payloadWithSelector = await run("abi-encode-withselector", {
         contractname,

@@ -1,22 +1,22 @@
 import { internalTask } from "@nomiclabs/buidler/config";
 
 export default internalTask(
-  "gc-mint:defaultpayload:ActionMultiMintForConditionTimestampPassed",
-  `Returns a hardcoded executionPayload of ActionMultiMintForConditionTimestampPassed`
+  "gc-mintexecclaim:defaultpayload:ActionMultiMintForConditionTimestampPassed",
+  `Returns a hardcoded actionPayload of ActionMultiMintForConditionTimestampPassed`
 )
   .addParam(
-    "selectedexecutor",
-    "CAUTION: selectedexecutor cannot be a safe default"
+    "gelatoexecutor",
+    "CAUTION: gelatoexecutor cannot be a safe default"
   )
   .addParam(
     "numberofmints",
     "CAUTION: number of mints cannot be a safe default"
   )
   .addFlag("log")
-  .setAction(async ({ selectedexecutor, numberofmints, log }) => {
+  .setAction(async ({ gelatoexecutor, numberofmints, log }) => {
     try {
       const contractname = "ActionMultiMintForConditionTimestampPassed";
-      // action(_gelatoCore, _selectedExecutor, _conditionTimestampPassed, _startTime, _action, _actionPayloadWithSelector, _intervalSpan, _numberOfMints)
+      // action(_gelatoCore, _gelatoExecutor, _conditionTimestampPassed, _startTime, _action, _actionPayload, _intervalSpan, _numberOfMints)
       const functionname = "action";
       // Params
       const {
@@ -30,19 +30,19 @@ export default internalTask(
         deployments: true,
         contractname: "ActionKyberTrade"
       });
-      const executionPayload = await run(
-        "gc-mint:defaultpayload:ActionKyberTrade",
+      const actionPayload = await run(
+        "gc-mintexecclaim:defaultpayload:ActionKyberTrade",
         { log }
       );
       const intervalSpan = "300"; // seconds
       // Params as sorted array of inputs for abi.encoding
       const inputs = [
         gelatoCoreAddress,
-        selectedexecutor,
+        gelatoexecutor,
         conditionTimestampPassedAddress,
         startTime,
         actionAddress,
-        executionPayload,
+        actionPayload,
         intervalSpan,
         numberofmints
       ];
