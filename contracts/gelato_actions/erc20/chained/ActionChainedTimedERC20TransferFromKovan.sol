@@ -68,7 +68,7 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
 
     // ======= ACTION CONDITIONS CHECK =========
     // Overriding and extending GelatoActionsStandard's function (optional)
-    function ok(bytes calldata _actionPayload)
+    function termsOk(bytes calldata _actionPayload)
         external
         view
         override
@@ -84,23 +84,23 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
         );
 
         // Check: ActionERC20TransferFrom._actionConditionsCheck
-        string memory transferStatus = super.ok(superActionPayload);
+        string memory transferStatus = super.termsOk(superActionPayload);
 
-        // If: Base actionCondition: NOT OK => Return
+        // If: Base actionTermsOk: NOT OK => Return
         if (transferStatus.startsWithOk()) return transferStatus;
 
-        // Else: Check and Return current contract actionCondition
-        return ok(actionData, execClaim);
+        // Else: Check and Return current contract actionTermsOk
+        return termsOk(actionData, execClaim);
     }
 
-    function ok(ActionData memory _actionData, ExecClaim memory _execClaim)
+    function termsOk(ActionData memory _actionData, ExecClaim memory _execClaim)
         public
         view
         virtual
-        returns(string memory)  // actionCondition
+        returns(string memory)  // actionTermsOk
     {
         if (_actionData.dueDate >= block.timestamp)
-            return "ActionChainedTimedERC20TransferFromKovan.ok: TimestampDidNotPass";
+            return "ActionChainedTimedERC20TransferFromKovan.termsOk: TimestampDidNotPass";
 
         GelatoCore gelatoCore = GelatoCore(GELATO_CORE);
 
@@ -112,7 +112,7 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
             executor
         );
         if (nextDueDate > (now + executorClaimLifespan))
-            return "ActionChainedTimedERC20TransferFromKovan.ok: executorClaimLifespan";
+            return "ActionChainedTimedERC20TransferFromKovan.termsOk: executorClaimLifespan";
 
         uint256 gelatoGasPrice = gelatoCore.gelatoGasPrice();
 
@@ -121,7 +121,7 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
             if (!isProvided.startsWithOk()) {
                 return string(
                     abi.encodePacked(
-                        "ActionChainedTimedERC20TransferFromKovan.ok:", isProvided
+                        "ActionChainedTimedERC20TransferFromKovan.termsOk:", isProvided
                     )
                 );
             }

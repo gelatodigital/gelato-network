@@ -155,12 +155,12 @@ contract ActionUniswapTrade is GelatoActionsStandard {
 
     // ====== ACTION CONDITIONS CHECK ==========
     // Overriding and extending GelatoActionsStandard's function (optional)
-    function ok(bytes calldata _actionPayload)
+    function termsOk(bytes calldata _actionPayload)
         external
         view
         override
         virtual
-        returns(string memory)  // actionCondition
+        returns(string memory)  // actionTermsOk
     {
         (address _user, address _userProxy, address _sendToken, uint256 _sendAmt, address _receiveToken) = abi.decode(
             _actionPayload[4:164],
@@ -179,7 +179,7 @@ contract ActionUniswapTrade is GelatoActionsStandard {
         internal
         view
         virtual
-        returns (string memory)  // actionCondition
+        returns (string memory)  // actionTermsOk
     {
         // if (!_isUserOwnerOfUserProxy(_user, _userProxy))
         //     return "ActionUniswapTrade: NotOkUserProxyOwner";

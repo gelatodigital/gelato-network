@@ -33,7 +33,7 @@ contract MockActionChainedDummy is GelatoActionsStandard {
 
     // ======= ACTION CONDITIONS CHECK =========
     // Overriding and extending GelatoActionsStandard's function (optional)
-    function ok(bytes calldata _actionPayload)
+    function termsOk(bytes calldata _actionPayload)
         external
         view
         override
@@ -46,15 +46,15 @@ contract MockActionChainedDummy is GelatoActionsStandard {
             (ExecClaim,GelatoCore)
         );
 
-        // Else: Check and Return current contract actionCondition
-        return ok(execClaim, gelatoCore);
+        // Else: Check and Return current contract actionTermsOk
+        return termsOk(execClaim, gelatoCore);
     }
 
-    function ok(ExecClaim memory _execClaim, GelatoCore _gelatoCore)
+    function termsOk(ExecClaim memory _execClaim, GelatoCore _gelatoCore)
         public
         view
         virtual
-        returns(string memory)  // actionCondition
+        returns(string memory)  // actionTermsOk
     {
         uint256 gelatoGasPrice = _gelatoCore.gelatoGasPrice();
 
@@ -63,7 +63,7 @@ contract MockActionChainedDummy is GelatoActionsStandard {
             if (!isProvided.startsWithOk()) {
                 return string(
                     abi.encodePacked(
-                        "MockActionChainedDummy.ok:", isProvided
+                        "MockActionChainedDummy.termsOk:", isProvided
                     )
                 );
             }

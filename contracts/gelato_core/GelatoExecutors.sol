@@ -9,9 +9,6 @@ abstract contract GelatoExecutors is IGelatoExecutors {
     using Address for address payable;  /// for sendValue method
     using SafeMath for uint256;
 
-    // Executor Registration/Lifespan mgmt
-    mapping(address => uint256) public override executorClaimLifespan;
-
     // Executor Accounting
     mapping(address => uint256) public override executorSuccessShare;
     mapping(address => uint256) public override executorFunds;

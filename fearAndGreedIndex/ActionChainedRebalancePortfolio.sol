@@ -33,7 +33,7 @@ contract ActionChainedRebalancePortfolio is ActionRebalancePortfolio {
 
         // Encode FearAndGreedIndex Condition
         bytes memory conditionPayload = abi.encodeWithSelector(
-            bytes4(keccak256("ok(uint256)")),
+            bytes4(keccak256("termsOk(uint256)")),
             newFearAndGreedIndex
         );
 

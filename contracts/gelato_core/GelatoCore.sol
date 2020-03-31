@@ -2,7 +2,7 @@ pragma solidity ^0.6.4;
 pragma experimental ABIEncoderV2;
 
 import { IGelatoCore, ExecClaim } from "./interfaces/IGelatoCore.sol";
-import { GelatoGasAdmin } from "./GelatoGasAdmin.sol";
+import { GelatoSysAdmin } from "./GelatoSysAdmin.sol";
 import { GelatoExecutors } from "./GelatoExecutors.sol";
 import { GelatoProviders } from "./GelatoProviders.sol";
 import { SafeMath } from "../external/SafeMath.sol";
@@ -14,7 +14,7 @@ import { IGelatoProviderModule } from "./interfaces/IGelatoProviderModule.sol";
 /// @title GelatoCore
 /// @notice Exec Claim: minting, checking, execution, and cancellation
 /// @dev Find all NatSpecs inside IGelatoCore
-contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecutors {
+contract GelatoCore is IGelatoCore, GelatoSysAdmin, GelatoProviders, GelatoExecutors {
 
     using SafeMath for uint256;
     using GelatoString for string;
@@ -123,11 +123,11 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
         }
 
         // CHECK Action Conditions
-        try IGelatoAction(_execClaim.action).ok(_execClaim.actionPayload)
-            returns(string memory actionCondition)
+        try IGelatoAction(_execClaim.action).termsOk(_execClaim.actionPayload)
+            returns(string memory actionTermsOk)
         {
-            if (actionCondition.startsWithOk()) return "Ok";
-            return string(abi.encodePacked("ActionConditionsNotOk:", actionCondition));
+            if (actionTermsOk.startsWithOk()) return "Ok";
+            return string(abi.encodePacked("ActionTermsNotOk:", actionTermsOk));
         } catch Error(string memory error) {
             return string(abi.encodePacked("ActionReverted:", error));
         } catch {
@@ -300,7 +300,7 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
                 "GelatoCore._processProviderPayables: providerFunds underflow"
             );
             executorFunds[msg.sender] += executorSuccessFee;
-            gasAdminFunds += gasAdminSuccessFee;
+            gasAdminFunds += sysAdminSuccessFee;
         } else {
             // ExecFailure: Provider REFUNDS estimated costs to executor
             uint256 estExecCost = estGasConsumed.mul(_gelatoGasPrice);

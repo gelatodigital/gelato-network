@@ -35,18 +35,18 @@ contract ActionERC20TransferFrom is GelatoActionsStandard {
 
     // ======= ACTION CONDITIONS CHECK =========
     // Overriding and extending GelatoActionsStandard's function (optional)
-    function ok(bytes calldata _actionPayload)
+    function termsOk(bytes calldata _actionPayload)
         external
         view
         override
         virtual
-        returns(string memory)  // actionCondition
+        returns(string memory)  // actionTermsOk
     {
         (ActionPayload memory _p) = abi.decode(_actionPayload[4:], (ActionPayload));
-        return ok(_p);
+        return termsOk(_p);
     }
 
-    function ok(ActionPayload memory _p) public view virtual returns(string memory) {
+    function termsOk(ActionPayload memory _p) public view virtual returns(string memory) {
         if (!_p.sendToken.isContract())
             return "ActionERC20TransferFrom: NotOkSendTokenAddress";
 
