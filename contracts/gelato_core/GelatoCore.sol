@@ -116,7 +116,7 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
 
         if (_execClaim.expiryDate < now) return "Expired";
 
-        // CHECK for non-self-conditional Actions
+        // CHECK Condition for user proxies
         if (_execClaim.condition != address(0)) {
             try IGelatoCondition(_execClaim.condition).ok(_execClaim.conditionPayload)
                 returns(string memory condition)
@@ -130,7 +130,7 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
             }
         }
 
-        // CHECK Action Conditions
+        // CHECK Action Terms for provider
         try IGelatoAction(_execClaim.action).termsOk(_execClaim.actionPayload)
             returns(string memory actionTermsOk)
         {
