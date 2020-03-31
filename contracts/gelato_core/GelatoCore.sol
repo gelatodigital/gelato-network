@@ -159,7 +159,7 @@ contract GelatoCore is IGelatoCore, GelatoSysAdmin, GelatoProviders, GelatoExecu
         uint256 _gelatoMaxGas = gelatoMaxGas;
 
         // CHECKS
-        require(tx.gasprice >= _gelatoGasPrice, "GelatoCore.exec: tx.gasprice");
+        require(tx.gasprice == _gelatoGasPrice, "GelatoCore.exec: tx.gasprice");
         require(startGas < _gelatoMaxGas, "GelatoCore.exec: gas surplus");
 
         // 2nd Attempt: requires gelatoMaxGas
