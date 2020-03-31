@@ -2,15 +2,15 @@ pragma solidity ^0.6.4;
 pragma experimental ABIEncoderV2;
 
 struct ExecClaim {
-    uint256 id;
-    address provider;
-    address providerModule;
-    address userProxy;
-    address condition;
+    uint256 id;  // set automatically by mintExecClaim
+    address provider;   //  if msg.sender == provider => self-Provider
+    address providerModule;  //  can be AddressZero for self-Providers
+    address userProxy;  // set automatically to msg.sender by mintExecClaim
+    address condition;   // can be AddressZero for self-conditional Actions
     address action;
-    bytes conditionPayload;
+    bytes conditionPayload;  // can be bytes32(0) for self-conditionalActions
     bytes actionPayload;
-    uint256 expiryDate;
+    uint256 expiryDate;  // 0 => defaults to global maximum
 }
 
 interface IGelatoCore {
@@ -41,7 +41,8 @@ interface IGelatoCore {
 
     event LogExecClaimCancelled(uint256 indexed execClaimId);
 
-    function mintExecClaim(ExecClaim calldata _execClaim, address _executor)
+    function mintExecClaim(ExecClaim calldata _execClaim) external;
+    function mintSelfProvidedExecClaim(ExecClaim calldata _execClaim, address _executor)
         external
         payable;
 

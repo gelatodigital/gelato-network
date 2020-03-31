@@ -2,6 +2,7 @@ pragma solidity ^0.6.4;
 pragma experimental ABIEncoderV2;
 
 import { IGelatoProviders } from "./interfaces/IGelatoProviders.sol";
+import { GelatoSysAdmin } from "./GelatoSysAdmin.sol";
 import { Address } from "../external/Address.sol";
 import { SafeMath } from "../external/SafeMath.sol";
 import { IGelatoProviderModule } from "./interfaces/IGelatoProviderModule.sol";
@@ -10,9 +11,9 @@ import { EnumerableWordSet } from "../external/EnumerableWordSet.sol";
 import { ExecClaim } from "./interfaces/IGelatoCore.sol";
 
 /// @title GelatoProviders
-/// @notice APIs for GelatoCore Owner and executorClaimLifespan
+/// @notice APIs for GelatoCore Owner and execClaimLifespan
 /// @dev Find all NatSpecs inside IGelatoCoreAccounting
-abstract contract GelatoProviders is IGelatoProviders {
+abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
 
     using Address for address payable;  /// for sendValue method
     using EnumerableAddressSet for EnumerableAddressSet.AddressSet;
@@ -21,13 +22,16 @@ abstract contract GelatoProviders is IGelatoProviders {
 
     mapping(address => uint256) public override providerFunds;
     mapping(address => address) public override providerExecutor;
-    mapping(address => uint256) public override providerExecutorShareCeil;
-    mapping(address => uint256) public override providerGasAdminShareCeil;
+    mapping(address => uint256) public override executorProvidersCount;
     mapping(address => EnumerableAddressSet.AddressSet) internal _providerModules;
     mapping(address => EnumerableWordSet.WordSet) internal execClaimHashesByProvider;
 
     // IGelatoProviderModule: Gelato Minting/Execution Gate
-    function isProvided(ExecClaim memory _execClaim, uint256 _gelatoGasPrice)
+    function isProvided(
+        ExecClaim memory _execClaim,
+        address _executor,
+        uint256 _gelatoGasPrice
+    )
         public
         view
         override
@@ -38,29 +42,19 @@ abstract contract GelatoProviders is IGelatoProviders {
         IGelatoProviderModule providerModule = IGelatoProviderModule(
             _execClaim.providerModule
         );
-        return providerModule.isProvided(
-            _execClaim,
-            providerExecutor[_execClaim.provider],
-            _gelatoGasPrice
-        );
+        if (_executor == address(0)) _executor = providerExecutor[_execClaim.provider];
+        return providerModule.isProvided(_execClaim, _executor, _gelatoGasPrice);
     }
 
     // Registration
-    function registerProvider(
-        address _executor,
-        address[] calldata _modules,
-        uint256 _executorFeeCeil,
-        uint256 _oracleFeeCeil
-    )
+    function registerProvider(address _executor, address[] calldata _modules)
         external
         payable
         override
     {
         provideFunds(msg.sender);
-        setProviderExecutor(_executor);
+        assignProviderExecutor(msg.sender, _executor);
         batchAddProviderModules(_modules);
-        setProviderExecutorFeeCeil(_executorFeeCeil);
-        setProviderOracleFeeCeil(_oracleFeeCeil);
         emit LogRegisterProvider(msg.sender);
     }
 
@@ -68,12 +62,11 @@ abstract contract GelatoProviders is IGelatoProviders {
         external
         override
     {
-        unprovideFunds(providerFunds[msg.sender]);
-        delete(providerFunds[msg.sender]);
+        uint256 remainingFunds = providerFunds[msg.sender];
+        delete providerFunds[msg.sender];
+        msg.sender.sendValue(remainingFunds);
         delete providerExecutor[msg.sender];
         batchRemoveProviderModules(_modules);
-        delete providerExecutorShareCeil[msg.sender];
-        delete providerGasAdminShareCeil[msg.sender];
         emit LogUnregisterProvider(msg.sender);
     }
 
@@ -86,19 +79,19 @@ abstract contract GelatoProviders is IGelatoProviders {
     }
 
     function unprovideFunds(uint256 _withdrawAmount) public override {
-        require(_withdrawAmount > 0, "GelatoProviders.unprovideFunds: zero _amount");
+        require(_withdrawAmount > 0, "GelatoProviders.unprovideFunds: 0");
         // Checks
-        uint256 previousProviderFunding = providerFunds[msg.sender];
+        uint256 previousProviderFunds = providerFunds[msg.sender];
         require(
-            previousProviderFunding >= _withdrawAmount,
+            previousProviderFunds >= _withdrawAmount,
             "GelatoProviders.unprovideFunds: out of funds"
         );
-        uint256 newProviderFunding = previousProviderFunding - _withdrawAmount;
+        uint256 newProviderFunds = previousProviderFunds - _withdrawAmount;
         // Effects
-        providerFunds[msg.sender] = newProviderFunding;
+        providerFunds[msg.sender] = newProviderFunds;
         // Interaction
         msg.sender.sendValue(_withdrawAmount);
-        emit LogUnprovideFunds(msg.sender, previousProviderFunding, newProviderFunding);
+        emit LogUnprovideFunds(msg.sender, previousProviderFunds, newProviderFunds);
     }
 
     function isProviderLiquid(address _provider, uint256 _gas, uint256 _gasPrice)
@@ -110,27 +103,28 @@ abstract contract GelatoProviders is IGelatoProviders {
         return _gas.mul(_gasPrice) <= providerFunds[_provider] ? true : false;
     }
 
-    // Provider Executor
-    function setProviderExecutor(address _executor) public override {
+    // Provider Executor: can be set by Provider OR providerExecutor.
+    function assignProviderExecutor(address _provider, address _newExecutor) public override {
         require(
-            providerExecutor[msg.sender] != _executor,
-            "GelatoProviders.setProviderExecutor: _executor already set"
+            _provider != address(0),
+            "GelatoProviders.assignProviderExecutor: _provider AddressZero"
         );
-        emit LogSetProviderExecutor(providerExecutor[msg.sender], _executor);
-        providerExecutor[msg.sender] = _executor;
-    }
-
-    function setProviderExecutorFeeCeil(uint256 _feeCeil) public override {
-        require(_feeCeil <= 100, "GelatoProviders.setProviderExecutorFeeCeil: _feeCeil");
-        emit LogSetProviderExecutorFeeCeil(providerExecutorShareCeil[msg.sender], _feeCeil);
-        providerExecutorShareCeil[msg.sender] = _feeCeil;
-    }
-
-    // Provider Oracle Fee Ceil
-    function setProviderOracleFeeCeil(uint256 _feeCeil) public override {
-        require(_feeCeil <= 100, "GelatoProviders.setProviderOracleFeeCeil: _feeCeil");
-        emit LogSetProviderOracleFeeCeil(providerGasAdminShareCeil[msg.sender], _feeCeil);
-        providerGasAdminShareCeil[msg.sender] = _feeCeil;
+        address currentExecutor = providerExecutor[_provider];
+        require(
+            currentExecutor != _newExecutor,
+            "GelatoProviders.assignProviderExecutor: _newExecutor already set"
+        );
+        emit LogSetProviderExecutor(_provider, currentExecutor, _newExecutor);
+        // Allow providerExecutor to reassign to new Executor when they unstake
+        if (msg.sender == currentExecutor) providerExecutor[_provider] = _newExecutor;
+        else providerExecutor[msg.sender] = _newExecutor;  // Provider reassigns
+        if (currentExecutor != address(0)) {
+            executorProvidersCount[currentExecutor].sub(
+                1,
+                "GelatProviders.assignProviderExecutor: executorProvidersCount undeflow"
+            );
+        }
+        executorProvidersCount[_newExecutor]++;
     }
 
     // Provider Module
@@ -152,6 +146,11 @@ abstract contract GelatoProviders is IGelatoProviders {
 
     function batchRemoveProviderModules(address[] memory _modules) public override {
         for (uint i = 0; i < _modules.length; i++) removeProviderModule(_modules[i]);
+    }
+
+    // Providers' Executor Assignment
+    function isExecutorAssigned(address _executor) public view override returns(bool) {
+        return executorProvidersCount[_executor] == 0;
     }
 
     // Providers' Module Getters

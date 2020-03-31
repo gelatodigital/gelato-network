@@ -3,7 +3,7 @@ import { defaultNetwork } from "../../../../../buidler.config";
 
 export default task(
   "gc-setproviderexecutor",
-  `Sends tx to GelatoCore.setProviderExecutor(<gelatoexecutor>) on [--network] (default: ${defaultNetwork})`
+  `Sends tx to GelatoCore.assignProviderExecutor(<gelatoexecutor>) on [--network] (default: ${defaultNetwork})`
 )
   .addOptionalPositionalParam("gelatoexecutor")
   .addFlag("events", "Logs events logs to stdout")
@@ -20,8 +20,8 @@ export default task(
         signer: gelatoProvider,
         write: true
       });
-      const tx = await gelatoCore.setProviderExecutor(gelatoexecutor);
-      if (log) console.log(`\n txHash setProviderExecutor: ${tx.hash}\n`);
+      const tx = await gelatoCore.assignProviderExecutor(gelatoexecutor);
+      if (log) console.log(`\n txHash assignProviderExecutor: ${tx.hash}\n`);
       const { blockHash: blockhash } = await tx.wait();
 
       if (events) {

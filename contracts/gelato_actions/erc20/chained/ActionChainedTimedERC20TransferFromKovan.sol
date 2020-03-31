@@ -53,7 +53,7 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
         );
 
         // Mint: ExecClaim Chain continues with Updated Payloads
-        try IGelatoCore(GELATO_CORE).mintExecClaim(_execClaim, address(0)) {
+        try IGelatoCore(GELATO_CORE).mintExecClaim(_execClaim) {
         } catch Error(string memory error) {
             revert(
                 string(abi.encodePacked(
@@ -104,20 +104,21 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
 
         GelatoCore gelatoCore = GelatoCore(GELATO_CORE);
 
-        address executor = gelatoCore.providerExecutor(_execClaim.provider);
-
         // Check ExecClaimExpiryDate maximum
         uint256 nextDueDate = _actionData.dueDate.add(_actionData.timeOffset);
-        uint256 executorClaimLifespan = gelatoCore.executorClaimLifespan(
-            executor
-        );
-        if (nextDueDate > (now + executorClaimLifespan))
-            return "ActionChainedTimedERC20TransferFromKovan.termsOk: executorClaimLifespan";
+        uint256 execClaimLifespan = gelatoCore.execClaimLifespan();
+
+        if (nextDueDate > (now + execClaimLifespan))
+            return "ActionChainedTimedERC20TransferFromKovan.termsOk: execClaimLifespan";
 
         uint256 gelatoGasPrice = gelatoCore.gelatoGasPrice();
 
         if (_execClaim.userProxy != _execClaim.provider) {
-            string memory isProvided = gelatoCore.isProvided(_execClaim, gelatoGasPrice);
+            string memory isProvided = gelatoCore.isProvided(
+                _execClaim,
+                address(0),  // executor defaults to providerExecutor
+                gelatoGasPrice
+            );
             if (!isProvided.startsWithOk()) {
                 return string(
                     abi.encodePacked(

@@ -36,7 +36,7 @@ contract ActionMultiMintForConditionTimestampPassed is GelatoActionsStandard {
                 IGelatoCondition.ok.selector,
                 timestamp
             );
-            _p.gelatoCore.mintExecClaim(_p.execClaim, address(0));
+            _p.gelatoCore.mintExecClaim(_p.execClaim);
         }
     }
 }

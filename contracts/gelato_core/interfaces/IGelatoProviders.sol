@@ -11,30 +11,21 @@ interface IGelatoProviders {
 
     // Provider Executor
     event LogSetProviderExecutor(
+        address indexed provider,
         address indexed oldExecutor,
         address indexed newExecutor
-    );
-    event LogSetProviderExecutorFeeCeil(
-        uint256 indexed oldFeeCeil,
-        uint256 indexed newFeeCeil
-    );
-
-    // Provider Oracle Fee Ceil
-    event LogSetProviderOracleFeeCeil(
-        uint256 indexed oldFeeCeil,
-        uint256 indexed newFeeCeil
     );
 
     // Provider Funding
     event LogProvideFunds(
         address indexed provider,
-        uint256 previousProviderFunding,
-        uint256 newProviderFunding
+        uint256 previousProviderFunds,
+        uint256 newProviderFunds
     );
     event LogUnprovideFunds(
         address indexed provider,
-        uint256 previousProviderFunding,
-        uint256 newProviderFunding
+        uint256 previousProviderFunds,
+        uint256 newProviderFunds
     );
 
     // Provider Module
@@ -42,18 +33,17 @@ interface IGelatoProviders {
     event LogRemoveProviderModule(address module);
 
     // IGelatoProviderModule Standard wrapper
-    function isProvided(ExecClaim calldata _execClaim, uint256 _gelatoGasPrice)
+    function isProvided(
+        ExecClaim calldata _execClaim,
+        address _executor,
+        uint256 _gelatoGasPrice
+    )
         external
         view
         returns (string memory);
 
     // Registration
-    function registerProvider(
-        address _executor,
-        address[] calldata _modules,
-        uint256 _executorFeeCeil,
-        uint256 _oracleFeeCeil
-    )
+    function registerProvider(address _executor, address[] calldata _modules)
         external
         payable;
     function unregisterProvider(address[] calldata _modules) external;
@@ -61,17 +51,9 @@ interface IGelatoProviders {
     // Provider Funding
     function provideFunds(address _provider) external payable;
     function unprovideFunds(uint256 _withdrawAmount) external;
-    function isProviderLiquid(address _provider, uint256 _gas, uint256 _gasPrice)
-        external
-        view
-        returns(bool);
 
     // Provider Executor
-    function setProviderExecutor(address _executor) external;
-    function setProviderExecutorFeeCeil(uint256 _feeCeil) external;
-
-    // Provider Oracle Fee ceil
-    function setProviderOracleFeeCeil(uint256 _feeCeil) external;
+    function assignProviderExecutor(address _provider, address _executor) external;
 
     // Provider Module
     function addProviderModule(address _module) external;
@@ -81,6 +63,10 @@ interface IGelatoProviders {
 
     // Provider Funding
     function providerFunds(address _provider) external view returns (uint256);
+    function isProviderLiquid(address _provider, uint256 _gas, uint256 _gasPrice)
+        external
+        view
+        returns(bool);
 
     // Provider Executor
     function providerExecutor(address _provider)
@@ -88,16 +74,9 @@ interface IGelatoProviders {
         view
         returns (address);
 
-    function providerExecutorShareCeil(address _provider)
-        external
-        view
-        returns (uint256);
-
-    // Provider Oracle Fee Ceil
-    function providerGasAdminShareCeil(address _provider)
-        external
-        view
-        returns (uint256);
+    // Number of Providers Per Executor
+    function executorProvidersCount(address _executor) external view returns(uint256);
+    function isExecutorAssigned(address _executor) external view returns(bool);
 
     // Providers' Module Getters
     function isProviderModule(address _provider, address _module)
