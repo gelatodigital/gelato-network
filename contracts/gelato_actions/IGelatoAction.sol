@@ -23,11 +23,7 @@ interface IGelatoAction {
 
     function action(bytes calldata _actionPayload) external payable;
 
-    /**
-     * @notice Returns whether the action-specific conditions are fulfilled
-     * @dev if actions have specific conditions they should override and extend this fn
-     * @param _actionPayload: the actionPayload (with actionSelector)
-     * @return actionCondition
-     */
-    function ok(bytes calldata _actionPayload) external view returns (string memory);
+    function termsOk(bytes calldata _actionPayload) external view returns (string memory);
+
+    function actionStandardSelector() external pure returns(bytes4);
 }

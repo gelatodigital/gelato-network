@@ -33,7 +33,7 @@ contract MockActionChainedDummy is GelatoActionsStandard {
 
     // ======= ACTION CONDITIONS CHECK =========
     // Overriding and extending GelatoActionsStandard's function (optional)
-    function ok(bytes calldata _actionPayload)
+    function termsOk(bytes calldata _actionPayload)
         external
         view
         override
@@ -46,35 +46,35 @@ contract MockActionChainedDummy is GelatoActionsStandard {
             (ExecClaim,GelatoCore)
         );
 
-        // Else: Check and Return current contract actionCondition
-        return ok(execClaim, gelatoCore);
+        // Else: Check and Return current contract actionTermsOk
+        return termsOk(execClaim, gelatoCore);
     }
 
-    function ok(ExecClaim memory _execClaim, GelatoCore _gelatoCore)
+    function termsOk(ExecClaim memory _execClaim, GelatoCore _gelatoCore)
         public
         view
         virtual
-        returns(string memory)  // actionCondition
+        returns(string memory)  // actionTermsOk
     {
         address executor = _gelatoCore.providerExecutor(_execClaim.provider);
 
         // Check fee factors
-        uint256 executorSuccessFeeFactor = _gelatoCore.executorSuccessFeeFactor(executor);
-        if (_execClaim.executorSuccessFeeFactor != executorSuccessFeeFactor)
-            return "MockActionChainedDummy.ok: executorSuccessFeeFactor";
+        uint256 executorSuccessShare = _gelatoCore.executorSuccessShare(executor);
+        if (_execClaim.executorSuccessShare != executorSuccessShare)
+            return "MockActionChainedDummy.termsOk: executorSuccessShare";
 
-        uint256 oracleSuccessFeeFactor = _gelatoCore.oracleSuccessFeeFactor();
-        if (_execClaim.oracleSuccessFeeFactor != oracleSuccessFeeFactor)
-            return "MockActionChainedDummy.ok: oracleSuccessFeeFactor";
+        uint256 gasAdminSuccessShare = _gelatoCore.gasAdminSuccessShare();
+        if (_execClaim.gasAdminSuccessShare != gasAdminSuccessShare)
+            return "MockActionChainedDummy.termsOk: gasAdminSuccessShare";
 
         uint256 gelatoGasPrice = _gelatoCore.gelatoGasPrice();
 
-        if (_execClaim.user != _execClaim.provider) {
+        if (_execClaim.userProxy != _execClaim.provider) {
             string memory isProvided = _gelatoCore.isProvided(_execClaim, gelatoGasPrice);
             if (!isProvided.startsWithOk()) {
                 return string(
                     abi.encodePacked(
-                        "MockActionChainedDummy.ok:", isProvided
+                        "MockActionChainedDummy.termsOk:", isProvided
                     )
                 );
             }

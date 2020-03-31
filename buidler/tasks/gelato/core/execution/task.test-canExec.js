@@ -33,8 +33,8 @@ export default task("test-canexec")
         conditionPayload: constants.HashZero,
         actionPayload: constants.HashZero,
         expiryDate: "0x5ecc1408",
-        executorSuccessFeeFactor: 5,
-        oracleSuccessFeeFactor: 2
+        executorSuccessShare: 5,
+        gasAdminSuccessShare: 2
       };
 
       const { execClaimHash } = await run("event-getparsedlog", {

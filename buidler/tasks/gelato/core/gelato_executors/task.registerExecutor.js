@@ -5,7 +5,7 @@ const SIXY_DAYS = 5184000;
 
 export default task(
   "gc-registerexecutor",
-  `Sends tx to GelatoCore.registerExecutor([<_executorClaimLifespan>, <executorSuccessFeeFactor>]) on [--network] (default: ${defaultNetwork})`
+  `Sends tx to GelatoCore.registerExecutor([<_executorClaimLifespan>, <executorSuccessShare>]) on [--network] (default: ${defaultNetwork})`
 )
   .addOptionalPositionalParam(
     "executorclaimlifespan",

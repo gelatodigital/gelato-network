@@ -63,12 +63,12 @@ contract ActionBzxPtokenMintWithToken is GelatoActionsStandard {
 
     // ======= ACTION CONDITIONS CHECK =========
     // Overriding and extending GelatoActionsStandard's function (optional)
-    function ok(bytes calldata _actionPayload)
+    function termsOk(bytes calldata _actionPayload)
         external
         view
         override
         virtual
-        returns(string memory)  // actionCondition
+        returns(string memory)  // actionTermsOk
     {
         (address _user,
          address _userProxy,
@@ -91,7 +91,7 @@ contract ActionBzxPtokenMintWithToken is GelatoActionsStandard {
         internal
         view
         virtual
-        returns(string memory)  // actionCondition
+        returns(string memory)  // actionTermsOk
     {
         if (!_sendToken.isContract())
             return "ActionBzxPtokenMintWithToken: NotOkSendTokenAddress";

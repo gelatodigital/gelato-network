@@ -11,8 +11,8 @@ export default task("gc-debug-newcore")
     try {
       if (network.name !== "buidlerevm") throw new Error("\n buidlerevmonly\n");
 
-      const testAccountIndex = 0;
-      const [{ _address: testAccount }] = await ethers.signers();
+      const testSignerIndex = 0;
+      const [{ _address: testSigner }] = await ethers.signers();
 
       // === Deployments ===
       // GelatoCore
@@ -59,7 +59,7 @@ export default task("gc-debug-newcore")
         gelatocoreaddress: gelatoCore.address,
         executorclaimlifespan: 5184000,
         executorsuccessfeefactor: 5,
-        executorindex: testAccountIndex,
+        executorindex: testSignerIndex,
         events,
         log
       });
@@ -69,18 +69,18 @@ export default task("gc-debug-newcore")
         gelatocoreaddress: gelatoCore.address,
         ethamount: "0.2",
         modules: [providerModuleGelatoUserProxy.address],
-        executorfeeceil: 5,
-        oraclefeeceil: 2,
-        gelatoexecutor: testAccount,
-        providerindex: testAccountIndex,
+        executorshareceil: 5,
+        gasadminshareceil: 2,
+        gelatoexecutor: testSigner,
+        providerindex: testSignerIndex,
         events,
         log
       });
 
       // === GelatoUserProxy setup ===
       const gelatoUserProxyAddress = await run("gupf-creategelatouserproxy", {
-        funding: "0",
         factoryaddress: gelatoUserProxyFactory.address,
+        funding: "0",
         events,
         log
       });
@@ -91,7 +91,7 @@ export default task("gc-debug-newcore")
 
       const execClaim = {
         id: constants.HashZero,
-        provider: testAccount,
+        provider: testSigner,
         providerModule: providerModuleGelatoUserProxy.address,
         user: constants.AddressZero,
         condition: condition ? condition.address : constants.AddressZero,
@@ -99,8 +99,8 @@ export default task("gc-debug-newcore")
         conditionPayload: conditionPayload,
         actionPayload: actionPayload,
         expiryDate: constants.HashZero,
-        executorSuccessFeeFactor: 5,
-        oracleSuccessFeeFactor: 2
+        executorSuccessShare: 5,
+        gasAdminSuccessShare: 2
       };
 
       const gelatoUserProxy = await run("instantiateContract", {
@@ -111,7 +111,7 @@ export default task("gc-debug-newcore")
 
       let mintTx;
       try {
-        mintTx = await gelatoUserProxy.mintExecClaim(execClaim, testAccount);
+        mintTx = await gelatoUserProxy.mintExecClaim(execClaim, testSigner);
       } catch (error) {
         console.error(`\n gc-debug-newcore: mintExecClaim\n`, error);
         throw new Error(`\n gelatoUserProxy.mintExecClaim: PRE tx error \n`);
@@ -140,7 +140,7 @@ export default task("gc-debug-newcore")
 
       // === Execution ===
       execClaim.id = utils.bigNumberify("1");
-      execClaim.user = gelatoUserProxy.address;
+      execClaim.userProxy = gelatoUserProxy.address;
       const iFace = await run("ethers-interface-new", {
         contractname: "GelatoCore"
       });

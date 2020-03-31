@@ -13,7 +13,7 @@ abstract contract GelatoExecutors is IGelatoExecutors {
     mapping(address => uint256) public override executorClaimLifespan;
 
     // Executor Accounting
-    mapping(address => uint256) public override executorSuccessFeeFactor;
+    mapping(address => uint256) public override executorSuccessShare;
     mapping(address => uint256) public override executorFunds;
 
     modifier minMaxExecutorClaimLifespan(uint256 _executorClaimLifespan) {
@@ -26,27 +26,24 @@ abstract contract GelatoExecutors is IGelatoExecutors {
     }
 
     // Executor De/Registrations
-    function registerExecutor(
-        uint256 _executorClaimLifespan,
-        uint256 _executorSuccessFeeFactor
-    )
+    function registerExecutor(uint256 _executorClaimLifespan, uint256 _executorSuccessShare)
         external
         override
         minMaxExecutorClaimLifespan(_executorClaimLifespan)
     {
         executorClaimLifespan[msg.sender] = _executorClaimLifespan;
-        executorSuccessFeeFactor[msg.sender] = _executorSuccessFeeFactor;
+        executorSuccessShare[msg.sender] = _executorSuccessShare;
         emit LogRegisterExecutor(
             msg.sender,
             _executorClaimLifespan,
-            _executorSuccessFeeFactor
+            _executorSuccessShare
         );
     }
 
     function deregisterExecutor() external override {
         _requireRegisteredExecutor(msg.sender);
         delete executorClaimLifespan[msg.sender];
-        delete executorSuccessFeeFactor[msg.sender];
+        delete executorSuccessShare[msg.sender];
         emit LogDeregisterExecutor(msg.sender);
     }
 
@@ -60,14 +57,28 @@ abstract contract GelatoExecutors is IGelatoExecutors {
     }
 
     // Executor Accounting
-    function setExecutorFeeFactor(uint256 _feeFactor) external override {
-        require(_feeFactor < 100, "GelatoExecutors.setExecutorFeeFactor: over 100");
-        emit LogSetExecutorFeeFactor(
+    function setExecutorSuccessShare(uint256 _percentage) external override {
+        require(_percentage < 100, "GelatoExecutors.setExecutorSuccessShare: over 100");
+        emit LogSetExecutorSuccessShare(
             msg.sender,
-            executorSuccessFeeFactor[msg.sender],
-            _feeFactor
+            executorSuccessShare[msg.sender],
+            _percentage
         );
-        executorSuccessFeeFactor[msg.sender] = _feeFactor;
+        executorSuccessShare[msg.sender] = _percentage;
+    }
+
+    function executorSuccessFee(address _executor, uint256 _gas, uint256 _gasPrice)
+        public
+        view
+        override
+        returns(uint256)
+    {
+        uint256 estExecCost = _gas.mul(_gasPrice);
+        return SafeMath.div(
+            estExecCost.mul(executorSuccessShare[_executor]),
+            100,
+            "GelatoExecutors.executorSuccessFee: div error"
+        );
     }
 
     function withdrawExecutorBalance(uint256 _withdrawAmount) external override {
@@ -87,21 +98,6 @@ abstract contract GelatoExecutors is IGelatoExecutors {
         msg.sender.sendValue(_withdrawAmount);
         emit LogWithdrawExecutorBalance(msg.sender, _withdrawAmount);
     }
-
-    function executorSuccessFee(address _executor, uint256 _gas, uint256 _gasPrice)
-        external
-        view
-        override
-        returns(uint256)
-    {
-        uint256 estExecCost = _gas.mul(_gasPrice);
-        return SafeMath.div(
-            estExecCost.mul(executorSuccessFeeFactor[_executor]),
-            100,
-            "GelatoExecutors.executorSuccessFee: div error"
-        );
-    }
-
 
     // Check functions (not modifiers due to stack too deep)
     function _requireRegisteredExecutor(address _executor) internal view {

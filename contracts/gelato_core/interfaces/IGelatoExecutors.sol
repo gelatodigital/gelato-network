@@ -4,13 +4,13 @@ interface IGelatoExecutors {
     event LogRegisterExecutor(
         address indexed executor,
         uint256 executorClaimLifespan,
-        uint256 executorSuccessFeeFactor
+        uint256 executorSuccessShare
     );
     event LogDeregisterExecutor(address indexed executor);
 
     event LogSetExecutorClaimLifespan(uint256 oldLifespan, uint256 newLifespan);
 
-    event LogSetExecutorFeeFactor(
+    event LogSetExecutorSuccessShare(
         address indexed executor,
         uint256 oldFactor,
         uint256 newFactor
@@ -23,7 +23,7 @@ interface IGelatoExecutors {
     // Executor Registration
     function registerExecutor(
         uint256 _executorClaimLifespan,
-        uint256 _executorSuccessFeeFactor
+        uint256 _executorSuccessShare
     ) external;
     function deregisterExecutor() external;
 
@@ -36,9 +36,9 @@ interface IGelatoExecutors {
         returns (uint256);
 
     // Executor Accounting
-    function setExecutorFeeFactor(uint256 _feeFactor) external;
+    function setExecutorSuccessShare(uint256 _percentage) external;
     function withdrawExecutorBalance(uint256 _withdrawAmount) external;
-    function executorSuccessFeeFactor(address _executor) external view returns (uint256);
+    function executorSuccessShare(address _executor) external view returns (uint256);
     function executorSuccessFee(address _executor, uint256 _gas, uint256 _gasPrice)
         external
         view

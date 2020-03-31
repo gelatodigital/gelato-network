@@ -1,9 +1,10 @@
 pragma solidity ^0.6.4;
 pragma experimental ABIEncoderV2;
 
-import { IGelatoCondition, ConditionValues } from "../../IGelatoCondition.sol";
+import { GelatoConditionsStandard } from "../../GelatoConditionsStandard.sol";
+import { ConditionValues } from "../../IGelatoCondition.sol";
 
-contract ConditionTimestampPassed is IGelatoCondition {
+contract ConditionTimestampPassed is GelatoConditionsStandard {
 
     // STANDARD interface
     function ok(bytes calldata _conditionPayload)

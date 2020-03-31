@@ -1,9 +1,10 @@
 pragma solidity ^0.6.4;
 pragma experimental ABIEncoderV2;
 
-import { IGelatoCondition, ConditionValues } from "../../gelato_conditions/IGelatoCondition.sol";
+import { GelatoConditionsStandard } from "../../gelato_conditions/GelatoConditionsStandard.sol";
+import { ConditionValues } from "../../gelato_conditions/IGelatoCondition.sol";
 
-contract MockConditionDummy is IGelatoCondition {
+contract MockConditionDummy is GelatoConditionsStandard {
     // STANDARD interface
     function ok(bytes calldata) external view virtual override returns(string memory) {
        return "Ok";

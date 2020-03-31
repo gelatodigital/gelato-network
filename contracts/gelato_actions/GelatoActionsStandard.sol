@@ -5,12 +5,17 @@ import "./IGelatoAction.sol";
 /// @title GelatoActionsStandard
 /// @dev find all the NatSpecs inside IGelatoAction
 abstract contract GelatoActionsStandard is IGelatoAction {
-    function ok(bytes calldata)  // _actionPayload
+
+    function actionStandardSelector() external pure override returns(bytes4) {
+        return IGelatoAction.action.selector;
+    }
+
+    function termsOk(bytes calldata)  // _actionPayload
         external
         view
         override
         virtual
-        returns(string memory)  // actionCondition
+        returns(string memory)  // actionTermsOk
     {
         this;
         // Standard return value for actionConditions fulfilled and no erros:

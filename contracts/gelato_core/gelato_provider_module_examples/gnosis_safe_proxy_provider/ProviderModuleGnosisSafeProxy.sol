@@ -11,8 +11,6 @@ import {
     IGnosisSafeProxy
 } from "../../../user_proxies/gnosis_safe_proxy/interfaces/IGnosisSafeProxy.sol";
 import { ExecClaim } from "../../interfaces/IGelatoCore.sol";
-import { Address } from "../../../external/Address.sol";
-
 
 contract ProviderModuleGnosisSafeProxy is
     IGelatoProviderModule,
@@ -49,9 +47,7 @@ contract ProviderModuleGnosisSafeProxy is
             return "ProviderModuleGnosisSafeProxy.isProvided:gelatoGasPriceTooHigh";
         if (!isConditionProvided[_execClaim.condition])
             return "ProviderModuleGnosisSafeProxy.isProvided:ConditionNotProvided";
-        address userProxy = _execClaim.user;
-        if (!Address.isContract(userProxy))
-            return "ProviderModuleGnosisSafeProxy.isProvided:InvalidUserProxy";
+        address userProxy = _execClaim.userProxy;
         bytes32 codehash;
         assembly { codehash := extcodehash(userProxy) }
         if (!isProxyExtcodehashProvided[codehash])

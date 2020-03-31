@@ -16,14 +16,14 @@ export default task(
     types.int
   )
   .addOptionalParam(
-    "executorfeeceil",
-    "Upper Limit for executorSuccessFeeFactor",
+    "executorshareceil",
+    "Upper Limit for executorSuccessShare",
     5,
     types.int
   )
   .addOptionalParam(
-    "oraclefeeceil",
-    "Upper Limit for oracleSuccessFeeFactor",
+    "gasadminshareceil",
+    "Upper Limit for gasAdminSuccessShare",
     2,
     types.int
   )
@@ -54,8 +54,8 @@ export default task(
       const tx = await gelatoCore.registerProvider(
         taskArgs.gelatoexecutor,
         taskArgs.modules,
-        taskArgs.executorfeeceil,
-        taskArgs.oraclefeeceil,
+        taskArgs.executorshareceil,
+        taskArgs.gasadminshareceil,
         {
           value: utils.parseEther(taskArgs.ethamount)
         }

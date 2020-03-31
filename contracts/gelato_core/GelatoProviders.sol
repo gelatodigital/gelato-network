@@ -21,8 +21,8 @@ abstract contract GelatoProviders is IGelatoProviders {
 
     mapping(address => uint256) public override providerFunds;
     mapping(address => address) public override providerExecutor;
-    mapping(address => uint256) public override providerExecutorFeeCeil;
-    mapping(address => uint256) public override providerOracleFeeCeil;
+    mapping(address => uint256) public override providerExecutorShareCeil;
+    mapping(address => uint256) public override providerGasAdminShareCeil;
     mapping(address => EnumerableAddressSet.AddressSet) internal _providerModules;
     mapping(address => EnumerableWordSet.WordSet) internal execClaimHashesByProvider;
 
@@ -72,8 +72,8 @@ abstract contract GelatoProviders is IGelatoProviders {
         delete(providerFunds[msg.sender]);
         delete providerExecutor[msg.sender];
         batchRemoveProviderModules(_modules);
-        delete providerExecutorFeeCeil[msg.sender];
-        delete providerOracleFeeCeil[msg.sender];
+        delete providerExecutorShareCeil[msg.sender];
+        delete providerGasAdminShareCeil[msg.sender];
         emit LogUnregisterProvider(msg.sender);
     }
 
@@ -101,6 +101,15 @@ abstract contract GelatoProviders is IGelatoProviders {
         emit LogUnprovideFunds(msg.sender, previousProviderFunding, newProviderFunding);
     }
 
+    function isProviderLiquid(address _provider, uint256 _gas, uint256 _gasPrice)
+        public
+        view
+        override
+        returns(bool)
+    {
+        return _gas.mul(_gasPrice) <= providerFunds[_provider] ? true : false;
+    }
+
     // Provider Executor
     function setProviderExecutor(address _executor) public override {
         require(
@@ -113,15 +122,15 @@ abstract contract GelatoProviders is IGelatoProviders {
 
     function setProviderExecutorFeeCeil(uint256 _feeCeil) public override {
         require(_feeCeil <= 100, "GelatoProviders.setProviderExecutorFeeCeil: _feeCeil");
-        emit LogSetProviderExecutorFeeCeil(providerExecutorFeeCeil[msg.sender], _feeCeil);
-        providerExecutorFeeCeil[msg.sender] = _feeCeil;
+        emit LogSetProviderExecutorFeeCeil(providerExecutorShareCeil[msg.sender], _feeCeil);
+        providerExecutorShareCeil[msg.sender] = _feeCeil;
     }
 
     // Provider Oracle Fee Ceil
     function setProviderOracleFeeCeil(uint256 _feeCeil) public override {
         require(_feeCeil <= 100, "GelatoProviders.setProviderOracleFeeCeil: _feeCeil");
-        emit LogSetProviderOracleFeeCeil(providerOracleFeeCeil[msg.sender], _feeCeil);
-        providerOracleFeeCeil[msg.sender] = _feeCeil;
+        emit LogSetProviderOracleFeeCeil(providerGasAdminShareCeil[msg.sender], _feeCeil);
+        providerGasAdminShareCeil[msg.sender] = _feeCeil;
     }
 
     // Provider Module

@@ -68,7 +68,7 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
 
     // ======= ACTION CONDITIONS CHECK =========
     // Overriding and extending GelatoActionsStandard's function (optional)
-    function ok(bytes calldata _actionPayload)
+    function termsOk(bytes calldata _actionPayload)
         external
         view
         override
@@ -84,36 +84,36 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
         );
 
         // Check: ActionERC20TransferFrom._actionConditionsCheck
-        string memory transferStatus = super.ok(superActionPayload);
+        string memory transferStatus = super.termsOk(superActionPayload);
 
-        // If: Base actionCondition: NOT OK => Return
+        // If: Base actionTermsOk: NOT OK => Return
         if (transferStatus.startsWithOk()) return transferStatus;
 
-        // Else: Check and Return current contract actionCondition
-        return ok(actionData, execClaim);
+        // Else: Check and Return current contract actionTermsOk
+        return termsOk(actionData, execClaim);
     }
 
-    function ok(ActionData memory _actionData, ExecClaim memory _execClaim)
+    function termsOk(ActionData memory _actionData, ExecClaim memory _execClaim)
         public
         view
         virtual
-        returns(string memory)  // actionCondition
+        returns(string memory)  // actionTermsOk
     {
         if (_actionData.dueDate >= block.timestamp)
-            return "ActionChainedTimedERC20TransferFromKovan.ok: TimestampDidNotPass";
+            return "ActionChainedTimedERC20TransferFromKovan.termsOk: TimestampDidNotPass";
 
         GelatoCore gelatoCore = GelatoCore(GELATO_CORE);
 
         address executor = gelatoCore.providerExecutor(_execClaim.provider);
 
         // Check fee factors
-        uint256 executorSuccessFeeFactor = gelatoCore.executorSuccessFeeFactor(executor);
-        if (_execClaim.executorSuccessFeeFactor != executorSuccessFeeFactor)
-            return "ActionChainedTimedERC20TransferFromKovan.ok: executorSuccessFeeFactor";
+        uint256 executorSuccessShare = gelatoCore.executorSuccessShare(executor);
+        if (_execClaim.executorSuccessShare != executorSuccessShare)
+            return "ActionChainedTimedERC20TransferFromKovan.termsOk: executorSuccessShare";
 
-        uint256 oracleSuccessFeeFactor = gelatoCore.oracleSuccessFeeFactor();
-        if (_execClaim.oracleSuccessFeeFactor != oracleSuccessFeeFactor)
-            return "ActionChainedTimedERC20TransferFromKovan.ok: oracleSuccessFeeFactor";
+        uint256 gasAdminSuccessShare = gelatoCore.gasAdminSuccessShare();
+        if (_execClaim.gasAdminSuccessShare != gasAdminSuccessShare)
+            return "ActionChainedTimedERC20TransferFromKovan.termsOk: gasAdminSuccessShare";
 
         // Check ExecClaimExpiryDate maximum
         uint256 nextDueDate = _actionData.dueDate.add(_actionData.timeOffset);
@@ -121,16 +121,16 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
             executor
         );
         if (nextDueDate > (now + executorClaimLifespan))
-            return "ActionChainedTimedERC20TransferFromKovan.ok: executorClaimLifespan";
+            return "ActionChainedTimedERC20TransferFromKovan.termsOk: executorClaimLifespan";
 
         uint256 gelatoGasPrice = gelatoCore.gelatoGasPrice();
 
-        if (_execClaim.user != _execClaim.provider) {
+        if (_execClaim.userProxy != _execClaim.provider) {
             string memory isProvided = gelatoCore.isProvided(_execClaim, gelatoGasPrice);
             if (!isProvided.startsWithOk()) {
                 return string(
                     abi.encodePacked(
-                        "ActionChainedTimedERC20TransferFromKovan.ok:", isProvided
+                        "ActionChainedTimedERC20TransferFromKovan.termsOk:", isProvided
                     )
                 );
             }

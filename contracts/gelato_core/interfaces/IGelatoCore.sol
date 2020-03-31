@@ -5,14 +5,14 @@ struct ExecClaim {
     uint256 id;
     address provider;
     address providerModule;
-    address user;
+    address userProxy;
     address condition;
     address action;
     bytes conditionPayload;
     bytes actionPayload;
     uint256 expiryDate;
-    uint256 executorSuccessFeeFactor;
-    uint256 oracleSuccessFeeFactor;
+    uint256 executorSuccessShare;
+    uint256 gasAdminSuccessShare;
 }
 
 interface IGelatoCore {
@@ -65,11 +65,6 @@ interface IGelatoCore {
     function currentExecClaimId() external view returns(uint256 currentId);
 
     function isSecondExecAttempt(uint256 _execClaimId)
-        external
-        view
-        returns(bool);
-
-    function isProviderLiquid(address _provider, uint256 _gas, uint256 _gasPrice)
         external
         view
         returns(bool);

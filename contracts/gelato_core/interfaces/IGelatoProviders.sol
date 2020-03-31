@@ -61,6 +61,10 @@ interface IGelatoProviders {
     // Provider Funding
     function provideFunds(address _provider) external payable;
     function unprovideFunds(uint256 _withdrawAmount) external;
+    function isProviderLiquid(address _provider, uint256 _gas, uint256 _gasPrice)
+        external
+        view
+        returns(bool);
 
     // Provider Executor
     function setProviderExecutor(address _executor) external;
@@ -84,13 +88,13 @@ interface IGelatoProviders {
         view
         returns (address);
 
-    function providerExecutorFeeCeil(address _provider)
+    function providerExecutorShareCeil(address _provider)
         external
         view
         returns (uint256);
 
     // Provider Oracle Fee Ceil
-    function providerOracleFeeCeil(address _provider)
+    function providerGasAdminShareCeil(address _provider)
         external
         view
         returns (uint256);
