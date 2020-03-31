@@ -42,7 +42,6 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         IGelatoProviderModule providerModule = IGelatoProviderModule(
             _execClaim.providerModule
         );
-        if (_executor == address(0)) _executor = providerExecutor[_execClaim.provider];
         return providerModule.isProvided(_execClaim, _executor, _gelatoGasPrice);
     }
 
