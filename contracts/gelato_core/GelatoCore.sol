@@ -97,8 +97,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         override
         returns (string memory)
     {
-        if (msg.sender != providerExecutor[_execClaim.provider]) return "InvalidExecutor";
-
         if (_execClaim.userProxy != _execClaim.provider) {
             string memory res = isProvided(_execClaim, msg.sender, _gelatoGasPrice);
             if (!res.startsWithOk()) return res;
@@ -132,13 +130,19 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         try IGelatoAction(_execClaim.action).termsOk(_execClaim.actionPayload)
             returns(string memory actionTermsOk)
         {
-            if (actionTermsOk.startsWithOk()) return "Ok";
-            return string(abi.encodePacked("ActionTermsNotOk:", actionTermsOk));
+            if (!actionTermsOk.startsWithOk()) return string(abi.encodePacked("ActionTermsNotOk:", actionTermsOk));
         } catch Error(string memory error) {
             return string(abi.encodePacked("ActionReverted:", error));
         } catch {
             return "ActionRevertedNoMessage";
         }
+
+        // Check if assigned executor is calling the function. Note: Anyone can check if
+        // canExecute returns true if the return value is "canExecOkButInvalidExecutor"
+        if (msg.sender != providerExecutor[_execClaim.provider]) return "canExecOkButInvalidExecutor";
+
+        return "Ok";
+
     }
 
     // ================  EXECUTE EXECUTOR API ============================
