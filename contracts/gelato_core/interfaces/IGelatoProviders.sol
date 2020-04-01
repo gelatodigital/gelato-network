@@ -91,18 +91,4 @@ interface IGelatoProviders {
         external
         view
         returns (address[] memory);
-
-    // Providers' Claims Getters
-    function isProviderClaim(address _provider, bytes32 _execClaimHash)
-        external
-        view
-        returns (bool);
-    function numOfProviderClaims(address _provider)
-        external
-        view
-        returns (uint256);
-    function providerClaims(address _provider)
-        external
-        view
-        returns (bytes32[] memory);
 }

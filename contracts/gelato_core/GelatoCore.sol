@@ -19,8 +19,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
     // ================  STATE VARIABLES ======================================
     uint256 public override currentExecClaimId;
-    // execClaim.id => already attempted non-gelatoMaxGas or not?
-    mapping(uint256 => bool) public override isSecondExecAttempt;
+    // execClaim.id => execClaimHash
+    mapping(uint256 => bytes32) public override execClaimHash;
     // Executors can charge Providers execClaimRent
     mapping(uint256 => uint256) public override lastExecClaimRentPayment;
 
@@ -55,12 +55,12 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         _execClaim.id = currentExecClaimId;
 
         // ExecClaim Hashing
-        bytes32 execClaimHash = keccak256(abi.encode(_execClaim));
+        bytes32 hashedExecClaim = keccak256(abi.encode(_execClaim));
 
-        // ProviderClaim registration
-        execClaimHashesByProvider[_execClaim.provider].add(execClaimHash);
+        // ExecClaim Hash registration
+        execClaimHash[_execClaim.id] = hashedExecClaim;
 
-        emit LogExecClaimMinted(executor, _execClaim.id, execClaimHash, _execClaim);
+        emit LogExecClaimMinted(executor, _execClaim.id, hashedExecClaim, _execClaim);
     }
 
     function mintSelfProvidedExecClaim(ExecClaim memory _execClaim, address _executor)
@@ -105,10 +105,9 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         if (!isProviderLiquid(_execClaim.provider, _gelatoGasPrice, _gelatoMaxGas))
             return "ProviderIlliquid";
 
-        bytes32 execClaimHash = keccak256(abi.encode(_execClaim));
-        if (execClaimHash != _execClaimHash) return "ExecClaimHashInvalid";
-        if (!isProviderClaim(_execClaim.provider, _execClaimHash))
-            return "ExecClaimHashNotProvided";
+        bytes32 hashedExecClaim = keccak256(abi.encode(_execClaim));
+        if (hashedExecClaim != _execClaimHash) return "Invalid_execClaimHash";
+        if (execClaimHash[_execClaim.id] != hashedExecClaim) return "InvalidExecClaimHash";
 
         if (_execClaim.expiryDate != 0 && _execClaim.expiryDate < now) return "Expired";
 
@@ -161,44 +160,34 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // CHECKS
         require(tx.gasprice == _gelatoGasPrice, "GelatoCore.exec: tx.gasprice");
-        require(startGas < _gelatoMaxGas, "GelatoCore.exec: gas surplus");
 
-        // 2nd Attempt: requires gelatoMaxGas
-        if (isSecondExecAttempt[_execClaim.id]) {
-            // 100k call overhead buffer
-            require(startGas > _gelatoMaxGas - 100000, "GelatoCore.exec2: gas shortage");
-            if (!_canExec(_execClaim, _execClaimHash, _gelatoGasPrice, _gelatoMaxGas))
-                return;  // R-3: 2nd canExec failed: NO REFUND
-            if(!_exec(_execClaim)) {
-                // R-4: 2nd exec() failed. Executor REFUND and Claim deleted.
-                delete isSecondExecAttempt[_execClaim.id];
-                execClaimHashesByProvider[_execClaim.provider].remove(_execClaimHash);
+        // internal canExec() check
+        if (!_canExec(_execClaim, _execClaimHash, _gelatoGasPrice, _gelatoMaxGas))
+            return;  // canExec failed: NO REFUND
+
+        // internal exec attempt and check
+        if(!_exec(_execClaim)) {
+            // If the executor used gelatoMaxGas - txOverhead: Refund + Delete ExecClaim
+            if (startGas > _gelatoMaxGas - 100000) {
                 _processProviderPayables(
                     _execClaim.provider,
                     ExecutorPay.Refund,
                     startGas,
+                    _gelatoMaxGas,
                     _gelatoGasPrice
                 );
-                return;
+                delete execClaimHash[_execClaim.id];
             }
-            // R-4: 2nd exec() success
-            delete isSecondExecAttempt[_execClaim.id];
-        } else {
-            // 1st Attempt: no requirement of using gelatoMaxGas
-            if (!_canExec(_execClaim, _execClaimHash, _gelatoGasPrice, _gelatoMaxGas))
-                return;  // R-0: 1st canExec() failed: NO REFUND
-            if (!_exec(_execClaim)) {
-                isSecondExecAttempt[_execClaim.id] = true;
-                return;  // R-1: 1st exec() failed: NO REFUND but second attempt left
-            }
+            return;  // EXEC-FAILURE: - retry possible if gelatoMaxGas was not used
         }
 
-        // R-1 or -4: SUCCESS: ExecClaim deleted, Executor REWARD, Oracle paid
-        execClaimHashesByProvider[_execClaim.provider].remove(_execClaimHash);
+        // EXEC-SUCCESS: Provider Pays Executor Reward
+        delete execClaimHash[_execClaim.id];
         _processProviderPayables(
             _execClaim.provider,
-            ExecutorPay.Refund,
+            ExecutorPay.Reward,
             startGas,
+            _gelatoMaxGas,
             _gelatoGasPrice
         );
     }
@@ -283,12 +272,16 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         address _provider,
         ExecutorPay _payType,
         uint256 _startGas,
+        uint256 _gelatoMaxGas,
         uint256 _gelatoGasPrice
     )
         private
     {
+        // Provider payable Gas Refund capped at gelatoMaxGas
+        uint256 estExecTxGas = _startGas <= _gelatoMaxGas ? _startGas : _gelatoMaxGas;
+
         // ExecutionCost (- consecutive state writes + gas refund from deletion)
-        uint256 estGasConsumed = _startGas - gasleft();
+        uint256 estGasConsumed = estExecTxGas - gasleft();
 
         if (_payType == ExecutorPay.Reward) {
             uint256 executorSuccessFee = executorSuccessFee(estGasConsumed, _gelatoGasPrice);
@@ -317,9 +310,12 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         if (msg.sender != _execClaim.userProxy && msg.sender != _execClaim.provider)
             require(_execClaim.expiryDate <= now, "GelatoCore.cancelExecClaim: sender");
         // Effects
-        bytes32 execClaimHash = keccak256(abi.encode(_execClaim));
-        execClaimHashesByProvider[_execClaim.provider].remove(execClaimHash);
-        if (isSecondExecAttempt[_execClaim.id]) delete isSecondExecAttempt[_execClaim.id];
+        bytes32 hashedExecClaim = keccak256(abi.encode(_execClaim));
+        require(
+            hashedExecClaim == execClaimHash[_execClaim.id],
+            "GelatoCore.cancelExecClaim: invalid execClaimHash"
+        );
+        delete execClaimHash[_execClaim.id];
         emit LogExecClaimCancelled(_execClaim.id);
     }
 
@@ -339,16 +335,17 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             "GelatoCore.extractExecutorRent: rent is not due"
         );
         require(
-            isProviderClaim(_execClaim.provider, keccak256(abi.encode(_execClaim))),
-            "GelatoCore.extractExecutorRent: invalid ExecClaim Provider"
-        );
-        require(
             (isProvided(_execClaim, address(0), 0)).startsWithOk(),
             "GelatoCore.extractExecutorRent: execClaim not provided any more"
         );
         require(
             providerFunds[_execClaim.provider] >= execClaimRent,
             "GelatoCore.extractExecutorRent: insufficient providerFunds"
+        );
+        bytes32 hashedExecClaim = keccak256(abi.encode(_execClaim));
+        require(
+            hashedExecClaim == execClaimHash[_execClaim.id],
+            "GelatoCore.collectExecClaimRent: invalid execClaimHash"
         );
 
         // EFFECTS: If the ExecClaim expired, automatic cancellation

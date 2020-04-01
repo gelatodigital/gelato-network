@@ -73,6 +73,6 @@ interface IGelatoCore {
 
     // ================  GETTER APIs =========================
     function currentExecClaimId() external view returns(uint256 currentId);
-    function isSecondExecAttempt(uint256 _execClaimId) external view returns(bool);
+    function execClaimHash(uint256 _execClaimId) external view returns(bytes32);
     function lastExecClaimRentPayment(uint256 _execClaimId) external view returns(uint256);
 }

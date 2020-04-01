@@ -17,14 +17,12 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
 
     using Address for address payable;  /// for sendValue method
     using EnumerableAddressSet for EnumerableAddressSet.AddressSet;
-    using EnumerableWordSet for EnumerableWordSet.WordSet;
     using SafeMath for uint256;
 
     mapping(address => uint256) public override providerFunds;
     mapping(address => address) public override providerExecutor;
     mapping(address => uint256) public override executorProvidersCount;
     mapping(address => EnumerableAddressSet.AddressSet) internal _providerModules;
-    mapping(address => EnumerableWordSet.WordSet) internal execClaimHashesByProvider;
 
     // IGelatoProviderModule: Gelato Minting/Execution Gate
     function isProvided(
@@ -175,21 +173,4 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         return _providerModules[_provider].enumerate();
     }
 
-    // Providers' Claims Getters
-    function isProviderClaim(address _provider, bytes32 _execClaimHash)
-        public
-        view
-        override
-        returns(bool)
-    {
-        return execClaimHashesByProvider[_provider].contains(_execClaimHash);
-    }
-
-    function numOfProviderClaims(address _provider) external view override returns(uint256) {
-        return execClaimHashesByProvider[_provider].length();
-    }
-
-    function providerClaims(address _provider) external view override returns(bytes32[] memory) {
-        return execClaimHashesByProvider[_provider].enumerate();
-    }
 }
