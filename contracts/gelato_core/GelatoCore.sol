@@ -95,7 +95,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         public
         view
         override
-        returns (string memory)
+        returns(string memory)
     {
         if (msg.sender != providerExecutor[_execClaim.provider]) return "InvalidExecutor";
 
