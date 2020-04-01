@@ -21,8 +21,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     uint256 public override currentExecClaimId;
     // execClaim.id => execClaimHash
     mapping(uint256 => bytes32) public override execClaimHash;
-    // execClaim.id => already attempted non-gelatoMaxGas or not?
-    mapping(uint256 => bool) public override isSecondExecAttempt;
     // Executors can charge Providers execClaimRent
     mapping(uint256 => uint256) public override lastExecClaimRentPayment;
 
@@ -158,44 +156,34 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // CHECKS
         require(tx.gasprice == _gelatoGasPrice, "GelatoCore.exec: tx.gasprice");
-        require(startGas < _gelatoMaxGas, "GelatoCore.exec: gas surplus");
 
-        // 2nd Attempt: requires gelatoMaxGas
-        if (isSecondExecAttempt[_execClaim.id]) {
-            // 100k call overhead buffer
-            require(startGas > _gelatoMaxGas - 100000, "GelatoCore.exec2: gas shortage");
-            if (!_canExec(_execClaim, _execClaimHash, _gelatoGasPrice, _gelatoMaxGas))
-                return;  // R-3: 2nd canExec failed: NO REFUND
-            if(!_exec(_execClaim)) {
-                // R-4: 2nd exec() failed. Executor REFUND and Claim deleted.
-                delete isSecondExecAttempt[_execClaim.id];
-                delete execClaimHash[_execClaim.id];
+        // internal canExec() check
+        if (!_canExec(_execClaim, _execClaimHash, _gelatoGasPrice, _gelatoMaxGas))
+            return;  // canExec failed: NO REFUND
+
+        // internal exec attempt and check
+        if(!_exec(_execClaim)) {
+            // If the executor used gelatoMaxGas - txOverhead: Refund + Delete ExecClaim
+            if (startGas > _gelatoMaxGas - 100000) {
                 _processProviderPayables(
                     _execClaim.provider,
                     ExecutorPay.Refund,
                     startGas,
+                    _gelatoMaxGas,
                     _gelatoGasPrice
                 );
-                return;
+                delete execClaimHash[_execClaim.id];
             }
-            // R-4: 2nd exec() success
-            delete isSecondExecAttempt[_execClaim.id];
-        } else {
-            // 1st Attempt: no requirement of using gelatoMaxGas
-            if (!_canExec(_execClaim, _execClaimHash, _gelatoGasPrice, _gelatoMaxGas))
-                return;  // R-0: 1st canExec() failed: NO REFUND
-            if (!_exec(_execClaim)) {
-                isSecondExecAttempt[_execClaim.id] = true;
-                return;  // R-1: 1st exec() failed: NO REFUND but second attempt left
-            }
+            return;  // EXEC-FAILURE: - retry possible if gelatoMaxGas was not used
         }
 
-        // R-1 or -4: SUCCESS: ExecClaim deleted, Executor REWARD, Oracle paid
+        // EXEC-SUCCESS: Provider Pays Executor Reward
         delete execClaimHash[_execClaim.id];
         _processProviderPayables(
             _execClaim.provider,
-            ExecutorPay.Refund,
+            ExecutorPay.Reward,
             startGas,
+            _gelatoMaxGas,
             _gelatoGasPrice
         );
     }
@@ -280,12 +268,16 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         address _provider,
         ExecutorPay _payType,
         uint256 _startGas,
+        uint256 _gelatoMaxGas,
         uint256 _gelatoGasPrice
     )
         private
     {
+        // Provider payable Gas Refund capped at gelatoMaxGas
+        uint256 estExecTxGas = _startGas <= _gelatoMaxGas ? _startGas : _gelatoMaxGas;
+
         // ExecutionCost (- consecutive state writes + gas refund from deletion)
-        uint256 estGasConsumed = _startGas - gasleft();
+        uint256 estGasConsumed = estExecTxGas - gasleft();
 
         if (_payType == ExecutorPay.Reward) {
             uint256 executorSuccessFee = executorSuccessFee(estGasConsumed, _gelatoGasPrice);
@@ -320,7 +312,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             "GelatoCore.cancelExecClaim: invalid execClaimHash"
         );
         delete execClaimHash[_execClaim.id];
-        if (isSecondExecAttempt[_execClaim.id]) delete isSecondExecAttempt[_execClaim.id];
         emit LogExecClaimCancelled(_execClaim.id);
     }
 
