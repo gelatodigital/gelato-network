@@ -55,10 +55,8 @@ export default task("gc-debug-newcore")
 
       // === GelatoCore setup ===
       // Executor
-      await run("gc-stakeExecutor", {
+      await run("gc-stakeexecutor", {
         gelatocoreaddress: gelatoCore.address,
-        execclaimtenancy: 5184000,
-        executorsuccessfeefactor: 5,
         executorindex: testSignerIndex,
         events,
         log
