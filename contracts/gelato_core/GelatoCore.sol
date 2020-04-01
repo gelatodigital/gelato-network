@@ -19,6 +19,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
     // ================  STATE VARIABLES ======================================
     uint256 public override currentExecClaimId;
+    // execClaim.id => execClaimHash
+    mapping(uint256 => bytes32) public override execClaimHash;
     // execClaim.id => already attempted non-gelatoMaxGas or not?
     mapping(uint256 => bool) public override isSecondExecAttempt;
     // Executors can charge Providers execClaimRent
@@ -55,12 +57,12 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         _execClaim.id = currentExecClaimId;
 
         // ExecClaim Hashing
-        bytes32 execClaimHash = keccak256(abi.encode(_execClaim));
+        bytes32 hashedExecClaim = keccak256(abi.encode(_execClaim));
 
-        // ProviderClaim registration
-        execClaimHashesByProvider[_execClaim.provider].add(execClaimHash);
+        // ExecClaim Hash registration
+        execClaimHash[_execClaim.id] = hashedExecClaim;
 
-        emit LogExecClaimMinted(executor, _execClaim.id, execClaimHash, _execClaim);
+        emit LogExecClaimMinted(executor, _execClaim.id, hashedExecClaim, _execClaim);
     }
 
     function mintSelfProvidedExecClaim(ExecClaim memory _execClaim, address _executor)
@@ -107,10 +109,9 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         if (!isProviderLiquid(_execClaim.provider, _gelatoGasPrice, _gelatoMaxGas))
             return "ProviderIlliquid";
 
-        bytes32 execClaimHash = keccak256(abi.encode(_execClaim));
-        if (execClaimHash != _execClaimHash) return "ExecClaimHashInvalid";
-        if (!isProviderClaim(_execClaim.provider, _execClaimHash))
-            return "ExecClaimHashNotProvided";
+        bytes32 hashedExecClaim = keccak256(abi.encode(_execClaim));
+        if (hashedExecClaim != _execClaimHash) return "Invalid_execClaimHash";
+        if (execClaimHash[_execClaim.id] != hashedExecClaim) return "InvalidExecClaimHash";
 
         if (_execClaim.expiryDate != 0 && _execClaim.expiryDate < now) return "Expired";
 
@@ -168,7 +169,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             if(!_exec(_execClaim)) {
                 // R-4: 2nd exec() failed. Executor REFUND and Claim deleted.
                 delete isSecondExecAttempt[_execClaim.id];
-                execClaimHashesByProvider[_execClaim.provider].remove(_execClaimHash);
+                delete execClaimHash[_execClaim.id];
                 _processProviderPayables(
                     _execClaim.provider,
                     ExecutorPay.Refund,
@@ -190,7 +191,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         }
 
         // R-1 or -4: SUCCESS: ExecClaim deleted, Executor REWARD, Oracle paid
-        execClaimHashesByProvider[_execClaim.provider].remove(_execClaimHash);
+        delete execClaimHash[_execClaim.id];
         _processProviderPayables(
             _execClaim.provider,
             ExecutorPay.Refund,
@@ -313,8 +314,12 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         if (msg.sender != _execClaim.userProxy && msg.sender != _execClaim.provider)
             require(_execClaim.expiryDate <= now, "GelatoCore.cancelExecClaim: sender");
         // Effects
-        bytes32 execClaimHash = keccak256(abi.encode(_execClaim));
-        execClaimHashesByProvider[_execClaim.provider].remove(execClaimHash);
+        bytes32 hashedExecClaim = keccak256(abi.encode(_execClaim));
+        require(
+            hashedExecClaim == execClaimHash[_execClaim.id],
+            "GelatoCore.cancelExecClaim: invalid execClaimHash"
+        );
+        delete execClaimHash[_execClaim.id];
         if (isSecondExecAttempt[_execClaim.id]) delete isSecondExecAttempt[_execClaim.id];
         emit LogExecClaimCancelled(_execClaim.id);
     }
@@ -335,16 +340,17 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             "GelatoCore.extractExecutorRent: rent is not due"
         );
         require(
-            isProviderClaim(_execClaim.provider, keccak256(abi.encode(_execClaim))),
-            "GelatoCore.extractExecutorRent: invalid ExecClaim Provider"
-        );
-        require(
             (isProvided(_execClaim, address(0), 0)).startsWithOk(),
             "GelatoCore.extractExecutorRent: execClaim not provided any more"
         );
         require(
             providerFunds[_execClaim.provider] >= execClaimRent,
             "GelatoCore.extractExecutorRent: insufficient providerFunds"
+        );
+        bytes32 hashedExecClaim = keccak256(abi.encode(_execClaim));
+        require(
+            hashedExecClaim == execClaimHash[_execClaim.id],
+            "GelatoCore.collectExecClaimRent: invalid execClaimHash"
         );
 
         // EFFECTS: If the ExecClaim expired, automatic cancellation
