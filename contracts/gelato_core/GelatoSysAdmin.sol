@@ -34,7 +34,6 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
 
     // Executors' profit share on exec costs
     function setExecutorSuccessShare(uint256 _percentage) external override onlyOwner {
-        require(_percentage < 100, "GelatoExecutors.setExecutorSuccessShare: over 100");
         emit LogSetExecutorSuccessShare(executorSuccessShare, _percentage);
         if (_percentage == 0) delete executorSuccessShare;
         else executorSuccessShare = _percentage;
@@ -63,7 +62,6 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
 
     // Sys Admin (DAO) Business Model
     function setSysAdminSuccessShare(uint256 _percentage) external override onlyOwner {
-        require(_percentage < 100, "GelatoSysAdmin.setSysAdminSuccessShare: over 100");
         emit LogSetSysAdminSuccessShare(sysAdminSuccessShare, _percentage);
         if (_percentage == 0) delete sysAdminSuccessShare;
         else sysAdminSuccessShare = _percentage;
