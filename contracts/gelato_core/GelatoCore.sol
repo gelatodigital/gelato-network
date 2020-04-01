@@ -88,7 +88,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     // ================  CAN EXECUTE EXECUTOR API ============================
     function canExec(
         ExecClaim memory _execClaim,
-        bytes32 _execClaimHash,
         uint256 _gelatoGasPrice,
         uint256 _gelatoMaxGas
     )
@@ -106,7 +105,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             return "ProviderIlliquid";
 
         bytes32 hashedExecClaim = keccak256(abi.encode(_execClaim));
-        if (hashedExecClaim != _execClaimHash) return "Invalid_execClaimHash";
         if (execClaimHash[_execClaim.id] != hashedExecClaim) return "InvalidExecClaimHash";
 
         if (_execClaim.expiryDate != 0 && _execClaim.expiryDate < now) return "Expired";
@@ -150,7 +148,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         Refund
     }
 
-    function exec(ExecClaim memory _execClaim, bytes32 _execClaimHash) public override {
+    function exec(ExecClaim memory _execClaim) public override {
         // Store startGas for gas-consumption based cost and payout calcs
         uint256 startGas = gasleft();
 
@@ -162,7 +160,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         require(tx.gasprice == _gelatoGasPrice, "GelatoCore.exec: tx.gasprice");
 
         // internal canExec() check
-        if (!_canExec(_execClaim, _execClaimHash, _gelatoGasPrice, _gelatoMaxGas))
+        if (!_canExec(_execClaim, _gelatoGasPrice, _gelatoMaxGas))
             return;  // canExec failed: NO REFUND
 
         // internal exec attempt and check
@@ -194,14 +192,13 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
     function _canExec(
         ExecClaim memory _execClaim,
-        bytes32 _execClaimHash,
         uint256 _gelatoGasPrice,
         uint256 _gelatoMaxGas
     )
         private
         returns(bool)
     {
-        string memory res = canExec(_execClaim, _execClaimHash, _gelatoGasPrice, _gelatoMaxGas);
+        string memory res = canExec(_execClaim, _gelatoGasPrice, _gelatoMaxGas);
         if (res.startsWithOk()) {
             emit LogCanExecSuccess(msg.sender, _execClaim.id, res);
             return true;  // SUCCESS: continue Execution
