@@ -19,34 +19,25 @@ contract ProviderModuleGnosisSafeProxy is
 {
     mapping(bytes32 => bool) public override isProxyExtcodehashProvided;
     mapping(address => bool) public override isMastercopyProvided;
-    mapping(address => bool) public override isConditionProvided;
-    mapping(address => bool) public override isActionProvided;
-    mapping(address => uint256) public override actionGasPriceCeil;
 
     constructor(
         bytes32[] memory hashes,
-        address[] memory masterCopies,
-        address[] memory _conditions,
-        ActionWithGasPriceCeil[] memory _actions
+        address[] memory masterCopies
     )
         public
     {
-        batchProvide(hashes, masterCopies, _conditions, _actions);
+        batchProvide(hashes, masterCopies);
     }
 
     // ================= GELATO PROVIDER MODULE STANDARD ================
     // @dev since we check extcodehash prior to execution, we forego the execution option
     //  where the userProxy is deployed at execution time.
-    function isProvided(ExecClaim calldata _execClaim, address, uint256 _gelatoGasPrice)
+    function providerModuleCheck(ExecClaim calldata _execClaim)
         external
         view
         override
         returns (string memory)
     {
-        if (actionGasPriceCeil[_execClaim.action] < _gelatoGasPrice)
-            return "ProviderModuleGnosisSafeProxy.isProvided:gelatoGasPriceTooHigh";
-        if (!isConditionProvided[_execClaim.condition])
-            return "ProviderModuleGnosisSafeProxy.isProvided:ConditionNotProvided";
         address userProxy = _execClaim.userProxy;
         bytes32 codehash;
         assembly { codehash := extcodehash(userProxy) }
@@ -110,66 +101,10 @@ contract ProviderModuleGnosisSafeProxy is
         emit LogUnprovideMastercopy(_mastercopy);
     }
 
-    // (Un-)provide Conditions
-    function provideCondition(address _condition) public override onlyOwner {
-        require(
-            !isConditionProvided[_condition],
-            "ProviderModuleGnosisSafeProxy.provideCondition: already provided"
-        );
-        isConditionProvided[_condition] = true;
-        emit LogProvideCondition(_condition);
-    }
-
-    function unprovideCondition(address _condition) public override onlyOwner {
-        require(
-            isConditionProvided[_condition],
-            "ProviderModuleGnosisSafeProxy.unprovideCondition: already not provided"
-        );
-        delete isConditionProvided[_condition];
-        emit LogUnprovideCondition(_condition);
-    }
-
-    // (Un-)provide Actions at different gasPrices
-    function provideAction(ActionWithGasPriceCeil memory _action) public override onlyOwner {
-        setActionGasPriceCeil(_action);
-        isActionProvided[_action._address] = true;
-        emit LogProvideAction(_action._address);
-    }
-
-    function unprovideAction(address _action) public override onlyOwner {
-        require(
-            actionGasPriceCeil[_action] != 0,
-            "ProviderModuleGnosisSafeProxy.unprovideAction: already not provided"
-        );
-        delete isActionProvided[_action];
-        delete actionGasPriceCeil[_action];
-        emit LogUnprovideAction(_action);
-    }
-
-    function setActionGasPriceCeil(ActionWithGasPriceCeil memory _action)
-        public
-        override
-        onlyOwner
-    {
-        require(
-            actionGasPriceCeil[_action._address] != _action.gasPriceCeil &&
-            actionGasPriceCeil[_action._address] != 0,
-            "ProviderModuleGnosisSafeProxy.setActionGasPriceCeil: duplicate or 0"
-        );
-        emit LogSetActionGasPriceCeil(
-            _action._address,
-            actionGasPriceCeil[_action._address],
-            _action.gasPriceCeil
-        );
-        actionGasPriceCeil[_action._address] = _action.gasPriceCeil;
-    }
-
     // Batch (un-)provide
     function batchProvide(
         bytes32[] memory _hashes,
-        address[] memory _mastercopies,
-        address[] memory _conditions,
-        ActionWithGasPriceCeil[] memory _actions
+        address[] memory _mastercopies
     )
         public
         override
@@ -177,15 +112,11 @@ contract ProviderModuleGnosisSafeProxy is
     {
         for (uint256 i = 0; i < _hashes.length; i++) provideProxyExtcodehash(_hashes[i]);
         for (uint256 i = 0; i < _mastercopies.length; i++) provideMastercopy(_mastercopies[i]);
-        for (uint256 i = 0; i < _conditions.length; i++) provideCondition(_conditions[i]);
-        for (uint256 i = 0; i < _actions.length; i++) setActionGasPriceCeil(_actions[i]);
     }
 
     function batchUnprovide(
         bytes32[] calldata _hashes,
-        address[] calldata _mastercopies,
-        address[] calldata _conditions,
-        address[] calldata _actions
+        address[] calldata _mastercopies
     )
         external
         override
@@ -193,7 +124,5 @@ contract ProviderModuleGnosisSafeProxy is
     {
         for (uint256 i = 0; i < _hashes.length; i++) unprovideProxyExtcodehash(_hashes[i]);
         for (uint256 i = 0; i < _mastercopies.length; i++) unprovideMastercopy(_mastercopies[i]);
-        for (uint256 i = 0; i < _conditions.length; i++) unprovideCondition(_conditions[i]);
-        for (uint256 i = 0; i < _actions.length; i++) unprovideAction(_actions[i]);
     }
 }

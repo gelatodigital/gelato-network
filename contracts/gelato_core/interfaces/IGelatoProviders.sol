@@ -28,19 +28,45 @@ interface IGelatoProviders {
         uint256 newProviderFunds
     );
 
+    // (Un)Providung Condition
+    event LogProvideCondition(address indexed condition);
+    event LogUnprovideCondition(address indexed condition);
+
+    // (Un)Providung Action
+    event LogProvideAction(address indexed action, uint256 indexed _actionGasPriceCeil);
+    event LogUnprovideAction(address indexed action);
+
     // Provider Module
     event LogAddProviderModule(address module);
     event LogRemoveProviderModule(address module);
 
     // IGelatoProviderModule Standard wrapper
-    function isProvided(
-        ExecClaim calldata _execClaim,
-        address _executor,
-        uint256 _gelatoGasPrice
+    function providerModuleCheck(
+        ExecClaim calldata _execClaim
     )
         external
         view
         returns (string memory);
+
+    function executionGate (
+        ExecClaim calldata _execClaim,
+        uint256 _gelatoGasPrice
+    )
+        external
+        view
+
+        returns(string memory);
+
+    function conditionActionCheck (
+        ExecClaim calldata _execClaim,
+        uint256 _gelatoGasPrice
+    )
+        external
+        view
+
+        returns(string memory);
+
+
 
     // Registration
     function registerProvider(address _executor, address[] calldata _modules)
@@ -61,6 +87,32 @@ interface IGelatoProviders {
     function batchAddProviderModules(address[] calldata _modules) external;
     function batchRemoveProviderModules(address[] calldata _modules) external;
 
+    // (Un-)provide Conditions
+    function provideCondition(address _condition) external;
+    function unprovideCondition(address _condition) external;
+
+    // (Un-)provide Actions
+    function provideAction(address _action, uint256 _actionGasPriceCeil) external;
+    function unprovideAction(address _action) external;
+
+    // Batch (un-)provide
+    function batchProvide(
+        address[] calldata _conditions,
+        address[] calldata _actions,
+        uint256[] calldata _actionGasPriceCeils
+
+    )
+        external;
+
+    function batchUnprovide(
+        address[] calldata _conditions,
+        address[] calldata _actions
+
+    )
+        external;
+
+
+
     // Provider Funding
     function providerFunds(address _provider) external view returns (uint256);
     function isProviderLiquid(address _provider, uint256 _gas, uint256 _gasPrice)
@@ -73,6 +125,25 @@ interface IGelatoProviders {
         external
         view
         returns (address);
+
+    // Check if condition is whitelisted
+    function isConditionProvided(address _condition)
+        external
+        view
+        returns (bool);
+
+    // // Check if action is whitelisted
+    // function isActionProvided(address _action)
+    //     external
+    //     view
+    //     returns (bool);
+
+    // Check if action is whitelisted
+    function actionGasPriceCeil(address _action)
+        external
+        view
+        returns (uint256);
+
 
     // Number of Providers Per Executor
     function executorProvidersCount(address _executor) external view returns(uint256);

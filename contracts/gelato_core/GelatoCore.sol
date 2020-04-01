@@ -4,7 +4,6 @@ pragma experimental ABIEncoderV2;
 import { IGelatoCore, ExecClaim } from "./interfaces/IGelatoCore.sol";
 import { GelatoExecutors } from "./GelatoExecutors.sol";
 import { SafeMath } from "../external/SafeMath.sol";
-import { GelatoString } from "../libraries/GelatoString.sol";
 import { IGelatoCondition } from "../gelato_conditions/IGelatoCondition.sol";
 import { IGelatoAction } from "../gelato_actions/IGelatoAction.sol";
 import { IGelatoProviderModule } from "./interfaces/IGelatoProviderModule.sol";
@@ -15,7 +14,7 @@ import { IGelatoProviderModule } from "./interfaces/IGelatoProviderModule.sol";
 contract GelatoCore is IGelatoCore, GelatoExecutors {
 
     using SafeMath for uint256;
-    using GelatoString for string;
+
 
     // ================  STATE VARIABLES ======================================
     uint256 public override currentExecClaimId;
@@ -31,10 +30,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         _execClaim.userProxy = msg.sender;
 
         // EXECUTOR CHECKS
-        require(
-            _execClaim.expiryDate <= now + execClaimTenancy,
-            "GelatoCore.mintExecClaim: execClaim.expiryDate"
-        );
         address executor = providerExecutor[_execClaim.provider];
         require(
             isExecutorMinStaked(executor),
@@ -43,7 +38,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // PROVIDER CHECKS (not for self-Providers)
         if (msg.sender != _execClaim.provider) {
-            string memory isProvided = isProvided(_execClaim, executor, gelatoGasPrice);
+            string memory isProvided = providerModuleCheck(_execClaim);
             require(
                 isProvided.startsWithOk(),
                 string(abi.encodePacked("GelatoCore.mintExecClaim.isProvided:", isProvided))
@@ -59,6 +54,9 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // ExecClaim Hash registration
         execClaimHash[_execClaim.id] = hashedExecClaim;
+
+        // Set Minting time for rent payment
+        lastExecClaimRentPayment[_execClaim.id] = now;
 
         emit LogExecClaimMinted(executor, _execClaim.id, hashedExecClaim, _execClaim);
     }
@@ -97,7 +95,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         returns (string memory)
     {
         if (_execClaim.userProxy != _execClaim.provider) {
-            string memory res = isProvided(_execClaim, msg.sender, _gelatoGasPrice);
+            string memory res = executionGate(_execClaim, _gelatoGasPrice);
             if (!res.startsWithOk()) return res;
         }
 
@@ -328,11 +326,12 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             "GelatoCore.extractExecutorRent: msg.sender not assigned Executor"
         );
         require(
-            lastExecClaimRentPayment[_execClaim.id] >= now - execClaimTenancy,
+            lastExecClaimRentPayment[_execClaim.id] <= now - execClaimTenancy,
             "GelatoCore.extractExecutorRent: rent is not due"
         );
+        // @DEV Put the whitelist stuff back on core => only isProvided check, not provider module check
         require(
-            (isProvided(_execClaim, address(0), 0)).startsWithOk(),
+            (conditionActionCheck(_execClaim, actionMaxGasPriceCeil)).startsWithOk(),
             "GelatoCore.extractExecutorRent: execClaim not provided any more"
         );
         require(
@@ -349,8 +348,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         if (_execClaim.expiryDate != 0 && _execClaim.expiryDate <= now) {
             cancelExecClaim(_execClaim);
             delete lastExecClaimRentPayment[_execClaim.id];
-        }
-        else lastExecClaimRentPayment[_execClaim.id] = now;
+        } else lastExecClaimRentPayment[_execClaim.id] = now;
 
         // INTERACTIONS: Provider pays Executor ExecClaim Rent
         providerFunds[_execClaim.provider] -= execClaimRent;
