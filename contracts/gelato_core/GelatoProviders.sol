@@ -5,6 +5,7 @@ import { IGelatoProviders } from "./interfaces/IGelatoProviders.sol";
 import { GelatoSysAdmin } from "./GelatoSysAdmin.sol";
 import { Address } from "../external/Address.sol";
 import { SafeMath } from "../external/SafeMath.sol";
+import { Math } from "../external/Math.sol";
 import { IGelatoProviderModule } from "./interfaces/IGelatoProviderModule.sol";
 import { EnumerableAddressSet } from "../external/EnumerableAddressSet.sol";
 import { EnumerableWordSet } from "../external/EnumerableWordSet.sol";
@@ -117,19 +118,23 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         providerFunds[_provider] = newProviderFunds;
     }
 
-    function unprovideFunds(uint256 _withdrawAmount) public override {
-        require(_withdrawAmount > 0, "GelatoProviders.unprovideFunds: 0");
-        // Checks
+    function unprovideFunds(uint256 _withdrawAmount)
+        public
+        override
+        returns (uint256 realWithdrawAmount)
+    {
         uint256 previousProviderFunds = providerFunds[msg.sender];
-        require(
-            previousProviderFunds >= _withdrawAmount,
-            "GelatoProviders.unprovideFunds: out of funds"
-        );
-        uint256 newProviderFunds = previousProviderFunds - _withdrawAmount;
+
+        realWithdrawAmount = Math.min(_withdrawAmount, previousProviderFunds);
+
+        uint256 newProviderFunds = previousProviderFunds - realWithdrawAmount;
+
         // Effects
-        providerFunds[msg.sender] = newProviderFunds;
+        providerFunds[msg.sender] = previousProviderFunds - newProviderFunds;
+
         // Interaction
-        msg.sender.sendValue(_withdrawAmount);
+        msg.sender.sendValue(realWithdrawAmount);
+
         emit LogUnprovideFunds(msg.sender, previousProviderFunds, newProviderFunds);
     }
 

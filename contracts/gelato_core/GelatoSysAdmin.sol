@@ -4,6 +4,7 @@ import "./interfaces/IGelatoSysAdmin.sol";
 import "../external/Ownable.sol";
 import "../external/Address.sol";
 import "../external/SafeMath.sol";
+import "../external/Math.sol";
 
 abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
 
@@ -75,17 +76,23 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
         else sysAdminSuccessShare = _percentage;
     }
 
-    function withdrawSysAdminFunds(uint256 _amount) external override onlyOwner {
+    function withdrawSysAdminFunds(uint256 _amount)
+        external
+        override
+        onlyOwner
+        returns(uint256 realWithdrawAmount)
+    {
         uint256 currentBalance = sysAdminFunds;
-        if (_amount == currentBalance) delete sysAdminFunds;
-        else {
-            sysAdminFunds = currentBalance.sub(
-                _amount,
-                "GelatoSysAdmin.withdrawSysAdminFunds: underflow"
-            );
-        }
-        msg.sender.sendValue(_amount);
-        emit LogWithdrawOracleFunds(currentBalance, sysAdminFunds);
+
+        realWithdrawAmount = Math.min(_amount, currentBalance);
+
+        uint256 newSysAdminFunds = currentBalance - realWithdrawAmount;
+
+        // Effects
+        sysAdminFunds = newSysAdminFunds;
+
+        msg.sender.sendValue(realWithdrawAmount);
+        emit LogWithdrawOracleFunds(currentBalance, newSysAdminFunds);
     }
 
     // Executors' total fee for a successful exec

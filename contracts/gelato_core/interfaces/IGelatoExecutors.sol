@@ -22,7 +22,7 @@ interface IGelatoExecutors {
         address _transferExecutor
     ) external;
 
-    function withdrawExecutorBalance(uint256 _withdrawAmount) external;
+    function withdrawExecutorBalance(uint256 _withdrawAmount) external returns(uint256);
 
     function executorStake(address _executor) external view returns (uint256);
     function isExecutorMinStaked(address _executor) external view returns(bool);
