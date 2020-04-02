@@ -39,13 +39,13 @@ interface IGelatoProviders {
     event LogUnprovideCondition(address indexed provider, address indexed condition);
 
     // Actions
-    event LogProvideAction(address indexed provider, address indexed action);
-    event LogUnprovideAction(address indexed provider, address indexed action);
-    event LogSetActionGasPriceCeil(
+    event LogProvideAction(
+        address indexed provider,
         address indexed action,
-        uint256 indexed oldCeil,
-        uint256 indexed newCeil
+        uint256 oldGasPriceCeil,
+        uint256 newGasPriceCeil
     );
+    event LogUnprovideAction(address indexed provider, address indexed action);
 
     // Provider Module
     event LogAddProviderModule(address indexed provider, address indexed module);
@@ -90,7 +90,6 @@ interface IGelatoProviders {
     // (Un-)provide Conditions
     function provideActions(ActionWithGasPriceCeil[] calldata _actions) external;
     function unprovideActions(address[] calldata _actions) external;
-    function setActionGasPriceCeil(ActionWithGasPriceCeil calldata _action) external;
 
     // Provider Module
     function addProviderModules(address[] calldata _modules) external;
@@ -130,14 +129,11 @@ interface IGelatoProviders {
         external
         view
         returns(bool);
-    function isActionProvided(address _provider, address _action)
-        external
-        view
-        returns(bool);
     function actionGasPriceCeil(address _provider, address _action)
         external
         view
         returns(uint256);
+    function NO_CEIL() external pure returns(uint256);
 
     // Providers' Module Getters
     function isProviderModule(address _provider, address _module)

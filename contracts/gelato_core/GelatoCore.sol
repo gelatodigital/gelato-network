@@ -314,6 +314,12 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             providerExecutor[_execClaim.provider] == msg.sender,
             "GelatoCore.collecExecClaimRent: msg.sender not assigned Executor"
         );
+        if (_execClaim.expiryDate != 0) {
+            require(
+                _execClaim.expiryDate > now,
+                "GelatoCore.collectExecClaimRent: expired"
+            );
+        }
         require(
             lastExecClaimRentPaymentDate[_execClaim.id] <= now - execClaimTenancy,
             "GelatoCore.collecExecClaimRent: rent is not due"
@@ -333,13 +339,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         );
 
         // EFFECTS
-        if (_execClaim.expiryDate != 0 && _execClaim.expiryDate <= now) {
-            // ExpiredClaim must be cancelled here (or by provider). Else Rent Abuse.
-            cancelExecClaim(_execClaim);
-            delete lastExecClaimRentPaymentDate[_execClaim.id];
-            return;  // No rent payments for expired claims.
-        }
-        else lastExecClaimRentPaymentDate[_execClaim.id] = now;
+        lastExecClaimRentPaymentDate[_execClaim.id] = now;
 
         // INTERACTIONS: Provider pays Executor ExecClaim Rent.
         providerFunds[_execClaim.provider] -= execClaimRent;
