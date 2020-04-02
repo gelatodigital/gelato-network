@@ -22,7 +22,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     // execClaim.id => execClaimHash
     mapping(uint256 => bytes32) public override execClaimHash;
     // Executors can charge Providers execClaimRent
-    mapping(uint256 => uint256) public override lastExecClaimRentPayment;
+    mapping(uint256 => uint256) public override lastExecClaimRentPaymentDate;
 
     // ================  MINTING ==============================================
     // Only pass _executor for self-providing users, else address(0)
@@ -31,10 +31,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         _execClaim.userProxy = msg.sender;
 
         // EXECUTOR CHECKS
-        require(
-            _execClaim.expiryDate <= now + execClaimTenancy,
-            "GelatoCore.mintExecClaim: execClaim.expiryDate"
-        );
         address executor = providerExecutor[_execClaim.provider];
         require(
             isExecutorMinStaked(executor),
@@ -43,10 +39,15 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // PROVIDER CHECKS (not for self-Providers)
         if (msg.sender != _execClaim.provider) {
-            string memory isProvided = isProvided(_execClaim, executor, gelatoGasPrice);
+            string memory isProvided = combinedProviderChecks(_execClaim, gelatoGasPrice);
             require(
                 isProvided.startsWithOk(),
-                string(abi.encodePacked("GelatoCore.mintExecClaim.isProvided:", isProvided))
+                string(
+                    abi.encodePacked(
+                        "GelatoCore.mintExecClaim.combinedProviderChecks:",
+                        isProvided
+                    )
+                )
             );
         }
 
@@ -59,6 +60,9 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // ExecClaim Hash registration
         execClaimHash[_execClaim.id] = hashedExecClaim;
+
+        // First ExecClaim Rent for first execClaimTenancy is free
+        lastExecClaimRentPaymentDate[_execClaim.id] = now;
 
         emit LogExecClaimMinted(executor, _execClaim.id, hashedExecClaim, _execClaim);
     }
@@ -100,7 +104,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         if (msg.sender != providerExecutor[_execClaim.provider]) return "InvalidExecutor";
 
         if (_execClaim.userProxy != _execClaim.provider) {
-            string memory res = isProvided(_execClaim, msg.sender, _gelatoGasPrice);
+            string memory res = combinedProviderChecks(_execClaim, _gelatoGasPrice);
             if (!res.startsWithOk()) return res;
         }
 
@@ -325,19 +329,19 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         // CHECKS
         require(
             providerExecutor[_execClaim.provider] == msg.sender,
-            "GelatoCore.extractExecutorRent: msg.sender not assigned Executor"
+            "GelatoCore.collecExecClaimRent: msg.sender not assigned Executor"
         );
         require(
-            lastExecClaimRentPayment[_execClaim.id] >= now - execClaimTenancy,
-            "GelatoCore.extractExecutorRent: rent is not due"
+            lastExecClaimRentPaymentDate[_execClaim.id] <= now - execClaimTenancy,
+            "GelatoCore.collecExecClaimRent: rent is not due"
         );
         require(
-            (isProvided(_execClaim, address(0), 0)).startsWithOk(),
-            "GelatoCore.extractExecutorRent: execClaim not provided any more"
+            coreProviderChecks(_execClaim),
+            "GelatoCore.collecExecClaimRent: coreProviderChecks failed"
         );
         require(
             providerFunds[_execClaim.provider] >= execClaimRent,
-            "GelatoCore.extractExecutorRent: insufficient providerFunds"
+            "GelatoCore.collecExecClaimRent: insufficient providerFunds"
         );
         bytes32 hashedExecClaim = keccak256(abi.encode(_execClaim));
         require(
@@ -348,15 +352,15 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         // EFFECTS: If the ExecClaim expired, automatic cancellation
         if (_execClaim.expiryDate != 0 && _execClaim.expiryDate <= now) {
             cancelExecClaim(_execClaim);
-            delete lastExecClaimRentPayment[_execClaim.id];
+            delete lastExecClaimRentPaymentDate[_execClaim.id];
         }
-        else lastExecClaimRentPayment[_execClaim.id] = now;
+        else lastExecClaimRentPaymentDate[_execClaim.id] = now;
 
         // INTERACTIONS: Provider pays Executor ExecClaim Rent
         providerFunds[_execClaim.provider] -= execClaimRent;
         executorFunds[msg.sender] += execClaimRent;
 
-        emit LogExtractExecClaimRent(
+        emit LogCollectExecClaimRent(
             msg.sender,
             _execClaim.provider,
             _execClaim.id,

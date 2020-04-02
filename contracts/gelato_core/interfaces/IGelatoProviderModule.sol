@@ -4,14 +4,13 @@ pragma experimental ABIEncoderV2;
 import {ExecClaim} from "./IGelatoCore.sol";
 
 interface IGelatoProviderModule {
-    function isProvided(
-        ExecClaim calldata _execClaim,
-        address _executor,
-        uint256 _gelatoGasPrice
-    ) external view returns (string memory);
+    function isProvided(ExecClaim calldata _execClaim, uint256 _gelatoGasPrice)
+        external
+        view
+        returns(string memory);
 
     function execPayload(address _action, bytes calldata _actionPayload)
         external
         pure
-        returns (bytes memory);
+        returns(bytes memory);
 }

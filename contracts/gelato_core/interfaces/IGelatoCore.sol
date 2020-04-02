@@ -41,7 +41,7 @@ interface IGelatoCore {
 
     event LogExecClaimCancelled(uint256 indexed execClaimId);
 
-    event LogExtractExecClaimRent(
+    event LogCollectExecClaimRent(
         address indexed provider,
         address indexed executor,
         uint256 indexed execClaimId,
@@ -74,5 +74,5 @@ interface IGelatoCore {
     // ================  GETTER APIs =========================
     function currentExecClaimId() external view returns(uint256 currentId);
     function execClaimHash(uint256 _execClaimId) external view returns(bytes32);
-    function lastExecClaimRentPayment(uint256 _execClaimId) external view returns(uint256);
+    function lastExecClaimRentPaymentDate(uint256 _execClaimId) external view returns(uint256);
 }
