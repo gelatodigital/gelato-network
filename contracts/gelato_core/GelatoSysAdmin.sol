@@ -28,6 +28,7 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
     // exec-tx gasprice
     function setGelatoGasPrice(uint256 _newGasPrice) external override onlyOwner {
         emit LogSetGelatoGasPrice(gelatoGasPrice, _newGasPrice);
+        require(_newGasPrice != 0, "Cannot be zero");
         gelatoGasPrice = _newGasPrice;
     }
 
