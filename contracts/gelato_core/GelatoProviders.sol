@@ -51,6 +51,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     {
         if (!isProviderModule(_execClaim.provider, _execClaim.providerModule))
             return "InvalidProviderModule";
+
         IGelatoProviderModule providerModule = IGelatoProviderModule(
             _execClaim.providerModule
         );
@@ -239,13 +240,8 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     }
 
     // Provider Liquidity
-    function isProviderLiquid(address _provider, uint256 _gas, uint256 _gasPrice)
-        public
-        view
-        override
-        returns(bool)
-    {
-        return _gas.mul(_gasPrice) <= providerFunds[_provider] ? true : false;
+    function isProviderLiquid(address _provider) public view override returns(bool) {
+        return minProviderStake <= providerFunds[_provider] ? true : false;
     }
 
     // Providers' Executor Assignment

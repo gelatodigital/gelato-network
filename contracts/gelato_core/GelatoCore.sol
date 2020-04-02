@@ -94,7 +94,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             if (!res.startsWithOk()) return res;
         }
 
-        if (!isProviderLiquid(_execClaim.provider, 0, 0)) return "ProviderIlliquid";
+        if (!isProviderLiquid(_execClaim.provider)) return "ProviderIlliquid";
 
         bytes32 hashedExecClaim = keccak256(abi.encode(_execClaim));
         if (execClaimHash[_execClaim.id] != hashedExecClaim) return "InvalidExecClaimHash";
@@ -332,14 +332,16 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             "GelatoCore.collectExecClaimRent: invalid execClaimHash"
         );
 
-        // EFFECTS: If the ExecClaim expired, automatic cancellation
+        // EFFECTS
         if (_execClaim.expiryDate != 0 && _execClaim.expiryDate <= now) {
+            // ExpiredClaim must be cancelled here (or by provider). Else Rent Abuse.
             cancelExecClaim(_execClaim);
             delete lastExecClaimRentPaymentDate[_execClaim.id];
+            return;  // No rent payments for expired claims.
         }
         else lastExecClaimRentPaymentDate[_execClaim.id] = now;
 
-        // INTERACTIONS: Provider pays Executor ExecClaim Rent
+        // INTERACTIONS: Provider pays Executor ExecClaim Rent.
         providerFunds[_execClaim.provider] -= execClaimRent;
         executorFunds[msg.sender] += execClaimRent;
 

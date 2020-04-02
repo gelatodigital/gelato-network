@@ -116,47 +116,40 @@ interface IGelatoProviders {
     // =========== PROVIDER STATE READ APIs ==============
     // Provider Funding
     function providerFunds(address _provider) external view returns (uint256);
+    function isProviderLiquid(address _provider) external view returns(bool);
 
     // Provider Executor
     function providerExecutor(address _provider)
         external
         view
-        returns (address);
-
-    // Number of Providers Per Executor
+        returns(address);
     function executorProvidersCount(address _executor) external view returns(uint256);
     function isExecutorAssigned(address _executor) external view returns(bool);
-
-    // Provider Funding
-    function isProviderLiquid(address _provider, uint256 _gas, uint256 _gasPrice)
-        external
-        view
-        returns(bool);
 
     function isConditionProvided(address _provider, address _condition)
         external
         view
-        returns (bool);
+        returns(bool);
     function isActionProvided(address _provider, address _action)
         external
         view
-        returns (bool);
+        returns(bool);
     function actionGasPriceCeil(address _provider, address _action)
         external
         view
-        returns (uint256);
+        returns(uint256);
 
     // Providers' Module Getters
     function isProviderModule(address _provider, address _module)
         external
         view
-        returns (bool);
+        returns(bool);
     function numOfProviderModules(address _provider)
         external
         view
-        returns (uint256);
+        returns(uint256);
     function providerModules(address _provider)
         external
         view
-        returns (address[] memory);
+        returns(address[] memory);
 }
