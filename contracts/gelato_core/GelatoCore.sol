@@ -36,6 +36,9 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             "GelatoCore.mintExecClaim: providerExecutor's stake is insufficient."
         );
 
+        // User checks
+        require(_execClaim.expiryDate >= now, "GelatoCore.mintExecClaim: Expiry date cannot be in the past");
+
         // PROVIDER CHECKS (not for self-Providers)
         if (msg.sender != _execClaim.provider) {
             string memory canMint = providerCheck(_execClaim, 0);
