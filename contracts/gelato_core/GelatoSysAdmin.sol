@@ -21,6 +21,9 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
     uint256 public override sysAdminSuccessShare = 20;  // 20% of successful execution cost
     uint256 public override sysAdminFunds;
 
+    // Exec Gas Values
+    uint256 public internalGasRequirement = 500000;
+
     // == The main functions of the Sys Admin (DAO) ==
     // exec-tx gasprice
     function setGelatoGasPrice(uint256 _newGasPrice) external override onlyOwner {

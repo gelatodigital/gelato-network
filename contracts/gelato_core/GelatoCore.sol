@@ -89,7 +89,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     // ================  CAN EXECUTE EXECUTOR API ============================
     function canExec(
         ExecClaim memory _execClaim,
-        uint256 _gelatoGasPrice
+        uint256 _gelatoGasPrice,
+        uint256 _internalGasRequirement
     )
         public
         view
@@ -111,7 +112,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // CHECK for non-self-conditional Actions
         if (_execClaim.condition != address(0)) {
-            try IGelatoCondition(_execClaim.condition).ok(_execClaim.conditionPayload)
+            try IGelatoCondition(_execClaim.condition).ok{ gas: getGasForExternalCall(_internalGasRequirement - 100000, gasleft()) }
+                (_execClaim.conditionPayload)
                 returns(string memory condition)
             {
                 if (!condition.startsWithOk())
@@ -124,7 +126,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         }
 
         // CHECK Action Conditions
-        try IGelatoAction(_execClaim.action).termsOk(_execClaim.actionPayload)
+        try IGelatoAction(_execClaim.action).termsOk{ gas: getGasForExternalCall(_internalGasRequirement - 200000, gasleft()) }
+            (_execClaim.actionPayload)
             returns(string memory actionTermsOk)
         {
             if (!actionTermsOk.startsWithOk()) return string(abi.encodePacked("ActionTermsNotOk:", actionTermsOk));
@@ -152,6 +155,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         // Store startGas for gas-consumption based cost and payout calcs
         uint256 startGas = gasleft();
 
+        require(startGas > internalGasRequirement, "GelatoCore.exec: Insufficient gas sent");
+
         // memcopy of gelatoGasPrice and gelatoMaxGas, to avoid multiple storage reads
         uint256 _gelatoGasPrice = gelatoGasPrice;
         uint256 _gelatoMaxGas = gelatoMaxGas;
@@ -160,11 +165,11 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         require(tx.gasprice == _gelatoGasPrice, "GelatoCore.exec: tx.gasprice");
 
         // internal canExec() check
-        if (!_canExec(_execClaim, _gelatoGasPrice))
+        if (!_canExec(_execClaim, _gelatoGasPrice, internalGasRequirement))
             return;  // canExec failed: NO REFUND
 
         // internal exec attempt and check
-        if(!_exec(_execClaim)) {
+        if(!_exec(_execClaim, internalGasRequirement)) {
             // If the executor used gelatoMaxGas - txOverhead: Refund + Delete ExecClaim
             if (startGas > _gelatoMaxGas - 100000) {
                 _processProviderPayables(
@@ -192,11 +197,13 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
     function _canExec(
         ExecClaim memory _execClaim,
-        uint256 _gelatoGasPrice    )
+        uint256 _gelatoGasPrice,
+        uint256 _internalGasRequirement
+    )
         private
         returns(bool)
     {
-        string memory res = canExec(_execClaim, _gelatoGasPrice);
+        string memory res = canExec(_execClaim, _gelatoGasPrice, _internalGasRequirement);
         if (res.startsWithOk()) {
             emit LogCanExecSuccess(msg.sender, _execClaim.id, res);
             return true;  // SUCCESS: continue Execution
@@ -206,16 +213,21 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         }
     }
 
-    function _exec(ExecClaim memory _execClaim) private returns(bool success) {
+    function _exec(ExecClaim memory _execClaim, uint256 _internalGasRequirement) private returns(bool success) {
         // INTERACTIONS
         bytes memory revertMsg;
         string memory error;
 
         // Provided Users vs. Self-Providing Users
         if (_execClaim.userProxy != _execClaim.provider) {
+
             // Provided Users: execPayload from ProviderModule
             bytes memory execPayload;
-            try IGelatoProviderModule(_execClaim.providerModule).execPayload(
+            try IGelatoProviderModule(_execClaim.providerModule).execPayload{
+                gas: getGasForExternalCall(_internalGasRequirement - 300000, gasleft())
+            }
+
+            (
                 _execClaim.action,
                 _execClaim.actionPayload
             )
@@ -230,13 +242,18 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
             // Execution via UserProxy
             if (execPayload.length >= 4)
-                (success, revertMsg) = _execClaim.userProxy.call(execPayload);
+                (success, revertMsg) = _execClaim.userProxy.call{
+                    gas: getGasForExternalCall(_internalGasRequirement - 400000, gasleft())
+                }(execPayload);
+
             else error = "GelatoCore._exec.execPayload: invalid";
         } else {
             // Self-Providing Users: actionPayload == execPayload assumption
             // Execution via UserProxy
-            if (_execClaim.actionPayload.length >= 4)
-                (success, revertMsg) = _execClaim.userProxy.call(_execClaim.actionPayload);
+            if (_execClaim.actionPayload.length >= 4) {
+                (success, revertMsg) = _execClaim.userProxy.call{gas: getGasForExternalCall(_internalGasRequirement - 300000, gasleft())}
+                (_execClaim.actionPayload);
+            }
             else error = "GelatoCore._exec.actionPayload: invalid";
         }
 
@@ -368,6 +385,14 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
     function batchCollectExecClaimRent(ExecClaim[] memory _execClaims) public override {
         for (uint i; i < _execClaims.length; i++) collectExecClaimRent(_execClaims[i]);
+    }
+
+    function getGasForExternalCall(uint256 _requiredGelatoGas, uint256 gasLeft)
+        internal
+        pure
+        returns (uint256 gasForExternalCall)
+    {
+        _requiredGelatoGas < gasLeft ? gasForExternalCall = 0 : gasForExternalCall = gasLeft - _requiredGelatoGas;
     }
 
 }
