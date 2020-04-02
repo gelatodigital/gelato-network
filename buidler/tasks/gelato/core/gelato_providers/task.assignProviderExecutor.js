@@ -2,7 +2,7 @@ import { task } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../../buidler.config";
 
 export default task(
-  "gc-setproviderexecutor",
+  "gc-assignproviderexecutor",
   `Sends tx to GelatoCore.assignProviderExecutor(<gelatoexecutor>) on [--network] (default: ${defaultNetwork})`
 )
   .addOptionalPositionalParam("gelatoexecutor")
@@ -27,7 +27,7 @@ export default task(
       if (events) {
         await run("event-getparsedlog", {
           contractname: "GelatoCore",
-          eventname: "LogSetProviderExecutor",
+          eventname: "LogAssignProviderExecutor",
           txhash: tx.hash,
           blockhash,
           log: true

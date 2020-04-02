@@ -19,24 +19,18 @@ contract ProviderModuleGelatoUserProxy is
     Ownable
 {
     mapping(bytes32 => bool) public override isProxyExtcodehashProvided;
-    mapping(address => bool) public override isConditionProvided;
-    mapping(address => bool) public override isActionProvided;
     mapping(address => uint256) public override actionGasPriceCeil;
 
-    constructor(
-        bytes32[] memory hashes,
-        address[] memory _conditions,
-        ActionWithGasPriceCeil[] memory _actions
-    )
+    constructor(bytes32[] memory hashes, ActionWithGasPriceCeil[] memory _actions)
         public
     {
-        batchProvide(hashes, _conditions, _actions);
+        batchProvide(hashes, _actions);
     }
 
     // ================= GELATO PROVIDER MODULE STANDARD ================
     // @dev since we check extcodehash prior to execution, we forego the execution option
     //  where the userProxy is deployed at execution time.
-    function isProvided(ExecClaim calldata _execClaim, address, uint256 _gelatoGasPrice)
+    function isProvided(ExecClaim calldata _execClaim, uint256 _gelatoGasPrice)
         external
         view
         override
@@ -44,8 +38,6 @@ contract ProviderModuleGelatoUserProxy is
     {
         if (actionGasPriceCeil[_execClaim.action] < _gelatoGasPrice)
             return "ProviderModuleGelatoUserProxy.isProvided:gelatoGasPriceTooHigh";
-        if (!isConditionProvided[_execClaim.condition])
-            return "ProviderModuleGelatoUserProxy.isProvided:ConditionNotProvided";
         address userProxy = _execClaim.userProxy;
         bytes32 codehash;
         assembly { codehash := extcodehash(userProxy) }
@@ -87,64 +79,27 @@ contract ProviderModuleGelatoUserProxy is
         emit LogUnprovideProxyExtcodehash(_hash);
     }
 
-    // (Un-)provide Conditions
-    function provideCondition(address _condition) public override onlyOwner {
-        require(
-            !isConditionProvided[_condition],
-            "ProviderModuleGelatoUserProxy.provideCondition: already provided"
-        );
-        isConditionProvided[_condition] = true;
-        emit LogProvideCondition(_condition);
-    }
-
-    function unprovideCondition(address _condition) public override onlyOwner {
-        require(
-            isConditionProvided[_condition],
-            "ProviderModuleGelatoUserProxy.unprovideCondition: already not provided"
-        );
-        delete isConditionProvided[_condition];
-        emit LogUnprovideCondition(_condition);
-    }
-
-    // (Un-)provide Actions at different gasPrices
-    function provideAction(ActionWithGasPriceCeil memory _action) public override onlyOwner {
-        setActionGasPriceCeil(_action);
-        isActionProvided[_action._address] = true;
-        emit LogProvideAction(_action._address);
-    }
-
-    function unprovideAction(address _action) public override onlyOwner {
-        require(
-            actionGasPriceCeil[_action] != 0,
-            "ProviderModuleGelatoUserProxy.unprovideAction: already not provided"
-        );
-        delete isActionProvided[_action];
-        delete actionGasPriceCeil[_action];
-        emit LogUnprovideAction(_action);
-    }
-
     function setActionGasPriceCeil(ActionWithGasPriceCeil memory _action)
         public
         override
         onlyOwner
     {
         require(
-            actionGasPriceCeil[_action._address] != _action.gasPriceCeil &&
-            _action.gasPriceCeil != 0,
-            "ProviderModuleGelatoUserProxy.setActionGasPriceCeil: duplicate or 0"
+            actionGasPriceCeil[_action._address] != _action.gasPriceCeil,
+            "ProviderModuleGelatoUserProxy.setActionGasPriceCeil: already set"
         );
         emit LogSetActionGasPriceCeil(
             _action._address,
             actionGasPriceCeil[_action._address],
             _action.gasPriceCeil
         );
-        actionGasPriceCeil[_action._address] = _action.gasPriceCeil;
+        if (_action.gasPriceCeil == 0) delete actionGasPriceCeil[_action._address];
+        else actionGasPriceCeil[_action._address] = _action.gasPriceCeil;
     }
 
     // Batch (un-)provide
     function batchProvide(
         bytes32[] memory _hashes,
-        address[] memory _conditions,
         ActionWithGasPriceCeil[] memory _actions
     )
         public
@@ -152,21 +107,21 @@ contract ProviderModuleGelatoUserProxy is
         onlyOwner
     {
         for (uint256 i = 0; i < _hashes.length; i++) provideProxyExtcodehash(_hashes[i]);
-        for (uint256 i = 0; i < _conditions.length; i++) provideCondition(_conditions[i]);
         for (uint256 i = 0; i < _actions.length; i++) setActionGasPriceCeil(_actions[i]);
     }
 
-    function batchUnprovide(
-        bytes32[] calldata _hashes,
-        address[] calldata _conditions,
-        address[] calldata _actions
-    )
+    function batchUnprovide(bytes32[] calldata _hashes, address[] calldata _actions)
         external
         override
         onlyOwner
     {
         for (uint256 i = 0; i < _hashes.length; i++) unprovideProxyExtcodehash(_hashes[i]);
-        for (uint256 i = 0; i < _conditions.length; i++) unprovideCondition(_conditions[i]);
-        for (uint256 i = 0; i < _actions.length; i++) unprovideAction(_actions[i]);
+        for (uint256 i = 0; i < _actions.length; i++) {
+            ActionWithGasPriceCeil memory action = ActionWithGasPriceCeil({
+                _address: _actions[i],
+                gasPriceCeil: 0
+            });
+            setActionGasPriceCeil(action);
+        }
     }
 }

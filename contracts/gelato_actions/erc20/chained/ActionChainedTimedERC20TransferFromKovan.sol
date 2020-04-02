@@ -114,9 +114,8 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
         uint256 gelatoGasPrice = gelatoCore.gelatoGasPrice();
 
         if (_execClaim.userProxy != _execClaim.provider) {
-            string memory isProvided = gelatoCore.isProvided(
+            string memory isProvided = gelatoCore.combinedProviderChecks(
                 _execClaim,
-                address(0),  // executor defaults to providerExecutor
                 gelatoGasPrice
             );
             if (!isProvided.startsWithOk()) {

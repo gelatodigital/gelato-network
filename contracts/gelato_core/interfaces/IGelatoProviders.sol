@@ -10,7 +10,7 @@ interface IGelatoProviders {
     event LogUnregisterProvider(address indexed provider);
 
     // Provider Executor
-    event LogSetProviderExecutor(
+    event LogAssignProviderExecutor(
         address indexed provider,
         address indexed oldExecutor,
         address indexed newExecutor
@@ -28,26 +28,35 @@ interface IGelatoProviders {
         uint256 newProviderFunds
     );
 
-    // Provider Module
-    event LogAddProviderModule(address module);
-    event LogRemoveProviderModule(address module);
+    // Conditions
+    event LogProvideCondition(address indexed provider, address indexed condition);
+    event LogUnprovideCondition(address indexed provider, address indexed condition);
 
-    // IGelatoProviderModule Standard wrapper
-    function isProvided(
-        ExecClaim calldata _execClaim,
-        address _executor,
-        uint256 _gelatoGasPrice
-    )
+    // Actions
+    event LogProvideAction(address indexed provider, address indexed action);
+    event LogUnprovideAction(address indexed provider, address indexed action);
+
+    // Provider Module
+    event LogAddProviderModule(address indexed provider, address indexed module);
+    event LogRemoveProviderModule(address indexed provider, address indexed module);
+
+
+    // =========== CORE PROTOCOL APIs ==============
+    // Standard Provider Checks
+    function coreProviderChecks(ExecClaim calldata _execClaim) external view returns(bool);
+
+    // Modular Checks via IGelatoProviderModule Standard wrapper
+    function providerModuleChecks(ExecClaim calldata _execClaim, uint256 _gelatoGasPrice)
         external
         view
-        returns (string memory);
+        returns(string memory);
 
-    // Registration
-    function registerProvider(address _executor, address[] calldata _modules)
+    function combinedProviderChecks(ExecClaim calldata _execClaim, uint256 _gelatoGasPrice)
         external
-        payable;
-    function unregisterProvider(address[] calldata _modules) external;
+        view
+        returns(string memory);
 
+    // =========== PROVIDER STATE WRITE APIs ==============
     // Provider Funding
     function provideFunds(address _provider) external payable;
     function unprovideFunds(uint256 _withdrawAmount) external;
@@ -55,18 +64,39 @@ interface IGelatoProviders {
     // Provider Executor
     function assignProviderExecutor(address _provider, address _executor) external;
 
+    // (Un-)provide Conditions
+    function provideCondition(address _condition) external;
+    function unprovideCondition(address _condition) external;
+
+    // (Un-)provide Conditions
+    function provideAction(address _action) external;
+    function unprovideAction(address _action) external;
+
     // Provider Module
     function addProviderModule(address _module) external;
     function removeProviderModule(address _module) external;
-    function batchAddProviderModules(address[] calldata _modules) external;
-    function batchRemoveProviderModules(address[] calldata _modules) external;
 
+    // Batch (un-)provide
+    function batchProvide(
+        address _executor,
+        address[] calldata _conditions,
+        address[] calldata _actions,
+        address[] calldata _modules
+    )
+        external
+        payable;
+
+    function batchUnprovide(
+        uint256 _withdrawAmount,
+        address[] calldata _conditions,
+        address[] calldata _actions,
+        address[] calldata _modules
+    )
+        external;
+
+    // =========== PROVIDER STATE READ APIs ==============
     // Provider Funding
     function providerFunds(address _provider) external view returns (uint256);
-    function isProviderLiquid(address _provider, uint256 _gas, uint256 _gasPrice)
-        external
-        view
-        returns(bool);
 
     // Provider Executor
     function providerExecutor(address _provider)
@@ -77,6 +107,21 @@ interface IGelatoProviders {
     // Number of Providers Per Executor
     function executorProvidersCount(address _executor) external view returns(uint256);
     function isExecutorAssigned(address _executor) external view returns(bool);
+
+    // Provider Funding
+    function isProviderLiquid(address _provider, uint256 _gas, uint256 _gasPrice)
+        external
+        view
+        returns(bool);
+
+    function isConditionProvided(address _provider, address _condition)
+        external
+        view
+        returns (bool);
+    function isActionProvided(address _provider, address _action)
+        external
+        view
+        returns (bool);
 
     // Providers' Module Getters
     function isProviderModule(address _provider, address _module)
