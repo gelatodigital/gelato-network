@@ -15,13 +15,12 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
     using SafeMath for uint256;
 
-
     // ================  STATE VARIABLES ======================================
     uint256 public override currentExecClaimId;
     // execClaim.id => execClaimHash
     mapping(uint256 => bytes32) public override execClaimHash;
     // Executors can charge Providers execClaimRent
-    mapping(uint256 => uint256) public override lastExecClaimRentPayment;
+    mapping(uint256 => uint256) public override lastExecClaimRentPaymentDate;
 
     // ================  MINTING ==============================================
     // Only pass _executor for self-providing users, else address(0)
@@ -41,10 +40,10 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // PROVIDER CHECKS (not for self-Providers)
         if (msg.sender != _execClaim.provider) {
-            string memory canMint = providerCheck(_execClaim, 0);
+            string memory isProvided = isExecClaimProvided(_execClaim, gelatoGasPrice);
             require(
-                canMint.startsWithOk(),
-                string(abi.encodePacked("GelatoCore.mintExecClaim.mintingGate:", canMint))
+                isProvided.startsWithOk(),
+                string(abi.encodePacked("GelatoCore.mintExecClaim.mintingGate:", isProvided))
             );
         }
 
@@ -58,8 +57,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         // ExecClaim Hash registration
         execClaimHash[_execClaim.id] = hashedExecClaim;
 
-        // Set Minting time for rent payment
-        lastExecClaimRentPayment[_execClaim.id] = now;
+        // First ExecClaim Rent for first execClaimTenancy is free
+        lastExecClaimRentPaymentDate[_execClaim.id] = now;
 
         emit LogExecClaimMinted(executor, _execClaim.id, hashedExecClaim, _execClaim);
     }
@@ -98,12 +97,11 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         returns(string memory)
     {
         if (_execClaim.userProxy != _execClaim.provider) {
-            string memory res = providerCheck(_execClaim, _gelatoGasPrice);
+            string memory res = providerCanExec(_execClaim, _gelatoGasPrice);
             if (!res.startsWithOk()) return res;
         }
 
-        if (!isProviderLiquid(_execClaim.provider))
-            return "ProviderIlliquid";
+        if (!isProviderLiquid(_execClaim.provider)) return "ProviderIlliquid";
 
         bytes32 hashedExecClaim = keccak256(abi.encode(_execClaim));
         if (execClaimHash[_execClaim.id] != hashedExecClaim) return "InvalidExecClaimHash";
@@ -137,12 +135,10 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             return "ActionRevertedNoMessage";
         }
 
-        // Check if assigned executor is calling the function. Note: Anyone can check if
-        // canExecute returns true if the return value is "canExecOkButInvalidExecutor"
-        if (msg.sender != providerExecutor[_execClaim.provider]) return "canExecOkButInvalidExecutor";
+        // At end, to allow for canExec debugging from any account. Else check this first.
+        if (msg.sender != providerExecutor[_execClaim.provider]) return "InvalidExecutor";
 
         return "Ok";
-
     }
 
     // ================  EXECUTE EXECUTOR API ============================
@@ -341,19 +337,25 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         // CHECKS
         require(
             providerExecutor[_execClaim.provider] == msg.sender,
-            "GelatoCore.extractExecutorRent: msg.sender not assigned Executor"
+            "GelatoCore.collecExecClaimRent: msg.sender not assigned Executor"
+        );
+        if (_execClaim.expiryDate != 0) {
+            require(
+                _execClaim.expiryDate > now,
+                "GelatoCore.collectExecClaimRent: expired"
+            );
+        }
+        require(
+            lastExecClaimRentPaymentDate[_execClaim.id] <= now - execClaimTenancy,
+            "GelatoCore.collecExecClaimRent: rent is not due"
         );
         require(
-            lastExecClaimRentPayment[_execClaim.id] <= now - execClaimTenancy,
-            "GelatoCore.extractExecutorRent: rent is not due"
-        );
-        require(
-            (providerCheck(_execClaim, 0)).startsWithOk(),
-            "GelatoCore.extractExecutorRent: execClaim not provided any more"
+            (isExecClaimProvided(_execClaim)).startsWithOk(),
+            "GelatoCore.collecExecClaimRent: isConditionActionProvided failed"
         );
         require(
             providerFunds[_execClaim.provider] >= execClaimRent,
-            "GelatoCore.extractExecutorRent: insufficient providerFunds"
+            "GelatoCore.collecExecClaimRent: insufficient providerFunds"
         );
         bytes32 hashedExecClaim = keccak256(abi.encode(_execClaim));
         require(
@@ -361,21 +363,14 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             "GelatoCore.collectExecClaimRent: invalid execClaimHash"
         );
 
-        // EFFECTS: If the ExecClaim expired, automatic cancellation
-        if (_execClaim.expiryDate != 0 && _execClaim.expiryDate <= now) {
-            cancelExecClaim(_execClaim);
-            delete lastExecClaimRentPayment[_execClaim.id];
-            // @DEV we need to return here, otherwise even if a user inputted an expiry date less than 29 days, the provider
-            // will still get charged for rent, even though the first period is free
-            // tho no executor will call this here as they don't get a refund, hence we can delete this if statement IMO
-            return;
-        } else lastExecClaimRentPayment[_execClaim.id] = now;
+        // EFFECTS
+        lastExecClaimRentPaymentDate[_execClaim.id] = now;
 
-        // INTERACTIONS: Provider pays Executor ExecClaim Rent
+        // INTERACTIONS: Provider pays Executor ExecClaim Rent.
         providerFunds[_execClaim.provider] -= execClaimRent;
         executorFunds[msg.sender] += execClaimRent;
 
-        emit LogExtractExecClaimRent(
+        emit LogCollectExecClaimRent(
             msg.sender,
             _execClaim.provider,
             _execClaim.id,
