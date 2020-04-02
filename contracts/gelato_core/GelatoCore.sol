@@ -92,7 +92,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         public
         view
         override
-        returns (string memory)
+        returns(string memory)
     {
         if (_execClaim.userProxy != _execClaim.provider) {
             string memory res = executionGate(_execClaim, _gelatoGasPrice);
@@ -240,27 +240,28 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             else error = "GelatoCore._exec.actionPayload: invalid";
         }
 
-        // Error string decoding for revertMsg from userProxy.call
-        if (!success && bytes(error).length == 0) {
-            // FAILURE
-            // 32-length, 4-ErrorSelector, UTF-8 revertMsg
-            if (revertMsg.length % 32 == 4) {
-                bytes4 selector;
-                assembly { selector := mload(add(revertMsg, 32)) }
-                if (selector == 0x08c379a0) {  // Function selector for Error(string)
-                    assembly { revertMsg := mload(add(revertMsg, 36)) }
-                    error = string(
-                        abi.encodePacked("GelatoCore._exec:", string(revertMsg))
-                    );
+        // FAILURE
+        if (!success) {
+            // Error string decoding for revertMsg from userProxy.call
+            if (bytes(error).length == 0) {
+                // 32-length, 4-ErrorSelector, UTF-8 revertMsg
+                if (revertMsg.length % 32 == 4) {
+                    bytes4 selector;
+                    assembly { selector := mload(add(revertMsg, 32)) }
+                    if (selector == 0x08c379a0) {  // Function selector for Error(string)
+                        assembly { revertMsg := mload(add(revertMsg, 36)) }
+                        error = string(
+                            abi.encodePacked("GelatoCore._exec:", string(revertMsg))
+                        );
+                    } else {
+                        error = "GelatoCore._exec:NoErrorSelector";
+                    }
                 } else {
-                    error = "GelatoCore._exec:NoErrorSelector";
+                    error = "GelatoCore._exec:UnexpectedReturndata";
                 }
-            } else {
-                error = "GelatoCore._exec:UnexpectedReturndata";
             }
-        }
-        else if (success) emit LogExecSuccess(msg.sender, _execClaim.id);  // SUCCESS END
-        else emit LogExecFailed(msg.sender, _execClaim.id, error);  // FAILURE END
+            emit LogExecFailed(msg.sender, _execClaim.id, error);  // FAILURE END
+        } else emit LogExecSuccess(msg.sender, _execClaim.id);  // SUCCESS END
     }
 
     function _processProviderPayables(
