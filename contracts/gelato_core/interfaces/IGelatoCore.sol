@@ -53,17 +53,12 @@ interface IGelatoCore {
         external
         payable;
 
-    function canExec(
-        ExecClaim calldata _execClaim,
-        bytes32 _execClaimHash,
-        uint256 _gelatoGasPrice,
-        uint256 _gelatoMaxGas
-    )
+    function canExec(ExecClaim calldata _execClaim, uint256 _gelatoGasPrice)
         external
         view
         returns(string memory);
 
-    function exec(ExecClaim calldata _execClaim, bytes32 _execClaimHash) external;
+    function exec(ExecClaim calldata _execClaim) external;
 
     function cancelExecClaim(ExecClaim calldata _execClaim) external;
     function batchCancelExecClaim(ExecClaim[] calldata _execClaims) external;

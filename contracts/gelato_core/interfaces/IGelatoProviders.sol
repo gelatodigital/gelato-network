@@ -5,6 +5,12 @@ import {IGelatoProviderModule} from "./IGelatoProviderModule.sol";
 import {ExecClaim} from "../interfaces/IGelatoCore.sol";
 
 interface IGelatoProviders {
+
+    struct ActionWithGasPriceCeil {
+        address _address;
+        uint256 gasPriceCeil;
+    }
+
     // Registration
     event LogRegisterProvider(address indexed provider);
     event LogUnregisterProvider(address indexed provider);
@@ -35,6 +41,11 @@ interface IGelatoProviders {
     // Actions
     event LogProvideAction(address indexed provider, address indexed action);
     event LogUnprovideAction(address indexed provider, address indexed action);
+    event LogSetActionGasPriceCeil(
+        address indexed action,
+        uint256 indexed oldCeil,
+        uint256 indexed newCeil
+    );
 
     // Provider Module
     event LogAddProviderModule(address indexed provider, address indexed module);
@@ -42,19 +53,27 @@ interface IGelatoProviders {
 
 
     // =========== CORE PROTOCOL APIs ==============
-    // Standard Provider Checks
-    function coreProviderChecks(ExecClaim calldata _execClaim) external view returns(bool);
+    // GelatoCore: mintExecClaim/canExec/collectExecClaimRent Gate
+    function isConditionActionProvided(ExecClaim calldata _execClaim)
+        external
+        view
+        returns(string memory);
 
-    // Modular Checks via IGelatoProviderModule Standard wrapper
+    // IGelatoProviderModule: Gelato mintExecClaim/canExec Gate
     function providerModuleChecks(ExecClaim calldata _execClaim, uint256 _gelatoGasPrice)
         external
         view
         returns(string memory);
 
-    function combinedProviderChecks(ExecClaim calldata _execClaim, uint256 _gelatoGasPrice)
+    function isExecClaimProvided(ExecClaim calldata _execClaim, uint256 _gelatoGasPrice)
         external
         view
-        returns(string memory);
+        returns(string memory res);
+
+    function providerCanExec(ExecClaim calldata _execClaim, uint256 _gelatoGasPrice)
+        external
+        view
+        returns(string memory res);
 
     // =========== PROVIDER STATE WRITE APIs ==============
     // Provider Funding
@@ -65,22 +84,22 @@ interface IGelatoProviders {
     function assignProviderExecutor(address _provider, address _executor) external;
 
     // (Un-)provide Conditions
-    function provideCondition(address _condition) external;
-    function unprovideCondition(address _condition) external;
+    function provideConditions(address[] calldata _conditions) external;
+    function unprovideConditions(address[] calldata _conditions) external;
 
     // (Un-)provide Conditions
-    function provideAction(address _action) external;
-    function unprovideAction(address _action) external;
+    function provideActions(ActionWithGasPriceCeil[] calldata _actions) external;
+    function unprovideActions(address[] calldata _actions) external;
+    function setActionGasPriceCeil(ActionWithGasPriceCeil calldata _action) external;
 
     // Provider Module
-    function addProviderModule(address _module) external;
-    function removeProviderModule(address _module) external;
+    function addProviderModules(address[] calldata _modules) external;
+    function removeProviderModules(address[] calldata _modules) external;
 
     // Batch (un-)provide
     function batchProvide(
-        address _executor,
         address[] calldata _conditions,
-        address[] calldata _actions,
+        ActionWithGasPriceCeil[] calldata _actions,
         address[] calldata _modules
     )
         external
@@ -122,6 +141,10 @@ interface IGelatoProviders {
         external
         view
         returns (bool);
+    function actionGasPriceCeil(address _provider, address _action)
+        external
+        view
+        returns (uint256);
 
     // Providers' Module Getters
     function isProviderModule(address _provider, address _module)
