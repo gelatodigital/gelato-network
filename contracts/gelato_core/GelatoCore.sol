@@ -86,8 +86,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     // ================  CAN EXECUTE EXECUTOR API ============================
     function canExec(
         ExecClaim memory _execClaim,
-        uint256 _gelatoGasPrice,
-        uint256 _gelatoMaxGas
+        uint256 _gelatoGasPrice
     )
         public
         view
@@ -158,7 +157,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         require(tx.gasprice == _gelatoGasPrice, "GelatoCore.exec: tx.gasprice");
 
         // internal canExec() check
-        if (!_canExec(_execClaim, _gelatoGasPrice, _gelatoMaxGas))
+        if (!_canExec(_execClaim, _gelatoGasPrice))
             return;  // canExec failed: NO REFUND
 
         // internal exec attempt and check
@@ -190,13 +189,11 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
     function _canExec(
         ExecClaim memory _execClaim,
-        uint256 _gelatoGasPrice,
-        uint256 _gelatoMaxGas
-    )
+        uint256 _gelatoGasPrice    )
         private
         returns(bool)
     {
-        string memory res = canExec(_execClaim, _gelatoGasPrice, _gelatoMaxGas);
+        string memory res = canExec(_execClaim, _gelatoGasPrice);
         if (res.startsWithOk()) {
             emit LogCanExecSuccess(msg.sender, _execClaim.id, res);
             return true;  // SUCCESS: continue Execution
