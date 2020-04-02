@@ -38,10 +38,10 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // PROVIDER CHECKS (not for self-Providers)
         if (msg.sender != _execClaim.provider) {
-            string memory isProvided = providerModuleCheck(_execClaim);
+            string memory canMint = providerCheck(_execClaim, 0);
             require(
-                isProvided.startsWithOk(),
-                string(abi.encodePacked("GelatoCore.mintExecClaim.isProvided:", isProvided))
+                canMint.startsWithOk(),
+                string(abi.encodePacked("GelatoCore.mintExecClaim.mintingGate:", canMint))
             );
         }
 
@@ -95,11 +95,11 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         returns(string memory)
     {
         if (_execClaim.userProxy != _execClaim.provider) {
-            string memory res = executionGate(_execClaim, _gelatoGasPrice);
+            string memory res = providerCheck(_execClaim, _gelatoGasPrice);
             if (!res.startsWithOk()) return res;
         }
 
-        if (!isProviderLiquid(_execClaim.provider, _gelatoGasPrice, _gelatoMaxGas))
+        if (!isProviderLiquid(_execClaim.provider))
             return "ProviderIlliquid";
 
         bytes32 hashedExecClaim = keccak256(abi.encode(_execClaim));
@@ -330,9 +330,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             lastExecClaimRentPayment[_execClaim.id] <= now - execClaimTenancy,
             "GelatoCore.extractExecutorRent: rent is not due"
         );
-        // @DEV Put the whitelist stuff back on core => only isProvided check, not provider module check
         require(
-            (conditionActionCheck(_execClaim, actionMaxGasPriceCeil)).startsWithOk(),
+            (providerCheck(_execClaim, 0)).startsWithOk(),
             "GelatoCore.extractExecutorRent: execClaim not provided any more"
         );
         require(
@@ -349,6 +348,10 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         if (_execClaim.expiryDate != 0 && _execClaim.expiryDate <= now) {
             cancelExecClaim(_execClaim);
             delete lastExecClaimRentPayment[_execClaim.id];
+            // @DEV we need to return here, otherwise even if a user inputted an expiry date less than 29 days, the provider
+            // will still get charged for rent, even though the first period is free
+            // tho no executor will call this here as they don't get a refund, hence we can delete this if statement IMO
+            return;
         } else lastExecClaimRentPayment[_execClaim.id] = now;
 
         // INTERACTIONS: Provider pays Executor ExecClaim Rent

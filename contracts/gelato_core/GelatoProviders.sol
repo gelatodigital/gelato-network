@@ -23,8 +23,8 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     using GelatoString for string;
 
     mapping(address => uint256) public override providerFunds;
-    mapping(address => bool) public override isConditionProvided;
-    mapping(address => uint256) public override actionGasPriceCeil;
+    mapping(address => mapping(address => bool)) public override isConditionProvided;
+    mapping(address => mapping(address => uint256)) public override actionGasPriceCeil;
     mapping(address => address) public override providerExecutor;
     mapping(address => uint256) public override executorProvidersCount;
     mapping(address => EnumerableAddressSet.AddressSet) internal _providerModules;
@@ -43,6 +43,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     {
         if (!isProviderModule(_execClaim.provider, _execClaim.providerModule))
             return "InvalidProviderModule";
+
         IGelatoProviderModule providerModule = IGelatoProviderModule(
             _execClaim.providerModule
         );
@@ -50,25 +51,8 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         return providerModule.providerModuleCheck(_execClaim);
     }
 
-    // IGelatoProviderModule: Condition and Action check
-    function conditionActionCheck (
-        ExecClaim memory _execClaim,
-        uint256 _gelatoGasPrice
-    )
-        public
-        view
-        override
-        returns(string memory)
-    {
-        if (actionGasPriceCeil[_execClaim.action] < _gelatoGasPrice)
-            return "ProviderModuleGnosisSafeProxy.isProvided:gelatoGasPriceTooHigh";
-        if (!isConditionProvided[_execClaim.condition])
-            return "ProviderModuleGnosisSafeProxy.isProvided:ConditionNotProvided";
-        return "Ok";
-    }
-
     // IGelatoProviderModule: Gelato Execution Gate
-    function executionGate (
+    function providerCheck (
         ExecClaim memory _execClaim,
         uint256 _gelatoGasPrice
     )
@@ -77,10 +61,27 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         override
         returns(string memory)
     {
+        // 1. Check if provider module returns OK
         string memory providerModuleCheckReturn = providerModuleCheck(_execClaim);
         if (!providerModuleCheckReturn.startsWithOk()) return providerModuleCheckReturn;
-        string memory conditionActionCheckReturn = conditionActionCheck(_execClaim, _gelatoGasPrice);
-        if (!conditionActionCheckReturn.startsWithOk()) return conditionActionCheckReturn;
+
+        // @DEV if we pass 0 (minting and renewing) as _gelatoGasPrice, we only check if action is whitelisted and not
+        // the actual actionGasPriceCeil
+        if (_gelatoGasPrice == 0) {
+            // 2. Check if action is whitelisted by provider
+            if (actionGasPriceCeil[_execClaim.provider][_execClaim.action] == 0)
+                return "ProviderModuleGnosisSafeProxy.isProvided:ActionNotProvided";
+        } else {
+            // 2. Check if action is whitelisted && if actionGasPriceCeil is greater than current
+            // gelatoGasPrice
+            if (_gelatoGasPrice > actionGasPriceCeil[_execClaim.provider][_execClaim.action])
+                return "ProviderModuleGnosisSafeProxy.isProvided:gelatoGasPriceTooHigh";
+        }
+
+        // 3. Check if condition is whitelisted by provider
+        if (!isConditionProvided[_execClaim.provider][_execClaim.condition])
+            return "ProviderModuleGnosisSafeProxy.isProvided:ConditionNotProvided";
+
         return "ok";
     }
 
@@ -132,13 +133,13 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         emit LogUnprovideFunds(msg.sender, previousProviderFunds, newProviderFunds);
     }
 
-    function isProviderLiquid(address _provider, uint256 _gas, uint256 _gasPrice)
+    function isProviderLiquid(address _provider)
         public
         view
         override
         returns(bool)
     {
-        return _gas.mul(_gasPrice) <= providerFunds[_provider] ? true : false;
+        return minProviderStake <= providerFunds[_provider] ? true : false;
     }
 
     // Provider Executor: can be set by Provider OR providerExecutor.
@@ -168,19 +169,19 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     // (Un-)provide Conditions
     function provideCondition(address _condition) public override onlyOwner {
         require(
-            !isConditionProvided[_condition],
+            !isConditionProvided[msg.sender][_condition],
             "ProviderModuleGnosisSafeProxy.provideCondition: already provided"
         );
-        isConditionProvided[_condition] = true;
+        isConditionProvided[msg.sender][_condition] = true;
         emit LogProvideCondition(_condition);
     }
 
     function unprovideCondition(address _condition) public override onlyOwner {
         require(
-            isConditionProvided[_condition],
+            isConditionProvided[msg.sender][_condition],
             "ProviderModuleGnosisSafeProxy.unprovideCondition: already not provided"
         );
-        delete isConditionProvided[_condition];
+        delete isConditionProvided[msg.sender][_condition];
         emit LogUnprovideCondition(_condition);
     }
 
@@ -188,12 +189,12 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     function provideAction(address _action, uint256 _actionGasPriceCeil) public override onlyOwner {
         // If _actionGasPriceCeil == 0 is passed, set actionGasPriceCeil to actionMaxGasPriceCeil
         if (_actionGasPriceCeil == 0) _actionGasPriceCeil = actionMaxGasPriceCeil;
-        actionGasPriceCeil[_action] = _actionGasPriceCeil;
+        actionGasPriceCeil[msg.sender][_action] = _actionGasPriceCeil;
         emit LogProvideAction(_action, _actionGasPriceCeil);
     }
 
     function unprovideAction(address _action) public override onlyOwner {
-        delete actionGasPriceCeil[_action];
+        delete actionGasPriceCeil[msg.sender][_action];
         emit LogUnprovideAction(_action);
     }
 

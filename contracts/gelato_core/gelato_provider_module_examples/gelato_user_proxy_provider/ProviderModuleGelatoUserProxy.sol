@@ -36,16 +36,12 @@ contract ProviderModuleGelatoUserProxy is
     // ================= GELATO PROVIDER MODULE STANDARD ================
     // @dev since we check extcodehash prior to execution, we forego the execution option
     //  where the userProxy is deployed at execution time.
-    function isProvided(ExecClaim calldata _execClaim, address, uint256 _gelatoGasPrice)
+    function providerModuleCheck(ExecClaim calldata _execClaim)
         external
         view
         override
         returns (string memory)
     {
-        if (actionGasPriceCeil[_execClaim.action] < _gelatoGasPrice)
-            return "ProviderModuleGelatoUserProxy.isProvided:gelatoGasPriceTooHigh";
-        if (!isConditionProvided[_execClaim.condition])
-            return "ProviderModuleGelatoUserProxy.isProvided:ConditionNotProvided";
         address userProxy = _execClaim.userProxy;
         bytes32 codehash;
         assembly { codehash := extcodehash(userProxy) }

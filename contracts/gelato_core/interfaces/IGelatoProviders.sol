@@ -48,25 +48,20 @@ interface IGelatoProviders {
         view
         returns (string memory);
 
-    function executionGate (
+    function providerCheck (
         ExecClaim calldata _execClaim,
         uint256 _gelatoGasPrice
     )
         external
         view
-
         returns(string memory);
 
-    function conditionActionCheck (
-        ExecClaim calldata _execClaim,
-        uint256 _gelatoGasPrice
-    )
-        external
-        view
-
-        returns(string memory);
-
-
+    // function mintingGate (
+    //     ExecClaim calldata _execClaim
+    // )
+    //     external
+    //     view
+    //     returns(string memory);
 
     // Registration
     function registerProvider(address _executor, address[] calldata _modules)
@@ -115,7 +110,7 @@ interface IGelatoProviders {
 
     // Provider Funding
     function providerFunds(address _provider) external view returns (uint256);
-    function isProviderLiquid(address _provider, uint256 _gas, uint256 _gasPrice)
+    function isProviderLiquid(address _provider)
         external
         view
         returns(bool);
@@ -127,7 +122,7 @@ interface IGelatoProviders {
         returns (address);
 
     // Check if condition is whitelisted
-    function isConditionProvided(address _condition)
+    function isConditionProvided(address _provider, address _condition)
         external
         view
         returns (bool);
@@ -139,7 +134,7 @@ interface IGelatoProviders {
     //     returns (bool);
 
     // Check if action is whitelisted
-    function actionGasPriceCeil(address _action)
+    function actionGasPriceCeil(address _provider, address _action)
         external
         view
         returns (uint256);
