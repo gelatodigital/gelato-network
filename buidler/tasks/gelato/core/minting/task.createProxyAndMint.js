@@ -19,7 +19,7 @@ export default task(
   .addOptionalParam("gelatoexecutor", "Defaults to network addressbook default")
   .addOptionalParam("conditionaddress", "", constants.AddressZero)
   .addOptionalParam("actionaddress", "Must be supplied if not <actionname>")
-  .addOptionalParam("conditionpayload", "Payload for optional condition")
+  .addOptionalParam("conditionpayload", "Payload for optional condition", constants.HashZero)
   .addOptionalParam(
     "actionpayload",
     "If not provided, must have a default returned from handleGelatoPayload()"
@@ -65,7 +65,7 @@ export default task(
   )
   .addOptionalParam(
     "defaultpayloadscript",
-    "Deployed contract Script's (also --to if no --to) default --data"
+    "Script to retrieve --data and to be --to (if not --to supplied)"
   )
   .addOptionalParam(
     "fallbackhandler",
@@ -103,6 +103,7 @@ export default task(
         throw new Error(`\n Must supply <actionname> or --actionaddress`);
       if (
         taskArgs.conditionname &&
+        taskArgs.conditionname !== "0" &&
         !taskArgs.conditionname.startsWith("Condition")
       ) {
         throw new Error(
@@ -186,12 +187,19 @@ export default task(
       // Condition and ConditionPayload (optional)
       if (taskArgs.conditionname) {
         if (taskArgs.conditionaddress === constants.AddressZero) {
-          taskArgs.conditionaddress = await run("bre-config", {
-            deployments: true,
-            contractname: taskArgs.conditionname
-          });
+          if(taskArgs.conditionname === "0") {
+            taskArgs.conditionaddress = await run("bre-config", {
+              deployments: true,
+              contractname: taskArgs.defaultpayloadscript
+            });
+          } else {
+            taskArgs.conditionaddress = await run("bre-config", {
+              deployments: true,
+              contractname: taskArgs.to
+            });
+          }
         }
-        if (!taskArgs.conditionpayload) {
+        if (!taskArgs.conditionpayload && taskArgs.conditionname !== "0") {
           taskArgs.conditionpayload = await run("handleGelatoPayload", {
             contractname: taskArgs.conditionname
           });

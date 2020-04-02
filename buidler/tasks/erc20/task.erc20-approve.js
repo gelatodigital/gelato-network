@@ -13,11 +13,11 @@ export default task(
   .addPositionalParam("amount", "Uint: amount to approve spender for")
   .addFlag("log", "Logs return values to stdout")
   .setAction(async ({ erc20address, spender, amount, log }) => {
-    await run("checkAddressBook", {
-      networkname: network.name,
-      category: "erc20",
-      entry: erc20address
-    });
+    // erc20address = await run("checkAddressBook", {
+    //   networkname: network.name,
+    //   category: "erc20",
+    //   entry: erc20address
+    // });
 
     const txHash = await run("erc20:approve", {
       erc20address,

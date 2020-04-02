@@ -52,6 +52,8 @@ contract GelatoCore is IGelatoCore, GelatoGasAdmin, GelatoProviders, GelatoExecu
                 string(abi.encodePacked("GelatoCore.mintExecClaim.isProvided:", isProvided))
             );
         }
+        */
+        address userProxy = msg.sender;
 
         // EXECUTOR CHECKS
         _requireMaxExecutorClaimLifespan(_executor, _execClaim.expiryDate);
