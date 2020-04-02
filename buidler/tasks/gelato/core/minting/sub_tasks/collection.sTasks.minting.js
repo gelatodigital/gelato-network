@@ -28,7 +28,7 @@ import "./default_payloads/actions/sTask.defaultpayload.ActionKyberTrade";
 import "./default_payloads/actions/sTask.defaultpayload.ActionKyberTradeKovan";
 // ActionMultiMintForConditionTimestampPassed
 import "./default_payloads/actions/sTask.defaultpayload.ActionMultiMintForConditionTimestampPassed";
-// ActionRebalancePortfolio
-import "./default_payloads/actions/sTask.defaultpayload.ActionRebalancePortfolio";
-// ActionChainedRebalancePortfolio
-import "./default_payloads/actions/sTask.defaultpayload.ActionChainedRebalancePortfolio";
+// ActionRebalancePortfolioKovan
+import "./default_payloads/actions/sTask.defaultpayload.ActionRebalancePortfolioKovan";
+// ActionChainedRebalancePortfolioKovan
+import "./default_payloads/actions/sTask.defaultpayload.ActionChainedRebalancePortfolioKovan";

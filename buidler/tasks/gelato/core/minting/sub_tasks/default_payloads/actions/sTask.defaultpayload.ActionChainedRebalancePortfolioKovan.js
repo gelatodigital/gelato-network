@@ -3,8 +3,8 @@ import { AddressZero } from "ethers/constants";
 import { BigNumber } from "ethers/utils";
 
 export default internalTask(
-  "gc-mintexecclaim:defaultpayload:ActionChainedRebalancePortfolio",
-  `Returns a hardcoded actionPayload of ActionChainedRebalancePortfolio`
+  "gc-mint:defaultpayload:ActionChainedRebalancePortfolioKovan",
+  `Returns a hardcoded actionPayload of ActionChainedRebalancePortfolioKovan`
 )
   .addOptionalPositionalParam(
     "executorindex",
@@ -27,7 +27,7 @@ export default internalTask(
       const providerAndExecutor = [provider._address, gelatoExecutor._address];
 
       const actionContract = await run("instantiateContract", {
-        contractname: "ActionChainedRebalancePortfolio",
+        contractname: "ActionChainedRebalancePortfolioKovan",
         read: true,
         log
       });
@@ -44,7 +44,7 @@ export default internalTask(
       ];
 
       const actionPayload = await run("abi-encode-withselector", {
-        contractname: "ActionChainedRebalancePortfolio",
+        contractname: "ActionChainedRebalancePortfolioKovan",
         functionname: "chainedAction",
         inputs: [providerAndExecutor, conditionAndAction],
         log
