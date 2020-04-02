@@ -5,40 +5,23 @@ export default task(
   "erc20-approve",
   `Send tx to <erc20address> to approve <spender> for <amount> and return (or --log) tx hash on [--network] (default: ${defaultNetwork})`
 )
-  .addPositionalParam(
+  .addPositionalParam("erc20name")
+  .addOptionalPositionalParam(
     "erc20address",
     "Must be in config.networks.[--network].addressbook.erc20"
   )
   .addPositionalParam("spender", "Address of approvee")
-  .addPositionalParam("amount", "Uint: amount to approve spender for")
+  .addPositionalParam("amount", "Uint: <amount> to approve <spender> for")
+  .addFlag("events", "Logs Event Logs to stdout")
   .addFlag("log", "Logs return values to stdout")
-  .setAction(async ({ erc20address, spender, amount, log }) => {
-    await run("checkAddressBook", {
-      networkname: network.name,
-      category: "erc20",
-      entry: erc20address
-    });
-
-    const txHash = await run("erc20:approve", {
-      erc20address,
-      spender,
-      amount,
-      log
-    });
-
-    if (log) {
-      const erc20Symbol = await run("bre-config", {
+  .setAction(async taskArgs => {
+    if (!taskArgs.erc20address) {
+      taskArgs.erc20address = await run("bre-config", {
         addressbookcategory: "erc20",
-        addressbookentry: erc20address
+        addressbookentry: erc20name
       });
-      console.log(
-        `ERC20 Approval:\
-         \nNetwork: ${network.name}\
-         \nERC20:   ${erc20Symbol}\
-         \nSpender: ${spender}\
-         \nAmount:  ${amount / 10 ** 18} ${erc20Symbol}\n`
-      );
     }
-
+    if (taskArgs.log) console.taskArgs.log(taskArgs);
+    const txHash = await run("erc20:approve", taskArgs);
     return txHash;
   });
