@@ -1,5 +1,5 @@
 import { task, types } from "@nomiclabs/buidler/config";
-import { defaultNetwork } from "../../../../buidler.config";
+import { defaultNetwork } from "../../../../../buidler.config";
 import { constants, utils } from "ethers";
 
 export default task(
