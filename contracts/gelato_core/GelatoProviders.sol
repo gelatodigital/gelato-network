@@ -5,6 +5,7 @@ import { IGelatoProviders } from "./interfaces/IGelatoProviders.sol";
 import { GelatoSysAdmin } from "./GelatoSysAdmin.sol";
 import { Address } from "../external/Address.sol";
 import { SafeMath } from "../external/SafeMath.sol";
+import { GelatoString } from "../libraries/GelatoString.sol";
 import { IGelatoProviderModule } from "./interfaces/IGelatoProviderModule.sol";
 import { EnumerableAddressSet } from "../external/EnumerableAddressSet.sol";
 import { EnumerableWordSet } from "../external/EnumerableWordSet.sol";
@@ -18,26 +19,31 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     using Address for address payable;  /// for sendValue method
     using EnumerableAddressSet for EnumerableAddressSet.AddressSet;
     using SafeMath for uint256;
+    using GelatoString for string;
 
     mapping(address => uint256) public override providerFunds;
     mapping(address => address) public override providerExecutor;
     mapping(address => uint256) public override executorProvidersCount;
     mapping(address => mapping(address => bool)) public override isConditionProvided;
-    mapping(address => mapping(address => bool)) public override isActionProvided;
+    mapping(address => mapping(address => uint256)) public override actionGasPriceCeil;
+    uint256 public constant override NO_CEIL = 10**18;
     mapping(address => EnumerableAddressSet.AddressSet) internal _providerModules;
 
-    // IGelatoProviderModule: Gelato Minting/Execution Gate
-    function coreProviderChecks(ExecClaim memory _execClaim)
+
+    // GelatoCore: mintExecClaim/canExec/collectExecClaimRent Gate
+    function isConditionActionProvided(ExecClaim memory _execClaim)
         public
         view
         override
-        returns(bool)
+        returns(string memory)
     {
-        if (!isConditionProvided[_execClaim.provider][_execClaim.condition]) return false;
-        if (!isActionProvided[_execClaim.provider][_execClaim.action]) return false;
-        return true;
+        if (!isConditionProvided[_execClaim.provider][_execClaim.condition])
+            return "ConditionNotProvided";
+        if (actionGasPriceCeil[_execClaim.provider][_execClaim.action] != 0)
+            return "ActionNotProvided";
     }
 
+    // IGelatoProviderModule: Gelato mintExecClaim/canExec Gate
     function providerModuleChecks(ExecClaim memory _execClaim, uint256 _gelatoGasPrice)
         public
         view
@@ -46,20 +52,35 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     {
         if (!isProviderModule(_execClaim.provider, _execClaim.providerModule))
             return "InvalidProviderModule";
+
         IGelatoProviderModule providerModule = IGelatoProviderModule(
             _execClaim.providerModule
         );
         return providerModule.isProvided(_execClaim, _gelatoGasPrice);
     }
 
-    function combinedProviderChecks(ExecClaim memory _execClaim, uint256 _gelatoGasPrice)
+    function isExecClaimProvided(ExecClaim memory _execClaim, uint256 _gelatoGasPrice)
         public
         view
         override
-        returns(string memory)
+        returns(string memory res)
     {
-        if (!coreProviderChecks(_execClaim)) return "ConditionOrActionNotProvided";
-        return providerModuleChecks(_execClaim, _gelatoGasPrice);
+        res = isConditionActionProvided(_execClaim);
+        if (res.startsWithOk()) return providerModuleChecks(_execClaim, _gelatoGasPrice);
+    }
+
+    function providerCanExec(ExecClaim memory _execClaim, uint256 _gelatoGasPrice)
+        public
+        view
+        override
+        returns(string memory res)
+    {
+        res = isExecClaimProvided(_execClaim, _gelatoGasPrice);
+        if (actionGasPriceCeil[_execClaim.provider][_execClaim.action] == NO_CEIL)
+            return res;
+        else if (res.startsWithOk())
+            if (actionGasPriceCeil[_execClaim.provider][_execClaim.action] < _gelatoGasPrice)
+                return "GelatoGasPriceAboveActionCeil";
     }
 
     // Provider Funding
@@ -95,7 +116,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         address currentExecutor = providerExecutor[_provider];
         require(
             currentExecutor != _newExecutor,
-            "GelatoProviders.assignProviderExecutor: _newExecutor already set"
+            "GelatoProviders.assignProviderExecutor: redundant"
         );
         emit LogAssignProviderExecutor(_provider, currentExecutor, _newExecutor);
         // Allow providerExecutor to reassign to new Executor when they unstake
@@ -111,61 +132,85 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     }
 
     // (Un-)provide Conditions
-    function provideCondition(address _condition) public override {
-        require(
-            !isConditionProvided[msg.sender][_condition],
-            "GelatProviders.provideCondition: already provided"
-        );
-        isConditionProvided[msg.sender][_condition] = true;
-        emit LogProvideCondition(msg.sender, _condition);
+    function provideConditions(address[] memory _conditions) public override {
+        for (uint i; i < _conditions.length; i++) {
+            require(
+                !isConditionProvided[msg.sender][_conditions[i]],
+                "GelatProviders.provideConditions: redundant"
+            );
+            isConditionProvided[msg.sender][_conditions[i]] = true;
+            emit LogProvideCondition(msg.sender, _conditions[i]);
+        }
     }
 
-    function unprovideCondition(address _condition) public override {
-        require(
-            isConditionProvided[msg.sender][_condition],
-            "GelatProviders.unprovideCondition: already not provided"
-        );
-        delete isConditionProvided[msg.sender][_condition];
-        emit LogUnprovideCondition(msg.sender, _condition);
+    function unprovideConditions(address[] memory _conditions) public override {
+        for (uint i; i < _conditions.length; i++) {
+            require(
+                isConditionProvided[msg.sender][_conditions[i]],
+                "GelatProviders.unprovideConditions: redundant"
+            );
+            delete isConditionProvided[msg.sender][_conditions[i]];
+            emit LogUnprovideCondition(msg.sender, _conditions[i]);
+        }
     }
 
     // (Un-)provide Actions at different gasPrices
-    function provideAction(address _action) public override onlyOwner {
-        require(
-            !isActionProvided[msg.sender][_action],
-            "GelatProviders.provideCondition: already provided"
-        );
-        isActionProvided[msg.sender][_action] = true;
-        emit LogProvideAction(msg.sender, _action);
+    function provideActions(ActionWithGasPriceCeil[] memory _actions) public override {
+        for (uint i; i < _actions.length; i++) {
+            if (_actions[i].gasPriceCeil == 0) _actions[i].gasPriceCeil = NO_CEIL;
+            uint256 currentGasPriceCeil = actionGasPriceCeil[msg.sender][_actions[i]._address];
+            require(
+                currentGasPriceCeil != _actions[i].gasPriceCeil,
+                "GelatoProviders.provideActions: redundant"
+            );
+            actionGasPriceCeil[msg.sender][_actions[i]._address] = _actions[i].gasPriceCeil;
+            emit LogProvideAction(
+                msg.sender,
+                _actions[i]._address,
+                currentGasPriceCeil,
+                _actions[i].gasPriceCeil
+            );
+        }
     }
 
-    function unprovideAction(address _action) public override onlyOwner {
-        require(
-            isActionProvided[msg.sender][_action],
-            "GelatProviders.unprovideCondition: already not provided"
-        );
-        delete isActionProvided[msg.sender][_action];
-        emit LogUnprovideAction(msg.sender, _action);
+    function unprovideActions(address[] memory _actions) public override {
+        for (uint i; i < _actions.length; i++) {
+            require(
+                actionGasPriceCeil[msg.sender][_actions[i]] != 0,
+                "GelatoProviders.unprovideActions: redundant"
+            );
+            delete actionGasPriceCeil[msg.sender][_actions[i]];
+            emit LogUnprovideAction(msg.sender, _actions[i]);
+        }
     }
 
     // Provider Module
-    function addProviderModule(address _module) public override {
-        require(_module != address(0), "GelatoProviders.addProviderModule: _module");
-        _providerModules[msg.sender].add(_module);
-        emit LogAddProviderModule(msg.sender, _module);
+    function addProviderModules(address[] memory _modules) public override {
+        for (uint i; i < _modules.length; i++) {
+            require(
+                !isProviderModule(msg.sender, _modules[i]),
+                "GelatoProviders.addProviderModules: redundant"
+            );
+            _providerModules[msg.sender].add(_modules[i]);
+            emit LogAddProviderModule(msg.sender, _modules[i]);
+        }
     }
 
-    function removeProviderModule(address _module) public override {
-        require(_module != address(0), "GelatoProviders.removeProviderModule: _module");
-        _providerModules[msg.sender].remove(_module);
-        emit LogRemoveProviderModule(msg.sender, _module);
+    function removeProviderModules(address[] memory _modules) public override {
+        for (uint i; i < _modules.length; i++) {
+            require(
+                isProviderModule(msg.sender, _modules[i]),
+                "GelatoProviders.removeProviderModules: redundant"
+            );
+            _providerModules[msg.sender].remove(_modules[i]);
+            emit LogRemoveProviderModule(msg.sender, _modules[i]);
+        }
     }
 
     // Batch (un-)provide
     function batchProvide(
-        address _executor,
         address[] memory _conditions,
-        address[] memory _actions,
+        ActionWithGasPriceCeil[] memory _actions,
         address[] memory _modules
     )
         public
@@ -173,13 +218,9 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         override
     {
         if (msg.value != 0) provideFunds(msg.sender);
-        if (_executor != address(0)) assignProviderExecutor(msg.sender, _executor);
-        for (uint256 i = 0; i < _conditions.length; i++)
-            if (_conditions[i] != address(0)) provideCondition(_conditions[i]);
-        for (uint256 i = 0; i < _actions.length; i++)
-            if (_actions[i] != address(0)) provideAction(_actions[i]);
-        for (uint256 i = 0; i < _modules.length; i++)
-            if (_modules[i] != address(0)) addProviderModule(_modules[i]);
+        provideConditions(_conditions);
+        provideActions(_actions);
+        addProviderModules(_modules);
     }
 
     function batchUnprovide(
@@ -192,22 +233,14 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         override
     {
         if (_withdrawAmount != 0) unprovideFunds(_withdrawAmount);
-        for (uint256 i = 0; i < _conditions.length; i++)
-            if (_conditions[i] != address(0)) unprovideCondition(_conditions[i]);
-        for (uint256 i = 0; i < _actions.length; i++)
-            if (_actions[i] != address(0)) unprovideAction(_actions[i]);
-        for (uint256 i = 0; i < _modules.length; i++)
-            if (_modules[i] != address(0)) removeProviderModule(_modules[i]);
+        unprovideConditions(_conditions);
+        unprovideActions(_actions);
+        removeProviderModules(_modules);
     }
 
     // Provider Liquidity
-    function isProviderLiquid(address _provider, uint256 _gas, uint256 _gasPrice)
-        public
-        view
-        override
-        returns(bool)
-    {
-        return _gas.mul(_gasPrice) <= providerFunds[_provider] ? true : false;
+    function isProviderLiquid(address _provider) public view override returns(bool) {
+        return minProviderStake <= providerFunds[_provider] ? true : false;
     }
 
     // Providers' Executor Assignment
