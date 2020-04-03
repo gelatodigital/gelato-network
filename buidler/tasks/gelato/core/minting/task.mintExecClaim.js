@@ -106,7 +106,7 @@ export default task(
           actionPayload: taskArgs.actionpayload,
           expiryDate: taskArgs.execclaimexpirydate,
           executorSuccessShare: taskArgs.executorsuccessfeefactor,
-          gasAdminSuccessShare: taskArgs.oraclesuccessfeefactor
+          sysAdminSuccessShare: taskArgs.oraclesuccessfeefactor
         };
       }
 

@@ -23,7 +23,7 @@ contract MockActionChainedDummy is GelatoActionsStandard {
         virtual
     {
         // Mint: ExecClaim Chain continues with Updated Payloads
-        try _gelatoCore.mintExecClaim(_execClaim, address(0)) {
+        try _gelatoCore.mintExecClaim(_execClaim) {
         } catch Error(string memory error) {
             revert(string(abi.encodePacked("MockActionChainedDummy.mintExecClaim", error)));
         } catch {
@@ -56,21 +56,11 @@ contract MockActionChainedDummy is GelatoActionsStandard {
         virtual
         returns(string memory)  // actionTermsOk
     {
-        address executor = _gelatoCore.providerExecutor(_execClaim.provider);
-
-        // Check fee factors
-        uint256 executorSuccessShare = _gelatoCore.executorSuccessShare(executor);
-        if (_execClaim.executorSuccessShare != executorSuccessShare)
-            return "MockActionChainedDummy.termsOk: executorSuccessShare";
-
-        uint256 gasAdminSuccessShare = _gelatoCore.gasAdminSuccessShare();
-        if (_execClaim.gasAdminSuccessShare != gasAdminSuccessShare)
-            return "MockActionChainedDummy.termsOk: gasAdminSuccessShare";
-
-        uint256 gelatoGasPrice = _gelatoCore.gelatoGasPrice();
 
         if (_execClaim.userProxy != _execClaim.provider) {
-            string memory isProvided = _gelatoCore.isProvided(_execClaim, gelatoGasPrice);
+            string memory isProvided = _gelatoCore.isExecClaimProvided(
+                _execClaim
+            );
             if (!isProvided.startsWithOk()) {
                 return string(
                     abi.encodePacked(

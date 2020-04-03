@@ -39,13 +39,17 @@ contract GelatoUserProxy is IGelatoUserProxy {
         _;
     }
 
-    function mintExecClaim(ExecClaim calldata _execClaim, address _executor)
+    function mintExecClaim(ExecClaim calldata _execClaim) external override onlyUser{
+        IGelatoCore(gelatoCore).mintExecClaim(_execClaim);
+    }
+
+    function mintSelfProvidedExecClaim(ExecClaim calldata _execClaim, address _executor)
         external
         payable
         override
         onlyUser
     {
-        IGelatoCore(gelatoCore).mintExecClaim(_execClaim, _executor);
+        IGelatoCore(gelatoCore).mintSelfProvidedExecClaim(_execClaim, _executor);
     }
 
     function callGelatoAction(IGelatoAction _action, bytes calldata _actionPayload)

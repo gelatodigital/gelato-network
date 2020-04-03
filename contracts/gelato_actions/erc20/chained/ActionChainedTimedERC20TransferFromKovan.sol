@@ -53,7 +53,7 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
         );
 
         // Mint: ExecClaim Chain continues with Updated Payloads
-        try IGelatoCore(GELATO_CORE).mintExecClaim(_execClaim, address(0)) {
+        try IGelatoCore(GELATO_CORE).mintExecClaim(_execClaim) {
         } catch Error(string memory error) {
             revert(
                 string(abi.encodePacked(
@@ -104,29 +104,17 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
 
         GelatoCore gelatoCore = GelatoCore(GELATO_CORE);
 
-        address executor = gelatoCore.providerExecutor(_execClaim.provider);
-
-        // Check fee factors
-        uint256 executorSuccessShare = gelatoCore.executorSuccessShare(executor);
-        if (_execClaim.executorSuccessShare != executorSuccessShare)
-            return "ActionChainedTimedERC20TransferFromKovan.termsOk: executorSuccessShare";
-
-        uint256 gasAdminSuccessShare = gelatoCore.gasAdminSuccessShare();
-        if (_execClaim.gasAdminSuccessShare != gasAdminSuccessShare)
-            return "ActionChainedTimedERC20TransferFromKovan.termsOk: gasAdminSuccessShare";
-
         // Check ExecClaimExpiryDate maximum
         uint256 nextDueDate = _actionData.dueDate.add(_actionData.timeOffset);
-        uint256 executorClaimLifespan = gelatoCore.executorClaimLifespan(
-            executor
-        );
-        if (nextDueDate > (now + executorClaimLifespan))
-            return "ActionChainedTimedERC20TransferFromKovan.termsOk: executorClaimLifespan";
+        uint256 execClaimTenancy = gelatoCore.execClaimTenancy();
 
-        uint256 gelatoGasPrice = gelatoCore.gelatoGasPrice();
+        if (nextDueDate > (now + execClaimTenancy))
+            return "ActionChainedTimedERC20TransferFromKovan.termsOk: execClaimTenancy";
 
         if (_execClaim.userProxy != _execClaim.provider) {
-            string memory isProvided = gelatoCore.isProvided(_execClaim, gelatoGasPrice);
+            string memory isProvided = gelatoCore.isExecClaimProvided(
+                _execClaim
+            );
             if (!isProvided.startsWithOk()) {
                 return string(
                     abi.encodePacked(

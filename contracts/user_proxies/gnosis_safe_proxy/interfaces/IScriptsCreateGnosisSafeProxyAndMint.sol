@@ -8,7 +8,6 @@ interface IScriptsCreateGnosisSafeProxyAndMint {
         address _mastercopy,
         bytes calldata _initializer,
         IGelatoCore _gelatoCore,
-        address _executor,
         ExecClaim calldata _execClaim
     ) external payable; // address userProxy
 
@@ -17,7 +16,6 @@ interface IScriptsCreateGnosisSafeProxyAndMint {
         bytes calldata _initializer,
         uint256 _saltNonce,
         IGelatoCore _gelatoCore,
-        address _executor,
         ExecClaim calldata _execClaim
     ) external payable;
 }

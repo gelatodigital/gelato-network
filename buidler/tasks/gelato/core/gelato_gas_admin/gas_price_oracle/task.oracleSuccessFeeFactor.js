@@ -3,7 +3,7 @@ import { defaultNetwork } from "../../../../../../buidler.config";
 
 export default task(
   "gc-oraclesuccessfeefactor",
-  `Return (or --log) GelatoCore.gasAdminSuccessShare() on [--network] (default: ${defaultNetwork})`
+  `Return (or --log) GelatoCore.sysAdminSuccessShare() on [--network] (default: ${defaultNetwork})`
 )
   .addFlag("log", "Logs return values to stdout")
   .setAction(async ({ log }) => {
@@ -12,14 +12,14 @@ export default task(
         contractname: "GelatoCore",
         write: true
       });
-      const gasAdminSuccessShare = await gelatoCore.gasAdminSuccessShare();
+      const sysAdminSuccessShare = await gelatoCore.sysAdminSuccessShare();
       if (log) {
         console.log(`
-          \n OracleSuccessFeeFactor: ${gasAdminSuccessShare}\
+          \n OracleSuccessFeeFactor: ${sysAdminSuccessShare}\
           \n Network:                ${network.name}\n
         `);
       }
-      return gasAdminSuccessShare;
+      return sysAdminSuccessShare;
     } catch (error) {
       console.error(error, "\n");
       process.exit(1);
