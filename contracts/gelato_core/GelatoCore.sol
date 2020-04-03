@@ -40,7 +40,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // PROVIDER CHECKS (not for self-Providers)
         if (msg.sender != _execClaim.provider) {
-            string memory isProvided = isExecClaimProvided(_execClaim, gelatoGasPrice);
+            string memory isProvided = isExecClaimProvided(_execClaim);
             require(
                 isProvided.startsWithOk(),
                 string(abi.encodePacked("GelatoCore.mintExecClaim.mintingGate:", isProvided))

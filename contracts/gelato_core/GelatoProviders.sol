@@ -60,7 +60,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
             _execClaim.providerModule
         );
 
-        return providerModule.providerModuleCheck(_execClaim);
+        return providerModule.isProvided(_execClaim);
     }
 
 

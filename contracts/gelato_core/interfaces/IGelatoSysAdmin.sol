@@ -35,7 +35,6 @@ interface IGelatoSysAdmin {
     function gelatoGasPrice() external view returns (uint256);
     function gelatoMaxGas() external view returns (uint256);
 
-    function minProviderStake() external view returns(uint256);
     function minExecutorStake() external view returns(uint256);
     function minProviderStake() external view returns(uint256);
 

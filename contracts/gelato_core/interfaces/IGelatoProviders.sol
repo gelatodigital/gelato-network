@@ -60,12 +60,12 @@ interface IGelatoProviders {
         returns(string memory);
 
     // IGelatoProviderModule: Gelato mintExecClaim/canExec Gate
-    function providerModuleChecks(ExecClaim calldata _execClaim, uint256 _gelatoGasPrice)
+    function providerModuleChecks(ExecClaim calldata _execClaim)
         external
         view
         returns(string memory);
 
-    function isExecClaimProvided(ExecClaim calldata _execClaim, uint256 _gelatoGasPrice)
+    function isExecClaimProvided(ExecClaim calldata _execClaim)
         external
         view
         returns(string memory res);
