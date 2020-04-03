@@ -19,29 +19,20 @@ contract ProviderModuleGnosisSafeProxy is
 {
     mapping(bytes32 => bool) public override isProxyExtcodehashProvided;
     mapping(address => bool) public override isMastercopyProvided;
-    mapping(address => uint256) public override actionGasPriceCeil;
 
-    constructor(
-        bytes32[] memory hashes,
-        address[] memory masterCopies,
-        ActionWithGasPriceCeil[] memory _actions
-    )
-        public
-    {
-        batchProvide(hashes, masterCopies, _actions);
+    constructor(bytes32[] memory hashes, address[] memory masterCopies) public {
+        batchProvide(hashes, masterCopies);
     }
 
     // ================= GELATO PROVIDER MODULE STANDARD ================
     // @dev since we check extcodehash prior to execution, we forego the execution option
     //  where the userProxy is deployed at execution time.
-    function isProvided(ExecClaim calldata _execClaim, uint256 _gelatoGasPrice)
+    function isProvided(ExecClaim calldata _execClaim)
         external
         view
         override
         returns (string memory)
     {
-        if (actionGasPriceCeil[_execClaim.action] < _gelatoGasPrice)
-            return "ProviderModuleGnosisSafeProxy.isProvided:gelatoGasPriceTooHigh";
         address userProxy = _execClaim.userProxy;
         bytes32 codehash;
         assembly { codehash := extcodehash(userProxy) }
@@ -69,93 +60,66 @@ contract ProviderModuleGnosisSafeProxy is
     }
 
     // GnosisSafeProxy
-    function provideProxyExtcodehash(bytes32 _hash) public override onlyOwner {
-        require(
-            !isProxyExtcodehashProvided[_hash],
-            "ProviderModuleGnosisSafeProxy.provideExtcodehash: already provided"
-        );
-        isProxyExtcodehashProvided[_hash] = true;
-        emit LogProvideProxyExtcodehash(_hash);
+    function provideProxyExtcodehashes(bytes32[] memory _hashes) public override onlyOwner {
+        for (uint i; i < _hashes.length; i++) {
+            require(
+                !isProxyExtcodehashProvided[_hashes[i]],
+                "ProviderModuleGnosisSafeProxy.provideProxyExtcodehashes: redundant"
+            );
+            isProxyExtcodehashProvided[_hashes[i]] = true;
+            emit LogProvideProxyExtcodehash(_hashes[i]);
+        }
     }
 
-    function unprovideProxyExtcodehash(bytes32 _hash) public override onlyOwner {
-        require(
-            isProxyExtcodehashProvided[_hash],
-            "ProviderModuleGnosisSafeProxy.unprovideProxyExtcodehash: already not provided"
-        );
-        delete isProxyExtcodehashProvided[_hash];
-        emit LogUnprovideProxyExtcodehash(_hash);
+    function unprovideProxyExtcodehashes(bytes32[] memory _hashes) public override onlyOwner {
+        for (uint i; i < _hashes.length; i++) {
+            require(
+                isProxyExtcodehashProvided[_hashes[i]],
+                "ProviderModuleGnosisSafeProxy.unprovideProxyExtcodehashes: redundant"
+            );
+            delete isProxyExtcodehashProvided[_hashes[i]];
+            emit LogUnprovideProxyExtcodehash(_hashes[i]);
+        }
     }
 
-    function provideMastercopy(address _mastercopy) public override onlyOwner {
-        require(
-            !isMastercopyProvided[_mastercopy],
-            "ProviderModuleGnosisSafeProxy.provideMastercopy: already provided"
-        );
-        isMastercopyProvided[_mastercopy] = true;
-        emit LogProvideMastercopy(_mastercopy);
+    function provideMastercopies(address[] memory _mastercopies) public override onlyOwner {
+        for (uint i; i < _mastercopies.length; i++) {
+            require(
+                !isMastercopyProvided[_mastercopies[i]],
+                "ProviderModuleGnosisSafeProxy.provideMastercopy: redundant"
+            );
+            isMastercopyProvided[_mastercopies[i]] = true;
+            emit LogProvideMastercopy(_mastercopies[i]);
+        }
     }
 
-    function unprovideMastercopy(address _mastercopy) public override onlyOwner {
-        require(
-            isMastercopyProvided[_mastercopy],
-            "ProviderModuleGnosisSafeProxy.unprovideMastercopy: already not provided"
-        );
-        delete isMastercopyProvided[_mastercopy];
-        emit LogUnprovideMastercopy(_mastercopy);
-    }
-
-    // Action Gas Price Ceils
-    function setActionGasPriceCeil(ActionWithGasPriceCeil memory _action)
-        public
-        override
-        onlyOwner
-    {
-        require(
-            actionGasPriceCeil[_action._address] != _action.gasPriceCeil,
-            "ProviderModuleGelatoUserProxy.setActionGasPriceCeil: already set"
-        );
-        emit LogSetActionGasPriceCeil(
-            _action._address,
-            actionGasPriceCeil[_action._address],
-            _action.gasPriceCeil
-        );
-        if (_action.gasPriceCeil == 0) delete actionGasPriceCeil[_action._address];
-        else actionGasPriceCeil[_action._address] = _action.gasPriceCeil;
+    function unprovideMastercopies(address[] memory _mastercopies) public override onlyOwner {
+        for (uint i; i < _mastercopies.length; i++) {
+            require(
+                isMastercopyProvided[_mastercopies[i]],
+                "ProviderModuleGnosisSafeProxy.unprovideMastercopies: redundant"
+            );
+            delete isMastercopyProvided[_mastercopies[i]];
+            emit LogUnprovideMastercopy(_mastercopies[i]);
+        }
     }
 
     // Batch (un-)provide
-    function batchProvide(
-        bytes32[] memory _hashes,
-        address[] memory _mastercopies,
-        ActionWithGasPriceCeil[] memory _actions
-    )
+    function batchProvide(bytes32[] memory _hashes, address[] memory _mastercopies)
         public
         override
         onlyOwner
     {
-        for (uint256 i = 0; i < _hashes.length; i++) provideProxyExtcodehash(_hashes[i]);
-        for (uint256 i = 0; i < _mastercopies.length; i++) provideMastercopy(_mastercopies[i]);
-        for (uint256 i = 0; i < _actions.length; i++) setActionGasPriceCeil(_actions[i]);
+        provideProxyExtcodehashes(_hashes);
+        provideMastercopies(_mastercopies);
     }
 
-    function batchUnprovide(
-        bytes32[] calldata _hashes,
-        address[] calldata _mastercopies,
-        address[] calldata _actions
-    )
+    function batchUnprovide(bytes32[] calldata _hashes, address[] calldata _mastercopies)
         external
         override
         onlyOwner
     {
-        for (uint256 i = 0; i < _hashes.length; i++) unprovideProxyExtcodehash(_hashes[i]);
-        for (uint256 i = 0; i < _mastercopies.length; i++) unprovideMastercopy(_mastercopies[i]);
-        for (uint256 i = 0; i < _actions.length; i++) {
-            ActionWithGasPriceCeil memory action = ActionWithGasPriceCeil({
-                _address: _actions[i],
-                gasPriceCeil: 0
-            });
-            setActionGasPriceCeil(action);
-        }
+        unprovideProxyExtcodehashes(_hashes);
+        unprovideMastercopies(_mastercopies);
     }
 }

@@ -56,12 +56,10 @@ contract MockActionChainedDummy is GelatoActionsStandard {
         virtual
         returns(string memory)  // actionTermsOk
     {
-        uint256 gelatoGasPrice = _gelatoCore.gelatoGasPrice();
 
         if (_execClaim.userProxy != _execClaim.provider) {
-            string memory isProvided = _gelatoCore.combinedProviderChecks(
-                _execClaim,
-                gelatoGasPrice
+            string memory isProvided = _gelatoCore.isExecClaimProvided(
+                _execClaim
             );
             if (!isProvided.startsWithOk()) {
                 return string(
