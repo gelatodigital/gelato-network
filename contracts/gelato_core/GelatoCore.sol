@@ -148,6 +148,11 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     // Execution Entry Point
     function exec(ExecClaim memory _execClaim) public override {
 
+        // Store startGas for gas-consumption based cost and payout calcs
+        uint256 startGas = gasleft();
+
+        require(startGas > internalGasRequirement, "GelatoCore.exec: Insufficient gas sent");
+
         // memcopy of gelatoGasPrice and gelatoMaxGas, to avoid multiple storage reads
         uint256 _gelatoGasPrice = gelatoGasPrice;
         uint256 _gelatoMaxGas = gelatoMaxGas;
@@ -157,23 +162,30 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         ExecutionResult executionResult;
 
-        // Store startGas for gas-consumption based cost and payout calcs
-        uint256 startGas = gasleft();
-
-        require(startGas > internalGasRequirement + 10000, "GelatoCore.exec: Insufficient gas sent");
-
-        try this.executionWrapper{gas: startGas - internalGasRequirement}(_execClaim, _gelatoGasPrice)
+        try this.executionWrapper{gas: startGas - internalGasRequirement}(
+            _execClaim.id,
+            _execClaim.provider,
+            _execClaim.providerModule,
+            _execClaim.userProxy,
+            _execClaim.condition,
+            _execClaim.action,
+            _execClaim.conditionPayload,
+            _execClaim.actionPayload,
+            _execClaim.expiryDate,
+            _gelatoGasPrice
+        )
         returns(ExecutionResult _executionResult)
         {
             executionResult = _executionResult;
         } catch {
-            // If one external call results in out of gas, executor is eligible for a refund
+            // If any of the external call results in out of gas, executor is eligible for a refund
+            // if executor sent gelatoMaxGas
             executionResult = ExecutionResult.ExecFailed;
         }
 
         if (executionResult == ExecutionResult.CanExecFailed ) return;
         else if (executionResult == ExecutionResult.ExecFailed) {
-            if(startGas < _gelatoMaxGas - 100000) return; // EXEC-FAILURE: No Refund
+            if(startGas < _gelatoMaxGas - 50000) return; // EXEC-FAILURE: No Refund
             // EXEC-FAILURE: Provider Pays Executor Refund
             delete execClaimHash[_execClaim.id];
             _processProviderPayables(
@@ -206,7 +218,15 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
 
     function executionWrapper(
-        ExecClaim calldata _execClaim,
+        uint256 id,
+        address provider,
+        address providerModule,
+        address userProxy,
+        address condition,
+        address action,
+        bytes calldata conditionPayload,
+        bytes calldata actionPayload,
+        uint256 expiryDate,
         uint256 _gelatoGasPrice
     )
         external
@@ -214,12 +234,24 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     {
         require(msg.sender == address(this), "Only Gelato Core can call this function");
 
+        ExecClaim memory execClaim = ExecClaim ({
+            id: id,
+            provider: provider,
+            providerModule: providerModule,
+            userProxy: userProxy,
+            condition: condition,
+            action: action,
+            conditionPayload: conditionPayload,
+            actionPayload: actionPayload,
+            expiryDate: expiryDate
+        });
+
         // internal canExec() check
-        if (!_canExec(_execClaim, _gelatoGasPrice))
-            return (ExecutionResult.CanExecFailed);  // canExec failed: NO REFUND
+        if (!_canExec(execClaim, _gelatoGasPrice))
+            return (ExecutionResult.CanExecFailed);  // canExec failed: No refund
 
         // internal exec attempt and check
-        if(!_exec(_execClaim)) {
+        if(!_exec(execClaim)) {
             return (ExecutionResult.ExecFailed);  // exec failed: Possibility of refund
         }
 
