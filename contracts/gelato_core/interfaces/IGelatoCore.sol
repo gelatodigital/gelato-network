@@ -73,4 +73,5 @@ interface IGelatoCore {
     function currentExecClaimId() external view returns(uint256 currentId);
     function execClaimHash(uint256 _execClaimId) external view returns(bytes32);
     function lastExecClaimRentPaymentDate(uint256 _execClaimId) external view returns(uint256);
+    function EXEC_TX_OVERHEAD() external pure returns(uint256);
 }

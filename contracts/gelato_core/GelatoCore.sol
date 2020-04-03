@@ -16,6 +16,9 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     using SafeMath for uint256;
 
     // ================  STATE VARIABLES ======================================
+    // Executor compensation for estimated tx costs not accounted for by startGas
+    uint256 public constant override EXEC_TX_OVERHEAD = 50000;
+    // ExecClaimIds
     uint256 public override currentExecClaimId;
     // execClaim.id => execClaimHash
     mapping(uint256 => bytes32) public override execClaimHash;
@@ -36,7 +39,10 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         );
 
         // User checks
-        require(_execClaim.expiryDate >= now, "GelatoCore.mintExecClaim: Expiry date cannot be in the past");
+        require(
+            _execClaim.expiryDate >= now + 60 seconds,
+            "GelatoCore.mintExecClaim: Invalid expiryDate"
+        );
 
         // PROVIDER CHECKS (not for self-Providers)
         if (msg.sender != _execClaim.provider) {
@@ -86,10 +92,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     }
 
     // ================  CAN EXECUTE EXECUTOR API ============================
-    function canExec(
-        ExecClaim memory _execClaim,
-        uint256 _gelatoGasPrice
-    )
+    function canExec(ExecClaim memory _execClaim, uint256 _gelatoGasPrice)
         public
         view
         override
@@ -125,7 +128,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         try IGelatoAction(_execClaim.action).termsOk(_execClaim.actionPayload)
             returns(string memory actionTermsOk)
         {
-            if (!actionTermsOk.startsWithOk()) return string(abi.encodePacked("ActionTermsNotOk:", actionTermsOk));
+            if (!actionTermsOk.startsWithOk())
+                return string(abi.encodePacked("ActionTermsNotOk:", actionTermsOk));
         } catch Error(string memory error) {
             return string(abi.encodePacked("ActionReverted:", error));
         } catch {
@@ -139,15 +143,11 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     }
 
     // ================  EXECUTE EXECUTOR API ============================
-    enum ExecutorPay {
-        None,
-        Reward,
-        Refund
-    }
+    enum ExecutionResult { CanExecFailed, ExecFailed, ExecSuccess }
+    enum ExecutorPay { Reward, Refund }
 
     // Execution Entry Point
     function exec(ExecClaim memory _execClaim) public override {
-
         // Store startGas for gas-consumption based cost and payout calcs
         uint256 startGas = gasleft();
 
@@ -174,19 +174,19 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             _execClaim.expiryDate,
             _gelatoGasPrice
         )
-        returns(ExecutionResult _executionResult)
+            returns(ExecutionResult _executionResult)
         {
             executionResult = _executionResult;
         } catch {
-            // If any of the external call results in out of gas, executor is eligible for a refund
-            // if executor sent gelatoMaxGas
+            // If any of the external calls in executionWrapper resulted in an out of gas,
+            // Executor is eligible for a Refund, but only if Executor sent gelatoMaxGas.
             executionResult = ExecutionResult.ExecFailed;
         }
 
-        if (executionResult == ExecutionResult.CanExecFailed ) return;
+        if (executionResult == ExecutionResult.CanExecFailed ) return;  // END: NO REFUND
         else if (executionResult == ExecutionResult.ExecFailed) {
-            if(startGas < _gelatoMaxGas - 50000) return; // EXEC-FAILURE: No Refund
-            // EXEC-FAILURE: Provider Pays Executor Refund
+            if (startGas < _gelatoMaxGas) return; // END: NO REFUND
+            // EXEC-FAILURE despite gelatoMaxGas: Provider Pays Executor Refund
             delete execClaimHash[_execClaim.id];
             _processProviderPayables(
                 _execClaim.provider,
@@ -195,7 +195,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
                 _gelatoMaxGas,
                 _gelatoGasPrice
             );
-            return;
+            return;  // END: REFUND.
         }
 
         // EXEC-SUCCESS: Provider Pays Executor Reward
@@ -207,15 +207,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             _gelatoMaxGas,
             _gelatoGasPrice
         );
-
     }
-
-    enum ExecutionResult {
-        CanExecFailed,
-        ExecFailed,
-        ExecSuccess
-    }
-
 
     function executionWrapper(
         uint256 id,
@@ -230,11 +222,11 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         uint256 _gelatoGasPrice
     )
         external
-        returns (ExecutionResult)
+        returns(ExecutionResult)
     {
-        require(msg.sender == address(this), "Only Gelato Core can call this function");
+        require(msg.sender == address(this), "GelatoCore.executionWrapper:onlyGelatoCore");
 
-        ExecClaim memory execClaim = ExecClaim ({
+        ExecClaim memory execClaim = ExecClaim({
             id: id,
             provider: provider,
             providerModule: providerModule,
@@ -246,22 +238,17 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             expiryDate: expiryDate
         });
 
-        // internal canExec() check
-        if (!_canExec(execClaim, _gelatoGasPrice))
-            return (ExecutionResult.CanExecFailed);  // canExec failed: No refund
+        // canExec() failed: NO Executor REFUND
+        if (!_canExec(execClaim, _gelatoGasPrice)) return ExecutionResult.CanExecFailed;
 
-        // internal exec attempt and check
-        if(!_exec(execClaim)) {
-            return (ExecutionResult.ExecFailed);  // exec failed: Possibility of refund
-        }
+        // _exec failed: Executor REFUND IF gelatoMaxGas was sent along with tx
+        if(!_exec(execClaim)) return ExecutionResult.ExecFailed;
 
-        // Execution Success
-        return (ExecutionResult.ExecSuccess);
+        // Execution Success: Executor REWARD
+        return ExecutionResult.ExecSuccess;
     }
 
-    function _canExec(
-        ExecClaim memory _execClaim,
-        uint256 _gelatoGasPrice    )
+    function _canExec(ExecClaim memory _execClaim, uint256 _gelatoGasPrice)
         private
         returns(bool)
     {
@@ -282,11 +269,9 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // Provided Users vs. Self-Providing Users
         if (_execClaim.userProxy != _execClaim.provider) {
-
             // Provided Users: execPayload from ProviderModule
             bytes memory execPayload;
-            try IGelatoProviderModule(_execClaim.providerModule).execPayload
-            (
+            try IGelatoProviderModule(_execClaim.providerModule).execPayload(
                 _execClaim.action,
                 _execClaim.actionPayload
             )
@@ -307,9 +292,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         } else {
             // Self-Providing Users: actionPayload == execPayload assumption
             // Execution via UserProxy
-            if (_execClaim.actionPayload.length >= 4) {
+            if (_execClaim.actionPayload.length >= 4)
                 (success, revertMsg) = _execClaim.userProxy.call(_execClaim.actionPayload);
-            }
             else error = "GelatoCore._exec.actionPayload: invalid";
         }
 
@@ -350,7 +334,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         uint256 estExecTxGas = _startGas <= _gelatoMaxGas ? _startGas : _gelatoMaxGas;
 
         // ExecutionCost (- consecutive state writes + gas refund from deletion)
-        uint256 estGasConsumed = estExecTxGas - gasleft();
+        uint256 estGasConsumed = EXEC_TX_OVERHEAD + estExecTxGas - gasleft();
 
         if (_payType == ExecutorPay.Reward) {
             uint256 executorSuccessFee = executorSuccessFee(estGasConsumed, _gelatoGasPrice);
@@ -441,13 +425,4 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     function batchCollectExecClaimRent(ExecClaim[] memory _execClaims) public override {
         for (uint i; i < _execClaims.length; i++) collectExecClaimRent(_execClaims[i]);
     }
-
-    function getGasForExternalCall(uint256 _requiredGelatoGas, uint256 gasLeft)
-        internal
-        pure
-        returns (uint256 gasForExternalCall)
-    {
-        _requiredGelatoGas < gasLeft ? gasForExternalCall = 0 : gasForExternalCall = gasLeft - _requiredGelatoGas;
-    }
-
 }
