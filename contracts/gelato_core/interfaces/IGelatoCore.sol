@@ -55,8 +55,7 @@ interface IGelatoCore {
 
     function canExec(
         ExecClaim calldata _execClaim,
-        uint256 _gelatoGasPrice,
-        uint256 _internalGasRequirement
+        uint256 _gelatoGasPrice
     )
         external
         view
