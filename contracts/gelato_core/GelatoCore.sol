@@ -239,7 +239,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             // Execution via UserProxy
             if (execPayload.length >= 4)
                 (success, revertMsg) = _execClaim.userProxy.call{
-                    gas: getGasForExternalCall(_internalGasRequirement - 400000, gasleft())
+                    gas: getGasForExternalCall(_internalGasRequirement - 350000, gasleft())
                 }(execPayload);
 
             else error = "GelatoCore._exec.execPayload: invalid";
