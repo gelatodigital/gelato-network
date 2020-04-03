@@ -4,11 +4,11 @@ import { defaultNetwork } from "../../../../../buidler.config";
 const SIXY_DAYS = 5184000;
 
 export default task(
-  "gc-registerexecutor",
-  `Sends tx to GelatoCore.registerExecutor([<_executorClaimLifespan>, <executorSuccessShare>]) on [--network] (default: ${defaultNetwork})`
+  "gc-stakeExecutor",
+  `Sends tx to GelatoCore.stakeExecutor([<_executorClaimLifespan>, <executorSuccessShare>]) on [--network] (default: ${defaultNetwork})`
 )
   .addOptionalPositionalParam(
-    "executorclaimlifespan",
+    "execclaimtenancy",
     "gelatoExecutor's max execClaim lifespan",
     SIXY_DAYS,
     types.int
@@ -38,7 +38,7 @@ export default task(
       if (!gelatoExecutor)
         throw new Error("\n Executor accounts from ethers.signers failed \n");
 
-      if (taskArgs.log) console.log("gc-registerexecutor:\n", taskArgs);
+      if (taskArgs.log) console.log("gc-stakeExecutor:\n", taskArgs);
 
       const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
@@ -47,12 +47,12 @@ export default task(
         write: true
       });
 
-      const tx = await gelatoCore.registerExecutor(
-        taskArgs.executorclaimlifespan,
+      const tx = await gelatoCore.stakeExecutor(
+        taskArgs.execclaimtenancy,
         taskArgs.executorsuccessfeefactor
       );
 
-      if (taskArgs.log) console.log(`\n\ntxHash registerExecutor: ${tx.hash}`);
+      if (taskArgs.log) console.log(`\n\ntxHash stakeExecutor: ${tx.hash}`);
 
       const { blockHash: blockhash } = await tx.wait();
 

@@ -5,125 +5,147 @@ import {IGelatoProviderModule} from "./IGelatoProviderModule.sol";
 import {ExecClaim} from "../interfaces/IGelatoCore.sol";
 
 interface IGelatoProviders {
+
+    struct ActionWithGasPriceCeil {
+        address _address;
+        uint256 gasPriceCeil;
+    }
+
     // Registration
     event LogRegisterProvider(address indexed provider);
     event LogUnregisterProvider(address indexed provider);
 
     // Provider Executor
-    event LogSetProviderExecutor(
+    event LogAssignProviderExecutor(
+        address indexed provider,
         address indexed oldExecutor,
         address indexed newExecutor
-    );
-    event LogSetProviderExecutorFeeCeil(
-        uint256 indexed oldFeeCeil,
-        uint256 indexed newFeeCeil
-    );
-
-    // Provider Oracle Fee Ceil
-    event LogSetProviderOracleFeeCeil(
-        uint256 indexed oldFeeCeil,
-        uint256 indexed newFeeCeil
     );
 
     // Provider Funding
     event LogProvideFunds(
         address indexed provider,
-        uint256 previousProviderFunding,
-        uint256 newProviderFunding
+        uint256 previousProviderFunds,
+        uint256 newProviderFunds
     );
     event LogUnprovideFunds(
         address indexed provider,
-        uint256 previousProviderFunding,
-        uint256 newProviderFunding
+        uint256 previousProviderFunds,
+        uint256 newProviderFunds
     );
 
-    // Provider Module
-    event LogAddProviderModule(address module);
-    event LogRemoveProviderModule(address module);
+    // Conditions
+    event LogProvideCondition(address indexed provider, address indexed condition);
+    event LogUnprovideCondition(address indexed provider, address indexed condition);
 
-    // IGelatoProviderModule Standard wrapper
-    function isProvided(ExecClaim calldata _execClaim, uint256 _gelatoGasPrice)
+    // Actions
+    event LogProvideAction(
+        address indexed provider,
+        address indexed action,
+        uint256 oldGasPriceCeil,
+        uint256 newGasPriceCeil
+    );
+    event LogUnprovideAction(address indexed provider, address indexed action);
+
+    // Provider Module
+    event LogAddProviderModule(address indexed provider, address indexed module);
+    event LogRemoveProviderModule(address indexed provider, address indexed module);
+
+
+    // =========== CORE PROTOCOL APIs ==============
+    // GelatoCore: mintExecClaim/canExec/collectExecClaimRent Gate
+    function isConditionActionProvided(ExecClaim calldata _execClaim)
         external
         view
-        returns (string memory);
+        returns(string memory);
 
-    // Registration
-    function registerProvider(
-        address _executor,
-        address[] calldata _modules,
-        uint256 _executorFeeCeil,
-        uint256 _oracleFeeCeil
+    // IGelatoProviderModule: Gelato mintExecClaim/canExec Gate
+    function providerModuleChecks(ExecClaim calldata _execClaim)
+        external
+        view
+        returns(string memory);
+
+    function isExecClaimProvided(ExecClaim calldata _execClaim)
+        external
+        view
+        returns(string memory res);
+
+    function providerCanExec(ExecClaim calldata _execClaim, uint256 _gelatoGasPrice)
+        external
+        view
+        returns(string memory res);
+
+    // =========== PROVIDER STATE WRITE APIs ==============
+    // Provider Funding
+    function provideFunds(address _provider) external payable;
+    function unprovideFunds(uint256 _withdrawAmount) external returns(uint256);
+
+    // Provider Executor
+    function assignProviderExecutor(address _provider, address _executor) external;
+
+    // (Un-)provide Conditions
+    function provideConditions(address[] calldata _conditions) external;
+    function unprovideConditions(address[] calldata _conditions) external;
+
+    // (Un-)provide Conditions
+    function provideActions(ActionWithGasPriceCeil[] calldata _actions) external;
+    function unprovideActions(address[] calldata _actions) external;
+
+    // Provider Module
+    function addProviderModules(address[] calldata _modules) external;
+    function removeProviderModules(address[] calldata _modules) external;
+
+    // Batch (un-)provide
+    function batchProvide(
+        address[] calldata _conditions,
+        ActionWithGasPriceCeil[] calldata _actions,
+        address[] calldata _modules
     )
         external
         payable;
-    function unregisterProvider(address[] calldata _modules) external;
 
-    // Provider Funding
-    function provideFunds(address _provider) external payable;
-    function unprovideFunds(uint256 _withdrawAmount) external;
-    function isProviderLiquid(address _provider, uint256 _gas, uint256 _gasPrice)
-        external
-        view
-        returns(bool);
+    function batchUnprovide(
+        uint256 _withdrawAmount,
+        address[] calldata _conditions,
+        address[] calldata _actions,
+        address[] calldata _modules
+    )
+        external;
 
-    // Provider Executor
-    function setProviderExecutor(address _executor) external;
-    function setProviderExecutorFeeCeil(uint256 _feeCeil) external;
-
-    // Provider Oracle Fee ceil
-    function setProviderOracleFeeCeil(uint256 _feeCeil) external;
-
-    // Provider Module
-    function addProviderModule(address _module) external;
-    function removeProviderModule(address _module) external;
-    function batchAddProviderModules(address[] calldata _modules) external;
-    function batchRemoveProviderModules(address[] calldata _modules) external;
-
+    // =========== PROVIDER STATE READ APIs ==============
     // Provider Funding
     function providerFunds(address _provider) external view returns (uint256);
+    function isProviderLiquid(address _provider) external view returns(bool);
 
     // Provider Executor
     function providerExecutor(address _provider)
         external
         view
-        returns (address);
+        returns(address);
+    function executorProvidersCount(address _executor) external view returns(uint256);
+    function isExecutorAssigned(address _executor) external view returns(bool);
 
-    function providerExecutorShareCeil(address _provider)
+    function isConditionProvided(address _provider, address _condition)
         external
         view
-        returns (uint256);
-
-    // Provider Oracle Fee Ceil
-    function providerGasAdminShareCeil(address _provider)
+        returns(bool);
+    function actionGasPriceCeil(address _provider, address _action)
         external
         view
-        returns (uint256);
+        returns(uint256);
+    function NO_CEIL() external pure returns(uint256);
 
     // Providers' Module Getters
     function isProviderModule(address _provider, address _module)
         external
         view
-        returns (bool);
+        returns(bool);
     function numOfProviderModules(address _provider)
         external
         view
-        returns (uint256);
+        returns(uint256);
     function providerModules(address _provider)
         external
         view
-        returns (address[] memory);
-
-    // Providers' Claims Getters
-    function isProviderClaim(address _provider, bytes32 _execClaimHash)
-        external
-        view
-        returns (bool);
-    function numOfProviderClaims(address _provider)
-        external
-        view
-        returns (uint256);
-    function providerClaims(address _provider)
-        external
-        view
-        returns (bytes32[] memory);
+        returns(address[] memory);
 }

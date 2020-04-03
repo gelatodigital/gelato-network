@@ -1,119 +1,91 @@
 pragma solidity ^0.6.4;
+pragma experimental ABIEncoderV2;
 
-import "./interfaces/IGelatoExecutors.sol";
-import "../external/Address.sol";
-import "../external/SafeMath.sol";
+import { IGelatoExecutors } from "./interfaces/IGelatoExecutors.sol";
+import { GelatoProviders } from "./GelatoProviders.sol";
+import { Address } from  "../external/Address.sol";
+import { SafeMath } from "../external/SafeMath.sol";
+import { Math } from "../external/Math.sol";
+import { ExecClaim } from "./interfaces/IGelatoCore.sol";
 
-abstract contract GelatoExecutors is IGelatoExecutors {
+abstract contract GelatoExecutors is IGelatoExecutors, GelatoProviders {
 
     using Address for address payable;  /// for sendValue method
     using SafeMath for uint256;
 
-    // Executor Registration/Lifespan mgmt
-    mapping(address => uint256) public override executorClaimLifespan;
-
-    // Executor Accounting
-    mapping(address => uint256) public override executorSuccessShare;
+    mapping(address => uint256) public override executorStake;
     mapping(address => uint256) public override executorFunds;
 
-    modifier minMaxExecutorClaimLifespan(uint256 _executorClaimLifespan) {
+    // Executor De/Registrations and Staking
+    function stakeExecutor() external payable override {
         require(
-            _executorClaimLifespan > 20 seconds &&
-            _executorClaimLifespan < 36500 days,  // ~ 100 years
-            "GelatoExecutors.minMaxExecutorClaimLifespan"
+            executorStake[msg.sender] == 0,
+            "GelatoExecutors.stakeExecutor: already registered"
         );
-        _;
+        require(
+            msg.value >= minExecutorStake,
+            "GelatoExecutors.stakeExecutor: minExecutorStake"
+        );
+        executorStake[msg.sender] = msg.value;
+        emit LogStakeExecutor(msg.sender, msg.value);
     }
 
-    // Executor De/Registrations
-    function registerExecutor(uint256 _executorClaimLifespan, uint256 _executorSuccessShare)
+    function unstakeExecutor(address _transferExecutor) external override {
+        require(
+            isExecutorMinStaked(msg.sender),
+            "GelatoExecutors.unstakeExecutor: msg.sender is NOT min staked"
+        );
+        require(
+            isExecutorMinStaked(_transferExecutor),
+            "GelatoExecutors.unstakeExecutor: _transferExecutor is NOT min staked"
+        );
+        require(
+            !isExecutorAssigned(msg.sender),
+            "GelatoExecutors.unstakeExecutor: msg.sender still assigned to provider(s)"
+        );
+        uint256 unbondedStake = executorStake[msg.sender];
+        delete executorStake[msg.sender];
+        msg.sender.sendValue(unbondedStake);
+        emit LogUnstakeExecutor(msg.sender, _transferExecutor);
+    }
+
+    function increaseExecutorStake(uint256 _topUpAmount) external payable override {
+        executorStake[msg.sender] = executorStake[msg.sender].add(_topUpAmount);
+        require(isExecutorMinStaked(msg.sender), "GelatoExecutors.increaseExecutorStake");
+        emit LogIncreaseExecutorStake(msg.sender, executorStake[msg.sender]);
+    }
+
+    // To unstake, Executors must reassign ALL their Providers to another staked Executor
+    function batchReassignProviders(address[] calldata _providers, address _transferExecutor)
         external
         override
-        minMaxExecutorClaimLifespan(_executorClaimLifespan)
     {
-        executorClaimLifespan[msg.sender] = _executorClaimLifespan;
-        executorSuccessShare[msg.sender] = _executorSuccessShare;
-        emit LogRegisterExecutor(
-            msg.sender,
-            _executorClaimLifespan,
-            _executorSuccessShare
-        );
-    }
-
-    function deregisterExecutor() external override {
-        _requireRegisteredExecutor(msg.sender);
-        delete executorClaimLifespan[msg.sender];
-        delete executorSuccessShare[msg.sender];
-        emit LogDeregisterExecutor(msg.sender);
-    }
-
-    function setExecutorClaimLifespan(uint256 _lifespan)
-        external
-        override
-        minMaxExecutorClaimLifespan(_lifespan)
-    {
-        emit LogSetExecutorClaimLifespan(executorClaimLifespan[msg.sender], _lifespan);
-        executorClaimLifespan[msg.sender] = _lifespan;
+        for (uint i; i < _providers.length; i++)
+            assignProviderExecutor(_providers[i], _transferExecutor);
     }
 
     // Executor Accounting
-    function setExecutorSuccessShare(uint256 _percentage) external override {
-        require(_percentage < 100, "GelatoExecutors.setExecutorSuccessShare: over 100");
-        emit LogSetExecutorSuccessShare(
-            msg.sender,
-            executorSuccessShare[msg.sender],
-            _percentage
-        );
-        executorSuccessShare[msg.sender] = _percentage;
-    }
-
-    function executorSuccessFee(address _executor, uint256 _gas, uint256 _gasPrice)
-        public
-        view
+    function withdrawExecutorBalance(uint256 _withdrawAmount)
+        external
         override
-        returns(uint256)
+        returns(uint256 realWithdrawAmount)
     {
-        uint256 estExecCost = _gas.mul(_gasPrice);
-        return SafeMath.div(
-            estExecCost.mul(executorSuccessShare[_executor]),
-            100,
-            "GelatoExecutors.executorSuccessFee: div error"
-        );
-    }
-
-    function withdrawExecutorBalance(uint256 _withdrawAmount) external override {
-        // Checks
-        require(
-            _withdrawAmount > 0,
-            "GelatoExecutors.withdrawExecutorBalance: zero _withdrawAmount"
-        );
         uint256 currentExecutorBalance = executorFunds[msg.sender];
-        require(
-            currentExecutorBalance >= _withdrawAmount,
-            "GelatoExecutors.withdrawExecutorBalance: out of balance"
-        );
+
+        realWithdrawAmount = Math.min(_withdrawAmount, currentExecutorBalance);
+
+        uint256 newExecutorFunds = currentExecutorBalance - realWithdrawAmount;
+
         // Effects
-        executorFunds[msg.sender] = currentExecutorBalance - _withdrawAmount;
+        executorFunds[msg.sender] = newExecutorFunds;
+
         // Interaction
-        msg.sender.sendValue(_withdrawAmount);
-        emit LogWithdrawExecutorBalance(msg.sender, _withdrawAmount);
+        msg.sender.sendValue(realWithdrawAmount);
+        emit LogWithdrawExecutorBalance(msg.sender, realWithdrawAmount);
     }
 
-    // Check functions (not modifiers due to stack too deep)
-    function _requireRegisteredExecutor(address _executor) internal view {
-        require(
-            executorClaimLifespan[_executor] != 0,
-            "GelatoExecutors._requireRegisteredExecutor"
-        );
-    }
-
-    function _requireMaxExecutorClaimLifespan(address _executor, uint256 _execClaimExpiryDate)
-        internal
-        view
-    {
-        require(
-            _execClaimExpiryDate <= now + executorClaimLifespan[_executor],
-            "GelatoExecutors._requireMaxExecutorClaimLifespan"
-        );
+    // An Executor qualifies and remains registered for as long as he has minExecutorStake
+    function isExecutorMinStaked(address _executor) public view override returns(bool) {
+        return executorStake[_executor] >= minExecutorStake;
     }
 }

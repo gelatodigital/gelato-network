@@ -11,17 +11,23 @@ export default task(
     "The address of the gnosis safe proxy we call"
   )
   .addPositionalParam("contractname", "The contract whose abi has the function")
-  .addPositionalParam("functionname", "The function we want to call")
-  .addOptionalVariadicPositionalParam("inputs", "The parameters for the function call")
+  .addOptionalVariadicPositionalParam(
+    "inputs",
+    "The parameters for --functionname or for the defaultpayloadscript for <contractname>"
+  )
   .addOptionalParam(
     "to",
-    "The address which to call/delegatecall. Defaults to <gnosissafeproxyaddress>"
+    "The address which to call/delegatecall. Defaults to <contractname>"
+  )
+  .addOptionalParam("functionname", "The function we want to call")
+  .addOptionalParam(
+    "data",
+    "The data for the call --to. If not --functioname, defaults to <contractname> defaultpayload is used."
   )
   .addOptionalParam(
     "value",
     "The value to sent along with the tx",
-    0,
-    types.int
+    constants.HashZero
   )
   .addOptionalParam(
     "operation",
@@ -31,9 +37,8 @@ export default task(
   )
   .addOptionalParam(
     "safetxgas",
-    "Max gas for relay service. 0 for gasleft or nor relay",
-    0,
-    types.int
+    "Max gas for relay service. 0 for gasleft or no relay",
+    constants.HashZero
   )
   .addOptionalParam(
     "basegas",
@@ -44,8 +49,7 @@ export default task(
   .addOptionalParam(
     "gasprice",
     "The gasprice for relayer service. 0 for no relay.",
-    0,
-    types.int
+    constants.HashZero
   )
   .addOptionalParam(
     "gastoken",
@@ -64,13 +68,36 @@ export default task(
   .addFlag("log", "Logs return values to stdout")
   .setAction(async taskArgs => {
     try {
-      if (!taskArgs.to) taskArgs.to = taskArgs.gnosissafeproxyaddress;
 
-      const data = await run("abi-encode-withselector", {
-        contractname: taskArgs.contractname,
-        functionname: taskArgs.functionname,
-        inputs: taskArgs.inputs
-      });
+      // taskArgs sanitzation
+      if (taskArgs.functionname && taskArgs.data)
+        throw new Error("Provide EITHER --functionname OR --data");
+
+
+      if (!taskArgs.inputs) taskArgs.inputs = []
+
+        // --to address defaults to Contractname
+      if (!taskArgs.to) {
+        taskArgs.to = await run("bre-config", {
+          deployments: true,
+          contractname: taskArgs.contractname
+        });
+      }
+
+      if (!taskArgs.functionname && !taskArgs.data) {
+        taskArgs.data = await run(
+          `gsp:scripts:defaultpayload:${taskArgs.contractname}`,
+          {
+            inputs: taskArgs.inputs
+          }
+        );
+      } else if (taskArgs.functionname && !taskArgs.data) {
+        taskArgs.data = await run("abi-encode-withselector", {
+          contractname: taskArgs.contractname,
+          functionname: taskArgs.functionname,
+          inputs: taskArgs.inputs
+        });
+      }
 
       const signerAddr = await run("ethers", { signer: true, address: true });
 
@@ -81,15 +108,7 @@ export default task(
         )}000000000000000000000000000000000000000000000000000000000000000001`;
       }
 
-      if (taskArgs.log) {
-        console.log(
-          `\n GnosisSafe.execTransaction:\
-           \n To: ${taskArgs.contractname} at ${taskArgs.to}\
-           \n Function: ${taskArgs.functionname}\
-           \n Data:\n ${data}\
-           \n Signatures:\n ${taskArgs.signatures}\n`
-        );
-      }
+      if (taskArgs.log) console.log(taskArgs);
 
       const gnosisSafeProxy = await run("instantiateContract", {
         contractname: "IGnosisSafe",
@@ -97,50 +116,58 @@ export default task(
         write: true
       });
 
-      const executeTx = await gnosisSafeProxy.execTransaction(
-        taskArgs.to,
-        taskArgs.value,
-        data,
-        taskArgs.operation,
-        taskArgs.safetxgas,
-        taskArgs.basegas,
-        taskArgs.gasprice,
-        taskArgs.gastoken,
-        taskArgs.refundreceiver,
-        taskArgs.signatures,
-        { gasLimit: 200000 }
-      );
-
+      let executeTx;
+      try {
+        executeTx = await gnosisSafeProxy.execTransaction(
+          taskArgs.to,
+          taskArgs.value,
+          taskArgs.data,
+          taskArgs.operation,
+          taskArgs.safetxgas,
+          taskArgs.basegas,
+          taskArgs.gasprice,
+          taskArgs.gastoken,
+          taskArgs.refundreceiver,
+          taskArgs.signatures,
+          { gasLimit: 2000000 }
+        );
+      } catch (error) {
+        console.error(`gsp.executeTransaction() PRE-EXECUTION error\n`, error);
+        process.exit(1);
+      }
       if (taskArgs.log)
         console.log(`\n txHash execTransaction: ${executeTx.hash}\n`);
 
-      const executeTxReceipt = await executeTx.wait();
+      let executeTxReceipt;
+      try {
+        executeTxReceipt = await executeTx.wait();
+      } catch (error) {
+        console.error(`gsp.executeTransaction() EXECUTION error\n`, error);
+        process.exit(1);
+      }
 
       if (taskArgs.log) {
-        const executionSuccess = await run("event-getparsedlogs", {
-          contractname: "IGnosisSafe",
-          contractaddress: taskArgs.gnosissafeproxyaddress,
-          eventname: "ExecutionSuccess",
-          txhash: executeTx.hash,
-          blockhash: executeTxReceipt.blockHash
-        });
-        if (executionSuccess) console.log(`\n ExecutionSuccess ✅`);
+        const eventNames = ["ExecutionSuccess", "ExecutionFailure"];
 
-        const executionFailure = await run("event-getparsedlogs", {
-          contractname: "IGnosisSafe",
-          contractaddress: taskArgs.gnosissafeproxyaddress,
-          eventname: "ExecutionFailure",
-          txhash: executeTx.hash,
-          blockhash: executeTxReceipt.blockHash
-        });
-        if (executionFailure) console.log(`\n ExecutionFailure ❌`);
+        const executionEvents = [];
 
-        if (!executionSuccess && !executionFailure) {
-          console.log(`
-            \n🚫 Neither ExecutionSuccess or ExecutionFailure event logs where found\
-            \n   executeTx: ${executeTxReceipt.hash}\n
-          `);
+        for (const eventname of eventNames) {
+          const executionEvent = await run("event-getparsedlog", {
+            contractname: "IGnosisSafe",
+            contractaddress: taskArgs.gnosissafeproxyaddress,
+            eventname,
+            txhash: executeTxReceipt.transactionHash,
+            blockhash: executeTxReceipt.blockHash,
+            values: true,
+            stringify: true
+          });
+          if (executionEvent)
+            executionEvents.push({ [eventname]: executionEvent });
         }
+        console.log(
+          `\nExecution Events emitted for execute-tx: ${executeTx.hash}:`
+        );
+        for (const event of executionEvents) console.log(event);
       }
 
       return executeTxReceipt.hash;

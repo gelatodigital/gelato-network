@@ -2,17 +2,15 @@ pragma solidity ^0.6.4;
 pragma experimental ABIEncoderV2;
 
 struct ExecClaim {
-    uint256 id;
-    address provider;
-    address providerModule;
-    address userProxy;
-    address condition;
+    uint256 id;  // set automatically by mintExecClaim
+    address provider;   //  if msg.sender == provider => self-Provider
+    address providerModule;  //  can be AddressZero for self-Providers
+    address userProxy;  // set automatically to msg.sender by mintExecClaim
+    address condition;   // can be AddressZero for self-conditional Actions
     address action;
-    bytes conditionPayload;
+    bytes conditionPayload;  // can be bytes32(0) for self-conditionalActions
     bytes actionPayload;
-    uint256 expiryDate;
-    uint256 executorSuccessShare;
-    uint256 gasAdminSuccessShare;
+    uint256 expiryDate;  // 0 => defaults to global maximum
 }
 
 interface IGelatoCore {
@@ -43,29 +41,37 @@ interface IGelatoCore {
 
     event LogExecClaimCancelled(uint256 indexed execClaimId);
 
-    function mintExecClaim(ExecClaim calldata _execClaim, address _executor)
+    event LogCollectExecClaimRent(
+        address indexed provider,
+        address indexed executor,
+        uint256 indexed execClaimId,
+        uint256 amount
+    );
+
+    function mintExecClaim(ExecClaim calldata _execClaim) external;
+    function mintSelfProvidedExecClaim(ExecClaim calldata _execClaim, address _executor)
         external
         payable;
 
     function canExec(
         ExecClaim calldata _execClaim,
-        bytes32 _execClaimHash,
         uint256 _gelatoGasPrice,
-        uint256 _gelatoMaxGas
+        uint256 _internalGasRequirement
     )
         external
         view
         returns(string memory);
 
-    function exec(ExecClaim calldata _execClaim, bytes32 _execClaimHash) external;
+    function exec(ExecClaim calldata _execClaim) external;
 
     function cancelExecClaim(ExecClaim calldata _execClaim) external;
+    function batchCancelExecClaim(ExecClaim[] calldata _execClaims) external;
+
+    function collectExecClaimRent(ExecClaim calldata _execClaim) external;
+    function batchCollectExecClaimRent(ExecClaim[] calldata _execClaims) external;
 
     // ================  GETTER APIs =========================
     function currentExecClaimId() external view returns(uint256 currentId);
-
-    function isSecondExecAttempt(uint256 _execClaimId)
-        external
-        view
-        returns(bool);
+    function execClaimHash(uint256 _execClaimId) external view returns(bytes32);
+    function lastExecClaimRentPaymentDate(uint256 _execClaimId) external view returns(uint256);
 }

@@ -30,10 +30,11 @@ assert.ok(INFURA_ID, "no Infura ID in process.env");
 // Config Files
 const buidlerevmConfig = require("./buidler/config/networks/buidlerevmConfig");
 const kovanConfig = require("./buidler/config/networks/kovanConfig");
+const rinkebyConfig = require("./buidler/config/networks/rinkebyConfig");
 const mainnetConfig = require("./buidler/config/networks/mainnetConfig");
 
 module.exports = {
-  defaultNetwork: "kovan",
+  defaultNetwork: "rinkeby",
   networks: {
     buidlerevm: {
       hardfork: "istanbul",
@@ -66,6 +67,18 @@ module.exports = {
       contracts: kovanConfig.contracts,
       deployments: kovanConfig.deployments,
       filters: kovanConfig.filters
+    },
+    rinkeby: {
+      // Standard
+      accounts: { mnemonic: DEV_MNEMONIC },
+      chainId: 4,
+      gasPrice: parseInt(utils.parseUnits("8", "gwei")),
+      url: `https://rinkeby.infura.io/v3/${INFURA_ID}`,
+      // Custom
+      addressBook: rinkebyConfig.addressBook,
+      contracts: rinkebyConfig.contracts,
+      deployments: rinkebyConfig.deployments,
+      filters: rinkebyConfig.filters
     }
   },
   solc: {
@@ -126,3 +139,6 @@ require("./buidler/tasks/user_proxies/collection.tasks.gelato-user-proxies");
 // ======================== INTERNAL HELPER TASKS ======================================
 // encoding, naming ....
 require("./buidler/tasks/internal/collection.internalTasks");
+
+// ======================== VIEW FUNCS ======================================
+require("./buidler/tasks/view/collection.viewTasks");

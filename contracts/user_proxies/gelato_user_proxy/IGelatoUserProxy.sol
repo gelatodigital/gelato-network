@@ -5,7 +5,9 @@ import {ExecClaim} from "../../gelato_core/interfaces/IGelatoCore.sol";
 import {IGelatoAction} from "../../gelato_actions/IGelatoAction.sol";
 
 interface IGelatoUserProxy {
-    function mintExecClaim(ExecClaim calldata _execClaim, address _executor)
+    function mintExecClaim(ExecClaim calldata _execClaim) external;
+
+    function mintSelfProvidedExecClaim(ExecClaim calldata _execClaim, address _executor)
         external
         payable;
 

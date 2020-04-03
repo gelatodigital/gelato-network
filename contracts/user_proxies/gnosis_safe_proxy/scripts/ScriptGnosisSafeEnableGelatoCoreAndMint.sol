@@ -20,11 +20,7 @@ contract ScriptGnosisSafeEnableGelatoCoreAndMint {
     event LogFailure(string error);
 
     /// @dev This function should be delegatecalled
-    function enableModuleAndMint(
-        address _gelatoCore,
-        address _executor,
-        ExecClaim memory _execClaim
-    )
+    function enableModuleAndMint(address _gelatoCore, ExecClaim memory _execClaim)
         public
     {
         // Whitelist GelatoCore as module on delegatecaller (Gnosis Safe Proxy)
@@ -36,7 +32,7 @@ contract ScriptGnosisSafeEnableGelatoCoreAndMint {
         }
 
         // Mint on GelatoCore from delegatecaller (Gnosis Safe Proxy)
-        try IGelatoCore(_gelatoCore).mintExecClaim(_execClaim, _executor) {
+        try IGelatoCore(_gelatoCore).mintExecClaim(_execClaim) {
         } catch Error(string memory error) {
             emit LogFailure(error);
         } catch {

@@ -23,7 +23,7 @@ export default task(
   )
   .addOptionalParam(
     "gasadminshareceil",
-    "Upper Limit for gasAdminSuccessShare",
+    "Upper Limit for sysAdminSuccessShare",
     2,
     types.int
   )
