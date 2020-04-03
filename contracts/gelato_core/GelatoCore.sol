@@ -212,6 +212,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         external
         returns (ExecutionResult)
     {
+        require(msg.sender == address(this), "Only Gelato Core can call this function");
+
         // internal canExec() check
         if (!_canExec(_execClaim, _gelatoGasPrice))
             return (ExecutionResult.CanExecFailed);  // canExec failed: NO REFUND
