@@ -1,6 +1,5 @@
 import { internalTask } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../buidler.config";
-import { Contract } from "ethers";
 
 export default internalTask(
   "erc20:approve",
