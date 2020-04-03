@@ -21,24 +21,19 @@ interface IGelatoCore {
         ExecClaim execClaim
     );
 
-    event LogCanExecSuccess(
-        address indexed executor,
-        uint256 indexed execClaimId,
-        string canExecResult
-    );
     event LogCanExecFailed(
         address indexed executor,
         uint256 indexed execClaimId,
         string canExecResult
     );
-
-    event LogExecSuccess(address indexed executor, uint256 indexed execClaimId);
     event LogExecFailed(
         address indexed executor,
         uint256 indexed execClaimId,
         string reason
     );
-
+    event LogExecutionRevert(address indexed executor, uint256 indexed execClaimId);
+    event LogExecSuccess(address indexed executor, uint256 indexed execClaimId);
+    
     event LogExecClaimCancelled(uint256 indexed execClaimId);
 
     event LogCollectExecClaimRent(
