@@ -43,7 +43,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             string memory isProvided = isExecClaimProvided(_execClaim);
             require(
                 isProvided.startsWithOk(),
-                string(abi.encodePacked("GelatoCore.mintExecClaim.mintingGate:", isProvided))
+                string(abi.encodePacked("GelatoCore.mintExecClaim.isProvided:", isProvided))
             );
         }
 
@@ -376,7 +376,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             "GelatoCore.collecExecClaimRent: rent is not due"
         );
         require(
-            (isExecClaimProvided(_execClaim)).startsWithOk(),
+            (isConditionActionProvided(_execClaim)).startsWithOk(),
             "GelatoCore.collecExecClaimRent: isConditionActionProvided failed"
         );
         require(

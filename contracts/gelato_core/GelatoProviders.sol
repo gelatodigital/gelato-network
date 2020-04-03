@@ -28,10 +28,9 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     mapping(address => uint256) public override providerFunds;
     mapping(address => address) public override providerExecutor;
     mapping(address => uint256) public override executorProvidersCount;
-    mapping(address => EnumerableAddressSet.AddressSet) internal _providerModules;
     mapping(address => mapping(address => bool)) public override isConditionProvided;
     mapping(address => mapping(address => uint256)) public override actionGasPriceCeil;
-
+    mapping(address => EnumerableAddressSet.AddressSet) internal _providerModules;
 
     // GelatoCore: mintExecClaim/canExec/collectExecClaimRent Gate
     function isConditionActionProvided(ExecClaim memory _execClaim)
@@ -63,8 +62,6 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         return providerModule.isProvided(_execClaim);
     }
 
-
-
     function isExecClaimProvided(ExecClaim memory _execClaim)
         public
         view
@@ -79,15 +76,15 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         public
         view
         override
-        returns(string memory res)
+        returns(string memory)
     {
         // Will only return if a) action is not whitelisted & b) gelatoGasPrice is higher than gasPriceCeiling
         if (_gelatoGasPrice > actionGasPriceCeil[_execClaim.provider][_execClaim.action])
-            return "ProviderModuleGnosisSafeProxy.isProvided:gelatoGasPriceTooHigh";
+            return "GelatoGasPriceTooHigh";
 
         // 3. Check if condition is whitelisted by provider
         if (!isConditionProvided[_execClaim.provider][_execClaim.condition])
-            return "ProviderModuleGnosisSafeProxy.isProvided:ConditionNotProvided";
+            return "ConditionNotProvided";
 
         return providerModuleChecks(_execClaim);
     }
