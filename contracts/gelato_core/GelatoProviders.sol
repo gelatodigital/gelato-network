@@ -5,11 +5,13 @@ import { IGelatoProviders } from "./interfaces/IGelatoProviders.sol";
 import { GelatoSysAdmin } from "./GelatoSysAdmin.sol";
 import { Address } from "../external/Address.sol";
 import { SafeMath } from "../external/SafeMath.sol";
-import { GelatoString } from "../libraries/GelatoString.sol";
+import { Math } from "../external/Math.sol";
 import { IGelatoProviderModule } from "./interfaces/IGelatoProviderModule.sol";
 import { EnumerableAddressSet } from "../external/EnumerableAddressSet.sol";
 import { EnumerableWordSet } from "../external/EnumerableWordSet.sol";
 import { ExecClaim } from "./interfaces/IGelatoCore.sol";
+import { GelatoString } from "../libraries/GelatoString.sol";
+
 
 /// @title GelatoProviders
 /// @notice APIs for GelatoCore Owner and execClaimTenancy
@@ -21,14 +23,14 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     using SafeMath for uint256;
     using GelatoString for string;
 
+    uint256 public constant override NO_CEIL = 10**18;
+
     mapping(address => uint256) public override providerFunds;
     mapping(address => address) public override providerExecutor;
     mapping(address => uint256) public override executorProvidersCount;
     mapping(address => mapping(address => bool)) public override isConditionProvided;
     mapping(address => mapping(address => uint256)) public override actionGasPriceCeil;
-    uint256 public constant override NO_CEIL = 10**18;
     mapping(address => EnumerableAddressSet.AddressSet) internal _providerModules;
-
 
     // GelatoCore: mintExecClaim/canExec/collectExecClaimRent Gate
     function isConditionActionProvided(ExecClaim memory _execClaim)
@@ -39,12 +41,12 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     {
         if (!isConditionProvided[_execClaim.provider][_execClaim.condition])
             return "ConditionNotProvided";
-        if (actionGasPriceCeil[_execClaim.provider][_execClaim.action] != 0)
+        if (actionGasPriceCeil[_execClaim.provider][_execClaim.action] == 0)
             return "ActionNotProvided";
     }
 
     // IGelatoProviderModule: Gelato mintExecClaim/canExec Gate
-    function providerModuleChecks(ExecClaim memory _execClaim, uint256 _gelatoGasPrice)
+    function providerModuleChecks(ExecClaim memory _execClaim)
         public
         view
         override
@@ -56,31 +58,35 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         IGelatoProviderModule providerModule = IGelatoProviderModule(
             _execClaim.providerModule
         );
-        return providerModule.isProvided(_execClaim, _gelatoGasPrice);
+
+        return providerModule.isProvided(_execClaim);
     }
 
-    function isExecClaimProvided(ExecClaim memory _execClaim, uint256 _gelatoGasPrice)
+    function isExecClaimProvided(ExecClaim memory _execClaim)
         public
         view
         override
         returns(string memory res)
     {
         res = isConditionActionProvided(_execClaim);
-        if (res.startsWithOk()) return providerModuleChecks(_execClaim, _gelatoGasPrice);
+        if (res.startsWithOk()) return providerModuleChecks(_execClaim);
     }
 
     function providerCanExec(ExecClaim memory _execClaim, uint256 _gelatoGasPrice)
         public
         view
         override
-        returns(string memory res)
+        returns(string memory)
     {
-        res = isExecClaimProvided(_execClaim, _gelatoGasPrice);
-        if (actionGasPriceCeil[_execClaim.provider][_execClaim.action] == NO_CEIL)
-            return res;
-        else if (res.startsWithOk())
-            if (actionGasPriceCeil[_execClaim.provider][_execClaim.action] < _gelatoGasPrice)
-                return "GelatoGasPriceAboveActionCeil";
+        // Will only return if a) action is not whitelisted & b) gelatoGasPrice is higher than gasPriceCeiling
+        if (_gelatoGasPrice > actionGasPriceCeil[_execClaim.provider][_execClaim.action])
+            return "GelatoGasPriceTooHigh";
+
+        // 3. Check if condition is whitelisted by provider
+        if (!isConditionProvided[_execClaim.provider][_execClaim.condition])
+            return "ConditionNotProvided";
+
+        return providerModuleChecks(_execClaim);
     }
 
     // Provider Funding
@@ -91,19 +97,23 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         providerFunds[_provider] = newProviderFunds;
     }
 
-    function unprovideFunds(uint256 _withdrawAmount) public override {
-        require(_withdrawAmount > 0, "GelatoProviders.unprovideFunds: 0");
-        // Checks
+    function unprovideFunds(uint256 _withdrawAmount)
+        public
+        override
+        returns (uint256 realWithdrawAmount)
+    {
         uint256 previousProviderFunds = providerFunds[msg.sender];
-        require(
-            previousProviderFunds >= _withdrawAmount,
-            "GelatoProviders.unprovideFunds: out of funds"
-        );
-        uint256 newProviderFunds = previousProviderFunds - _withdrawAmount;
+
+        realWithdrawAmount = Math.min(_withdrawAmount, previousProviderFunds);
+
+        uint256 newProviderFunds = previousProviderFunds - realWithdrawAmount;
+
         // Effects
-        providerFunds[msg.sender] = newProviderFunds;
+        providerFunds[msg.sender] = previousProviderFunds - newProviderFunds;
+
         // Interaction
-        msg.sender.sendValue(_withdrawAmount);
+        msg.sender.sendValue(realWithdrawAmount);
+
         emit LogUnprovideFunds(msg.sender, previousProviderFunds, newProviderFunds);
     }
 
@@ -270,5 +280,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     {
         return _providerModules[_provider].enumerate();
     }
+
+
 
 }

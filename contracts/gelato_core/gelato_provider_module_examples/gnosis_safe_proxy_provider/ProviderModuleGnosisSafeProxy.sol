@@ -27,7 +27,7 @@ contract ProviderModuleGnosisSafeProxy is
     // ================= GELATO PROVIDER MODULE STANDARD ================
     // @dev since we check extcodehash prior to execution, we forego the execution option
     //  where the userProxy is deployed at execution time.
-    function isProvided(ExecClaim calldata _execClaim, uint256)
+    function isProvided(ExecClaim calldata _execClaim)
         external
         view
         override

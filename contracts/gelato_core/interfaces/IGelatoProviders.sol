@@ -60,12 +60,12 @@ interface IGelatoProviders {
         returns(string memory);
 
     // IGelatoProviderModule: Gelato mintExecClaim/canExec Gate
-    function providerModuleChecks(ExecClaim calldata _execClaim, uint256 _gelatoGasPrice)
+    function providerModuleChecks(ExecClaim calldata _execClaim)
         external
         view
         returns(string memory);
 
-    function isExecClaimProvided(ExecClaim calldata _execClaim, uint256 _gelatoGasPrice)
+    function isExecClaimProvided(ExecClaim calldata _execClaim)
         external
         view
         returns(string memory res);
@@ -78,7 +78,7 @@ interface IGelatoProviders {
     // =========== PROVIDER STATE WRITE APIs ==============
     // Provider Funding
     function provideFunds(address _provider) external payable;
-    function unprovideFunds(uint256 _withdrawAmount) external;
+    function unprovideFunds(uint256 _withdrawAmount) external returns(uint256);
 
     // Provider Executor
     function assignProviderExecutor(address _provider, address _executor) external;

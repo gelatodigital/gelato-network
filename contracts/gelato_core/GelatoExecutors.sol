@@ -5,6 +5,7 @@ import { IGelatoExecutors } from "./interfaces/IGelatoExecutors.sol";
 import { GelatoProviders } from "./GelatoProviders.sol";
 import { Address } from  "../external/Address.sol";
 import { SafeMath } from "../external/SafeMath.sol";
+import { Math } from "../external/Math.sol";
 import { ExecClaim } from "./interfaces/IGelatoCore.sol";
 
 abstract contract GelatoExecutors is IGelatoExecutors, GelatoProviders {
@@ -64,22 +65,23 @@ abstract contract GelatoExecutors is IGelatoExecutors, GelatoProviders {
     }
 
     // Executor Accounting
-    function withdrawExecutorBalance(uint256 _withdrawAmount) external override {
-        // Checks
-        require(
-            _withdrawAmount > 0,
-            "GelatoExecutors.withdrawExecutorBalance: zero _withdrawAmount"
-        );
+    function withdrawExecutorBalance(uint256 _withdrawAmount)
+        external
+        override
+        returns(uint256 realWithdrawAmount)
+    {
         uint256 currentExecutorBalance = executorFunds[msg.sender];
-        require(
-            currentExecutorBalance >= _withdrawAmount,
-            "GelatoExecutors.withdrawExecutorBalance: out of balance"
-        );
+
+        realWithdrawAmount = Math.min(_withdrawAmount, currentExecutorBalance);
+
+        uint256 newExecutorFunds = currentExecutorBalance - realWithdrawAmount;
+
         // Effects
-        executorFunds[msg.sender] = currentExecutorBalance - _withdrawAmount;
+        executorFunds[msg.sender] = newExecutorFunds;
+
         // Interaction
-        msg.sender.sendValue(_withdrawAmount);
-        emit LogWithdrawExecutorBalance(msg.sender, _withdrawAmount);
+        msg.sender.sendValue(realWithdrawAmount);
+        emit LogWithdrawExecutorBalance(msg.sender, realWithdrawAmount);
     }
 
     // An Executor qualifies and remains registered for as long as he has minExecutorStake

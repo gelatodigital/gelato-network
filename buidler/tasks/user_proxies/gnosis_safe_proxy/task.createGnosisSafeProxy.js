@@ -41,7 +41,7 @@ export default task(
   )
   .addOptionalParam(
     "defaultpayloadscript",
-    "The name of the defaultpayload script to retrieve 'data'"
+    "Script to retrieve --data and to be --to (if not --to supplied)"
   )
   .addOptionalParam(
     "fallbackhandler",
@@ -107,7 +107,7 @@ export default task(
         taskArgs.data = await run(
           `gsp:scripts:defaultpayload:${taskArgs.defaultpayloadscript}`
         );
-        if (taskArgs.to === constants.HashZero) {
+        if (taskArgs.to === constants.AddressZero) {
           taskArgs.to = await run("bre-config", {
             deployments: true,
             contractname: taskArgs.defaultpayloadscript

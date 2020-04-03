@@ -13,13 +13,13 @@ export const contracts = [
   // Multimint
   "ActionMultiMintForConditionTimestampPassed",
   // Portfolio Mgmt
-  "ActionRebalancePortfolio",
+  "ActionRebalancePortfolioKovan",
 
   // = Chained =
   // ERC20
   "ActionChainedTimedERC20TransferFromKovan",
   // Portfolio Mgmt
-  "ActionChainedRebalancePortfolio",
+  "ActionChainedRebalancePortfolioKovan",
 
   // Action specific scripts
   "ScriptEnterPortfolioRebalancing",
@@ -48,6 +48,9 @@ export const contracts = [
   // Scripts
   "ScriptGnosisSafeEnableGelatoCore",
   "ScriptGnosisSafeEnableGelatoCoreAndMint",
+  // Action specific scripts
+  "ScriptEnterPortfolioRebalancingKovan",
+  "ScriptExitRebalancePortfolioKovan",
 
   // === Mocks ====
   // Conditions

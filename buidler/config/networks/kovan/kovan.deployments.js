@@ -1,6 +1,8 @@
 export const deployments = {
   // ========== KOVAN ===========
   // ==== One-Off Actions ====
+  // Gnosis
+  ActionWithdrawBatchExchangeRinkeby: "0x0",
   // BzX
   ActionBzxPtokenBurnToToken: "0x43dFFE6f0C2029e397Fa47DD27587Ef6297660C3",
   ActionBzxPtokenMintWithToken: "0x080d3059b30D3B7EDffa1B0B9AE981f0Ce94168E",
@@ -10,17 +12,18 @@ export const deployments = {
   // kyber
   ActionKyberTradeKovan: "0xF829B506c378AaD11dB7Efe8d626cc7d0e015CBA",
   // Portfolio Mgmt
-  ActionRebalancePortfolio: "0xB4Fa9846811309347C0B86805D96F4E171C2EFbF",
+  ActionRebalancePortfolioKovan: "0x66ba11147695bf8d502c56a84ff0Bc132D362C75",
 
   // ==== Actions - Chained ====
   // erc20
   ActionChainedTimedERC20TransferFromKovan:
-    "0xBeB2257A57Ad97a51841eBd05CB3f17a1141b2b8",
+    "0x9Ba17D7D573f79e7663C8758d484A1D2D35Cf762",
   // Portfolio Mgmt
-  ActionChainedRebalancePortfolio: "0xBcB7492164066E5B5DD5D74c9Ae3c5DfbACcde69",
+  ActionChainedRebalancePortfolioKovan:
+    "0x6199B69Fa71BDA8865CF0226ab464cE596ee10c0",
 
   // ===== Gelato Core ====
-  GelatoCore: "0xeEa7e91EbDFF03432101590f976d3906b5352ef8",
+  GelatoCore: "0x4e4f3d95CC4920f1D6e8fb433a9Feed3C8f3CC31",
   ProviderModuleGelatoUserProxy: "0xA6D02eFA927639EDAFB34A0AeC2Ebe1152a50713",
 
   // ==== Conditions ====
@@ -43,10 +46,15 @@ export const deployments = {
   // == GnosisSafe ==
   // Scripts
   ScriptGnosisSafeEnableGelatoCore:
-    "0x99D081a6c07043e9E78A231Ae2c41fa811AD856C",
+    "0x08954d0d87D2169CA4051AA612537eEDf6E6DCb4",
+  // Enable GelatoCore Module and Mint
   ScriptGnosisSafeEnableGelatoCoreAndMint:
     "0x5993ff30b943dE4c3fDA59d88D87d1661412D101",
-  ScriptEnterPortfolioRebalancing: "0x57de907e200B214A6A6EfA6C723891069999D2Cc",
+  // Enter the Rebalancing Chained Action
+  ScriptEnterPortfolioRebalancingKovan:
+    "0x882E8963F45B7bC1E817B6Dca43916ca343b92F9",
+  ScriptExitRebalancePortfolioKovan:
+    "0xc5006243ac1AbF38f0536272408B1F6E3f96933d",
 
   // === Mocks ====
   // Conditions
