@@ -140,7 +140,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
     // ================  EXECUTE EXECUTOR API ============================
     enum ExecutorPay {
-        None,
         Reward,
         Refund
     }
