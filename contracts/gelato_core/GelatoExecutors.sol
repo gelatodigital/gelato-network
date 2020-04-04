@@ -13,7 +13,6 @@ abstract contract GelatoExecutors is IGelatoExecutors, GelatoProviders {
     using Address for address payable;  /// for sendValue method
     using SafeMath for uint256;
 
-    mapping(address => uint256) public override executorStake;
     mapping(address => uint256) public override executorFunds;
 
     // Executor De/Registrations and Staking
@@ -30,14 +29,10 @@ abstract contract GelatoExecutors is IGelatoExecutors, GelatoProviders {
         emit LogStakeExecutor(msg.sender, msg.value);
     }
 
-    function unstakeExecutor(address _transferExecutor) external override {
+    function unstakeExecutor() external override {
         require(
             isExecutorMinStaked(msg.sender),
             "GelatoExecutors.unstakeExecutor: msg.sender is NOT min staked"
-        );
-        require(
-            isExecutorMinStaked(_transferExecutor),
-            "GelatoExecutors.unstakeExecutor: _transferExecutor is NOT min staked"
         );
         require(
             !isExecutorAssigned(msg.sender),
@@ -46,9 +41,11 @@ abstract contract GelatoExecutors is IGelatoExecutors, GelatoProviders {
         uint256 unbondedStake = executorStake[msg.sender];
         delete executorStake[msg.sender];
         msg.sender.sendValue(unbondedStake);
-        emit LogUnstakeExecutor(msg.sender, _transferExecutor);
+        emit LogUnstakeExecutor(msg.sender);
     }
 
+    // @DEV why would anyone increase their stake? Only reason is to showcase that they are a serious executor, however
+    // this would only be valid if this "excess" stake would be non-withdrawable, similiar to the minStake.
     function increaseExecutorStake(uint256 _topUpAmount) external payable override {
         executorStake[msg.sender] = executorStake[msg.sender].add(_topUpAmount);
         require(isExecutorMinStaked(msg.sender), "GelatoExecutors.increaseExecutorStake");
@@ -61,7 +58,7 @@ abstract contract GelatoExecutors is IGelatoExecutors, GelatoProviders {
         override
     {
         for (uint i; i < _providers.length; i++)
-            assignProviderExecutor(_providers[i], _transferExecutor);
+            assignExecutorByExecutor(_providers[i], _transferExecutor);
     }
 
     // Executor Accounting
@@ -82,10 +79,5 @@ abstract contract GelatoExecutors is IGelatoExecutors, GelatoProviders {
         // Interaction
         msg.sender.sendValue(realWithdrawAmount);
         emit LogWithdrawExecutorBalance(msg.sender, realWithdrawAmount);
-    }
-
-    // An Executor qualifies and remains registered for as long as he has minExecutorStake
-    function isExecutorMinStaked(address _executor) public view override returns(bool) {
-        return executorStake[_executor] >= minExecutorStake;
     }
 }

@@ -26,11 +26,14 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     uint256 public constant override NO_CEIL = 10**18;
 
     mapping(address => uint256) public override providerFunds;
-    mapping(address => address) public override providerExecutor;
+    mapping(address => address) public override executorByProvider;
     mapping(address => uint256) public override executorProvidersCount;
     mapping(address => mapping(address => bool)) public override isConditionProvided;
     mapping(address => mapping(address => uint256)) public override actionGasPriceCeil;
     mapping(address => EnumerableAddressSet.AddressSet) internal _providerModules;
+
+    // Executor Stake
+    mapping(address => uint256) public override executorStake;
 
     // GelatoCore: mintExecClaim/canExec/collectExecClaimRent Gate
     function isConditionActionProvided(ExecClaim memory _execClaim)
@@ -43,6 +46,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
             return "ConditionNotProvided";
         if (actionGasPriceCeil[_execClaim.provider][_execClaim.action] == 0)
             return "ActionNotProvided";
+        return "Ok";
     }
 
     // IGelatoProviderModule: Gelato mintExecClaim/canExec Gate
@@ -102,6 +106,10 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         override
         returns (uint256 realWithdrawAmount)
     {
+        address currentExecutor = executorByProvider[msg.sender];
+
+        require(currentExecutor == address(0), "GelatoProviders.unprovideFunds: Providers have to un-assign executor first");
+
         uint256 previousProviderFunds = providerFunds[msg.sender];
 
         realWithdrawAmount = Math.min(_withdrawAmount, previousProviderFunds);
@@ -117,28 +125,62 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         emit LogUnprovideFunds(msg.sender, previousProviderFunds, newProviderFunds);
     }
 
-    // Provider Executor: can be set by Provider OR providerExecutor.
-    function assignProviderExecutor(address _provider, address _newExecutor) public override {
+    // Called by Providers
+    function assignExecutorByProvider(address _newExecutor) public override {
+
+        address currentExecutor = executorByProvider[msg.sender];
+
         require(
-            _provider != address(0),
-            "GelatoProviders.assignProviderExecutor: _provider AddressZero"
+            isExecutorMinStaked(_newExecutor),
+            "GelatoProviders.assignExecutorByProvider: New Executor must be staked"
         );
-        address currentExecutor = providerExecutor[_provider];
+
         require(
-            currentExecutor != _newExecutor,
-            "GelatoProviders.assignProviderExecutor: redundant"
+            isProviderLiquid(msg.sender),
+            "GelatoProviders.assignExecutorByProvider: To reassign, providers need to have min. stake"
         );
-        emit LogAssignProviderExecutor(_provider, currentExecutor, _newExecutor);
-        // Allow providerExecutor to reassign to new Executor when they unstake
-        if (msg.sender == currentExecutor) providerExecutor[_provider] = _newExecutor;
-        else providerExecutor[msg.sender] = _newExecutor;  // Provider reassigns
+
+        emit LogAssignProviderExecutor(msg.sender, currentExecutor, _newExecutor);
+
+        // CHECKS
+        // Provider reassigns
+        executorByProvider[msg.sender] = _newExecutor;
         if (currentExecutor != address(0)) {
             executorProvidersCount[currentExecutor].sub(
                 1,
-                "GelatProviders.assignProviderExecutor: executorProvidersCount undeflow"
+                "GelatProviders.assignExecutorByProvider: executorProvidersCount undeflow"
             );
         }
+        // Dont increment if address(0)
+        if (_newExecutor != address(0)) executorProvidersCount[_newExecutor]++;
+    }
+
+    // Called by Executors
+    function assignExecutorByExecutor(address _provider, address _newExecutor) public override {
+
+        address currentExecutor = executorByProvider[_provider];
+
+        require(
+            currentExecutor == msg.sender,
+            "GelatoProviders.assignExecutorByExecutor: Msg.sender is not assigned executor"
+        );
+
+        // Checks at the same time if _nexExecutor != address(0)
+        require(
+            isExecutorMinStaked(_newExecutor),
+            "GelatoProviders.assignExecutorByExecutor: New Executor must be staked"
+        );
+
+        emit LogAssignProviderExecutor(_provider, currentExecutor, _newExecutor);
+
+        // CHECKS
+        // Executor reassigns
+        executorByProvider[_provider] = _newExecutor;
         executorProvidersCount[_newExecutor]++;
+        executorProvidersCount[currentExecutor].sub(
+            1,
+            "GelatProviders.assignExecutorByExecutor: executorProvidersCount undeflow"
+        );
     }
 
     // (Un-)provide Conditions
@@ -255,7 +297,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
 
     // Providers' Executor Assignment
     function isExecutorAssigned(address _executor) public view override returns(bool) {
-        return executorProvidersCount[_executor] == 0;
+        return executorProvidersCount[_executor] != 0;
     }
 
     // Providers' Module Getters
@@ -279,6 +321,13 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         returns(address[] memory)
     {
         return _providerModules[_provider].enumerate();
+    }
+
+    // Executor Getters
+
+    // An Executor qualifies and remains registered for as long as he has minExecutorStake
+    function isExecutorMinStaked(address _executor) public view override returns(bool) {
+        return executorStake[_executor] >= minExecutorStake;
     }
 
 

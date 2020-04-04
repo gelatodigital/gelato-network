@@ -32,10 +32,10 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         _execClaim.userProxy = msg.sender;
 
         // EXECUTOR CHECKS
-        address executor = providerExecutor[_execClaim.provider];
+        address executor = executorByProvider[_execClaim.provider];
         require(
             isExecutorMinStaked(executor),
-            "GelatoCore.mintExecClaim: providerExecutor's stake is insufficient."
+            "GelatoCore.mintExecClaim: executorByProvider's stake is insufficient."
         );
 
         // User checks
@@ -81,8 +81,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         );
 
         // Executor Handling
-        if (_executor != address(0) && providerExecutor[msg.sender] != _executor)
-            providerExecutor[msg.sender] = _executor;  // assign new executor
+        if (_executor != address(0) && executorByProvider[msg.sender] != _executor)
+            executorByProvider[msg.sender] = _executor;  // assign new executor
 
         // Optional User prepayment
         if (msg.value > 0) providerFunds[msg.sender] += msg.value;
@@ -137,7 +137,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         }
 
         // At end, to allow for canExec debugging from any account. Else check this first.
-        if (msg.sender != providerExecutor[_execClaim.provider]) return "InvalidExecutor";
+        if (msg.sender != executorByProvider[_execClaim.provider]) return "InvalidExecutor";
 
         return "Ok";
     }
@@ -358,7 +358,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     function collectExecClaimRent(ExecClaim memory _execClaim) public override {
         // CHECKS
         require(
-            providerExecutor[_execClaim.provider] == msg.sender,
+            executorByProvider[_execClaim.provider] == msg.sender,
             "GelatoCore.collecExecClaimRent: msg.sender not assigned Executor"
         );
         if (_execClaim.expiryDate != 0) {
