@@ -8,9 +8,9 @@ struct ExecClaim {
     address userProxy;  // set automatically to msg.sender by mintExecClaim
     address condition;   // can be AddressZero for self-conditional Actions
     address action;
-    bytes conditionPayload;  // can be bytes32(0) for self-conditionalActions
+    bytes conditionPayload;  // can be bytes32(0) for self-conditional Actions
     bytes actionPayload;
-    uint256 expiryDate;  // 0 => defaults to global maximum
+    uint256 expiryDate;  // subject to rent payments; 0 == infinity.
 }
 
 interface IGelatoCore {
@@ -21,19 +21,15 @@ interface IGelatoCore {
         ExecClaim execClaim
     );
 
+    event LogExecSuccess(address indexed executor, uint256 indexed execClaimId);
     event LogCanExecFailed(
-        address indexed executor,
-        uint256 indexed execClaimId,
-        string canExecResult
-    );
-    event LogExecFailed(
         address indexed executor,
         uint256 indexed execClaimId,
         string reason
     );
+    event LogExecFailed(address indexed executor, uint256 indexed execClaimId, string reason);
     event LogExecutionRevert(address indexed executor, uint256 indexed execClaimId);
-    event LogExecSuccess(address indexed executor, uint256 indexed execClaimId);
-    
+
     event LogExecClaimCancelled(uint256 indexed execClaimId);
 
     event LogCollectExecClaimRent(
@@ -48,10 +44,7 @@ interface IGelatoCore {
         external
         payable;
 
-    function canExec(
-        ExecClaim calldata _execClaim,
-        uint256 _gelatoGasPrice
-    )
+    function canExec(ExecClaim calldata _execClaim, uint256 _gelatoGasPrice)
         external
         view
         returns(string memory);

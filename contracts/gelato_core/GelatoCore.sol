@@ -143,7 +143,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     }
 
     // ================  EXECUTE EXECUTOR API ============================
-    enum ExecutionResult { ExecSuccess, CanExecFailed, ExecFailed, ExecutionRevert }
+    enum ExecutionResult { ExecSuccess, CanExecFailed, ExecFailed /*, ExecutionRevert*/ }
     enum ExecutorPay { Reward, Refund }
 
     // Execution Entry Point
@@ -161,20 +161,20 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         require(tx.gasprice == _gelatoGasPrice, "GelatoCore.exec: tx.gasprice");
 
         ExecutionResult executionResult;
-        string memory executionMsg;
+        string memory reason;
 
         try this.executionWrapper{gas: startGas - internalGasRequirement}(
             _execClaim,
             _gelatoGasPrice
         )
-            returns(ExecutionResult _executionResult, string memory _res)
+            returns(ExecutionResult _executionResult, string memory _reason)
         {
             executionResult = _executionResult;
-            executionMsg = _res;
+            reason = _reason;
         } catch {
             // If any of the external calls in executionWrapper resulted in e.g. out of gas,
             // Executor is eligible for a Refund, but only if Executor sent gelatoMaxGas.
-            // executionResult = ExecutionResult.ExecutionRevert; @dev implict => gas saving
+            // executionResult = ExecutionResult.ExecutionRevert; @dev implict => saving gas
         }
 
         if (executionResult == ExecutionResult.ExecSuccess) {
@@ -192,11 +192,11 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         } else if (executionResult == ExecutionResult.CanExecFailed) {
             // END-2: CanExecFailed => No ExecClaim Deletion & No Refund
-            emit LogCanExecFailed(msg.sender, _execClaim.id, executionMsg);
+            emit LogCanExecFailed(msg.sender, _execClaim.id, reason);
             return;
 
         } else if (executionResult == ExecutionResult.ExecFailed) {
-            emit LogExecFailed(msg.sender, _execClaim.id, executionMsg);
+            emit LogExecFailed(msg.sender, _execClaim.id, reason);
 
             // END-3.1: ExecFailed NO gelatoMaxGas => No ExecClaim Deletion & No Refund
             if (startGas < _gelatoMaxGas) return;
@@ -220,12 +220,13 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         );
     }
 
+    // Used by GelatoCore.exec(), to handle Out-Of-Gas from execution gracefully
     function executionWrapper(ExecClaim memory execClaim, uint256 _gelatoGasPrice)
         public
         returns(ExecutionResult, string memory)
     {
         require(msg.sender == address(this), "GelatoCore.executionWrapper:onlyGelatoCore");
-        
+
         // canExec()
         string memory canExecRes = canExec(execClaim, _gelatoGasPrice);
         if (!canExecRes.startsWithOk()) return (ExecutionResult.CanExecFailed, canExecRes);

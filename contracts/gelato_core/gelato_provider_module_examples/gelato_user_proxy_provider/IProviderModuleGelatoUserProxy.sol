@@ -10,5 +10,5 @@ interface IProviderModuleGelatoUserProxy{
     function isProxyExtcodehashProvided(bytes32 _hash)
         external
         view
-        returns (bool);
+        returns(bool);
 }
