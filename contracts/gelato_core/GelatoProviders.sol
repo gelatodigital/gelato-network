@@ -59,7 +59,13 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
             _execClaim.providerModule
         );
 
-        return providerModule.isProvided(_execClaim);
+        try providerModule.isProvided(_execClaim)
+        returns(string memory providerModuleMessage)
+        {
+            return providerModuleMessage;
+        } catch {
+            return "Error in Provider Module";
+        }
     }
 
     // GelatoCore: combined mintExecClaim Gate
