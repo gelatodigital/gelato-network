@@ -80,8 +80,17 @@ interface IGelatoProviders {
     function provideFunds(address _provider) external payable;
     function unprovideFunds(uint256 _withdrawAmount) external returns(uint256);
 
-    // Provider Executor
-    function assignProviderExecutor(address _provider, address _executor) external;
+    // Executor Stake
+    function executorStake(address _executor) external view returns (uint256);
+
+    function isExecutorMinStaked(address _executor) external view returns(bool);
+
+
+    // Provider assigns Executor
+    function assignExecutorByProvider(address _executor) external;
+
+    // Executor assigns Executor
+    function assignExecutorByExecutor(address _provider, address _newExecutor) external;
 
     // (Un-)provide Conditions
     function provideConditions(address[] calldata _conditions) external;
@@ -118,10 +127,11 @@ interface IGelatoProviders {
     function isProviderLiquid(address _provider) external view returns(bool);
 
     // Provider Executor
-    function providerExecutor(address _provider)
+    function executorByProvider(address _provider)
         external
         view
         returns(address);
+
     function executorProvidersCount(address _executor) external view returns(uint256);
     function isExecutorAssigned(address _executor) external view returns(bool);
 

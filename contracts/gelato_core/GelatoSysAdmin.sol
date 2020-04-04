@@ -13,6 +13,7 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
 
     uint256 public override gelatoGasPrice = 9000000000;  // 9 gwei initial
     uint256 public override gelatoMaxGas = 7000000;  // 7 mio initial
+    uint256 public override internalGasRequirement = 500000;
     uint256 public override minProviderStake = 0.1 ether;  // production: 1 ETH
     uint256 public override minExecutorStake = 0.02 ether;  // production: 1 ETH
     uint256 public override execClaimTenancy = 30 days;
@@ -20,9 +21,6 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
     uint256 public override executorSuccessShare = 50;  // 50% of successful execution cost
     uint256 public override sysAdminSuccessShare = 20;  // 20% of successful execution cost
     uint256 public override sysAdminFunds;
-
-    // Exec Gas Values
-    uint256 public internalGasRequirement = 500000;
 
     // == The main functions of the Sys Admin (DAO) ==
     // exec-tx gasprice
@@ -36,6 +34,12 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
     function setGelatoMaxGas(uint256 _newMaxGas) external override onlyOwner {
         emit LogSetGelatoMaxGas(gelatoMaxGas, _newMaxGas);
         gelatoMaxGas = _newMaxGas;
+    }
+
+    // exec-tx GelatoCore internal gas requirement
+    function setInternalGasRequirement(uint256 _newRequirement) external override onlyOwner {
+        emit LogSetInternalGasRequirement(internalGasRequirement, _newRequirement);
+        internalGasRequirement = _newRequirement;
     }
 
     // Minimum Executor Stake Per Provider
