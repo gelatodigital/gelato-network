@@ -143,7 +143,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     }
 
     // ================  EXECUTE EXECUTOR API ============================
-    enum ExecutionResult { ExecSuccess, CanExecFailed, ExecFailed /*, ExecutionRevert*/ }
+    enum ExecutionResult { ExecSuccess, CanExecFailed, ExecFailed, ExecutionRevert }
     enum ExecutorPay { Reward, Refund }
 
     // Execution Entry Point
@@ -174,7 +174,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         } catch {
             // If any of the external calls in executionWrapper resulted in e.g. out of gas,
             // Executor is eligible for a Refund, but only if Executor sent gelatoMaxGas.
-            // executionResult = ExecutionResult.ExecutionRevert; @dev implict => saving gas
+            executionResult = ExecutionResult.ExecutionRevert;
         }
 
         if (executionResult == ExecutionResult.ExecSuccess) {
@@ -202,6 +202,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             if (startGas < _gelatoMaxGas) return;
 
         } else {
+            // executionResult == ExecutionResult.ExecutionRevert
             emit LogExecutionRevert(msg.sender, _execClaim.id);
 
             // END-4.1: ExecutionReverted NO gelatoMaxGas => No ExecClaim Deletion & No Refund
