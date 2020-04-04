@@ -322,7 +322,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
                 executorSuccessFee.add(sysAdminSuccessFee),
                 "GelatoCore._processProviderPayables: providerFunds underflow"
             );
-            executorFunds[msg.sender] += executorSuccessFee;
+            executorStake[msg.sender] += executorSuccessFee;
             sysAdminFunds += sysAdminSuccessFee;
         } else {
             // ExecFailure: Provider REFUNDS estimated costs to executor
@@ -331,7 +331,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
                 estExecCost,
                 "GelatoCore._processProviderPayables:  providerFunds underflow"
             );
-            executorFunds[msg.sender] += estExecCost;
+            executorStake[msg.sender] += estExecCost;
         }
     }
 
@@ -390,7 +390,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // INTERACTIONS: Provider pays Executor ExecClaim Rent.
         providerFunds[_execClaim.provider] -= execClaimRent;
-        executorFunds[msg.sender] += execClaimRent;
+        executorStake[msg.sender] += execClaimRent;
 
         emit LogCollectExecClaimRent(
             msg.sender,

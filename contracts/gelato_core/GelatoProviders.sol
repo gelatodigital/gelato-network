@@ -293,7 +293,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
 
     // Provider Liquidity
     function isProviderLiquid(address _provider) public view override returns(bool) {
-        return minProviderStake <= providerFunds[_provider] ? true : false;
+        return providerFunds[_provider] >= minProviderStake;
     }
 
     // An Executor qualifies and remains registered for as long as he has minExecutorStake

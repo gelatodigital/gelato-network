@@ -20,7 +20,5 @@ interface IGelatoExecutors {
         address _transferExecutor
     ) external;
 
-    function withdrawExecutorBalance(uint256 _withdrawAmount) external returns(uint256);
-
-    function executorFunds(address _executor) external view returns (uint256);
+    function withdrawExcessExecutorStake(uint256 _withdrawAmount) external returns(uint256);
 }
