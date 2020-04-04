@@ -6,7 +6,6 @@ import { GelatoProviders } from "./GelatoProviders.sol";
 import { Address } from  "../external/Address.sol";
 import { SafeMath } from "../external/SafeMath.sol";
 import { Math } from "../external/Math.sol";
-import { ExecClaim } from "./interfaces/IGelatoCore.sol";
 
 abstract contract GelatoExecutors is IGelatoExecutors, GelatoProviders {
 
@@ -58,7 +57,7 @@ abstract contract GelatoExecutors is IGelatoExecutors, GelatoProviders {
         override
     {
         for (uint i; i < _providers.length; i++)
-            assignExecutorByExecutor(_providers[i], _transferExecutor);
+            executorAssignsExecutor(_providers[i], _transferExecutor);
     }
 
     // Executor Accounting
