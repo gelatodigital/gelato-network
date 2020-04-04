@@ -59,12 +59,10 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
             _execClaim.providerModule
         );
 
-        try providerModule.isProvided(_execClaim)
-        returns(string memory providerModuleMessage)
-        {
-            return providerModuleMessage;
+        try providerModule.isProvided(_execClaim) returns(string memory res) {
+            return res;
         } catch {
-            return "Error in Provider Module";
+            return "GelatoProviders.providerModuleChecks";
         }
     }
 
