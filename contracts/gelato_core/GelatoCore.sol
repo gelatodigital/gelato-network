@@ -154,7 +154,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         require(startGas > internalGasRequirement, "GelatoCore.exec: Insufficient gas sent");
 
         // memcopy of gelatoGasPrice and gelatoMaxGas, to avoid multiple storage reads
-        uint256 _gelatoGasPrice = gelatoGasPrice;
+        uint256 _gelatoGasPrice = gelatoGasPrice();
         uint256 _gelatoMaxGas = gelatoMaxGas;
 
         // CHECKS
