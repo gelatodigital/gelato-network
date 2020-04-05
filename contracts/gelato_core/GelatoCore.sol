@@ -39,10 +39,12 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         );
 
         // User checks
-        require(
-            _execClaim.expiryDate >= now + 60 seconds,
-            "GelatoCore.mintExecClaim: Invalid expiryDate"
-        );
+        if (_execClaim.expiryDate != 0) {
+            require(
+                _execClaim.expiryDate >= now,
+                "GelatoCore.mintExecClaim: Invalid expiryDate"
+            );
+        }
 
         // PROVIDER CHECKS (not for self-Providers)
         if (msg.sender != _execClaim.provider) {

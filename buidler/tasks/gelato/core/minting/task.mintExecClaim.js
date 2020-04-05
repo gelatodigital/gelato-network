@@ -53,12 +53,16 @@ export default task(
   .addFlag("log", "Logs return values to stdout")
   .setAction(async (taskArgs) => {
     try {
-      if (taskArgs.funds || (taskArgs.gelatoexecutor && !taskArgs.selfprovide))
-        throw new Error(
-          "\n --funds or --gelatoexecutor only with --selfprovide"
-        );
+      // if (
+      //   !taskArgs.funds ||
+      //   (!taskArgs.gelatoexecutor && !taskArgs.selfprovide)
+      // )
+      //   throw new Error(
+      //     "\n --funds or --gelatoexecutor only with --selfprovide"
+      //   );
 
       if (!taskArgs.execclaim) {
+        taskArgs.execclaim = {};
         // Command Line Argument Checks
         if (!taskArgs.actionname && !taskArgs.actionaddress)
           throw new Error(`\n Must supply <actionname> or --actionaddress`);
@@ -79,15 +83,20 @@ export default task(
           );
         }
 
-        // Selected GelatoProvider
-        taskArgs.execclaim.provider = await run("handleGelatoProvider", {
-          gelatoprovider: taskArgs.gelatoprovider,
-        });
+        console.log(taskArgs.gelatoprovider);
+        if (!taskArgs.gelatoprovider)
+          // Selected GelatoProvider
+          taskArgs.execclaim.provider = await run("handleGelatoProvider", {
+            gelatoprovider: taskArgs.gelatoprovider,
+          });
+        else {
+          taskArgs.execclaim.provider = taskArgs.gelatoprovider;
+        }
 
         // ProviderModule
-        if (!taskArgs.providermodule)
-          throw new Error(`\n gc-mintexecclaim: providerModule \n`);
-        else taskArgs.execclaim.provderModule = taskArgs.providermodule;
+        if (!taskArgs.gelatoprovidermodule)
+          throw new Error(`\n gc-mintexecclaim: gelatoprovidermodule \n`);
+        else taskArgs.execclaim.providerModule = taskArgs.gelatoprovidermodule;
 
         // Condition and ConditionPayload (optional)
         if (taskArgs.conditionname !== "0") {
@@ -147,7 +156,9 @@ export default task(
           { value: taskArgs.funds }
         );
       } else {
-        mintTx = await gelatoCore.mintExecClaim(execClaim);
+        mintTx = await gelatoCore.mintExecClaim(execClaim, {
+          gasLimit: 1000000,
+        });
       }
 
       if (taskArgs.log) console.log(`\n mintTx Hash: ${mintTx.hash}\n`);
