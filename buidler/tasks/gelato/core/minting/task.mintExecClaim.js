@@ -85,8 +85,9 @@ export default task(
         });
 
         // ProviderModule
-        if (!taskArgs.providerModule)
+        if (!taskArgs.providermodule)
           throw new Error(`\n gc-mintexecclaim: providerModule \n`);
+        else taskArgs.execclaim.provderModule = taskArgs.providermodule;
 
         // Condition and ConditionPayload (optional)
         if (taskArgs.conditionname !== "0") {
@@ -97,7 +98,7 @@ export default task(
             });
           }
           if (!taskArgs.conditionpayload) {
-            taskArgs.execclaim.conditionpayload = await run(
+            taskArgs.execclaim.conditionPayload = await run(
               "handleGelatoPayload",
               {
                 contractname: taskArgs.conditionname,
@@ -114,7 +115,7 @@ export default task(
           });
         }
         if (!taskArgs.actionpayload) {
-          taskArgs.execclaim.actionpayload = await run("handleGelatoPayload", {
+          taskArgs.execclaim.actionPayload = await run("handleGelatoPayload", {
             contractname: taskArgs.actionname,
             payload: taskArgs.actionpayload,
           });
