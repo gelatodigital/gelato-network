@@ -1,11 +1,13 @@
 pragma solidity ^0.6.3;
 
-import "../../external/IERC20.sol";
-import "../../external/SafeERC20.sol";
-import "../../external/SafeMath.sol";
-import "../../dapp_interfaces/gnosis/IBatchExchange.sol";
+import { GelatoActionsStandard } from "../GelatoActionsStandard.sol";
+import { IGelatoAction } from "../IGelatoAction.sol";
+import { IERC20 } from "../../external/IERC20.sol";
+import { SafeERC20 } from "../../external/SafeERC20.sol";
+import { SafeMath } from "../../external/SafeMath.sol";
+import { IBatchExchange } from "../../dapp_interfaces/gnosis/IBatchExchange.sol";
 
-contract ActionPlaceOrderBatchExchange {
+contract ActionPlaceOrderBatchExchange is GelatoActionsStandard {
 
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
@@ -14,8 +16,12 @@ contract ActionPlaceOrderBatchExchange {
 
     IBatchExchange private constant batchExchange = IBatchExchange(0xC576eA7bd102F7E476368a5E98FA455d1Ea34dE2);
 
+    function action(bytes calldata _actionPayload) external payable override virtual {
+        (address _user, address _sellToken, address _buyToken, uint128 _sellAmount, uint128 _buyAmount, uint32 _orderExpirationBatchId) = abi.decode(_actionPayload[4:], (address, address, address, uint128, uint128, uint32));
+        action(_user, _sellToken, _buyToken, _sellAmount, _buyAmount, _orderExpirationBatchId);
+    }
 
-    function placeOrderRequestWithdraw(
+    function action(
         address _user,
         address _sellToken,
         address _buyToken,

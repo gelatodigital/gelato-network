@@ -1,10 +1,11 @@
 pragma solidity ^0.6.3;
 
-import "../GelatoActionsStandard.sol";
-import "../../external/IERC20.sol";
-import "../../external/SafeERC20.sol";
-import "../../external/SafeMath.sol";
-import "../../dapp_interfaces/gnosis/IBatchExchange.sol";
+import { GelatoActionsStandard } from "../GelatoActionsStandard.sol";
+import { IGelatoAction } from "../IGelatoAction.sol";
+import { IERC20 } from "../../external/IERC20.sol";
+import { SafeERC20 } from "../../external/SafeERC20.sol";
+import { SafeMath } from "../../external/SafeMath.sol";
+import { IBatchExchange } from "../../dapp_interfaces/gnosis/IBatchExchange.sol";
 
 contract ActionWithdrawBatchExchangeRinkeby is GelatoActionsStandard {
 
@@ -26,12 +27,15 @@ contract ActionWithdrawBatchExchangeRinkeby is GelatoActionsStandard {
     // WETH RINKEBY
     address private constant WETH = 0xc778417E063141139Fce010982780140Aa0cD5Ab;
 
-    function actionSelector() public pure override virtual returns(bytes4) {
-        return this.withdrawFromBatchExchange.selector;
+
+    function action(bytes calldata _actionPayload) external payable override virtual {
+        (address _user, address _proxyAddress, address _sellToken, address _buyToken) = abi.decode(_actionPayload[4:], (address, address, address, address));
+        action(_user, _proxyAddress, _sellToken, _buyToken);
     }
 
-    function withdrawFromBatchExchange(
+    function action(
         address _user,
+        address _proxyAddress,
         address _sellToken,
         address _buyToken
     )
@@ -43,15 +47,15 @@ contract ActionWithdrawBatchExchangeRinkeby is GelatoActionsStandard {
 
         // 1. Fetch sellToken Balance
         IERC20 sellToken = IERC20(_sellToken);
-        uint256 preSellTokenBalance = sellToken.balanceOf(address(this));
+        uint256 preSellTokenBalance = sellToken.balanceOf(_proxyAddress);
 
         // 2. Fetch buyToken Balance
         IERC20 buyToken = IERC20(_buyToken);
-        uint256 preBuyTokenBalance = buyToken.balanceOf(address(this));
+        uint256 preBuyTokenBalance = buyToken.balanceOf(_proxyAddress);
 
         // 3. Withdraw buy token and pay provider fee (if possible)
-        try batchExchange.withdraw(address(this), _buyToken) {
-            uint256 postBuyTokenBalance = buyToken.balanceOf(address(this));
+        try batchExchange.withdraw(_proxyAddress, _buyToken) {
+            uint256 postBuyTokenBalance = buyToken.balanceOf(_proxyAddress);
             uint256 buyTokenWithdrawAmount = postBuyTokenBalance.sub(preBuyTokenBalance);
 
             // 4. Check if buy tokens got withdrawn
@@ -85,8 +89,8 @@ contract ActionWithdrawBatchExchangeRinkeby is GelatoActionsStandard {
         }
 
         // 5. Withdraw sell token and pay fee (if not paid already)
-        try batchExchange.withdraw(address(this), _sellToken) {
-            uint256 postSellTokenBalance = sellToken.balanceOf(address(this));
+        try batchExchange.withdraw(_proxyAddress, _sellToken) {
+            uint256 postSellTokenBalance = sellToken.balanceOf(_proxyAddress);
             uint256 sellTokenWithdrawAmount = postSellTokenBalance.sub(preSellTokenBalance);
 
             // Check if some sell tokens got withdrawn
@@ -135,23 +139,24 @@ contract ActionWithdrawBatchExchangeRinkeby is GelatoActionsStandard {
 
     // ======= ACTION CONDITIONS CHECK =========
     // Overriding and extending GelatoActionsStandard's function (optional)
-    function actionConditionsCheck(bytes calldata _actionPayload)
+    function termsOk(bytes calldata _actionPayload)
         external
         view
         override
         virtual
         returns(string memory)  // actionCondition
     {
-        (, address _sellToken, address _buyToken) = abi.decode(
+        (, address _proxyAddress, address _sellToken, address _buyToken) = abi.decode(
             _actionPayload[4:],
-            (address,address,address)
+            (address,address,address,address)
         );
         return _actionConditionsCheck(
-            _sellToken, _buyToken
+            _proxyAddress, _sellToken, _buyToken
         );
     }
 
     function _actionConditionsCheck(
+        address _proxyAddress,
         address _sellToken,
         address _buyToken
     )
@@ -169,13 +174,14 @@ contract ActionWithdrawBatchExchangeRinkeby is GelatoActionsStandard {
 
         // @ DEV: Problem, as we dont have a way to on-chain check if there are actually funds that can be withdrawn, the business model relies on the assumption that sufficient funds are availabe to be withdrawn in order to compensate the executor
 
-        bool sellTokenWithdrawable = batchExchange.hasValidWithdrawRequest(address(this), _sellToken);
+
+        bool sellTokenWithdrawable = batchExchange.hasValidWithdrawRequest(_proxyAddress, _sellToken);
 
         if (!sellTokenWithdrawable) {
             return "ActionWithdrawBatchExchangeRinkeby: Sell Token not withdrawable yet";
         }
 
-        bool buyTokenWithdrawable = batchExchange.hasValidWithdrawRequest(address(this), _buyToken);
+        bool buyTokenWithdrawable = batchExchange.hasValidWithdrawRequest(_proxyAddress, _buyToken);
 
         if (!buyTokenWithdrawable) {
             return "ActionWithdrawBatchExchangeRinkeby: Buy Token not withdrawable yet";
