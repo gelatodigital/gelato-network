@@ -75,7 +75,7 @@ export default task(
           ? taskArgs.modules
           : [taskArgs.modules];
 
-      if (taskArgs.log) console.log("gc-batchprovide:\n", taskArgs);
+      if (taskArgs.log) console.log("\n gc-batchprovide TaskArgs:\n", taskArgs);
 
       const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",

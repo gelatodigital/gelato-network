@@ -5,4 +5,4 @@ import "./task.execClaimTenancy";
 import "./task.sysAdminSuccessFeeFactor";
 // Setters
 import "./task.setGelatoGasPrice";
-
+import "./task.setGelatoGasPriceOracle";

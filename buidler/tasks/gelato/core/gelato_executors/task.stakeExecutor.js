@@ -18,11 +18,11 @@ export default task(
   .addOptionalParam("gelatocoreaddress")
   .addFlag("events", "Logs parsed Event Logs to stdout")
   .addFlag("log", "Logs return values to stdout")
-  .setAction(async taskArgs => {
+  .setAction(async (taskArgs) => {
     try {
       // We use the 2nd account (index 1) generated from mnemonic for the gelatoExecutor by default
       const {
-        [taskArgs.executorindex]: gelatoExecutor
+        [taskArgs.executorindex]: gelatoExecutor,
       } = await ethers.signers();
 
       if (!gelatoExecutor)
@@ -32,7 +32,7 @@ export default task(
         contractname: "GelatoCore",
         contractaddress: taskArgs.gelatocoreaddress,
         signer: gelatoExecutor,
-        write: true
+        write: true,
       });
 
       if (!taskArgs.stake) taskArgs.stake = await gelatoCore.minExecutorStake();
@@ -51,8 +51,7 @@ export default task(
           contractaddress: gelatoCore.address,
           blockhash,
           txhash: tx.hash,
-          stringify: true,
-          log: true
+          log: true,
         });
       }
 

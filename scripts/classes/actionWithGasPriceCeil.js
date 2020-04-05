@@ -6,7 +6,7 @@ class ActionWithGasPriceCeil {
       throw new Error(
         "\n ActionWithGasPriceCeil: no address passed to constructor \n "
       );
-    this.address = address;
+    this._address = address;
     this.gasPriceCeil = gasPriceCeil ? gasPriceCeil : constants.HashZero;
   }
 }
