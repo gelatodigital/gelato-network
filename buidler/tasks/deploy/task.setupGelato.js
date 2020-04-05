@@ -18,6 +18,14 @@ export default task("setupgelato")
         contractname: "GelatoCore",
         log,
       });
+
+      // GelatoGasPriceOracle
+      const gelatoCore = await run("deploy", {
+        contractname: "GelatoGasPriceOracle",
+
+        log,
+      });
+
       // Condition
       const condition = await run("deploy", {
         contractname: taskArgs.condition,
