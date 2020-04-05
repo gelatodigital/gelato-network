@@ -143,7 +143,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     }
 
     // ================  EXECUTE EXECUTOR API ============================
-    enum ExecutionResult { ExecSuccess, CanExecFailed, ExecFailed /*, ExecutionRevert*/ }
+    enum ExecutionResult { ExecSuccess, CanExecFailed, ExecFailed, ExecutionRevert }
     enum ExecutorPay { Reward, Refund }
 
     // Execution Entry Point
@@ -154,7 +154,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         require(startGas > internalGasRequirement, "GelatoCore.exec: Insufficient gas sent");
 
         // memcopy of gelatoGasPrice and gelatoMaxGas, to avoid multiple storage reads
-        uint256 _gelatoGasPrice = gelatoGasPrice;
+        uint256 _gelatoGasPrice = gelatoGasPrice();
         uint256 _gelatoMaxGas = gelatoMaxGas;
 
         // CHECKS
@@ -174,7 +174,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         } catch {
             // If any of the external calls in executionWrapper resulted in e.g. out of gas,
             // Executor is eligible for a Refund, but only if Executor sent gelatoMaxGas.
-            // executionResult = ExecutionResult.ExecutionRevert; @dev implict => saving gas
+            executionResult = ExecutionResult.ExecutionRevert;
         }
 
         if (executionResult == ExecutionResult.ExecSuccess) {
@@ -202,6 +202,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             if (startGas < _gelatoMaxGas) return;
 
         } else {
+            // executionResult == ExecutionResult.ExecutionRevert
             emit LogExecutionRevert(msg.sender, _execClaim.id);
 
             // END-4.1: ExecutionReverted NO gelatoMaxGas => No ExecClaim Deletion & No Refund
@@ -322,7 +323,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
                 executorSuccessFee.add(sysAdminSuccessFee),
                 "GelatoCore._processProviderPayables: providerFunds underflow"
             );
-            executorFunds[msg.sender] += executorSuccessFee;
+            executorStake[msg.sender] += executorSuccessFee;
             sysAdminFunds += sysAdminSuccessFee;
         } else {
             // ExecFailure: Provider REFUNDS estimated costs to executor
@@ -331,7 +332,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
                 estExecCost,
                 "GelatoCore._processProviderPayables:  providerFunds underflow"
             );
-            executorFunds[msg.sender] += estExecCost;
+            executorStake[msg.sender] += estExecCost;
         }
     }
 
@@ -390,7 +391,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // INTERACTIONS: Provider pays Executor ExecClaim Rent.
         providerFunds[_execClaim.provider] -= execClaimRent;
-        executorFunds[msg.sender] += execClaimRent;
+        executorStake[msg.sender] += execClaimRent;
 
         emit LogCollectExecClaimRent(
             msg.sender,

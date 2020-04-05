@@ -6,14 +6,11 @@ import { GelatoProviders } from "./GelatoProviders.sol";
 import { Address } from  "../external/Address.sol";
 import { SafeMath } from "../external/SafeMath.sol";
 import { Math } from "../external/Math.sol";
-import { ExecClaim } from "./interfaces/IGelatoCore.sol";
 
 abstract contract GelatoExecutors is IGelatoExecutors, GelatoProviders {
 
     using Address for address payable;  /// for sendValue method
     using SafeMath for uint256;
-
-    mapping(address => uint256) public override executorFunds;
 
     // Executor De/Registrations and Staking
     function stakeExecutor() external payable override {
@@ -58,23 +55,27 @@ abstract contract GelatoExecutors is IGelatoExecutors, GelatoProviders {
         override
     {
         for (uint i; i < _providers.length; i++)
-            assignExecutorByExecutor(_providers[i], _transferExecutor);
+            executorAssignsExecutor(_providers[i], _transferExecutor);
     }
 
     // Executor Accounting
-    function withdrawExecutorBalance(uint256 _withdrawAmount)
+    function withdrawExcessExecutorStake(uint256 _withdrawAmount)
         external
         override
         returns(uint256 realWithdrawAmount)
     {
-        uint256 currentExecutorBalance = executorFunds[msg.sender];
+        require(isExecutorMinStaked(msg.sender), "Executor needs to be staked on gelato");
 
-        realWithdrawAmount = Math.min(_withdrawAmount, currentExecutorBalance);
+        uint256 currentExecutorStake = executorStake[msg.sender];
 
-        uint256 newExecutorFunds = currentExecutorBalance - realWithdrawAmount;
+        uint256 excessExecutorStake = currentExecutorStake - minExecutorStake;
+
+        realWithdrawAmount = Math.min(_withdrawAmount, excessExecutorStake);
+
+        uint256 newExecutorStake = currentExecutorStake - realWithdrawAmount;
 
         // Effects
-        executorFunds[msg.sender] = newExecutorFunds;
+        executorStake[msg.sender] = newExecutorStake;
 
         // Interaction
         msg.sender.sendValue(realWithdrawAmount);

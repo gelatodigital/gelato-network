@@ -6,17 +6,19 @@ import {ExecClaim} from "../interfaces/IGelatoCore.sol";
 
 interface IGelatoProviders {
 
-    struct ActionWithGasPriceCeil {
-        address _address;
-        uint256 gasPriceCeil;
-    }
+    struct ActionWithGasPriceCeil { address _address; uint256 gasPriceCeil; }
 
     // Registration
     event LogRegisterProvider(address indexed provider);
     event LogUnregisterProvider(address indexed provider);
 
-    // Provider Executor
-    event LogAssignProviderExecutor(
+    // Executor By Provider
+    event LogProviderAssignsExecutor(
+        address indexed provider,
+        address indexed oldExecutor,
+        address indexed newExecutor
+    );
+    event LogExecutorAssignsExecutor(
         address indexed provider,
         address indexed oldExecutor,
         address indexed newExecutor
@@ -80,17 +82,11 @@ interface IGelatoProviders {
     function provideFunds(address _provider) external payable;
     function unprovideFunds(uint256 _withdrawAmount) external returns(uint256);
 
-    // Executor Stake
-    function executorStake(address _executor) external view returns (uint256);
-
-    function isExecutorMinStaked(address _executor) external view returns(bool);
-
-
     // Provider assigns Executor
-    function assignExecutorByProvider(address _executor) external;
+    function providerAssignsExecutor(address _executor) external;
 
     // Executor assigns Executor
-    function assignExecutorByExecutor(address _provider, address _newExecutor) external;
+    function executorAssignsExecutor(address _provider, address _newExecutor) external;
 
     // (Un-)provide Conditions
     function provideConditions(address[] calldata _conditions) external;
@@ -106,6 +102,7 @@ interface IGelatoProviders {
 
     // Batch (un-)provide
     function batchProvide(
+        address _executor,
         address[] calldata _conditions,
         ActionWithGasPriceCeil[] calldata _actions,
         address[] calldata _modules
@@ -123,8 +120,12 @@ interface IGelatoProviders {
 
     // =========== PROVIDER STATE READ APIs ==============
     // Provider Funding
-    function providerFunds(address _provider) external view returns (uint256);
+    function providerFunds(address _provider) external view returns(uint256);
     function isProviderLiquid(address _provider) external view returns(bool);
+
+    // Executor Stake
+    function executorStake(address _executor) external view returns(uint256);
+    function isExecutorMinStaked(address _executor) external view returns(bool);
 
     // Provider Executor
     function executorByProvider(address _provider)
