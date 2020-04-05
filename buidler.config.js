@@ -110,7 +110,7 @@ require("./buidler/tasks/dapps/collection.tasks.dapps");
 require("./buidler/tasks/debugging/collection.tasks.debugging");
 
 // ============== DEPLOY
-require("./buidler/tasks/deploy/task.deploy");
+require("./buidler/tasks/deploy/collection.tasks.deploy");
 
 // ============== ERC20
 require("./buidler/tasks/erc20/collection.tasks.erc20");
