@@ -2,7 +2,7 @@ import { task } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../../buidler.config";
 
 export default task(
-  "gc-unregisterprovider",
+  "gc-batchunprovide",
   `Sends tx to GelatoCore.unregisterProvider(conditions, actions) on [--network] (default: ${defaultNetwork})`
 )
   .addVariadicPositionalParam(

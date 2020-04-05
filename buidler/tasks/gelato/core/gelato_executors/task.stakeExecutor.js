@@ -51,7 +51,6 @@ export default task(
           contractaddress: gelatoCore.address,
           blockhash,
           txhash: tx.hash,
-          values: true,
           stringify: true,
           log: true
         });

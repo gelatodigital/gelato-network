@@ -3,6 +3,9 @@ require("@babel/register");
 // Libraries
 const assert = require("assert");
 const { utils } = require("ethers");
+// Classes
+const ActionWithGasPriceCeil = require("./scripts/classes/actionWithGasPriceCeil")
+  .default;
 // Helpers
 const checkNestedObj = require("./scripts/helpers/nestedObjects/checkNestedObj")
   .default;
@@ -11,7 +14,8 @@ const getNestedObj = require("./scripts/helpers/nestedObjects/getNestedObj")
 const sleep = require("./scripts/helpers/async/sleep").default;
 
 // ================================= BRE extension ==================================
-extendEnvironment(bre => {
+extendEnvironment((bre) => {
+  bre.ActionWithGasPriceCeil = ActionWithGasPriceCeil;
   bre.checkNestedObj = checkNestedObj;
   bre.getNestedObj = getNestedObj;
   bre.sleep = sleep;
@@ -34,13 +38,13 @@ const rinkebyConfig = require("./buidler/config/networks/rinkebyConfig");
 const mainnetConfig = require("./buidler/config/networks/mainnetConfig");
 
 module.exports = {
-  defaultNetwork: "rinkeby",
+  defaultNetwork: "buidlerevm",
   networks: {
     buidlerevm: {
       hardfork: "istanbul",
       contracts: buidlerevmConfig.contracts,
       gas: 15000000,
-      blockGasLimit: 20000000
+      blockGasLimit: 20000000,
     },
     mainnet: {
       // Standard
@@ -54,7 +58,7 @@ module.exports = {
       addressBook: mainnetConfig.addressBook,
       contracts: mainnetConfig.contracts,
       deployments: mainnetConfig.deployments,
-      filters: mainnetConfig.filters
+      filters: mainnetConfig.filters,
     },
     kovan: {
       // Standard
@@ -66,7 +70,7 @@ module.exports = {
       addressBook: kovanConfig.addressBook,
       contracts: kovanConfig.contracts,
       deployments: kovanConfig.deployments,
-      filters: kovanConfig.filters
+      filters: kovanConfig.filters,
     },
     rinkeby: {
       // Standard
@@ -78,13 +82,13 @@ module.exports = {
       addressBook: rinkebyConfig.addressBook,
       contracts: rinkebyConfig.contracts,
       deployments: rinkebyConfig.deployments,
-      filters: rinkebyConfig.filters
-    }
+      filters: rinkebyConfig.filters,
+    },
   },
   solc: {
     version: "0.6.4",
-    optimizer: { enabled: true }
-  }
+    optimizer: { enabled: true },
+  },
 };
 
 // ================================= PLUGINS =========================================
