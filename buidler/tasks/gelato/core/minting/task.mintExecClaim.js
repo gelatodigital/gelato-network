@@ -147,24 +147,36 @@ export default task(
       });
 
       // Send Minting Tx
-      let mintTx;
+      let mintTxHash;
 
       if (taskArgs.selfprovide) {
-        mintTx = await gelatoCore.mintSelfProvidedExecClaim(
+        mintTxHash = await gelatoCore.mintSelfProvidedExecClaim(
           execClaim,
           taskArgs.gelatoexecutor,
           { value: taskArgs.funds }
         );
       } else {
-        mintTx = await gelatoCore.mintExecClaim(execClaim, {
-          gasLimit: 1000000,
+        // Wrap Mint function in Gnosis Safe Transaction
+        const safeAddress = await run("gc-determineCpkProxyAddress");
+        mintTxHash = await run("gsp-exectransaction", {
+          gnosissafeproxyaddress: safeAddress,
+          contractname: "GelatoCore",
+          inputs: execClaim,
+          functionname: "mintExecClaim",
+          operation: 0,
+          log: true,
         });
+
+        // const tx = await gelatoCore.mintExecClaim(execClaim, {
+        //   gasLimit: 1000000,
+        // });
+        // mintTxHash = tx.hash;
       }
 
-      if (taskArgs.log) console.log(`\n mintTx Hash: ${mintTx.hash}\n`);
+      if (taskArgs.log) console.log(`\n mintTx Hash: ${mintTxHash}\n`);
 
-      // Wait for tx to get mined
-      const { blockHash: blockhash } = await mintTx.wait();
+      // // Wait for tx to get mined
+      // const { blockHash: blockhash } = await mintTx.wait();
 
       // Event Emission verification
       if (taskArgs.events) {
@@ -172,7 +184,7 @@ export default task(
           contractname: "GelatoCore",
           contractaddress: taskArgs.gelatocoreaddress,
           eventname: "LogExecClaimMinted",
-          txhash: mintTx.hash,
+          txhash: mintTxHash,
           blockhash,
           values: true,
           stringify: true,
@@ -182,7 +194,7 @@ export default task(
         else console.log("\n❌ LogExecClaimMinted not found");
       }
 
-      return mintTx.hash;
+      return mintTxHash;
     } catch (error) {
       console.error(error, "\n");
       process.exit(1);

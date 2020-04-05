@@ -16,6 +16,7 @@ import "./provide_actions/task.provideActions";
 import "./provide_actions/task.isProvidedAction";
 // Provider Module
 import "./task.providerModules";
+import "./provider_module/task.isProvidedModule";
 
 // === GelatoProviderModuleExample ===
 import "./provider_module/collection.tasks.gelato-provider-module";

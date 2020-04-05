@@ -10,7 +10,8 @@ export const deployments = {
   ActionBzxPtokenMintWithToken: "0x0",
   // erc20
   ActionERC20Transfer: "0x0",
-  ActionERC20TransferFrom: "0x50B2b52E6EBD63aa75a608d39Eb9eDE397Eb152B",
+  ActionERC20TransferFrom: "0x95dcAAa400DeB4385015AA00b5F8dcdB93cF0961",
+  MockConditionDummy: "0xEC7551f77E2d1D84eF7346ce5223D27D63200486",
   // kyber
   ActionKyberTradeRinkeby: "0x0",
   // Portfolio Mgmt
@@ -23,10 +24,10 @@ export const deployments = {
   ActionChainedRebalancePortfolioRinkeby: "0x0",
 
   // ===== Gelato Core ====
-  GelatoCore: "0x82c53a1F4390bdC5F9A5AF88e51c4912fBaa16BF",
-  GelatoGasPriceOracle: "0x89a06F64Ab917D7B6Fb58a93519AE4bd01AB186B",
+  GelatoCore: "0x6D9c14201d45F6A8B82bdE0ff467c5717Ee68450",
+  GelatoGasPriceOracle: "0x36D03F8108441D30265499e8E35A8C12d2C69a02",
   ProviderModuleGelatoUserProxy: "0x0",
-  ProviderModuleGnosisSafeProxy: "0xbCe9002099f4527d4287587b535bE420Bde92116",
+  ProviderModuleGnosisSafeProxy: "0x39CECf5Ab5944685100F195E3F3034088D2aCacb",
 
   // ==== Conditions ====
   // == Balances ==

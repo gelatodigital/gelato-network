@@ -91,8 +91,10 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
             return "GelatoGasPriceTooHigh";
 
         // 3. Check if condition is whitelisted by provider
-        if (!isConditionProvided[_execClaim.provider][_execClaim.condition])
-            return "ConditionNotProvided";
+        if (_execClaim.condition != address(0)) {
+            if (!isConditionProvided[_execClaim.provider][_execClaim.condition])
+                return "ConditionNotProvided";
+        }
 
         return providerModuleChecks(_execClaim);
     }

@@ -1,5 +1,7 @@
 import { task, types } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../../buidler.config";
+import ExecClaim from "../../../../../classes/gelato/execClaim";
+import { constants, utils } from "ethers";
 
 export default task(
   "gc-canexec",
@@ -19,7 +21,7 @@ export default task(
   .addOptionalParam("txhash", "Filter for a specific tx")
   .addFlag("stringify")
   .addFlag("log", "Logs return values to stdout")
-  .setAction(async taskArgs => {
+  .setAction(async (taskArgs) => {
     try {
       if (!taskArgs.execclaim) {
         taskArgs.execclaim = await run("fetchExecClaim", {
@@ -28,15 +30,17 @@ export default task(
           toblock: taskArgs.toblock,
           blockhash: taskArgs.blockhash,
           txhash: taskArgs.txhash,
-          stringify: taskArgs.stringify
+          stringify: taskArgs.stringify,
         });
       }
+
+      console.log(taskArgs.execclaim);
 
       if (!taskArgs.execclaim)
         throw new Error("\nUnable to fetch execClaim from events");
 
       const {
-        [taskArgs.executorindex]: gelatoExecutor
+        [taskArgs.executorindex]: gelatoExecutor,
       } = await ethers.signers();
 
       if (taskArgs.log) {
@@ -47,23 +51,40 @@ export default task(
       const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
         signer: gelatoExecutor,
-        write: true
+        write: true,
       });
 
-      const { execClaimHash } = await run("event-getparsedlog", {
-        execclaimid: taskArgs.execclaimid,
-        fromblock: taskArgs.fromblock,
-        toblock: taskArgs.toblock,
-        blockhash: taskArgs.blockhash,
-        txhash: taskArgs.txhash,
-        stringify: taskArgs.stringify
+      // const { execClaimHash } = await run("event-getparsedlog", {
+      //   execclaimid: taskArgs.execclaimid,
+      //   fromblock: taskArgs.fromblock,
+      //   toblock: taskArgs.toblock,
+      //   blockhash: taskArgs.blockhash,
+      //   txhash: taskArgs.txhash,
+      //   stringify: taskArgs.stringify,
+      // });
+      // const gelatoGasPrice = await gelatoCore.gelatoGasPrice();
+      // const gelatoMaxGas = await gelatoCore.gelatoMaxGas();
+
+      const execClaim = new ExecClaim({
+        id: taskArgs.execclaim[0],
+        provider: taskArgs.execclaim[1],
+        providerModule: taskArgs.execclaim[2],
+        userProxy: taskArgs.execclaim[3],
+        condition: taskArgs.execclaim[4],
+        action: taskArgs.execclaim[5],
+        conditionPayload: taskArgs.execclaim[6],
+        actionPayload: taskArgs.execclaim[7],
+        expiryDate: taskArgs.execclaim[8],
       });
-      const gelatoGasPrice = await gelatoCore.gelatoGasPrice();
-      const gelatoMaxGas = await gelatoCore.gelatoMaxGas();
+
+      const gelatoGasPrice = utils.parseUnits("20", "gwei");
 
       try {
-        const canExecResult = await gelatoCore.canExec(taskArgs.execclaim);
-        if (log) console.log(`\n Can Exec Result: ${canExecResult}\n`);
+        const canExecResult = await gelatoCore.canExec(
+          execClaim,
+          gelatoGasPrice
+        );
+        if (taskArgs.log) console.log(`\n Can Exec Result: ${canExecResult}\n`);
         return canExecResult;
       } catch (error) {
         console.error(`\n canExec error`, error);
