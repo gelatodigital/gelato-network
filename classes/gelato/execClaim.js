@@ -5,6 +5,7 @@ class ExecClaim {
     try {
       if (!execClaimObj.actionPayload)
         throw new Error("undefined actionPayload");
+
       this.id = constants.HashZero;
       this.provider = utils.getAddress(execClaimObj.provider);
       this.providerModule = utils.getAddress(execClaimObj.providerModule);
