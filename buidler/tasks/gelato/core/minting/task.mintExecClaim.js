@@ -143,7 +143,7 @@ export default task(
         mintTx = await gelatoCore.mintSelfProvidedExecClaim(
           execClaim,
           taskArgs.gelatoexecutor,
-          { value: funds }
+          { value: taskArgs.funds }
         );
       } else {
         mintTx = await gelatoCore.mintExecClaim(execClaim);
