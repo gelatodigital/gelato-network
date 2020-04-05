@@ -2,7 +2,8 @@ export const deployments = {
   // ========== Rinkeby ===========
   // ==== One-Off Actions ====
   // Gnosis
-  ActionWithdrawBatchExchangeRinkeby: "0x4C9137958685bb0392651571a9Ca104e7C483b4E",
+  ActionWithdrawBatchExchangeRinkeby:
+    "0xe6c832514218d3F3f505c0D9e6b6c78e693b07Ba",
   ActionPlaceOrderBatchExchange: "0xDBF368e549604CC78684e83955C73346860D6EA2",
   // BzX
   ActionBzxPtokenBurnToToken: "0x0",
@@ -17,14 +18,15 @@ export const deployments = {
 
   // ==== Actions - Chained ====
   // erc20
-  ActionChainedTimedERC20TransferFromRinkeby:
-    "0x0",
+  ActionChainedTimedERC20TransferFromRinkeby: "0x0",
   // Portfolio Mgmt
-  ActionChainedRebalancePortfolioRinkeby:
-    "0x0",
+  ActionChainedRebalancePortfolioRinkeby: "0x0",
 
   // ===== Gelato Core ====
-  GelatoCore: "0xff54516a7bC1c1ea952A688E72d5B93a80620074",
+  GelatoCore: "0x82c53a1F4390bdC5F9A5AF88e51c4912fBaa16BF",
+  GelatoGasPriceOracle: "0x89a06F64Ab917D7B6Fb58a93519AE4bd01AB186B",
+  ProviderModuleGelatoUserProxy: "0x0",
+  ProviderModuleGnosisSafeProxy: "0xbCe9002099f4527d4287587b535bE420Bde92116",
 
   // ==== Conditions ====
   // == Balances ==
@@ -39,7 +41,8 @@ export const deployments = {
   // Timestamps
   ConditionTimestampPassed: "0x0",
   // Gnosis
-  ConditionBatchExchangeFundsWithdrawable: "0x7FbbAE131b7855EDbbd8F3b74a4c5c6a2D24a3Db",
+  ConditionBatchExchangeFundsWithdrawable:
+    "0x7FbbAE131b7855EDbbd8F3b74a4c5c6a2D24a3Db",
 
   // ==== Scripts ====
   // == GnosisSafe ==
@@ -47,12 +50,9 @@ export const deployments = {
   ScriptGnosisSafeEnableGelatoCore:
     "0x5EF44De4b98F2bcE0E29c344E7B2Fb8f0282A0Cf",
   // Enable GelatoCore Module and Mint
-  ScriptGnosisSafeEnableGelatoCoreAndMint:
-    "0x0",
+  ScriptGnosisSafeEnableGelatoCoreAndMint: "0x0",
   // Enter the Rebalancing Chained Action
-  ScriptEnterPortfolioRebalancingRinkeby:
-    "0x0",
-  ScriptExitRebalancePortfolioRinkeby:
-    "0x0",
-  ScriptEnterStableSwap: "0xAD31E3C538152aD304F82EC4791cAC3977A98F64"
+  ScriptEnterPortfolioRebalancingRinkeby: "0x0",
+  ScriptExitRebalancePortfolioRinkeby: "0x0",
+  ScriptEnterStableSwap: "0xAD31E3C538152aD304F82EC4791cAC3977A98F64",
 };
