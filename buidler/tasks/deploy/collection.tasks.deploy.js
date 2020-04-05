@@ -2,4 +2,4 @@
 import "./task.deploy";
 
 // Gelato Core System
-import "./task.setupGelato";
+import "./task.setupGelato.gelatoUserProxies";

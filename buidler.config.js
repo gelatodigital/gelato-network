@@ -4,8 +4,9 @@ require("@babel/register");
 const assert = require("assert");
 const { utils } = require("ethers");
 // Classes
-const ActionWithGasPriceCeil = require("./scripts/classes/actionWithGasPriceCeil")
+const ActionWithGasPriceCeil = require("./classes/gelato/actionWithGasPriceCeil")
   .default;
+const ExecClaim = require("./classes/gelato/execClaim").default;
 // Helpers
 const checkNestedObj = require("./scripts/helpers/nestedObjects/checkNestedObj")
   .default;
@@ -15,7 +16,10 @@ const sleep = require("./scripts/helpers/async/sleep").default;
 
 // ================================= BRE extension ==================================
 extendEnvironment((bre) => {
+  // Classes
   bre.ActionWithGasPriceCeil = ActionWithGasPriceCeil;
+  bre.ExecClaim = ExecClaim;
+  // Functions
   bre.checkNestedObj = checkNestedObj;
   bre.getNestedObj = getNestedObj;
   bre.sleep = sleep;
