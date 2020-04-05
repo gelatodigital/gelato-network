@@ -10,7 +10,7 @@ export const deployments = {
   ActionBzxPtokenMintWithToken: "0x0",
   // erc20
   ActionERC20Transfer: "0x0",
-  ActionERC20TransferFrom: "0xAE2681CA4E898bEc0bFAa850D1E9bC3f9bA06fE0",
+  ActionERC20TransferFrom: "0x50B2b52E6EBD63aa75a608d39Eb9eDE397Eb152B",
   // kyber
   ActionKyberTradeRinkeby: "0x0",
   // Portfolio Mgmt
