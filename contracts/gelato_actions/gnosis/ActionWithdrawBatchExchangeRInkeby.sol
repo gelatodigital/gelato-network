@@ -27,9 +27,6 @@ contract ActionWithdrawBatchExchangeRinkeby is GelatoActionsStandard {
     // WETH RINKEBY
     address private constant WETH = 0xc778417E063141139Fce010982780140Aa0cD5Ab;
 
-    function actionStandardSelector() public pure override virtual returns(bytes4) {
-        return IGelatoAction.action.selector;
-    }
 
     function action(bytes calldata _actionPayload) external payable override virtual {
         (address _user, address _proxyAddress, address _sellToken, address _buyToken) = abi.decode(_actionPayload[4:], (address, address, address, address));
@@ -50,15 +47,15 @@ contract ActionWithdrawBatchExchangeRinkeby is GelatoActionsStandard {
 
         // 1. Fetch sellToken Balance
         IERC20 sellToken = IERC20(_sellToken);
-        uint256 preSellTokenBalance = sellToken.balanceOf(address(this));
+        uint256 preSellTokenBalance = sellToken.balanceOf(_proxyAddress);
 
         // 2. Fetch buyToken Balance
         IERC20 buyToken = IERC20(_buyToken);
-        uint256 preBuyTokenBalance = buyToken.balanceOf(address(this));
+        uint256 preBuyTokenBalance = buyToken.balanceOf(_proxyAddress);
 
         // 3. Withdraw buy token and pay provider fee (if possible)
-        try batchExchange.withdraw(address(this), _buyToken) {
-            uint256 postBuyTokenBalance = buyToken.balanceOf(address(this));
+        try batchExchange.withdraw(_proxyAddress, _buyToken) {
+            uint256 postBuyTokenBalance = buyToken.balanceOf(_proxyAddress);
             uint256 buyTokenWithdrawAmount = postBuyTokenBalance.sub(preBuyTokenBalance);
 
             // 4. Check if buy tokens got withdrawn
@@ -92,8 +89,8 @@ contract ActionWithdrawBatchExchangeRinkeby is GelatoActionsStandard {
         }
 
         // 5. Withdraw sell token and pay fee (if not paid already)
-        try batchExchange.withdraw(address(this), _sellToken) {
-            uint256 postSellTokenBalance = sellToken.balanceOf(address(this));
+        try batchExchange.withdraw(_proxyAddress, _sellToken) {
+            uint256 postSellTokenBalance = sellToken.balanceOf(_proxyAddress);
             uint256 sellTokenWithdrawAmount = postSellTokenBalance.sub(preSellTokenBalance);
 
             // Check if some sell tokens got withdrawn

@@ -16,10 +16,6 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandard {
 
     IBatchExchange private constant batchExchange = IBatchExchange(0xC576eA7bd102F7E476368a5E98FA455d1Ea34dE2);
 
-    function actionStandardSelector() public pure override virtual returns(bytes4) {
-        return IGelatoAction.action.selector;
-    }
-
     function action(bytes calldata _actionPayload) external payable override virtual {
         (address _user, address _sellToken, address _buyToken, uint128 _sellAmount, uint128 _buyAmount, uint32 _orderExpirationBatchId) = abi.decode(_actionPayload[4:], (address, address, address, uint128, uint128, uint32));
         action(_user, _sellToken, _buyToken, _sellAmount, _buyAmount, _orderExpirationBatchId);
