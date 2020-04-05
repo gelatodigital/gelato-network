@@ -2,7 +2,6 @@ pragma solidity ^0.6.4;
 pragma experimental ABIEncoderV2;
 
 import { GelatoConditionsStandard } from "../GelatoConditionsStandard.sol";
-import { ConditionValues } from "../IGelatoCondition.sol";
 import "../../external/Ownable.sol";
 import "../../external/SafeMath.sol";
 
@@ -58,16 +57,5 @@ contract ConditionFearGreedIndex is GelatoConditionsStandard, Ownable {
         if (value >= _prevIndex + 10) return "ok0";
         else if (!prevIndexIsZero && value <= _prevIndex - 10) return "ok1";
         return "NotOkNewIndexIsNotSmallerOrGreater";
-    }
-
-    // STANDARD Interface
-    function currentState(bytes calldata)
-        external
-        view
-        override
-        virtual
-        returns(ConditionValues memory _values)
-    {
-        _values.uints[0] = value;
     }
 }

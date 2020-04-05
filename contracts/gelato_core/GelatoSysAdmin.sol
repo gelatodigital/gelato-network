@@ -1,11 +1,11 @@
 pragma solidity ^0.6.4;
 
-import "./interfaces/IGelatoSysAdmin.sol";
-import "./interfaces/IGelatoOracle.sol";
-import "../external/Ownable.sol";
-import "../external/Address.sol";
-import "../external/SafeMath.sol";
-import "../external/Math.sol";
+import { IGelatoSysAdmin } from "./interfaces/IGelatoSysAdmin.sol";
+import { Ownable } from "../external/Ownable.sol";
+import { IGelatoGasPriceOracle } from "./interfaces/IGelatoGasPriceOracle.sol";
+import { Address } from "../external/Address.sol";
+import { SafeMath } from "../external/SafeMath.sol";
+import { Math } from "../external/Math.sol";
 
 abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
 
@@ -13,7 +13,7 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
     using SafeMath for uint256;
 
     // uint256 public override gelatoGasPrice = 9000000000;  // 9 gwei initial
-    IGelatoOracle public override gelatoOracle;
+    IGelatoGasPriceOracle public override gelatoGasPriceOracle;
     uint256 public override gelatoMaxGas = 7000000;  // 7 mio initial
     uint256 public override internalGasRequirement = 500000;
     uint256 public override minProviderStake = 0.1 ether;  // production: 1 ETH
@@ -25,9 +25,16 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
     uint256 public override sysAdminFunds;
 
     // == The main functions of the Sys Admin (DAO) ==
-    // exec-tx gasprice
+    // The oracle defines the system-critical gelatoGasPrice
+    function setGelatoGasPriceOracle(address _newOracle) external override onlyOwner {
+        require(_newOracle != address(0), "GelatoSysAdmin.setGelatoGasPriceOracle: 0");
+        emit LogSetGelatoGasPriceOracle(address(gelatoGasPriceOracle), _newOracle);
+        gelatoGasPriceOracle = IGelatoGasPriceOracle(_newOracle);
+    }
+
+    // exec-tx gasprice: pulled in from the Oracle by the Executor during exec()
     function gelatoGasPrice() internal view returns(uint256) {
-        return gelatoOracle.getGasPrice();
+        return gelatoGasPriceOracle.getGasPrice();
     }
 
     // exec-tx gas
@@ -82,13 +89,6 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
         emit LogSetSysAdminSuccessShare(sysAdminSuccessShare, _percentage);
         if (_percentage == 0) delete sysAdminSuccessShare;
         else sysAdminSuccessShare = _percentage;
-    }
-
-    // Set GelatoOracle
-    function setGelatoOracle(address _newOracle) external override onlyOwner {
-        require(_newOracle == address(0), "New oracle cannot be address(0)");
-        emit LogSetNewGelatoOracle(_newOracle);
-        gelatoOracle = IGelatoOracle(_newOracle);
     }
 
     function withdrawSysAdminFunds(uint256 _amount)

@@ -2,7 +2,6 @@ pragma solidity ^0.6.4;
 pragma experimental ABIEncoderV2;
 
 import { GelatoConditionsStandard } from "../GelatoConditionsStandard.sol";
-import { ConditionValues } from "../IGelatoCondition.sol";
 import { IERC20 } from "../../external/IERC20.sol";
 
 contract ConditionBalance is GelatoConditionsStandard {
@@ -58,30 +57,5 @@ contract ConditionBalance is GelatoConditionsStandard {
                 return "ERC20Error";
             }
         }
-    }
-
-    // STANDARD Interface
-    function currentState(bytes calldata _conditionPayload)
-        external
-        view
-        override
-        returns(ConditionValues memory _values)
-    {
-        (address account, address token) = abi.decode(
-            _conditionPayload[4:68],
-            (address, address)
-        );
-        _values.uints[0] = currentState(account, token);
-    }
-
-    // Specific implementation
-    function currentState(address _account, address _token)
-        public
-        view
-        virtual
-        returns(uint256)
-    {
-        if (_token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) return _account.balance;
-        return IERC20(_token).balanceOf(_account);
     }
 }

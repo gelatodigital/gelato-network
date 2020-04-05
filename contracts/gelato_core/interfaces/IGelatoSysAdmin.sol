@@ -1,10 +1,11 @@
 pragma solidity ^0.6.4;
 
-import "./IGelatoOracle.sol";
+import { IGelatoGasPriceOracle } from "./IGelatoGasPriceOracle.sol";
 
 interface IGelatoSysAdmin {
     // Events
-    event LogSetGelatoGasPrice(uint256 oldGasPrice, uint256 newGasPrice);
+    event LogSetGelatoGasPriceOracle(address indexed oldOracle, address indexed newOracle);
+
     event LogSetGelatoMaxGas(uint256 oldMaxGas, uint256 newMaxGas);
     event LogSetInternalGasRequirement(uint256 oldRequirment, uint256 newRequirment);
 
@@ -17,11 +18,11 @@ interface IGelatoSysAdmin {
     event LogSetExecutorSuccessShare(uint256 oldShare, uint256 newShare);
     event LogSetSysAdminSuccessShare(uint256 oldFeeFactor, uint256 newFeeFactor);
 
-    event LogSetNewGelatoOracle(address newGelatoOracle);
-
     event LogWithdrawOracleFunds(uint256 oldBalance, uint256 newBalance);
 
     // State Writing
+    function setGelatoGasPriceOracle(address _newOracle) external;
+
     function setGelatoMaxGas(uint256 _newMaxGas) external;
     function setInternalGasRequirement(uint256 _newRequirement) external;
 
@@ -34,12 +35,11 @@ interface IGelatoSysAdmin {
     function setExecutorSuccessShare(uint256 _percentage) external;
     function setSysAdminSuccessShare(uint256 _percentage) external;
 
-    function setGelatoOracle(address _newOracle) external;
-
     function withdrawSysAdminFunds(uint256 _amount) external returns(uint256);
 
     // State Reading
-    function gelatoOracle() external view returns(IGelatoOracle);
+    function gelatoGasPriceOracle() external view returns(IGelatoGasPriceOracle);
+
     function gelatoMaxGas() external view returns(uint256);
     function internalGasRequirement() external view returns(uint256);
 
