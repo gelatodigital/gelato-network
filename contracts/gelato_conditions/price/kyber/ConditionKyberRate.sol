@@ -2,7 +2,6 @@ pragma solidity ^0.6.4;
 pragma experimental ABIEncoderV2;
 
 import { GelatoConditionsStandard } from "../../GelatoConditionsStandard.sol";
-import { ConditionValues } from "../../IGelatoCondition.sol";
 import { IKyber } from "../../../dapp_interfaces/kyber/IKyber.sol";
 import { SafeMath } from "../../../external/SafeMath.sol";
 
@@ -58,33 +57,5 @@ contract ConditionKyberRate is GelatoConditionsStandard {
         } catch {
             return "KyberGetExpectedRateError";
         }
-    }
-
-    // STANDARD Interface
-    function currentState(bytes calldata _conditionPayload)
-        external
-        view
-        override
-        virtual
-        returns(ConditionValues memory _values)
-    {
-        (address src, uint256 srcAmt, address dest) = abi.decode(
-            _conditionPayload[4:100],
-            (address,uint256,address)
-        );
-        _values.uints[0] = currentState(src, srcAmt, dest);
-    }
-
-
-    // Specific Implementation
-    function currentState(address _src, uint256 _srcAmt, address _dest)
-        public
-        view
-        virtual
-        returns(uint256 expectedRate)
-    {
-        // !!!!!!!!! MAINNET !!!!!!
-        address kyberAddress = 0x818E6FECD516Ecc3849DAf6845e3EC868087B755;
-        (expectedRate,) = IKyber(kyberAddress).getExpectedRate(_src, _dest, _srcAmt);
     }
 }
