@@ -11,15 +11,15 @@ import { ExecClaim, IGelatoCore } from "../../gelato_core/interfaces/IGelatoCore
 contract ScriptEnterStableSwap is ActionPlaceOrderBatchExchange, ScriptGnosisSafeEnableGelatoCore {
 
     // struct ExecClaim {
-    //     uint256 id;  // set automatically by mintExecClaim
-    //     address provider;   //  if msg.sender == provider => self-Provider
-    //     address providerModule;  //  can be AddressZero for self-Providers
-    //     address userProxy;  // set automatically to msg.sender by mintExecClaim
-    //     address condition;   // can be AddressZero for self-conditional Actions
+    //     uint256 id;
+    //     address provider;
+    //     address providerModule;
+    //     address userProxy;
+    //     address condition;
     //     address action;
-    //     bytes conditionPayload;  // can be bytes32(0) for self-conditional Actions
+    //     bytes conditionPayload;
     //     bytes actionPayload;
-    //     uint256 expiryDate;  // subject to rent payments; 0 == infinity.
+    //     uint256 expiryDate;
     // }
 
     // Gelato Core
@@ -58,10 +58,10 @@ contract ScriptEnterStableSwap is ActionPlaceOrderBatchExchange, ScriptGnosisSaf
         );
 
         // 3. Mint execution claim
-        bytes memory conditionPayload;
         bytes memory actionPayload = abi.encodeWithSignature(
-            "action(address,address,address)",
+            "action(address,address,address,address)",
             _user,
+            address(this), //proxyAddress
             _sellToken,
             _buyToken
         );
