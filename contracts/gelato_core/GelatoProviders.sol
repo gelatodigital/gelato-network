@@ -38,8 +38,10 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         override
         returns(string memory)
     {
-        if (!isConditionProvided[_execClaim.provider][_execClaim.condition])
-            return "ConditionNotProvided";
+        if (_execClaim.condition != address(0)) {
+            if (!isConditionProvided[_execClaim.provider][_execClaim.condition])
+                return "ConditionNotProvided";
+        }
         if (actionGasPriceCeil[_execClaim.provider][_execClaim.action] == 0)
             return "ActionNotProvided";
         return "Ok";
