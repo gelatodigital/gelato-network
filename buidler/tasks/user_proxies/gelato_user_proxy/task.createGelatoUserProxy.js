@@ -70,9 +70,7 @@ export default task(
         contractaddress: taskArgs.factoryaddress,
         eventname: "LogCreation",
         txhash: creationTx.hash,
-        blockhash,
-        values: true,
-        stringify: true
+        blockhash
       });
 
       if (taskArgs.events) {
@@ -80,13 +78,13 @@ export default task(
         else console.log("\n❌ LogCreation not found");
       }
 
-      if (!parsedCreateLog.userProxy) {
+      if (!parsedCreateLog.values.userProxy) {
         throw new Error(
           `\n gupf-creategelatouserproxy: no userProxy retrieved \n`
         );
       }
 
-      return parsedCreateLog.userProxy;
+      return parsedCreateLog.values.userProxy;
     } catch (error) {
       console.error(error, "\n");
       process.exit(1);

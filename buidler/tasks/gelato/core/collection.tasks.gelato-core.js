@@ -1,6 +1,6 @@
 // ==== GelatoCore ====
 // GelatoSysAdmin
-import "./gelato_gas_admin/collection.tasks.gelato-gas-admin";
+import "./gelato_sys_admin/collection.tasks.gelato-sys-admin";
 
 // GelatoProvider
 import "./gelato_providers/collection.tasks.gelato-provider";

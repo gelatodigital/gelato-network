@@ -1,23 +1,13 @@
 import { task } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../../buidler.config";
 
-const SIXY_DAYS = 5184000;
-
 export default task(
-  "gc-stakeExecutor",
-  `Sends tx to GelatoCore.stakeExecutor([<_executorClaimLifespan>, <executorSuccessShare>]) on [--network] (default: ${defaultNetwork})`
+  "gc-stakeexecutor",
+  `Sends tx to GelatoCore.stakeExecutor{msg.value}() on [--network] (default: ${defaultNetwork})`
 )
   .addOptionalPositionalParam(
-    "execclaimtenancy",
-    "gelatoExecutor's max execClaim lifespan",
-    SIXY_DAYS,
-    types.int
-  )
-  .addOptionalPositionalParam(
-    "executorsuccessfeefactor",
-    "The percantage cut of total execution costs that the gelatoExecutor takes as profit.",
-    5,
-    types.int
+    "stake",
+    "The amount to stake. Defaults to gelatoCore.minExecutorStake()"
   )
   .addOptionalParam(
     "executorindex",
@@ -28,31 +18,30 @@ export default task(
   .addOptionalParam("gelatocoreaddress")
   .addFlag("events", "Logs parsed Event Logs to stdout")
   .addFlag("log", "Logs return values to stdout")
-  .setAction(async taskArgs => {
+  .setAction(async (taskArgs) => {
     try {
       // We use the 2nd account (index 1) generated from mnemonic for the gelatoExecutor by default
       const {
-        [taskArgs.executorindex]: gelatoExecutor
+        [taskArgs.executorindex]: gelatoExecutor,
       } = await ethers.signers();
 
       if (!gelatoExecutor)
-        throw new Error("\n Executor accounts from ethers.signers failed \n");
-
-      if (taskArgs.log) console.log("gc-stakeExecutor:\n", taskArgs);
+        throw new Error("\n gelatoExecutor not instantiated \n");
 
       const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
         contractaddress: taskArgs.gelatocoreaddress,
         signer: gelatoExecutor,
-        write: true
+        write: true,
       });
 
-      const tx = await gelatoCore.stakeExecutor(
-        taskArgs.execclaimtenancy,
-        taskArgs.executorsuccessfeefactor
-      );
+      if (!taskArgs.stake) taskArgs.stake = await gelatoCore.minExecutorStake();
 
-      if (taskArgs.log) console.log(`\n\ntxHash stakeExecutor: ${tx.hash}`);
+      if (taskArgs.log) console.log("\n gc-stakeexecutor:\n", taskArgs);
+
+      const tx = await gelatoCore.stakeExecutor({ value: taskArgs.stake });
+
+      if (taskArgs.log) console.log(`\n txHash stakeExecutor: ${tx.hash} \n`);
 
       const { blockHash: blockhash } = await tx.wait();
 
@@ -62,9 +51,7 @@ export default task(
           contractaddress: gelatoCore.address,
           blockhash,
           txhash: tx.hash,
-          values: true,
-          stringify: true,
-          log: true
+          log: true,
         });
       }
 

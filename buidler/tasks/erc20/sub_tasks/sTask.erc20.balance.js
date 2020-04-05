@@ -1,6 +1,5 @@
 import { internalTask } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../buidler.config";
-import { Contract } from "ethers";
 
 export default internalTask(
   "erc20:balance",
@@ -10,11 +9,10 @@ export default internalTask(
   .addParam("owner", "address")
   .setAction(async ({ erc20address, owner }) => {
     try {
-      const [signer] = await ethers.signers();
-      const ierc20ABI = [
-        "function balanceOf(address account) external view returns (uint256)"
-      ];
-      const erc20Contract = new Contract(erc20address, ierc20ABI, signer);
+      const erc20Contract = await run("instantiateContract", {
+        contractname: "IERC20",
+        contractaddress: erc20address
+      });
       const balance = await erc20Contract.balanceOf(owner);
       return balance;
     } catch (error) {
