@@ -24,7 +24,7 @@ export default task("setupgelato")
       // GelatoGasPriceOracle
       const gelatoGasPriceOracle = await run("deploy", {
         contractname: "GelatoGasPriceOracle",
-        constructorargs: [GAS_PRICE, gelatoCore.address],
+        constructorargs: [gelatoCore.address, GAS_PRICE],
         events: taskArgs.events,
         log: taskArgs.log,
       });
