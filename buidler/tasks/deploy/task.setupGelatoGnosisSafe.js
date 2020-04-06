@@ -3,7 +3,7 @@ import { constants, utils } from "ethers";
 
 const GAS_PRICE = utils.parseUnits("9", "gwei");
 
-export default task("setupgelatognosissafe")
+export default task("setupgelato-gnosissafeproxy")
   .addParam("condition")
   .addParam("action")
   .addFlag("events", "Logs parsed Event Logs to stdout")
