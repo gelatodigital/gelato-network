@@ -96,7 +96,10 @@ module.exports = {
 };
 
 // ================================= PLUGINS =========================================
+// buidler-ethers
 usePlugin("@nomiclabs/buidler-ethers");
+// buidler-waffle
+usePlugin("@nomiclabs/buidler-waffle");
 
 // ================================= TASKS =========================================
 // task action function receives the Buidler Runtime Environment as second argument
