@@ -43,11 +43,16 @@ export default task(
       const { contractname } = taskArgs;
       await run("checkContractName", { contractname, networkname });
 
-      const { [taskArgs.signerindex]: deployer } = await ethers.getSigners();
+      let deployer;
+      if (!taskArgs.signerindex) [deployer] = await ethers.getSigners();
+      else {
+        const { [taskArgs.signerindex]: _deployer } = await ethers.getSigners();
+        deployer = _deployer;
+      }
 
       if (taskArgs.log) {
         console.log(`
-          \n Deployment:\
+          \n Deployment: 🚢 \
           \n Network:  ${networkname.toUpperCase()}\
           \n Contract: ${contractname}\
           \n Deployer: ${deployer._address}\n
