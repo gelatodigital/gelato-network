@@ -45,9 +45,7 @@ export default task("setupgelato-gnosissafeproxy")
       );
 
       // === GelatoCore setup ===
-      const signers = await ethers.signers();
-      const gelatoExecutor = signers[1];
-      const gelatoExecutorAddress = gelatoExecutor._address;
+      const { 1: { _address: gelatoExecutorAddress } } = await ethers.signers();
 
       // ProviderModule Gnosis Safe
       // 1. Get extcodehash of Gnosis Safe
