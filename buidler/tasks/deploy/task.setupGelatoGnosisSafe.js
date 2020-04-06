@@ -50,7 +50,6 @@ export default task("setupgelato-gnosissafeproxy")
       // ProviderModule Gnosis Safe
       // 1. Get extcodehash of Gnosis Safe
       const safeAddress = await run("gc-determineCpkProxyAddress");
-      console.log(`Safe Address: ${safeAddress}`);
       let provider = ethers.provider;
       const extcode = await provider.getCode(safeAddress);
       const extcodehash = utils.solidityKeccak256(["bytes"], [extcode]);
