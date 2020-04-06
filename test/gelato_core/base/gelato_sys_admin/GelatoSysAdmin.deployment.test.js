@@ -2,20 +2,20 @@
 // => only dependency we need
 import { expect } from "chai";
 
-// Optional dependencies
-import { constants, utils } from "ethers";
-
-// Some constants at deployment time
-const GELATO_GAS_PRICE_ORACLE = constants.AddressZero;
-const GELATO_MAX_GAS = 7000000;
-const INTERNAL_GAS_REQUIREMENT = 500000;
-const MIN_PROVIDER_STAKE = utils.parseEther("0.1");
-const MIN_EXECUTOR_STAKE = utils.parseEther("0.02");
-const EXEC_CLAIM_TENANCY = 30 * 24 * 60 * 60; // 30 days
-const EXEC_CLAIM_RENT = utils.parseUnits("1", "finney");
-const EXECUTOR_SUCCESS_SHARE = 50;
-const SYS_ADMIN_SUCCESS_SHARE = 20;
-const SYS_ADMIN_FUNDS = 0;
+// GelatoSysAdmin creation time variable values
+import initialState from "./GelatoSysAdmin.initialState";
+const {
+  gelatoGasPriceOracle,
+  gelatoMaxGas,
+  internalGasRequirement,
+  minProviderStake,
+  minExecutorStake,
+  execClaimTenancy,
+  execClaimRent,
+  executorSuccessShare,
+  sysAdminSuccessShare,
+  sysAdminFunds,
+} = initialState;
 
 describe("GelatoCore - GelatoSysAdmin - Deployment", function () {
   // We define the ContractFactory and Signer variables here and assign them in
@@ -35,22 +35,22 @@ describe("GelatoCore - GelatoSysAdmin - Deployment", function () {
   it("Should initialize only the creation time state variables", async function () {
     expect(await gelatoCore.owner()).to.equal(await owner.getAddress());
     expect(await gelatoCore.gelatoGasPriceOracle()).to.equal(
-      GELATO_GAS_PRICE_ORACLE
+      gelatoGasPriceOracle
     );
-    expect(await gelatoCore.gelatoMaxGas()).to.equal(GELATO_MAX_GAS);
+    expect(await gelatoCore.gelatoMaxGas()).to.equal(gelatoMaxGas);
     expect(await gelatoCore.internalGasRequirement()).to.equal(
-      INTERNAL_GAS_REQUIREMENT
+      internalGasRequirement
     );
-    expect(await gelatoCore.minProviderStake()).to.equal(MIN_PROVIDER_STAKE);
-    expect(await gelatoCore.minExecutorStake()).to.equal(MIN_EXECUTOR_STAKE);
-    expect(await gelatoCore.execClaimTenancy()).to.equal(EXEC_CLAIM_TENANCY);
-    expect(await gelatoCore.execClaimRent()).to.equal(EXEC_CLAIM_RENT);
+    expect(await gelatoCore.minProviderStake()).to.equal(minProviderStake);
+    expect(await gelatoCore.minExecutorStake()).to.equal(minExecutorStake);
+    expect(await gelatoCore.execClaimTenancy()).to.equal(execClaimTenancy);
+    expect(await gelatoCore.execClaimRent()).to.equal(execClaimRent);
     expect(await gelatoCore.executorSuccessShare()).to.equal(
-      EXECUTOR_SUCCESS_SHARE
+      executorSuccessShare
     );
     expect(await gelatoCore.sysAdminSuccessShare()).to.equal(
-      SYS_ADMIN_SUCCESS_SHARE
+      sysAdminSuccessShare
     );
-    expect(await gelatoCore.sysAdminFunds()).to.equal(SYS_ADMIN_FUNDS);
+    expect(await gelatoCore.sysAdminFunds()).to.equal(sysAdminFunds);
   });
 });
