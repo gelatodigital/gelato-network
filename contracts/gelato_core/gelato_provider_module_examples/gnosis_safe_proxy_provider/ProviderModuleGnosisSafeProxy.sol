@@ -19,9 +19,11 @@ contract ProviderModuleGnosisSafeProxy is
 {
     mapping(bytes32 => bool) public override isProxyExtcodehashProvided;
     mapping(address => bool) public override isMastercopyProvided;
+    address public gelatoCore;
 
-    constructor(bytes32[] memory hashes, address[] memory masterCopies) public {
+    constructor(bytes32[] memory hashes, address[] memory masterCopies, address _gelatoCore) public {
         batchProvide(hashes, masterCopies);
+        gelatoCore = _gelatoCore;
     }
 
     // ================= GELATO PROVIDER MODULE STANDARD ================
@@ -41,6 +43,8 @@ contract ProviderModuleGnosisSafeProxy is
         address mastercopy = IGnosisSafeProxy(userProxy).masterCopy();
         if (!isMastercopyProvided[mastercopy])
             return "ProviderModuleGnosisSafeProxy.isProvided:InvalidGSPMastercopy";
+        if (!isGelatoCoreWhitelisted(userProxy))
+            return "ProviderModuleGnosisSafeProxy.isProvided:GelatoCoreNotWhitelisted";
         return "Ok";
     }
 
@@ -101,6 +105,19 @@ contract ProviderModuleGnosisSafeProxy is
             );
             delete isMastercopyProvided[_mastercopies[i]];
             emit LogUnprovideMastercopy(_mastercopies[i]);
+        }
+    }
+
+    function isGelatoCoreWhitelisted(address _userProxy)
+        view
+        internal
+        returns(bool isWhitelisted)
+    {
+        address[] memory whitelistedModules =  IGnosisSafe(_userProxy).getModules();
+        for(uint i = 0; i < whitelistedModules.length; i++) {
+            if (whitelistedModules[i] == address(0x0ACEFf0880F50c618bA9Aa22530BFF14910Aeccf)) {
+                isWhitelisted = true;
+            }
         }
     }
 

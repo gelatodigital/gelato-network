@@ -68,7 +68,7 @@ export default task("setupgelatognosissafe")
 
       const providerModuleGnosisSafeProxy = await run("deploy", {
         contractname: "ProviderModuleGnosisSafeProxy",
-        constructorargs: [[extcodehash], [mastercopy]],
+        constructorargs: [[extcodehash], [mastercopy], gelatoCore.address],
         events: taskArgs.events,
         log: taskArgs.log,
       });
