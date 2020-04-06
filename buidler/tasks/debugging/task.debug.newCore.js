@@ -12,7 +12,7 @@ export default task("gc-debug-newcore")
       if (network.name !== "buidlerevm") throw new Error("\n buidlerevmonly\n");
 
       const testSignerIndex = 0;
-      const [{ _address: testSigner }] = await ethers.signers();
+      const [{ _address: testSigner }] = await ethers.getSigners();
 
       // === Deployments ===
       // GelatoCore

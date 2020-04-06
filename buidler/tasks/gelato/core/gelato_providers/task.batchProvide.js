@@ -34,7 +34,7 @@ export default task(
       // Gelato Provider is the 3rd signer account
       const {
         [taskArgs.providerindex]: gelatoProvider,
-      } = await ethers.signers();
+      } = await ethers.getSigners();
 
       if (!gelatoProvider)
         throw new Error("\n gelatoProvider not instantiated \n");

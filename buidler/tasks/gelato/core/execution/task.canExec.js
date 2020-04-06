@@ -37,7 +37,7 @@ export default task(
 
       const {
         [taskArgs.executorindex]: gelatoExecutor
-      } = await ethers.signers();
+      } = await ethers.getSigners();
 
       if (taskArgs.log) {
         console.log(taskArgs);

@@ -11,7 +11,7 @@ export default internalTask(
     try {
       const returnValues = [];
 
-      const [signer] = await ethers.signers();
+      const [signer] = await ethers.getSigners();
 
       if (address) returnValues.push(signer._address);
 

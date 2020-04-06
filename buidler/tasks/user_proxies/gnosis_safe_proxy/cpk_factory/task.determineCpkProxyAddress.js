@@ -21,7 +21,7 @@ export default task(
     try {
 
       if (!useraddress) {
-        const signers = await ethers.signers()
+        const signers = await ethers.getSigners()
         const signer = signers[0]
         useraddress = signer._address
       }

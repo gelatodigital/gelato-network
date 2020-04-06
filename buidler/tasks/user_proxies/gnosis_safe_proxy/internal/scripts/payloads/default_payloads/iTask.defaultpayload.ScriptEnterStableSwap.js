@@ -48,7 +48,7 @@ export default internalTask(
 
       // const proxyAddress = await run("gc-determineCpkProxyAddress")
 
-      const signers = await ethers.signers()
+      const signers = await ethers.getSigners()
       const signer = signers[0]
       const useraddress = signer._address
 

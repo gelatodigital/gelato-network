@@ -6,7 +6,7 @@ export default internalTask(
 )
 	.addFlag("log")
 	.setAction(async ({ log }) => {
-		let [signer] = await ethers.signers();
+		let [signer] = await ethers.getSigners();
 
 		// Fetch current fearAndGreedIndex value
 		const conditionFearGreedIndex = await run("instantiateContract", {
