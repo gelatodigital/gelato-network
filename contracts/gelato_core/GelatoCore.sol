@@ -284,9 +284,9 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
                 // 32-length, 4-ErrorSelector, UTF-8 revertMsg
                 if (revertMsg.length % 32 == 4) {
                     bytes4 selector;
-                    assembly { selector := mload(add(revertMsg, 32)) }
+                    assembly { selector := mload(add(0x20, revertMsg)) }
                     if (selector == 0x08c379a0) {  // Function selector for Error(string)
-                        assembly { revertMsg := mload(add(revertMsg, 36)) }
+                        assembly { revertMsg := add(revertMsg, 68) }
                         error = string(
                             abi.encodePacked("GelatoCore._exec:", string(revertMsg))
                         );

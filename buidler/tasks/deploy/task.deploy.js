@@ -1,4 +1,4 @@
-import { task } from "@nomiclabs/buidler/config";
+import { task, types } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../buidler.config";
 
 export default task(
@@ -13,19 +13,25 @@ export default task(
     "constructorargs",
     "A collection of arguments to pass to the contract constructor"
   )
+  .addOptionalParam(
+    "signerindex",
+    "The Signer accounts index to use for deployment. This can be used for Ownable contracts.",
+    0,
+    types.int
+  )
   .addFlag("clean")
   .addFlag("compile", "Compile before deploy")
   .addFlag("events", "Logs parsed Event Logs to stdout")
   .addFlag("log", "Logs to stdout")
-  .setAction(async taskArgs => {
+  .setAction(async (taskArgs) => {
     try {
       // Default for now to avoid accidentally losing addresses during deployment
       const networkname = network.name;
       if (networkname !== "buidlerevm") taskArgs.log = true;
 
-      taskArgs.compile = true;
+      if (taskArgs.log) console.log("\n deploy taskArgs:", taskArgs, "\n");
 
-      const { contractname } = taskArgs;
+      taskArgs.compile = true;
 
       if (networkname == "mainnet") {
         console.log(
@@ -34,12 +40,19 @@ export default task(
         await sleep(10000);
       }
 
+      const { contractname } = taskArgs;
       await run("checkContractName", { contractname, networkname });
 
-      if (taskArgs.log)
-        console.log(
-          `\nStarting deployment on ${networkname.toUpperCase()} sequence for ${contractname}\n`
-        );
+      const { [taskArgs.signerindex]: deployer } = await ethers.getSigners();
+
+      if (taskArgs.log) {
+        console.log(`
+          \n Deployment:\
+          \n Network:  ${networkname.toUpperCase()}\
+          \n Contract: ${contractname}\
+          \n Deployer: ${deployer._address}\n
+        `);
+      }
 
       if (taskArgs.clean) {
         if (taskArgs.log) console.log("\nrunning npx buidler clean\n");
@@ -48,13 +61,16 @@ export default task(
 
       if (taskArgs.compile) await run("compile");
 
-      const ContractFactory = await ethers.getContract(contractname);
+      const contractFactory = await ethers.getContractFactory(
+        contractname,
+        deployer
+      );
       let contract;
       if (taskArgs.constructorargs) {
         const args = taskArgs.constructorargs;
-        contract = await ContractFactory.deploy(...args);
+        contract = await contractFactory.deploy(...args);
       } else {
-        contract = await ContractFactory.deploy();
+        contract = await contractFactory.deploy();
       }
 
       if (taskArgs.log) {
@@ -64,7 +80,7 @@ export default task(
       }
 
       const {
-        deployTransaction: { hash: txhash, blockHash: blockhash }
+        deployTransaction: { hash: txhash, blockHash: blockhash },
       } = await contract.deployed();
 
       if (taskArgs.log) {
@@ -80,7 +96,7 @@ export default task(
             contractaddress: contract.address,
             txhash,
             blockhash,
-            log: true
+            log: true,
           });
         } catch (error) {
           console.error(`\n Error during event-getparsedlogsallevents \n`);
