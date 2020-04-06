@@ -33,9 +33,6 @@ export default task(
           stringify: taskArgs.stringify,
         });
       }
-
-      console.log(taskArgs.execclaim);
-
       if (!taskArgs.execclaim)
         throw new Error("\nUnable to fetch execClaim from events");
 
@@ -65,7 +62,7 @@ export default task(
       // const gelatoGasPrice = await gelatoCore.gelatoGasPrice();
       // const gelatoMaxGas = await gelatoCore.gelatoMaxGas();
 
-      const execClaim = new ExecClaim({
+      const execClaim = {
         id: taskArgs.execclaim[0],
         provider: taskArgs.execclaim[1],
         providerModule: taskArgs.execclaim[2],
@@ -75,7 +72,7 @@ export default task(
         conditionPayload: taskArgs.execclaim[6],
         actionPayload: taskArgs.execclaim[7],
         expiryDate: taskArgs.execclaim[8],
-      });
+      };
 
       const gelatoGasPrice = utils.parseUnits("20", "gwei");
 

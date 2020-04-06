@@ -161,7 +161,7 @@ export default task(
         mintTxHash = await run("gsp-exectransaction", {
           gnosissafeproxyaddress: safeAddress,
           contractname: "GelatoCore",
-          inputs: execClaim,
+          inputs: [execClaim],
           functionname: "mintExecClaim",
           operation: 0,
           log: true,

@@ -40,7 +40,7 @@ export default task(
           property: "execClaim",
           stringify: taskArgs.stringify,
         });
-        execClaim = execClaims[0].execClaim;
+        execClaim = execClaims[parseInt(taskArgs.execclaimid) - 1].execClaim;
         if (!execClaims) throw new Error(`\n ❌ ExecClaim not found in logs`);
 
         // This will only work with new ethers update that uses annotated arrays for structs

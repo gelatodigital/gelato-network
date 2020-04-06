@@ -13,10 +13,7 @@ export default task(
     1,
     types.int
   )
-  .addOptionalParam(
-    "execclaim",
-    "Supply LogExecClaimMinted values in an obj"
-  )
+  .addOptionalParam("execclaim", "Supply LogExecClaimMinted values in an obj")
   .addOptionalParam(
     "fromblock",
     "The block number to search for event logs from",
@@ -41,7 +38,7 @@ export default task(
       toblock,
       blockhash,
       txhash,
-      log
+      log,
     }) => {
       try {
         if (!execclaim) {
@@ -52,7 +49,7 @@ export default task(
             toblock,
             blockhash,
             txhash,
-            log
+            log,
           });
         }
 
@@ -61,20 +58,21 @@ export default task(
         const gelatoCore = await run("instantiateContract", {
           contractname: "GelatoCore",
           signer: gelatoExecutor,
-          write: true
+          write: true,
         });
 
         let gelatoGasPrice;
         try {
           gelatoGasPrice = await gelatoCore.gelatoGasPrice();
         } catch (error) {
-          console.error(`gelatoCore.gelatoGasPrice() error\n`, error);
+          console.log("Using default gas price of 9 gwei");
+          gelatoGasPrice = utils.parseUnits("9", "gwei");
         }
 
         const gelatoGasPriceGwei = utils.formatUnits(gelatoGasPrice, "gwei");
         let gelatoMAXGAS;
         try {
-          gelatoMAXGAS = await gelatoCore.MAXGAS();
+          gelatoMAXGAS = await gelatoCore.gelatoMaxGas();
         } catch (error) {
           console.error(`gelatoCore.MAXGAS() error\n`, error);
         }
@@ -83,25 +81,29 @@ export default task(
           console.log(
             `\n Gelato Gas Price:  ${gelatoGasPriceGwei} gwei\
              \n Gelato MAX GAS:    ${gelatoMAXGAS}\
-             \n UserProxy Address: ${execclaim.userProxy}\n`
+             \n UserProxy Address: ${execclaim[3]}\n
+             \n Executor Address: ${gelatoExecutor._address}\n`
           );
         }
 
+        const execClaim = {
+          id: execclaim[0],
+          provider: execclaim[1],
+          providerModule: execclaim[2],
+          userProxy: execclaim[3],
+          condition: execclaim[4],
+          action: execclaim[5],
+          conditionPayload: execclaim[6],
+          actionPayload: execclaim[7],
+          expiryDate: execclaim[8],
+        };
+
         let executeTx;
         try {
-          executeTx = await gelatoCore.exec(
-            execclaim.gelatoProviderAndExecutor,
-            execclaim.execClaimId,
-            execclaim.userProxy,
-            execclaim.conditionAndAction,
-            execclaim.conditionPayload,
-            execclaim.actionPayload,
-            execclaim.execClaimExpiryDate,
-            {
-              gasPrice: gelatoGasPrice,
-              gasLimit: gelatoMAXGAS
-            }
-          );
+          executeTx = await gelatoCore.exec(execClaim, {
+            gasPrice: gelatoGasPrice,
+            gasLimit: gelatoMAXGAS,
+          });
         } catch (error) {
           console.error(`gelatoCore.exec() PRE-EXECUTION error\n`, error);
         }
@@ -120,7 +122,7 @@ export default task(
             "LogCanExecSuccess",
             "LogCanExecFailed",
             "LogExecSuccess",
-            "LogExecFailed"
+            "LogExecFailed",
           ];
 
           const executionEvents = [];
@@ -132,7 +134,7 @@ export default task(
               txhash: executeTxReceipt.transactionHash,
               blockhash: executeTxReceipt.blockHash,
               values: true,
-              stringify: true
+              stringify: true,
             });
             if (executionEvent)
               executionEvents.push({ [eventname]: executionEvent });
