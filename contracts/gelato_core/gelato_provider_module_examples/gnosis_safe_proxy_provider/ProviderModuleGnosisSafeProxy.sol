@@ -139,4 +139,13 @@ contract ProviderModuleGnosisSafeProxy is
         unprovideProxyExtcodehashes(_hashes);
         unprovideMastercopies(_mastercopies);
     }
+
+    function setGelatoCore(address _gelatoCore)
+        external
+        onlyOwner
+    {
+        require(_gelatoCore != address(0), "Gelato Core cannot be address 0");
+        gelatoCore = _gelatoCore;
+    }
+
 }

@@ -73,6 +73,15 @@ export default task("setupgelatognosissafe")
         log: taskArgs.log,
       });
 
+      // Whitelist gelatoCore as module
+      await run("gsp-exectransaction", {
+        gnosissafeproxyaddress: safeAddress,
+        contractname: "ScriptGnosisSafeEnableGelatoCore",
+        inputs: [gelatoCore.address],
+        functionname: "enableGelatoCoreModule",
+        operation: 1,
+      });
+
       // GelatoSysAdmin
       await run("gc-setgelatogaspriceoracle", {
         gelatocoreaddress: gelatoCore.address,

@@ -22,11 +22,6 @@ contract ScriptEnterStableSwap is ActionPlaceOrderBatchExchange, ScriptGnosisSaf
     //     uint256 expiryDate;
     // }
 
-    // Gelato Core
-    IGelatoCore private constant gelatoCore = IGelatoCore(
-        0xff54516a7bC1c1ea952A688E72d5B93a80620074)
-    ;
-
     // BatchExchange
     IBatchExchange private constant batchExchange = IBatchExchange(0xC576eA7bd102F7E476368a5E98FA455d1Ea34dE2);
 
@@ -37,6 +32,7 @@ contract ScriptEnterStableSwap is ActionPlaceOrderBatchExchange, ScriptGnosisSaf
         uint128 _sellAmount,
         uint128 _buyAmount,
         uint32 _orderExpirationBatchId,
+        address _gelatoCore,
         // ChainedMintingParams
         ExecClaim memory _execClaim
     )
@@ -45,7 +41,7 @@ contract ScriptEnterStableSwap is ActionPlaceOrderBatchExchange, ScriptGnosisSaf
         require(_execClaim.condition == address(0));
 
         // 1. Enable Gelato Core
-        enableGelatoCoreModule(address(gelatoCore));
+        enableGelatoCoreModule(_gelatoCore);
 
         // 2. Execute Trade on BatchExchange
         action(
@@ -70,7 +66,7 @@ contract ScriptEnterStableSwap is ActionPlaceOrderBatchExchange, ScriptGnosisSaf
         _execClaim.actionPayload = actionPayload;
 
         // Mint new Claim
-        try gelatoCore.mintExecClaim(_execClaim) {
+        try IGelatoCore(_gelatoCore).mintExecClaim(_execClaim) {
         } catch {
             revert("Minting chainedClaim unsuccessful");
         }
