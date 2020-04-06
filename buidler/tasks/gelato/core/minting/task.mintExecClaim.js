@@ -83,7 +83,6 @@ export default task(
           );
         }
 
-        console.log(taskArgs.gelatoprovider);
         if (!taskArgs.gelatoprovider)
           // Selected GelatoProvider
           taskArgs.execclaim.provider = await run("handleGelatoProvider", {

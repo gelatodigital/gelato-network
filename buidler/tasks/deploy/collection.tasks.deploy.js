@@ -2,5 +2,5 @@
 import "./task.deploy";
 
 // Gelato Core System
-import "./task.setupGelatoGnosisSafe";
+import "./task.setupGelato.gnosisSafe";
 import "./task.setupGelato.gelatoUserProxies";

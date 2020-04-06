@@ -6,6 +6,7 @@ const GAS_PRICE = utils.parseUnits("9", "gwei");
 export default task("setupgelatognosissafe")
   .addParam("condition")
   .addParam("action")
+  .addOptionalPositionalParam("mastercopy", "gnosis safe mastercopy")
   .addFlag("events", "Logs parsed Event Logs to stdout")
   .addFlag("log")
   .setAction(async (taskArgs) => {
@@ -52,23 +53,25 @@ export default task("setupgelatognosissafe")
       // ProviderModule Gnosis Safe
       // 1. Get extcodehash of Gnosis Safe
       const safeAddress = await run("gc-determineCpkProxyAddress");
-      console.log(`Safe Address: ${safeAddress}`);
       let provider = ethers.provider;
       const extcode = await provider.getCode(safeAddress);
       const extcodehash = utils.solidityKeccak256(["bytes"], [extcode]);
-      console.log(`extcodehash: ${extcodehash}`);
 
       // 1. Get Mastercopy
-      const mastercopy = await run("bre-config", {
-        addressbookcategory: "gnosisSafe",
-        addressbookentry: "mastercopy",
-      });
-
-      console.log(`mastercopy: ${mastercopy}`);
+      if (!taskArgs.mastercopy) {
+        taskArgs.mastercopy = await run("bre-config", {
+          addressbookcategory: "gnosisSafe",
+          addressbookentry: "mastercopy",
+        });
+      }
 
       const providerModuleGnosisSafeProxy = await run("deploy", {
         contractname: "ProviderModuleGnosisSafeProxy",
-        constructorargs: [[extcodehash], [mastercopy], gelatoCore.address],
+        constructorargs: [
+          [extcodehash],
+          [taskArgs.mastercopy],
+          gelatoCore.address,
+        ],
         events: taskArgs.events,
         log: taskArgs.log,
       });
@@ -111,13 +114,17 @@ export default task("setupgelatognosissafe")
         log: taskArgs.log,
       });
 
-      console.log(`
-        GelatoCore: ${gelatoCore.address}\n
-        GelatoGasPriceOracle: ${gelatoGasPriceOracle.address}\n
-        Condition: ${condition.address}\n
-        Action: ${action.address}\n
-        ProviderModuleGnosisSafeProxy: ${providerModuleGnosisSafeProxy.address}\n
-      `);
+      if (taskArgs.log)
+        console.log(`
+      GelatoCore: ${gelatoCore.address}\n
+      GelatoGasPriceOracle: ${gelatoGasPriceOracle.address}\n
+      Condition: ${condition.address}\n
+      Action: ${action.address}\n
+      ProviderModuleGnosisSafeProxy: ${providerModuleGnosisSafeProxy.address}\n
+      extcodehash: ${extcodehash}\n
+      Safe Address: ${safeAddress}\n
+      mastercopy: ${taskArgs.mastercopy}\n
+    `);
     } catch (error) {
       console.error(error, "\n");
       process.exit(1);
