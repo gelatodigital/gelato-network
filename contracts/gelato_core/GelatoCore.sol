@@ -82,12 +82,12 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             "GelatoCore.mintSelfProvidedExecClaim: sender not provider"
         );
 
+        // Optional User prepayment
+        if (msg.value > 0) provideFunds(msg.sender);
+
         // Executor Handling
         if (_executor != address(0) && executorByProvider[msg.sender] != _executor)
-            executorByProvider[msg.sender] = _executor;  // assign new executor
-
-        // Optional User prepayment
-        if (msg.value > 0) providerFunds[msg.sender] += msg.value;
+            providerAssignsExecutor(_executor);  // assign new executor
 
         // Minting
         mintExecClaim(_execClaim);
