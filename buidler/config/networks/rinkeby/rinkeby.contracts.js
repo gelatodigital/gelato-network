@@ -25,6 +25,9 @@ export const contracts = [
 
   // === GelatoCore ===
   "GelatoCore",
+  "GelatoGasPriceOracle",
+  "ProviderModuleGelatoUserProxy",
+  "ProviderModuleGnosisSafeProxy",
 
   // === Conditions ===
   // Balances
@@ -37,6 +40,8 @@ export const contracts = [
   "ConditionTimestampPassed",
   // Gnosis
   "ConditionBatchExchangeFundsWithdrawable",
+  // Mock
+  "MockConditionDummy",
 
   // === Scripts ===
   // GnosisSafe
@@ -46,5 +51,5 @@ export const contracts = [
   "ScriptEnterPortfolioRebalancingRinkeby",
   "ScriptExitRebalancePortfolioRinkeby",
   // Gnosis BatchExchange
-  "ScriptEnterStableSwap"
+  "ScriptEnterStableSwap",
 ];

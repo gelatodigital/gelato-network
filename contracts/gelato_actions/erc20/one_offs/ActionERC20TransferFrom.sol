@@ -19,7 +19,7 @@ contract ActionERC20TransferFrom is GelatoActionsStandard {
     using Address for address;
 
     function action(bytes calldata _actionPayload) external payable override virtual {
-        (ActionPayload memory _p) = abi.decode(_actionPayload[4:], (ActionPayload));
+        (ActionPayload memory _p) = abi.decode(_actionPayload, (ActionPayload));
          action(_p);
     }
 

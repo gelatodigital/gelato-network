@@ -9,13 +9,14 @@ import "./provide_funds/task.unprovideFunds";
 // ProviderExecutor
 import "./task.assignProviderExecutor";
 // Conditions
-import "./provide_conditions/task.provideCondition";
+import "./provide_conditions/task.provideConditions";
 import "./provide_conditions/task.isProvidedCondition";
 // Actions
-import "./provide_actions/task.provideAction";
+import "./provide_actions/task.provideActions";
 import "./provide_actions/task.isProvidedAction";
 // Provider Module
 import "./task.providerModules";
+import "./provider_module/task.isProvidedModule";
 
 // === GelatoProviderModuleExample ===
 import "./provider_module/collection.tasks.gelato-provider-module";

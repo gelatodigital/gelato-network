@@ -2,7 +2,7 @@ import { task } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../../../buidler.config";
 
 export default task(
-  "gc-providecondition",
+  "gc-provideconditions",
   `Sends tx to GelatoCore.provideCondition(<condition>) on [--network] (default: ${defaultNetwork})`
 )
   .addPositionalParam("conditionname")
@@ -11,14 +11,14 @@ export default task(
     try {
       const condition = await run("bre-config", {
         deployments: true,
-        contractname: conditionname
+        contractname: conditionname,
       });
       // Gelato Provider is the 3rd signer account
       const { 2: gelatoProvider } = await ethers.getSigners();
       const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
         signer: gelatoProvider,
-        write: true
+        write: true,
       });
       const tx = await gelatoCore.provideCondition(condition);
       if (log) console.log(`\n txHash provideCondition: ${tx.hash} \n`);

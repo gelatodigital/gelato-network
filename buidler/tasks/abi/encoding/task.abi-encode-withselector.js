@@ -16,9 +16,16 @@ export default task("abi-encode-withselector")
       if (!checkNestedObj(interFace, "functions", taskArgs.functionname))
         throw new Error("\nfunctionname is not on contract's interface");
 
+      let iterableInputs;
+      try {
+        iterableInputs = [...taskArgs.inputs];
+      } catch (error) {
+        iterableInputs = [taskArgs.inputs];
+      }
+
       const payloadWithSelector = interFace.functions[
         taskArgs.functionname
-      ].encode([...taskArgs.inputs]);
+      ].encode(iterableInputs);
 
       if (taskArgs.log)
         console.log(`\nEncodedPayloadWithSelector:\n${payloadWithSelector}\n`);

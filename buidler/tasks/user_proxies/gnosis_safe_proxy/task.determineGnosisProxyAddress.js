@@ -16,23 +16,27 @@ export default task(
     "The deployed implementation code the created proxy should point to"
   )
   .addFlag("log", "Logs return values to stdout")
-  .setAction(async taskArgs => {
+  .setAction(async (taskArgs) => {
     try {
       const saltNonce = 1;
       if (!taskArgs.mastercopy) {
         taskArgs.mastercopy = await run("bre-config", {
           addressbookcategory: "gnosisSafe",
-          addressbookentry: "mastercopy"
+          addressbookentry: "mastercopy",
         });
       }
 
+      if (!taskArgs.initializer) {
+        taskArgs.initializer = constants.AddressZero;
+      }
+
       const gnosisSafeProxyFactoryAbi = [
-        `function calculateCreateProxyWithNonceAddress(address _mastercopy, bytes initializer, uint256 saltNonce) external returns (GnosisSafeProxy proxy)`
+        `function calculateCreateProxyWithNonceAddress(address _mastercopy, bytes initializer, uint256 saltNonce) external returns (GnosisSafeProxy proxy)`,
       ];
 
       const gnosisSafeProxyFactoryAddress = await run("bre-config", {
         addressbookcategory: "gnosisSafe",
-        addressbookentry: "gnosisSafeProxyFactory"
+        addressbookentry: "gnosisSafeProxyFactory",
       });
 
       const { [1]: signer } = await ethers.getSigners();

@@ -12,7 +12,7 @@ export default task(
   .addOptionalParam("txhash", "Filter for a specific tx")
   .addFlag("stringify")
   .addFlag("log", "Logs return values to stdout")
-  .setAction(async taskArgs => {
+  .setAction(async (taskArgs) => {
     try {
       if (taskArgs.log) console.log("\n fetchExecClaim:\n", taskArgs);
 
@@ -27,7 +27,7 @@ export default task(
           toblock: taskArgs.toblock,
           blockhash: taskArgs.blockhash,
           property: "execClaim",
-          stringify: taskArgs.stringify
+          stringify: taskArgs.stringify,
         });
       } else {
         // Search Logs
@@ -38,8 +38,9 @@ export default task(
           toblock: taskArgs.toblock,
           blockhash: taskArgs.blockhash,
           property: "execClaim",
-          stringify: taskArgs.stringify
+          stringify: taskArgs.stringify,
         });
+        execClaim = execClaims[parseInt(taskArgs.execclaimid) - 1].execClaim;
         if (!execClaims) throw new Error(`\n ❌ ExecClaim not found in logs`);
 
         // This will only work with new ethers update that uses annotated arrays for structs

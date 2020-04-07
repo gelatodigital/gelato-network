@@ -6,5 +6,5 @@ export const erc20s = {
   DAI: "0x5592EC0cfb4dbc12D3aB100b257153436a1f0FEa",
   "0x5592EC0cfb4dbc12D3aB100b257153436a1f0FEa": "DAI",
   KNC: "0x0",
-  "0x0": "KNC"
+  "0x0": "KNC",
 };

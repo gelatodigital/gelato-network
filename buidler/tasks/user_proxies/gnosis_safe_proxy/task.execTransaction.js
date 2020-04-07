@@ -66,21 +66,27 @@ export default task(
     "Packed signature data ({bytes32 r}{bytes32 s}{uint8 v}). Defaults to pre-validated signature for msg.sender == owner"
   )
   .addFlag("log", "Logs return values to stdout")
-  .setAction(async taskArgs => {
+  .setAction(async (taskArgs) => {
     try {
-
+      // DEFAULT VALUES due to Buidler BUG
+      if (!taskArgs.value) taskArgs.value = constants.HashZero;
+      if (!taskArgs.safetxgas) taskArgs.safetxgas = constants.HashZero;
+      if (!taskArgs.basegas) taskArgs.basegas = 0;
+      if (!taskArgs.gasprice) taskArgs.gasprice = constants.HashZero;
+      if (!taskArgs.gastoken) taskArgs.gastoken = constants.AddressZero;
+      if (!taskArgs.refundreceiver)
+        taskArgs.refundreceiver = constants.AddressZero;
       // taskArgs sanitzation
       if (taskArgs.functionname && taskArgs.data)
         throw new Error("Provide EITHER --functionname OR --data");
 
+      if (!taskArgs.inputs) taskArgs.inputs = [];
 
-      if (!taskArgs.inputs) taskArgs.inputs = []
-
-        // --to address defaults to Contractname
+      // --to address defaults to Contractname
       if (!taskArgs.to) {
         taskArgs.to = await run("bre-config", {
           deployments: true,
-          contractname: taskArgs.contractname
+          contractname: taskArgs.contractname,
         });
       }
 
@@ -88,14 +94,14 @@ export default task(
         taskArgs.data = await run(
           `gsp:scripts:defaultpayload:${taskArgs.contractname}`,
           {
-            inputs: taskArgs.inputs
+            inputs: taskArgs.inputs,
           }
         );
       } else if (taskArgs.functionname && !taskArgs.data) {
         taskArgs.data = await run("abi-encode-withselector", {
           contractname: taskArgs.contractname,
           functionname: taskArgs.functionname,
-          inputs: taskArgs.inputs
+          inputs: taskArgs.inputs,
         });
       }
 
@@ -113,7 +119,7 @@ export default task(
       const gnosisSafeProxy = await run("instantiateContract", {
         contractname: "IGnosisSafe",
         contractaddress: taskArgs.gnosissafeproxyaddress,
-        write: true
+        write: true,
       });
 
       let executeTx;
@@ -159,7 +165,7 @@ export default task(
             txhash: executeTxReceipt.transactionHash,
             blockhash: executeTxReceipt.blockHash,
             values: true,
-            stringify: true
+            stringify: true,
           });
           if (executionEvent)
             executionEvents.push({ [eventname]: executionEvent });

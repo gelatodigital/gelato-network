@@ -29,7 +29,7 @@ contract ActionWithdrawBatchExchangeRinkeby is GelatoActionsStandard {
 
 
     function action(bytes calldata _actionPayload) external payable override virtual {
-        (address _user, address _proxyAddress, address _sellToken, address _buyToken) = abi.decode(_actionPayload[4:], (address, address, address, address));
+        (address _user, address _proxyAddress, address _sellToken, address _buyToken) = abi.decode(_actionPayload, (address, address, address, address));
         action(_user, _proxyAddress, _sellToken, _buyToken);
     }
 
@@ -187,7 +187,7 @@ contract ActionWithdrawBatchExchangeRinkeby is GelatoActionsStandard {
             return "ActionWithdrawBatchExchangeRinkeby: Buy Token not withdrawable yet";
         }
 
-        return "ok";
+        return "Ok";
 
     }
 

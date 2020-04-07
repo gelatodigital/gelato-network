@@ -8,27 +8,41 @@ export default internalTask(
   .addFlag("log")
   .setAction(async ({ log }) => {
     try {
+      /*
+        address user;
+        address userProxy;
+        address sendToken;
+        address destination;
+        uint256 sendAmount;
+      */
       // ActionERC20TransferFrom Params
-      const { devluis: user, luis: destination } = await run("bre-config", {
-        addressbookcategory: "EOA"
+      const { user1: user, user2: destination } = await run("bre-config", {
+        addressbookcategory: "EOA",
       });
-      const { luis: userProxy } = await run("bre-config", {
-        addressbookcategory: "userProxy"
+      const { proxy1: userProxy } = await run("bre-config", {
+        addressbookcategory: "userProxy",
       });
-      const { KNC: sendToken } = await run("bre-config", {
-        addressbookcategory: "erc20"
+      const { DAI: sendToken } = await run("bre-config", {
+        addressbookcategory: "erc20",
       });
-      const sendAmount = utils.parseUnits("10", 18);
+      const sendAmount = utils.parseUnits("1", 18);
 
       // Params as sorted array of inputs for abi.encoding
-      // action(_user, _userProxy, _src, _srcAmt, _beneficiary)
-      const inputs = [[user, userProxy], [sendToken, destination], sendAmount];
+      const inputs = [
+        {
+          user,
+          userProxy,
+          sendToken,
+          destination,
+          sendAmount,
+        },
+      ];
       // Encoding
       const payloadWithSelector = await run("abi-encode-withselector", {
         contractname: "ActionERC20TransferFrom",
         functionname: "action",
         inputs,
-        log
+        log,
       });
       return payloadWithSelector;
     } catch (err) {
