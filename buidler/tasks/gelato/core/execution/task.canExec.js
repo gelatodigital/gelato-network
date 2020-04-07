@@ -1,6 +1,5 @@
 import { task, types } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../../buidler.config";
-import ExecClaim from "../../../../../classes/gelato/execClaim";
 import { constants, utils } from "ethers";
 
 export default task(
