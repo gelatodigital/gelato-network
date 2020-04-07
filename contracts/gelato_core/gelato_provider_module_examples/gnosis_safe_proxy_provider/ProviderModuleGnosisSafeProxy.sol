@@ -115,7 +115,7 @@ contract ProviderModuleGnosisSafeProxy is
     {
         address[] memory whitelistedModules =  IGnosisSafe(_userProxy).getModules();
         for(uint i = 0; i < whitelistedModules.length; i++) {
-            if (whitelistedModules[i] == address(0x0ACEFf0880F50c618bA9Aa22530BFF14910Aeccf)) {
+            if (whitelistedModules[i] ==  gelatoCore) {
                 isWhitelisted = true;
             }
         }
