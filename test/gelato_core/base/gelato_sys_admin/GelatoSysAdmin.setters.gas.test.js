@@ -9,27 +9,23 @@ describe("GelatoCore - GelatoSysAdmin - Setters: Gas related", function () {
   // We define the ContractFactory and Signer variables here and assign them in
   // a beforeEach hook.
   let GelatoCore;
+  let gelatoCore;
   let owner;
   let notOwner;
   let oracle;
   let oracleAddress;
 
   beforeEach(async function () {
-    // Get the ContractFactory and Signers here.
+    // Get the ContractFactory, contract instance, and Signers here.
     GelatoCore = await ethers.getContractFactory("GelatoCore");
+    gelatoCore = await GelatoCore.deploy();
+    await gelatoCore.deployed();
     [owner, notOwner, oracle] = await ethers.getSigners();
     oracleAddress = await oracle.getAddress();
   });
 
   // We test different functionality of the contract as normal Mocha tests.
-  describe("GelatoCore.GelatoSysAdmin.setGelatoGasPrice", function () {
-    let gelatoCore;
-
-    beforeEach(async function () {
-      gelatoCore = await GelatoCore.deploy();
-      await gelatoCore.deployed();
-    });
-
+  describe("GelatoCore.GelatoSysAdmin.setGelatoGasPriceOracle", function () {
     it("Should let the owner setGelatoGasPriceOracle", async function () {
       // Every transaction and call is sent with the owner by default
       await expect(gelatoCore.setGelatoGasPriceOracle(oracleAddress))
