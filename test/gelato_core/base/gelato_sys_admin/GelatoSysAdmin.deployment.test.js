@@ -1,5 +1,5 @@
 // running `npx buidler test` automatically makes use of buidler-waffle plugin
-// => only dependency we need
+// => only dependency we need is "chai"
 import { expect } from "chai";
 
 // GelatoSysAdmin creation time variable values
