@@ -15,7 +15,6 @@ export default task("abi-encode-withselector")
       if (!checkNestedObj(interFace, "functions", taskArgs.functionname))
         throw new Error("\nfunctionname is not on contract's interface");
 
-      console.log(taskArgs.inputs);
       let iterableInputs;
       try {
         iterableInputs = [...taskArgs.inputs];

@@ -3,7 +3,7 @@ import { constants, utils } from "ethers";
 
 const GAS_PRICE = utils.parseUnits("9", "gwei");
 
-export default task("setupgelatognosissafe")
+export default task("setupgelato-gnosissafeproxy")
   .addParam("condition")
   .addParam("action")
   .addOptionalPositionalParam("mastercopy", "gnosis safe mastercopy")
@@ -46,9 +46,7 @@ export default task("setupgelatognosissafe")
       );
 
       // === GelatoCore setup ===
-      const signers = await ethers.signers();
-      const gelatoExecutor = signers[1];
-      const gelatoExecutorAddress = gelatoExecutor._address;
+      const { 1: { _address: gelatoExecutorAddress } } = await ethers.signers();
 
       // ProviderModule Gnosis Safe
       // 1. Get extcodehash of Gnosis Safe
