@@ -20,9 +20,9 @@ export default task(
   .setAction(async ({ useraddress, saltnonce, log }) => {
     try {
       if (!useraddress) {
-        const signers = await ethers.signers();
-        const signer = signers[0];
-        useraddress = signer._address;
+        const signers = await ethers.getSigners()
+        const signer = signers[0]
+        useraddress = signer._address
       }
 
       // Generate CPK Gnosis Safe Proxy address

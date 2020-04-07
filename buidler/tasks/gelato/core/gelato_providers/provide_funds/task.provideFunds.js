@@ -24,7 +24,7 @@ export default task(
   .setAction(async ({ ethamount, gelatoprovider, funderindex, log }) => {
     try {
       gelatoprovider = await run("handleGelatoProvider", { gelatoprovider });
-      const { [funderindex]: funder } = await ethers.signers();
+      const { [funderindex]: funder } = await ethers.getSigners();
       if (log) {
         console.log(`
           \n Funding from account with index: ${funderindex}\

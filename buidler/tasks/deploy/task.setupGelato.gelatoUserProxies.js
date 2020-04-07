@@ -105,7 +105,7 @@ export default task(
       // Provider
       const {
         1: { _address: gelatoExecutor },
-      } = await ethers.signers();
+      } = await ethers.getSigners();
 
       await run("gc-batchprovide", {
         gelatocoreaddress: gelatoCore.address,

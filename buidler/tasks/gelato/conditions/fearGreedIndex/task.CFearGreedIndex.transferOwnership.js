@@ -10,7 +10,7 @@ export default task(
   .setAction(async ({ newowner, log }) => {
     try {
       console.log(newowner)
-      const { [0]: provider } = await ethers.signers();
+      const { [0]: provider } = await ethers.getSigners();
       const condition = await run("instantiateContract", {
         contractname: "ConditionFearGreedIndex",
         write: true,

@@ -17,11 +17,14 @@
     "@babel/node": "^7.7.4",
     "@babel/preset-env": "^7.7.4",
     "@babel/register": "^7.7.4",
-    "@nomiclabs/buidler": "^1.1.0",
-    "@nomiclabs/buidler-ethers": "^1.1.0",
+    "@nomiclabs/buidler": "^1.2.0",
+    "@nomiclabs/buidler-ethers": "^1.2.0",
+    "@nomiclabs/buidler-waffle": "^1.2.0",
+    "chai": "^4.2.0",
     "dotenv": "^8.2.0",
-    "ethers": "^4.0.23",
-    "prettier": "^1.19.1",
+    "ethereum-waffle": "^2.4.0",
+    "ethers": "^4.0.46",
+    "prettier": "^2.0.3",
     "solc": "^0.6.4"
   },
   "dependencies": {

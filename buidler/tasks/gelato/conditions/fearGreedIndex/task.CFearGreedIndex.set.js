@@ -9,7 +9,7 @@ export default task(
   .addFlag("log", "Logs return values to stdout")
   .setAction(async ({ newvalue, log }) => {
     try {
-      const { [0]: provider } = await ethers.signers();
+      const { [0]: provider } = await ethers.getSigners();
       const condition = await run("instantiateContract", {
         contractname: "ConditionFearGreedIndex",
         write: true,

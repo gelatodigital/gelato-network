@@ -30,7 +30,7 @@ export default internalTask(
       if (read) {
         instance = new Contract(contractaddress, abi, ethers.provider);
       } else if (write) {
-        if (!signer) [signer] = await ethers.signers();
+        if (!signer) [signer] = await ethers.getSigners();
         instance = new Contract(contractaddress, abi, signer);
       }
       return instance;
