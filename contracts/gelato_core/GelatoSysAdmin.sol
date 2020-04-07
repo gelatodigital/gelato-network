@@ -121,7 +121,7 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
         return SafeMath.div(
             estExecCost.mul(executorSuccessShare),
             100,
-            "GelatoExecutors.executorSuccessFee: div error"
+            "GelatoSysAdmin.executorSuccessFee: div error"
         );
     }
 

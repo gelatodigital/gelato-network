@@ -5,7 +5,7 @@ const { expect } = require("chai");
 // GelatoSysAdmin creation time variable values
 import initialState from "./GelatoSysAdmin.initialState";
 
-describe("GelatoCore - GelatoSysAdmin - Setters: Gas related", function () {
+describe("GelatoCore - GelatoSysAdmin - Setters: GAS/GAS-PRICE", function () {
   // We define the ContractFactory and Signer variables here and assign them in
   // a beforeEach hook.
   let GelatoCore;
