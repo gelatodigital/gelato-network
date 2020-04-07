@@ -211,10 +211,5 @@ contract ActionWithdrawBatchExchangeRinkeby is GelatoActionsStandard {
         } else {
             revert("ActionWithdrawBatchExchangeRinkeby.getDecimals no decimals found");
         }
-
-
     }
-
-
-
 }
