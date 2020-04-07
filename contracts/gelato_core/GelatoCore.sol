@@ -138,6 +138,9 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             return "ActionRevertedNoMessage";
         }
 
+        if (msg.sender != executorByProvider[_execClaim.provider] && msg.sender != address(this))
+            return "InvalidExecutor";
+
         return "Ok";
     }
 
@@ -158,9 +161,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // CHECKS
         require(tx.gasprice == _gelatoGasPrice, "GelatoCore.exec: tx.gasprice");
-
-        // At end, to allow for canExec debugging from any account. Else check this first.
-        require(msg.sender == executorByProvider[_execClaim.provider], "GelatoCore.exec: InvalidExecutor");
 
         ExecutionResult executionResult;
         string memory reason;
