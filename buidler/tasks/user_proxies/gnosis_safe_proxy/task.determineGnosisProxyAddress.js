@@ -39,7 +39,7 @@ export default task(
         addressbookentry: "gnosisSafeProxyFactory",
       });
 
-      const { [1]: signer } = await ethers.signers();
+      const { [1]: signer } = await ethers.getSigners();
 
       const gnosisSafeProxyFactory = new ethers.Contract(
         gnosisSafeProxyFactoryAddress,

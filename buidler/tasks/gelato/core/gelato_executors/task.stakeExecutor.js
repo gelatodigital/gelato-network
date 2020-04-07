@@ -23,7 +23,7 @@ export default task(
       // We use the 2nd account (index 1) generated from mnemonic for the gelatoExecutor by default
       const {
         [taskArgs.executorindex]: gelatoExecutor,
-      } = await ethers.signers();
+      } = await ethers.getSigners();
 
       if (!gelatoExecutor)
         throw new Error("\n gelatoExecutor not instantiated \n");

@@ -53,7 +53,7 @@ export default task(
           });
         }
 
-        const { [executorindex]: gelatoExecutor } = await ethers.signers();
+        const { [executorindex]: gelatoExecutor } = await ethers.getSigners();
 
         const gelatoCore = await run("instantiateContract", {
           contractname: "GelatoCore",

@@ -16,7 +16,7 @@ export default task(
   .setAction(async ({ amount, executorindex, log }) => {
     try {
       // We use the 2nd account (index 1) generated from mnemonic for the gelatoExecutor by default
-      const { [executorindex]: gelatoExecutor } = await ethers.signers();
+      const { [executorindex]: gelatoExecutor } = await ethers.getSigners();
       if (log) {
         console.log(
           `\n Taking account with index: ${executorindex}\

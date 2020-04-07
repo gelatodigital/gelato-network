@@ -22,7 +22,7 @@ export default task(
       else if (withdrawamount > availableFunds)
         throw new Error(`\n Insufficient Provider Funds\n`);
       // Gelato Provider is the 3rd signer account
-      const { [providerindex]: gelatoProvider } = await ethers.signers();
+      const { [providerindex]: gelatoProvider } = await ethers.getSigners();
       if (log) {
         console.log(
           `\n Taking account with index: ${providerindex}\

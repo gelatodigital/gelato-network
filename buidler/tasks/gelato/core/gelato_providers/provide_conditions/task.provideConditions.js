@@ -14,7 +14,7 @@ export default task(
         contractname: conditionname,
       });
       // Gelato Provider is the 3rd signer account
-      const { 2: gelatoProvider } = await ethers.signers();
+      const { 2: gelatoProvider } = await ethers.getSigners();
       const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
         signer: gelatoProvider,

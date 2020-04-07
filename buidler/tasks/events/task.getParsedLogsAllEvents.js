@@ -34,7 +34,7 @@ export default task(
   .addFlag("values", "Only return the values property of the parsedLog")
   .addFlag("stringify")
   .addFlag("log", "Logs return values to stdout")
-  .setAction(async taskArgs => {
+  .setAction(async (taskArgs) => {
     try {
       if (taskArgs.property && taskArgs.values)
         throw new Error("\nCannot search for --property and --values");

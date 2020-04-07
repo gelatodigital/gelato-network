@@ -7,7 +7,7 @@ export default internalTask(
   .addFlag("address", "Log the addresses of the Signers")
   .setAction(async ({ address }) => {
     try {
-      const signers = await ethers.signers();
+      const signers = await ethers.getSigners();
       if (address) {
         const signerAddresses = [];
         for (const signer of signers) signerAddresses.push(signer._address);

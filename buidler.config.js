@@ -4,15 +4,15 @@ require("@babel/register");
 const assert = require("assert");
 const { utils } = require("ethers");
 // Classes
-const ActionWithGasPriceCeil = require("./classes/gelato/actionWithGasPriceCeil")
+const ActionWithGasPriceCeil = require("./src/classes/gelato/actionWithGasPriceCeil")
   .default;
-const ExecClaim = require("./classes/gelato/execClaim").default;
+const ExecClaim = require("./src/classes/gelato/execClaim").default;
 // Helpers
-const checkNestedObj = require("./scripts/helpers/nestedObjects/checkNestedObj")
+const checkNestedObj = require("./src/scripts/helpers/nestedObjects/checkNestedObj")
   .default;
-const getNestedObj = require("./scripts/helpers/nestedObjects/getNestedObj")
+const getNestedObj = require("./src/scripts/helpers/nestedObjects/getNestedObj")
   .default;
-const sleep = require("./scripts/helpers/async/sleep").default;
+const sleep = require("./src/scripts/helpers/async/sleep").default;
 
 // ================================= BRE extension ==================================
 extendEnvironment((bre) => {
@@ -97,7 +97,10 @@ module.exports = {
 };
 
 // ================================= PLUGINS =========================================
+// buidler-ethers
 usePlugin("@nomiclabs/buidler-ethers");
+// buidler-waffle
+usePlugin("@nomiclabs/buidler-waffle");
 
 // ================================= TASKS =========================================
 // task action function receives the Buidler Runtime Environment as second argument

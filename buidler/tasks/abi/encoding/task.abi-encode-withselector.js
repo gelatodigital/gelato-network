@@ -1,6 +1,5 @@
 import { task } from "@nomiclabs/buidler/config";
 import { utils } from "ethers";
-import checkNestedObj from "../../../../scripts/helpers/nestedObjects/checkNestedObj";
 
 export default task("abi-encode-withselector")
   .addPositionalParam("contractname")
@@ -9,6 +8,8 @@ export default task("abi-encode-withselector")
   .addFlag("log")
   .setAction(async (taskArgs) => {
     try {
+      if (taskArgs.log) console.log(taskArgs);
+
       const abi = await run("abi-get", { contractname: taskArgs.contractname });
       const interFace = new utils.Interface(abi);
 
@@ -26,10 +27,8 @@ export default task("abi-encode-withselector")
         taskArgs.functionname
       ].encode(iterableInputs);
 
-      if (taskArgs.log) {
-        console.log(taskArgs);
+      if (taskArgs.log)
         console.log(`\nEncodedPayloadWithSelector:\n${payloadWithSelector}\n`);
-      }
       return payloadWithSelector;
     } catch (err) {
       console.error(err);

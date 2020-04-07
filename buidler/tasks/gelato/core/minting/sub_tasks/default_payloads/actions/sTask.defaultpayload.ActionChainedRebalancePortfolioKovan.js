@@ -21,7 +21,7 @@ export default internalTask(
   .addFlag("log")
   .setAction(async ({ executorindex = 1, providerindex = 2, log = true }) => {
     try {
-      const signers = await ethers.signers();
+      const signers = await ethers.getSigners();
       const gelatoExecutor = signers[parseInt(executorindex)];
       const provider = signers[parseInt(providerindex)];
       const providerAndExecutor = [provider._address, gelatoExecutor._address];
