@@ -51,6 +51,9 @@ module.exports = {
       gas: 15000000,
       blockGasLimit: 20000000,
     },
+    coverage: {
+      url: "http://127.0.0.1:8555",
+    },
     mainnet: {
       // Standard
       accounts: { mnemonic: MAINNET_MNEMONIC },
@@ -101,6 +104,8 @@ module.exports = {
 usePlugin("@nomiclabs/buidler-ethers");
 // buidler-waffle
 usePlugin("@nomiclabs/buidler-waffle");
+// solidity-coverage
+usePlugin("solidity-coverage");
 
 // ================================= TASKS =========================================
 // task action function receives the Buidler Runtime Environment as second argument

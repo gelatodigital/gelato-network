@@ -9,6 +9,7 @@
     "build": "babel ./scripts --out-dir dist",
     "solhint": "solhint contracts/**/*.sol",
     "clean": "rimraf dist",
+    "coverage": "npx buidler coverage --network coverage",
     "rebuild": "yarn clean && yarn build"
   },
   "devDependencies": {
@@ -25,7 +26,8 @@
     "ethereum-waffle": "^2.4.0",
     "ethers": "^4.0.46",
     "prettier": "^2.0.3",
-    "solc": "^0.6.4"
+    "solc": "^0.6.4",
+    "solidity-coverage": "^0.7.0-beta.3"
   },
   "dependencies": {
     "rimraf": "^3.0.0"
