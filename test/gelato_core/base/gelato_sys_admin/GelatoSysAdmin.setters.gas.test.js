@@ -45,4 +45,23 @@ describe("GelatoCore - GelatoSysAdmin - Setters: Gas related", function () {
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
   });
+
+  describe("GelatoCore.GelatoSysAdmin.setGelatoMaxGas", function () {
+    it("Should let the owner setGelatoMaxGas", async function () {
+      // Every transaction and call is sent with the owner by default
+      await expect(gelatoCore.setGelatoMaxGas(100))
+        .to.emit(gelatoCore, "LogSetGelatoMaxGas")
+        .withArgs(initialState.gelatoMaxGas, 100);
+
+      expect(await gelatoCore.gelatoMaxGas()).to.be.equal(100);
+    });
+
+    it("Shouldn't let non-Owners setGelatoMaxGas", async function () {
+      // gelatoCore.connect returns the same GelatoCore contract instance,
+      // but associated to a different signer
+      await expect(
+        gelatoCore.connect(notOwner).setGelatoMaxGas(100)
+      ).to.be.revertedWith("Ownable: caller is not the owner");
+    });
+  });
 });
