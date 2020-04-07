@@ -107,7 +107,7 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
         sysAdminFunds = newSysAdminFunds;
 
         msg.sender.sendValue(realWithdrawAmount);
-        emit LogWithdrawOracleFunds(currentBalance, newSysAdminFunds);
+        emit LogWithdrawSysAdminFunds(currentBalance, newSysAdminFunds);
     }
 
     // Executors' total fee for a successful exec

@@ -25,6 +25,8 @@ describe("GelatoCore - GelatoSysAdmin - Setters: Gas related", function () {
   });
 
   // We test different functionality of the contract as normal Mocha tests.
+
+  // setGelatoGasPriceOracle
   describe("GelatoCore.GelatoSysAdmin.setGelatoGasPriceOracle", function () {
     it("Should let the owner setGelatoGasPriceOracle", async function () {
       // Every transaction and call is sent with the owner by default
@@ -46,6 +48,7 @@ describe("GelatoCore - GelatoSysAdmin - Setters: Gas related", function () {
     });
   });
 
+  // setGelatoMaxGas
   describe("GelatoCore.GelatoSysAdmin.setGelatoMaxGas", function () {
     it("Should let the owner setGelatoMaxGas", async function () {
       // Every transaction and call is sent with the owner by default
@@ -61,6 +64,26 @@ describe("GelatoCore - GelatoSysAdmin - Setters: Gas related", function () {
       // but associated to a different signer
       await expect(
         gelatoCore.connect(notOwner).setGelatoMaxGas(100)
+      ).to.be.revertedWith("Ownable: caller is not the owner");
+    });
+  });
+
+  // setInternalGasRequirement
+  describe("GelatoCore.GelatoSysAdmin.setInternalGasRequirement", function () {
+    it("Should let the owner setInternalGasRequirement", async function () {
+      // Every transaction and call is sent with the owner by default
+      await expect(gelatoCore.setInternalGasRequirement(100))
+        .to.emit(gelatoCore, "LogSetInternalGasRequirement")
+        .withArgs(initialState.internalGasRequirement, 100);
+
+      expect(await gelatoCore.internalGasRequirement()).to.be.equal(100);
+    });
+
+    it("Shouldn't let non-Owners setInternalGasRequirement", async function () {
+      // gelatoCore.connect returns the same GelatoCore contract instance,
+      // but associated to a different signer
+      await expect(
+        gelatoCore.connect(notOwner).setInternalGasRequirement(100)
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
   });
