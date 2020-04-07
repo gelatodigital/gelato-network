@@ -1,4 +1,4 @@
-pragma solidity ^0.6.3;
+pragma solidity ^0.6.5;
 
 import { GelatoActionsStandard } from "../GelatoActionsStandard.sol";
 import { IGelatoAction } from "../IGelatoAction.sol";
@@ -7,7 +7,9 @@ import { SafeERC20 } from "../../external/SafeERC20.sol";
 import { SafeMath } from "../../external/SafeMath.sol";
 import { IBatchExchange } from "../../dapp_interfaces/gnosis/IBatchExchange.sol";
 
-contract ActionWithdrawBatchExchangeRinkeby is GelatoActionsStandard {
+import "@nomiclabs/buidler/console.sol";
+
+contract ActionWithdrawBatchExchange is GelatoActionsStandard {
 
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
@@ -19,13 +21,19 @@ contract ActionWithdrawBatchExchangeRinkeby is GelatoActionsStandard {
     uint256 public constant FEE_ETH = 9000000000000000;
 
     // Gelato Provider // Pays execution cost and receives fee in return
-    address private constant gelatoProvider = address(0x518eAa8f962246bCe2FA49329Fe998B66d67cbf8);
+    address private immutable gelatoProvider;
 
     // BatchExchange RINKEBY
-    IBatchExchange private constant batchExchange = IBatchExchange(0xC576eA7bd102F7E476368a5E98FA455d1Ea34dE2);
+    IBatchExchange private immutable batchExchange;
 
     // WETH RINKEBY
-    address private constant WETH = 0xc778417E063141139Fce010982780140Aa0cD5Ab;
+    address private immutable WETH;
+
+    constructor(address _batchExchange, address _weth, address _gelatoProvider) public {
+        batchExchange = IBatchExchange(_batchExchange);
+        WETH = _weth;
+        gelatoProvider = _gelatoProvider;
+    }
 
 
     function action(bytes calldata _actionPayload) external payable override virtual {
@@ -67,6 +75,7 @@ contract ActionWithdrawBatchExchangeRinkeby is GelatoActionsStandard {
                     fee = FEE_ETH;
                 } else {
                     uint256 buyTokenDecimals = getDecimals(_buyToken);
+                    console.logUint(buyTokenDecimals);
                     fee = FEE_USD * 10 ** buyTokenDecimals;
                 }
 
@@ -85,7 +94,7 @@ contract ActionWithdrawBatchExchangeRinkeby is GelatoActionsStandard {
         }
         catch {
            // Do not revert, as order might not have been fulfilled.
-           revert("ActionWithdrawBatchExchangeRinkeby.withdraw _buyToken failed");
+           revert("ActionWithdrawBatchExchange.withdraw _buyToken failed");
         }
 
         // 5. Withdraw sell token and pay fee (if not paid already)
@@ -93,7 +102,7 @@ contract ActionWithdrawBatchExchangeRinkeby is GelatoActionsStandard {
             uint256 postSellTokenBalance = sellToken.balanceOf(_proxyAddress);
             uint256 sellTokenWithdrawAmount = postSellTokenBalance.sub(preSellTokenBalance);
 
-            // Check if some sell tokens got withdrawn
+            // 6. Check if buy tokens got withdrawn
             if (sellTokenWithdrawAmount > 0) {
 
                 // If user did not pay fee with _buyToken, pay with _sellToken
@@ -117,7 +126,7 @@ contract ActionWithdrawBatchExchangeRinkeby is GelatoActionsStandard {
                         sellToken.safeTransfer(_user, sellTokenWithdrawAmount - fee);
 
                     } else {
-                        revert("ActionWithdrawBatchExchangeRinkeby: Insufficient balance for user to pay for withdrawal 1");
+                        revert("ActionWithdrawBatchExchange: Insufficient balance for user to pay for withdrawal 1");
                     }
 
                 } else {
@@ -126,13 +135,13 @@ contract ActionWithdrawBatchExchangeRinkeby is GelatoActionsStandard {
 
             } else {
                 // If no sell token got withdrawn and user has not paid yet, revert
-                if (!paid) revert("ActionWithdrawBatchExchangeRinkeby: Insufficient balance for user to pay for withdrawal 2");
+                if (!paid) revert("ActionWithdrawBatchExchange: Insufficient balance for user to pay for withdrawal 2");
 
             }
         }
         catch {
             // Do not revert, as order might have been filled completely
-            revert("ActionWithdrawBatchExchangeRinkeby.withdraw _sellToken failed");
+            revert("ActionWithdrawBatchExchange.withdraw _sellToken failed");
         }
 
     }
@@ -169,7 +178,7 @@ contract ActionWithdrawBatchExchangeRinkeby is GelatoActionsStandard {
         // if (_batchIdEnablingWithdraw < currentBatchId) {
         //     return "ok";
         // } else {
-        //     return "ActionWithdrawBatchExchangeRinkeby: Not withdrawable yet";
+        //     return "ActionWithdrawBatchExchange: Not withdrawable yet";
         // }
 
         // @ DEV: Problem, as we dont have a way to on-chain check if there are actually funds that can be withdrawn, the business model relies on the assumption that sufficient funds are availabe to be withdrawn in order to compensate the executor
@@ -178,13 +187,13 @@ contract ActionWithdrawBatchExchangeRinkeby is GelatoActionsStandard {
         bool sellTokenWithdrawable = batchExchange.hasValidWithdrawRequest(_proxyAddress, _sellToken);
 
         if (!sellTokenWithdrawable) {
-            return "ActionWithdrawBatchExchangeRinkeby: Sell Token not withdrawable yet";
+            return "ActionWithdrawBatchExchange: Sell Token not withdrawable yet";
         }
 
         bool buyTokenWithdrawable = batchExchange.hasValidWithdrawRequest(_proxyAddress, _buyToken);
 
         if (!buyTokenWithdrawable) {
-            return "ActionWithdrawBatchExchangeRinkeby: Buy Token not withdrawable yet";
+            return "ActionWithdrawBatchExchange: Buy Token not withdrawable yet";
         }
 
         return "Ok";
@@ -209,7 +218,7 @@ contract ActionWithdrawBatchExchangeRinkeby is GelatoActionsStandard {
         if (success) {
             return abi.decode(data, (uint256));
         } else {
-            revert("ActionWithdrawBatchExchangeRinkeby.getDecimals no decimals found");
+            revert("ActionWithdrawBatchExchange.getDecimals no decimals found");
         }
     }
 }

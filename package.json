@@ -1,7 +1,7 @@
 {
   "name": "gelato-contracts",
   "version": "0.0.1",
-  "description": "If This Then That Automation on Ethereum",
+  "description": "The automation protocol for Ethereum",
   "repository": "https://github.com/gelatodigital/gelato.git",
   "author": "The guys from gelato-digital",
   "private": false,
@@ -25,9 +25,9 @@
     "ethereum-waffle": "^2.4.0",
     "ethers": "^4.0.46",
     "prettier": "^2.0.3",
-    "solc": "^0.6.4"
+    "solc": "^0.6.5"
   },
   "dependencies": {
-    "rimraf": "^3.0.0"
+    "rimraf": "^3.0.2"
   }
 }

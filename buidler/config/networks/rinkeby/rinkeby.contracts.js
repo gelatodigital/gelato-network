@@ -15,7 +15,7 @@ export const contracts = [
   // Portfolio Mgmt
   "ActionRebalancePortfolioRinkeby",
   // Gnosis Batch Exchange
-  "ActionWithdrawBatchExchangeRinkeby",
+  "ActionWithdrawBatchExchange",
   "ActionPlaceOrderBatchExchange",
   // = Chained =
   // ERC20
