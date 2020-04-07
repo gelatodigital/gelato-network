@@ -20,7 +20,7 @@ class ExecClaim {
       this.actionPayload = execClaimObj.actionPayload;
       this.expiryDate = execClaimObj.expiryDate
         ? execClaimObj.expiryDate
-        : constants.HashZero;
+        : constants.Zero;
     } catch (error) {
       console.error(`\n ExecClaim Class: \n`, error);
       process.exit(1);

@@ -31,6 +31,7 @@ require("dotenv").config();
 const DEV_MNEMONIC = process.env.DEV_MNEMONIC;
 const MAINNET_MNEMONIC = process.env.MAINNET_MNEMONIC;
 const INFURA_ID = process.env.INFURA_ID;
+const DEFAULT_NETWORK = process.env.DEFAULT_NETWORK;
 assert.ok(DEV_MNEMONIC, "no DEV_MNEMONIC in process.env");
 assert.ok(MAINNET_MNEMONIC, "no MAINNET_MNEMONIC in process.env");
 assert.ok(INFURA_ID, "no Infura ID in process.env");
@@ -42,7 +43,7 @@ const rinkebyConfig = require("./buidler/config/networks/rinkebyConfig");
 const mainnetConfig = require("./buidler/config/networks/mainnetConfig");
 
 module.exports = {
-  defaultNetwork: "buidlerevm",
+  defaultNetwork: DEFAULT_NETWORK ? DEFAULT_NETWORK : "buidlerevm",
   networks: {
     buidlerevm: {
       hardfork: "istanbul",

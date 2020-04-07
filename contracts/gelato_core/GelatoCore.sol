@@ -39,10 +39,12 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         );
 
         // User checks
-        require(
-            _execClaim.expiryDate >= now + 60 seconds,
-            "GelatoCore.mintExecClaim: Invalid expiryDate"
-        );
+        if (_execClaim.expiryDate != 0) {
+            require(
+                _execClaim.expiryDate >= now,
+                "GelatoCore.mintExecClaim: Invalid expiryDate"
+            );
+        }
 
         // PROVIDER CHECKS (not for self-Providers)
         if (msg.sender != _execClaim.provider) {
@@ -80,12 +82,12 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             "GelatoCore.mintSelfProvidedExecClaim: sender not provider"
         );
 
+        // Optional User prepayment
+        if (msg.value > 0) provideFunds(msg.sender);
+
         // Executor Handling
         if (_executor != address(0) && executorByProvider[msg.sender] != _executor)
-            executorByProvider[msg.sender] = _executor;  // assign new executor
-
-        // Optional User prepayment
-        if (msg.value > 0) providerFunds[msg.sender] += msg.value;
+            providerAssignsExecutor(_executor);  // assign new executor
 
         // Minting
         mintExecClaim(_execClaim);
@@ -136,8 +138,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             return "ActionRevertedNoMessage";
         }
 
-        // At end, to allow for canExec debugging from any account. Else check this first.
-        if (msg.sender != executorByProvider[_execClaim.provider]) return "InvalidExecutor";
+        if (msg.sender != executorByProvider[_execClaim.provider] && msg.sender != address(this))
+            return "InvalidExecutor";
 
         return "Ok";
     }
@@ -284,9 +286,9 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
                 // 32-length, 4-ErrorSelector, UTF-8 revertMsg
                 if (revertMsg.length % 32 == 4) {
                     bytes4 selector;
-                    assembly { selector := mload(add(revertMsg, 32)) }
+                    assembly { selector := mload(add(0x20, revertMsg)) }
                     if (selector == 0x08c379a0) {  // Function selector for Error(string)
-                        assembly { revertMsg := mload(add(revertMsg, 36)) }
+                        assembly { revertMsg := add(revertMsg, 68) }
                         error = string(
                             abi.encodePacked("GelatoCore._exec:", string(revertMsg))
                         );
@@ -299,6 +301,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             }
         }
     }
+
 
     function _processProviderPayables(
         address _provider,

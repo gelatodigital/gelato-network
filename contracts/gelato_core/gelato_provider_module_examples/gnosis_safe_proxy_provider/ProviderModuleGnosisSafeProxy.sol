@@ -19,16 +19,18 @@ contract ProviderModuleGnosisSafeProxy is
 {
     mapping(bytes32 => bool) public override isProxyExtcodehashProvided;
     mapping(address => bool) public override isMastercopyProvided;
+    address public gelatoCore;
 
-    constructor(bytes32[] memory hashes, address[] memory masterCopies) public {
+    constructor(bytes32[] memory hashes, address[] memory masterCopies, address _gelatoCore) public {
         batchProvide(hashes, masterCopies);
+        gelatoCore = _gelatoCore;
     }
 
     // ================= GELATO PROVIDER MODULE STANDARD ================
     // @dev since we check extcodehash prior to execution, we forego the execution option
     //  where the userProxy is deployed at execution time.
-    function isProvided(ExecClaim calldata _execClaim)
-        external
+    function isProvided(ExecClaim memory _execClaim)
+        public
         view
         override
         returns (string memory)
@@ -41,6 +43,8 @@ contract ProviderModuleGnosisSafeProxy is
         address mastercopy = IGnosisSafeProxy(userProxy).masterCopy();
         if (!isMastercopyProvided[mastercopy])
             return "ProviderModuleGnosisSafeProxy.isProvided:InvalidGSPMastercopy";
+        if (!isGelatoCoreWhitelisted(userProxy))
+            return "ProviderModuleGnosisSafeProxy.isProvided:GelatoCoreNotWhitelisted";
         return "Ok";
     }
 
@@ -104,6 +108,19 @@ contract ProviderModuleGnosisSafeProxy is
         }
     }
 
+    function isGelatoCoreWhitelisted(address _userProxy)
+        view
+        internal
+        returns(bool isWhitelisted)
+    {
+        address[] memory whitelistedModules =  IGnosisSafe(_userProxy).getModules();
+        for(uint i = 0; i < whitelistedModules.length; i++) {
+            if (whitelistedModules[i] ==  gelatoCore) {
+                isWhitelisted = true;
+            }
+        }
+    }
+
     // Batch (un-)provide
     function batchProvide(bytes32[] memory _hashes, address[] memory _mastercopies)
         public
@@ -122,4 +139,13 @@ contract ProviderModuleGnosisSafeProxy is
         unprovideProxyExtcodehashes(_hashes);
         unprovideMastercopies(_mastercopies);
     }
+
+    function setGelatoCore(address _gelatoCore)
+        external
+        onlyOwner
+    {
+        require(_gelatoCore != address(0), "Gelato Core cannot be address 0");
+        gelatoCore = _gelatoCore;
+    }
+
 }

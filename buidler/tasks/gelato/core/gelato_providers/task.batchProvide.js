@@ -1,6 +1,6 @@
 import { task } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../../buidler.config";
-import { utils } from "ethers";
+import { utils, constants } from "ethers";
 
 export default task(
   "gc-batchprovide",
@@ -91,7 +91,7 @@ export default task(
         taskArgs.actionswithgaspriceceil,
         taskArgs.modules,
         {
-          value: utils.parseEther(taskArgs.funds),
+          value: utils.parseEther(taskArgs.funds ? taskArgs.funds : "0"),
         }
       );
 

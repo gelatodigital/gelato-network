@@ -38,7 +38,7 @@ export default task(
   .addFlag("values", "Only return the values property of the parsedLog")
   .addFlag("stringify")
   .addFlag("log", "Logs return values to stdout")
-  .setAction(async taskArgs => {
+  .setAction(async (taskArgs) => {
     try {
       if (!taskArgs.eventname && !taskArgs.eventlogs)
         throw new Error("\n Must provide <eventname> or --eventlogs");
@@ -82,7 +82,7 @@ export default task(
 
       let parsedLogs = await run("ethers-interface-parseLogs", {
         contractname: taskArgs.contractname,
-        eventlogs
+        eventlogs,
       });
 
       // Filter/Mutate parsedLogs
@@ -99,11 +99,11 @@ export default task(
         if (taskArgs.values) {
           // filterkey/value
           if (taskArgs.filterkey) {
-            parsedLogs = parsedLogs.filter(parsedLog =>
+            parsedLogs = parsedLogs.filter((parsedLog) =>
               checkNestedObj(parsedLog, "values", taskArgs.filterkey)
             );
             if (taskArgs.filtervalue) {
-              parsedLogs = parsedLogs.filter(parsedLog => {
+              parsedLogs = parsedLogs.filter((parsedLog) => {
                 const filteredValue = parsedLog.values[taskArgs.filterkey];
                 return taskArgs.strcmp
                   ? filteredValue.toString() === taskArgs.filtervalue.toString()
@@ -123,7 +123,7 @@ export default task(
           }
         } else if (taskArgs.property) {
           if (taskArgs.filtervalue) {
-            parsedLogs = parsedLogs.filter(parsedLog => {
+            parsedLogs = parsedLogs.filter((parsedLog) => {
               const filteredValue = getNestedObj(
                 parsedLog,
                 "values",
@@ -138,7 +138,7 @@ export default task(
             parsedLogs[index] = {
               [taskArgs.property]: taskArgs.stringify
                 ? parsedLog.values[taskArgs.property].toString()
-                : parsedLog.values[taskArgs.property]
+                : parsedLog.values[taskArgs.property],
             };
           }
         }

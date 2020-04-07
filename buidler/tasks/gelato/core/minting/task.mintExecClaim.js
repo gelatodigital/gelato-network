@@ -53,12 +53,16 @@ export default task(
   .addFlag("log", "Logs return values to stdout")
   .setAction(async (taskArgs) => {
     try {
-      if (taskArgs.funds || (taskArgs.gelatoexecutor && !taskArgs.selfprovide))
-        throw new Error(
-          "\n --funds or --gelatoexecutor only with --selfprovide"
-        );
+      // if (
+      //   !taskArgs.funds ||
+      //   (!taskArgs.gelatoexecutor && !taskArgs.selfprovide)
+      // )
+      //   throw new Error(
+      //     "\n --funds or --gelatoexecutor only with --selfprovide"
+      //   );
 
       if (!taskArgs.execclaim) {
+        taskArgs.execclaim = {};
         // Command Line Argument Checks
         if (!taskArgs.actionname && !taskArgs.actionaddress)
           throw new Error(`\n Must supply <actionname> or --actionaddress`);
@@ -79,15 +83,19 @@ export default task(
           );
         }
 
-        // Selected GelatoProvider
-        taskArgs.execclaim.provider = await run("handleGelatoProvider", {
-          gelatoprovider: taskArgs.gelatoprovider,
-        });
+        if (!taskArgs.gelatoprovider)
+          // Selected GelatoProvider
+          taskArgs.execclaim.provider = await run("handleGelatoProvider", {
+            gelatoprovider: taskArgs.gelatoprovider,
+          });
+        else {
+          taskArgs.execclaim.provider = taskArgs.gelatoprovider;
+        }
 
         // ProviderModule
-        if (!taskArgs.providermodule)
-          throw new Error(`\n gc-mintexecclaim: providerModule \n`);
-        else taskArgs.execclaim.provderModule = taskArgs.providermodule;
+        if (!taskArgs.gelatoprovidermodule)
+          throw new Error(`\n gc-mintexecclaim: gelatoprovidermodule \n`);
+        else taskArgs.execclaim.providerModule = taskArgs.gelatoprovidermodule;
 
         // Condition and ConditionPayload (optional)
         if (taskArgs.conditionname !== "0") {
@@ -138,22 +146,36 @@ export default task(
       });
 
       // Send Minting Tx
-      let mintTx;
+      let mintTxHash;
 
       if (taskArgs.selfprovide) {
-        mintTx = await gelatoCore.mintSelfProvidedExecClaim(
+        mintTxHash = await gelatoCore.mintSelfProvidedExecClaim(
           execClaim,
           taskArgs.gelatoexecutor,
           { value: taskArgs.funds }
         );
       } else {
-        mintTx = await gelatoCore.mintExecClaim(execClaim);
+        // Wrap Mint function in Gnosis Safe Transaction
+        const safeAddress = await run("gc-determineCpkProxyAddress");
+        mintTxHash = await run("gsp-exectransaction", {
+          gnosissafeproxyaddress: safeAddress,
+          contractname: "GelatoCore",
+          inputs: [execClaim],
+          functionname: "mintExecClaim",
+          operation: 0,
+          log: true,
+        });
+
+        // const tx = await gelatoCore.mintExecClaim(execClaim, {
+        //   gasLimit: 1000000,
+        // });
+        // mintTxHash = tx.hash;
       }
 
-      if (taskArgs.log) console.log(`\n mintTx Hash: ${mintTx.hash}\n`);
+      if (taskArgs.log) console.log(`\n mintTx Hash: ${mintTxHash}\n`);
 
-      // Wait for tx to get mined
-      const { blockHash: blockhash } = await mintTx.wait();
+      // // Wait for tx to get mined
+      // const { blockHash: blockhash } = await mintTx.wait();
 
       // Event Emission verification
       if (taskArgs.events) {
@@ -161,7 +183,7 @@ export default task(
           contractname: "GelatoCore",
           contractaddress: taskArgs.gelatocoreaddress,
           eventname: "LogExecClaimMinted",
-          txhash: mintTx.hash,
+          txhash: mintTxHash,
           blockhash,
           values: true,
           stringify: true,
@@ -171,7 +193,7 @@ export default task(
         else console.log("\n❌ LogExecClaimMinted not found");
       }
 
-      return mintTx.hash;
+      return mintTxHash;
     } catch (error) {
       console.error(error, "\n");
       process.exit(1);

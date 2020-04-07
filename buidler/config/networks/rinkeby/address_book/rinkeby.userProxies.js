@@ -1,3 +1,6 @@
+require("dotenv").config();
+
 export const userProxies = {
-  luis: "0x0"
+  proxy1: process.env.PROXY_1,
+  proxy2: "0x0",
 };

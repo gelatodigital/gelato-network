@@ -2,26 +2,30 @@ import { task } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../../../buidler.config";
 
 export default task(
-  "gc-providecondition",
-  `Sends tx to GelatoCore.provideCondition(<condition>) on [--network] (default: ${defaultNetwork})`
+  "gc-provideactions",
+  `Sends tx to GelatoCore.setActionGasPriceCeil(<actionname>) on [--network] (default: ${defaultNetwork})`
 )
-  .addPositionalParam("conditionname")
+  .addPositionalParam("actionname")
   .addFlag("log", "Logs return values to stdout")
-  .setAction(async ({ conditionname, log }) => {
+  .setAction(async ({ actionname, log }) => {
     try {
-      const condition = await run("bre-config", {
+      const action = await run("bre-config", {
         deployments: true,
-        contractname: conditionname
+        contractname: actionname,
       });
       // Gelato Provider is the 3rd signer account
       const { 2: gelatoProvider } = await ethers.signers();
       const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
         signer: gelatoProvider,
-        write: true
+        write: true,
       });
-      const tx = await gelatoCore.provideCondition(condition);
-      if (log) console.log(`\n txHash provideCondition: ${tx.hash} \n`);
+      const ActionWithGasPriceCeil = new ActionWithGasPriceCeil(
+        action.address,
+        utils.parseUnits("20", "gwei")
+      );
+      const tx = await gelatoCore.setActionGasPriceCeil(action);
+      if (log) console.log(`\n txHash setActionGasPriceCeil: ${tx.hash}\n`);
       await tx.wait();
       return tx.hash;
     } catch (error) {
