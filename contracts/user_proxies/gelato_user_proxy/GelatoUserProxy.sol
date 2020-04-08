@@ -39,7 +39,7 @@ contract GelatoUserProxy is IGelatoUserProxy {
         _;
     }
 
-    function mintExecClaim(ExecClaim calldata _execClaim) external override onlyUser{
+    function mintExecClaim(ExecClaim calldata _execClaim) external override onlyUser {
         IGelatoCore(gelatoCore).mintExecClaim(_execClaim);
     }
 

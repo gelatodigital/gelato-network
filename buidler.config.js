@@ -2,7 +2,8 @@
 require("@babel/register");
 // Libraries
 const assert = require("assert");
-const { utils } = require("ethers");
+const { constants, utils } = require("ethers");
+
 // Classes
 const ActionWithGasPriceCeil = require("./src/classes/gelato/actionWithGasPriceCeil")
   .default;
@@ -23,10 +24,13 @@ extendEnvironment((bre) => {
   bre.checkNestedObj = checkNestedObj;
   bre.getNestedObj = getNestedObj;
   bre.sleep = sleep;
+  // Libraries
+  bre.constants = constants;
+  bre.utils = utils;
 });
 
 // ================================= CONFIG =========================================
-// Env Variables
+// Process Env Variables
 require("dotenv").config();
 const DEV_MNEMONIC = process.env.DEV_MNEMONIC;
 const MAINNET_MNEMONIC = process.env.MAINNET_MNEMONIC;
@@ -50,6 +54,9 @@ module.exports = {
       contracts: buidlerevmConfig.contracts,
       gas: 15000000,
       blockGasLimit: 20000000,
+    },
+    coverage: {
+      url: "http://127.0.0.1:8555",
     },
     mainnet: {
       // Standard
@@ -101,6 +108,8 @@ module.exports = {
 usePlugin("@nomiclabs/buidler-ethers");
 // buidler-waffle
 usePlugin("@nomiclabs/buidler-waffle");
+// solidity-coverage
+usePlugin("solidity-coverage");
 
 // ================================= TASKS =========================================
 // task action function receives the Buidler Runtime Environment as second argument
