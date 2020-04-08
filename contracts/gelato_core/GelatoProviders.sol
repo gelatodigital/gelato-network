@@ -140,6 +140,12 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
             currentExecutor != _newExecutor,
             "GelatoProviders.providerAssignsExecutor: already assigned."
         );
+        if (_newExecutor != address(0)) {
+            require(
+                isExecutorMinStaked(_newExecutor),
+                "GelatoProviders.executorAssignsExecutor: isExecutorMinStaked()"
+            );
+        }
         require(
             isProviderLiquid(msg.sender),
             "GelatoProviders.providerAssignsExecutor: isProviderLiquid()"
