@@ -46,18 +46,12 @@ describe("GelatoCore - GelatoProviders - Setters: EXECUTOR", function () {
       await gelatoCore.provideFunds(providerAddress, {
         value: minProviderStake,
       });
-      expect(await gelatoCore.providerFunds(providerAddress)).to.be.equal(
-        minProviderStake
-      );
 
       // stakeExecutor() (needed for providerAssignsExecutor())
       const minExecutorStake = await gelatoCore.minExecutorStake();
       await gelatoCore
         .connect(executor)
         .stakeExecutor({ value: minExecutorStake });
-      expect(await gelatoCore.executorStake(executorAddress)).to.be.equal(
-        minExecutorStake
-      );
 
       // providerAssignsExecutor
       await expect(gelatoCore.providerAssignsExecutor(executorAddress))
@@ -87,18 +81,12 @@ describe("GelatoCore - GelatoProviders - Setters: EXECUTOR", function () {
       await gelatoCore.provideFunds(providerAddress, {
         value: minProviderStake,
       });
-      expect(await gelatoCore.providerFunds(providerAddress)).to.be.equal(
-        minProviderStake
-      );
 
       // stakeExecutor() (needed for providerAssignsExecutor())
       const minExecutorStake = await gelatoCore.minExecutorStake();
       await gelatoCore
         .connect(executor)
         .stakeExecutor({ value: minExecutorStake });
-      expect(await gelatoCore.executorStake(executorAddress)).to.be.equal(
-        minExecutorStake
-      );
 
       // providerAssignsExecutor
       await gelatoCore.providerAssignsExecutor(executorAddress);
@@ -119,9 +107,6 @@ describe("GelatoCore - GelatoProviders - Setters: EXECUTOR", function () {
       await gelatoCore
         .connect(otherExecutor)
         .stakeExecutor({ value: minExecutorStake });
-      expect(await gelatoCore.executorStake(otherExecutorAddress)).to.be.equal(
-        minExecutorStake
-      );
 
       // providerAssignsExecutor: otherExecutor
       await expect(gelatoCore.providerAssignsExecutor(otherExecutorAddress))
@@ -147,18 +132,12 @@ describe("GelatoCore - GelatoProviders - Setters: EXECUTOR", function () {
       await gelatoCore.provideFunds(providerAddress, {
         value: minProviderStake,
       });
-      expect(await gelatoCore.providerFunds(providerAddress)).to.be.equal(
-        minProviderStake
-      );
 
       // stakeExecutor() (needed for providerAssignsExecutor())
       const minExecutorStake = await gelatoCore.minExecutorStake();
       await gelatoCore
         .connect(executor)
         .stakeExecutor({ value: minExecutorStake });
-      expect(await gelatoCore.executorStake(executorAddress)).to.be.equal(
-        minExecutorStake
-      );
 
       // providerAssignsExecutor
       await expect(gelatoCore.providerAssignsExecutor(executorAddress))
@@ -198,9 +177,6 @@ describe("GelatoCore - GelatoProviders - Setters: EXECUTOR", function () {
       await gelatoCore.provideFunds(providerAddress, {
         value: minProviderStake,
       });
-      expect(await gelatoCore.providerFunds(providerAddress)).to.be.equal(
-        minProviderStake
-      );
 
       // providerAssignsExecutor
       await expect(
@@ -222,15 +198,12 @@ describe("GelatoCore - GelatoProviders - Setters: EXECUTOR", function () {
       ).to.be.equal(initialState.executorProvidersCount);
     });
 
-    it("Should NOT allow illiquid Providers to assign an Executor", async function () {
+    it("Should NOT allow not-minStaked Providers to assign an Executor", async function () {
       // stakeExecutor() (needed for providerAssignsExecutor())
       const minExecutorStake = await gelatoCore.minExecutorStake();
       await gelatoCore
         .connect(executor)
         .stakeExecutor({ value: minExecutorStake });
-      expect(await gelatoCore.executorStake(executorAddress)).to.be.equal(
-        minExecutorStake
-      );
 
       // providerAssignsExecutor
       await expect(
