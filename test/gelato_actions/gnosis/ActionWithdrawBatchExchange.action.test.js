@@ -3,6 +3,7 @@
 const { expect } = require("chai");
 const { run, ethers } = require("@nomiclabs/buidler");
 const FEE_USD = 2;
+const FEE_ETH = 9000000000000000;
 
 // ##### Gnosis Action Test Cases #####
 // 1. All sellTokens got converted into buy tokens, sufficient for withdrawal
@@ -22,8 +23,6 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
   let userProxyAddress;
   let sellToken; //DAI
   let buyToken; //USDC
-  let sellAmount; // DAI
-  let buyAmount; // USDC
   let ActionWithdrawBatchExchange;
   let MockERC20;
   let MockBatchExchange;
@@ -121,16 +120,23 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
 
     userProxy = await ethers.getContractAt("GelatoUserProxy", userProxyAddress);
 
-    // 1. Fund MockBatchExchange with buyTokens
-    const hundred = 100 * 10 ** buyDecimals;
-    await buyToken.mint(mockBatchExchange.address, hundred);
-    await sellToken.mint(mockBatchExchange.address, hundred);
-    await WETH.mint(mockBatchExchange.address, hundred);
+    await buyToken.mint(
+      mockBatchExchange.address,
+      ethers.utils.parseUnits("100", buyDecimals)
+    );
+    await sellToken.mint(
+      mockBatchExchange.address,
+      ethers.utils.parseUnits("100", sellDecimals)
+    );
+    await WETH.mint(
+      mockBatchExchange.address,
+      ethers.utils.parseUnits("100", wethDecimals)
+    );
   });
 
   // We test different functionality of the contract as normal Mocha tests.
   describe("ActionWithdrawBatchExchange.action", function () {
-    it("Case #1: 0 sellTokens withdrawable, 10 buyTokens withdrawable to pay fees", async function () {
+    it("Case #1: No sellTokens withdrawable, 10 buyTokens (non weth) withdrawable to pay fees", async function () {
       const withdrawAmount = 10 * 10 ** buyDecimals;
 
       const sellerBalanceBefore = await buyToken.balanceOf(sellerAddress);
@@ -181,7 +187,49 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       );
     });
 
-    it("Case #2: 0 sellTokens withdrawable, 1.9 (insufficient) buyTokens withdrawable", async function () {
+    it("Case #2: No sellTokens withdrawable, 1 WETH withdrawable", async function () {
+      const withdrawAmount = ethers.utils.parseUnits("1", wethDecimals);
+
+      const sellerBalanceBefore = await WETH.balanceOf(sellerAddress);
+
+      // 3. MockBatchExchange Set withdraw amount
+      tx = await mockBatchExchange.setWithdrawAmount(
+        WETH.address,
+        withdrawAmount.toString()
+      );
+      await tx.wait();
+
+      const withdrawPayload = await run("abi-encode-withselector", {
+        contractname: "ActionWithdrawBatchExchange",
+        functionname: "action",
+        inputs: [
+          sellerAddress,
+          userProxyAddress,
+          sellToken.address,
+          WETH.address,
+        ],
+      });
+
+      tx = await userProxy.delegatecallGelatoAction(
+        actionWithdrawBatchExchange.address,
+        withdrawPayload
+      );
+      txResponse = await tx.wait();
+
+      const feeAmount = FEE_ETH;
+
+      const providerBalance = await WETH.balanceOf(providerAddress);
+      expect(providerBalance).to.be.equal(ethers.utils.bigNumberify(feeAmount));
+
+      const sellerBalanceAfter = await WETH.balanceOf(sellerAddress);
+      expect(ethers.utils.bigNumberify(sellerBalanceAfter)).to.be.equal(
+        sellerBalanceBefore
+          .add(withdrawAmount)
+          .sub(ethers.utils.bigNumberify(feeAmount))
+      );
+    });
+
+    it("Case #3: No sellTokens withdrawable, 1.9 (insufficient) buyTokens (non weth) withdrawable", async function () {
       const withdrawAmount = 1.9 * 10 ** buyDecimals;
 
       const sellerBalanceBefore = await buyToken.balanceOf(sellerAddress);
@@ -192,14 +240,6 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         withdrawAmount
       );
       await tx.wait();
-
-      // 4. Withdraw Funds from BatchExchange with withdraw action
-
-      // const abiCoder = ethers.utils.defaultAbiCoder;
-      // const withdrawPayload = abiCoder.encode(
-      //   ["address", "address", "address", "address"],
-      //   [sellerAddress, userProxyAddress, sellToken.address, buyToken.address]
-      // );
 
       const withdrawPayload = await run("abi-encode-withselector", {
         contractname: "ActionWithdrawBatchExchange",
@@ -221,18 +261,231 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         "GelatoUserProxy.delegatecallGelatoAction:ActionWithdrawBatchExchange: Insufficient balance for user to pay for withdrawal 2"
       );
 
-      // tx = await userProxy.delegatecallGelatoAction(
-      //   actionWithdrawBatchExchange.address,
-      //   withdrawPayload
-      // );
-      // txResponse = await tx.wait();
-
-      const feeAmount = FEE_USD * 10 ** buyDecimals;
-
       const providerBalance = await buyToken.balanceOf(providerAddress);
       expect(providerBalance).to.be.equal(0);
 
       const sellerBalanceAfter = await buyToken.balanceOf(sellerAddress);
+      expect(ethers.utils.bigNumberify(sellerBalanceAfter)).to.be.equal(
+        ethers.utils.bigNumberify(sellerBalanceBefore)
+      );
+    });
+
+    it("Case #4: No sellTokens withdrawable, 4000000000000000 (insufficient) WETH withdrawable", async function () {
+      const withdrawAmount = 4000000000000000;
+
+      const sellerBalanceBefore = await WETH.balanceOf(sellerAddress);
+
+      // 3. MockBatchExchange Set withdraw amount
+      tx = await mockBatchExchange.setWithdrawAmount(
+        WETH.address,
+        withdrawAmount
+      );
+      await tx.wait();
+
+      // 4. Withdraw Funds from BatchExchange with withdraw action
+
+      // const abiCoder = ethers.utils.defaultAbiCoder;
+      // const withdrawPayload = abiCoder.encode(
+      //   ["address", "address", "address", "address"],
+      //   [sellerAddress, userProxyAddress, sellToken.address, WETH.address]
+      // );
+
+      const withdrawPayload = await run("abi-encode-withselector", {
+        contractname: "ActionWithdrawBatchExchange",
+        functionname: "action",
+        inputs: [
+          sellerAddress,
+          userProxyAddress,
+          sellToken.address,
+          WETH.address,
+        ],
+      });
+
+      await expect(
+        userProxy.delegatecallGelatoAction(
+          actionWithdrawBatchExchange.address,
+          withdrawPayload
+        )
+      ).to.be.revertedWith(
+        "GelatoUserProxy.delegatecallGelatoAction:ActionWithdrawBatchExchange: Insufficient balance for user to pay for withdrawal 2"
+      );
+
+      const providerBalance = await WETH.balanceOf(providerAddress);
+      expect(providerBalance).to.be.equal(0);
+
+      const sellerBalanceAfter = await WETH.balanceOf(sellerAddress);
+      expect(ethers.utils.bigNumberify(sellerBalanceAfter)).to.be.equal(
+        ethers.utils.bigNumberify(sellerBalanceBefore)
+      );
+    });
+
+    it("Case #5: 10 sellTokens withdrawable, No buyTokens withdrawable", async function () {
+      const withdrawAmount = ethers.utils.parseUnits("10", sellDecimals);
+
+      const sellerBalanceBefore = await sellToken.balanceOf(sellerAddress);
+
+      // 3. MockBatchExchange Set withdraw amount
+      tx = await mockBatchExchange.setWithdrawAmount(
+        sellToken.address,
+        withdrawAmount
+      );
+      await tx.wait();
+
+      const withdrawPayload = await run("abi-encode-withselector", {
+        contractname: "ActionWithdrawBatchExchange",
+        functionname: "action",
+        inputs: [
+          sellerAddress,
+          userProxyAddress,
+          sellToken.address,
+          buyToken.address,
+        ],
+      });
+
+      tx = await userProxy.delegatecallGelatoAction(
+        actionWithdrawBatchExchange.address,
+        withdrawPayload
+      );
+      txResponse = await tx.wait();
+
+      const feeAmount = ethers.utils.parseUnits(
+        FEE_USD.toString(),
+        sellDecimals
+      );
+
+      const providerBalance = await sellToken.balanceOf(providerAddress);
+      expect(providerBalance).to.be.equal(feeAmount);
+
+      const sellerBalanceAfter = await sellToken.balanceOf(sellerAddress);
+      expect(ethers.utils.bigNumberify(sellerBalanceAfter)).to.be.equal(
+        ethers.utils
+          .bigNumberify(sellerBalanceBefore)
+          .add(ethers.utils.bigNumberify(withdrawAmount))
+          .sub(ethers.utils.bigNumberify(feeAmount))
+      );
+    });
+
+    it("Case #6: 1 sellToken (WETH) withdrawable, No buyTokens withdrawable", async function () {
+      const withdrawAmount = ethers.utils.parseUnits("10", wethDecimals);
+
+      const sellerBalanceBefore = await WETH.balanceOf(sellerAddress);
+
+      // 3. MockBatchExchange Set withdraw amount
+      tx = await mockBatchExchange.setWithdrawAmount(
+        WETH.address,
+        withdrawAmount
+      );
+      await tx.wait();
+
+      const withdrawPayload = await run("abi-encode-withselector", {
+        contractname: "ActionWithdrawBatchExchange",
+        functionname: "action",
+        inputs: [
+          sellerAddress,
+          userProxyAddress,
+          WETH.address,
+          buyToken.address,
+        ],
+      });
+
+      tx = await userProxy.delegatecallGelatoAction(
+        actionWithdrawBatchExchange.address,
+        withdrawPayload
+      );
+      txResponse = await tx.wait();
+
+      const feeAmount = FEE_ETH.toString();
+
+      const providerBalance = await WETH.balanceOf(providerAddress);
+      expect(providerBalance).to.be.equal(feeAmount);
+
+      const sellerBalanceAfter = await WETH.balanceOf(sellerAddress);
+      expect(ethers.utils.bigNumberify(sellerBalanceAfter)).to.be.equal(
+        ethers.utils
+          .bigNumberify(sellerBalanceBefore)
+          .add(ethers.utils.bigNumberify(withdrawAmount))
+          .sub(ethers.utils.bigNumberify(feeAmount))
+      );
+    });
+
+    it("Case #7: Insufficient sellTokens withdrawable and insufficient buyTokens withdrawable", async function () {
+      const withdrawAmount = ethers.utils.parseUnits("1.5", sellDecimals);
+
+      const sellerBalanceBefore = await sellToken.balanceOf(sellerAddress);
+
+      // 3. MockBatchExchange Set withdraw amount
+      tx = await mockBatchExchange.setWithdrawAmount(
+        sellToken.address,
+        withdrawAmount
+      );
+      await tx.wait();
+
+      const withdrawPayload = await run("abi-encode-withselector", {
+        contractname: "ActionWithdrawBatchExchange",
+        functionname: "action",
+        inputs: [
+          sellerAddress,
+          userProxyAddress,
+          sellToken.address,
+          buyToken.address,
+        ],
+      });
+
+      await expect(
+        userProxy.delegatecallGelatoAction(
+          actionWithdrawBatchExchange.address,
+          withdrawPayload
+        )
+      ).to.be.revertedWith(
+        "GelatoUserProxy.delegatecallGelatoAction:ActionWithdrawBatchExchange: Insufficient balance for user to pay for withdrawal 1"
+      );
+
+      const providerBalance = await sellToken.balanceOf(providerAddress);
+      expect(providerBalance).to.be.equal(0);
+
+      const sellerBalanceAfter = await sellToken.balanceOf(sellerAddress);
+      expect(ethers.utils.bigNumberify(sellerBalanceAfter)).to.be.equal(
+        ethers.utils.bigNumberify(sellerBalanceBefore)
+      );
+    });
+
+    it("Case #8: Insufficient sellTokens (WETH) withdrawable and insufficient buyTokens withdrawable", async function () {
+      // withdraw amount == any amount smaller than the required FEE (insufficient)
+      const withdrawAmount = FEE_ETH - 100000;
+
+      const sellerBalanceBefore = await WETH.balanceOf(sellerAddress);
+
+      // 3. MockBatchExchange Set withdraw amount
+      tx = await mockBatchExchange.setWithdrawAmount(
+        WETH.address,
+        withdrawAmount
+      );
+      await tx.wait();
+
+      const withdrawPayload = await run("abi-encode-withselector", {
+        contractname: "ActionWithdrawBatchExchange",
+        functionname: "action",
+        inputs: [
+          sellerAddress,
+          userProxyAddress,
+          WETH.address,
+          buyToken.address,
+        ],
+      });
+
+      await expect(
+        userProxy.delegatecallGelatoAction(
+          actionWithdrawBatchExchange.address,
+          withdrawPayload
+        )
+      ).to.be.revertedWith(
+        "GelatoUserProxy.delegatecallGelatoAction:ActionWithdrawBatchExchange: Insufficient balance for user to pay for withdrawal 1"
+      );
+
+      const providerBalance = await WETH.balanceOf(providerAddress);
+      expect(providerBalance).to.be.equal(0);
+
+      const sellerBalanceAfter = await WETH.balanceOf(sellerAddress);
       expect(ethers.utils.bigNumberify(sellerBalanceAfter)).to.be.equal(
         ethers.utils.bigNumberify(sellerBalanceBefore)
       );

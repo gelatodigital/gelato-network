@@ -75,7 +75,6 @@ contract ActionWithdrawBatchExchange is GelatoActionsStandard {
                     fee = FEE_ETH;
                 } else {
                     uint256 buyTokenDecimals = getDecimals(_buyToken);
-                    console.logUint(buyTokenDecimals);
                     fee = FEE_USD * 10 ** buyTokenDecimals;
                 }
 
