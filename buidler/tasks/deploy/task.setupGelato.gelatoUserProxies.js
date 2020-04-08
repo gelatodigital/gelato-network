@@ -23,7 +23,7 @@ export default task(
   )
   .addFlag("events", "Logs parsed Event Logs to stdout")
   .addFlag("log", "Log taskArgs and tx hashes inter alia")
-  .setAction(async (taskArgs) => {
+  .setAction(async (taskArgs, bre) => {
     try {
       if (taskArgs.log) console.log("\n setupgelato TaskArgs:\n", taskArgs);
 
@@ -32,6 +32,11 @@ export default task(
       const gelatoCore = await run("deploy", {
         contractname: "GelatoCore",
         log: taskArgs.log,
+      });
+
+      Object.defineProperty(bre, "gelatoCore", {
+        value: gelatoCore,
+        writable: true,
       });
 
       // GelatoGasPriceOracle

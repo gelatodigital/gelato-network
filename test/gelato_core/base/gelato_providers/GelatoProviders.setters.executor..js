@@ -32,7 +32,7 @@ describe("GelatoCore - GelatoProviders - Setters: EXECUTOR", function () {
 
   // providerAssignsExecutor
   describe("GelatoCore.GelatoProviders.providerAssignsExecutor", function () {
-    it("Should allow liquid Providers to assign an Executor", async function () {
+    it("Should allow minStaked Providers to assign a minStaked Executor", async function () {
       // provideFunds(minProviderStake)
       const minProviderStake = await gelatoCore.minProviderStake();
       await gelatoCore.provideFunds(providerAddress, {
@@ -40,6 +40,15 @@ describe("GelatoCore - GelatoProviders - Setters: EXECUTOR", function () {
       });
       expect(await gelatoCore.providerFunds(providerAddress)).to.be.equal(
         minProviderStake
+      );
+
+      // stakeExecutor() (needed for providerAssignsExecutor())
+      const minExecutorStake = await gelatoCore.minExecutorStake();
+      await gelatoCore
+        .connect(executor)
+        .stakeExecutor({ value: minExecutorStake });
+      expect(await gelatoCore.executorStake(executorAddress)).to.be.equal(
+        minExecutorStake
       );
 
       // providerAssignsExecutor
@@ -55,7 +64,7 @@ describe("GelatoCore - GelatoProviders - Setters: EXECUTOR", function () {
       );
     });
 
-    it("Shouldn't allow liquid providers to assign the same Executor again", async function () {
+    it("Shouldn't allow minStaked Providers to assign the same Executor again", async function () {
       // provideFunds(minProviderStake)
       const minProviderStake = await gelatoCore.minProviderStake();
       await gelatoCore.provideFunds(providerAddress, {
@@ -63,6 +72,15 @@ describe("GelatoCore - GelatoProviders - Setters: EXECUTOR", function () {
       });
       expect(await gelatoCore.providerFunds(providerAddress)).to.be.equal(
         minProviderStake
+      );
+
+      // stakeExecutor() (needed for providerAssignsExecutor())
+      const minExecutorStake = await gelatoCore.minExecutorStake();
+      await gelatoCore
+        .connect(executor)
+        .stakeExecutor({ value: minExecutorStake });
+      expect(await gelatoCore.executorStake(executorAddress)).to.be.equal(
+        minExecutorStake
       );
 
       // providerAssignsExecutor
@@ -88,7 +106,7 @@ describe("GelatoCore - GelatoProviders - Setters: EXECUTOR", function () {
       );
     });
 
-    it("Shouldn't allow liquid providers to assign other Provider's Executor", async function () {
+    it("Shouldn't allow minStaked Providers to assign a not-minStaked Executor", async function () {
       // provideFunds(minProviderStake)
       const minProviderStake = await gelatoCore.minProviderStake();
       await gelatoCore.provideFunds(providerAddress, {
@@ -99,22 +117,22 @@ describe("GelatoCore - GelatoProviders - Setters: EXECUTOR", function () {
       );
 
       // providerAssignsExecutor
-      await expect(gelatoCore.providerAssignsExecutor(executorAddress))
-        .to.emit(gelatoCore, "LogProviderAssignsExecutor")
-        .withArgs(
-          providerAddress,
-          initialState.executorByProvider,
-          executorAddress
-        );
-      expect(await gelatoCore.executorByProvider(providerAddress)).to.be.equal(
-        executorAddress
+      await expect(
+        gelatoCore.providerAssignsExecutor(executorAddress)
+      ).to.revertedWith(
+        "GelatoProviders.providerAssignsExecutor: isExecutorMinStaked()"
       );
+      expect(await gelatoCore.executorByProvider(providerAddress)).to.be.equal(
+        initialState.executorByProvider
+      );
+    });
 
-      // providerAssignsExecutor again
+    it("Shouldn't allow illiquid Providers to assign an Executor", async function () {
+      // providerAssignsExecutor
       await expect(
         gelatoCore.providerAssignsExecutor(executorAddress)
       ).to.be.revertedWith(
-        "GelatoProviders.providerAssignsExecutor: already assigned."
+        "GelatoProviders.providerAssignsExecutor: isProviderMinStaked()"
       );
       expect(await gelatoCore.executorByProvider(providerAddress)).to.be.equal(
         executorAddress

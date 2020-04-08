@@ -143,12 +143,12 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         if (_newExecutor != address(0)) {
             require(
                 isExecutorMinStaked(_newExecutor),
-                "GelatoProviders.executorAssignsExecutor: isExecutorMinStaked()"
+                "GelatoProviders.providerAssignsExecutor: isExecutorMinStaked()"
             );
         }
         require(
-            isProviderLiquid(msg.sender),
-            "GelatoProviders.providerAssignsExecutor: isProviderLiquid()"
+            isProviderMinStaked(msg.sender),
+            "GelatoProviders.providerAssignsExecutor: isProviderMinStaked()"
         );
 
         // EFFECTS: Provider reassigns from currentExecutor to newExecutor (or no executor)
@@ -178,8 +178,8 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
             "GelatoProviders.executorAssignsExecutor: isExecutorMinStaked()"
         );
         require(
-            isProviderLiquid(_provider),
-            "GelatoProviders.executorAssignsExecutor: isProviderLiquid()"
+            isProviderMinStaked(_provider),
+            "GelatoProviders.executorAssignsExecutor: isProviderMinStaked()"
         );
 
         // EFFECTS: currentExecutor reassigns to newExecutor
@@ -300,7 +300,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     }
 
     // Provider Liquidity
-    function isProviderLiquid(address _provider) public view override returns(bool) {
+    function isProviderMinStaked(address _provider) public view override returns(bool) {
         return providerFunds[_provider] >= minProviderStake;
     }
 
