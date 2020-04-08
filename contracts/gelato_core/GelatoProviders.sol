@@ -141,10 +141,6 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
             "GelatoProviders.providerAssignsExecutor: already assigned."
         );
         require(
-            isExecutorMinStaked(_newExecutor),
-            "GelatoProviders.providerAssignsExecutor: isExecutorMinStaked()"
-        );
-        require(
             isProviderLiquid(msg.sender),
             "GelatoProviders.providerAssignsExecutor: isProviderLiquid()"
         );
@@ -174,6 +170,10 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         require(
             isExecutorMinStaked(_newExecutor),
             "GelatoProviders.executorAssignsExecutor: isExecutorMinStaked()"
+        );
+        require(
+            isProviderLiquid(_provider),
+            "GelatoProviders.executorAssignsExecutor: isProviderLiquid()"
         );
 
         // EFFECTS: currentExecutor reassigns to newExecutor
