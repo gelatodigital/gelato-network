@@ -34,7 +34,7 @@ describe("GelatoCore - GelatoSysAdmin - Setters: FEES", function () {
       expect(await gelatoCore.execClaimTenancy()).to.be.equal(69420);
     });
 
-    it("Shouldn't let non-Owners setExecClaimTenancy", async function () {
+    it("Should NOT let non-Owners setExecClaimTenancy", async function () {
       // gelatoCore.connect returns the same GelatoCore contract instance,
       // but associated to a different signer
       await expect(
@@ -54,7 +54,7 @@ describe("GelatoCore - GelatoSysAdmin - Setters: FEES", function () {
       expect(await gelatoCore.execClaimRent()).to.be.equal(69420);
     });
 
-    it("Shouldn't let non-Owners setExecClaimRent", async function () {
+    it("Should NOT let non-Owners setExecClaimRent", async function () {
       // gelatoCore.connect returns the same GelatoCore contract instance,
       // but associated to a different signer
       await expect(
@@ -74,7 +74,7 @@ describe("GelatoCore - GelatoSysAdmin - Setters: FEES", function () {
       expect(await gelatoCore.executorSuccessShare()).to.be.equal(69420);
     });
 
-    it("Shouldn't let non-Owners setExecutorSuccessShare", async function () {
+    it("Should NOT let non-Owners setExecutorSuccessShare", async function () {
       // gelatoCore.connect returns the same GelatoCore contract instance,
       // but associated to a different signer
       await expect(
@@ -94,7 +94,7 @@ describe("GelatoCore - GelatoSysAdmin - Setters: FEES", function () {
       expect(await gelatoCore.sysAdminSuccessShare()).to.be.equal(69420);
     });
 
-    it("Shouldn't let non-Owners setSysAdminSuccessShare", async function () {
+    it("Should NOT let non-Owners setSysAdminSuccessShare", async function () {
       // gelatoCore.connect returns the same GelatoCore contract instance,
       // but associated to a different signer
       await expect(

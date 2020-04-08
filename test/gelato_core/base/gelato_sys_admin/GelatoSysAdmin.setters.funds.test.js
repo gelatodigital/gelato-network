@@ -34,7 +34,7 @@ describe("GelatoCore - GelatoSysAdmin - Setters: FUNDS/STAKE", function () {
       expect(await gelatoCore.minExecutorStake()).to.be.equal(69420);
     });
 
-    it("Shouldn't let non-Owners setMinExecutorStake", async function () {
+    it("Should NOT let non-Owners setMinExecutorStake", async function () {
       // gelatoCore.connect returns the same GelatoCore contract instance,
       // but associated to a different signer
       await expect(
@@ -54,7 +54,7 @@ describe("GelatoCore - GelatoSysAdmin - Setters: FUNDS/STAKE", function () {
       expect(await gelatoCore.minProviderStake()).to.be.equal(69420);
     });
 
-    it("Shouldn't let non-Owners setMinProviderStake", async function () {
+    it("Should NOT let non-Owners setMinProviderStake", async function () {
       // gelatoCore.connect returns the same GelatoCore contract instance,
       // but associated to a different signer
       await expect(
@@ -74,7 +74,7 @@ describe("GelatoCore - GelatoSysAdmin - Setters: FUNDS/STAKE", function () {
       expect(await gelatoCore.sysAdminFunds()).to.be.equal(0);
     });
 
-    it("Shouldn't let the owner withdraw non-existant funds", async function () {
+    it("Should NOT let the owner withdraw non-existant funds", async function () {
       // Every transaction and call is sent with the owner by default
       await expect(gelatoCore.withdrawSysAdminFunds(69420))
         .to.emit(gelatoCore, "LogWithdrawSysAdminFunds")
@@ -83,7 +83,7 @@ describe("GelatoCore - GelatoSysAdmin - Setters: FUNDS/STAKE", function () {
       expect(await gelatoCore.sysAdminFunds()).to.be.equal(0);
     });
 
-    it("Shouldn't let non-Owners withdrawSysAdminFunds", async function () {
+    it("Should NOT let non-Owners withdrawSysAdminFunds", async function () {
       // gelatoCore.connect returns the same GelatoCore contract instance,
       // but associated to a different signer
       await expect(

@@ -38,7 +38,7 @@ describe("GelatoCore - GelatoSysAdmin - Getters: FEES", function () {
     });
 
     // This test does not work with chai matchers yet
-    /*it("Shouldn't let division underflow happen", async function () {
+    /*it("Should NOT let division underflow happen", async function () {
       expect(await gelatoCore.executorSuccessFee(0, 0)).to.be.revertedWith(
         "GelatoSysAdmin.executorSuccessFee: div error"
       );
@@ -57,7 +57,7 @@ describe("GelatoCore - GelatoSysAdmin - Getters: FEES", function () {
     });
 
     // This test does not work with chai matchers yet
-    /*it("Shouldn't let division underflow happen", async function () {
+    /*it("Should NOT let division underflow happen", async function () {
       expect(await gelatoCore.sysAdminSuccessFee(0, 0)).to.be.revertedWith(
         "GelatoSysAdmin.sysAdminSuccessShare: div error"
       );

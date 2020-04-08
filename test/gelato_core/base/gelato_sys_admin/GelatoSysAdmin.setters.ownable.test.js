@@ -34,7 +34,7 @@ describe("GelatoCore - GelatoSysAdmin - Setters: OWNABLE", function () {
       expect(await gelatoCore.connect(newOwner).isOwner()).to.be.true;
     });
 
-    it("Shouldn't let non-Owners transferOwnership", async function () {
+    it("Should NOT let non-Owners transferOwnership", async function () {
       await expect(
         gelatoCore
           .connect(notOwner)
@@ -53,7 +53,7 @@ describe("GelatoCore - GelatoSysAdmin - Setters: OWNABLE", function () {
       expect(await gelatoCore.isOwner()).to.be.false;
     });
 
-    it("Shouldn't let non-Owners renounceOwnership", async function () {
+    it("Should NOT let non-Owners renounceOwnership", async function () {
       await expect(
         gelatoCore.connect(notOwner).renounceOwnership()
       ).to.be.revertedWith("Ownable: caller is not the owner");

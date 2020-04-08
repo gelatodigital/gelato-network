@@ -52,7 +52,7 @@ describe("GelatoCore - GelatoProviders - Setters: FUNDS", function () {
       );
     });
 
-    it("Shouldn't allow provideFunds(value: 0)", async function () {
+    it("Should NOT allow provideFunds(value: 0)", async function () {
       await expect(
         gelatoCore.provideFunds(providerAddress, { value: "0" })
       ).to.be.revertedWith("GelatoProviders.provideFunds: zero value");
@@ -115,7 +115,7 @@ describe("GelatoCore - GelatoProviders - Setters: FUNDS", function () {
   });
 
   // unprovideFunds
-  it("Shouldn't allow Providers with an assigned Executor to unprovide their funds", async function () {
+  it("Should NOT allow Providers with an assigned Executor to unprovide their funds", async function () {
     // provideFunds(): minProviderStake required for providerAssignsExecutor
     const minProviderStake = await gelatoCore.minProviderStake();
     await expect(
