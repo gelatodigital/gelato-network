@@ -18,7 +18,7 @@ interface IGelatoSysAdmin {
     event LogSetExecutorSuccessShare(uint256 oldShare, uint256 newShare);
     event LogSetSysAdminSuccessShare(uint256 oldFeeFactor, uint256 newFeeFactor);
 
-    event LogWithdrawOracleFunds(uint256 oldBalance, uint256 newBalance);
+    event LogWithdrawSysAdminFunds(uint256 oldBalance, uint256 newBalance);
 
     // State Writing
     function setGelatoGasPriceOracle(address _newOracle) external;

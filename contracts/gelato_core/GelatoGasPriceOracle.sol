@@ -22,12 +22,17 @@ contract GelatoGasPriceOracle is IGelatoGasPriceOracle, Ownable {
         _;
     }
 
-    function setOracleAdmin(address _newOracleAdmin) public onlyOwner override  {
+    modifier onlyGelatoCore {
+        require(msg.sender == gelatoCore, "Only gelatoCore can read oracle");
+        _;
+    }
+
+    function setOracleAdmin(address _newOracleAdmin) public override onlyOwner {
         emit LogSetOracleAdmin(oracleAdmin, _newOracleAdmin);
         oracleAdmin = _newOracleAdmin;
     }
 
-    function setGelatoCore(address _newGelatoCore) public onlyOwner override  {
+    function setGelatoCore(address _newGelatoCore) public override onlyOwner  {
         emit LogSetGelatoCore(gelatoCore, _newGelatoCore);
         gelatoCore = _newGelatoCore;
     }
@@ -38,8 +43,7 @@ contract GelatoGasPriceOracle is IGelatoGasPriceOracle, Ownable {
         gasPrice = _newGasPrice;
     }
 
-    function getGasPrice() view external override returns(uint256) {
-        require(msg.sender == gelatoCore, "Only gelatoCore can read oracle");
+    function getGasPrice() view external override onlyGelatoCore returns(uint256) {
         return gasPrice;
     }
 }

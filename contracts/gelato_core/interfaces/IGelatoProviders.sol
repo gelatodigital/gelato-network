@@ -8,9 +8,17 @@ interface IGelatoProviders {
 
     struct ActionWithGasPriceCeil { address _address; uint256 gasPriceCeil; }
 
-    // Registration
-    event LogRegisterProvider(address indexed provider);
-    event LogUnregisterProvider(address indexed provider);
+    // Provider Funding
+    event LogProvideFunds(
+        address indexed provider,
+        uint256 amount,
+        uint256 newProviderFunds
+    );
+    event LogUnprovideFunds(
+        address indexed provider,
+        uint256 realWithdrawAmount,
+        uint256 newProviderFunds
+    );
 
     // Executor By Provider
     event LogProviderAssignsExecutor(
@@ -22,18 +30,6 @@ interface IGelatoProviders {
         address indexed provider,
         address indexed oldExecutor,
         address indexed newExecutor
-    );
-
-    // Provider Funding
-    event LogProvideFunds(
-        address indexed provider,
-        uint256 previousProviderFunds,
-        uint256 newProviderFunds
-    );
-    event LogUnprovideFunds(
-        address indexed provider,
-        uint256 previousProviderFunds,
-        uint256 newProviderFunds
     );
 
     // Conditions

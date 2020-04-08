@@ -107,7 +107,7 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
         sysAdminFunds = newSysAdminFunds;
 
         msg.sender.sendValue(realWithdrawAmount);
-        emit LogWithdrawOracleFunds(currentBalance, newSysAdminFunds);
+        emit LogWithdrawSysAdminFunds(currentBalance, newSysAdminFunds);
     }
 
     // Executors' total fee for a successful exec
@@ -121,7 +121,7 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
         return SafeMath.div(
             estExecCost.mul(executorSuccessShare),
             100,
-            "GelatoExecutors.executorSuccessFee: div error"
+            "GelatoSysAdmin.executorSuccessFee: div error"
         );
     }
 
