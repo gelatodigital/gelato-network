@@ -21,7 +21,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     using SafeMath for uint256;
     using GelatoString for string;
 
-    uint256 public constant override NO_CEIL = 10**18;
+    uint256 public constant override NO_CEIL = 2**256 - 1;  // MaxUint256
 
     mapping(address => uint256) public override providerFunds;
     mapping(address => uint256) public override executorStake;
@@ -103,7 +103,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     function provideFunds(address _provider) public payable override {
         require(msg.value > 0, "GelatoProviders.provideFunds: zero value");
         uint256 newProviderFunds = providerFunds[_provider].add(msg.value);
-        emit LogProvideFunds(_provider, providerFunds[_provider], newProviderFunds);
+        emit LogProvideFunds(_provider, msg.value, newProviderFunds);
         providerFunds[_provider] = newProviderFunds;
     }
 
@@ -113,22 +113,22 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         returns (uint256 realWithdrawAmount)
     {
         address currentExecutor = executorByProvider[msg.sender];
-
-        require(currentExecutor == address(0), "GelatoProviders.unprovideFunds: Providers have to un-assign executor first");
+        require(
+            currentExecutor == address(0),
+            "GelatoProviders.unprovideFunds: Must un-assign executor first"
+        );
 
         uint256 previousProviderFunds = providerFunds[msg.sender];
-
         realWithdrawAmount = Math.min(_withdrawAmount, previousProviderFunds);
-
         uint256 newProviderFunds = previousProviderFunds - realWithdrawAmount;
 
         // Effects
-        providerFunds[msg.sender] = previousProviderFunds - newProviderFunds;
+        providerFunds[msg.sender] = newProviderFunds;
 
         // Interaction
         msg.sender.sendValue(realWithdrawAmount);
 
-        emit LogUnprovideFunds(msg.sender, previousProviderFunds, newProviderFunds);
+        emit LogUnprovideFunds(msg.sender, realWithdrawAmount, newProviderFunds);
     }
 
     // Called by Providers
