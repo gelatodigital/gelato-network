@@ -180,12 +180,9 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         inputs: [execClaim],
       });
 
-      tx = await userProxy.delegatecallGelatoAction(
-        gelatoCore.address,
-        mintPayload
-      );
+      tx = await userProxy.callGelatoAction(gelatoCore.address, mintPayload);
       txResponse = await tx.wait();
-      onmouseleave.log(txResponse);
+      console.log(txResponse);
     });
   });
 });
