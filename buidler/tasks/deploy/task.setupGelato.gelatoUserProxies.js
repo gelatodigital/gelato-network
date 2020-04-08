@@ -26,7 +26,8 @@ export default task(
   .setAction(async (taskArgs) => {
     try {
       if (taskArgs.log) console.log("\n setupgelato TaskArgs:\n", taskArgs);
-
+      if (!taskArgs.gelatogasprice)
+        taskArgs.gelatogasprice = GELATO_GAS_PRICE.toString();
       // === Deployments ===
       // GelatoCore
       const gelatoCore = await run("deploy", {
@@ -126,6 +127,14 @@ export default task(
         events: taskArgs.events,
         log: taskArgs.log,
       });
+
+      return {
+        gelatoCore,
+        gelatoUserProxyFactory,
+        providerModuleGelatoUserProxyAddress,
+        actionAddress,
+        conditionAddress,
+      };
     } catch (error) {
       console.error(error, "\n");
       process.exit(1);

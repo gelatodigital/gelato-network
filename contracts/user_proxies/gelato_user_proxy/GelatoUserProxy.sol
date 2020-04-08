@@ -52,18 +52,32 @@ contract GelatoUserProxy is IGelatoUserProxy {
         IGelatoCore(gelatoCore).mintSelfProvidedExecClaim(_execClaim, _executor);
     }
 
-    function callGelatoAction(IGelatoAction _action, bytes calldata _actionPayload)
+    function callGelatoAction(address _action, bytes calldata _actionPayload)
         external
         payable
         override
         auth
         noZeroAddress(address(_action))
     {
-        try _action.action{value: msg.value}(_actionPayload) {
-        } catch Error(string memory error) {
-            revert(string(abi.encodePacked("GelatoUserProxy.delegateCallAction:", error)));
-        } catch {
-            revert("GelatoUserProxy.delegateCallAction");
+       (bool success, bytes memory revertReason) = _action.call{value: msg.value}(_actionPayload);
+        if (!success) {
+            // FAILURE
+            // 68: 32-location, 32-length, 4-ErrorSelector, UTF-8 revertReason
+            if (revertReason.length % 32 == 4) {
+                bytes4 selector;
+                assembly { selector := mload(add(0x20, revertReason)) }
+                if (selector == 0x08c379a0) {  // Function selector for Error(string)
+                    assembly { revertReason := add(revertReason, 68) }
+                    revert(string(abi.encodePacked(
+                        "GelatoUserProxy.callGelatoAction:",
+                        string(revertReason)
+                    )));
+                } else {
+                    revert("GelatoUserProxy.callGelatoAction:NoErrorSelector");
+                }
+            } else {
+                revert("GelatoUserProxy.callGelatoAction:UnexpectedReturndata");
+            }
         }
     }
 

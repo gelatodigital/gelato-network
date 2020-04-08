@@ -7,8 +7,6 @@ import { SafeERC20 } from "../../external/SafeERC20.sol";
 import { SafeMath } from "../../external/SafeMath.sol";
 import { IBatchExchange } from "../../dapp_interfaces/gnosis/IBatchExchange.sol";
 
-import "@nomiclabs/buidler/console.sol";
-
 contract ActionWithdrawBatchExchange is GelatoActionsStandard {
 
     using SafeMath for uint256;
