@@ -104,9 +104,27 @@ contract GelatoUserProxy is IGelatoUserProxy {
         override
         onlyUser
         noZeroAddress(_account)
-        returns(bool success, bytes memory returndata)
     {
-        (success, returndata) = _account.call{ value: msg.value }(_payload);
+        (bool success, bytes memory revertReason) = _account.call{ value: msg.value }(_payload);
+        if (!success) {
+            // FAILURE
+            // 68: 32-location, 32-length, 4-ErrorSelector, UTF-8 revertReason
+            if (revertReason.length % 32 == 4) {
+                bytes4 selector;
+                assembly { selector := mload(add(0x20, revertReason)) }
+                if (selector == 0x08c379a0) {  // Function selector for Error(string)
+                    assembly { revertReason := add(revertReason, 68) }
+                    revert(string(abi.encodePacked(
+                        "GelatoUserProxy.callAccount:",
+                        string(revertReason)
+                    )));
+                } else {
+                    revert("GelatoUserProxy.callAccount:NoErrorSelector");
+                }
+            } else {
+                revert("GelatoUserProxy.callAccount:UnexpectedReturndata");
+            }
+        }
     }
 
     function delegatecallAccount(address _account, bytes calldata _payload)

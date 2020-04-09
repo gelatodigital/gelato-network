@@ -20,17 +20,33 @@ contract ScriptGnosisSafeEnableGelatoCore {
     /// @dev This function should be delegatecalled
     function enableGelatoCoreModule(address _gelatoCore) public {
         // Whitelist GelatoCore as module on delegatecaller (Gnosis Safe Proxy)
-        try IGnosisSafe(address(this)).enableModule(_gelatoCore) {
-        } catch Error(string memory error) {
-            // If error is the following:
-            // "Module has already been added"
-            // It's ok as gelatoCore is already enabled
-            string memory errorMessage = "Module has already been added";
-            if (keccak256(bytes(error)) != keccak256(bytes(errorMessage))) {
-                revert(error);
+        if(!isGelatoCoreWhitelisted(_gelatoCore)) {
+            try IGnosisSafe(address(this)).enableModule(_gelatoCore) {
+            } catch Error(string memory error) {
+                // If error is the following:
+                // "Module has already been added"
+                // It's ok as gelatoCore is already enabled
+                string memory errorMessage = "Module has already been added";
+                if (keccak256(bytes(error)) != keccak256(bytes(errorMessage))) {
+                    revert(error);
+                }
+            } catch {
+                revert("enableModule error");
             }
-        } catch {
-            revert("enableModule error");
+        }
+    }
+
+
+    function isGelatoCoreWhitelisted(address _gelatoCore)
+        view
+        internal
+        returns(bool isWhitelisted)
+    {
+        address[] memory whitelistedModules =  IGnosisSafe(address(this)).getModules();
+        for(uint i = 0; i < whitelistedModules.length; i++) {
+            if (whitelistedModules[i] ==  _gelatoCore) {
+                isWhitelisted = true;
+            }
         }
     }
 }

@@ -23,8 +23,8 @@ interface IGelatoUserProxy {
 
     function callAccount(address, bytes calldata)
         external
-        payable
-        returns (bool, bytes memory);
+        payable;
+
     function delegatecallAccount(address, bytes calldata)
         external
         payable
