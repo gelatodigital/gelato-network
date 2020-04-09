@@ -1,4 +1,4 @@
-pragma solidity ^0.6.4;
+pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
 import { GelatoActionsStandard } from "../../GelatoActionsStandard.sol";
@@ -32,11 +32,11 @@ contract ActionMultiMintForConditionTimestampPassed is GelatoActionsStandard {
     function action(ActionPayload memory _p) public payable virtual {
         for (uint256 i = 0; i < _p.numOfMints; i++) {
             uint256 timestamp = _p.startTime.add(_p.intervalSpan.mul(i));
-            _p.execClaim.conditionPayload = abi.encodeWithSelector(
+            _p.execClaim.task.conditionPayload = abi.encodeWithSelector(
                 IGelatoCondition.ok.selector,
                 timestamp
             );
-            _p.gelatoCore.mintExecClaim(_p.execClaim);
+            _p.gelatoCore.mintExecClaim(_p.execClaim.task);
         }
     }
 }

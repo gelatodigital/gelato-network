@@ -1,4 +1,4 @@
-pragma solidity ^0.6.4;
+pragma solidity ^0.6.6;
 
 import { GelatoActionsStandard } from "../../../gelato_actions/GelatoActionsStandard.sol";
 import { SafeERC20 } from "../../../external/SafeERC20.sol";

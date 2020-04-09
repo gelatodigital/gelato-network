@@ -1,4 +1,4 @@
-pragma solidity ^0.6.4;
+pragma solidity ^0.6.6;
 
 import "../GelatoActionsStandard.sol";
 import "./ActionRebalancePortfolioKovan.sol";
@@ -35,8 +35,8 @@ contract ActionChainedRebalancePortfolioKovan is ActionRebalancePortfolioKovan {
 =======
         address[2] memory _selectedProviderAndExecutor,
         address[2] memory _conditionAndAction
-    ) 
-        public 
+    )
+        public
     {
         // Execute Rebalancing action
         uint256 newFearAndGreedIndex = action();

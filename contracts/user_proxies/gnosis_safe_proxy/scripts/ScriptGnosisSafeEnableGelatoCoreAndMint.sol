@@ -1,4 +1,4 @@
-pragma solidity ^0.6.4;
+pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
 import "../interfaces/IGnosisSafe.sol";
@@ -20,7 +20,7 @@ contract ScriptGnosisSafeEnableGelatoCoreAndMint {
     event LogFailure(string error);
 
     /// @dev This function should be delegatecalled
-    function enableModuleAndMint(address _gelatoCore, ExecClaim memory _execClaim)
+    function enableModuleAndMint(address _gelatoCore, ExecClaim memory _ec)
         public
     {
         // Whitelist GelatoCore as module on delegatecaller (Gnosis Safe Proxy)
@@ -32,7 +32,7 @@ contract ScriptGnosisSafeEnableGelatoCoreAndMint {
         }
 
         // Mint on GelatoCore from delegatecaller (Gnosis Safe Proxy)
-        try IGelatoCore(_gelatoCore).mintExecClaim(_execClaim) {
+        try IGelatoCore(_gelatoCore).mintExecClaim(_ec.task) {
         } catch Error(string memory error) {
             emit LogFailure(error);
         } catch {

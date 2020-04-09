@@ -2,10 +2,10 @@ import { constants } from "ethers";
 
 export default {
   NO_CEIL: constants.MaxUint256,
-  providerFunds: constants.Zero,
-  executorStake: constants.Zero,
+  providerFunds: 0,
+  executorStake: 0,
   executorByProvider: constants.AddressZero,
-  executorProvidersCount: constants.Zero,
+  executorProvidersCount: 0,
   isConditionProvided: false,
-  actionGasPriceCeil: constants.Zero,
+  actionGasPriceCeil: 0,
 };

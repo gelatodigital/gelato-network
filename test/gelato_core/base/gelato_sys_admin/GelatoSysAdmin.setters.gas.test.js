@@ -39,7 +39,7 @@ describe("GelatoCore - GelatoSysAdmin - Setters: GAS/GAS-PRICE", function () {
       );
     });
 
-    it("Shouldn't let non-Owners setGelatoGasPriceOracle", async function () {
+    it("Should NOT let non-Owners setGelatoGasPriceOracle", async function () {
       // gelatoCore.connect returns the same GelatoCore contract instance,
       // but associated to a different signer
       await expect(
@@ -59,7 +59,7 @@ describe("GelatoCore - GelatoSysAdmin - Setters: GAS/GAS-PRICE", function () {
       expect(await gelatoCore.gelatoMaxGas()).to.be.equal(100);
     });
 
-    it("Shouldn't let non-Owners setGelatoMaxGas", async function () {
+    it("Should NOT let non-Owners setGelatoMaxGas", async function () {
       // gelatoCore.connect returns the same GelatoCore contract instance,
       // but associated to a different signer
       await expect(
@@ -79,7 +79,7 @@ describe("GelatoCore - GelatoSysAdmin - Setters: GAS/GAS-PRICE", function () {
       expect(await gelatoCore.internalGasRequirement()).to.be.equal(100);
     });
 
-    it("Shouldn't let non-Owners setInternalGasRequirement", async function () {
+    it("Should NOT let non-Owners setInternalGasRequirement", async function () {
       // gelatoCore.connect returns the same GelatoCore contract instance,
       // but associated to a different signer
       await expect(

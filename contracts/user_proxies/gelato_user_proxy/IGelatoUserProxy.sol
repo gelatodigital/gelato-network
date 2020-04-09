@@ -1,13 +1,13 @@
 pragma solidity ^0.6.0;
 pragma experimental ABIEncoderV2;
 
-import {ExecClaim} from "../../gelato_core/interfaces/IGelatoCore.sol";
-import {IGelatoAction} from "../../gelato_actions/IGelatoAction.sol";
+import { Task } from "../../gelato_core/interfaces/IGelatoCore.sol";
+import { IGelatoAction } from "../../gelato_actions/IGelatoAction.sol";
 
 interface IGelatoUserProxy {
-    function mintExecClaim(ExecClaim calldata _execClaim) external;
+    function mintExecClaim(Task calldata _task) external;
 
-    function mintSelfProvidedExecClaim(ExecClaim calldata _execClaim, address _executor)
+    function mintSelfProvidedExecClaim(Task calldata _task, address _executor)
         external
         payable;
 

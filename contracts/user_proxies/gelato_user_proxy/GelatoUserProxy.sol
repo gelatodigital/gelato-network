@@ -2,7 +2,7 @@ pragma solidity ^0.6.0;
 pragma experimental ABIEncoderV2;
 
 import { IGelatoUserProxy } from "./IGelatoUserProxy.sol";
-import { IGelatoCore, ExecClaim } from "../../gelato_core/interfaces/IGelatoCore.sol";
+import { Task, IGelatoCore } from "../../gelato_core/interfaces/IGelatoCore.sol";
 import { IGelatoAction } from "../../gelato_actions/IGelatoAction.sol";
 
 contract GelatoUserProxy is IGelatoUserProxy {
@@ -39,17 +39,17 @@ contract GelatoUserProxy is IGelatoUserProxy {
         _;
     }
 
-    function mintExecClaim(ExecClaim calldata _execClaim) external override onlyUser {
-        IGelatoCore(gelatoCore).mintExecClaim(_execClaim);
+    function mintExecClaim(Task calldata _task) external override onlyUser {
+        IGelatoCore(gelatoCore).mintExecClaim(_task);
     }
 
-    function mintSelfProvidedExecClaim(ExecClaim calldata _execClaim, address _executor)
+    function mintSelfProvidedExecClaim(Task calldata _task, address _executor)
         external
         payable
         override
         onlyUser
     {
-        IGelatoCore(gelatoCore).mintSelfProvidedExecClaim(_execClaim, _executor);
+        IGelatoCore(gelatoCore).mintSelfProvidedExecClaim(_task, _executor);
     }
 
     function callGelatoAction(IGelatoAction _action, bytes calldata _actionPayload)

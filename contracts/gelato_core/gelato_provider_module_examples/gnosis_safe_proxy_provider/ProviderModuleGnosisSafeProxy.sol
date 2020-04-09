@@ -1,4 +1,4 @@
-pragma solidity ^0.6.4;
+pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
 import { IGelatoProviderModule } from "../../interfaces/IGelatoProviderModule.sol";
@@ -29,13 +29,13 @@ contract ProviderModuleGnosisSafeProxy is
     // ================= GELATO PROVIDER MODULE STANDARD ================
     // @dev since we check extcodehash prior to execution, we forego the execution option
     //  where the userProxy is deployed at execution time.
-    function isProvided(ExecClaim memory _execClaim)
+    function isProvided(ExecClaim memory _ec)
         public
         view
         override
-        returns (string memory)
+        returns(string memory)
     {
-        address userProxy = _execClaim.userProxy;
+        address userProxy = _ec.userProxy;
         bytes32 codehash;
         assembly { codehash := extcodehash(userProxy) }
         if (!isProxyExtcodehashProvided[codehash])
@@ -140,10 +140,7 @@ contract ProviderModuleGnosisSafeProxy is
         unprovideMastercopies(_mastercopies);
     }
 
-    function setGelatoCore(address _gelatoCore)
-        external
-        onlyOwner
-    {
+    function setGelatoCore(address _gelatoCore) external onlyOwner {
         require(_gelatoCore != address(0), "Gelato Core cannot be address 0");
         gelatoCore = _gelatoCore;
     }

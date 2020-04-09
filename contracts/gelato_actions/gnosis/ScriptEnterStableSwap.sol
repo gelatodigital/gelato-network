@@ -34,11 +34,11 @@ contract ScriptEnterStableSwap is ActionPlaceOrderBatchExchange, ScriptGnosisSaf
         uint32 _orderExpirationBatchId,
         address _gelatoCore,
         // ChainedMintingParams
-        ExecClaim memory _execClaim
+        ExecClaim memory _ec
     )
         public
     {
-        require(_execClaim.condition == address(0));
+        require(_ec.task.condition == address(0));
 
         // 1. Enable Gelato Core
         enableGelatoCoreModule(_gelatoCore);
@@ -62,11 +62,11 @@ contract ScriptEnterStableSwap is ActionPlaceOrderBatchExchange, ScriptGnosisSaf
             _buyToken
         );
 
-        _execClaim.userProxy = address(this);
-        _execClaim.actionPayload = actionPayload;
+        _ec.userProxy = address(this);
+        _ec.task.actionPayload = actionPayload;
 
         // Mint new Claim
-        try IGelatoCore(_gelatoCore).mintExecClaim(_execClaim) {
+        try IGelatoCore(_gelatoCore).mintExecClaim(_ec.task) {
         } catch {
             revert("Minting chainedClaim unsuccessful");
         }

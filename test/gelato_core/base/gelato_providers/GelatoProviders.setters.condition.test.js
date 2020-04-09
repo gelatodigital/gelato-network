@@ -5,7 +5,7 @@ const { expect } = require("chai");
 // GelatoProviders creation time variable values
 import initialState from "./GelatoProviders.initialState";
 
-describe("GelatoCore - GelatoProviders - Setters: FUNDS", function () {
+describe("GelatoCore - GelatoProviders - Setters: CONDITION", function () {
   // We define the ContractFactory and Address variables here and assign them in
   // a beforeEach hook.
   let GelatoCore;

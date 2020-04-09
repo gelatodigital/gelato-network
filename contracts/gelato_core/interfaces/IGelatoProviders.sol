@@ -1,4 +1,4 @@
-pragma solidity ^0.6.4;
+pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
 import {IGelatoProviderModule} from "./IGelatoProviderModule.sol";
@@ -52,23 +52,23 @@ interface IGelatoProviders {
 
     // =========== CORE PROTOCOL APIs ==============
     // GelatoCore: mintExecClaim/canExec/collectExecClaimRent Gate
-    function isConditionActionProvided(ExecClaim calldata _execClaim)
+    function isConditionActionProvided(ExecClaim calldata _ec)
         external
         view
         returns(string memory);
 
     // IGelatoProviderModule: Gelato mintExecClaim/canExec Gate
-    function providerModuleChecks(ExecClaim calldata _execClaim)
+    function providerModuleChecks(ExecClaim calldata _ec)
         external
         view
         returns(string memory);
 
-    function isExecClaimProvided(ExecClaim calldata _execClaim)
+    function isExecClaimProvided(ExecClaim calldata _ec)
         external
         view
         returns(string memory res);
 
-    function providerCanExec(ExecClaim calldata _execClaim, uint256 _gelatoGasPrice)
+    function providerCanExec(ExecClaim calldata _ec, uint256 _gelatoGasPrice)
         external
         view
         returns(string memory res);
