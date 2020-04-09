@@ -13,11 +13,11 @@
     "rebuild": "yarn clean && yarn build"
   },
   "devDependencies": {
-    "@babel/cli": "^7.7.4",
-    "@babel/core": "^7.7.4",
-    "@babel/node": "^7.7.4",
-    "@babel/preset-env": "^7.7.4",
-    "@babel/register": "^7.7.4",
+    "@babel/cli": "7.7.4",
+    "@babel/core": "7.7.4",
+    "@babel/node": "7.7.4",
+    "@babel/preset-env": "7.7.4",
+    "@babel/register": "7.7.4",
     "@nomiclabs/buidler": "^1.2.0",
     "@nomiclabs/buidler-ethers": "^1.2.0",
     "@nomiclabs/buidler-waffle": "^1.2.0",

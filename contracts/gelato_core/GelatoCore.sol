@@ -317,7 +317,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         }
     }
 
-
     function _processProviderPayables(
         address _provider,
         ExecutorPay _payType,

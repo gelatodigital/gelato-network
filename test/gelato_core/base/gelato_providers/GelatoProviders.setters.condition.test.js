@@ -2,218 +2,161 @@
 // => only dependency we need is "chai"
 const { expect } = require("chai");
 
-// GelatoProviders creation time variable values
-import initialState from "./GelatoProviders.initialState";
-
-describe("GelatoCore - GelatoProviders - Setters: CONDITION", function () {
+describe("GelatoCore - GelatoProviders - Setters: CONDITIONS", function () {
   // We define the ContractFactory and Address variables here and assign them in
   // a beforeEach hook.
   let GelatoCore;
+  let Condition;
+  let OtherCondition;
   let gelatoCore;
   let provider;
   let providerAddress;
-  let otherProvider;
-  let otherProviderAddress;
-  let executor;
-  let executorAddress;
+  let condition;
+  let conditionAddress;
+  let otherCondition;
+  let otherConditionAddress;
 
   beforeEach(async function () {
     // Get the ContractFactory, contract instance, and Signers here.
     GelatoCore = await ethers.getContractFactory("GelatoCore");
+    Condition = await ethers.getContractFactory("ConditionTimestampPassed");
+    OtherCondition = await ethers.getContractFactory("MockConditionDummy");
     gelatoCore = await GelatoCore.deploy();
+    condition = await Condition.deploy();
+    otherCondition = await OtherCondition.deploy();
     await gelatoCore.deployed();
-    [provider, otherProvider, executor] = await ethers.getSigners();
+    await condition.deployed();
+    await otherCondition.deployed();
+    conditionAddress = condition.address;
+    otherConditionAddress = otherCondition.address;
+
+    [provider] = await ethers.getSigners();
     providerAddress = await provider.getAddress();
-    otherProviderAddress = await otherProvider.getAddress();
-    executorAddress = await executor.getAddress();
   });
 
   // We test different functionality of the contract as normal Mocha tests.
 
-  // provideFunds
-  describe("GelatoCore.GelatoProviders.provideFunds", function () {
-    it("Should allow anyone to provideFunds to their own provider", async function () {
-      await expect(gelatoCore.provideFunds(providerAddress, { value: 69420 }))
-        .to.emit(gelatoCore, "LogProvideFunds")
-        .withArgs(providerAddress, 69420, 69420);
-      expect(await gelatoCore.providerFunds(providerAddress)).to.be.equal(
-        69420
-      );
+  // provideConditions
+  describe("GelatoCore.GelatoProviders.provideConditions", function () {
+    it("Should allow anyone to provide a single condition", async function () {
+      await expect(gelatoCore.provideConditions([conditionAddress]))
+        .to.emit(gelatoCore, "LogProvideCondition")
+        .withArgs(providerAddress, conditionAddress);
+      expect(
+        await gelatoCore.isConditionProvided(providerAddress, conditionAddress)
+      ).to.be.true;
+    });
 
+    it("Should allow anyone to provideConditions", async function () {
       await expect(
-        gelatoCore
-          .connect(otherProvider)
-          .provideFunds(otherProviderAddress, { value: 42069 })
+        gelatoCore.provideConditions([conditionAddress, otherConditionAddress])
       )
-        .to.emit(gelatoCore, "LogProvideFunds")
-        .withArgs(otherProviderAddress, 42069, 42069);
-      expect(await gelatoCore.providerFunds(otherProviderAddress)).to.be.equal(
-        42069
-      );
+        .to.emit(gelatoCore, "LogProvideCondition")
+        .withArgs(providerAddress, conditionAddress)
+        .and.to.emit(gelatoCore, "LogProvideCondition")
+        .withArgs(providerAddress, otherConditionAddress);
+      expect(
+        await gelatoCore.isConditionProvided(providerAddress, conditionAddress)
+      ).to.be.true;
+      expect(
+        await gelatoCore.isConditionProvided(
+          providerAddress,
+          otherConditionAddress
+        )
+      ).to.be.true;
     });
 
-    it("Should NOT allow provideFunds(value: 0)", async function () {
+    it("Should NOT allow to provide same conditions again", async function () {
+      await gelatoCore.provideConditions([conditionAddress]);
+
       await expect(
-        gelatoCore.provideFunds(providerAddress, { value: "0" })
-      ).to.be.revertedWith("GelatoProviders.provideFunds: zero value");
+        gelatoCore.provideConditions([conditionAddress])
+      ).to.be.revertedWith("GelatProviders.provideConditions: redundant");
+
+      await expect(
+        gelatoCore.provideConditions([otherConditionAddress, conditionAddress])
+      ).to.be.revertedWith("GelatProviders.provideConditions: redundant");
     });
   });
 
-  // unprovideFunds
-  describe("GelatoCore.GelatoProviders.unprovideFunds", function () {
-    it("Should allow Providers to unprovide their funds", async function () {
-      // provideFunds
-      await expect(gelatoCore.provideFunds(providerAddress, { value: 69420 }))
-        .to.emit(gelatoCore, "LogProvideFunds")
-        .withArgs(providerAddress, 69420, 69420);
-      expect(await gelatoCore.providerFunds(providerAddress)).to.be.equal(
-        69420
-      );
+  // unprovideConditions
+  describe("GelatoCore.GelatoProviders.unprovideConditions", function () {
+    it("Should allow Providers to unprovide a single Condition", async function () {
+      // provideCondition
+      await gelatoCore.provideConditions([
+        conditionAddress,
+        otherConditionAddress,
+      ]);
 
-      // unprovideFunds
-      await expect(gelatoCore.unprovideFunds(69420))
-        .to.emit(gelatoCore, "LogUnprovideFunds")
-        .withArgs(providerAddress, 69420, 0);
-      expect(await gelatoCore.providerFunds(providerAddress)).to.be.equal(0);
+      // unprovideConditions
+      await expect(gelatoCore.unprovideConditions([conditionAddress]))
+        .to.emit(gelatoCore, "LogUnprovideCondition")
+        .withArgs(providerAddress, conditionAddress);
+      expect(
+        await gelatoCore.isConditionProvided(providerAddress, conditionAddress)
+      ).to.be.false;
+      expect(
+        await gelatoCore.isConditionProvided(
+          providerAddress,
+          otherConditionAddress
+        )
+      ).to.be.true;
+    });
 
-      // otherProvider: provideFunds
+    it("Should allow Providers to unprovideConditions", async function () {
+      // provideConditions
+      await gelatoCore.provideConditions([
+        conditionAddress,
+        otherConditionAddress,
+      ]);
+
+      // unprovideConditions
       await expect(
-        gelatoCore
-          .connect(otherProvider)
-          .provideFunds(otherProviderAddress, { value: 42069 })
+        gelatoCore.unprovideConditions([
+          conditionAddress,
+          otherConditionAddress,
+        ])
       )
-        .to.emit(gelatoCore, "LogProvideFunds")
-        .withArgs(otherProviderAddress, 42069, 42069);
-      expect(await gelatoCore.providerFunds(otherProviderAddress)).to.be.equal(
-        42069
-      );
-
-      // otherProvider: unprovideFunds
-      await expect(gelatoCore.connect(otherProvider).unprovideFunds(69))
-        .to.emit(gelatoCore, "LogUnprovideFunds")
-        .withArgs(otherProviderAddress, 69, 42000);
-      expect(await gelatoCore.providerFunds(otherProviderAddress)).to.be.equal(
-        42000
-      );
+        .to.emit(gelatoCore, "LogUnprovideCondition")
+        .withArgs(providerAddress, conditionAddress)
+        .and.to.emit(gelatoCore, "LogUnprovideCondition")
+        .withArgs(providerAddress, otherConditionAddress);
+      expect(
+        await gelatoCore.isConditionProvided(providerAddress, conditionAddress)
+      ).to.be.false;
+      expect(
+        await gelatoCore.isConditionProvided(
+          providerAddress,
+          otherConditionAddress
+        )
+      ).to.be.false;
     });
 
-    it("Should automatically unprovideFunds(all) if surplus withdrawamount", async function () {
-      // provideFunds
-      await expect(gelatoCore.provideFunds(providerAddress, { value: 69420 }))
-        .to.emit(gelatoCore, "LogProvideFunds")
-        .withArgs(providerAddress, 69420, 69420);
-      expect(await gelatoCore.providerFunds(providerAddress)).to.be.equal(
-        69420
-      );
+    it("Should NOT allow Providers to unprovide not-provided Conditions", async function () {
+      await expect(
+        gelatoCore.unprovideConditions([conditionAddress])
+      ).to.be.revertedWith("GelatProviders.unprovideConditions: redundant");
 
-      // unprovideFunds
-      await expect(gelatoCore.unprovideFunds(999999999999))
-        .to.emit(gelatoCore, "LogUnprovideFunds")
-        .withArgs(providerAddress, 69420, 0);
-      expect(await gelatoCore.providerFunds(providerAddress)).to.be.equal(0);
+      await expect(
+        gelatoCore.unprovideConditions([
+          conditionAddress,
+          otherConditionAddress,
+        ])
+      ).to.be.revertedWith("GelatProviders.unprovideConditions: redundant");
+
+      // provideConditions
+      await gelatoCore.provideConditions([conditionAddress]);
+
+      await expect(
+        gelatoCore.unprovideConditions([otherConditionAddress])
+      ).to.be.revertedWith("GelatProviders.unprovideConditions: redundant");
+
+      await expect(
+        gelatoCore.unprovideConditions([
+          conditionAddress,
+          otherConditionAddress,
+        ])
+      ).to.be.revertedWith("GelatProviders.unprovideConditions: redundant");
     });
-  });
-
-  // unprovideFunds
-  it("Should NOT allow Providers with an assigned Executor to unprovide their funds", async function () {
-    // provideFunds(): minProviderStake required for providerAssignsExecutor
-    const minProviderStake = await gelatoCore.minProviderStake();
-    await expect(
-      gelatoCore.provideFunds(providerAddress, {
-        value: minProviderStake,
-      })
-    )
-      .to.emit(gelatoCore, "LogProvideFunds")
-      .withArgs(providerAddress, minProviderStake, minProviderStake);
-    expect(await gelatoCore.providerFunds(providerAddress)).to.be.equal(
-      minProviderStake
-    );
-
-    // stakeExecutor() (needed for providerAssignsExecutor())
-    await gelatoCore
-      .connect(executor)
-      .stakeExecutor({ value: await gelatoCore.minExecutorStake() });
-    expect(await gelatoCore.executorStake(executorAddress)).to.be.equal(
-      await gelatoCore.minExecutorStake()
-    );
-
-    // providerAssignsExecutor (needs executoMinStake)
-    await expect(gelatoCore.providerAssignsExecutor(executorAddress))
-      .to.emit(gelatoCore, "LogProviderAssignsExecutor")
-      .withArgs(
-        providerAddress,
-        initialState.executorByProvider,
-        executorAddress
-      );
-    expect(await gelatoCore.executorByProvider(providerAddress)).to.be.equal(
-      executorAddress
-    );
-
-    // unprovideFunds
-    await expect(gelatoCore.unprovideFunds(1)).to.be.revertedWith(
-      "GelatoProviders.unprovideFunds: Must un-assign executor first"
-    );
-
-    expect(await gelatoCore.providerFunds(providerAddress)).to.be.equal(
-      minProviderStake
-    );
-    expect(await gelatoCore.executorByProvider(providerAddress)).to.be.equal(
-      executorAddress
-    );
-  });
-
-  // unprovideFunds
-  it("Should allow Providers to unassign Executor and unprovideFunds", async function () {
-    // provideFunds(): minProviderStake required for providerAssignsExecutor
-    const minProviderStake = await gelatoCore.minProviderStake();
-    await expect(
-      gelatoCore.provideFunds(providerAddress, {
-        value: minProviderStake,
-      })
-    )
-      .to.emit(gelatoCore, "LogProvideFunds")
-      .withArgs(providerAddress, minProviderStake, minProviderStake);
-    expect(await gelatoCore.providerFunds(providerAddress)).to.be.equal(
-      minProviderStake
-    );
-
-    // stakeExecutor() (needed for providerAssignsExecutor())
-    await gelatoCore
-      .connect(executor)
-      .stakeExecutor({ value: await gelatoCore.minExecutorStake() });
-    expect(await gelatoCore.executorStake(executorAddress)).to.be.equal(
-      await gelatoCore.minExecutorStake()
-    );
-
-    // providerAssignsExecutor (needs executoMinStake)
-    await expect(gelatoCore.providerAssignsExecutor(executorAddress))
-      .to.emit(gelatoCore, "LogProviderAssignsExecutor")
-      .withArgs(
-        providerAddress,
-        initialState.executorByProvider,
-        executorAddress
-      );
-    expect(await gelatoCore.executorByProvider(providerAddress)).to.be.equal(
-      executorAddress
-    );
-
-    // unprovideFunds
-    await expect(gelatoCore.unprovideFunds(1)).to.be.revertedWith(
-      "GelatoProviders.unprovideFunds: Must un-assign executor first"
-    );
-
-    // provider unassigns Executor
-    await expect(gelatoCore.providerAssignsExecutor(constants.AddressZero))
-      .to.emit(gelatoCore, "LogProviderAssignsExecutor")
-      .withArgs(providerAddress, executorAddress, constants.AddressZero);
-    expect(await gelatoCore.executorByProvider(providerAddress)).to.be.equal(
-      constants.AddressZero
-    );
-
-    // unprovideFunds
-    await expect(gelatoCore.unprovideFunds(minProviderStake))
-      .to.emit(gelatoCore, "LogUnprovideFunds")
-      .withArgs(providerAddress, minProviderStake, 0);
-    expect(await gelatoCore.providerFunds(providerAddress)).to.be.equal(0);
   });
 });
