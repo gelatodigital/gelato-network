@@ -29,7 +29,7 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
     function action(
         SuperActionPayload memory _superActionPayload,
         ActionData memory _actionData,
-        ExecClaim memory _execClaim
+        ExecClaim memory _ec
     )
         public
         payable
@@ -41,19 +41,19 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
         // Duedate for next chained action call
          _actionData.dueDate = _actionData.dueDate.add(_actionData.timeOffset);
          // Max 3 days delay, else automatic expiry
-        _execClaim.expiryDate = _actionData.dueDate.add(3 days);
+        _ec.task.expiryDate = _actionData.dueDate.add(3 days);
 
         // Encode updated ActionChainedTimedERC20TransferFromKovan payload into actionPayload
         // @DEV we could maybe use some assembly here to only swap the dueDateValue
-        _execClaim.actionPayload = abi.encodeWithSelector(
+        _ec.task.actionPayload = abi.encodeWithSelector(
             IGelatoAction.action.selector,
             _superActionPayload,
             _actionData,
-            _execClaim
+            _ec
         );
 
         // Mint: ExecClaim Chain continues with Updated Payloads
-        try IGelatoCore(GELATO_CORE).mintExecClaim(_execClaim) {
+        try IGelatoCore(GELATO_CORE).mintExecClaim(_ec.task) {
         } catch Error(string memory error) {
             revert(
                 string(abi.encodePacked(
@@ -93,7 +93,7 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
         return termsOk(actionData, execClaim);
     }
 
-    function termsOk(ActionData memory _actionData, ExecClaim memory _execClaim)
+    function termsOk(ActionData memory _actionData, ExecClaim memory _ec)
         public
         view
         virtual
@@ -111,9 +111,9 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
         if (nextDueDate > (now + execClaimTenancy))
             return "ActionChainedTimedERC20TransferFromKovan.termsOk: execClaimTenancy";
 
-        if (_execClaim.userProxy != _execClaim.provider) {
+        if (_ec.userProxy != _ec.task.provider) {
             string memory isProvided = gelatoCore.isExecClaimProvided(
-                _execClaim
+                _ec
             );
             if (!isProvided.startsWithOk()) {
                 return string(

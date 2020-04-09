@@ -1,16 +1,20 @@
 pragma solidity ^0.6.4;
 pragma experimental ABIEncoderV2;
 
-struct ExecClaim {
-    uint256 id;  // set automatically by mintExecClaim
+struct Task {
     address provider;   //  if msg.sender == provider => self-Provider
     address providerModule;  //  can be AddressZero for self-Providers
-    address userProxy;  // set automatically to msg.sender by mintExecClaim
     address condition;   // can be AddressZero for self-conditional Actions
     address action;
     bytes conditionPayload;  // can be bytes32(0) for self-conditional Actions
     bytes actionPayload;
     uint256 expiryDate;  // subject to rent payments; 0 == infinity.
+}
+
+struct ExecClaim {
+    uint256 id;
+    address userProxy;
+    Task task;
 }
 
 interface IGelatoCore {
@@ -21,14 +25,28 @@ interface IGelatoCore {
         ExecClaim execClaim
     );
 
-    event LogExecSuccess(address indexed executor, uint256 indexed execClaimId);
+    event LogExecSuccess(
+        address indexed executor,
+        uint256 indexed execClaimId,
+        uint256 executorSuccessFee,
+        uint256 sysAdminSuccessFee
+    );
     event LogCanExecFailed(
         address indexed executor,
         uint256 indexed execClaimId,
         string reason
     );
-    event LogExecFailed(address indexed executor, uint256 indexed execClaimId, string reason);
-    event LogExecutionRevert(address indexed executor, uint256 indexed execClaimId);
+    event LogExecFailed(
+        address indexed executor,
+        uint256 indexed execClaimId,
+        uint256 executorRefund,
+        string reason
+    );
+    event LogExecutionRevert(
+        address indexed executor,
+        uint256 indexed execClaimId,
+        uint256 executorRefund
+    );
 
     event LogExecClaimCancelled(uint256 indexed execClaimId);
 
@@ -39,22 +57,22 @@ interface IGelatoCore {
         uint256 amount
     );
 
-    function mintExecClaim(ExecClaim calldata _execClaim) external;
-    function mintSelfProvidedExecClaim(ExecClaim calldata _execClaim, address _executor)
+    function mintExecClaim(Task calldata _task) external;
+    function mintSelfProvidedExecClaim(Task calldata _task, address _executor)
         external
         payable;
 
-    function canExec(ExecClaim calldata _execClaim, uint256 _gelatoGasPrice)
+    function canExec(ExecClaim calldata _ec, uint256 _gelatoGasPrice)
         external
         view
         returns(string memory);
 
-    function exec(ExecClaim calldata _execClaim) external;
+    function exec(ExecClaim calldata _ec) external;
 
-    function cancelExecClaim(ExecClaim calldata _execClaim) external;
+    function cancelExecClaim(ExecClaim calldata _ec) external;
     function batchCancelExecClaim(ExecClaim[] calldata _execClaims) external;
 
-    function collectExecClaimRent(ExecClaim calldata _execClaim) external;
+    function collectExecClaimRent(ExecClaim calldata _ec) external;
     function batchCollectExecClaimRent(ExecClaim[] calldata _execClaims) external;
 
     // ================  GETTER APIs =========================

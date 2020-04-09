@@ -14,14 +14,14 @@ contract ScriptsCreateGnosisSafeProxyAndMint is
         address _mastercopy,
         bytes memory _initializer,
         IGelatoCore _gelatoCore,
-        ExecClaim memory _execClaim
+        ExecClaim memory _ec
     )
         public
         payable
         override
     {
         create(_mastercopy, _initializer);
-        _gelatoCore.mintExecClaim(_execClaim);
+        _gelatoCore.mintExecClaim(_ec.task);
     }
 
     function createTwo(
@@ -29,13 +29,13 @@ contract ScriptsCreateGnosisSafeProxyAndMint is
         bytes memory _initializer,
         uint256 _saltNonce,
         IGelatoCore _gelatoCore,
-        ExecClaim memory _execClaim
+        ExecClaim memory _ec
     )
         public
         payable
         override
     {
         createTwo(_mastercopy, _initializer, _saltNonce);
-        _gelatoCore.mintExecClaim(_execClaim);
+        _gelatoCore.mintExecClaim(_ec.task);
     }
 }

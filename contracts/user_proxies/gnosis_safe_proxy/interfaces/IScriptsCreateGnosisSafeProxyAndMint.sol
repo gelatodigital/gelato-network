@@ -8,7 +8,7 @@ interface IScriptsCreateGnosisSafeProxyAndMint {
         address _mastercopy,
         bytes calldata _initializer,
         IGelatoCore _gelatoCore,
-        ExecClaim calldata _execClaim
+        ExecClaim calldata _ec
     ) external payable; // address userProxy
 
     function createTwo(
@@ -16,6 +16,6 @@ interface IScriptsCreateGnosisSafeProxyAndMint {
         bytes calldata _initializer,
         uint256 _saltNonce,
         IGelatoCore _gelatoCore,
-        ExecClaim calldata _execClaim
+        ExecClaim calldata _ec
     ) external payable;
 }

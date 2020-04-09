@@ -32,36 +32,36 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     mapping(address => EnumerableAddressSet.AddressSet) internal _providerModules;
 
     // GelatoCore: mintExecClaim/collectExecClaimRent Gate
-    function isConditionActionProvided(ExecClaim memory _execClaim)
+    function isConditionActionProvided(ExecClaim memory _ec)
         public
         view
         override
         returns(string memory)
     {
-        if (_execClaim.condition != address(0)) {
-            if (!isConditionProvided[_execClaim.provider][_execClaim.condition])
+        if (_ec.task.condition != address(0)) {
+            if (!isConditionProvided[_ec.task.provider][_ec.task.condition])
                 return "ConditionNotProvided";
         }
-        if (actionGasPriceCeil[_execClaim.provider][_execClaim.action] == 0)
+        if (actionGasPriceCeil[_ec.task.provider][_ec.task.action] == 0)
             return "ActionNotProvided";
         return "Ok";
     }
 
     // IGelatoProviderModule: GelatoCore mintExecClaim/canExec Gate
-    function providerModuleChecks(ExecClaim memory _execClaim)
+    function providerModuleChecks(ExecClaim memory _ec)
         public
         view
         override
         returns(string memory)
     {
-        if (!isProviderModule(_execClaim.provider, _execClaim.providerModule))
+        if (!isProviderModule(_ec.task.provider, _ec.task.providerModule))
             return "InvalidProviderModule";
 
         IGelatoProviderModule providerModule = IGelatoProviderModule(
-            _execClaim.providerModule
+            _ec.task.providerModule
         );
 
-        try providerModule.isProvided(_execClaim) returns(string memory res) {
+        try providerModule.isProvided(_ec) returns(string memory res) {
             return res;
         } catch {
             return "GelatoProviders.providerModuleChecks";
@@ -69,34 +69,34 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     }
 
     // GelatoCore: combined mintExecClaim Gate
-    function isExecClaimProvided(ExecClaim memory _execClaim)
+    function isExecClaimProvided(ExecClaim memory _ec)
         public
         view
         override
         returns(string memory res)
     {
-        res = isConditionActionProvided(_execClaim);
-        if (res.startsWithOk()) return providerModuleChecks(_execClaim);
+        res = isConditionActionProvided(_ec);
+        if (res.startsWithOk()) return providerModuleChecks(_ec);
     }
 
     // GelatoCore canExec Gate
-    function providerCanExec(ExecClaim memory _execClaim, uint256 _gelatoGasPrice)
+    function providerCanExec(ExecClaim memory _ec, uint256 _gelatoGasPrice)
         public
         view
         override
         returns(string memory)
     {
         // Will only return if a) action is not whitelisted & b) gelatoGasPrice is higher than gasPriceCeiling
-        if (_gelatoGasPrice > actionGasPriceCeil[_execClaim.provider][_execClaim.action])
+        if (_gelatoGasPrice > actionGasPriceCeil[_ec.task.provider][_ec.task.action])
             return "GelatoGasPriceTooHigh";
 
         // 3. Check if condition is whitelisted by provider
-        if (_execClaim.condition != address(0)) {
-            if (!isConditionProvided[_execClaim.provider][_execClaim.condition])
+        if (_ec.task.condition != address(0)) {
+            if (!isConditionProvided[_ec.task.provider][_ec.task.condition])
                 return "ConditionNotProvided";
         }
 
-        return providerModuleChecks(_execClaim);
+        return providerModuleChecks(_ec);
     }
 
     // Provider Funding

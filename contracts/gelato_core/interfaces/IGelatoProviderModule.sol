@@ -4,7 +4,7 @@ pragma experimental ABIEncoderV2;
 import {ExecClaim} from "./IGelatoCore.sol";
 
 interface IGelatoProviderModule {
-    function isProvided(ExecClaim calldata _execClaim)
+    function isProvided(ExecClaim calldata _ec)
         external
         view
         returns(string memory);

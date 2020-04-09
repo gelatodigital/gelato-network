@@ -17,13 +17,13 @@ contract MockActionChainedDummy is GelatoActionsStandard {
         action(execClaim, gelatoCore);
     }
 
-    function action(ExecClaim memory _execClaim, GelatoCore _gelatoCore)
+    function action(ExecClaim memory _ec, GelatoCore _gelatoCore)
         public
         payable
         virtual
     {
         // Mint: ExecClaim Chain continues with Updated Payloads
-        try _gelatoCore.mintExecClaim(_execClaim) {
+        try _gelatoCore.mintExecClaim(_ec.task) {
         } catch Error(string memory error) {
             revert(string(abi.encodePacked("MockActionChainedDummy.mintExecClaim", error)));
         } catch {
@@ -50,16 +50,16 @@ contract MockActionChainedDummy is GelatoActionsStandard {
         return termsOk(execClaim, gelatoCore);
     }
 
-    function termsOk(ExecClaim memory _execClaim, GelatoCore _gelatoCore)
+    function termsOk(ExecClaim memory _ec, GelatoCore _gelatoCore)
         public
         view
         virtual
         returns(string memory)  // actionTermsOk
     {
 
-        if (_execClaim.userProxy != _execClaim.provider) {
+        if (_ec.userProxy != _ec.task.provider) {
             string memory isProvided = _gelatoCore.isExecClaimProvided(
-                _execClaim
+                _ec
             );
             if (!isProvided.startsWithOk()) {
                 return string(
