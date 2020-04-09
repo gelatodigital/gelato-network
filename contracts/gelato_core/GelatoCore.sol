@@ -25,6 +25,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     // Executors can charge Providers execClaimRent
     mapping(uint256 => uint256) public override lastExecClaimRentPaymentDate;
 
+
     // ================  MINTING ==============================================
     // Only pass _executor for self-providing users, else address(0)
     function mintExecClaim(Task memory _task) public override {
@@ -108,7 +109,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             if (!res.startsWithOk()) return res;
         }
 
-        if (!isProviderMinStaked(_ec.task.provider)) return "ProviderIlliquid";
+        if (!isProviderMinStaked(_execClaim.provider)) return "ProviderNotMinStaked";
 
         bytes32 hashedExecClaim = keccak256(abi.encode(_ec));
         if (execClaimHash[_ec.id] != hashedExecClaim) return "InvalidExecClaimHash";

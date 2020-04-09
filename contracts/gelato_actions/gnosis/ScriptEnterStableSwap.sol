@@ -3,7 +3,7 @@ pragma experimental ABIEncoderV2;
 
 import { ScriptGnosisSafeEnableGelatoCore } from "../../user_proxies/gnosis_safe_proxy/scripts/ScriptGnosisSafeEnableGelatoCore.sol";
 import { IGelatoCore } from "../../gelato_core/interfaces/IGelatoCore.sol";
-import { ActionWithdrawBatchExchangeRinkeby } from "./ActionWithdrawBatchExchangeRinkeby.sol";
+import { ActionWithdrawBatchExchange } from "./ActionWithdrawBatchExchange.sol";
 import { ActionPlaceOrderBatchExchange } from "./ActionPlaceOrderBatchExchange.sol";
 import { IBatchExchange } from "../../dapp_interfaces/gnosis/IBatchExchange.sol";
 import { ExecClaim, IGelatoCore } from "../../gelato_core/interfaces/IGelatoCore.sol";

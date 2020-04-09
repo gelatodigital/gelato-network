@@ -2,7 +2,7 @@ export const deployments = {
   // ========== KOVAN ===========
   // ==== One-Off Actions ====
   // Gnosis
-  ActionWithdrawBatchExchangeRinkeby: "0x0",
+  ActionWithdrawBatchExchange: "0x0",
   // BzX
   ActionBzxPtokenBurnToToken: "0x43dFFE6f0C2029e397Fa47DD27587Ef6297660C3",
   ActionBzxPtokenMintWithToken: "0x080d3059b30D3B7EDffa1B0B9AE981f0Ce94168E",
@@ -63,5 +63,5 @@ export const deployments = {
   // One-Off
   MockActionDummy: "0xd9dC553CDCf4ff237B5D6a7025c85f7F096705B4",
   // Chained
-  MockActionChainedDummy: ""
+  MockActionChainedDummy: "",
 };

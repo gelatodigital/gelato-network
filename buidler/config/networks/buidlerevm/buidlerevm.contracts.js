@@ -14,6 +14,8 @@ export const contracts = [
   "ActionMultiMintForConditionTimestampPassed",
   // Portfolio Mgmt
   "ActionRebalancePortfolio",
+  // Gnosis
+  "ActionWithdrawBatchExchange",
 
   // = Chained =
   // ERC20
@@ -57,8 +59,11 @@ export const contracts = [
   // = Actions =
   // One-Off
   "MockActionDummy",
+  "MockBatchExchange",
   // Chained
   "MockActionChainedDummy",
+  // ERC-20
+  "MockERC20",
 
   // === Debugging ===
   // Action
@@ -68,5 +73,5 @@ export const contracts = [
   // ReverStringDecoding
   "Action",
   "Core",
-  "UserProxy"
+  "UserProxy",
 ];
