@@ -1,4 +1,4 @@
-pragma solidity ^0.6.4;
+pragma solidity ^0.6.6;
 
 interface IProviderModuleGelatoUserProxy{
     event LogProvideProxyExtcodehash(bytes32 indexed extcodehash);

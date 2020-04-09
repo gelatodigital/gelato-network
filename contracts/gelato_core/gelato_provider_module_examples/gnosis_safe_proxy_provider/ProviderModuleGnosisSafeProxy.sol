@@ -1,4 +1,4 @@
-pragma solidity ^0.6.4;
+pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
 import { IGelatoProviderModule } from "../../interfaces/IGelatoProviderModule.sol";

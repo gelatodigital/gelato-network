@@ -8613,7 +8613,7 @@ solc@0.5.15:
     semver "^5.5.0"
     tmp "0.0.33"
 
-solc@^0.6.3, solc@^0.6.4:
+solc@^0.6.3:
   version "0.6.5"
   resolved "https://registry.yarnpkg.com/solc/-/solc-0.6.5.tgz#9e1e5c5c202c0160e054649f621210117d0083a3"
   integrity sha512-syvJgAYia/hOXIYTGSPSQYQmDLlMXhOZW5J7dGBUFU0oYoDyZ8jRsHYq9D12w8iNlum0tzWJ+vGV4EEvAJe+0Q==

@@ -1,4 +1,4 @@
-pragma solidity ^0.6.4;
+pragma solidity ^0.6.6;
 
 import { IGelatoSysAdmin } from "./interfaces/IGelatoSysAdmin.sol";
 import { Ownable } from "../external/Ownable.sol";

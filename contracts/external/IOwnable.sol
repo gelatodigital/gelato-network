@@ -1,4 +1,4 @@
-pragma solidity ^0.6.4;
+pragma solidity ^0.6.6;
 
 interface IOwnable {
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);

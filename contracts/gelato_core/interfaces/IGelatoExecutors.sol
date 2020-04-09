@@ -1,4 +1,4 @@
-pragma solidity ^0.6.4;
+pragma solidity ^0.6.6;
 
 interface IGelatoExecutors {
     event LogStakeExecutor(address indexed executor, uint256 stake);

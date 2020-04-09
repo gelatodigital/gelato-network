@@ -1,4 +1,4 @@
-pragma solidity ^0.6.4;
+pragma solidity ^0.6.6;
 
 library GelatoString {
     function startsWithOk(string memory _str) internal pure returns(bool) {

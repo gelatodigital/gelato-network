@@ -1,4 +1,4 @@
-pragma solidity ^0.6.4;
+pragma solidity ^0.6.6;
 
 import { IGelatoUserProxyFactory } from "./IGelatoUserProxyFactory.sol";
 import { Address } from "../../external/Address.sol";

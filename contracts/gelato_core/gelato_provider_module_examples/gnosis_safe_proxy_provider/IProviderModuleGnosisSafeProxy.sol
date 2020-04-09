@@ -1,4 +1,4 @@
-pragma solidity ^0.6.4;
+pragma solidity ^0.6.6;
 
 interface IProviderModuleGnosisSafeProxy{
     event LogProvideProxyExtcodehash(bytes32 indexed extcodehash);

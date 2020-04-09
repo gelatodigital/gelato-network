@@ -1,4 +1,4 @@
-pragma solidity ^0.6.4;
+pragma solidity ^0.6.6;
 
 import { IGelatoGasPriceOracle } from "./IGelatoGasPriceOracle.sol";
 
