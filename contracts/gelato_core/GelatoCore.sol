@@ -105,7 +105,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             if (!res.startsWithOk()) return res;
         }
 
-        if (!isProviderMinStaked(_execClaim.provider)) return "ProviderIlliquid";
+        if (!isProviderMinStaked(_execClaim.provider)) return "ProviderNotMinStaked";
 
         bytes32 hashedExecClaim = keccak256(abi.encode(_execClaim));
         if (execClaimHash[_execClaim.id] != hashedExecClaim) return "InvalidExecClaimHash";
