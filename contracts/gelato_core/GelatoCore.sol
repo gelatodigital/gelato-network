@@ -31,6 +31,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     function mintExecClaim(Task memory _task) public override {
         // GelatoCore will generate an ExecClaim from the _task
         ExecClaim memory execClaim;
+        execClaim.task = _task;
 
         // Smart Contract Accounts ONLY
         execClaim.userProxy = msg.sender;
