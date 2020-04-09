@@ -41,7 +41,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
   let gelatoCore;
   let providerModuleGelatoUserProxyAddress;
 
-  before(async function () {
+  beforeEach(async function () {
     // Setup Gelato System
     const result = await run("setupgelato-gelatouserproxies");
     gelatoCore = result.gelatoCore;
@@ -151,8 +151,8 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
   });
 
   // We test different functionality of the contract as normal Mocha tests.
-  describe("ActionWithdrawBatchExchange.action", function () {
-    it("Mint Exec Claim with ActionWithdrawBatchExchange as Action", async function () {
+  describe("GelatoCore.Exec", function () {
+    it("Successfully mint and execute ActionWithdrawBatchExchange execClaim", async function () {
       // Get Action Payload
       const withdrawAmount = 10 * 10 ** buyDecimals;
 
@@ -241,6 +241,114 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       )
         .to.emit(gelatoCore, "LogExecSuccess")
         .withArgs(executorAddress, execClaim.id);
+
+      const feeAmount = FEE_USD * 10 ** buyDecimals;
+
+      const providerBalance = await buyToken.balanceOf(providerAddress);
+      expect(providerBalance).to.be.equal(ethers.utils.bigNumberify(feeAmount));
+      const sellerBalanceAfter = await buyToken.balanceOf(sellerAddress);
+
+      expect(ethers.utils.bigNumberify(sellerBalanceAfter)).to.be.equal(
+        ethers.utils
+          .bigNumberify(sellerBalanceBefore)
+          .add(ethers.utils.bigNumberify(withdrawAmount))
+          .sub(ethers.utils.bigNumberify(feeAmount))
+      );
+    });
+
+    it("Mint ActionWithdraw and revert in execution due to insufficient withdraw balance", async function () {
+      // Get Action Payload
+      const withdrawAmount = 1 * 10 ** buyDecimals;
+
+      const sellerBalanceBefore = await buyToken.balanceOf(sellerAddress);
+
+      // 3. MockBatchExchange Set withdraw amount
+      tx = await mockBatchExchange.setWithdrawAmount(
+        buyToken.address,
+        withdrawAmount
+      );
+      await tx.wait();
+
+      // 4. Withdraw Funds from BatchExchange with withdraw action
+
+      // const abiCoder = ethers.utils.defaultAbiCoder;
+      // const withdrawPayload = abiCoder.encode(
+      //   ["address", "address", "address", "address"],
+      //   [sellerAddress, userProxyAddress, sellToken.address, buyToken.address]
+      // );
+
+      const actionPayload = await run("abi-encode-withselector", {
+        contractname: "ActionWithdrawBatchExchange",
+        functionname: "action",
+        inputs: [
+          sellerAddress,
+          userProxyAddress,
+          sellToken.address,
+          buyToken.address,
+        ],
+      });
+
+      // Mint ExexClaim
+
+      let execClaim = {
+        id: 1,
+        provider: providerAddress,
+        providerModule: providerModuleGelatoUserProxyAddress,
+        userProxy: userProxyAddress,
+        condition: ethers.constants.AddressZero,
+        action: actionWithdrawBatchExchange.address,
+        conditionPayload: ethers.constants.HashZero,
+        actionPayload: actionPayload,
+        expiryDate: 0,
+      };
+
+      // Should return "Ok"
+      const isProvided = await gelatoCore.isConditionActionProvided(execClaim);
+
+      const mintPayload = await run("abi-encode-withselector", {
+        contractname: "GelatoCore",
+        functionname: "mintExecClaim",
+        inputs: [execClaim],
+      });
+
+      tx = await userProxy.callGelatoAction(gelatoCore.address, mintPayload);
+      txResponse = await tx.wait();
+
+      expect(await gelatoCore.canExec(execClaim, GELATO_GAS_PRICE)).to.be.equal(
+        "ActionTermsNotOk:ActionWithdrawBatchExchange: Sell Token not withdrawable yet"
+      );
+
+      // LogCanExecFailed
+      // await expect(gelatoCore.setExecClaimTenancy(69420))
+      //   .to.emit(gelatoCore, "LogSetExecClaimTenancy")
+      //   .withArgs(initialState.execClaimTenancy, 69420);
+
+      await expect(
+        gelatoCore
+          .connect(executor)
+          .exec(execClaim, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
+      )
+        .to.emit(gelatoCore, "LogCanExecFailed")
+        .withArgs(
+          executorAddress,
+          execClaim.id,
+          "ActionTermsNotOk:ActionWithdrawBatchExchange: Sell Token not withdrawable yet"
+        );
+
+      // Make ExecClaim executable
+      await mockBatchExchange.setValidWithdrawRequest(userProxyAddress);
+
+      await expect(
+        gelatoCore
+          .connect(executor)
+          .exec(execClaim, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
+      )
+        .to.emit(gelatoCore, "LogExecFailed")
+        .withArgs(
+          executorAddress,
+          execClaim.id,
+          "ActionWithdrawBatchExchange: Insufficient balance for user to pay for withdrawal 2"
+        );
 
       const feeAmount = FEE_USD * 10 ** buyDecimals;
 

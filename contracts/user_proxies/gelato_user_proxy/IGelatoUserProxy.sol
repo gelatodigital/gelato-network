@@ -12,7 +12,7 @@ interface IGelatoUserProxy {
         payable;
 
     function callGelatoAction(
-        address _action,
+        IGelatoAction _action,
         bytes calldata _actionPayload
     ) external payable;
 
