@@ -33,10 +33,7 @@ export default task(
     "execclaimexpirydate",
     "Defaults to 0 for gelatoexecutor's maximum"
   )
-  .addOptionalParam(
-    "execclaim",
-    "Pass a complete class ExecClaim obj for minting."
-  )
+  .addOptionalParam("task", "Pass a complete class Task obj for minting.")
   .addFlag("selfprovide", "Calls gelatoCore.mintSelfProvidedExecClaim()")
   .addOptionalParam(
     "funds",
@@ -61,8 +58,8 @@ export default task(
       //     "\n --funds or --gelatoexecutor only with --selfprovide"
       //   );
 
-      if (!taskArgs.execclaim) {
-        taskArgs.execclaim = {};
+      if (!taskArgs.task) {
+        taskArgs.task = {};
         // Command Line Argument Checks
         if (!taskArgs.actionname && !taskArgs.actionaddress)
           throw new Error(`\n Must supply <actionname> or --actionaddress`);
@@ -85,45 +82,42 @@ export default task(
 
         if (!taskArgs.gelatoprovider)
           // Selected GelatoProvider
-          taskArgs.execclaim.provider = await run("handleGelatoProvider", {
+          taskArgs.task.provider = await run("handleGelatoProvider", {
             gelatoprovider: taskArgs.gelatoprovider,
           });
         else {
-          taskArgs.execclaim.provider = taskArgs.gelatoprovider;
+          taskArgs.task.provider = taskArgs.gelatoprovider;
         }
 
         // ProviderModule
         if (!taskArgs.gelatoprovidermodule)
           throw new Error(`\n gc-mintexecclaim: gelatoprovidermodule \n`);
-        else taskArgs.execclaim.providerModule = taskArgs.gelatoprovidermodule;
+        else taskArgs.task.providerModule = taskArgs.gelatoprovidermodule;
 
         // Condition and ConditionPayload (optional)
         if (taskArgs.conditionname !== "0") {
           if (!taskArgs.conditionaddress) {
-            taskArgs.execclaim.condition = await run("bre-config", {
+            taskArgs.task.condition = await run("bre-config", {
               deployments: true,
               contractname: taskArgs.conditionname,
             });
           }
           if (!taskArgs.conditionpayload) {
-            taskArgs.execclaim.conditionPayload = await run(
-              "handleGelatoPayload",
-              {
-                contractname: taskArgs.conditionname,
-              }
-            );
+            taskArgs.task.conditionPayload = await run("handleGelatoPayload", {
+              contractname: taskArgs.conditionname,
+            });
           }
         }
 
         // Action and ActionPayload
         if (!taskArgs.actionaddress) {
-          taskArgs.execclaim.action = await run("bre-config", {
+          taskArgs.task.action = await run("bre-config", {
             deployments: true,
             contractname: taskArgs.actionname,
           });
         }
         if (!taskArgs.actionpayload) {
-          taskArgs.execclaim.actionPayload = await run("handleGelatoPayload", {
+          taskArgs.task.actionPayload = await run("handleGelatoPayload", {
             contractname: taskArgs.actionname,
             payload: taskArgs.actionpayload,
           });
@@ -131,12 +125,12 @@ export default task(
       }
 
       if (taskArgs.log)
-        console.log("\n gc-mintexecclaiom TaskArgs:\n", taskArgs, "\n");
+        console.log("\n gc-mintexecclaim TaskArgs:\n", taskArgs, "\n");
 
-      // Construct ExecClaim for minting
-      const execClaim = new ExecClaim(taskArgs.execclaim);
+      // Construct Task for minting
+      const task = new Task(taskArgs.task);
 
-      if (taskArgs.log) console.log("\n ExecClaim:\n", execClaim);
+      if (taskArgs.log) console.log("\n Task:\n", task);
 
       // GelatoCore write Instance
       const gelatoCore = await run("instantiateContract", {
@@ -150,7 +144,7 @@ export default task(
 
       if (taskArgs.selfprovide) {
         mintTxHash = await gelatoCore.mintSelfProvidedExecClaim(
-          execClaim,
+          task,
           taskArgs.gelatoexecutor,
           { value: taskArgs.funds }
         );
@@ -160,13 +154,13 @@ export default task(
         mintTxHash = await run("gsp-exectransaction", {
           gnosissafeproxyaddress: safeAddress,
           contractname: "GelatoCore",
-          inputs: [execClaim],
+          inputs: [task],
           functionname: "mintExecClaim",
           operation: 0,
           log: true,
         });
 
-        // const tx = await gelatoCore.mintExecClaim(execClaim, {
+        // const tx = await gelatoCore.mintExecClaim(task, {
         //   gasLimit: 1000000,
         // });
         // mintTxHash = tx.hash;

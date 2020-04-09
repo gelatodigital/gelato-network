@@ -5,9 +5,9 @@ const assert = require("assert");
 const { constants, utils } = require("ethers");
 
 // Classes
-const ActionWithGasPriceCeil = require("./src/classes/gelato/actionWithGasPriceCeil")
+const ActionWithGasPriceCeil = require("./src/classes/gelato/ActionWithGasPriceCeil")
   .default;
-const ExecClaim = require("./src/classes/gelato/execClaim").default;
+const Task = require("./src/classes/gelato/Task").default;
 // Helpers
 const checkNestedObj = require("./src/scripts/helpers/nestedObjects/checkNestedObj")
   .default;
@@ -19,7 +19,7 @@ const sleep = require("./src/scripts/helpers/async/sleep").default;
 extendEnvironment((bre) => {
   // Classes
   bre.ActionWithGasPriceCeil = ActionWithGasPriceCeil;
-  bre.ExecClaim = ExecClaim;
+  bre.Task = Task;
   // Functions
   bre.checkNestedObj = checkNestedObj;
   bre.getNestedObj = getNestedObj;
