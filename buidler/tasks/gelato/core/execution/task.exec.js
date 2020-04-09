@@ -88,14 +88,16 @@ export default task(
 
         const execClaim = {
           id: execclaim[0],
-          provider: execclaim[1],
-          providerModule: execclaim[2],
-          userProxy: execclaim[3],
-          condition: execclaim[4],
-          action: execclaim[5],
-          conditionPayload: execclaim[6],
-          actionPayload: execclaim[7],
-          expiryDate: execclaim[8],
+          userProxy: execclaim[1],
+          task: {
+            provider: execclaim[2][0],
+            providerModule: execclaim[2][1],
+            condition: execclaim[2][2],
+            action: execclaim[2][3],
+            conditionPayload: execclaim[2][4],
+            actionPayload: execclaim[2][5],
+            expiryDate: execclaim[2][6],
+          },
         };
 
         let executeTx;

@@ -35,25 +35,42 @@ export default task("setupgelato-gnosissafeproxy")
         contractname: taskArgs.condition,
         log: taskArgs.log,
       });
+
+      // === GelatoCore setup ===
+      const { 1: gelatoExecutor, 2: gelatoProvider } = await ethers.signers();
+      const gelatoExecutorAddress = await gelatoExecutor.getAddress();
+      const gelatoProviderAddress = await gelatoProvider.getAddress();
+
       // Action
+      let actionconstructorargs;
+      if (taskArgs.action === "ActionWithdrawBatchExchange") {
+        const batchExchange = await run("bre-config", {
+          addressbookcategory: "gnosisProtocol",
+          addressbookentry: "batchExchange",
+        });
+
+        const { WETH: weth } = await run("bre-config", {
+          addressbookcategory: "erc20",
+        });
+
+        // address _batchExchange, address _weth, address _gelatoProvider
+        actionconstructorargs = [batchExchange, weth, gelatoProviderAddress];
+      }
       const action = await run("deploy", {
         contractname: taskArgs.action,
         log: taskArgs.log,
+        constructorargs: actionconstructorargs,
       });
       const actionWithGasPriceCeil = new ActionWithGasPriceCeil(
         action.address,
         utils.parseUnits("20", "gwei")
       );
 
-      // === GelatoCore setup ===
-      const { 1: gelatoExecutor } = await ethers.signers();
-      const gelatoExecutorAddress = await gelatoExecutor.getAddress();
-
       // ProviderModule Gnosis Safe
       // 1. Get extcodehash of Gnosis Safe
       const safeAddress = await run("gc-determineCpkProxyAddress");
-      let provider = ethers.provider;
-      const extcode = await provider.getCode(safeAddress);
+      let providerToRead = ethers.provider;
+      const extcode = await providerToRead.getCode(safeAddress);
       const extcodehash = utils.solidityKeccak256(["bytes"], [extcode]);
 
       // 1. Get Mastercopy

@@ -20,8 +20,8 @@ contract ScriptEnterStableSwap is ActionPlaceOrderBatchExchange, ScriptGnosisSaf
     //     uint256 expiryDate;
     // }
 
-    // BatchExchange
-    IBatchExchange private constant batchExchange = IBatchExchange(0xC576eA7bd102F7E476368a5E98FA455d1Ea34dE2);
+    constructor(address _batchExchange) ActionPlaceOrderBatchExchange(_batchExchange) public {
+    }
 
     function enterStableSwap(
         address _user,
