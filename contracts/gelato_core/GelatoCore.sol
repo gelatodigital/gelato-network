@@ -32,6 +32,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         // GelatoCore will generate an ExecClaim from the _task
         ExecClaim memory execClaim;
 
+        execClaim.task = _task;
+
         // Smart Contract Accounts ONLY
         execClaim.userProxy = msg.sender;
 
