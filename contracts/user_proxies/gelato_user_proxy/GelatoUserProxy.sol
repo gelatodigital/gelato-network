@@ -59,7 +59,9 @@ contract GelatoUserProxy is IGelatoUserProxy {
         auth
         noZeroAddress(address(_action))
     {
-        try _action.action{value: msg.value}(_actionPayload) {
+       try _action.action{value: msg.value}(
+            _actionPayload.length % 32 == 4 ? _actionPayload[4:] : _actionPayload
+        ) {
         } catch Error(string memory error) {
             revert(string(abi.encodePacked("GelatoUserProxy.delegateCallAction:", error)));
         } catch {
