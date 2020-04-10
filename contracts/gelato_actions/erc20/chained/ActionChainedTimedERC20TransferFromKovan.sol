@@ -45,25 +45,25 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
 
         // Encode updated ActionChainedTimedERC20TransferFromKovan payload into actionPayload
         // @DEV we could maybe use some assembly here to only swap the dueDateValue
-        _ec.task.actionPayload = abi.encodeWithSelector(
-            IGelatoAction.action.selector,
-            _superActionPayload,
-            _actionData,
-            _ec
-        );
+        // _ec.task.actionPayload = abi.encodeWithSelector(
+        //     IGelatoAction.action.selector,
+        //     _superActionPayload,
+        //     _actionData,
+        //     _ec
+        // );
 
-        // Mint: ExecClaim Chain continues with Updated Payloads
-        try IGelatoCore(GELATO_CORE).mintExecClaim(_ec.task) {
-        } catch Error(string memory error) {
-            revert(
-                string(abi.encodePacked(
-                    "ActionChainedTimedERC20TransferFromKovan.mintExecClaim",
-                    error
-                ))
-            );
-        } catch {
-            revert("ActionChainedTimedERC20TransferFromKovan.mintExecClaim:undefined");
-        }
+        // // Mint: ExecClaim Chain continues with Updated Payloads
+        // try IGelatoCore(GELATO_CORE).mintExecClaim(_ec.task) {
+        // } catch Error(string memory error) {
+        //     revert(
+        //         string(abi.encodePacked(
+        //             "ActionChainedTimedERC20TransferFromKovan.mintExecClaim",
+        //             error
+        //         ))
+        //     );
+        // } catch {
+        //     revert("ActionChainedTimedERC20TransferFromKovan.mintExecClaim:undefined");
+        // }
     }
 
     // ======= ACTION CONDITIONS CHECK =========

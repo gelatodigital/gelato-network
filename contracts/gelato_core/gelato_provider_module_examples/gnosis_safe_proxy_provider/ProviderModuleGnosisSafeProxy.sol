@@ -48,19 +48,44 @@ contract ProviderModuleGnosisSafeProxy is
         return "Ok";
     }
 
-    function execPayload(address _action, bytes calldata _actionPayload)
+    address constant MULTIMINT = address(0);
+
+    function execPayload(address[] calldata _actions, bytes[] calldata _actionsPayload)
         external
         pure
         override
         returns(bytes memory)
     {
-        return abi.encodeWithSelector(
-            IGnosisSafe.execTransactionFromModuleReturnData.selector,
-            _action,  // to
-            0,  // value
-            _actionPayload,  // data
-            IGnosisSafe.Operation.DelegateCall
-        );
+        if( _actions.length == 1) {
+            return abi.encodeWithSelector(
+                IGnosisSafe.execTransactionFromModuleReturnData.selector,
+                _actions[0],  // to
+                0,  // value
+                _actionsPayload[0],  // data
+                IGnosisSafe.Operation.DelegateCall
+            );
+        } else if (_actions.length > 1) {
+            bytes memory multimintPayload;
+            uint8 operation = 1;
+            uint256 value = 0;
+            for (uint i; i < _actions.length; i++ ) {
+                bytes memory data = _actionsPayload[i];
+                address to = _actions[i];
+                uint256 length = data.length;
+                bytes memory payloadPart =  abi.encodePacked(operation, to, value, length, data);
+                multimintPayload = abi.encodePacked(multimintPayload, payloadPart);
+            }
+            multimintPayload = abi.encodeWithSignature("multiSend(bytes)", multimintPayload);
+            return abi.encodeWithSelector(
+                IGnosisSafe.execTransactionFromModuleReturnData.selector,
+                MULTIMINT,  // to
+                0,  // value
+                multimintPayload,  // data
+                IGnosisSafe.Operation.DelegateCall
+            );
+
+
+        }
     }
 
     // GnosisSafeProxy

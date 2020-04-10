@@ -146,7 +146,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
     // Whitelist action by provider
     await gelatoCore.connect(provider).provideActions([
       {
-        _address: actionWithdrawBatchExchange.address,
+        addresses: [actionWithdrawBatchExchange.address],
         gasPriceCeil: ethers.utils.parseUnits("100", "gwei"),
       },
     ]);
@@ -191,9 +191,9 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         provider: providerAddress,
         providerModule: providerModuleGelatoUserProxyAddress,
         condition: ethers.constants.AddressZero,
-        action: actionWithdrawBatchExchange.address,
+        actions: [actionWithdrawBatchExchange.address],
         conditionPayload: ethers.constants.HashZero,
-        actionPayload: actionPayload,
+        actionsPayload: [actionPayload],
         expiryDate: 0,
       };
 
@@ -302,9 +302,9 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         provider: providerAddress,
         providerModule: providerModuleGelatoUserProxyAddress,
         condition: ethers.constants.AddressZero,
-        action: actionWithdrawBatchExchange.address,
+        actions: [actionWithdrawBatchExchange.address],
         conditionPayload: ethers.constants.HashZero,
-        actionPayload: actionPayload,
+        actionsPayload: [actionPayload],
         expiryDate: 0,
       };
 

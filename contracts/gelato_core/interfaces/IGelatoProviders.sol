@@ -6,7 +6,10 @@ import {ExecClaim} from "../interfaces/IGelatoCore.sol";
 
 interface IGelatoProviders {
 
-    struct ActionWithGasPriceCeil { address _address; uint256 gasPriceCeil; }
+    struct ActionWithGasPriceCeil { address[] addresses; uint256 gasPriceCeil; }
+    struct ActionsArray {
+        address[] actions;
+    }
 
     // Provider Funding
     event LogProvideFunds(
@@ -39,11 +42,11 @@ interface IGelatoProviders {
     // Actions
     event LogProvideAction(
         address indexed provider,
-        address indexed action,
+        bytes32 indexed actionHash,
         uint256 oldGasPriceCeil,
         uint256 newGasPriceCeil
     );
-    event LogUnprovideAction(address indexed provider, address indexed action);
+    event LogUnprovideAction(address indexed provider, bytes32 indexed actionHash);
 
     // Provider Module
     event LogAddProviderModule(address indexed provider, address indexed module);
@@ -90,7 +93,7 @@ interface IGelatoProviders {
 
     // (Un-)provide Conditions
     function provideActions(ActionWithGasPriceCeil[] calldata _actions) external;
-    function unprovideActions(address[] calldata _actions) external;
+    function unprovideActions(ActionsArray[] calldata _actionsArray) external;
 
     // Provider Module
     function addProviderModules(address[] calldata _modules) external;
@@ -109,7 +112,7 @@ interface IGelatoProviders {
     function batchUnprovide(
         uint256 _withdrawAmount,
         address[] calldata _conditions,
-        address[] calldata _actions,
+        ActionsArray[] calldata _actions,
         address[] calldata _modules
     )
         external;
@@ -136,7 +139,7 @@ interface IGelatoProviders {
         external
         view
         returns(bool);
-    function actionGasPriceCeil(address _provider, address _action)
+    function actionGasPriceCeil(address _provider, bytes32 _actionsHash)
         external
         view
         returns(uint256);
