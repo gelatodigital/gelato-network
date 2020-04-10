@@ -43,7 +43,7 @@ contract ProviderModuleGelatoUserProxy is
         returns(bytes memory)
     {
         return abi.encodeWithSelector(
-            IGelatoUserProxy.delegatecallGelatoAction.selector,
+            IGelatoUserProxy.delegatecallAction.selector,
             _action,
             _actionPayload
         );

@@ -216,7 +216,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       // LogExecClaimMinted(executor, execClaim.id, hashedExecClaim, execClaim);
 
       await expect(
-        userProxy.callAccount(gelatoCore.address, mintPayload)
+        userProxy.callAction(gelatoCore.address, mintPayload)
       ).to.emit(gelatoCore, "LogExecClaimMinted");
 
       expect(await gelatoCore.canExec(execClaim, GELATO_GAS_PRICE)).to.be.equal(
@@ -324,7 +324,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       });
 
       await expect(
-        userProxy.callAccount(gelatoCore.address, mintPayload)
+        userProxy.callAction(gelatoCore.address, mintPayload)
       ).to.emit(gelatoCore, "LogExecClaimMinted");
 
       expect(await gelatoCore.canExec(execClaim, GELATO_GAS_PRICE)).to.be.equal(
