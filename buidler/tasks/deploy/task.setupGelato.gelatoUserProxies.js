@@ -17,10 +17,7 @@ export default task(
     "condition",
     "A condition contract to deploy and batchProvide on ProviderModuleGelatoUserProxy"
   )
-  .addOptionalParam(
-    "action",
-    "An Action contract to deploy and batchProvide on ProviderModuleGelatoUserProxy"
-  )
+  .addOptionalVariadicPositionalParam("actions")
   .addFlag("events", "Logs parsed Event Logs to stdout")
   .addFlag("log", "Log taskArgs and tx hashes inter alia")
   .setAction(async (taskArgs) => {
@@ -36,12 +33,14 @@ export default task(
       });
 
       // GelatoGasPriceOracle
-      const { address: gelatoGasPriceOracleAddress } = await run("deploy", {
+      const gelatoGasPriceOracle = await run("deploy", {
         contractname: "GelatoGasPriceOracle",
         constructorargs: [gelatoCore.address, taskArgs.gelatogasprice],
         events: taskArgs.events,
         log: taskArgs.log,
       });
+
+      const gelatoGasPriceOracleAddress = gelatoGasPriceOracle.address;
 
       // GelatoUserProxy Factory
       const gelatoUserProxyFactory = await run("deploy", {
@@ -52,15 +51,15 @@ export default task(
 
       // ProviderModule GelatoUserProxy
       const extcodehash = await gelatoUserProxyFactory.proxyExtcodehash();
-      const { address: providerModuleGelatoUserProxyAddress } = await run(
-        "deploy",
-        {
-          contractname: "ProviderModuleGelatoUserProxy",
-          constructorargs: [[extcodehash]],
-          events: taskArgs.events,
-          log: taskArgs.log,
-        }
-      );
+      const providerModuleGelatoUserProxy = await run("deploy", {
+        contractname: "ProviderModuleGelatoUserProxy",
+        constructorargs: [[extcodehash]],
+        events: taskArgs.events,
+        log: taskArgs.log,
+      });
+
+      const providerModuleGelatoUserProxyAddress =
+        providerModuleGelatoUserProxy.address;
 
       // Optional Condition
       let conditionAddress;
@@ -72,19 +71,55 @@ export default task(
         conditionAddress = address;
       }
 
-      // Optional Action
-      let actionAddress, actionWithGasPriceCeil;
-      if (taskArgs.action) {
-        const { address } = await run("deploy", {
-          contractname: taskArgs.action,
-          log: taskArgs.log,
-        });
-        actionAddress = address;
-        actionWithGasPriceCeil = new ActionWithGasPriceCeil(
-          actionAddress,
-          utils.parseUnits("20", "gwei")
-        );
+      // Action
+
+      let actionAddresses = [];
+      let tempArray = [];
+      for (const action of taskArgs.actions) {
+        if (!tempArray.includes(action)) {
+          let actionconstructorargs;
+          if (action === "ActionWithdrawBatchExchange") {
+            const batchExchange = await run("bre-config", {
+              addressbookcategory: "gnosisProtocol",
+              addressbookentry: "batchExchange",
+            });
+
+            const { WETH: weth } = await run("bre-config", {
+              addressbookcategory: "erc20",
+            });
+
+            // address _batchExchange, address _weth, address _gelatoProvider
+            actionconstructorargs = [
+              batchExchange,
+              weth,
+              gelatoProviderAddress,
+            ];
+          }
+          const deployedAction = await run("deploy", {
+            contractname: action,
+            log: taskArgs.log,
+            constructorargs: actionconstructorargs,
+          });
+
+          tempArray.push(action);
+          actionAddresses.push(deployedAction.address);
+        } else {
+          let i = 0;
+          for (const tempAction of taskArgs.actions) {
+            if (tempAction === action) {
+              actionAddresses.push(actionAddresses[i]);
+              tempArray.push(action);
+              break;
+            }
+            i = i + 1;
+          }
+        }
       }
+
+      const actionsWithGasPriceCeil = new ActionsWithGasPriceCeil(
+        actionAddresses,
+        utils.parseUnits("20", "gwei")
+      );
 
       // === GelatoCore setup ===
       // GelatoSysAdmin
@@ -114,7 +149,7 @@ export default task(
         funds: "0.2",
         gelatoexecutor: gelatoExecutor,
         conditions: conditionAddress,
-        actionswithgaspriceceil: actionWithGasPriceCeil,
+        actionswithgaspriceceil: actionsWithGasPriceCeil,
         modules: [providerModuleGelatoUserProxyAddress],
         // events: taskArgs.events,  < = BUIDLER EVM events bug for structs
         log: taskArgs.log,
@@ -124,15 +159,15 @@ export default task(
       await run("gupf-creategelatouserproxy", {
         factoryaddress: gelatoUserProxyFactory.address,
         funding: "0",
-        events: taskArgs.events,
+        // events: taskArgs.events,
         log: taskArgs.log,
       });
 
       return {
         gelatoCore,
         gelatoUserProxyFactory,
-        providerModuleGelatoUserProxyAddress,
-        actionAddress,
+        providerModuleGelatoUserProxy,
+        actionsWithGasPriceCeil,
         conditionAddress,
       };
     } catch (error) {

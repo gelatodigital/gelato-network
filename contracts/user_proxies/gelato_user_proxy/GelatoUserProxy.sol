@@ -52,15 +52,23 @@ contract GelatoUserProxy is IGelatoUserProxy {
         IGelatoCore(gelatoCore).mintSelfProvidedExecClaim(_task, _executor);
     }
 
-    function callGelatoAction(IGelatoAction _action, bytes calldata _actionPayload)
-        external
+    function getSlice(uint256 begin, uint256 end, bytes memory _calldata) public pure returns (bytes memory) {
+        bytes memory a = new bytes(end-begin+1);
+        for(uint i=0; i<=end-begin; i++){
+            a[i] = bytes(_calldata)[i + begin - 1];
+        }
+        return a;
+    }
+
+    function callGelatoAction(IGelatoAction _action, bytes memory _actionPayload)
+        public
         payable
         override
         auth
         noZeroAddress(address(_action))
     {
        try _action.action{value: msg.value}(
-            _actionPayload.length % 32 == 4 ? _actionPayload[4:] : _actionPayload
+            _actionPayload.length % 32 == 4 ? getSlice(4, _actionPayload.length, _actionPayload) : _actionPayload
         ) {
         } catch Error(string memory error) {
             revert(string(abi.encodePacked("GelatoUserProxy.delegateCallAction:", error)));
@@ -69,14 +77,25 @@ contract GelatoUserProxy is IGelatoUserProxy {
         }
     }
 
-    function delegatecallGelatoAction(address _action, bytes calldata _actionPayload)
+    function multiGelatoCallAction(IGelatoAction[] calldata _accounts, bytes[] calldata _payloads)
         external
+        override
+        auth
+    {
+        require(_accounts.length == _payloads.length, "GelatoUserProxy.multiCallAction:LengthNotCorrect");
+        for(uint i = 0; i < _accounts.length; i++) {
+            callGelatoAction(_accounts[i], _payloads[i]);
+        }
+    }
+
+    function delegatecallAction(address _account, bytes memory _payload)
+        public
         payable
         override
         auth
-        noZeroAddress(_action)
+        noZeroAddress(_account)
     {
-        (bool success, bytes memory revertReason) = _action.delegatecall(_actionPayload);
+        (bool success, bytes memory revertReason) = _account.delegatecall(_payload);
         if (!success) {
             // FAILURE
             // 68: 32-location, 32-length, 4-ErrorSelector, UTF-8 revertReason
@@ -86,37 +105,69 @@ contract GelatoUserProxy is IGelatoUserProxy {
                 if (selector == 0x08c379a0) {  // Function selector for Error(string)
                     assembly { revertReason := add(revertReason, 68) }
                     revert(string(abi.encodePacked(
-                        "GelatoUserProxy.delegatecallGelatoAction:",
+                        "GelatoUserProxy.callAction:",
                         string(revertReason)
                     )));
                 } else {
-                    revert("GelatoUserProxy.delegatecallGelatoAction:NoErrorSelector");
+                    revert("GelatoUserProxy.callAction:NoErrorSelector");
                 }
             } else {
-                revert("GelatoUserProxy.delegatecallGelatoAction:UnexpectedReturndata");
+                revert("GelatoUserProxy.callAction:UnexpectedReturndata");
             }
         }
     }
 
-    function callAccount(address _account, bytes calldata _payload)
+    function multiDelegatecallAction(address[] calldata _accounts, bytes[] calldata _payloads)
         external
-        payable
         override
-        onlyUser
-        noZeroAddress(_account)
-        returns(bool success, bytes memory returndata)
+        auth
     {
-        (success, returndata) = _account.call{ value: msg.value }(_payload);
+        require(_accounts.length == _payloads.length, "GelatoUserProxy.multiDelegatecallAction:LengthNotCorrect");
+        for(uint i = 0; i < _accounts.length; i++) {
+            delegatecallAction(_accounts[i], _payloads[i]);
+        }
     }
 
-    function delegatecallAccount(address _account, bytes calldata _payload)
-        external
+
+    function callAction(address _account, bytes memory _payload)
+        public
         payable
         override
-        onlyUser
+        auth
         noZeroAddress(_account)
-        returns(bool success, bytes memory returndata)
     {
-        (success, returndata) = _account.delegatecall(_payload);
+        (bool success, bytes memory revertReason) = _account.call{ value: msg.value }(_payload);
+        if (!success) {
+            // FAILURE
+            // 68: 32-location, 32-length, 4-ErrorSelector, UTF-8 revertReason
+            if (revertReason.length % 32 == 4) {
+                bytes4 selector;
+                assembly { selector := mload(add(0x20, revertReason)) }
+                if (selector == 0x08c379a0) {  // Function selector for Error(string)
+                    assembly { revertReason := add(revertReason, 68) }
+                    revert(string(abi.encodePacked(
+                        "GelatoUserProxy.callAction:",
+                        string(revertReason)
+                    )));
+                } else {
+                    revert("GelatoUserProxy.callAction:NoErrorSelector");
+                }
+            } else {
+                revert("GelatoUserProxy.callAction:UnexpectedReturndata");
+            }
+        }
     }
+
+    function multiCallAction(address[] calldata _accounts, bytes[] calldata _payloads)
+        external
+        override
+        auth
+    {
+        require(_accounts.length == _payloads.length, "GelatoUserProxy.multiCallAction:LengthNotCorrect");
+        for(uint i = 0; i < _accounts.length; i++) {
+            callAction(_accounts[i], _payloads[i]);
+        }
+    }
+
+
 }

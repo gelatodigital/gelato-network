@@ -1,4 +1,4 @@
-pragma solidity ^0.6.3;
+pragma solidity ^0.6.5;
 
 import { GelatoActionsStandard } from "../GelatoActionsStandard.sol";
 import { IGelatoAction } from "../IGelatoAction.sol";
@@ -14,7 +14,11 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandard {
 
     uint256 public constant MAX_UINT = uint256(-1);
 
-    IBatchExchange private constant batchExchange = IBatchExchange(0xC576eA7bd102F7E476368a5E98FA455d1Ea34dE2);
+    IBatchExchange private immutable batchExchange;
+
+    constructor(address _batchExchange) public {
+        batchExchange = IBatchExchange(_batchExchange);
+    }
 
     function action(bytes calldata _actionPayload) external payable override virtual {
         (address _user, address _sellToken, address _buyToken, uint128 _sellAmount, uint128 _buyAmount, uint32 _orderExpirationBatchId) = abi.decode(_actionPayload, (address, address, address, uint128, uint128, uint32));

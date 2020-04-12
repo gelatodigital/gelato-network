@@ -6,15 +6,13 @@ import { IGelatoCore } from "../../gelato_core/interfaces/IGelatoCore.sol";
 import { ActionWithdrawBatchExchange } from "./ActionWithdrawBatchExchange.sol";
 import { ActionPlaceOrderBatchExchange } from "./ActionPlaceOrderBatchExchange.sol";
 import { IBatchExchange } from "../../dapp_interfaces/gnosis/IBatchExchange.sol";
-import { ExecClaim, IGelatoCore } from "../../gelato_core/interfaces/IGelatoCore.sol";
+import { Task, IGelatoCore } from "../../gelato_core/interfaces/IGelatoCore.sol";
 
 contract ScriptEnterStableSwap is ActionPlaceOrderBatchExchange, ScriptGnosisSafeEnableGelatoCore {
 
-    // struct ExecClaim {
-    //     uint256 id;
+    // struct Task {
     //     address provider;
     //     address providerModule;
-    //     address userProxy;
     //     address condition;
     //     address action;
     //     bytes conditionPayload;
@@ -22,8 +20,8 @@ contract ScriptEnterStableSwap is ActionPlaceOrderBatchExchange, ScriptGnosisSaf
     //     uint256 expiryDate;
     // }
 
-    // BatchExchange
-    IBatchExchange private constant batchExchange = IBatchExchange(0xC576eA7bd102F7E476368a5E98FA455d1Ea34dE2);
+    constructor(address _batchExchange) ActionPlaceOrderBatchExchange(_batchExchange) public {
+    }
 
     function enterStableSwap(
         address _user,
@@ -34,11 +32,11 @@ contract ScriptEnterStableSwap is ActionPlaceOrderBatchExchange, ScriptGnosisSaf
         uint32 _orderExpirationBatchId,
         address _gelatoCore,
         // ChainedMintingParams
-        ExecClaim memory _ec
+        Task memory _task
     )
         public
     {
-        require(_ec.task.condition == address(0));
+        require(_task.condition == address(0));
 
         // 1. Enable Gelato Core
         enableGelatoCoreModule(_gelatoCore);
@@ -62,11 +60,10 @@ contract ScriptEnterStableSwap is ActionPlaceOrderBatchExchange, ScriptGnosisSaf
             _buyToken
         );
 
-        _ec.userProxy = address(this);
-        _ec.task.actionPayload = actionPayload;
+        _task.actionsPayload[0] = actionPayload;
 
         // Mint new Claim
-        try IGelatoCore(_gelatoCore).mintExecClaim(_ec.task) {
+        try IGelatoCore(_gelatoCore).mintExecClaim(_task) {
         } catch {
             revert("Minting chainedClaim unsuccessful");
         }

@@ -5,9 +5,9 @@ struct Task {
     address provider;   //  if msg.sender == provider => self-Provider
     address providerModule;  //  can be AddressZero for self-Providers
     address condition;   // can be AddressZero for self-conditional Actions
-    address action;
+    address[] actions;
     bytes conditionPayload;  // can be bytes32(0) for self-conditional Actions
-    bytes actionPayload;
+    bytes[] actionsPayload;
     uint256 expiryDate;  // subject to rent payments; 0 == infinity.
 }
 
