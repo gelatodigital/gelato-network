@@ -20,7 +20,7 @@ export default task(
         signer: gelatoProvider,
         write: true,
       });
-      const ActionWithGasPriceCeil = new ActionWithGasPriceCeil(
+      const ActionsWithGasPriceCeil = new ActionsWithGasPriceCeil(
         action.address,
         utils.parseUnits("20", "gwei")
       );

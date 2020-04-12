@@ -44,7 +44,9 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
 
   beforeEach(async function () {
     // Setup Gelato System
-    const result = await run("setupgelato-gelatouserproxies");
+    const result = await run("setupgelato-gelatouserproxies", {
+      actions: ["ActionERC20TransferFrom", "ActionERC20TransferFrom"],
+    });
     gelatoCore = result.gelatoCore;
     gelatoUserProxyFactory = result.gelatoUserProxyFactory;
     providerModuleGelatoUserProxy = result.providerModuleGelatoUserProxy;

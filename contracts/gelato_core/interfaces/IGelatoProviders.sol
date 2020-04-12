@@ -6,7 +6,7 @@ import {ExecClaim} from "../interfaces/IGelatoCore.sol";
 
 interface IGelatoProviders {
 
-    struct ActionWithGasPriceCeil { address[] addresses; uint256 gasPriceCeil; }
+    struct ActionsWithGasPriceCeil { address[] addresses; uint256 gasPriceCeil; }
     struct ActionsArray {
         address[] actions;
     }
@@ -92,7 +92,7 @@ interface IGelatoProviders {
     function unprovideConditions(address[] calldata _conditions) external;
 
     // (Un-)provide Conditions
-    function provideActions(ActionWithGasPriceCeil[] calldata _actions) external;
+    function provideActions(ActionsWithGasPriceCeil[] calldata _actions) external;
     function unprovideActions(ActionsArray[] calldata _actionsArray) external;
 
     // Provider Module
@@ -103,7 +103,7 @@ interface IGelatoProviders {
     function batchProvide(
         address _executor,
         address[] calldata _conditions,
-        ActionWithGasPriceCeil[] calldata _actions,
+        ActionsWithGasPriceCeil[] calldata _actions,
         address[] calldata _modules
     )
         external

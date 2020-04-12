@@ -3,7 +3,7 @@ import { constants, utils } from "ethers";
 class Task {
   constructor(taskObj) {
     try {
-      if (!taskObj.actionPayload)
+      if (!taskObj.actionsPayload)
         throw new Error("undefined Task.actionPayload");
 
       this.provider = utils.getAddress(taskObj.provider);
@@ -11,14 +11,14 @@ class Task {
       this.condition = taskObj.condition
         ? utils.getAddress(taskObj.condition)
         : constants.AddressZero;
-      this.actions = [
-        utils.getAddress(taskObj.action),
-        utils.getAddress(taskObj.action),
-      ];
+      this.actions = [];
+      taskObj.actions.forEach((action) => {
+        this.actions.push(utils.getAddress(action));
+      });
       this.conditionPayload = taskObj.conditionPayload
         ? taskObj.conditionPayload
         : constants.HashZero;
-      this.actionsPayload = [taskObj.actionPayload, taskObj.actionPayload];
+      this.actionsPayload = taskObj.actionsPayload;
       this.expiryDate = taskObj.expiryDate
         ? taskObj.expiryDate
         : constants.Zero;

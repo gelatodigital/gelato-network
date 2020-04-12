@@ -217,7 +217,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     }
 
     // (Un-)provide Actions at different gasPrices
-    function provideActions(ActionWithGasPriceCeil[] memory _actions) public override {
+    function provideActions(ActionsWithGasPriceCeil[] memory _actions) public override {
         for (uint i; i < _actions.length; i++) {
             if (_actions[i].gasPriceCeil == 0) _actions[i].gasPriceCeil = NO_CEIL;
 
@@ -277,7 +277,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     function batchProvide(
         address _executor,
         address[] memory _conditions,
-        ActionWithGasPriceCeil[] memory _actions,
+        ActionsWithGasPriceCeil[] memory _actions,
         address[] memory _modules
     )
         public

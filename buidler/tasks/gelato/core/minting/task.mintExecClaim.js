@@ -10,26 +10,23 @@ export default task(
     "conditionname",
     "Must exist inside buidler.config. Supply '0' for AddressZero Conditions"
   )
-  .addOptionalPositionalParam(
-    "actionname",
+  .addOptionalParam("gelatoprovider", "Defaults to network addressbook default")
+  .addOptionalVariadicPositionalParam(
+    "actionnames",
     "Actionname (must be inside buidler.config) OR --actionaddress MUST be supplied."
-  )
-  .addOptionalPositionalParam(
-    "gelatoprovider",
-    "Defaults to network addressbook default"
   )
   .addOptionalParam("gelatoprovidermodule")
   .addOptionalParam("conditionaddress")
   .addOptionalParam("actionaddress")
-  .addOptionalPositionalParam(
+  .addOptionalParam(
     "conditionpayload",
     "If needed but not provided, must have a default returned from handleGelatoPayload()"
   )
-  .addOptionalPositionalParam(
+  .addOptionalParam(
     "actionpayload",
     "If not provided, must have a default returned from handleGelatoPayload()"
   )
-  .addOptionalPositionalParam(
+  .addOptionalParam(
     "execclaimexpirydate",
     "Defaults to 0 for gelatoexecutor's maximum"
   )
@@ -61,8 +58,8 @@ export default task(
       if (!taskArgs.task) {
         taskArgs.task = {};
         // Command Line Argument Checks
-        if (!taskArgs.actionname && !taskArgs.actionaddress)
-          throw new Error(`\n Must supply <actionname> or --actionaddress`);
+        if (!taskArgs.actionnames && !taskArgs.actionaddress)
+          throw new Error(`\n Must supply <actionnames> or --actionaddress`);
 
         if (
           taskArgs.conditionname &&
@@ -70,14 +67,17 @@ export default task(
           !taskArgs.conditionname.startsWith("Condition")
         ) {
           throw new Error(
-            `\nInvalid condition: ${taskArgs.conditionname}: 1.<conditionname> 2.<actionname>\n`
+            `\nInvalid condition: ${taskArgs.conditionname}: 1.<conditionname> 2.<actionnames>\n`
           );
         }
 
-        if (taskArgs.actionname && !taskArgs.actionname.startsWith("Action")) {
-          throw new Error(
-            `\nInvalid action: ${taskArgs.actionname}: 1.<conditionname> 2.<actionname>\n`
-          );
+        if (taskArgs.actionnames) {
+          taskArgs.actionnames.forEach((action) => {
+            if (!action.startsWith("Action"))
+              throw new Error(
+                `\nInvalid action: ${taskArgs.actionname}: 1.<conditionname> 2.<actionname>\n`
+              );
+          });
         }
 
         if (!taskArgs.gelatoprovider)
@@ -110,19 +110,22 @@ export default task(
         }
 
         // Action and ActionPayload
-        if (!taskArgs.actionaddress) {
+        taskArgs.task.actions = [];
+        taskArgs.task.actionsPayload = [];
+        for (const actionname of taskArgs.actionnames) {
           let actionAddress = await run("bre-config", {
             deployments: true,
-            contractname: taskArgs.actionname,
+            contractname: actionname,
           });
-          taskArgs.task.action = actionAddress;
-        }
-        if (!taskArgs.actionpayload) {
-          let actionPayload = await run("handleGelatoPayload", {
-            contractname: taskArgs.actionname,
-            payload: taskArgs.actionpayload,
-          });
-          taskArgs.task.actionPayload = actionPayload;
+
+          taskArgs.task.actions.push(actionAddress);
+
+          if (!taskArgs.actionpayload) {
+            let actionPayload = await run("handleGelatoPayload", {
+              contractname: actionname,
+            });
+            taskArgs.task.actionsPayload.push(actionPayload);
+          }
         }
       }
 

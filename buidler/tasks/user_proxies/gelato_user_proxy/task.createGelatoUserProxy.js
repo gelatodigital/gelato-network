@@ -17,7 +17,7 @@ export default task(
   .addOptionalParam("factoryaddress")
   .addFlag("events", "Logs parsed Event Logs to stdout")
   .addFlag("log", "Logs return values to stdout")
-  .setAction(async taskArgs => {
+  .setAction(async (taskArgs) => {
     try {
       if (taskArgs.log)
         console.log("\n gupf-creategelatouserproxy:\n", taskArgs, "\n");
@@ -26,7 +26,7 @@ export default task(
       const gelatoUserProxyFactory = await run("instantiateContract", {
         contractname: "GelatoUserProxyFactory",
         contractaddress: taskArgs.factoryaddress,
-        write: true
+        write: true,
       });
 
       let creationTx;
@@ -43,7 +43,7 @@ export default task(
       } else {
         try {
           creationTx = await gelatoUserProxyFactory.create({
-            value: utils.parseEther(taskArgs.funding)
+            value: utils.parseEther(taskArgs.funding),
           });
         } catch (error) {
           throw new Error("\n PRE creationTx submission error", error, "\n");
@@ -65,26 +65,26 @@ export default task(
       }
 
       // Event Emission verification
-      const parsedCreateLog = await run("event-getparsedlog", {
-        contractname: "GelatoUserProxyFactory",
-        contractaddress: taskArgs.factoryaddress,
-        eventname: "LogCreation",
-        txhash: creationTx.hash,
-        blockhash
-      });
+      // const parsedCreateLog = await run("event-getparsedlog", {
+      //   contractname: "GelatoUserProxyFactory",
+      //   contractaddress: taskArgs.factoryaddress,
+      //   eventname: "LogCreation",
+      //   txhash: creationTx.hash,
+      //   blockhash
+      // });
 
-      if (taskArgs.events) {
-        if (parsedCreateLog) console.log("\n✅ LogCreation\n", parsedCreateLog);
-        else console.log("\n❌ LogCreation not found");
-      }
+      // if (taskArgs.events) {
+      //   if (parsedCreateLog) console.log("\n✅ LogCreation\n", parsedCreateLog);
+      //   else console.log("\n❌ LogCreation not found");
+      // }
 
-      if (!parsedCreateLog.values.userProxy) {
-        throw new Error(
-          `\n gupf-creategelatouserproxy: no userProxy retrieved \n`
-        );
-      }
+      // if (!parsedCreateLog.values.userProxy) {
+      //   throw new Error(
+      //     `\n gupf-creategelatouserproxy: no userProxy retrieved \n`
+      //   );
+      // }
 
-      return parsedCreateLog.values.userProxy;
+      // return parsedCreateLog.values.userProxy;
     } catch (error) {
       console.error(error, "\n");
       process.exit(1);
