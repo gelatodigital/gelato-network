@@ -9,7 +9,7 @@ interface IGelatoProviderModule {
         view
         returns(string memory);
 
-    function execPayload(address _action, bytes calldata _actionPayload)
+    function execPayload(address[] calldata _actions, bytes[] calldata _actionsPayload)
         external
         pure
         returns(bytes memory);

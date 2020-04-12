@@ -60,7 +60,7 @@ contract ScriptEnterStableSwap is ActionPlaceOrderBatchExchange, ScriptGnosisSaf
             _buyToken
         );
 
-        _task.actionPayload = actionPayload;
+        _task.actionsPayload[0] = actionPayload;
 
         // Mint new Claim
         try IGelatoCore(_gelatoCore).mintExecClaim(_task) {

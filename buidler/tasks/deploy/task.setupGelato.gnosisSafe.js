@@ -5,8 +5,8 @@ const GAS_PRICE = utils.parseUnits("9", "gwei");
 
 export default task("setupgelato-gnosissafeproxy")
   .addParam("condition")
-  .addParam("action")
-  .addOptionalPositionalParam("mastercopy", "gnosis safe mastercopy")
+  .addOptionalVariadicPositionalParam("actions")
+  .addOptionalParam("mastercopy", "gnosis safe mastercopy")
   .addFlag("events", "Logs parsed Event Logs to stdout")
   .addFlag("log")
   .setAction(async (taskArgs) => {
@@ -42,27 +42,51 @@ export default task("setupgelato-gnosissafeproxy")
       const gelatoProviderAddress = await gelatoProvider.getAddress();
 
       // Action
-      let actionconstructorargs;
-      if (taskArgs.action === "ActionWithdrawBatchExchange") {
-        const batchExchange = await run("bre-config", {
-          addressbookcategory: "gnosisProtocol",
-          addressbookentry: "batchExchange",
-        });
+      let actionAddresses = [];
+      let tempArray = [];
+      for (const action of taskArgs.actions) {
+        if (!tempArray.includes(action)) {
+          let actionconstructorargs;
+          if (action === "ActionWithdrawBatchExchange") {
+            const batchExchange = await run("bre-config", {
+              addressbookcategory: "gnosisProtocol",
+              addressbookentry: "batchExchange",
+            });
 
-        const { WETH: weth } = await run("bre-config", {
-          addressbookcategory: "erc20",
-        });
+            const { WETH: weth } = await run("bre-config", {
+              addressbookcategory: "erc20",
+            });
 
-        // address _batchExchange, address _weth, address _gelatoProvider
-        actionconstructorargs = [batchExchange, weth, gelatoProviderAddress];
+            // address _batchExchange, address _weth, address _gelatoProvider
+            actionconstructorargs = [
+              batchExchange,
+              weth,
+              gelatoProviderAddress,
+            ];
+          }
+          const deployedAction = await run("deploy", {
+            contractname: action,
+            log: taskArgs.log,
+            constructorargs: actionconstructorargs,
+          });
+
+          tempArray.push(action);
+          actionAddresses.push(deployedAction.address);
+        } else {
+          let i = 0;
+          for (const tempAction of taskArgs.actions) {
+            if (tempAction === action) {
+              actionAddresses.push(actionAddresses[i]);
+              tempArray.push(action);
+              break;
+            }
+            i = i + 1;
+          }
+        }
       }
-      const action = await run("deploy", {
-        contractname: taskArgs.action,
-        log: taskArgs.log,
-        constructorargs: actionconstructorargs,
-      });
-      const actionWithGasPriceCeil = new ActionWithGasPriceCeil(
-        action.address,
+
+      const actionWithGasPriceCeil = new ActionsWithGasPriceCeil(
+        actionAddresses,
         utils.parseUnits("20", "gwei")
       );
 
@@ -130,17 +154,21 @@ export default task("setupgelato-gnosissafeproxy")
         log: taskArgs.log,
       });
 
-      if (taskArgs.log)
+      if (taskArgs.log) {
         console.log(`
-      GelatoCore: ${gelatoCore.address}\n
-      GelatoGasPriceOracle: ${gelatoGasPriceOracle.address}\n
-      Condition: ${condition.address}\n
-      Action: ${action.address}\n
-      ProviderModuleGnosisSafeProxy: ${providerModuleGnosisSafeProxy.address}\n
-      extcodehash: ${extcodehash}\n
-      Safe Address: ${safeAddress}\n
-      mastercopy: ${taskArgs.mastercopy}\n
-    `);
+            GelatoCore: ${gelatoCore.address}\n
+            GelatoGasPriceOracle: ${gelatoGasPriceOracle.address}\n
+            Condition: ${condition.address}\n
+            ProviderModuleGnosisSafeProxy: ${providerModuleGnosisSafeProxy.address}\n
+            extcodehash: ${extcodehash}\n
+            Safe Address: ${safeAddress}\n
+            mastercopy: ${taskArgs.mastercopy}\n
+        `);
+        actionAddresses.forEach((action) => {
+          console.log(`Action: ${action}`);
+        });
+        console.log(``);
+      }
     } catch (error) {
       console.error(error, "\n");
       process.exit(1);

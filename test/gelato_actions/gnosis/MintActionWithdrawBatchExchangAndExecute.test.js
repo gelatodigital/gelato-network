@@ -44,7 +44,9 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
 
   beforeEach(async function () {
     // Setup Gelato System
-    const result = await run("setupgelato-gelatouserproxies");
+    const result = await run("setupgelato-gelatouserproxies", {
+      actions: ["ActionERC20TransferFrom", "ActionERC20TransferFrom"],
+    });
     gelatoCore = result.gelatoCore;
     gelatoUserProxyFactory = result.gelatoUserProxyFactory;
     providerModuleGelatoUserProxy = result.providerModuleGelatoUserProxy;
@@ -146,7 +148,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
     // Whitelist action by provider
     await gelatoCore.connect(provider).provideActions([
       {
-        _address: actionWithdrawBatchExchange.address,
+        addresses: [actionWithdrawBatchExchange.address],
         gasPriceCeil: ethers.utils.parseUnits("100", "gwei"),
       },
     ]);
@@ -191,9 +193,9 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         provider: providerAddress,
         providerModule: providerModuleGelatoUserProxyAddress,
         condition: ethers.constants.AddressZero,
-        action: actionWithdrawBatchExchange.address,
+        actions: [actionWithdrawBatchExchange.address],
         conditionPayload: ethers.constants.HashZero,
-        actionPayload: actionPayload,
+        actionsPayload: [actionPayload],
         expiryDate: 0,
       };
 
@@ -216,7 +218,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       // LogExecClaimMinted(executor, execClaim.id, hashedExecClaim, execClaim);
 
       await expect(
-        userProxy.callAccount(gelatoCore.address, mintPayload)
+        userProxy.callAction(gelatoCore.address, mintPayload)
       ).to.emit(gelatoCore, "LogExecClaimMinted");
 
       expect(await gelatoCore.canExec(execClaim, GELATO_GAS_PRICE)).to.be.equal(
@@ -302,9 +304,9 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         provider: providerAddress,
         providerModule: providerModuleGelatoUserProxyAddress,
         condition: ethers.constants.AddressZero,
-        action: actionWithdrawBatchExchange.address,
+        actions: [actionWithdrawBatchExchange.address],
         conditionPayload: ethers.constants.HashZero,
-        actionPayload: actionPayload,
+        actionsPayload: [actionPayload],
         expiryDate: 0,
       };
 
@@ -324,7 +326,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       });
 
       await expect(
-        userProxy.callAccount(gelatoCore.address, mintPayload)
+        userProxy.callAction(gelatoCore.address, mintPayload)
       ).to.emit(gelatoCore, "LogExecClaimMinted");
 
       expect(await gelatoCore.canExec(execClaim, GELATO_GAS_PRICE)).to.be.equal(

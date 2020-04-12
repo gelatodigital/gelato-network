@@ -16,20 +16,25 @@ interface IGelatoUserProxy {
         bytes calldata _actionPayload
     ) external payable;
 
-    function delegatecallGelatoAction(
-        address _action,
-        bytes calldata _actionPayload
-    ) external payable;
-
-    function callAccount(address, bytes calldata)
+    function callAction(address, bytes calldata)
         external
         payable;
 
-    function delegatecallAccount(address, bytes calldata)
+    function delegatecallAction(address, bytes calldata)
         external
-        payable
-        returns (bool, bytes memory);
+        payable;
 
     function user() external view returns (address);
     function gelatoCore() external view returns (address);
+
+    function multiCallAction(address[] calldata _accounts, bytes[] calldata _payloads)
+        external;
+
+    function multiDelegatecallAction(address[] calldata _accounts, bytes[] calldata _payloads)
+        external;
+
+    function multiGelatoCallAction(IGelatoAction[] calldata _accounts, bytes[] calldata _payloads)
+        external;
+
+
 }

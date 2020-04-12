@@ -8,8 +8,13 @@ contract MockBatchExchange is GelatoActionsStandard {
 
     using SafeERC20 for IERC20;
 
+    event LogWithdrawRequest();
+    event LogCounter();
+
     mapping(address => uint256) public withdrawAmounts;
     mapping(address => bool) public validWithdrawRequests;
+
+    uint256 public counter;
 
     function action(bytes calldata) external payable override virtual {
     }
@@ -42,5 +47,8 @@ contract MockBatchExchange is GelatoActionsStandard {
         public
     {
         validWithdrawRequests[_proxyAddress] = true;
+        emit LogWithdrawRequest();
+        counter++;
+        if(counter == 1 ) emit LogCounter();
     }
 }

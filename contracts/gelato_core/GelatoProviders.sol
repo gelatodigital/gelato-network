@@ -28,7 +28,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     mapping(address => address) public override executorByProvider;
     mapping(address => uint256) public override executorProvidersCount;
     mapping(address => mapping(address => bool)) public override isConditionProvided;
-    mapping(address => mapping(address => uint256)) public override actionGasPriceCeil;
+    mapping(address => mapping(bytes32 => uint256)) public override actionGasPriceCeil;
     mapping(address => EnumerableAddressSet.AddressSet) internal _providerModules;
 
     // GelatoCore: mintExecClaim/collectExecClaimRent Gate
@@ -42,7 +42,9 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
             if (!isConditionProvided[_ec.task.provider][_ec.task.condition])
                 return "ConditionNotProvided";
         }
-        if (actionGasPriceCeil[_ec.task.provider][_ec.task.action] == 0)
+
+        bytes32 actionsHash = keccak256(abi.encode(_ec.task.actions));
+        if (actionGasPriceCeil[_ec.task.provider][actionsHash] == 0)
             return "ActionNotProvided";
         return "Ok";
     }
@@ -87,7 +89,8 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         returns(string memory)
     {
         // Will only return if a) action is not whitelisted & b) gelatoGasPrice is higher than gasPriceCeiling
-        if (_gelatoGasPrice > actionGasPriceCeil[_ec.task.provider][_ec.task.action])
+        bytes32 actionsHash = keccak256(abi.encode(_ec.task.actions));
+        if (_gelatoGasPrice > actionGasPriceCeil[_ec.task.provider][actionsHash])
             return "GelatoGasPriceTooHigh";
 
         // 3. Check if condition is whitelisted by provider
@@ -214,32 +217,36 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     }
 
     // (Un-)provide Actions at different gasPrices
-    function provideActions(ActionWithGasPriceCeil[] memory _actions) public override {
+    function provideActions(ActionsWithGasPriceCeil[] memory _actions) public override {
         for (uint i; i < _actions.length; i++) {
             if (_actions[i].gasPriceCeil == 0) _actions[i].gasPriceCeil = NO_CEIL;
-            uint256 currentGasPriceCeil = actionGasPriceCeil[msg.sender][_actions[i]._address];
+
+            bytes32 actionsHash = keccak256(abi.encode(_actions[i].addresses));
+
+            uint256 currentGasPriceCeil = actionGasPriceCeil[msg.sender][actionsHash];
             require(
                 currentGasPriceCeil != _actions[i].gasPriceCeil,
                 "GelatoProviders.provideActions: redundant"
             );
-            actionGasPriceCeil[msg.sender][_actions[i]._address] = _actions[i].gasPriceCeil;
+            actionGasPriceCeil[msg.sender][actionsHash] = _actions[i].gasPriceCeil;
             emit LogProvideAction(
                 msg.sender,
-                _actions[i]._address,
+                actionsHash,
                 currentGasPriceCeil,
                 _actions[i].gasPriceCeil
             );
         }
     }
 
-    function unprovideActions(address[] memory _actions) public override {
-        for (uint i; i < _actions.length; i++) {
+    function unprovideActions(ActionsArray[] memory _actionsArray) public override {
+        for (uint i; i < _actionsArray.length; i++) {
+            bytes32 actionsHash = keccak256(abi.encode(_actionsArray[i]));
             require(
-                actionGasPriceCeil[msg.sender][_actions[i]] != 0,
+                actionGasPriceCeil[msg.sender][actionsHash] != 0,
                 "GelatoProviders.unprovideActions: redundant"
             );
-            delete actionGasPriceCeil[msg.sender][_actions[i]];
-            emit LogUnprovideAction(msg.sender, _actions[i]);
+            delete actionGasPriceCeil[msg.sender][actionsHash];
+            emit LogUnprovideAction(msg.sender, actionsHash);
         }
     }
 
@@ -270,7 +277,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     function batchProvide(
         address _executor,
         address[] memory _conditions,
-        ActionWithGasPriceCeil[] memory _actions,
+        ActionsWithGasPriceCeil[] memory _actions,
         address[] memory _modules
     )
         public
@@ -287,7 +294,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     function batchUnprovide(
         uint256 _withdrawAmount,
         address[] memory _conditions,
-        address[] memory _actions,
+        ActionsArray[] memory _actions,
         address[] memory _modules
     )
         public

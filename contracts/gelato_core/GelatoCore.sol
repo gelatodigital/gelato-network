@@ -132,15 +132,18 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         }
 
         // CHECK Action Conditions
-        try IGelatoAction(_ec.task.action).termsOk(_ec.task.actionPayload)
-            returns(string memory actionTermsOk)
-        {
-            if (!actionTermsOk.startsWithOk())
-                return string(abi.encodePacked("ActionTermsNotOk:", actionTermsOk));
-        } catch Error(string memory error) {
-            return string(abi.encodePacked("ActionReverted:", error));
-        } catch {
-            return "ActionRevertedNoMessage";
+        for (uint i; i < _ec.task.actions.length; i++) {
+
+            try IGelatoAction(_ec.task.actions[i]).termsOk(_ec.task.actionsPayload[i])
+                returns(string memory actionTermsOk)
+            {
+                if (!actionTermsOk.startsWithOk())
+                    return string(abi.encodePacked("ActionTermsNotOk:", actionTermsOk));
+            } catch Error(string memory error) {
+                return string(abi.encodePacked("ActionReverted:", error));
+            } catch {
+                return "ActionRevertedNoMessage";
+            }
         }
 
         if (
@@ -270,8 +273,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             // Provided Users: execPayload from ProviderModule
             bytes memory execPayload;
             try IGelatoProviderModule(_ec.task.providerModule).execPayload(
-                _ec.task.action,
-                _ec.task.actionPayload
+                _ec.task.actions,
+                _ec.task.actionsPayload
             )
                 returns(bytes memory _execPayload)
             {
@@ -290,8 +293,11 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         } else {
             // Self-Providing Users: actionPayload == execPayload assumption
             // Execution via UserProxy
-            if (_ec.task.actionPayload.length >= 4)
-                (success, revertMsg) = _ec.userProxy.call(_ec.task.actionPayload);
+            if (_ec.task.actionsPayload[0].length >= 4 ) {
+                if ( _ec.task.actionsPayload.length == 1) (success, revertMsg) = _ec.userProxy.call(_ec.task.actionsPayload[0]);
+                else error = "GelatoCore._exec.actionsPayload: Needs to be one";
+            }
+
             else error = "GelatoCore._exec.actionPayload: invalid";
         }
 

@@ -36,16 +36,16 @@ contract ProviderModuleGelatoUserProxy is
         return "Ok";
     }
 
-    function execPayload(address _action, bytes calldata _actionPayload)
+    function execPayload(address[] calldata _actions, bytes[] calldata _actionsPayload)
         external
         pure
         override
         returns(bytes memory)
     {
         return abi.encodeWithSelector(
-            IGelatoUserProxy.delegatecallGelatoAction.selector,
-            _action,
-            _actionPayload
+            IGelatoUserProxy.multiDelegatecallAction.selector,
+            _actions,
+            _actionsPayload
         );
     }
 

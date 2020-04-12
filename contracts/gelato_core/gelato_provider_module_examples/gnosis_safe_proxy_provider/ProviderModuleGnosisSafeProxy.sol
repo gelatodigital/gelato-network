@@ -4,6 +4,7 @@ pragma experimental ABIEncoderV2;
 import { IGelatoProviderModule } from "../../interfaces/IGelatoProviderModule.sol";
 import { IProviderModuleGnosisSafeProxy } from "./IProviderModuleGnosisSafeProxy.sol";
 import { Ownable } from "../../../external/Ownable.sol";
+import { MultiSend } from "../../../external/Multisend.sol";
 import {
     IGnosisSafe
 } from "../../../user_proxies/gnosis_safe_proxy/interfaces/IGnosisSafe.sol";
@@ -20,6 +21,7 @@ contract ProviderModuleGnosisSafeProxy is
     mapping(bytes32 => bool) public override isProxyExtcodehashProvided;
     mapping(address => bool) public override isMastercopyProvided;
     address public gelatoCore;
+    MultiSend public constant multiSend = MultiSend(0x29CAa04Fa05A046a05C85A50e8f2af8cf9A05BaC);
 
     constructor(bytes32[] memory hashes, address[] memory masterCopies, address _gelatoCore) public {
         batchProvide(hashes, masterCopies);
@@ -48,19 +50,42 @@ contract ProviderModuleGnosisSafeProxy is
         return "Ok";
     }
 
-    function execPayload(address _action, bytes calldata _actionPayload)
+    function execPayload(address[] calldata _actions, bytes[] calldata _actionsPayload)
         external
         pure
         override
         returns(bytes memory)
     {
-        return abi.encodeWithSelector(
-            IGnosisSafe.execTransactionFromModuleReturnData.selector,
-            _action,  // to
-            0,  // value
-            _actionPayload,  // data
-            IGnosisSafe.Operation.DelegateCall
-        );
+        if( _actions.length == 1) {
+            return abi.encodeWithSelector(
+                IGnosisSafe.execTransactionFromModuleReturnData.selector,
+                _actions[0],  // to
+                0,  // value
+                _actionsPayload[0],  // data
+                IGnosisSafe.Operation.DelegateCall
+            );
+        } else if (_actions.length > 1) {
+            bytes memory multimintPayload;
+            uint8 operation = 1;
+            uint256 value = 0;
+            for (uint i; i < _actions.length; i++ ) {
+                bytes memory data = _actionsPayload[i];
+                address to = _actions[i];
+                uint256 length = data.length;
+                bytes memory payloadPart =  abi.encodePacked(operation, to, value, length, data);
+                multimintPayload = abi.encodePacked(multimintPayload, payloadPart);
+            }
+            multimintPayload = abi.encodeWithSignature("multiSend(bytes)", multimintPayload);
+            return abi.encodeWithSelector(
+                IGnosisSafe.execTransactionFromModuleReturnData.selector,
+                multiSend,  // to
+                0,  // value
+                multimintPayload,  // data
+                IGnosisSafe.Operation.DelegateCall
+            );
+
+
+        }
     }
 
     // GnosisSafeProxy
