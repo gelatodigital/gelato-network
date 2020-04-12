@@ -1,7 +1,7 @@
 pragma solidity ^0.6.0;
 pragma experimental ABIEncoderV2;
 
-import { Task } from "../../gelato_core/interfaces/IGelatoCore.sol";
+import { Action, Task } from "../../gelato_core/interfaces/IGelatoCore.sol";
 import { IGelatoAction } from "../../gelato_actions/IGelatoAction.sol";
 
 interface IGelatoUserProxy {
@@ -30,8 +30,7 @@ interface IGelatoUserProxy {
     function multiCallAction(address[] calldata _accounts, bytes[] calldata _payloads)
         external;
 
-    function multiDelegatecallAction(address[] calldata _accounts, bytes[] calldata _payloads)
-        external;
+    function multiDelegatecallAction(Action[] calldata _actions) external;
 
     function multiGelatoCallAction(IGelatoAction[] calldata _accounts, bytes[] calldata _payloads)
         external;

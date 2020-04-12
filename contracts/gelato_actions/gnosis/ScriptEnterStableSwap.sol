@@ -36,7 +36,7 @@ contract ScriptEnterStableSwap is ActionPlaceOrderBatchExchange, ScriptGnosisSaf
     )
         public
     {
-        require(_task.condition == address(0));
+        require(_task.condition.addr == address(0));
 
         // 1. Enable Gelato Core
         enableGelatoCoreModule(_gelatoCore);
@@ -60,7 +60,7 @@ contract ScriptEnterStableSwap is ActionPlaceOrderBatchExchange, ScriptGnosisSaf
             _buyToken
         );
 
-        _task.actionsPayload[0] = actionPayload;
+        _task.actions[0].data = actionPayload;
 
         // Mint new Claim
         try IGelatoCore(_gelatoCore).mintExecClaim(_task) {

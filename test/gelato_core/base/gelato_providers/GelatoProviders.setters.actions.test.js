@@ -48,54 +48,54 @@ describe("GelatoCore - GelatoProviders - Setters: CONDITIONS", function () {
 
   // We test different functionality of the contract as normal Mocha tests.
 
-  // provideActions
-  describe("GelatoCore.GelatoProviders.provideActions", function () {
+  // provideCAMs
+  describe("GelatoCore.GelatoProviders.provideCAMs", function () {
     it("Should allow anyone to provide a single action", async function () {
-      await expect(gelatoCore.provideActions([actionWithGasPriceCeil]))
-        .to.emit(gelatoCore, "LogProvideAction")
+      await expect(gelatoCore.provideCAMs([actionWithGasPriceCeil]))
+        .to.emit(gelatoCore, "LogProvideCAM")
         .withArgs(
           providerAddress,
           actionWithGasPriceCeil._address,
-          initialState.actionGasPriceCeil,
+          initialState.camGPC,
           actionWithGasPriceCeil.gasPriceCeil
         );
       expect(
-        await gelatoCore.actionGasPriceCeil(
+        await gelatoCore.camGPC(
           providerAddress,
           actionWithGasPriceCeil._address
         )
       ).to.be.equal(actionWithGasPriceCeil.gasPriceCeil);
     });
 
-    it("Should allow anyone to provideActions", async function () {
+    it("Should allow anyone to provideCAMs", async function () {
       await expect(
-        gelatoCore.provideActions([
+        gelatoCore.provideCAMs([
           actionWithGasPriceCeil,
           otherActionWithGasPriceCeil,
         ])
       )
-        .to.emit(gelatoCore, "LogProvideAction")
+        .to.emit(gelatoCore, "LogProvideCAM")
         .withArgs(
           providerAddress,
           actionWithGasPriceCeil._address,
-          initialState.actionGasPriceCeil,
+          initialState.camGPC,
           actionWithGasPriceCeil.gasPriceCeil
         )
-        .and.to.emit(gelatoCore, "LogProvideAction")
+        .and.to.emit(gelatoCore, "LogProvideCAM")
         .withArgs(
           providerAddress,
           otherActionWithGasPriceCeil._address,
-          initialState.actionGasPriceCeil,
+          initialState.camGPC,
           otherActionWithGasPriceCeil.gasPriceCeil
         );
       expect(
-        await gelatoCore.actionGasPriceCeil(
+        await gelatoCore.camGPC(
           providerAddress,
           actionWithGasPriceCeil._address
         )
       ).to.be.equal(actionWithGasPriceCeil.gasPriceCeil);
       expect(
-        await gelatoCore.actionGasPriceCeil(
+        await gelatoCore.camGPC(
           providerAddress,
           otherActionWithGasPriceCeil._address
         )
@@ -103,92 +103,92 @@ describe("GelatoCore - GelatoProviders - Setters: CONDITIONS", function () {
     });
 
     it("Should NOT allow to provide same actions again", async function () {
-      await gelatoCore.provideActions([actionWithGasPriceCeil]);
+      await gelatoCore.provideCAMs([actionWithGasPriceCeil]);
 
       await expect(
-        gelatoCore.provideActions([actionWithGasPriceCeil])
-      ).to.be.revertedWith("GelatoProviders.provideActions: redundant");
+        gelatoCore.provideCAMs([actionWithGasPriceCeil])
+      ).to.be.revertedWith("GelatoProviders.provideCAMs: redundant");
 
       await expect(
-        gelatoCore.provideActions([
+        gelatoCore.provideCAMs([
           otherActionWithGasPriceCeil,
           actionWithGasPriceCeil,
         ])
-      ).to.be.revertedWith("GelatoProviders.provideActions: redundant");
+      ).to.be.revertedWith("GelatoProviders.provideCAMs: redundant");
     });
   });
 
-  // unprovideActions
-  describe("GelatoCore.GelatoProviders.unprovideActions", function () {
+  // unprovideCAMs
+  describe("GelatoCore.GelatoProviders.unprovideCAMs", function () {
     it("Should allow Providers to unprovide a single Action", async function () {
-      // provideActions
-      await gelatoCore.provideActions([
+      // provideCAMs
+      await gelatoCore.provideCAMs([
         actionWithGasPriceCeil,
         otherActionWithGasPriceCeil,
       ]);
 
-      // unprovideActions
-      await expect(gelatoCore.unprovideActions([action.address]))
-        .to.emit(gelatoCore, "LogUnprovideAction")
+      // unprovideCAMs
+      await expect(gelatoCore.unprovideCAMs([action.address]))
+        .to.emit(gelatoCore, "LogUnprovideCAM")
         .withArgs(providerAddress, action.address);
       expect(
-        await gelatoCore.actionGasPriceCeil(providerAddress, action.address)
-      ).to.be.equal(initialState.actionGasPriceCeil);
+        await gelatoCore.camGPC(providerAddress, action.address)
+      ).to.be.equal(initialState.camGPC);
       expect(
-        await gelatoCore.actionGasPriceCeil(
+        await gelatoCore.camGPC(
           providerAddress,
           otherAction.address
         )
       ).to.be.equal(otherActionWithGasPriceCeil.gasPriceCeil);
     });
 
-    it("Should allow Providers to unprovideActions", async function () {
-      // provideActions
-      await gelatoCore.provideActions([
+    it("Should allow Providers to unprovideCAMs", async function () {
+      // provideCAMs
+      await gelatoCore.provideCAMs([
         actionWithGasPriceCeil,
         otherActionWithGasPriceCeil,
       ]);
 
-      // unprovideActions
+      // unprovideCAMs
       await expect(
-        gelatoCore.unprovideActions([action.address, otherAction.address])
+        gelatoCore.unprovideCAMs([action.address, otherAction.address])
       )
-        .to.emit(gelatoCore, "LogUnprovideAction")
+        .to.emit(gelatoCore, "LogUnprovideCAM")
         .withArgs(providerAddress, action.address)
-        .and.to.emit(gelatoCore, "LogUnprovideAction")
+        .and.to.emit(gelatoCore, "LogUnprovideCAM")
         .withArgs(providerAddress, otherAction.address);
       expect(
-        await gelatoCore.actionGasPriceCeil(providerAddress, action.address)
-      ).to.be.equal(initialState.actionGasPriceCeil);
+        await gelatoCore.camGPC(providerAddress, action.address)
+      ).to.be.equal(initialState.camGPC);
       expect(
-        await gelatoCore.actionGasPriceCeil(
+        await gelatoCore.camGPC(
           providerAddress,
           otherAction.address
         )
-      ).to.be.equal(initialState.actionGasPriceCeil);
+      ).to.be.equal(initialState.camGPC);
     });
 
     it("Should NOT allow Providers to unprovide not-provided Actions", async function () {
-      // unprovideActions
+      // unprovideCAMs
       await expect(
-        gelatoCore.unprovideActions([action.address])
-      ).to.be.revertedWith("GelatoProviders.unprovideActions: redundant");
+        gelatoCore.unprovideCAMs([action.address])
+      ).to.be.revertedWith("GelatoProviders.unprovideCAMs: redundant");
 
       await expect(
-        gelatoCore.unprovideActions([action.address, otherAction.address])
-      ).to.be.revertedWith("GelatoProviders.unprovideActions: redundant");
+        gelatoCore.unprovideCAMs([action.address, otherAction.address])
+      ).to.be.revertedWith("GelatoProviders.unprovideCAMs: redundant");
 
-      // provideActions
-      await gelatoCore.provideActions([actionWithGasPriceCeil]);
+      // provideCAMs
+      await gelatoCore.provideCAMs([actionWithGasPriceCeil]);
 
-      // unprovideActions
+      // unprovideCAMs
       await expect(
-        gelatoCore.unprovideActions([otherAction.address])
-      ).to.be.revertedWith("GelatoProviders.unprovideActions: redundant");
+        gelatoCore.unprovideCAMs([otherAction.address])
+      ).to.be.revertedWith("GelatoProviders.unprovideCAMs: redundant");
 
       await expect(
-        gelatoCore.unprovideActions([action.address, otherAction.address])
-      ).to.be.revertedWith("GelatoProviders.unprovideActions: redundant");
+        gelatoCore.unprovideCAMs([action.address, otherAction.address])
+      ).to.be.revertedWith("GelatoProviders.unprovideCAMs: redundant");
     });
   });
 });

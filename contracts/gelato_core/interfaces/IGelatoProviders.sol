@@ -1,14 +1,16 @@
 pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
-import {IGelatoProviderModule} from "./IGelatoProviderModule.sol";
-import {ExecClaim} from "../interfaces/IGelatoCore.sol";
+import { IGelatoProviderModule } from "./IGelatoProviderModule.sol";
+import { Condition, Action, ExecClaim} from "../interfaces/IGelatoCore.sol";
 
 interface IGelatoProviders {
 
-    struct ActionsWithGasPriceCeil { address[] addresses; uint256 gasPriceCeil; }
-    struct ActionsArray {
-        address[] actions;
+    // CAM
+    struct ConditionActionsMix {
+        Condition condition;   // optional AddressZero for self-conditional actions
+        Action[] actions;
+        uint256 gasPriceCeil;  // GPC
     }
 
     // Provider Funding
@@ -35,30 +37,22 @@ interface IGelatoProviders {
         address indexed newExecutor
     );
 
-    // Conditions
-    event LogProvideCondition(address indexed provider, address indexed condition);
-    event LogUnprovideCondition(address indexed provider, address indexed condition);
-
     // Actions
-    event LogProvideAction(
+    event LogProvideCAM(
         address indexed provider,
-        bytes32 indexed actionHash,
+        bytes32 indexed camHash,
         uint256 oldGasPriceCeil,
         uint256 newGasPriceCeil
     );
-    event LogUnprovideAction(address indexed provider, bytes32 indexed actionHash);
+    event LogUnprovideCAM(address indexed provider, bytes32 indexed camHash);
 
     // Provider Module
     event LogAddProviderModule(address indexed provider, address indexed module);
     event LogRemoveProviderModule(address indexed provider, address indexed module);
 
-
     // =========== CORE PROTOCOL APIs ==============
     // GelatoCore: mintExecClaim/canExec/collectExecClaimRent Gate
-    function isConditionActionProvided(ExecClaim calldata _ec)
-        external
-        view
-        returns(string memory);
+    function isCAMProvided(ExecClaim calldata _ec) external view returns(string memory);
 
     // IGelatoProviderModule: Gelato mintExecClaim/canExec Gate
     function providerModuleChecks(ExecClaim calldata _ec)
@@ -88,12 +82,8 @@ interface IGelatoProviders {
     function executorAssignsExecutor(address _provider, address _newExecutor) external;
 
     // (Un-)provide Conditions
-    function provideConditions(address[] calldata _conditions) external;
-    function unprovideConditions(address[] calldata _conditions) external;
-
-    // (Un-)provide Conditions
-    function provideActions(ActionsWithGasPriceCeil[] calldata _actions) external;
-    function unprovideActions(ActionsArray[] calldata _actionsArray) external;
+    function provideCAMs(ConditionActionsMix[] calldata _actions) external;
+    function unprovideCAMs(ConditionActionsMix[] calldata _actionsArray) external;
 
     // Provider Module
     function addProviderModules(address[] calldata _modules) external;
@@ -102,8 +92,7 @@ interface IGelatoProviders {
     // Batch (un-)provide
     function batchProvide(
         address _executor,
-        address[] calldata _conditions,
-        ActionsWithGasPriceCeil[] calldata _actions,
+        ConditionActionsMix[] calldata _actions,
         address[] calldata _modules
     )
         external
@@ -111,8 +100,7 @@ interface IGelatoProviders {
 
     function batchUnprovide(
         uint256 _withdrawAmount,
-        address[] calldata _conditions,
-        ActionsArray[] calldata _actions,
+        ConditionActionsMix[] calldata _actions,
         address[] calldata _modules
     )
         external;
@@ -135,14 +123,12 @@ interface IGelatoProviders {
     function executorProvidersCount(address _executor) external view returns(uint256);
     function isExecutorAssigned(address _executor) external view returns(bool);
 
-    function isConditionProvided(address _provider, address _condition)
-        external
-        view
-        returns(bool);
-    function actionGasPriceCeil(address _provider, bytes32 _actionsHash)
+    // Condition Actions Mix and Gas Price Ceil
+    function camGPC(address _provider, bytes32 _actionsHash)
         external
         view
         returns(uint256);
+
     function NO_CEIL() external pure returns(uint256);
 
     // Providers' Module Getters

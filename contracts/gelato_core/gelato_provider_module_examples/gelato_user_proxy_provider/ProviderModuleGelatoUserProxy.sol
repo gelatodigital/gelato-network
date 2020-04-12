@@ -4,7 +4,7 @@ pragma experimental ABIEncoderV2;
 import { IGelatoProviderModule } from "../../interfaces/IGelatoProviderModule.sol";
 import { IProviderModuleGelatoUserProxy } from "./IProviderModuleGelatoUserProxy.sol";
 import { Ownable } from "../../../external/Ownable.sol";
-import { ExecClaim } from "../../interfaces/IGelatoCore.sol";
+import { Action, ExecClaim } from "../../interfaces/IGelatoCore.sol";
 import {
     IGelatoUserProxy
 } from "../../../user_proxies/gelato_user_proxy/IGelatoUserProxy.sol";
@@ -36,7 +36,7 @@ contract ProviderModuleGelatoUserProxy is
         return "Ok";
     }
 
-    function execPayload(address[] calldata _actions, bytes[] calldata _actionsPayload)
+    function execPayload(Action[] calldata _actions)
         external
         pure
         override
@@ -44,8 +44,7 @@ contract ProviderModuleGelatoUserProxy is
     {
         return abi.encodeWithSelector(
             IGelatoUserProxy.multiDelegatecallAction.selector,
-            _actions,
-            _actionsPayload
+            _actions
         );
     }
 

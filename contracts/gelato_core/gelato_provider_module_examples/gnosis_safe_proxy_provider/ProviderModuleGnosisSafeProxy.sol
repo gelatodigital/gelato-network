@@ -11,7 +11,7 @@ import {
 import {
     IGnosisSafeProxy
 } from "../../../user_proxies/gnosis_safe_proxy/interfaces/IGnosisSafeProxy.sol";
-import { ExecClaim } from "../../interfaces/IGelatoCore.sol";
+import { Action, ExecClaim } from "../../interfaces/IGelatoCore.sol";
 
 contract ProviderModuleGnosisSafeProxy is
     IGelatoProviderModule,
@@ -50,7 +50,7 @@ contract ProviderModuleGnosisSafeProxy is
         return "Ok";
     }
 
-    function execPayload(address[] calldata _actions, bytes[] calldata _actionsPayload)
+    function execPayload(Action[] calldata _actions)
         external
         pure
         override
@@ -61,7 +61,7 @@ contract ProviderModuleGnosisSafeProxy is
                 IGnosisSafe.execTransactionFromModuleReturnData.selector,
                 _actions[0],  // to
                 0,  // value
-                _actionsPayload[0],  // data
+                _actions[0].data,
                 IGnosisSafe.Operation.DelegateCall
             );
         } else if (_actions.length > 1) {
@@ -69,8 +69,8 @@ contract ProviderModuleGnosisSafeProxy is
             uint8 operation = 1;
             uint256 value = 0;
             for (uint i; i < _actions.length; i++ ) {
-                bytes memory data = _actionsPayload[i];
-                address to = _actions[i];
+                bytes memory data = _actions[i].data;
+                address to = _actions[i].addr;
                 uint256 length = data.length;
                 bytes memory payloadPart =  abi.encodePacked(operation, to, value, length, data);
                 multimintPayload = abi.encodePacked(multimintPayload, payloadPart);

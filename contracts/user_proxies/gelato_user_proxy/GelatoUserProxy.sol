@@ -2,7 +2,7 @@ pragma solidity ^0.6.0;
 pragma experimental ABIEncoderV2;
 
 import { IGelatoUserProxy } from "./IGelatoUserProxy.sol";
-import { Task, IGelatoCore } from "../../gelato_core/interfaces/IGelatoCore.sol";
+import { Action, Task, IGelatoCore } from "../../gelato_core/interfaces/IGelatoCore.sol";
 import { IGelatoAction } from "../../gelato_actions/IGelatoAction.sol";
 
 contract GelatoUserProxy is IGelatoUserProxy {
@@ -117,15 +117,13 @@ contract GelatoUserProxy is IGelatoUserProxy {
         }
     }
 
-    function multiDelegatecallAction(address[] calldata _accounts, bytes[] calldata _payloads)
+    function multiDelegatecallAction(Action[] calldata _actions)
         external
         override
         auth
     {
-        require(_accounts.length == _payloads.length, "GelatoUserProxy.multiDelegatecallAction:LengthNotCorrect");
-        for(uint i = 0; i < _accounts.length; i++) {
-            delegatecallAction(_accounts[i], _payloads[i]);
-        }
+        for(uint i = 0; i < _actions.length; i++)
+            delegatecallAction(_actions[i].addr, _actions[i].data);
     }
 
 

@@ -1,13 +1,22 @@
 pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
+struct Provider {
+    address addr;  //  if msg.sender == provider => self-Provider
+    address module;  //  can be AddressZero for self-Providers
+}
+
+struct Condition {
+    address addr;  // can be AddressZero for self-conditional Actions
+    bytes data;  // can be bytes32(0) for self-conditional Actions
+}
+
+struct Action { address addr; bytes data; }
+
 struct Task {
-    address provider;   //  if msg.sender == provider => self-Provider
-    address providerModule;  //  can be AddressZero for self-Providers
-    address condition;   // can be AddressZero for self-conditional Actions
-    address[] actions;
-    bytes conditionPayload;  // can be bytes32(0) for self-conditional Actions
-    bytes[] actionsPayload;
+    Provider provider;
+    Condition condition;
+    Action[] actions;
     uint256 expiryDate;  // subject to rent payments; 0 == infinity.
 }
 

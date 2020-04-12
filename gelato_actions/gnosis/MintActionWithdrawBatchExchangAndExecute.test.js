@@ -146,7 +146,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
     );
 
     // Whitelist action by provider
-    await gelatoCore.connect(provider).provideActions([
+    await gelatoCore.connect(provider).provideCAMs([
       {
         addresses: [actionWithdrawBatchExchange.address],
         gasPriceCeil: ethers.utils.parseUnits("100", "gwei"),
@@ -207,7 +207,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
 
       // Should return "Ok"
 
-      const isProvided = await gelatoCore.isConditionActionProvided(execClaim);
+      const isProvided = await gelatoCore.isCAMProvided(execClaim);
 
       const mintPayload = await run("abi-encode-withselector", {
         contractname: "GelatoCore",
@@ -317,7 +317,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       };
 
       // Should return "Ok"
-      const isProvided = await gelatoCore.isConditionActionProvided(execClaim);
+      const isProvided = await gelatoCore.isCAMProvided(execClaim);
 
       const mintPayload = await run("abi-encode-withselector", {
         contractname: "GelatoCore",

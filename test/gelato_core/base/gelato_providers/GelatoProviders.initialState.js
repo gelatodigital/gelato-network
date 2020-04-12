@@ -7,5 +7,5 @@ export default {
   executorByProvider: constants.AddressZero,
   executorProvidersCount: 0,
   isConditionProvided: false,
-  actionGasPriceCeil: 0,
+  camGPC: 0,
 };

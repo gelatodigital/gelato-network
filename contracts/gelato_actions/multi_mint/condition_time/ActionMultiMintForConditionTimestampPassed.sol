@@ -32,7 +32,7 @@ contract ActionMultiMintForConditionTimestampPassed is GelatoActionsStandard {
     function action(ActionPayload memory _p) public payable virtual {
         for (uint256 i = 0; i < _p.numOfMints; i++) {
             uint256 timestamp = _p.startTime.add(_p.intervalSpan.mul(i));
-            _p.execClaim.task.conditionPayload = abi.encodeWithSelector(
+            _p.execClaim.task.condition.data = abi.encodeWithSelector(
                 IGelatoCondition.ok.selector,
                 timestamp
             );

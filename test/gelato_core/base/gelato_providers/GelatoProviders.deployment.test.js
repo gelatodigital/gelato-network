@@ -39,7 +39,7 @@ describe("GelatoCore - GelatoProviders - Deployment", function () {
       await gelatoCore.isConditionProvided(testAddress, constants.AddressZero)
     ).to.equal(initialState.isConditionProvided);
     expect(
-      await gelatoCore.actionGasPriceCeil(testAddress, constants.AddressZero)
-    ).to.equal(initialState.actionGasPriceCeil);
+      await gelatoCore.camGPC(testAddress, constants.AddressZero)
+    ).to.equal(initialState.camGPC);
   });
 });

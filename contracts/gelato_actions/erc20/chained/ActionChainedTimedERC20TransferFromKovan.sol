@@ -111,7 +111,7 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
         if (nextDueDate > (now + execClaimTenancy))
             return "ActionChainedTimedERC20TransferFromKovan.termsOk: execClaimTenancy";
 
-        if (_ec.userProxy != _ec.task.provider) {
+        if (_ec.userProxy != _ec.task.provider.addr) {
             string memory isProvided = gelatoCore.isExecClaimProvided(
                 _ec
             );
