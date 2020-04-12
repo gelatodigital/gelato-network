@@ -108,7 +108,7 @@ export default internalTask(
       // if (!taskArgs.sellToken) taskArgs.sellToken = "0x5592ec0cfb4dbc12d3ab100b257153436a1f0fea"
       // if (!taskArgs.buyToken) taskArgs.buyToken = "0x4dbcdf9b62e891a7cec5a2568c3f4faf9e8abe2b"
 
-      const execClaim = new Task({
+      const task = new Task({
         provider: taskArgs.gelatoprovider,
         providerModule: providerModuleAddress,
         action: actionAddress,
@@ -124,7 +124,7 @@ export default internalTask(
         taskArgs.orderExpirationBatchId,
         gelatoCoreAddress,
         // Exec Claim
-        execClaim,
+        task,
       ];
 
       if (taskArgs.log) console.log(`User: ${signer._address}`);

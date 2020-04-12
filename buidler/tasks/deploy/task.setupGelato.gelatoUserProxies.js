@@ -36,12 +36,14 @@ export default task(
       });
 
       // GelatoGasPriceOracle
-      const { address: gelatoGasPriceOracleAddress } = await run("deploy", {
+      const gelatoGasPriceOracle = await run("deploy", {
         contractname: "GelatoGasPriceOracle",
         constructorargs: [gelatoCore.address, taskArgs.gelatogasprice],
         events: taskArgs.events,
         log: taskArgs.log,
       });
+
+      const gelatoGasPriceOracleAddress = gelatoGasPriceOracle.address;
 
       // GelatoUserProxy Factory
       const gelatoUserProxyFactory = await run("deploy", {
@@ -52,15 +54,15 @@ export default task(
 
       // ProviderModule GelatoUserProxy
       const extcodehash = await gelatoUserProxyFactory.proxyExtcodehash();
-      const { address: providerModuleGelatoUserProxyAddress } = await run(
-        "deploy",
-        {
-          contractname: "ProviderModuleGelatoUserProxy",
-          constructorargs: [[extcodehash]],
-          events: taskArgs.events,
-          log: taskArgs.log,
-        }
-      );
+      const providerModuleGelatoUserProxy = await run("deploy", {
+        contractname: "ProviderModuleGelatoUserProxy",
+        constructorargs: [[extcodehash]],
+        events: taskArgs.events,
+        log: taskArgs.log,
+      });
+
+      const providerModuleGelatoUserProxyAddress =
+        providerModuleGelatoUserProxy.address;
 
       // Optional Condition
       let conditionAddress;
@@ -131,7 +133,7 @@ export default task(
       return {
         gelatoCore,
         gelatoUserProxyFactory,
-        providerModuleGelatoUserProxyAddress,
+        providerModuleGelatoUserProxy,
         actionAddress,
         conditionAddress,
       };

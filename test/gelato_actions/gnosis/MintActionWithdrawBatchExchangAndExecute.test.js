@@ -39,6 +39,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
   let tx;
   let txResponse;
   let gelatoCore;
+  let providerModuleGelatoUserProxy;
   let providerModuleGelatoUserProxyAddress;
 
   beforeEach(async function () {
@@ -46,8 +47,9 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
     const result = await run("setupgelato-gelatouserproxies");
     gelatoCore = result.gelatoCore;
     gelatoUserProxyFactory = result.gelatoUserProxyFactory;
+    providerModuleGelatoUserProxy = result.providerModuleGelatoUserProxy;
     providerModuleGelatoUserProxyAddress =
-      result.providerModuleGelatoUserProxyAddress;
+      providerModuleGelatoUserProxy.address;
 
     // Get the ContractFactory and Signers here.
     MockBatchExchange = await ethers.getContractFactory("MockBatchExchange");
@@ -185,12 +187,9 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       });
 
       // Mint ExexClaim
-
-      let execClaim = {
-        id: 1,
+      let task = {
         provider: providerAddress,
         providerModule: providerModuleGelatoUserProxyAddress,
-        userProxy: userProxyAddress,
         condition: ethers.constants.AddressZero,
         action: actionWithdrawBatchExchange.address,
         conditionPayload: ethers.constants.HashZero,
@@ -198,17 +197,27 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         expiryDate: 0,
       };
 
+      let execClaim = {
+        id: 1,
+        userProxy: userProxyAddress,
+        task,
+      };
+
       // Should return "Ok"
+
       const isProvided = await gelatoCore.isConditionActionProvided(execClaim);
 
       const mintPayload = await run("abi-encode-withselector", {
         contractname: "GelatoCore",
         functionname: "mintExecClaim",
-        inputs: [execClaim],
+        inputs: [task],
       });
 
-      tx = await userProxy.callGelatoAction(gelatoCore.address, mintPayload);
-      txResponse = await tx.wait();
+      // LogExecClaimMinted(executor, execClaim.id, hashedExecClaim, execClaim);
+
+      await expect(
+        userProxy.callAccount(gelatoCore.address, mintPayload)
+      ).to.emit(gelatoCore, "LogExecClaimMinted");
 
       expect(await gelatoCore.canExec(execClaim, GELATO_GAS_PRICE)).to.be.equal(
         "ActionTermsNotOk:ActionWithdrawBatchExchange: Sell Token not withdrawable yet"
@@ -238,9 +247,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         gelatoCore
           .connect(executor)
           .exec(execClaim, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
-      )
-        .to.emit(gelatoCore, "LogExecSuccess")
-        .withArgs(executorAddress, execClaim.id);
+      ).to.emit(gelatoCore, "LogExecSuccess");
 
       const feeAmount = FEE_USD * 10 ** buyDecimals;
 
@@ -290,16 +297,21 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
 
       // Mint ExexClaim
 
-      let execClaim = {
-        id: 1,
+      // Mint ExexClaim
+      let task = {
         provider: providerAddress,
         providerModule: providerModuleGelatoUserProxyAddress,
-        userProxy: userProxyAddress,
         condition: ethers.constants.AddressZero,
         action: actionWithdrawBatchExchange.address,
         conditionPayload: ethers.constants.HashZero,
         actionPayload: actionPayload,
         expiryDate: 0,
+      };
+
+      let execClaim = {
+        id: 1,
+        userProxy: userProxyAddress,
+        task,
       };
 
       // Should return "Ok"
@@ -308,11 +320,12 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       const mintPayload = await run("abi-encode-withselector", {
         contractname: "GelatoCore",
         functionname: "mintExecClaim",
-        inputs: [execClaim],
+        inputs: [task],
       });
 
-      tx = await userProxy.callGelatoAction(gelatoCore.address, mintPayload);
-      txResponse = await tx.wait();
+      await expect(
+        userProxy.callAccount(gelatoCore.address, mintPayload)
+      ).to.emit(gelatoCore, "LogExecClaimMinted");
 
       expect(await gelatoCore.canExec(execClaim, GELATO_GAS_PRICE)).to.be.equal(
         "ActionTermsNotOk:ActionWithdrawBatchExchange: Sell Token not withdrawable yet"
@@ -342,25 +355,18 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         gelatoCore
           .connect(executor)
           .exec(execClaim, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
-      )
-        .to.emit(gelatoCore, "LogExecFailed")
-        .withArgs(
-          executorAddress,
-          execClaim.id,
-          "ActionWithdrawBatchExchange: Insufficient balance for user to pay for withdrawal 2"
-        );
+      ).to.emit(gelatoCore, "LogExecFailed");
 
       const feeAmount = FEE_USD * 10 ** buyDecimals;
 
       const providerBalance = await buyToken.balanceOf(providerAddress);
-      expect(providerBalance).to.be.equal(ethers.utils.bigNumberify(feeAmount));
+      expect(providerBalance).to.be.equal(ethers.utils.bigNumberify("0"));
       const sellerBalanceAfter = await buyToken.balanceOf(sellerAddress);
 
       expect(ethers.utils.bigNumberify(sellerBalanceAfter)).to.be.equal(
-        ethers.utils
-          .bigNumberify(sellerBalanceBefore)
-          .add(ethers.utils.bigNumberify(withdrawAmount))
-          .sub(ethers.utils.bigNumberify(feeAmount))
+        ethers.utils.bigNumberify(sellerBalanceBefore)
+        // .add(ethers.utils.bigNumberify(withdrawAmount))
+        // .sub(ethers.utils.bigNumberify(feeAmount))
       );
     });
   });
