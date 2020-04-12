@@ -11,11 +11,14 @@ class Task {
       this.condition = taskObj.condition
         ? utils.getAddress(taskObj.condition)
         : constants.AddressZero;
-      this.action = utils.getAddress(taskObj.action);
+      this.actions = [
+        utils.getAddress(taskObj.action),
+        utils.getAddress(taskObj.action),
+      ];
       this.conditionPayload = taskObj.conditionPayload
         ? taskObj.conditionPayload
         : constants.HashZero;
-      this.actionPayload = taskObj.actionPayload;
+      this.actionsPayload = [taskObj.actionPayload, taskObj.actionPayload];
       this.expiryDate = taskObj.expiryDate
         ? taskObj.expiryDate
         : constants.Zero;

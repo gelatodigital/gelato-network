@@ -4,6 +4,7 @@ pragma experimental ABIEncoderV2;
 import { IGelatoProviderModule } from "../../interfaces/IGelatoProviderModule.sol";
 import { IProviderModuleGnosisSafeProxy } from "./IProviderModuleGnosisSafeProxy.sol";
 import { Ownable } from "../../../external/Ownable.sol";
+import { MultiSend } from "../../../external/Multisend.sol";
 import {
     IGnosisSafe
 } from "../../../user_proxies/gnosis_safe_proxy/interfaces/IGnosisSafe.sol";
@@ -20,6 +21,7 @@ contract ProviderModuleGnosisSafeProxy is
     mapping(bytes32 => bool) public override isProxyExtcodehashProvided;
     mapping(address => bool) public override isMastercopyProvided;
     address public gelatoCore;
+    MultiSend public constant multiSend = MultiSend(0x29CAa04Fa05A046a05C85A50e8f2af8cf9A05BaC);
 
     constructor(bytes32[] memory hashes, address[] memory masterCopies, address _gelatoCore) public {
         batchProvide(hashes, masterCopies);
@@ -47,8 +49,6 @@ contract ProviderModuleGnosisSafeProxy is
             return "ProviderModuleGnosisSafeProxy.isProvided:GelatoCoreNotWhitelisted";
         return "Ok";
     }
-
-    address constant MULTIMINT = address(0);
 
     function execPayload(address[] calldata _actions, bytes[] calldata _actionsPayload)
         external
@@ -78,7 +78,7 @@ contract ProviderModuleGnosisSafeProxy is
             multimintPayload = abi.encodeWithSignature("multiSend(bytes)", multimintPayload);
             return abi.encodeWithSelector(
                 IGnosisSafe.execTransactionFromModuleReturnData.selector,
-                MULTIMINT,  // to
+                multiSend,  // to
                 0,  // value
                 multimintPayload,  // data
                 IGnosisSafe.Operation.DelegateCall

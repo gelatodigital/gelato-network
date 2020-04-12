@@ -295,11 +295,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             // Execution via UserProxy
             if (_ec.task.actionsPayload[0].length >= 4 ) {
                 if ( _ec.task.actionsPayload.length == 1) (success, revertMsg) = _ec.userProxy.call(_ec.task.actionsPayload[0]);
-                else {
-                    for(uint i; i <  _ec.task.actionsPayload.length; i++) {
-                        (success, revertMsg) = _ec.userProxy.call(_ec.task.actionsPayload[i]);
-                    }
-                }
+                else error = "GelatoCore._exec.actionsPayload: Needs to be one";
             }
 
             else error = "GelatoCore._exec.actionPayload: invalid";

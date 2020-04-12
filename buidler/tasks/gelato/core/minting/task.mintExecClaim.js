@@ -18,7 +18,7 @@ export default task(
     "gelatoprovider",
     "Defaults to network addressbook default"
   )
-  .addOptionalPositionalParam("gelatoprovidermodule")
+  .addOptionalParam("gelatoprovidermodule")
   .addOptionalParam("conditionaddress")
   .addOptionalParam("actionaddress")
   .addOptionalPositionalParam(
@@ -111,16 +111,18 @@ export default task(
 
         // Action and ActionPayload
         if (!taskArgs.actionaddress) {
-          taskArgs.task.action = await run("bre-config", {
+          let actionAddress = await run("bre-config", {
             deployments: true,
             contractname: taskArgs.actionname,
           });
+          taskArgs.task.action = actionAddress;
         }
         if (!taskArgs.actionpayload) {
-          taskArgs.task.actionPayload = await run("handleGelatoPayload", {
+          let actionPayload = await run("handleGelatoPayload", {
             contractname: taskArgs.actionname,
             payload: taskArgs.actionpayload,
           });
+          taskArgs.task.actionPayload = actionPayload;
         }
       }
 

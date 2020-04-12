@@ -68,12 +68,13 @@ export default task(
           provider: taskArgs.execclaim[2][0],
           providerModule: taskArgs.execclaim[2][1],
           condition: taskArgs.execclaim[2][2],
-          action: taskArgs.execclaim[2][3],
+          actions: taskArgs.execclaim[2][3],
           conditionPayload: taskArgs.execclaim[2][4],
-          actionPayload: taskArgs.execclaim[2][5],
+          actionsPayload: taskArgs.execclaim[2][5],
           expiryDate: taskArgs.execclaim[2][6],
         },
       };
+      console.log(execClaim);
 
       const GAS_PRICE = utils.parseUnits("9", "gwei");
 

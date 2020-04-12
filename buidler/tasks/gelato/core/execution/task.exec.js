@@ -93,9 +93,9 @@ export default task(
             provider: execclaim[2][0],
             providerModule: execclaim[2][1],
             condition: execclaim[2][2],
-            action: execclaim[2][3],
+            actions: execclaim[2][3],
             conditionPayload: execclaim[2][4],
-            actionPayload: execclaim[2][5],
+            actionsPayload: execclaim[2][5],
             expiryDate: execclaim[2][6],
           },
         };
