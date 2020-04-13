@@ -39,6 +39,8 @@ describe("Gelato Core - Minting ", function () {
   let providerModuleGelatoUserProxy;
   let providerModuleGelatoUserProxyAddress;
   let actionsWithGasPriceCeil;
+  let user2;
+  let user2address;
 
   beforeEach(async function () {
     // Setup Gelato System
@@ -52,10 +54,11 @@ describe("Gelato Core - Minting ", function () {
       providerModuleGelatoUserProxy.address;
     actionsWithGasPriceCeil = result.actionsWithGasPriceCeil;
 
-    [seller, executor, provider] = await ethers.getSigners();
+    [seller, executor, provider, user2] = await ethers.getSigners();
     sellerAddress = await seller.getAddress();
     providerAddress = await provider.getAddress();
     executorAddress = await executor.getAddress();
+    user2address = await user2.getAddress();
     MockERC20 = await ethers.getContractFactory("MockERC20");
 
     // string memory _name, uint256 _mintAmount, address _to, uint8 _decimals
@@ -194,8 +197,6 @@ describe("Gelato Core - Minting ", function () {
       //     ["bytes"],
       //     [execClaimHash]
       //   );
-
-      //   console.log(execClaimHash);
 
       // emit LogExecClaimMinted(executor, execClaim.id, hashedExecClaim, execClaim);
 
@@ -410,7 +411,7 @@ describe("Gelato Core - Minting ", function () {
       ).to.be.revertedWith("GelatoCore.mintExecClaim: Invalid expiryDate");
     });
 
-    it("Minting reverts => Invalid expiryDate", async function () {
+    it("Minting reverts => InvalidProviderModule", async function () {
       const revertingProviderMouleAddress = sellerAddress;
       const notWhitelistedCondition = actionsWithGasPriceCeil.addresses[0];
       const actionInputs = {
@@ -462,7 +463,7 @@ describe("Gelato Core - Minting ", function () {
       );
     });
 
-    it("Minting reverts => No action Payload", async function () {
+    it("Minting successful => No action Payload", async function () {
       const noActionPayload = ethers.constants.AddressZero;
 
       const actionInputs = {
@@ -480,7 +481,7 @@ describe("Gelato Core - Minting ", function () {
       // Mint ExexClaim
       let task = {
         provider: providerAddress,
-        providerModule: providerModuleGelatoUserProxyAddress.address,
+        providerModule: providerModuleGelatoUserProxyAddress,
         condition: ethers.constants.AddressZero,
         actions: actionsWithGasPriceCeil.addresses,
         conditionPayload: ethers.constants.HashZero,
@@ -503,11 +504,226 @@ describe("Gelato Core - Minting ", function () {
       // GelatoCore.mintExecClaim.isProvided:InvalidProviderModule
       await expect(
         userProxy.callAction(gelatoCore.address, mintPayload)
-      ).to.be.revertedWith(
-        "GelatoCore.mintExecClaim.isProvided:InvalidProviderModule"
+      ).to.emit(gelatoCore, "LogExecClaimMinted");
+    });
+
+    it("mintSelfProvidedExecClaim success (Self-provider), not whitelisted action, assigning new executor and staking", async function () {
+      const actionInputs = {
+        user: user2address,
+        userProxy: userProxyAddress,
+        sendToken: sellToken.address,
+        destination: sellerAddress,
+        sendAmount: ethers.utils.parseUnits("1", "ether"),
+      };
+
+      const actionPayload = await run("abi-encode-withselector", {
+        contractname: "ActionERC20TransferFrom",
+        functionname: "action",
+        inputs: [actionInputs],
+      });
+
+      const taskPayloads = [];
+      for (const action of actionsWithGasPriceCeil.addresses)
+        taskPayloads.push(actionPayload);
+
+      // 2. Create Proxy for seller
+      tx = await gelatoUserProxyFactory.connect(user2).create();
+      txResponse = await tx.wait();
+
+      const executionEvent = await run("event-getparsedlog", {
+        contractname: "GelatoUserProxyFactory",
+        contractaddress: gelatoUserProxyFactory.address,
+        eventname: "LogCreation",
+        txhash: txResponse.transactionHash,
+        blockhash: txResponse.blockHash,
+        values: true,
+        stringify: true,
+      });
+
+      const user2addressProxyAddress = executionEvent.userProxy;
+
+      const user2addressProxy = await ethers.getContractAt(
+        "GelatoUserProxy",
+        user2addressProxyAddress
+      );
+
+      // Mint ExexClaim
+      let task = {
+        provider: user2addressProxyAddress,
+        providerModule: ethers.constants.AddressZero,
+        condition: ethers.constants.AddressZero,
+        actions: actionsWithGasPriceCeil.addresses,
+        conditionPayload: ethers.constants.HashZero,
+        actionsPayload: taskPayloads,
+        expiryDate: 0,
+      };
+
+      const mintPayload = await run("abi-encode-withselector", {
+        contractname: "GelatoCore",
+        functionname: "mintSelfProvidedExecClaim",
+        inputs: [task, executorAddress],
+      });
+
+      let execClaim = {
+        id: 1,
+        userProxy: user2addressProxyAddress,
+        task,
+      };
+
+      // GelatoCore.mintExecClaim.isProvided:InvalidProviderModule
+      await expect(
+        user2addressProxy
+          .connect(user2)
+          .callAction(gelatoCore.address, mintPayload, {
+            value: ethers.utils.parseUnits("1", "ether"),
+          })
+      ).to.emit(gelatoCore, "LogExecClaimMinted");
+    });
+
+    it("mintSelfProvidedExecClaim reverts (Self-provider), not staking and hence cannot assign executor", async function () {
+      const actionInputs = {
+        user: user2address,
+        userProxy: userProxyAddress,
+        sendToken: sellToken.address,
+        destination: sellerAddress,
+        sendAmount: ethers.utils.parseUnits("1", "ether"),
+      };
+
+      const actionPayload = await run("abi-encode-withselector", {
+        contractname: "ActionERC20TransferFrom",
+        functionname: "action",
+        inputs: [actionInputs],
+      });
+
+      const taskPayloads = [];
+      for (const action of actionsWithGasPriceCeil.addresses)
+        taskPayloads.push(actionPayload);
+
+      // 2. Create Proxy for seller
+      tx = await gelatoUserProxyFactory.connect(user2).create();
+      txResponse = await tx.wait();
+
+      const executionEvent = await run("event-getparsedlog", {
+        contractname: "GelatoUserProxyFactory",
+        contractaddress: gelatoUserProxyFactory.address,
+        eventname: "LogCreation",
+        txhash: txResponse.transactionHash,
+        blockhash: txResponse.blockHash,
+        values: true,
+        stringify: true,
+      });
+
+      const user2addressProxyAddress = executionEvent.userProxy;
+
+      const user2addressProxy = await ethers.getContractAt(
+        "GelatoUserProxy",
+        user2addressProxyAddress
+      );
+
+      // Mint ExexClaim
+      let task = {
+        provider: user2addressProxyAddress,
+        providerModule: ethers.constants.AddressZero,
+        condition: ethers.constants.AddressZero,
+        actions: actionsWithGasPriceCeil.addresses,
+        conditionPayload: ethers.constants.HashZero,
+        actionsPayload: taskPayloads,
+        expiryDate: 0,
+      };
+
+      const mintPayload = await run("abi-encode-withselector", {
+        contractname: "GelatoCore",
+        functionname: "mintSelfProvidedExecClaim",
+        inputs: [task, executorAddress],
+      });
+
+      let execClaim = {
+        id: 1,
+        userProxy: user2addressProxyAddress,
+        task,
+      };
+
+      // GelatoCore.mintExecClaim.isProvided:InvalidProviderModule
+      await expect(
+        user2addressProxy
+          .connect(user2)
+          .callAction(gelatoCore.address, mintPayload)
+      ).to.revertedWith(
+        "GelatoProviders.providerAssignsExecutor: isProviderMinStaked()"
       );
     });
 
-    // DO THE CHECK WITH REVERTING PAYLOAD AND MOVE THE PAYLOAD CHECK FROM EXEC TO MINT
+    it("mintSelfProvidedExecClaim reverts (Self-provider), inputting other address as provider", async function () {
+      const actionInputs = {
+        user: user2address,
+        userProxy: userProxyAddress,
+        sendToken: sellToken.address,
+        destination: sellerAddress,
+        sendAmount: ethers.utils.parseUnits("1", "ether"),
+      };
+
+      const actionPayload = await run("abi-encode-withselector", {
+        contractname: "ActionERC20TransferFrom",
+        functionname: "action",
+        inputs: [actionInputs],
+      });
+
+      const taskPayloads = [];
+      for (const action of actionsWithGasPriceCeil.addresses)
+        taskPayloads.push(actionPayload);
+
+      // 2. Create Proxy for seller
+      tx = await gelatoUserProxyFactory.connect(user2).create();
+      txResponse = await tx.wait();
+
+      const executionEvent = await run("event-getparsedlog", {
+        contractname: "GelatoUserProxyFactory",
+        contractaddress: gelatoUserProxyFactory.address,
+        eventname: "LogCreation",
+        txhash: txResponse.transactionHash,
+        blockhash: txResponse.blockHash,
+        values: true,
+        stringify: true,
+      });
+
+      const user2addressProxyAddress = executionEvent.userProxy;
+
+      const user2addressProxy = await ethers.getContractAt(
+        "GelatoUserProxy",
+        user2addressProxyAddress
+      );
+
+      // Mint ExexClaim
+      let task = {
+        provider: ethers.constants.AddressZero,
+        providerModule: ethers.constants.AddressZero,
+        condition: ethers.constants.AddressZero,
+        actions: actionsWithGasPriceCeil.addresses,
+        conditionPayload: ethers.constants.HashZero,
+        actionsPayload: taskPayloads,
+        expiryDate: 0,
+      };
+
+      const mintPayload = await run("abi-encode-withselector", {
+        contractname: "GelatoCore",
+        functionname: "mintSelfProvidedExecClaim",
+        inputs: [task, executorAddress],
+      });
+
+      let execClaim = {
+        id: 1,
+        userProxy: user2addressProxyAddress,
+        task,
+      };
+
+      // GelatoCore.mintExecClaim.isProvided:InvalidProviderModule
+      await expect(
+        user2addressProxy
+          .connect(user2)
+          .callAction(gelatoCore.address, mintPayload)
+      ).to.revertedWith(
+        "GelatoCore.mintSelfProvidedExecClaim: sender not provider"
+      );
+    });
   });
 });
