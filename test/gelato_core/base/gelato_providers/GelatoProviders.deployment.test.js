@@ -36,9 +36,6 @@ describe("GelatoCore - GelatoProviders - Deployment", function () {
       initialState.executorProvidersCount
     );
     expect(
-      await gelatoCore.isConditionProvided(testAddress, constants.AddressZero)
-    ).to.equal(initialState.isConditionProvided);
-    expect(
       await gelatoCore.camGPC(testAddress, constants.AddressZero)
     ).to.equal(initialState.camGPC);
   });

@@ -7,13 +7,17 @@ import { utils } from "ethers";
 // GelatoProviders creation time variable values
 import initialState from "./GelatoProviders.initialState";
 
-describe("GelatoCore - GelatoProviders - Setters: CONDITIONS", function () {
+describe("GelatoCore - GelatoProviders - Setters: ACTIONS", function () {
   // We define the ContractFactory and Address variables here and assign them in
   // a beforeEach hook.
   let GelatoCore;
   let Action;
   let OtherAction;
   let gelatoCore;
+  let condition;
+  let conditionAddress;
+  let otherCondition;
+  let otherConditionAddress;
   let action;
   let actionWithGasPriceCeil;
   let otherAction;
@@ -24,14 +28,25 @@ describe("GelatoCore - GelatoProviders - Setters: CONDITIONS", function () {
   beforeEach(async function () {
     // Get the ContractFactory, contract instance, and Signers here.
     GelatoCore = await ethers.getContractFactory("GelatoCore");
+    Condition = await ethers.getContractFactory("MockConditionDummy");
+    OtherCondition = await ethers.getContractFactory("MockConditionDummy");
     Action = await ethers.getContractFactory("MockActionDummy");
     OtherAction = await ethers.getContractFactory("MockActionDummy");
+
     gelatoCore = await GelatoCore.deploy();
+    condition = await Condition.deploy();
+    otherCondition = await OtherCondition.deploy();
     action = await Action.deploy();
     otherAction = await OtherAction.deploy();
+
     await gelatoCore.deployed();
+    await condition.deployed();
+    await otherCondition.deployed();
     await action.deployed();
     await otherAction.deployed();
+
+    conditionAddress = condition.address;
+    otherConditionAddress = otherCondition.address;
 
     actionWithGasPriceCeil = new ActionWithGasPriceCeil(
       action.address,
@@ -135,10 +150,7 @@ describe("GelatoCore - GelatoProviders - Setters: CONDITIONS", function () {
         await gelatoCore.camGPC(providerAddress, action.address)
       ).to.be.equal(initialState.camGPC);
       expect(
-        await gelatoCore.camGPC(
-          providerAddress,
-          otherAction.address
-        )
+        await gelatoCore.camGPC(providerAddress, otherAction.address)
       ).to.be.equal(otherActionWithGasPriceCeil.gasPriceCeil);
     });
 
@@ -161,10 +173,7 @@ describe("GelatoCore - GelatoProviders - Setters: CONDITIONS", function () {
         await gelatoCore.camGPC(providerAddress, action.address)
       ).to.be.equal(initialState.camGPC);
       expect(
-        await gelatoCore.camGPC(
-          providerAddress,
-          otherAction.address
-        )
+        await gelatoCore.camGPC(providerAddress, otherAction.address)
       ).to.be.equal(initialState.camGPC);
     });
 

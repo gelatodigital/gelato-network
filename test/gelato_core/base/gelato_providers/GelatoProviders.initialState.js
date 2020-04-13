@@ -6,6 +6,5 @@ export default {
   executorStake: 0,
   executorByProvider: constants.AddressZero,
   executorProvidersCount: 0,
-  isConditionProvided: false,
   camGPC: 0,
 };
