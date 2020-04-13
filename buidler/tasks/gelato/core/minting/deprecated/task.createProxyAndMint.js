@@ -188,7 +188,7 @@ export default task(
         gelatoexecutor: taskArgs.gelatoexecutor,
       });
 
-      // Condition and ConditionPayload (optional)
+      // Condition and ConditionData (optional)
       if (taskArgs.conditionname) {
         if (taskArgs.conditionaddress === constants.AddressZero) {
           if (taskArgs.conditionname === "0") {
@@ -210,7 +210,7 @@ export default task(
         }
       }
 
-      // Action and ActionPayload
+      // Action and ActionData
       if (!taskArgs.actionaddress) {
         taskArgs.actionaddress = await run("bre-config", {
           deployments: true,

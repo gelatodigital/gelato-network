@@ -95,7 +95,7 @@ export default task(
           module: taskArgs.providermodule,
         });
 
-        // Condition and ConditionPayload (optional)
+        // Condition and ConditionData (optional)
         if (taskArgs.conditionname !== "0") {
           if (!taskArgs.conditionaddress) {
             taskArgs.conditionaddress = await run("bre-config", {

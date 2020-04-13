@@ -6,7 +6,7 @@ import { SafeMath } from "../../../external/SafeMath.sol";
 import { IGelatoCondition } from "../../../gelato_conditions/IGelatoCondition.sol";
 import { IGelatoCore, ExecClaim } from "../../../gelato_core/interfaces/IGelatoCore.sol";
 
-struct ActionPayload {
+struct ActionData {
     // multi mint delegatecall requirement
     IGelatoCore gelatoCore;
     // gelatoCore.mintExecClaim params
@@ -24,12 +24,12 @@ contract ActionMultiMintForConditionTimestampPassed is GelatoActionsStandard {
     using SafeMath for uint256;
 
     function action(bytes calldata _actionData) external payable override virtual {
-        ActionPayload memory _p = abi.decode(_actionData[4:], (ActionPayload));
+        ActionData memory _p = abi.decode(_actionData[4:], (ActionData));
         action(_p);
     }
 
     // Specific Implementation: Caution when using storage in delegatecall
-    function action(ActionPayload memory _p) public payable virtual {
+    function action(ActionData memory _p) public payable virtual {
         for (uint256 i = 0; i < _p.numOfMints; i++) {
             uint256 timestamp = _p.startTime.add(_p.intervalSpan.mul(i));
             _p.execClaim.task.condition.data = abi.encodeWithSelector(
