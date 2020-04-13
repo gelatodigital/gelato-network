@@ -52,6 +52,8 @@ contract ProviderModuleGelatoUserProxy is
                 IGelatoUserProxy.execGelatoAction.selector,
                 _actions[0]
             );
+        } else {
+            revert("ProviderModuleGelatoUserProxy.execPayload: 0 _actions length");
         }
     }
 

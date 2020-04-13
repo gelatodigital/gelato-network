@@ -11,7 +11,7 @@ import {
 import {
     IGnosisSafeProxy
 } from "../../../user_proxies/gnosis_safe_proxy/interfaces/IGnosisSafeProxy.sol";
-import { Action, ExecClaim } from "../../interfaces/IGelatoCore.sol";
+import { Action, Operation, ExecClaim } from "../../interfaces/IGelatoCore.sol";
 
 contract ProviderModuleGnosisSafeProxy is
     IGelatoProviderModule,
@@ -59,16 +59,29 @@ contract ProviderModuleGnosisSafeProxy is
         returns(bytes memory)
     {
         if( _actions.length == 1) {
+            IGnosisSafe.Operation gsOperation;
+
+            if (_actions[0].operation == Operation.Call)
+                gsOperation = IGnosisSafe.Operation.DelegateCall;
+            else if (_actions[0].operation == Operation.Call)
+                gsOperation = IGnosisSafe.Operation.Call;
+            else revert("ProviderModuleGnosisSafeProxy.execPayload: invalid operation");
+
             return abi.encodeWithSelector(
                 IGnosisSafe.execTransactionFromModuleReturnData.selector,
                 _actions[0],  // to
                 0,  // value
                 _actions[0].data,
-                IGnosisSafe.Operation.DelegateCall
+                gsOperation
             );
         } else if (_actions.length > 1) {
             bytes memory multiSendPayload;
+
             for (uint i; i < _actions.length; i++ ) {
+                // MultiSend only allows Action.Operation.Delegatecall
+                if (_actions[i].operation != Operation.Delegatecall)
+                    revert("ProviderModuleGnosisSafeProxy.execPayload: d-call only");
+
                 bytes memory payloadPart = abi.encodePacked(
                     uint256(1),  // operation
                     _actions[i].inst,  // to
@@ -76,12 +89,15 @@ contract ProviderModuleGnosisSafeProxy is
                     _actions[i].data.length,
                     _actions[i].data
                 );
+
                 multiSendPayload = abi.encodePacked(multiSendPayload, payloadPart);
             }
+
             multiSendPayload = abi.encodeWithSelector(
                 MultiSend.multiSend.selector,
                 multiSendPayload
             );
+
             return abi.encodeWithSelector(
                 IGnosisSafe.execTransactionFromModuleReturnData.selector,
                 MULTI_SEND,  // to
@@ -89,6 +105,8 @@ contract ProviderModuleGnosisSafeProxy is
                 multiSendPayload,  // data
                 IGnosisSafe.Operation.DelegateCall
             );
+        } else {
+            revert("ProviderModuleGnosisSafeProxy.execPayload: 0 _actions length");
         }
     }
 

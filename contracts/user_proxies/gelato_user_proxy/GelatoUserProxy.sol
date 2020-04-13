@@ -52,6 +52,7 @@ contract GelatoUserProxy is IGelatoUserProxy {
         IGelatoCore(gelatoCore).mintSelfProvidedExecClaim{value: msg.value}(_task, _executor);
     }
 
+    // @dev we have to write duplicate code due to calldata _action FeatureNotImplemented
     function execGelatoAction(Action calldata _action)
         external
         payable
@@ -101,6 +102,7 @@ contract GelatoUserProxy is IGelatoUserProxy {
         }
     }
 
+    // @dev we have to write duplicate code due to calldata _action FeatureNotImplemented
     function multiExecGelatoActions(Action[] calldata _actions)
         external
         payable
