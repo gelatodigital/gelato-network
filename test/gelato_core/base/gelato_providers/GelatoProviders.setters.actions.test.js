@@ -72,117 +72,123 @@ describe("GelatoCore - GelatoProviders - Setters: ACTIONS", function () {
   // provideCAMs
   describe("GelatoCore.GelatoProviders.provideCAMs", function () {
     it("Should allow anyone to provide a single CAM", async function () {
+      const camHash = await gelatoCore.camHash(cam);
       await expect(gelatoCore.provideCAMs([cam]))
         .to.emit(gelatoCore, "LogProvideCAM")
         .withArgs(
           providerAddress,
-          ,
+          camHash,
           initialState.camGPC,
           cam.gasPriceCeil
         );
-      expect(
-        await gelatoCore.camGPC(providerAddress, cam._address)
-      ).to.be.equal(cam.gasPriceCeil);
+      expect(await gelatoCore.camGPC(providerAddress, camHash)).to.be.equal(
+        cam.gasPriceCeil
+      );
     });
 
     it("Should allow anyone to provideCAMs", async function () {
-      await expect(gelatoCore.provideCAMs([cam, otherActionWithGasPriceCeil]))
+      const camHash = await gelatoCore.camHash(cam);
+      const otherCAMHash = await gelatoCore.camHash(otherCAM);
+      await expect(gelatoCore.provideCAMs([cam, otherCAM]))
         .to.emit(gelatoCore, "LogProvideCAM")
         .withArgs(
           providerAddress,
-          cam._address,
+          camHash,
           initialState.camGPC,
           cam.gasPriceCeil
         )
         .and.to.emit(gelatoCore, "LogProvideCAM")
         .withArgs(
           providerAddress,
-          otherActionWithGasPriceCeil._address,
+          otherCAMHash,
           initialState.camGPC,
-          otherActionWithGasPriceCeil.gasPriceCeil
+          otherCAM.gasPriceCeil
         );
+      expect(await gelatoCore.camGPC(providerAddress, camHash)).to.be.equal(
+        cam.gasPriceCeil
+      );
       expect(
-        await gelatoCore.camGPC(providerAddress, cam._address)
-      ).to.be.equal(cam.gasPriceCeil);
-      expect(
-        await gelatoCore.camGPC(
-          providerAddress,
-          otherActionWithGasPriceCeil._address
-        )
-      ).to.be.equal(otherActionWithGasPriceCeil.gasPriceCeil);
+        await gelatoCore.camGPC(providerAddress, otherCAMHash)
+      ).to.be.equal(otherCAM.gasPriceCeil);
     });
 
-    it("Should NOT allow to provide same actions again", async function () {
+    it("Should NOT allow to provide same CAMs again", async function () {
       await gelatoCore.provideCAMs([cam]);
 
       await expect(gelatoCore.provideCAMs([cam])).to.be.revertedWith(
         "GelatoProviders.provideCAMs: redundant"
       );
 
-      await expect(
-        gelatoCore.provideCAMs([otherActionWithGasPriceCeil, cam])
-      ).to.be.revertedWith("GelatoProviders.provideCAMs: redundant");
+      await expect(gelatoCore.provideCAMs([otherCAM, cam])).to.be.revertedWith(
+        "GelatoProviders.provideCAMs: redundant"
+      );
     });
   });
 
   // unprovideCAMs
   describe("GelatoCore.GelatoProviders.unprovideCAMs", function () {
-    it("Should allow Providers to unprovide a single Action", async function () {
+    it("Should allow Providers to unprovide a single CAM", async function () {
       // provideCAMs
-      await gelatoCore.provideCAMs([cam, otherActionWithGasPriceCeil]);
+      await gelatoCore.provideCAMs([cam, otherCAM]);
+
+      // camHash
+      const camHash = await gelatoCore.camHash(cam);
+      const otherCAMHash = await gelatoCore.camHash(otherCAM);
 
       // unprovideCAMs
-      await expect(gelatoCore.unprovideCAMs([action.address]))
+      await expect(gelatoCore.unprovideCAMs([cam]))
         .to.emit(gelatoCore, "LogUnprovideCAM")
-        .withArgs(providerAddress, action.address);
+        .withArgs(providerAddress, camHash);
+      expect(await gelatoCore.camGPC(providerAddress, camHash)).to.be.equal(
+        initialState.camGPC
+      );
       expect(
-        await gelatoCore.camGPC(providerAddress, action.address)
-      ).to.be.equal(initialState.camGPC);
-      expect(
-        await gelatoCore.camGPC(providerAddress, otherAction.address)
-      ).to.be.equal(otherActionWithGasPriceCeil.gasPriceCeil);
+        await gelatoCore.camGPC(providerAddress, otherCAMHash)
+      ).to.be.equal(otherCAM.gasPriceCeil);
     });
 
     it("Should allow Providers to unprovideCAMs", async function () {
       // provideCAMs
-      await gelatoCore.provideCAMs([cam, otherActionWithGasPriceCeil]);
+      await gelatoCore.provideCAMs([cam, otherCAM]);
+
+      // camHash
+      const camHash = await gelatoCore.camHash(cam);
+      const otherCAMHash = await gelatoCore.camHash(otherCAM);
 
       // unprovideCAMs
-      await expect(
-        gelatoCore.unprovideCAMs([action.address, otherAction.address])
-      )
+      await expect(gelatoCore.unprovideCAMs([cam, otherCAM]))
         .to.emit(gelatoCore, "LogUnprovideCAM")
-        .withArgs(providerAddress, action.address)
+        .withArgs(providerAddress, camHash)
         .and.to.emit(gelatoCore, "LogUnprovideCAM")
-        .withArgs(providerAddress, otherAction.address);
+        .withArgs(providerAddress, otherCAMHash);
+      expect(await gelatoCore.camGPC(providerAddress, camHash)).to.be.equal(
+        initialState.camGPC
+      );
       expect(
-        await gelatoCore.camGPC(providerAddress, action.address)
-      ).to.be.equal(initialState.camGPC);
-      expect(
-        await gelatoCore.camGPC(providerAddress, otherAction.address)
+        await gelatoCore.camGPC(providerAddress, otherCAMHash)
       ).to.be.equal(initialState.camGPC);
     });
 
-    it("Should NOT allow Providers to unprovide not-provided Actions", async function () {
+    it("Should NOT allow Providers to unprovide not-provided CAMs", async function () {
       // unprovideCAMs
-      await expect(
-        gelatoCore.unprovideCAMs([action.address])
-      ).to.be.revertedWith("GelatoProviders.unprovideCAMs: redundant");
+      await expect(gelatoCore.unprovideCAMs([cam])).to.be.revertedWith(
+        "GelatoProviders.unprovideCAMs: redundant"
+      );
 
       await expect(
-        gelatoCore.unprovideCAMs([action.address, otherAction.address])
+        gelatoCore.unprovideCAMs([cam, otherCAM])
       ).to.be.revertedWith("GelatoProviders.unprovideCAMs: redundant");
 
       // provideCAMs
       await gelatoCore.provideCAMs([cam]);
 
       // unprovideCAMs
-      await expect(
-        gelatoCore.unprovideCAMs([otherAction.address])
-      ).to.be.revertedWith("GelatoProviders.unprovideCAMs: redundant");
+      await expect(gelatoCore.unprovideCAMs([otherCAM])).to.be.revertedWith(
+        "GelatoProviders.unprovideCAMs: redundant"
+      );
 
       await expect(
-        gelatoCore.unprovideCAMs([action.address, otherAction.address])
+        gelatoCore.unprovideCAMs([cam, otherCAM])
       ).to.be.revertedWith("GelatoProviders.unprovideCAMs: redundant");
     });
   });

@@ -2,7 +2,8 @@
 // => only dependency we need is "chai"
 const { expect } = require("chai");
 
-describe("GelatoCore - GelatoProviders - Setters: CONDITIONS", function () {
+/*
+describe("GelatoCore - GelatoProviders - Setters: MODULES", function () {
   // We define the ContractFactory and Address variables here and assign them in
   // a beforeEach hook.
   let GelatoCore;
@@ -19,7 +20,9 @@ describe("GelatoCore - GelatoProviders - Setters: CONDITIONS", function () {
   beforeEach(async function () {
     // Get the ContractFactory, contract instance, and Signers here.
     GelatoCore = await ethers.getContractFactory("GelatoCore");
-    ProviderModule = await ethers.getContractFactory("ConditionTimestampPassed");
+    ProviderModule = await ethers.getContractFactory(
+      "ConditionTimestampPassed"
+    );
     OtherProviderModule = await ethers.getContractFactory("MockConditionDummy");
     gelatoCore = await GelatoCore.deploy();
     condition = await ProviderModule.deploy();
@@ -160,3 +163,4 @@ describe("GelatoCore - GelatoProviders - Setters: CONDITIONS", function () {
     });
   });
 });
+*/
