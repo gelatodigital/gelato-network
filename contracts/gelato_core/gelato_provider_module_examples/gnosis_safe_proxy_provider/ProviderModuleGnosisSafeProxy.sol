@@ -67,7 +67,7 @@ contract ProviderModuleGnosisSafeProxy is
                 IGnosisSafe.Operation.DelegateCall
             );
         } else if (_actions.length > 1) {
-            bytes memory multisendPayload;
+            bytes memory multiSendPayload;
             for (uint i; i < _actions.length; i++ ) {
                 bytes memory payloadPart = abi.encodePacked(
                     uint256(1),  // operation
@@ -76,17 +76,17 @@ contract ProviderModuleGnosisSafeProxy is
                     _actions[i].data.length,
                     _actions[i].data
                 );
-                multisendPayload = abi.encodePacked(multisendPayload, payloadPart);
+                multiSendPayload = abi.encodePacked(multiSendPayload, payloadPart);
             }
-            multisendPayload = abi.encodeWithSelector(
+            multiSendPayload = abi.encodeWithSelector(
                 MultiSend.multiSend.selector,
-                multisendPayload
+                multiSendPayload
             );
             return abi.encodeWithSelector(
                 IGnosisSafe.execTransactionFromModuleReturnData.selector,
                 MULTI_SEND,  // to
                 0,  // value
-                multisendPayload,  // data
+                multiSendPayload,  // data
                 IGnosisSafe.Operation.DelegateCall
             );
         }

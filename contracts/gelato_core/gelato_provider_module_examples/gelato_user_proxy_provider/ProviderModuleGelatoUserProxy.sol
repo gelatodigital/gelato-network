@@ -42,10 +42,17 @@ contract ProviderModuleGelatoUserProxy is
         override
         returns(bytes memory)
     {
-        return abi.encodeWithSelector(
-            IGelatoUserProxy.multiDelegatecallActions.selector,
-            _actions
-        );
+        if (_actions.length > 1) {
+            return abi.encodeWithSelector(
+                IGelatoUserProxy.multiDelegatecallActions.selector,
+                _actions
+            );
+        } else if (_actions.length == 1) {
+            return abi.encodeWithSelector(
+                IGelatoUserProxy.delegatecallAction.selector,
+                _actions[0]
+            );
+        }
     }
 
     // GnosisSafeProxy

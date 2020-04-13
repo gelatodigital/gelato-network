@@ -1,6 +1,5 @@
 import { task } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../../buidler.config";
-import { constants } from "ethers";
 
 export default task(
   "gc-mintexecclaim",
@@ -32,7 +31,10 @@ export default task(
     "actiondata",
     "Multiple actions => JS object (np via CLI). If undefined, handleGelatoData() must work"
   )
-  .addOptionalParam("expirydate", "Defaults to 0 for gelatoexecutor's maximum")
+  .addOptionalParam(
+    "expirydate",
+    "Defaults to Zero for gelatoexecutor's maximum"
+  )
   .addOptionalParam("task", "Pass a complete class Task obj for minting.")
   .addFlag("selfprovide", "Calls gelatoCore.mintSelfProvidedExecClaim()")
   .addOptionalParam(
