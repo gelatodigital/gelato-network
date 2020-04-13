@@ -186,7 +186,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         for (uint i; i < _CAMs.length; i++) {
             if (_CAMs[i].gasPriceCeil == 0) _CAMs[i].gasPriceCeil = NO_CEIL;
 
-            bytes32 camHash = keccak256(abi.encode(_CAMs[i].condition, _CAMs[i].actions));
+            bytes32 camHash = camHash(_CAMs[i]);
 
             uint256 currentGasPriceCeil = camGPC[msg.sender][camHash];
             require(
@@ -207,7 +207,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
 
     function unprovideCAMs(ConditionActionsMix[] memory _CAMs) public override {
         for (uint i; i < _CAMs.length; i++) {
-            bytes32 camHash = keccak256(abi.encode(_CAMs[i].condition, _CAMs[i].actions));
+            bytes32 camHash = camHash(_CAMs[i]);
             require(
                 camGPC[msg.sender][camHash] != 0,
                 "GelatoProviders.unprovideCAMs: redundant"
@@ -284,6 +284,11 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         return executorProvidersCount[_executor] != 0;
     }
 
+    // Helper fn that can also be called to query camHash off-chain
+    function camHash(ConditionActionsMix memory _cam) public view override returns(bytes32) {
+        return keccak256(abi.encode(_cam.condition, _cam.actions));
+    }
+
     // Providers' Module Getters
     function isProviderModule(address _provider, IGelatoProviderModule _module)
         public
@@ -306,5 +311,4 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     {
         return _providerModules[_provider].enumerate();
     }
-
 }

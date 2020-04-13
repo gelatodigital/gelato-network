@@ -130,10 +130,11 @@ interface IGelatoProviders {
     function isExecutorAssigned(address _executor) external view returns(bool);
 
     // Condition Actions Mix and Gas Price Ceil
-    function camGPC(address _provider, bytes32 _actionsHash)
+    function camGPC(address _provider, bytes32 _camHash)
         external
         view
         returns(uint256);
+    function camHash(ConditionActionsMix calldata _cam) external view returns(bytes32);
     function NO_CEIL() external pure returns(uint256);
 
     // Providers' Module Getters

@@ -11,17 +11,23 @@ describe("GelatoCore - GelatoProviders - Setters: ACTIONS", function () {
   // We define the ContractFactory and Address variables here and assign them in
   // a beforeEach hook.
   let GelatoCore;
+  let Condition;
+  let OtherCondition;
   let Action;
   let OtherAction;
+
   let gelatoCore;
   let condition;
-  let conditionAddress;
   let otherCondition;
-  let otherConditionAddress;
   let action;
-  let actionWithGasPriceCeil;
   let otherAction;
-  let otherActionWithGasPriceCeil;
+
+  const gasPriceCeil = utils.parseUnits("20", "gwei");
+
+  // Condition - Actions - Mix
+  let cam;
+  let otherCAM;
+
   let provider;
   let providerAddress;
 
@@ -45,17 +51,17 @@ describe("GelatoCore - GelatoProviders - Setters: ACTIONS", function () {
     await action.deployed();
     await otherAction.deployed();
 
-    conditionAddress = condition.address;
-    otherConditionAddress = otherCondition.address;
+    cam = new CAM({
+      condition: condition.address,
+      actions: [action.address],
+      gasPriceCeil,
+    });
 
-    actionWithGasPriceCeil = new ActionWithGasPriceCeil(
-      action.address,
-      utils.parseUnits("20", "gwei")
-    );
-    otherActionWithGasPriceCeil = new ActionWithGasPriceCeil(
-      otherAction.address,
-      utils.parseUnits("20", "gwei")
-    );
+    otherCAM = new CAM({
+      condition: condition.address,
+      actions: [action.address, otherAction.address],
+      gasPriceCeil,
+    });
 
     [provider] = await ethers.getSigners();
     providerAddress = await provider.getAddress();
@@ -65,36 +71,28 @@ describe("GelatoCore - GelatoProviders - Setters: ACTIONS", function () {
 
   // provideCAMs
   describe("GelatoCore.GelatoProviders.provideCAMs", function () {
-    it("Should allow anyone to provide a single action", async function () {
-      await expect(gelatoCore.provideCAMs([actionWithGasPriceCeil]))
+    it("Should allow anyone to provide a single CAM", async function () {
+      await expect(gelatoCore.provideCAMs([cam]))
         .to.emit(gelatoCore, "LogProvideCAM")
         .withArgs(
           providerAddress,
-          actionWithGasPriceCeil._address,
+          ,
           initialState.camGPC,
-          actionWithGasPriceCeil.gasPriceCeil
+          cam.gasPriceCeil
         );
       expect(
-        await gelatoCore.camGPC(
-          providerAddress,
-          actionWithGasPriceCeil._address
-        )
-      ).to.be.equal(actionWithGasPriceCeil.gasPriceCeil);
+        await gelatoCore.camGPC(providerAddress, cam._address)
+      ).to.be.equal(cam.gasPriceCeil);
     });
 
     it("Should allow anyone to provideCAMs", async function () {
-      await expect(
-        gelatoCore.provideCAMs([
-          actionWithGasPriceCeil,
-          otherActionWithGasPriceCeil,
-        ])
-      )
+      await expect(gelatoCore.provideCAMs([cam, otherActionWithGasPriceCeil]))
         .to.emit(gelatoCore, "LogProvideCAM")
         .withArgs(
           providerAddress,
-          actionWithGasPriceCeil._address,
+          cam._address,
           initialState.camGPC,
-          actionWithGasPriceCeil.gasPriceCeil
+          cam.gasPriceCeil
         )
         .and.to.emit(gelatoCore, "LogProvideCAM")
         .withArgs(
@@ -104,11 +102,8 @@ describe("GelatoCore - GelatoProviders - Setters: ACTIONS", function () {
           otherActionWithGasPriceCeil.gasPriceCeil
         );
       expect(
-        await gelatoCore.camGPC(
-          providerAddress,
-          actionWithGasPriceCeil._address
-        )
-      ).to.be.equal(actionWithGasPriceCeil.gasPriceCeil);
+        await gelatoCore.camGPC(providerAddress, cam._address)
+      ).to.be.equal(cam.gasPriceCeil);
       expect(
         await gelatoCore.camGPC(
           providerAddress,
@@ -118,17 +113,14 @@ describe("GelatoCore - GelatoProviders - Setters: ACTIONS", function () {
     });
 
     it("Should NOT allow to provide same actions again", async function () {
-      await gelatoCore.provideCAMs([actionWithGasPriceCeil]);
+      await gelatoCore.provideCAMs([cam]);
+
+      await expect(gelatoCore.provideCAMs([cam])).to.be.revertedWith(
+        "GelatoProviders.provideCAMs: redundant"
+      );
 
       await expect(
-        gelatoCore.provideCAMs([actionWithGasPriceCeil])
-      ).to.be.revertedWith("GelatoProviders.provideCAMs: redundant");
-
-      await expect(
-        gelatoCore.provideCAMs([
-          otherActionWithGasPriceCeil,
-          actionWithGasPriceCeil,
-        ])
+        gelatoCore.provideCAMs([otherActionWithGasPriceCeil, cam])
       ).to.be.revertedWith("GelatoProviders.provideCAMs: redundant");
     });
   });
@@ -137,10 +129,7 @@ describe("GelatoCore - GelatoProviders - Setters: ACTIONS", function () {
   describe("GelatoCore.GelatoProviders.unprovideCAMs", function () {
     it("Should allow Providers to unprovide a single Action", async function () {
       // provideCAMs
-      await gelatoCore.provideCAMs([
-        actionWithGasPriceCeil,
-        otherActionWithGasPriceCeil,
-      ]);
+      await gelatoCore.provideCAMs([cam, otherActionWithGasPriceCeil]);
 
       // unprovideCAMs
       await expect(gelatoCore.unprovideCAMs([action.address]))
@@ -156,10 +145,7 @@ describe("GelatoCore - GelatoProviders - Setters: ACTIONS", function () {
 
     it("Should allow Providers to unprovideCAMs", async function () {
       // provideCAMs
-      await gelatoCore.provideCAMs([
-        actionWithGasPriceCeil,
-        otherActionWithGasPriceCeil,
-      ]);
+      await gelatoCore.provideCAMs([cam, otherActionWithGasPriceCeil]);
 
       // unprovideCAMs
       await expect(
@@ -188,7 +174,7 @@ describe("GelatoCore - GelatoProviders - Setters: ACTIONS", function () {
       ).to.be.revertedWith("GelatoProviders.unprovideCAMs: redundant");
 
       // provideCAMs
-      await gelatoCore.provideCAMs([actionWithGasPriceCeil]);
+      await gelatoCore.provideCAMs([cam]);
 
       // unprovideCAMs
       await expect(
