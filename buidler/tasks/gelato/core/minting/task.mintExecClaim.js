@@ -37,29 +37,19 @@ export default task(
   .addFlag("selfprovide", "Calls gelatoCore.mintSelfProvidedExecClaim()")
   .addOptionalParam(
     "funds",
-    "Optional ETH value to sent along with --selfprovide",
-    constants.Zero
+    "Optional ETH value to sent along with --selfprovide"
   )
-  .addOptionalParam(
-    "gelatoexecutor",
-    "Provide for --selfprovide",
-    constants.AddressZero
-  )
+  .addOptionalParam("gelatoexecutor", "Provide for --selfprovide")
   .addOptionalParam("gelatocoreaddress", "Supply if not in BRE-config")
   .addFlag("events", "Logs parsed Event Logs to stdout")
   .addFlag("log", "Logs return values to stdout")
   .setAction(async (taskArgs) => {
     try {
-      if (taskArgs.funds !== constants.Zero && !taskArgs.selfprovide) {
+      if (taskArgs.funds !== constants.Zero && !taskArgs.selfprovide)
         throw new Error("\n --funds only with --selfprovide");
-      }
 
-      if (
-        taskArgs.gelatoexecutor !== constants.AddressZero &&
-        !taskArgs.selfprovide
-      ) {
+      if (taskArgs.gelatoexecutor && !taskArgs.selfprovide)
         throw new Error("\n --gelatoexecutor only with --selfprovide");
-      }
 
       if (!taskArgs.task) {
         // Command Line Argument Checks
@@ -114,7 +104,7 @@ export default task(
           }
         }
         const condition = new Condition({
-          addr: taskArgs.condition,
+          addr: taskArgs.conditionaddress,
           data: taskArgs.conditiondata,
         });
 
@@ -130,11 +120,9 @@ export default task(
           }
           // Action.data
           if (!taskArgs.actiondata) {
-            for (const actionname of taskArgs.actionnames) {
-              taskArgs.actiondata[actionname] = await run("handleGelatoData", {
-                contractname: actionname,
-              });
-            }
+            taskArgs.actiondata[actionname] = await run("handleGelatoData", {
+              contractname: actionname,
+            });
           }
           // Action
           const action = new Action({
@@ -172,8 +160,10 @@ export default task(
       if (taskArgs.selfprovide) {
         mintTxHash = await gelatoCore.mintSelfProvidedExecClaim(
           task,
-          taskArgs.gelatoexecutor,
-          { value: taskArgs.funds }
+          taskArgs.gelatoexecutor
+            ? taskArgs.gelatoexecutor
+            : constants.AddressZero,
+          { value: taskArgs.funds ? taskArgs.funds : constants.Zero }
         );
       } else {
         // Wrap Mint function in Gnosis Safe Transaction
