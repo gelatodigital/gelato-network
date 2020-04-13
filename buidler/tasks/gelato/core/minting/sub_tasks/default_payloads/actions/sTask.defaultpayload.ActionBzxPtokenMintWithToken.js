@@ -3,7 +3,7 @@ import { utils } from "ethers";
 
 export default internalTask(
   "gc-mintexecclaim:defaultpayload:ActionBzxPtokenMintWithToken",
-  `Returns a hardcoded actionPayload of ActionBzxPtokenMintWithToken`
+  `Returns a hardcoded actionData of ActionBzxPtokenMintWithToken`
 )
   .addFlag("log")
   .setAction(async ({ log }) => {

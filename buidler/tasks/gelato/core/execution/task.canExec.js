@@ -69,7 +69,7 @@ export default task(
           providerModule: taskArgs.execclaim[2][1],
           condition: taskArgs.execclaim[2][2],
           actions: taskArgs.execclaim[2][3],
-          conditionPayload: taskArgs.execclaim[2][4],
+          conditionData: taskArgs.execclaim[2][4],
           actionsPayload: taskArgs.execclaim[2][5],
           expiryDate: taskArgs.execclaim[2][6],
         },

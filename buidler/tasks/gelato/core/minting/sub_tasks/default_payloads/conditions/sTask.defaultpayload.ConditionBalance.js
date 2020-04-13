@@ -3,7 +3,7 @@ import { utils } from "ethers";
 
 export default internalTask(
   "gc-mintexecclaim:defaultpayload:ConditionBalance",
-  `Returns a hardcoded conditionPayload of ConditionBalance`
+  `Returns a hardcoded conditionData of ConditionBalance`
 )
   .addFlag("log")
   .setAction(async ({ log }) => {

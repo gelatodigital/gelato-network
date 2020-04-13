@@ -6,9 +6,12 @@ const assert = require("assert");
 const { constants, utils } = require("ethers");
 
 // Classes
-const ActionsWithGasPriceCeil = require("./src/classes/gelato/ActionsWithGasPriceCeil")
-  .default;
+const Action = require("./src/classes/gelato/Action").default;
+const Condition = require("./src/classes/gelato/Condition").default;
+const CAM = require("./src/classes/gelato/CAM").default;
+const GelatoProvider = require("./src/classes/gelato/GelatoProvider").default;
 const Task = require("./src/classes/gelato/Task").default;
+
 // Helpers
 const checkNestedObj = require("./src/scripts/helpers/nestedObjects/checkNestedObj")
   .default;
@@ -19,7 +22,10 @@ const sleep = require("./src/scripts/helpers/async/sleep").default;
 // ================================= BRE extension ==================================
 extendEnvironment((bre) => {
   // Classes
-  bre.ActionsWithGasPriceCeil = ActionsWithGasPriceCeil;
+  bre.Action = Action;
+  bre.Condition = Condition;
+  bre.CAM = CAM;
+  bre.GelatoProvider = GelatoProvider;
   bre.Task = Task;
   // Functions
   bre.checkNestedObj = checkNestedObj;

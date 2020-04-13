@@ -2,7 +2,7 @@ import { internalTask } from "@nomiclabs/buidler/config";
 
 export default internalTask(
   "gc-mintexecclaim:defaultpayload:ActionBzxPtokenBurnToToken",
-  `Returns a hardcoded actionPayload of ActionBzxPtokenBurnToToken`
+  `Returns a hardcoded actionData of ActionBzxPtokenBurnToToken`
 )
   .addFlag("log")
   .setAction(async ({ log }) => {

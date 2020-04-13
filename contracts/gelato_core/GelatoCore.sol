@@ -289,7 +289,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
             else error = "GelatoCore._exec.execPayload: invalid";
         } else {
-            // Self-Providing Users: actionPayload == execPayload assumption
+            // Self-Providing Users: actionData == execPayload assumption
             // Execution via UserProxy
             if (_ec.task.actions.length != 1)
                 error = "GelatoCore._exec: _actions.length must be 1";

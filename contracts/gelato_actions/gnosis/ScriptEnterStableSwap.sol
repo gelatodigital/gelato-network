@@ -15,8 +15,8 @@ contract ScriptEnterStableSwap is ActionPlaceOrderBatchExchange, ScriptGnosisSaf
     //     address providerModule;
     //     address condition;
     //     address action;
-    //     bytes conditionPayload;
-    //     bytes actionPayload;
+    //     bytes conditionData;
+    //     bytes actionData;
     //     uint256 expiryDate;
     // }
 
@@ -52,7 +52,7 @@ contract ScriptEnterStableSwap is ActionPlaceOrderBatchExchange, ScriptGnosisSaf
         );
 
         // 3. Mint execution claim
-        bytes memory actionPayload = abi.encodeWithSignature(
+        bytes memory actionData = abi.encodeWithSignature(
             "action(address,address,address,address)",
             _user,
             address(this), //proxyAddress
@@ -60,7 +60,7 @@ contract ScriptEnterStableSwap is ActionPlaceOrderBatchExchange, ScriptGnosisSaf
             _buyToken
         );
 
-        _task.actions[0].data = actionPayload;
+        _task.actions[0].data = actionData;
 
         // Mint new Claim
         try IGelatoCore(_gelatoCore).mintExecClaim(_task) {

@@ -23,8 +23,8 @@ contract ActionMultiMintForConditionTimestampPassed is GelatoActionsStandard {
 
     using SafeMath for uint256;
 
-    function action(bytes calldata _actionPayload) external payable override virtual {
-        ActionPayload memory _p = abi.decode(_actionPayload[4:], (ActionPayload));
+    function action(bytes calldata _actionData) external payable override virtual {
+        ActionPayload memory _p = abi.decode(_actionData[4:], (ActionPayload));
         action(_p);
     }
 

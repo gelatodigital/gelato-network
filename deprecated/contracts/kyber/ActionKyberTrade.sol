@@ -70,7 +70,7 @@ contract ActionKyberTrade is GelatoActionsStandard {
 
     // ====== ACTION CONDITIONS CHECK ==========
     // Overriding and extending GelatoActionsStandard's function (optional)
-    function termsOk(bytes calldata _actionPayload)
+    function termsOk(bytes calldata _actionData)
         external
         view
         override
@@ -78,7 +78,7 @@ contract ActionKyberTrade is GelatoActionsStandard {
         returns(string memory)  // actionTermsOk
     {
         (address _user, address _userProxy, address _sendToken, uint256 _sendAmt) = abi.decode(
-            _actionPayload[4:132],
+            _actionData[4:132],
             (address,address,address,uint256)
         );
         return _actionConditionsCheck(_user, _userProxy, _sendToken, _sendAmt);

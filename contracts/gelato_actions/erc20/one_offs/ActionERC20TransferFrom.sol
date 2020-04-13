@@ -18,8 +18,8 @@ contract ActionERC20TransferFrom is GelatoActionsStandard {
     // using SafeERC20 for IERC20; <- internal library methods vs. try/catch
     using Address for address;
 
-    function action(bytes calldata _actionPayload) external payable override virtual {
-        (ActionPayload memory _p) = abi.decode(_actionPayload, (ActionPayload));
+    function action(bytes calldata _actionData) external payable override virtual {
+        (ActionPayload memory _p) = abi.decode(_actionData, (ActionPayload));
          action(_p);
     }
 
@@ -35,14 +35,14 @@ contract ActionERC20TransferFrom is GelatoActionsStandard {
 
     // ======= ACTION CONDITIONS CHECK =========
     // Overriding and extending GelatoActionsStandard's function (optional)
-    function termsOk(bytes calldata _actionPayload)
+    function termsOk(bytes calldata _actionData)
         external
         view
         override
         virtual
         returns(string memory)  // actionTermsOk
     {
-        (ActionPayload memory _p) = abi.decode(_actionPayload[4:], (ActionPayload));
+        (ActionPayload memory _p) = abi.decode(_actionData[4:], (ActionPayload));
         return termsOk(_p);
     }
 

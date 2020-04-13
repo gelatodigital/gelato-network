@@ -6,14 +6,14 @@ import { GelatoConditionsStandard } from "../../GelatoConditionsStandard.sol";
 contract ConditionTimestampPassed is GelatoConditionsStandard {
 
     // STANDARD interface
-    function ok(bytes calldata _conditionPayload)
+    function ok(bytes calldata _conditionData)
         external
         view
         virtual
         override
         returns(string memory)
     {
-        uint256 timestamp = abi.decode(_conditionPayload[4:], (uint256));
+        uint256 timestamp = abi.decode(_conditionData[4:], (uint256));
         return ok(timestamp);
     }
 

@@ -9,9 +9,9 @@ import { GelatoCore } from "../../../gelato_core/GelatoCore.sol";
 contract MockActionChainedDummy is GelatoActionsStandard {
     using GelatoString for string;
 
-    function action(bytes calldata _actionPayload) external payable override virtual {
+    function action(bytes calldata _actionData) external payable override virtual {
         (ExecClaim memory execClaim, GelatoCore gelatoCore) = abi.decode(
-            _actionPayload[4:],
+            _actionData[4:],
             (ExecClaim,GelatoCore)
         );
         action(execClaim, gelatoCore);
@@ -33,16 +33,16 @@ contract MockActionChainedDummy is GelatoActionsStandard {
 
     // ======= ACTION CONDITIONS CHECK =========
     // Overriding and extending GelatoActionsStandard's function (optional)
-    function termsOk(bytes calldata _actionPayload)
+    function termsOk(bytes calldata _actionData)
         external
         view
         override
         virtual
         returns(string memory)
     {
-        // Decode: Calldata Array actionPayload without Selector
+        // Decode: Calldata Array actionData without Selector
         (ExecClaim memory execClaim, GelatoCore gelatoCore) = abi.decode(
-            _actionPayload[4:],
+            _actionData[4:],
             (ExecClaim,GelatoCore)
         );
 

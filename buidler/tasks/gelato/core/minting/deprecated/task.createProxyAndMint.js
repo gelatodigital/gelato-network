@@ -1,5 +1,5 @@
 import { task, types } from "@nomiclabs/buidler/config";
-import { defaultNetwork } from "../../../../../buidler.config";
+import { defaultNetwork } from "../../../../../../buidler.config";
 import { constants, utils } from "ethers";
 
 export default task(
@@ -19,15 +19,19 @@ export default task(
   .addOptionalParam("gelatoexecutor", "Defaults to network addressbook default")
   .addOptionalParam("conditionaddress", "", constants.AddressZero)
   .addOptionalParam("actionaddress", "Must be supplied if not <actionname>")
-  .addOptionalParam("conditionpayload", "Payload for optional condition", constants.HashZero)
   .addOptionalParam(
-    "actionpayload",
-    "If not provided, must have a default returned from handleGelatoPayload()"
+    "conditiondata",
+    "Payload for optional condition",
+    constants.HashZero
   )
   .addOptionalParam(
-    "execclaimexpirydate",
+    "actiondata",
+    "If not provided, must have a default returned from handleGelatoData()"
+  )
+  .addOptionalParam(
+    "expirydate",
     "Defaults to 0 for gelatoexecutor's maximum",
-    constants.HashZero
+    constants.Zero
   )
   // GnosisSafeProxy Setup
   .addFlag("createtwo", "Call gelatoCore.createTwoProxyAndMint()")
@@ -95,7 +99,7 @@ export default task(
     types.string
   )
   .addFlag("log", "Logs return values to stdout")
-  .setAction(async taskArgs => {
+  .setAction(async (taskArgs) => {
     try {
       // Command Line Argument Checks
       // Condition and Action for minting
@@ -127,7 +131,7 @@ export default task(
       if (!taskArgs.mastercopy) {
         taskArgs.mastercopy = await run("bre-config", {
           addressbookcategory: "gnosisSafe",
-          addressbookentry: "mastercopy"
+          addressbookentry: "mastercopy",
         });
       }
 
@@ -137,7 +141,7 @@ export default task(
       if (taskArgs.setup && !taskArgs.owners) {
         const signerAddress = await run("ethers", {
           signer: true,
-          address: true
+          address: true,
         });
         taskArgs.owners = [signerAddress];
         if (!Array.isArray(taskArgs.owners))
@@ -151,7 +155,7 @@ export default task(
         if (taskArgs.to === constants.AddressZero) {
           taskArgs.to = await run("bre-config", {
             deployments: true,
-            contractname: taskArgs.defaultpayloadscript
+            contractname: taskArgs.defaultpayloadscript,
           });
         }
       }
@@ -165,12 +169,12 @@ export default task(
           taskArgs.fallbackhandler,
           taskArgs.paymenttoken,
           taskArgs.payment,
-          taskArgs.paymentreceiver
+          taskArgs.paymentreceiver,
         ];
         taskArgs.initializer = await run("abi-encode-withselector", {
           contractname: "IGnosisSafe",
           functionname: "setup",
-          inputs
+          inputs,
         });
       }
       // ============
@@ -178,30 +182,30 @@ export default task(
       // ==== GelatoCore.mintExecClaim Params ====
       // Selected Provider and Executor
       taskArgs.gelatoprovider = await run("handleGelatoProvider", {
-        gelatoprovider: taskArgs.gelatoprovider
+        gelatoprovider: taskArgs.gelatoprovider,
       });
       taskArgs.gelatoexecutor = await run("handleGelatoExecutor", {
-        gelatoexecutor: taskArgs.gelatoexecutor
+        gelatoexecutor: taskArgs.gelatoexecutor,
       });
 
       // Condition and ConditionPayload (optional)
       if (taskArgs.conditionname) {
         if (taskArgs.conditionaddress === constants.AddressZero) {
-          if(taskArgs.conditionname === "0") {
+          if (taskArgs.conditionname === "0") {
             taskArgs.conditionaddress = await run("bre-config", {
               deployments: true,
-              contractname: taskArgs.defaultpayloadscript
+              contractname: taskArgs.defaultpayloadscript,
             });
           } else {
             taskArgs.conditionaddress = await run("bre-config", {
               deployments: true,
-              contractname: taskArgs.to
+              contractname: taskArgs.to,
             });
           }
         }
-        if (!taskArgs.conditionpayload && taskArgs.conditionname !== "0") {
-          taskArgs.conditionpayload = await run("handleGelatoPayload", {
-            contractname: taskArgs.conditionname
+        if (!taskArgs.conditiondata && taskArgs.conditionname !== "0") {
+          taskArgs.conditiondata = await run("handleGelatoData", {
+            contractname: taskArgs.conditionname,
           });
         }
       }
@@ -210,13 +214,13 @@ export default task(
       if (!taskArgs.actionaddress) {
         taskArgs.actionaddress = await run("bre-config", {
           deployments: true,
-          contractname: taskArgs.actionname
+          contractname: taskArgs.actionname,
         });
       }
-      if (!taskArgs.actionpayload) {
-        taskArgs.actionpayload = await run("handleGelatoPayload", {
+      if (!taskArgs.actiondata) {
+        taskArgs.actiondata = await run("handleGelatoData", {
           contractname: taskArgs.actionname,
-          payload: taskArgs.actionpayload
+          payload: taskArgs.actiondata,
         });
       }
       // ============
@@ -226,7 +230,7 @@ export default task(
       // GelatoCore interaction
       const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
-        write: true
+        write: true,
       });
 
       let creationTx;
@@ -237,8 +241,8 @@ export default task(
           taskArgs.saltnonce,
           [taskArgs.gelatoprovider, taskArgs.gelatoexecutor],
           [taskArgs.conditionaddress, taskArgs.actionaddress],
-          taskArgs.conditionpayload,
-          taskArgs.actionpayload,
+          taskArgs.conditiondata,
+          taskArgs.actiondata,
           taskArgs.execclaimexpirydate,
           { value: utils.parseEther(taskArgs.funding), gasLimit: 3000000 }
         );
@@ -248,8 +252,8 @@ export default task(
           taskArgs.initializer,
           [taskArgs.gelatoprovider, taskArgs.gelatoexecutor],
           [taskArgs.conditionaddress, taskArgs.actionaddress],
-          taskArgs.conditionpayload,
-          taskArgs.actionpayload,
+          taskArgs.conditiondata,
+          taskArgs.actiondata,
           taskArgs.execclaimexpirydate,
           { value: utils.parseEther(taskArgs.funding), gasLimit: 3000000 }
         );
@@ -268,7 +272,7 @@ export default task(
           txhash: creationTx.hash,
           blockHash,
           values: true,
-          stringify: true
+          stringify: true,
         });
         if (parsedCreateLog)
           console.log("\n✅ LogGnosisSafeProxyCreation\n", parsedCreateLog);
@@ -280,7 +284,7 @@ export default task(
           txhash: creationTx.hash,
           blockHash,
           values: true,
-          stringify: true
+          stringify: true,
         });
         if (parsedMintingLog)
           console.log("\n✅ LogExecClaimMinted\n", parsedMintingLog);

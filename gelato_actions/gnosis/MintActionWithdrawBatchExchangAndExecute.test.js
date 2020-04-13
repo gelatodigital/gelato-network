@@ -177,7 +177,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       //   [sellerAddress, userProxyAddress, sellToken.address, buyToken.address]
       // );
 
-      const actionPayload = await run("abi-encode-withselector", {
+      const actionData = await run("abi-encode-withselector", {
         contractname: "ActionWithdrawBatchExchange",
         functionname: "action",
         inputs: [
@@ -194,8 +194,8 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         providerModule: providerModuleGelatoUserProxyAddress,
         condition: ethers.constants.AddressZero,
         actions: [actionWithdrawBatchExchange.address],
-        conditionPayload: ethers.constants.HashZero,
-        actionsPayload: [actionPayload],
+        conditionData: ethers.constants.HashZero,
+        actionsPayload: [actionData],
         expiryDate: 0,
       };
 
@@ -286,7 +286,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       //   [sellerAddress, userProxyAddress, sellToken.address, buyToken.address]
       // );
 
-      const actionPayload = await run("abi-encode-withselector", {
+      const actionData = await run("abi-encode-withselector", {
         contractname: "ActionWithdrawBatchExchange",
         functionname: "action",
         inputs: [
@@ -305,8 +305,8 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         providerModule: providerModuleGelatoUserProxyAddress,
         condition: ethers.constants.AddressZero,
         actions: [actionWithdrawBatchExchange.address],
-        conditionPayload: ethers.constants.HashZero,
-        actionsPayload: [actionPayload],
+        conditionData: ethers.constants.HashZero,
+        actionsPayload: [actionData],
         expiryDate: 0,
       };
 

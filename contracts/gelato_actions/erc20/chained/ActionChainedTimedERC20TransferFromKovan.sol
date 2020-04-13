@@ -16,11 +16,11 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
 
     address public constant GELATO_CORE = 0x40134bf777a126B0E6208e8BdD6C567F2Ce648d2;
 
-    function action(bytes calldata _actionPayload) external payable override virtual {
+    function action(bytes calldata _actionData) external payable override virtual {
         (SuperActionPayload memory superActionPayload,
          ActionData memory actionData,
          ExecClaim memory execClaim) = abi.decode(
-             _actionPayload[4:],
+             _actionData[4:],
              (SuperActionPayload,ActionData,ExecClaim)
          );
          action(superActionPayload, actionData, execClaim);
@@ -43,9 +43,9 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
          // Max 3 days delay, else automatic expiry
         _ec.task.expiryDate = _actionData.dueDate.add(3 days);
 
-        // Encode updated ActionChainedTimedERC20TransferFromKovan payload into actionPayload
+        // Encode updated ActionChainedTimedERC20TransferFromKovan payload into actionData
         // @DEV we could maybe use some assembly here to only swap the dueDateValue
-        // _ec.task.actionPayload = abi.encodeWithSelector(
+        // _ec.task.actionData = abi.encodeWithSelector(
         //     IGelatoAction.action.selector,
         //     _superActionPayload,
         //     _actionData,
@@ -68,18 +68,18 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
 
     // ======= ACTION CONDITIONS CHECK =========
     // Overriding and extending GelatoActionsStandard's function (optional)
-    function termsOk(bytes calldata _actionPayload)
+    function termsOk(bytes calldata _actionData)
         external
         view
         override
         virtual
         returns(string memory)
     {
-        // Decode: Calldata Array actionPayload without Selector
+        // Decode: Calldata Array actionData without Selector
         (SuperActionPayload memory superActionPayload,
          ActionData memory actionData,
          ExecClaim memory execClaim) = abi.decode(
-             _actionPayload[4:],
+             _actionData[4:],
              (SuperActionPayload,ActionData,ExecClaim)
         );
 
