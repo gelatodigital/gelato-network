@@ -40,7 +40,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         address executor = executorByProvider[_task.provider];
         require(
             isExecutorMinStaked(executor),
-            "GelatoCore.mintExecClaim: executorByProvider's stake is insufficient."
+            "GelatoCore.mintExecClaim: executorByProvider's stake is insufficient"
         );
 
         // User checks
@@ -285,20 +285,12 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
                 error = "GelatoCore._exec.execPayload";
             }
 
-            // Execution via UserProxy
-            if (execPayload.length >= 4)
-                (success, revertMsg) = _ec.userProxy.call(execPayload);
-
-            else error = "GelatoCore._exec.execPayload: invalid";
+            (success, revertMsg) = _ec.userProxy.call(execPayload);
         } else {
             // Self-Providing Users: actionPayload == execPayload assumption
             // Execution via UserProxy
-            if (_ec.task.actionsPayload[0].length >= 4 ) {
-                if ( _ec.task.actionsPayload.length == 1) (success, revertMsg) = _ec.userProxy.call(_ec.task.actionsPayload[0]);
-                else error = "GelatoCore._exec.actionsPayload: Needs to be one";
-            }
-
-            else error = "GelatoCore._exec.actionPayload: invalid";
+            if ( _ec.task.actionsPayload.length == 1) (success, revertMsg) = _ec.userProxy.call(_ec.task.actionsPayload[0]);
+            else error = "GelatoCore._exec.actionsPayload: Needs to be one";
         }
 
         // FAILURE
