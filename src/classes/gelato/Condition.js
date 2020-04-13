@@ -1,8 +1,8 @@
 import { constants } from "ethers";
 
 class Condition {
-  constructor({ addr, data }) {
-    this.addr = addr ? addr : constants.AddressZero;
+  constructor({ inst, data }) {
+    this.inst = inst ? inst : constants.AddressZero;
     this.data = data ? data : constants.HashZero;
   }
 }

@@ -47,8 +47,14 @@ interface IGelatoProviders {
     event LogUnprovideCAM(address indexed provider, bytes32 indexed camHash);
 
     // Provider Module
-    event LogAddProviderModule(address indexed provider, address indexed module);
-    event LogRemoveProviderModule(address indexed provider, address indexed module);
+    event LogAddProviderModule(
+        address indexed provider,
+        IGelatoProviderModule indexed module
+    );
+    event LogRemoveProviderModule(
+        address indexed provider,
+        IGelatoProviderModule indexed module
+    );
 
     // =========== CORE PROTOCOL APIs ==============
     // GelatoCore: mintExecClaim/canExec/collectExecClaimRent Gate
@@ -86,14 +92,14 @@ interface IGelatoProviders {
     function unprovideCAMs(ConditionActionsMix[] calldata _actionsArray) external;
 
     // Provider Module
-    function addProviderModules(address[] calldata _modules) external;
-    function removeProviderModules(address[] calldata _modules) external;
+    function addProviderModules(IGelatoProviderModule[] calldata _modules) external;
+    function removeProviderModules(IGelatoProviderModule[] calldata _modules) external;
 
     // Batch (un-)provide
     function batchProvide(
         address _executor,
         ConditionActionsMix[] calldata _actions,
-        address[] calldata _modules
+        IGelatoProviderModule[] calldata _modules
     )
         external
         payable;
@@ -101,7 +107,7 @@ interface IGelatoProviders {
     function batchUnprovide(
         uint256 _withdrawAmount,
         ConditionActionsMix[] calldata _actions,
-        address[] calldata _modules
+        IGelatoProviderModule[] calldata _modules
     )
         external;
 
@@ -131,7 +137,7 @@ interface IGelatoProviders {
     function NO_CEIL() external pure returns(uint256);
 
     // Providers' Module Getters
-    function isProviderModule(address _provider, address _module)
+    function isProviderModule(address _provider, IGelatoProviderModule _module)
         external
         view
         returns(bool);
@@ -142,5 +148,5 @@ interface IGelatoProviders {
     function providerModules(address _provider)
         external
         view
-        returns(address[] memory);
+        returns(IGelatoProviderModule[] memory);
 }

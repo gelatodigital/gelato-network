@@ -78,7 +78,7 @@ export default task(
         }
 
         // Handle GelatoProvider
-        // Provider.addr
+        // Provider.inst
         taskArgs.gelatoprovider = await run("handleGelatoProvider", {
           gelatoprovider: taskArgs.gelatoprovider,
         });
@@ -87,7 +87,7 @@ export default task(
           throw new Error(`\n gc-mintexecclaim: gelatoprovidermodule \n`);
         // GelatoProvider
         const gelatoProvider = new gelatoProvider({
-          addr: taskArgs.gelatoprovider,
+          inst: taskArgs.gelatoprovider,
           module: taskArgs.providermodule,
         });
 
@@ -106,14 +106,14 @@ export default task(
           }
         }
         const condition = new Condition({
-          addr: taskArgs.conditionaddress,
+          inst: taskArgs.conditionaddress,
           data: taskArgs.conditiondata,
         });
 
         // Handle Actions
         const actions = [];
         for (const actionname of taskArgs.actionnames) {
-          // Action.addr
+          // Action.inst
           if (!taskArgs.actionaddresses) {
             taskArgs.actionaddresses[actionname] = await run("bre-config", {
               deployments: true,
@@ -128,7 +128,7 @@ export default task(
           }
           // Action
           const action = new Action({
-            addr: taskArgs.actionaddresses[actionname],
+            inst: taskArgs.actionaddresses[actionname],
             data: taskArgs.actiondata[actionname],
           });
           // Task.actions

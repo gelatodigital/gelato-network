@@ -57,7 +57,7 @@ contract MockActionChainedDummy is GelatoActionsStandard {
         returns(string memory)  // actionTermsOk
     {
 
-        if (_ec.userProxy != _ec.task.provider.addr) {
+        if (_ec.userProxy != _ec.task.provider.inst) {
             string memory isProvided = _gelatoCore.isExecClaimProvided(
                 _ec
             );

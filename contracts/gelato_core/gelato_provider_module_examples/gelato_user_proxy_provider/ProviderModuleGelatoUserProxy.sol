@@ -44,12 +44,12 @@ contract ProviderModuleGelatoUserProxy is
     {
         if (_actions.length > 1) {
             return abi.encodeWithSelector(
-                IGelatoUserProxy.multiDelegatecallActions.selector,
+                IGelatoUserProxy.multiExecGelatoActions.selector,
                 _actions
             );
         } else if (_actions.length == 1) {
             return abi.encodeWithSelector(
-                IGelatoUserProxy.delegatecallAction.selector,
+                IGelatoUserProxy.execGelatoAction.selector,
                 _actions[0]
             );
         }

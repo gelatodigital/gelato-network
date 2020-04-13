@@ -36,7 +36,7 @@ contract ScriptEnterStableSwap is ActionPlaceOrderBatchExchange, ScriptGnosisSaf
     )
         public
     {
-        require(_task.condition.addr == address(0));
+        require(address(_task.condition.inst) == address(0));
 
         // 1. Enable Gelato Core
         enableGelatoCoreModule(_gelatoCore);

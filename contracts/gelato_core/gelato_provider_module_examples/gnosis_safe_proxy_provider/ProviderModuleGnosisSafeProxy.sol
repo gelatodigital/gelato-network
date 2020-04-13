@@ -71,7 +71,7 @@ contract ProviderModuleGnosisSafeProxy is
             for (uint i; i < _actions.length; i++ ) {
                 bytes memory payloadPart = abi.encodePacked(
                     uint256(1),  // operation
-                    _actions[i].addr,  // to
+                    _actions[i].inst,  // to
                     uint256(0),  // value
                     _actions[i].data.length,
                     _actions[i].data

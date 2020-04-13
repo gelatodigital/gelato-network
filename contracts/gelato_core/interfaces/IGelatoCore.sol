@@ -1,17 +1,23 @@
 pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
+import { IGelatoProviderModule } from "./IGelatoProviderModule.sol";
+import { IGelatoCondition } from "../../gelato_conditions/IGelatoCondition.sol";
+import { IGelatoAction } from "../../gelato_actions/IGelatoAction.sol";
+
 struct Provider {
-    address addr;  //  if msg.sender == provider => self-Provider
-    address module;  //  can be AddressZero for self-Providers
+    address inst;  //  if msg.sender == provider => self-Provider
+    IGelatoProviderModule module;  //  can be IGelatoProviderModule(0) for self-Providers
 }
 
 struct Condition {
-    address addr;  // can be AddressZero for self-conditional Actions
+    IGelatoCondition inst;  // can be AddressZero for self-conditional Actions
     bytes data;  // can be bytes32(0) for self-conditional Actions
 }
 
-struct Action { address addr; bytes data; }
+enum Operation { Call, Delegatecall }
+
+struct Action { IGelatoAction inst; bytes data; Operation operation; }
 
 struct Task {
     Provider provider;
