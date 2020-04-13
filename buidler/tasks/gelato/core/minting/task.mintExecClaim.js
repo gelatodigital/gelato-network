@@ -20,16 +20,20 @@ export default task(
   )
   .addOptionalParam("conditionaddress")
   .addOptionalParam(
-    "actionaddresses",
-    "Multiple actions => JS object (np via CLI)."
-  )
-  .addOptionalParam(
     "conditiondata",
     "If undefined, handleGelatoData() must work"
   )
   .addOptionalParam(
+    "actionaddresses",
+    "Multiple actions => JS object (np via CLI)."
+  )
+  .addOptionalParam(
     "actiondata",
     "Multiple actions => JS object (np via CLI). If undefined, handleGelatoData() must work"
+  )
+  .addOptionalParam(
+    "operations",
+    "Multiple actions => JS object (np via CLI). If undefined, defaults to delegatecall"
   )
   .addOptionalParam(
     "expirydate",
@@ -114,22 +118,27 @@ export default task(
         const actions = [];
         for (const actionname of taskArgs.actionnames) {
           // Action.inst
-          if (!taskArgs.actionaddresses) {
+          if (!taskArgs.actionaddresses[actionname]) {
             taskArgs.actionaddresses[actionname] = await run("bre-config", {
               deployments: true,
               contractname: actionname,
             });
           }
           // Action.data
-          if (!taskArgs.actiondata) {
+          if (!taskArgs.actiondata[actionname]) {
             taskArgs.actiondata[actionname] = await run("handleGelatoData", {
               contractname: actionname,
             });
           }
+          // Action.operation
+          if (!taskArgs.operations[actionname])
+            taskArgs.operations[actionname] = "delegatecall";
+
           // Action
           const action = new Action({
             inst: taskArgs.actionaddresses[actionname],
             data: taskArgs.actiondata[actionname],
+            operation: taskArgs.operations[actionname],
           });
           // Task.actions
           actions.push(action);

@@ -70,7 +70,7 @@ export default task(
       // Action
       let actionAddresses = [];
       let tempArray = [];
-      for (const action of taskArgs.actions) {
+      for (const action of taskArgs.actionnames) {
         if (!tempArray.includes(action)) {
           let actionconstructorargs;
           if (action === "ActionWithdrawBatchExchange") {
@@ -100,7 +100,7 @@ export default task(
           actionAddresses.push(deployedAction.address);
         } else {
           let i = 0;
-          for (const tempAction of taskArgs.actions) {
+          for (const tempAction of taskArgs.actionnames) {
             if (tempAction === action) {
               actionAddresses.push(actionAddresses[i]);
               tempArray.push(action);
