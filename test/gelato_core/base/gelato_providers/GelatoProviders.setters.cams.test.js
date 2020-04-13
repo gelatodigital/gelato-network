@@ -7,7 +7,7 @@ import { utils } from "ethers";
 // GelatoProviders creation time variable values
 import initialState from "./GelatoProviders.initialState";
 
-describe("GelatoCore - GelatoProviders - Setters: ACTIONS", function () {
+describe("GelatoCore - GelatoProviders - Setters: CAMS", function () {
   // We define the ContractFactory and Address variables here and assign them in
   // a beforeEach hook.
   let GelatoCore;
@@ -81,6 +81,9 @@ describe("GelatoCore - GelatoProviders - Setters: ACTIONS", function () {
           initialState.camGPC,
           cam.gasPriceCeil
         );
+      expect(await gelatoCore.camGPC(providerAddress, camHash)).to.be.equal(
+        cam.gasPriceCeil
+      );
       expect(await gelatoCore.camGPC(providerAddress, camHash)).to.be.equal(
         cam.gasPriceCeil
       );

@@ -1,9 +1,11 @@
-import { constants } from "ethers";
-
 class Condition {
   constructor({ inst, data }) {
-    this.inst = inst ? inst : constants.AddressZero;
-    this.data = data ? data : constants.HashZero;
+    if (!inst)
+      throw new Error("\n Condition: no inst passed to constructor \n ");
+    if (!data)
+      throw new Error("\n Condition: no data passed to constructor \n ");
+    this.inst = inst;
+    this.data = data;
   }
 }
 

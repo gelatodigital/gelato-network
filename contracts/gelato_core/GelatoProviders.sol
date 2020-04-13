@@ -39,7 +39,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         returns(string memory)
     {
         bytes32 camHash = keccak256(abi.encode(_ec.task.condition, _ec.task.actions));
-        if (camGPC[_ec.task.provider.inst][camHash] == 0)
+        if (camGPC[_ec.task.provider.addr][camHash] == 0)
             return "ConditionActionsMixNotProvided";
         return "Ok";
     }
@@ -51,7 +51,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         override
         returns(string memory)
     {
-        if (!isProviderModule(_ec.task.provider.inst, _ec.task.provider.module))
+        if (!isProviderModule(_ec.task.provider.addr, _ec.task.provider.module))
             return "InvalidProviderModule";
 
         IGelatoProviderModule providerModule = IGelatoProviderModule(
@@ -85,7 +85,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     {
         // Will only return if a) action is not whitelisted & b) gelatoGasPrice is higher than gasPriceCeiling
         bytes32 camHash = keccak256(abi.encode(_ec.task.condition, _ec.task.actions));
-        if (_gelatoGasPrice > camGPC[_ec.task.provider.inst][camHash])
+        if (_gelatoGasPrice > camGPC[_ec.task.provider.addr][camHash])
             return "GelatoGasPriceTooHigh";
         return providerModuleChecks(_ec);
     }

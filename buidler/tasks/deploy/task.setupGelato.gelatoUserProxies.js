@@ -111,10 +111,12 @@ export default task(
         }
       }
 
-      const actionsWithGasPriceCeil = new ActionsWithGasPriceCeil(
-        actionAddresses,
-        utils.parseUnits("20", "gwei")
-      );
+      // Condition Actions Mix
+      const cam = new CAM({
+        condition: conditionAddress ? conditionAddress : constants.AddressZero,
+        actions: actionAddresses,
+        gasPriceCeil: utils.parseUnits("20", "gwei"),
+      });
 
       // === GelatoCore setup ===
       // GelatoSysAdmin
@@ -134,20 +136,21 @@ export default task(
       });
 
       // Provider
-      const [_, executor] = await ethers.getSigners();
-      const gelatoExecutorAddress = await executor.getAddress();
+      const [_, executor, provider] = await ethers.getSigners();
+      const executorAddress = await executor.getAddress();
 
-      await run("gc-batchprovide", {
-        gelatocoreaddress: gelatoCore.address,
-        providerindex: 2,
-        funds: "0.2",
-        gelatoexecutor: gelatoExecutorAddress,
-        conditions: conditionAddress,
-        actionswithgaspriceceil: actionsWithGasPriceCeil,
-        modules: [providerModuleGelatoUserProxy.address],
-        // events: taskArgs.events,  < = BUIDLER EVM events bug for structs
-        log: taskArgs.log,
-      });
+      const minProviderStake = await gelatoCore.minProviderStake();
+      await gelatoCore
+        .connect(provider)
+        .provideFunds(await provider.getAddress(), { value: minProviderStake });
+
+      await gelatoCore
+        .connect(provider)
+        .batchProvide(
+          executorAddress,
+          [cam],
+          [providerModuleGelatoUserProxy.address]
+        );
 
       // === GelatoUserProxy setup ===
       await run("gupf-creategelatouserproxy", {
@@ -161,7 +164,7 @@ export default task(
         gelatoCore,
         gelatoUserProxyFactory,
         providerModuleGelatoUserProxy,
-        actionsWithGasPriceCeil,
+        cam,
         conditionAddress,
       };
     } catch (error) {
