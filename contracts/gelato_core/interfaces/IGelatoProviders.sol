@@ -128,7 +128,6 @@ interface IGelatoProviders {
         external
         view
         returns(uint256);
-
     function NO_CEIL() external pure returns(uint256);
 
     // Providers' Module Getters
