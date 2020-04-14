@@ -22,8 +22,6 @@ describe("GelatoCore - GelatoProviders - Setters: CAMS", function () {
 
   let actionStruct;
   let otherActionStruct;
-  let noDataAction;
-  let otherNoDataAction;
 
   const gasPriceCeil = utils.parseUnits("20", "gwei");
 
@@ -113,26 +111,15 @@ describe("GelatoCore - GelatoProviders - Setters: CAMS", function () {
     });
 
     // Condition Action Mix
-    noDataAction = new NoDataAction({
-      inst: action.address,
-      operation: "delegatecall",
-      termsOkCheck: false,
-    });
-    otherNoDataAction = new NoDataAction({
-      inst: otherAction.address,
-      operation: "delegatecall",
-      termsOkCheck: true,
-    });
-
     cam = new CAM({
       condition: condition.address,
-      noDataActions: [noDataAction],
+      actions: [actionStruct],
       gasPriceCeil,
     });
 
     otherCAM = new CAM({
       condition: condition.address,
-      noDataActions: [noDataAction, otherNoDataAction],
+      actions: [actionStruct, otherActionStruct],
       gasPriceCeil,
     });
   });
@@ -143,10 +130,7 @@ describe("GelatoCore - GelatoProviders - Setters: CAMS", function () {
   describe("GelatoCore.GelatoProviders.provideCAMs", function () {
     it("Should allow anyone to provide a single CAM", async function () {
       // camHash
-      const camHash = await gelatoCore.camHash(
-        cam.condition,
-        cam.noDataActions
-      );
+      const camHash = await gelatoCore.camHash(cam.condition, cam.actions);
       await expect(gelatoCore.provideCAMs([cam]))
         .to.emit(gelatoCore, "LogProvideCAM")
         .withArgs(
@@ -178,13 +162,10 @@ describe("GelatoCore - GelatoProviders - Setters: CAMS", function () {
 
     it("Should allow anyone to provideCAMs", async function () {
       // camHash
-      const camHash = await gelatoCore.camHash(
-        cam.condition,
-        cam.noDataActions
-      );
+      const camHash = await gelatoCore.camHash(cam.condition, cam.actions);
       const otherCAMHash = await gelatoCore.camHash(
         otherCAM.condition,
-        otherCAM.noDataActions
+        otherCAM.actions
       );
       await expect(gelatoCore.provideCAMs([cam, otherCAM]))
         .to.emit(gelatoCore, "LogProvideCAM")
@@ -260,13 +241,10 @@ describe("GelatoCore - GelatoProviders - Setters: CAMS", function () {
       await gelatoCore.provideCAMs([cam, otherCAM]);
 
       // camHash
-      const camHash = await gelatoCore.camHash(
-        cam.condition,
-        cam.noDataActions
-      );
+      const camHash = await gelatoCore.camHash(cam.condition, cam.actions);
       const otherCAMHash = await gelatoCore.camHash(
         otherCAM.condition,
-        otherCAM.noDataActions
+        otherCAM.actions
       );
 
       // unprovideCAMs
@@ -316,13 +294,10 @@ describe("GelatoCore - GelatoProviders - Setters: CAMS", function () {
       // provideCAMs
       await gelatoCore.provideCAMs([cam, otherCAM]);
 
-      const camHash = await gelatoCore.camHash(
-        cam.condition,
-        cam.noDataActions
-      );
+      const camHash = await gelatoCore.camHash(cam.condition, cam.actions);
       const otherCAMHash = await gelatoCore.camHash(
         otherCAM.condition,
-        otherCAM.noDataActions
+        otherCAM.actions
       );
 
       // unprovideCAMs

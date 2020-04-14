@@ -8,7 +8,7 @@ export default task(
   `Deploys GelatoCore, GelatoGasPriceOracle, ProviderModuleGelatoUserProxy, GelatoUserProxy,
     --action and --conditiod, and performs minimum viable setup`
 )
-  .addOptionalVariadicPositionalParam("actionnames")
+  .addVariadicPositionalParam("actionnames")
   .addOptionalParam(
     "gelatogasprice",
     "The initial gelatoGasPrice to set on GelatoGasPriceOracle",
@@ -111,10 +111,22 @@ export default task(
         }
       }
 
-      // Condition Actions Mix
+      // NoDataActions for CAM
+      const actions = [];
+      for (const address of actionAddresses) {
+        const action = new NoDataAction({
+          inst: address,
+          data: constants.HashZero,
+          operation: "delegatecall",
+          termsOkCheck: true,
+        });
+        actions.push(action);
+      }
+
+      // Condition Actions Mix (CAM)
       const cam = new CAM({
         condition: conditionAddress ? conditionAddress : constants.AddressZero,
-        actions: actionAddresses,
+        actions,
         gasPriceCeil: utils.parseUnits("20", "gwei"),
       });
 

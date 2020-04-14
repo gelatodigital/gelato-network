@@ -10,7 +10,7 @@ import { SafeMath } from "../external/SafeMath.sol";
 import { Math } from "../external/Math.sol";
 import { IGelatoProviderModule } from "./interfaces/IGelatoProviderModule.sol";
 import { ProviderModuleSet } from "../libraries/ProviderModuleSet.sol";
-import { Action, ExecClaim } from "./interfaces/IGelatoCore.sol";
+import { Action, Operation, ExecClaim } from "./interfaces/IGelatoCore.sol";
 import { GelatoString } from "../libraries/GelatoString.sol";
 import { IGelatoCondition } from "../gelato_conditions/IGelatoCondition.sol";
 
@@ -23,6 +23,13 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     using ProviderModuleSet for ProviderModuleSet.Set;
     using SafeMath for uint256;
     using GelatoString for string;
+
+    // This is only for internal use by camHash()
+    struct NoDataAction {
+        address inst;
+        Operation operation;
+        bool termsOkCheck;
+    }
 
     uint256 public constant override NO_CEIL = 2**256 - 1;  // MaxUint256
 
@@ -45,18 +52,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         override
         returns(string memory)
     {
-        NoDataAction[] memory noDataActions = new NoDataAction[](_actions.length);
-        for (uint i = 0; i < _actions.length; i++) {
-            NoDataAction memory noDataAction = NoDataAction({
-                inst: _actions[i].inst,
-                operation: _actions[i].operation,
-                termsOkCheck: _actions[i].termsOkCheck
-            });
-            noDataActions[i] = noDataAction;
-        }
-
-        bytes32 camHash = camHash(_condition, noDataActions);
-
+        bytes32 camHash = camHash(_condition, _actions);
         if (camGPC[_provider][camHash] == 0) return "ConditionActionsMixNotProvided";
         return "Ok";
     }
@@ -101,10 +97,10 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         returns(string memory)
     {
         // Will only return if a) action is not whitelisted & b) gelatoGasPrice is higher than gasPriceCeiling
-        bytes32 camHash = keccak256(abi.encode(_ec.task.condition, _ec.task.actions));
+        bytes32 camHash = camHash(_ec.task.condition.inst, _ec.task.actions);
         if (_gelatoGasPrice > camGPC[_ec.task.provider.addr][camHash])
             return "GelatoGasPriceTooHigh";
-        return isExecClaimProvided(_ec);
+        return providerModuleChecks(_ec);
     }
 
     // Provider Funding
@@ -203,7 +199,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         for (uint i; i < _CAMs.length; i++) {
             if (_CAMs[i].gasPriceCeil == 0) _CAMs[i].gasPriceCeil = NO_CEIL;
 
-            bytes32 camHash = camHash(_CAMs[i].condition, _CAMs[i].noDataActions);
+            bytes32 camHash = camHash(_CAMs[i].condition, _CAMs[i].actions);
 
             uint256 currentGasPriceCeil = camGPC[msg.sender][camHash];
             require(
@@ -224,7 +220,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
 
     function unprovideCAMs(ConditionActionsMix[] memory _CAMs) public override {
         for (uint i; i < _CAMs.length; i++) {
-            bytes32 camHash = camHash(_CAMs[i].condition, _CAMs[i].noDataActions);
+            bytes32 camHash = camHash(_CAMs[i].condition, _CAMs[i].actions);
             require(
                 camGPC[msg.sender][camHash] != 0,
                 "GelatoProviders.unprovideCAMs: redundant"
@@ -302,13 +298,22 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     }
 
     // Helper fn that can also be called to query camHash off-chain
-    function camHash(IGelatoCondition _condition, NoDataAction[] memory _noDataActions)
+    function camHash(IGelatoCondition _condition, Action[] memory _actions)
         public
         view
         override
         returns(bytes32)
     {
-        return keccak256(abi.encode(_condition, _noDataActions));
+        NoDataAction[] memory noDataActions = new NoDataAction[](_actions.length);
+        for (uint i = 0; i < _actions.length; i++) {
+            NoDataAction memory noDataAction = NoDataAction({
+                inst: _actions[i].inst,
+                operation: _actions[i].operation,
+                termsOkCheck: _actions[i].termsOkCheck
+            });
+            noDataActions[i] = noDataAction;
+        }
+        return keccak256(abi.encode(_condition, noDataActions));
     }
 
     // Providers' Module Getters
