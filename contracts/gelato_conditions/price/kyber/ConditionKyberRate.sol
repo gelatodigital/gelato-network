@@ -10,7 +10,7 @@ contract ConditionKyberRate is GelatoConditionsStandard {
     using SafeMath for uint256;
 
     // STANDARD Interface
-    function ok(bytes calldata _conditionPayload)
+    function ok(bytes calldata _conditionData)
         external
         view
         override
@@ -22,7 +22,7 @@ contract ConditionKyberRate is GelatoConditionsStandard {
          address dest,
          uint256 refRate,
          bool greaterElseSmaller) = abi.decode(
-             _conditionPayload[4:],
+             _conditionData[4:],
              (address,uint256,address,uint256,bool)
          );
         return ok(src, srcAmt, dest, refRate, greaterElseSmaller);

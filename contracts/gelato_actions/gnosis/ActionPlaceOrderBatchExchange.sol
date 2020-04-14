@@ -20,8 +20,8 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandard {
         batchExchange = IBatchExchange(_batchExchange);
     }
 
-    function action(bytes calldata _actionPayload) external payable override virtual {
-        (address _user, address _sellToken, address _buyToken, uint128 _sellAmount, uint128 _buyAmount, uint32 _orderExpirationBatchId) = abi.decode(_actionPayload, (address, address, address, uint128, uint128, uint32));
+    function action(bytes calldata _actionData) external payable override virtual {
+        (address _user, address _sellToken, address _buyToken, uint128 _sellAmount, uint128 _buyAmount, uint32 _orderExpirationBatchId) = abi.decode(_actionData, (address, address, address, uint128, uint128, uint32));
         action(_user, _sellToken, _buyToken, _sellAmount, _buyAmount, _orderExpirationBatchId);
     }
 

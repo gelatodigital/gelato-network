@@ -5,6 +5,6 @@ module.exports = {
     "external",
     "gelato_actions",
     "gelato_conditions",
-    "user_proxies/gnosis_safe_proxy",
+    "mocks",
   ],
 };

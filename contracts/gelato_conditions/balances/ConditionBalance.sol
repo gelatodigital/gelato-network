@@ -8,7 +8,7 @@ contract ConditionBalance is GelatoConditionsStandard {
 
     // STANDARD Interface
     // Caution: use 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE for ETH token
-    function ok(bytes calldata _conditionPayload)
+    function ok(bytes calldata _conditionData)
         external
         view
         override
@@ -20,7 +20,7 @@ contract ConditionBalance is GelatoConditionsStandard {
          address token,
          uint256 refBalance,
          bool greaterElseSmaller) = abi.decode(
-             _conditionPayload[4:],
+             _conditionData[4:],
              (address,address,uint256,bool)
          );
         return ok(account, token, refBalance, greaterElseSmaller);

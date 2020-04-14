@@ -7,7 +7,7 @@ import { Address } from "../external/Address.sol";
 import { SafeMath } from "../external/SafeMath.sol";
 import { Math } from "../external/Math.sol";
 import { IGelatoProviderModule } from "./interfaces/IGelatoProviderModule.sol";
-import { EnumerableAddressSet } from "../external/EnumerableAddressSet.sol";
+import { ProviderModuleSet } from "../libraries/ProviderModuleSet.sol";
 import { ExecClaim } from "./interfaces/IGelatoCore.sol";
 import { GelatoString } from "../libraries/GelatoString.sol";
 
@@ -17,7 +17,7 @@ import { GelatoString } from "../libraries/GelatoString.sol";
 abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
 
     using Address for address payable;  /// for sendValue method
-    using EnumerableAddressSet for EnumerableAddressSet.AddressSet;
+    using ProviderModuleSet for ProviderModuleSet.Set;
     using SafeMath for uint256;
     using GelatoString for string;
 
@@ -27,25 +27,25 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     mapping(address => uint256) public override executorStake;
     mapping(address => address) public override executorByProvider;
     mapping(address => uint256) public override executorProvidersCount;
-    mapping(address => mapping(address => bool)) public override isConditionProvided;
-    mapping(address => mapping(bytes32 => uint256)) public override actionGasPriceCeil;
-    mapping(address => EnumerableAddressSet.AddressSet) internal _providerModules;
+    // The Condition-Actions-Combo Gas-Price-Ceil => camGPC
+    mapping(address => mapping(bytes32 => uint256)) public override camGPC;
+    mapping(address => ProviderModuleSet.Set) internal _providerModules;
 
     // GelatoCore: mintExecClaim/collectExecClaimRent Gate
-    function isConditionActionProvided(ExecClaim memory _ec)
+    function isCAMProvided(ExecClaim memory _ec)
         public
         view
         override
         returns(string memory)
     {
-        if (_ec.task.condition != address(0)) {
-            if (!isConditionProvided[_ec.task.provider][_ec.task.condition])
-                return "ConditionNotProvided";
-        }
+        address[] memory actions = new address[](_ec.task.actions.length);
+        for (uint i = 0; i < actions.length; i++)
+            actions[i] = address(_ec.task.actions[i].inst);
 
-        bytes32 actionsHash = keccak256(abi.encode(_ec.task.actions));
-        if (actionGasPriceCeil[_ec.task.provider][actionsHash] == 0)
-            return "ActionNotProvided";
+        bytes32 camHash = keccak256(abi.encode(address(_ec.task.condition.inst), actions));
+
+        if (camGPC[_ec.task.provider.addr][camHash] == 0)
+            return "ConditionActionsMixNotProvided";
         return "Ok";
     }
 
@@ -56,11 +56,11 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         override
         returns(string memory)
     {
-        if (!isProviderModule(_ec.task.provider, _ec.task.providerModule))
+        if (!isProviderModule(_ec.task.provider.addr, _ec.task.provider.module))
             return "InvalidProviderModule";
 
         IGelatoProviderModule providerModule = IGelatoProviderModule(
-            _ec.task.providerModule
+            _ec.task.provider.module
         );
 
         try providerModule.isProvided(_ec) returns(string memory res) {
@@ -77,7 +77,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         override
         returns(string memory res)
     {
-        res = isConditionActionProvided(_ec);
+        res = isCAMProvided(_ec);
         if (res.startsWithOk()) return providerModuleChecks(_ec);
     }
 
@@ -89,16 +89,9 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         returns(string memory)
     {
         // Will only return if a) action is not whitelisted & b) gelatoGasPrice is higher than gasPriceCeiling
-        bytes32 actionsHash = keccak256(abi.encode(_ec.task.actions));
-        if (_gelatoGasPrice > actionGasPriceCeil[_ec.task.provider][actionsHash])
+        bytes32 camHash = keccak256(abi.encode(_ec.task.condition, _ec.task.actions));
+        if (_gelatoGasPrice > camGPC[_ec.task.provider.addr][camHash])
             return "GelatoGasPriceTooHigh";
-
-        // 3. Check if condition is whitelisted by provider
-        if (_ec.task.condition != address(0)) {
-            if (!isConditionProvided[_ec.task.provider][_ec.task.condition])
-                return "ConditionNotProvided";
-        }
-
         return providerModuleChecks(_ec);
     }
 
@@ -113,7 +106,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     function unprovideFunds(uint256 _withdrawAmount)
         public
         override
-        returns (uint256 realWithdrawAmount)
+        returns(uint256 realWithdrawAmount)
     {
         address currentExecutor = executorByProvider[msg.sender];
         require(
@@ -193,65 +186,44 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         emit LogExecutorAssignsExecutor(_provider, currentExecutor, _newExecutor);
     }
 
-    // (Un-)provide Conditions
-    function provideConditions(address[] memory _conditions) public override {
-        for (uint i; i < _conditions.length; i++) {
+    // (Un-)provide Condition Action Combos at different Gas Price Ceils
+    function provideCAMs(ConditionActionsMix[] memory _CAMs) public override {
+        for (uint i; i < _CAMs.length; i++) {
+            if (_CAMs[i].gasPriceCeil == 0) _CAMs[i].gasPriceCeil = NO_CEIL;
+
+            bytes32 camHash = camHash(_CAMs[i]);
+
+            uint256 currentGasPriceCeil = camGPC[msg.sender][camHash];
             require(
-                !isConditionProvided[msg.sender][_conditions[i]],
-                "GelatProviders.provideConditions: redundant"
+                currentGasPriceCeil != _CAMs[i].gasPriceCeil,
+                "GelatoProviders.provideCAMs: redundant"
             );
-            isConditionProvided[msg.sender][_conditions[i]] = true;
-            emit LogProvideCondition(msg.sender, _conditions[i]);
-        }
-    }
 
-    function unprovideConditions(address[] memory _conditions) public override {
-        for (uint i; i < _conditions.length; i++) {
-            require(
-                isConditionProvided[msg.sender][_conditions[i]],
-                "GelatProviders.unprovideConditions: redundant"
-            );
-            delete isConditionProvided[msg.sender][_conditions[i]];
-            emit LogUnprovideCondition(msg.sender, _conditions[i]);
-        }
-    }
+            camGPC[msg.sender][camHash] = _CAMs[i].gasPriceCeil;
 
-    // (Un-)provide Actions at different gasPrices
-    function provideActions(ActionsWithGasPriceCeil[] memory _actions) public override {
-        for (uint i; i < _actions.length; i++) {
-            if (_actions[i].gasPriceCeil == 0) _actions[i].gasPriceCeil = NO_CEIL;
-
-            bytes32 actionsHash = keccak256(abi.encode(_actions[i].addresses));
-
-            uint256 currentGasPriceCeil = actionGasPriceCeil[msg.sender][actionsHash];
-            require(
-                currentGasPriceCeil != _actions[i].gasPriceCeil,
-                "GelatoProviders.provideActions: redundant"
-            );
-            actionGasPriceCeil[msg.sender][actionsHash] = _actions[i].gasPriceCeil;
-            emit LogProvideAction(
+            emit LogProvideCAM(
                 msg.sender,
-                actionsHash,
+                camHash,
                 currentGasPriceCeil,
-                _actions[i].gasPriceCeil
+                _CAMs[i].gasPriceCeil
             );
         }
     }
 
-    function unprovideActions(ActionsArray[] memory _actionsArray) public override {
-        for (uint i; i < _actionsArray.length; i++) {
-            bytes32 actionsHash = keccak256(abi.encode(_actionsArray[i]));
+    function unprovideCAMs(ConditionActionsMix[] memory _CAMs) public override {
+        for (uint i; i < _CAMs.length; i++) {
+            bytes32 camHash = camHash(_CAMs[i]);
             require(
-                actionGasPriceCeil[msg.sender][actionsHash] != 0,
-                "GelatoProviders.unprovideActions: redundant"
+                camGPC[msg.sender][camHash] != 0,
+                "GelatoProviders.unprovideCAMs: redundant"
             );
-            delete actionGasPriceCeil[msg.sender][actionsHash];
-            emit LogUnprovideAction(msg.sender, actionsHash);
+            delete camGPC[msg.sender][camHash];
+            emit LogUnprovideCAM(msg.sender, camHash);
         }
     }
 
     // Provider Module
-    function addProviderModules(address[] memory _modules) public override {
+    function addProviderModules(IGelatoProviderModule[] memory _modules) public override {
         for (uint i; i < _modules.length; i++) {
             require(
                 !isProviderModule(msg.sender, _modules[i]),
@@ -262,7 +234,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         }
     }
 
-    function removeProviderModules(address[] memory _modules) public override {
+    function removeProviderModules(IGelatoProviderModule[] memory _modules) public override {
         for (uint i; i < _modules.length; i++) {
             require(
                 isProviderModule(msg.sender, _modules[i]),
@@ -276,9 +248,8 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     // Batch (un-)provide
     function batchProvide(
         address _executor,
-        address[] memory _conditions,
-        ActionsWithGasPriceCeil[] memory _actions,
-        address[] memory _modules
+        ConditionActionsMix[] memory _CAMs,
+        IGelatoProviderModule[] memory _modules
     )
         public
         payable
@@ -286,23 +257,20 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     {
         if (msg.value != 0) provideFunds(msg.sender);
         if (_executor != address(0)) providerAssignsExecutor(_executor);
-        provideConditions(_conditions);
-        provideActions(_actions);
+        provideCAMs(_CAMs);
         addProviderModules(_modules);
     }
 
     function batchUnprovide(
         uint256 _withdrawAmount,
-        address[] memory _conditions,
-        ActionsArray[] memory _actions,
-        address[] memory _modules
+        ConditionActionsMix[] memory _CAMs,
+        IGelatoProviderModule[] memory _modules
     )
         public
         override
     {
         if (_withdrawAmount != 0) unprovideFunds(_withdrawAmount);
-        unprovideConditions(_conditions);
-        unprovideActions(_actions);
+        unprovideCAMs(_CAMs);
         removeProviderModules(_modules);
     }
 
@@ -321,8 +289,13 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         return executorProvidersCount[_executor] != 0;
     }
 
+    // Helper fn that can also be called to query camHash off-chain
+    function camHash(ConditionActionsMix memory _cam) public view override returns(bytes32) {
+        return keccak256(abi.encode(_cam.condition, _cam.actions));
+    }
+
     // Providers' Module Getters
-    function isProviderModule(address _provider, address _module)
+    function isProviderModule(address _provider, IGelatoProviderModule _module)
         public
         view
         override
@@ -339,9 +312,8 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         external
         view
         override
-        returns(address[] memory)
+        returns(IGelatoProviderModule[] memory)
     {
         return _providerModules[_provider].enumerate();
     }
-
 }

@@ -4,7 +4,7 @@ import { BigNumber } from "ethers/utils";
 
 export default internalTask(
   "gc-mint:defaultpayload:ActionChainedRebalancePortfolioKovan",
-  `Returns a hardcoded actionPayload of ActionChainedRebalancePortfolioKovan`
+  `Returns a hardcoded actionData of ActionChainedRebalancePortfolioKovan`
 )
   .addOptionalPositionalParam(
     "executorindex",
@@ -43,15 +43,15 @@ export default internalTask(
         actionContract.address
       ];
 
-      const actionPayload = await run("abi-encode-withselector", {
+      const actionData = await run("abi-encode-withselector", {
         contractname: "ActionChainedRebalancePortfolioKovan",
         functionname: "chainedAction",
         inputs: [providerAndExecutor, conditionAndAction],
         log
       });
 
-      if (log) console.log(actionPayload);
-      return actionPayload;
+      if (log) console.log(actionData);
+      return actionData;
     } catch (err) {
       console.error(err);
       process.exit(1);

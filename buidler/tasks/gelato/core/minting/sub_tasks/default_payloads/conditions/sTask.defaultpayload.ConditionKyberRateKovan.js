@@ -3,7 +3,7 @@ import { utils } from "ethers";
 
 export default internalTask(
   "gc-mintexecclaim:defaultpayload:ConditionKyberRateKovan",
-  `Returns a hardcoded actionPayload of ConditionKyberRateKovan`
+  `Returns a hardcoded actionData of ConditionKyberRateKovan`
 )
   .addFlag("log")
   .setAction(async ({ log }) => {

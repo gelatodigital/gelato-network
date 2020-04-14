@@ -84,8 +84,8 @@ export default task("gc-debug-newcore")
       });
 
       // === Minting ===
-      const conditionPayload = constants.HashZero;
-      const actionPayload = constants.HashZero;
+      const conditionData = constants.HashZero;
+      const actionData = constants.HashZero;
 
       const execClaim = {
         id: constants.HashZero,
@@ -94,8 +94,8 @@ export default task("gc-debug-newcore")
         user: constants.AddressZero,
         condition: condition ? condition.address : constants.AddressZero,
         action: action.address,
-        conditionPayload: conditionPayload,
-        actionPayload: actionPayload,
+        conditionData: conditionData,
+        actionData: actionData,
         expiryDate: constants.HashZero,
         executorSuccessShare: 5,
         sysAdminSuccessShare: 2

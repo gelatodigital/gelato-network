@@ -31,8 +31,8 @@ export default internalTask(
       //   \n ProviderExecutor: ${executionClaim.selectedProviderAndExecutor}\n
       //   \n ExecutionClaimId: ${executionClaim.executionClaimId}\n
       //   \n ConditionAction: ${executionClaim.conditionAndAction}\n
-      //   \n Condition Payload: ${executionClaim.conditionPayload}\n
-      //   \n Actin Payload: ${executionClaim.actionPayload}\n
+      //   \n Condition Payload: ${executionClaim.conditionData}\n
+      //   \n Actin Payload: ${executionClaim.actionData}\n
       //   \n Expiry Date: ${executionClaim.executionClaimExpiryDate}\n
       // `);
 
@@ -41,8 +41,8 @@ export default internalTask(
         executionClaim.selectedProviderAndExecutor,
         executionClaim.executionClaimId,
         executionClaim.conditionAndAction,
-        executionClaim.conditionPayload,
-        executionClaim.actionPayload,
+        executionClaim.conditionData,
+        executionClaim.actionData,
         executionClaim.executionClaimExpiryDate
       ];
 
