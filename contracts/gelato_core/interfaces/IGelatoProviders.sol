@@ -2,7 +2,7 @@ pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
 import { IGelatoProviderModule } from "./IGelatoProviderModule.sol";
-import { Operation, ExecClaim } from "../interfaces/IGelatoCore.sol";
+import { Action, Operation, ExecClaim } from "../interfaces/IGelatoCore.sol";
 import { IGelatoCondition } from "../../gelato_conditions/IGelatoCondition.sol";
 
 interface IGelatoProviders {
@@ -17,7 +17,7 @@ interface IGelatoProviders {
     // CAM
     struct ConditionActionsMix {
         IGelatoCondition condition;   // optional AddressZero for self-conditional actions
-        NoDataAction[] actions;
+        NoDataAction[] noDataActions;
         uint256 gasPriceCeil;  // GPC
     }
 
@@ -66,7 +66,14 @@ interface IGelatoProviders {
 
     // =========== CORE PROTOCOL APIs ==============
     // GelatoCore: mintExecClaim/canExec/collectExecClaimRent Gate
-    function isCAMProvided(ExecClaim calldata _ec) external view returns(string memory);
+    function isCAMProvided(
+        address _provider,
+        IGelatoCondition _condition,
+        Action[] calldata _actions
+    )
+        external
+        view
+        returns(string memory);
 
     // IGelatoProviderModule: Gelato mintExecClaim/canExec Gate
     function providerModuleChecks(ExecClaim calldata _ec)
@@ -142,7 +149,10 @@ interface IGelatoProviders {
         external
         view
         returns(uint256);
-    function camHash(ConditionActionsMix calldata _cam) external view returns(bytes32);
+    function camHash(IGelatoCondition _condition, NoDataAction[] calldata _noDataActions)
+        external
+        view
+        returns(bytes32);
     function NO_CEIL() external pure returns(uint256);
 
     // Providers' Module Getters
