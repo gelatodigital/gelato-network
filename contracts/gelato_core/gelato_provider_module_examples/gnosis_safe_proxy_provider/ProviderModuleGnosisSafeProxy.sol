@@ -78,10 +78,6 @@ contract ProviderModuleGnosisSafeProxy is
             bytes memory multiSendPayload;
 
             for (uint i; i < _actions.length; i++ ) {
-                // MultiSend only allows Action.Operation.Delegatecall
-                if (_actions[i].operation != Operation.Delegatecall)
-                    revert("ProviderModuleGnosisSafeProxy.execPayload: d-call only");
-
                 bytes memory payloadPart = abi.encodePacked(
                     uint256(1),  // operation
                     _actions[i].inst,  // to
