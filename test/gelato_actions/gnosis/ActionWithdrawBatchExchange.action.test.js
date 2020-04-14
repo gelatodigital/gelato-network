@@ -268,7 +268,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         operation: OPERATION.delegatecall,
       };
       await expect(userProxy.execGelatoAction(gelatoAction)).to.be.revertedWith(
-        "GelatoUserProxy.execGelatoAction:ActionWithdrawBatchExchange: Insufficient balance for user to pay gelatoAction"
+        "GelatoUserProxy.delegatecallAction:ActionWithdrawBatchExchange: Insufficient balance for user to pay for withdrawal 2"
       );
 
       const providerBalance = await buyToken.balanceOf(providerAddress);
@@ -317,12 +317,8 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         operation: OPERATION.delegatecall,
       };
 
-      await expect(
-        userProxy
-          .execGelatoAction(gelatoAction)
-          .to.be.revertedWith(
-            "GelatoUserProxy.execGelatoAction:ActionWithdrawBatchExchange: Insufficient balance for user to pay gelatoAction"
-          )
+      await expect(userProxy.execGelatoAction(gelatoAction)).to.be.revertedWith(
+        "GelatoUserProxy.delegatecallAction:ActionWithdrawBatchExchange: Insufficient balance for user to pay for withdrawal 2"
       );
 
       const providerBalance = await WETH.balanceOf(providerAddress);
@@ -457,12 +453,8 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         data: withdrawPayload,
         operation: OPERATION.delegatecall,
       };
-      await expect(
-        userProxy
-          .execGelatoAction(gelatoAction)
-          .to.be.revertedWith(
-            "GelatoUserProxy.execGelatoAction:ActionWithdrawBatchExchange: Insufficient balance for user to pay gelatoAction"
-          )
+      await expect(userProxy.execGelatoAction(gelatoAction)).to.be.revertedWith(
+        "GelatoUserProxy.delegatecallAction:ActionWithdrawBatchExchange: Insufficient balance for user to pay for withdrawal 1"
       );
 
       const providerBalance = await sellToken.balanceOf(providerAddress);
@@ -504,12 +496,8 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         operation: OPERATION.delegatecall,
       };
 
-      await expect(
-        userProxy
-          .execGelatoAction(gelatoAction)
-          .to.be.revertedWith(
-            "GelatoUserProxy.execGelatoAction:ActionWithdrawBatchExchange: Insufficient balance for user to pay gelatoAction"
-          )
+      await expect(userProxy.execGelatoAction(gelatoAction)).to.be.revertedWith(
+        "GelatoUserProxy.delegatecallAction:ActionWithdrawBatchExchange: Insufficient balance for user to pay for withdrawal 1"
       );
 
       const providerBalance = await WETH.balanceOf(providerAddress);
