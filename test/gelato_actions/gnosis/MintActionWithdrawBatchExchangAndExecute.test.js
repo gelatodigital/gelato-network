@@ -4,6 +4,11 @@ const { expect } = require("chai");
 const { run, ethers } = require("@nomiclabs/buidler");
 const FEE_USD = 2;
 const FEE_ETH = 9000000000000000;
+const OPERATION = {
+  call: 0,
+  delegatecall: 1,
+};
+const GELATO_GAS_PRICE = ethers.utils.parseUnits("8", "gwei");
 
 // ##### Gnosis Action Test Cases #####
 // 1. All sellTokens got converted into buy tokens, sufficient for withdrawal
@@ -18,10 +23,12 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
   let seller;
   let provider;
   let executor;
+  let sysAdmin;
   let userProxy;
   let sellerAddress;
   let providerAddress;
   let executorAddress;
+  let sysAdminAddress;
   let userProxyAddress;
   let sellToken; //DAI
   let buyToken; //USDC
@@ -37,62 +44,79 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
   let wethDecimals;
   let tx;
   let txResponse;
-  let gelatoCore;
   let providerModuleGelatoUserProxy;
   let providerModuleGelatoUserProxyAddress;
+  let gelatoCore;
 
+  // ###### GelatoCore Setup ######
   beforeEach(async function () {
-    // Setup Gelato System
-    const result = await run("setupgelato-gelatouserproxies", {
-      actionnames: ["ActionERC20TransferFrom", "ActionERC20TransferFrom"],
-    });
-    gelatoCore = result.gelatoCore;
-    gelatoUserProxyFactory = result.gelatoUserProxyFactory;
-    providerModuleGelatoUserProxy = result.providerModuleGelatoUserProxy;
-    providerModuleGelatoUserProxyAddress =
-      providerModuleGelatoUserProxy.address;
-
-    // Get the ContractFactory and Signers here.
-    MockBatchExchange = await ethers.getContractFactory("MockBatchExchange");
-    ActionWithdrawBatchExchange = await ethers.getContractFactory(
-      "ActionWithdrawBatchExchange"
-    );
-    MockERC20 = await ethers.getContractFactory("MockERC20");
-    GelatoUserProxyFactory = await ethers.getContractFactory(
-      "GelatoUserProxyFactory"
-    );
-
-    [seller, executor, provider] = await ethers.getSigners();
+    // Get signers
+    [seller, provider, executor, sysAdmin] = await ethers.getSigners();
     sellerAddress = await seller.getAddress();
     providerAddress = await provider.getAddress();
     executorAddress = await executor.getAddress();
+    sysAdminAddress = await sysAdmin.getAddress();
 
-    // Deploy MockBatchExchange action
+    // Deploy Gelato Core with SysAdmin + Stake Executor
+    const GelatoCore = await ethers.getContractFactory("GelatoCore", sysAdmin);
+    gelatoCore = await GelatoCore.deploy();
+    await gelatoCore
+      .connect(executor)
+      .stakeExecutor({ value: ethers.utils.parseUnits("1", "ether") });
+
+    // Deploy Gelato Gas Price Oracle with SysAdmin and set to GELATO_GAS_PRICE
+    const GelatoGasPriceOracle = await ethers.getContractFactory(
+      "GelatoGasPriceOracle",
+      sysAdmin
+    );
+    const gelatoGasPriceOracle = await GelatoGasPriceOracle.deploy(
+      gelatoCore.address,
+      GELATO_GAS_PRICE
+    );
+
+    // Set gas price oracle on core
+    await gelatoCore
+      .connect(sysAdmin)
+      .setGelatoGasPriceOracle(gelatoGasPriceOracle.address);
+
+    // Deploy GelatoUserProxyFactory with SysAdmin
+    const GelatoUserProxyFactory = await ethers.getContractFactory(
+      "GelatoUserProxyFactory",
+      sysAdmin
+    );
+    const gelatoUserProxyFactory = await GelatoUserProxyFactory.deploy(
+      gelatoCore.address
+    );
+
+    // Call proxyExtcodehash on Factory and deploy ProviderModuleGelatoUserProxy with constructorArgs
+    const proxyExtcodehash = await gelatoUserProxyFactory.proxyExtcodehash();
+    const ProviderModuleGelatoUserProxy = await ethers.getContractFactory(
+      "ProviderModuleGelatoUserProxy",
+      sysAdmin
+    );
+    providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxy.deploy([
+      proxyExtcodehash,
+    ]);
+
+    // Deploy Condition (if necessary)
+
+    // Deploy Actions
+    // // ERCTransferFROM
+    const ActionERC20TransferFrom = await ethers.getContractFactory(
+      "ActionERC20TransferFrom",
+      sysAdmin
+    );
+    const actionERC20TransferFrom = await ActionERC20TransferFrom.deploy();
+    await actionERC20TransferFrom.deployed();
+
+    // // #### ActionWithdrawBatchExchange Start ####
+    const MockBatchExchange = await ethers.getContractFactory(
+      "MockBatchExchange"
+    );
     mockBatchExchange = await MockBatchExchange.deploy();
     await mockBatchExchange.deployed();
 
-    // string memory _name, uint256 _mintAmount, address _to, uint8 _decimals
-    // Deploy Sell Token
-    sellDecimals = 18;
-    sellToken = await MockERC20.deploy(
-      "DAI",
-      (100 * 10 ** sellDecimals).toString(),
-      sellerAddress,
-      sellDecimals
-    );
-    await sellToken.deployed();
-
-    // Deploy Buy Token
-    buyDecimals = 6;
-    buyToken = await MockERC20.deploy(
-      "USDC",
-      (100 * 10 ** buyDecimals).toString(),
-      sellerAddress,
-      buyDecimals
-    );
-    await buyToken.deployed();
-
-    // Deploy WETH
+    MockERC20 = await ethers.getContractFactory("MockERC20");
     wethDecimals = 18;
     WETH = await MockERC20.deploy(
       "WETH",
@@ -102,19 +126,59 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
     );
     await WETH.deployed();
 
-    // address _batchExchange, address _weth, address _gelatoProvider
-    // Deploy Withdraw action
+    const ActionWithdrawBatchExchange = await ethers.getContractFactory(
+      "ActionWithdrawBatchExchange"
+    );
     actionWithdrawBatchExchange = await ActionWithdrawBatchExchange.deploy(
       mockBatchExchange.address,
       WETH.address,
       providerAddress
     );
-    await actionWithdrawBatchExchange.deployed();
+    // // #### ActionWithdrawBatchExchange End ####
 
-    // Create User Proxy
+    // Call provideFunds(value) with provider on core
+    await gelatoCore.connect(provider).provideFunds(providerAddress, {
+      value: ethers.utils.parseUnits("1", "ether"),
+    });
 
-    // 2. Create Proxy for seller
-    tx = await gelatoUserProxyFactory.create();
+    // Register new provider CAM on core with provider EDITS NEED ä#######################
+
+    const condition = new Condition({
+      inst: constants.AddressZero,
+      data: constants.HashZero,
+    });
+
+    const actionERC20TransferFromGelato = new Action({
+      inst: actionERC20TransferFrom.address,
+      data: constants.HashZero,
+      operation: "delegatecall",
+      termsOkCheck: true,
+    });
+
+    const actionWithdrawBatchExchangeGelato = new Action({
+      inst: actionWithdrawBatchExchange.address,
+      data: constants.HashZero,
+      operation: "delegatecall",
+      termsOkCheck: true,
+    });
+
+    const newCam = new CAM({
+      condition: condition.inst,
+      actions: [actionWithdrawBatchExchangeGelato],
+      gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
+    });
+
+    // Call batchProvider(executor, CAMS[], providerModules[])
+    await gelatoCore
+      .connect(provider)
+      .batchProvide(
+        executorAddress,
+        [newCam],
+        [providerModuleGelatoUserProxy.address]
+      );
+
+    // Create UserProxy
+    tx = await gelatoUserProxyFactory.connect(seller).create();
     txResponse = await tx.wait();
 
     const executionEvent = await run("event-getparsedlog", {
@@ -131,6 +195,28 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
 
     userProxy = await ethers.getContractAt("GelatoUserProxy", userProxyAddress);
 
+    // DEPLOY DUMMY ERC20s
+    // // Deploy Sell Token
+    sellDecimals = 18;
+    sellToken = await MockERC20.deploy(
+      "DAI",
+      (100 * 10 ** sellDecimals).toString(),
+      sellerAddress,
+      sellDecimals
+    );
+    await sellToken.deployed();
+
+    // //  Deploy Buy Token
+    buyDecimals = 6;
+    buyToken = await MockERC20.deploy(
+      "USDC",
+      (100 * 10 ** buyDecimals).toString(),
+      sellerAddress,
+      buyDecimals
+    );
+    await buyToken.deployed();
+
+    // Pre-fund batch Exchange
     await buyToken.mint(
       mockBatchExchange.address,
       ethers.utils.parseUnits("100", buyDecimals)
@@ -143,14 +229,6 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       mockBatchExchange.address,
       ethers.utils.parseUnits("100", wethDecimals)
     );
-
-    // Whitelist CAM by provider
-    const cam = new CAM({
-      condition: constants.AddressZero,
-      actions: [actionWithdrawBatchExchange.address],
-      gasPriceCeil: ethers.utils.parseUnits("100", "gwei"),
-    });
-    await gelatoCore.connect(provider).provideCAMs([cam]);
   });
 
   // We test different functionality of the contract as normal Mocha tests.
@@ -190,7 +268,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       // Mint ExexClaim
       const gelatoProvider = new GelatoProvider({
         addr: providerAddress,
-        module: providerModuleGelatoUserProxyAddress,
+        module: providerModuleGelatoUserProxy.address,
       });
 
       const condition = new Condition({
@@ -202,7 +280,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         inst: actionWithdrawBatchExchange.address,
         data: actionData,
         operation: "delegatecall",
-        termsOk: true,
+        termsOkCheck: true,
       });
 
       const task = new Task({
@@ -228,30 +306,19 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         inputs: [task],
       });
 
-      const mintAction = new Action({
-        inst: gelatoCore.address,
-        data: mintPayload,
-        operation: "delegatecall",
-        termsOk: false,
-      });
-
       // LogExecClaimMinted(executor, execClaim.id, hashedExecClaim, execClaim);
 
-      await expect(userProxy.callAction(mintAction)).to.emit(
-        gelatoCore,
-        "LogExecClaimMinted"
-      );
+      await expect(
+        userProxy.callAction(gelatoCore.address, mintPayload)
+      ).to.emit(gelatoCore, "LogExecClaimMinted");
 
-      const gelatoGasPrice = await gelatoCore.gelatoGasPrice();
-
-      expect(await gelatoCore.canExec(execClaim, gelatoGasPrice)).to.be.equal(
+      expect(await gelatoCore.canExec(execClaim, GELATO_GAS_PRICE)).to.be.equal(
         "ActionTermsNotOk:ActionWithdrawBatchExchange: Sell Token not withdrawable yet"
       );
 
-      // LogCanExecFailed
-      // await expect(gelatoCore.setExecClaimTenancy(69420))
-      //   .to.emit(gelatoCore, "LogSetExecClaimTenancy")
-      //   .withArgs(initialState.execClaimTenancy, 69420);
+      await gelatoCore
+        .connect(executor)
+        .exec(execClaim, { gasPrice: GELATO_GAS_PRICE, gasLimit: 5000000 });
 
       await expect(
         gelatoCore
@@ -325,7 +392,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       // Mint ExexClaim
       const gelatoProvider = new GelatoProvider({
         addr: providerAddress,
-        module: providerModuleGelatoUserProxyAddress,
+        module: providerModuleGelatoUserProxy.address,
       });
 
       const condition = new Condition({
@@ -337,6 +404,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         inst: actionWithdrawBatchExchange.address,
         data: actionData,
         operation: "delegatecall",
+        termsOkCheck: true,
       });
 
       const task = new Task({
@@ -361,23 +429,13 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         inputs: [task],
       });
 
-      const mintAction = new Action({
-        inst: gelatoCore.address,
-        data: mintPayload,
-        operation: "delegatecall",
-        termsOk: false,
-      });
-
       // LogExecClaimMinted(executor, execClaim.id, hashedExecClaim, execClaim);
 
-      await expect(userProxy.callAction(mintAction)).to.emit(
-        gelatoCore,
-        "LogExecClaimMinted"
-      );
+      await expect(
+        userProxy.callAction(gelatoCore.address, mintPayload)
+      ).to.emit(gelatoCore, "LogExecClaimMinted");
 
-      const gelatoGasPrice = await gelatoCore.gelatoGasPrice();
-
-      expect(await gelatoCore.canExec(execClaim, gelatoGasPrice)).to.be.equal(
+      expect(await gelatoCore.canExec(execClaim, GELATO_GAS_PRICE)).to.be.equal(
         "ActionTermsNotOk:ActionWithdrawBatchExchange: Sell Token not withdrawable yet"
       );
 

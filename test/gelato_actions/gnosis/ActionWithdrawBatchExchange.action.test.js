@@ -22,9 +22,13 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
   let actionWithdrawBatchExchange;
   let seller;
   let provider;
+  let sysAdmin;
+  let executor;
   let userProxy;
   let sellerAddress;
   let providerAddress;
+  let executorAddress;
+  let sysAdminAddress;
   let userProxyAddress;
   let sellToken; //DAI
   let buyToken; //USDC
@@ -36,8 +40,9 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
   let wethDecimals;
   let tx;
   let txResponse;
+  let gelatoCore;
 
-  // GelatoCore Setup
+  // ###### GelatoCore Setup ######
   beforeEach(async function () {
     // Get signers
     [seller, provider, executor, sysAdmin] = await ethers.getSigners();
@@ -63,6 +68,11 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       GELATO_GAS_PRICE
     );
 
+    // Set gas price oracle on core
+    await gelatoCore
+      .connect(sysAdmin)
+      .setGelatoGasPriceOracle(gelatoGasPriceOracle.address);
+
     // Deploy GelatoUserProxyFactory with SysAdmin
     const GelatoUserProxyFactory = await ethers.getContractFactory(
       "GelatoUserProxyFactory",
@@ -78,9 +88,9 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       "ProviderModuleGelatoUserProxy",
       sysAdmin
     );
-    const providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxy.deploy(
-      [proxyExtcodehash]
-    );
+    providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxy.deploy([
+      proxyExtcodehash,
+    ]);
 
     // Deploy Condition (if necessary)
 
@@ -100,6 +110,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
     mockBatchExchange = await MockBatchExchange.deploy();
     await mockBatchExchange.deployed();
 
+    MockERC20 = await ethers.getContractFactory("MockERC20");
     wethDecimals = 18;
     WETH = await MockERC20.deploy(
       "WETH",
@@ -120,9 +131,9 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
     // // #### ActionWithdrawBatchExchange End ####
 
     // Call provideFunds(value) with provider on core
-    await gelatoCore
-      .connect(provider)
-      .provideFunds({ value: ethers.utils.parseUnits("1", "ether") });
+    await gelatoCore.connect(provider).provideFunds(providerAddress, {
+      value: ethers.utils.parseUnits("1", "ether"),
+    });
 
     // Register new provider CAM on core with provider EDITS NEED ä#######################
 
@@ -135,40 +146,19 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       inst: actionERC20TransferFrom.address,
       data: constants.HashZero,
       operation: "delegatecall",
-      termsOk: true,
+      termsOkCheck: true,
     });
 
     const actionWithdrawBatchExchangeGelato = new Action({
       inst: actionWithdrawBatchExchange.address,
       data: constants.HashZero,
       operation: "delegatecall",
-      termsOk: true,
+      termsOkCheck: true,
     });
-
-    /*
-    struct NoDataAction {
-      address inst;
-      Operation operation;
-      bool termsOkCheck;
-    }
-
-    // CAM
-    struct ConditionActionsMix {
-        IGelatoCondition condition;   // optional AddressZero for self-conditional actions
-        NoDataAction[] actions;
-        uint256 gasPriceCeil;  // GPC
-    }
-    */
 
     const newCam = new CAM({
       condition: condition.inst,
-      noDataActions: [
-        {
-          inst: actionWithdrawBatchExchangeGelato.inst,
-          operation: 1,
-          termsOkCheck: true,
-        },
-      ],
+      actions: [actionWithdrawBatchExchangeGelato],
       gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
     });
 
@@ -182,7 +172,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       );
 
     // Create UserProxy
-    tx = await gelatoUserProxyFactory.create();
+    tx = await gelatoUserProxyFactory.connect(seller).create();
     txResponse = await tx.wait();
 
     const executionEvent = await run("event-getparsedlog", {
@@ -198,35 +188,9 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
     userProxyAddress = executionEvent.userProxy;
 
     userProxy = await ethers.getContractAt("GelatoUserProxy", userProxyAddress);
-  });
 
-  /*
-  beforeEach(async function () {
-    // Get the ContractFactory and Signers here.
-    MockBatchExchange = await ethers.getContractFactory("MockBatchExchange");
-    ActionWithdrawBatchExchange = await ethers.getContractFactory(
-      "ActionWithdrawBatchExchange"
-    );
-    MockERC20 = await ethers.getContractFactory("MockERC20");
-    GelatoUserProxyFactory = await ethers.getContractFactory(
-      "GelatoUserProxyFactory"
-    );
-
-    [seller, provider] = await ethers.getSigners();
-    sellerAddress = await seller.getAddress();
-    providerAddress = await provider.getAddress();
-
-    // Deploy MockBatchExchange action
-    mockBatchExchange = await MockBatchExchange.deploy();
-    await mockBatchExchange.deployed();
-
-    gelatoUserProxyFactory = await GelatoUserProxyFactory.deploy(
-      mockBatchExchange.address
-    );
-    await gelatoUserProxyFactory.deployed();
-
-    // string memory _name, uint256 _mintAmount, address _to, uint8 _decimals
-    // Deploy Sell Token
+    // DEPLOY DUMMY ERC20s
+    // // Deploy Sell Token
     sellDecimals = 18;
     sellToken = await MockERC20.deploy(
       "DAI",
@@ -236,7 +200,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
     );
     await sellToken.deployed();
 
-    // Deploy Buy Token
+    // //  Deploy Buy Token
     buyDecimals = 6;
     buyToken = await MockERC20.deploy(
       "USDC",
@@ -246,45 +210,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
     );
     await buyToken.deployed();
 
-    // Deploy WETH
-    wethDecimals = 18;
-    WETH = await MockERC20.deploy(
-      "WETH",
-      (100 * 10 ** wethDecimals).toString(),
-      sellerAddress,
-      wethDecimals
-    );
-    await WETH.deployed();
-
-    // address _batchExchange, address _weth, address _gelatoProvider
-    // Deploy Withdraw action
-    actionWithdrawBatchExchange = await ActionWithdrawBatchExchange.deploy(
-      mockBatchExchange.address,
-      WETH.address,
-      providerAddress
-    );
-    await actionWithdrawBatchExchange.deployed();
-
-    // Create User Proxy
-
-    // 2. Create Proxy for seller
-    tx = await gelatoUserProxyFactory.create();
-    txResponse = await tx.wait();
-
-    const executionEvent = await run("event-getparsedlog", {
-      contractname: "GelatoUserProxyFactory",
-      contractaddress: gelatoUserProxyFactory.address,
-      eventname: "LogCreation",
-      txhash: txResponse.transactionHash,
-      blockhash: txResponse.blockHash,
-      values: true,
-      stringify: true,
-    });
-
-    userProxyAddress = executionEvent.userProxy;
-
-    userProxy = await ethers.getContractAt("GelatoUserProxy", userProxyAddress);
-
+    // Pre-fund batch Exchange
     await buyToken.mint(
       mockBatchExchange.address,
       ethers.utils.parseUnits("100", buyDecimals)
@@ -670,6 +596,4 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       );
     });
   });
-
-  */
 });
