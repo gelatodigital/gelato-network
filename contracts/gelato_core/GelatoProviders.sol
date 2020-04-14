@@ -38,7 +38,12 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         override
         returns(string memory)
     {
-        bytes32 camHash = keccak256(abi.encode(_ec.task.condition, _ec.task.actions));
+        address[] memory actions = new address[](_ec.task.actions.length);
+        for (uint i = 0; i < actions.length; i++)
+            actions[i] = address(_ec.task.actions[i].inst);
+
+        bytes32 camHash = keccak256(abi.encode(address(_ec.task.condition.inst), actions));
+
         if (camGPC[_ec.task.provider.addr][camHash] == 0)
             return "ConditionActionsMixNotProvided";
         return "Ok";

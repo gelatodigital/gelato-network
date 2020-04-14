@@ -9,6 +9,7 @@ const { constants, utils } = require("ethers");
 const Action = require("./src/classes/gelato/Action").default;
 const Condition = require("./src/classes/gelato/Condition").default;
 const CAM = require("./src/classes/gelato/CAM").default;
+const ExecClaim = require("./src/classes/gelato/ExecClaim").default;
 const GelatoProvider = require("./src/classes/gelato/GelatoProvider").default;
 const Task = require("./src/classes/gelato/Task").default;
 
@@ -25,6 +26,7 @@ extendEnvironment((bre) => {
   bre.Action = Action;
   bre.Condition = Condition;
   bre.CAM = CAM;
+  bre.ExecClaim = ExecClaim;
   bre.GelatoProvider = GelatoProvider;
   bre.Task = Task;
   // Functions

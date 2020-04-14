@@ -10,11 +10,11 @@ import initialState from "./GelatoProviders.initialState";
 describe("GelatoCore - GelatoProviders - Setters: CAMS", function () {
   // We define the ContractFactory and Address variables here and assign them in
   // a beforeEach hook.
-  let GelatoCore;
-  let Condition;
-  let OtherCondition;
-  let Action;
-  let OtherAction;
+  let GelatoCoreFactory;
+  let ConditionFactory;
+  let OtherConditionFactory;
+  let ActionFactory;
+  let OtherActionFactory;
 
   let gelatoCore;
   let condition;
@@ -28,22 +28,27 @@ describe("GelatoCore - GelatoProviders - Setters: CAMS", function () {
   let cam;
   let otherCAM;
 
+  // ExecClaim for isCAMProvided check
+  let execClaim;
+
   let provider;
   let providerAddress;
 
   beforeEach(async function () {
     // Get the ContractFactory, contract instance, and Signers here.
-    GelatoCore = await ethers.getContractFactory("GelatoCore");
-    Condition = await ethers.getContractFactory("MockConditionDummy");
-    OtherCondition = await ethers.getContractFactory("MockConditionDummy");
-    Action = await ethers.getContractFactory("MockActionDummy");
-    OtherAction = await ethers.getContractFactory("MockActionDummy");
+    GelatoCoreFactory = await ethers.getContractFactory("GelatoCore");
+    ConditionFactory = await ethers.getContractFactory("MockConditionDummy");
+    OtherConditionFactory = await ethers.getContractFactory(
+      "MockConditionDummy"
+    );
+    ActionFactory = await ethers.getContractFactory("MockActionDummy");
+    OtherActionFactory = await ethers.getContractFactory("MockActionDummy");
 
-    gelatoCore = await GelatoCore.deploy();
-    condition = await Condition.deploy();
-    otherCondition = await OtherCondition.deploy();
-    action = await Action.deploy();
-    otherAction = await OtherAction.deploy();
+    gelatoCore = await GelatoCoreFactory.deploy();
+    condition = await ConditionFactory.deploy();
+    otherCondition = await OtherConditionFactory.deploy();
+    action = await ActionFactory.deploy();
+    otherAction = await OtherActionFactory.deploy();
 
     await gelatoCore.deployed();
     await condition.deployed();
@@ -65,6 +70,32 @@ describe("GelatoCore - GelatoProviders - Setters: CAMS", function () {
 
     [provider] = await ethers.getSigners();
     providerAddress = await provider.getAddress();
+
+    // construct ExecClaim for unit test isCAMProvided()
+    const gelatoProvider = new GelatoProvider({
+      addr: await provider.getAddress(),
+      module: constants.AddressZero,
+    });
+    const _condition = new Condition({
+      inst: condition.address,
+      data: constants.HashZero,
+    });
+    const _action = new Action({
+      inst: action.address,
+      data: constants.HashZero,
+      operation: "delegatecall",
+    });
+    const task = new Task({
+      provider: gelatoProvider,
+      condition: _condition,
+      actions: [_action],
+      expiryDate: constants.Zero,
+    });
+    execClaim = new ExecClaim({
+      id: constants.Zero,
+      userProxy: constants.AddressZero,
+      taskObj: task,
+    });
   });
 
   // We test different functionality of the contract as normal Mocha tests.
@@ -84,9 +115,7 @@ describe("GelatoCore - GelatoProviders - Setters: CAMS", function () {
       expect(await gelatoCore.camGPC(providerAddress, camHash)).to.be.equal(
         cam.gasPriceCeil
       );
-      expect(await gelatoCore.camGPC(providerAddress, camHash)).to.be.equal(
-        cam.gasPriceCeil
-      );
+      expect(await gelatoCore.isCAMProvided(execClaim)).to.be.equal("Ok");
     });
 
     it("Should allow anyone to provideCAMs", async function () {
