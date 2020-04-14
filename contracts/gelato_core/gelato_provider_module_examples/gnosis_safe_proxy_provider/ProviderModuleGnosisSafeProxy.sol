@@ -75,17 +75,17 @@ contract ProviderModuleGnosisSafeProxy is
                 gsOperation
             );
         } else if (_actions.length > 1) {
+            // Action.Operation encoded into multiSendPayload and handled by MultiSend
             bytes memory multiSendPayload;
 
             for (uint i; i < _actions.length; i++ ) {
                 bytes memory payloadPart = abi.encodePacked(
-                    uint256(1),  // operation
+                    _actions[i].operation,  
                     _actions[i].inst,  // to
                     uint256(0),  // value
                     _actions[i].data.length,
                     _actions[i].data
                 );
-
                 multiSendPayload = abi.encodePacked(multiSendPayload, payloadPart);
             }
 
