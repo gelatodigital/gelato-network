@@ -2,14 +2,22 @@ pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
 import { IGelatoProviderModule } from "./IGelatoProviderModule.sol";
-import { ExecClaim} from "../interfaces/IGelatoCore.sol";
+import { Operation, ExecClaim } from "../interfaces/IGelatoCore.sol";
+import { IGelatoCondition } from "../../gelato_conditions/IGelatoCondition.sol";
 
 interface IGelatoProviders {
 
+    // This is IGelatoCore.Action without the data field
+    struct NoDataAction {
+        address inst;
+        Operation operation;
+        bool termsOkCheck;
+    }
+
     // CAM
     struct ConditionActionsMix {
-        address condition;   // optional AddressZero for self-conditional actions
-        address[] actions;
+        IGelatoCondition condition;   // optional AddressZero for self-conditional actions
+        NoDataAction[] actions;
         uint256 gasPriceCeil;  // GPC
     }
 

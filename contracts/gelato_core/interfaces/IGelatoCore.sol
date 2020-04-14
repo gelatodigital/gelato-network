@@ -3,7 +3,6 @@ pragma experimental ABIEncoderV2;
 
 import { IGelatoProviderModule } from "./IGelatoProviderModule.sol";
 import { IGelatoCondition } from "../../gelato_conditions/IGelatoCondition.sol";
-import { IGelatoAction } from "../../gelato_actions/IGelatoAction.sol";
 
 struct Provider {
     address addr;  //  if msg.sender == provider => self-Provider
@@ -18,7 +17,7 @@ struct Condition {
 enum Operation { Call, Delegatecall }
 
 struct Action {
-    IGelatoAction inst;
+    address inst;
     bytes data;
     Operation operation;
     bool termsOkCheck;
