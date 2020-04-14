@@ -20,6 +20,11 @@ describe("GelatoCore - GelatoProviders - Setters: CAMS", function () {
   let action;
   let otherAction;
 
+  let actionStruct;
+  let otherActionStruct;
+  let noDataAction;
+  let otherNoDataAction;
+
   const gasPriceCeil = utils.parseUnits("20", "gwei");
 
   // Condition - Actions - Mix
@@ -50,19 +55,6 @@ describe("GelatoCore - GelatoProviders - Setters: CAMS", function () {
     await action.deployed();
     await otherAction.deployed();
 
-    // Condition Action Mix
-    cam = new CAM({
-      condition: condition.address,
-      actions: [action.address],
-      gasPriceCeil,
-    });
-
-    otherCAM = new CAM({
-      condition: condition.address,
-      actions: [action.address, otherAction.address],
-      gasPriceCeil,
-    });
-
     // Provider
     [provider] = await ethers.getSigners();
     providerAddress = await provider.getAddress();
@@ -70,39 +62,41 @@ describe("GelatoCore - GelatoProviders - Setters: CAMS", function () {
     // Construct ExecClaim for unit test isCAMProvided():
     // GelatoProvider
     const gelatoProvider = new GelatoProvider({
-      addr: await provider.getAddress(),
+      addr: providerAddress,
       module: constants.AddressZero,
     });
 
     // Condition
-    const _condition = new Condition({
+    const conditionStruct = new Condition({
       inst: condition.address,
       data: constants.HashZero,
     });
 
     // Action
-    const _action = new Action({
+    actionStruct = new Action({
       inst: action.address,
-      data: constants.HashZero,
+      data: "0xdeadbeef",
       operation: "delegatecall",
+      termsOkCheck: false,
     });
-    const _otherAction = new Action({
+    otherActionStruct = new Action({
       inst: otherAction.address,
-      data: constants.HashZero,
+      data: "0xdeadbeef",
       operation: "delegatecall",
+      termsOkCheck: true,
     });
 
     // Task
     const task = new Task({
       provider: gelatoProvider,
-      condition: _condition,
-      actions: [_action],
+      condition: conditionStruct,
+      actions: [actionStruct],
       expiryDate: constants.Zero,
     });
     const otherTask = new Task({
       provider: gelatoProvider,
-      condition: _condition,
-      actions: [_action, _otherAction],
+      condition: conditionStruct,
+      actions: [actionStruct, otherActionStruct],
       expiryDate: constants.Zero,
     });
 
@@ -117,6 +111,30 @@ describe("GelatoCore - GelatoProviders - Setters: CAMS", function () {
       userProxy: constants.AddressZero,
       taskObj: otherTask,
     });
+
+    // Condition Action Mix
+    noDataAction = new NoDataAction({
+      inst: action.address,
+      operation: "delegatecall",
+      termsOkCheck: false,
+    });
+    otherNoDataAction = new NoDataAction({
+      inst: otherAction.address,
+      operation: "delegatecall",
+      termsOkCheck: true,
+    });
+
+    cam = new CAM({
+      condition: condition.address,
+      noDataActions: [noDataAction],
+      gasPriceCeil,
+    });
+
+    otherCAM = new CAM({
+      condition: condition.address,
+      noDataActions: [noDataAction, otherNoDataAction],
+      gasPriceCeil,
+    });
   });
 
   // We test different functionality of the contract as normal Mocha tests.
@@ -124,7 +142,11 @@ describe("GelatoCore - GelatoProviders - Setters: CAMS", function () {
   // provideCAMs
   describe("GelatoCore.GelatoProviders.provideCAMs", function () {
     it("Should allow anyone to provide a single CAM", async function () {
-      const camHash = await gelatoCore.camHash(cam);
+      // camHash
+      const camHash = await gelatoCore.camHash(
+        cam.condition,
+        cam.noDataActions
+      );
       await expect(gelatoCore.provideCAMs([cam]))
         .to.emit(gelatoCore, "LogProvideCAM")
         .withArgs(
@@ -136,21 +158,34 @@ describe("GelatoCore - GelatoProviders - Setters: CAMS", function () {
       expect(await gelatoCore.camGPC(providerAddress, camHash)).to.be.equal(
         cam.gasPriceCeil
       );
-      expect(await gelatoCore.isCAMProvided(execClaim)).to.be.equal("Ok");
+      expect(
+        await gelatoCore.isCAMProvided(providerAddress, condition.address, [
+          actionStruct,
+        ])
+      ).to.be.equal("Ok");
       expect(await gelatoCore.isExecClaimProvided(execClaim)).not.to.be.equal(
         "ConditionActionsMixNotProvided"
       );
-      expect(await gelatoCore.isCAMProvided(otherExecClaim)).to.be.equal(
-        "ConditionActionsMixNotProvided"
-      );
+      expect(
+        await gelatoCore.isCAMProvided(providerAddress, condition.address, [
+          otherActionStruct,
+        ])
+      ).to.be.equal("ConditionActionsMixNotProvided");
       expect(await gelatoCore.isExecClaimProvided(otherExecClaim)).to.be.equal(
         "ConditionActionsMixNotProvided"
       );
     });
 
     it("Should allow anyone to provideCAMs", async function () {
-      const camHash = await gelatoCore.camHash(cam);
-      const otherCAMHash = await gelatoCore.camHash(otherCAM);
+      // camHash
+      const camHash = await gelatoCore.camHash(
+        cam.condition,
+        cam.noDataActions
+      );
+      const otherCAMHash = await gelatoCore.camHash(
+        otherCAM.condition,
+        otherCAM.noDataActions
+      );
       await expect(gelatoCore.provideCAMs([cam, otherCAM]))
         .to.emit(gelatoCore, "LogProvideCAM")
         .withArgs(
@@ -166,25 +201,40 @@ describe("GelatoCore - GelatoProviders - Setters: CAMS", function () {
           initialState.camGPC,
           otherCAM.gasPriceCeil
         );
+
       // cam
       // camGPC
       expect(await gelatoCore.camGPC(providerAddress, camHash)).to.be.equal(
         cam.gasPriceCeil
       );
+
       // isCAMProvided
-      expect(await gelatoCore.isCAMProvided(execClaim)).to.be.equal("Ok");
+      expect(
+        await gelatoCore.isCAMProvided(providerAddress, condition.address, [
+          actionStruct,
+        ])
+      ).to.be.equal("Ok");
+
       // isExecClaimProvided
       expect(await gelatoCore.isExecClaimProvided(execClaim)).not.to.be.equal(
         "ConditionActionsMixNotProvided"
       );
+
       // otherCAM
       // camGPC
       expect(
         await gelatoCore.camGPC(providerAddress, otherCAMHash)
       ).to.be.equal(otherCAM.gasPriceCeil);
+
       // isCAMProvided
-      expect(await gelatoCore.isCAMProvided(otherExecClaim)).to.be.equal("Ok");
-      // isExecClaimProvided
+      expect(
+        await gelatoCore.isCAMProvided(providerAddress, condition.address, [
+          actionStruct,
+          otherActionStruct,
+        ])
+      ).to.be.equal("Ok");
+
+      // isExecClaimProvided;
       expect(
         await gelatoCore.isExecClaimProvided(otherExecClaim)
       ).not.to.be.equal("ConditionActionsMixNotProvided");
@@ -210,33 +260,52 @@ describe("GelatoCore - GelatoProviders - Setters: CAMS", function () {
       await gelatoCore.provideCAMs([cam, otherCAM]);
 
       // camHash
-      const camHash = await gelatoCore.camHash(cam);
-      const otherCAMHash = await gelatoCore.camHash(otherCAM);
+      const camHash = await gelatoCore.camHash(
+        cam.condition,
+        cam.noDataActions
+      );
+      const otherCAMHash = await gelatoCore.camHash(
+        otherCAM.condition,
+        otherCAM.noDataActions
+      );
 
       // unprovideCAMs
       await expect(gelatoCore.unprovideCAMs([cam]))
         .to.emit(gelatoCore, "LogUnprovideCAM")
         .withArgs(providerAddress, camHash);
+
       // cam
       // camGPC
       expect(await gelatoCore.camGPC(providerAddress, camHash)).to.be.equal(
         initialState.camGPC
       );
+
       // isCamProvided
-      expect(await gelatoCore.isCAMProvided(execClaim)).to.be.equal(
-        "ConditionActionsMixNotProvided"
-      );
+      expect(
+        await gelatoCore.isCAMProvided(providerAddress, condition.address, [
+          actionStruct,
+        ])
+      ).to.be.equal("ConditionActionsMixNotProvided");
+
       // isExecClaimProvided
       expect(await gelatoCore.isExecClaimProvided(execClaim)).to.be.equal(
         "ConditionActionsMixNotProvided"
       );
+
       // otherCAM
       // camGPC
       expect(
         await gelatoCore.camGPC(providerAddress, otherCAMHash)
       ).to.be.equal(otherCAM.gasPriceCeil);
+
       // isCamProvided
-      expect(await gelatoCore.isCAMProvided(otherExecClaim)).to.be.equal("Ok");
+      expect(
+        await gelatoCore.isCAMProvided(providerAddress, condition.address, [
+          actionStruct,
+          otherActionStruct,
+        ])
+      ).to.be.equal("Ok");
+
       // isExecClaimProvided
       expect(
         await gelatoCore.isExecClaimProvided(otherExecClaim)
@@ -247,9 +316,14 @@ describe("GelatoCore - GelatoProviders - Setters: CAMS", function () {
       // provideCAMs
       await gelatoCore.provideCAMs([cam, otherCAM]);
 
-      // camHash
-      const camHash = await gelatoCore.camHash(cam);
-      const otherCAMHash = await gelatoCore.camHash(otherCAM);
+      const camHash = await gelatoCore.camHash(
+        cam.condition,
+        cam.noDataActions
+      );
+      const otherCAMHash = await gelatoCore.camHash(
+        otherCAM.condition,
+        otherCAM.noDataActions
+      );
 
       // unprovideCAMs
       await expect(gelatoCore.unprovideCAMs([cam, otherCAM]))
@@ -257,24 +331,33 @@ describe("GelatoCore - GelatoProviders - Setters: CAMS", function () {
         .withArgs(providerAddress, camHash)
         .and.to.emit(gelatoCore, "LogUnprovideCAM")
         .withArgs(providerAddress, otherCAMHash);
+
       // cam
       // camGPC
       expect(await gelatoCore.camGPC(providerAddress, camHash)).to.be.equal(
         initialState.camGPC
       );
+
       // isCAMProvided
-      expect(await gelatoCore.isCAMProvided(execClaim)).to.be.equal(
-        "ConditionActionsMixNotProvided"
-      );
+      expect(
+        await gelatoCore.isCAMProvided(providerAddress, condition.address, [
+          actionStruct,
+        ])
+      ).to.be.equal("ConditionActionsMixNotProvided");
+
       // otherCAM
       // camGPC
       expect(
         await gelatoCore.camGPC(providerAddress, otherCAMHash)
       ).to.be.equal(initialState.camGPC);
+
       // isCAMProvided
-      expect(await gelatoCore.isCAMProvided(otherExecClaim)).to.be.equal(
-        "ConditionActionsMixNotProvided"
-      );
+      expect(
+        await gelatoCore.isCAMProvided(providerAddress, condition.address, [
+          actionStruct,
+          otherActionStruct,
+        ])
+      ).to.be.equal("ConditionActionsMixNotProvided");
     });
 
     it("Should NOT allow Providers to unprovide not-provided CAMs", async function () {

@@ -11,6 +11,7 @@ const Condition = require("./src/classes/gelato/Condition").default;
 const CAM = require("./src/classes/gelato/CAM").default;
 const ExecClaim = require("./src/classes/gelato/ExecClaim").default;
 const GelatoProvider = require("./src/classes/gelato/GelatoProvider").default;
+const NoDataAction = require("./src/classes/gelato/NoDataAction").default;
 const Task = require("./src/classes/gelato/Task").default;
 
 // Helpers
@@ -28,6 +29,7 @@ extendEnvironment((bre) => {
   bre.CAM = CAM;
   bre.ExecClaim = ExecClaim;
   bre.GelatoProvider = GelatoProvider;
+  bre.NoDataAction = NoDataAction;
   bre.Task = Task;
   // Functions
   bre.checkNestedObj = checkNestedObj;

@@ -398,7 +398,11 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             "GelatoCore.collecExecClaimRent: rent is not due"
         );
         require(
-            (isCAMProvided(_ec)).startsWithOk(),
+            (isCAMProvided(
+                _ec.task.provider.addr,
+                _ec.task.condition.inst,
+                _ec.task.actions
+            )).startsWithOk(),
             "GelatoCore.collecExecClaimRent: isCAMProvided failed"
         );
         require(

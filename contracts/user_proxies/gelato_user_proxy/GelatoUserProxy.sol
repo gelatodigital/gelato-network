@@ -37,7 +37,7 @@ contract GelatoUserProxy is IGelatoUserProxy {
         gelatoCore = _gelatoCore;
     }
 
-    fallback() external payable {}
+    receive() external payable {}
 
     function mintExecClaim(Task calldata _task) external override onlyUser {
         IGelatoCore(gelatoCore).mintExecClaim(_task);
