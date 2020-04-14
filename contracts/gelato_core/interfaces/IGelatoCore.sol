@@ -17,7 +17,12 @@ struct Condition {
 
 enum Operation { Call, Delegatecall }
 
-struct Action { IGelatoAction inst; bytes data; Operation operation; }
+struct Action {
+    IGelatoAction inst;
+    bytes data;
+    Operation operation;
+    bool termsOkCheck;
+}
 
 struct Task {
     Provider provider;
