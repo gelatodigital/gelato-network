@@ -4,6 +4,10 @@ const { expect } = require("chai");
 const { run, ethers } = require("@nomiclabs/buidler");
 const FEE_USD = 2;
 const FEE_ETH = 9000000000000000;
+const OPERATION = {
+  call: 0,
+  delegatecall: 1,
+};
 
 // ##### Gnosis Action Test Cases #####
 // 1. All sellTokens got converted into buy tokens, sufficient for withdrawal
@@ -167,10 +171,13 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         ],
       });
 
-      tx = await userProxy.delegatecallGelatoAction(
-        actionWithdrawBatchExchange.address,
-        withdrawPayload
-      );
+      const gelatoAction = {
+        inst: actionWithdrawBatchExchange.address,
+        data: withdrawPayload,
+        operation: OPERATION.delegatecall,
+      };
+
+      tx = await userProxy.execGelatoAction(gelatoAction);
       txResponse = await tx.wait();
 
       const feeAmount = FEE_USD * 10 ** buyDecimals;
@@ -210,10 +217,13 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         ],
       });
 
-      tx = await userProxy.delegatecallGelatoAction(
-        actionWithdrawBatchExchange.address,
-        withdrawPayload
-      );
+      const gelatoAction = {
+        inst: actionWithdrawBatchExchange.address,
+        data: withdrawPayload,
+        operation: OPERATION.delegatecall,
+      };
+
+      tx = await userProxy.execGelatoAction(gelatoAction);
       txResponse = await tx.wait();
 
       const feeAmount = FEE_ETH;
@@ -252,13 +262,13 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         ],
       });
 
-      await expect(
-        userProxy.delegatecallGelatoAction(
-          actionWithdrawBatchExchange.address,
-          withdrawPayload
-        )
-      ).to.be.revertedWith(
-        "GelatoUserProxy.delegatecallGelatoAction:ActionWithdrawBatchExchange: Insufficient balance for user to pay for withdrawal 2"
+      const gelatoAction = {
+        inst: actionWithdrawBatchExchange.address,
+        data: withdrawPayload,
+        operation: OPERATION.delegatecall,
+      };
+      await expect(userProxy.execGelatoAction(gelatoAction)).to.be.revertedWith(
+        "GelatoUserProxy.execGelatoAction:ActionWithdrawBatchExchange: Insufficient balance for user to pay gelatoAction"
       );
 
       const providerBalance = await buyToken.balanceOf(providerAddress);
@@ -301,13 +311,18 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         ],
       });
 
+      const gelatoAction = {
+        inst: actionWithdrawBatchExchange.address,
+        data: withdrawPayload,
+        operation: OPERATION.delegatecall,
+      };
+
       await expect(
-        userProxy.delegatecallGelatoAction(
-          actionWithdrawBatchExchange.address,
-          withdrawPayload
-        )
-      ).to.be.revertedWith(
-        "GelatoUserProxy.delegatecallGelatoAction:ActionWithdrawBatchExchange: Insufficient balance for user to pay for withdrawal 2"
+        userProxy
+          .execGelatoAction(gelatoAction)
+          .to.be.revertedWith(
+            "GelatoUserProxy.execGelatoAction:ActionWithdrawBatchExchange: Insufficient balance for user to pay gelatoAction"
+          )
       );
 
       const providerBalance = await WETH.balanceOf(providerAddress);
@@ -342,10 +357,13 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         ],
       });
 
-      tx = await userProxy.delegatecallGelatoAction(
-        actionWithdrawBatchExchange.address,
-        withdrawPayload
-      );
+      const gelatoAction = {
+        inst: actionWithdrawBatchExchange.address,
+        data: withdrawPayload,
+        operation: OPERATION.delegatecall,
+      };
+
+      tx = await userProxy.execGelatoAction(gelatoAction);
       txResponse = await tx.wait();
 
       const feeAmount = ethers.utils.parseUnits(
@@ -388,10 +406,13 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         ],
       });
 
-      tx = await userProxy.delegatecallGelatoAction(
-        actionWithdrawBatchExchange.address,
-        withdrawPayload
-      );
+      const gelatoAction = {
+        inst: actionWithdrawBatchExchange.address,
+        data: withdrawPayload,
+        operation: OPERATION.delegatecall,
+      };
+
+      tx = await userProxy.execGelatoAction(gelatoAction);
       txResponse = await tx.wait();
 
       const feeAmount = FEE_ETH.toString();
@@ -431,13 +452,17 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         ],
       });
 
+      const gelatoAction = {
+        inst: actionWithdrawBatchExchange.address,
+        data: withdrawPayload,
+        operation: OPERATION.delegatecall,
+      };
       await expect(
-        userProxy.delegatecallGelatoAction(
-          actionWithdrawBatchExchange.address,
-          withdrawPayload
-        )
-      ).to.be.revertedWith(
-        "GelatoUserProxy.delegatecallGelatoAction:ActionWithdrawBatchExchange: Insufficient balance for user to pay for withdrawal 1"
+        userProxy
+          .execGelatoAction(gelatoAction)
+          .to.be.revertedWith(
+            "GelatoUserProxy.execGelatoAction:ActionWithdrawBatchExchange: Insufficient balance for user to pay gelatoAction"
+          )
       );
 
       const providerBalance = await sellToken.balanceOf(providerAddress);
@@ -473,13 +498,18 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         ],
       });
 
+      const gelatoAction = {
+        inst: actionWithdrawBatchExchange.address,
+        data: withdrawPayload,
+        operation: OPERATION.delegatecall,
+      };
+
       await expect(
-        userProxy.delegatecallGelatoAction(
-          actionWithdrawBatchExchange.address,
-          withdrawPayload
-        )
-      ).to.be.revertedWith(
-        "GelatoUserProxy.delegatecallGelatoAction:ActionWithdrawBatchExchange: Insufficient balance for user to pay for withdrawal 1"
+        userProxy
+          .execGelatoAction(gelatoAction)
+          .to.be.revertedWith(
+            "GelatoUserProxy.execGelatoAction:ActionWithdrawBatchExchange: Insufficient balance for user to pay gelatoAction"
+          )
       );
 
       const providerBalance = await WETH.balanceOf(providerAddress);
