@@ -133,7 +133,10 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // CHECK Action Conditions
         for (uint i; i < _ec.task.actions.length; i++) {
-            try _ec.task.actions[i].inst.termsOk(_ec.task.actions[i].data)
+            // Only check termsOk if specified, else continue
+            if (!_ec.task.actions[i].termsOkCheck) continue;
+
+            try IGelatoAction(_ec.task.actions[i].inst).termsOk(_ec.task.actions[i].data)
                 returns(string memory actionTermsOk)
             {
                 if (!actionTermsOk.startsWithOk())
