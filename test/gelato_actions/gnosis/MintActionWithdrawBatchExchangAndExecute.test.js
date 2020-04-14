@@ -202,6 +202,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         inst: actionWithdrawBatchExchange.address,
         data: actionData,
         operation: "delegatecall",
+        termsOk: true,
       });
 
       const task = new Task({
@@ -231,6 +232,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         inst: gelatoCore.address,
         data: mintPayload,
         operation: "delegatecall",
+        termsOk: false,
       });
 
       // LogExecClaimMinted(executor, execClaim.id, hashedExecClaim, execClaim);
@@ -363,6 +365,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         inst: gelatoCore.address,
         data: mintPayload,
         operation: "delegatecall",
+        termsOk: false,
       });
 
       // LogExecClaimMinted(executor, execClaim.id, hashedExecClaim, execClaim);

@@ -3,16 +3,7 @@
 const { expect } = require("chai");
 const { run, ethers } = require("@nomiclabs/buidler");
 
-// ##### Gnosis Action Test Cases #####
-// 1. All sellTokens got converted into buy tokens, sufficient for withdrawal
-// 2. All sellTokens got converted into buy tokens, insufficient for withdrawal
-// 3. SellTokens got partially converted into buy tokens, insufficient buy tokens for withdrawal
-// 4. No sellTokens got converted into buy tokens, sufficient sell tokens for withdrawal
-// 5. No sellTokens got converted into buy tokens, insufficient sell tokens for withdrawal
 describe("Gelato Core - Minting ", function () {
-  // We define the ContractFactory and Signer variables here and assign them in
-  // a beforeEach hook.
-  let actionWithdrawBatchExchange;
   let seller;
   let provider;
   let executor;
@@ -22,17 +13,9 @@ describe("Gelato Core - Minting ", function () {
   let executorAddress;
   let userProxyAddress;
   let sellToken; //DAI
-  let buyToken; //USDC
-  let ActionWithdrawBatchExchange;
   let MockERC20;
-  let MockBatchExchange;
-  let mockBatchExchange;
-  let WETH;
-  let GelatoUserProxyFactory;
   let gelatoUserProxyFactory;
   let sellDecimals;
-  let buyDecimals;
-  let wethDecimals;
   let tx;
   let txResponse;
   let gelatoCore;
@@ -61,8 +44,6 @@ describe("Gelato Core - Minting ", function () {
     user2address = await user2.getAddress();
     MockERC20 = await ethers.getContractFactory("MockERC20");
 
-    // string memory _name, uint256 _mintAmount, address _to, uint8 _decimals
-    // Deploy Sell Token
     sellDecimals = 18;
     sellToken = await MockERC20.deploy(
       "DAI",
@@ -72,27 +53,6 @@ describe("Gelato Core - Minting ", function () {
     );
     await sellToken.deployed();
 
-    // Deploy Buy Token
-    buyDecimals = 6;
-    buyToken = await MockERC20.deploy(
-      "USDC",
-      (100 * 10 ** buyDecimals).toString(),
-      sellerAddress,
-      buyDecimals
-    );
-    await buyToken.deployed();
-
-    // Deploy WETH
-    wethDecimals = 18;
-    WETH = await MockERC20.deploy(
-      "WETH",
-      (100 * 10 ** wethDecimals).toString(),
-      sellerAddress,
-      wethDecimals
-    );
-    await WETH.deployed();
-
-    // 2. Create Proxy for seller
     tx = await gelatoUserProxyFactory.create();
     txResponse = await tx.wait();
 
@@ -111,20 +71,8 @@ describe("Gelato Core - Minting ", function () {
     userProxy = await ethers.getContractAt("GelatoUserProxy", userProxyAddress);
   });
 
-  // We test different functionality of the contract as normal Mocha tests.
   describe("GelatoCore.Mint Tests", function () {
     it("Successfully mint whitelisted executionClaim", async function () {
-      /*
-
-        struct ActionPayload {
-            address user;
-            address userProxy;
-            address sendToken;
-            address destination;
-            uint256 sendAmount;
-        }
-    */
-
       const actionInputs = {
         user: sellerAddress,
         userProxy: userProxyAddress,
@@ -153,6 +101,34 @@ describe("Gelato Core - Minting ", function () {
         actionsPayload: taskPayloads,
         expiryDate: 0,
       };
+
+      // #######
+
+      const condition = new Condition({
+        inst: constants.AddressZero,
+        data: constants.HashZero,
+      });
+
+      const action = new Action({
+        inst: actionWithdrawBatchExchange.address,
+        data: actionPayload,
+        operation: "delegatecall",
+      });
+
+      const task = new Task({
+        provider: gelatoProvider,
+        condition,
+        actions: [action],
+        expiryDate: constants.HashZero,
+      });
+
+      let execClaim = {
+        id: 1,
+        userProxy: userProxyAddress,
+        task,
+      };
+
+      // #######
 
       const mintPayload = await run("abi-encode-withselector", {
         contractname: "GelatoCore",

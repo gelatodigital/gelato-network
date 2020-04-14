@@ -8,6 +8,7 @@ const OPERATION = {
   call: 0,
   delegatecall: 1,
 };
+const GELATO_GAS_PRICE = ethers.utils.parseUints("8", "gwei");
 
 // ##### Gnosis Action Test Cases #####
 // 1. All sellTokens got converted into buy tokens, sufficient for withdrawal
@@ -27,18 +28,177 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
   let userProxyAddress;
   let sellToken; //DAI
   let buyToken; //USDC
-  let ActionWithdrawBatchExchange;
   let MockERC20;
-  let MockBatchExchange;
   let mockBatchExchange;
   let WETH;
-  let GelatoUserProxyFactory;
-  let gelatoUserProxyFactory;
   let sellDecimals;
   let buyDecimals;
   let wethDecimals;
   let tx;
   let txResponse;
+
+  // GelatoCore Setup
+  beforeEach(async function () {
+    // Get signers
+    [seller, provider, executor, sysAdmin] = await ethers.getSigners();
+    sellerAddress = await seller.getAddress();
+    providerAddress = await provider.getAddress();
+    executorAddress = await executor.getAddress();
+    sysAdminAddress = await sysAdmin.getAddress();
+
+    // Deploy Gelato Core with SysAdmin + Stake Executor
+    const GelatoCore = await ethers.getContractFactory("GelatoCore", sysAdmin);
+    gelatoCore = await GelatoCore.deploy();
+    await gelatoCore
+      .connect(executor)
+      .stakeExecutor({ value: ethers.utils.parseUnits("1", "ether") });
+
+    // Deploy Gelato Gas Price Oracle with SysAdmin and set to GELATO_GAS_PRICE
+    const GelatoGasPriceOracle = await ethers.getContractFactory(
+      "GelatoGasPriceOracle",
+      sysAdmin
+    );
+    const gelatoGasPriceOracle = await GelatoGasPriceOracle.deploy(
+      gelatoCore.address,
+      GELATO_GAS_PRICE
+    );
+
+    // Deploy GelatoUserProxyFactory with SysAdmin
+    const GelatoUserProxyFactory = await ethers.getContractFactory(
+      "GelatoUserProxyFactory",
+      sysAdmin
+    );
+    const gelatoUserProxyFactory = await GelatoUserProxyFactory.deploy(
+      gelatoCore.address
+    );
+
+    // Call proxyExtcodehash on Factory and deploy ProviderModuleGelatoUserProxy with constructorArgs
+    const proxyExtcodehash = await gelatoUserProxyFactory.proxyExtcodehash();
+    const ProviderModuleGelatoUserProxy = await ethers.getContractFactory(
+      "ProviderModuleGelatoUserProxy",
+      sysAdmin
+    );
+    const providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxy.deploy(
+      [proxyExtcodehash]
+    );
+
+    // Deploy Condition (if necessary)
+
+    // Deploy Actions
+    // // ERCTransferFROM
+    const ActionERC20TransferFrom = await ethers.getContractFactory(
+      "ActionERC20TransferFrom",
+      sysAdmin
+    );
+    const actionERC20TransferFrom = await ActionERC20TransferFrom.deploy();
+    await actionERC20TransferFrom.deployed();
+
+    // // #### ActionWithdrawBatchExchange Start ####
+    const MockBatchExchange = await ethers.getContractFactory(
+      "MockBatchExchange"
+    );
+    mockBatchExchange = await MockBatchExchange.deploy();
+    await mockBatchExchange.deployed();
+
+    wethDecimals = 18;
+    WETH = await MockERC20.deploy(
+      "WETH",
+      (100 * 10 ** wethDecimals).toString(),
+      sellerAddress,
+      wethDecimals
+    );
+    await WETH.deployed();
+
+    const ActionWithdrawBatchExchange = await ethers.getContractFactory(
+      "ActionWithdrawBatchExchange"
+    );
+    actionWithdrawBatchExchange = await ActionWithdrawBatchExchange.deploy(
+      mockBatchExchange.address,
+      WETH.address,
+      providerAddress
+    );
+    // // #### ActionWithdrawBatchExchange End ####
+
+    // Call provideFunds(value) with provider on core
+    await gelatoCore
+      .connect(provider)
+      .provideFunds({ value: ethers.utils.parseUnits("1", "ether") });
+
+    // Register new provider CAM on core with provider EDITS NEED ä#######################
+
+    const condition = new Condition({
+      inst: constants.AddressZero,
+      data: constants.HashZero,
+    });
+
+    const actionERC20TransferFromGelato = new Action({
+      inst: actionERC20TransferFrom.address,
+      data: constants.HashZero,
+      operation: "delegatecall",
+      termsOk: true,
+    });
+
+    const actionWithdrawBatchExchangeGelato = new Action({
+      inst: actionWithdrawBatchExchange.address,
+      data: constants.HashZero,
+      operation: "delegatecall",
+      termsOk: true,
+    });
+
+    /*
+    struct NoDataAction {
+      address inst;
+      Operation operation;
+      bool termsOkCheck;
+    }
+
+    // CAM
+    struct ConditionActionsMix {
+        IGelatoCondition condition;   // optional AddressZero for self-conditional actions
+        NoDataAction[] actions;
+        uint256 gasPriceCeil;  // GPC
+    }
+    */
+
+    const newCam = new CAM({
+      condition: condition.inst,
+      actions: [
+        {
+          inst: actionWithdrawBatchExchangeGelato.inst,
+          operation: 1,
+          termsOkCheck: true,
+        },
+      ],
+      gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
+    });
+
+    // Call batchProvider(executor, CAMS[], providerModules[])
+    await gelatoCore
+      .connect(provider)
+      .batchProvide(
+        executorAddress,
+        [newCam],
+        [providerModuleGelatoUserProxy.address]
+      );
+
+    // Create UserProxy
+    tx = await gelatoUserProxyFactory.create();
+    txResponse = await tx.wait();
+
+    const executionEvent = await run("event-getparsedlog", {
+      contractname: "GelatoUserProxyFactory",
+      contractaddress: gelatoUserProxyFactory.address,
+      eventname: "LogCreation",
+      txhash: txResponse.transactionHash,
+      blockhash: txResponse.blockHash,
+      values: true,
+      stringify: true,
+    });
+
+    userProxyAddress = executionEvent.userProxy;
+
+    userProxy = await ethers.getContractAt("GelatoUserProxy", userProxyAddress);
+  });
 
   beforeEach(async function () {
     // Get the ContractFactory and Signers here.
