@@ -1,28 +1,14 @@
-import { constants, utils } from "ethers";
-
 class Task {
-  constructor(taskObj) {
-    try {
-      if (!taskObj.actionPayload)
-        throw new Error("undefined Task.actionPayload");
+  constructor({ provider, condition, actions, expiryDate }) {
+    if (!provider) throw new Error("Task: no provider");
+    if (!condition) throw new Error("Task: no condition");
+    if (!actions || !actions.length) throw new Error("Task: no actions");
+    if (!expiryDate) throw new Error("Task: no expiryDate");
 
-      this.provider = utils.getAddress(taskObj.provider);
-      this.providerModule = utils.getAddress(taskObj.providerModule);
-      this.condition = taskObj.condition
-        ? utils.getAddress(taskObj.condition)
-        : constants.AddressZero;
-      this.action = utils.getAddress(taskObj.action);
-      this.conditionPayload = taskObj.conditionPayload
-        ? taskObj.conditionPayload
-        : constants.HashZero;
-      this.actionPayload = taskObj.actionPayload;
-      this.expiryDate = taskObj.expiryDate
-        ? taskObj.expiryDate
-        : constants.Zero;
-    } catch (error) {
-      console.error(`\n Task Class: \n`, error);
-      process.exit(1);
-    }
+    this.provider = provider;
+    this.condition = condition;
+    this.actions = actions;
+    this.expiryDate = expiryDate;
   }
 }
 

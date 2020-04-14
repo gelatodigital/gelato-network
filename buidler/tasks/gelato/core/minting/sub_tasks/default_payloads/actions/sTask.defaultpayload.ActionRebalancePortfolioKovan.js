@@ -2,7 +2,7 @@ import { internalTask } from "@nomiclabs/buidler/config";
 
 export default internalTask(
   "gc-mint:defaultpayload:ActionRebalancePortfolioKovan",
-  `Returns a hardcoded actionPayload of ActionRebalancePortfolioKovan`
+  `Returns a hardcoded actionData of ActionRebalancePortfolioKovan`
 )
   .addOptionalPositionalParam(
     "providerindex",
@@ -15,13 +15,13 @@ export default internalTask(
     try {
       // const provider = await run("handleGelatoProvider");
 
-      const actionPayload = await run("abi-encode-withselector", {
+      const actionData = await run("abi-encode-withselector", {
         contractname: "ActionRebalancePortfolioKovan",
         functionname: "action",
         inputs: []
       });
 
-      return actionPayload;
+      return actionData;
     } catch (err) {
       console.error(err);
       process.exit(1);

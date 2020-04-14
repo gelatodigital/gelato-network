@@ -36,7 +36,7 @@ export default task(
         throw new Error("\nUnable to fetch execClaim from events");
 
       const {
-        [taskArgs.executorindex]: gelatoExecutor
+        [taskArgs.executorindex]: gelatoExecutor,
       } = await ethers.getSigners();
 
       if (taskArgs.log) {
@@ -63,23 +63,23 @@ export default task(
 
       const execClaim = {
         id: taskArgs.execclaim[0],
-        provider: taskArgs.execclaim[1],
-        providerModule: taskArgs.execclaim[2],
-        userProxy: taskArgs.execclaim[3],
-        condition: taskArgs.execclaim[4],
-        action: taskArgs.execclaim[5],
-        conditionPayload: taskArgs.execclaim[6],
-        actionPayload: taskArgs.execclaim[7],
-        expiryDate: taskArgs.execclaim[8],
+        userProxy: taskArgs.execclaim[1],
+        task: {
+          provider: taskArgs.execclaim[2][0],
+          providerModule: taskArgs.execclaim[2][1],
+          condition: taskArgs.execclaim[2][2],
+          actions: taskArgs.execclaim[2][3],
+          conditionData: taskArgs.execclaim[2][4],
+          actionsPayload: taskArgs.execclaim[2][5],
+          expiryDate: taskArgs.execclaim[2][6],
+        },
       };
+      console.log(execClaim);
 
-      const gelatoGasPrice = utils.parseUnits("20", "gwei");
+      const GAS_PRICE = utils.parseUnits("9", "gwei");
 
       try {
-        const canExecResult = await gelatoCore.canExec(
-          execClaim,
-          gelatoGasPrice
-        );
+        const canExecResult = await gelatoCore.canExec(execClaim, GAS_PRICE);
         if (taskArgs.log) console.log(`\n Can Exec Result: ${canExecResult}\n`);
         return canExecResult;
       } catch (error) {

@@ -31,6 +31,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     function mintExecClaim(Task memory _task) public override {
         // GelatoCore will generate an ExecClaim from the _task
         ExecClaim memory execClaim;
+        execClaim.task = _task;
 
         execClaim.task = _task;
 
@@ -38,7 +39,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         execClaim.userProxy = msg.sender;
 
         // EXECUTOR CHECKS
-        address executor = executorByProvider[_task.provider];
+        address executor = executorByProvider[_task.provider.addr];
         require(
             isExecutorMinStaked(executor),
             "GelatoCore.mintExecClaim: executorByProvider's stake is insufficient."
@@ -53,7 +54,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         }
 
         // PROVIDER CHECKS (not for self-Providers)
-        if (msg.sender != _task.provider) {
+        if (msg.sender != _task.provider.addr) {
             string memory isProvided = isExecClaimProvided(execClaim);
             require(
                 isProvided.startsWithOk(),
@@ -84,7 +85,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     {
         // CHECK: UserProxy (msg.sender) is self-Provider
         require(
-            msg.sender == _task.provider,
+            msg.sender == _task.provider.addr,
             "GelatoCore.mintSelfProvidedExecClaim: sender not provider"
         );
 
@@ -106,12 +107,12 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         override
         returns(string memory)
     {
-        if (_ec.userProxy != _ec.task.provider) {
+        if (_ec.userProxy != _ec.task.provider.addr) {
             string memory res = providerCanExec(_ec, _gelatoGasPrice);
             if (!res.startsWithOk()) return res;
         }
 
-        if (!isProviderMinStaked(_ec.task.provider)) return "ProviderNotMinStaked";
+        if (!isProviderMinStaked(_ec.task.provider.addr)) return "ProviderNotMinStaked";
 
         bytes32 hashedExecClaim = keccak256(abi.encode(_ec));
         if (execClaimHash[_ec.id] != hashedExecClaim) return "InvalidExecClaimHash";
@@ -119,8 +120,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         if (_ec.task.expiryDate != 0 && _ec.task.expiryDate < now) return "Expired";
 
         // CHECK Condition for user proxies
-        if (_ec.task.condition != address(0)) {
-            try IGelatoCondition(_ec.task.condition).ok(_ec.task.conditionPayload)
+        if (_ec.task.condition.inst != IGelatoCondition(0)) {
+            try _ec.task.condition.inst.ok(_ec.task.condition.data)
                 returns(string memory condition)
             {
                 if (!condition.startsWithOk())
@@ -133,19 +134,21 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         }
 
         // CHECK Action Conditions
-        try IGelatoAction(_ec.task.action).termsOk(_ec.task.actionPayload)
-            returns(string memory actionTermsOk)
-        {
-            if (!actionTermsOk.startsWithOk())
-                return string(abi.encodePacked("ActionTermsNotOk:", actionTermsOk));
-        } catch Error(string memory error) {
-            return string(abi.encodePacked("ActionReverted:", error));
-        } catch {
-            return "ActionRevertedNoMessage";
+        for (uint i; i < _ec.task.actions.length; i++) {
+            try _ec.task.actions[i].inst.termsOk(_ec.task.actions[i].data)
+                returns(string memory actionTermsOk)
+            {
+                if (!actionTermsOk.startsWithOk())
+                    return string(abi.encodePacked("ActionTermsNotOk:", actionTermsOk));
+            } catch Error(string memory error) {
+                return string(abi.encodePacked("ActionReverted:", error));
+            } catch {
+                return "ActionRevertedNoMessage";
+            }
         }
 
         if (
-            msg.sender != executorByProvider[_ec.task.provider] &&
+            msg.sender != executorByProvider[_ec.task.provider.addr] &&
             msg.sender != address(this)
         )
             return "InvalidExecutor";
@@ -189,7 +192,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             // END-1: SUCCESS => ExecClaim Deletion & Reward
             delete execClaimHash[_ec.id];
             (uint256 executorSuccessFee, uint256 sysAdminSuccessFee) = _processProviderPayables(
-                _ec.task.provider,
+                _ec.task.provider.addr,
                 ExecutorPay.Reward,
                 startGas,
                 _gelatoMaxGas,
@@ -211,7 +214,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
                 //  => ExecClaim Deletion & Refund
                 delete execClaimHash[_ec.id];
                 (uint256 executorRefund,) = _processProviderPayables(
-                    _ec.task.provider,
+                    _ec.task.provider.addr,
                     ExecutorPay.Refund,
                     startGas,
                     _gelatoMaxGas,
@@ -229,7 +232,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
                 //  => ExecClaim Deletion & Refund
                 delete execClaimHash[_ec.id];
                 (uint256 executorRefund,) = _processProviderPayables(
-                    _ec.task.provider,
+                    _ec.task.provider.addr,
                     ExecutorPay.Refund,
                     startGas,
                     _gelatoMaxGas,
@@ -267,12 +270,11 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         bytes memory revertMsg;
 
         // Provided Users vs. Self-Providing Users
-        if (_ec.userProxy != _ec.task.provider) {
+        if (_ec.userProxy != _ec.task.provider.addr) {
             // Provided Users: execPayload from ProviderModule
             bytes memory execPayload;
-            try IGelatoProviderModule(_ec.task.providerModule).execPayload(
-                _ec.task.action,
-                _ec.task.actionPayload
+            try IGelatoProviderModule(_ec.task.provider.module).execPayload(
+                _ec.task.actions
             )
                 returns(bytes memory _execPayload)
             {
@@ -289,11 +291,13 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
             else error = "GelatoCore._exec.execPayload: invalid";
         } else {
-            // Self-Providing Users: actionPayload == execPayload assumption
+            // Self-Providing Users: actionData == execPayload assumption
             // Execution via UserProxy
-            if (_ec.task.actionPayload.length >= 4)
-                (success, revertMsg) = _ec.userProxy.call(_ec.task.actionPayload);
-            else error = "GelatoCore._exec.actionPayload: invalid";
+            if (_ec.task.actions.length != 1)
+                error = "GelatoCore._exec: _actions.length must be 1";
+            else if (_ec.task.actions[0].data.length >= 4 )
+                (success, revertMsg) = _ec.userProxy.call(_ec.task.actions[0].data);
+            else error = "GelatoCore._exec: action.data invalid";
         }
 
         // FAILURE
@@ -318,7 +322,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             }
         }
     }
-
 
     function _processProviderPayables(
         address _provider,
@@ -360,7 +363,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     // ================  CANCEL USER / EXECUTOR API ============================
     function cancelExecClaim(ExecClaim memory _ec) public override {
         // Checks
-        if (msg.sender != _ec.userProxy && msg.sender != _ec.task.provider)
+        if (msg.sender != _ec.userProxy && msg.sender != _ec.task.provider.addr)
             require(_ec.task.expiryDate <= now, "GelatoCore.cancelExecClaim: sender");
         // Effects
         bytes32 hashedExecClaim = keccak256(abi.encode(_ec));
@@ -380,7 +383,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     function collectExecClaimRent(ExecClaim memory _ec) public override {
         // CHECKS
         require(
-            executorByProvider[_ec.task.provider] == msg.sender,
+            executorByProvider[_ec.task.provider.addr] == msg.sender,
             "GelatoCore.collecExecClaimRent: msg.sender not assigned Executor"
         );
         if (_ec.task.expiryDate != 0) {
@@ -394,11 +397,11 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             "GelatoCore.collecExecClaimRent: rent is not due"
         );
         require(
-            (isConditionActionProvided(_ec)).startsWithOk(),
-            "GelatoCore.collecExecClaimRent: isConditionActionProvided failed"
+            (isCAMProvided(_ec)).startsWithOk(),
+            "GelatoCore.collecExecClaimRent: isCAMProvided failed"
         );
         require(
-            providerFunds[_ec.task.provider] >= execClaimRent,
+            providerFunds[_ec.task.provider.addr] >= execClaimRent,
             "GelatoCore.collecExecClaimRent: insufficient providerFunds"
         );
         bytes32 hashedExecClaim = keccak256(abi.encode(_ec));
@@ -411,12 +414,12 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         lastExecClaimRentPaymentDate[_ec.id] = now;
 
         // INTERACTIONS: Provider pays Executor ExecClaim Rent.
-        providerFunds[_ec.task.provider] -= execClaimRent;
+        providerFunds[_ec.task.provider.addr] -= execClaimRent;
         executorStake[msg.sender] += execClaimRent;
 
         emit LogCollectExecClaimRent(
             msg.sender,
-            _ec.task.provider,
+            _ec.task.provider.addr,
             _ec.id,
             execClaimRent
         );

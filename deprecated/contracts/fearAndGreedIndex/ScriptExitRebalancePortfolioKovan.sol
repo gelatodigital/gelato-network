@@ -59,8 +59,8 @@ contract ScriptExitRebalancePortfolioKovan {
         address[2] calldata _selectedProviderAndExecutor,
         uint256 _executionClaimId,
         address[2] calldata _conditionAndAction,
-        bytes calldata _conditionPayload,
-        bytes calldata _actionPayload,
+        bytes calldata _conditionData,
+        bytes calldata _actionData,
         uint256 _executionClaimExpiryDate
     )
         external
@@ -115,8 +115,8 @@ contract ScriptExitRebalancePortfolioKovan {
             _executionClaimId,
             address(this),
             _conditionAndAction,
-            _conditionPayload,
-            _actionPayload,
+            _conditionData,
+            _actionData,
             _executionClaimExpiryDate
         )  {
         } catch Error(string memory error) {

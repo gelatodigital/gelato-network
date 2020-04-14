@@ -21,9 +21,9 @@ interface IGelatoAction {
         address receiver
     );
 
-    function action(bytes calldata _actionPayload) external payable;
+    function action(bytes calldata _actionData) external payable;
 
-    function termsOk(bytes calldata _actionPayload) external view returns (string memory);
+    function termsOk(bytes calldata _actionData) external view returns (string memory);
 
     function actionStandardSelector() external pure returns(bytes4);
 }

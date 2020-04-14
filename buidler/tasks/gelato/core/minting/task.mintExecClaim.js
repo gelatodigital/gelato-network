@@ -1,6 +1,5 @@
 import { task } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../../buidler.config";
-import { constants } from "ethers";
 
 export default task(
   "gc-mintexecclaim",
@@ -10,59 +9,58 @@ export default task(
     "conditionname",
     "Must exist inside buidler.config. Supply '0' for AddressZero Conditions"
   )
-  .addOptionalPositionalParam(
-    "actionname",
+  .addOptionalVariadicPositionalParam(
+    "actionnames",
     "Actionname (must be inside buidler.config) OR --actionaddress MUST be supplied."
   )
-  .addOptionalPositionalParam(
-    "gelatoprovider",
-    "Defaults to network addressbook default"
+  .addOptionalParam("gelatoprovider", "Defaults to network addressbook default")
+  .addOptionalParam(
+    "gelatoprovidermodule",
+    "Address must be passed unless --selfprovide"
   )
-  .addOptionalPositionalParam("gelatoprovidermodule")
   .addOptionalParam("conditionaddress")
-  .addOptionalParam("actionaddress")
-  .addOptionalPositionalParam(
-    "conditionpayload",
-    "If needed but not provided, must have a default returned from handleGelatoPayload()"
+  .addOptionalParam(
+    "conditiondata",
+    "If undefined, handleGelatoData() must work"
   )
-  .addOptionalPositionalParam(
-    "actionpayload",
-    "If not provided, must have a default returned from handleGelatoPayload()"
+  .addOptionalParam(
+    "actionaddresses",
+    "Multiple actions => JS object (np via CLI)."
   )
-  .addOptionalPositionalParam(
-    "execclaimexpirydate",
-    "Defaults to 0 for gelatoexecutor's maximum"
+  .addOptionalParam(
+    "actiondata",
+    "Multiple actions => JS object (np via CLI). If undefined, handleGelatoData() must work"
+  )
+  .addOptionalParam(
+    "operations",
+    "Multiple actions => JS object (np via CLI). If undefined, defaults to delegatecall"
+  )
+  .addOptionalParam(
+    "expirydate",
+    "Defaults to Zero for gelatoexecutor's maximum"
   )
   .addOptionalParam("task", "Pass a complete class Task obj for minting.")
   .addFlag("selfprovide", "Calls gelatoCore.mintSelfProvidedExecClaim()")
   .addOptionalParam(
     "funds",
-    "Optional ETH value to sent along with --selfprovide",
-    constants.HashZero
+    "Optional ETH value to sent along with --selfprovide"
   )
-  .addOptionalParam(
-    "gelatoexecutor",
-    "Provide for --selfprovide",
-    constants.AddressZero
-  )
+  .addOptionalParam("gelatoexecutor", "Provide for --selfprovide")
   .addOptionalParam("gelatocoreaddress", "Supply if not in BRE-config")
   .addFlag("events", "Logs parsed Event Logs to stdout")
   .addFlag("log", "Logs return values to stdout")
   .setAction(async (taskArgs) => {
     try {
-      // if (
-      //   !taskArgs.funds ||
-      //   (!taskArgs.gelatoexecutor && !taskArgs.selfprovide)
-      // )
-      //   throw new Error(
-      //     "\n --funds or --gelatoexecutor only with --selfprovide"
-      //   );
+      if (taskArgs.funds !== constants.Zero && !taskArgs.selfprovide)
+        throw new Error("\n --funds only with --selfprovide");
+
+      if (taskArgs.gelatoexecutor && !taskArgs.selfprovide)
+        throw new Error("\n --gelatoexecutor only with --selfprovide");
 
       if (!taskArgs.task) {
-        taskArgs.task = {};
         // Command Line Argument Checks
-        if (!taskArgs.actionname && !taskArgs.actionaddress)
-          throw new Error(`\n Must supply <actionname> or --actionaddress`);
+        if (!taskArgs.actionnames && !taskArgs.actionaddress)
+          throw new Error(`\n Must supply <actionnames> or --actionaddress`);
 
         if (
           taskArgs.conditionname &&
@@ -70,67 +68,95 @@ export default task(
           !taskArgs.conditionname.startsWith("Condition")
         ) {
           throw new Error(
-            `\nInvalid condition: ${taskArgs.conditionname}: 1.<conditionname> 2.<actionname>\n`
+            `\nInvalid condition: ${taskArgs.conditionname}: 1.<conditionname> 2.<actionnames>\n`
           );
         }
 
-        if (taskArgs.actionname && !taskArgs.actionname.startsWith("Action")) {
-          throw new Error(
-            `\nInvalid action: ${taskArgs.actionname}: 1.<conditionname> 2.<actionname>\n`
-          );
-        }
-
-        if (!taskArgs.gelatoprovider)
-          // Selected GelatoProvider
-          taskArgs.task.provider = await run("handleGelatoProvider", {
-            gelatoprovider: taskArgs.gelatoprovider,
+        if (taskArgs.actionnames) {
+          taskArgs.actionnames.forEach((action) => {
+            if (!action.startsWith("Action"))
+              throw new Error(
+                `\nInvalid action: ${taskArgs.actionname}: 1.<conditionname> 2.<actionname>\n`
+              );
           });
-        else {
-          taskArgs.task.provider = taskArgs.gelatoprovider;
         }
 
-        // ProviderModule
-        if (!taskArgs.gelatoprovidermodule)
+        // Handle GelatoProvider
+        // Provider.inst
+        taskArgs.gelatoprovider = await run("handleGelatoProvider", {
+          gelatoprovider: taskArgs.gelatoprovider,
+        });
+        // Provider.module
+        if (!taskArgs.selfprovide && !taskArgs.gelatoprovidermodule)
           throw new Error(`\n gc-mintexecclaim: gelatoprovidermodule \n`);
-        else taskArgs.task.providerModule = taskArgs.gelatoprovidermodule;
+        // GelatoProvider
+        const gelatoProvider = new gelatoProvider({
+          inst: taskArgs.gelatoprovider,
+          module: taskArgs.providermodule,
+        });
 
-        // Condition and ConditionPayload (optional)
+        // Condition and ConditionData (optional)
         if (taskArgs.conditionname !== "0") {
           if (!taskArgs.conditionaddress) {
-            taskArgs.task.condition = await run("bre-config", {
+            taskArgs.conditionaddress = await run("bre-config", {
               deployments: true,
               contractname: taskArgs.conditionname,
             });
           }
-          if (!taskArgs.conditionpayload) {
-            taskArgs.task.conditionPayload = await run("handleGelatoPayload", {
+          if (!taskArgs.conditiondata) {
+            taskArgs.task.conditionData = await run("handleGelatoData", {
               contractname: taskArgs.conditionname,
             });
           }
         }
+        const condition = new Condition({
+          inst: taskArgs.conditionaddress,
+          data: taskArgs.conditiondata,
+        });
 
-        // Action and ActionPayload
-        if (!taskArgs.actionaddress) {
-          taskArgs.task.action = await run("bre-config", {
-            deployments: true,
-            contractname: taskArgs.actionname,
+        // Handle Actions
+        const actions = [];
+        for (const actionname of taskArgs.actionnames) {
+          // Action.inst
+          if (!taskArgs.actionaddresses[actionname]) {
+            taskArgs.actionaddresses[actionname] = await run("bre-config", {
+              deployments: true,
+              contractname: actionname,
+            });
+          }
+          // Action.data
+          if (!taskArgs.actiondata[actionname]) {
+            taskArgs.actiondata[actionname] = await run("handleGelatoData", {
+              contractname: actionname,
+            });
+          }
+          // Action.operation
+          if (!taskArgs.operations[actionname])
+            taskArgs.operations[actionname] = "delegatecall";
+
+          // Action
+          const action = new Action({
+            inst: taskArgs.actionaddresses[actionname],
+            data: taskArgs.actiondata[actionname],
+            operation: taskArgs.operations[actionname],
           });
+          // Task.actions
+          actions.push(action);
         }
-        if (!taskArgs.actionpayload) {
-          taskArgs.task.actionPayload = await run("handleGelatoPayload", {
-            contractname: taskArgs.actionname,
-            payload: taskArgs.actionpayload,
-          });
-        }
+
+        // TASK
+        taskArgs.task = new Task({
+          provider: gelatoProvider,
+          condition,
+          actions,
+          expiryDate: taskArgs.expirydate,
+        });
       }
 
       if (taskArgs.log)
         console.log("\n gc-mintexecclaim TaskArgs:\n", taskArgs, "\n");
 
-      // Construct Task for minting
-      const task = new Task(taskArgs.task);
-
-      if (taskArgs.log) console.log("\n Task:\n", task);
+      if (taskArgs.log) console.log("\n Task:\n", taskArgs.task);
 
       // GelatoCore write Instance
       const gelatoCore = await run("instantiateContract", {
@@ -145,8 +171,10 @@ export default task(
       if (taskArgs.selfprovide) {
         mintTxHash = await gelatoCore.mintSelfProvidedExecClaim(
           task,
-          taskArgs.gelatoexecutor,
-          { value: taskArgs.funds }
+          taskArgs.gelatoexecutor
+            ? taskArgs.gelatoexecutor
+            : constants.AddressZero,
+          { value: taskArgs.funds ? taskArgs.funds : constants.Zero }
         );
       } else {
         // Wrap Mint function in Gnosis Safe Transaction
@@ -154,7 +182,7 @@ export default task(
         mintTxHash = await run("gsp-exectransaction", {
           gnosissafeproxyaddress: safeAddress,
           contractname: "GelatoCore",
-          inputs: [task],
+          inputs: [taskArgs.task],
           functionname: "mintExecClaim",
           operation: 0,
           log: true,
@@ -178,7 +206,6 @@ export default task(
           contractaddress: taskArgs.gelatocoreaddress,
           eventname: "LogExecClaimMinted",
           txhash: mintTxHash,
-          blockhash,
           values: true,
           stringify: true,
         });

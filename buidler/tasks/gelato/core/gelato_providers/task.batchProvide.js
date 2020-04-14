@@ -11,7 +11,7 @@ export default task(
   .addOptionalParam("conditions", "Only one via CLI.")
   .addOptionalParam(
     "actionswithgaspriceceil",
-    "Cannot be passed via CLI as it is an Array of ActionWithGasPriceCeil objs"
+    "Cannot be passed via CLI as it is an Array of ActionsWithGasPriceCeil objs"
   )
   .addOptionalParam(
     "action",
@@ -62,7 +62,7 @@ export default task(
           deployments: true,
           contractname: taskArgs.action,
         });
-        const actionWithGasPriceCeil = new ActionWithGasPriceCeil(
+        const actionWithGasPriceCeil = new ActionsWithGasPriceCeil(
           actionAddress,
           taskArgs.actiongaspriceceil
         );

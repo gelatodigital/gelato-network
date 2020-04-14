@@ -4,13 +4,14 @@ pragma experimental ABIEncoderV2;
 import { IGelatoProviderModule } from "../../interfaces/IGelatoProviderModule.sol";
 import { IProviderModuleGnosisSafeProxy } from "./IProviderModuleGnosisSafeProxy.sol";
 import { Ownable } from "../../../external/Ownable.sol";
+import { MultiSend } from "../../../external/MultiSend.sol";
 import {
     IGnosisSafe
 } from "../../../user_proxies/gnosis_safe_proxy/interfaces/IGnosisSafe.sol";
 import {
     IGnosisSafeProxy
 } from "../../../user_proxies/gnosis_safe_proxy/interfaces/IGnosisSafeProxy.sol";
-import { ExecClaim } from "../../interfaces/IGelatoCore.sol";
+import { Action, Operation, ExecClaim } from "../../interfaces/IGelatoCore.sol";
 
 contract ProviderModuleGnosisSafeProxy is
     IGelatoProviderModule,
@@ -19,9 +20,12 @@ contract ProviderModuleGnosisSafeProxy is
 {
     mapping(bytes32 => bool) public override isProxyExtcodehashProvided;
     mapping(address => bool) public override isMastercopyProvided;
-    address public gelatoCore;
+    address public override gelatoCore;
+    address public constant override MULTI_SEND = 0x29CAa04Fa05A046a05C85A50e8f2af8cf9A05BaC;
 
-    constructor(bytes32[] memory hashes, address[] memory masterCopies, address _gelatoCore) public {
+    constructor(bytes32[] memory hashes, address[] memory masterCopies, address _gelatoCore)
+        public
+    {
         batchProvide(hashes, masterCopies);
         gelatoCore = _gelatoCore;
     }
@@ -48,19 +52,62 @@ contract ProviderModuleGnosisSafeProxy is
         return "Ok";
     }
 
-    function execPayload(address _action, bytes calldata _actionPayload)
+    function execPayload(Action[] calldata _actions)
         external
         pure
         override
         returns(bytes memory)
     {
-        return abi.encodeWithSelector(
-            IGnosisSafe.execTransactionFromModuleReturnData.selector,
-            _action,  // to
-            0,  // value
-            _actionPayload,  // data
-            IGnosisSafe.Operation.DelegateCall
-        );
+        if( _actions.length == 1) {
+            IGnosisSafe.Operation gsOperation;
+
+            if (_actions[0].operation == Operation.Call)
+                gsOperation = IGnosisSafe.Operation.DelegateCall;
+            else if (_actions[0].operation == Operation.Call)
+                gsOperation = IGnosisSafe.Operation.Call;
+            else revert("ProviderModuleGnosisSafeProxy.execPayload: invalid operation");
+
+            return abi.encodeWithSelector(
+                IGnosisSafe.execTransactionFromModuleReturnData.selector,
+                _actions[0],  // to
+                0,  // value
+                _actions[0].data,
+                gsOperation
+            );
+        } else if (_actions.length > 1) {
+            bytes memory multiSendPayload;
+
+            for (uint i; i < _actions.length; i++ ) {
+                // MultiSend only allows Action.Operation.Delegatecall
+                if (_actions[i].operation != Operation.Delegatecall)
+                    revert("ProviderModuleGnosisSafeProxy.execPayload: d-call only");
+
+                bytes memory payloadPart = abi.encodePacked(
+                    uint256(1),  // operation
+                    _actions[i].inst,  // to
+                    uint256(0),  // value
+                    _actions[i].data.length,
+                    _actions[i].data
+                );
+
+                multiSendPayload = abi.encodePacked(multiSendPayload, payloadPart);
+            }
+
+            multiSendPayload = abi.encodeWithSelector(
+                MultiSend.multiSend.selector,
+                multiSendPayload
+            );
+
+            return abi.encodeWithSelector(
+                IGnosisSafe.execTransactionFromModuleReturnData.selector,
+                MULTI_SEND,  // to
+                0,  // value
+                multiSendPayload,  // data
+                IGnosisSafe.Operation.DelegateCall
+            );
+        } else {
+            revert("ProviderModuleGnosisSafeProxy.execPayload: 0 _actions length");
+        }
     }
 
     // GnosisSafeProxy
@@ -108,19 +155,6 @@ contract ProviderModuleGnosisSafeProxy is
         }
     }
 
-    function isGelatoCoreWhitelisted(address _userProxy)
-        view
-        internal
-        returns(bool isWhitelisted)
-    {
-        address[] memory whitelistedModules =  IGnosisSafe(_userProxy).getModules();
-        for(uint i = 0; i < whitelistedModules.length; i++) {
-            if (whitelistedModules[i] ==  gelatoCore) {
-                isWhitelisted = true;
-            }
-        }
-    }
-
     // Batch (un-)provide
     function batchProvide(bytes32[] memory _hashes, address[] memory _mastercopies)
         public
@@ -141,8 +175,19 @@ contract ProviderModuleGnosisSafeProxy is
     }
 
     function setGelatoCore(address _gelatoCore) external onlyOwner {
-        require(_gelatoCore != address(0), "Gelato Core cannot be address 0");
+        require(_gelatoCore != address(0), "ProviderModuleGnosisSafeProxy.setGelatoCore:0");
         gelatoCore = _gelatoCore;
+    }
+
+    function isGelatoCoreWhitelisted(address _userProxy)
+        view
+        internal
+        returns(bool)
+    {
+        address[] memory whitelistedModules = IGnosisSafe(_userProxy).getModules();
+        for (uint i = 0; i < whitelistedModules.length; i++)
+            if (whitelistedModules[i] == gelatoCore) return true;
+        return false;
     }
 
 }

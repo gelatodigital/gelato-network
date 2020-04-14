@@ -3,7 +3,7 @@ import { utils } from "ethers";
 
 export default internalTask(
   "gc-mintexecclaim:defaultpayload:ActionChainedTimedERC20TransferFromKovan",
-  `Returns a hardcoded actionPayload of ActionChainedTimedERC20TransferFromKovan`
+  `Returns a hardcoded actionData of ActionChainedTimedERC20TransferFromKovan`
 )
   .addFlag("log")
   .setAction(async ({ log }) => {

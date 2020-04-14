@@ -30,14 +30,14 @@ contract ConditionFearGreedIndex is GelatoConditionsStandard, Ownable {
 
 
     // STANDARD Interface
-    function ok(bytes calldata _conditionPayload)
+    function ok(bytes calldata _conditionData)
         external
         view
         override
         virtual
         returns(string memory)
     {
-        uint256 prevIndex = abi.decode(_conditionPayload[4:], (uint256));
+        uint256 prevIndex = abi.decode(_conditionData[4:], (uint256));
         return ok(prevIndex);
     }
 

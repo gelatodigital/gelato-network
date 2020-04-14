@@ -18,7 +18,7 @@ contract ConditionKyberRateError {
         view
         returns(string memory)
     {
-        bytes memory conditionPayload = abi.encodeWithSelector(
+        bytes memory conditionData = abi.encodeWithSelector(
             IGelatoCondition.ok.selector,
             _src,
             _srcAmt,
@@ -27,7 +27,7 @@ contract ConditionKyberRateError {
             _greaterElseSmaller
         );
 
-        try IGelatoCondition(_conditionKyberRate).ok{gas: _conditionGas}(conditionPayload)
+        try IGelatoCondition(_conditionKyberRate).ok{gas: _conditionGas}(conditionData)
             returns(string memory res)
         {
             return res;

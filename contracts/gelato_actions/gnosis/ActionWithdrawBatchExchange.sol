@@ -34,8 +34,8 @@ contract ActionWithdrawBatchExchange is GelatoActionsStandard {
     }
 
 
-    function action(bytes calldata _actionPayload) external payable override virtual {
-        (address _user, address _proxyAddress, address _sellToken, address _buyToken) = abi.decode(_actionPayload, (address, address, address, address));
+    function action(bytes calldata _actionData) external payable override virtual {
+        (address _user, address _proxyAddress, address _sellToken, address _buyToken) = abi.decode(_actionData, (address, address, address, address));
         action(_user, _proxyAddress, _sellToken, _buyToken);
     }
 
@@ -145,7 +145,7 @@ contract ActionWithdrawBatchExchange is GelatoActionsStandard {
 
     // ======= ACTION CONDITIONS CHECK =========
     // Overriding and extending GelatoActionsStandard's function (optional)
-    function termsOk(bytes calldata _actionPayload)
+    function termsOk(bytes calldata _actionData)
         external
         view
         override
@@ -153,7 +153,7 @@ contract ActionWithdrawBatchExchange is GelatoActionsStandard {
         returns(string memory)  // actionCondition
     {
         (, address _proxyAddress, address _sellToken, address _buyToken) = abi.decode(
-            _actionPayload[4:],
+            _actionData[4:],
             (address,address,address,address)
         );
         return _actionConditionsCheck(

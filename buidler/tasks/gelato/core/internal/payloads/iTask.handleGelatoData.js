@@ -1,7 +1,7 @@
 import { internalTask } from "@nomiclabs/buidler/config";
 
 export default internalTask(
-  "handleGelatoPayload",
+  "handleGelatoData",
   "Returns default payload for Condition or Action <contractname>, if no payload is passed"
 )
   .addPositionalParam("contractname")
