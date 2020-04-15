@@ -2,36 +2,37 @@
 // => only dependency we need is "chai"
 const { expect } = require("chai");
 
-/*
-describe("GelatoCore - GelatoProviders - Setters: MODULES", function () {
+describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function () {
   // We define the ContractFactory and Address variables here and assign them in
   // a beforeEach hook.
   let GelatoCore;
   let ProviderModule;
   let OtherProviderModule;
+
   let gelatoCore;
+  let providerModule;
+  let otherProviderModule;
+
   let provider;
   let providerAddress;
-  let module;
-  let conditionAddress;
-  let otherCondition;
-  let otherConditionAddress;
 
   beforeEach(async function () {
     // Get the ContractFactory, contract instance, and Signers here.
     GelatoCore = await ethers.getContractFactory("GelatoCore");
     ProviderModule = await ethers.getContractFactory(
-      "ConditionTimestampPassed"
+      "ProviderModuleGelatoUserProxy"
     );
-    OtherProviderModule = await ethers.getContractFactory("MockConditionDummy");
+    OtherProviderModule = await ethers.getContractFactory(
+      "ProviderModuleGnosisSafeProxy"
+    );
+
     gelatoCore = await GelatoCore.deploy();
-    condition = await ProviderModule.deploy();
-    otherCondition = await OtherProviderModule.deploy();
+    providerModule = await ProviderModule.deploy();
+    otherProviderModule = await OtherProviderModule.deploy();
+
     await gelatoCore.deployed();
-    await condition.deployed();
-    await otherCondition.deployed();
-    conditionAddress = condition.address;
-    otherConditionAddress = otherCondition.address;
+    await providerModule.deployed();
+    await otherProviderModule.deployed();
 
     [provider] = await ethers.getSigners();
     providerAddress = await provider.getAddress();
@@ -39,54 +40,56 @@ describe("GelatoCore - GelatoProviders - Setters: MODULES", function () {
 
   // We test different functionality of the contract as normal Mocha tests.
 
-  // provideConditions
-  describe("GelatoCore.GelatoProviders.provideConditions", function () {
-    it("Should allow anyone to provide a single condition", async function () {
-      await expect(gelatoCore.provideConditions([conditionAddress]))
+  // addProviderModules
+  describe("GelatoCore.GelatoProviders.addProviderModules", function () {
+    it("Should allow anyone to add a single provider module", async function () {
+      // addProviderModules
+      await expect(gelatoCore.addProviderModules([conditionAddress]))
         .to.emit(gelatoCore, "LogProvideCondition")
         .withArgs(providerAddress, conditionAddress);
+
       expect(
         await gelatoCore.isConditionProvided(providerAddress, conditionAddress)
       ).to.be.true;
     });
 
-    it("Should allow anyone to provideConditions", async function () {
-      await expect(
-        gelatoCore.provideConditions([conditionAddress, otherConditionAddress])
-      )
-        .to.emit(gelatoCore, "LogProvideCondition")
-        .withArgs(providerAddress, conditionAddress)
-        .and.to.emit(gelatoCore, "LogProvideCondition")
-        .withArgs(providerAddress, otherConditionAddress);
-      expect(
-        await gelatoCore.isConditionProvided(providerAddress, conditionAddress)
-      ).to.be.true;
-      expect(
-        await gelatoCore.isConditionProvided(
-          providerAddress,
-          otherConditionAddress
-        )
-      ).to.be.true;
-    });
+    // it("Should allow anyone to addProviderModules", async function () {
+    //   await expect(
+    //     gelatoCore.addProviderModules([conditionAddress, otherConditionAddress])
+    //   )
+    //     .to.emit(gelatoCore, "LogProvideCondition")
+    //     .withArgs(providerAddress, conditionAddress)
+    //     .and.to.emit(gelatoCore, "LogProvideCondition")
+    //     .withArgs(providerAddress, otherConditionAddress);
+    //   expect(
+    //     await gelatoCore.isConditionProvided(providerAddress, conditionAddress)
+    //   ).to.be.true;
+    //   expect(
+    //     await gelatoCore.isConditionProvided(
+    //       providerAddress,
+    //       otherConditionAddress
+    //     )
+    //   ).to.be.true;
+    // });
 
-    it("Should NOT allow to provide same conditions again", async function () {
-      await gelatoCore.provideConditions([conditionAddress]);
+    // it("Should NOT allow to provide same conditions again", async function () {
+    //   await gelatoCore.addProviderModules([conditionAddress]);
 
-      await expect(
-        gelatoCore.provideConditions([conditionAddress])
-      ).to.be.revertedWith("GelatProviders.provideConditions: redundant");
+    //   await expect(
+    //     gelatoCore.addProviderModules([conditionAddress])
+    //   ).to.be.revertedWith("GelatProviders.addProviderModules: redundant");
 
-      await expect(
-        gelatoCore.provideConditions([otherConditionAddress, conditionAddress])
-      ).to.be.revertedWith("GelatProviders.provideConditions: redundant");
-    });
+    //   await expect(
+    //     gelatoCore.addProviderModules([otherConditionAddress, conditionAddress])
+    //   ).to.be.revertedWith("GelatProviders.addProviderModules: redundant");
+    // });
   });
 
-  // unprovideConditions
+  /*   // unprovideConditions
   describe("GelatoCore.GelatoProviders.unprovideConditions", function () {
     it("Should allow Providers to unprovide a single ProviderModule", async function () {
       // provideCondition
-      await gelatoCore.provideConditions([
+      await gelatoCore.addProviderModules([
         conditionAddress,
         otherConditionAddress,
       ]);
@@ -107,8 +110,8 @@ describe("GelatoCore - GelatoProviders - Setters: MODULES", function () {
     });
 
     it("Should allow Providers to unprovideConditions", async function () {
-      // provideConditions
-      await gelatoCore.provideConditions([
+      // addProviderModules
+      await gelatoCore.addProviderModules([
         conditionAddress,
         otherConditionAddress,
       ]);
@@ -147,8 +150,8 @@ describe("GelatoCore - GelatoProviders - Setters: MODULES", function () {
         ])
       ).to.be.revertedWith("GelatProviders.unprovideConditions: redundant");
 
-      // provideConditions
-      await gelatoCore.provideConditions([conditionAddress]);
+      // addProviderModules
+      await gelatoCore.addProviderModules([conditionAddress]);
 
       await expect(
         gelatoCore.unprovideConditions([otherConditionAddress])
@@ -161,6 +164,5 @@ describe("GelatoCore - GelatoProviders - Setters: MODULES", function () {
         ])
       ).to.be.revertedWith("GelatProviders.unprovideConditions: redundant");
     });
-  });
+  }); */
 });
-*/

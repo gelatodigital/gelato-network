@@ -29,6 +29,7 @@ build/
 *.icloud
 
 # solidity
+coverage.json
 coverage/
 
 # yarn
