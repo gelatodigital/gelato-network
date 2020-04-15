@@ -64,7 +64,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         override
         returns(string memory)
     {
-        if (!isProviderModule(_ec.task.provider.addr, _ec.task.provider.module))
+        if (!isModuleProvided(_ec.task.provider.addr, _ec.task.provider.module))
             return "InvalidProviderModule";
 
         IGelatoProviderModule providerModule = IGelatoProviderModule(
@@ -234,7 +234,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     function addProviderModules(IGelatoProviderModule[] memory _modules) public override {
         for (uint i; i < _modules.length; i++) {
             require(
-                !isProviderModule(msg.sender, _modules[i]),
+                !isModuleProvided(msg.sender, _modules[i]),
                 "GelatoProviders.addProviderModules: redundant"
             );
             _providerModules[msg.sender].add(_modules[i]);
@@ -245,7 +245,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     function removeProviderModules(IGelatoProviderModule[] memory _modules) public override {
         for (uint i; i < _modules.length; i++) {
             require(
-                isProviderModule(msg.sender, _modules[i]),
+                isModuleProvided(msg.sender, _modules[i]),
                 "GelatoProviders.removeProviderModules: redundant"
             );
             _providerModules[msg.sender].remove(_modules[i]);
@@ -317,7 +317,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     }
 
     // Providers' Module Getters
-    function isProviderModule(address _provider, IGelatoProviderModule _module)
+    function isModuleProvided(address _provider, IGelatoProviderModule _module)
         public
         view
         override

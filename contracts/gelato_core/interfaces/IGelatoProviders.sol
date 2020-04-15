@@ -149,7 +149,7 @@ interface IGelatoProviders {
     function NO_CEIL() external pure returns(uint256);
 
     // Providers' Module Getters
-    function isProviderModule(address _provider, IGelatoProviderModule _module)
+    function isModuleProvided(address _provider, IGelatoProviderModule _module)
         external
         view
         returns(bool);
