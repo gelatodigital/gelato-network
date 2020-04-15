@@ -8,6 +8,8 @@ import { IGelatoCondition } from "../gelato_conditions/IGelatoCondition.sol";
 import { IGelatoAction } from "../gelato_actions/IGelatoAction.sol";
 import { IGelatoProviderModule } from "./interfaces/IGelatoProviderModule.sol";
 
+import "@nomiclabs/buidler/console.sol";
+
 /// @title GelatoCore
 /// @notice Exec Claim: minting, checking, execution, and cancellation
 /// @dev Find all NatSpecs inside IGelatoCore
@@ -42,6 +44,9 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             isExecutorMinStaked(executor),
             "GelatoCore.mintExecClaim: executorByProvider's stake is insufficient"
         );
+
+        console.log(now);
+        console.log(_task.expiryDate);
 
         // User checks
         if (_task.expiryDate != 0) {
@@ -115,7 +120,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         bytes32 hashedExecClaim = hashExecClaim(_ec);
         if (execClaimHash[_ec.id] != hashedExecClaim) return "InvalidExecClaimHash";
 
-        if (_ec.task.expiryDate != 0 && _ec.task.expiryDate < now) return "Expired";
+        if (_ec.task.expiryDate != 0 && _ec.task.expiryDate < now) return "ExecClaimExpired";
 
         // CHECK Condition for user proxies
         if (_ec.task.condition.inst != IGelatoCondition(0)) {

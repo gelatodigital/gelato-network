@@ -766,7 +766,7 @@ describe("Gelato Core - Minting ", function () {
       await expect(
         user2Proxy.connect(user2).callAction(gelatoCore.address, mintPayload)
       ).to.revertedWith(
-        "GelatoProviders.providerAssignsExecutor: isProviderMinStaked()"
+        "GelatoUserProxy.callAction:GelatoProviders.providerAssignsExecutor: isProviderMinFunded()"
       );
     });
 
@@ -847,7 +847,7 @@ describe("Gelato Core - Minting ", function () {
       await expect(
         user2Proxy.connect(user2).callAction(gelatoCore.address, mintPayload)
       ).to.revertedWith(
-        "GelatoCore.mintSelfProvidedExecClaim: sender not provider"
+        "GelatoUserProxy.callAction:GelatoCore.mintSelfProvidedExecClaim: sender not provider"
       );
     });
   });

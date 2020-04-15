@@ -20,6 +20,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
   // We define the ContractFactory and Signer variables here and assign them in
   // a beforeEach hook.
   let actionWithdrawBatchExchange;
+  let providerModuleGelatoUserProxy;
   let seller;
   let provider;
   let sysAdmin;
