@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for user_proxies/gelato_user_proxy/GelatoUserProxyFactory.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../prettify.css" />
+    <link rel="stylesheet" href="../../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../../index.html">all files</a> / <a href="index.html">user_proxies/gelato_user_proxy/</a> GelatoUserProxyFactory.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>0/14</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>0/2</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>0/7</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>0/13</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line low'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">pragma solidity ^0.6.6;
+&nbsp;
+import { IGelatoUserProxyFactory } from "./IGelatoUserProxyFactory.sol";
+import { Address } from "../../external/Address.sol";
+import { GelatoUserProxy } from "./GelatoUserProxy.sol";
+&nbsp;
+contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
+&nbsp;
+    using Address for address payable;  /// for oz's sendValue method
+&nbsp;
+    address public override gelatoCore;
+    mapping(address =&gt; GelatoUserProxy) public override gelatoProxyByUser;
+&nbsp;
+<span class="fstat-no" title="function not covered" >    constructor(address _gelatoCore) publi</span>c { <span class="cstat-no" title="statement not covered" >gelatoCore = _gelatoCore</span>; }
+&nbsp;
+    // create
+<span class="fstat-no" title="function not covered" >    function create()</span>
+        external
+        payable
+        override
+        returns(GelatoUserProxy userProxy)
+    {
+<span class="cstat-no" title="statement not covered" >        userProxy = new GelatoUserProxy{value: msg.value}(msg.sender, gelatoCore)</span>;
+<span class="cstat-no" title="statement not covered" >        gelatoProxyByUser[msg.sender] = userProxy</span>;
+<span class="cstat-no" title="statement not covered" >        emit LogCreation(msg.sender, userProxy);</span>
+    }
+&nbsp;
+    /// @dev create2: uses tx.origin so setup scripts can run before this call.
+    ///  This however means that contract accounts are excluded from creating a
+    ///  safe GelatoUserProxy by using create2.
+<span class="fstat-no" title="function not covered" >    function createTwo(uint256 _saltNonce)</span>
+        external
+        payable
+        override
+        returns(GelatoUserProxy userProxy)
+    {
+        // Standard Way of deriving salt
+<span class="cstat-no" title="statement not covered" >        bytes32 salt = keccak256(abi.encode(tx.origin, _saltNonce));</span>
+        // Deploy userProxy with create2
+<span class="cstat-no" title="statement not covered" >        userProxy = new GelatoUserProxy{salt: salt, value: msg.value}(tx.origin, gelatoCore)</span>;
+<span class="cstat-no" title="statement not covered" >        require(</span>
+            address(userProxy) == predictProxyAddress(tx.origin, _saltNonce),
+            "GelatoUserProxyFactory.createTwo: wrong address prediction"
+        );
+<span class="cstat-no" title="statement not covered" >        gelatoProxyByUser[tx.origin] = userProxy</span>;
+        // Success
+<span class="cstat-no" title="statement not covered" >        emit LogCreation(tx.origin, userProxy);</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function predictProxyAddress(address _user, uint256 _saltNonce)</span>
+        public
+        view
+        override
+        returns(address)
+    {
+        // Standard Way of deriving salt
+<span class="cstat-no" title="statement not covered" >        bytes32 salt = keccak256(abi.encode(tx.origin, _saltNonce));</span>
+        // Derive undeployed userProxy address
+<span class="cstat-no" title="statement not covered" >        return address(uint(keccak256(abi.encodePacked(</span>
+            byte(0xff),
+            address(this),
+            salt,
+            keccak256(abi.encodePacked(proxyCreationCode(), _user, gelatoCore))
+        ))));
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function proxyCreationCode() public pure override returns(bytes memory</span>) {
+<span class="cstat-no" title="statement not covered" >        return type(GelatoUserProxy).creationCode;</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function proxyRuntimeCode() public pure override returns(bytes memory</span>) {
+<span class="cstat-no" title="statement not covered" >        return type(GelatoUserProxy).runtimeCode;</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function proxyExtcodehash() external pure override returns(bytes32</span>) {
+<span class="cstat-no" title="statement not covered" >        return keccak256(proxyRuntimeCode());</span>
+    }
+}</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Wed Apr 15 2020 11:37:48 GMT+0200 (Central European Summer Time)
+</div>
+</div>
+<script src="../../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../../sorter.js"></script>
+</body>
+</html>

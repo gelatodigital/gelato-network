@@ -1,0 +1,1373 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for gelato_core/GelatoCore.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../index.html">all files</a> / <a href="index.html">gelato_core/</a> GelatoCore.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>0/120</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>0/90</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>0/11</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>0/114</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line low'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259
+260
+261
+262
+263
+264
+265
+266
+267
+268
+269
+270
+271
+272
+273
+274
+275
+276
+277
+278
+279
+280
+281
+282
+283
+284
+285
+286
+287
+288
+289
+290
+291
+292
+293
+294
+295
+296
+297
+298
+299
+300
+301
+302
+303
+304
+305
+306
+307
+308
+309
+310
+311
+312
+313
+314
+315
+316
+317
+318
+319
+320
+321
+322
+323
+324
+325
+326
+327
+328
+329
+330
+331
+332
+333
+334
+335
+336
+337
+338
+339
+340
+341
+342
+343
+344
+345
+346
+347
+348
+349
+350
+351
+352
+353
+354
+355
+356
+357
+358
+359
+360
+361
+362
+363
+364
+365
+366
+367
+368
+369
+370
+371
+372
+373
+374
+375
+376
+377
+378
+379
+380
+381
+382
+383
+384
+385
+386
+387
+388
+389
+390
+391
+392
+393
+394
+395
+396
+397
+398
+399
+400
+401
+402
+403
+404
+405
+406
+407
+408
+409
+410
+411
+412
+413
+414
+415
+416
+417
+418
+419
+420
+421
+422
+423
+424
+425
+426
+427
+428
+429
+430
+431
+432
+433
+434
+435
+436
+437</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">pragma solidity ^0.6.6;
+pragma experimental ABIEncoderV2;
+&nbsp;
+import { IGelatoCore, Task, ExecClaim } from "./interfaces/IGelatoCore.sol";
+import { GelatoExecutors } from "./GelatoExecutors.sol";
+import { SafeMath } from "../external/SafeMath.sol";
+import { IGelatoCondition } from "../gelato_conditions/IGelatoCondition.sol";
+import { IGelatoAction } from "../gelato_actions/IGelatoAction.sol";
+import { IGelatoProviderModule } from "./interfaces/IGelatoProviderModule.sol";
+&nbsp;
+/// @title GelatoCore
+/// @notice Exec Claim: minting, checking, execution, and cancellation
+/// @dev Find all NatSpecs inside IGelatoCore
+contract GelatoCore is IGelatoCore, GelatoExecutors {
+&nbsp;
+    using SafeMath for uint256;
+&nbsp;
+    // ================  STATE VARIABLES ======================================
+    // Executor compensation for estimated tx costs not accounted for by startGas
+    uint256 public constant override EXEC_TX_OVERHEAD = 50000;
+    // ExecClaimIds
+    uint256 public override currentExecClaimId;
+    // execClaim.id =&gt; execClaimHash
+    mapping(uint256 =&gt; bytes32) public override execClaimHash;
+    // Executors can charge Providers execClaimRent
+    mapping(uint256 =&gt; uint256) public override lastExecClaimRentPaymentDate;
+&nbsp;
+&nbsp;
+    // ================  MINTING ==============================================
+    // Only pass _executor for self-providing users, else address(0)
+<span class="fstat-no" title="function not covered" >    function mintExecClaim(Task memory _task) public overrid</span>e {
+        // GelatoCore will generate an ExecClaim from the _task
+<span class="cstat-no" title="statement not covered" >        ExecClaim memory execClaim;</span>
+<span class="cstat-no" title="statement not covered" >        execClaim.task = _task</span>;
+&nbsp;
+        // Smart Contract Accounts ONLY
+<span class="cstat-no" title="statement not covered" >        execClaim.userProxy = msg.sender</span>;
+&nbsp;
+        // EXECUTOR CHECKS
+<span class="cstat-no" title="statement not covered" >        address executor = executorByProvider[_task.provider.addr];</span>
+<span class="cstat-no" title="statement not covered" >        require(</span>
+            isExecutorMinStaked(executor),
+            "GelatoCore.mintExecClaim: executorByProvider's stake is insufficient."
+        );
+&nbsp;
+        // User checks
+<span class="cstat-no" title="statement not covered" >        if (_task.expiryDate != 0) {</span>
+<span class="cstat-no" title="statement not covered" >            require(</span>
+                _task.expiryDate &gt;= now,
+                "GelatoCore.mintExecClaim: Invalid expiryDate"
+            );
+        }
+&nbsp;
+        // PROVIDER CHECKS (not for self-Providers)
+<span class="cstat-no" title="statement not covered" >        if (msg.sender != _task.provider.addr) {</span>
+<span class="cstat-no" title="statement not covered" >            string memory isProvided = isExecClaimProvided(execClaim);</span>
+<span class="cstat-no" title="statement not covered" >            require(</span>
+                isProvided.startsWithOk(),
+                string(abi.encodePacked("GelatoCore.mintExecClaim.isProvided:", isProvided))
+            );
+        }
+&nbsp;
+        // Mint new execClaim
+        currentExecClaimId++;
+<span class="cstat-no" title="statement not covered" >        execClaim.id = currentExecClaimId</span>;
+&nbsp;
+        // ExecClaim Hashing
+<span class="cstat-no" title="statement not covered" >        bytes32 hashedExecClaim = keccak256(abi.encode(execClaim));</span>
+&nbsp;
+        // ExecClaim Hash registration
+<span class="cstat-no" title="statement not covered" >        execClaimHash[execClaim.id] = hashedExecClaim</span>;
+&nbsp;
+        // First ExecClaim Rent for first execClaimTenancy is free
+<span class="cstat-no" title="statement not covered" >        lastExecClaimRentPaymentDate[execClaim.id] = now</span>;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        emit LogExecClaimMinted(executor, execClaim.id, hashedExecClaim, execClaim);</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function mintSelfProvidedExecClaim(Task memory _task, address _executor)</span>
+        public
+        payable
+        override
+    {
+        // CHECK: UserProxy (msg.sender) is self-Provider
+<span class="cstat-no" title="statement not covered" >        require(</span>
+            msg.sender == _task.provider.addr,
+            "GelatoCore.mintSelfProvidedExecClaim: sender not provider"
+        );
+&nbsp;
+        // Optional User prepayment
+<span class="cstat-no" title="statement not covered" >        if (msg.value &gt; 0) <span class="cstat-no" title="statement not covered" >provideFunds(msg.sender)</span>;</span>
+&nbsp;
+        // Executor Handling
+<span class="cstat-no" title="statement not covered" >        if (_executor != address(0) &amp;&amp; executorByProvider[msg.sender] != _executor)</span>
+<span class="cstat-no" title="statement not covered" >            providerAssignsExecutor(_executor)</span>;  // assign new executor
+&nbsp;
+        // Minting
+<span class="cstat-no" title="statement not covered" >        mintExecClaim(_task)</span>;
+    }
+&nbsp;
+    // ================  CAN EXECUTE EXECUTOR API ============================
+<span class="fstat-no" title="function not covered" >    function canExec(ExecClaim memory _ec, uint256 _gelatoGasPrice)</span>
+        public
+        view
+        override
+        returns(string memory)
+    {
+<span class="cstat-no" title="statement not covered" >        if (_ec.userProxy != _ec.task.provider.addr) {</span>
+<span class="cstat-no" title="statement not covered" >            string memory res = providerCanExec(_ec, _gelatoGasPrice);</span>
+<span class="cstat-no" title="statement not covered" >            if (!res.startsWithOk()) <span class="cstat-no" title="statement not covered" >return res;</span></span>
+        }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        if (!isProviderMinFunded(_ec.task.provider.addr)) <span class="cstat-no" title="statement not covered" >return "ProviderNotMinStaked";</span></span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        bytes32 hashedExecClaim = keccak256(abi.encode(_ec));</span>
+<span class="cstat-no" title="statement not covered" >        if (execClaimHash[_ec.id] != hashedExecClaim) <span class="cstat-no" title="statement not covered" >return "InvalidExecClaimHash";</span></span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        if (_ec.task.expiryDate != 0 &amp;&amp; _ec.task.expiryDate &lt; now) <span class="cstat-no" title="statement not covered" >return "Expired";</span></span>
+&nbsp;
+        // CHECK Condition for user proxies
+<span class="cstat-no" title="statement not covered" >        if (_ec.task.condition.inst != IGelatoCondition(0)) {</span>
+            try _ec.task.condition.inst.ok(_ec.task.condition.data)
+                returns(string memory condition)
+            {
+                if (!condition.startsWithOk())
+                    return string(abi.encodePacked("ConditionNotOk:", condition));
+            } catch Error(string memory error) {
+                return string(abi.encodePacked("ConditionReverted:", error));
+            } catch {
+                return "ConditionRevertedNoMessage";
+            }
+        }
+&nbsp;
+        // CHECK Action Conditions
+<span class="cstat-no" title="statement not covered" >        for (uint i; i &lt; _ec.task.actions.length; i++) {</span>
+            // Only check termsOk if specified, else continue
+<span class="cstat-no" title="statement not covered" >            if (!_ec.task.actions[i].termsOkCheck) continue;</span>
+&nbsp;
+            try IGelatoAction(_ec.task.actions[i].inst).termsOk(_ec.task.actions[i].data)
+                returns(string memory actionTermsOk)
+            {
+                if (!actionTermsOk.startsWithOk())
+                    return string(abi.encodePacked("ActionTermsNotOk:", actionTermsOk));
+            } catch Error(string memory error) {
+                return string(abi.encodePacked("ActionReverted:", error));
+            } catch {
+                return "ActionRevertedNoMessage";
+            }
+        }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        if (</span>
+            msg.sender != executorByProvider[_ec.task.provider.addr] &amp;&amp;
+            msg.sender != address(this)
+        )
+<span class="cstat-no" title="statement not covered" >            return "InvalidExecutor";</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        return "Ok";</span>
+    }
+&nbsp;
+    // ================  EXECUTE EXECUTOR API ============================
+    enum ExecutionResult { ExecSuccess, CanExecFailed, ExecFailed, ExecutionRevert }
+    enum ExecutorPay { Reward, Refund }
+&nbsp;
+    // Execution Entry Point
+<span class="fstat-no" title="function not covered" >    function exec(ExecClaim memory _ec) public overrid</span>e {
+        // Store startGas for gas-consumption based cost and payout calcs
+<span class="cstat-no" title="statement not covered" >        uint256 startGas = gasleft();</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        require(startGas &gt; internalGasRequirement, "GelatoCore.exec: Insufficient gas sent")</span>;
+&nbsp;
+        // memcopy of gelatoGasPrice and gelatoMaxGas, to avoid multiple storage reads
+<span class="cstat-no" title="statement not covered" >        uint256 _gelatoGasPrice = gelatoGasPrice();</span>
+<span class="cstat-no" title="statement not covered" >        uint256 _gelatoMaxGas = gelatoMaxGas;</span>
+&nbsp;
+        // CHECKS
+<span class="cstat-no" title="statement not covered" >        require(tx.gasprice == _gelatoGasPrice, "GelatoCore.exec: tx.gasprice")</span>;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        ExecutionResult executionResult;</span>
+<span class="cstat-no" title="statement not covered" >        string memory reason;</span>
+&nbsp;
+        try this.executionWrapper{gas: startGas - internalGasRequirement}(_ec, _gelatoGasPrice)
+            returns(ExecutionResult _executionResult, string memory _reason)
+        {
+            executionResult = _executionResult;
+            reason = _reason;
+        } catch {
+            // If any of the external calls in executionWrapper resulted in e.g. out of gas,
+            // Executor is eligible for a Refund, but only if Executor sent gelatoMaxGas.
+            executionResult = ExecutionResult.ExecutionRevert;
+        }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        if (executionResult == ExecutionResult.ExecSuccess) {</span>
+            // END-1: SUCCESS =&gt; ExecClaim Deletion &amp; Reward
+            delete execClaimHash[_ec.id];
+<span class="cstat-no" title="statement not covered" >            (uint256 executorSuccessFee, uint256 sysAdminSuccessFee) = _processProviderPayables(</span>
+                _ec.task.provider.addr,
+                ExecutorPay.Reward,
+                startGas,
+                _gelatoMaxGas,
+                _gelatoGasPrice
+            );
+<span class="cstat-no" title="statement not covered" >            emit LogExecSuccess(msg.sender, _ec.id, executorSuccessFee, sysAdminSuccessFee);</span>
+<span class="cstat-no" title="statement not covered" >            return;</span>
+&nbsp;
+        } else <span class="cstat-no" title="statement not covered" >if (executionResult == ExecutionResult.CanExecFailed) {</span>
+            // END-2: CanExecFailed =&gt; No ExecClaim Deletion &amp; No Refund
+<span class="cstat-no" title="statement not covered" >            emit LogCanExecFailed(msg.sender, _ec.id, reason);</span>
+<span class="cstat-no" title="statement not covered" >            return;</span>
+&nbsp;
+        } else <span class="cstat-no" title="statement not covered" >if (executionResult == ExecutionResult.ExecFailed) {</span>
+            // END-3.1: ExecFailed NO gelatoMaxGas =&gt; No ExecClaim Deletion &amp; No Refund
+<span class="cstat-no" title="statement not covered" >            if (startGas &lt; _gelatoMaxGas) <span class="cstat-no" title="statement not covered" >emit LogExecFailed(msg.sender, _ec.id, 0, reason);</span></span>
+            else {
+                // END-3.2 ExecFailed BUT gelatoMaxGas was used
+                //  =&gt; ExecClaim Deletion &amp; Refund
+                delete execClaimHash[_ec.id];
+<span class="cstat-no" title="statement not covered" >                (uint256 executorRefund,) = _processProviderPayables(</span>
+                    _ec.task.provider.addr,
+                    ExecutorPay.Refund,
+                    startGas,
+                    _gelatoMaxGas,
+                    _gelatoGasPrice
+                );
+<span class="cstat-no" title="statement not covered" >                emit LogExecFailed(msg.sender, _ec.id, executorRefund, reason);</span>
+            }
+&nbsp;
+        } else {
+            // executionResult == ExecutionResult.ExecutionRevert
+            // END-4.1: ExecutionReverted NO gelatoMaxGas =&gt; No ExecClaim Deletion &amp; No Refund
+<span class="cstat-no" title="statement not covered" >            if (startGas &lt; _gelatoMaxGas) <span class="cstat-no" title="statement not covered" >emit LogExecutionRevert(msg.sender, _ec.id, 0);</span></span>
+            else {
+                // END-4.2: ExecutionReverted BUT gelatoMaxGas was used
+                //  =&gt; ExecClaim Deletion &amp; Refund
+                delete execClaimHash[_ec.id];
+<span class="cstat-no" title="statement not covered" >                (uint256 executorRefund,) = _processProviderPayables(</span>
+                    _ec.task.provider.addr,
+                    ExecutorPay.Refund,
+                    startGas,
+                    _gelatoMaxGas,
+                    _gelatoGasPrice
+                );
+<span class="cstat-no" title="statement not covered" >                emit LogExecutionRevert(msg.sender, _ec.id, executorRefund);</span>
+            }
+        }
+    }
+&nbsp;
+    // Used by GelatoCore.exec(), to handle Out-Of-Gas from execution gracefully
+<span class="fstat-no" title="function not covered" >    function executionWrapper(ExecClaim memory execClaim, uint256 _gelatoGasPrice)</span>
+        public
+        returns(ExecutionResult, string memory)
+    {
+<span class="cstat-no" title="statement not covered" >        require(msg.sender == address(this), "GelatoCore.executionWrapper:onlyGelatoCore")</span>;
+&nbsp;
+        // canExec()
+<span class="cstat-no" title="statement not covered" >        string memory canExecRes = canExec(execClaim, _gelatoGasPrice);</span>
+<span class="cstat-no" title="statement not covered" >        if (!canExecRes.startsWithOk()) <span class="cstat-no" title="statement not covered" >return (ExecutionResult.CanExecFailed, canExecRes);</span></span>
+&nbsp;
+        // _exec()
+<span class="cstat-no" title="statement not covered" >        (bool success, string memory error) = _exec(execClaim);</span>
+<span class="cstat-no" title="statement not covered" >        if (!success) <span class="cstat-no" title="statement not covered" >return (ExecutionResult.ExecFailed, error);</span></span>
+&nbsp;
+        // Execution Success: Executor REWARD
+<span class="cstat-no" title="statement not covered" >        return (ExecutionResult.ExecSuccess, "");</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function _exec(ExecClaim memory _ec)</span>
+        private
+        returns(bool success, string memory error)
+    {
+        // INTERACTIONS
+<span class="cstat-no" title="statement not covered" >        bytes memory revertMsg;</span>
+&nbsp;
+        // Provided Users vs. Self-Providing Users
+<span class="cstat-no" title="statement not covered" >        if (_ec.userProxy != _ec.task.provider.addr) {</span>
+            // Provided Users: execPayload from ProviderModule
+<span class="cstat-no" title="statement not covered" >            bytes memory execPayload;</span>
+            try IGelatoProviderModule(_ec.task.provider.module).execPayload(
+                _ec.task.actions
+            )
+                returns(bytes memory _execPayload)
+            {
+                execPayload = _execPayload;
+            } catch Error(string memory _error) {
+                error = string(abi.encodePacked("GelatoCore._exec.execPayload:", _error));
+            } catch {
+                error = "GelatoCore._exec.execPayload";
+            }
+&nbsp;
+            // Execution via UserProxy
+<span class="cstat-no" title="statement not covered" >            if (execPayload.length &gt;= 4)</span>
+<span class="cstat-no" title="statement not covered" >                (success, revertMsg) = _ec.userProxy.call(execPayload)</span>;
+&nbsp;
+            else <span class="cstat-no" title="statement not covered" >error = "GelatoCore._exec.execPayload: invalid"</span>;
+        } else {
+            // Self-Providing Users: actionData == execPayload assumption
+            // Execution via UserProxy
+<span class="cstat-no" title="statement not covered" >            if (_ec.task.actions.length != 1)</span>
+<span class="cstat-no" title="statement not covered" >                error = "GelatoCore._exec: _actions.length must be 1"</span>;
+            else <span class="cstat-no" title="statement not covered" >if (_ec.task.actions[0].data.length &gt;= 4 )</span>
+<span class="cstat-no" title="statement not covered" >                (success, revertMsg) = _ec.userProxy.call(_ec.task.actions[0].data)</span>;
+            else <span class="cstat-no" title="statement not covered" >error = "GelatoCore._exec: action.data invalid"</span>;
+        }
+&nbsp;
+        // FAILURE
+<span class="cstat-no" title="statement not covered" >        if (!success) {</span>
+            // Error string decoding for revertMsg from userProxy.call
+<span class="cstat-no" title="statement not covered" >            if (bytes(error).length == 0) {</span>
+                // 32-length, 4-ErrorSelector, UTF-8 revertMsg
+<span class="cstat-no" title="statement not covered" >                if (revertMsg.length % 32 == 4) {</span>
+<span class="cstat-no" title="statement not covered" >                    bytes4 selector;</span>
+                    assembly { selector := mload(add(0x20, revertMsg)) }
+<span class="cstat-no" title="statement not covered" >                    if (selector == 0x08c379a0) {  // Function selector for Error(string)</span>
+                        assembly { revertMsg := add(revertMsg, 68) }
+<span class="cstat-no" title="statement not covered" >                        error = string(</span>
+                            abi.encodePacked("GelatoCore._exec:", string(revertMsg))
+                        );
+                    } else {
+<span class="cstat-no" title="statement not covered" >                        error = "GelatoCore._exec:NoErrorSelector"</span>;
+                    }
+                } else {
+<span class="cstat-no" title="statement not covered" >                    error = "GelatoCore._exec:UnexpectedReturndata"</span>;
+                }
+            }
+        }
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function _processProviderPayables(</span>
+        address _provider,
+        ExecutorPay _payType,
+        uint256 _startGas,
+        uint256 _gelatoMaxGas,
+        uint256 _gelatoGasPrice
+    )
+        private
+        returns(uint256 executorCompensation, uint256 sysAdminCompensation)
+    {
+        // Provider payable Gas Refund capped at gelatoMaxGas
+<span class="cstat-no" title="statement not covered" >        uint256 estExecTxGas = _startGas &lt;= _gelatoMaxGas ? _startGas : _gelatoMaxGas;</span>
+&nbsp;
+        // ExecutionCost (- consecutive state writes + gas refund from deletion)
+<span class="cstat-no" title="statement not covered" >        uint256 estGasConsumed = EXEC_TX_OVERHEAD + estExecTxGas - gasleft();</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        if (_payType == ExecutorPay.Reward) {</span>
+<span class="cstat-no" title="statement not covered" >            executorCompensation = executorSuccessFee(estGasConsumed, _gelatoGasPrice)</span>;
+<span class="cstat-no" title="statement not covered" >            sysAdminCompensation = sysAdminSuccessFee(estGasConsumed, _gelatoGasPrice)</span>;
+            // ExecSuccess: Provider pays ExecutorSuccessFee and SysAdminSuccessFee
+<span class="cstat-no" title="statement not covered" >            providerFunds[_provider] = providerFunds[_provider].sub(</span>
+                executorCompensation.add(sysAdminCompensation),
+                "GelatoCore._processProviderPayables: providerFunds underflow"
+            );
+<span class="cstat-no" title="statement not covered" >            executorStake[msg.sender] += executorCompensation</span>;
+<span class="cstat-no" title="statement not covered" >            sysAdminFunds += sysAdminCompensation</span>;
+        } else {
+            // ExecFailure: Provider REFUNDS estimated costs to executor
+<span class="cstat-no" title="statement not covered" >            executorCompensation = estGasConsumed.mul(_gelatoGasPrice)</span>;
+<span class="cstat-no" title="statement not covered" >            providerFunds[_provider] = providerFunds[_provider].sub(</span>
+                executorCompensation,
+                "GelatoCore._processProviderPayables:  providerFunds underflow"
+            );
+<span class="cstat-no" title="statement not covered" >            executorStake[msg.sender] += executorCompensation</span>;
+        }
+    }
+&nbsp;
+    // ================  CANCEL USER / EXECUTOR API ============================
+<span class="fstat-no" title="function not covered" >    function cancelExecClaim(ExecClaim memory _ec) public overrid</span>e {
+        // Checks
+<span class="cstat-no" title="statement not covered" >        if (msg.sender != _ec.userProxy &amp;&amp; msg.sender != _ec.task.provider.addr)</span>
+<span class="cstat-no" title="statement not covered" >            require(_ec.task.expiryDate &lt;= now, "GelatoCore.cancelExecClaim: sender")</span>;
+        // Effects
+<span class="cstat-no" title="statement not covered" >        bytes32 hashedExecClaim = keccak256(abi.encode(_ec));</span>
+<span class="cstat-no" title="statement not covered" >        require(</span>
+            hashedExecClaim == execClaimHash[_ec.id],
+            "GelatoCore.cancelExecClaim: invalid execClaimHash"
+        );
+        delete execClaimHash[_ec.id];
+<span class="cstat-no" title="statement not covered" >        emit LogExecClaimCancelled(_ec.id);</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function batchCancelExecClaim(ExecClaim[] memory _execClaims) public overrid</span>e {
+<span class="cstat-no" title="statement not covered" >        for (uint i; i &lt; _execClaims.length; i++) <span class="cstat-no" title="statement not covered" >cancelExecClaim(_execClaims[i])</span>;</span>
+    }
+&nbsp;
+    // ================  EXECCLAIM RENT APIs =================
+<span class="fstat-no" title="function not covered" >    function collectExecClaimRent(ExecClaim memory _ec) public overrid</span>e {
+        // CHECKS
+<span class="cstat-no" title="statement not covered" >        require(</span>
+            executorByProvider[_ec.task.provider.addr] == msg.sender,
+            "GelatoCore.collecExecClaimRent: msg.sender not assigned Executor"
+        );
+<span class="cstat-no" title="statement not covered" >        if (_ec.task.expiryDate != 0) {</span>
+<span class="cstat-no" title="statement not covered" >            require(</span>
+                _ec.task.expiryDate &gt; now,
+                "GelatoCore.collectExecClaimRent: expired"
+            );
+        }
+<span class="cstat-no" title="statement not covered" >        require(</span>
+            lastExecClaimRentPaymentDate[_ec.id] &lt;= now - execClaimTenancy,
+            "GelatoCore.collecExecClaimRent: rent is not due"
+        );
+<span class="cstat-no" title="statement not covered" >        require(</span>
+            (isCAMProvided(
+                _ec.task.provider.addr,
+                _ec.task.condition.inst,
+                _ec.task.actions
+            )).startsWithOk(),
+            "GelatoCore.collecExecClaimRent: isCAMProvided failed"
+        );
+<span class="cstat-no" title="statement not covered" >        require(</span>
+            providerFunds[_ec.task.provider.addr] &gt;= execClaimRent,
+            "GelatoCore.collecExecClaimRent: insufficient providerFunds"
+        );
+<span class="cstat-no" title="statement not covered" >        bytes32 hashedExecClaim = keccak256(abi.encode(_ec));</span>
+<span class="cstat-no" title="statement not covered" >        require(</span>
+            hashedExecClaim == execClaimHash[_ec.id],
+            "GelatoCore.collectExecClaimRent: invalid execClaimHash"
+        );
+&nbsp;
+        // EFFECTS
+<span class="cstat-no" title="statement not covered" >        lastExecClaimRentPaymentDate[_ec.id] = now</span>;
+&nbsp;
+        // INTERACTIONS: Provider pays Executor ExecClaim Rent.
+<span class="cstat-no" title="statement not covered" >        providerFunds[_ec.task.provider.addr] -= execClaimRent</span>;
+<span class="cstat-no" title="statement not covered" >        executorStake[msg.sender] += execClaimRent</span>;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        emit LogCollectExecClaimRent(</span>
+            msg.sender,
+            _ec.task.provider.addr,
+            _ec.id,
+            execClaimRent
+        );
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function batchCollectExecClaimRent(ExecClaim[] memory _execClaims) public overrid</span>e {
+<span class="cstat-no" title="statement not covered" >        for (uint i; i &lt; _execClaims.length; i++) <span class="cstat-no" title="statement not covered" >collectExecClaimRent(_execClaims[i])</span>;</span>
+    }
+}
+&nbsp;</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Wed Apr 15 2020 11:37:48 GMT+0200 (Central European Summer Time)
+</div>
+</div>
+<script src="../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../sorter.js"></script>
+</body>
+</html>

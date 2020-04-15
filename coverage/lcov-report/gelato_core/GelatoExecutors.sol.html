@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for gelato_core/GelatoExecutors.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../index.html">all files</a> / <a href="index.html">gelato_core/</a> GelatoExecutors.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">18.18% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>4/22</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">16.67% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>2/12</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">20% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>1/5</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">17.39% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>4/23</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line low'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">45×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">45×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">45×</span>
+<span class="cline-any cline-yes">45×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">pragma solidity ^0.6.6;
+pragma experimental ABIEncoderV2;
+&nbsp;
+import { IGelatoExecutors } from "./interfaces/IGelatoExecutors.sol";
+import { GelatoProviders } from "./GelatoProviders.sol";
+import { Address } from  "../external/Address.sol";
+import { SafeMath } from "../external/SafeMath.sol";
+import { Math } from "../external/Math.sol";
+&nbsp;
+abstract contract GelatoExecutors is IGelatoExecutors, GelatoProviders {
+&nbsp;
+    using Address for address payable;  /// for sendValue method
+    using SafeMath for uint256;
+&nbsp;
+    // Executor De/Registrations and Staking
+    function stakeExecutor() external payable override {
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(
+            executorStake[msg.sender] == 0,
+            "GelatoExecutors.stakeExecutor: already registered"
+        );
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(
+            msg.value &gt;= minExecutorStake,
+            "GelatoExecutors.stakeExecutor: minExecutorStake"
+        );
+        executorStake[msg.sender] = msg.value;
+        emit LogStakeExecutor(msg.sender, msg.value);
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function unstakeExecutor() external overrid</span>e {
+<span class="cstat-no" title="statement not covered" >        require(</span>
+            isExecutorMinStaked(msg.sender),
+            "GelatoExecutors.unstakeExecutor: msg.sender is NOT min staked"
+        );
+<span class="cstat-no" title="statement not covered" >        require(</span>
+            !isExecutorAssigned(msg.sender),
+            "GelatoExecutors.unstakeExecutor: msg.sender still assigned to provider(s)"
+        );
+<span class="cstat-no" title="statement not covered" >        uint256 unbondedStake = executorStake[msg.sender];</span>
+        delete executorStake[msg.sender];
+<span class="cstat-no" title="statement not covered" >        msg.sender.sendValue(unbondedStake)</span>;
+<span class="cstat-no" title="statement not covered" >        emit LogUnstakeExecutor(msg.sender);</span>
+    }
+&nbsp;
+    // @DEV why would anyone increase their stake? Only reason is to showcase that they are a serious executor, however
+    // this would only be valid if this "excess" stake would be non-withdrawable, similiar to the minStake.
+<span class="fstat-no" title="function not covered" >    function increaseExecutorStake(uint256 _topUpAmount) external payable overrid</span>e {
+<span class="cstat-no" title="statement not covered" >        executorStake[msg.sender] = executorStake[msg.sender].add(_topUpAmount)</span>;
+<span class="cstat-no" title="statement not covered" >        require(isExecutorMinStaked(msg.sender), "GelatoExecutors.increaseExecutorStake")</span>;
+<span class="cstat-no" title="statement not covered" >        emit LogIncreaseExecutorStake(msg.sender, executorStake[msg.sender]);</span>
+    }
+&nbsp;
+    // To unstake, Executors must reassign ALL their Providers to another staked Executor
+<span class="fstat-no" title="function not covered" >    function batchReassignProviders(address[] calldata _providers, address _transferExecutor)</span>
+        external
+        override
+    {
+<span class="cstat-no" title="statement not covered" >        for (uint i; i &lt; _providers.length; i++)</span>
+<span class="cstat-no" title="statement not covered" >            executorAssignsExecutor(_providers[i], _transferExecutor)</span>;
+    }
+&nbsp;
+    // Executor Accounting
+<span class="fstat-no" title="function not covered" >    function withdrawExcessExecutorStake(uint256 _withdrawAmount)</span>
+        external
+        override
+        returns(uint256 realWithdrawAmount)
+    {
+<span class="cstat-no" title="statement not covered" >        require(isExecutorMinStaked(msg.sender), "Executor needs to be staked on gelato")</span>;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        uint256 currentExecutorStake = executorStake[msg.sender];</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        uint256 excessExecutorStake = currentExecutorStake - minExecutorStake;</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        realWithdrawAmount = Math.min(_withdrawAmount, excessExecutorStake)</span>;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        uint256 newExecutorStake = currentExecutorStake - realWithdrawAmount;</span>
+&nbsp;
+        // Effects
+<span class="cstat-no" title="statement not covered" >        executorStake[msg.sender] = newExecutorStake</span>;
+&nbsp;
+        // Interaction
+<span class="cstat-no" title="statement not covered" >        msg.sender.sendValue(realWithdrawAmount)</span>;
+<span class="cstat-no" title="statement not covered" >        emit LogWithdrawExecutorBalance(msg.sender, realWithdrawAmount);</span>
+    }
+}</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Wed Apr 15 2020 11:37:48 GMT+0200 (Central European Summer Time)
+</div>
+</div>
+<script src="../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../sorter.js"></script>
+</body>
+</html>
