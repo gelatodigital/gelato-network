@@ -1,6 +1,6 @@
 pragma solidity ^0.6.6;
 
-import { GelatoUserProxy } from "./GelatoUserProxy.sol";
+import { GelatoUserProxy } from "../GelatoUserProxy.sol";
 
 interface IGelatoUserProxyFactory {
     event LogCreation(address indexed user, GelatoUserProxy indexed userProxy);

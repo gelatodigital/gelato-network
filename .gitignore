@@ -28,5 +28,9 @@ build/
 .DS_Store
 *.icloud
 
+# solidity
+coverage.json
+coverage/
+
 # yarn
 yarn-error.log

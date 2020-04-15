@@ -7,7 +7,7 @@ import { Ownable } from "../../../external/Ownable.sol";
 import { Action, ExecClaim } from "../../interfaces/IGelatoCore.sol";
 import {
     IGelatoUserProxy
-} from "../../../user_proxies/gelato_user_proxy/IGelatoUserProxy.sol";
+} from "../../../user_proxies/gelato_user_proxy/interfaces/IGelatoUserProxy.sol";
 
 contract ProviderModuleGelatoUserProxy is
     IGelatoProviderModule,

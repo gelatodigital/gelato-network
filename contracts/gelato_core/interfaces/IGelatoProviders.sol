@@ -122,7 +122,7 @@ interface IGelatoProviders {
     // =========== PROVIDER STATE READ APIs ==============
     // Provider Funding
     function providerFunds(address _provider) external view returns(uint256);
-    function isProviderMinStaked(address _provider) external view returns(bool);
+    function isProviderMinFunded(address _provider) external view returns(bool);
 
     // Executor Stake
     function executorStake(address _executor) external view returns(uint256);
@@ -149,7 +149,7 @@ interface IGelatoProviders {
     function NO_CEIL() external pure returns(uint256);
 
     // Providers' Module Getters
-    function isProviderModule(address _provider, IGelatoProviderModule _module)
+    function isModuleProvided(address _provider, IGelatoProviderModule _module)
         external
         view
         returns(bool);

@@ -51,9 +51,9 @@ describe("GelatoCore - GelatoProviders - Setters: EXECUTOR", function () {
         .stakeExecutor({ value: minExecutorStake });
 
       // provideFunds()
-      const minProviderStake = await gelatoCore.minProviderStake();
+      const minProviderFunds = await gelatoCore.minProviderFunds();
       await gelatoCore.connect(provider).provideFunds(providerAddress, {
-        value: minProviderStake,
+        value: minProviderFunds,
       });
 
       // providerAssignsExecutor
@@ -94,9 +94,9 @@ describe("GelatoCore - GelatoProviders - Setters: EXECUTOR", function () {
       await gelatoCore.stakeExecutor({ value: minExecutorStake });
 
       // provideFunds()
-      const minProviderStake = await gelatoCore.minProviderStake();
+      const minProviderFunds = await gelatoCore.minProviderFunds();
       await gelatoCore.connect(provider).provideFunds(providerAddress, {
-        value: minProviderStake,
+        value: minProviderFunds,
       });
 
       // providerAssignsExecutor
@@ -125,9 +125,9 @@ describe("GelatoCore - GelatoProviders - Setters: EXECUTOR", function () {
         .stakeExecutor({ value: minExecutorStake });
 
       // provideFunds()
-      const minProviderStake = await gelatoCore.minProviderStake();
+      const minProviderFunds = await gelatoCore.minProviderFunds();
       await gelatoCore.connect(provider).provideFunds(providerAddress, {
-        value: minProviderStake,
+        value: minProviderFunds,
       });
 
       // providerAssignsExecutor
@@ -149,9 +149,9 @@ describe("GelatoCore - GelatoProviders - Setters: EXECUTOR", function () {
       await gelatoCore.stakeExecutor({ value: minExecutorStake });
 
       // provideFunds()
-      const minProviderStake = await gelatoCore.minProviderStake();
+      const minProviderFunds = await gelatoCore.minProviderFunds();
       await gelatoCore.connect(provider).provideFunds(providerAddress, {
-        value: minProviderStake,
+        value: minProviderFunds,
       });
 
       // providerAssignsExecutor
@@ -170,7 +170,7 @@ describe("GelatoCore - GelatoProviders - Setters: EXECUTOR", function () {
       );
     });
 
-    it("Should NOT allow Executors to reassign if Provider is not minStaked", async function () {
+    it("Should NOT allow Executors to reassign if Provider is not minFunded", async function () {
       // stakeExecutor() (needed for executorAssignsExecutor())
       const minExecutorStake = await gelatoCore.minExecutorStake();
       await gelatoCore.stakeExecutor({ value: minExecutorStake });
@@ -180,19 +180,30 @@ describe("GelatoCore - GelatoProviders - Setters: EXECUTOR", function () {
         .connect(otherExecutor)
         .stakeExecutor({ value: minExecutorStake });
 
+      // minProviderFunds
+      const minProviderFunds = await gelatoCore.minProviderFunds();
+
+      // isProviderMinFunded
+      expect(await gelatoCore.isProviderMinFunded(providerAddress)).to.be.false;
+
       // provideFunds()
-      const minProviderStake = await gelatoCore.minProviderStake();
       await gelatoCore.connect(provider).provideFunds(providerAddress, {
-        value: minProviderStake,
+        value: minProviderFunds,
       });
+
+      // isProviderMinFunded
+      expect(await gelatoCore.isProviderMinFunded(providerAddress)).to.be.true;
 
       // providerAssignsExecutor
       await gelatoCore
         .connect(provider)
         .providerAssignsExecutor(executorAddress);
 
-      // increase minProviderStake (connected executor is Owner of GelatoCore)
-      await gelatoCore.setMinProviderStake(minProviderStake + 1);
+      // increase minProviderFunds (connected executor is Owner of GelatoCore)
+      await gelatoCore.setMinProviderFunds(minProviderFunds + 1);
+
+      // isProviderMinFunded
+      expect(await gelatoCore.isProviderMinFunded(providerAddress)).to.be.false;
 
       // executor tries to assign otherExecutor to not (anymore) minStaked Provider
       await expect(
@@ -201,7 +212,7 @@ describe("GelatoCore - GelatoProviders - Setters: EXECUTOR", function () {
           otherExecutorAddress
         )
       ).to.be.revertedWith(
-        "GelatoProviders.executorAssignsExecutor: isProviderMinStaked()"
+        "GelatoProviders.executorAssignsExecutor: isProviderMinFunded()"
       );
     });
   });

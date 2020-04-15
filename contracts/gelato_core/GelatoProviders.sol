@@ -62,7 +62,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         override
         returns(string memory)
     {
-        if (!isProviderModule(_ec.task.provider.addr, _ec.task.provider.module))
+        if (!isModuleProvided(_ec.task.provider.addr, _ec.task.provider.module))
             return "InvalidProviderModule";
 
         IGelatoProviderModule providerModule = IGelatoProviderModule(
@@ -149,8 +149,8 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
             );
         }
         require(
-            isProviderMinStaked(msg.sender),
-            "GelatoProviders.providerAssignsExecutor: isProviderMinStaked()"
+            isProviderMinFunded(msg.sender),
+            "GelatoProviders.providerAssignsExecutor: isProviderMinFunded()"
         );
 
         // EFFECTS: Provider reassigns from currentExecutor to newExecutor (or no executor)
@@ -180,8 +180,8 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
             "GelatoProviders.executorAssignsExecutor: isExecutorMinStaked()"
         );
         require(
-            isProviderMinStaked(_provider),
-            "GelatoProviders.executorAssignsExecutor: isProviderMinStaked()"
+            isProviderMinFunded(_provider),
+            "GelatoProviders.executorAssignsExecutor: isProviderMinFunded()"
         );
 
         // EFFECTS: currentExecutor reassigns to newExecutor
@@ -232,7 +232,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     function addProviderModules(IGelatoProviderModule[] memory _modules) public override {
         for (uint i; i < _modules.length; i++) {
             require(
-                !isProviderModule(msg.sender, _modules[i]),
+                !isModuleProvided(msg.sender, _modules[i]),
                 "GelatoProviders.addProviderModules: redundant"
             );
             _providerModules[msg.sender].add(_modules[i]);
@@ -243,7 +243,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     function removeProviderModules(IGelatoProviderModule[] memory _modules) public override {
         for (uint i; i < _modules.length; i++) {
             require(
-                isProviderModule(msg.sender, _modules[i]),
+                isModuleProvided(msg.sender, _modules[i]),
                 "GelatoProviders.removeProviderModules: redundant"
             );
             _providerModules[msg.sender].remove(_modules[i]);
@@ -281,8 +281,8 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     }
 
     // Provider Liquidity
-    function isProviderMinStaked(address _provider) public view override returns(bool) {
-        return providerFunds[_provider] >= minProviderStake;
+    function isProviderMinFunded(address _provider) public view override returns(bool) {
+        return providerFunds[_provider] >= minProviderFunds;
     }
 
     // An Executor qualifies and remains registered for as long as he has minExecutorStake
@@ -315,7 +315,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     }
 
     // Providers' Module Getters
-    function isProviderModule(address _provider, IGelatoProviderModule _module)
+    function isModuleProvided(address _provider, IGelatoProviderModule _module)
         public
         view
         override
