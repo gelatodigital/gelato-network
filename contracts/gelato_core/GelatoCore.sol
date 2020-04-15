@@ -65,7 +65,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         execClaim.id = currentExecClaimId;
 
         // ExecClaim Hashing
-        bytes32 hashedExecClaim = keccak256(abi.encode(execClaim));
+        bytes32 hashedExecClaim = hashExecClaim(execClaim);
 
         // ExecClaim Hash registration
         execClaimHash[execClaim.id] = hashedExecClaim;
@@ -112,7 +112,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         if (!isProviderMinStaked(_ec.task.provider.addr)) return "ProviderNotMinStaked";
 
-        bytes32 hashedExecClaim = keccak256(abi.encode(_ec));
+        bytes32 hashedExecClaim = hashExecClaim(_ec);
         if (execClaimHash[_ec.id] != hashedExecClaim) return "InvalidExecClaimHash";
 
         if (_ec.task.expiryDate != 0 && _ec.task.expiryDate < now) return "Expired";
@@ -363,7 +363,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         if (msg.sender != _ec.userProxy && msg.sender != _ec.task.provider.addr)
             require(_ec.task.expiryDate <= now, "GelatoCore.cancelExecClaim: sender");
         // Effects
-        bytes32 hashedExecClaim = keccak256(abi.encode(_ec));
+        bytes32 hashedExecClaim = hashExecClaim(_ec);
         require(
             hashedExecClaim == execClaimHash[_ec.id],
             "GelatoCore.cancelExecClaim: invalid execClaimHash"
@@ -405,7 +405,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             providerFunds[_ec.task.provider.addr] >= execClaimRent,
             "GelatoCore.collecExecClaimRent: insufficient providerFunds"
         );
-        bytes32 hashedExecClaim = keccak256(abi.encode(_ec));
+        bytes32 hashedExecClaim = hashExecClaim(_ec);
         require(
             hashedExecClaim == execClaimHash[_ec.id],
             "GelatoCore.collectExecClaimRent: invalid execClaimHash"
@@ -428,5 +428,9 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
     function batchCollectExecClaimRent(ExecClaim[] memory _execClaims) public override {
         for (uint i; i < _execClaims.length; i++) collectExecClaimRent(_execClaims[i]);
+    }
+
+    function hashExecClaim(ExecClaim memory _ec) pure public returns(bytes32) {
+        return keccak256(abi.encode(_ec));
     }
 }

@@ -2,58 +2,177 @@
 // => only dependency we need is "chai"
 const { expect } = require("chai");
 const { run, ethers } = require("@nomiclabs/buidler");
+const FEE_USD = 2;
+const FEE_ETH = 9000000000000000;
+const OPERATION = {
+  call: 0,
+  delegatecall: 1,
+};
+const GELATO_GAS_PRICE = ethers.utils.parseUnits("8", "gwei");
 
 describe("Gelato Core - Minting ", function () {
+  let actionWithdrawBatchExchange;
   let seller;
   let provider;
   let executor;
+  let sysAdmin;
   let userProxy;
   let sellerAddress;
   let providerAddress;
   let executorAddress;
+  let sysAdminAddress;
   let userProxyAddress;
   let sellToken; //DAI
+  let buyToken; //USDC
+  let ActionWithdrawBatchExchange;
   let MockERC20;
+  let MockBatchExchange;
+  let mockBatchExchange;
+  let WETH;
+  let GelatoUserProxyFactory;
   let gelatoUserProxyFactory;
   let sellDecimals;
+  let buyDecimals;
+  let wethDecimals;
   let tx;
   let txResponse;
-  let gelatoCore;
   let providerModuleGelatoUserProxy;
   let providerModuleGelatoUserProxyAddress;
-  let actionsWithGasPriceCeil;
+  let gelatoCore;
   let user2;
   let user2address;
 
   beforeEach(async function () {
-    // Setup Gelato System
-    const result = await run("setupgelato-gelatouserproxies", {
-      actions: ["ActionERC20TransferFrom", "ActionERC20TransferFrom"],
-    });
-    gelatoCore = result.gelatoCore;
-    gelatoUserProxyFactory = result.gelatoUserProxyFactory;
-    providerModuleGelatoUserProxy = result.providerModuleGelatoUserProxy;
-    providerModuleGelatoUserProxyAddress =
-      providerModuleGelatoUserProxy.address;
-    actionsWithGasPriceCeil = result.actionsWithGasPriceCeil;
-
-    [seller, executor, provider, user2] = await ethers.getSigners();
+    // Get signers
+    [seller, provider, executor, sysAdmin, user2] = await ethers.getSigners();
     sellerAddress = await seller.getAddress();
     providerAddress = await provider.getAddress();
     executorAddress = await executor.getAddress();
+    sysAdminAddress = await sysAdmin.getAddress();
     user2address = await user2.getAddress();
-    MockERC20 = await ethers.getContractFactory("MockERC20");
 
-    sellDecimals = 18;
-    sellToken = await MockERC20.deploy(
-      "DAI",
-      (100 * 10 ** sellDecimals).toString(),
-      sellerAddress,
-      sellDecimals
+    // Deploy Gelato Core with SysAdmin + Stake Executor
+    const GelatoCore = await ethers.getContractFactory("GelatoCore", sysAdmin);
+    gelatoCore = await GelatoCore.deploy();
+    await gelatoCore
+      .connect(executor)
+      .stakeExecutor({ value: ethers.utils.parseUnits("1", "ether") });
+
+    // Deploy Gelato Gas Price Oracle with SysAdmin and set to GELATO_GAS_PRICE
+    const GelatoGasPriceOracle = await ethers.getContractFactory(
+      "GelatoGasPriceOracle",
+      sysAdmin
     );
-    await sellToken.deployed();
+    const gelatoGasPriceOracle = await GelatoGasPriceOracle.deploy(
+      gelatoCore.address,
+      GELATO_GAS_PRICE
+    );
 
-    tx = await gelatoUserProxyFactory.create();
+    // Set gas price oracle on core
+    await gelatoCore
+      .connect(sysAdmin)
+      .setGelatoGasPriceOracle(gelatoGasPriceOracle.address);
+
+    // Deploy GelatoUserProxyFactory with SysAdmin
+    const GelatoUserProxyFactory = await ethers.getContractFactory(
+      "GelatoUserProxyFactory",
+      sysAdmin
+    );
+    const gelatoUserProxyFactory = await GelatoUserProxyFactory.deploy(
+      gelatoCore.address
+    );
+
+    // Call proxyExtcodehash on Factory and deploy ProviderModuleGelatoUserProxy with constructorArgs
+    const proxyExtcodehash = await gelatoUserProxyFactory.proxyExtcodehash();
+    const ProviderModuleGelatoUserProxy = await ethers.getContractFactory(
+      "ProviderModuleGelatoUserProxy",
+      sysAdmin
+    );
+    providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxy.deploy([
+      proxyExtcodehash,
+    ]);
+
+    // Deploy Condition (if necessary)
+
+    // Deploy Actions
+    // // ERCTransferFROM
+    const ActionERC20TransferFrom = await ethers.getContractFactory(
+      "ActionERC20TransferFrom",
+      sysAdmin
+    );
+    const actionERC20TransferFrom = await ActionERC20TransferFrom.deploy();
+    await actionERC20TransferFrom.deployed();
+
+    // // #### ActionWithdrawBatchExchange Start ####
+    const MockBatchExchange = await ethers.getContractFactory(
+      "MockBatchExchange"
+    );
+    mockBatchExchange = await MockBatchExchange.deploy();
+    await mockBatchExchange.deployed();
+
+    MockERC20 = await ethers.getContractFactory("MockERC20");
+    wethDecimals = 18;
+    WETH = await MockERC20.deploy(
+      "WETH",
+      (100 * 10 ** wethDecimals).toString(),
+      sellerAddress,
+      wethDecimals
+    );
+    await WETH.deployed();
+
+    const ActionWithdrawBatchExchange = await ethers.getContractFactory(
+      "ActionWithdrawBatchExchange"
+    );
+    actionWithdrawBatchExchange = await ActionWithdrawBatchExchange.deploy(
+      mockBatchExchange.address,
+      WETH.address,
+      providerAddress
+    );
+    // // #### ActionWithdrawBatchExchange End ####
+
+    // Call provideFunds(value) with provider on core
+    await gelatoCore.connect(provider).provideFunds(providerAddress, {
+      value: ethers.utils.parseUnits("1", "ether"),
+    });
+
+    // Register new provider CAM on core with provider EDITS NEED ä#######################
+
+    const condition = new Condition({
+      inst: constants.AddressZero,
+      data: constants.HashZero,
+    });
+
+    const actionERC20TransferFromGelato = new Action({
+      inst: actionERC20TransferFrom.address,
+      data: constants.HashZero,
+      operation: "delegatecall",
+      termsOkCheck: true,
+    });
+
+    const actionWithdrawBatchExchangeGelato = new Action({
+      inst: actionWithdrawBatchExchange.address,
+      data: constants.HashZero,
+      operation: "delegatecall",
+      termsOkCheck: true,
+    });
+
+    const newCam = new CAM({
+      condition: condition.inst,
+      actions: [actionWithdrawBatchExchangeGelato],
+      gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
+    });
+
+    // Call batchProvider(executor, CAMS[], providerModules[])
+    await gelatoCore
+      .connect(provider)
+      .batchProvide(
+        executorAddress,
+        [newCam],
+        [providerModuleGelatoUserProxy.address]
+      );
+
+    // Create UserProxy
+    tx = await gelatoUserProxyFactory.connect(seller).create();
     txResponse = await tx.wait();
 
     const executionEvent = await run("event-getparsedlog", {
@@ -69,6 +188,41 @@ describe("Gelato Core - Minting ", function () {
     userProxyAddress = executionEvent.userProxy;
 
     userProxy = await ethers.getContractAt("GelatoUserProxy", userProxyAddress);
+
+    // DEPLOY DUMMY ERC20s
+    // // Deploy Sell Token
+    sellDecimals = 18;
+    sellToken = await MockERC20.deploy(
+      "DAI",
+      (100 * 10 ** sellDecimals).toString(),
+      sellerAddress,
+      sellDecimals
+    );
+    await sellToken.deployed();
+
+    // //  Deploy Buy Token
+    buyDecimals = 6;
+    buyToken = await MockERC20.deploy(
+      "USDC",
+      (100 * 10 ** buyDecimals).toString(),
+      sellerAddress,
+      buyDecimals
+    );
+    await buyToken.deployed();
+
+    // Pre-fund batch Exchange
+    await buyToken.mint(
+      mockBatchExchange.address,
+      ethers.utils.parseUnits("100", buyDecimals)
+    );
+    await sellToken.mint(
+      mockBatchExchange.address,
+      ethers.utils.parseUnits("100", sellDecimals)
+    );
+    await WETH.mint(
+      mockBatchExchange.address,
+      ethers.utils.parseUnits("100", wethDecimals)
+    );
   });
 
   describe("GelatoCore.Mint Tests", function () {
@@ -87,22 +241,23 @@ describe("Gelato Core - Minting ", function () {
         inputs: [actionInputs],
       });
 
-      const taskPayloads = [];
-      for (const action of actionsWithGasPriceCeil.addresses)
-        taskPayloads.push(actionPayload);
-
       // Mint ExexClaim
-      let task = {
-        provider: providerAddress,
-        providerModule: providerModuleGelatoUserProxyAddress,
-        condition: ethers.constants.AddressZero,
-        actions: actionsWithGasPriceCeil.addresses,
-        conditionPayload: ethers.constants.HashZero,
-        actionsPayload: taskPayloads,
-        expiryDate: 0,
-      };
+      // let task = {
+      //   provider: providerAddress,
+      //   providerModule: providerModuleGelatoUserProxyAddress,
+      //   condition: ethers.constants.AddressZero,
+      //   actions: actionsWithGasPriceCeil.addresses,
+      //   conditionPayload: ethers.constants.HashZero,
+      //   actionsPayload: taskPayloads,
+      //   expiryDate: 0,
+      // };
 
       // #######
+
+      const provider = new GelatoProvider({
+        addr: providerAddress,
+        module: providerModuleGelatoUserProxy.address,
+      });
 
       const condition = new Condition({
         inst: constants.AddressZero,
@@ -113,22 +268,15 @@ describe("Gelato Core - Minting ", function () {
         inst: actionWithdrawBatchExchange.address,
         data: actionPayload,
         operation: "delegatecall",
+        termsOkCheck: true,
       });
 
       const task = new Task({
-        provider: gelatoProvider,
+        provider,
         condition,
         actions: [action],
         expiryDate: constants.HashZero,
       });
-
-      let execClaim = {
-        id: 1,
-        userProxy: userProxyAddress,
-        task,
-      };
-
-      // #######
 
       const mintPayload = await run("abi-encode-withselector", {
         contractname: "GelatoCore",
@@ -142,50 +290,18 @@ describe("Gelato Core - Minting ", function () {
         task,
       };
 
-      //   const encoder = await ethers.utils.defaultAbiCoder;
+      const camHash = await gelatoCore.camHash(condition.inst, [action]);
 
-      //   let execClaimHash = await encoder.encode(
-      //     [
-      //       "uint256",
-      //       "address",
-      //       "address",
-      //       "address",
-      //       "address",
-      //       "address[]",
-      //       "bytes",
-      //       "bytes[]",
-      //       "uint256",
-      //     ],
-      //     [
-      //       execClaim.id,
-      //       execClaim.userProxy,
-      //       task.provider,
-      //       task.providerModule,
-      //       task.condition,
-      //       task.actions,
-      //       task.conditionPayload,
-      //       task.actionsPayload,
-      //       task.expiryDate,
-      //     ]
-      //   );
-
-      //   execClaimHash = ethers.utils.solidityKeccak256(
-      //     ["bytes"],
-      //     [execClaimHash]
-      //   );
-
-      // emit LogExecClaimMinted(executor, execClaim.id, hashedExecClaim, execClaim);
-
-      await expect(
-        userProxy.callAction(gelatoCore.address, mintPayload)
-      ).to.emit(gelatoCore, "LogExecClaimMinted");
+      await expect(userProxy.callAction(gelatoCore.address, mintPayload))
+        .to.emit(gelatoCore, "LogExecClaimMinted")
+        .withArgs(executorAddress, 1, camHash, execClaim);
 
       // CouldNt get the execClaimHash to be computed off-chain
       // .withArgs(executorAddress, 1, execClaimHash, execClaim);
     });
 
     it("Minting reverts => Action not whitelisted", async function () {
-      const notWhitelistedAction = actionsWithGasPriceCeil.addresses[0];
+      const notWhitelistedAction = actionERC20TransferFromGelato.address;
       const actionInputs = {
         user: sellerAddress,
         userProxy: userProxyAddress,
@@ -200,32 +316,35 @@ describe("Gelato Core - Minting ", function () {
         inputs: [actionInputs],
       });
 
-      const taskPayloads = [];
-      for (const action of actionsWithGasPriceCeil.addresses)
-        taskPayloads.push(actionPayload);
+      const provider = new GelatoProvider({
+        addr: providerAddress,
+        module: providerModuleGelatoUserProxy.address,
+      });
 
-      // Mint ExexClaim
-      let task = {
-        provider: providerAddress,
-        providerModule: providerModuleGelatoUserProxyAddress,
-        condition: ethers.constants.AddressZero,
-        actions: [notWhitelistedAction],
-        conditionPayload: ethers.constants.HashZero,
-        actionsPayload: taskPayloads,
-        expiryDate: 0,
-      };
+      const condition = new Condition({
+        inst: constants.AddressZero,
+        data: constants.HashZero,
+      });
+
+      const action = new Action({
+        inst: notWhitelistedAction,
+        data: actionPayload,
+        operation: "delegatecall",
+        termsOkCheck: true,
+      });
+
+      const task = new Task({
+        provider,
+        condition,
+        actions: [action],
+        expiryDate: constants.HashZero,
+      });
 
       const mintPayload = await run("abi-encode-withselector", {
         contractname: "GelatoCore",
         functionname: "mintExecClaim",
         inputs: [task],
       });
-
-      let execClaim = {
-        id: 1,
-        userProxy: userProxyAddress,
-        task,
-      };
 
       await expect(
         userProxy.callAction(gelatoCore.address, mintPayload)
@@ -238,7 +357,8 @@ describe("Gelato Core - Minting ", function () {
     });
 
     it("Minting reverts => Condition not whitelisted", async function () {
-      const notWhitelistedCondition = actionsWithGasPriceCeil.addresses[0];
+      const notWhitelistedCondition = actionWithdrawBatchExchange.address;
+
       const actionInputs = {
         user: sellerAddress,
         userProxy: userProxyAddress,
@@ -253,32 +373,35 @@ describe("Gelato Core - Minting ", function () {
         inputs: [actionInputs],
       });
 
-      const taskPayloads = [];
-      for (const action of actionsWithGasPriceCeil.addresses)
-        taskPayloads.push(actionPayload);
+      const provider = new GelatoProvider({
+        addr: providerAddress,
+        module: providerModuleGelatoUserProxy.address,
+      });
 
-      // Mint ExexClaim
-      let task = {
-        provider: providerAddress,
-        providerModule: providerModuleGelatoUserProxyAddress,
-        condition: notWhitelistedCondition,
-        actions: actionsWithGasPriceCeil.addresses,
-        conditionPayload: ethers.constants.HashZero,
-        actionsPayload: taskPayloads,
-        expiryDate: 0,
-      };
+      const condition = new Condition({
+        inst: notWhitelistedCondition,
+        data: constants.HashZero,
+      });
+
+      const action = new Action({
+        inst: actionWithdrawBatchExchange.address,
+        data: actionPayload,
+        operation: "delegatecall",
+        termsOkCheck: true,
+      });
+
+      const task = new Task({
+        provider,
+        condition,
+        actions: [action],
+        expiryDate: constants.HashZero,
+      });
 
       const mintPayload = await run("abi-encode-withselector", {
         contractname: "GelatoCore",
         functionname: "mintExecClaim",
         inputs: [task],
       });
-
-      let execClaim = {
-        id: 1,
-        userProxy: userProxyAddress,
-        task,
-      };
 
       await expect(
         userProxy.callAction(gelatoCore.address, mintPayload)
@@ -303,10 +426,6 @@ describe("Gelato Core - Minting ", function () {
         functionname: "action",
         inputs: [actionInputs],
       });
-
-      const taskPayloads = [];
-      for (const action of actionsWithGasPriceCeil.addresses)
-        taskPayloads.push(actionPayload);
 
       // Mint ExexClaim
       let task = {
@@ -355,10 +474,6 @@ describe("Gelato Core - Minting ", function () {
         inputs: [actionInputs],
       });
 
-      const taskPayloads = [];
-      for (const action of actionsWithGasPriceCeil.addresses)
-        taskPayloads.push(actionPayload);
-
       // Mint ExexClaim
       let task = {
         provider: providerAddress,
@@ -404,10 +519,6 @@ describe("Gelato Core - Minting ", function () {
         inputs: [actionInputs],
       });
 
-      const taskPayloads = [];
-      for (const action of actionsWithGasPriceCeil.addresses)
-        taskPayloads.push(actionPayload);
-
       // Mint ExexClaim
       let task = {
         provider: providerAddress,
@@ -449,10 +560,6 @@ describe("Gelato Core - Minting ", function () {
         destination: sellerAddress,
         sendAmount: ethers.utils.parseUnits("1", "ether"),
       };
-
-      const taskPayloads = [];
-      for (const action of actionsWithGasPriceCeil.addresses)
-        taskPayloads.push(noActionPayload);
 
       // Mint ExexClaim
       let task = {
@@ -497,10 +604,6 @@ describe("Gelato Core - Minting ", function () {
         functionname: "action",
         inputs: [actionInputs],
       });
-
-      const taskPayloads = [];
-      for (const action of actionsWithGasPriceCeil.addresses)
-        taskPayloads.push(actionPayload);
 
       // 2. Create Proxy for seller
       tx = await gelatoUserProxyFactory.connect(user2).create();
@@ -571,10 +674,6 @@ describe("Gelato Core - Minting ", function () {
         inputs: [actionInputs],
       });
 
-      const taskPayloads = [];
-      for (const action of actionsWithGasPriceCeil.addresses)
-        taskPayloads.push(actionPayload);
-
       // 2. Create Proxy for seller
       tx = await gelatoUserProxyFactory.connect(user2).create();
       txResponse = await tx.wait();
@@ -643,10 +742,6 @@ describe("Gelato Core - Minting ", function () {
         functionname: "action",
         inputs: [actionInputs],
       });
-
-      const taskPayloads = [];
-      for (const action of actionsWithGasPriceCeil.addresses)
-        taskPayloads.push(actionPayload);
 
       // 2. Create Proxy for seller
       tx = await gelatoUserProxyFactory.connect(user2).create();
