@@ -218,13 +218,17 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
                     _gelatoGasPrice
                 );
                 emit LogExecFailed(msg.sender, _ec.id, executorRefund, reason);
+                return;
             }
 
         } else {
             // executionResult == ExecutionResult.ExecutionRevert
             // END-4.1: ExecutionReverted NO gelatoMaxGas => No ExecClaim Deletion & No Refund
-            if (startGas < _gelatoMaxGas) emit LogExecutionRevert(msg.sender, _ec.id, 0);
-            else {
+            if (startGas < _gelatoMaxGas) {
+                emit LogExecutionRevert(msg.sender, _ec.id, 0);
+                return;
+
+            } else {
                 // END-4.2: ExecutionReverted BUT gelatoMaxGas was used
                 //  => ExecClaim Deletion & Refund
                 delete execClaimHash[_ec.id];
