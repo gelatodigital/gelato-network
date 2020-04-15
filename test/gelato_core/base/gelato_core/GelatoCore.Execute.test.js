@@ -49,6 +49,8 @@ describe("GelatoCore.Execute", function () {
   let gelatoCore;
   let actionERC20TransferFrom;
   let mockConditionDummy;
+  let mockConditionDummyRevert;
+  let actionERC20TransferFromGelato;
 
   // ###### GelatoCore Setup ######
   beforeEach(async function () {
@@ -156,7 +158,7 @@ describe("GelatoCore.Execute", function () {
       data: constants.HashZero,
     });
 
-    const actionERC20TransferFromGelato = new Action({
+    actionERC20TransferFromGelato = new Action({
       inst: actionERC20TransferFrom.address,
       data: constants.HashZero,
       operation: "delegatecall",
@@ -495,7 +497,7 @@ describe("GelatoCore.Execute", function () {
       );
     });
 
-    it("#3: Mint ActionERC20TransferFrom and revert with LogCanExecFailed in exec due to ConditionFailure", async function () {
+    it("#3: Mint ActionERC20TransferFrom and revert with LogCanExecFailed in exec due to other string than 'Ok' being returned inside Condition", async function () {
       // Get Action Payload
 
       const actionData = await run("abi-encode-withselector", {
@@ -571,7 +573,358 @@ describe("GelatoCore.Execute", function () {
         .withArgs(executorAddress, execClaim.id, "ConditionNotOk:NotOk");
     });
 
-    it("#4: Mint ActionERC20TransferFrom and revert with LogCanExecFailed in exec due to Action termsOk failure", async function () {
+    it("#4: Mint ActionERC20TransferFrom and revert with LogCanExecFailed in exec due to Revert Inside Condition", async function () {
+      // Get Action Payload
+
+      // Provider registers new condition
+      const MockConditionDummyRevert = await ethers.getContractFactory(
+        "MockConditionDummyRevert",
+        sysAdmin
+      );
+      mockConditionDummyRevert = await MockConditionDummyRevert.deploy();
+      await mockConditionDummyRevert.deployed();
+
+      const newCam2 = new CAM({
+        condition: mockConditionDummyRevert.address,
+        actions: [actionERC20TransferFromGelato],
+        gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
+      });
+
+      await gelatoCore.connect(provider).provideCAMs([newCam2]);
+
+      const actionData = await run("abi-encode-withselector", {
+        contractname: "ActionERC20TransferFrom",
+        functionname: "action",
+        inputs: [
+          {
+            user: sellerAddress,
+            userProxy: userProxyAddress,
+            sendToken: sellToken.address,
+            destination: providerAddress,
+            sendAmount: ethers.utils.parseUnits("1", "ether"),
+          },
+        ],
+      });
+
+      const conditionDataFalse = await run("abi-encode-withselector", {
+        contractname: "MockConditionDummyRevert",
+        functionname: "ok",
+        inputs: [false],
+      });
+
+      // Mint ExexClaim
+      const gelatoProvider = new GelatoProvider({
+        addr: providerAddress,
+        module: providerModuleGelatoUserProxy.address,
+      });
+
+      const condition = new Condition({
+        inst: mockConditionDummyRevert.address,
+        data: conditionDataFalse,
+      });
+
+      const action = new Action({
+        inst: actionERC20TransferFrom.address,
+        data: actionData,
+        operation: "delegatecall",
+        termsOkCheck: true,
+      });
+
+      const task = new Task({
+        provider: gelatoProvider,
+        condition,
+        actions: [action],
+        expiryDate: constants.HashZero,
+      });
+
+      let execClaim = {
+        id: 1,
+        userProxy: userProxyAddress,
+        task,
+      };
+
+      // Should return "Ok"
+      // const isProvided = await gelatoCore.isCAMProvided(execClaim);
+
+      const mintPayload = await run("abi-encode-withselector", {
+        contractname: "GelatoCore",
+        functionname: "mintExecClaim",
+        inputs: [task],
+      });
+
+      await expect(
+        userProxy.callAction(gelatoCore.address, mintPayload)
+      ).to.emit(gelatoCore, "LogExecClaimMinted");
+
+      await expect(
+        gelatoCore
+          .connect(executor)
+          .exec(execClaim, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
+      )
+        .to.emit(gelatoCore, "LogCanExecFailed")
+        .withArgs(
+          executorAddress,
+          execClaim.id,
+          "ConditionReverted:Condition Reverted"
+        );
+    });
+
+    it("#5: Mint ActionERC20TransferFrom and revert with LogCanExecFailed in exec due to Condition Reverting with no message", async function () {
+      // @DEV registering an action as a condition (with no ok function)
+
+      // Provider registers new condition
+
+      const newCam2 = new CAM({
+        condition: actionERC20TransferFrom.address,
+        actions: [actionERC20TransferFromGelato],
+        gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
+      });
+
+      await gelatoCore.connect(provider).provideCAMs([newCam2]);
+
+      const actionData = await run("abi-encode-withselector", {
+        contractname: "ActionERC20TransferFrom",
+        functionname: "action",
+        inputs: [
+          {
+            user: sellerAddress,
+            userProxy: userProxyAddress,
+            sendToken: sellToken.address,
+            destination: providerAddress,
+            sendAmount: ethers.utils.parseUnits("1", "ether"),
+          },
+        ],
+      });
+
+      const conditionDataFalse = await run("abi-encode-withselector", {
+        contractname: "MockConditionDummyRevert",
+        functionname: "ok",
+        inputs: [false],
+      });
+
+      // Mint ExexClaim
+      const gelatoProvider = new GelatoProvider({
+        addr: providerAddress,
+        module: providerModuleGelatoUserProxy.address,
+      });
+
+      const condition = new Condition({
+        inst: actionERC20TransferFrom.address,
+        data: actionData,
+      });
+
+      const action = new Action({
+        inst: actionERC20TransferFrom.address,
+        data: actionData,
+        operation: "delegatecall",
+        termsOkCheck: true,
+      });
+
+      const task = new Task({
+        provider: gelatoProvider,
+        condition,
+        actions: [action],
+        expiryDate: constants.HashZero,
+      });
+
+      let execClaim = {
+        id: 1,
+        userProxy: userProxyAddress,
+        task,
+      };
+
+      // Should return "Ok"
+      // const isProvided = await gelatoCore.isCAMProvided(execClaim);
+
+      const mintPayload = await run("abi-encode-withselector", {
+        contractname: "GelatoCore",
+        functionname: "mintExecClaim",
+        inputs: [task],
+      });
+
+      await expect(
+        userProxy.callAction(gelatoCore.address, mintPayload)
+      ).to.emit(gelatoCore, "LogExecClaimMinted");
+
+      await expect(
+        gelatoCore
+          .connect(executor)
+          .exec(execClaim, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
+      )
+        .to.emit(gelatoCore, "LogCanExecFailed")
+        .withArgs(executorAddress, execClaim.id, "ConditionRevertedNoMessage");
+    });
+
+    it("#5: Mint ActionERC20TransferFrom and revert with LogCanExecFailed in exec due to ActionReverted", async function () {
+      // @DEV registering an action with reverting termsOk
+
+      // Provider registers new condition
+      const MockActionDummy = await ethers.getContractFactory(
+        "MockActionDummy",
+        sysAdmin
+      );
+
+      const mockActionDummy = await MockActionDummy.deploy();
+      await mockActionDummy.deployed();
+
+      const mockActionDummyGelato = new Action({
+        inst: mockActionDummy.address,
+        data: constants.HashZero,
+        operation: "delegatecall",
+        termsOkCheck: true,
+      });
+
+      // Provider registers new acttion
+
+      const newCam2 = new CAM({
+        condition: constants.AddressZero,
+        actions: [mockActionDummyGelato],
+        gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
+      });
+
+      await gelatoCore.connect(provider).provideCAMs([newCam2]);
+
+      const encoder = ethers.utils.defaultAbiCoder;
+      const actionData = await encoder.encode(["bool"], [false]);
+
+      // Mint ExexClaim
+      const gelatoProvider = new GelatoProvider({
+        addr: providerAddress,
+        module: providerModuleGelatoUserProxy.address,
+      });
+
+      const condition = new Condition({
+        inst: constants.AddressZero,
+        data: constants.HashZero,
+      });
+
+      const action = new Action({
+        inst: mockActionDummy.address,
+        data: actionData,
+        operation: "delegatecall",
+        termsOkCheck: true,
+      });
+
+      const task = new Task({
+        provider: gelatoProvider,
+        condition,
+        actions: [action],
+        expiryDate: constants.HashZero,
+      });
+
+      let execClaim = {
+        id: 1,
+        userProxy: userProxyAddress,
+        task,
+      };
+
+      // Should return "Ok"
+      // const isProvided = await gelatoCore.isCAMProvided(execClaim);
+
+      const mintPayload = await run("abi-encode-withselector", {
+        contractname: "GelatoCore",
+        functionname: "mintExecClaim",
+        inputs: [task],
+      });
+
+      await expect(
+        userProxy.callAction(gelatoCore.address, mintPayload)
+      ).to.emit(gelatoCore, "LogExecClaimMinted");
+
+      await expect(
+        gelatoCore
+          .connect(executor)
+          .exec(execClaim, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
+      )
+        .to.emit(gelatoCore, "LogCanExecFailed")
+        .withArgs(
+          executorAddress,
+          execClaim.id,
+          "ActionReverted:Action TermsOk not ok"
+        );
+    });
+
+    it("#5: Mint ActionERC20TransferFrom and revert with LogCanExecFailed in exec due to ActionRevertedNoMessage", async function () {
+      // @DEV Use condition contract as an action to see termsOk revert
+      const MockConditionDummyRevert = await ethers.getContractFactory(
+        "MockConditionDummyRevert",
+        sysAdmin
+      );
+      mockConditionDummyRevert = await MockConditionDummyRevert.deploy();
+      await mockConditionDummyRevert.deployed();
+
+      const revertingAction = new Action({
+        inst: mockConditionDummyRevert.address,
+        data: constants.HashZero,
+        operation: "delegatecall",
+        termsOkCheck: true,
+      });
+
+      const newCam2 = new CAM({
+        condition: constants.AddressZero,
+        actions: [revertingAction],
+        gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
+      });
+
+      await gelatoCore.connect(provider).provideCAMs([newCam2]);
+
+      const encoder = ethers.utils.defaultAbiCoder;
+      const actionData = await encoder.encode(["bool"], [false]);
+
+      // Mint ExexClaim
+      const gelatoProvider = new GelatoProvider({
+        addr: providerAddress,
+        module: providerModuleGelatoUserProxy.address,
+      });
+
+      const condition = new Condition({
+        inst: constants.AddressZero,
+        data: constants.HashZero,
+      });
+
+      const action = new Action({
+        inst: mockConditionDummyRevert.address,
+        data: actionData,
+        operation: "delegatecall",
+        termsOkCheck: true,
+      });
+
+      const task = new Task({
+        provider: gelatoProvider,
+        condition,
+        actions: [action],
+        expiryDate: constants.HashZero,
+      });
+
+      let execClaim = {
+        id: 1,
+        userProxy: userProxyAddress,
+        task,
+      };
+
+      // Should return "Ok"
+      // const isProvided = await gelatoCore.isCAMProvided(execClaim);
+
+      const mintPayload = await run("abi-encode-withselector", {
+        contractname: "GelatoCore",
+        functionname: "mintExecClaim",
+        inputs: [task],
+      });
+
+      await expect(
+        userProxy.callAction(gelatoCore.address, mintPayload)
+      ).to.emit(gelatoCore, "LogExecClaimMinted");
+
+      await expect(
+        gelatoCore
+          .connect(executor)
+          .exec(execClaim, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
+      )
+        .to.emit(gelatoCore, "LogCanExecFailed")
+        .withArgs(executorAddress, execClaim.id, "ActionRevertedNoMessage");
+    });
+
+    it("#6: Mint ActionERC20TransferFrom and revert with LogCanExecFailed in exec due to Action termsOk failure", async function () {
       // Get Action Payload
 
       const actionData = await run("abi-encode-withselector", {
@@ -651,7 +1004,7 @@ describe("GelatoCore.Execute", function () {
         );
     });
 
-    it("#5: Mint revert with InvalidExecClaimHash in exec due to ExecClaimHash not existing", async function () {
+    it("#7: Mint revert with InvalidExecClaimHash in exec due to ExecClaimHash not existing", async function () {
       // Get Action Payload
 
       const actionData = await run("abi-encode-withselector", {
@@ -722,7 +1075,75 @@ describe("GelatoCore.Execute", function () {
         .withArgs(executorAddress, execClaim.id, "InvalidExecClaimHash");
     });
 
-    it("#6: Mint and revert with Expired in exec due to expiry date having passed", async function () {
+    it("#8: Mint and revert in exec due to InvalidExecutor", async function () {
+      // Get Action Payload
+
+      const MockConditionDummy = await ethers.getContractFactory(
+        "MockConditionDummyRevert",
+        sysAdmin
+      );
+      const mockConditionDummy = await MockConditionDummy.deploy();
+      await mockConditionDummy.deployed();
+
+      const mockConditionAsAction = new Action({
+        inst: mockConditionDummy.address,
+        data: constants.HashZero,
+        operation: "delegatecall",
+        termsOkCheck: false,
+      });
+
+      const newCam2 = new CAM({
+        condition: constants.AddressZero,
+        actions: [mockConditionAsAction],
+        gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
+      });
+
+      await gelatoCore.connect(provider).provideCAMs([newCam2]);
+
+      // Mint ExexClaim
+      const gelatoProvider = new GelatoProvider({
+        addr: providerAddress,
+        module: providerModuleGelatoUserProxy.address,
+      });
+
+      const condition = new Condition({
+        inst: constants.AddressZero,
+        data: constants.HashZero,
+      });
+
+      const task = new Task({
+        provider: gelatoProvider,
+        condition,
+        actions: [mockConditionAsAction],
+        expiryDate: constants.HashZero,
+      });
+
+      let execClaim = {
+        id: 1,
+        userProxy: userProxyAddress,
+        task,
+      };
+
+      const mintPayload = await run("abi-encode-withselector", {
+        contractname: "GelatoCore",
+        functionname: "mintExecClaim",
+        inputs: [task],
+      });
+
+      await expect(
+        userProxy.callAction(gelatoCore.address, mintPayload)
+      ).to.emit(gelatoCore, "LogExecClaimMinted");
+
+      await expect(
+        gelatoCore
+          .connect(provider)
+          .exec(execClaim, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
+      )
+        .to.emit(gelatoCore, "LogCanExecFailed")
+        .withArgs(providerAddress, execClaim.id, "InvalidExecutor");
+    });
+
+    it("#9: Mint and revert with Expired in exec due to expiry date having passed", async function () {
       this.timeout(0);
 
       // Get Action Payload

@@ -5,8 +5,6 @@ class Action {
     if (!inst) throw new Error("\nAction: no inst passed to constructor\n");
     if (!operation)
       throw new Error("\nAction: no operation passed to constructor\n");
-    if (!termsOkCheck)
-      throw new Error("\nAction: no termsOkCheck passed to constructor\n");
     if (termsOkCheck !== true && termsOkCheck !== false) {
       throw new Error(
         "\nAction: pass 'true' or 'false', you passed:",

@@ -8,8 +8,6 @@ import { IGelatoCondition } from "../gelato_conditions/IGelatoCondition.sol";
 import { IGelatoAction } from "../gelato_actions/IGelatoAction.sol";
 import { IGelatoProviderModule } from "./interfaces/IGelatoProviderModule.sol";
 
-import "@nomiclabs/buidler/console.sol";
-
 /// @title GelatoCore
 /// @notice Exec Claim: minting, checking, execution, and cancellation
 /// @dev Find all NatSpecs inside IGelatoCore
@@ -44,9 +42,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             isExecutorMinStaked(executor),
             "GelatoCore.mintExecClaim: executorByProvider's stake is insufficient"
         );
-
-        console.log(now);
-        console.log(_task.expiryDate);
 
         // User checks
         if (_task.expiryDate != 0) {
@@ -153,12 +148,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             }
         }
 
-        if (
-            msg.sender != executorByProvider[_ec.task.provider.addr] &&
-            msg.sender != address(this)
-        )
-            return "InvalidExecutor";
-
         return "Ok";
     }
 
@@ -179,6 +168,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // CHECKS
         require(tx.gasprice == _gelatoGasPrice, "GelatoCore.exec: tx.gasprice");
+
+        require(msg.sender == executorByProvider[_ec.task.provider.addr], "GelatoCore.exec: Invalid Executor");
 
         ExecutionResult executionResult;
         string memory reason;
