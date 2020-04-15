@@ -1,7 +1,8 @@
+import { constants } from "ethers";
+
 class Action {
   constructor({ inst, data, operation, termsOkCheck }) {
     if (!inst) throw new Error("\nAction: no inst passed to constructor\n");
-    if (!data) throw new Error("\nAction: no data passed to constructor\n");
     if (!operation)
       throw new Error("\nAction: no operation passed to constructor\n");
     if (operation !== "call" && operation !== "delegatecall") {
@@ -14,7 +15,7 @@ class Action {
     if (termsOkCheck === undefined)
       throw new Error("\nAction: no termsOkCheck passed to constructor\n");
     this.inst = inst;
-    this.data = data;
+    this.data = data ? data : constants.HashZero;
     this.operation = operation == "call" ? 0 : 1;
     this.termsOkCheck = termsOkCheck;
   }
