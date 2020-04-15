@@ -149,12 +149,11 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         }
 
         if (
-            msg.sender != executorByProvider[_ec.task.provider.addr] &&
-            msg.sender != address(this)
+            msg.sender == executorByProvider[_ec.task.provider.addr] ||
+            msg.sender == address(this)
         )
-            return "InvalidExecutor";
-
-        return "Ok";
+            return "Ok";
+        else return "InvalidExecutor";
     }
 
     // ================  EXECUTE EXECUTOR API ============================
