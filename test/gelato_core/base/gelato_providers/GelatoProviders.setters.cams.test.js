@@ -102,12 +102,12 @@ describe("GelatoCore - GelatoProviders - Setters: CAMS", function () {
     execClaim = new ExecClaim({
       id: constants.Zero,
       userProxy: constants.AddressZero,
-      taskObj: task,
+      task: task,
     });
     otherExecClaim = new ExecClaim({
       id: 1,
       userProxy: constants.AddressZero,
-      taskObj: otherTask,
+      task: otherTask,
     });
 
     // Condition Action Mix

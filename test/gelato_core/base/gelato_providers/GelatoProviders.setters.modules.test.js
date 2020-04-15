@@ -8,40 +8,131 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
   // We define the ContractFactory and Address variables here and assign them in
   // a beforeEach hook.
   let GelatoCoreFactory;
+  let GelatoUserProxyFactoryFactory;
   let ProviderModuleFactory;
   let OtherProviderModuleFactory;
+  let FakeProviderModuleFactory;
 
   let gelatoCore;
+  let gelatoUserProxyFactory;
   let providerModule;
   let otherProviderModule;
+  let fakeProviderModule;
 
   let provider;
+  let user;
   let providerAddress;
+
+  let gelatoUserProxyAddress;
+  let extcodehashGelatoUserProxy;
+
+  let execClaim;
+  let otherExecClaim;
+  let fakeExecClaim;
 
   beforeEach(async function () {
     // Get the ContractFactory, contract instance, and Signers here.
     GelatoCoreFactory = await ethers.getContractFactory("GelatoCore");
+    GelatoUserProxyFactoryFactory = await ethers.getContractFactory(
+      "GelatoUserProxyFactory"
+    );
     ProviderModuleFactory = await ethers.getContractFactory(
       "ProviderModuleGelatoUserProxy"
     );
     OtherProviderModuleFactory = await ethers.getContractFactory(
       "ProviderModuleGnosisSafeProxy"
     );
+    FakeProviderModuleFactory = await ethers.getContractFactory(
+      "MockConditionDummy"
+    );
 
     gelatoCore = await GelatoCoreFactory.deploy();
-    providerModule = await ProviderModuleFactory.deploy([constants.HashZero]); // hashes
+    await gelatoCore.deployed();
+
+    gelatoUserProxyFactory = await GelatoUserProxyFactoryFactory.deploy(
+      gelatoCore.address
+    );
+    await gelatoUserProxyFactory.deployed();
+
+    [provider, user] = await ethers.getSigners();
+    providerAddress = await provider.getAddress();
+
+    await gelatoUserProxyFactory.connect(user).create();
+    gelatoUserProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
+      await user.getAddress()
+    );
+    extcodehashGelatoUserProxy = await gelatoUserProxyFactory.proxyExtcodehash();
+
+    providerModule = await ProviderModuleFactory.deploy([
+      extcodehashGelatoUserProxy,
+    ]);
     otherProviderModule = await OtherProviderModuleFactory.deploy(
       [constants.HashZero], // hashes
       [constants.AddressZero], // masterCopies
       gelatoCore.address
     );
+    fakeProviderModule = await FakeProviderModuleFactory.deploy();
 
-    await gelatoCore.deployed();
     await providerModule.deployed();
     await otherProviderModule.deployed();
+    await fakeProviderModule.deployed();
 
-    [provider] = await ethers.getSigners();
-    providerAddress = await provider.getAddress();
+    const gelatoProvider = new GelatoProvider({
+      addr: providerAddress,
+      module: providerModule.address,
+    });
+    const otherGelatoProvider = new GelatoProvider({
+      addr: providerAddress,
+      module: otherProviderModule.address,
+    });
+    const fakeGelatoProvider = new GelatoProvider({
+      addr: providerAddress,
+      module: fakeProviderModule.address,
+    });
+    const condition = new Condition({
+      inst: constants.AddressZero,
+      data: constants.HashZero,
+    });
+    const action = new Action({
+      inst: constants.AddressZero,
+      data: constants.HashZero,
+      operation: "call",
+      termsOkCheck: true,
+    });
+    const task = new Task({
+      provider: gelatoProvider,
+      condition,
+      actions: [action],
+      expiryDate: constants.Zero,
+    });
+    const otherTask = new Task({
+      provider: otherGelatoProvider,
+      condition,
+      actions: [action],
+      expiryDate: constants.Zero,
+    });
+    const fakeTask = new Task({
+      provider: fakeGelatoProvider,
+      condition,
+      actions: [action],
+      expiryDate: constants.Zero,
+    });
+
+    execClaim = new ExecClaim({
+      id: 0,
+      userProxy: gelatoUserProxyAddress,
+      task,
+    });
+    otherExecClaim = new ExecClaim({
+      id: 0,
+      userProxy: gelatoUserProxyAddress,
+      task: otherTask,
+    });
+    fakeExecClaim = new ExecClaim({
+      id: 0,
+      userProxy: gelatoUserProxyAddress,
+      task: fakeTask,
+    });
   });
 
   // We test different functionality of the contract as normal Mocha tests.
@@ -66,6 +157,11 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
       expect(
         (await gelatoCore.providerModules(providerAddress)).length
       ).to.be.equal(initialState.providerModulesLength);
+
+      // providerModuleChecks
+      expect(await gelatoCore.providerModuleChecks(execClaim)).to.be.equal(
+        "InvalidProviderModule"
+      );
 
       // addProviderModules()
       await expect(gelatoCore.addProviderModules([providerModule.address]))
@@ -92,9 +188,22 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
       expect(
         (await gelatoCore.providerModules(providerAddress))[0]
       ).to.be.equal(providerModule.address);
+
+      // providerModuleChecks
+      expect(await gelatoCore.providerModuleChecks(execClaim)).to.be.equal(
+        "Ok"
+      );
     });
 
     it("Should allow anyone to addProviderModules", async function () {
+      // providerModuleChecks
+      expect(await gelatoCore.providerModuleChecks(execClaim)).to.be.equal(
+        "InvalidProviderModule"
+      );
+      expect(await gelatoCore.providerModuleChecks(otherExecClaim)).to.be.equal(
+        "InvalidProviderModule"
+      );
+
       // addProviderModules()
       await expect(
         gelatoCore.addProviderModules([
@@ -140,6 +249,25 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
       expect(
         (await gelatoCore.providerModules(providerAddress))[1]
       ).to.be.equal(otherProviderModule.address);
+
+      // providerModuleChecks
+      expect(await gelatoCore.providerModuleChecks(execClaim)).to.be.equal(
+        "Ok"
+      );
+      expect(
+        await gelatoCore.providerModuleChecks(otherExecClaim)
+      ).to.not.be.equal("Ok");
+    });
+
+    it("Should catch non-conform providerModuleChecks()", async function () {
+      // addProviderModules()
+      await expect(gelatoCore.addProviderModules([fakeProviderModule.address]))
+        .to.emit(gelatoCore, "LogAddProviderModule")
+        .withArgs(providerAddress, fakeProviderModule.address);
+
+      expect(await gelatoCore.providerModuleChecks(fakeExecClaim)).to.be.equal(
+        "GelatoProviders.providerModuleChecks"
+      );
     });
 
     it("Should NOT allow to add same modules again", async function () {
