@@ -4,7 +4,7 @@ import { expect } from "chai";
 
 import initialState from "./GelatoProviders.initialState";
 
-describe("GelatoCore - GelatoProviders - Setters: BATCH PROVIDE", function () {
+describe("GelatoCore - GelatoProviders - Setters: BATCH UNPROVIDE", function () {
   // We define the ContractFactory and Address variables here and assign them in
   // a beforeEach hook.
   let GelatoCore;
@@ -107,9 +107,9 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH PROVIDE", function () {
 
   // We test different functionality of the contract as normal Mocha tests.
 
-  // batchProvide
-  describe("GelatoCore.GelatoProviders.batchProvide", function () {
-    it("Should allow anyone to batchProvide", async function () {
+  // removeProviderModules
+  describe("GelatoCore.GelatoProviders.batchUnprovide", function () {
+    it("Should allow Providers to batchUnprovide", async function () {
       // minProviderFunds required for providerAssignsExecutor
       const minProviderFunds = await gelatoCore.minProviderFunds();
 
@@ -129,71 +129,64 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH PROVIDE", function () {
       );
 
       // batchProvide()
+      await gelatoCore.batchProvide(
+        executorAddress,
+        [cam, otherCAM],
+        [providerModule.address, otherProviderModule.address],
+        { value: minProviderFunds }
+      );
+
+      expect(await gelatoCore.isExecutorAssigned(executorAddress)).to.be.true;
+
+      // batchUnprovide revert: Must un-assign executor first
       await expect(
-        gelatoCore.batchProvide(
-          executorAddress,
+        gelatoCore.batchUnprovide(
+          minProviderFunds,
           [cam, otherCAM],
-          [providerModule.address, otherProviderModule.address],
-          { value: minProviderFunds }
+          [providerModule.address, otherProviderModule.address]
+        )
+      ).to.be.revertedWith(
+        "GelatoProviders.unprovideFunds: Must un-assign executor first"
+      );
+
+      // unassign executor
+      await gelatoCore.providerAssignsExecutor(constants.AddressZero);
+
+      expect(await gelatoCore.isExecutorAssigned(executorAddress)).to.be.false;
+
+      // batchUnprovide()
+      await expect(
+        gelatoCore.batchUnprovide(
+          minProviderFunds,
+          [cam, otherCAM],
+          [providerModule.address, otherProviderModule.address]
         )
       )
-        // LogProvideFunds
-        .to.emit(gelatoCore, "LogProvideFunds")
-        .withArgs(providerAddress, minProviderFunds, minProviderFunds)
-        // LogProviderAssignsExecutor
-        .and.to.emit(gelatoCore, "LogProviderAssignsExecutor")
-        .withArgs(
-          providerAddress,
-          initialState.executorByProvider,
-          executorAddress
-        )
-        // LogProvideCAM & LogSetCAMGPC
-        .and.to.emit(gelatoCore, "LogProvideCAM")
+        // LogUnprovideFunds
+        .to.emit(gelatoCore, "LogUnprovideFunds")
+        .withArgs(providerAddress, minProviderFunds, 0)
+        // LogUnprovideCAM
+        .and.to.emit(gelatoCore, "LogUnprovideCAM")
         .withArgs(providerAddress, camHash)
-        .and.to.emit(gelatoCore, "LogSetCAMGPC")
-        .withArgs(providerAddress, camHash, initialState.camGPC, gasPriceCeil)
-        .and.to.emit(gelatoCore, "LogProvideCAM")
+        .and.to.emit(gelatoCore, "LogUnprovideCAM")
         .withArgs(providerAddress, otherCAMHash)
-        .and.to.emit(gelatoCore, "LogSetCAMGPC")
-        .withArgs(
-          providerAddress,
-          otherCAMHash,
-          initialState.camGPC,
-          gasPriceCeil
-        )
-        // LogAddProviderModule
-        .and.to.emit(gelatoCore, "LogAddProviderModule")
+        // LogRemoveProviderModule
+        .and.to.emit(gelatoCore, "LogRemoveProviderModule")
         .withArgs(providerAddress, providerModule.address)
-        .and.to.emit(gelatoCore, "LogAddProviderModule")
+        .and.to.emit(gelatoCore, "LogRemoveProviderModule")
         .withArgs(providerAddress, otherProviderModule.address);
 
       // providerFunds
       expect(await gelatoCore.providerFunds(providerAddress)).to.be.equal(
-        minProviderFunds
+        initialState.providerFunds
       );
       // isProviderMinFunded
-      expect(await gelatoCore.isProviderMinFunded(providerAddress)).to.be.true;
-
-      // executorProvidersCount(prevExecutor)
-      expect(
-        await gelatoCore.executorProvidersCount(initialState.executorByProvider)
-      ).to.be.equal(initialState.executorProvidersCount);
-      // executorByProvider(provider)
-      expect(await gelatoCore.executorByProvider(providerAddress)).to.be.equal(
-        executorAddress
-      );
-      // executorProvidersCount(newExecutor)
-      expect(
-        await gelatoCore.executorProvidersCount(executorAddress)
-      ).to.be.equal(initialState.executorProvidersCount + 1);
-
-      // isExecutorAssigned
-      expect(await gelatoCore.isExecutorAssigned(executorAddress)).to.be.true;
+      expect(await gelatoCore.isProviderMinFunded(providerAddress)).to.be.false;
 
       // cam
       // camGPC
       expect(await gelatoCore.camGPC(providerAddress, camHash)).to.be.equal(
-        cam.gasPriceCeil
+        initialState.camGPC
       );
 
       // isCAMProvided
@@ -201,13 +194,13 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH PROVIDE", function () {
         await gelatoCore.isCAMProvided(providerAddress, condition.address, [
           actionStruct,
         ])
-      ).to.be.equal("Ok");
+      ).to.be.equal("ConditionActionsMixNotProvided");
 
       // otherCAM
       // camGPC
       expect(
         await gelatoCore.camGPC(providerAddress, otherCAMHash)
-      ).to.be.equal(otherCAM.gasPriceCeil);
+      ).to.be.equal(initialState.camGPC);
 
       // isCAMProvided
       expect(
@@ -215,7 +208,7 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH PROVIDE", function () {
           actionStruct,
           otherActionStruct,
         ])
-      ).to.be.equal("Ok");
+      ).to.be.equal("ConditionActionsMixNotProvided");
 
       // providerModule: isModuleProvided
       expect(
@@ -223,7 +216,7 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH PROVIDE", function () {
           providerAddress,
           providerModule.address
         )
-      ).to.be.true;
+      ).to.be.false;
 
       // otherProviderModule: isModuleProvided
       expect(
@@ -231,23 +224,17 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH PROVIDE", function () {
           providerAddress,
           otherProviderModule.address
         )
-      ).to.be.true;
+      ).to.be.false;
 
       // numOfProviderModules
       expect(
         await gelatoCore.numOfProviderModules(providerAddress)
-      ).to.be.equal(initialState.numOfProviderModules + 2);
+      ).to.be.equal(initialState.numOfProviderModules);
 
       // providerModules
       expect(
         (await gelatoCore.providerModules(providerAddress)).length
-      ).to.be.equal(2);
-      expect(
-        (await gelatoCore.providerModules(providerAddress))[0]
-      ).to.be.equal(providerModule.address);
-      expect(
-        (await gelatoCore.providerModules(providerAddress))[1]
-      ).to.be.equal(otherProviderModule.address);
+      ).to.be.equal(0);
     });
   });
 });
