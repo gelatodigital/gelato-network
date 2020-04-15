@@ -39,13 +39,14 @@ interface IGelatoProviders {
     );
 
     // Actions
-    event LogProvideCAM(
-        address indexed provider,
-        bytes32 indexed camHash,
-        uint256 oldGasPriceCeil,
-        uint256 newGasPriceCeil
-    );
+    event LogProvideCAM(address indexed provider, bytes32 indexed camHash);
     event LogUnprovideCAM(address indexed provider, bytes32 indexed camHash);
+    event LogSetCAMGPC(
+        address indexed provider,
+        bytes32 camHash,
+        uint256 oldCAMGPC,
+        uint256 newCAMGPC
+    );
 
     // Provider Module
     event LogAddProviderModule(
@@ -98,6 +99,7 @@ interface IGelatoProviders {
     // (Un-)provide Conditions
     function provideCAMs(ConditionActionsMix[] calldata _actions) external;
     function unprovideCAMs(ConditionActionsMix[] calldata _actionsArray) external;
+    function setCAMGPC(bytes32 _camHash, uint256 _gasPriceCeil) external;
 
     // Provider Module
     function addProviderModules(IGelatoProviderModule[] calldata _modules) external;

@@ -198,23 +198,9 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     function provideCAMs(ConditionActionsMix[] memory _CAMs) public override {
         for (uint i; i < _CAMs.length; i++) {
             if (_CAMs[i].gasPriceCeil == 0) _CAMs[i].gasPriceCeil = NO_CEIL;
-
             bytes32 camHash = camHash(_CAMs[i].condition, _CAMs[i].actions);
-
-            uint256 currentGasPriceCeil = camGPC[msg.sender][camHash];
-            require(
-                currentGasPriceCeil != _CAMs[i].gasPriceCeil,
-                "GelatoProviders.provideCAMs: redundant"
-            );
-
-            camGPC[msg.sender][camHash] = _CAMs[i].gasPriceCeil;
-
-            emit LogProvideCAM(
-                msg.sender,
-                camHash,
-                currentGasPriceCeil,
-                _CAMs[i].gasPriceCeil
-            );
+            setCAMGPC(camHash, _CAMs[i].gasPriceCeil);
+            emit LogProvideCAM(msg.sender, camHash);
         }
     }
 
@@ -228,6 +214,16 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
             delete camGPC[msg.sender][camHash];
             emit LogUnprovideCAM(msg.sender, camHash);
         }
+    }
+
+    function setCAMGPC(bytes32 _camHash, uint256 _gasPriceCeil) public override {
+            uint256 currentCAMGPC = camGPC[msg.sender][_camHash];
+            require(
+                currentCAMGPC != _gasPriceCeil,
+                "GelatoProviders.setCAMGPC: redundant"
+            );
+            camGPC[msg.sender][_camHash] = _gasPriceCeil;
+            emit LogSetCAMGPC(msg.sender, _camHash, currentCAMGPC, _gasPriceCeil);
     }
 
     // Provider Module

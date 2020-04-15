@@ -1,17 +1,32 @@
-// running `npx buidler test` automatically makes use of buidler-waffle plugin
+/* // running `npx buidler test` automatically makes use of buidler-waffle plugin
 // => only dependency we need is "chai"
 import { expect } from "chai";
 
 import initialState from "./GelatoProviders.initialState";
 
-describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function () {
+describe("GelatoCore - GelatoProviders - Setters: BATCH (UN)PROVIDE", function () {
   // We define the ContractFactory and Address variables here and assign them in
   // a beforeEach hook.
-  let GelatoCoreFactory;
+  let GelatoCore;
+
+  let ConditionFactory;
+  let ActionFactory;
+  let OtherActionFactory;
+
   let ProviderModuleFactory;
   let OtherProviderModuleFactory;
 
   let gelatoCore;
+
+  let executor;
+  let executorAddress;
+
+  let condition;
+  let action;
+  let otherAction;
+  let actionStruct;
+  let otherActionStruct;
+
   let providerModule;
   let otherProviderModule;
 
@@ -20,17 +35,20 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
 
   beforeEach(async function () {
     // Get the ContractFactory, contract instance, and Signers here.
-    GelatoCoreFactory = await ethers.getContractFactory("GelatoCore");
-    ProviderModuleFactory = await ethers.getContractFactory(
+    GelatoCore = await ethers.getContractFactory("GelatoCore");
+    ConditionFactory = await ethers.getContractFactory("MockConditionDummy");
+    ActionFactory = await ethers.getContractFactory("MockActionDummy");
+    OtherActionFactory = await ethers.getContractFactory("MockActionDummy");
+    ProviderModule = await ethers.getContractFactory(
       "ProviderModuleGelatoUserProxy"
     );
-    OtherProviderModuleFactory = await ethers.getContractFactory(
+    OtherProviderModule = await ethers.getContractFactory(
       "ProviderModuleGnosisSafeProxy"
     );
 
-    gelatoCore = await GelatoCoreFactory.deploy();
-    providerModule = await ProviderModuleFactory.deploy([constants.HashZero]); // hashes
-    otherProviderModule = await OtherProviderModuleFactory.deploy(
+    gelatoCore = await GelatoCore.deploy();
+    providerModule = await ProviderModule.deploy([constants.HashZero]); // hashes
+    otherProviderModule = await OtherProviderModule.deploy(
       [constants.HashZero], // hashes
       [constants.AddressZero], // masterCopies
       gelatoCore.address
@@ -279,3 +297,4 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
     });
   });
 });
+ */
