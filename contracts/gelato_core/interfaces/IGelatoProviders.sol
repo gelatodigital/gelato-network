@@ -122,7 +122,7 @@ interface IGelatoProviders {
     // =========== PROVIDER STATE READ APIs ==============
     // Provider Funding
     function providerFunds(address _provider) external view returns(uint256);
-    function isProviderMinStaked(address _provider) external view returns(bool);
+    function isProviderMinFunded(address _provider) external view returns(bool);
 
     // Executor Stake
     function executorStake(address _executor) external view returns(uint256);

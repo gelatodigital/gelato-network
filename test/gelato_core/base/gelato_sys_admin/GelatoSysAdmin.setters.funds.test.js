@@ -43,22 +43,22 @@ describe("GelatoCore - GelatoSysAdmin - Setters: FUNDS/STAKE", function () {
     });
   });
 
-  // setMinProviderStake
-  describe("GelatoCore.GelatoSysAdmin.setMinProviderStake", function () {
-    it("Should let the owner setMinProviderStake", async function () {
+  // setMinProviderFunds
+  describe("GelatoCore.GelatoSysAdmin.setMinProviderFunds", function () {
+    it("Should let the owner setMinProviderFunds", async function () {
       // Every transaction and call is sent with the owner by default
-      await expect(gelatoCore.setMinProviderStake(69420))
-        .to.emit(gelatoCore, "LogSetMinProviderStake")
-        .withArgs(initialState.minProviderStake, 69420);
+      await expect(gelatoCore.setMinProviderFunds(69420))
+        .to.emit(gelatoCore, "LogSetMinProviderFunds")
+        .withArgs(initialState.minProviderFunds, 69420);
 
-      expect(await gelatoCore.minProviderStake()).to.be.equal(69420);
+      expect(await gelatoCore.minProviderFunds()).to.be.equal(69420);
     });
 
-    it("Should NOT let non-Owners setMinProviderStake", async function () {
+    it("Should NOT let non-Owners setMinProviderFunds", async function () {
       // gelatoCore.connect returns the same GelatoCore contract instance,
       // but associated to a different signer
       await expect(
-        gelatoCore.connect(notOwner).setMinProviderStake(69420)
+        gelatoCore.connect(notOwner).setMinProviderFunds(69420)
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
   });

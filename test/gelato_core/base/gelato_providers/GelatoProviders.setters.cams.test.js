@@ -131,6 +131,8 @@ describe("GelatoCore - GelatoProviders - Setters: CAMS", function () {
     it("Should allow anyone to provide a single CAM", async function () {
       // camHash
       const camHash = await gelatoCore.camHash(cam.condition, cam.actions);
+
+      // provideCAMs
       await expect(gelatoCore.provideCAMs([cam]))
         .to.emit(gelatoCore, "LogProvideCAM")
         .withArgs(
@@ -139,22 +141,35 @@ describe("GelatoCore - GelatoProviders - Setters: CAMS", function () {
           initialState.camGPC,
           cam.gasPriceCeil
         );
+
+      // cam
+      // camGPC
       expect(await gelatoCore.camGPC(providerAddress, camHash)).to.be.equal(
         cam.gasPriceCeil
       );
+
+      // isCAMProvided
       expect(
         await gelatoCore.isCAMProvided(providerAddress, condition.address, [
           actionStruct,
         ])
       ).to.be.equal("Ok");
+
+      // isExecClaimProvided
       expect(await gelatoCore.isExecClaimProvided(execClaim)).not.to.be.equal(
         "ConditionActionsMixNotProvided"
       );
+
+      // otherCam
+      // isCAMProvided
       expect(
         await gelatoCore.isCAMProvided(providerAddress, condition.address, [
+          actionStruct,
           otherActionStruct,
         ])
       ).to.be.equal("ConditionActionsMixNotProvided");
+
+      // isExecClaimProvided
       expect(await gelatoCore.isExecClaimProvided(otherExecClaim)).to.be.equal(
         "ConditionActionsMixNotProvided"
       );
@@ -163,10 +178,13 @@ describe("GelatoCore - GelatoProviders - Setters: CAMS", function () {
     it("Should allow anyone to provideCAMs", async function () {
       // camHash
       const camHash = await gelatoCore.camHash(cam.condition, cam.actions);
+      // otherCAMHash
       const otherCAMHash = await gelatoCore.camHash(
         otherCAM.condition,
         otherCAM.actions
       );
+
+      // provideCAMs
       await expect(gelatoCore.provideCAMs([cam, otherCAM]))
         .to.emit(gelatoCore, "LogProvideCAM")
         .withArgs(
@@ -242,6 +260,7 @@ describe("GelatoCore - GelatoProviders - Setters: CAMS", function () {
 
       // camHash
       const camHash = await gelatoCore.camHash(cam.condition, cam.actions);
+      // otherCAMHash
       const otherCAMHash = await gelatoCore.camHash(
         otherCAM.condition,
         otherCAM.actions
@@ -258,7 +277,7 @@ describe("GelatoCore - GelatoProviders - Setters: CAMS", function () {
         initialState.camGPC
       );
 
-      // isCamProvided
+      // isCAMProvided
       expect(
         await gelatoCore.isCAMProvided(providerAddress, condition.address, [
           actionStruct,
@@ -276,7 +295,7 @@ describe("GelatoCore - GelatoProviders - Setters: CAMS", function () {
         await gelatoCore.camGPC(providerAddress, otherCAMHash)
       ).to.be.equal(otherCAM.gasPriceCeil);
 
-      // isCamProvided
+      // isCAMProvided
       expect(
         await gelatoCore.isCAMProvided(providerAddress, condition.address, [
           actionStruct,
@@ -294,7 +313,9 @@ describe("GelatoCore - GelatoProviders - Setters: CAMS", function () {
       // provideCAMs
       await gelatoCore.provideCAMs([cam, otherCAM]);
 
+      // camHash
       const camHash = await gelatoCore.camHash(cam.condition, cam.actions);
+      // otherCAMHash
       const otherCAMHash = await gelatoCore.camHash(
         otherCAM.condition,
         otherCAM.actions
@@ -336,11 +357,12 @@ describe("GelatoCore - GelatoProviders - Setters: CAMS", function () {
     });
 
     it("Should NOT allow Providers to unprovide not-provided CAMs", async function () {
-      // unprovideCAMs
+      // unprovideCAMs revert
       await expect(gelatoCore.unprovideCAMs([cam])).to.be.revertedWith(
         "GelatoProviders.unprovideCAMs: redundant"
       );
 
+      // unprovideCAMs revert
       await expect(
         gelatoCore.unprovideCAMs([cam, otherCAM])
       ).to.be.revertedWith("GelatoProviders.unprovideCAMs: redundant");
@@ -348,11 +370,12 @@ describe("GelatoCore - GelatoProviders - Setters: CAMS", function () {
       // provideCAMs
       await gelatoCore.provideCAMs([cam]);
 
-      // unprovideCAMs
+      // unprovideCAMs revert
       await expect(gelatoCore.unprovideCAMs([otherCAM])).to.be.revertedWith(
         "GelatoProviders.unprovideCAMs: redundant"
       );
 
+      // unprovideCAMs revert
       await expect(
         gelatoCore.unprovideCAMs([cam, otherCAM])
       ).to.be.revertedWith("GelatoProviders.unprovideCAMs: redundant");
