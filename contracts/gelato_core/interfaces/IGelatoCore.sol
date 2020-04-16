@@ -20,6 +20,7 @@ struct Action {
     address inst;
     bytes data;
     Operation operation;
+    uint256 value;
     bool termsOkCheck;
 }
 
@@ -77,9 +78,6 @@ interface IGelatoCore {
     );
 
     function mintExecClaim(Task calldata _task) external;
-    function mintSelfProvidedExecClaim(Task calldata _task, address _executor)
-        external
-        payable;
 
     function canExec(ExecClaim calldata _ec, uint256 _gelatoGasPrice)
         external
