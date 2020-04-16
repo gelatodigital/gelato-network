@@ -52,7 +52,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // Check Provider details
         string memory isProvided;
-        msg.sender != _task.provider.addr ? isProvided = isExecClaimProvided(execClaim) : isProvided = providerModuleChecks(execClaim);
+        if (msg.sender == _task.provider.addr) isProvided = providerModuleChecks(execClaim);
+        else isProvided = isExecClaimProvided(execClaim);
         require(
             isProvided.startsWithOk(),
             string(abi.encodePacked("GelatoCore.mintExecClaim.isProvided:", isProvided))
@@ -392,7 +393,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         for (uint i; i < _execClaims.length; i++) collectExecClaimRent(_execClaims[i]);
     }
 
-    function hashExecClaim(ExecClaim memory _ec) pure public returns(bytes32) {
+    function hashExecClaim(ExecClaim memory _ec) public pure override returns(bytes32) {
         return keccak256(abi.encode(_ec));
     }
 }

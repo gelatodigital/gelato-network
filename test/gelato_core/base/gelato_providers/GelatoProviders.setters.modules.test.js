@@ -30,6 +30,11 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
   let otherExecClaim;
   let fakeExecClaim;
 
+  // Condition - Actions - Mix
+  let cam;
+  // GPC
+  const gasPriceCeil = utils.parseUnits("20", "gwei");
+
   beforeEach(async function () {
     // Get the ContractFactory, contract instance, and Signers here.
     GelatoCoreFactory = await ethers.getContractFactory("GelatoCore");
@@ -132,6 +137,13 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
       id: 0,
       userProxy: gelatoUserProxyAddress,
       task: fakeTask,
+    });
+
+    // Condition Action Mix
+    cam = new CAM({
+      condition: condition.inst,
+      actions: [action],
+      gasPriceCeil,
     });
   });
 
@@ -268,6 +280,43 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
       expect(await gelatoCore.providerModuleChecks(fakeExecClaim)).to.be.equal(
         "GelatoProviders.providerModuleChecks"
       );
+    });
+
+    it("Should return providerModuleChecks from providerCanExec, if correct gelatoGasPrice", async function () {
+      // provideCAMs
+      await gelatoCore.provideCAMs([cam]);
+
+      // addProviderModules()
+      await gelatoCore.addProviderModules([
+        providerModule.address,
+        otherProviderModule.address,
+        fakeProviderModule.address,
+      ]);
+
+      const weirdFlexButOkPrice = 0;
+      const okGelatoGasPrice = cam.gasPriceCeil.sub(1);
+      const alsoOkGelatoGasPrice = cam.gasPriceCeil;
+      const notOkGelatoGasPrice = cam.gasPriceCeil.add(1);
+
+      // providerCanExec: execClaim (provided gelato user proxy)
+      expect(
+        await gelatoCore.providerCanExec(execClaim, weirdFlexButOkPrice)
+      ).to.be.equal("Ok");
+
+      // providerCanExec: otherExecClaim (not provided gnosis safe)
+      expect(
+        await gelatoCore.providerCanExec(otherExecClaim, okGelatoGasPrice)
+      ).to.not.be.equal("Ok");
+
+      // providerCanExec: fakeExecClaim
+      expect(
+        await gelatoCore.providerCanExec(fakeExecClaim, alsoOkGelatoGasPrice)
+      ).to.be.equal("GelatoProviders.providerModuleChecks");
+
+      // providerCanExec: gelatoGasPriceTooHigh
+      expect(
+        await gelatoCore.providerCanExec(execClaim, notOkGelatoGasPrice)
+      ).to.be.equal("GelatoGasPriceTooHigh");
     });
 
     it("Should NOT allow to add same modules again", async function () {
