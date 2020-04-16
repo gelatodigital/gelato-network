@@ -3,7 +3,9 @@ require("@babel/register");
 
 // Libraries
 const assert = require("assert");
-const { constants, utils } = require("ethers");
+const { constants, errors, utils } = require("ethers");
+
+errors.setLogLevel("error");
 
 // Classes
 const Action = require("./src/classes/gelato/Action").default;
