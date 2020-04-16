@@ -23,7 +23,7 @@ interface IBatchExchange {
         view
         returns (bool);
 
-    function tokenAddressToIdMap(address addr)
+    function tokenAddressToIdMap(address inst)
         external
         view
         returns (uint16);

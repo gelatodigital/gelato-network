@@ -112,7 +112,7 @@ export default internalTask(
         provider: taskArgs.gelatoprovider,
         providerModule: providerModuleAddress,
         action: actionAddress,
-        actionPayload: constants.HashZero,
+        actionData: constants.HashZero,
       });
 
       const inputs = [

@@ -12,11 +12,11 @@ import "./task.assignProviderExecutor";
 import "./provide_conditions/task.provideConditions";
 import "./provide_conditions/task.isProvidedCondition";
 // Actions
-import "./provide_actions/task.provideActions";
+// import "./provide_actions/task.provideCAMs";
 import "./provide_actions/task.isProvidedAction";
 // Provider Module
 import "./task.providerModules";
-import "./provider_module/task.isProvidedModule";
+import "./provider_module/task.isModuleProvided";
 
 // === GelatoProviderModuleExample ===
 import "./provider_module/collection.tasks.gelato-provider-module";

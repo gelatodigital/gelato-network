@@ -157,7 +157,7 @@ contract ActionUniswapTrade is GelatoActionsStandard {
 
     // ====== ACTION CONDITIONS CHECK ==========
     // Overriding and extending GelatoActionsStandard's function (optional)
-    function termsOk(bytes calldata _actionPayload)
+    function termsOk(bytes calldata _actionData)
         external
         view
         override
@@ -165,7 +165,7 @@ contract ActionUniswapTrade is GelatoActionsStandard {
         returns(string memory)  // actionTermsOk
     {
         (address _user, address _userProxy, address _sendToken, uint256 _sendAmt, address _receiveToken) = abi.decode(
-            _actionPayload[4:164],
+            _actionData[4:164],
             (address,address,address,uint256,address)
         );
         return _actionConditionsCheck(_user, _userProxy, _sendToken, _sendAmt, _receiveToken);

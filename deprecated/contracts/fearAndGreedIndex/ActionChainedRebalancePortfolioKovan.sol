@@ -43,13 +43,13 @@ contract ActionChainedRebalancePortfolioKovan is ActionRebalancePortfolioKovan {
 >>>>>>> gnoAutomatedWithdrawal:fearAndGreedIndex/ActionChainedRebalancePortfolioKovan.sol
 
         // Encode FearAndGreedIndex Condition
-        bytes memory conditionPayload = abi.encodeWithSelector(
+        bytes memory conditionData = abi.encodeWithSelector(
             bytes4(keccak256("termsOk(uint256)")),
             newFearAndGreedIndex
         );
 
         // // Encode This Action
-        bytes memory actionPayload = abi.encodeWithSelector(
+        bytes memory actionData = abi.encodeWithSelector(
             actionSelector(),
             _gelatoProviderAndExecutor,
             _conditionAndAction
@@ -64,8 +64,8 @@ contract ActionChainedRebalancePortfolioKovan is ActionRebalancePortfolioKovan {
             _selectedProviderAndExecutor,
 >>>>>>> gnoAutomatedWithdrawal:fearAndGreedIndex/ActionChainedRebalancePortfolioKovan.sol
             _conditionAndAction,
-            conditionPayload,
-            actionPayload,
+            conditionData,
+            actionData,
             0  // execClaimExpiryDate defaults to executor's max allowance
         ) {
         } catch {

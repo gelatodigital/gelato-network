@@ -30,8 +30,8 @@ export default task("test-canexec")
         user: "0xEA32a91261516b06Fe4917F7f248604b55d05cA8",
         condition: "0x16A6292aC4c568B8e70006C39ACf86fcee542Ef2",
         action: "0xd9dC553CDCf4ff237B5D6a7025c85f7F096705B4",
-        conditionPayload: constants.HashZero,
-        actionPayload: constants.HashZero,
+        conditionData: constants.HashZero,
+        actionData: constants.HashZero,
         expiryDate: "0x5ecc1408",
         executorSuccessShare: 5,
         sysAdminSuccessShare: 2

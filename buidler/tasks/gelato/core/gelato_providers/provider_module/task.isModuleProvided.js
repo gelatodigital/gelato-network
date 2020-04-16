@@ -2,7 +2,7 @@ import { task } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../../../buidler.config";
 
 export default task(
-  "gc-isprovidedmodule",
+  "gc-ismoduleprovided",
   `Return (or --log) GelatoCore.isProvidedCondition([<gelatoprovider>: defaults to default gelatoprovider], conditionname) on [--network] (default: ${defaultNetwork})`
 )
   .addPositionalParam("modulename")
@@ -22,7 +22,7 @@ export default task(
         contractname: "GelatoCore",
         write: true,
       });
-      const isProviderModule = await gelatoCore.isProviderModule(
+      const isModuleProvided = await gelatoCore.isModuleProvided(
         gelatoprovider,
         moduleAddress
       );
@@ -31,10 +31,10 @@ export default task(
           `\n Provider:        ${gelatoprovider}\
            \n Module:          ${modulename} at ${moduleAddress}\
            \n Network:         ${network.name}\
-           \n IsProvided?:     ${isProviderModule ? "✅" : "❌"}\n`
+           \n IsProvided?:     ${isModuleProvided ? "✅" : "❌"}\n`
         );
       }
-      return isProviderModule;
+      return isModuleProvided;
     } catch (error) {
       console.error(error, "\n");
       process.exit(1);

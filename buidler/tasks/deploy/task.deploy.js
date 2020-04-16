@@ -27,11 +27,12 @@ export default task(
     try {
       // Default for now to avoid accidentally losing addresses during deployment
       const networkname = network.name;
-      if (networkname !== "buidlerevm") taskArgs.log = true;
+      if (networkname !== "buidlerevm") {
+        taskArgs.log = true;
+        taskArgs.compile = true;
+      }
 
       if (taskArgs.log) console.log("\n deploy taskArgs:", taskArgs, "\n");
-
-      taskArgs.compile = true;
 
       if (networkname == "mainnet") {
         console.log(

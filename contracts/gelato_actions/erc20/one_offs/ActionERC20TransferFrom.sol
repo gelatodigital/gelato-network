@@ -6,7 +6,7 @@ import { IERC20 } from "../../../external/IERC20.sol";
 // import "../../../external/SafeERC20.sol";
 import { Address } from "../../../external/Address.sol";
 
-struct ActionPayload {
+struct ActionData {
     address user;
     address userProxy;
     address sendToken;
@@ -18,12 +18,12 @@ contract ActionERC20TransferFrom is GelatoActionsStandard {
     // using SafeERC20 for IERC20; <- internal library methods vs. try/catch
     using Address for address;
 
-    function action(bytes calldata _actionPayload) external payable override virtual {
-        (ActionPayload memory _p) = abi.decode(_actionPayload, (ActionPayload));
+    function action(bytes calldata _actionData) external payable override virtual {
+        (ActionData memory _p) = abi.decode(_actionData, (ActionData));
          action(_p);
     }
 
-    function action(ActionPayload memory _p) public payable virtual {
+    function action(ActionData memory _p) public payable virtual {
         require(address(this) == _p.userProxy, "ActionERC20TransferFrom: UserProxy");
         IERC20 sendERC20 = IERC20(_p.sendToken);
         try sendERC20.transferFrom(_p.user, _p.destination, _p.sendAmount) {
@@ -35,18 +35,18 @@ contract ActionERC20TransferFrom is GelatoActionsStandard {
 
     // ======= ACTION CONDITIONS CHECK =========
     // Overriding and extending GelatoActionsStandard's function (optional)
-    function termsOk(bytes calldata _actionPayload)
+    function termsOk(bytes calldata _actionData)
         external
         view
         override
         virtual
         returns(string memory)  // actionTermsOk
     {
-        (ActionPayload memory _p) = abi.decode(_actionPayload[4:], (ActionPayload));
+        (ActionData memory _p) = abi.decode(_actionData[4:], (ActionData));
         return termsOk(_p);
     }
 
-    function termsOk(ActionPayload memory _p) public view virtual returns(string memory) {
+    function termsOk(ActionData memory _p) public view virtual returns(string memory) {
         if (!_p.sendToken.isContract())
             return "ActionERC20TransferFrom: NotOkSendTokenAddress";
 

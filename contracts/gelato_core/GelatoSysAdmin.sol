@@ -16,7 +16,7 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
     IGelatoGasPriceOracle public override gelatoGasPriceOracle;
     uint256 public override gelatoMaxGas = 7000000;  // 7 mio initial
     uint256 public override internalGasRequirement = 500000;
-    uint256 public override minProviderStake = 0.1 ether;  // production: 1 ETH
+    uint256 public override minProviderFunds = 0.1 ether;  // production: 1 ETH
     uint256 public override minExecutorStake = 0.02 ether;  // production: 1 ETH
     uint256 public override execClaimTenancy = 30 days;
     uint256 public override execClaimRent = 1 finney;
@@ -50,17 +50,17 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
     }
 
     // Minimum Executor Stake Per Provider
+    function setMinProviderFunds(uint256 _newMin) external override onlyOwner {
+        emit LogSetMinProviderFunds(minProviderFunds, _newMin);
+        if (_newMin == 0) delete minProviderFunds;
+        else minProviderFunds = _newMin;
+    }
+
+    // Minimum Executor Stake Per Provider
     function setMinExecutorStake(uint256 _newMin) external override onlyOwner {
         emit LogSetMinExecutorStake(minExecutorStake, _newMin);
         if (_newMin == 0) delete minExecutorStake;
         else minExecutorStake = _newMin;
-    }
-
-    // Minimum Executor Stake Per Provider
-    function setMinProviderStake(uint256 _newMin) external override onlyOwner {
-        emit LogSetMinProviderStake(minProviderStake, _newMin);
-        if (_newMin == 0) delete minProviderStake;
-        else minProviderStake = _newMin;
     }
 
     // execClaim lifespan

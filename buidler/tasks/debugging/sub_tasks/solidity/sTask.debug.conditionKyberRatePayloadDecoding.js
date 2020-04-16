@@ -1,7 +1,7 @@
 import { internalTask } from "@nomiclabs/buidler/config";
 
 export default internalTask("debug:conditionkyberratepayloaddecoding")
-  .addPositionalParam("conditionPayload")
+  .addPositionalParam("conditionData")
   .setAction(async taskArgs => {
     try {
       if (network.name != "buidlerevm") throw new Error("\nbuidlerevm only");

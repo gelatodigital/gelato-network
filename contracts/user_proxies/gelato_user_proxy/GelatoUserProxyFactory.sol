@@ -1,6 +1,6 @@
 pragma solidity ^0.6.6;
 
-import { IGelatoUserProxyFactory } from "./IGelatoUserProxyFactory.sol";
+import { IGelatoUserProxyFactory } from "./interfaces/IGelatoUserProxyFactory.sol";
 import { Address } from "../../external/Address.sol";
 import { GelatoUserProxy } from "./GelatoUserProxy.sol";
 

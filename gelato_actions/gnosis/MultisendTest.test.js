@@ -146,7 +146,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
     );
 
     // Whitelist action by provider
-    await gelatoCore.connect(provider).provideActions([
+    await gelatoCore.connect(provider).provideCAMs([
       {
         addresses: [actionWithdrawBatchExchange.address],
         gasPriceCeil: ethers.utils.parseUnits("100", "gwei"),
