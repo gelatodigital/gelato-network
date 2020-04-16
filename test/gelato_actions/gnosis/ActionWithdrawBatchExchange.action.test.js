@@ -147,6 +147,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       inst: actionERC20TransferFrom.address,
       data: constants.HashZero,
       operation: "delegatecall",
+      value: 0,
       termsOkCheck: true,
     });
 
@@ -154,6 +155,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       inst: actionWithdrawBatchExchange.address,
       data: constants.HashZero,
       operation: "delegatecall",
+      value: 0,
       termsOkCheck: true,
     });
 
@@ -263,6 +265,8 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         inst: actionWithdrawBatchExchange.address,
         data: withdrawPayload,
         operation: OPERATION.delegatecall,
+        value: 0,
+        termsOkCheck: true,
       };
 
       tx = await userProxy.execGelatoAction(gelatoAction);
@@ -309,6 +313,8 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         inst: actionWithdrawBatchExchange.address,
         data: withdrawPayload,
         operation: OPERATION.delegatecall,
+        value: 0,
+        termsOkCheck: true,
       };
 
       tx = await userProxy.execGelatoAction(gelatoAction);
@@ -354,6 +360,8 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         inst: actionWithdrawBatchExchange.address,
         data: withdrawPayload,
         operation: OPERATION.delegatecall,
+        value: 0,
+        termsOkCheck: true,
       };
       await expect(userProxy.execGelatoAction(gelatoAction)).to.be.revertedWith(
         "GelatoUserProxy.delegatecallAction:ActionWithdrawBatchExchange: Insufficient balance for user to pay for withdrawal 2"
@@ -403,6 +411,8 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         inst: actionWithdrawBatchExchange.address,
         data: withdrawPayload,
         operation: OPERATION.delegatecall,
+        value: 0,
+        termsOkCheck: true,
       };
 
       await expect(userProxy.execGelatoAction(gelatoAction)).to.be.revertedWith(
@@ -445,6 +455,8 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         inst: actionWithdrawBatchExchange.address,
         data: withdrawPayload,
         operation: OPERATION.delegatecall,
+        value: 0,
+        termsOkCheck: true,
       };
 
       tx = await userProxy.execGelatoAction(gelatoAction);
@@ -494,6 +506,8 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         inst: actionWithdrawBatchExchange.address,
         data: withdrawPayload,
         operation: OPERATION.delegatecall,
+        value: 0,
+        termsOkCheck: true,
       };
 
       tx = await userProxy.execGelatoAction(gelatoAction);
@@ -540,6 +554,8 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         inst: actionWithdrawBatchExchange.address,
         data: withdrawPayload,
         operation: OPERATION.delegatecall,
+        value: 0,
+        termsOkCheck: true,
       };
       await expect(userProxy.execGelatoAction(gelatoAction)).to.be.revertedWith(
         "GelatoUserProxy.delegatecallAction:ActionWithdrawBatchExchange: Insufficient balance for user to pay for withdrawal 1"
@@ -582,6 +598,8 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         inst: actionWithdrawBatchExchange.address,
         data: withdrawPayload,
         operation: OPERATION.delegatecall,
+        value: 0,
+        termsOkCheck: true,
       };
 
       await expect(userProxy.execGelatoAction(gelatoAction)).to.be.revertedWith(
