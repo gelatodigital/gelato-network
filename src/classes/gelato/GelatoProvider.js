@@ -1,11 +1,10 @@
 class GelatoProvider {
-  constructor({ addr, module }) {
-    if (!addr)
-      throw new Error("\n Provider: no addr passed to constructor \n ");
+  constructor({ addr, module: _module }) {
+    if (!addr) throw new Error("\nProvider: no addr passed to constructor \n");
     if (!module)
-      throw new Error("\n Provider: no module passed to constructor \n ");
+      throw new Error("\nProvider: no module passed to constructor\n");
     this.addr = addr;
-    this.module = module;
+    this.module = _module;
   }
 }
 
