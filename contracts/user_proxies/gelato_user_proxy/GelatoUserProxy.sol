@@ -1,7 +1,9 @@
 pragma solidity ^0.6.0;
 pragma experimental ABIEncoderV2;
 
-import { IGelatoUserProxy } from "./interfaces/IGelatoUserProxy.sol";
+import {
+    IGelatoUserProxy, ActionWithValue, ActionWithData
+} from "./interfaces/IGelatoUserProxy.sol";
 import { Action, Operation, Task, IGelatoCore } from "../../gelato_core/interfaces/IGelatoCore.sol";
 import { IGelatoAction } from "../../gelato_actions/IGelatoAction.sol";
 
@@ -43,26 +45,16 @@ contract GelatoUserProxy is IGelatoUserProxy {
         IGelatoCore(gelatoCore).mintExecClaim(_task);
     }
 
-    function mintSelfProvidedExecClaim(Task calldata _task, address _executor)
-        external
-        payable
-        override
-        onlyUser
-    {
-        IGelatoCore(gelatoCore).mintSelfProvidedExecClaim{value: msg.value}(_task, _executor);
-    }
-
     // @dev we have to write duplicate code due to calldata _action FeatureNotImplemented
     function execGelatoAction(Action calldata _action)
         external
-        payable
         override
         auth
     {
         if (_action.operation == Operation.Call)
-            callAction(address(_action.inst), _action.data);
+            callAction(_action.inst, _action.data, _action.value);
         else if (_action.operation == Operation.Delegatecall)
-            delegatecallAction(address(_action.inst), _action.data);
+            delegatecallAction(_action.inst, _action.data);
         else
             revert("GelatoUserProxy.execGelatoAction: invalid operation");
     }
@@ -70,13 +62,12 @@ contract GelatoUserProxy is IGelatoUserProxy {
     // @dev we have to write duplicate code due to calldata _action FeatureNotImplemented
     function multiExecGelatoActions(Action[] calldata _actions)
         external
-        payable
         override
         auth
     {
         for (uint i = 0; i < _actions.length; i++) {
             if (_actions[i].operation == Operation.Call)
-                callAction(address(_actions[i].inst), _actions[i].data);
+                callAction(_actions[i].inst, _actions[i].data, _actions[i].value);
             else if (_actions[i].operation == Operation.Delegatecall)
                 delegatecallAction(address(_actions[i].inst), _actions[i].data);
             else
@@ -84,14 +75,14 @@ contract GelatoUserProxy is IGelatoUserProxy {
         }
     }
 
-    function callAction(address _action, bytes memory _data)
+    function callAction(address _action, bytes memory _data, uint256 _value)
         public
         payable
         override
         auth
         noZeroAddress(_action)
     {
-        (bool success, bytes memory err) = _action.call{value: msg.value}(_data);
+        (bool success, bytes memory err) = _action.call{value: _value}(_data);
         if (!success) {
             // FAILURE
             // 68: 32-location, 32-length, 4-ErrorSelector, UTF-8 err
@@ -113,13 +104,14 @@ contract GelatoUserProxy is IGelatoUserProxy {
         }
     }
 
-    function multiCallActions(address[] calldata _actions, bytes[] calldata _data)
+    function multiCallActions(ActionWithValue[] calldata _actions)
         external
         payable
         override
         auth
     {
-        for (uint i = 0; i < _actions.length; i++) callAction(_actions[i], _data[i]);
+        for (uint i = 0; i < _actions.length; i++)
+            callAction(_actions[i].inst, _actions[i].data, _actions[i].value);
     }
 
     function delegatecallAction(address _action, bytes memory _data)
@@ -151,12 +143,13 @@ contract GelatoUserProxy is IGelatoUserProxy {
         }
     }
 
-    function multiDelegatecallActions(address[] calldata _actions, bytes[] calldata _data)
+    function multiDelegatecallActions(ActionWithData[] calldata _actions)
         external
         payable
         override
         auth
     {
-        for (uint i = 0; i < _actions.length; i++) delegatecallAction(_actions[i], _data[i]);
+        for (uint i = 0; i < _actions.length; i++)
+            delegatecallAction(_actions[i].inst, _actions[i].data);
     }
 }
