@@ -137,11 +137,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
     // Execution Entry Point
     function exec(ExecClaim memory _ec) public override {
-        // Only the Executor the Provider assigned can exec
-        require(
-            msg.sender == executorByProvider[_ec.task.provider.addr],
-            "GelatoCore.exec: InvalidExecutor"
-        );
 
         // Store startGas for gas-consumption based cost and payout calcs
         uint256 startGas = gasleft();
@@ -202,7 +197,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
                     _gelatoGasPrice
                 );
                 emit LogExecFailed(msg.sender, _ec.id, executorRefund, reason);
-                return;
             }
 
         } else {
@@ -210,7 +204,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             // END-4.1: ExecutionReverted NO gelatoMaxGas => No ExecClaim Deletion & No Refund
             if (startGas < _gelatoMaxGas) {
                 emit LogExecutionRevert(msg.sender, _ec.id, 0);
-                return;
 
             } else {
                 // END-4.2: ExecutionReverted BUT gelatoMaxGas was used

@@ -162,6 +162,7 @@ describe("GelatoCore.Execute", function () {
       inst: actionERC20TransferFrom.address,
       data: constants.HashZero,
       operation: "delegatecall",
+      value: 0,
       termsOkCheck: true,
     });
 
@@ -169,6 +170,7 @@ describe("GelatoCore.Execute", function () {
       inst: actionWithdrawBatchExchange.address,
       data: constants.HashZero,
       operation: "delegatecall",
+      value: 0,
       termsOkCheck: true,
     });
 
@@ -299,6 +301,7 @@ describe("GelatoCore.Execute", function () {
         inst: actionWithdrawBatchExchange.address,
         data: actionData,
         operation: "delegatecall",
+        value: 0,
         termsOkCheck: true,
       });
 
@@ -328,7 +331,7 @@ describe("GelatoCore.Execute", function () {
       // LogExecClaimMinted(executor, execClaim.id, hashedExecClaim, execClaim);
 
       await expect(
-        userProxy.callAction(gelatoCore.address, mintPayload)
+        userProxy.callAction(gelatoCore.address, mintPayload, 0)
       ).to.emit(gelatoCore, "LogExecClaimMinted");
 
       expect(await gelatoCore.canExec(execClaim, GELATO_GAS_PRICE)).to.be.equal(
@@ -419,6 +422,7 @@ describe("GelatoCore.Execute", function () {
         inst: actionWithdrawBatchExchange.address,
         data: actionData,
         operation: "delegatecall",
+        value: 0,
         termsOkCheck: true,
       });
 
@@ -447,7 +451,7 @@ describe("GelatoCore.Execute", function () {
       // LogExecClaimMinted(executor, execClaim.id, hashedExecClaim, execClaim);
 
       await expect(
-        userProxy.callAction(gelatoCore.address, mintPayload)
+        userProxy.callAction(gelatoCore.address, mintPayload, 0)
       ).to.emit(gelatoCore, "LogExecClaimMinted");
 
       expect(await gelatoCore.canExec(execClaim, GELATO_GAS_PRICE)).to.be.equal(
@@ -531,6 +535,7 @@ describe("GelatoCore.Execute", function () {
         inst: actionERC20TransferFrom.address,
         data: actionData,
         operation: "delegatecall",
+        value: 0,
         termsOkCheck: true,
       });
 
@@ -557,7 +562,7 @@ describe("GelatoCore.Execute", function () {
       });
 
       await expect(
-        userProxy.callAction(gelatoCore.address, mintPayload)
+        userProxy.callAction(gelatoCore.address, mintPayload, 0)
       ).to.emit(gelatoCore, "LogExecClaimMinted");
 
       await expect(
@@ -623,6 +628,7 @@ describe("GelatoCore.Execute", function () {
         inst: actionERC20TransferFrom.address,
         data: actionData,
         operation: "delegatecall",
+        value: 0,
         termsOkCheck: true,
       });
 
@@ -649,7 +655,7 @@ describe("GelatoCore.Execute", function () {
       });
 
       await expect(
-        userProxy.callAction(gelatoCore.address, mintPayload)
+        userProxy.callAction(gelatoCore.address, mintPayload, 0)
       ).to.emit(gelatoCore, "LogExecClaimMinted");
 
       await expect(
@@ -713,6 +719,7 @@ describe("GelatoCore.Execute", function () {
         inst: actionERC20TransferFrom.address,
         data: actionData,
         operation: "delegatecall",
+        value: 0,
         termsOkCheck: true,
       });
 
@@ -739,7 +746,7 @@ describe("GelatoCore.Execute", function () {
       });
 
       await expect(
-        userProxy.callAction(gelatoCore.address, mintPayload)
+        userProxy.callAction(gelatoCore.address, mintPayload, 0)
       ).to.emit(gelatoCore, "LogExecClaimMinted");
 
       await expect(
@@ -767,6 +774,7 @@ describe("GelatoCore.Execute", function () {
         inst: mockActionDummy.address,
         data: constants.HashZero,
         operation: "delegatecall",
+        value: 0,
         termsOkCheck: true,
       });
 
@@ -798,6 +806,7 @@ describe("GelatoCore.Execute", function () {
         inst: mockActionDummy.address,
         data: actionData,
         operation: "delegatecall",
+        value: 0,
         termsOkCheck: true,
       });
 
@@ -824,7 +833,7 @@ describe("GelatoCore.Execute", function () {
       });
 
       await expect(
-        userProxy.callAction(gelatoCore.address, mintPayload)
+        userProxy.callAction(gelatoCore.address, mintPayload, 0)
       ).to.emit(gelatoCore, "LogExecClaimMinted");
 
       await expect(
@@ -853,6 +862,7 @@ describe("GelatoCore.Execute", function () {
         inst: mockConditionDummyRevert.address,
         data: constants.HashZero,
         operation: "delegatecall",
+        value: 0,
         termsOkCheck: true,
       });
 
@@ -882,6 +892,7 @@ describe("GelatoCore.Execute", function () {
         inst: mockConditionDummyRevert.address,
         data: actionData,
         operation: "delegatecall",
+        value: 0,
         termsOkCheck: true,
       });
 
@@ -908,7 +919,7 @@ describe("GelatoCore.Execute", function () {
       });
 
       await expect(
-        userProxy.callAction(gelatoCore.address, mintPayload)
+        userProxy.callAction(gelatoCore.address, mintPayload, 0)
       ).to.emit(gelatoCore, "LogExecClaimMinted");
 
       await expect(
@@ -958,6 +969,7 @@ describe("GelatoCore.Execute", function () {
         inst: actionERC20TransferFrom.address,
         data: actionData,
         operation: "delegatecall",
+        value: 0,
         termsOkCheck: true,
       });
 
@@ -984,7 +996,7 @@ describe("GelatoCore.Execute", function () {
       });
 
       await expect(
-        userProxy.callAction(gelatoCore.address, mintPayload)
+        userProxy.callAction(gelatoCore.address, mintPayload, 0)
       ).to.emit(gelatoCore, "LogExecClaimMinted");
 
       await expect(
@@ -1046,6 +1058,7 @@ describe("GelatoCore.Execute", function () {
         inst: actionERC20TransferFrom.address,
         data: actionData,
         operation: "delegatecall",
+        value: 0,
         termsOkCheck: true,
       });
 
@@ -1085,6 +1098,7 @@ describe("GelatoCore.Execute", function () {
         inst: mockConditionDummy.address,
         data: constants.HashZero,
         operation: "delegatecall",
+        value: 0,
         termsOkCheck: false,
       });
 
@@ -1127,7 +1141,7 @@ describe("GelatoCore.Execute", function () {
       });
 
       await expect(
-        userProxy.callAction(gelatoCore.address, mintPayload)
+        userProxy.callAction(gelatoCore.address, mintPayload, 0)
       ).to.emit(gelatoCore, "LogExecClaimMinted");
 
       await expect(
@@ -1184,6 +1198,7 @@ describe("GelatoCore.Execute", function () {
         inst: actionERC20TransferFrom.address,
         data: actionData,
         operation: "delegatecall",
+        value: 0,
         termsOkCheck: true,
       });
 
@@ -1209,7 +1224,7 @@ describe("GelatoCore.Execute", function () {
       });
 
       await expect(
-        userProxy.callAction(gelatoCore.address, mintPayload)
+        userProxy.callAction(gelatoCore.address, mintPayload, 0)
       ).to.emit(gelatoCore, "LogExecClaimMinted");
 
       // By default connect to
@@ -1292,6 +1307,7 @@ describe("GelatoCore.Execute", function () {
         inst: actionWithdrawBatchExchange.address,
         data: actionData,
         operation: "delegatecall",
+        value: 0,
         termsOkCheck: true,
       });
 
@@ -1321,7 +1337,7 @@ describe("GelatoCore.Execute", function () {
       // LogExecClaimMinted(executor, execClaim.id, hashedExecClaim, execClaim);
 
       await expect(
-        userProxy.callAction(gelatoCore.address, mintPayload)
+        userProxy.callAction(gelatoCore.address, mintPayload, 0)
       ).to.emit(gelatoCore, "LogExecClaimMinted");
 
       expect(await gelatoCore.canExec(execClaim, GELATO_GAS_PRICE)).to.be.equal(
@@ -1401,6 +1417,7 @@ describe("GelatoCore.Execute", function () {
         inst: actionWithdrawBatchExchange.address,
         data: actionData,
         operation: "delegatecall",
+        value: 0,
         termsOkCheck: true,
       });
 
@@ -1430,7 +1447,7 @@ describe("GelatoCore.Execute", function () {
       // LogExecClaimMinted(executor, execClaim.id, hashedExecClaim, execClaim);
 
       await expect(
-        userProxy.callAction(gelatoCore.address, mintPayload)
+        userProxy.callAction(gelatoCore.address, mintPayload, 0)
       ).to.emit(gelatoCore, "LogExecClaimMinted");
 
       expect(await gelatoCore.canExec(execClaim, GELATO_GAS_PRICE)).to.be.equal(
@@ -1474,14 +1491,6 @@ describe("GelatoCore.Execute", function () {
       );
       await tx.wait();
 
-      // 4. Withdraw Funds from BatchExchange with withdraw action
-
-      // const abiCoder = ethers.utils.defaultAbiCoder;
-      // const withdrawPayload = abiCoder.encode(
-      //   ["address", "address", "address", "address"],
-      //   [sellerAddress, userProxyAddress, sellToken.address, buyToken.address]
-      // );
-
       const actionData = await run("abi-encode-withselector", {
         contractname: "ActionWithdrawBatchExchange",
         functionname: "action",
@@ -1493,16 +1502,10 @@ describe("GelatoCore.Execute", function () {
         ],
       });
 
-      const userProxyDelegatecallData = await run("abi-encode-withselector", {
-        contractname: "GelatoUserProxy",
-        functionname: "delegatecallAction",
-        inputs: [actionWithdrawBatchExchange.address, actionData],
-      });
-
       // Mint ExexClaim
       const gelatoProvider = new GelatoProvider({
         addr: userProxyAddress,
-        module: constants.AddressZero,
+        module: providerModuleGelatoUserProxy.address,
       });
 
       const condition = new Condition({
@@ -1511,10 +1514,11 @@ describe("GelatoCore.Execute", function () {
       });
 
       const action = new Action({
-        inst: constants.AddressZero,
-        data: userProxyDelegatecallData,
+        inst: actionWithdrawBatchExchange.address,
+        data: actionData,
         operation: "delegatecall",
-        termsOkCheck: false,
+        value: 0,
+        termsOkCheck: true,
       });
 
       const task = new Task({
@@ -1534,23 +1538,66 @@ describe("GelatoCore.Execute", function () {
 
       //const isProvided = await gelatoCore.isCAMProvided(execClaim);
 
+      const provideFundsPayload = await run("abi-encode-withselector", {
+        contractname: "GelatoCore",
+        functionname: "provideFunds",
+        inputs: [userProxyAddress],
+      });
+
+      // Assign Executor
+      const providerAssignsExecutorPayload = await run(
+        "abi-encode-withselector",
+        {
+          contractname: "GelatoCore",
+          functionname: "providerAssignsExecutor",
+          inputs: [executorAddress],
+        }
+      );
+
+      // Mint Claim
       const mintPayload = await run("abi-encode-withselector", {
         contractname: "GelatoCore",
-        functionname: "mintSelfProvidedExecClaim",
-        inputs: [task, executorAddress],
+        functionname: "mintExecClaim",
+        inputs: [task],
       });
+
+      // addProviderModules
+      const addProviderModulePayload = await run("abi-encode-withselector", {
+        contractname: "GelatoCore",
+        functionname: "addProviderModules",
+        inputs: [[providerModuleGelatoUserProxy.address]],
+      });
+
+      const selfProviderSetupData = [
+        {
+          inst: gelatoCore.address,
+          data: provideFundsPayload,
+          value: ethers.utils.parseUnits("1", "ether"),
+        },
+        {
+          inst: gelatoCore.address,
+          data: providerAssignsExecutorPayload,
+          value: ethers.constants.Zero,
+        },
+        {
+          inst: gelatoCore.address,
+          data: mintPayload,
+          value: ethers.constants.Zero,
+        },
+        {
+          inst: gelatoCore.address,
+          data: addProviderModulePayload,
+          value: ethers.constants.Zero,
+        },
+      ];
 
       // LogExecClaimMinted(executor, execClaim.id, hashedExecClaim, execClaim);
 
       await expect(
-        userProxy.callAction(gelatoCore.address, mintPayload, {
+        userProxy.multiCallActions(selfProviderSetupData, {
           value: ethers.utils.parseUnits("1", "ether"),
         })
       ).to.emit(gelatoCore, "LogExecClaimMinted");
-
-      expect(await gelatoCore.canExec(execClaim, GELATO_GAS_PRICE)).to.be.equal(
-        "Ok"
-      );
 
       // Make ExecClaim executable
       await mockBatchExchange.setValidWithdrawRequest(userProxyAddress);
