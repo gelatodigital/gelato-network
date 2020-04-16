@@ -50,14 +50,13 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             );
         }
 
-        // PROVIDER CHECKS (not for self-Providers)
-        if (msg.sender != _task.provider.addr) {
-            string memory isProvided = isExecClaimProvided(execClaim);
-            require(
-                isProvided.startsWithOk(),
-                string(abi.encodePacked("GelatoCore.mintExecClaim.isProvided:", isProvided))
-            );
-        }
+        // Check Provider details
+        string memory isProvided;
+        msg.sender != _task.provider.addr ? isProvided = isExecClaimProvided(execClaim) : isProvided = providerModuleChecks(execClaim);
+        require(
+            isProvided.startsWithOk(),
+            string(abi.encodePacked("GelatoCore.mintExecClaim.isProvided:", isProvided))
+        );
 
         // Mint new execClaim
         currentExecClaimId++;

@@ -643,7 +643,7 @@ describe("Gelato Core - Minting ", function () {
 
       const gelatoProvider = new GelatoProvider({
         addr: providerProxyAddress,
-        module: ethers.constants.AddressZero,
+        module: providerModuleGelatoUserProxy.address,
       });
 
       const condition = new Condition({
@@ -698,6 +698,13 @@ describe("Gelato Core - Minting ", function () {
         inputs: [task],
       });
 
+      // addProviderModules
+      const addProviderModulePayload = await run("abi-encode-withselector", {
+        contractname: "GelatoCore",
+        functionname: "addProviderModules",
+        inputs: [[providerModuleGelatoUserProxy.address]],
+      });
+
       const selfProviderSetupData = [
         {
           inst: gelatoCore.address,
@@ -707,6 +714,11 @@ describe("Gelato Core - Minting ", function () {
         {
           inst: gelatoCore.address,
           data: providerAssignsExecutorPayload,
+          value: ethers.constants.Zero,
+        },
+        {
+          inst: gelatoCore.address,
+          data: addProviderModulePayload,
           value: ethers.constants.Zero,
         },
         {
@@ -768,7 +780,7 @@ describe("Gelato Core - Minting ", function () {
 
       const gelatoProvider = new GelatoProvider({
         addr: providerProxyAddress,
-        module: ethers.constants.AddressZero,
+        module: providerModuleGelatoUserProxy.address,
       });
 
       const condition = new Condition({
@@ -816,10 +828,22 @@ describe("Gelato Core - Minting ", function () {
         inputs: [task],
       });
 
+      // addProviderModules
+      const addProviderModulePayload = await run("abi-encode-withselector", {
+        contractname: "GelatoCore",
+        functionname: "addProviderModules",
+        inputs: [[providerModuleGelatoUserProxy.address]],
+      });
+
       const selfProviderSetupData = [
         {
           inst: gelatoCore.address,
           data: providerAssignsExecutorPayload,
+          value: ethers.constants.Zero,
+        },
+        {
+          inst: gelatoCore.address,
+          data: addProviderModulePayload,
           value: ethers.constants.Zero,
         },
         {
@@ -929,6 +953,13 @@ describe("Gelato Core - Minting ", function () {
         inputs: [task],
       });
 
+      // addProviderModules
+      const addProviderModulePayload = await run("abi-encode-withselector", {
+        contractname: "GelatoCore",
+        functionname: "addProviderModules",
+        inputs: [[providerModuleGelatoUserProxy.address]],
+      });
+
       const selfProviderSetupData = [
         {
           inst: gelatoCore.address,
@@ -938,6 +969,11 @@ describe("Gelato Core - Minting ", function () {
         {
           inst: gelatoCore.address,
           data: providerAssignsExecutorPayload,
+          value: ethers.constants.Zero,
+        },
+        {
+          inst: gelatoCore.address,
+          data: addProviderModulePayload,
           value: ethers.constants.Zero,
         },
         {
