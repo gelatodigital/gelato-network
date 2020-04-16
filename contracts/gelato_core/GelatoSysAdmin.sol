@@ -22,6 +22,7 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
     uint256 public override execClaimRent = 1 finney;
     uint256 public override executorSuccessShare = 50;  // 50% of successful execution cost
     uint256 public override sysAdminSuccessShare = 20;  // 20% of successful execution cost
+    uint256 public override totalSuccessShare = 70;  // 20% of successful execution cost
     uint256 public override sysAdminFunds;
 
     // == The main functions of the Sys Admin (DAO) ==

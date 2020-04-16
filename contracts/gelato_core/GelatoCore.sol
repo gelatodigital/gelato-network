@@ -257,7 +257,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         // Execution via UserProxy
         bytes memory revertMsg;
         if (execPayload.length >= 4) (success, revertMsg) = _ec.userProxy.call(execPayload);
-        else error = "GelatoCore._exec.execPayload: invalid";
+        else if (bytes(error).length == 0) error = "GelatoCore._exec.execPayload: invalid";
 
         // FAILURE
         if (!success) {
