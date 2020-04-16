@@ -25,7 +25,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     // Executors can charge Providers execClaimRent
     mapping(uint256 => uint256) public override lastExecClaimRentPaymentDate;
 
-
     // ================  MINTING ==============================================
     // Only pass _executor for self-providing users, else address(0)
     function mintExecClaim(Task memory _task) public override {
@@ -74,28 +73,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         lastExecClaimRentPaymentDate[execClaim.id] = now;
 
         emit LogExecClaimMinted(executor, execClaim.id, hashedExecClaim, execClaim);
-    }
-
-    function mintSelfProvidedExecClaim(Task memory _task, address _executor)
-        public
-        payable
-        override
-    {
-        // CHECK: UserProxy (msg.sender) is self-Provider
-        require(
-            msg.sender == _task.provider.addr,
-            "GelatoCore.mintSelfProvidedExecClaim: sender not provider"
-        );
-
-        // Optional User prepayment
-        if (msg.value > 0) provideFunds(msg.sender);
-
-        // Executor Handling
-        if (_executor != address(0) && executorByProvider[msg.sender] != _executor)
-            providerAssignsExecutor(_executor);  // assign new executor
-
-        // Minting
-        mintExecClaim(_task);
     }
 
     // ================  CAN EXECUTE EXECUTOR API ============================
@@ -148,7 +125,10 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             }
         }
 
-        return "Ok";
+        // Executor Validation
+        if (msg.sender == address(this)) return "Ok";
+        else if (msg.sender == executorByProvider[_ec.task.provider.addr]) return "Ok";
+        else return "InvalidExecutor";
     }
 
     // ================  EXECUTE EXECUTOR API ============================
@@ -157,6 +137,12 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
     // Execution Entry Point
     function exec(ExecClaim memory _ec) public override {
+        // Only the Executor the Provider assigned can exec
+        require(
+            msg.sender == executorByProvider[_ec.task.provider.addr],
+            "GelatoCore.exec: InvalidExecutor"
+        );
+
         // Store startGas for gas-consumption based cost and payout calcs
         uint256 startGas = gasleft();
 
@@ -196,12 +182,10 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
                 _gelatoGasPrice
             );
             emit LogExecSuccess(msg.sender, _ec.id, executorSuccessFee, sysAdminSuccessFee);
-            return;
 
         } else if (executionResult == ExecutionResult.CanExecFailed) {
             // END-2: CanExecFailed => No ExecClaim Deletion & No Refund
             emit LogCanExecFailed(msg.sender, _ec.id, reason);
-            return;
 
         } else if (executionResult == ExecutionResult.ExecFailed) {
             // END-3.1: ExecFailed NO gelatoMaxGas => No ExecClaim Deletion & No Refund
@@ -268,34 +252,22 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         returns(bool success, string memory error)
     {
         // INTERACTIONS
-        bytes memory revertMsg;
-
-        // Provided Users vs. Self-Providing Users
-        if (_ec.userProxy != _ec.task.provider.addr) {
-            // Provided Users: execPayload from ProviderModule
-            bytes memory execPayload;
-            try IGelatoProviderModule(_ec.task.provider.module).execPayload(
-                _ec.task.actions
-            )
-                returns(bytes memory _execPayload)
-            {
-                execPayload = _execPayload;
-            } catch Error(string memory _error) {
-                error = string(abi.encodePacked("GelatoCore._exec.execPayload:", _error));
-            } catch {
-                error = "GelatoCore._exec.execPayload";
-            }
-
-            (success, revertMsg) = _ec.userProxy.call(execPayload);
-        } else {
-            // Self-Providing Users: actionData == execPayload assumption
-            // Execution via UserProxy
-            if (_ec.task.actions.length != 1)
-                error = "GelatoCore._exec: _actions.length must be 1";
-            else if (_ec.task.actions[0].data.length >= 4 )
-                (success, revertMsg) = _ec.userProxy.call(_ec.task.actions[0].data);
-            else error = "GelatoCore._exec: action.data invalid";
+        // execPayload from ProviderModule
+        bytes memory execPayload;
+        try IGelatoProviderModule(_ec.task.provider.module).execPayload(_ec.task.actions)
+            returns(bytes memory _execPayload)
+        {
+            execPayload = _execPayload;
+        } catch Error(string memory _error) {
+            error = string(abi.encodePacked("GelatoCore._exec.execPayload:", _error));
+        } catch {
+            error = "GelatoCore._exec.execPayload";
         }
+
+        // Execution via UserProxy
+        bytes memory revertMsg;
+        if (execPayload.length >= 4) (success, revertMsg) = _ec.userProxy.call(execPayload);
+        else error = "GelatoCore._exec.execPayload: invalid";
 
         // FAILURE
         if (!success) {

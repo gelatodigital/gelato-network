@@ -1,14 +1,11 @@
-import Task from "./Task";
-
 class ExecClaim {
-  constructor({ id, userProxy, taskObj }) {
-    if (!id) throw new Error("ExecClaim: no id");
-    if (!userProxy) throw new Error("ExecClaim: no userProxy");
-    if (!taskObj) throw new Error("ExecClaim: no Task object");
+  constructor({ id, userProxy, task }) {
+    if (id === undefined) throw new Error("ExecClaim: no id");
+    if (userProxy === undefined) throw new Error("ExecClaim: no userProxy");
+    if (task === undefined) throw new Error("ExecClaim: no Task object");
 
     this.id = id;
     this.userProxy = userProxy;
-    const task = new Task(taskObj);
     this.task = task;
   }
 }

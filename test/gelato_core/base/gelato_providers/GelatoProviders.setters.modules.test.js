@@ -1,45 +1,138 @@
 // running `npx buidler test` automatically makes use of buidler-waffle plugin
 // => only dependency we need is "chai"
-const { expect } = require("chai");
+import { expect } from "chai";
+
+import initialState from "./GelatoProviders.initialState";
 
 describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function () {
   // We define the ContractFactory and Address variables here and assign them in
   // a beforeEach hook.
-  let GelatoCore;
-  let ProviderModule;
-  let OtherProviderModule;
+  let GelatoCoreFactory;
+  let GelatoUserProxyFactoryFactory;
+  let ProviderModuleFactory;
+  let OtherProviderModuleFactory;
+  let FakeProviderModuleFactory;
 
   let gelatoCore;
+  let gelatoUserProxyFactory;
   let providerModule;
   let otherProviderModule;
+  let fakeProviderModule;
 
   let provider;
+  let user;
   let providerAddress;
+
+  let gelatoUserProxyAddress;
+  let extcodehashGelatoUserProxy;
+
+  let execClaim;
+  let otherExecClaim;
+  let fakeExecClaim;
 
   beforeEach(async function () {
     // Get the ContractFactory, contract instance, and Signers here.
-    GelatoCore = await ethers.getContractFactory("GelatoCore");
-    ProviderModule = await ethers.getContractFactory(
+    GelatoCoreFactory = await ethers.getContractFactory("GelatoCore");
+    GelatoUserProxyFactoryFactory = await ethers.getContractFactory(
+      "GelatoUserProxyFactory"
+    );
+    ProviderModuleFactory = await ethers.getContractFactory(
       "ProviderModuleGelatoUserProxy"
     );
-    OtherProviderModule = await ethers.getContractFactory(
+    OtherProviderModuleFactory = await ethers.getContractFactory(
       "ProviderModuleGnosisSafeProxy"
     );
+    FakeProviderModuleFactory = await ethers.getContractFactory(
+      "MockConditionDummy"
+    );
 
-    gelatoCore = await GelatoCore.deploy();
-    providerModule = await ProviderModule.deploy([constants.HashZero]); // hashes
-    otherProviderModule = await OtherProviderModule.deploy(
+    gelatoCore = await GelatoCoreFactory.deploy();
+    await gelatoCore.deployed();
+
+    gelatoUserProxyFactory = await GelatoUserProxyFactoryFactory.deploy(
+      gelatoCore.address
+    );
+    await gelatoUserProxyFactory.deployed();
+
+    [provider, user] = await ethers.getSigners();
+    providerAddress = await provider.getAddress();
+
+    await gelatoUserProxyFactory.connect(user).create();
+    gelatoUserProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
+      await user.getAddress()
+    );
+    extcodehashGelatoUserProxy = await gelatoUserProxyFactory.proxyExtcodehash();
+
+    providerModule = await ProviderModuleFactory.deploy([
+      extcodehashGelatoUserProxy,
+    ]);
+    otherProviderModule = await OtherProviderModuleFactory.deploy(
       [constants.HashZero], // hashes
       [constants.AddressZero], // masterCopies
       gelatoCore.address
     );
+    fakeProviderModule = await FakeProviderModuleFactory.deploy();
 
-    await gelatoCore.deployed();
     await providerModule.deployed();
     await otherProviderModule.deployed();
+    await fakeProviderModule.deployed();
 
-    [provider] = await ethers.getSigners();
-    providerAddress = await provider.getAddress();
+    const gelatoProvider = new GelatoProvider({
+      addr: providerAddress,
+      module: providerModule.address,
+    });
+    const otherGelatoProvider = new GelatoProvider({
+      addr: providerAddress,
+      module: otherProviderModule.address,
+    });
+    const fakeGelatoProvider = new GelatoProvider({
+      addr: providerAddress,
+      module: fakeProviderModule.address,
+    });
+    const condition = new Condition({
+      inst: constants.AddressZero,
+      data: constants.HashZero,
+    });
+    const action = new Action({
+      inst: constants.AddressZero,
+      data: constants.HashZero,
+      operation: "call",
+      termsOkCheck: true,
+    });
+    const task = new Task({
+      provider: gelatoProvider,
+      condition,
+      actions: [action],
+      expiryDate: constants.Zero,
+    });
+    const otherTask = new Task({
+      provider: otherGelatoProvider,
+      condition,
+      actions: [action],
+      expiryDate: constants.Zero,
+    });
+    const fakeTask = new Task({
+      provider: fakeGelatoProvider,
+      condition,
+      actions: [action],
+      expiryDate: constants.Zero,
+    });
+
+    execClaim = new ExecClaim({
+      id: 0,
+      userProxy: gelatoUserProxyAddress,
+      task,
+    });
+    otherExecClaim = new ExecClaim({
+      id: 0,
+      userProxy: gelatoUserProxyAddress,
+      task: otherTask,
+    });
+    fakeExecClaim = new ExecClaim({
+      id: 0,
+      userProxy: gelatoUserProxyAddress,
+      task: fakeTask,
+    });
   });
 
   // We test different functionality of the contract as normal Mocha tests.
@@ -47,6 +140,29 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
   // addProviderModules
   describe("GelatoCore.GelatoProviders.addProviderModules", function () {
     it("Should allow anyone to add a single provider module", async function () {
+      // isModuleProvided
+      expect(
+        await gelatoCore.isModuleProvided(
+          providerAddress,
+          providerModule.address
+        )
+      ).to.be.false;
+
+      // numOfProviderModules
+      expect(
+        await gelatoCore.numOfProviderModules(providerAddress)
+      ).to.be.equal(initialState.numOfProviderModules);
+
+      // providerModules
+      expect(
+        (await gelatoCore.providerModules(providerAddress)).length
+      ).to.be.equal(initialState.providerModulesLength);
+
+      // providerModuleChecks
+      expect(await gelatoCore.providerModuleChecks(execClaim)).to.be.equal(
+        "InvalidProviderModule"
+      );
+
       // addProviderModules()
       await expect(gelatoCore.addProviderModules([providerModule.address]))
         .to.emit(gelatoCore, "LogAddProviderModule")
@@ -59,118 +175,235 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
           providerModule.address
         )
       ).to.be.true;
+
+      // numOfProviderModules
+      expect(
+        await gelatoCore.numOfProviderModules(providerAddress)
+      ).to.be.equal(initialState.numOfProviderModules + 1);
+
+      // providerModules
+      expect(
+        (await gelatoCore.providerModules(providerAddress)).length
+      ).to.be.equal(1);
+      expect(
+        (await gelatoCore.providerModules(providerAddress))[0]
+      ).to.be.equal(providerModule.address);
+
+      // providerModuleChecks
+      expect(await gelatoCore.providerModuleChecks(execClaim)).to.be.equal(
+        "Ok"
+      );
     });
 
-    // it("Should allow anyone to addProviderModules", async function () {
-    //   await expect(
-    //     gelatoCore.addProviderModules([providerModule.address, otherConditionAddress])
-    //   )
-    //     .to.emit(gelatoCore, "LogAddProviderModule")
-    //     .withArgs(providerAddress, providerModule.address)
-    //     .and.to.emit(gelatoCore, "LogAddProviderModule")
-    //     .withArgs(providerAddress, otherConditionAddress);
-    //   expect(
-    //     await gelatoCore.isModuleProvided(providerAddress, providerModule.address)
-    //   ).to.be.true;
-    //   expect(
-    //     await gelatoCore.isModuleProvided(
-    //       providerAddress,
-    //       otherConditionAddress
-    //     )
-    //   ).to.be.true;
-    // });
+    it("Should allow anyone to addProviderModules", async function () {
+      // providerModuleChecks
+      expect(await gelatoCore.providerModuleChecks(execClaim)).to.be.equal(
+        "InvalidProviderModule"
+      );
+      expect(await gelatoCore.providerModuleChecks(otherExecClaim)).to.be.equal(
+        "InvalidProviderModule"
+      );
 
-    // it("Should NOT allow to provide same conditions again", async function () {
-    //   await gelatoCore.addProviderModules([providerModule.address]);
+      // addProviderModules()
+      await expect(
+        gelatoCore.addProviderModules([
+          providerModule.address,
+          otherProviderModule.address,
+        ])
+      )
+        .to.emit(gelatoCore, "LogAddProviderModule")
+        .withArgs(providerAddress, providerModule.address)
+        .and.to.emit(gelatoCore, "LogAddProviderModule")
+        .withArgs(providerAddress, otherProviderModule.address);
 
-    //   await expect(
-    //     gelatoCore.addProviderModules([providerModule.address])
-    //   ).to.be.revertedWith("GelatProviders.addProviderModules: redundant");
-
-    //   await expect(
-    //     gelatoCore.addProviderModules([otherConditionAddress, providerModule.address])
-    //   ).to.be.revertedWith("GelatProviders.addProviderModules: redundant");
-    // });
-  });
-
-  /*   // unprovideConditions
-  describe("GelatoCore.GelatoProviders.unprovideConditions", function () {
-    it("Should allow Providers to unprovide a single ProviderModule", async function () {
-      // provideCondition
-      await gelatoCore.addProviderModules([
-        providerModule.address,
-        otherConditionAddress,
-      ]);
-
-      // unprovideConditions
-      await expect(gelatoCore.unprovideConditions([providerModule.address]))
-        .to.emit(gelatoCore, "LogUnprovideCondition")
-        .withArgs(providerAddress, providerModule.address);
-      expect(
-        await gelatoCore.isModuleProvided(providerAddress, providerModule.address)
-      ).to.be.false;
+      // providerModule
+      // isModuleProvided
       expect(
         await gelatoCore.isModuleProvided(
           providerAddress,
-          otherConditionAddress
+          providerModule.address
         )
       ).to.be.true;
+
+      // otherProviderModule
+      // isModuleProvided
+      expect(
+        await gelatoCore.isModuleProvided(
+          providerAddress,
+          otherProviderModule.address
+        )
+      ).to.be.true;
+
+      // numOfProviderModules
+      expect(
+        await gelatoCore.numOfProviderModules(providerAddress)
+      ).to.be.equal(initialState.numOfProviderModules + 2);
+
+      // providerModules
+      expect(
+        (await gelatoCore.providerModules(providerAddress)).length
+      ).to.be.equal(2);
+      expect(
+        (await gelatoCore.providerModules(providerAddress))[0]
+      ).to.be.equal(providerModule.address);
+      expect(
+        (await gelatoCore.providerModules(providerAddress))[1]
+      ).to.be.equal(otherProviderModule.address);
+
+      // providerModuleChecks
+      expect(await gelatoCore.providerModuleChecks(execClaim)).to.be.equal(
+        "Ok"
+      );
+      expect(
+        await gelatoCore.providerModuleChecks(otherExecClaim)
+      ).to.not.be.equal("Ok");
     });
 
-    it("Should allow Providers to unprovideConditions", async function () {
+    it("Should catch non-conform providerModuleChecks()", async function () {
+      // addProviderModules()
+      await expect(gelatoCore.addProviderModules([fakeProviderModule.address]))
+        .to.emit(gelatoCore, "LogAddProviderModule")
+        .withArgs(providerAddress, fakeProviderModule.address);
+
+      expect(await gelatoCore.providerModuleChecks(fakeExecClaim)).to.be.equal(
+        "GelatoProviders.providerModuleChecks"
+      );
+    });
+
+    it("Should NOT allow to add same modules again", async function () {
+      // addProviderModules()
+      await gelatoCore.addProviderModules([providerModule.address]);
+
+      // addProviderModules revert
+      await expect(
+        gelatoCore.addProviderModules([providerModule.address])
+      ).to.be.revertedWith("GelatoProviders.addProviderModules: redundant");
+
+      // addProviderModules revert
+      await expect(
+        gelatoCore.addProviderModules([
+          otherProviderModule.address,
+          providerModule.address,
+        ])
+      ).to.be.revertedWith("GelatoProviders.addProviderModules: redundant");
+    });
+  });
+
+  // removeProviderModules
+  describe("GelatoCore.GelatoProviders.removeProviderModules", function () {
+    it("Should allow Providers to remove a single ProviderModule", async function () {
       // addProviderModules
       await gelatoCore.addProviderModules([
         providerModule.address,
-        otherConditionAddress,
+        otherProviderModule.address,
       ]);
 
-      // unprovideConditions
-      await expect(
-        gelatoCore.unprovideConditions([
-          providerModule.address,
-          otherConditionAddress,
-        ])
-      )
-        .to.emit(gelatoCore, "LogUnprovideCondition")
-        .withArgs(providerAddress, providerModule.address)
-        .and.to.emit(gelatoCore, "LogUnprovideCondition")
-        .withArgs(providerAddress, otherConditionAddress);
-      expect(
-        await gelatoCore.isModuleProvided(providerAddress, providerModule.address)
-      ).to.be.false;
+      // removeProviderModules
+      await expect(gelatoCore.removeProviderModules([providerModule.address]))
+        .to.emit(gelatoCore, "LogRemoveProviderModule")
+        .withArgs(providerAddress, providerModule.address);
+
+      // providerModule: isModuleProvided
       expect(
         await gelatoCore.isModuleProvided(
           providerAddress,
-          otherConditionAddress
+          providerModule.address
         )
       ).to.be.false;
+
+      // otherProviderModule: isModuleProvided
+      expect(
+        await gelatoCore.isModuleProvided(
+          providerAddress,
+          otherProviderModule.address
+        )
+      ).to.be.true;
+
+      // numOfProviderModules
+      expect(
+        await gelatoCore.numOfProviderModules(providerAddress)
+      ).to.be.equal(initialState.numOfProviderModules + 1);
+
+      // providerModules
+      expect(
+        (await gelatoCore.providerModules(providerAddress)).length
+      ).to.be.equal(1);
+      expect(
+        (await gelatoCore.providerModules(providerAddress))[0]
+      ).to.be.equal(otherProviderModule.address);
     });
 
-    it("Should NOT allow Providers to unprovide not-provided Conditions", async function () {
+    it("Should allow Providers to removeProviderModules", async function () {
+      // addProviderModules
+      await gelatoCore.addProviderModules([
+        providerModule.address,
+        otherProviderModule.address,
+      ]);
+
+      // removeProviderModules
       await expect(
-        gelatoCore.unprovideConditions([providerModule.address])
-      ).to.be.revertedWith("GelatProviders.unprovideConditions: redundant");
+        gelatoCore.removeProviderModules([
+          providerModule.address,
+          otherProviderModule.address,
+        ])
+      )
+        .to.emit(gelatoCore, "LogRemoveProviderModule")
+        .withArgs(providerAddress, providerModule.address)
+        .and.to.emit(gelatoCore, "LogRemoveProviderModule")
+        .withArgs(providerAddress, otherProviderModule.address);
+
+      // providerModule: isModuleProvided
+      expect(
+        await gelatoCore.isModuleProvided(
+          providerAddress,
+          providerModule.address
+        )
+      ).to.be.false;
+
+      // otherProviderModule: isModuleProvided
+      expect(
+        await gelatoCore.isModuleProvided(
+          providerAddress,
+          otherProviderModule.address
+        )
+      ).to.be.false;
+
+      // numOfProviderModules
+      expect(
+        await gelatoCore.numOfProviderModules(providerAddress)
+      ).to.be.equal(initialState.numOfProviderModules);
+
+      // providerModules
+      expect(
+        (await gelatoCore.providerModules(providerAddress)).length
+      ).to.be.equal(0);
+    });
+
+    it("Should NOT allow Providers to remove not-provided modules", async function () {
+      await expect(
+        gelatoCore.removeProviderModules([providerModule.address])
+      ).to.be.revertedWith("GelatoProviders.removeProviderModules: redundant");
 
       await expect(
-        gelatoCore.unprovideConditions([
+        gelatoCore.removeProviderModules([
           providerModule.address,
-          otherConditionAddress,
+          otherProviderModule.address,
         ])
-      ).to.be.revertedWith("GelatProviders.unprovideConditions: redundant");
+      ).to.be.revertedWith("GelatoProviders.removeProviderModules: redundant");
 
       // addProviderModules
       await gelatoCore.addProviderModules([providerModule.address]);
 
       await expect(
-        gelatoCore.unprovideConditions([otherConditionAddress])
-      ).to.be.revertedWith("GelatProviders.unprovideConditions: redundant");
+        gelatoCore.removeProviderModules([otherProviderModule.address])
+      ).to.be.revertedWith("GelatoProviders.removeProviderModules: redundant");
 
       await expect(
-        gelatoCore.unprovideConditions([
+        gelatoCore.removeProviderModules([
           providerModule.address,
-          otherConditionAddress,
+          otherProviderModule.address,
         ])
-      ).to.be.revertedWith("GelatProviders.unprovideConditions: redundant");
+      ).to.be.revertedWith("GelatoProviders.removeProviderModules: redundant");
     });
-  }); */
+  });
 });

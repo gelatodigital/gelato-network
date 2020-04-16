@@ -43,7 +43,7 @@ describe("GelatoCore - GelatoProviders - Setters: EXECUTOR", function () {
     it("Should allow minStaked Executors to reassign to another minStaked Executor", async function () {
       // stakeExecutor() (needed for executorAssignsExecutor())
       const minExecutorStake = await gelatoCore.minExecutorStake();
-      await gelatoCore.stakeExecutor({ value: minExecutorStake });
+      gelatoCore.stakeExecutor({ value: minExecutorStake });
 
       // stakeExecutor(): otherExecutor
       await gelatoCore

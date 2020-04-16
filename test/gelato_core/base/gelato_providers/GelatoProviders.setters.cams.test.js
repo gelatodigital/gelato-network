@@ -16,10 +16,10 @@ describe("GelatoCore - GelatoProviders - Setters: CAMS", function () {
   let OtherActionFactory;
 
   let gelatoCore;
+
   let condition;
   let action;
   let otherAction;
-
   let actionStruct;
   let otherActionStruct;
 
@@ -102,12 +102,12 @@ describe("GelatoCore - GelatoProviders - Setters: CAMS", function () {
     execClaim = new ExecClaim({
       id: constants.Zero,
       userProxy: constants.AddressZero,
-      taskObj: task,
+      task: task,
     });
     otherExecClaim = new ExecClaim({
       id: 1,
       userProxy: constants.AddressZero,
-      taskObj: otherTask,
+      task: otherTask,
     });
 
     // Condition Action Mix
@@ -135,12 +135,9 @@ describe("GelatoCore - GelatoProviders - Setters: CAMS", function () {
       // provideCAMs
       await expect(gelatoCore.provideCAMs([cam]))
         .to.emit(gelatoCore, "LogProvideCAM")
-        .withArgs(
-          providerAddress,
-          camHash,
-          initialState.camGPC,
-          cam.gasPriceCeil
-        );
+        .withArgs(providerAddress, camHash)
+        .and.to.emit(gelatoCore, "LogSetCAMGPC")
+        .withArgs(providerAddress, camHash, initialState.camGPC, gasPriceCeil);
 
       // cam
       // camGPC
@@ -187,18 +184,17 @@ describe("GelatoCore - GelatoProviders - Setters: CAMS", function () {
       // provideCAMs
       await expect(gelatoCore.provideCAMs([cam, otherCAM]))
         .to.emit(gelatoCore, "LogProvideCAM")
-        .withArgs(
-          providerAddress,
-          camHash,
-          initialState.camGPC,
-          cam.gasPriceCeil
-        )
+        .withArgs(providerAddress, camHash)
+        .and.to.emit(gelatoCore, "LogSetCAMGPC")
+        .withArgs(providerAddress, camHash, initialState.camGPC, gasPriceCeil)
         .and.to.emit(gelatoCore, "LogProvideCAM")
+        .withArgs(providerAddress, otherCAMHash)
+        .and.to.emit(gelatoCore, "LogSetCAMGPC")
         .withArgs(
           providerAddress,
           otherCAMHash,
           initialState.camGPC,
-          otherCAM.gasPriceCeil
+          gasPriceCeil
         );
 
       // cam
@@ -243,12 +239,66 @@ describe("GelatoCore - GelatoProviders - Setters: CAMS", function () {
       await gelatoCore.provideCAMs([cam]);
 
       await expect(gelatoCore.provideCAMs([cam])).to.be.revertedWith(
-        "GelatoProviders.provideCAMs: redundant"
+        "GelatoProviders.setCAMGPC: redundant"
       );
 
       await expect(gelatoCore.provideCAMs([otherCAM, cam])).to.be.revertedWith(
-        "GelatoProviders.provideCAMs: redundant"
+        "GelatoProviders.setCAMGPC: redundant"
       );
+    });
+
+    it("Should allow anyone to setCAMGPC", async function () {
+      // camHash
+      const camHash = await gelatoCore.camHash(cam.condition, cam.actions);
+
+      // setCAMGPC
+      await expect(gelatoCore.setCAMGPC(camHash, gasPriceCeil))
+        .to.emit(gelatoCore, "LogSetCAMGPC")
+        .withArgs(providerAddress, camHash, initialState.camGPC, gasPriceCeil);
+
+      // cam
+      // camGPC
+      expect(await gelatoCore.camGPC(providerAddress, camHash)).to.be.equal(
+        gasPriceCeil
+      );
+
+      // isCAMProvided
+      expect(
+        await gelatoCore.isCAMProvided(providerAddress, condition.address, [
+          actionStruct,
+        ])
+      ).to.be.equal("Ok");
+
+      // isExecClaimProvided
+      expect(await gelatoCore.isExecClaimProvided(execClaim)).not.to.be.equal(
+        "ConditionActionsMixNotProvided"
+      );
+
+      // otherCam
+      // isCAMProvided
+      expect(
+        await gelatoCore.isCAMProvided(providerAddress, condition.address, [
+          actionStruct,
+          otherActionStruct,
+        ])
+      ).to.be.equal("ConditionActionsMixNotProvided");
+
+      // isExecClaimProvided
+      expect(await gelatoCore.isExecClaimProvided(otherExecClaim)).to.be.equal(
+        "ConditionActionsMixNotProvided"
+      );
+    });
+
+    it("Should NOT allow to redundantly setCAMGPC", async function () {
+      // camHash
+      const camHash = await gelatoCore.camHash(cam.condition, cam.actions);
+
+      // setCAMGPC
+      await gelatoCore.setCAMGPC(camHash, gasPriceCeil);
+
+      await expect(
+        gelatoCore.setCAMGPC(camHash, gasPriceCeil)
+      ).to.be.revertedWith("GelatoProviders.setCAMGPC: redundant");
     });
   });
 
