@@ -16,7 +16,7 @@ const GELATO_GAS_PRICE = ethers.utils.parseUnits("8", "gwei");
 // 3. SellTokens got partially converted into buy tokens, insufficient buy tokens for withdrawal
 // 4. No sellTokens got converted into buy tokens, sufficient sell tokens for withdrawal
 // 5. No sellTokens got converted into buy tokens, insufficient sell tokens for withdrawal
-describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
+describe("Multisend with Gelato User Proxy Test", function () {
   // We define the ContractFactory and Signer variables here and assign them in
   // a beforeEach hook.
 
@@ -156,6 +156,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       data: constants.HashZero,
       operation: "delegatecall",
       termsOkCheck: true,
+      value: 0,
     });
 
     const actionWithdrawBatchExchangeGelato = new Action({
@@ -163,6 +164,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       data: constants.HashZero,
       operation: "delegatecall",
       termsOkCheck: true,
+      value: 0,
     });
 
     const newCam = new CAM({
@@ -242,7 +244,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
     await multisend.deployed();
   });
 
-  it("Test", async () => {
+  it("Multisend with Gelato User Proxy Test", async () => {
     const payload = await run("abi-encode-withselector", {
       contractname: "MockBatchExchange",
       functionname: "setValidWithdrawRequest",
