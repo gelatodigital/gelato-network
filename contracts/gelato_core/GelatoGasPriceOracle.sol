@@ -23,7 +23,7 @@ contract GelatoGasPriceOracle is IGelatoGasPriceOracle, Ownable {
     }
 
     modifier onlyGelatoCore {
-        require(msg.sender == gelatoCore, "Only gelatoCore can read oracle");
+        require(msg.sender == gelatoCore, "GelatoGasPriceOracle.onlyGelatoCore");
         _;
     }
 

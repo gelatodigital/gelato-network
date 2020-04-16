@@ -53,43 +53,37 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
     // Minimum Executor Stake Per Provider
     function setMinProviderFunds(uint256 _newMin) external override onlyOwner {
         emit LogSetMinProviderFunds(minProviderFunds, _newMin);
-        if (_newMin == 0) delete minProviderFunds;
-        else minProviderFunds = _newMin;
+        minProviderFunds = _newMin;
     }
 
     // Minimum Executor Stake Per Provider
     function setMinExecutorStake(uint256 _newMin) external override onlyOwner {
         emit LogSetMinExecutorStake(minExecutorStake, _newMin);
-        if (_newMin == 0) delete minExecutorStake;
-        else minExecutorStake = _newMin;
+        minExecutorStake = _newMin;
     }
 
     // execClaim lifespan
     function setExecClaimTenancy(uint256 _lifespan) external override onlyOwner {
         emit LogSetExecClaimTenancy(execClaimTenancy, _lifespan);
-        if (_lifespan == 0) delete execClaimTenancy;
-        else execClaimTenancy = _lifespan;
+        execClaimTenancy = _lifespan;
     }
 
     // execClaim rent per lifespan
     function setExecClaimRent(uint256 _rent) external override onlyOwner {
         emit LogSetExecClaimRent(execClaimRent, _rent);
-        if (_rent == 0) delete execClaimRent;
-        else execClaimRent = _rent;
+        execClaimRent = _rent;
     }
 
     // Executors' profit share on exec costs
     function setExecutorSuccessShare(uint256 _percentage) external override onlyOwner {
         emit LogSetExecutorSuccessShare(executorSuccessShare, _percentage);
-        if (_percentage == 0) delete executorSuccessShare;
-        else executorSuccessShare = _percentage;
+        executorSuccessShare = _percentage;
     }
 
     // Sys Admin (DAO) Business Model
     function setSysAdminSuccessShare(uint256 _percentage) external override onlyOwner {
         emit LogSetSysAdminSuccessShare(sysAdminSuccessShare, _percentage);
-        if (_percentage == 0) delete sysAdminSuccessShare;
-        else sysAdminSuccessShare = _percentage;
+        sysAdminSuccessShare = _percentage;
     }
 
     function withdrawSysAdminFunds(uint256 _amount)
