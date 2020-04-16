@@ -39,7 +39,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         address executor = executorByProvider[_task.provider.addr];
         require(
             isExecutorMinStaked(executor),
-            "GelatoCore.mintExecClaim: executorByProvider's stake is insufficient."
+            "GelatoCore.mintExecClaim: executorByProvider's stake is insufficient"
         );
 
         // User checks
@@ -50,21 +50,20 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             );
         }
 
-        // PROVIDER CHECKS (not for self-Providers)
-        if (msg.sender != _task.provider.addr) {
-            string memory isProvided = isExecClaimProvided(execClaim);
-            require(
-                isProvided.startsWithOk(),
-                string(abi.encodePacked("GelatoCore.mintExecClaim.isProvided:", isProvided))
-            );
-        }
+        // Check Provider details
+        string memory isProvided;
+        msg.sender != _task.provider.addr ? isProvided = isExecClaimProvided(execClaim) : isProvided = providerModuleChecks(execClaim);
+        require(
+            isProvided.startsWithOk(),
+            string(abi.encodePacked("GelatoCore.mintExecClaim.isProvided:", isProvided))
+        );
 
         // Mint new execClaim
         currentExecClaimId++;
         execClaim.id = currentExecClaimId;
 
         // ExecClaim Hashing
-        bytes32 hashedExecClaim = keccak256(abi.encode(execClaim));
+        bytes32 hashedExecClaim = hashExecClaim(execClaim);
 
         // ExecClaim Hash registration
         execClaimHash[execClaim.id] = hashedExecClaim;
@@ -89,10 +88,10 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         if (!isProviderMinFunded(_ec.task.provider.addr)) return "ProviderNotMinStaked";
 
-        bytes32 hashedExecClaim = keccak256(abi.encode(_ec));
+        bytes32 hashedExecClaim = hashExecClaim(_ec);
         if (execClaimHash[_ec.id] != hashedExecClaim) return "InvalidExecClaimHash";
 
-        if (_ec.task.expiryDate != 0 && _ec.task.expiryDate < now) return "Expired";
+        if (_ec.task.expiryDate != 0 && _ec.task.expiryDate < now) return "ExecClaimExpired";
 
         // CHECK Condition for user proxies
         if (_ec.task.condition.inst != IGelatoCondition(0)) {
@@ -137,11 +136,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
     // Execution Entry Point
     function exec(ExecClaim memory _ec) public override {
-        // Only the Executor the Provider assigned can exec
-        require(
-            msg.sender == executorByProvider[_ec.task.provider.addr],
-            "GelatoCore.exec: InvalidExecutor"
-        );
 
         // Store startGas for gas-consumption based cost and payout calcs
         uint256 startGas = gasleft();
@@ -154,6 +148,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // CHECKS
         require(tx.gasprice == _gelatoGasPrice, "GelatoCore.exec: tx.gasprice");
+
+        require(msg.sender == executorByProvider[_ec.task.provider.addr], "GelatoCore.exec: Invalid Executor");
 
         ExecutionResult executionResult;
         string memory reason;
@@ -329,7 +325,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         if (msg.sender != _ec.userProxy && msg.sender != _ec.task.provider.addr)
             require(_ec.task.expiryDate <= now, "GelatoCore.cancelExecClaim: sender");
         // Effects
-        bytes32 hashedExecClaim = keccak256(abi.encode(_ec));
+        bytes32 hashedExecClaim = hashExecClaim(_ec);
         require(
             hashedExecClaim == execClaimHash[_ec.id],
             "GelatoCore.cancelExecClaim: invalid execClaimHash"
@@ -371,7 +367,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             providerFunds[_ec.task.provider.addr] >= execClaimRent,
             "GelatoCore.collecExecClaimRent: insufficient providerFunds"
         );
-        bytes32 hashedExecClaim = keccak256(abi.encode(_ec));
+        bytes32 hashedExecClaim = hashExecClaim(_ec);
         require(
             hashedExecClaim == execClaimHash[_ec.id],
             "GelatoCore.collectExecClaimRent: invalid execClaimHash"
@@ -394,5 +390,9 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
     function batchCollectExecClaimRent(ExecClaim[] memory _execClaims) public override {
         for (uint i; i < _execClaims.length; i++) collectExecClaimRent(_execClaims[i]);
+    }
+
+    function hashExecClaim(ExecClaim memory _ec) pure public returns(bytes32) {
+        return keccak256(abi.encode(_ec));
     }
 }

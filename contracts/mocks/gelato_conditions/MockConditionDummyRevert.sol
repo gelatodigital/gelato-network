@@ -3,7 +3,7 @@ pragma experimental ABIEncoderV2;
 
 import { GelatoConditionsStandard } from "../../gelato_conditions/GelatoConditionsStandard.sol";
 
-contract MockConditionDummy is GelatoConditionsStandard {
+contract MockConditionDummyRevert is GelatoConditionsStandard {
     // STANDARD interface
 
     function ok(bytes calldata data) external view virtual override returns(string memory) {
@@ -12,6 +12,7 @@ contract MockConditionDummy is GelatoConditionsStandard {
     }
 
     function ok(bool returnOk) public pure virtual returns(string memory returnString) {
-       returnOk ? returnString = "Ok" : returnString = "NotOk";
+        if(returnOk) returnString = "Ok";
+        revert("Condition Reverted");
     }
 }
