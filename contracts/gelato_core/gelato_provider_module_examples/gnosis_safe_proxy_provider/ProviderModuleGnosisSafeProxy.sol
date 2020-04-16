@@ -59,20 +59,12 @@ contract ProviderModuleGnosisSafeProxy is
         returns(bytes memory)
     {
         if( _actions.length == 1) {
-            IGnosisSafe.Operation gsOperation;
-
-            if (_actions[0].operation == Operation.Call)
-                gsOperation = IGnosisSafe.Operation.DelegateCall;
-            else if (_actions[0].operation == Operation.Call)
-                gsOperation = IGnosisSafe.Operation.Call;
-            else revert("ProviderModuleGnosisSafeProxy.execPayload: invalid operation");
-
             return abi.encodeWithSelector(
                 IGnosisSafe.execTransactionFromModuleReturnData.selector,
                 _actions[0],  // to
                 _actions[0].value,  // value
                 _actions[0].data,
-                gsOperation
+                _actions[0].operation
             );
         } else if (_actions.length > 1) {
             // Action.Operation encoded into multiSendPayload and handled by MultiSend
