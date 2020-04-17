@@ -9,14 +9,12 @@ import {
     IGelatoUserProxy
 } from "../../../user_proxies/gelato_user_proxy/interfaces/IGelatoUserProxy.sol";
 
-contract MockProviderModuleGelatoUserProxy is
+contract MockProviderModuleGelatoUserProxyRevert is
     IGelatoProviderModule,
     IMockProviderModuleGelatoUserProxy,
     Ownable
 {
     mapping(bytes32 => bool) public override isProxyExtcodehashProvided;
-
-    constructor(bytes32[] memory hashes) public { provideProxyExtcodehashes(hashes); }
 
     // ================= GELATO PROVIDER MODULE STANDARD ================
     // @dev since we check extcodehash prior to execution, we forego the execution option
@@ -27,12 +25,6 @@ contract MockProviderModuleGelatoUserProxy is
         override
         returns(string memory)
     {
-        address userProxy = _ec.userProxy;
-        bytes32 codehash;
-        assembly { codehash := extcodehash(userProxy) }
-        if (!isProxyExtcodehashProvided[codehash])
-            return "ProviderModuleGelatoUserProxy.isProvided:InvalidExtcodehash";
-
         return "Ok";
     }
 
