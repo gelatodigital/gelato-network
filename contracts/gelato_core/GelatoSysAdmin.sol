@@ -115,8 +115,7 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
         returns(uint256)
     {
         uint256 estExecCost = _gas.mul(_gasPrice);
-        return SafeMath.div(
-            estExecCost.mul(executorSuccessShare),
+        return estExecCost + estExecCost.mul(executorSuccessShare).div(
             100,
             "GelatoSysAdmin.executorSuccessFee: div error"
         );
@@ -129,8 +128,8 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
         returns(uint256)
     {
         uint256 estExecCost = _gas.mul(_gasPrice);
-        return SafeMath.div(
-            estExecCost.mul(sysAdminSuccessShare),
+        return
+            estExecCost.mul(sysAdminSuccessShare).div(
             100,
             "GelatoSysAdmin.sysAdminSuccessShare: div error"
         );

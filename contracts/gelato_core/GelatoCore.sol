@@ -8,6 +8,8 @@ import { IGelatoCondition } from "../gelato_conditions/IGelatoCondition.sol";
 import { IGelatoAction } from "../gelato_actions/IGelatoAction.sol";
 import { IGelatoProviderModule } from "./interfaces/IGelatoProviderModule.sol";
 
+import "@nomiclabs/buidler/console.sol";
+
 /// @title GelatoCore
 /// @notice Exec Claim: minting, checking, execution, and cancellation
 /// @dev Find all NatSpecs inside IGelatoCore
@@ -17,7 +19,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
     // ================  STATE VARIABLES ======================================
     // Executor compensation for estimated tx costs not accounted for by startGas
-    uint256 public constant override EXEC_TX_OVERHEAD = 50000;
+    uint256 public constant override EXEC_TX_OVERHEAD = 55000;
     // ExecClaimIds
     uint256 public override currentExecClaimId;
     // execClaim.id => execClaimHash
@@ -163,6 +165,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         {
             executionResult = _executionResult;
             reason = _reason;
+
         } catch {
             // If any of the external calls in executionWrapper resulted in e.g. out of gas,
             // Executor is eligible for a Refund, but only if Executor sent gelatoMaxGas.
