@@ -79,7 +79,7 @@ interface IGelatoCore {
 
     function mintExecClaim(Task calldata _task) external;
 
-    function canExec(ExecClaim calldata _ec, uint256 _gelatoGasPrice)
+    function canExec(ExecClaim calldata _ec, uint256 _gelatoMaxGas, uint256 _execTxGasPrice)
         external
         view
         returns(string memory);
@@ -96,6 +96,5 @@ interface IGelatoCore {
     function currentExecClaimId() external view returns(uint256 currentId);
     function execClaimHash(uint256 _execClaimId) external view returns(bytes32);
     function lastExecClaimRentPaymentDate(uint256 _execClaimId) external view returns(uint256);
-    function EXEC_TX_OVERHEAD() external pure returns(uint256);
     function hashExecClaim(ExecClaim calldata _ec) external pure returns(bytes32);
 }

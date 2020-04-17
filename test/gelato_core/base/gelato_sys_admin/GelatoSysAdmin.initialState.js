@@ -15,7 +15,7 @@ export default {
   gelatoGasPriceOracle: GELATO_GAS_PRICE_ORACLE,
   gelatoMaxGas: GELATO_MAX_GAS,
   internalGasRequirement: INTERNAL_GAS_REQUIREMENT,
-  minProviderFunds: MIN_PROVIDER_STAKE,
+  minProviderStake: MIN_PROVIDER_STAKE,
   minExecutorStake: MIN_EXECUTOR_STAKE,
   execClaimTenancy: EXEC_CLAIM_TENANCY,
   execClaimRent: EXEC_CLAIM_RENT,

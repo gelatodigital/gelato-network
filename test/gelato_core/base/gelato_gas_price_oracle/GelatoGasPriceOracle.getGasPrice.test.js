@@ -2,10 +2,7 @@
 // => only dependency we need is "chai"
 const { expect } = require("chai");
 
-// Libraries
-import { utils } from "ethers";
-
-const INITIAL_GAS_PRICE = utils.parseUnits("5", "gwei");
+import initialState from "./GelatoGasPriceOracle.initialState";
 
 describe("GelatoCore - GelatoGasPriceOracle: getGasPrice", function () {
   // We define the ContractFactory and Signer variables here and assign them in
@@ -29,7 +26,7 @@ describe("GelatoCore - GelatoGasPriceOracle: getGasPrice", function () {
     gelatoCore = await GelatoCoreFactory.deploy();
     gelatoGasPriceOracle = await GelatoGasPriceOracleFactory.deploy(
       gelatoCore.address,
-      INITIAL_GAS_PRICE
+      initialState.gasPrice
     );
 
     await gelatoCore.deployed();
@@ -51,7 +48,7 @@ describe("GelatoCore - GelatoGasPriceOracle: getGasPrice", function () {
     // setGelatoGasPrice
     await gelatoGasPriceOracle
       .connect(oracleAdmin)
-      .setGasPrice(INITIAL_GAS_PRICE.add(42069));
+      .setGasPrice(initialState.gasPrice.add(42069));
 
     // getGasPrice
     await expect(
