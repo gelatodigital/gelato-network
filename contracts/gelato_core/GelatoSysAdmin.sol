@@ -12,17 +12,20 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
     using Address for address payable;
     using SafeMath for uint256;
 
+    // Executor compensation for estimated tx costs not accounted for by startGas
+    uint256 public constant override EXEC_TX_OVERHEAD = 50000;
+
     // uint256 public override gelatoGasPrice = 9000000000;  // 9 gwei initial
     IGelatoGasPriceOracle public override gelatoGasPriceOracle;
     uint256 public override gelatoMaxGas = 7000000;  // 7 mio initial
     uint256 public override internalGasRequirement = 500000;
-    uint256 public override minProviderFunds = 0.1 ether;  // production: 1 ETH
+    uint256 public override minProviderStake = 0.1 ether;  // production: 1 ETH
     uint256 public override minExecutorStake = 0.02 ether;  // production: 1 ETH
     uint256 public override execClaimTenancy = 30 days;
     uint256 public override execClaimRent = 1 finney;
     uint256 public override executorSuccessShare = 50;  // 50% of successful execution cost
     uint256 public override sysAdminSuccessShare = 20;  // 20% of successful execution cost
-    uint256 public override totalSuccessShare = executorSuccessShare + sysAdminSuccessShare;
+    uint256 public override totalSuccessShare = 70;
     uint256 public override sysAdminFunds;
 
     // == The main functions of the Sys Admin (DAO) ==
@@ -34,8 +37,14 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
     }
 
     // exec-tx gasprice: pulled in from the Oracle by the Executor during exec()
-    function gelatoGasPrice() internal view returns(uint256) {
-        return gelatoGasPriceOracle.getGasPrice();
+    function _gelatoGasPrice() internal view returns(uint256) {
+        try gelatoGasPriceOracle.getGasPrice() returns(uint256 gasPrice) {
+            return gasPrice;
+        } catch Error(string memory err) {
+            revert(string(abi.encodePacked("GelatoSysAdmin.gelatoGasPrice:", err)));
+        } catch {
+            revert("GelatoSysAdmin.gelatoGasPrice:undefined");
+        }
     }
 
     // exec-tx gas
@@ -51,9 +60,9 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
     }
 
     // Minimum Executor Stake Per Provider
-    function setMinProviderFunds(uint256 _newMin) external override onlyOwner {
-        emit LogSetMinProviderFunds(minProviderFunds, _newMin);
-        minProviderFunds = _newMin;
+    function setMinProviderStake(uint256 _newMin) external override onlyOwner {
+        emit LogSetMinProviderStake(minProviderStake, _newMin);
+        minProviderStake = _newMin;
     }
 
     // Minimum Executor Stake Per Provider
@@ -76,16 +85,24 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
 
     // Executors' profit share on exec costs
     function setExecutorSuccessShare(uint256 _percentage) external override onlyOwner {
-        emit LogSetExecutorSuccessShare(executorSuccessShare, _percentage);
-        totalSuccessShare = totalSuccessShare + _percentage - executorSuccessShare;
+        emit LogSetExecutorSuccessShare(
+            executorSuccessShare,
+            _percentage,
+            _percentage + sysAdminSuccessShare
+        );
         executorSuccessShare = _percentage;
+        totalSuccessShare = _percentage + sysAdminSuccessShare;
     }
 
     // Sys Admin (DAO) Business Model
     function setSysAdminSuccessShare(uint256 _percentage) external override onlyOwner {
-        emit LogSetSysAdminSuccessShare(sysAdminSuccessShare, _percentage);
-        totalSuccessShare = totalSuccessShare + _percentage - sysAdminSuccessShare;
+        emit LogSetSysAdminSuccessShare(
+            sysAdminSuccessShare,
+            _percentage,
+            executorSuccessShare + _percentage
+        );
         sysAdminSuccessShare = _percentage;
+        totalSuccessShare = executorSuccessShare + _percentage;
     }
 
     function withdrawSysAdminFunds(uint256 _amount)

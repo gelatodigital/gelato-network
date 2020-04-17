@@ -2,7 +2,7 @@
 // => only dependency we need is "chai"
 const { expect } = require("chai");
 
-const { utils } = require("ethers");
+import initialState from "./GelatoGasPriceOracle.initialState";
 
 describe("GelatoCore - GelatoGasPriceOracle - Setters:", function () {
   // We define the ContractFactory and Signer variables here and assign them in
@@ -22,8 +22,6 @@ describe("GelatoCore - GelatoGasPriceOracle - Setters:", function () {
   let otherGelatoCore;
   let gelatoGasPriceOracle;
 
-  const INITIAL_GAS_PRICE = utils.parseUnits("5", "gwei");
-
   beforeEach(async function () {
     // Get the ContractFactory, contract instance, and Signers here.
     GelatoCoreFactory = await ethers.getContractFactory("GelatoCore");
@@ -42,7 +40,7 @@ describe("GelatoCore - GelatoGasPriceOracle - Setters:", function () {
 
     gelatoGasPriceOracle = await GelatoGasPriceOracleFactory.deploy(
       gelatoCore.address,
-      INITIAL_GAS_PRICE
+      initialState.gasPrice
     );
 
     await gelatoGasPriceOracle.deployed();
@@ -137,12 +135,12 @@ describe("GelatoCore - GelatoGasPriceOracle - Setters:", function () {
   // setGasPrice
   describe("GelatoCore.GelatoGasPriceOracle.setGasPrice", function () {
     it("Should let the oracleAdmin setGasPrice", async function () {
-      const newGasPrice = INITIAL_GAS_PRICE.add(42069);
+      const newGasPrice = initialState.gasPrice.add(42069);
 
       // setGasPrice()
       await expect(gelatoGasPriceOracle.setGasPrice(newGasPrice))
         .to.emit(gelatoGasPriceOracle, "LogSetGasPrice")
-        .withArgs(INITIAL_GAS_PRICE, newGasPrice);
+        .withArgs(initialState.gasPrice, newGasPrice);
 
       // setOracleAdmin()
       await gelatoGasPriceOracle.setOracleAdmin(oracleAdminAddress);
@@ -170,7 +168,7 @@ describe("GelatoCore - GelatoGasPriceOracle - Setters:", function () {
       await expect(
         gelatoGasPriceOracle
           .connect(owner)
-          .setGasPrice(INITIAL_GAS_PRICE.add(42069))
+          .setGasPrice(initialState.gasPrice.add(42069))
       ).to.be.revertedWith("GelatoGasPriceOracle.onlyOracleAdmin");
 
       // setOracleAdmin
@@ -180,7 +178,7 @@ describe("GelatoCore - GelatoGasPriceOracle - Setters:", function () {
       await expect(
         gelatoGasPriceOracle
           .connect(randomGuy)
-          .setGasPrice(INITIAL_GAS_PRICE.add(42069))
+          .setGasPrice(initialState.gasPrice.add(42069))
       ).to.be.revertedWith("GelatoGasPriceOracle.onlyOracleAdmin");
     });
   });

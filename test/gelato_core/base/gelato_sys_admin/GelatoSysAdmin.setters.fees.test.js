@@ -66,12 +66,21 @@ describe("GelatoCore - GelatoSysAdmin - Setters: FEES", function () {
   // setExecutorSuccessShare
   describe("GelatoCore.GelatoSysAdmin.setExecutorSuccessShare", function () {
     it("Should let the owner setExecutorSuccessShare", async function () {
-      // Every transaction and call is sent with the owner by default
-      await expect(gelatoCore.setExecutorSuccessShare(69420))
-        .to.emit(gelatoCore, "LogSetExecutorSuccessShare")
-        .withArgs(initialState.executorSuccessShare, 69420);
+      const executorSuccessShare = await gelatoCore.executorSuccessShare();
+      const sysAdminSuccessShare = await gelatoCore.sysAdminSuccessShare();
 
-      expect(await gelatoCore.executorSuccessShare()).to.be.equal(69420);
+      // Every transaction and call is sent with the owner by default
+      await expect(gelatoCore.setExecutorSuccessShare(69))
+        .to.emit(gelatoCore, "LogSetExecutorSuccessShare")
+        .withArgs(executorSuccessShare, 69, sysAdminSuccessShare.add(69));
+
+      // executorSuccessShare
+      expect(await gelatoCore.executorSuccessShare()).to.be.equal(69);
+
+      // totalSuccessShare
+      expect(await gelatoCore.totalSuccessShare()).to.be.equal(
+        sysAdminSuccessShare.add(69)
+      );
     });
 
     it("Should NOT let non-Owners setExecutorSuccessShare", async function () {
@@ -86,19 +95,28 @@ describe("GelatoCore - GelatoSysAdmin - Setters: FEES", function () {
   // setSysAdminSuccessShare
   describe("GelatoCore.GelatoSysAdmin.setSysAdminSuccessShare", function () {
     it("Should let the owner setSysAdminSuccessShare", async function () {
-      // Every transaction and call is sent with the owner by default
-      await expect(gelatoCore.setSysAdminSuccessShare(69420))
-        .to.emit(gelatoCore, "LogSetSysAdminSuccessShare")
-        .withArgs(initialState.sysAdminSuccessShare, 69420);
+      const executorSuccessShare = await gelatoCore.executorSuccessShare();
+      const sysAdminSuccessShare = await gelatoCore.sysAdminSuccessShare();
 
-      expect(await gelatoCore.sysAdminSuccessShare()).to.be.equal(69420);
+      // Every transaction and call is sent with the owner by default
+      await expect(gelatoCore.setSysAdminSuccessShare(96))
+        .to.emit(gelatoCore, "LogSetSysAdminSuccessShare")
+        .withArgs(sysAdminSuccessShare, 96, executorSuccessShare.add(96));
+
+      // sysAdminSuccessShare
+      expect(await gelatoCore.sysAdminSuccessShare()).to.be.equal(96);
+
+      // totalSuccessShare
+      expect(await gelatoCore.totalSuccessShare()).to.be.equal(
+        executorSuccessShare.add(96)
+      );
     });
 
     it("Should NOT let non-Owners setSysAdminSuccessShare", async function () {
       // gelatoCore.connect returns the same GelatoCore contract instance,
       // but associated to a different signer
       await expect(
-        gelatoCore.connect(notOwner).setSysAdminSuccessShare(69420)
+        gelatoCore.connect(notOwner).setSysAdminSuccessShare(42069)
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
   });

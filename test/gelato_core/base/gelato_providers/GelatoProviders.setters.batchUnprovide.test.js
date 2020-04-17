@@ -110,8 +110,8 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH UNPROVIDE", function () 
   // removeProviderModules
   describe("GelatoCore.GelatoProviders.batchUnprovide", function () {
     it("Should allow Providers to batchUnprovide", async function () {
-      // minProviderFunds required for providerAssignsExecutor
-      const minProviderFunds = await gelatoCore.minProviderFunds();
+      // minProviderStake required for providerAssignsExecutor
+      const minProviderStake = await gelatoCore.minProviderStake();
 
       // minExecutorStake needed for providerAssignsExecutor()
       const minExecutorStake = await gelatoCore.minExecutorStake();
@@ -133,7 +133,7 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH UNPROVIDE", function () 
         executorAddress,
         [cam, otherCAM],
         [providerModule.address, otherProviderModule.address],
-        { value: minProviderFunds }
+        { value: minProviderStake }
       );
 
       expect(await gelatoCore.isExecutorAssigned(executorAddress)).to.be.true;
@@ -141,7 +141,7 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH UNPROVIDE", function () 
       // batchUnprovide revert: Must un-assign executor first
       await expect(
         gelatoCore.batchUnprovide(
-          minProviderFunds,
+          minProviderStake,
           [cam, otherCAM],
           [providerModule.address, otherProviderModule.address]
         )
@@ -157,14 +157,14 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH UNPROVIDE", function () 
       // batchUnprovide()
       await expect(
         gelatoCore.batchUnprovide(
-          minProviderFunds,
+          minProviderStake,
           [cam, otherCAM],
           [providerModule.address, otherProviderModule.address]
         )
       )
         // LogUnprovideFunds
         .to.emit(gelatoCore, "LogUnprovideFunds")
-        .withArgs(providerAddress, minProviderFunds, 0)
+        .withArgs(providerAddress, minProviderStake, 0)
         // LogUnprovideCAM
         .and.to.emit(gelatoCore, "LogUnprovideCAM")
         .withArgs(providerAddress, camHash)
@@ -180,8 +180,8 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH UNPROVIDE", function () 
       expect(await gelatoCore.providerFunds(providerAddress)).to.be.equal(
         initialState.providerFunds
       );
-      // isProviderMinFunded
-      expect(await gelatoCore.isProviderMinFunded(providerAddress)).to.be.false;
+      // isProviderMinStaked
+      expect(await gelatoCore.isProviderMinStaked(providerAddress)).to.be.false;
 
       // cam
       // camGPC

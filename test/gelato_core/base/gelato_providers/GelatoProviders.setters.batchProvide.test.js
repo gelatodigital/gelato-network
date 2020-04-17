@@ -110,8 +110,8 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH PROVIDE", function () {
   // batchProvide
   describe("GelatoCore.GelatoProviders.batchProvide", function () {
     it("Should allow anyone to batchProvide", async function () {
-      // minProviderFunds required for providerAssignsExecutor
-      const minProviderFunds = await gelatoCore.minProviderFunds();
+      // minProviderStake required for providerAssignsExecutor
+      const minProviderStake = await gelatoCore.minProviderStake();
 
       // minExecutorStake needed for providerAssignsExecutor()
       const minExecutorStake = await gelatoCore.minExecutorStake();
@@ -134,12 +134,12 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH PROVIDE", function () {
           executorAddress,
           [cam, otherCAM],
           [providerModule.address, otherProviderModule.address],
-          { value: minProviderFunds }
+          { value: minProviderStake }
         )
       )
         // LogProvideFunds
         .to.emit(gelatoCore, "LogProvideFunds")
-        .withArgs(providerAddress, minProviderFunds, minProviderFunds)
+        .withArgs(providerAddress, minProviderStake, minProviderStake)
         // LogProviderAssignsExecutor
         .and.to.emit(gelatoCore, "LogProviderAssignsExecutor")
         .withArgs(
@@ -169,10 +169,10 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH PROVIDE", function () {
 
       // providerFunds
       expect(await gelatoCore.providerFunds(providerAddress)).to.be.equal(
-        minProviderFunds
+        minProviderStake
       );
-      // isProviderMinFunded
-      expect(await gelatoCore.isProviderMinFunded(providerAddress)).to.be.true;
+      // isProviderMinStaked
+      expect(await gelatoCore.isProviderMinStaked(providerAddress)).to.be.true;
 
       // executorProvidersCount(prevExecutor)
       expect(

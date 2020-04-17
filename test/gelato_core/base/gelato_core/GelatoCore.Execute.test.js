@@ -2,13 +2,19 @@
 // => only dependency we need is "chai"
 const { expect } = require("chai");
 const { run, ethers } = require("@nomiclabs/buidler");
+
+import initialStateSysAdmin from "../gelato_sys_admin/GelatoSysAdmin.initialState";
+import initialStateGasPriceOracle from "../gelato_gas_price_oracle/GelatoGasPriceOracle.initialState";
+
 const FEE_USD = 2;
 const FEE_ETH = 9000000000000000;
 const OPERATION = {
   call: 0,
   delegatecall: 1,
 };
-const GELATO_GAS_PRICE = ethers.utils.parseUnits("8", "gwei");
+
+const GELATO_MAX_GAS = initialStateSysAdmin.gelatoMaxGas;
+const GELATO_GAS_PRICE = initialStateGasPriceOracle.gasPrice;
 
 // ##### Gnosis Action Test Cases #####
 // 1. All sellTokens got converted into buy tokens, sufficient for withdrawal
@@ -334,7 +340,9 @@ describe("GelatoCore.Execute", function () {
         userProxy.callAction(gelatoCore.address, mintPayload, 0)
       ).to.emit(gelatoCore, "LogExecClaimMinted");
 
-      expect(await gelatoCore.canExec(execClaim, GELATO_GAS_PRICE)).to.be.equal(
+      expect(
+        await gelatoCore.canExec(execClaim, GELATO_MAX_GAS, GELATO_GAS_PRICE)
+      ).to.be.equal(
         "ActionTermsNotOk:ActionWithdrawBatchExchange: Sell Token not withdrawable yet"
       );
 
@@ -1216,7 +1224,9 @@ describe("GelatoCore.Execute", function () {
         userProxy.callAction(gelatoCore.address, mintPayload, 0)
       ).to.emit(gelatoCore, "LogExecClaimMinted");
 
-      expect(await gelatoCore.canExec(execClaim, GELATO_GAS_PRICE)).to.be.equal(
+      expect(
+        await gelatoCore.canExec(execClaim, GELATO_MAX_GAS, GELATO_GAS_PRICE)
+      ).to.be.equal(
         "ActionTermsNotOk:ActionWithdrawBatchExchange: Sell Token not withdrawable yet"
       );
 
@@ -1326,7 +1336,9 @@ describe("GelatoCore.Execute", function () {
         userProxy.callAction(gelatoCore.address, mintPayload, 0)
       ).to.emit(gelatoCore, "LogExecClaimMinted");
 
-      expect(await gelatoCore.canExec(execClaim, GELATO_GAS_PRICE)).to.be.equal(
+      expect(
+        await gelatoCore.canExec(execClaim, GELATO_MAX_GAS, GELATO_GAS_PRICE)
+      ).to.be.equal(
         "ActionTermsNotOk:ActionWithdrawBatchExchange: Sell Token not withdrawable yet"
       );
 
@@ -1567,7 +1579,9 @@ describe("GelatoCore.Execute", function () {
         userProxy.callAction(gelatoCore.address, mintPayload, 0)
       ).to.emit(gelatoCore, "LogExecClaimMinted");
 
-      expect(await gelatoCore.canExec(execClaim, GELATO_GAS_PRICE)).to.be.equal(
+      expect(
+        await gelatoCore.canExec(execClaim, GELATO_MAX_GAS, GELATO_GAS_PRICE)
+      ).to.be.equal(
         "ActionTermsNotOk:ActionWithdrawBatchExchange: Sell Token not withdrawable yet"
       );
 

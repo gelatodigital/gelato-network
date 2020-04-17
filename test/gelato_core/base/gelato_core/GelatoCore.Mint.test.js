@@ -857,7 +857,7 @@ describe("Gelato Core - Minting ", function () {
       await expect(
         providerProxy.connect(provider).multiCallActions(selfProviderSetupData)
       ).to.revertedWith(
-        "GelatoUserProxy.callAction:GelatoProviders.providerAssignsExecutor: isProviderMinFunded()"
+        "GelatoUserProxy.callAction:GelatoProviders.providerAssignsExecutor: isProviderMinStaked()"
       );
     });
 
