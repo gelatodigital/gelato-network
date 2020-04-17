@@ -8,7 +8,7 @@ contract GelatoGasPriceOracle is IGelatoGasPriceOracle, Ownable {
     address public override oracleAdmin;
     address public override gelatoCore;
 
-    // This gasPrice is pulled into GelatoCore.exec() via GelatoSysAdmin._gelatoGasPrice()
+    // This gasPrice is pulled into GelatoCore.exec() via GelatoSysAdmin._getGelatoGasPrice()
     uint256 private gasPrice;
 
     constructor(address _gelatoCore, uint256 _gasPrice) public {

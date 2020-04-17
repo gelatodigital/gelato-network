@@ -79,7 +79,7 @@ interface IGelatoCore {
 
     function mintExecClaim(Task calldata _task) external;
 
-    function canExec(ExecClaim calldata _ec, uint256 _gelatoMaxGas, uint256 _gelatoGasPrice)
+    function canExec(ExecClaim calldata _ec, uint256 _gelatoMaxGas, uint256 _execTxGasPrice)
         external
         view
         returns(string memory);

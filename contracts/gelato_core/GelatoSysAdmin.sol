@@ -37,7 +37,7 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
     }
 
     // exec-tx gasprice: pulled in from the Oracle by the Executor during exec()
-    function _gelatoGasPrice() internal view returns(uint256) {
+    function _getGelatoGasPrice() internal view returns(uint256) {
         try gelatoGasPriceOracle.getGasPrice() returns(uint256 gasPrice) {
             return gasPrice;
         } catch Error(string memory err) {
