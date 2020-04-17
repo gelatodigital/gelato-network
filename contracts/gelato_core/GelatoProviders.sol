@@ -149,8 +149,8 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
             );
         }
         require(
-            isProviderMinFunded(msg.sender),
-            "GelatoProviders.providerAssignsExecutor: isProviderMinFunded()"
+            isProviderMinStaked(msg.sender),
+            "GelatoProviders.providerAssignsExecutor: isProviderMinStaked()"
         );
 
         // EFFECTS: Provider reassigns from currentExecutor to newExecutor (or no executor)
@@ -180,8 +180,8 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
             "GelatoProviders.executorAssignsExecutor: isExecutorMinStaked()"
         );
         require(
-            isProviderMinFunded(_provider),
-            "GelatoProviders.executorAssignsExecutor: isProviderMinFunded()"
+            isProviderMinStaked(_provider),
+            "GelatoProviders.executorAssignsExecutor: isProviderMinStaked()"
         );
 
         // EFFECTS: currentExecutor reassigns to newExecutor
@@ -277,8 +277,32 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     }
 
     // Provider Liquidity
-    function isProviderMinFunded(address _provider) public view override returns(bool) {
-        return providerFunds[_provider] >= minProviderFunds;
+    function minExecProviderFunds(uint256 _gelatoMaxGas, uint256 _gelatoGasPrice)
+        public
+        view
+        override
+        returns(uint256)
+    {
+        uint256 maxExecTxCost = (EXEC_TX_OVERHEAD + _gelatoMaxGas) * _gelatoGasPrice;
+        return maxExecTxCost + (maxExecTxCost * totalSuccessShare) / 100;
+    }
+
+    function isProviderLiquid(
+        address _provider,
+        uint256 _gelatoMaxGas,
+        uint256 _gelatoGasPrice
+    )
+        public
+        view
+        override
+        returns(bool)
+    {
+        return minExecProviderFunds(_gelatoMaxGas, _gelatoGasPrice) <= providerFunds[_provider];
+    }
+
+    // Provider Stake
+    function isProviderMinStaked(address _provider) public view override returns(bool) {
+        return providerFunds[_provider] >= minProviderStake;
     }
 
     // An Executor qualifies and remains registered for as long as he has minExecutorStake

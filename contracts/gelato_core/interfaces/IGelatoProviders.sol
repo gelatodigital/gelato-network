@@ -124,7 +124,21 @@ interface IGelatoProviders {
     // =========== PROVIDER STATE READ APIs ==============
     // Provider Funding
     function providerFunds(address _provider) external view returns(uint256);
-    function isProviderMinFunded(address _provider) external view returns(bool);
+    function minExecProviderFunds(uint256 _gelatoMaxGas, uint256 _gelatoGasPrice)
+        external
+        view
+        returns(uint256);
+    function isProviderLiquid(
+        address _provider,
+        uint256 _gelatoMaxGas,
+        uint256 _gelatoGasPrice
+    )
+        external
+        view
+        returns(bool);
+
+    // Provider Stake
+    function isProviderMinStaked(address _provider) external view returns(bool);
 
     // Executor Stake
     function executorStake(address _executor) external view returns(uint256);

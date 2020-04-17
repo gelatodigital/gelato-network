@@ -18,8 +18,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     using SafeMath for uint256;
 
     // ================  STATE VARIABLES ======================================
-    // Executor compensation for estimated tx costs not accounted for by startGas
-    uint256 public constant override EXEC_TX_OVERHEAD = 55000;
     // ExecClaimIds
     uint256 public override currentExecClaimId;
     // execClaim.id => execClaimHash
@@ -78,21 +76,21 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     }
 
     // ================  CAN EXECUTE EXECUTOR API ============================
-    function canExec(ExecClaim memory _ec, uint256 _gelatoGasPrice)
+    function canExec(ExecClaim memory _ec, uint256 _gelatoMaxGas, uint256 _execTxGasPrice)
         public
         view
         override
         returns(string memory)
     {
+        if (_execTxGasPrice != _getGelatoGasPrice()) return "ExecTxGasPriceNotGelatoGasPrice";
+
+        if (!isProviderLiquid(_ec.task.provider.addr, _gelatoMaxGas, _execTxGasPrice))
+            return "InsufficientProviderFunds";
+
         if (_ec.userProxy != _ec.task.provider.addr) {
-            string memory res = providerCanExec(_ec, _gelatoGasPrice);
+            string memory res = providerCanExec(_ec, _execTxGasPrice);
             if (!res.startsWithOk()) return res;
         }
-
-        uint256 minBalanceRequired = (EXEC_TX_OVERHEAD + gelatoMaxGas).mul(_gelatoGasPrice);
-        minBalanceRequired +=  minBalanceRequired.mul(totalSuccessShare).div(100);
-
-        if (minBalanceRequired > providerFunds[_ec.task.provider.addr]) return "ProviderInsufficientBalance";
 
         bytes32 hashedExecClaim = hashExecClaim(_ec);
         if (execClaimHash[_ec.id] != hashedExecClaim) return "InvalidExecClaimHash";
@@ -140,27 +138,26 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     enum ExecutionResult { ExecSuccess, CanExecFailed, ExecFailed, ExecutionRevert }
     enum ExecutorPay { Reward, Refund }
 
-    // Execution Entry Point
+    // Execution Entry Point: tx.gasprice must be _getGelatoGasPrice()
     function exec(ExecClaim memory _ec) public override {
 
         // Store startGas for gas-consumption based cost and payout calcs
         uint256 startGas = gasleft();
 
+        // CHECKS: all further checks are done during this.executionWrapper.canExec()
         require(startGas > internalGasRequirement, "GelatoCore.exec: Insufficient gas sent");
+        require(
+            msg.sender == executorByProvider[_ec.task.provider.addr],
+            "GelatoCore.exec: Invalid Executor"
+        );
 
-        // memcopy of gelatoGasPrice and gelatoMaxGas, to avoid multiple storage reads
-        uint256 _gelatoGasPrice = gelatoGasPrice();
+        // memcopy of gelatoMaxGas, to avoid multiple storage reads
         uint256 _gelatoMaxGas = gelatoMaxGas;
-
-        // CHECKS
-        require(tx.gasprice == _gelatoGasPrice, "GelatoCore.exec: tx.gasprice");
-
-        require(msg.sender == executorByProvider[_ec.task.provider.addr], "GelatoCore.exec: Invalid Executor");
 
         ExecutionResult executionResult;
         string memory reason;
 
-        try this.executionWrapper{gas: startGas - internalGasRequirement}(_ec, _gelatoGasPrice)
+        try this.executionWrapper{gas: startGas - internalGasRequirement}(_ec, _gelatoMaxGas)
             returns(ExecutionResult _executionResult, string memory _reason)
         {
             executionResult = _executionResult;
@@ -180,7 +177,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
                 ExecutorPay.Reward,
                 startGas,
                 _gelatoMaxGas,
-                _gelatoGasPrice
+                tx.gasprice  // == gelatoGasPrice
             );
             emit LogExecSuccess(msg.sender, _ec.id, executorSuccessFee, sysAdminSuccessFee);
 
@@ -200,7 +197,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
                     ExecutorPay.Refund,
                     startGas,
                     _gelatoMaxGas,
-                    _gelatoGasPrice
+                    tx.gasprice  // == gelatoGasPrice
                 );
                 emit LogExecFailed(msg.sender, _ec.id, executorRefund, reason);
             }
@@ -218,7 +215,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
                     ExecutorPay.Refund,
                     startGas,
                     _gelatoMaxGas,
-                    _gelatoGasPrice
+                     tx.gasprice  // == gelatoGasPrice
                 );
                 emit LogExecutionRevert(msg.sender, _ec.id, executorRefund);
             }
@@ -226,14 +223,14 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     }
 
     // Used by GelatoCore.exec(), to handle Out-Of-Gas from execution gracefully
-    function executionWrapper(ExecClaim memory execClaim, uint256 _gelatoGasPrice)
+    function executionWrapper(ExecClaim memory execClaim, uint256 _gelatoMaxGas)
         public
         returns(ExecutionResult, string memory)
     {
         require(msg.sender == address(this), "GelatoCore.executionWrapper:onlyGelatoCore");
 
         // canExec()
-        string memory canExecRes = canExec(execClaim, _gelatoGasPrice);
+        string memory canExecRes = canExec(execClaim, _gelatoMaxGas, tx.gasprice);
         if (!canExecRes.startsWithOk()) return (ExecutionResult.CanExecFailed, canExecRes);
 
         // _exec()
