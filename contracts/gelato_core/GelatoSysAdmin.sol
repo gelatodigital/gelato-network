@@ -18,7 +18,7 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
     // uint256 public override gelatoGasPrice = 9000000000;  // 9 gwei initial
     IGelatoGasPriceOracle public override gelatoGasPriceOracle;
     uint256 public override gelatoMaxGas = 7000000;  // 7 mio initial
-    uint256 public override internalGasRequirement = 500000;
+    uint256 public override internalGasRequirement = 100000;
     uint256 public override minProviderStake = 0.1 ether;  // production: 1 ETH
     uint256 public override minExecutorStake = 0.02 ether;  // production: 1 ETH
     uint256 public override execClaimTenancy = 30 days;

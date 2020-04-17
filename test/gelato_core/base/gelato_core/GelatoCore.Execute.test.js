@@ -1144,7 +1144,7 @@ describe("GelatoCore.Execute", function () {
         .withArgs(executorAddress, execClaim.id, "ExecClaimExpired");
     });
 
-    it("#11: Exec good execClaim, however revert because insufficient gas was sent", async function () {
+    it("#11: Exec good execClaim, however revert  with GelatoCore.exec: Insufficient gas sent because insufficient gas was sent", async function () {
       // Get Action Payload
       const withdrawAmount = 10 * 10 ** buyDecimals;
 
@@ -1156,14 +1156,6 @@ describe("GelatoCore.Execute", function () {
         withdrawAmount
       );
       await tx.wait();
-
-      // 4. Withdraw Funds from BatchExchange with withdraw action
-
-      // const abiCoder = ethers.utils.defaultAbiCoder;
-      // const withdrawPayload = abiCoder.encode(
-      //   ["address", "address", "address", "address"],
-      //   [sellerAddress, userProxyAddress, sellToken.address, buyToken.address]
-      // );
 
       const actionData = await run("abi-encode-withselector", {
         contractname: "ActionWithdrawBatchExchange",
@@ -1249,14 +1241,17 @@ describe("GelatoCore.Execute", function () {
       // Make ExecClaim executable
       await mockBatchExchange.setValidWithdrawRequest(userProxyAddress);
 
+      const internalGasRequirement = await gelatoCore.internalGasRequirement();
+
       await expect(
-        gelatoCore
-          .connect(executor)
-          .exec(execClaim, { gasPrice: GELATO_GAS_PRICE, gasLimit: 200000 })
+        gelatoCore.connect(executor).exec(execClaim, {
+          gasPrice: GELATO_GAS_PRICE,
+          gasLimit: internalGasRequirement,
+        })
       ).to.revertedWith("GelatoCore.exec: Insufficient gas sent");
     });
 
-    it("#12: Exec good execClaim, however revert because insufficient gas was sent", async function () {
+    it("#12: Exec good execClaim, however revert with LogExecutionRevert because insufficient gas was sent", async function () {
       // Get Action Payload
       const withdrawAmount = 10 * 10 ** buyDecimals;
 
@@ -1268,14 +1263,6 @@ describe("GelatoCore.Execute", function () {
         withdrawAmount
       );
       await tx.wait();
-
-      // 4. Withdraw Funds from BatchExchange with withdraw action
-
-      // const abiCoder = ethers.utils.defaultAbiCoder;
-      // const withdrawPayload = abiCoder.encode(
-      //   ["address", "address", "address", "address"],
-      //   [sellerAddress, userProxyAddress, sellToken.address, buyToken.address]
-      // );
 
       const actionData = await run("abi-encode-withselector", {
         contractname: "ActionWithdrawBatchExchange",
@@ -1342,10 +1329,6 @@ describe("GelatoCore.Execute", function () {
         "ActionTermsNotOk:ActionWithdrawBatchExchange: Sell Token not withdrawable yet"
       );
 
-      await gelatoCore
-        .connect(executor)
-        .exec(execClaim, { gasPrice: GELATO_GAS_PRICE, gasLimit: 5000000 });
-
       await expect(
         gelatoCore
           .connect(executor)
@@ -1361,10 +1344,15 @@ describe("GelatoCore.Execute", function () {
       // Make ExecClaim executable
       await mockBatchExchange.setValidWithdrawRequest(userProxyAddress);
 
+      const internalGasRequirement = await gelatoCore.internalGasRequirement();
+
       await expect(
-        gelatoCore
-          .connect(executor)
-          .exec(execClaim, { gasPrice: GELATO_GAS_PRICE, gasLimit: 550000 })
+        gelatoCore.connect(executor).exec(execClaim, {
+          gasPrice: GELATO_GAS_PRICE,
+          gasLimit: ethers.utils
+            .bigNumberify(internalGasRequirement)
+            .add(ethers.utils.bigNumberify("50000")),
+        })
       ).to.emit(gelatoCore, "LogExecutionRevert");
     });
 

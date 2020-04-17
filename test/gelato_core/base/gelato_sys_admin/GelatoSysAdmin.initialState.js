@@ -2,7 +2,7 @@ import { constants, utils } from "ethers";
 
 const GELATO_GAS_PRICE_ORACLE = constants.AddressZero;
 const GELATO_MAX_GAS = 7000000;
-const INTERNAL_GAS_REQUIREMENT = 500000;
+const INTERNAL_GAS_REQUIREMENT = 100000;
 const MIN_PROVIDER_STAKE = utils.parseEther("0.1");
 const MIN_EXECUTOR_STAKE = utils.parseEther("0.02");
 const EXEC_CLAIM_TENANCY = 30 * 24 * 60 * 60; // 30 days
