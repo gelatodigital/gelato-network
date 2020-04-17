@@ -22,6 +22,7 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
     uint256 public override execClaimRent = 1 finney;
     uint256 public override executorSuccessShare = 50;  // 50% of successful execution cost
     uint256 public override sysAdminSuccessShare = 20;  // 20% of successful execution cost
+    uint256 public override totalSuccessShare = executorSuccessShare + sysAdminSuccessShare;
     uint256 public override sysAdminFunds;
 
     // == The main functions of the Sys Admin (DAO) ==
@@ -76,12 +77,14 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
     // Executors' profit share on exec costs
     function setExecutorSuccessShare(uint256 _percentage) external override onlyOwner {
         emit LogSetExecutorSuccessShare(executorSuccessShare, _percentage);
+        totalSuccessShare = totalSuccessShare + _percentage - executorSuccessShare;
         executorSuccessShare = _percentage;
     }
 
     // Sys Admin (DAO) Business Model
     function setSysAdminSuccessShare(uint256 _percentage) external override onlyOwner {
         emit LogSetSysAdminSuccessShare(sysAdminSuccessShare, _percentage);
+        totalSuccessShare = totalSuccessShare + _percentage - sysAdminSuccessShare;
         sysAdminSuccessShare = _percentage;
     }
 

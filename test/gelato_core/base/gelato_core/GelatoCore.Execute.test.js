@@ -638,16 +638,16 @@ describe("GelatoCore.Execute", function () {
       // @DEV registering an action with reverting termsOk
 
       // Provider registers new condition
-      const MockActionDummy = await ethers.getContractFactory(
-        "MockActionDummy",
+      const MockActionDummyRevert = await ethers.getContractFactory(
+        "MockActionDummyRevert",
         sysAdmin
       );
 
-      const mockActionDummy = await MockActionDummy.deploy();
-      await mockActionDummy.deployed();
+      const mockActionDummyRevert = await MockActionDummyRevert.deploy();
+      await mockActionDummyRevert.deployed();
 
-      const mockActionDummyGelato = new Action({
-        inst: mockActionDummy.address,
+      const mockActionDummyRevertGelato = new Action({
+        inst: mockActionDummyRevert.address,
         data: constants.HashZero,
         operation: "delegatecall",
         value: 0,
@@ -658,7 +658,7 @@ describe("GelatoCore.Execute", function () {
 
       const newCam2 = new CAM({
         condition: constants.AddressZero,
-        actions: [mockActionDummyGelato],
+        actions: [mockActionDummyRevertGelato],
         gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
       });
 
@@ -679,7 +679,7 @@ describe("GelatoCore.Execute", function () {
       });
 
       const action = new Action({
-        inst: mockActionDummy.address,
+        inst: mockActionDummyRevert.address,
         data: actionData,
         operation: "delegatecall",
         value: 0,
@@ -1595,9 +1595,14 @@ describe("GelatoCore.Execute", function () {
         gelatoCore
           .connect(executor)
           .exec(execClaim, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
-      ).to.emit(gelatoCore, "LogExecFailed");
-
-      const feeAmount = FEE_USD * 10 ** buyDecimals;
+      )
+        .to.emit(gelatoCore, "LogExecFailed")
+        .withArgs(
+          executorAddress,
+          1,
+          0,
+          "GelatoCore._exec:GelatoUserProxy.delegatecallAction:ActionWithdrawBatchExchange: Insufficient balance for user to pay for withdrawal 2"
+        );
 
       const providerBalance = await buyToken.balanceOf(providerAddress);
       expect(providerBalance).to.be.equal(ethers.utils.bigNumberify("0"));
@@ -1605,49 +1610,62 @@ describe("GelatoCore.Execute", function () {
 
       expect(ethers.utils.bigNumberify(sellerBalanceAfter)).to.be.equal(
         ethers.utils.bigNumberify(sellerBalanceBefore)
-        // .add(ethers.utils.bigNumberify(withdrawAmount))
-        // .sub(ethers.utils.bigNumberify(feeAmount))
       );
     });
 
-    it("#15: Mint ActionWithdraw and revert with LogExecFailed in exec due execPayload reverting (due to revert in ProviderModule)", async function () {
-      // Get Action Payload
-      const withdrawAmount = 1 * 10 ** buyDecimals;
-
-      const sellerBalanceBefore = await buyToken.balanceOf(sellerAddress);
-
-      // 3. MockBatchExchange Set withdraw amount
-      tx = await mockBatchExchange.setWithdrawAmount(
-        buyToken.address,
-        withdrawAmount
+    it("#15: Mint DummyAction and revert with LogExecFailed in exec due execPayload reverting (due to revert in ProviderModule)", async function () {
+      // Provider registers new condition
+      const MockActionDummy = await ethers.getContractFactory(
+        "MockActionDummy",
+        sysAdmin
       );
-      await tx.wait();
 
-      // 4. Withdraw Funds from BatchExchange with withdraw action
+      const mockActionDummy = await MockActionDummy.deploy();
+      await mockActionDummy.deployed();
 
-      // const abiCoder = ethers.utils.defaultAbiCoder;
-      // const withdrawPayload = abiCoder.encode(
-      //   ["address", "address", "address", "address"],
-      //   [sellerAddress, userProxyAddress, sellToken.address, buyToken.address]
-      // );
-
-      const actionData = await run("abi-encode-withselector", {
-        contractname: "ActionWithdrawBatchExchange",
-        functionname: "action",
-        inputs: [
-          sellerAddress,
-          userProxyAddress,
-          sellToken.address,
-          buyToken.address,
-        ],
+      const mockActionDummyGelato = new Action({
+        inst: mockActionDummy.address,
+        data: constants.HashZero,
+        operation: "delegatecall",
+        value: 0,
+        termsOkCheck: true,
       });
 
-      // Mint ExexClaim
+      // Provider registers new acttion
 
-      // Mint ExexClaim
+      const newCam2 = new CAM({
+        condition: constants.AddressZero,
+        actions: [mockActionDummyGelato],
+        gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
+      });
+
+      // Instantiate ProviderModule that reverts in execPayload()
+
+      const MockProviderModuleGelatoUserProxyRevert = await ethers.getContractFactory(
+        "MockProviderModuleGelatoUserProxyRevert",
+        sysAdmin
+      );
+
+      const mockProviderModuleGelatoUserProxyRevert = await MockProviderModuleGelatoUserProxyRevert.deploy();
+      await mockProviderModuleGelatoUserProxyRevert.deployed();
+
+      await gelatoCore
+        .connect(provider)
+        .batchProvide(
+          constants.AddressZero,
+          [newCam2],
+          [mockProviderModuleGelatoUserProxyRevert.address]
+        );
+      // Provider batch providers dummy action and revertinng module
+
+      const abi = ["function action(bool)"];
+      const interFace = new utils.Interface(abi);
+
+      const actionData = interFace.functions.action.encode([true]);
+
       const gelatoProvider = new GelatoProvider({
         addr: providerAddress,
-        module: providerModuleGelatoUserProxy.address,
+        module: mockProviderModuleGelatoUserProxyRevert.address,
       });
 
       const condition = new Condition({
@@ -1656,7 +1674,7 @@ describe("GelatoCore.Execute", function () {
       });
 
       const action = new Action({
-        inst: actionWithdrawBatchExchange.address,
+        inst: mockActionDummy.address,
         data: actionData,
         operation: "delegatecall",
         value: 0,
@@ -1676,57 +1694,28 @@ describe("GelatoCore.Execute", function () {
         task,
       };
 
-      // Should return "Ok"
-      // const isProvided = await gelatoCore.isCAMProvided(execClaim);
-
       const mintPayload = await run("abi-encode-withselector", {
         contractname: "GelatoCore",
         functionname: "mintExecClaim",
         inputs: [task],
       });
 
-      // LogExecClaimMinted(executor, execClaim.id, hashedExecClaim, execClaim);
-
       await expect(
         userProxy.callAction(gelatoCore.address, mintPayload, 0)
       ).to.emit(gelatoCore, "LogExecClaimMinted");
-
-      expect(await gelatoCore.canExec(execClaim, GELATO_GAS_PRICE)).to.be.equal(
-        "ActionTermsNotOk:ActionWithdrawBatchExchange: Sell Token not withdrawable yet"
-      );
 
       await expect(
         gelatoCore
           .connect(executor)
           .exec(execClaim, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
       )
-        .to.emit(gelatoCore, "LogCanExecFailed")
+        .to.emit(gelatoCore, "LogExecFailed")
         .withArgs(
           executorAddress,
-          execClaim.id,
-          "ActionTermsNotOk:ActionWithdrawBatchExchange: Sell Token not withdrawable yet"
+          1,
+          0,
+          "GelatoCore._exec.execPayload:Test Revert"
         );
-
-      // Make ExecClaim executable
-      await mockBatchExchange.setValidWithdrawRequest(userProxyAddress);
-
-      await expect(
-        gelatoCore
-          .connect(executor)
-          .exec(execClaim, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
-      ).to.emit(gelatoCore, "LogExecFailed");
-
-      const feeAmount = FEE_USD * 10 ** buyDecimals;
-
-      const providerBalance = await buyToken.balanceOf(providerAddress);
-      expect(providerBalance).to.be.equal(ethers.utils.bigNumberify("0"));
-      const sellerBalanceAfter = await buyToken.balanceOf(sellerAddress);
-
-      expect(ethers.utils.bigNumberify(sellerBalanceAfter)).to.be.equal(
-        ethers.utils.bigNumberify(sellerBalanceBefore)
-        // .add(ethers.utils.bigNumberify(withdrawAmount))
-        // .sub(ethers.utils.bigNumberify(feeAmount))
-      );
     });
   });
 });

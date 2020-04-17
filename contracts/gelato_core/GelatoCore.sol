@@ -87,7 +87,10 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             if (!res.startsWithOk()) return res;
         }
 
-        if (!isProviderMinFunded(_ec.task.provider.addr)) return "ProviderNotMinStaked";
+        uint256 minBalanceRequired = (EXEC_TX_OVERHEAD + gelatoMaxGas).mul(_gelatoGasPrice);
+        minBalanceRequired +=  minBalanceRequired.mul(totalSuccessShare).div(100);
+
+        if (minBalanceRequired > providerFunds[_ec.task.provider.addr]) return "ProviderInsufficientBalance";
 
         bytes32 hashedExecClaim = hashExecClaim(_ec);
         if (execClaimHash[_ec.id] != hashedExecClaim) return "InvalidExecClaimHash";
@@ -258,7 +261,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         // Execution via UserProxy
         bytes memory revertMsg;
         if (execPayload.length >= 4) (success, revertMsg) = _ec.userProxy.call(execPayload);
-        else error = "GelatoCore._exec.execPayload: invalid";
+        else if (bytes(error).length == 0) error = "GelatoCore._exec.execPayload: invalid";
 
         // FAILURE
         if (!success) {

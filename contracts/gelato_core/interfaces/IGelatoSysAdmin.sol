@@ -50,6 +50,8 @@ interface IGelatoSysAdmin {
     function execClaimTenancy() external view returns(uint256);
 
     function executorSuccessShare() external view returns(uint256);
+    function totalSuccessShare() external view returns(uint256);
+
     function executorSuccessFee(uint256 _gas, uint256 _gasPrice)
         external
         view
