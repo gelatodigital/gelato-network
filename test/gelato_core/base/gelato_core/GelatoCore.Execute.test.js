@@ -1036,8 +1036,6 @@ describe("GelatoCore.Execute", function () {
     });
 
     it("#10: Mint and revert with Expired in exec due to expiry date having passed", async function () {
-      this.timeout(0);
-
       // Get Action Payload
       const actionData = await run("abi-encode-withselector", {
         contractname: "ActionERC20TransferFrom",
@@ -1113,16 +1111,6 @@ describe("GelatoCore.Execute", function () {
 
       // By default connect to
       let provider = new ethers.providers.JsonRpcProvider();
-
-      // Time travel Logic
-
-      // helper to manipulate evm time
-      // const increaseTime = (addSeconds) => {
-      //   const id = Date.now();
-      //   return new Promise((resolve, reject) => {
-      //     provider.send("evm_increaseTime", [addSeconds]);
-      //   });
-      // };
 
       // Get a promise for your call
       await ethers.provider.send("evm_increaseTime", [1000000]);

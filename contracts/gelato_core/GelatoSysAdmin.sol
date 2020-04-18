@@ -14,6 +14,7 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
 
     // Executor compensation for estimated tx costs not accounted for by startGas
     uint256 public constant override EXEC_TX_OVERHEAD = 55000;
+    string public constant override OK = "Ok";
 
     // uint256 public override gelatoGasPrice = 9000000000;  // 9 gwei initial
     IGelatoGasPriceOracle public override gelatoGasPriceOracle;

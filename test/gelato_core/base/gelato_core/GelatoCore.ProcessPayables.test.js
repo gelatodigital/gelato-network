@@ -374,7 +374,7 @@ describe("GelatoCore.Execute", function () {
       );
     });
 
-    it("#2: Executor has a higher gelato stake  after unsuccessfull execution compared to its ETH balance before, when overMaxGas was sent", async function () {
+    it("#2: Executor has a higher gelato stake after unsuccessfull execution compared to its ETH balance before, when overMaxGas was sent", async function () {
       // Provider registers new condition
       const MockActionDummyRevert = await ethers.getContractFactory(
         "MockActionDummyRevert",
