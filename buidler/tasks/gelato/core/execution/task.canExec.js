@@ -65,21 +65,37 @@ export default task(
         id: taskArgs.execclaim[0],
         userProxy: taskArgs.execclaim[1],
         task: {
-          provider: taskArgs.execclaim[2][0],
-          providerModule: taskArgs.execclaim[2][1],
-          condition: taskArgs.execclaim[2][2],
-          actions: taskArgs.execclaim[2][3],
-          conditionData: taskArgs.execclaim[2][4],
-          actionsPayload: taskArgs.execclaim[2][5],
-          expiryDate: taskArgs.execclaim[2][6],
+          provider: {
+            addr: taskArgs.execclaim[2][0][0],
+            module: taskArgs.execclaim[2][0][1],
+          },
+          condition: {
+            inst: taskArgs.execclaim[2][1][0],
+            data: taskArgs.execclaim[2][1][1],
+          },
+          actions: [
+            {
+              inst: taskArgs.execclaim[2][2][0][0],
+              data: taskArgs.execclaim[2][2][0][1],
+              operation: taskArgs.execclaim[2][2][0][2],
+              value: taskArgs.execclaim[2][2][0][3],
+              termsOkCheck: taskArgs.execclaim[2][2][0][4],
+            },
+          ],
+          expiryDate: taskArgs.execclaim[2][3],
         },
       };
-      console.log(execClaim);
+      if (taskArgs.log) console.log(execClaim);
 
       const GAS_PRICE = utils.parseUnits("9", "gwei");
+      const GELATO_MAX_GAS = 7000000;
 
       try {
-        const canExecResult = await gelatoCore.canExec(execClaim, GAS_PRICE);
+        const canExecResult = await gelatoCore.canExec(
+          execClaim,
+          GELATO_MAX_GAS,
+          GAS_PRICE
+        );
         if (taskArgs.log) console.log(`\n Can Exec Result: ${canExecResult}\n`);
         return canExecResult;
       } catch (error) {

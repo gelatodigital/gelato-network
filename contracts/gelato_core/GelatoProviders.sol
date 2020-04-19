@@ -27,6 +27,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         address inst;
         Operation operation;
         bool termsOkCheck;
+        bool value;
     }
 
     uint256 public constant override NO_CEIL = 2**256 - 1;  // MaxUint256
@@ -327,7 +328,8 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
             NoDataAction memory noDataAction = NoDataAction({
                 inst: _actions[i].inst,
                 operation: _actions[i].operation,
-                termsOkCheck: _actions[i].termsOkCheck
+                termsOkCheck: _actions[i].termsOkCheck,
+                value: _actions[i].value == 0 ? false : true
             });
             noDataActions[i] = noDataAction;
         }

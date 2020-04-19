@@ -13,7 +13,12 @@ class Action {
       );
     }
 
-    if (operation !== "call" && operation !== "delegatecall") {
+    if (
+      operation !== "call" &&
+      operation !== "delegatecall" &&
+      operation !== 0 &&
+      operation !== 1
+    ) {
       throw new Error(
         "\nAction: pass 'call' or 'delegatecall', you passed:",
         operation,
@@ -24,7 +29,7 @@ class Action {
       throw new Error("\nAction: no termsOkCheck passed to constructor\n");
     this.inst = inst;
     this.data = data ? data : constants.HashZero;
-    this.operation = operation == "call" ? 0 : 1;
+    this.operation = operation == "call" || 0 ? 0 : 1;
     this.value = value ? value : constants.Zero;
     this.termsOkCheck = termsOkCheck;
   }

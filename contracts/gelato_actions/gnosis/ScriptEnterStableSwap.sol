@@ -10,16 +10,6 @@ import { Task, IGelatoCore } from "../../gelato_core/interfaces/IGelatoCore.sol"
 
 contract ScriptEnterStableSwap is ActionPlaceOrderBatchExchange, ScriptGnosisSafeEnableGelatoCore {
 
-    // struct Task {
-    //     address provider;
-    //     address providerModule;
-    //     address condition;
-    //     address action;
-    //     bytes conditionData;
-    //     bytes actionData;
-    //     uint256 expiryDate;
-    // }
-
     constructor(address _batchExchange) ActionPlaceOrderBatchExchange(_batchExchange) public {
     }
 
@@ -36,8 +26,6 @@ contract ScriptEnterStableSwap is ActionPlaceOrderBatchExchange, ScriptGnosisSaf
     )
         public
     {
-        require(address(_task.condition.inst) == address(0));
-
         // 1. Enable Gelato Core
         enableGelatoCoreModule(_gelatoCore);
 
@@ -52,17 +40,6 @@ contract ScriptEnterStableSwap is ActionPlaceOrderBatchExchange, ScriptGnosisSaf
         );
 
         // 3. Mint execution claim
-        bytes memory actionData = abi.encodeWithSignature(
-            "action(address,address,address,address)",
-            _user,
-            address(this), //proxyAddress
-            _sellToken,
-            _buyToken
-        );
-
-        _task.actions[0].data = actionData;
-
-        // Mint new Claim
         try IGelatoCore(_gelatoCore).mintExecClaim(_task) {
         } catch {
             revert("Minting chainedClaim unsuccessful");

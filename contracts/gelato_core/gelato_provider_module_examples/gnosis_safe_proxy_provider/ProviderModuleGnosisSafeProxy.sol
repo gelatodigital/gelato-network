@@ -61,7 +61,7 @@ contract ProviderModuleGnosisSafeProxy is
         if( _actions.length == 1) {
             return abi.encodeWithSelector(
                 IGnosisSafe.execTransactionFromModuleReturnData.selector,
-                _actions[0],  // to
+                _actions[0].inst,  // to
                 _actions[0].value,  // value
                 _actions[0].data,
                 _actions[0].operation
