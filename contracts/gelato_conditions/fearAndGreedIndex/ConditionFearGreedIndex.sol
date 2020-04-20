@@ -54,8 +54,8 @@ contract ConditionFearGreedIndex is GelatoConditionsStandard, Ownable {
 
         bool prevIndexIsZero = _prevIndex == 0;
 
-        if (value >= _prevIndex + 10) return "ok0";
-        else if (!prevIndexIsZero && value <= _prevIndex - 10) return "ok1";
-        return "NotOkNewIndexIsNotSmallerOrGreater";
+        if (value >= _prevIndex + 10) return OK;
+        else if (!prevIndexIsZero && value <= _prevIndex - 10) return OK;
+        return "NewIndexIsNotSmallerOrGreater";
     }
 }

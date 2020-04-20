@@ -61,7 +61,7 @@ export default task("test-canexec")
 
       console.log(`\n CanExecResult:\n ${canExecResult}`);
 
-      if (canExecResult === "Ok") {
+      if (canExecResult === "OK") {
         const execTx = await gelatoCore.exec(
           execClaim,
           "0x51992e18c92053b7677003e2a86c5077a7ace82639873e8e63ef55ca806188fc",

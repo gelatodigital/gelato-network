@@ -1,7 +1,7 @@
 pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
-import { IGelatoProviderModule } from "../../interfaces/IGelatoProviderModule.sol";
+import { GelatoProviderModuleStandard } from "../../GelatoProviderModuleStandard.sol";
 import { IProviderModuleGnosisSafeProxy } from "./IProviderModuleGnosisSafeProxy.sol";
 import { Ownable } from "../../../external/Ownable.sol";
 import { MultiSend } from "../../../external/MultiSend.sol";
@@ -11,10 +11,10 @@ import {
 import {
     IGnosisSafeProxy
 } from "../../../user_proxies/gnosis_safe_proxy/interfaces/IGnosisSafeProxy.sol";
-import { Action, Operation, ExecClaim } from "../../interfaces/IGelatoCore.sol";
+import { Action, ExecClaim } from "../../interfaces/IGelatoCore.sol";
 
 contract ProviderModuleGnosisSafeProxy is
-    IGelatoProviderModule,
+    GelatoProviderModuleStandard,
     IProviderModuleGnosisSafeProxy,
     Ownable
 {
@@ -49,7 +49,7 @@ contract ProviderModuleGnosisSafeProxy is
             return "ProviderModuleGnosisSafeProxy.isProvided:InvalidGSPMastercopy";
         if (!isGelatoCoreWhitelisted(userProxy))
             return "ProviderModuleGnosisSafeProxy.isProvided:GelatoCoreNotWhitelisted";
-        return "Ok";
+        return OK;
     }
 
     function execPayload(Action[] calldata _actions)
@@ -160,11 +160,6 @@ contract ProviderModuleGnosisSafeProxy is
     {
         unprovideProxyExtcodehashes(_hashes);
         unprovideMastercopies(_mastercopies);
-    }
-
-    function setGelatoCore(address _gelatoCore) external onlyOwner {
-        require(_gelatoCore != address(0), "ProviderModuleGnosisSafeProxy.setGelatoCore:0");
-        gelatoCore = _gelatoCore;
     }
 
     function isGelatoCoreWhitelisted(address _userProxy)

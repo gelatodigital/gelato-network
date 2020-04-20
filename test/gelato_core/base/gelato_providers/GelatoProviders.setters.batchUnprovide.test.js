@@ -110,9 +110,6 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH UNPROVIDE", function () 
   // removeProviderModules
   describe("GelatoCore.GelatoProviders.batchUnprovide", function () {
     it("Should allow Providers to batchUnprovide", async function () {
-      // minProviderStake required for providerAssignsExecutor
-      const minProviderStake = await gelatoCore.minProviderStake();
-
       // minExecutorStake needed for providerAssignsExecutor()
       const minExecutorStake = await gelatoCore.minExecutorStake();
       // stakeExecutor()
@@ -129,11 +126,12 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH UNPROVIDE", function () 
       );
 
       // batchProvide()
+      const providedFunds = utils.bigNumberify(42069);
       await gelatoCore.batchProvide(
         executorAddress,
         [cam, otherCAM],
         [providerModule.address, otherProviderModule.address],
-        { value: minProviderStake }
+        { value: providedFunds }
       );
 
       expect(await gelatoCore.isExecutorAssigned(executorAddress)).to.be.true;
@@ -141,7 +139,7 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH UNPROVIDE", function () 
       // batchUnprovide revert: Must un-assign executor first
       await expect(
         gelatoCore.batchUnprovide(
-          minProviderStake,
+          providedFunds,
           [cam, otherCAM],
           [providerModule.address, otherProviderModule.address]
         )
@@ -157,14 +155,14 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH UNPROVIDE", function () 
       // batchUnprovide()
       await expect(
         gelatoCore.batchUnprovide(
-          minProviderStake,
+          providedFunds,
           [cam, otherCAM],
           [providerModule.address, otherProviderModule.address]
         )
       )
         // LogUnprovideFunds
         .to.emit(gelatoCore, "LogUnprovideFunds")
-        .withArgs(providerAddress, minProviderStake, 0)
+        .withArgs(providerAddress, providedFunds, 0)
         // LogUnprovideCAM
         .and.to.emit(gelatoCore, "LogUnprovideCAM")
         .withArgs(providerAddress, camHash)

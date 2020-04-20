@@ -6,13 +6,7 @@ const OPERATION = {
   call: 0,
   delegatecall: 1,
 };
-import initialStateSysAdmin from "../gelato_sys_admin/GelatoSysAdmin.initialState";
-import initialStateGasPriceOracle from "../gelato_gas_price_oracle/GelatoGasPriceOracle.initialState";
-
-const GELATO_MAX_GAS = initialStateSysAdmin.gelatoMaxGas;
-const GELATO_GAS_PRICE = initialStateGasPriceOracle.gasPrice;
-const EXEC_CLAIM_TENANCY = initialStateSysAdmin.execClaimTenancy;
-const EXEC_CLAIM_RENT = initialStateSysAdmin.execClaimRent;
+const GELATO_GAS_PRICE = ethers.utils.parseUnits("8", "gwei");
 
 // ##### Gnosis Action Test Cases #####
 // 1. All sellTokens got converted into buy tokens, sufficient for withdrawal
@@ -20,7 +14,7 @@ const EXEC_CLAIM_RENT = initialStateSysAdmin.execClaimRent;
 // 3. SellTokens got partially converted into buy tokens, insufficient buy tokens for withdrawal
 // 4. No sellTokens got converted into buy tokens, sufficient sell tokens for withdrawal
 // 5. No sellTokens got converted into buy tokens, insufficient sell tokens for withdrawal
-describe("GelatoCore.collectExecClaimRent", function () {
+describe("GelatoCore.CancelExecClaim", function () {
   // We define the ContractFactory and Signer variables here and assign them in
   // a beforeEach hook.
   let seller;
@@ -41,7 +35,6 @@ describe("GelatoCore.collectExecClaimRent", function () {
   let execClaim;
   let execClaim2;
   let mintPayload;
-  let newCam2;
 
   // ###### GelatoCore Setup ######
   beforeEach(async function () {
@@ -112,7 +105,7 @@ describe("GelatoCore.collectExecClaimRent", function () {
 
     // Provider registers new acttion
 
-    newCam2 = new CAM({
+    const newCam2 = new CAM({
       condition: constants.AddressZero,
       actions: [mockActionDummyGelato],
       gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
@@ -187,19 +180,10 @@ describe("GelatoCore.collectExecClaimRent", function () {
       task,
     };
 
-    let oldBlock = await ethers.provider.getBlock();
-
-    const task2 = new Task({
-      provider: gelatoProvider,
-      condition,
-      actions: [action],
-      expiryDate: oldBlock.timestamp + 1000000,
-    });
-
     execClaim2 = {
       id: 2,
       userProxy: userProxyAddress,
-      task: task2,
+      task,
     };
 
     mintPayload = await run("abi-encode-withselector", {
@@ -208,151 +192,42 @@ describe("GelatoCore.collectExecClaimRent", function () {
       inputs: [task],
     });
 
-    const mintPayload2 = await run("abi-encode-withselector", {
-      contractname: "GelatoCore",
-      functionname: "mintExecClaim",
-      inputs: [task2],
-    });
-
     await userProxy.callAction(gelatoCore.address, mintPayload, 0);
-    await userProxy.callAction(gelatoCore.address, mintPayload2, 0);
   });
 
   // We test different functionality of the contract as normal Mocha tests.
-  describe("GelatoCore.collectExecClaimRent", function () {
-    it("#1: Collect Exec Claim Rent successfully by Executor after skipping time", async function () {
-      // Skip the execClaimTenancy
-      await ethers.provider.send("evm_increaseTime", [EXEC_CLAIM_TENANCY]);
+  describe("GelatoCore.cancelExecClaim", function () {
+    it("#1: Cancel execution claim succesfully as user", async function () {
+      const cancelPayload = await run("abi-encode-withselector", {
+        contractname: "GelatoCore",
+        functionname: "cancelExecClaim",
+        inputs: [execClaim],
+      });
 
-      const executorBalanceBefore = await gelatoCore.executorStake(
-        executorAddress
-      );
-
-      const providerBalanceBefore = await gelatoCore.providerFunds(
-        providerAddress
-      );
-
-      await expect(gelatoCore.connect(executor).collectExecClaimRent(execClaim))
-        .to.emit(gelatoCore, "LogCollectExecClaimRent")
-        .withArgs(
-          executorAddress,
-          providerAddress,
-          execClaim.id,
-          EXEC_CLAIM_RENT
-        );
-
-      const executorBalanceAfter = await gelatoCore.executorStake(
-        executorAddress
-      );
-
-      const providerBalanceAfter = await gelatoCore.providerFunds(
-        providerAddress
-      );
-
-      // Provider Stake has decreased
-      expect(providerBalanceAfter).to.equal(
-        ethers.utils
-          .bigNumberify(providerBalanceBefore)
-          .sub(ethers.utils.bigNumberify(EXEC_CLAIM_RENT)),
-        "Provider Stake on gelato increased by EXEC CLAIM RENT"
-      );
-
-      // Executor Stake has increased
-      expect(executorBalanceAfter).to.equal(
-        ethers.utils
-          .bigNumberify(executorBalanceBefore)
-          .add(ethers.utils.bigNumberify(EXEC_CLAIM_RENT)),
-        "Executor Stake on gelato increased by EXEC CLAIM RENT"
-      );
+      await expect(userProxy.callAction(gelatoCore.address, cancelPayload, 0))
+        .to.emit(gelatoCore, "LogExecClaimCancelled")
+        .withArgs(execClaim.id);
     });
 
-    it("#2: Revert when collecting Exec Claim Rent successfully by Executor after NOT skipping time", async function () {
-      // Skip the execClaimTenancy
+    it("#2: Cancel execution claim succesfully as provider", async function () {
+      await expect(gelatoCore.connect(provider).cancelExecClaim(execClaim))
+        .to.emit(gelatoCore, "LogExecClaimCancelled")
+        .withArgs(execClaim.id);
+    });
 
+    it("#3: Cancel execution claim unsuccesfully as random third party", async function () {
       await expect(
-        gelatoCore.connect(executor).collectExecClaimRent(execClaim)
-      ).to.be.revertedWith("GelatoCore.collecExecClaimRent: rent is not due");
+        gelatoCore.connect(executor).cancelExecClaim(execClaim)
+      ).to.be.revertedWith("GelatoCore.cancelExecClaim: sender");
     });
 
-    it("#3: Revert when collecting Exec Claim Rent successfully by anyone else than executor", async function () {
-      // Skip the execClaimTenancy
+    it("#4: Cancel execution claim succesfully as random third party IF Expiry date is NOT 0 and expired", async function () {
+      // Mint execClaim with expiry != 0
 
-      await expect(
-        gelatoCore.connect(provider).collectExecClaimRent(execClaim)
-      ).to.be.revertedWith(
-        "GelatoCore.collecExecClaimRent: msg.sender not assigned Executor"
-      );
-    });
+      const abi = ["function action(bool)"];
+      const interFace = new utils.Interface(abi);
+      const actionData = interFace.functions.action.encode([true]);
 
-    it("#4: Revert when collecting Exec Claim Rent due to expired execClaim", async function () {
-      // Skip the execClaimTenancy
-      await ethers.provider.send("evm_increaseTime", [1000000]);
-
-      await expect(
-        gelatoCore.connect(executor).collectExecClaimRent(execClaim2)
-      ).to.be.revertedWith("GelatoCore.collectExecClaimRent: expired");
-    });
-
-    it("#5: Revert when collecting Exec Claim Rent due to provider having unprovided CAM (only for non-self providers)", async function () {
-      // Unprovide CAM
-      await gelatoCore.connect(provider).unprovideCAMs([newCam2]);
-
-      await ethers.provider.send("evm_increaseTime", [EXEC_CLAIM_TENANCY]);
-
-      await expect(
-        gelatoCore.connect(executor).collectExecClaimRent(execClaim)
-      ).to.be.revertedWith(
-        "GelatoCore.collecExecClaimRent: isCAMProvided failed"
-      );
-    });
-
-    it("#6: Revert when collecting Exec Claim Rent due to provider having unprovided Funds ", async function () {
-      // Change min. stake of providers to below 1 finney
-      await gelatoCore.connect(sysAdmin).setMinProviderStake("1000");
-
-      // get current provider stake
-      let currentProviderStake = await gelatoCore.providerFunds(
-        providerAddress
-      );
-
-      const withdrawAmount = ethers.utils
-        .bigNumberify(currentProviderStake)
-        .sub(ethers.utils.bigNumberify(EXEC_CLAIM_RENT))
-        .add(ethers.utils.bigNumberify("1"));
-
-      // Withdraw exccess funds to have below EXEC_CLAIM_RENT
-      await gelatoCore
-        .connect(provider)
-        .providerAssignsExecutor(constants.AddressZero);
-      await gelatoCore.connect(provider).unprovideFunds(withdrawAmount);
-      await gelatoCore
-        .connect(provider)
-        .providerAssignsExecutor(executorAddress);
-
-      currentProviderStake = await gelatoCore.providerFunds(providerAddress);
-
-      await ethers.provider.send("evm_increaseTime", [EXEC_CLAIM_TENANCY]);
-
-      await expect(
-        gelatoCore.connect(executor).collectExecClaimRent(execClaim)
-      ).to.be.revertedWith(
-        "GelatoCore.collecExecClaimRent: insufficient providerFunds"
-      );
-    });
-
-    it("#7: Revert when collecting Exec Claim Rent due to wrong execCLaim ", async function () {
-      // Change min. stake of providers to below 1 finney
-
-      execClaim.id = 100;
-
-      await expect(
-        gelatoCore.connect(executor).collectExecClaimRent(execClaim)
-      ).to.be.revertedWith(
-        "GelatoCore.collectExecClaimRent: invalid execClaimHash"
-      );
-    });
-
-    it("#8: BATCH Collect Exec Claim Rent successfully by Executor after skipping time", async function () {
       const gelatoProvider = new GelatoProvider({
         addr: providerAddress,
         module: providerModuleGelatoUserProxy.address,
@@ -365,54 +240,84 @@ describe("GelatoCore.collectExecClaimRent", function () {
 
       const action = new Action({
         inst: mockActionDummy.address,
-        data: constants.HashZero,
+        data: actionData,
         operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });
 
-      const tempTask = new Task({
+      let oldBlock = await ethers.provider.getBlock();
+
+      const task = new Task({
         provider: gelatoProvider,
         condition,
         actions: [action],
-        expiryDate: constants.HashZero,
+        expiryDate: oldBlock.timestamp + 1000000,
       });
 
-      const tempExecClaim = {
-        id: 3,
+      execClaim = {
+        id: 2,
         userProxy: userProxyAddress,
-        task: tempTask,
+        task,
       };
 
-      mintPayload = await run("abi-encode-withselector", {
+      const mintPayload = await run("abi-encode-withselector", {
         contractname: "GelatoCore",
         functionname: "mintExecClaim",
-        inputs: [tempTask],
+        inputs: [task],
       });
 
       await userProxy.callAction(gelatoCore.address, mintPayload, 0);
 
-      await ethers.provider.send("evm_increaseTime", [EXEC_CLAIM_TENANCY]);
+      await expect(
+        gelatoCore.connect(executor).cancelExecClaim(execClaim)
+      ).to.be.revertedWith("GelatoCore.cancelExecClaim: sender");
+
+      await ethers.provider.send("evm_increaseTime", [1000000]);
+
+      await expect(gelatoCore.connect(executor).cancelExecClaim(execClaim))
+        .to.emit(gelatoCore, "LogExecClaimCancelled")
+        .withArgs(execClaim.id);
+    });
+
+    it("#5: Cancel execution claim unsuccesfully due to wrong execClaim input", async function () {
+      await expect(
+        gelatoCore.connect(provider).cancelExecClaim(execClaim2)
+      ).to.be.revertedWith(
+        "VM Exception while processing transaction: revert GelatoCore.cancelExecClaim: invalid execClaimHash"
+      );
+    });
+
+    it("#6: Batch Cancel execution claim succesfully as user", async function () {
+      // mint second Claim
+      await userProxy.callAction(gelatoCore.address, mintPayload, 0);
+
+      const cancelPayload = await run("abi-encode-withselector", {
+        contractname: "GelatoCore",
+        functionname: "batchCancelExecClaim",
+        inputs: [[execClaim, execClaim2]],
+      });
+
+      await expect(userProxy.callAction(gelatoCore.address, cancelPayload, 0))
+        .to.emit(gelatoCore, "LogExecClaimCancelled")
+        .withArgs(execClaim.id)
+        .to.emit(gelatoCore, "LogExecClaimCancelled")
+        .withArgs(execClaim2.id);
+    });
+
+    it("#7: Batch Cancel execution claim succesfully as provider", async function () {
+      // mint second Claim
+      await userProxy.callAction(gelatoCore.address, mintPayload, 0);
 
       await expect(
         gelatoCore
-          .connect(executor)
-          .batchCollectExecClaimRent([execClaim, tempExecClaim])
+          .connect(provider)
+          .batchCancelExecClaim([execClaim, execClaim2])
       )
-        .to.emit(gelatoCore, "LogCollectExecClaimRent")
-        .withArgs(
-          executorAddress,
-          providerAddress,
-          execClaim.id,
-          EXEC_CLAIM_RENT
-        )
-        .to.emit(gelatoCore, "LogCollectExecClaimRent")
-        .withArgs(
-          executorAddress,
-          providerAddress,
-          tempExecClaim.id,
-          EXEC_CLAIM_RENT
-        );
+        .to.emit(gelatoCore, "LogExecClaimCancelled")
+        .withArgs(execClaim.id)
+        .to.emit(gelatoCore, "LogExecClaimCancelled")
+        .withArgs(execClaim2.id);
     });
   });
 });

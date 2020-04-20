@@ -228,10 +228,10 @@ describe("GelatoCore.Execute", function () {
           ethers.utils.parseUnits("300", "ether")
         );
 
-      expect(canExecReturn).to.equal("InsufficientProviderFunds");
+      expect(canExecReturn).to.equal("ProviderIlliquidity");
     });
 
-    it("#3: CanExec - Exec Claim expired)", async function () {
+    it("#3: CanExec - Exec Claim expired", async function () {
       let oldBlock = await ethers.provider.getBlock();
 
       const task2 = new Task({
@@ -292,9 +292,7 @@ describe("GelatoCore.Execute", function () {
         .connect(executor)
         .canExec(execClaim2, GELATO_MAX_GAS, GELATO_GAS_PRICE);
 
-      expect(canExecReturn).to.equal(
-        "GelatoGasPriceTooHigh OR CAM not whitelisted"
-      );
+      expect(canExecReturn).to.equal("camGasPriceCeil-OR-notProvided");
     });
 
     it("#5: CanExec - Return Ok when called via executor)", async function () {
@@ -302,10 +300,10 @@ describe("GelatoCore.Execute", function () {
         .connect(executor)
         .canExec(execClaim, GELATO_MAX_GAS, GELATO_GAS_PRICE);
 
-      expect(canExecReturn).to.equal("Ok");
+      expect(canExecReturn).to.equal("OK");
     });
 
-    it("#5: CanExec - Return InvalidExecutor when called NOT via executor)", async function () {
+    it("#6: CanExec - Return InvalidExecutor when called NOT via executor)", async function () {
       const canExecReturn = await gelatoCore
         .connect(provider)
         .canExec(execClaim, GELATO_MAX_GAS, GELATO_GAS_PRICE);

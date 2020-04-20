@@ -203,7 +203,7 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
 
       // providerModuleChecks
       expect(await gelatoCore.providerModuleChecks(execClaim)).to.be.equal(
-        "Ok"
+        "OK"
       );
     });
 
@@ -264,11 +264,11 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
 
       // providerModuleChecks
       expect(await gelatoCore.providerModuleChecks(execClaim)).to.be.equal(
-        "Ok"
+        "OK"
       );
       expect(
         await gelatoCore.providerModuleChecks(otherExecClaim)
-      ).to.not.be.equal("Ok");
+      ).to.not.be.equal("OK");
     });
 
     it("Should catch non-conform providerModuleChecks()", async function () {
@@ -301,12 +301,12 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
       // providerCanExec: execClaim (provided gelato user proxy)
       expect(
         await gelatoCore.providerCanExec(execClaim, weirdFlexButOkPrice)
-      ).to.be.equal("Ok");
+      ).to.be.equal("OK");
 
       // providerCanExec: otherExecClaim (not provided gnosis safe)
       expect(
         await gelatoCore.providerCanExec(otherExecClaim, okGelatoGasPrice)
-      ).to.not.be.equal("Ok");
+      ).to.not.be.equal("OK");
 
       // providerCanExec: fakeExecClaim
       expect(

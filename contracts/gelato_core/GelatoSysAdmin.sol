@@ -14,13 +14,12 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
 
     // Executor compensation for estimated tx costs not accounted for by startGas
     uint256 public constant override EXEC_TX_OVERHEAD = 55000;
-    string public constant override OK = "OK";
+    string internal constant OK = "OK";
 
     // uint256 public override gelatoGasPrice = 9000000000;  // 9 gwei initial
     IGelatoGasPriceOracle public override gelatoGasPriceOracle;
     uint256 public override gelatoMaxGas = 7000000;  // 7 mio initial
     uint256 public override internalGasRequirement = 100000;
-    uint256 public override minProviderStake = 0.1 ether;  // production: 1 ETH
     uint256 public override minExecutorStake = 0.02 ether;  // production: 1 ETH
     uint256 public override execClaimTenancy = 30 days;
     uint256 public override execClaimRent = 1 finney;
@@ -58,12 +57,6 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
     function setInternalGasRequirement(uint256 _newRequirement) external override onlyOwner {
         emit LogSetInternalGasRequirement(internalGasRequirement, _newRequirement);
         internalGasRequirement = _newRequirement;
-    }
-
-    // Minimum Executor Stake Per Provider
-    function setMinProviderStake(uint256 _newMin) external override onlyOwner {
-        emit LogSetMinProviderStake(minProviderStake, _newMin);
-        minProviderStake = _newMin;
     }
 
     // Minimum Executor Stake Per Provider

@@ -42,31 +42,31 @@ describe("GelatoCore - GelatoExecutors - Setters: FUNDS", function () {
 
   // stakeExecutor
   describe("GelatoCore.GelatoExecutors.stakeExecutor", function () {
-    it("Should allow anyone to stakeExecutor with minExecutorStake", async function () {
-      // stakeExecutor()
-      await expect(gelatoCore.stakeExecutor({ value: minExecutorStake }))
-        .to.emit(gelatoCore, "LogStakeExecutor")
-        .withArgs(executorAddress, minExecutorStake);
+    // it("Should allow anyone to stakeExecutor with minExecutorStake", async function () {
+    //   // stakeExecutor()
+    //   await expect(gelatoCore.stakeExecutor({ value: minExecutorStake }))
+    //     .to.emit(gelatoCore, "LogStakeExecutor")
+    //     .withArgs(executorAddress, minExecutorStake);
 
-      // executorStake
-      expect(await gelatoCore.executorStake(executorAddress)).to.be.equal(
-        69420
-      );
+    //   // executorStake
+    //   expect(await gelatoCore.executorStake(executorAddress)).to.be.equal(
+    //     69420
+    //   );
 
-      // stakeExecutor()
-      await expect(
-        gelatoCore
-          .connect(randomGuy)
-          .stakeExecutor({ value: minExecutorStake.add(69) })
-      )
-        .to.emit(gelatoCore, "LogStakeExecutor")
-        .withArgs(await randomGuy.getAddress, minExecutorStake.add(69));
+    //   // stakeExecutor()
+    //   await expect(
+    //     gelatoCore
+    //       .connect(randomGuy)
+    //       .stakeExecutor({ value: minExecutorStake.add(69) })
+    //   )
+    //     .to.emit(gelatoCore, "LogStakeExecutor")
+    //     .withArgs(await randomGuy.getAddress, minExecutorStake.add(69));
 
-      // executorStake
-      expect(await gelatoCore.providerFunds(otherProviderAddress)).to.be.equal(
-        42069
-      );
-    });
+    //   // executorStake
+    //   expect(await gelatoCore.providerFunds(otherProviderAddress)).to.be.equal(
+    //     42069
+    //   );
+    // });
 
     // it("Should allow anyone to stakeExecutor to other Providers", async function () {
     //   await expect(
@@ -155,7 +155,7 @@ describe("GelatoCore - GelatoExecutors - Setters: FUNDS", function () {
   // unstakeExecutor
   it("Should NOT allow Providers with an assigned Executor to unprovide their funds", async function () {
     // minProviderStake required for providerAssignsExecutor
-    const minProviderStake = await gelatoCore.minProviderStake();
+    const providedFunds = utils.bigNumberify(42069);
 
     // isProviderMinStaked
     expect(await gelatoCore.isProviderMinStaked(executorAddress)).to.be.false;
@@ -211,7 +211,7 @@ describe("GelatoCore - GelatoExecutors - Setters: FUNDS", function () {
   // unstakeExecutor
   it("Should allow minFunded Providers to unassign Executor and unstakeExecutor", async function () {
     // minProviderStake required for providerAssignsExecutor
-    const minProviderStake = await gelatoCore.minProviderStake();
+    const providedFunds = utils.bigNumberify(42069);
 
     // isProviderMinStaked
     expect(await gelatoCore.isProviderMinStaked(executorAddress)).to.be.false;

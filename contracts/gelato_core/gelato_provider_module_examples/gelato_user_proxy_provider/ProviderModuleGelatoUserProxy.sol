@@ -1,7 +1,7 @@
 pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
-import { IGelatoProviderModule } from "../../interfaces/IGelatoProviderModule.sol";
+import { GelatoProviderModuleStandard } from "../../GelatoProviderModuleStandard.sol";
 import { IProviderModuleGelatoUserProxy } from "./IProviderModuleGelatoUserProxy.sol";
 import { Ownable } from "../../../external/Ownable.sol";
 import { Action, ExecClaim } from "../../interfaces/IGelatoCore.sol";
@@ -10,7 +10,7 @@ import {
 } from "../../../user_proxies/gelato_user_proxy/interfaces/IGelatoUserProxy.sol";
 
 contract ProviderModuleGelatoUserProxy is
-    IGelatoProviderModule,
+    GelatoProviderModuleStandard,
     IProviderModuleGelatoUserProxy,
     Ownable
 {
@@ -33,7 +33,7 @@ contract ProviderModuleGelatoUserProxy is
         if (!isProxyExtcodehashProvided[codehash])
             return "ProviderModuleGelatoUserProxy.isProvided:InvalidExtcodehash";
 
-        return "Ok";
+        return OK;
     }
 
     function execPayload(Action[] calldata _actions)

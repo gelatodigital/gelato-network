@@ -6,7 +6,7 @@ contract MockActionDummyRevert is GelatoActionsStandard {
     function action(bytes calldata) external payable override virtual {
     }
 
-    function action(bool falseOrTrue) public payable virtual {
+    function action(bool) public payable virtual {
         revert("Test revert");
     }
 
@@ -17,7 +17,7 @@ contract MockActionDummyRevert is GelatoActionsStandard {
 
     function termsOk(bool _isOk) public pure virtual returns(string memory)
     {
-        if(_isOk) return "Ok";
+        if(_isOk) return OK;
         revert("Action TermsOk not ok");
     }
 }
