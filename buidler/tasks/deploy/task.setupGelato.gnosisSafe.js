@@ -97,7 +97,7 @@ export default task("setupgelato-gnosissafeproxy")
         const action = new Action({
           inst: actionAddress,
           data: constants.HashZero,
-          operation: "delegatecall",
+          operation: Operation.Delegatecall,
           termsOkCheck: true,
         });
         actionArray.push(action);

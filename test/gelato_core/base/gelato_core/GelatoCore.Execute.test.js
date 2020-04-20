@@ -167,7 +167,7 @@ describe("GelatoCore.Execute", function () {
     actionERC20TransferFromGelato = new Action({
       inst: actionERC20TransferFrom.address,
       data: constants.HashZero,
-      operation: "delegatecall",
+      operation: Operation.Delegatecall,
       value: 0,
       termsOkCheck: true,
     });
@@ -175,7 +175,7 @@ describe("GelatoCore.Execute", function () {
     const actionWithdrawBatchExchangeGelato = new Action({
       inst: actionWithdrawBatchExchange.address,
       data: constants.HashZero,
-      operation: "delegatecall",
+      operation: Operation.Delegatecall,
       value: 0,
       termsOkCheck: true,
     });
@@ -306,7 +306,7 @@ describe("GelatoCore.Execute", function () {
       const action = new Action({
         inst: actionWithdrawBatchExchange.address,
         data: actionData,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });
@@ -418,7 +418,7 @@ describe("GelatoCore.Execute", function () {
       const action = new Action({
         inst: actionERC20TransferFrom.address,
         data: actionData,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });
@@ -511,7 +511,7 @@ describe("GelatoCore.Execute", function () {
       const action = new Action({
         inst: actionERC20TransferFrom.address,
         data: actionData,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });
@@ -602,7 +602,7 @@ describe("GelatoCore.Execute", function () {
       const action = new Action({
         inst: actionERC20TransferFrom.address,
         data: actionData,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });
@@ -657,7 +657,7 @@ describe("GelatoCore.Execute", function () {
       const mockActionDummyRevertGelato = new Action({
         inst: mockActionDummyRevert.address,
         data: constants.HashZero,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });
@@ -689,7 +689,7 @@ describe("GelatoCore.Execute", function () {
       const action = new Action({
         inst: mockActionDummyRevert.address,
         data: actionData,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });
@@ -745,7 +745,7 @@ describe("GelatoCore.Execute", function () {
       const revertingAction = new Action({
         inst: mockConditionDummyRevert.address,
         data: constants.HashZero,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });
@@ -775,7 +775,7 @@ describe("GelatoCore.Execute", function () {
       const action = new Action({
         inst: mockConditionDummyRevert.address,
         data: actionData,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });
@@ -852,7 +852,7 @@ describe("GelatoCore.Execute", function () {
       const action = new Action({
         inst: actionERC20TransferFrom.address,
         data: actionData,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });
@@ -941,7 +941,7 @@ describe("GelatoCore.Execute", function () {
       const action = new Action({
         inst: actionERC20TransferFrom.address,
         data: actionData,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });
@@ -981,7 +981,7 @@ describe("GelatoCore.Execute", function () {
       const mockConditionAsAction = new Action({
         inst: mockConditionDummy.address,
         data: constants.HashZero,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: false,
       });
@@ -1079,7 +1079,7 @@ describe("GelatoCore.Execute", function () {
       const action = new Action({
         inst: actionERC20TransferFrom.address,
         data: actionData,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });
@@ -1170,7 +1170,7 @@ describe("GelatoCore.Execute", function () {
       const action = new Action({
         inst: actionWithdrawBatchExchange.address,
         data: actionData,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });
@@ -1277,7 +1277,7 @@ describe("GelatoCore.Execute", function () {
       const action = new Action({
         inst: actionWithdrawBatchExchange.address,
         data: actionData,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });
@@ -1380,7 +1380,7 @@ describe("GelatoCore.Execute", function () {
       const action = new Action({
         inst: actionWithdrawBatchExchange.address,
         data: actionData,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });
@@ -1522,7 +1522,7 @@ describe("GelatoCore.Execute", function () {
       const action = new Action({
         inst: actionWithdrawBatchExchange.address,
         data: actionData,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });
@@ -1616,7 +1616,7 @@ describe("GelatoCore.Execute", function () {
       const mockActionDummyGelato = new Action({
         inst: mockActionDummy.address,
         data: constants.HashZero,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });
@@ -1666,7 +1666,7 @@ describe("GelatoCore.Execute", function () {
       const action = new Action({
         inst: mockActionDummy.address,
         data: actionData,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });

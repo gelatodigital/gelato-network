@@ -105,7 +105,7 @@ describe("GelatoCore.collectExecClaimRent", function () {
     const mockActionDummyGelato = new Action({
       inst: mockActionDummy.address,
       data: constants.HashZero,
-      operation: "delegatecall",
+      operation: Operation.Delegatecall,
       value: 0,
       termsOkCheck: true,
     });
@@ -169,7 +169,7 @@ describe("GelatoCore.collectExecClaimRent", function () {
     const action = new Action({
       inst: mockActionDummy.address,
       data: actionData,
-      operation: "delegatecall",
+      operation: Operation.Delegatecall,
       value: 0,
       termsOkCheck: true,
     });
@@ -366,7 +366,7 @@ describe("GelatoCore.collectExecClaimRent", function () {
       const action = new Action({
         inst: mockActionDummy.address,
         data: constants.HashZero,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });

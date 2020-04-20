@@ -101,7 +101,7 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
     const action = new Action({
       inst: constants.AddressZero,
       data: constants.HashZero,
-      operation: "call",
+      operation: Operation.Call,
       termsOkCheck: true,
     });
     const task = new Task({

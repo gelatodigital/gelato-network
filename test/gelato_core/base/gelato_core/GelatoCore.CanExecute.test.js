@@ -116,7 +116,7 @@ describe("GelatoCore.Execute", function () {
     const mockActionDummyGelato = new Action({
       inst: mockActionDummy.address,
       data: constants.HashZero,
-      operation: "delegatecall",
+      operation: Operation.Delegatecall,
       value: 0,
       termsOkCheck: true,
     });
@@ -172,7 +172,7 @@ describe("GelatoCore.Execute", function () {
     action = new Action({
       inst: mockActionDummy.address,
       data: actionData,
-      operation: "delegatecall",
+      operation: Operation.Delegatecall,
       value: 0,
       termsOkCheck: true,
     });

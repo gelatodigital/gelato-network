@@ -74,13 +74,13 @@ describe("GelatoCore - GelatoProviders - Setters: CAMS", function () {
     actionStruct = new Action({
       inst: action.address,
       data: "0xdeadbeef",
-      operation: "delegatecall",
+      operation: Operation.Delegatecall,
       termsOkCheck: false,
     });
     otherActionStruct = new Action({
       inst: otherAction.address,
       data: "0xdeadbeef",
-      operation: "delegatecall",
+      operation: Operation.Delegatecall,
       termsOkCheck: true,
     });
 

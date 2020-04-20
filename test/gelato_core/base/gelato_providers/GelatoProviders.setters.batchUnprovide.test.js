@@ -81,13 +81,13 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH UNPROVIDE", function () 
     actionStruct = new Action({
       inst: action.address,
       data: "0xdeadbeef",
-      operation: "delegatecall",
+      operation: Operation.Delegatecall,
       termsOkCheck: false,
     });
     otherActionStruct = new Action({
       inst: otherAction.address,
       data: "0xdeadbeef",
-      operation: "delegatecall",
+      operation: Operation.Delegatecall,
       termsOkCheck: true,
     });
 
@@ -180,9 +180,6 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH UNPROVIDE", function () 
       expect(await gelatoCore.providerFunds(providerAddress)).to.be.equal(
         initialState.providerFunds
       );
-      // isProviderMinStaked
-      expect(await gelatoCore.isProviderMinStaked(providerAddress)).to.be.false;
-
       // cam
       // camGPC
       expect(await gelatoCore.camGPC(providerAddress, camHash)).to.be.equal(
