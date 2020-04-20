@@ -31,7 +31,7 @@ describe("GelatoCore - GelatoSysAdmin - Getters: FEES", function () {
     it("Should return the correct executorSuccessFee", async function () {
       const estExecCostBN = GAS.mul(GAS_PRICE);
       const numeratorBN = estExecCostBN.mul(initialState.executorSuccessShare);
-      const expectedFee = numeratorBN.div(100);
+      const expectedFee = estExecCostBN.add(numeratorBN.div(100));
       expect(await gelatoCore.executorSuccessFee(GAS, GAS_PRICE)).to.be.equal(
         expectedFee
       );

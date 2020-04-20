@@ -146,7 +146,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
     const actionERC20TransferFromGelato = new Action({
       inst: actionERC20TransferFrom.address,
       data: constants.HashZero,
-      operation: "delegatecall",
+      operation: Operation.Delegatecall,
       value: 0,
       termsOkCheck: true,
     });
@@ -154,7 +154,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
     const actionWithdrawBatchExchangeGelato = new Action({
       inst: actionWithdrawBatchExchange.address,
       data: constants.HashZero,
-      operation: "delegatecall",
+      operation: Operation.Delegatecall,
       value: 0,
       termsOkCheck: true,
     });

@@ -4,10 +4,7 @@ const { expect } = require("chai");
 const { run, ethers } = require("@nomiclabs/buidler");
 const FEE_USD = 2;
 const FEE_ETH = 9000000000000000;
-const OPERATION = {
-  call: 0,
-  delegatecall: 1,
-};
+
 const GELATO_GAS_PRICE = ethers.utils.parseUnits("8", "gwei");
 
 describe("Gelato Core - Minting ", function () {
@@ -147,7 +144,7 @@ describe("Gelato Core - Minting ", function () {
     actionERC20TransferFromGelato = new Action({
       inst: actionERC20TransferFrom.address,
       data: constants.HashZero,
-      operation: "delegatecall",
+      operation: Operation.Delegatecall,
       value: 0,
       termsOkCheck: true,
     });
@@ -155,7 +152,7 @@ describe("Gelato Core - Minting ", function () {
     const actionWithdrawBatchExchangeGelato = new Action({
       inst: actionWithdrawBatchExchange.address,
       data: constants.HashZero,
-      operation: "delegatecall",
+      operation: Operation.Delegatecall,
       value: 0,
       termsOkCheck: true,
     });
@@ -258,7 +255,7 @@ describe("Gelato Core - Minting ", function () {
       const action = new Action({
         inst: actionWithdrawBatchExchange.address,
         data: actionPayload,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });
@@ -311,7 +308,7 @@ describe("Gelato Core - Minting ", function () {
       const action = new Action({
         inst: notWhitelistedAction,
         data: actionPayload,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });
@@ -369,7 +366,7 @@ describe("Gelato Core - Minting ", function () {
       const action = new Action({
         inst: actionWithdrawBatchExchange.address,
         data: actionPayload,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });
@@ -424,7 +421,7 @@ describe("Gelato Core - Minting ", function () {
       const action = new Action({
         inst: actionWithdrawBatchExchange.address,
         data: actionPayload,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });
@@ -479,7 +476,7 @@ describe("Gelato Core - Minting ", function () {
       const action = new Action({
         inst: actionWithdrawBatchExchange.address,
         data: actionPayload,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });
@@ -532,7 +529,7 @@ describe("Gelato Core - Minting ", function () {
       const action = new Action({
         inst: actionWithdrawBatchExchange.address,
         data: actionPayload,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });
@@ -575,7 +572,7 @@ describe("Gelato Core - Minting ", function () {
       const action = new Action({
         inst: actionWithdrawBatchExchange.address,
         data: noActionPayload,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });
@@ -654,7 +651,7 @@ describe("Gelato Core - Minting ", function () {
       const action = new Action({
         inst: actionWithdrawBatchExchange.address,
         data: actionPayload,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });
@@ -662,7 +659,7 @@ describe("Gelato Core - Minting ", function () {
       const action2 = new Action({
         inst: constants.AddressZero,
         data: constants.HashZero,
-        operation: "call",
+        operation: Operation.Call,
         value: 0,
         termsOkCheck: true,
       });
@@ -742,125 +739,6 @@ describe("Gelato Core - Minting ", function () {
       // GelatoCore.mintExecClaim.isProvided:InvalidProviderModule
     });
 
-    it("#9: mintExecClaim reverts (Self-provider), not staking and hence cannot assign executor", async function () {
-      const actionInputs = {
-        user: providerAddress,
-        userProxy: userProxyAddress,
-        sendToken: sellToken.address,
-        destination: sellerAddress,
-        sendAmount: ethers.utils.parseUnits("1", "ether"),
-      };
-
-      const actionPayload = await run("abi-encode-withselector", {
-        contractname: "ActionERC20TransferFrom",
-        functionname: "action",
-        inputs: [actionInputs],
-      });
-
-      // 2. Create Proxy for seller
-      tx = await gelatoUserProxyFactory.connect(provider).create();
-      txResponse = await tx.wait();
-
-      const executionEvent = await run("event-getparsedlog", {
-        contractname: "GelatoUserProxyFactory",
-        contractaddress: gelatoUserProxyFactory.address,
-        eventname: "LogCreation",
-        txhash: txResponse.transactionHash,
-        blockhash: txResponse.blockHash,
-        values: true,
-        stringify: true,
-      });
-
-      const providerProxyAddress = executionEvent.userProxy;
-
-      const providerProxy = await ethers.getContractAt(
-        "GelatoUserProxy",
-        providerProxyAddress
-      );
-
-      const gelatoProvider = new GelatoProvider({
-        addr: providerProxyAddress,
-        module: providerModuleGelatoUserProxy.address,
-      });
-
-      const condition = new Condition({
-        inst: constants.AddressZero,
-        data: constants.HashZero,
-      });
-
-      const action = new Action({
-        inst: actionWithdrawBatchExchange.address,
-        data: actionPayload,
-        operation: "delegatecall",
-        value: 0,
-        termsOkCheck: true,
-      });
-
-      const action2 = new Action({
-        inst: constants.AddressZero,
-        data: constants.HashZero,
-        value: 0,
-        operation: "call",
-        termsOkCheck: true,
-      });
-
-      const task = new Task({
-        provider: gelatoProvider,
-        condition,
-        actions: [action, action2],
-        expiryDate: constants.HashZero,
-      });
-
-      // Assign Executor
-      const providerAssignsExecutorPayload = await run(
-        "abi-encode-withselector",
-        {
-          contractname: "GelatoCore",
-          functionname: "providerAssignsExecutor",
-          inputs: [executorAddress],
-        }
-      );
-
-      // Mint Claim
-      const mintPayload = await run("abi-encode-withselector", {
-        contractname: "GelatoCore",
-        functionname: "mintExecClaim",
-        inputs: [task],
-      });
-
-      // addProviderModules
-      const addProviderModulePayload = await run("abi-encode-withselector", {
-        contractname: "GelatoCore",
-        functionname: "addProviderModules",
-        inputs: [[providerModuleGelatoUserProxy.address]],
-      });
-
-      const selfProviderSetupData = [
-        {
-          inst: gelatoCore.address,
-          data: providerAssignsExecutorPayload,
-          value: ethers.constants.Zero,
-        },
-        {
-          inst: gelatoCore.address,
-          data: addProviderModulePayload,
-          value: ethers.constants.Zero,
-        },
-        {
-          inst: gelatoCore.address,
-          data: mintPayload,
-          value: ethers.constants.Zero,
-        },
-      ];
-
-      // GelatoCore.mintExecClaim.isProvided:InvalidProviderModule
-      await expect(
-        providerProxy.connect(provider).multiCallActions(selfProviderSetupData)
-      ).to.revertedWith(
-        "GelatoUserProxy.callAction:GelatoProviders.providerAssignsExecutor: isProviderMinStaked()"
-      );
-    });
-
     it("#10: mintExecClaim reverts (Self-provider), inputting other address as provider that has not whitelisted action", async function () {
       const actionInputs = {
         user: providerAddress,
@@ -910,7 +788,7 @@ describe("Gelato Core - Minting ", function () {
       const action = new Action({
         inst: actionWithdrawBatchExchange.address,
         data: actionPayload,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });
@@ -918,7 +796,7 @@ describe("Gelato Core - Minting ", function () {
       const action2 = new Action({
         inst: actionWithdrawBatchExchange.address,
         data: constants.HashZero,
-        operation: "call",
+        operation: Operation.Call,
         value: 0,
         termsOkCheck: true,
       });

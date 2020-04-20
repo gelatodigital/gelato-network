@@ -13,12 +13,13 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
     using SafeMath for uint256;
 
     // Executor compensation for estimated tx costs not accounted for by startGas
-    uint256 public constant override EXEC_TX_OVERHEAD = 50000;
+    uint256 public constant override EXEC_TX_OVERHEAD = 55000;
+    string public constant override OK = "OK";
 
     // uint256 public override gelatoGasPrice = 9000000000;  // 9 gwei initial
     IGelatoGasPriceOracle public override gelatoGasPriceOracle;
     uint256 public override gelatoMaxGas = 7000000;  // 7 mio initial
-    uint256 public override internalGasRequirement = 500000;
+    uint256 public override internalGasRequirement = 100000;
     uint256 public override minProviderStake = 0.1 ether;  // production: 1 ETH
     uint256 public override minExecutorStake = 0.02 ether;  // production: 1 ETH
     uint256 public override execClaimTenancy = 30 days;
@@ -132,8 +133,7 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
         returns(uint256)
     {
         uint256 estExecCost = _gas.mul(_gasPrice);
-        return SafeMath.div(
-            estExecCost.mul(executorSuccessShare),
+        return estExecCost + estExecCost.mul(executorSuccessShare).div(
             100,
             "GelatoSysAdmin.executorSuccessFee: div error"
         );
@@ -146,8 +146,8 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
         returns(uint256)
     {
         uint256 estExecCost = _gas.mul(_gasPrice);
-        return SafeMath.div(
-            estExecCost.mul(sysAdminSuccessShare),
+        return
+            estExecCost.mul(sysAdminSuccessShare).div(
             100,
             "GelatoSysAdmin.sysAdminSuccessShare: div error"
         );

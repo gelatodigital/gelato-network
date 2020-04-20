@@ -6,11 +6,12 @@ export default task(
   "gc-batchprovide",
   `Sends tx and --funds to GelatoCore.batchProvide() on [--network] (default: ${defaultNetwork})`
 )
+  .addOptionalParam("cams", "Already created CAMS")
   .addOptionalParam("funds", "The amount of ETH funds to provide")
   .addOptionalParam("gelatoexecutor", "The provider's assigned gelatoExecutor")
   .addOptionalParam("conditions", "Only one via CLI.")
   .addOptionalParam(
-    "actionswithgaspriceceil",
+    "actions",
     "Cannot be passed via CLI as it is an Array of ActionsWithGasPriceCeil objs"
   )
   .addOptionalParam(
@@ -42,40 +43,40 @@ export default task(
       if (!taskArgs.gelatoexecutor)
         taskArgs.gelatoexecutor = constants.AddressZero;
 
-      if (!taskArgs.conditions) taskArgs.conditions = [];
-      else
-        taskArgs.conditions = Array.isArray(taskArgs.conditions)
-          ? taskArgs.conditions
-          : [taskArgs.conditions];
+      if (!taskArgs.cams) {
+        if (!taskArgs.conditions) taskArgs.conditions = [];
+        else
+          taskArgs.conditions = Array.isArray(taskArgs.conditions)
+            ? taskArgs.conditions
+            : [taskArgs.conditions];
 
-      if (!taskArgs.actionswithgaspriceceil)
-        taskArgs.actionswithgaspriceceil = [];
-      else
-        taskArgs.actionswithgaspriceceil = Array.isArray(
-          taskArgs.actionswithgaspriceceil
-        )
-          ? taskArgs.actionswithgaspriceceil
-          : [taskArgs.actionswithgaspriceceil];
+        if (!taskArgs.actions) taskArgs.actions = [];
+        else
+          taskArgs.actions = Array.isArray(taskArgs.actions)
+            ? taskArgs.actions
+            : [taskArgs.actions];
 
-      if (taskArgs.action) {
-        const actionAddress = await run("bre-config", {
-          deployments: true,
-          contractname: taskArgs.action,
-        });
-        const actionWithGasPriceCeil = new ActionsWithGasPriceCeil(
-          actionAddress,
-          taskArgs.actiongaspriceceil
-        );
-        taskArgs.actionswithgaspriceceil.push(actionWithGasPriceCeil);
+        if (taskArgs.action) {
+          const actionAddress = await run("bre-config", {
+            deployments: true,
+            contractname: taskArgs.action,
+          });
+          const actionWithGasPriceCeil = new ActionsWithGasPriceCeil(
+            actionAddress,
+            taskArgs.actiongaspriceceil
+          );
+          taskArgs.actions.push(actionWithGasPriceCeil);
+        }
+
+        if (!taskArgs.modules) taskArgs.modules = [];
+        else
+          taskArgs.modules = Array.isArray(taskArgs.modules)
+            ? taskArgs.modules
+            : [taskArgs.modules];
+
+        if (taskArgs.log)
+          console.log("\n gc-batchprovide TaskArgs:\n", taskArgs);
       }
-
-      if (!taskArgs.modules) taskArgs.modules = [];
-      else
-        taskArgs.modules = Array.isArray(taskArgs.modules)
-          ? taskArgs.modules
-          : [taskArgs.modules];
-
-      if (taskArgs.log) console.log("\n gc-batchprovide TaskArgs:\n", taskArgs);
 
       const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
@@ -85,10 +86,12 @@ export default task(
       });
 
       // GelatoCore contract call from provider account
+      // address _executor,
+      // ConditionActionsMix[] memory _CAMs,
+      // IGelatoProviderModule[] memory _modules
       const tx = await gelatoCore.batchProvide(
         taskArgs.gelatoexecutor,
-        taskArgs.conditions,
-        taskArgs.actionswithgaspriceceil,
+        taskArgs.cams,
         taskArgs.modules,
         {
           value: utils.parseEther(taskArgs.funds ? taskArgs.funds : "0"),

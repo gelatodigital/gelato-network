@@ -27,6 +27,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         address inst;
         Operation operation;
         bool termsOkCheck;
+        bool value;
     }
 
     uint256 public constant override NO_CEIL = 2**256 - 1;  // MaxUint256
@@ -52,7 +53,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     {
         bytes32 camHash = camHash(_condition, _actions);
         if (camGPC[_provider][camHash] == 0) return "ConditionActionsMixNotProvided";
-        return "Ok";
+        return OK;
     }
 
     // IGelatoProviderModule: GelatoCore mintExecClaim/canExec Gate
@@ -97,7 +98,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         // Will only return if a) action is not whitelisted & b) gelatoGasPrice is higher than gasPriceCeiling
         bytes32 camHash = camHash(_ec.task.condition.inst, _ec.task.actions);
         if (_gelatoGasPrice > camGPC[_ec.task.provider.addr][camHash])
-            return "GelatoGasPriceTooHigh";
+            return "camGasPriceCeil-OR-notProvided";
         return providerModuleChecks(_ec);
     }
 
@@ -148,10 +149,6 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
                 "GelatoProviders.providerAssignsExecutor: isExecutorMinStaked()"
             );
         }
-        require(
-            isProviderMinStaked(msg.sender),
-            "GelatoProviders.providerAssignsExecutor: isProviderMinStaked()"
-        );
 
         // EFFECTS: Provider reassigns from currentExecutor to newExecutor (or no executor)
         if (currentExecutor != address(0)) executorProvidersCount[currentExecutor]--;
@@ -178,10 +175,6 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         require(
             isExecutorMinStaked(_newExecutor),
             "GelatoProviders.executorAssignsExecutor: isExecutorMinStaked()"
-        );
-        require(
-            isProviderMinStaked(_provider),
-            "GelatoProviders.executorAssignsExecutor: isProviderMinStaked()"
         );
 
         // EFFECTS: currentExecutor reassigns to newExecutor
@@ -300,11 +293,6 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         return minExecProviderFunds(_gelatoMaxGas, _gelatoGasPrice) <= providerFunds[_provider];
     }
 
-    // Provider Stake
-    function isProviderMinStaked(address _provider) public view override returns(bool) {
-        return providerFunds[_provider] >= minProviderStake;
-    }
-
     // An Executor qualifies and remains registered for as long as he has minExecutorStake
     function isExecutorMinStaked(address _executor) public view override returns(bool) {
         return executorStake[_executor] >= minExecutorStake;
@@ -327,7 +315,8 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
             NoDataAction memory noDataAction = NoDataAction({
                 inst: _actions[i].inst,
                 operation: _actions[i].operation,
-                termsOkCheck: _actions[i].termsOkCheck
+                termsOkCheck: _actions[i].termsOkCheck,
+                value: _actions[i].value == 0 ? false : true
             });
             noDataActions[i] = noDataAction;
         }

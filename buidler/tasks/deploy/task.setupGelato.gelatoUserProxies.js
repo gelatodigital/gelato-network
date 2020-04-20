@@ -117,7 +117,7 @@ export default task(
         const action = new NoDataAction({
           inst: address,
           data: constants.HashZero,
-          operation: "delegatecall",
+          operation: Operation.Delegatecall,
           termsOkCheck: true,
         });
         actions.push(action);

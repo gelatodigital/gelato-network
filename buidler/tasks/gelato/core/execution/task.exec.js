@@ -90,13 +90,24 @@ export default task(
           id: execclaim[0],
           userProxy: execclaim[1],
           task: {
-            provider: execclaim[2][0],
-            providerModule: execclaim[2][1],
-            condition: execclaim[2][2],
-            actions: execclaim[2][3],
-            conditionData: execclaim[2][4],
-            actionsPayload: execclaim[2][5],
-            expiryDate: execclaim[2][6],
+            provider: {
+              addr: execclaim[2][0][0],
+              module: execclaim[2][0][1],
+            },
+            condition: {
+              inst: execclaim[2][1][0],
+              data: execclaim[2][1][1],
+            },
+            actions: [
+              {
+                inst: execclaim[2][2][0][0],
+                data: execclaim[2][2][0][1],
+                operation: execclaim[2][2][0][2],
+                value: execclaim[2][2][0][3],
+                termsOkCheck: execclaim[2][2][0][4],
+              },
+            ],
+            expiryDate: execclaim[2][3],
           },
         };
 
@@ -104,7 +115,8 @@ export default task(
         try {
           executeTx = await gelatoCore.exec(execClaim, {
             gasPrice: gelatoGasPrice,
-            gasLimit: gelatoMAXGAS,
+            // gasLimit: gelatoMAXGAS,
+            gasLimit: 500000,
           });
         } catch (error) {
           console.error(`gelatoCore.exec() PRE-EXECUTION error\n`, error);
