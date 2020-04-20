@@ -83,7 +83,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         if (_execTxGasPrice != _getGelatoGasPrice()) return "ExecTxGasPriceNotGelatoGasPrice";
 
         if (!isProviderLiquid(_ec.task.provider.addr, _gelatoMaxGas, _execTxGasPrice))
-            return "InsufficientProviderFunds";
+            return "ProviderIlliquidity";
 
         if (_ec.userProxy != _ec.task.provider.addr) {
             string memory res = providerCanExec(_ec, _execTxGasPrice);
