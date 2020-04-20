@@ -132,7 +132,7 @@ export default task(
           }
           // Action.operation
           if (!taskArgs.operations[actionname])
-            taskArgs.operations[actionname] = "delegatecall";
+            taskArgs.operations[actionname] = Operation.Delegatecall;
 
           // Action
           const action = new Action({

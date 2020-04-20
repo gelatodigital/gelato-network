@@ -1,10 +1,11 @@
 import { task } from "@nomiclabs/buidler/config";
 import { constants, utils } from "ethers";
+import CAM from "../../../src/classes/gelato/CAM";
 
 const GAS_PRICE = utils.parseUnits("9", "gwei");
 
 export default task("setupgelato-gnosissafeproxy")
-  .addParam("condition")
+  .addOptionalParam("condition")
   .addOptionalVariadicPositionalParam("actions")
   .addOptionalParam("mastercopy", "gnosis safe mastercopy")
   .addFlag("events", "Logs parsed Event Logs to stdout")
@@ -31,10 +32,15 @@ export default task("setupgelato-gnosissafeproxy")
       });
 
       // Condition
-      const condition = await run("deploy", {
-        contractname: taskArgs.condition,
-        log: taskArgs.log,
-      });
+      if (taskArgs.condition) {
+        const conditionInstance = await run("deploy", {
+          contractname: taskArgs.condition,
+          log: taskArgs.log,
+        });
+        taskArgs.condition = conditionInstance.address;
+      } else {
+        taskArgs.condition = constants.AddressZero;
+      }
 
       // === GelatoCore setup ===
       const { 1: gelatoExecutor, 2: gelatoProvider } = await ethers.signers();
@@ -85,10 +91,17 @@ export default task("setupgelato-gnosissafeproxy")
         }
       }
 
-      const actionWithGasPriceCeil = new ActionsWithGasPriceCeil(
-        actionAddresses,
-        utils.parseUnits("20", "gwei")
-      );
+      // inst, data, operation, value, termsOkCheck
+      const actionArray = [];
+      for (const actionAddress of actionAddresses) {
+        const action = new Action({
+          inst: actionAddress,
+          data: constants.HashZero,
+          operation: Operation.Delegatecall,
+          termsOkCheck: true,
+        });
+        actionArray.push(action);
+      }
 
       // ProviderModule Gnosis Safe
       // 1. Get extcodehash of Gnosis Safe
@@ -142,13 +155,19 @@ export default task("setupgelato-gnosissafeproxy")
       });
 
       // Provider
+      // Create CAM condition, actions, gasPriceCeil
+      const cam = new CAM({
+        condition: taskArgs.condition,
+        actions: actionArray,
+        gasPriceCeil: utils.parseUnits("20", "gwei"),
+      });
+
       await run("gc-batchprovide", {
         gelatocoreaddress: gelatoCore.address,
         providerindex: 2,
-        funds: "0.2",
+        funds: "1",
         gelatoexecutor: gelatoExecutorAddress,
-        conditions: [condition.address],
-        actionswithgaspriceceil: [actionWithGasPriceCeil],
+        cams: [cam],
         modules: [providerModuleGnosisSafeProxy.address],
         // events: taskArgs.events,  < = BUIDLER EVM events bug for structs
         log: taskArgs.log,
@@ -158,7 +177,7 @@ export default task("setupgelato-gnosissafeproxy")
         console.log(`
             GelatoCore: ${gelatoCore.address}\n
             GelatoGasPriceOracle: ${gelatoGasPriceOracle.address}\n
-            Condition: ${condition.address}\n
+            Condition: ${taskArgs.condition}\n
             ProviderModuleGnosisSafeProxy: ${providerModuleGnosisSafeProxy.address}\n
             extcodehash: ${extcodehash}\n
             Safe Address: ${safeAddress}\n

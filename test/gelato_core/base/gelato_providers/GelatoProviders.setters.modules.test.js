@@ -101,7 +101,7 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
     const action = new Action({
       inst: constants.AddressZero,
       data: constants.HashZero,
-      operation: "call",
+      operation: Operation.Call,
       termsOkCheck: true,
     });
     const task = new Task({
@@ -316,7 +316,7 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
       // providerCanExec: gelatoGasPriceTooHigh
       expect(
         await gelatoCore.providerCanExec(execClaim, notOkGelatoGasPrice)
-      ).to.be.equal("GelatoGasPriceTooHigh");
+      ).to.be.equal("camGasPriceCeil-OR-notProvided");
     });
 
     it("Should NOT allow to add same modules again", async function () {

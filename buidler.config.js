@@ -15,6 +15,7 @@ const CAM = require("./src/classes/gelato/CAM").default;
 const ExecClaim = require("./src/classes/gelato/ExecClaim").default;
 const GelatoProvider = require("./src/classes/gelato/GelatoProvider").default;
 const Task = require("./src/classes/gelato/Task").default;
+const { Operation } = require("./src/classes/gelato/Action");
 
 // Helpers
 const checkNestedObj = require("./src/scripts/helpers/nestedObjects/checkNestedObj")
@@ -32,6 +33,8 @@ extendEnvironment((bre) => {
   bre.ExecClaim = ExecClaim;
   bre.GelatoProvider = GelatoProvider;
   bre.Task = Task;
+  // Enums
+  bre.Operation = Operation;
   // Functions
   bre.checkNestedObj = checkNestedObj;
   bre.getNestedObj = getNestedObj;

@@ -141,9 +141,6 @@ describe("GelatoCore - GelatoProviders - Setters: FUNDS", function () {
     // minProviderStake required for providerAssignsExecutor
     const minProviderStake = await gelatoCore.minProviderStake();
 
-    // isProviderMinStaked
-    expect(await gelatoCore.isProviderMinStaked(providerAddress)).to.be.false;
-
     // provideFunds()
     await expect(
       gelatoCore.provideFunds(providerAddress, {
@@ -155,9 +152,6 @@ describe("GelatoCore - GelatoProviders - Setters: FUNDS", function () {
     expect(await gelatoCore.providerFunds(providerAddress)).to.be.equal(
       minProviderStake
     );
-
-    // isProviderMinStaked
-    expect(await gelatoCore.isProviderMinStaked(providerAddress)).to.be.true;
 
     // stakeExecutor() (needed for providerAssignsExecutor())
     await gelatoCore
@@ -197,9 +191,6 @@ describe("GelatoCore - GelatoProviders - Setters: FUNDS", function () {
     // minProviderStake required for providerAssignsExecutor
     const minProviderStake = await gelatoCore.minProviderStake();
 
-    // isProviderMinStaked
-    expect(await gelatoCore.isProviderMinStaked(providerAddress)).to.be.false;
-
     // provideFunds()
     await expect(
       gelatoCore.provideFunds(providerAddress, {
@@ -213,9 +204,6 @@ describe("GelatoCore - GelatoProviders - Setters: FUNDS", function () {
     expect(await gelatoCore.providerFunds(providerAddress)).to.be.equal(
       minProviderStake
     );
-
-    // isProviderMinStaked
-    expect(await gelatoCore.isProviderMinStaked(providerAddress)).to.be.true;
 
     // stakeExecutor() (needed for providerAssignsExecutor())
     await gelatoCore
@@ -261,8 +249,5 @@ describe("GelatoCore - GelatoProviders - Setters: FUNDS", function () {
       .to.emit(gelatoCore, "LogUnprovideFunds")
       .withArgs(providerAddress, minProviderStake, 0);
     expect(await gelatoCore.providerFunds(providerAddress)).to.be.equal(0);
-
-    // isProviderMinStaked
-    expect(await gelatoCore.isProviderMinStaked(providerAddress)).to.be.false;
   });
 });

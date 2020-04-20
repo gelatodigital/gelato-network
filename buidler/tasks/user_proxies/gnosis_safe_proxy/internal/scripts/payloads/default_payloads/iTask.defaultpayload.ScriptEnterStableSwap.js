@@ -30,6 +30,7 @@ export default internalTask(
     "will be +2 batches from current batch"
   )
   .addOptionalParam("gelatoprovider", "handleGelatoProvider default")
+  .addOptionalParam("gelatoprovidermodule", "bre config")
   .addOptionalParam("gelatoexecutor", "handleGelatoExecutor default")
   .addOptionalVariadicPositionalParam("inputs")
   .addFlag("log")
@@ -38,11 +39,11 @@ export default internalTask(
       // @DEV Check EOA approval for Gnosis Safe
       taskArgs.log = true;
 
-      // const proxyAddress = await run("gc-determineCpkProxyAddress")
+      const proxyAddress = await run("gc-determineCpkProxyAddress");
 
       const signers = await ethers.getSigners();
-      const signer = signers[0];
-      const useraddress = signer._address;
+      const user = signers[0];
+      const useraddress = await user.getAddress();
 
       if (!taskArgs.orderExpirationBatchId) {
         const currentBatchId = await run("invokeviewfunction", {
@@ -62,9 +63,10 @@ export default internalTask(
         );
       }
 
-      taskArgs.gelatoprovider = await run("handleGelatoProvider", {
-        gelatoprovider: taskArgs.gelatoprovider,
-      });
+      if (!taskArgs.gelatoprovider)
+        taskArgs.gelatoprovider = await run("handleGelatoProvider", {
+          gelatoprovider: taskArgs.gelatoprovider,
+        });
 
       taskArgs.gelatoexecutor = await run("handleGelatoExecutor", {
         gelatoexecutor: taskArgs.gelatoexecutor,
@@ -75,10 +77,12 @@ export default internalTask(
         contractname: "ActionWithdrawBatchExchange",
       });
 
-      const providerModuleAddress = await run("bre-config", {
-        deployments: true,
-        contractname: "ProviderModuleGnosisSafeProxy",
-      });
+      if (!taskArgs.gelatoprovidermodule) {
+        taskArgs.gelatoprovidermodule = await run("bre-config", {
+          deployments: true,
+          contractname: "ProviderModuleGnosisSafeProxy",
+        });
+      }
 
       const gelatoCoreAddress = await run("bre-config", {
         deployments: true,
@@ -108,12 +112,44 @@ export default internalTask(
       // if (!taskArgs.sellToken) taskArgs.sellToken = "0x5592ec0cfb4dbc12d3ab100b257153436a1f0fea"
       // if (!taskArgs.buyToken) taskArgs.buyToken = "0x4dbcdf9b62e891a7cec5a2568c3f4faf9e8abe2b"
 
-      const task = new Task({
-        provider: taskArgs.gelatoprovider,
-        providerModule: providerModuleAddress,
-        action: actionAddress,
-        actionData: constants.HashZero,
+      const gelatoProvider = new GelatoProvider({
+        addr: taskArgs.gelatoprovider,
+        module: taskArgs.gelatoprovidermodule,
       });
+
+      const condition = new Condition({
+        inst: constants.AddressZero,
+        data: constants.HashZero,
+      });
+
+      const actionWithdrawFromBatchExchangePayload = await run(
+        "abi-encode-withselector",
+        {
+          contractname: "ActionWithdrawBatchExchange",
+          functionname: "action",
+          inputs: [
+            useraddress,
+            proxyAddress,
+            taskArgs.sellToken,
+            taskArgs.buyToken,
+          ],
+        }
+      );
+
+      const actionWithdrawFromBatchExchange = new Action({
+        inst: actionAddress,
+        data: actionWithdrawFromBatchExchangePayload,
+        operation: 1,
+        value: 0,
+        termsOkCheck: true,
+      });
+
+      const taskWithdrawBatchExchange = {
+        provider: gelatoProvider,
+        condition: condition,
+        actions: [actionWithdrawFromBatchExchange],
+        expiryDate: constants.HashZero,
+      };
 
       const inputs = [
         useraddress,
@@ -123,11 +159,11 @@ export default internalTask(
         ethers.utils.bigNumberify(taskArgs.buyAmount),
         taskArgs.orderExpirationBatchId,
         gelatoCoreAddress,
-        // Exec Claim
-        task,
+        // Task
+        taskWithdrawBatchExchange,
       ];
 
-      if (taskArgs.log) console.log(`User: ${signer._address}`);
+      if (taskArgs.log) console.log(`User: ${useraddress}`);
 
       if (taskArgs.log) console.log(`Inputs: ${inputs}`);
 

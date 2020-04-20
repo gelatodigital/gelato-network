@@ -2,7 +2,7 @@ export const deployments = {
   // ========== Rinkeby ===========
   // ==== One-Off Actions ====
   // Gnosis
-  ActionWithdrawBatchExchange: "0x743B6fa163243011f38870235E222be6c2570f1E",
+  ActionWithdrawBatchExchange: "0x7a0986883e84DB63A18b1AA96F8B4EC25fD904a6",
   ActionPlaceOrderBatchExchange: "0xDBF368e549604CC78684e83955C73346860D6EA2",
   // BzX
   ActionBzxPtokenBurnToToken: "0x0",
@@ -23,10 +23,10 @@ export const deployments = {
   ActionChainedRebalancePortfolioRinkeby: "0x0",
 
   // ===== Gelato Core ====
-  GelatoCore: "0xC53f5C135F490f4449a0306F77eA12712cbe4D02",
-  GelatoGasPriceOracle: "0xB3cc5cE71143648907d0A7FD698da96026965BC3",
+  GelatoCore: "0xBe3E9777ba67e4CEb7d6Ede2001FB9F5101F68e4",
+  GelatoGasPriceOracle: "0xb26d6905C5F34bB2F8BB14970ea1cd95a3B4b5BE",
   ProviderModuleGelatoUserProxy: "0x0",
-  ProviderModuleGnosisSafeProxy: "0x918078763Ef2Be34417A53c3999Cd0883edDA036",
+  ProviderModuleGnosisSafeProxy: "0x4ffC2ada3E95C7De36Ee12a0514BFED2b0fDd995",
 
   // ==== Conditions ====
   // == Balances ==
@@ -54,5 +54,5 @@ export const deployments = {
   // Enter the Rebalancing Chained Action
   ScriptEnterPortfolioRebalancingRinkeby: "0x0",
   ScriptExitRebalancePortfolioRinkeby: "0x0",
-  ScriptEnterStableSwap: "0x2E34623D8791be51883a4EdD4f21Fe5D778E3CdE",
+  ScriptEnterStableSwap: "0x39D86A5b7248F06dEe7081e3F7F76B7F0d8fA1ee",
 };

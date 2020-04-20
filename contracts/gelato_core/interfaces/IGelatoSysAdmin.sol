@@ -39,6 +39,7 @@ interface IGelatoSysAdmin {
 
     // State Reading
     function EXEC_TX_OVERHEAD() external pure returns(uint256);
+    function OK() external pure returns(string memory);
 
     function gelatoGasPriceOracle() external view returns(IGelatoGasPriceOracle);
 

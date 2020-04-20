@@ -167,7 +167,7 @@ describe("GelatoCore.Execute", function () {
     actionERC20TransferFromGelato = new Action({
       inst: actionERC20TransferFrom.address,
       data: constants.HashZero,
-      operation: "delegatecall",
+      operation: Operation.Delegatecall,
       value: 0,
       termsOkCheck: true,
     });
@@ -175,7 +175,7 @@ describe("GelatoCore.Execute", function () {
     const actionWithdrawBatchExchangeGelato = new Action({
       inst: actionWithdrawBatchExchange.address,
       data: constants.HashZero,
-      operation: "delegatecall",
+      operation: Operation.Delegatecall,
       value: 0,
       termsOkCheck: true,
     });
@@ -306,7 +306,7 @@ describe("GelatoCore.Execute", function () {
       const action = new Action({
         inst: actionWithdrawBatchExchange.address,
         data: actionData,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });
@@ -418,7 +418,7 @@ describe("GelatoCore.Execute", function () {
       const action = new Action({
         inst: actionERC20TransferFrom.address,
         data: actionData,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });
@@ -511,7 +511,7 @@ describe("GelatoCore.Execute", function () {
       const action = new Action({
         inst: actionERC20TransferFrom.address,
         data: actionData,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });
@@ -602,7 +602,7 @@ describe("GelatoCore.Execute", function () {
       const action = new Action({
         inst: actionERC20TransferFrom.address,
         data: actionData,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });
@@ -657,7 +657,7 @@ describe("GelatoCore.Execute", function () {
       const mockActionDummyRevertGelato = new Action({
         inst: mockActionDummyRevert.address,
         data: constants.HashZero,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });
@@ -689,7 +689,7 @@ describe("GelatoCore.Execute", function () {
       const action = new Action({
         inst: mockActionDummyRevert.address,
         data: actionData,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });
@@ -745,7 +745,7 @@ describe("GelatoCore.Execute", function () {
       const revertingAction = new Action({
         inst: mockConditionDummyRevert.address,
         data: constants.HashZero,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });
@@ -775,7 +775,7 @@ describe("GelatoCore.Execute", function () {
       const action = new Action({
         inst: mockConditionDummyRevert.address,
         data: actionData,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });
@@ -852,7 +852,7 @@ describe("GelatoCore.Execute", function () {
       const action = new Action({
         inst: actionERC20TransferFrom.address,
         data: actionData,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });
@@ -941,7 +941,7 @@ describe("GelatoCore.Execute", function () {
       const action = new Action({
         inst: actionERC20TransferFrom.address,
         data: actionData,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });
@@ -981,7 +981,7 @@ describe("GelatoCore.Execute", function () {
       const mockConditionAsAction = new Action({
         inst: mockConditionDummy.address,
         data: constants.HashZero,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: false,
       });
@@ -1036,8 +1036,6 @@ describe("GelatoCore.Execute", function () {
     });
 
     it("#10: Mint and revert with Expired in exec due to expiry date having passed", async function () {
-      this.timeout(0);
-
       // Get Action Payload
       const actionData = await run("abi-encode-withselector", {
         contractname: "ActionERC20TransferFrom",
@@ -1081,7 +1079,7 @@ describe("GelatoCore.Execute", function () {
       const action = new Action({
         inst: actionERC20TransferFrom.address,
         data: actionData,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });
@@ -1114,16 +1112,6 @@ describe("GelatoCore.Execute", function () {
       // By default connect to
       let provider = new ethers.providers.JsonRpcProvider();
 
-      // Time travel Logic
-
-      // helper to manipulate evm time
-      // const increaseTime = (addSeconds) => {
-      //   const id = Date.now();
-      //   return new Promise((resolve, reject) => {
-      //     provider.send("evm_increaseTime", [addSeconds]);
-      //   });
-      // };
-
       // Get a promise for your call
       await ethers.provider.send("evm_increaseTime", [1000000]);
 
@@ -1144,7 +1132,7 @@ describe("GelatoCore.Execute", function () {
         .withArgs(executorAddress, execClaim.id, "ExecClaimExpired");
     });
 
-    it("#11: Exec good execClaim, however revert because insufficient gas was sent", async function () {
+    it("#11: Exec good execClaim, however revert  with GelatoCore.exec: Insufficient gas sent because insufficient gas was sent", async function () {
       // Get Action Payload
       const withdrawAmount = 10 * 10 ** buyDecimals;
 
@@ -1156,14 +1144,6 @@ describe("GelatoCore.Execute", function () {
         withdrawAmount
       );
       await tx.wait();
-
-      // 4. Withdraw Funds from BatchExchange with withdraw action
-
-      // const abiCoder = ethers.utils.defaultAbiCoder;
-      // const withdrawPayload = abiCoder.encode(
-      //   ["address", "address", "address", "address"],
-      //   [sellerAddress, userProxyAddress, sellToken.address, buyToken.address]
-      // );
 
       const actionData = await run("abi-encode-withselector", {
         contractname: "ActionWithdrawBatchExchange",
@@ -1190,7 +1170,7 @@ describe("GelatoCore.Execute", function () {
       const action = new Action({
         inst: actionWithdrawBatchExchange.address,
         data: actionData,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });
@@ -1249,14 +1229,17 @@ describe("GelatoCore.Execute", function () {
       // Make ExecClaim executable
       await mockBatchExchange.setValidWithdrawRequest(userProxyAddress);
 
+      const internalGasRequirement = await gelatoCore.internalGasRequirement();
+
       await expect(
-        gelatoCore
-          .connect(executor)
-          .exec(execClaim, { gasPrice: GELATO_GAS_PRICE, gasLimit: 200000 })
+        gelatoCore.connect(executor).exec(execClaim, {
+          gasPrice: GELATO_GAS_PRICE,
+          gasLimit: internalGasRequirement,
+        })
       ).to.revertedWith("GelatoCore.exec: Insufficient gas sent");
     });
 
-    it("#12: Exec good execClaim, however revert because insufficient gas was sent", async function () {
+    it("#12: Exec good execClaim, however revert with LogExecutionRevert because insufficient gas was sent", async function () {
       // Get Action Payload
       const withdrawAmount = 10 * 10 ** buyDecimals;
 
@@ -1268,14 +1251,6 @@ describe("GelatoCore.Execute", function () {
         withdrawAmount
       );
       await tx.wait();
-
-      // 4. Withdraw Funds from BatchExchange with withdraw action
-
-      // const abiCoder = ethers.utils.defaultAbiCoder;
-      // const withdrawPayload = abiCoder.encode(
-      //   ["address", "address", "address", "address"],
-      //   [sellerAddress, userProxyAddress, sellToken.address, buyToken.address]
-      // );
 
       const actionData = await run("abi-encode-withselector", {
         contractname: "ActionWithdrawBatchExchange",
@@ -1302,7 +1277,7 @@ describe("GelatoCore.Execute", function () {
       const action = new Action({
         inst: actionWithdrawBatchExchange.address,
         data: actionData,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });
@@ -1342,10 +1317,6 @@ describe("GelatoCore.Execute", function () {
         "ActionTermsNotOk:ActionWithdrawBatchExchange: Sell Token not withdrawable yet"
       );
 
-      await gelatoCore
-        .connect(executor)
-        .exec(execClaim, { gasPrice: GELATO_GAS_PRICE, gasLimit: 5000000 });
-
       await expect(
         gelatoCore
           .connect(executor)
@@ -1361,10 +1332,15 @@ describe("GelatoCore.Execute", function () {
       // Make ExecClaim executable
       await mockBatchExchange.setValidWithdrawRequest(userProxyAddress);
 
+      const internalGasRequirement = await gelatoCore.internalGasRequirement();
+
       await expect(
-        gelatoCore
-          .connect(executor)
-          .exec(execClaim, { gasPrice: GELATO_GAS_PRICE, gasLimit: 550000 })
+        gelatoCore.connect(executor).exec(execClaim, {
+          gasPrice: GELATO_GAS_PRICE,
+          gasLimit: ethers.utils
+            .bigNumberify(internalGasRequirement)
+            .add(ethers.utils.bigNumberify("50000")),
+        })
       ).to.emit(gelatoCore, "LogExecutionRevert");
     });
 
@@ -1404,7 +1380,7 @@ describe("GelatoCore.Execute", function () {
       const action = new Action({
         inst: actionWithdrawBatchExchange.address,
         data: actionData,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });
@@ -1546,7 +1522,7 @@ describe("GelatoCore.Execute", function () {
       const action = new Action({
         inst: actionWithdrawBatchExchange.address,
         data: actionData,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });
@@ -1640,7 +1616,7 @@ describe("GelatoCore.Execute", function () {
       const mockActionDummyGelato = new Action({
         inst: mockActionDummy.address,
         data: constants.HashZero,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });
@@ -1690,7 +1666,7 @@ describe("GelatoCore.Execute", function () {
       const action = new Action({
         inst: mockActionDummy.address,
         data: actionData,
-        operation: "delegatecall",
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       });

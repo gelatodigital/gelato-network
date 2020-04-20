@@ -137,9 +137,6 @@ interface IGelatoProviders {
         view
         returns(bool);
 
-    // Provider Stake
-    function isProviderMinStaked(address _provider) external view returns(bool);
-
     // Executor Stake
     function executorStake(address _executor) external view returns(uint256);
     function isExecutorMinStaked(address _executor) external view returns(bool);

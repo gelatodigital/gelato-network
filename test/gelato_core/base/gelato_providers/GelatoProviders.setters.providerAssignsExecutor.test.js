@@ -244,18 +244,8 @@ describe("GelatoCore - GelatoProviders - Setters: EXECUTOR", function () {
         .connect(executor)
         .stakeExecutor({ value: minExecutorStake });
 
-      // isProviderMinStaked
-      expect(await gelatoCore.isProviderMinStaked(providerAddress)).to.be.false;
-
       // isExecutorAssigned: executor
       expect(await gelatoCore.isExecutorAssigned(executorAddress)).to.be.false;
-
-      // providerAssignsExecutor
-      await expect(
-        gelatoCore.providerAssignsExecutor(executorAddress)
-      ).to.be.revertedWith(
-        "GelatoProviders.providerAssignsExecutor: isProviderMinStaked()"
-      );
 
       // executorProvidersCount(prev)
       expect(
