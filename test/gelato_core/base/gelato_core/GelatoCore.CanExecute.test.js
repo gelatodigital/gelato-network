@@ -6,8 +6,8 @@ const { run, ethers } = require("@nomiclabs/buidler");
 import initialStateSysAdmin from "../gelato_sys_admin/GelatoSysAdmin.initialState";
 import initialStateGasPriceOracle from "../gelato_gas_price_oracle/GelatoGasPriceOracle.initialState";
 
-const FEE_USD = 2;
-const FEE_ETH = 9000000000000000;
+const FEE_USD = 3;
+const FEE_ETH = 17000000000000000;
 const OPERATION = {
   call: 0,
   delegatecall: 1,
