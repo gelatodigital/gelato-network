@@ -1,9 +1,9 @@
 pragma solidity ^0.6.0;
 pragma experimental ABIEncoderV2;
 
-import { Action, Task } from "../../../gelato_core/interfaces/IGelatoCore.sol";
+import { Action, Task } from "../../gelato_core/interfaces/IGelatoCore.sol";
 
-interface IGelatoUserProxy {
+interface IGelatoUserProxyDebug {
     function mintExecClaim(Task calldata _task) external;
     function multiMintExecClaims(Task[] calldata _tasks) external;
 

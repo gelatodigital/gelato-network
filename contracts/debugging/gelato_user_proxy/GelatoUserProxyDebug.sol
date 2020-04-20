@@ -1,10 +1,10 @@
 pragma solidity ^0.6.0;
 pragma experimental ABIEncoderV2;
 
-import { IGelatoUserProxy } from "./interfaces/IGelatoUserProxy.sol";
+import { IGelatoUserProxyDebug } from "./IGelatoUserProxyDebug.sol";
 import { Action, Operation, Task, IGelatoCore } from "../../gelato_core/interfaces/IGelatoCore.sol";
 
-contract GelatoUserProxy is IGelatoUserProxy {
+contract GelatoUserProxyDebug is IGelatoUserProxyDebug {
 
     address public override user;
     address public override gelatoCore;
