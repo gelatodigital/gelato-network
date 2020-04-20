@@ -64,10 +64,12 @@ abstract contract GelatoExecutors is IGelatoExecutors, GelatoProviders {
         override
         returns(uint256 realWithdrawAmount)
     {
-        require(isExecutorMinStaked(msg.sender), "Executor needs to be staked on gelato");
+        require(
+            isExecutorMinStaked(msg.sender),
+            "GelatoExecutors.withdrawExcessExecutorStake: not minStaked"
+        );
 
         uint256 currentExecutorStake = executorStake[msg.sender];
-
         uint256 excessExecutorStake = currentExecutorStake - minExecutorStake;
 
         realWithdrawAmount = Math.min(_withdrawAmount, excessExecutorStake);
