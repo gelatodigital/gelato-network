@@ -92,15 +92,14 @@ describe("GelatoCore.Execute", function () {
       gelatoCore.address
     );
 
-    // Call proxyExtcodehash on Factory and deploy ProviderModuleGelatoUserProxy with constructorArgs
-    const proxyExtcodehash = await gelatoUserProxyFactory.proxyExtcodehash();
+    // Deploy ProviderModuleGelatoUserProxy with constructorArgs
     const ProviderModuleGelatoUserProxy = await ethers.getContractFactory(
       "ProviderModuleGelatoUserProxy",
       sysAdmin
     );
-    providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxy.deploy([
-      proxyExtcodehash,
-    ]);
+    providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxy.deploy(
+      gelatoUserProxyFactory.address,
+    );
 
     // Deploy Condition (if necessary)
     const MockConditionDummy = await ethers.getContractFactory(

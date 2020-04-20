@@ -98,15 +98,14 @@ describe("GelatoCore.Execute", function () {
       gelatoCore.address
     );
 
-    // Call proxyExtcodehash on Factory and deploy ProviderModuleGelatoUserProxy with constructorArgs
-    const proxyExtcodehash = await gelatoUserProxyFactory.proxyExtcodehash();
+    // Deploy ProviderModuleGelatoUserProxy with constructorArgs
     const ProviderModuleGelatoUserProxy = await ethers.getContractFactory(
       "ProviderModuleGelatoUserProxy",
       sysAdmin
     );
-    providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxy.deploy([
-      proxyExtcodehash,
-    ]);
+    providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxy.deploy(
+      gelatoUserProxyFactory.address,
+    );
 
     // Deploy Condition (if necessary)
     const MockConditionDummy = await ethers.getContractFactory(
@@ -1458,7 +1457,7 @@ describe("GelatoCore.Execute", function () {
       // LogExecClaimMinted(executor, execClaim.id, hashedExecClaim, execClaim);
 
       await expect(
-        userProxy.multiCallActions(selfProviderSetupData, {
+        userProxy.multiExecActions(selfProviderSetupData, {
           value: ethers.utils.parseUnits("1", "ether"),
         })
       ).to.emit(gelatoCore, "LogExecClaimMinted");

@@ -66,11 +66,10 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
     gelatoUserProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
       await user.getAddress()
     );
-    extcodehashGelatoUserProxy = await gelatoUserProxyFactory.proxyExtcodehash();
 
-    providerModule = await ProviderModuleFactory.deploy([
-      extcodehashGelatoUserProxy,
-    ]);
+    providerModule = await ProviderModuleFactory.deploy(
+      gelatoUserProxyFactory.address
+    );
     otherProviderModule = await OtherProviderModuleFactory.deploy(
       [constants.HashZero], // hashes
       [constants.AddressZero], // masterCopies

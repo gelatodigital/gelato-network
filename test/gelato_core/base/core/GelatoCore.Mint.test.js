@@ -81,15 +81,14 @@ describe("Gelato Core - Minting ", function () {
       gelatoCore.address
     );
 
-    // Call proxyExtcodehash on Factory and deploy ProviderModuleGelatoUserProxy with constructorArgs
-    const proxyExtcodehash = await gelatoUserProxyFactory.proxyExtcodehash();
+    // Deploy ProviderModuleGelatoUserProxy with constructorArgs
     const ProviderModuleGelatoUserProxy = await ethers.getContractFactory(
       "ProviderModuleGelatoUserProxy",
       sysAdmin
     );
-    providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxy.deploy([
-      proxyExtcodehash,
-    ]);
+    providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxy.deploy(
+      gelatoUserProxyFactory.address,
+    );
 
     // Deploy Condition (if necessary)
 
@@ -728,7 +727,7 @@ describe("Gelato Core - Minting ", function () {
       await expect(
         providerProxy
           .connect(provider)
-          .multiCallActions(selfProviderSetupData, {
+          .multiExecActions(selfProviderSetupData, {
             value: ethers.utils.parseUnits("1", "ether"),
           })
       )
@@ -865,7 +864,7 @@ describe("Gelato Core - Minting ", function () {
       await expect(
         providerProxy
           .connect(provider)
-          .multiCallActions(selfProviderSetupData, {
+          .multiExecActions(selfProviderSetupData, {
             value: ethers.utils.parseUnits("1", "ether"),
           })
       ).to.revertedWith(
