@@ -316,7 +316,7 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
       // providerCanExec: gelatoGasPriceTooHigh
       expect(
         await gelatoCore.providerCanExec(execClaim, notOkGelatoGasPrice)
-      ).to.be.equal("GelatoGasPriceTooHigh OR CAM not whitelisted");
+      ).to.be.equal("camGasPriceCeil-OR-notProvided");
     });
 
     it("Should NOT allow to add same modules again", async function () {

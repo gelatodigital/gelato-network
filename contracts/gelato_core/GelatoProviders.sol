@@ -98,7 +98,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         // Will only return if a) action is not whitelisted & b) gelatoGasPrice is higher than gasPriceCeiling
         bytes32 camHash = camHash(_ec.task.condition.inst, _ec.task.actions);
         if (_gelatoGasPrice > camGPC[_ec.task.provider.addr][camHash])
-            return "GelatoGasPriceTooHigh OR CAM not whitelisted";
+            return "camGasPriceCeil-OR-notProvided";
         return providerModuleChecks(_ec);
     }
 
