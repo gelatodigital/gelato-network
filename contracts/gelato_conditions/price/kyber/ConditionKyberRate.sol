@@ -9,6 +9,9 @@ contract ConditionKyberRate is GelatoConditionsStandard {
 
     using SafeMath for uint256;
 
+    address public immutable kyberProxyAddress;
+    constructor(address _kyberProxy) public { kyberProxyAddress = _kyberProxy; }
+
     // STANDARD Interface
     function ok(bytes calldata _conditionData)
         external
@@ -41,17 +44,14 @@ contract ConditionKyberRate is GelatoConditionsStandard {
         virtual
         returns(string memory)
     {
-        // !!!!!!!!! MAINNET !!!!!!
-        address kyberAddress = 0x818E6FECD516Ecc3849DAf6845e3EC868087B755;
-
-        try IKyber(kyberAddress).getExpectedRate(_src, _dest, _srcAmt)
+        try IKyber(kyberProxyAddress).getExpectedRate(_src, _dest, _srcAmt)
             returns(uint256 expectedRate, uint256)
         {
             if (_greaterElseSmaller) {  // greaterThan
-                if (expectedRate >= _refRate) return "ok0";
+                if (expectedRate >= _refRate) return OK;
                 return "NotOkKyberExpectedRateIsNotGreaterThanRefRate";
             } else {  // smallerThan
-                if (expectedRate <= _refRate) return "ok1";
+                if (expectedRate <= _refRate) return OK;
                 return "NotOkKyberExpectedRateIsNotSmallerThanRefRate";
             }
         } catch {

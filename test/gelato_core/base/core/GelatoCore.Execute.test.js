@@ -324,7 +324,7 @@ describe("GelatoCore.Execute", function () {
         task,
       };
 
-      // Should return "Ok"
+      // Should return "OK"
 
       //const isProvided = await gelatoCore.isCAMProvided(execClaim);
 
@@ -436,7 +436,7 @@ describe("GelatoCore.Execute", function () {
         task,
       };
 
-      // Should return "Ok"
+      // Should return "OK"
       // const isProvided = await gelatoCore.isCAMProvided(execClaim);
 
       const mintPayload = await run("abi-encode-withselector", {
@@ -529,7 +529,7 @@ describe("GelatoCore.Execute", function () {
         task,
       };
 
-      // Should return "Ok"
+      // Should return "OK"
       // const isProvided = await gelatoCore.isCAMProvided(execClaim);
 
       const mintPayload = await run("abi-encode-withselector", {
@@ -620,7 +620,7 @@ describe("GelatoCore.Execute", function () {
         task,
       };
 
-      // Should return "Ok"
+      // Should return "OK"
       // const isProvided = await gelatoCore.isCAMProvided(execClaim);
 
       const mintPayload = await run("abi-encode-withselector", {
@@ -707,7 +707,7 @@ describe("GelatoCore.Execute", function () {
         task,
       };
 
-      // Should return "Ok"
+      // Should return "OK"
       // const isProvided = await gelatoCore.isCAMProvided(execClaim);
 
       const mintPayload = await run("abi-encode-withselector", {
@@ -793,7 +793,7 @@ describe("GelatoCore.Execute", function () {
         task,
       };
 
-      // Should return "Ok"
+      // Should return "OK"
       // const isProvided = await gelatoCore.isCAMProvided(execClaim);
 
       const mintPayload = await run("abi-encode-withselector", {
@@ -870,7 +870,7 @@ describe("GelatoCore.Execute", function () {
         task,
       };
 
-      // Should return "Ok"
+      // Should return "OK"
       // const isProvided = await gelatoCore.isCAMProvided(execClaim);
 
       const mintPayload = await run("abi-encode-withselector", {
@@ -1188,7 +1188,7 @@ describe("GelatoCore.Execute", function () {
         task,
       };
 
-      // Should return "Ok"
+      // Should return "OK"
 
       //const isProvided = await gelatoCore.isCAMProvided(execClaim);
 
@@ -1295,7 +1295,7 @@ describe("GelatoCore.Execute", function () {
         task,
       };
 
-      // Should return "Ok"
+      // Should return "OK"
 
       //const isProvided = await gelatoCore.isCAMProvided(execClaim);
 
@@ -1398,7 +1398,7 @@ describe("GelatoCore.Execute", function () {
         task,
       };
 
-      // Should return "Ok"
+      // Should return "OK"
 
       //const isProvided = await gelatoCore.isCAMProvided(execClaim);
 
@@ -1540,7 +1540,7 @@ describe("GelatoCore.Execute", function () {
         task,
       };
 
-      // Should return "Ok"
+      // Should return "OK"
       // const isProvided = await gelatoCore.isCAMProvided(execClaim);
 
       const mintPayload = await run("abi-encode-withselector", {

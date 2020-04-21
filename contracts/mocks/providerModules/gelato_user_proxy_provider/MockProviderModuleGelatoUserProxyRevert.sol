@@ -1,7 +1,7 @@
 pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
-import { IGelatoProviderModule } from "../../../gelato_core/interfaces/IGelatoProviderModule.sol";
+import { GelatoProviderModuleStandard } from "../../../gelato_core/GelatoProviderModuleStandard.sol";
 import { IMockProviderModuleGelatoUserProxy } from "./IMockProviderModuleGelatoUserProxy.sol";
 import { Ownable } from "../../../external/Ownable.sol";
 import { Action, ExecClaim } from "../../../gelato_core/interfaces/IGelatoCore.sol";
@@ -10,7 +10,7 @@ import {
 } from "../../../user_proxies/gelato_user_proxy/interfaces/IGelatoUserProxy.sol";
 
 contract MockProviderModuleGelatoUserProxyRevert is
-    IGelatoProviderModule,
+    GelatoProviderModuleStandard,
     IMockProviderModuleGelatoUserProxy,
     Ownable
 {
@@ -19,13 +19,13 @@ contract MockProviderModuleGelatoUserProxyRevert is
     // ================= GELATO PROVIDER MODULE STANDARD ================
     // @dev since we check extcodehash prior to execution, we forego the execution option
     //  where the userProxy is deployed at execution time.
-    function isProvided(ExecClaim calldata _ec)
+    function isProvided(ExecClaim calldata)
         external
         view
         override
         returns(string memory)
     {
-        return "Ok";
+        return OK;
     }
 
     // Incorrect execPayload func on purpose

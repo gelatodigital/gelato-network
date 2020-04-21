@@ -19,7 +19,7 @@ contract ConditionTimestampPassed is GelatoConditionsStandard {
 
     // Specific implementation
     function ok(uint256 _timestamp) public view virtual returns(string memory) {
-        if (_timestamp <= block.timestamp) return "Ok";
+        if (_timestamp <= block.timestamp) return OK;
         return "NotOkTimestampDidNotPass";
     }
 }

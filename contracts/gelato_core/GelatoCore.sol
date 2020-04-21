@@ -83,7 +83,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         if (_execTxGasPrice != _getGelatoGasPrice()) return "ExecTxGasPriceNotGelatoGasPrice";
 
         if (!isProviderLiquid(_ec.task.provider.addr, _gelatoMaxGas, _execTxGasPrice))
-            return "InsufficientProviderFunds";
+            return "ProviderIlliquidity";
 
         if (_ec.userProxy != _ec.task.provider.addr) {
             string memory res = providerCanExec(_ec, _execTxGasPrice);
@@ -343,7 +343,9 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     // ================  EXECCLAIM RENT APIs =================
     function collectExecClaimRent(ExecClaim memory _ec) public override {
         // CHECKS
-        require(canCollectExecClaimRent(_ec));
+        string memory canCollect = canCollectExecClaimRent(_ec);
+        if (!canCollect.startsWithOk())
+            revert(string(abi.encodePacked("GelatoCore.collectExecClaimRent:", canCollect)));
 
         // EFFECTS
         lastExecClaimRentPaymentDate[_ec.id] = now;
@@ -360,50 +362,44 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         );
     }
 
-    function canCollectExecClaimRent(ExecClaim memory _ec) public view override returns(bool) {
-        // CHECKS
-        require(
-            executorByProvider[_ec.task.provider.addr] == msg.sender,
-            "GelatoCore.collecExecClaimRent: msg.sender not assigned Executor"
-        );
-        bytes32 hashedExecClaim = hashExecClaim(_ec);
-        require(
-            hashedExecClaim == execClaimHash[_ec.id],
-            "GelatoCore.collectExecClaimRent: invalid execClaimHash"
-        );
-        if (_ec.task.expiryDate != 0) {
-            require(
-                _ec.task.expiryDate > now,
-                "GelatoCore.collectExecClaimRent: expired"
-            );
-        }
-        require(
-            lastExecClaimRentPaymentDate[_ec.id] <= now - execClaimTenancy,
-            "GelatoCore.collecExecClaimRent: rent is not due"
-        );
-
-        if(_ec.task.provider.addr != _ec.userProxy) {
-            require(
-                (isCAMProvided(
-                    _ec.task.provider.addr,
-                    _ec.task.condition.inst,
-                    _ec.task.actions
-                )).startsWithOk(),
-                "GelatoCore.collecExecClaimRent: isCAMProvided failed"
-            );
-        }
-        require(
-            providerFunds[_ec.task.provider.addr] >= execClaimRent,
-            "GelatoCore.collecExecClaimRent: insufficient providerFunds"
-        );
-
-        return true;
-    }
-
     function batchCollectExecClaimRent(ExecClaim[] memory _execClaims) public override {
         for (uint i; i < _execClaims.length; i++) collectExecClaimRent(_execClaims[i]);
     }
 
+    function canCollectExecClaimRent(ExecClaim memory _ec)
+        public
+        view
+        override
+        returns(string memory)
+    {
+        // CHECKS
+        if (executorByProvider[_ec.task.provider.addr] != msg.sender) return "NotAssigned";
+
+        bytes32 hashedExecClaim = hashExecClaim(_ec);
+        if (hashedExecClaim != execClaimHash[_ec.id]) return "InvalidExecClaimHash";
+
+        if (_ec.task.expiryDate != 0)
+            if (_ec.task.expiryDate < now) return "ExecClaimExpired";
+
+        if (lastExecClaimRentPaymentDate[_ec.id] > now - execClaimTenancy)
+            return "RentNotDue";
+
+        if(_ec.task.provider.addr != _ec.userProxy) {
+            string memory provided = isCAMProvided(
+                    _ec.task.provider.addr,
+                    _ec.task.condition.inst,
+                    _ec.task.actions
+            );
+            if (!provided.startsWithOk()) return "CAMnotProvided";
+        }
+
+        if (providerFunds[_ec.task.provider.addr] < execClaimRent) return "ProviderIlliquid";
+
+        return OK;
+    }
+
+
+    // Helper
     function hashExecClaim(ExecClaim memory _ec) public pure override returns(bytes32) {
         return keccak256(abi.encode(_ec));
     }

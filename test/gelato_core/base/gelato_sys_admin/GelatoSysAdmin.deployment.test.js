@@ -8,7 +8,6 @@ const {
   gelatoGasPriceOracle,
   gelatoMaxGas,
   internalGasRequirement,
-  minProviderStake,
   minExecutorStake,
   execClaimTenancy,
   execClaimRent,
@@ -41,7 +40,6 @@ describe("GelatoCore - GelatoSysAdmin - Deployment", function () {
     expect(await gelatoCore.internalGasRequirement()).to.equal(
       internalGasRequirement
     );
-    expect(await gelatoCore.minProviderStake()).to.equal(minProviderStake);
     expect(await gelatoCore.minExecutorStake()).to.equal(minExecutorStake);
     expect(await gelatoCore.execClaimTenancy()).to.equal(execClaimTenancy);
     expect(await gelatoCore.execClaimRent()).to.equal(execClaimRent);

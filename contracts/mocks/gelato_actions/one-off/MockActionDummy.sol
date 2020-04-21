@@ -16,7 +16,7 @@ contract MockActionDummy is GelatoActionsStandard {
 
     function termsOk(bool _isOk) public pure virtual returns(string memory)
     {
-        if(_isOk) return "Ok";
+        if(_isOk) return OK;
         revert("Action TermsOk not ok");
     }
 }

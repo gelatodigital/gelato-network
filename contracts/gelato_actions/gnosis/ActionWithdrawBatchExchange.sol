@@ -173,7 +173,7 @@ contract ActionWithdrawBatchExchange is GelatoActionsStandard {
     {
         // uint32 currentBatchId = batchExchange.getCurrentBatchId();
         // if (_batchIdEnablingWithdraw < currentBatchId) {
-        //     return "ok";
+        //     return OK;
         // } else {
         //     return "ActionWithdrawBatchExchange: Not withdrawable yet";
         // }
@@ -193,7 +193,7 @@ contract ActionWithdrawBatchExchange is GelatoActionsStandard {
             return "ActionWithdrawBatchExchange: Buy Token not withdrawable yet";
         }
 
-        return "Ok";
+        return OK;
 
     }
 
