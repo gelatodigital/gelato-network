@@ -135,7 +135,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       value: ethers.utils.parseUnits("1", "ether"),
     });
 
-    // Register new provider CAM on core with provider EDITS NEED ä#######################
+    // Register new provider IceCream on core with provider EDITS NEED ä#######################
 
     const condition = new Condition({
       inst: constants.AddressZero,
@@ -158,18 +158,18 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       termsOkCheck: true,
     });
 
-    const newCam = new CAM({
+    const newIceCream = new IceCream({
       condition: condition.inst,
       actions: [actionWithdrawBatchExchangeGelato],
       gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
     });
 
-    // Call batchProvider(executor, CAMS[], providerModules[])
+    // Call batchProvider(executor, IceCreamS[], providerModules[])
     await gelatoCore
       .connect(provider)
       .batchProvide(
         executorAddress,
-        [newCam],
+        [newIceCream],
         [providerModuleGelatoUserProxy.address]
       );
 

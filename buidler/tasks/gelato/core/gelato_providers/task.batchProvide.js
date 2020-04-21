@@ -6,7 +6,7 @@ export default task(
   "gc-batchprovide",
   `Sends tx and --funds to GelatoCore.batchProvide() on [--network] (default: ${defaultNetwork})`
 )
-  .addOptionalParam("cams", "Already created CAMS")
+  .addOptionalParam("iceCreams", "Already created IceCreamS")
   .addOptionalParam("funds", "The amount of ETH funds to provide")
   .addOptionalParam("gelatoexecutor", "The provider's assigned gelatoExecutor")
   .addOptionalParam("conditions", "Only one via CLI.")
@@ -43,7 +43,7 @@ export default task(
       if (!taskArgs.gelatoexecutor)
         taskArgs.gelatoexecutor = constants.AddressZero;
 
-      if (!taskArgs.cams) {
+      if (!taskArgs.iceCreams) {
         if (!taskArgs.conditions) taskArgs.conditions = [];
         else
           taskArgs.conditions = Array.isArray(taskArgs.conditions)
@@ -87,11 +87,11 @@ export default task(
 
       // GelatoCore contract call from provider account
       // address _executor,
-      // ConditionActionsMix[] memory _CAMs,
+      // IceCream[] memory _IceCreams,
       // IGelatoProviderModule[] memory _modules
       const tx = await gelatoCore.batchProvide(
         taskArgs.gelatoexecutor,
-        taskArgs.cams,
+        taskArgs.iceCreams,
         taskArgs.modules,
         {
           value: utils.parseEther(taskArgs.funds ? taskArgs.funds : "0"),
