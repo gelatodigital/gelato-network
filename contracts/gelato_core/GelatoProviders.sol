@@ -214,7 +214,12 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
                 "GelatoProviders.setIceCreamGasPriceCeil: redundant"
             );
             iceCreamGasPriceCeil[msg.sender][_iceCreamHash] = _gasPriceCeil;
-            emit LogSetIceCreamGasPriceCeil(msg.sender, _iceCreamHash, currentIceCreamGasPriceCeil, _gasPriceCeil);
+            emit LogSetIceCreamGasPriceCeil(
+                msg.sender,
+                _iceCreamHash,
+                currentIceCreamGasPriceCeil,
+                _gasPriceCeil
+            );
     }
 
     // Provider Module

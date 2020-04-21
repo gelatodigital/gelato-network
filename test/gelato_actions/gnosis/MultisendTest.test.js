@@ -88,15 +88,14 @@ describe("Multisend with Gelato User Proxy Test", function () {
       gelatoCore.address
     );
 
-    // Call proxyExtcodehash on Factory and deploy ProviderModuleGelatoUserProxy with constructorArgs
-    const proxyExtcodehash = await gelatoUserProxyFactory.proxyExtcodehash();
+    // Deploy ProviderModuleGelatoUserProxy with constructorArgs
     const ProviderModuleGelatoUserProxy = await ethers.getContractFactory(
       "ProviderModuleGelatoUserProxy",
       sysAdmin
     );
-    providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxy.deploy([
-      proxyExtcodehash,
-    ]);
+    providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxy.deploy(
+      gelatoUserProxyFactory.address
+    );
 
     // Deploy Condition (if necessary)
 
@@ -180,21 +179,13 @@ describe("Multisend with Gelato User Proxy Test", function () {
       );
 
     // Create UserProxy
-    tx = await gelatoUserProxyFactory.connect(seller).create();
-    txResponse = await tx.wait();
-
-    const executionEvent = await run("event-getparsedlog", {
-      contractname: "GelatoUserProxyFactory",
-      contractaddress: gelatoUserProxyFactory.address,
-      eventname: "LogCreation",
-      txhash: txResponse.transactionHash,
-      blockhash: txResponse.blockHash,
-      values: true,
-      stringify: true,
-    });
-
-    userProxyAddress = executionEvent.userProxy;
-
+    const createTx = await gelatoUserProxyFactory
+      .connect(seller)
+      .create([], []);
+    await createTx.wait();
+    userProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
+      sellerAddress
+    );
     userProxy = await ethers.getContractAt("GelatoUserProxy", userProxyAddress);
 
     // DEPLOY DUMMY ERC20s
@@ -263,9 +254,13 @@ describe("Multisend with Gelato User Proxy Test", function () {
       [ethers.utils.hexlify(ethers.utils.concat([encodedData, encodedData]))]
     );
 
-    await expect(
-      userProxy.delegatecallAction(multisend.address, encodedMultisendData)
-    )
+    const action = new Action({
+      inst: multisend.address,
+      data: encodedMultisendData,
+      operation: Operation.Delegatecall,
+    });
+
+    await expect(userProxy.execAction(action))
       .to.emit(mockBatchExchange, "LogWithdrawRequest")
       .to.emit(mockBatchExchange, "LogCounter");
   });

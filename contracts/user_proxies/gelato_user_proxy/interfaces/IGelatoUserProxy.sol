@@ -1,37 +1,19 @@
-pragma solidity ^0.6.0;
+pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
-import { Action, Task } from "../../../gelato_core/interfaces/IGelatoCore.sol";
-
-struct ActionWithValue {
-    address inst;
-    bytes data;
-    uint256 value;
-}
-
-struct ActionWithData {
-    address inst;
-    bytes data;
-}
+import { Action, Task, ExecClaim } from "../../../gelato_core/interfaces/IGelatoCore.sol";
 
 interface IGelatoUserProxy {
     function mintExecClaim(Task calldata _task) external;
+    function multiMintExecClaims(Task[] calldata _tasks) external;
 
-    function execGelatoAction(Action calldata _action) external;
-    function multiExecGelatoActions(Action[] calldata _actions) external;
+    function cancelExecClaim(ExecClaim calldata _ec) external;
+    function batchCancelExecClaims(ExecClaim[] calldata _ecs) external;
 
-    function callAction(address _action, bytes calldata _data, uint256 _value)
-        external
-        payable;
-    function multiCallActions(ActionWithValue[] calldata _actions)
-        external
-        payable;
+    function execAction(Action calldata _action) external payable;
+    function multiExecActions(Action[] calldata _actions) external payable;
 
-    function delegatecallAction(address _action, bytes calldata _data) external payable;
-    function multiDelegatecallActions(ActionWithData[] calldata _actions)
-        external
-        payable;
-
+    // Does not work due to `immutable override` InternalCompilerError: Assembly exception for bytecode
     function user() external view returns(address);
     function gelatoCore() external view returns(address);
 }

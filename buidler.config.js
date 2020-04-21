@@ -15,6 +15,7 @@ const IceCream = require("./src/classes/gelato/IceCream").default;
 const ExecClaim = require("./src/classes/gelato/ExecClaim").default;
 const GelatoProvider = require("./src/classes/gelato/GelatoProvider").default;
 const Task = require("./src/classes/gelato/Task").default;
+// Objects
 const { Operation } = require("./src/classes/gelato/Action");
 
 // Helpers
@@ -33,7 +34,7 @@ extendEnvironment((bre) => {
   bre.ExecClaim = ExecClaim;
   bre.GelatoProvider = GelatoProvider;
   bre.Task = Task;
-  // Enums
+  // Objects
   bre.Operation = Operation;
   // Functions
   bre.checkNestedObj = checkNestedObj;

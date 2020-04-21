@@ -4,10 +4,8 @@ import { constants, utils } from "ethers";
 
 export default task(
   "gupf-creategelatouserproxy",
-  `Sends tx to GelatoUserProxyFactory.create() or if --createtwo to .createTwo()  on [--network] (default: ${defaultNetwork})`
+  `Sends tx to GelatoUserProxyFactory.create() on [--network] (default: ${defaultNetwork})`
 )
-  .addFlag("createtwo", "Call ScriptsCreateGnosisSafeProxy.createTwo()")
-  .addOptionalParam("saltnonce", "Supply for --createtwo", 42069, types.int)
   .addOptionalParam(
     "funding",
     "ETH value to be sent to newly created gelato user proxy",
@@ -29,25 +27,20 @@ export default task(
         write: true,
       });
 
+      const optionalMintTasks = [];
+      const optionalActions = [];
+
       let creationTx;
-      if (taskArgs.createtwo) {
-        try {
-          creationTx = await gelatoUserProxyFactory.createTwo(
-            taskArgs.saltnonce,
-            { value: utils.parseEther(taskArgs.funding) }
-          );
-        } catch (error) {
-          console.error("PRE creationTx submission error");
-          process.exit(1);
-        }
-      } else {
-        try {
-          creationTx = await gelatoUserProxyFactory.create({
+      try {
+        creationTx = await gelatoUserProxyFactory.create(
+          optionalMintTasks,
+          optionalActions,
+          {
             value: utils.parseEther(taskArgs.funding),
-          });
-        } catch (error) {
-          throw new Error("\n PRE creationTx submission error", error, "\n");
-        }
+          }
+        );
+      } catch (error) {
+        throw new Error("\n PRE creationTx submission error", error, "\n");
       }
 
       if (taskArgs.log)
@@ -65,26 +58,26 @@ export default task(
       }
 
       // Event Emission verification
-      // const parsedCreateLog = await run("event-getparsedlog", {
-      //   contractname: "GelatoUserProxyFactory",
-      //   contractaddress: taskArgs.factoryaddress,
-      //   eventname: "LogCreation",
-      //   txhash: creationTx.hash,
-      //   blockhash
-      // });
+      const parsedCreateLog = await run("event-getparsedlog", {
+        contractname: "GelatoUserProxyFactory",
+        contractaddress: taskArgs.factoryaddress,
+        eventname: "LogCreation",
+        txhash: creationTx.hash,
+        blockhash,
+      });
 
-      // if (taskArgs.events) {
-      //   if (parsedCreateLog) console.log("\n✅ LogCreation\n", parsedCreateLog);
-      //   else console.log("\n❌ LogCreation not found");
-      // }
+      if (taskArgs.events) {
+        if (parsedCreateLog) console.log("\n✅ LogCreation\n", parsedCreateLog);
+        else console.log("\n❌ LogCreation not found");
+      }
 
-      // if (!parsedCreateLog.values.userProxy) {
-      //   throw new Error(
-      //     `\n gupf-creategelatouserproxy: no userProxy retrieved \n`
-      //   );
-      // }
+      if (!parsedCreateLog.values.userProxy) {
+        throw new Error(
+          `\n gupf-creategelatouserproxy: no userProxy retrieved \n`
+        );
+      }
 
-      // return parsedCreateLog.values.userProxy;
+      return parsedCreateLog.values.userProxy;
     } catch (error) {
       console.error(error, "\n");
       process.exit(1);

@@ -24,7 +24,6 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
   let providerAddress;
 
   let gelatoUserProxyAddress;
-  let extcodehashGelatoUserProxy;
 
   let execClaim;
   let otherExecClaim;
@@ -32,7 +31,6 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
 
   // Condition - Actions - Mix
   let iceCream;
-  // GasPriceCeil
   const gasPriceCeil = utils.parseUnits("20", "gwei");
 
   beforeEach(async function () {
@@ -62,15 +60,14 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
     [provider, user] = await ethers.getSigners();
     providerAddress = await provider.getAddress();
 
-    await gelatoUserProxyFactory.connect(user).create();
+    await gelatoUserProxyFactory.connect(user).create([], []);
     gelatoUserProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
       await user.getAddress()
     );
-    extcodehashGelatoUserProxy = await gelatoUserProxyFactory.proxyExtcodehash();
 
-    providerModule = await ProviderModuleFactory.deploy([
-      extcodehashGelatoUserProxy,
-    ]);
+    providerModule = await ProviderModuleFactory.deploy(
+      gelatoUserProxyFactory.address
+    );
     otherProviderModule = await OtherProviderModuleFactory.deploy(
       [constants.HashZero], // hashes
       [constants.AddressZero], // masterCopies

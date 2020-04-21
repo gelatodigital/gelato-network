@@ -24,14 +24,14 @@ describe("GelatoCore.CancelExecClaim", function () {
   let executorAddress;
   let sysAdminAddress;
   let userProxyAddress;
-  let tx;
-  let txResponse;
   let providerModuleGelatoUserProxy;
   let gelatoCore;
   let mockActionDummy;
+
+  let task;
+
   let execClaim;
   let execClaim2;
-  let mintPayload;
 
   // ###### GelatoCore Setup ######
   beforeEach(async function () {
@@ -45,6 +45,7 @@ describe("GelatoCore.CancelExecClaim", function () {
     // Deploy Gelato Core with SysAdmin + Stake Executor
     const GelatoCore = await ethers.getContractFactory("GelatoCore", sysAdmin);
     gelatoCore = await GelatoCore.deploy();
+    await gelatoCore.deployed();
     await gelatoCore
       .connect(executor)
       .stakeExecutor({ value: ethers.utils.parseUnits("1", "ether") });
@@ -58,6 +59,7 @@ describe("GelatoCore.CancelExecClaim", function () {
       gelatoCore.address,
       GELATO_GAS_PRICE
     );
+    await gelatoGasPriceOracle.deployed();
 
     // Set gas price oracle on core
     await gelatoCore
@@ -72,16 +74,17 @@ describe("GelatoCore.CancelExecClaim", function () {
     const gelatoUserProxyFactory = await GelatoUserProxyFactory.deploy(
       gelatoCore.address
     );
+    await gelatoUserProxyFactory.deployed();
 
-    // Call proxyExtcodehash on Factory and deploy ProviderModuleGelatoUserProxy with constructorArgs
-    const proxyExtcodehash = await gelatoUserProxyFactory.proxyExtcodehash();
+    // Deploy ProviderModuleGelatoUserProxy with constructorArgs
     const ProviderModuleGelatoUserProxy = await ethers.getContractFactory(
       "ProviderModuleGelatoUserProxy",
       sysAdmin
     );
-    providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxy.deploy([
-      proxyExtcodehash,
-    ]);
+    providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxy.deploy(
+      gelatoUserProxyFactory.address
+    );
+    await providerModuleGelatoUserProxy.deployed();
 
     // Provide IceCream
     const MockActionDummy = await ethers.getContractFactory(
@@ -96,7 +99,6 @@ describe("GelatoCore.CancelExecClaim", function () {
       inst: mockActionDummy.address,
       data: constants.HashZero,
       operation: Operation.Delegatecall,
-      value: 0,
       termsOkCheck: true,
     });
 
@@ -124,21 +126,13 @@ describe("GelatoCore.CancelExecClaim", function () {
       );
 
     // Create UserProxy
-    tx = await gelatoUserProxyFactory.connect(seller).create();
-    txResponse = await tx.wait();
-
-    const executionEvent = await run("event-getparsedlog", {
-      contractname: "GelatoUserProxyFactory",
-      contractaddress: gelatoUserProxyFactory.address,
-      eventname: "LogCreation",
-      txhash: txResponse.transactionHash,
-      blockhash: txResponse.blockHash,
-      values: true,
-      stringify: true,
-    });
-
-    userProxyAddress = executionEvent.userProxy;
-
+    const createTx = await gelatoUserProxyFactory
+      .connect(seller)
+      .create([], []);
+    await createTx.wait();
+    userProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
+      sellerAddress
+    );
     userProxy = await ethers.getContractAt("GelatoUserProxy", userProxyAddress);
 
     const abi = ["function action(bool)"];
@@ -164,7 +158,7 @@ describe("GelatoCore.CancelExecClaim", function () {
       termsOkCheck: true,
     });
 
-    const task = new Task({
+    task = new Task({
       provider: gelatoProvider,
       condition,
       actions: [action],
@@ -183,25 +177,14 @@ describe("GelatoCore.CancelExecClaim", function () {
       task,
     };
 
-    mintPayload = await run("abi-encode-withselector", {
-      contractname: "GelatoCore",
-      functionname: "mintExecClaim",
-      inputs: [task],
-    });
-
-    await userProxy.callAction(gelatoCore.address, mintPayload, 0);
+    const mintTx = await userProxy.mintExecClaim(task);
+    await mintTx.wait();
   });
 
   // We test different functionality of the contract as normal Mocha tests.
   describe("GelatoCore.cancelExecClaim", function () {
     it("#1: Cancel execution claim succesfully as user", async function () {
-      const cancelPayload = await run("abi-encode-withselector", {
-        contractname: "GelatoCore",
-        functionname: "cancelExecClaim",
-        inputs: [execClaim],
-      });
-
-      await expect(userProxy.callAction(gelatoCore.address, cancelPayload, 0))
+      await expect(userProxy.cancelExecClaim(execClaim))
         .to.emit(gelatoCore, "LogExecClaimCancelled")
         .withArgs(execClaim.id);
     });
@@ -258,13 +241,8 @@ describe("GelatoCore.CancelExecClaim", function () {
         task,
       };
 
-      const mintPayload = await run("abi-encode-withselector", {
-        contractname: "GelatoCore",
-        functionname: "mintExecClaim",
-        inputs: [task],
-      });
-
-      await userProxy.callAction(gelatoCore.address, mintPayload, 0);
+      const mintTx = await userProxy.mintExecClaim(task);
+      await mintTx.wait();
 
       await expect(
         gelatoCore.connect(executor).cancelExecClaim(execClaim)
@@ -287,15 +265,10 @@ describe("GelatoCore.CancelExecClaim", function () {
 
     it("#6: Batch Cancel execution claim succesfully as user", async function () {
       // mint second Claim
-      await userProxy.callAction(gelatoCore.address, mintPayload, 0);
+      const mintTx = await userProxy.mintExecClaim(task);
+      await mintTx.wait();
 
-      const cancelPayload = await run("abi-encode-withselector", {
-        contractname: "GelatoCore",
-        functionname: "batchCancelExecClaim",
-        inputs: [[execClaim, execClaim2]],
-      });
-
-      await expect(userProxy.callAction(gelatoCore.address, cancelPayload, 0))
+      await expect(userProxy.batchCancelExecClaims([execClaim, execClaim2]))
         .to.emit(gelatoCore, "LogExecClaimCancelled")
         .withArgs(execClaim.id)
         .to.emit(gelatoCore, "LogExecClaimCancelled")
@@ -304,12 +277,13 @@ describe("GelatoCore.CancelExecClaim", function () {
 
     it("#7: Batch Cancel execution claim succesfully as provider", async function () {
       // mint second Claim
-      await userProxy.callAction(gelatoCore.address, mintPayload, 0);
+      const mintTx = await userProxy.mintExecClaim(task);
+      await mintTx.wait();
 
       await expect(
         gelatoCore
           .connect(provider)
-          .batchCancelExecClaim([execClaim, execClaim2])
+          .batchCancelExecClaims([execClaim, execClaim2])
       )
         .to.emit(gelatoCore, "LogExecClaimCancelled")
         .withArgs(execClaim.id)

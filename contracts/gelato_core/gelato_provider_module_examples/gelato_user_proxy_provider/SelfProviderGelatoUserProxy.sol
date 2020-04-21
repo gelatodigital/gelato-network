@@ -18,12 +18,12 @@ contract SelfProviderGelatoUserProxy is GelatoProviderModuleStandard {
     {
         if (_actions.length > 1) {
             return abi.encodeWithSelector(
-                IGelatoUserProxy.multiExecGelatoActions.selector,
+                IGelatoUserProxy.multiExecActions.selector,
                 _actions
             );
         } else if (_actions.length == 1) {
             return abi.encodeWithSelector(
-                IGelatoUserProxy.execGelatoAction.selector,
+                IGelatoUserProxy.execAction.selector,
                 _actions[0]
             );
         } else {
