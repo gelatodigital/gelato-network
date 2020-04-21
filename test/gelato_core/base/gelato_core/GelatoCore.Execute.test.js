@@ -1501,11 +1501,6 @@ describe("GelatoCore.Execute", function () {
         "ActionTermsNotOk:ActionWithdrawBatchExchange: Sell Token not withdrawable yet"
       );
 
-      // LogCanExecFailed
-      // await expect(gelatoCore.setExecClaimTenancy(69420))
-      //   .to.emit(gelatoCore, "LogSetExecClaimTenancy")
-      //   .withArgs(initialState.execClaimTenancy, 69420);
-
       await expect(
         gelatoCore
           .connect(executor)

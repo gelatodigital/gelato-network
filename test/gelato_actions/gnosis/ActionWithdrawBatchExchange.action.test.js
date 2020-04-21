@@ -252,7 +252,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       const gelatoAction = {
         inst: actionWithdrawBatchExchange.address,
         data: withdrawPayload,
-        operation: OPERATION.delegatecall,
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       };
@@ -263,7 +263,9 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       const feeAmount = FEE_USD * 10 ** buyDecimals;
 
       const providerBalance = await buyToken.balanceOf(providerAddress);
-      expect(providerBalance).to.be.equal(ethers.utils.bigNumberify(feeAmount));
+      expect(ethers.utils.bigNumberify(providerBalance)).to.be.equal(
+        ethers.utils.bigNumberify(feeAmount)
+      );
       const sellerBalanceAfter = await buyToken.balanceOf(sellerAddress);
 
       expect(ethers.utils.bigNumberify(sellerBalanceAfter)).to.be.equal(
@@ -300,7 +302,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       const gelatoAction = {
         inst: actionWithdrawBatchExchange.address,
         data: withdrawPayload,
-        operation: OPERATION.delegatecall,
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       };
@@ -311,13 +313,16 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       const feeAmount = FEE_ETH;
 
       const providerBalance = await WETH.balanceOf(providerAddress);
-      expect(providerBalance).to.be.equal(ethers.utils.bigNumberify(feeAmount));
+      expect(ethers.utils.bigNumberify(providerBalance)).to.be.equal(
+        ethers.utils.bigNumberify(feeAmount.toString())
+      );
 
       const sellerBalanceAfter = await WETH.balanceOf(sellerAddress);
       expect(ethers.utils.bigNumberify(sellerBalanceAfter)).to.be.equal(
-        sellerBalanceBefore
-          .add(withdrawAmount)
-          .sub(ethers.utils.bigNumberify(feeAmount))
+        ethers.utils
+          .bigNumberify(sellerBalanceBefore)
+          .add(ethers.utils.bigNumberify(withdrawAmount))
+          .sub(ethers.utils.bigNumberify(feeAmount.toString()))
       );
     });
 
@@ -347,7 +352,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       const gelatoAction = {
         inst: actionWithdrawBatchExchange.address,
         data: withdrawPayload,
-        operation: OPERATION.delegatecall,
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       };
@@ -398,7 +403,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       const gelatoAction = {
         inst: actionWithdrawBatchExchange.address,
         data: withdrawPayload,
-        operation: OPERATION.delegatecall,
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       };
@@ -442,7 +447,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       const gelatoAction = {
         inst: actionWithdrawBatchExchange.address,
         data: withdrawPayload,
-        operation: OPERATION.delegatecall,
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       };
@@ -493,7 +498,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       const gelatoAction = {
         inst: actionWithdrawBatchExchange.address,
         data: withdrawPayload,
-        operation: OPERATION.delegatecall,
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       };
@@ -541,7 +546,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       const gelatoAction = {
         inst: actionWithdrawBatchExchange.address,
         data: withdrawPayload,
-        operation: OPERATION.delegatecall,
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       };
@@ -567,7 +572,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       // 3. MockBatchExchange Set withdraw amount
       tx = await mockBatchExchange.setWithdrawAmount(
         WETH.address,
-        withdrawAmount
+        withdrawAmount.toString()
       );
       await tx.wait();
 
@@ -585,7 +590,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       const gelatoAction = {
         inst: actionWithdrawBatchExchange.address,
         data: withdrawPayload,
-        operation: OPERATION.delegatecall,
+        operation: Operation.Delegatecall,
         value: 0,
         termsOkCheck: true,
       };
@@ -595,7 +600,9 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       );
 
       const providerBalance = await WETH.balanceOf(providerAddress);
-      expect(providerBalance).to.be.equal(0);
+      expect(ethers.utils.bigNumberify(providerBalance)).to.be.equal(
+        ethers.constants.HashZero
+      );
 
       const sellerBalanceAfter = await WETH.balanceOf(sellerAddress);
       expect(ethers.utils.bigNumberify(sellerBalanceAfter)).to.be.equal(

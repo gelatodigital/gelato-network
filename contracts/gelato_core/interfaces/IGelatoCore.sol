@@ -70,13 +70,6 @@ interface IGelatoCore {
 
     event LogExecClaimCancelled(uint256 indexed execClaimId);
 
-    event LogCollectExecClaimRent(
-        address indexed provider,
-        address indexed executor,
-        uint256 indexed execClaimId,
-        uint256 amount
-    );
-
     // ================  Exec Suite =========================
     /// @notice Create a gelato task that will be executed if the specified condition and action(s) terms are fulfilled
     /// @dev Use only through a Proxy contract which is defined in the selected provider module
@@ -106,7 +99,7 @@ interface IGelatoCore {
     /// @notice Batch Cancel execution claims
     /// @dev Callable only by userProxy or selected provider
     /// @param _execClaims ExecutionClaim Array, consisting of user task, user proxy address and id
-    function batchCancelExecClaim(ExecClaim[] calldata _execClaims) external;
+    function batchCancelExecClaims(ExecClaim[] calldata _execClaims) external;
 
     /// @notice Compute hash of execution claim
     /// @param _ec ExecutionClaim, consisting of user task, user proxy address and id
