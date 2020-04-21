@@ -9,7 +9,7 @@ interface IGelatoProviders {
 
     // CAM
     struct ConditionActionsMix {
-        IGelatoCondition condition;   // optional AddressZero for self-conditional actions
+        IGelatoCondition condition;   // Address: optional AddressZero for self-conditional actions
         Action[] actions;
         uint256 gasPriceCeil;  // GPC
     }

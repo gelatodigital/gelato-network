@@ -16,18 +16,27 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
     uint256 public constant override EXEC_TX_OVERHEAD = 55000;
     string public constant override OK = "OK";
 
-    // uint256 public override gelatoGasPrice = 9000000000;  // 9 gwei initial
     IGelatoGasPriceOracle public override gelatoGasPriceOracle;
-    uint256 public override gelatoMaxGas = 7000000;  // 7 mio initial
-    uint256 public override internalGasRequirement = 100000;
-    uint256 public override minProviderStake = 0.1 ether;  // production: 1 ETH
-    uint256 public override minExecutorStake = 0.02 ether;  // production: 1 ETH
-    uint256 public override execClaimTenancy = 30 days;
-    uint256 public override execClaimRent = 1 finney;
-    uint256 public override executorSuccessShare = 50;  // 50% of successful execution cost
-    uint256 public override sysAdminSuccessShare = 20;  // 20% of successful execution cost
-    uint256 public override totalSuccessShare = 70;
+    uint256 public override gelatoMaxGas;
+    uint256 public override internalGasRequirement;
+    uint256 public override minExecutorStake;
+    uint256 public override execClaimTenancy;
+    uint256 public override execClaimRent;
+    uint256 public override executorSuccessShare;
+    uint256 public override sysAdminSuccessShare;
+    uint256 public override totalSuccessShare;
     uint256 public override sysAdminFunds;
+
+    constructor() public {
+        gelatoMaxGas = 7000000;  // 7 mio initial
+        internalGasRequirement = 100000;
+        minExecutorStake = 1 ether;  // production: 1 ETH
+        execClaimTenancy = 60 days;
+        execClaimRent = 0;
+        executorSuccessShare = 50;  // 50% of successful execution cost
+        sysAdminSuccessShare = 20;  // 20% of successful execution cost
+        totalSuccessShare = 70;
+    }
 
     // == The main functions of the Sys Admin (DAO) ==
     // The oracle defines the system-critical gelatoGasPrice
@@ -58,12 +67,6 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
     function setInternalGasRequirement(uint256 _newRequirement) external override onlyOwner {
         emit LogSetInternalGasRequirement(internalGasRequirement, _newRequirement);
         internalGasRequirement = _newRequirement;
-    }
-
-    // Minimum Executor Stake Per Provider
-    function setMinProviderStake(uint256 _newMin) external override onlyOwner {
-        emit LogSetMinProviderStake(minProviderStake, _newMin);
-        minProviderStake = _newMin;
     }
 
     // Minimum Executor Stake Per Provider
