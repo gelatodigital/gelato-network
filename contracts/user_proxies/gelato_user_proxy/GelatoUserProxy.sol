@@ -160,9 +160,22 @@ contract GelatoUserProxy is IGelatoUserProxy {
     )
         private
     {
-        if (_tasks.length != 0)
-            for (uint i = 0; i < _tasks.length; i++)
-                IGelatoCore(_gelatoCore).mintExecClaim(_tasks[i]);
+        if (_tasks.length != 0) {
+            for (uint i = 0; i < _tasks.length; i++) {
+                try IGelatoCore(_gelatoCore).mintExecClaim(_tasks[i]) {
+                } catch Error(string memory err) {
+                    revert(
+                        string(
+                            abi.encodePacked(
+                                "GelatoUserProxy._initialize.mintExecClaim:", err
+                            )
+                        )
+                    );
+                } catch {
+                    revert("GelatoUserProxy._initialize.mintExecClaim:undefined");
+                }
+            }
+        }
 
         if (_actions.length != 0) {
             for (uint i = 0; i < _actions.length; i++) {
@@ -171,7 +184,7 @@ contract GelatoUserProxy is IGelatoUserProxy {
                 else if (_actions[i].operation == Operation.Delegatecall)
                     delegatecallAction(address(_actions[i].inst), _actions[i].data);
                 else
-                    revert("GelatoUserProxy.multiExecActions: invalid operation");
+                    revert("GelatoUserProxy._initialize: invalid operation");
             }
         }
     }
