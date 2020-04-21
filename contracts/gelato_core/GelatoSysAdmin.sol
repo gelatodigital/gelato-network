@@ -109,7 +109,7 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
         totalSuccessShare = executorSuccessShare + _percentage;
     }
 
-    function withdrawSysAdminFunds(uint256 _amount)
+    function withdrawSysAdminFunds(uint256 _amount, address payable _to)
         external
         override
         onlyOwner
@@ -124,7 +124,7 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
         // Effects
         sysAdminFunds = newSysAdminFunds;
 
-        msg.sender.sendValue(realWithdrawAmount);
+        _to.sendValue(realWithdrawAmount);
         emit LogWithdrawSysAdminFunds(currentBalance, newSysAdminFunds);
     }
 

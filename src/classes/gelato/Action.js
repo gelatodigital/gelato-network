@@ -1,9 +1,6 @@
 import { constants } from "ethers";
 
-export const Operation = {
-  Call: 0,
-  Delegatecall: 1,
-};
+export //
 
 class Action {
   constructor({ inst, data, operation, value, termsOkCheck }) {

@@ -33,7 +33,7 @@ interface IGelatoSysAdmin {
     function setExecutorSuccessShare(uint256 _percentage) external;
     function setSysAdminSuccessShare(uint256 _percentage) external;
 
-    function withdrawSysAdminFunds(uint256 _amount) external returns(uint256);
+    function withdrawSysAdminFunds(uint256 _amount, address payable _to) external returns(uint256);
 
     // State Reading
     function EXEC_TX_OVERHEAD() external pure returns(uint256);

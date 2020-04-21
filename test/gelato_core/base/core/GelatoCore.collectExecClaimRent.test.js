@@ -2,10 +2,7 @@
 // => only dependency we need is "chai"
 const { expect, assert } = require("chai");
 const { run, ethers } = require("@nomiclabs/buidler");
-const OPERATION = {
-  call: 0,
-  delegatecall: 1,
-};
+//
 import initialStateSysAdmin from "../gelato_sys_admin/GelatoSysAdmin.initialState";
 import initialStateGasPriceOracle from "../gelato_gas_price_oracle/GelatoGasPriceOracle.initialState";
 
