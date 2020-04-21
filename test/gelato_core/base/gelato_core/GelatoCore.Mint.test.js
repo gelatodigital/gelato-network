@@ -133,7 +133,7 @@ describe("Gelato Core - Minting ", function () {
       value: ethers.utils.parseUnits("1", "ether"),
     });
 
-    // Register new provider CAM on core with provider EDITS NEED ä#######################
+    // Register new provider IceCream on core with provider EDITS NEED ä#######################
 
     const condition = new Condition({
       inst: constants.AddressZero,
@@ -156,18 +156,18 @@ describe("Gelato Core - Minting ", function () {
       termsOkCheck: true,
     });
 
-    const newCam = new CAM({
+    const newIceCream = new IceCream({
       condition: condition.inst,
       actions: [actionWithdrawBatchExchangeGelato],
       gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
     });
 
-    // Call batchProvider(executor, CAMS[], providerModules[])
+    // Call batchProvider(executor, IceCreamS[], providerModules[])
     await gelatoCore
       .connect(provider)
       .batchProvide(
         executorAddress,
-        [newCam],
+        [newIceCream],
         [providerModuleGelatoUserProxy.address]
       );
 
@@ -307,7 +307,7 @@ describe("Gelato Core - Minting ", function () {
       });
 
       await expect(userProxy.mintExecClaim(task)).to.be.revertedWith(
-        "GelatoUserProxy.mintExecClaim:GelatoCore.mintExecClaim.isProvided:ConditionActionsMixNotProvided"
+        "GelatoUserProxy.mintExecClaim:GelatoCore.mintExecClaim.isProvided:IceCreamNotProvided"
       );
 
       // CouldNt get the execClaimHash to be computed off-chain
@@ -357,7 +357,7 @@ describe("Gelato Core - Minting ", function () {
       });
 
       await expect(userProxy.mintExecClaim(task)).to.be.revertedWith(
-        "GelatoUserProxy.mintExecClaim:GelatoCore.mintExecClaim.isProvided:ConditionActionsMixNotProvided"
+        "GelatoUserProxy.mintExecClaim:GelatoCore.mintExecClaim.isProvided:IceCreamNotProvided"
       );
     });
 
@@ -800,7 +800,7 @@ describe("Gelato Core - Minting ", function () {
           value: ethers.utils.parseUnits("1", "ether"),
         })
       ).to.revertedWith(
-        "GelatoUserProxy.callAction:GelatoCore.mintExecClaim.isProvided:ConditionActionsMixNotProvided"
+        "GelatoUserProxy.callAction:GelatoCore.mintExecClaim.isProvided:IceCreamNotProvided"
       );
     });
   });

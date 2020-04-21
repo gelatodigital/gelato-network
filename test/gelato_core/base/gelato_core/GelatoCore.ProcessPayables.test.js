@@ -150,7 +150,7 @@ describe("GelatoCore.Execute", function () {
       value: ethers.utils.parseUnits("1", "ether"),
     });
 
-    // Register new provider CAM on core with provider EDITS NEED ä#######################
+    // Register new provider IceCream on core with provider EDITS NEED ä#######################
 
     const condition = new Condition({
       inst: constants.AddressZero,
@@ -173,7 +173,7 @@ describe("GelatoCore.Execute", function () {
       termsOkCheck: true,
     });
 
-    const newCam = new CAM({
+    const newIceCream = new IceCream({
       condition: condition.inst,
       actions: [actionWithdrawBatchExchangeGelato],
       gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
@@ -184,18 +184,18 @@ describe("GelatoCore.Execute", function () {
       .connect(provider)
       .batchProvide(
         executorAddress,
-        [newCam],
+        [newIceCream],
         [providerModuleGelatoUserProxy.address]
       );
 
     // Call batchProvider( for mockConditionDummy + actionERC20TransferFrom
-    const newCam2 = new CAM({
+    const newIceCream2 = new IceCream({
       condition: mockConditionDummy.address,
       actions: [actionERC20TransferFromGelato],
       gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
     });
 
-    await gelatoCore.connect(provider).provideCAMs([newCam2]);
+    await gelatoCore.connect(provider).provideIceCreams([newIceCream2]);
 
     // Create UserProxy
     const createTx = await gelatoUserProxyFactory
@@ -265,7 +265,7 @@ describe("GelatoCore.Execute", function () {
 
       // Provider registers new acttion
 
-      const newCam2 = new CAM({
+      const newIceCream2 = new IceCream({
         condition: constants.AddressZero,
         actions: [mockActionDummyGelato],
         gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
@@ -277,7 +277,7 @@ describe("GelatoCore.Execute", function () {
         .connect(provider)
         .batchProvide(
           constants.AddressZero,
-          [newCam2],
+          [newIceCream2],
           [constants.AddressZero]
         );
       // Provider batch providers dummy action and revertinng module
@@ -380,7 +380,7 @@ describe("GelatoCore.Execute", function () {
 
       // Provider registers new acttion
 
-      const newCam2 = new CAM({
+      const newIceCream2 = new IceCream({
         condition: constants.AddressZero,
         actions: [mockActionDummyRevertGelato],
         gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
@@ -392,7 +392,7 @@ describe("GelatoCore.Execute", function () {
         .connect(provider)
         .batchProvide(
           constants.AddressZero,
-          [newCam2],
+          [newIceCream2],
           [constants.AddressZero]
         );
       // Provider batch providers dummy action and revertinng module
@@ -507,7 +507,7 @@ describe("GelatoCore.Execute", function () {
 
       // Provider registers new acttion
 
-      const newCam2 = new CAM({
+      const newIceCream2 = new IceCream({
         condition: constants.AddressZero,
         actions: [
           mockActionDummyOutOfGasGelato,
@@ -522,7 +522,7 @@ describe("GelatoCore.Execute", function () {
         .connect(provider)
         .batchProvide(
           constants.AddressZero,
-          [newCam2],
+          [newIceCream2],
           [constants.AddressZero]
         );
       // Provider batch providers dummy action and revertinng module
@@ -633,7 +633,7 @@ describe("GelatoCore.Execute", function () {
 
       // Provider registers new acttion
 
-      const newCam2 = new CAM({
+      const newIceCream2 = new IceCream({
         condition: constants.AddressZero,
         actions: [mockActionDummyOutOfGasGelato, mockActionDummyOutOfGasGelato],
         gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
@@ -645,7 +645,7 @@ describe("GelatoCore.Execute", function () {
         .connect(provider)
         .batchProvide(
           constants.AddressZero,
-          [newCam2],
+          [newIceCream2],
           [constants.AddressZero]
         );
       // Provider batch providers dummy action and revertinng module

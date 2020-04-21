@@ -30,8 +30,7 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
   let fakeExecClaim;
 
   // Condition - Actions - Mix
-  let cam;
-  // GPC
+  let iceCream;
   const gasPriceCeil = utils.parseUnits("20", "gwei");
 
   beforeEach(async function () {
@@ -138,7 +137,7 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
     });
 
     // Condition Action Mix
-    cam = new CAM({
+    iceCream = new IceCream({
       condition: condition.inst,
       actions: [action],
       gasPriceCeil,
@@ -281,8 +280,8 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
     });
 
     it("Should return providerModuleChecks from providerCanExec, if correct gelatoGasPrice", async function () {
-      // provideCAMs
-      await gelatoCore.provideCAMs([cam]);
+      // provideIceCreams
+      await gelatoCore.provideIceCreams([iceCream]);
 
       // addProviderModules()
       await gelatoCore.addProviderModules([
@@ -292,9 +291,9 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
       ]);
 
       const weirdFlexButOkPrice = 0;
-      const okGelatoGasPrice = cam.gasPriceCeil.sub(1);
-      const alsoOkGelatoGasPrice = cam.gasPriceCeil;
-      const notOkGelatoGasPrice = cam.gasPriceCeil.add(1);
+      const okGelatoGasPrice = iceCream.gasPriceCeil.sub(1);
+      const alsoOkGelatoGasPrice = iceCream.gasPriceCeil;
+      const notOkGelatoGasPrice = iceCream.gasPriceCeil.add(1);
 
       // providerCanExec: execClaim (provided gelato user proxy)
       expect(
@@ -314,7 +313,7 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
       // providerCanExec: gelatoGasPriceTooHigh
       expect(
         await gelatoCore.providerCanExec(execClaim, notOkGelatoGasPrice)
-      ).to.be.equal("camGasPriceCeil-OR-notProvided");
+      ).to.be.equal("iceCreamGasPriceCeil-OR-notProvided");
     });
 
     it("Should NOT allow to add same modules again", async function () {

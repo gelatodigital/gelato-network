@@ -385,12 +385,12 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             return "RentNotDue";
 
         if(_ec.task.provider.addr != _ec.userProxy) {
-            string memory provided = isCAMProvided(
+            string memory provided = isIceCreamProvided(
                     _ec.task.provider.addr,
                     _ec.task.condition.inst,
                     _ec.task.actions
             );
-            if (!provided.startsWithOk()) return "CAMnotProvided";
+            if (!provided.startsWithOk()) return "IceCreamnotProvided";
         }
 
         if (providerFunds[_ec.task.provider.addr] < execClaimRent) return "ProviderIlliquid";

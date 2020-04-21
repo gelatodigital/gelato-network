@@ -111,7 +111,7 @@ export default task(
         }
       }
 
-      // NoDataActions for CAM
+      // NoDataActions for IceCream
       const actions = [];
       for (const address of actionAddresses) {
         const action = new NoDataAction({
@@ -123,8 +123,8 @@ export default task(
         actions.push(action);
       }
 
-      // Condition Actions Mix (CAM)
-      const cam = new CAM({
+      // Condition Actions Mix (IceCream)
+      const iceCream = new IceCream({
         condition: conditionAddress ? conditionAddress : constants.AddressZero,
         actions,
         gasPriceCeil: utils.parseUnits("20", "gwei"),
@@ -161,7 +161,7 @@ export default task(
         .connect(provider)
         .batchProvide(
           executorAddress,
-          [cam],
+          [iceCream],
           [providerModuleGelatoUserProxy.address]
         );
 
@@ -177,7 +177,7 @@ export default task(
         gelatoCore,
         gelatoUserProxyFactory,
         providerModuleGelatoUserProxy,
-        cam,
+        iceCream,
         conditionAddress,
       };
     } catch (error) {
