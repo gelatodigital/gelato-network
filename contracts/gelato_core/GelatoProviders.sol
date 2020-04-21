@@ -13,8 +13,8 @@ import { GelatoString } from "../libraries/GelatoString.sol";
 import { IGelatoCondition } from "../gelato_conditions/IGelatoCondition.sol";
 
 /// @title GelatoProviders
-/// @notice APIs for GelatoCore Owner and execClaimTenancy
-/// @dev Find all NatSpecs inside IGelatoCoreAccounting
+/// @notice Provider Management API - Whitelist IceCreams
+/// @dev Find all NatSpecs inside IGelatoProviders
 abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
 
     using Address for address payable;  /// for sendValue method
@@ -110,17 +110,12 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         providerFunds[_provider] = newProviderFunds;
     }
 
+    // @dev change to withdraw funds
     function unprovideFunds(uint256 _withdrawAmount)
         public
         override
         returns(uint256 realWithdrawAmount)
     {
-        address currentExecutor = executorByProvider[msg.sender];
-        require(
-            currentExecutor == address(0),
-            "GelatoProviders.unprovideFunds: Must un-assign executor first"
-        );
-
         uint256 previousProviderFunds = providerFunds[msg.sender];
         realWithdrawAmount = Math.min(_withdrawAmount, previousProviderFunds);
         uint256 newProviderFunds = previousProviderFunds - realWithdrawAmount;
