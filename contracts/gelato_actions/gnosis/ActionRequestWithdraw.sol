@@ -95,7 +95,6 @@ contract ActionRequestWithdraw is GelatoActionsStandard {
         }
 
         return "Ok";
-
     }
 
 
