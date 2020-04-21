@@ -739,7 +739,7 @@ describe("Gelato Core - Minting ", function () {
       // GelatoCore.mintExecClaim.isProvided:InvalidProviderModule
     });
 
-    it("#10: mintExecClaim reverts (Self-provider), inputting other address as provider that has not whitelisted action", async function () {
+    it("#9: mintExecClaim reverts (Self-provider), inputting other address as provider that has not whitelisted action", async function () {
       const actionInputs = {
         user: providerAddress,
         userProxy: userProxyAddress,

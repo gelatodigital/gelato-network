@@ -77,6 +77,7 @@ interface IGelatoCore {
         uint256 amount
     );
 
+    // ================  Exec Suite =========================
     function mintExecClaim(Task calldata _task) external;
 
     function canExec(ExecClaim calldata _ec, uint256 _gelatoMaxGas, uint256 _execTxGasPrice)
@@ -90,12 +91,17 @@ interface IGelatoCore {
     function batchCancelExecClaim(ExecClaim[] calldata _execClaims) external;
 
     function collectExecClaimRent(ExecClaim calldata _ec) external;
-    function canCollectExecClaimRent(ExecClaim calldata _ec) external view returns(bool);
     function batchCollectExecClaimRent(ExecClaim[] calldata _execClaims) external;
 
-    // ================  GETTER APIs =========================
+    // ================  Getters =========================
     function currentExecClaimId() external view returns(uint256 currentId);
     function execClaimHash(uint256 _execClaimId) external view returns(bytes32);
+
     function lastExecClaimRentPaymentDate(uint256 _execClaimId) external view returns(uint256);
+    function canCollectExecClaimRent(ExecClaim calldata _ec)
+        external
+        view
+        returns(string memory);
+
     function hashExecClaim(ExecClaim calldata _ec) external pure returns(bytes32);
 }

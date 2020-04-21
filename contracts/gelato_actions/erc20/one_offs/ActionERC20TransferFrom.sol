@@ -67,6 +67,6 @@ contract ActionERC20TransferFrom is GelatoActionsStandard {
         }
 
         // STANDARD return string to signal actionConditions Ok
-        return "Ok";
+        return OK;
     }
 }

@@ -10,7 +10,6 @@ interface IGelatoSysAdmin {
     event LogSetInternalGasRequirement(uint256 oldRequirment, uint256 newRequirment);
 
     event LogSetMinExecutorStake(uint256 oldMin, uint256 newMin);
-    event LogSetMinProviderStake(uint256 oldMin, uint256 newMin);
 
     event LogSetExecClaimRent(uint256 oldRent, uint256 newRent);
     event LogSetExecClaimTenancy(uint256 oldLifespan, uint256 newLifespan);
@@ -27,7 +26,6 @@ interface IGelatoSysAdmin {
     function setInternalGasRequirement(uint256 _newRequirement) external;
 
     function setMinExecutorStake(uint256 _newMin) external;
-    function setMinProviderStake(uint256 _newMin) external;
 
     function setExecClaimRent(uint256 _rent) external;
     function setExecClaimTenancy(uint256 _lifespan) external;
@@ -39,7 +37,6 @@ interface IGelatoSysAdmin {
 
     // State Reading
     function EXEC_TX_OVERHEAD() external pure returns(uint256);
-    function OK() external pure returns(string memory);
 
     function gelatoGasPriceOracle() external view returns(IGelatoGasPriceOracle);
 
@@ -47,7 +44,6 @@ interface IGelatoSysAdmin {
     function internalGasRequirement() external view returns(uint256);
 
     function minExecutorStake() external view returns(uint256);
-    function minProviderStake() external view returns(uint256);
 
     function execClaimRent() external view returns(uint256);
     function execClaimTenancy() external view returns(uint256);

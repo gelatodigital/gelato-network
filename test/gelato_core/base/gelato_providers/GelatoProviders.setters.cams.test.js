@@ -150,7 +150,7 @@ describe("GelatoCore - GelatoProviders - Setters: CAMS", function () {
         await gelatoCore.isCAMProvided(providerAddress, condition.address, [
           actionStruct,
         ])
-      ).to.be.equal("Ok");
+      ).to.be.equal("OK");
 
       // isExecClaimProvided
       expect(await gelatoCore.isExecClaimProvided(execClaim)).not.to.be.equal(
@@ -208,7 +208,7 @@ describe("GelatoCore - GelatoProviders - Setters: CAMS", function () {
         await gelatoCore.isCAMProvided(providerAddress, condition.address, [
           actionStruct,
         ])
-      ).to.be.equal("Ok");
+      ).to.be.equal("OK");
 
       // isExecClaimProvided
       expect(await gelatoCore.isExecClaimProvided(execClaim)).not.to.be.equal(
@@ -227,7 +227,7 @@ describe("GelatoCore - GelatoProviders - Setters: CAMS", function () {
           actionStruct,
           otherActionStruct,
         ])
-      ).to.be.equal("Ok");
+      ).to.be.equal("OK");
 
       // isExecClaimProvided;
       expect(
@@ -267,7 +267,7 @@ describe("GelatoCore - GelatoProviders - Setters: CAMS", function () {
         await gelatoCore.isCAMProvided(providerAddress, condition.address, [
           actionStruct,
         ])
-      ).to.be.equal("Ok");
+      ).to.be.equal("OK");
 
       // isExecClaimProvided
       expect(await gelatoCore.isExecClaimProvided(execClaim)).not.to.be.equal(
@@ -351,7 +351,7 @@ describe("GelatoCore - GelatoProviders - Setters: CAMS", function () {
           actionStruct,
           otherActionStruct,
         ])
-      ).to.be.equal("Ok");
+      ).to.be.equal("OK");
 
       // isExecClaimProvided
       expect(

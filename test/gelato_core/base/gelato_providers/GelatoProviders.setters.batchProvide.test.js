@@ -110,9 +110,6 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH PROVIDE", function () {
   // batchProvide
   describe("GelatoCore.GelatoProviders.batchProvide", function () {
     it("Should allow anyone to batchProvide", async function () {
-      // minProviderStake required for providerAssignsExecutor
-      const minProviderStake = await gelatoCore.minProviderStake();
-
       // minExecutorStake needed for providerAssignsExecutor()
       const minExecutorStake = await gelatoCore.minExecutorStake();
       // stakeExecutor()
@@ -134,12 +131,12 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH PROVIDE", function () {
           executorAddress,
           [cam, otherCAM],
           [providerModule.address, otherProviderModule.address],
-          { value: minProviderStake }
+          { value: 42069 }
         )
       )
         // LogProvideFunds
         .to.emit(gelatoCore, "LogProvideFunds")
-        .withArgs(providerAddress, minProviderStake, minProviderStake)
+        .withArgs(providerAddress, 42069, 42069)
         // LogProviderAssignsExecutor
         .and.to.emit(gelatoCore, "LogProviderAssignsExecutor")
         .withArgs(
@@ -169,7 +166,7 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH PROVIDE", function () {
 
       // providerFunds
       expect(await gelatoCore.providerFunds(providerAddress)).to.be.equal(
-        minProviderStake
+        42069
       );
 
       // executorProvidersCount(prevExecutor)
@@ -199,7 +196,7 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH PROVIDE", function () {
         await gelatoCore.isCAMProvided(providerAddress, condition.address, [
           actionStruct,
         ])
-      ).to.be.equal("Ok");
+      ).to.be.equal("OK");
 
       // otherCAM
       // camGPC
@@ -213,7 +210,7 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH PROVIDE", function () {
           actionStruct,
           otherActionStruct,
         ])
-      ).to.be.equal("Ok");
+      ).to.be.equal("OK");
 
       // providerModule: isModuleProvided
       expect(

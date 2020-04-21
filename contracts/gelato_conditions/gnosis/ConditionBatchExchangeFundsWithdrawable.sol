@@ -1,40 +1,41 @@
-pragma solidity ^0.6.2;
+pragma solidity ^0.6.6;
 
-import "../IGelatoCondition.sol";
-import "../../external/IERC20.sol";
+import "../GelatoConditionsStandard.sol";
 import "../../dapp_interfaces/gnosis/IBatchExchange.sol";
 
-contract ConditionBatchExchangeFundsWithdrawable {
+contract ConditionBatchExchangeFundsWithdrawable is GelatoConditionsStandard {
 
+    address public immutable batchExchangeAddress;
+    constructor(address _batchExchange) public { batchExchangeAddress = _batchExchange; }
 
-    IBatchExchange private constant batchExchange = IBatchExchange(0xC576eA7bd102F7E476368a5E98FA455d1Ea34dE2);
-
-    // conditionSelector public state variable np due to this.actionSelector constant issue
-    function okStandardSelector() public pure returns(bytes4) {
-        return this.reached.selector;
-    }
-
-    function reached(
-        address _proxy,
-        address _sellToken,
-        address _buyToken
-    )
+    function ok(bytes calldata _conditionDataWithSelector)
         external
         view
-        returns(bool, string memory)  // executable?, reason
+        override
+        virtual
+        returns(string memory)
     {
-        (bool sellTokenWithdrawable, bool buyTokenWithdrawable) = getConditionValue(_proxy, _sellToken, _buyToken);
+        (address proxy, address sellToken, address buyToken) = abi.decode(
+            _conditionDataWithSelector[4:],
+            (address,address,address)
+        );
+        return ok(proxy, sellToken, buyToken);
+    }
 
-        if (!sellTokenWithdrawable) {
-            return (false, "1");
-        }
-
-        if (!buyTokenWithdrawable) {
-            return (false, "2");
-        }
-
-        return (true, "0");
-
+    function ok(address _proxy, address _sellToken, address _buyToken)
+        public
+        view
+        virtual
+        returns(string memory)  // executable?
+    {
+        (bool sellTokenWithdrawable, bool buyTokenWithdrawable) = getConditionValue(
+            _proxy,
+            _sellToken,
+            _buyToken
+        );
+        if (!sellTokenWithdrawable) return "SellTokenNotWithdrawable";
+        if (!buyTokenWithdrawable) return "BuyTokenNotWithdrawable";
+        return OK;
     }
 
     function getConditionValue(
@@ -44,10 +45,10 @@ contract ConditionBatchExchangeFundsWithdrawable {
     )
         public
         view
-        returns(bool, bool)
+        returns(bool sellTokenWithdrawable, bool buyTokenWithdrawable)
     {
-        bool sellTokenWithdrawable = batchExchange.hasValidWithdrawRequest(_proxy, _sellToken);
-        bool buyTokenWithdrawable = batchExchange.hasValidWithdrawRequest(_proxy, _buyToken);
-        return (sellTokenWithdrawable, buyTokenWithdrawable);
+        IBatchExchange batchExchange = IBatchExchange(batchExchangeAddress);
+        sellTokenWithdrawable = batchExchange.hasValidWithdrawRequest(_proxy, _sellToken);
+        buyTokenWithdrawable = batchExchange.hasValidWithdrawRequest(_proxy, _buyToken);
     }
 }

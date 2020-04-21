@@ -6,6 +6,8 @@ import "./IGelatoAction.sol";
 /// @dev find all the NatSpecs inside IGelatoAction
 abstract contract GelatoActionsStandard is IGelatoAction {
 
+    string internal constant OK = "OK";
+
     function actionStandardSelector() external pure override returns(bytes4) {
         return IGelatoAction.action.selector;
     }
@@ -19,6 +21,6 @@ abstract contract GelatoActionsStandard is IGelatoAction {
     {
         this;
         // Standard return value for actionConditions fulfilled and no erros:
-        return "Ok";
+        return OK;
     }
 }

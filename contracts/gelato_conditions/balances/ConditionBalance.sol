@@ -36,10 +36,10 @@ contract ConditionBalance is GelatoConditionsStandard {
         // ETH balances
         if (_token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) {
             if (_greaterElseSmaller) {  // greaterThan
-                if (_account.balance >= _refBalance) return "ok0";
+                if (_account.balance >= _refBalance) return OK;
                 return "NotOkETHBalanceIsNotGreaterThanRefBalance";
             } else {  // smallerThan
-                if (_account.balance <= _refBalance) return "ok1";
+                if (_account.balance <= _refBalance) return OK;
                 return "NotOkETHBalanceIsNotSmallerThanRefBalance";
             }
         } else {
@@ -47,10 +47,10 @@ contract ConditionBalance is GelatoConditionsStandard {
             IERC20 erc20 = IERC20(_token);
             try erc20.balanceOf(_account) returns (uint256 erc20Balance) {
                 if (_greaterElseSmaller) {  // greaterThan
-                    if (erc20Balance >= _refBalance) return "ok2";
+                    if (erc20Balance >= _refBalance) return OK;
                     return "NotOkERC20BalanceIsNotGreaterThanRefBalance";
                 } else {  // smallerThan
-                    if (erc20Balance <= _refBalance) return "ok3";
+                    if (erc20Balance <= _refBalance) return OK;
                     return "NotOkERC20BalanceIsNotSmallerThanRefBalance";
                 }
             } catch {

@@ -151,10 +151,11 @@ export default task(
       const [_, executor, provider] = await ethers.getSigners();
       const executorAddress = await executor.getAddress();
 
-      const minProviderStake = await gelatoCore.minProviderStake();
       await gelatoCore
         .connect(provider)
-        .provideFunds(await provider.getAddress(), { value: minProviderStake });
+        .provideFunds(await provider.getAddress(), {
+          value: utils.parseEther("0.1"),
+        });
 
       await gelatoCore
         .connect(provider)

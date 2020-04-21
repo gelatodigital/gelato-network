@@ -21,9 +21,6 @@ interface IProviderModuleGnosisSafeProxy{
     function batchUnprovide(bytes32[] calldata _hashes, address[] calldata _mastercopies)
         external;
 
-
-    function gelatoCore() external view returns(address);
-
     function isProxyExtcodehashProvided(bytes32 _hash)
         external
         view
@@ -33,5 +30,7 @@ interface IProviderModuleGnosisSafeProxy{
         view
         returns(bool);
 
+
+    function gelatoCore() external view returns(address);
     function MULTI_SEND() external pure returns(address);
 }

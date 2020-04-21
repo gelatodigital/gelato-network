@@ -125,6 +125,6 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
         }
 
         // STANDARD return string to signal actionConditions Ok
-        return "Ok";
+        return OK;
     }
 }
