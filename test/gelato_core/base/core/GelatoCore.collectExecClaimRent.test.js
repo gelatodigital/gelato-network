@@ -38,7 +38,7 @@ describe("GelatoCore.collectExecClaimRent", function () {
   let execClaim;
   let execClaim2;
   let mintPayload;
-  let newCam2;
+  let newIceCream2;
 
   // ###### GelatoCore Setup ######
   beforeEach(async function () {
@@ -90,7 +90,7 @@ describe("GelatoCore.collectExecClaimRent", function () {
       proxyExtcodehash,
     ]);
 
-    // Provide CAM
+    // Provide IceCream
     const MockActionDummy = await ethers.getContractFactory(
       "MockActionDummy",
       sysAdmin
@@ -109,7 +109,7 @@ describe("GelatoCore.collectExecClaimRent", function () {
 
     // Provider registers new acttion
 
-    newCam2 = new CAM({
+    newIceCream2 = new IceCream({
       condition: constants.AddressZero,
       actions: [mockActionDummyGelato],
       gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
@@ -126,7 +126,7 @@ describe("GelatoCore.collectExecClaimRent", function () {
       .connect(provider)
       .batchProvide(
         executorAddress,
-        [newCam2],
+        [newIceCream2],
         [providerModuleGelatoUserProxy.address]
       );
 
@@ -288,15 +288,17 @@ describe("GelatoCore.collectExecClaimRent", function () {
       ).to.be.revertedWith("GelatoCore.collectExecClaimRent:ExecClaimExpired");
     });
 
-    it("#5: Revert when collecting Exec Claim Rent due to provider having unprovided CAM (only for non-self providers)", async function () {
-      // Unprovide CAM
-      await gelatoCore.connect(provider).unprovideCAMs([newCam2]);
+    it("#5: Revert when collecting Exec Claim Rent due to provider having unprovided IceCream (only for non-self providers)", async function () {
+      // Unprovide IceCream
+      await gelatoCore.connect(provider).unprovideIceCreams([newIceCream2]);
 
       await ethers.provider.send("evm_increaseTime", [EXEC_CLAIM_TENANCY]);
 
       await expect(
         gelatoCore.connect(executor).collectExecClaimRent(execClaim)
-      ).to.be.revertedWith("GelatoCore.collectExecClaimRent:CAMnotProvided");
+      ).to.be.revertedWith(
+        "GelatoCore.collectExecClaimRent:IceCreamnotProvided"
+      );
     });
 
     it("#6: Revert when collecting Exec Claim Rent due to provider having unprovided Funds ", async function () {

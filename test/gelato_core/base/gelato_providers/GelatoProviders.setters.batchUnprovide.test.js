@@ -25,8 +25,8 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH UNPROVIDE", function () 
   let otherActionStruct;
   const gasPriceCeil = utils.parseUnits("20", "gwei");
 
-  let cam;
-  let otherCAM;
+  let iceCream;
+  let otherIceCream;
 
   let providerModule;
   let otherProviderModule;
@@ -92,13 +92,13 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH UNPROVIDE", function () 
     });
 
     // Condition Action Mix
-    cam = new CAM({
+    iceCream = new IceCream({
       condition: condition.address,
       actions: [actionStruct],
       gasPriceCeil,
     });
 
-    otherCAM = new CAM({
+    otherIceCream = new IceCream({
       condition: condition.address,
       actions: [actionStruct, otherActionStruct],
       gasPriceCeil,
@@ -117,19 +117,22 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH UNPROVIDE", function () 
         .connect(executor)
         .stakeExecutor({ value: minExecutorStake });
 
-      // camHash
-      const camHash = await gelatoCore.camHash(cam.condition, cam.actions);
-      // otherCAMHash
-      const otherCAMHash = await gelatoCore.camHash(
-        otherCAM.condition,
-        otherCAM.actions
+      // iceCreamHash
+      const iceCreamHash = await gelatoCore.iceCreamHash(
+        iceCream.condition,
+        iceCream.actions
+      );
+      // otherIceCreamHash
+      const otherIceCreamHash = await gelatoCore.iceCreamHash(
+        otherIceCream.condition,
+        otherIceCream.actions
       );
 
       // batchProvide()
       const providedFunds = utils.bigNumberify(42069);
       await gelatoCore.batchProvide(
         executorAddress,
-        [cam, otherCAM],
+        [iceCream, otherIceCream],
         [providerModule.address, otherProviderModule.address],
         { value: providedFunds }
       );
@@ -140,7 +143,7 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH UNPROVIDE", function () 
       await expect(
         gelatoCore.batchUnprovide(
           providedFunds,
-          [cam, otherCAM],
+          [iceCream, otherIceCream],
           [providerModule.address, otherProviderModule.address]
         )
       ).to.be.revertedWith(
@@ -156,18 +159,18 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH UNPROVIDE", function () 
       await expect(
         gelatoCore.batchUnprovide(
           providedFunds,
-          [cam, otherCAM],
+          [iceCream, otherIceCream],
           [providerModule.address, otherProviderModule.address]
         )
       )
         // LogUnprovideFunds
         .to.emit(gelatoCore, "LogUnprovideFunds")
         .withArgs(providerAddress, providedFunds, 0)
-        // LogUnprovideCAM
-        .and.to.emit(gelatoCore, "LogUnprovideCAM")
-        .withArgs(providerAddress, camHash)
-        .and.to.emit(gelatoCore, "LogUnprovideCAM")
-        .withArgs(providerAddress, otherCAMHash)
+        // LogUnprovideIceCream
+        .and.to.emit(gelatoCore, "LogUnprovideIceCream")
+        .withArgs(providerAddress, iceCreamHash)
+        .and.to.emit(gelatoCore, "LogUnprovideIceCream")
+        .withArgs(providerAddress, otherIceCreamHash)
         // LogRemoveProviderModule
         .and.to.emit(gelatoCore, "LogRemoveProviderModule")
         .withArgs(providerAddress, providerModule.address)
@@ -178,32 +181,38 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH UNPROVIDE", function () 
       expect(await gelatoCore.providerFunds(providerAddress)).to.be.equal(
         initialState.providerFunds
       );
-      // cam
-      // camGPC
-      expect(await gelatoCore.camGPC(providerAddress, camHash)).to.be.equal(
-        initialState.camGPC
-      );
-
-      // isCAMProvided
+      // iceCream
+      // iceCreamGasPriceCeil
       expect(
-        await gelatoCore.isCAMProvided(providerAddress, condition.address, [
-          actionStruct,
-        ])
-      ).to.be.equal("ConditionActionsMixNotProvided");
+        await gelatoCore.iceCreamGasPriceCeil(providerAddress, iceCreamHash)
+      ).to.be.equal(initialState.iceCreamGasPriceCeil);
 
-      // otherCAM
-      // camGPC
+      // isIceCreamProvided
       expect(
-        await gelatoCore.camGPC(providerAddress, otherCAMHash)
-      ).to.be.equal(initialState.camGPC);
+        await gelatoCore.isIceCreamProvided(
+          providerAddress,
+          condition.address,
+          [actionStruct]
+        )
+      ).to.be.equal("IceCreamNotProvided");
 
-      // isCAMProvided
+      // otherIceCream
+      // iceCreamGasPriceCeil
       expect(
-        await gelatoCore.isCAMProvided(providerAddress, condition.address, [
-          actionStruct,
-          otherActionStruct,
-        ])
-      ).to.be.equal("ConditionActionsMixNotProvided");
+        await gelatoCore.iceCreamGasPriceCeil(
+          providerAddress,
+          otherIceCreamHash
+        )
+      ).to.be.equal(initialState.iceCreamGasPriceCeil);
+
+      // isIceCreamProvided
+      expect(
+        await gelatoCore.isIceCreamProvided(
+          providerAddress,
+          condition.address,
+          [actionStruct, otherActionStruct]
+        )
+      ).to.be.equal("IceCreamNotProvided");
 
       // providerModule: isModuleProvided
       expect(

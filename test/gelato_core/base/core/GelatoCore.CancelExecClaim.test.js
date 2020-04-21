@@ -83,7 +83,7 @@ describe("GelatoCore.CancelExecClaim", function () {
       proxyExtcodehash,
     ]);
 
-    // Provide CAM
+    // Provide IceCream
     const MockActionDummy = await ethers.getContractFactory(
       "MockActionDummy",
       sysAdmin
@@ -102,7 +102,7 @@ describe("GelatoCore.CancelExecClaim", function () {
 
     // Provider registers new acttion
 
-    const newCam2 = new CAM({
+    const newIceCream2 = new IceCream({
       condition: constants.AddressZero,
       actions: [mockActionDummyGelato],
       gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
@@ -119,7 +119,7 @@ describe("GelatoCore.CancelExecClaim", function () {
       .connect(provider)
       .batchProvide(
         executorAddress,
-        [newCam2],
+        [newIceCream2],
         [providerModuleGelatoUserProxy.address]
       );
 

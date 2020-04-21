@@ -7,11 +7,11 @@ import { IGelatoCondition } from "../../gelato_conditions/IGelatoCondition.sol";
 
 interface IGelatoProviders {
 
-    // CAM
-    struct ConditionActionsMix {
+    // IceCream
+    struct IceCream {
         IGelatoCondition condition;   // Address: optional AddressZero for self-conditional actions
         Action[] actions;
-        uint256 gasPriceCeil;  // GPC
+        uint256 gasPriceCeil;  // GasPriceCeil
     }
 
     // Provider Funding
@@ -39,13 +39,13 @@ interface IGelatoProviders {
     );
 
     // Actions
-    event LogProvideCAM(address indexed provider, bytes32 indexed camHash);
-    event LogUnprovideCAM(address indexed provider, bytes32 indexed camHash);
-    event LogSetCAMGPC(
+    event LogProvideIceCream(address indexed provider, bytes32 indexed iceCreamHash);
+    event LogUnprovideIceCream(address indexed provider, bytes32 indexed iceCreamHash);
+    event LogSetIceCreamGasPriceCeil(
         address indexed provider,
-        bytes32 camHash,
-        uint256 oldCAMGPC,
-        uint256 newCAMGPC
+        bytes32 iceCreamHash,
+        uint256 oldIceCreamGasPriceCeil,
+        uint256 newIceCreamGasPriceCeil
     );
 
     // Provider Module
@@ -60,7 +60,7 @@ interface IGelatoProviders {
 
     // =========== CORE PROTOCOL APIs ==============
     // GelatoCore: mintExecClaim/canExec/collectExecClaimRent Gate
-    function isCAMProvided(
+    function isIceCreamProvided(
         address _provider,
         IGelatoCondition _condition,
         Action[] calldata _actions
@@ -97,9 +97,9 @@ interface IGelatoProviders {
     function executorAssignsExecutor(address _provider, address _newExecutor) external;
 
     // (Un-)provide Conditions
-    function provideCAMs(ConditionActionsMix[] calldata _actions) external;
-    function unprovideCAMs(ConditionActionsMix[] calldata _actionsArray) external;
-    function setCAMGPC(bytes32 _camHash, uint256 _gasPriceCeil) external;
+    function provideIceCreams(IceCream[] calldata _actions) external;
+    function unprovideIceCreams(IceCream[] calldata _actionsArray) external;
+    function setIceCreamGasPriceCeil(bytes32 _iceCreamHash, uint256 _gasPriceCeil) external;
 
     // Provider Module
     function addProviderModules(IGelatoProviderModule[] calldata _modules) external;
@@ -108,7 +108,7 @@ interface IGelatoProviders {
     // Batch (un-)provide
     function batchProvide(
         address _executor,
-        ConditionActionsMix[] calldata _actions,
+        IceCream[] calldata _actions,
         IGelatoProviderModule[] calldata _modules
     )
         external
@@ -116,7 +116,7 @@ interface IGelatoProviders {
 
     function batchUnprovide(
         uint256 _withdrawAmount,
-        ConditionActionsMix[] calldata _actions,
+        IceCream[] calldata _actions,
         IGelatoProviderModule[] calldata _modules
     )
         external;
@@ -151,11 +151,11 @@ interface IGelatoProviders {
     function isExecutorAssigned(address _executor) external view returns(bool);
 
     // Condition Actions Mix and Gas Price Ceil
-    function camGPC(address _provider, bytes32 _camHash)
+    function iceCreamGasPriceCeil(address _provider, bytes32 _iceCreamHash)
         external
         view
         returns(uint256);
-    function camHash(IGelatoCondition _condition, Action[] calldata _noDataActions)
+    function iceCreamHash(IGelatoCondition _condition, Action[] calldata _noDataActions)
         external
         view
         returns(bytes32);
