@@ -13,6 +13,8 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH UNPROVIDE", function () 
   let ActionFactory;
   let OtherActionFactory;
 
+  let GelatoUserProxyFactoryFactory;
+
   let ProviderModuleFactory;
   let OtherProviderModuleFactory;
 
@@ -27,6 +29,8 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH UNPROVIDE", function () 
 
   let cam;
   let otherCAM;
+
+  let gelatoUserProxyFactory;
 
   let providerModule;
   let otherProviderModule;
@@ -44,6 +48,10 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH UNPROVIDE", function () 
     ActionFactory = await ethers.getContractFactory("MockActionDummy");
     OtherActionFactory = await ethers.getContractFactory("MockActionDummy");
 
+    GelatoUserProxyFactoryFactory = await ethers.getContractFactory(
+      "GelatoUserProxyFactory"
+    );
+
     ProviderModuleFactory = await ethers.getContractFactory(
       "ProviderModuleGelatoUserProxy"
     );
@@ -57,7 +65,11 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH UNPROVIDE", function () 
     action = await ActionFactory.deploy();
     otherAction = await OtherActionFactory.deploy();
 
-    providerModule = await ProviderModuleFactory.deploy([constants.HashZero]); // hashes
+    gelatoUserProxyFactory = await GelatoUserProxyFactoryFactory.deploy(
+      gelatoCore.address
+    );
+
+    providerModule = await ProviderModuleFactory.deploy(gelatoUserProxyFactory.address); // hashes
     otherProviderModule = await OtherProviderModuleFactory.deploy(
       [constants.HashZero], // hashes
       [constants.AddressZero], // masterCopies
@@ -69,6 +81,8 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH UNPROVIDE", function () 
     await condition.deployed();
     await action.deployed();
     await otherAction.deployed();
+
+    await gelatoUserProxyFactory.deployed();
 
     await providerModule.deployed();
     await otherProviderModule.deployed();

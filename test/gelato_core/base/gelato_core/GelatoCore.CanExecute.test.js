@@ -58,6 +58,7 @@ describe("GelatoCore.Execute", function () {
     // Deploy Gelato Core with SysAdmin + Stake Executor
     const GelatoCore = await ethers.getContractFactory("GelatoCore", sysAdmin);
     gelatoCore = await GelatoCore.deploy();
+    await gelatoCore.deployed();
     await gelatoCore
       .connect(executor)
       .stakeExecutor({ value: ethers.utils.parseUnits("1", "ether") });
@@ -71,6 +72,7 @@ describe("GelatoCore.Execute", function () {
       gelatoCore.address,
       GELATO_GAS_PRICE
     );
+    await gelatoGasPriceOracle.deployed();
 
     // Set gas price oracle on core
     await gelatoCore
@@ -85,16 +87,17 @@ describe("GelatoCore.Execute", function () {
     const gelatoUserProxyFactory = await GelatoUserProxyFactory.deploy(
       gelatoCore.address
     );
+    await gelatoUserProxyFactory.deployed();
 
-    // Call proxyExtcodehash on Factory and deploy ProviderModuleGelatoUserProxy with constructorArgs
-    const proxyExtcodehash = await gelatoUserProxyFactory.proxyExtcodehash();
+    // Deploy ProviderModuleGelatoUserProxy with constructorArgs
     const ProviderModuleGelatoUserProxy = await ethers.getContractFactory(
       "ProviderModuleGelatoUserProxy",
       sysAdmin
     );
-    providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxy.deploy([
-      proxyExtcodehash,
-    ]);
+    providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxy.deploy(
+      gelatoUserProxyFactory.address
+    );
+    await providerModuleGelatoUserProxy.deployed();
 
     // Call provideFunds(value) with provider on core
     await gelatoCore.connect(provider).provideFunds(providerAddress, {
@@ -117,7 +120,6 @@ describe("GelatoCore.Execute", function () {
       inst: mockActionDummy.address,
       data: constants.HashZero,
       operation: Operation.Delegatecall,
-      value: 0,
       termsOkCheck: true,
     });
 
@@ -137,21 +139,13 @@ describe("GelatoCore.Execute", function () {
       );
 
     // Create UserProxy
-    tx = await gelatoUserProxyFactory.connect(seller).create();
-    txResponse = await tx.wait();
-
-    const executionEvent = await run("event-getparsedlog", {
-      contractname: "GelatoUserProxyFactory",
-      contractaddress: gelatoUserProxyFactory.address,
-      eventname: "LogCreation",
-      txhash: txResponse.transactionHash,
-      blockhash: txResponse.blockHash,
-      values: true,
-      stringify: true,
-    });
-
-    userProxyAddress = executionEvent.userProxy;
-
+    const createTx = await gelatoUserProxyFactory
+      .connect(seller)
+      .create([], []);
+    await createTx.wait();
+    userProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
+      sellerAddress
+    );
     userProxy = await ethers.getContractAt("GelatoUserProxy", userProxyAddress);
 
     const abi = ["function action(bool)"];
@@ -190,15 +184,10 @@ describe("GelatoCore.Execute", function () {
       task,
     };
 
-    const mintPayload = await run("abi-encode-withselector", {
-      contractname: "GelatoCore",
-      functionname: "mintExecClaim",
-      inputs: [task],
-    });
-
-    await expect(
-      userProxy.callAction(gelatoCore.address, mintPayload, 0)
-    ).to.emit(gelatoCore, "LogExecClaimMinted");
+    await expect(userProxy.mintExecClaim(task)).to.emit(
+      gelatoCore,
+      "LogExecClaimMinted"
+    );
   });
 
   // We test different functionality of the contract as normal Mocha tests.
@@ -247,21 +236,16 @@ describe("GelatoCore.Execute", function () {
         task: task2,
       };
 
-      const mintPayload2 = await run("abi-encode-withselector", {
-        contractname: "GelatoCore",
-        functionname: "mintExecClaim",
-        inputs: [task2],
-      });
-
-      await userProxy.callAction(gelatoCore.address, mintPayload2, 0);
+      const mintTx = await userProxy.mintExecClaim(task2);
+      await mintTx.wait();
 
       await ethers.provider.send("evm_increaseTime", [1000000]);
 
-      const canExecReturn = await gelatoCore
-        .connect(executor)
-        .canExec(execClaim2, GELATO_MAX_GAS, GELATO_GAS_PRICE);
-
-      expect(canExecReturn).to.equal("ExecClaimExpired");
+      expect(
+        await gelatoCore
+          .connect(executor)
+          .canExec(execClaim2, GELATO_MAX_GAS, GELATO_GAS_PRICE)
+      ).to.equal("ExecClaimExpired");
     });
 
     it("#4: CanExec - Fail due to provider module check failure, not whitelisted action)", async function () {
@@ -278,13 +262,7 @@ describe("GelatoCore.Execute", function () {
         task: task2,
       };
 
-      const mintPayload2 = await run("abi-encode-withselector", {
-        contractname: "GelatoCore",
-        functionname: "mintExecClaim",
-        inputs: [task2],
-      });
-
-      await userProxy.callAction(gelatoCore.address, mintPayload2, 0);
+      await userProxy.mintExecClaim(task2);
 
       await gelatoCore.connect(provider).unprovideCAMs([newCam]);
 

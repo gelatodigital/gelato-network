@@ -83,15 +83,14 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       gelatoCore.address
     );
 
-    // Call proxyExtcodehash on Factory and deploy ProviderModuleGelatoUserProxy with constructorArgs
-    const proxyExtcodehash = await gelatoUserProxyFactory.proxyExtcodehash();
+    // Deploy ProviderModuleGelatoUserProxy with constructorArgs
     const ProviderModuleGelatoUserProxy = await ethers.getContractFactory(
       "ProviderModuleGelatoUserProxy",
       sysAdmin
     );
-    providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxy.deploy([
-      proxyExtcodehash,
-    ]);
+    providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxy.deploy(
+      gelatoUserProxyFactory.address
+    );
 
     // Deploy Condition (if necessary)
 
@@ -175,21 +174,13 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       );
 
     // Create UserProxy
-    tx = await gelatoUserProxyFactory.connect(seller).create();
-    txResponse = await tx.wait();
-
-    const executionEvent = await run("event-getparsedlog", {
-      contractname: "GelatoUserProxyFactory",
-      contractaddress: gelatoUserProxyFactory.address,
-      eventname: "LogCreation",
-      txhash: txResponse.transactionHash,
-      blockhash: txResponse.blockHash,
-      values: true,
-      stringify: true,
-    });
-
-    userProxyAddress = executionEvent.userProxy;
-
+    const createTx = await gelatoUserProxyFactory
+      .connect(seller)
+      .create([], []);
+    await createTx.wait();
+    userProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
+      sellerAddress
+    );
     userProxy = await ethers.getContractAt("GelatoUserProxy", userProxyAddress);
 
     // DEPLOY DUMMY ERC20s
@@ -269,7 +260,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         termsOkCheck: true,
       };
 
-      tx = await userProxy.execGelatoAction(gelatoAction);
+      tx = await userProxy.execAction(gelatoAction);
       txResponse = await tx.wait();
 
       const feeAmount = FEE_USD * 10 ** buyDecimals;
@@ -317,7 +308,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         termsOkCheck: true,
       };
 
-      tx = await userProxy.execGelatoAction(gelatoAction);
+      tx = await userProxy.execAction(gelatoAction);
       txResponse = await tx.wait();
 
       const feeAmount = FEE_ETH;
@@ -363,7 +354,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         value: 0,
         termsOkCheck: true,
       };
-      await expect(userProxy.execGelatoAction(gelatoAction)).to.be.revertedWith(
+      await expect(userProxy.execAction(gelatoAction)).to.be.revertedWith(
         "GelatoUserProxy.delegatecallAction:ActionWithdrawBatchExchange: Insufficient balance for user to pay for withdrawal 2"
       );
 
@@ -415,7 +406,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         termsOkCheck: true,
       };
 
-      await expect(userProxy.execGelatoAction(gelatoAction)).to.be.revertedWith(
+      await expect(userProxy.execAction(gelatoAction)).to.be.revertedWith(
         "GelatoUserProxy.delegatecallAction:ActionWithdrawBatchExchange: Insufficient balance for user to pay for withdrawal 2"
       );
 
@@ -459,7 +450,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         termsOkCheck: true,
       };
 
-      tx = await userProxy.execGelatoAction(gelatoAction);
+      tx = await userProxy.execAction(gelatoAction);
       txResponse = await tx.wait();
 
       const feeAmount = ethers.utils.parseUnits(
@@ -510,7 +501,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         termsOkCheck: true,
       };
 
-      tx = await userProxy.execGelatoAction(gelatoAction);
+      tx = await userProxy.execAction(gelatoAction);
       txResponse = await tx.wait();
 
       const feeAmount = FEE_ETH.toString();
@@ -557,7 +548,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         value: 0,
         termsOkCheck: true,
       };
-      await expect(userProxy.execGelatoAction(gelatoAction)).to.be.revertedWith(
+      await expect(userProxy.execAction(gelatoAction)).to.be.revertedWith(
         "GelatoUserProxy.delegatecallAction:ActionWithdrawBatchExchange: Insufficient balance for user to pay for withdrawal 1"
       );
 
@@ -602,7 +593,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         termsOkCheck: true,
       };
 
-      await expect(userProxy.execGelatoAction(gelatoAction)).to.be.revertedWith(
+      await expect(userProxy.execAction(gelatoAction)).to.be.revertedWith(
         "GelatoUserProxy.delegatecallAction:ActionWithdrawBatchExchange: Insufficient balance for user to pay for withdrawal 1"
       );
 

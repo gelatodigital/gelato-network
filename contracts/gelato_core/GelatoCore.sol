@@ -336,7 +336,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         emit LogExecClaimCancelled(_ec.id);
     }
 
-    function batchCancelExecClaim(ExecClaim[] memory _execClaims) public override {
+    function batchCancelExecClaims(ExecClaim[] memory _execClaims) public override {
         for (uint i; i < _execClaims.length; i++) cancelExecClaim(_execClaims[i]);
     }
 

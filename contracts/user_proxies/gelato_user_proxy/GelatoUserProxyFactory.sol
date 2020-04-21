@@ -1,67 +1,49 @@
 pragma solidity ^0.6.6;
+pragma experimental ABIEncoderV2;
 
 import { IGelatoUserProxyFactory } from "./interfaces/IGelatoUserProxyFactory.sol";
 import { Address } from "../../external/Address.sol";
 import { GelatoUserProxy } from "./GelatoUserProxy.sol";
+import { Action, Task } from "../../gelato_core/interfaces/IGelatoCore.sol";
 
 contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
 
     using Address for address payable;  /// for oz's sendValue method
 
+    // Make this immutable after solidity coverage
     address public override gelatoCore;
+
     mapping(address => GelatoUserProxy) public override gelatoProxyByUser;
+    // make this after coverage:
+    //  mapping(GelatoUserProxy => address) public override userByGelatoProxy;
+    mapping(address => address) public override userByGelatoProxy;
 
     constructor(address _gelatoCore) public { gelatoCore = _gelatoCore; }
 
     // create
-    function create()
+    function create(Task[] calldata _optionalMintTasks, Action[] calldata _optionalActions)
         external
         payable
         override
         returns(GelatoUserProxy userProxy)
     {
-        userProxy = new GelatoUserProxy{value: msg.value}(msg.sender, gelatoCore);
+        userProxy = new GelatoUserProxy{value: msg.value}(
+            msg.sender,
+            gelatoCore,
+            _optionalMintTasks,
+            _optionalActions
+        );
         gelatoProxyByUser[msg.sender] = userProxy;
+        userByGelatoProxy[address(userProxy)] = msg.sender;
         emit LogCreation(msg.sender, userProxy);
     }
 
-    /// @dev create2: uses tx.origin so setup scripts can run before this call.
-    ///  This however means that contract accounts are excluded from creating a
-    ///  safe GelatoUserProxy by using create2.
-    function createTwo(uint256 _saltNonce)
-        external
-        payable
-        override
-        returns(GelatoUserProxy userProxy)
-    {
-        // Standard Way of deriving salt
-        bytes32 salt = keccak256(abi.encode(tx.origin, _saltNonce));
-        // Deploy userProxy with create2
-        userProxy = new GelatoUserProxy{salt: salt, value: msg.value}(tx.origin, gelatoCore);
-        require(
-            address(userProxy) == predictProxyAddress(tx.origin, _saltNonce),
-            "GelatoUserProxyFactory.createTwo: wrong address prediction"
-        );
-        gelatoProxyByUser[tx.origin] = userProxy;
-        // Success
-        emit LogCreation(tx.origin, userProxy);
+    function isGelatoUserProxy(address _proxy) public view override returns(bool) {
+        return userByGelatoProxy[_proxy] != address(0);
     }
 
-    function predictProxyAddress(address _user, uint256 _saltNonce)
-        public
-        view
-        override
-        returns(address)
-    {
-        // Standard Way of deriving salt
-        bytes32 salt = keccak256(abi.encode(tx.origin, _saltNonce));
-        // Derive undeployed userProxy address
-        return address(uint(keccak256(abi.encodePacked(
-            byte(0xff),
-            address(this),
-            salt,
-            keccak256(abi.encodePacked(proxyCreationCode(), _user, gelatoCore))
-        ))));
+    function isGelatoProxyUser(address _user) public view override returns(bool) {
+        return gelatoProxyByUser[_user] != GelatoUserProxy(0);
     }
 
     function proxyCreationCode() public pure override returns(bytes memory) {

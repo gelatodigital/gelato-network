@@ -92,15 +92,14 @@ describe("GelatoCore.Execute", function () {
       gelatoCore.address
     );
 
-    // Call proxyExtcodehash on Factory and deploy ProviderModuleGelatoUserProxy with constructorArgs
-    const proxyExtcodehash = await gelatoUserProxyFactory.proxyExtcodehash();
+    // Deploy ProviderModuleGelatoUserProxy with constructorArgs
     const ProviderModuleGelatoUserProxy = await ethers.getContractFactory(
       "ProviderModuleGelatoUserProxy",
       sysAdmin
     );
-    providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxy.deploy([
-      proxyExtcodehash,
-    ]);
+    providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxy.deploy(
+      gelatoUserProxyFactory.address
+    );
 
     // Deploy Condition (if necessary)
     const MockConditionDummy = await ethers.getContractFactory(
@@ -199,21 +198,13 @@ describe("GelatoCore.Execute", function () {
     await gelatoCore.connect(provider).provideCAMs([newCam2]);
 
     // Create UserProxy
-    tx = await gelatoUserProxyFactory.connect(seller).create();
-    txResponse = await tx.wait();
-
-    const executionEvent = await run("event-getparsedlog", {
-      contractname: "GelatoUserProxyFactory",
-      contractaddress: gelatoUserProxyFactory.address,
-      eventname: "LogCreation",
-      txhash: txResponse.transactionHash,
-      blockhash: txResponse.blockHash,
-      values: true,
-      stringify: true,
-    });
-
-    userProxyAddress = executionEvent.userProxy;
-
+    const createTx = await gelatoUserProxyFactory
+      .connect(seller)
+      .create([], []);
+    await createTx.wait();
+    userProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
+      sellerAddress
+    );
     userProxy = await ethers.getContractAt("GelatoUserProxy", userProxyAddress);
 
     // DEPLOY DUMMY ERC20s
@@ -327,13 +318,8 @@ describe("GelatoCore.Execute", function () {
         task,
       };
 
-      const mintPayload = await run("abi-encode-withselector", {
-        contractname: "GelatoCore",
-        functionname: "mintExecClaim",
-        inputs: [task],
-      });
-
-      await userProxy.callAction(gelatoCore.address, mintPayload, 0);
+      const mintTx = await userProxy.mintExecClaim(task);
+      await mintTx.wait();
 
       const executorBalanceBefore = await ethers.provider.getBalance(
         executorAddress
@@ -447,13 +433,8 @@ describe("GelatoCore.Execute", function () {
         task,
       };
 
-      const mintPayload = await run("abi-encode-withselector", {
-        contractname: "GelatoCore",
-        functionname: "mintExecClaim",
-        inputs: [task],
-      });
-
-      await userProxy.callAction(gelatoCore.address, mintPayload, 0);
+      const mintTx = await userProxy.mintExecClaim(task);
+      await mintTx.wait();
 
       const executorBalanceBefore = await ethers.provider.getBalance(
         executorAddress
@@ -590,13 +571,8 @@ describe("GelatoCore.Execute", function () {
         task,
       };
 
-      const mintPayload = await run("abi-encode-withselector", {
-        contractname: "GelatoCore",
-        functionname: "mintExecClaim",
-        inputs: [task],
-      });
-
-      await userProxy.callAction(gelatoCore.address, mintPayload, 0);
+      const mintTx = await userProxy.mintExecClaim(task);
+      await mintTx.wait();
 
       const executorBalanceBefore = await ethers.provider.getBalance(
         executorAddress
@@ -710,13 +686,8 @@ describe("GelatoCore.Execute", function () {
         task,
       };
 
-      const mintPayload = await run("abi-encode-withselector", {
-        contractname: "GelatoCore",
-        functionname: "mintExecClaim",
-        inputs: [task],
-      });
-
-      await userProxy.callAction(gelatoCore.address, mintPayload, 0);
+      const mintTx = await userProxy.mintExecClaim(task);
+      await mintTx.wait();
 
       const executorBalanceBefore = await ethers.provider.getBalance(
         executorAddress
