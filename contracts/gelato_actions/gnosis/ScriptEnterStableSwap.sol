@@ -32,6 +32,7 @@ contract ScriptEnterStableSwap is ActionPlaceOrderBatchExchange, ScriptGnosisSaf
         // 2. Execute Trade on BatchExchange
         action(
             _user,
+            address(this),
             _sellToken,
             _buyToken,
             _sellAmount,

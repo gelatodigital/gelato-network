@@ -104,13 +104,6 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
 
         GelatoCore gelatoCore = GelatoCore(GELATO_CORE);
 
-        // Check ExecClaimExpiryDate maximum
-        uint256 nextDueDate = _actionData.dueDate.add(_actionData.timeOffset);
-        uint256 execClaimTenancy = gelatoCore.execClaimTenancy();
-
-        if (nextDueDate > (now + execClaimTenancy))
-            return "ActionChainedTimedERC20TransferFromKovan.termsOk: execClaimTenancy";
-
         if (_ec.userProxy != _ec.task.provider.addr) {
             string memory isProvided = gelatoCore.isExecClaimProvided(
                 _ec
