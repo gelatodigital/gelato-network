@@ -21,8 +21,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     uint256 public override currentExecClaimId;
     // execClaim.id => execClaimHash
     mapping(uint256 => bytes32) public override execClaimHash;
-    // Executors can charge Providers execClaimRent
-    mapping(uint256 => uint256) public override lastExecClaimRentPaymentDate;
 
     // ================  MINTING ==============================================
     function mintExecClaim(Task memory _task) public override {
@@ -66,9 +64,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // ExecClaim Hash registration
         execClaimHash[execClaim.id] = hashedExecClaim;
-
-        // First ExecClaim Rent for first execClaimTenancy is free
-        lastExecClaimRentPaymentDate[execClaim.id] = now;
 
         emit LogExecClaimMinted(executor, execClaim.id, hashedExecClaim, execClaim);
     }
@@ -338,65 +333,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     function batchCancelExecClaim(ExecClaim[] memory _execClaims) public override {
         for (uint i; i < _execClaims.length; i++) cancelExecClaim(_execClaims[i]);
     }
-
-    // ================  EXECCLAIM RENT APIs =================
-    function collectExecClaimRent(ExecClaim memory _ec) public override {
-        // CHECKS
-        string memory canCollect = canCollectExecClaimRent(_ec);
-        if (!canCollect.startsWithOk())
-            revert(string(abi.encodePacked("GelatoCore.collectExecClaimRent:", canCollect)));
-
-        // EFFECTS
-        lastExecClaimRentPaymentDate[_ec.id] = now;
-
-        // INTERACTIONS: Provider pays Executor ExecClaim Rent.
-        providerFunds[_ec.task.provider.addr] -= execClaimRent;
-        executorStake[msg.sender] += execClaimRent;
-
-        emit LogCollectExecClaimRent(
-            msg.sender,
-            _ec.task.provider.addr,
-            _ec.id,
-            execClaimRent
-        );
-    }
-
-    function batchCollectExecClaimRent(ExecClaim[] memory _execClaims) public override {
-        for (uint i; i < _execClaims.length; i++) collectExecClaimRent(_execClaims[i]);
-    }
-
-    function canCollectExecClaimRent(ExecClaim memory _ec)
-        public
-        view
-        override
-        returns(string memory)
-    {
-        // CHECKS
-        if (executorByProvider[_ec.task.provider.addr] != msg.sender) return "NotAssigned";
-
-        bytes32 hashedExecClaim = hashExecClaim(_ec);
-        if (hashedExecClaim != execClaimHash[_ec.id]) return "InvalidExecClaimHash";
-
-        if (_ec.task.expiryDate != 0)
-            if (_ec.task.expiryDate < now) return "ExecClaimExpired";
-
-        if (lastExecClaimRentPaymentDate[_ec.id] > now - execClaimTenancy)
-            return "RentNotDue";
-
-        if(_ec.task.provider.addr != _ec.userProxy) {
-            string memory provided = isCAMProvided(
-                    _ec.task.provider.addr,
-                    _ec.task.condition.inst,
-                    _ec.task.actions
-            );
-            if (!provided.startsWithOk()) return "CAMnotProvided";
-        }
-
-        if (providerFunds[_ec.task.provider.addr] < execClaimRent) return "ProviderIlliquid";
-
-        return OK;
-    }
-
 
     // Helper
     function hashExecClaim(ExecClaim memory _ec) public pure override returns(bytes32) {

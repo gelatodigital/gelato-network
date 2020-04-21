@@ -108,13 +108,6 @@ interface IGelatoCore {
     /// @param _execClaims ExecutionClaim Array, consisting of user task, user proxy address and id
     function batchCancelExecClaim(ExecClaim[] calldata _execClaims) external;
 
-    /// @notice Collect execution claim rent from provider
-    /// @dev Callable only by selected executor
-    /// @param _ec ExecutionClaim, consisting of user task, user proxy address and id
-    function collectExecClaimRent(ExecClaim calldata _ec) external;
-
-    function batchCollectExecClaimRent(ExecClaim[] calldata _execClaims) external;
-
     /// @notice Compute hash of execution claim
     /// @param _ec ExecutionClaim, consisting of user task, user proxy address and id
     /// @return hash of execClaim

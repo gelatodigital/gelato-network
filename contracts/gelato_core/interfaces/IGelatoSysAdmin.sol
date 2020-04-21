@@ -11,9 +11,6 @@ interface IGelatoSysAdmin {
 
     event LogSetMinExecutorStake(uint256 oldMin, uint256 newMin);
 
-    event LogSetExecClaimRent(uint256 oldRent, uint256 newRent);
-    event LogSetExecClaimTenancy(uint256 oldLifespan, uint256 newLifespan);
-
     event LogSetExecutorSuccessShare(uint256 oldShare, uint256 newShare, uint256 total);
     event LogSetSysAdminSuccessShare(uint256 oldShare, uint256 newShare, uint256 total);
 
@@ -26,9 +23,6 @@ interface IGelatoSysAdmin {
     function setInternalGasRequirement(uint256 _newRequirement) external;
 
     function setMinExecutorStake(uint256 _newMin) external;
-
-    function setExecClaimRent(uint256 _rent) external;
-    function setExecClaimTenancy(uint256 _lifespan) external;
 
     function setExecutorSuccessShare(uint256 _percentage) external;
     function setSysAdminSuccessShare(uint256 _percentage) external;
@@ -44,9 +38,6 @@ interface IGelatoSysAdmin {
     function internalGasRequirement() external view returns(uint256);
 
     function minExecutorStake() external view returns(uint256);
-
-    function execClaimRent() external view returns(uint256);
-    function execClaimTenancy() external view returns(uint256);
 
     function executorSuccessShare() external view returns(uint256);
     function totalSuccessShare() external view returns(uint256);

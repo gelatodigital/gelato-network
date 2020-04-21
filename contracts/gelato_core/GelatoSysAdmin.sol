@@ -20,8 +20,6 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
     uint256 public override gelatoMaxGas;
     uint256 public override internalGasRequirement;
     uint256 public override minExecutorStake;
-    uint256 public override execClaimTenancy;
-    uint256 public override execClaimRent;
     uint256 public override executorSuccessShare;
     uint256 public override sysAdminSuccessShare;
     uint256 public override totalSuccessShare;
@@ -31,8 +29,6 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
         gelatoMaxGas = 7000000;  // 7 mio initial
         internalGasRequirement = 100000;
         minExecutorStake = 1 ether;  // production: 1 ETH
-        execClaimTenancy = 60 days;
-        execClaimRent = 0;
         executorSuccessShare = 50;  // 50% of successful execution cost
         sysAdminSuccessShare = 20;  // 20% of successful execution cost
         totalSuccessShare = 70;
@@ -73,18 +69,6 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
     function setMinExecutorStake(uint256 _newMin) external override onlyOwner {
         emit LogSetMinExecutorStake(minExecutorStake, _newMin);
         minExecutorStake = _newMin;
-    }
-
-    // execClaim lifespan
-    function setExecClaimTenancy(uint256 _lifespan) external override onlyOwner {
-        emit LogSetExecClaimTenancy(execClaimTenancy, _lifespan);
-        execClaimTenancy = _lifespan;
-    }
-
-    // execClaim rent per lifespan
-    function setExecClaimRent(uint256 _rent) external override onlyOwner {
-        emit LogSetExecClaimRent(execClaimRent, _rent);
-        execClaimRent = _rent;
     }
 
     // Executors' profit share on exec costs
