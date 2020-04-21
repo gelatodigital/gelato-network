@@ -24,7 +24,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     mapping(uint256 => uint256) public override lastExecClaimRentPaymentDate;
 
     // ================  MINTING ==============================================
-    // Only pass _executor for self-providing users, else address(0)
     function mintExecClaim(Task memory _task) public override {
         // GelatoCore will generate an ExecClaim from the _task
         ExecClaim memory execClaim;
