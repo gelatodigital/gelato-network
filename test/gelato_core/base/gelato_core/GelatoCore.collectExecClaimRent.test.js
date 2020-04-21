@@ -33,14 +33,15 @@ describe("GelatoCore.collectExecClaimRent", function () {
   let executorAddress;
   let sysAdminAddress;
   let userProxyAddress;
-  let tx;
-  let txResponse;
   let providerModuleGelatoUserProxy;
   let gelatoCore;
   let mockActionDummy;
+
+  let task;
+  let task2;
+
   let execClaim;
   let execClaim2;
-  let mintPayload;
   let newCam2;
 
   // ###### GelatoCore Setup ######
@@ -55,6 +56,8 @@ describe("GelatoCore.collectExecClaimRent", function () {
     // Deploy Gelato Core with SysAdmin + Stake Executor
     const GelatoCore = await ethers.getContractFactory("GelatoCore", sysAdmin);
     gelatoCore = await GelatoCore.deploy();
+    await gelatoCore.deployed();
+
     await gelatoCore
       .connect(executor)
       .stakeExecutor({ value: ethers.utils.parseUnits("1", "ether") });
@@ -68,6 +71,7 @@ describe("GelatoCore.collectExecClaimRent", function () {
       gelatoCore.address,
       GELATO_GAS_PRICE
     );
+    await gelatoGasPriceOracle.deployed();
 
     // Set gas price oracle on core
     await gelatoCore
@@ -82,6 +86,7 @@ describe("GelatoCore.collectExecClaimRent", function () {
     const gelatoUserProxyFactory = await GelatoUserProxyFactory.deploy(
       gelatoCore.address
     );
+    await gelatoUserProxyFactory.deployed();
 
     // Deploy ProviderModuleGelatoUserProxy with constructorArgs
     const ProviderModuleGelatoUserProxy = await ethers.getContractFactory(
@@ -89,8 +94,9 @@ describe("GelatoCore.collectExecClaimRent", function () {
       sysAdmin
     );
     providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxy.deploy(
-      gelatoUserProxyFactory.address,
+      gelatoUserProxyFactory.address
     );
+    await providerModuleGelatoUserProxy.deployed();
 
     // Provide CAM
     const MockActionDummy = await ethers.getContractFactory(
@@ -105,7 +111,6 @@ describe("GelatoCore.collectExecClaimRent", function () {
       inst: mockActionDummy.address,
       data: constants.HashZero,
       operation: Operation.Delegatecall,
-      value: 0,
       termsOkCheck: true,
     });
 
@@ -133,21 +138,13 @@ describe("GelatoCore.collectExecClaimRent", function () {
       );
 
     // Create UserProxy
-    tx = await gelatoUserProxyFactory.connect(seller).create();
-    txResponse = await tx.wait();
-
-    const executionEvent = await run("event-getparsedlog", {
-      contractname: "GelatoUserProxyFactory",
-      contractaddress: gelatoUserProxyFactory.address,
-      eventname: "LogCreation",
-      txhash: txResponse.transactionHash,
-      blockhash: txResponse.blockHash,
-      values: true,
-      stringify: true,
-    });
-
-    userProxyAddress = executionEvent.userProxy;
-
+    const createTx = await gelatoUserProxyFactory
+      .connect(seller)
+      .create([], []);
+    await createTx.wait();
+    userProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
+      sellerAddress
+    );
     userProxy = await ethers.getContractAt("GelatoUserProxy", userProxyAddress);
 
     const abi = ["function action(bool)"];
@@ -169,11 +166,10 @@ describe("GelatoCore.collectExecClaimRent", function () {
       inst: mockActionDummy.address,
       data: actionData,
       operation: Operation.Delegatecall,
-      value: 0,
       termsOkCheck: true,
     });
 
-    const task = new Task({
+    task = new Task({
       provider: gelatoProvider,
       condition,
       actions: [action],
@@ -188,7 +184,7 @@ describe("GelatoCore.collectExecClaimRent", function () {
 
     let oldBlock = await ethers.provider.getBlock();
 
-    const task2 = new Task({
+    task2 = new Task({
       provider: gelatoProvider,
       condition,
       actions: [action],
@@ -201,20 +197,10 @@ describe("GelatoCore.collectExecClaimRent", function () {
       task: task2,
     };
 
-    mintPayload = await run("abi-encode-withselector", {
-      contractname: "GelatoCore",
-      functionname: "mintExecClaim",
-      inputs: [task],
-    });
-
-    const mintPayload2 = await run("abi-encode-withselector", {
-      contractname: "GelatoCore",
-      functionname: "mintExecClaim",
-      inputs: [task2],
-    });
-
-    await userProxy.callAction(gelatoCore.address, mintPayload, 0);
-    await userProxy.callAction(gelatoCore.address, mintPayload2, 0);
+    const mintTx = await userProxy.mintExecClaim(task);
+    await mintTx.wait();
+    const mintTx2 = await userProxy.mintExecClaim(task2);
+    await mintTx2.wait();
   });
 
   // We test different functionality of the contract as normal Mocha tests.
@@ -357,7 +343,6 @@ describe("GelatoCore.collectExecClaimRent", function () {
         inst: mockActionDummy.address,
         data: constants.HashZero,
         operation: Operation.Delegatecall,
-        value: 0,
         termsOkCheck: true,
       });
 
@@ -374,13 +359,8 @@ describe("GelatoCore.collectExecClaimRent", function () {
         task: tempTask,
       };
 
-      mintPayload = await run("abi-encode-withselector", {
-        contractname: "GelatoCore",
-        functionname: "mintExecClaim",
-        inputs: [tempTask],
-      });
-
-      await userProxy.callAction(gelatoCore.address, mintPayload, 0);
+      const mintTx = await userProxy.mintExecClaim(tempTask);
+      await mintTx.wait();
 
       await ethers.provider.send("evm_increaseTime", [EXEC_CLAIM_TENANCY]);
 

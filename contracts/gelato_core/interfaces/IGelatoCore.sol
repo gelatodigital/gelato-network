@@ -88,7 +88,7 @@ interface IGelatoCore {
     function exec(ExecClaim calldata _ec) external;
 
     function cancelExecClaim(ExecClaim calldata _ec) external;
-    function batchCancelExecClaim(ExecClaim[] calldata _execClaims) external;
+    function batchCancelExecClaims(ExecClaim[] calldata _execClaims) external;
 
     function collectExecClaimRent(ExecClaim calldata _ec) external;
     function batchCollectExecClaimRent(ExecClaim[] calldata _execClaims) external;

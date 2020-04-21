@@ -1,4 +1,4 @@
-import { constants } from "ethers";
+import { constants, utils } from "ethers";
 
 export const Operation = {
   Call: 0,
@@ -10,33 +10,28 @@ class Action {
     if (!inst) throw new Error("\nAction: no inst passed to constructor\n");
     if (operation === undefined)
       throw new Error("\nAction: no operation passed to constructor\n");
-    if (termsOkCheck !== true && termsOkCheck !== false) {
+    if (operation !== Operation.Call && operation !== Operation.Delegatecall) {
       throw new Error(
-        "\nAction: pass 'true' or 'false', you passed:",
+        "\nAction: pass 'Operation.Call' or 'Operation.Delegatecall', you passed:",
+        operation,
+        "\n CASE SENSITIVE => .call or .delegatecall do not work!",
+        "\n"
+      );
+    }
+    const trueOrFalse = [true, false];
+    if (termsOkCheck !== undefined && !trueOrFalse.includes(termsOkCheck)) {
+      throw new Error(
+        "\nAction.termsOkCheck: pass true or false, you passed:",
         termsOkCheck,
         "\n"
       );
     }
 
-    if (
-      operation !== Operation.Call &&
-      operation !== Operation.Delegatecall &&
-      operation !== 0 &&
-      operation !== 1
-    ) {
-      throw new Error(
-        "\nAction: pass 'call' or 'delegatecall', you passed:",
-        operation,
-        "\n"
-      );
-    }
-    if (termsOkCheck === undefined)
-      throw new Error("\nAction: no termsOkCheck passed to constructor\n");
     this.inst = inst;
     this.data = data ? data : constants.HashZero;
-    this.operation = operation == Operation.Call || 0 ? 0 : 1;
+    this.operation = operation;
     this.value = value ? value : constants.Zero;
-    this.termsOkCheck = termsOkCheck;
+    this.termsOkCheck = termsOkCheck ? termsOkCheck : false;
   }
 }
 

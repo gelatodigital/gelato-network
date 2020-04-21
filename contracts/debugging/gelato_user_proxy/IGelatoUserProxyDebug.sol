@@ -11,6 +11,6 @@ interface IGelatoUserProxyDebug {
     function multiExecActions(Action[] calldata _actions) external;
 
     // Does not work due to `immutable override` InternalCompilerError: Assembly exception for bytecode
-    function user() external view returns(address);
+    function user() external pure returns(address);
     function gelatoCore() external view returns(address);
 }

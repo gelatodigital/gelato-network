@@ -8,10 +8,6 @@ import initialStateGasPriceOracle from "../gelato_gas_price_oracle/GelatoGasPric
 
 const FEE_USD = 2;
 const FEE_ETH = 9000000000000000;
-const OPERATION = {
-  call: 0,
-  delegatecall: 1,
-};
 
 const GELATO_MAX_GAS = initialStateSysAdmin.gelatoMaxGas;
 const GELATO_GAS_PRICE = initialStateGasPriceOracle.gasPrice;
@@ -70,6 +66,8 @@ describe("GelatoCore.Execute", function () {
     // Deploy Gelato Core with SysAdmin + Stake Executor
     const GelatoCore = await ethers.getContractFactory("GelatoCore", sysAdmin);
     gelatoCore = await GelatoCore.deploy();
+    await gelatoCore.deployed();
+
     await gelatoCore
       .connect(executor)
       .stakeExecutor({ value: ethers.utils.parseUnits("1", "ether") });
@@ -83,6 +81,7 @@ describe("GelatoCore.Execute", function () {
       gelatoCore.address,
       GELATO_GAS_PRICE
     );
+    await gelatoGasPriceOracle.deployed();
 
     // Set gas price oracle on core
     await gelatoCore
@@ -97,6 +96,7 @@ describe("GelatoCore.Execute", function () {
     const gelatoUserProxyFactory = await GelatoUserProxyFactory.deploy(
       gelatoCore.address
     );
+    await gelatoUserProxyFactory.deployed();
 
     // Deploy ProviderModuleGelatoUserProxy with constructorArgs
     const ProviderModuleGelatoUserProxy = await ethers.getContractFactory(
@@ -104,8 +104,9 @@ describe("GelatoCore.Execute", function () {
       sysAdmin
     );
     providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxy.deploy(
-      gelatoUserProxyFactory.address,
+      gelatoUserProxyFactory.address
     );
+    await providerModuleGelatoUserProxy.deployed();
 
     // Deploy Condition (if necessary)
     const MockConditionDummy = await ethers.getContractFactory(
@@ -204,21 +205,13 @@ describe("GelatoCore.Execute", function () {
     await gelatoCore.connect(provider).provideCAMs([newCam2]);
 
     // Create UserProxy
-    tx = await gelatoUserProxyFactory.connect(seller).create();
-    txResponse = await tx.wait();
-
-    const executionEvent = await run("event-getparsedlog", {
-      contractname: "GelatoUserProxyFactory",
-      contractaddress: gelatoUserProxyFactory.address,
-      eventname: "LogCreation",
-      txhash: txResponse.transactionHash,
-      blockhash: txResponse.blockHash,
-      values: true,
-      stringify: true,
-    });
-
-    userProxyAddress = executionEvent.userProxy;
-
+    const createTx = await gelatoUserProxyFactory
+      .connect(seller)
+      .create([], []);
+    await createTx.wait();
+    userProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
+      sellerAddress
+    );
     userProxy = await ethers.getContractAt("GelatoUserProxy", userProxyAddress);
 
     // DEPLOY DUMMY ERC20s
@@ -327,17 +320,12 @@ describe("GelatoCore.Execute", function () {
 
       //const isProvided = await gelatoCore.isCAMProvided(execClaim);
 
-      const mintPayload = await run("abi-encode-withselector", {
-        contractname: "GelatoCore",
-        functionname: "mintExecClaim",
-        inputs: [task],
-      });
-
       // LogExecClaimMinted(executor, execClaim.id, hashedExecClaim, execClaim);
 
-      await expect(
-        userProxy.callAction(gelatoCore.address, mintPayload, 0)
-      ).to.emit(gelatoCore, "LogExecClaimMinted");
+      await expect(userProxy.mintExecClaim(task)).to.emit(
+        gelatoCore,
+        "LogExecClaimMinted"
+      );
 
       expect(
         await gelatoCore.canExec(execClaim, GELATO_MAX_GAS, GELATO_GAS_PRICE)
@@ -438,15 +426,10 @@ describe("GelatoCore.Execute", function () {
       // Should return "OK"
       // const isProvided = await gelatoCore.isCAMProvided(execClaim);
 
-      const mintPayload = await run("abi-encode-withselector", {
-        contractname: "GelatoCore",
-        functionname: "mintExecClaim",
-        inputs: [task],
-      });
-
-      await expect(
-        userProxy.callAction(gelatoCore.address, mintPayload, 0)
-      ).to.emit(gelatoCore, "LogExecClaimMinted");
+      await expect(userProxy.mintExecClaim(task)).to.emit(
+        gelatoCore,
+        "LogExecClaimMinted"
+      );
 
       await expect(
         gelatoCore
@@ -531,15 +514,10 @@ describe("GelatoCore.Execute", function () {
       // Should return "OK"
       // const isProvided = await gelatoCore.isCAMProvided(execClaim);
 
-      const mintPayload = await run("abi-encode-withselector", {
-        contractname: "GelatoCore",
-        functionname: "mintExecClaim",
-        inputs: [task],
-      });
-
-      await expect(
-        userProxy.callAction(gelatoCore.address, mintPayload, 0)
-      ).to.emit(gelatoCore, "LogExecClaimMinted");
+      await expect(userProxy.mintExecClaim(task)).to.emit(
+        gelatoCore,
+        "LogExecClaimMinted"
+      );
 
       await expect(
         gelatoCore
@@ -622,15 +600,10 @@ describe("GelatoCore.Execute", function () {
       // Should return "OK"
       // const isProvided = await gelatoCore.isCAMProvided(execClaim);
 
-      const mintPayload = await run("abi-encode-withselector", {
-        contractname: "GelatoCore",
-        functionname: "mintExecClaim",
-        inputs: [task],
-      });
-
-      await expect(
-        userProxy.callAction(gelatoCore.address, mintPayload, 0)
-      ).to.emit(gelatoCore, "LogExecClaimMinted");
+      await expect(userProxy.mintExecClaim(task)).to.emit(
+        gelatoCore,
+        "LogExecClaimMinted"
+      );
 
       await expect(
         gelatoCore
@@ -709,15 +682,10 @@ describe("GelatoCore.Execute", function () {
       // Should return "OK"
       // const isProvided = await gelatoCore.isCAMProvided(execClaim);
 
-      const mintPayload = await run("abi-encode-withselector", {
-        contractname: "GelatoCore",
-        functionname: "mintExecClaim",
-        inputs: [task],
-      });
-
-      await expect(
-        userProxy.callAction(gelatoCore.address, mintPayload, 0)
-      ).to.emit(gelatoCore, "LogExecClaimMinted");
+      await expect(userProxy.mintExecClaim(task)).to.emit(
+        gelatoCore,
+        "LogExecClaimMinted"
+      );
 
       await expect(
         gelatoCore
@@ -795,15 +763,10 @@ describe("GelatoCore.Execute", function () {
       // Should return "OK"
       // const isProvided = await gelatoCore.isCAMProvided(execClaim);
 
-      const mintPayload = await run("abi-encode-withselector", {
-        contractname: "GelatoCore",
-        functionname: "mintExecClaim",
-        inputs: [task],
-      });
-
-      await expect(
-        userProxy.callAction(gelatoCore.address, mintPayload, 0)
-      ).to.emit(gelatoCore, "LogExecClaimMinted");
+      await expect(userProxy.mintExecClaim(task)).to.emit(
+        gelatoCore,
+        "LogExecClaimMinted"
+      );
 
       await expect(
         gelatoCore
@@ -872,15 +835,10 @@ describe("GelatoCore.Execute", function () {
       // Should return "OK"
       // const isProvided = await gelatoCore.isCAMProvided(execClaim);
 
-      const mintPayload = await run("abi-encode-withselector", {
-        contractname: "GelatoCore",
-        functionname: "mintExecClaim",
-        inputs: [task],
-      });
-
-      await expect(
-        userProxy.callAction(gelatoCore.address, mintPayload, 0)
-      ).to.emit(gelatoCore, "LogExecClaimMinted");
+      await expect(userProxy.mintExecClaim(task)).to.emit(
+        gelatoCore,
+        "LogExecClaimMinted"
+      );
 
       await expect(
         gelatoCore
@@ -1017,15 +975,10 @@ describe("GelatoCore.Execute", function () {
         task,
       };
 
-      const mintPayload = await run("abi-encode-withselector", {
-        contractname: "GelatoCore",
-        functionname: "mintExecClaim",
-        inputs: [task],
-      });
-
-      await expect(
-        userProxy.callAction(gelatoCore.address, mintPayload, 0)
-      ).to.emit(gelatoCore, "LogExecClaimMinted");
+      await expect(userProxy.mintExecClaim(task)).to.emit(
+        gelatoCore,
+        "LogExecClaimMinted"
+      );
 
       await expect(
         gelatoCore
@@ -1079,7 +1032,6 @@ describe("GelatoCore.Execute", function () {
         inst: actionERC20TransferFrom.address,
         data: actionData,
         operation: Operation.Delegatecall,
-        value: 0,
         termsOkCheck: true,
       });
 
@@ -1098,15 +1050,10 @@ describe("GelatoCore.Execute", function () {
         task,
       };
 
-      const mintPayload = await run("abi-encode-withselector", {
-        contractname: "GelatoCore",
-        functionname: "mintExecClaim",
-        inputs: [task],
-      });
-
-      await expect(
-        userProxy.callAction(gelatoCore.address, mintPayload, 0)
-      ).to.emit(gelatoCore, "LogExecClaimMinted");
+      await expect(userProxy.mintExecClaim(task)).to.emit(
+        gelatoCore,
+        "LogExecClaimMinted"
+      );
 
       // By default connect to
       let provider = new ethers.providers.JsonRpcProvider();
@@ -1191,17 +1138,12 @@ describe("GelatoCore.Execute", function () {
 
       //const isProvided = await gelatoCore.isCAMProvided(execClaim);
 
-      const mintPayload = await run("abi-encode-withselector", {
-        contractname: "GelatoCore",
-        functionname: "mintExecClaim",
-        inputs: [task],
-      });
-
       // LogExecClaimMinted(executor, execClaim.id, hashedExecClaim, execClaim);
 
-      await expect(
-        userProxy.callAction(gelatoCore.address, mintPayload, 0)
-      ).to.emit(gelatoCore, "LogExecClaimMinted");
+      await expect(userProxy.mintExecClaim(task)).to.emit(
+        gelatoCore,
+        "LogExecClaimMinted"
+      );
 
       expect(
         await gelatoCore.canExec(execClaim, GELATO_MAX_GAS, GELATO_GAS_PRICE)
@@ -1298,17 +1240,12 @@ describe("GelatoCore.Execute", function () {
 
       //const isProvided = await gelatoCore.isCAMProvided(execClaim);
 
-      const mintPayload = await run("abi-encode-withselector", {
-        contractname: "GelatoCore",
-        functionname: "mintExecClaim",
-        inputs: [task],
-      });
-
       // LogExecClaimMinted(executor, execClaim.id, hashedExecClaim, execClaim);
 
-      await expect(
-        userProxy.callAction(gelatoCore.address, mintPayload, 0)
-      ).to.emit(gelatoCore, "LogExecClaimMinted");
+      await expect(userProxy.mintExecClaim(task)).to.emit(
+        gelatoCore,
+        "LogExecClaimMinted"
+      );
 
       expect(
         await gelatoCore.canExec(execClaim, GELATO_MAX_GAS, GELATO_GAS_PRICE)
@@ -1431,33 +1368,41 @@ describe("GelatoCore.Execute", function () {
         inputs: [[providerModuleGelatoUserProxy.address]],
       });
 
-      const selfProviderSetupData = [
-        {
-          inst: gelatoCore.address,
-          data: provideFundsPayload,
-          value: ethers.utils.parseUnits("1", "ether"),
-        },
-        {
-          inst: gelatoCore.address,
-          data: providerAssignsExecutorPayload,
-          value: ethers.constants.Zero,
-        },
-        {
-          inst: gelatoCore.address,
-          data: addProviderModulePayload,
-          value: ethers.constants.Zero,
-        },
-        {
-          inst: gelatoCore.address,
-          data: mintPayload,
-          value: ethers.constants.Zero,
-        },
-      ];
+      const actions = [];
+
+      const provideFundsAction = new Action({
+        inst: gelatoCore.address,
+        data: provideFundsPayload,
+        operation: Operation.Call,
+        value: ethers.utils.parseUnits("1", "ether"),
+      });
+      actions.push(provideFundsAction);
+
+      const assignExecutorAction = new Action({
+        inst: gelatoCore.address,
+        data: providerAssignsExecutorPayload,
+        operation: Operation.Call,
+      });
+      actions.push(assignExecutorAction);
+
+      const addProviderModuleAction = new Action({
+        inst: gelatoCore.address,
+        data: addProviderModulePayload,
+        operation: Operation.Call,
+      });
+      actions.push(addProviderModuleAction);
+
+      const mintAction = new Action({
+        inst: gelatoCore.address,
+        data: mintPayload,
+        operation: Operation.Call,
+      });
+      actions.push(mintAction);
 
       // LogExecClaimMinted(executor, execClaim.id, hashedExecClaim, execClaim);
 
       await expect(
-        userProxy.multiExecActions(selfProviderSetupData, {
+        userProxy.multiExecActions(actions, {
           value: ethers.utils.parseUnits("1", "ether"),
         })
       ).to.emit(gelatoCore, "LogExecClaimMinted");
@@ -1542,17 +1487,12 @@ describe("GelatoCore.Execute", function () {
       // Should return "OK"
       // const isProvided = await gelatoCore.isCAMProvided(execClaim);
 
-      const mintPayload = await run("abi-encode-withselector", {
-        contractname: "GelatoCore",
-        functionname: "mintExecClaim",
-        inputs: [task],
-      });
-
       // LogExecClaimMinted(executor, execClaim.id, hashedExecClaim, execClaim);
 
-      await expect(
-        userProxy.callAction(gelatoCore.address, mintPayload, 0)
-      ).to.emit(gelatoCore, "LogExecClaimMinted");
+      await expect(userProxy.mintExecClaim(task)).to.emit(
+        gelatoCore,
+        "LogExecClaimMinted"
+      );
 
       expect(
         await gelatoCore.canExec(execClaim, GELATO_MAX_GAS, GELATO_GAS_PRICE)
@@ -1683,15 +1623,10 @@ describe("GelatoCore.Execute", function () {
         task,
       };
 
-      const mintPayload = await run("abi-encode-withselector", {
-        contractname: "GelatoCore",
-        functionname: "mintExecClaim",
-        inputs: [task],
-      });
-
-      await expect(
-        userProxy.callAction(gelatoCore.address, mintPayload, 0)
-      ).to.emit(gelatoCore, "LogExecClaimMinted");
+      await expect(userProxy.mintExecClaim(task)).to.emit(
+        gelatoCore,
+        "LogExecClaimMinted"
+      );
 
       await expect(
         gelatoCore

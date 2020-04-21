@@ -1,8 +1,10 @@
-pragma solidity ^0.6.0;
+pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
 import { IGelatoUserProxy } from "./interfaces/IGelatoUserProxy.sol";
-import { Action, Operation, Task, IGelatoCore } from "../../gelato_core/interfaces/IGelatoCore.sol";
+import {
+    Action, Operation, Task, ExecClaim, IGelatoCore
+} from "../../gelato_core/interfaces/IGelatoCore.sol";
 
 contract GelatoUserProxy is IGelatoUserProxy {
 
@@ -47,15 +49,38 @@ contract GelatoUserProxy is IGelatoUserProxy {
     }
 
     function mintExecClaim(Task memory _task) public override onlyUser {
-        IGelatoCore(gelatoCore).mintExecClaim(_task);
+        try IGelatoCore(gelatoCore).mintExecClaim(_task) {
+        } catch Error(string memory err) {
+            revert(string(abi.encodePacked("GelatoUserProxy.mintExecClaim:", err)));
+        } catch {
+            revert("GelatoUserProxy.mintExecClaim:undefinded");
+        }
     }
 
     function multiMintExecClaims(Task[] memory _tasks) public override onlyUser {
         for (uint i = 0; i < _tasks.length; i++) mintExecClaim(_tasks[i]);
     }
 
+    function cancelExecClaim(ExecClaim memory _ec) public override onlyUser {
+        try IGelatoCore(gelatoCore).cancelExecClaim(_ec) {
+        } catch Error(string memory err) {
+            revert(string(abi.encodePacked("GelatoUserProxy.cancelExecClaim:", err)));
+        } catch {
+            revert("GelatoUserProxy.cancelExecClaim:undefinded");
+        }
+    }
+
+    function batchCancelExecClaims(ExecClaim[] memory _ecs) public override onlyUser {
+        try IGelatoCore(gelatoCore).batchCancelExecClaims(_ecs) {
+        } catch Error(string memory err) {
+            revert(string(abi.encodePacked("GelatoUserProxy.batchCancelExecClaims:", err)));
+        } catch {
+            revert("GelatoUserProxy.batchCancelExecClaims:undefinded");
+        }
+    }
+
     // @dev we have to write duplicate code due to calldata _action FeatureNotImplemented
-    function execAction(Action memory _action) public override auth {
+    function execAction(Action memory _action) public payable override auth {
         if (_action.operation == Operation.Call)
             callAction(_action.inst, _action.data, _action.value);
         else if (_action.operation == Operation.Delegatecall)
@@ -65,7 +90,7 @@ contract GelatoUserProxy is IGelatoUserProxy {
     }
 
     // @dev we have to write duplicate code due to calldata _action FeatureNotImplemented
-    function multiExecActions(Action[] memory _actions) public override auth {
+    function multiExecActions(Action[] memory _actions) public payable override auth {
         for (uint i = 0; i < _actions.length; i++) {
             if (_actions[i].operation == Operation.Call)
                 callAction(_actions[i].inst, _actions[i].data, _actions[i].value);
