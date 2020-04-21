@@ -268,8 +268,16 @@ describe("GelatoCore.collectExecClaimRent", function () {
     });
 
     it("#4: Revert when collecting Exec Claim Rent due to expired execClaim", async function () {
+      let oldBlock = await ethers.provider.getBlock();
+      let skipAmount = 1000000;
+      let newBlockTimestamp = oldBlock.timestamp + skipAmount;
+
       // Skip the execClaimTenancy
-      await ethers.provider.send("evm_increaseTime", [1000000]);
+      if (network.name === "buidlerevm")
+        await ethers.provider.send("evm_increaseTime", [skipAmount]);
+
+      if (network.name === "coverage")
+        await ethers.provider.send("evm_mine", [newBlockTimestamp]);
 
       await expect(
         gelatoCore.connect(executor).collectExecClaimRent(execClaim2)
@@ -284,7 +292,9 @@ describe("GelatoCore.collectExecClaimRent", function () {
 
       await expect(
         gelatoCore.connect(executor).collectExecClaimRent(execClaim)
-      ).to.be.revertedWith("GelatoCore.collectExecClaimRent:IceCreamnotProvided");
+      ).to.be.revertedWith(
+        "GelatoCore.collectExecClaimRent:IceCreamnotProvided"
+      );
     });
 
     it("#6: Revert when collecting Exec Claim Rent due to provider having unprovided Funds ", async function () {

@@ -1037,11 +1037,14 @@ describe("GelatoCore.Execute", function () {
 
       let oldBlock = await ethers.provider.getBlock();
 
+      const lifespan = 100000;
+      const expiryDate = oldBlock.timestamp + lifespan;
+
       const task = new Task({
         provider: gelatoProvider,
         condition,
         actions: [action],
-        expiryDate: oldBlock.timestamp + 1000000,
+        expiryDate,
       });
 
       let execClaim = {
@@ -1055,11 +1058,12 @@ describe("GelatoCore.Execute", function () {
         "LogExecClaimMinted"
       );
 
-      // By default connect to
-      let provider = new ethers.providers.JsonRpcProvider();
-
       // Get a promise for your call
-      await ethers.provider.send("evm_increaseTime", [1000000]);
+      if (network.name === "buidlerevm")
+        await ethers.provider.send("evm_increaseTime", [lifespan]);
+
+      if (network.name === "coverage")
+        await ethers.provider.send("evm_mine", [expiryDate]);
 
       // Do random Tx to increment time
       await buyToken.mint(
