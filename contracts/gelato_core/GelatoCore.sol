@@ -150,7 +150,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         ExecutionResult executionResult;
         string memory reason;
 
-        try this.executionWrapper{gas: startGas - internalGasRequirement}(_ec, _gelatoMaxGas)
+        try this.executionWrapper{gas: gasleft() - internalGasRequirement}(_ec, _gelatoMaxGas)
             returns(ExecutionResult _executionResult, string memory _reason)
         {
             executionResult = _executionResult;
