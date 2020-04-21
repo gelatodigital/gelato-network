@@ -9,7 +9,8 @@ import { IGelatoAction } from "../gelato_actions/IGelatoAction.sol";
 import { IGelatoProviderModule } from "./interfaces/IGelatoProviderModule.sol";
 
 /// @title GelatoCore
-/// @notice Exec Claim: minting, checking, execution, and cancellation
+/// @author Luis Schliesske & Hilmar Orth
+/// @notice Exec Claim: minting, validation, execution, charging and cancellation
 /// @dev Find all NatSpecs inside IGelatoCore
 contract GelatoCore is IGelatoCore, GelatoExecutors {
 
@@ -323,8 +324,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     // ================  CANCEL USER / EXECUTOR API ============================
     function cancelExecClaim(ExecClaim memory _ec) public override {
         // Checks
-        if (msg.sender != _ec.userProxy && msg.sender != _ec.task.provider.addr)
-            require(_ec.task.expiryDate != 0 &&_ec.task.expiryDate <= now, "GelatoCore.cancelExecClaim: sender");
+        require (msg.sender == _ec.userProxy || msg.sender == _ec.task.provider.addr, "GelatoCore.cancelExecClaim: sender");
         // Effects
         bytes32 hashedExecClaim = hashExecClaim(_ec);
         require(
