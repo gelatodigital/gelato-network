@@ -21,12 +21,13 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandard {
     }
 
     function action(bytes calldata _actionData) external payable override virtual {
-        (address _user, address _sellToken, address _buyToken, uint128 _sellAmount, uint128 _buyAmount, uint32 _orderExpirationBatchId) = abi.decode(_actionData, (address, address, address, uint128, uint128, uint32));
-        action(_user, _sellToken, _buyToken, _sellAmount, _buyAmount, _orderExpirationBatchId);
+        (address _user, address _userProxy, address _sellToken, address _buyToken, uint128 _sellAmount, uint128 _buyAmount, uint32 _orderExpirationBatchId) = abi.decode(_actionData, (address, address, address, address, uint128, uint128, uint32));
+        action(_user, _userProxy, _sellToken, _buyToken, _sellAmount, _buyAmount, _orderExpirationBatchId);
     }
 
     function action(
         address _user,
+        address _userProxy,
         address _sellToken,
         address _buyToken,
         uint128 _sellAmount,
@@ -36,18 +37,19 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandard {
         public
         virtual
     {
+        require(address(this) == _userProxy, "ActionPlaceOrderBatchExchange.action: Must be correct user proxy");
 
         /*
-        - [ ] b) transferFrom an ERC20 from the proxies owner account to the proxy,
-        - [ ] c) calls ‘deposit’  token in EpochTokenLocker contract
-        - [ ] d) calls ‘placeOrder’ in BatchExchange contract, inputting valid until 3 auctions from current one
-        - [ ] e) calls ‘requestFutureWithdraw’ with batch id of the n + 3 and amount arbitrary high (higher than expected output) contract in EpochTokenLocker
-        - [ ] d) mints an execution claim on gelato with condition = address(0) and action “withdraw()” in EpochTokenLocker contract
+        - [ ] a) transferFrom an ERC20 from the proxies owner account to the proxy,
+        - [ ] b) calls ‘deposit’  token in EpochTokenLocker contract
+        - [ ] c) calls ‘placeOrder’ in BatchExchange contract, inputting valid until 3 auctions from current one
+        - [ ] d) calls ‘requestFutureWithdraw’ with batch id of the n + 3 and amount arbitrary high (higher than expected output) contract in EpochTokenLocker
+        - [ ] e) mints an execution claim on gelato with condition = address(0) and action “withdraw()” in EpochTokenLocker contract
         */
 
         // 1. Transfer sellToken to proxy
         IERC20 sellToken = IERC20(_sellToken);
-        sellToken.safeTransferFrom(_user, address(this), _sellAmount);
+        sellToken.safeTransferFrom(_user, _userProxy, _sellAmount);
 
         // 2. Fetch token Ids for sell & buy token on Batch Exchange
         uint16 sellTokenId = batchExchange.tokenAddressToIdMap(_sellToken);
@@ -84,6 +86,59 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandard {
             revert("batchExchange.requestFutureWithdraw _buyToken failed");
         }
 
+    }
+
+    /*
+
+    address _user,
+    address _userProxy,
+    address _sellToken,
+    address _buyToken,
+    uint128 _sellAmount,
+    uint128 _buyAmount,
+    uint32 _orderExpirationBatchId
+
+    */
+
+    // ======= ACTION CONDITIONS CHECK =========
+    // Overriding and extending GelatoActionsStandard's function (optional)
+    function termsOk(bytes calldata _actionData)
+        external
+        view
+        override
+        virtual
+        returns(string memory)  // actionCondition
+    {
+        (address _user, address _userProxy, address _sellToken, , uint128 _sellAmount, ,) = abi.decode(_actionData, (address, address, address, address, uint128, uint128, uint32));
+        return _actionConditionsCheck(_user, _userProxy, _sellToken, _sellAmount);
+    }
+
+    function _actionConditionsCheck(
+        address _user, address _userProxy, address _sellToken, uint128 _sellAmount
+    )
+        internal
+        view
+        virtual
+        returns(string memory)  // actionCondition
+    {
+        IERC20 sendERC20 = IERC20(_sellToken);
+        try sendERC20.balanceOf(_user) returns(uint256 sendERC20Balance) {
+            if (sendERC20Balance < _sellAmount)
+                return "ActionPlaceOrderBatchExchange: NotOkUserSendTokenBalance";
+        } catch {
+            return "ActionPlaceOrderBatchExchange: ErrorBalanceOf";
+        }
+        try sendERC20.allowance(_user, _userProxy)
+            returns(uint256 userProxySendTokenAllowance)
+        {
+            if (userProxySendTokenAllowance < _sellAmount)
+                return "ActionPlaceOrderBatchExchange: NotOkUserProxySendTokenAllowance";
+        } catch {
+            return "ActionPlaceOrderBatchExchange: ErrorAllowance";
+        }
+
+        // STANDARD return string to signal actionConditions Ok
+        return OK;
     }
 
 

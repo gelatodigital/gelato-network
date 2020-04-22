@@ -41,8 +41,6 @@ abstract contract GelatoExecutors is IGelatoExecutors, GelatoProviders {
         emit LogUnstakeExecutor(msg.sender);
     }
 
-    // @DEV why would anyone increase their stake? Only reason is to showcase that they are a serious executor, however
-    // this would only be valid if this "excess" stake would be non-withdrawable, similiar to the minStake.
     function increaseExecutorStake(uint256 _topUpAmount) external payable override {
         executorStake[msg.sender] = executorStake[msg.sender].add(_topUpAmount);
         require(isExecutorMinStaked(msg.sender), "GelatoExecutors.increaseExecutorStake");

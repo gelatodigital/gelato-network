@@ -2,10 +2,7 @@
 // => only dependency we need is "chai"
 const { expect, assert } = require("chai");
 const { run, ethers } = require("@nomiclabs/buidler");
-const OPERATION = {
-  call: 0,
-  delegatecall: 1,
-};
+//
 const GELATO_GAS_PRICE = ethers.utils.parseUnits("8", "gwei");
 
 // ##### Gnosis Action Test Cases #####
@@ -204,61 +201,7 @@ describe("GelatoCore.CancelExecClaim", function () {
       ).to.be.revertedWith("GelatoCore.cancelExecClaim: sender");
     });
 
-    it("#4: Cancel execution claim succesfully as random third party IF Expiry date is NOT 0 and expired", async function () {
-      // Mint execClaim with expiry != 0
-
-      const abi = ["function action(bool)"];
-      const interFace = new utils.Interface(abi);
-      const actionData = interFace.functions.action.encode([true]);
-
-      const gelatoProvider = new GelatoProvider({
-        addr: providerAddress,
-        module: providerModuleGelatoUserProxy.address,
-      });
-
-      const condition = new Condition({
-        inst: constants.AddressZero,
-        data: constants.HashZero,
-      });
-
-      const action = new Action({
-        inst: mockActionDummy.address,
-        data: actionData,
-        operation: Operation.Delegatecall,
-        value: 0,
-        termsOkCheck: true,
-      });
-
-      let oldBlock = await ethers.provider.getBlock();
-
-      const task = new Task({
-        provider: gelatoProvider,
-        condition,
-        actions: [action],
-        expiryDate: oldBlock.timestamp + 1000000,
-      });
-
-      execClaim = {
-        id: 2,
-        userProxy: userProxyAddress,
-        task,
-      };
-
-      const mintTx = await userProxy.mintExecClaim(task);
-      await mintTx.wait();
-
-      await expect(
-        gelatoCore.connect(executor).cancelExecClaim(execClaim)
-      ).to.be.revertedWith("GelatoCore.cancelExecClaim: sender");
-
-      await ethers.provider.send("evm_increaseTime", [1000000]);
-
-      await expect(gelatoCore.connect(executor).cancelExecClaim(execClaim))
-        .to.emit(gelatoCore, "LogExecClaimCancelled")
-        .withArgs(execClaim.id);
-    });
-
-    it("#5: Cancel execution claim unsuccesfully due to wrong execClaim input", async function () {
+    it("#4: Cancel execution claim unsuccesfully due to wrong execClaim input", async function () {
       await expect(
         gelatoCore.connect(provider).cancelExecClaim(execClaim2)
       ).to.be.revertedWith(
@@ -266,7 +209,7 @@ describe("GelatoCore.CancelExecClaim", function () {
       );
     });
 
-    it("#6: Batch Cancel execution claim succesfully as user", async function () {
+    it("#5: Batch Cancel execution claim succesfully as user", async function () {
       // mint second Claim
       const mintTx = await userProxy.mintExecClaim(task);
       await mintTx.wait();
@@ -278,7 +221,7 @@ describe("GelatoCore.CancelExecClaim", function () {
         .withArgs(execClaim2.id);
     });
 
-    it("#7: Batch Cancel execution claim succesfully as provider", async function () {
+    it("#6: Batch Cancel execution claim succesfully as provider", async function () {
       // mint second Claim
       const mintTx = await userProxy.mintExecClaim(task);
       await mintTx.wait();

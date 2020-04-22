@@ -9,7 +9,8 @@ import { IGelatoAction } from "../gelato_actions/IGelatoAction.sol";
 import { IGelatoProviderModule } from "./interfaces/IGelatoProviderModule.sol";
 
 /// @title GelatoCore
-/// @notice Exec Claim: minting, checking, execution, and cancellation
+/// @author Luis Schliesske & Hilmar Orth
+/// @notice Exec Claim: minting, validation, execution, charging and cancellation
 /// @dev Find all NatSpecs inside IGelatoCore
 contract GelatoCore is IGelatoCore, GelatoExecutors {
 
@@ -20,11 +21,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     uint256 public override currentExecClaimId;
     // execClaim.id => execClaimHash
     mapping(uint256 => bytes32) public override execClaimHash;
-    // Executors can charge Providers execClaimRent
-    mapping(uint256 => uint256) public override lastExecClaimRentPaymentDate;
 
     // ================  MINTING ==============================================
-    // Only pass _executor for self-providing users, else address(0)
     function mintExecClaim(Task memory _task) public override {
         // GelatoCore will generate an ExecClaim from the _task
         ExecClaim memory execClaim;
@@ -66,9 +64,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // ExecClaim Hash registration
         execClaimHash[execClaim.id] = hashedExecClaim;
-
-        // First ExecClaim Rent for first execClaimTenancy is free
-        lastExecClaimRentPaymentDate[execClaim.id] = now;
 
         emit LogExecClaimMinted(executor, execClaim.id, hashedExecClaim, execClaim);
     }
@@ -155,7 +150,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         ExecutionResult executionResult;
         string memory reason;
 
-        try this.executionWrapper{gas: startGas - internalGasRequirement}(_ec, _gelatoMaxGas)
+        try this.executionWrapper{gas: gasleft() - internalGasRequirement}(_ec, _gelatoMaxGas)
             returns(ExecutionResult _executionResult, string memory _reason)
         {
             executionResult = _executionResult;
@@ -324,8 +319,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     // ================  CANCEL USER / EXECUTOR API ============================
     function cancelExecClaim(ExecClaim memory _ec) public override {
         // Checks
-        if (msg.sender != _ec.userProxy && msg.sender != _ec.task.provider.addr)
-            require(_ec.task.expiryDate != 0 &&_ec.task.expiryDate <= now, "GelatoCore.cancelExecClaim: sender");
+        require (msg.sender == _ec.userProxy || msg.sender == _ec.task.provider.addr, "GelatoCore.cancelExecClaim: sender");
         // Effects
         bytes32 hashedExecClaim = hashExecClaim(_ec);
         require(
@@ -339,65 +333,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     function batchCancelExecClaims(ExecClaim[] memory _execClaims) public override {
         for (uint i; i < _execClaims.length; i++) cancelExecClaim(_execClaims[i]);
     }
-
-    // ================  EXECCLAIM RENT APIs =================
-    function collectExecClaimRent(ExecClaim memory _ec) public override {
-        // CHECKS
-        string memory canCollect = canCollectExecClaimRent(_ec);
-        if (!canCollect.startsWithOk())
-            revert(string(abi.encodePacked("GelatoCore.collectExecClaimRent:", canCollect)));
-
-        // EFFECTS
-        lastExecClaimRentPaymentDate[_ec.id] = now;
-
-        // INTERACTIONS: Provider pays Executor ExecClaim Rent.
-        providerFunds[_ec.task.provider.addr] -= execClaimRent;
-        executorStake[msg.sender] += execClaimRent;
-
-        emit LogCollectExecClaimRent(
-            msg.sender,
-            _ec.task.provider.addr,
-            _ec.id,
-            execClaimRent
-        );
-    }
-
-    function batchCollectExecClaimRent(ExecClaim[] memory _execClaims) public override {
-        for (uint i; i < _execClaims.length; i++) collectExecClaimRent(_execClaims[i]);
-    }
-
-    function canCollectExecClaimRent(ExecClaim memory _ec)
-        public
-        view
-        override
-        returns(string memory)
-    {
-        // CHECKS
-        if (executorByProvider[_ec.task.provider.addr] != msg.sender) return "NotAssigned";
-
-        bytes32 hashedExecClaim = hashExecClaim(_ec);
-        if (hashedExecClaim != execClaimHash[_ec.id]) return "InvalidExecClaimHash";
-
-        if (_ec.task.expiryDate != 0)
-            if (_ec.task.expiryDate < now) return "ExecClaimExpired";
-
-        if (lastExecClaimRentPaymentDate[_ec.id] > now - execClaimTenancy)
-            return "RentNotDue";
-
-        if(_ec.task.provider.addr != _ec.userProxy) {
-            string memory provided = isIceCreamProvided(
-                    _ec.task.provider.addr,
-                    _ec.task.condition.inst,
-                    _ec.task.actions
-            );
-            if (!provided.startsWithOk()) return "IceCreamnotProvided";
-        }
-
-        if (providerFunds[_ec.task.provider.addr] < execClaimRent) return "ProviderIlliquid";
-
-        return OK;
-    }
-
 
     // Helper
     function hashExecClaim(ExecClaim memory _ec) public pure override returns(bytes32) {

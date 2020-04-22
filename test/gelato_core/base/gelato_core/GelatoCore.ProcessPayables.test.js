@@ -2,12 +2,9 @@
 // => only dependency we need is "chai"
 const { expect, assert } = require("chai");
 const { run, ethers } = require("@nomiclabs/buidler");
-const FEE_USD = 2;
-const FEE_ETH = 9000000000000000;
-const OPERATION = {
-  call: 0,
-  delegatecall: 1,
-};
+const FEE_USD = 3;
+const FEE_ETH = 17000000000000000;
+//
 const GELATO_GAS_PRICE = ethers.utils.parseUnits("8", "gwei");
 
 // ##### Gnosis Action Test Cases #####

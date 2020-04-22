@@ -70,38 +70,50 @@ interface IGelatoCore {
 
     event LogExecClaimCancelled(uint256 indexed execClaimId);
 
-    event LogCollectExecClaimRent(
-        address indexed provider,
-        address indexed executor,
-        uint256 indexed execClaimId,
-        uint256 amount
-    );
-
     // ================  Exec Suite =========================
+    /// @notice Create a gelato task that will be executed if the specified condition and action(s) terms are fulfilled
+    /// @dev Use only through a Proxy contract which is defined in the selected provider module
+    /// @param _task Seleted provider, condition and action details, plus the expiry date after which the task is rendered useless
     function mintExecClaim(Task calldata _task) external;
 
+    /// @notice Off-chain validation for executors to see if an execution claim is executable
+    /// @dev Only used for off-chain validation
+    /// @param _ec ExecutionClaim, consisting of user task, user proxy address and id
+    /// @param _gelatoMaxGas Gas Limit to send to exec by executor to receive a full refund even if tx reverts
+    /// @param _execTxGasPrice Gas Price of gelatoCore's gas price oracle
     function canExec(ExecClaim calldata _ec, uint256 _gelatoMaxGas, uint256 _execTxGasPrice)
         external
         view
         returns(string memory);
 
+    /// @notice Executes the users task after conducting all condition and actions(s) term(s) checks
+    /// @dev Executor gets refunded, even if the specified action(s) revert
+    /// @param _ec ExecutionClaim, consisting of user task, user proxy address and id
     function exec(ExecClaim calldata _ec) external;
 
+    /// @notice Cancel execution claim
+    /// @dev Callable only by userProxy or selected provider
+    /// @param _ec ExecutionClaim, consisting of user task, user proxy address and id
     function cancelExecClaim(ExecClaim calldata _ec) external;
+
+    /// @notice Batch Cancel execution claims
+    /// @dev Callable only by userProxy or selected provider
+    /// @param _execClaims ExecutionClaim Array, consisting of user task, user proxy address and id
     function batchCancelExecClaims(ExecClaim[] calldata _execClaims) external;
 
-    function collectExecClaimRent(ExecClaim calldata _ec) external;
-    function batchCollectExecClaimRent(ExecClaim[] calldata _execClaims) external;
+    /// @notice Compute hash of execution claim
+    /// @param _ec ExecutionClaim, consisting of user task, user proxy address and id
+    /// @return hash of execClaim
+    function hashExecClaim(ExecClaim calldata _ec) external pure returns(bytes32);
 
     // ================  Getters =========================
+    /// @notice Returns the executionClaimId of the last ExecClaim minted
+    /// @return currentId currentId, last ExecutionClaimId minted
     function currentExecClaimId() external view returns(uint256 currentId);
+
+    /// @notice Returns computed execClaim hash, used to check for execClaim validity
+    /// @param _execClaimId Id of execClaim emitted in minting event
+    /// @return hash of execClaim
     function execClaimHash(uint256 _execClaimId) external view returns(bytes32);
 
-    function lastExecClaimRentPaymentDate(uint256 _execClaimId) external view returns(uint256);
-    function canCollectExecClaimRent(ExecClaim calldata _ec)
-        external
-        view
-        returns(string memory);
-
-    function hashExecClaim(ExecClaim calldata _ec) external pure returns(bytes32);
 }
