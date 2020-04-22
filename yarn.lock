@@ -884,10 +884,10 @@
   resolved "https://registry.yarnpkg.com/@sindresorhus/is/-/is-0.7.0.tgz#9a06f4f137ee84d7df0460c1fdb1135ffa6c50fd"
   integrity sha512-ONhaKPIufzzrlNbqtWFFd+jlnemX6lJAgq9ZeiZtS7I1PIf/la7CW4m83rTXRnVnsMbW2k56pGYu7AUFJD9Pow==
 
-"@solidity-parser/parser@^0.5.2":
-  version "0.5.2"
-  resolved "https://registry.yarnpkg.com/@solidity-parser/parser/-/parser-0.5.2.tgz#4d74670ead39e4f4fdab605a393ba8ea2390a2c4"
-  integrity sha512-uRyvnvVYmgNmTBpWDbBsH/0kPESQhQpEc4KsvMRLVzFJ1o1s0uIv0Y6Y9IB5vI1Dwz2CbS4X/y4Wyw/75cTFnQ==
+"@solidity-parser/parser@^0.6.0":
+  version "0.6.0"
+  resolved "https://registry.yarnpkg.com/@solidity-parser/parser/-/parser-0.6.0.tgz#deb964a4dbb8c21a342ee35b4acefb505fd04ea1"
+  integrity sha512-RiJXfS22frulogcfQCFhbKrd5ATu6P4tYUv/daChiIh6VHyKQ1kkVZVfX6aP7c2YGU/Bf9RwGNKdwLjfpaoqYQ==
 
 "@szmarczak/http-timer@^1.1.2":
   version "1.1.2"
@@ -3506,7 +3506,7 @@ ethereum-common@^0.0.18:
   resolved "https://registry.yarnpkg.com/ethereum-common/-/ethereum-common-0.0.18.tgz#2fdc3576f232903358976eb39da783213ff9523f"
   integrity sha1-L9w1dvIykDNYl26znaeDIT/5Uj8=
 
-ethereum-waffle@^2.4.0:
+ethereum-waffle@^2.4.1:
   version "2.4.1"
   resolved "https://registry.yarnpkg.com/ethereum-waffle/-/ethereum-waffle-2.4.1.tgz#db13376d5d366a0b3e8813cb64956a4682cbe144"
   integrity sha512-52HOubO/V80LDGN+N3FVb6yBq8L5vV2+kP7wjR5AgDoEeQHIrwqumcjJ22tE+FvzR8+eHTh3ItXjQPqJrMp+Mw==
@@ -7820,12 +7820,11 @@ solc@^0.6.3, solc@^0.6.6:
     semver "^5.5.0"
     tmp "0.0.33"
 
-solidity-coverage@^0.7.4:
+"solidity-coverage@https://github.com/sc-forks/solidity-coverage.git":
   version "0.7.4"
-  resolved "https://registry.yarnpkg.com/solidity-coverage/-/solidity-coverage-0.7.4.tgz#5bff265016edfc609e981601d953b125cbd55aab"
-  integrity sha512-eaYjKLJK7n+uAN9Xrm2kDujXOkxxBbHfNrjK+ZabU1DR4QWSVQiwDDF2JLciN943kkZdd2JOzJGp32NxCbdCWA==
+  resolved "https://github.com/sc-forks/solidity-coverage.git#7bdcac120687602c8384e6b04a63f88aae806fcc"
   dependencies:
-    "@solidity-parser/parser" "^0.5.2"
+    "@solidity-parser/parser" "^0.6.0"
     "@truffle/provider" "^0.1.17"
     chalk "^2.4.2"
     death "^1.1.0"

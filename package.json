@@ -27,7 +27,7 @@
     "ethers": "^4.0.46",
     "prettier": "^2.0.3",
     "solc": "^0.6.6",
-    "solidity-coverage": "^0.7.4"
+    "solidity-coverage": "https://github.com/sc-forks/solidity-coverage.git"
   },
   "dependencies": {
     "rimraf": "^3.0.2",

@@ -10,13 +10,10 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
 
     using Address for address payable;  /// for oz's sendValue method
 
-    // Make this immutable after solidity coverage
-    address public override gelatoCore;
+    address public immutable override gelatoCore;
 
     mapping(address => GelatoUserProxy) public override gelatoProxyByUser;
-    // make this after coverage:
-    //  mapping(GelatoUserProxy => address) public override userByGelatoProxy;
-    mapping(address => address) public override userByGelatoProxy;
+    mapping(GelatoUserProxy => address) public override userByGelatoProxy;
 
     constructor(address _gelatoCore) public { gelatoCore = _gelatoCore; }
 
@@ -34,12 +31,12 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
             _optionalActions
         );
         gelatoProxyByUser[msg.sender] = userProxy;
-        userByGelatoProxy[address(userProxy)] = msg.sender;
+        userByGelatoProxy[userProxy] = msg.sender;
         emit LogCreation(msg.sender, userProxy);
     }
 
     function isGelatoUserProxy(address _proxy) public view override returns(bool) {
-        return userByGelatoProxy[_proxy] != address(0);
+        return userByGelatoProxy[GelatoUserProxy(payable(_proxy))] != address(0);
     }
 
     function isGelatoProxyUser(address _user) public view override returns(bool) {
