@@ -6,6 +6,8 @@ export const contracts = [
   "ActionERC20Transfer",
   "ActionERC20TransferFrom",
   "ActionKyberTrade",
+  // Gnosis
+  "ActionWithdrawBatchExchangeWithMaker",
   // Core
   "GelatoCore",
   // Conditions
@@ -13,5 +15,5 @@ export const contracts = [
   "ConditionKyberRate",
   "ConditionTimestampPassed",
   // Debugging
-  "ConditionKyberRateError"
+  "ConditionKyberRateError",
 ];

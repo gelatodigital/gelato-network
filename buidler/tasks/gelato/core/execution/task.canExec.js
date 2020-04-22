@@ -60,6 +60,16 @@ export default task(
       // });
       // const gelatoGasPrice = await gelatoCore.gelatoGasPrice();
       // const gelatoMaxGas = await gelatoCore.gelatoMaxGas();
+      const actions = [];
+      for (const action of taskArgs.execclaim[2][2]) {
+        actions.push({
+          inst: action[0],
+          data: action[1],
+          operation: action[2],
+          value: action[3],
+          termsOkCheck: action[4],
+        });
+      }
 
       const execClaim = {
         id: taskArgs.execclaim[0],
@@ -73,15 +83,7 @@ export default task(
             inst: taskArgs.execclaim[2][1][0],
             data: taskArgs.execclaim[2][1][1],
           },
-          actions: [
-            {
-              inst: taskArgs.execclaim[2][2][0][0],
-              data: taskArgs.execclaim[2][2][0][1],
-              operation: taskArgs.execclaim[2][2][0][2],
-              value: taskArgs.execclaim[2][2][0][3],
-              termsOkCheck: taskArgs.execclaim[2][2][0][4],
-            },
-          ],
+          actions,
           expiryDate: taskArgs.execclaim[2][3],
         },
       };
