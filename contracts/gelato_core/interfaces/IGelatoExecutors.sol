@@ -13,12 +13,9 @@ interface IGelatoExecutors {
 
     function stakeExecutor() external payable;
     function unstakeExecutor() external;
-    function increaseExecutorStake(uint256 _topUpAmount) external payable;
-
-    function batchReassignProviders(
-        address[] calldata _providers,
-        address _transferExecutor
-    ) external;
-
+    function increaseExecutorStake() external payable;
     function withdrawExcessExecutorStake(uint256 _withdrawAmount) external returns(uint256);
+
+    function batchReassignProviders(address[] calldata _providers,address _newExecutor)
+        external;
 }

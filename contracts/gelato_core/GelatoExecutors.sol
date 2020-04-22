@@ -28,35 +28,29 @@ abstract contract GelatoExecutors is IGelatoExecutors, GelatoProviders {
 
     function unstakeExecutor() external override {
         require(
-            isExecutorMinStaked(msg.sender),
-            "GelatoExecutors.unstakeExecutor: msg.sender is NOT min staked"
-        );
-        require(
             !isExecutorAssigned(msg.sender),
-            "GelatoExecutors.unstakeExecutor: msg.sender still assigned to provider(s)"
+            "GelatoExecutors.unstakeExecutor: msg.sender still assigned"
         );
         uint256 unbondedStake = executorStake[msg.sender];
+        require(
+            unbondedStake != 0,
+            "GelatoExecutors.unstakeExecutor: already unstaked"
+        );
         delete executorStake[msg.sender];
         msg.sender.sendValue(unbondedStake);
         emit LogUnstakeExecutor(msg.sender);
     }
 
-    function increaseExecutorStake(uint256 _topUpAmount) external payable override {
-        executorStake[msg.sender] = executorStake[msg.sender].add(_topUpAmount);
+    function increaseExecutorStake() external payable override {
+        require(
+            executorStake[msg.sender] != 0,
+            "GelatoExecutors.increaseExecutorStake: stakeExecutor first"
+        );
+        executorStake[msg.sender] = executorStake[msg.sender].add(msg.value);
         require(isExecutorMinStaked(msg.sender), "GelatoExecutors.increaseExecutorStake");
         emit LogIncreaseExecutorStake(msg.sender, executorStake[msg.sender]);
     }
 
-    // To unstake, Executors must reassign ALL their Providers to another staked Executor
-    function batchReassignProviders(address[] calldata _providers, address _transferExecutor)
-        external
-        override
-    {
-        for (uint i; i < _providers.length; i++)
-            executorAssignsExecutor(_providers[i], _transferExecutor);
-    }
-
-    // Executor Accounting
     function withdrawExcessExecutorStake(uint256 _withdrawAmount)
         external
         override
@@ -80,5 +74,14 @@ abstract contract GelatoExecutors is IGelatoExecutors, GelatoProviders {
         // Interaction
         msg.sender.sendValue(realWithdrawAmount);
         emit LogWithdrawExecutorBalance(msg.sender, realWithdrawAmount);
+    }
+
+    // To unstake, Executors must reassign ALL their Providers to another staked Executor
+    function batchReassignProviders(address[] calldata _providers, address _newExecutor)
+        external
+        override
+    {
+        for (uint i; i < _providers.length; i++)
+            executorAssignsExecutor(_providers[i], _newExecutor);
     }
 }

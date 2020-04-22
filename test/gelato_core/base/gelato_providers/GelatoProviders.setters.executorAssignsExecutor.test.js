@@ -46,20 +46,16 @@ describe("GelatoCore - GelatoProviders - Setters: EXECUTOR", function () {
       gelatoCore.stakeExecutor({ value: minExecutorStake });
 
       // stakeExecutor(): otherExecutor
-      await gelatoCore
+      let tx = await gelatoCore
         .connect(otherExecutor)
         .stakeExecutor({ value: minExecutorStake });
-
-      // provideFunds()
-      const providedFunds = utils.bigNumberify(42069);
-      await gelatoCore.connect(provider).provideFunds(providerAddress, {
-        value: providedFunds,
-      });
+      await tx.wait();
 
       // providerAssignsExecutor
-      await gelatoCore
+      tx = await gelatoCore
         .connect(provider)
         .providerAssignsExecutor(executorAddress);
+      await tx.wait();
 
       const executorProvidersCount = await gelatoCore.executorProvidersCount(
         executorAddress
@@ -91,18 +87,14 @@ describe("GelatoCore - GelatoProviders - Setters: EXECUTOR", function () {
     it("Should only allow the assigned Executors to reassign", async function () {
       // stakeExecutor()
       const minExecutorStake = await gelatoCore.minExecutorStake();
-      await gelatoCore.stakeExecutor({ value: minExecutorStake });
-
-      // provideFunds()
-      const providedFunds = utils.bigNumberify(42069);
-      await gelatoCore.connect(provider).provideFunds(providerAddress, {
-        value: providedFunds,
-      });
+      let tx = await gelatoCore.stakeExecutor({ value: minExecutorStake });
+      await tx.wait();
 
       // providerAssignsExecutor
-      await gelatoCore
+      tx = await gelatoCore
         .connect(provider)
         .providerAssignsExecutor(executorAddress);
+      await tx.wait();
 
       // otherExecutor tries to reassign executor's asssignment to self
       await expect(
@@ -117,23 +109,20 @@ describe("GelatoCore - GelatoProviders - Setters: EXECUTOR", function () {
     it("Should NOT allow Executors to reassign to themselves", async function () {
       // stakeExecutor() (needed for executorAssignsExecutor())
       const minExecutorStake = await gelatoCore.minExecutorStake();
-      await gelatoCore.stakeExecutor({ value: minExecutorStake });
+      let tx = await gelatoCore.stakeExecutor({ value: minExecutorStake });
+      await tx.wait();
 
       // stakeExecutor(): otherExecutor
-      await gelatoCore
+      tx = await gelatoCore
         .connect(otherExecutor)
         .stakeExecutor({ value: minExecutorStake });
-
-      // provideFunds()
-      const providedFunds = utils.bigNumberify(42069);
-      await gelatoCore.connect(provider).provideFunds(providerAddress, {
-        value: providedFunds,
-      });
+      await tx.wait();
 
       // providerAssignsExecutor
-      await gelatoCore
+      tx = await gelatoCore
         .connect(provider)
         .providerAssignsExecutor(executorAddress);
+      await tx.wait();
 
       // executorAssignsExecutor
       await expect(
@@ -146,18 +135,14 @@ describe("GelatoCore - GelatoProviders - Setters: EXECUTOR", function () {
     it("Should NOT allow Executors to reassign to not-minStaked Executor", async function () {
       // stakeExecutor() (needed for executorAssignsExecutor())
       const minExecutorStake = await gelatoCore.minExecutorStake();
-      await gelatoCore.stakeExecutor({ value: minExecutorStake });
-
-      // provideFunds()
-      const providedFunds = utils.bigNumberify(42069);
-      await gelatoCore.connect(provider).provideFunds(providerAddress, {
-        value: providedFunds,
-      });
+      let tx = await gelatoCore.stakeExecutor({ value: minExecutorStake });
+      await tx.wait();
 
       // providerAssignsExecutor
-      await gelatoCore
+      tx = await gelatoCore
         .connect(provider)
         .providerAssignsExecutor(executorAddress);
+      await tx.wait();
 
       // executor tries to assign not-minStaked otherExecutor
       await expect(
