@@ -8,6 +8,7 @@ import { SafeMath } from "../../external/SafeMath.sol";
 import { IBatchExchange } from "../../dapp_interfaces/gnosis/IBatchExchange.sol";
 import { IMedianizer } from "../../dapp_interfaces/maker/IMakerMedianizer.sol";
 
+
 contract ActionWithdrawBatchExchangeWithMaker is GelatoActionsStandard {
 
     using SafeMath for uint256;
@@ -93,7 +94,7 @@ contract ActionWithdrawBatchExchangeWithMaker is GelatoActionsStandard {
         }
         catch {
            // Do not revert, as order might not have been fulfilled.
-           revert("ActionWithdrawBatchExchange.withdraw _buyToken failed");
+           revert("ActionWithdrawBatchExchangeWithMaker.withdraw _buyToken failed");
         }
 
         // 5. Withdraw sell token and pay fee (if not paid already)
@@ -125,7 +126,7 @@ contract ActionWithdrawBatchExchangeWithMaker is GelatoActionsStandard {
                         sellToken.safeTransfer(_user, sellTokenWithdrawAmount - fee);
 
                     } else {
-                        revert("ActionWithdrawBatchExchange: Insufficient balance for user to pay for withdrawal 1");
+                        revert("ActionWithdrawBatchExchangeWithMaker: Insufficient balance for user to pay for withdrawal 1");
                     }
 
                 } else {
@@ -134,21 +135,20 @@ contract ActionWithdrawBatchExchangeWithMaker is GelatoActionsStandard {
 
             } else {
                 // If no sell token got withdrawn and user has not paid yet, revert
-                if (!paid) revert("ActionWithdrawBatchExchange: Insufficient balance for user to pay for withdrawal 2");
+                if (!paid) revert("ActionWithdrawBatchExchangeWithMaker: Insufficient balance for user to pay for withdrawal 2");
 
             }
         }
         catch {
             // Do not revert, as order might have been filled completely
-            revert("ActionWithdrawBatchExchange.withdraw _sellToken failed");
+            revert("ActionWithdrawBatchExchangeWithMaker.withdraw _sellToken failed");
         }
 
     }
 
     function getEthFee() view public returns(uint256) {
-        // https://rinkeby.etherscan.io/address/0xbfff80b73f081cc159534d922712551c5ed8b3d3
-        // https://etherscan.io/address/0x729D19f657BD0614b4985Cf1D82531c67569197B#readContract
-        return 1 ether * 3 ether / uint256(medianizer.read());
+        uint256 ethPrice = uint256(medianizer.read());
+        return 1 ether * 3 ether / ethPrice;
 
     }
 
@@ -184,7 +184,7 @@ contract ActionWithdrawBatchExchangeWithMaker is GelatoActionsStandard {
         // if (_batchIdEnablingWithdraw < currentBatchId) {
         //     return OK;
         // } else {
-        //     return "ActionWithdrawBatchExchange: Not withdrawable yet";
+        //     return "ActionWithdrawBatchExchangeWithMaker: Not withdrawable yet";
         // }
 
         // @ DEV: Problem, as we dont have a way to on-chain check if there are actually funds that can be withdrawn, the business model relies on the assumption that sufficient funds are availabe to be withdrawn in order to compensate the executor
@@ -193,13 +193,13 @@ contract ActionWithdrawBatchExchangeWithMaker is GelatoActionsStandard {
         bool sellTokenWithdrawable = batchExchange.hasValidWithdrawRequest(_proxyAddress, _sellToken);
 
         if (!sellTokenWithdrawable) {
-            return "ActionWithdrawBatchExchange: Sell Token not withdrawable yet";
+            return "ActionWithdrawBatchExchangeWithMaker: Sell Token not withdrawable yet";
         }
 
         bool buyTokenWithdrawable = batchExchange.hasValidWithdrawRequest(_proxyAddress, _buyToken);
 
         if (!buyTokenWithdrawable) {
-            return "ActionWithdrawBatchExchange: Buy Token not withdrawable yet";
+            return "ActionWithdrawBatchExchangeWithMaker: Buy Token not withdrawable yet";
         }
 
         return OK;
@@ -224,7 +224,7 @@ contract ActionWithdrawBatchExchangeWithMaker is GelatoActionsStandard {
         if (success) {
             return abi.decode(data, (uint256));
         } else {
-            revert("ActionWithdrawBatchExchange.getDecimals no decimals found");
+            revert("ActionWithdrawBatchExchangeWithMaker.getDecimals no decimals found");
         }
     }
 }

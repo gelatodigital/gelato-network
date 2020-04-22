@@ -155,22 +155,6 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH UNPROVIDE", function () 
 
       expect(await gelatoCore.isExecutorAssigned(executorAddress)).to.be.true;
 
-      // batchUnprovide revert: Must un-assign executor first
-      await expect(
-        gelatoCore.batchUnprovide(
-          providedFunds,
-          [iceCream, otherIceCream],
-          [providerModule.address, otherProviderModule.address]
-        )
-      ).to.be.revertedWith(
-        "GelatoProviders.unprovideFunds: Must un-assign executor first"
-      );
-
-      // unassign executor
-      await gelatoCore.providerAssignsExecutor(constants.AddressZero);
-
-      expect(await gelatoCore.isExecutorAssigned(executorAddress)).to.be.false;
-
       // batchUnprovide()
       await expect(
         gelatoCore.batchUnprovide(

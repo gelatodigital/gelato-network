@@ -2,8 +2,7 @@
 // => only dependency we need is "chai"
 const { expect } = require("chai");
 const { run, ethers } = require("@nomiclabs/buidler");
-const FEE_USD = 3;
-const FEE_ETH = 17000000000000000;
+
 //
 const GELATO_GAS_PRICE = ethers.utils.parseUnits("8", "gwei");
 
