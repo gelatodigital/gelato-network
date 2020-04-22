@@ -23,6 +23,4 @@ interface IGelatoUserProxyFactory {
     function gelatoCore() external pure returns(address);
 
     function proxyCreationCode() external pure returns(bytes memory);
-    function proxyRuntimeCode() external pure returns(bytes memory);
-    function proxyExtcodehash() external pure returns(bytes32);
 }

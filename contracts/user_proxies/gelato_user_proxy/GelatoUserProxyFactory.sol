@@ -46,12 +46,4 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
     function proxyCreationCode() public pure override returns(bytes memory) {
         return type(GelatoUserProxy).creationCode;
     }
-
-    function proxyRuntimeCode() public pure override returns(bytes memory) {
-        return type(GelatoUserProxy).runtimeCode;
-    }
-
-    function proxyExtcodehash() external pure override returns(bytes32) {
-        return keccak256(proxyRuntimeCode());
-    }
 }
