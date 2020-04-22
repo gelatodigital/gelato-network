@@ -9,8 +9,6 @@ const {
   gelatoMaxGas,
   internalGasRequirement,
   minExecutorStake,
-  execClaimTenancy,
-  execClaimRent,
   executorSuccessShare,
   sysAdminSuccessShare,
   sysAdminFunds,
@@ -41,8 +39,6 @@ describe("GelatoCore - GelatoSysAdmin - Deployment", function () {
       internalGasRequirement
     );
     expect(await gelatoCore.minExecutorStake()).to.equal(minExecutorStake);
-    expect(await gelatoCore.execClaimTenancy()).to.equal(execClaimTenancy);
-    expect(await gelatoCore.execClaimRent()).to.equal(execClaimRent);
     expect(await gelatoCore.executorSuccessShare()).to.equal(
       executorSuccessShare
     );

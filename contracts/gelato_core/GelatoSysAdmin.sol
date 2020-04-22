@@ -16,17 +16,23 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
     uint256 public constant override EXEC_TX_OVERHEAD = 55000;
     string internal constant OK = "OK";
 
-    // uint256 public override gelatoGasPrice = 9000000000;  // 9 gwei initial
     IGelatoGasPriceOracle public override gelatoGasPriceOracle;
-    uint256 public override gelatoMaxGas = 7000000;  // 7 mio initial
-    uint256 public override internalGasRequirement = 100000;
-    uint256 public override minExecutorStake = 0.02 ether;  // production: 1 ETH
-    uint256 public override execClaimTenancy = 30 days;
-    uint256 public override execClaimRent = 1 finney;
-    uint256 public override executorSuccessShare = 50;  // 50% of successful execution cost
-    uint256 public override sysAdminSuccessShare = 20;  // 20% of successful execution cost
-    uint256 public override totalSuccessShare = 70;
+    uint256 public override gelatoMaxGas;
+    uint256 public override internalGasRequirement;
+    uint256 public override minExecutorStake;
+    uint256 public override executorSuccessShare;
+    uint256 public override sysAdminSuccessShare;
+    uint256 public override totalSuccessShare;
     uint256 public override sysAdminFunds;
+
+    constructor() public {
+        gelatoMaxGas = 7000000;  // 7 mio initial
+        internalGasRequirement = 100000;
+        minExecutorStake = 1 ether;  // production: 1 ETH
+        executorSuccessShare = 50;  // 50% of successful execution cost
+        sysAdminSuccessShare = 20;  // 20% of successful execution cost
+        totalSuccessShare = 70;
+    }
 
     // == The main functions of the Sys Admin (DAO) ==
     // The oracle defines the system-critical gelatoGasPrice
@@ -65,18 +71,6 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
         minExecutorStake = _newMin;
     }
 
-    // execClaim lifespan
-    function setExecClaimTenancy(uint256 _lifespan) external override onlyOwner {
-        emit LogSetExecClaimTenancy(execClaimTenancy, _lifespan);
-        execClaimTenancy = _lifespan;
-    }
-
-    // execClaim rent per lifespan
-    function setExecClaimRent(uint256 _rent) external override onlyOwner {
-        emit LogSetExecClaimRent(execClaimRent, _rent);
-        execClaimRent = _rent;
-    }
-
     // Executors' profit share on exec costs
     function setExecutorSuccessShare(uint256 _percentage) external override onlyOwner {
         emit LogSetExecutorSuccessShare(
@@ -99,7 +93,7 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
         totalSuccessShare = executorSuccessShare + _percentage;
     }
 
-    function withdrawSysAdminFunds(uint256 _amount)
+    function withdrawSysAdminFunds(uint256 _amount, address payable _to)
         external
         override
         onlyOwner
@@ -114,7 +108,7 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
         // Effects
         sysAdminFunds = newSysAdminFunds;
 
-        msg.sender.sendValue(realWithdrawAmount);
+        _to.sendValue(realWithdrawAmount);
         emit LogWithdrawSysAdminFunds(currentBalance, newSysAdminFunds);
     }
 

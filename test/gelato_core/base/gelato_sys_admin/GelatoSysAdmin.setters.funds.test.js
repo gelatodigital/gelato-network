@@ -11,6 +11,8 @@ describe("GelatoCore - GelatoSysAdmin - Setters: FUNDS/STAKE", function () {
   let GelatoCore;
   let gelatoCore;
   let owner;
+  let ownerAddress;
+  let notOwnerAddress;
   let notOwner;
 
   beforeEach(async function () {
@@ -19,6 +21,8 @@ describe("GelatoCore - GelatoSysAdmin - Setters: FUNDS/STAKE", function () {
     gelatoCore = await GelatoCore.deploy();
     await gelatoCore.deployed();
     [owner, notOwner] = await ethers.getSigners();
+    ownerAddress = await owner.getAddress();
+    notOwnerAddress = await notOwner.getAddress();
   });
 
   // We test different functionality of the contract as normal Mocha tests.
@@ -47,7 +51,7 @@ describe("GelatoCore - GelatoSysAdmin - Setters: FUNDS/STAKE", function () {
   describe("GelatoCore.GelatoSysAdmin.withdrawSysAdminFunds", function () {
     it("Should let the owner withdrawSysAdminFunds", async function () {
       // Every transaction and call is sent with the owner by default
-      await expect(gelatoCore.withdrawSysAdminFunds(0))
+      await expect(gelatoCore.withdrawSysAdminFunds(0, ownerAddress))
         .to.emit(gelatoCore, "LogWithdrawSysAdminFunds")
         .withArgs(initialState.sysAdminFunds, 0);
 
@@ -56,7 +60,7 @@ describe("GelatoCore - GelatoSysAdmin - Setters: FUNDS/STAKE", function () {
 
     it("Should NOT let the owner withdraw non-existant funds", async function () {
       // Every transaction and call is sent with the owner by default
-      await expect(gelatoCore.withdrawSysAdminFunds(69420))
+      await expect(gelatoCore.withdrawSysAdminFunds(69420, ownerAddress))
         .to.emit(gelatoCore, "LogWithdrawSysAdminFunds")
         .withArgs(initialState.sysAdminFunds, 0);
 
@@ -67,7 +71,7 @@ describe("GelatoCore - GelatoSysAdmin - Setters: FUNDS/STAKE", function () {
       // gelatoCore.connect returns the same GelatoCore contract instance,
       // but associated to a different signer
       await expect(
-        gelatoCore.connect(notOwner).withdrawSysAdminFunds(0)
+        gelatoCore.connect(notOwner).withdrawSysAdminFunds(0, notOwnerAddress)
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
   });

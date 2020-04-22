@@ -23,46 +23,6 @@ describe("GelatoCore - GelatoSysAdmin - Setters: FEES", function () {
 
   // We test different functionality of the contract as normal Mocha tests.
 
-  // setExecClaimTenancy
-  describe("GelatoCore.GelatoSysAdmin.setExecClaimTenancy", function () {
-    it("Should let the owner setExecClaimTenancy", async function () {
-      // Every transaction and call is sent with the owner by default
-      await expect(gelatoCore.setExecClaimTenancy(69420))
-        .to.emit(gelatoCore, "LogSetExecClaimTenancy")
-        .withArgs(initialState.execClaimTenancy, 69420);
-
-      expect(await gelatoCore.execClaimTenancy()).to.be.equal(69420);
-    });
-
-    it("Should NOT let non-Owners setExecClaimTenancy", async function () {
-      // gelatoCore.connect returns the same GelatoCore contract instance,
-      // but associated to a different signer
-      await expect(
-        gelatoCore.connect(notOwner).setExecClaimTenancy(69420)
-      ).to.be.revertedWith("Ownable: caller is not the owner");
-    });
-  });
-
-  // setExecClaimRent
-  describe("GelatoCore.GelatoSysAdmin.setExecClaimRent", function () {
-    it("Should let the owner setExecClaimRent", async function () {
-      // Every transaction and call is sent with the owner by default
-      await expect(gelatoCore.setExecClaimRent(69420))
-        .to.emit(gelatoCore, "LogSetExecClaimRent")
-        .withArgs(initialState.execClaimRent, 69420);
-
-      expect(await gelatoCore.execClaimRent()).to.be.equal(69420);
-    });
-
-    it("Should NOT let non-Owners setExecClaimRent", async function () {
-      // gelatoCore.connect returns the same GelatoCore contract instance,
-      // but associated to a different signer
-      await expect(
-        gelatoCore.connect(notOwner).setExecClaimRent(69420)
-      ).to.be.revertedWith("Ownable: caller is not the owner");
-    });
-  });
-
   // setExecutorSuccessShare
   describe("GelatoCore.GelatoSysAdmin.setExecutorSuccessShare", function () {
     it("Should let the owner setExecutorSuccessShare", async function () {

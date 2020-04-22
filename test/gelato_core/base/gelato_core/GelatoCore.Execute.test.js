@@ -6,8 +6,9 @@ const { run, ethers } = require("@nomiclabs/buidler");
 import initialStateSysAdmin from "../gelato_sys_admin/GelatoSysAdmin.initialState";
 import initialStateGasPriceOracle from "../gelato_gas_price_oracle/GelatoGasPriceOracle.initialState";
 
-const FEE_USD = 2;
-const FEE_ETH = 9000000000000000;
+const FEE_USD = 3;
+const FEE_ETH = 17000000000000000;
+//
 
 const GELATO_MAX_GAS = initialStateSysAdmin.gelatoMaxGas;
 const GELATO_GAS_PRICE = initialStateGasPriceOracle.gasPrice;
@@ -1503,11 +1504,6 @@ describe("GelatoCore.Execute", function () {
       ).to.be.equal(
         "ActionTermsNotOk:ActionWithdrawBatchExchange: Sell Token not withdrawable yet"
       );
-
-      // LogCanExecFailed
-      // await expect(gelatoCore.setExecClaimTenancy(69420))
-      //   .to.emit(gelatoCore, "LogSetExecClaimTenancy")
-      //   .withArgs(initialState.execClaimTenancy, 69420);
 
       await expect(
         gelatoCore

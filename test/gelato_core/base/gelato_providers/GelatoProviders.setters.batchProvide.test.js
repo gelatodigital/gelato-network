@@ -134,7 +134,10 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH PROVIDE", function () {
         .stakeExecutor({ value: minExecutorStake });
 
       // iceCreamHash
-      const iceCreamHash = await gelatoCore.iceCreamHash(iceCream.condition, iceCream.actions);
+      const iceCreamHash = await gelatoCore.iceCreamHash(
+        iceCream.condition,
+        iceCream.actions
+      );
       // otherIceCreamHash
       const otherIceCreamHash = await gelatoCore.iceCreamHash(
         otherIceCream.condition,
@@ -164,7 +167,12 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH PROVIDE", function () {
         .and.to.emit(gelatoCore, "LogProvideIceCream")
         .withArgs(providerAddress, iceCreamHash)
         .and.to.emit(gelatoCore, "LogSetIceCreamGasPriceCeil")
-        .withArgs(providerAddress, iceCreamHash, initialState.iceCreamGasPriceCeil, gasPriceCeil)
+        .withArgs(
+          providerAddress,
+          iceCreamHash,
+          initialState.iceCreamGasPriceCeil,
+          gasPriceCeil
+        )
         .and.to.emit(gelatoCore, "LogProvideIceCream")
         .withArgs(providerAddress, otherIceCreamHash)
         .and.to.emit(gelatoCore, "LogSetIceCreamGasPriceCeil")
@@ -203,29 +211,35 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH PROVIDE", function () {
 
       // iceCream
       // iceCreamGasPriceCeil
-      expect(await gelatoCore.iceCreamGasPriceCeil(providerAddress, iceCreamHash)).to.be.equal(
-        iceCream.gasPriceCeil
-      );
+      expect(
+        await gelatoCore.iceCreamGasPriceCeil(providerAddress, iceCreamHash)
+      ).to.be.equal(iceCream.gasPriceCeil);
 
       // isIceCreamProvided
       expect(
-        await gelatoCore.isIceCreamProvided(providerAddress, condition.address, [
-          actionStruct,
-        ])
+        await gelatoCore.isIceCreamProvided(
+          providerAddress,
+          condition.address,
+          [actionStruct]
+        )
       ).to.be.equal("OK");
 
       // otherIceCream
       // iceCreamGasPriceCeil
       expect(
-        await gelatoCore.iceCreamGasPriceCeil(providerAddress, otherIceCreamHash)
+        await gelatoCore.iceCreamGasPriceCeil(
+          providerAddress,
+          otherIceCreamHash
+        )
       ).to.be.equal(otherIceCream.gasPriceCeil);
 
       // isIceCreamProvided
       expect(
-        await gelatoCore.isIceCreamProvided(providerAddress, condition.address, [
-          actionStruct,
-          otherActionStruct,
-        ])
+        await gelatoCore.isIceCreamProvided(
+          providerAddress,
+          condition.address,
+          [actionStruct, otherActionStruct]
+        )
       ).to.be.equal("OK");
 
       // providerModule: isModuleProvided
