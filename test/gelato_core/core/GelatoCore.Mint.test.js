@@ -160,7 +160,7 @@ describe("Gelato Core - Minting ", function () {
       gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
     });
 
-    // Call batchProvider(executor, IceCreamS[], providerModules[])
+    // Call batchProvider(executor, IceCreams[], providerModules[])
     await gelatoCore
       .connect(provider)
       .batchProvide(

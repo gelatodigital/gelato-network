@@ -13,7 +13,6 @@ interface IGelatoUserProxy {
     function execAction(Action calldata _action) external payable;
     function multiExecActions(Action[] calldata _actions) external payable;
 
-    // Does not work due to `immutable override` InternalCompilerError: Assembly exception for bytecode
-    function user() external view returns(address);
-    function gelatoCore() external view returns(address);
+    function user() external pure returns(address);
+    function gelatoCore() external pure returns(address);
 }

@@ -25,10 +25,10 @@ interface IGelatoExecutors {
     /// @notice Re-assigns multiple providers to other executors
     /// @dev Executors must re-assign all providers before being able to unstake
     /// @param _providers List of providers to re-assign
-    /// @param _transferExecutor Address of new executor to assign providers to
+    /// @param _newExecutor Address of new executor to assign providers to
     function batchReassignProviders(
         address[] calldata _providers,
-        address _transferExecutor
+        address _newExecutor
     ) external;
 
 
@@ -37,4 +37,5 @@ interface IGelatoExecutors {
     /// @param _withdrawAmount Amount to withdraw
     /// @return Amount that was actually withdrawn
     function withdrawExcessExecutorStake(uint256 _withdrawAmount) external returns(uint256);
+
 }

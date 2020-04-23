@@ -3,8 +3,8 @@
 const { expect } = require("chai");
 const { run, ethers } = require("@nomiclabs/buidler");
 
-import initialStateSysAdmin from "../gelato_sys_admin/GelatoSysAdmin.initialState";
-import initialStateGasPriceOracle from "../gelato_gas_price_oracle/GelatoGasPriceOracle.initialState";
+import initialStateSysAdmin from "../base/gelato_sys_admin/GelatoSysAdmin.initialState";
+import initialStateGasPriceOracle from "../base/gelato_gas_price_oracle/GelatoGasPriceOracle.initialState";
 
 const FEE_USD = 3;
 //
@@ -528,7 +528,7 @@ describe("GelatoCore.Execute", function () {
         .withArgs(
           executorAddress,
           execClaim.id,
-          "ConditionReverted:Condition Reverted"
+          "ConditionReverted:MockConditionDummyRevert.ok: test revert"
         );
     });
 
@@ -696,7 +696,7 @@ describe("GelatoCore.Execute", function () {
         .withArgs(
           executorAddress,
           execClaim.id,
-          "ActionReverted:Action TermsOk not ok"
+          "ActionReverted:MockActionDummyOutOfGas.termsOk"
         );
     });
 
@@ -1037,11 +1037,14 @@ describe("GelatoCore.Execute", function () {
 
       let oldBlock = await ethers.provider.getBlock();
 
+      const lifespan = 100000;
+      const expiryDate = oldBlock.timestamp + lifespan;
+
       const task = new Task({
         provider: gelatoProvider,
         condition,
         actions: [action],
-        expiryDate: oldBlock.timestamp + 1000000,
+        expiryDate,
       });
 
       let execClaim = {
@@ -1055,11 +1058,12 @@ describe("GelatoCore.Execute", function () {
         "LogExecClaimMinted"
       );
 
-      // By default connect to
-      let provider = new ethers.providers.JsonRpcProvider();
-
       // Get a promise for your call
-      await ethers.provider.send("evm_increaseTime", [1000000]);
+      if (network.name === "buidlerevm")
+        await ethers.provider.send("evm_increaseTime", [lifespan]);
+
+      if (network.name === "coverage")
+        await ethers.provider.send("evm_mine", [expiryDate]);
 
       // Do random Tx to increment time
       await buyToken.mint(
@@ -1633,7 +1637,7 @@ describe("GelatoCore.Execute", function () {
           executorAddress,
           1,
           0,
-          "GelatoCore._exec.execPayload:Test Revert"
+          "GelatoCore._exec.execPayload:MockProviderModuleGelatoUserProxyRevert.execPayload: test revert"
         );
     });
   });

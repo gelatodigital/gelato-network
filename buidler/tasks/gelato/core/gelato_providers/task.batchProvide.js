@@ -6,7 +6,7 @@ export default task(
   "gc-batchprovide",
   `Sends tx and --funds to GelatoCore.batchProvide() on [--network] (default: ${defaultNetwork})`
 )
-  .addOptionalParam("iceCreams", "Already created IceCreamS")
+  .addOptionalParam("iceCreams", "Already created IceCreams")
   .addOptionalParam("funds", "The amount of ETH funds to provide")
   .addOptionalParam("gelatoexecutor", "The provider's assigned gelatoExecutor")
   .addOptionalParam("conditions", "Only one via CLI.")

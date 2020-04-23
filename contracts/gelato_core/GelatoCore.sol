@@ -88,7 +88,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         bytes32 hashedExecClaim = hashExecClaim(_ec);
         if (execClaimHash[_ec.id] != hashedExecClaim) return "InvalidExecClaimHash";
 
-        if (_ec.task.expiryDate != 0 && _ec.task.expiryDate < now) return "ExecClaimExpired";
+        if (_ec.task.expiryDate != 0 && _ec.task.expiryDate <= now) return "ExecClaimExpired";
 
         // CHECK Condition for user proxies
         if (_ec.task.condition.inst != IGelatoCondition(0)) {

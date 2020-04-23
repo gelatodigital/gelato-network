@@ -3,8 +3,8 @@
 const { expect } = require("chai");
 const { run, ethers } = require("@nomiclabs/buidler");
 
-import initialStateSysAdmin from "../gelato_sys_admin/GelatoSysAdmin.initialState";
-import initialStateGasPriceOracle from "../gelato_gas_price_oracle/GelatoGasPriceOracle.initialState";
+import initialStateSysAdmin from "../base/gelato_sys_admin/GelatoSysAdmin.initialState";
+import initialStateGasPriceOracle from "../base/gelato_gas_price_oracle/GelatoGasPriceOracle.initialState";
 
 //
 
@@ -218,11 +218,14 @@ describe("GelatoCore.Execute", function () {
     it("#3: CanExec - Exec Claim expired", async function () {
       let oldBlock = await ethers.provider.getBlock();
 
+      const lifespan = 420;
+      const expiryDate = oldBlock.timestamp + lifespan;
+
       const task2 = new Task({
         provider: gelatoProvider,
         condition,
         actions: [action],
-        expiryDate: oldBlock.timestamp + 1000000,
+        expiryDate,
       });
 
       let execClaim2 = {
@@ -234,7 +237,11 @@ describe("GelatoCore.Execute", function () {
       const mintTx = await userProxy.mintExecClaim(task2);
       await mintTx.wait();
 
-      await ethers.provider.send("evm_increaseTime", [1000000]);
+      if (network.name === "buidlerevm")
+        await ethers.provider.send("evm_increaseTime", [lifespan]);
+
+      if (network.name === "coverage")
+        await ethers.provider.send("evm_mine", [expiryDate]);
 
       expect(
         await gelatoCore

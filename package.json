@@ -1,21 +1,15 @@
 {
-  "name": "gelato-contracts",
+  "name": "gelato-v1",
   "version": "0.0.1",
   "description": "The automation protocol for Ethereum",
   "repository": "https://github.com/gelatodigital/gelato.git",
   "author": "The guys from gelato-digital",
   "private": false,
   "scripts": {
-    "build": "babel ./scripts --out-dir dist",
-    "solhint": "solhint contracts/**/*.sol",
-    "clean": "rimraf dist",
-    "coverage": "npx buidler coverage --network coverage",
-    "rebuild": "yarn clean && yarn build"
+    "coverage": "npx buidler coverage --network coverage"
   },
   "devDependencies": {
-    "@babel/cli": "7.7.4",
     "@babel/core": "7.7.4",
-    "@babel/node": "7.7.4",
     "@babel/preset-env": "7.7.4",
     "@babel/register": "7.7.4",
     "@nomiclabs/buidler": "1.2.0",
@@ -23,14 +17,10 @@
     "@nomiclabs/buidler-waffle": "1.2.0",
     "chai": "^4.2.0",
     "dotenv": "^8.2.0",
-    "ethereum-waffle": "^2.4.1",
-    "ethers": "^4.0.46",
+    "ethereum-waffle": "2.4.1",
+    "ethers": "4.0.47",
     "prettier": "^2.0.3",
     "solc": "^0.6.6",
-    "solidity-coverage": "^0.7.4"
-  },
-  "dependencies": {
-    "rimraf": "^3.0.2",
-    "solc": "^0.6.6"
+    "solidity-coverage": "https://github.com/sc-forks/solidity-coverage.git"
   }
 }

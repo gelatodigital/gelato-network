@@ -8,8 +8,8 @@ import {
 
 contract GelatoUserProxy is IGelatoUserProxy {
 
-    address public override user;
-    address public override gelatoCore;
+    address public immutable override user;
+    address public immutable override gelatoCore;
 
     constructor(
         address _user,

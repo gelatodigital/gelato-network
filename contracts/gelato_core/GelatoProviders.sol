@@ -333,7 +333,6 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         return _providerModules[_provider].contains(_module);
     }
 
-
     function providerModules(address _provider)
         external
         view
