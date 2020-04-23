@@ -30,7 +30,7 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
   let fakeExecClaim;
 
   // Condition - Actions - Mix
-  let iceCream;
+  let taskSpec;
   const gasPriceCeil = utils.parseUnits("20", "gwei");
 
   beforeEach(async function () {
@@ -137,7 +137,7 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
     });
 
     // Condition Action Mix
-    iceCream = new IceCream({
+    taskSpec = new TaskSpec({
       condition: condition.inst,
       actions: [action],
       gasPriceCeil,
@@ -265,8 +265,8 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
     });
 
     it("Should return providerModuleChecks from providerCanExec, if correct gelatoGasPrice", async function () {
-      // provideIceCreams
-      await gelatoCore.provideIceCreams([iceCream]);
+      // provideTaskSpecs
+      await gelatoCore.provideTaskSpecs([taskSpec]);
 
       // addProviderModules()
       await gelatoCore.addProviderModules([
@@ -276,9 +276,9 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
       ]);
 
       const weirdFlexButOkPrice = 0;
-      const okGelatoGasPrice = iceCream.gasPriceCeil.sub(1);
-      const alsoOkGelatoGasPrice = iceCream.gasPriceCeil;
-      const notOkGelatoGasPrice = iceCream.gasPriceCeil.add(1);
+      const okGelatoGasPrice = taskSpec.gasPriceCeil.sub(1);
+      const alsoOkGelatoGasPrice = taskSpec.gasPriceCeil;
+      const notOkGelatoGasPrice = taskSpec.gasPriceCeil.add(1);
 
       // providerCanExec: execClaim (provided gelato user proxy)
       expect(
@@ -298,7 +298,7 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
       // providerCanExec: gelatoGasPriceTooHigh
       expect(
         await gelatoCore.providerCanExec(execClaim, notOkGelatoGasPrice)
-      ).to.be.equal("iceCreamGasPriceCeil-OR-notProvided");
+      ).to.be.equal("taskSpecGasPriceCeil-OR-notProvided");
     });
 
     it("Should NOT allow to add same modules again", async function () {

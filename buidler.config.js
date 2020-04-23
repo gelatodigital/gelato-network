@@ -11,7 +11,7 @@ errors.setLogLevel("error");
 // Classes
 const Action = require("./src/classes/gelato/Action").default;
 const Condition = require("./src/classes/gelato/Condition").default;
-const IceCream = require("./src/classes/gelato/IceCream").default;
+const TaskSpec = require("./src/classes/gelato/TaskSpec").default;
 const ExecClaim = require("./src/classes/gelato/ExecClaim").default;
 const GelatoProvider = require("./src/classes/gelato/GelatoProvider").default;
 const Task = require("./src/classes/gelato/Task").default;
@@ -30,7 +30,7 @@ extendEnvironment((bre) => {
   // Classes
   bre.Action = Action;
   bre.Condition = Condition;
-  bre.IceCream = IceCream;
+  bre.TaskSpec = TaskSpec;
   bre.ExecClaim = ExecClaim;
   bre.GelatoProvider = GelatoProvider;
   bre.Task = Task;

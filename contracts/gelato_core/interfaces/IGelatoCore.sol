@@ -16,7 +16,7 @@ struct Condition {
 
 enum Operation { Call, Delegatecall }
 
-struct Action {
+struct Action {  
     address inst;
     bytes data;
     Operation operation;
@@ -24,14 +24,14 @@ struct Action {
     bool termsOkCheck;
 }
 
-struct Task {
+struct Task {  //
     Provider provider;
     Condition condition;  // optional
     Action[] actions;
     uint256 expiryDate;  // subject to rent payments; 0 == infinity.
 }
 
-struct ExecClaim {
+struct ExecClaim {  // TaskReceipt
     uint256 id;
     address userProxy;
     Task task;

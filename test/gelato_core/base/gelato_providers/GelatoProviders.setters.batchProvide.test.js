@@ -27,8 +27,8 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH PROVIDE", function () {
   let otherActionStruct;
   const gasPriceCeil = utils.parseUnits("20", "gwei");
 
-  let iceCream;
-  let otherIceCream;
+  let taskSpec;
+  let otherTaskSpec;
 
   let gelatoUserProxyFactory;
 
@@ -108,13 +108,13 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH PROVIDE", function () {
     });
 
     // Condition Action Mix
-    iceCream = new IceCream({
+    taskSpec = new TaskSpec({
       condition: condition.address,
       actions: [actionStruct],
       gasPriceCeil,
     });
 
-    otherIceCream = new IceCream({
+    otherTaskSpec = new TaskSpec({
       condition: condition.address,
       actions: [actionStruct, otherActionStruct],
       gasPriceCeil,
@@ -133,22 +133,22 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH PROVIDE", function () {
         .connect(executor)
         .stakeExecutor({ value: minExecutorStake });
 
-      // iceCreamHash
-      const iceCreamHash = await gelatoCore.iceCreamHash(
-        iceCream.condition,
-        iceCream.actions
+      // taskSpecHash
+      const taskSpecHash = await gelatoCore.taskSpecHash(
+        taskSpec.condition,
+        taskSpec.actions
       );
-      // otherIceCreamHash
-      const otherIceCreamHash = await gelatoCore.iceCreamHash(
-        otherIceCream.condition,
-        otherIceCream.actions
+      // otherTaskSpecHash
+      const otherTaskSpecHash = await gelatoCore.taskSpecHash(
+        otherTaskSpec.condition,
+        otherTaskSpec.actions
       );
 
       // batchProvide()
       await expect(
         gelatoCore.batchProvide(
           executorAddress,
-          [iceCream, otherIceCream],
+          [taskSpec, otherTaskSpec],
           [providerModule.address, otherProviderModule.address],
           { value: 42069 }
         )
@@ -163,23 +163,23 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH PROVIDE", function () {
           initialState.executorByProvider,
           executorAddress
         )
-        // LogProvideIceCream & LogSetIceCreamGasPriceCeil
-        .and.to.emit(gelatoCore, "LogProvideIceCream")
-        .withArgs(providerAddress, iceCreamHash)
-        .and.to.emit(gelatoCore, "LogSetIceCreamGasPriceCeil")
+        // LogProvideTaskSpec & LogSetTaskSpecGasPriceCeil
+        .and.to.emit(gelatoCore, "LogProvideTaskSpec")
+        .withArgs(providerAddress, taskSpecHash)
+        .and.to.emit(gelatoCore, "LogSetTaskSpecGasPriceCeil")
         .withArgs(
           providerAddress,
-          iceCreamHash,
-          initialState.iceCreamGasPriceCeil,
+          taskSpecHash,
+          initialState.taskSpecGasPriceCeil,
           gasPriceCeil
         )
-        .and.to.emit(gelatoCore, "LogProvideIceCream")
-        .withArgs(providerAddress, otherIceCreamHash)
-        .and.to.emit(gelatoCore, "LogSetIceCreamGasPriceCeil")
+        .and.to.emit(gelatoCore, "LogProvideTaskSpec")
+        .withArgs(providerAddress, otherTaskSpecHash)
+        .and.to.emit(gelatoCore, "LogSetTaskSpecGasPriceCeil")
         .withArgs(
           providerAddress,
-          otherIceCreamHash,
-          initialState.iceCreamGasPriceCeil,
+          otherTaskSpecHash,
+          initialState.taskSpecGasPriceCeil,
           gasPriceCeil
         )
         // LogAddProviderModule
@@ -209,33 +209,33 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH PROVIDE", function () {
       // isExecutorAssigned
       expect(await gelatoCore.isExecutorAssigned(executorAddress)).to.be.true;
 
-      // iceCream
-      // iceCreamGasPriceCeil
+      // taskSpec
+      // taskSpecGasPriceCeil
       expect(
-        await gelatoCore.iceCreamGasPriceCeil(providerAddress, iceCreamHash)
-      ).to.be.equal(iceCream.gasPriceCeil);
+        await gelatoCore.taskSpecGasPriceCeil(providerAddress, taskSpecHash)
+      ).to.be.equal(taskSpec.gasPriceCeil);
 
-      // isIceCreamProvided
+      // isTaskSpecProvided
       expect(
-        await gelatoCore.isIceCreamProvided(
+        await gelatoCore.isTaskSpecProvided(
           providerAddress,
           condition.address,
           [actionStruct]
         )
       ).to.be.equal("OK");
 
-      // otherIceCream
-      // iceCreamGasPriceCeil
+      // otherTaskSpec
+      // taskSpecGasPriceCeil
       expect(
-        await gelatoCore.iceCreamGasPriceCeil(
+        await gelatoCore.taskSpecGasPriceCeil(
           providerAddress,
-          otherIceCreamHash
+          otherTaskSpecHash
         )
-      ).to.be.equal(otherIceCream.gasPriceCeil);
+      ).to.be.equal(otherTaskSpec.gasPriceCeil);
 
-      // isIceCreamProvided
+      // isTaskSpecProvided
       expect(
-        await gelatoCore.isIceCreamProvided(
+        await gelatoCore.isTaskSpecProvided(
           providerAddress,
           condition.address,
           [actionStruct, otherActionStruct]

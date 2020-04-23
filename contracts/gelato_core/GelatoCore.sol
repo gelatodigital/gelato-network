@@ -23,7 +23,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     mapping(uint256 => bytes32) public override execClaimHash;
 
     // ================  CREATE ==============================================
-    function createExecClaim(Task memory _task) public override {
+    function createExecClaim(Task memory _task) public override { // submitTask
         // GelatoCore will generate an ExecClaim from the _task
         ExecClaim memory execClaim;
         execClaim.task = _task;

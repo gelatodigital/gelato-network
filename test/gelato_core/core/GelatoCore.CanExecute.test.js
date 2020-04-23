@@ -39,7 +39,7 @@ describe("GelatoCore.Execute", function () {
   let gelatoProvider;
   let condition;
   let action;
-  let newIceCream;
+  let newTaskSpec;
 
   // ###### GelatoCore Setup ######
   beforeEach(async function () {
@@ -99,7 +99,7 @@ describe("GelatoCore.Execute", function () {
       value: ethers.utils.parseUnits("1", "ether"),
     });
 
-    // Register new provider IceCream on core with provider EDITS NEED ä#######################
+    // Register new provider TaskSpec on core with provider EDITS NEED ä#######################
 
     // Call batchProvider( for mockConditionDummy + actionERC20TransferFrom
     // Provider registers new condition
@@ -118,7 +118,7 @@ describe("GelatoCore.Execute", function () {
       termsOkCheck: true,
     });
 
-    newIceCream = new IceCream({
+    newTaskSpec = new TaskSpec({
       condition: constants.AddressZero,
       actions: [mockActionDummyGelato],
       gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
@@ -129,7 +129,7 @@ describe("GelatoCore.Execute", function () {
       .connect(provider)
       .batchProvide(
         executorAddress,
-        [newIceCream],
+        [newTaskSpec],
         [providerModuleGelatoUserProxy.address]
       );
 
@@ -266,13 +266,13 @@ describe("GelatoCore.Execute", function () {
 
       await userProxy.createExecClaim(task2);
 
-      await gelatoCore.connect(provider).unprovideIceCreams([newIceCream]);
+      await gelatoCore.connect(provider).unprovideTaskSpecs([newTaskSpec]);
 
       const canExecReturn = await gelatoCore
         .connect(executor)
         .canExec(execClaim2, GELATO_MAX_GAS, GELATO_GAS_PRICE);
 
-      expect(canExecReturn).to.equal("iceCreamGasPriceCeil-OR-notProvided");
+      expect(canExecReturn).to.equal("taskSpecGasPriceCeil-OR-notProvided");
     });
 
     it("#5: CanExec - Return Ok when called via executor)", async function () {

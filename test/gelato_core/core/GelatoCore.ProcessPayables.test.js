@@ -147,7 +147,7 @@ describe("GelatoCore.Execute", function () {
       value: ethers.utils.parseUnits("1", "ether"),
     });
 
-    // Register new provider IceCream on core with provider EDITS NEED ä#######################
+    // Register new provider TaskSpec on core with provider EDITS NEED ä#######################
 
     const condition = new Condition({
       inst: constants.AddressZero,
@@ -170,7 +170,7 @@ describe("GelatoCore.Execute", function () {
       termsOkCheck: true,
     });
 
-    const newIceCream = new IceCream({
+    const newTaskSpec = new TaskSpec({
       condition: condition.inst,
       actions: [actionWithdrawBatchExchangeGelato],
       gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
@@ -181,18 +181,18 @@ describe("GelatoCore.Execute", function () {
       .connect(provider)
       .batchProvide(
         executorAddress,
-        [newIceCream],
+        [newTaskSpec],
         [providerModuleGelatoUserProxy.address]
       );
 
     // Call batchProvider( for mockConditionDummy + actionERC20TransferFrom
-    const newIceCream2 = new IceCream({
+    const newTaskSpec2 = new TaskSpec({
       condition: mockConditionDummy.address,
       actions: [actionERC20TransferFromGelato],
       gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
     });
 
-    await gelatoCore.connect(provider).provideIceCreams([newIceCream2]);
+    await gelatoCore.connect(provider).provideTaskSpecs([newTaskSpec2]);
 
     // Create UserProxy
     const createTx = await gelatoUserProxyFactory
@@ -262,7 +262,7 @@ describe("GelatoCore.Execute", function () {
 
       // Provider registers new acttion
 
-      const newIceCream2 = new IceCream({
+      const newTaskSpec2 = new TaskSpec({
         condition: constants.AddressZero,
         actions: [mockActionDummyGelato],
         gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
@@ -274,7 +274,7 @@ describe("GelatoCore.Execute", function () {
         .connect(provider)
         .batchProvide(
           constants.AddressZero,
-          [newIceCream2],
+          [newTaskSpec2],
           [constants.AddressZero]
         );
       // Provider batch providers dummy action and revertinng module
@@ -377,7 +377,7 @@ describe("GelatoCore.Execute", function () {
 
       // Provider registers new acttion
 
-      const newIceCream2 = new IceCream({
+      const newTaskSpec2 = new TaskSpec({
         condition: constants.AddressZero,
         actions: [mockActionDummyRevertGelato],
         gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
@@ -389,7 +389,7 @@ describe("GelatoCore.Execute", function () {
         .connect(provider)
         .batchProvide(
           constants.AddressZero,
-          [newIceCream2],
+          [newTaskSpec2],
           [constants.AddressZero]
         );
       // Provider batch providers dummy action and revertinng module
@@ -504,7 +504,7 @@ describe("GelatoCore.Execute", function () {
 
       // Provider registers new acttion
 
-      const newIceCream2 = new IceCream({
+      const newTaskSpec2 = new TaskSpec({
         condition: constants.AddressZero,
         actions: [
           mockActionDummyOutOfGasGelato,
@@ -519,7 +519,7 @@ describe("GelatoCore.Execute", function () {
         .connect(provider)
         .batchProvide(
           constants.AddressZero,
-          [newIceCream2],
+          [newTaskSpec2],
           [constants.AddressZero]
         );
       // Provider batch providers dummy action and revertinng module
@@ -630,7 +630,7 @@ describe("GelatoCore.Execute", function () {
 
       // Provider registers new acttion
 
-      const newIceCream2 = new IceCream({
+      const newTaskSpec2 = new TaskSpec({
         condition: constants.AddressZero,
         actions: [mockActionDummyOutOfGasGelato, mockActionDummyOutOfGasGelato],
         gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
@@ -642,7 +642,7 @@ describe("GelatoCore.Execute", function () {
         .connect(provider)
         .batchProvide(
           constants.AddressZero,
-          [newIceCream2],
+          [newTaskSpec2],
           [constants.AddressZero]
         );
       // Provider batch providers dummy action and revertinng module

@@ -12,7 +12,7 @@ import "./task.assignProviderExecutor";
 import "./provide_conditions/task.provideConditions";
 import "./provide_conditions/task.isProvidedCondition";
 // Actions
-// import "./provide_actions/task.provideIceCreams";
+// import "./provide_actions/task.provideTaskSpecs";
 import "./provide_actions/task.isProvidedAction";
 // Provider Module
 import "./task.providerModules";
@@ -22,4 +22,4 @@ import "./provider_module/task.isModuleProvided";
 import "./provider_module/collection.tasks.gelato-provider-module";
 
 // NEW
-import "./provide_iceCream/task.provideIceCream";
+import "./provide_taskSpec/task.provideTaskSpec";

@@ -131,7 +131,7 @@ describe("Gelato Core - Creating ", function () {
       value: ethers.utils.parseUnits("1", "ether"),
     });
 
-    // Register new provider IceCream on core with provider EDITS NEED ä#######################
+    // Register new provider TaskSpec on core with provider EDITS NEED ä#######################
 
     const condition = new Condition({
       inst: constants.AddressZero,
@@ -154,18 +154,18 @@ describe("Gelato Core - Creating ", function () {
       termsOkCheck: true,
     });
 
-    const newIceCream = new IceCream({
+    const newTaskSpec = new TaskSpec({
       condition: condition.inst,
       actions: [actionWithdrawBatchExchangeGelato],
       gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
     });
 
-    // Call batchProvider(executor, IceCreams[], providerModules[])
+    // Call batchProvider(executor, TaskSpecs[], providerModules[])
     await gelatoCore
       .connect(provider)
       .batchProvide(
         executorAddress,
-        [newIceCream],
+        [newTaskSpec],
         [providerModuleGelatoUserProxy.address]
       );
 
@@ -305,7 +305,7 @@ describe("Gelato Core - Creating ", function () {
       });
 
       await expect(userProxy.createExecClaim(task)).to.be.revertedWith(
-        "GelatoUserProxy.createExecClaim:GelatoCore.createExecClaim.isProvided:IceCreamNotProvided"
+        "GelatoUserProxy.createExecClaim:GelatoCore.createExecClaim.isProvided:TaskSpecNotProvided"
       );
 
       // CouldNt get the execClaimHash to be computed off-chain
@@ -355,7 +355,7 @@ describe("Gelato Core - Creating ", function () {
       });
 
       await expect(userProxy.createExecClaim(task)).to.be.revertedWith(
-        "GelatoUserProxy.createExecClaim:GelatoCore.createExecClaim.isProvided:IceCreamNotProvided"
+        "GelatoUserProxy.createExecClaim:GelatoCore.createExecClaim.isProvided:TaskSpecNotProvided"
       );
     });
 
@@ -798,7 +798,7 @@ describe("Gelato Core - Creating ", function () {
           value: ethers.utils.parseUnits("1", "ether"),
         })
       ).to.revertedWith(
-        "GelatoUserProxy.callAction:GelatoCore.createExecClaim.isProvided:IceCreamNotProvided"
+        "GelatoUserProxy.callAction:GelatoCore.createExecClaim.isProvided:TaskSpecNotProvided"
       );
     });
   });

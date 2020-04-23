@@ -2,8 +2,8 @@ import { task } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../../../buidler.config";
 
 export default task(
-  "gc-provideicecream",
-  `Sends tx to GelatoCore.provideIceCreams(<IceCreams[]>) on [--network] (default: ${defaultNetwork})`
+  "gc-providetaskspec",
+  `Sends tx to GelatoCore.provideTaskSpecs(<TaskSpecs[]>) on [--network] (default: ${defaultNetwork})`
 )
   .addPositionalParam("condition", "0 for no condition")
   .addPositionalParam("gaspriceceil", "in Gwei (e.g. 20)")
@@ -12,7 +12,7 @@ export default task(
   .setAction(async (taskArgs) => {
     try {
       /*
-      struct IceCream {
+      struct TaskSpec {
         IGelatoCondition condition;   // Address: optional AddressZero for self-conditional actions
         Action[] actions;
         uint256 gasPriceCeil;  // GasPriceCeil
@@ -62,17 +62,17 @@ export default task(
       });
 
       const gasPriceCeil = utils.parseUnits(taskArgs.gaspriceceil, "gwei");
-      // Create IceCream condition, actions, gasPriceCeil
-      const iceCream = new IceCream({
+      // Create TaskSpec condition, actions, gasPriceCeil
+      const taskSpec = new TaskSpec({
         condition: taskArgs.condition,
         actions: actionArray,
         gasPriceCeil,
       });
 
-      const tx = await gelatoCore.provideIceCreams([iceCream], {
+      const tx = await gelatoCore.provideTaskSpecs([taskSpec], {
         gasLimit: 1000000,
       });
-      if (taskArgs.log) console.log(`\n txHash provideIceCreams: ${tx.hash}\n`);
+      if (taskArgs.log) console.log(`\n txHash provideTaskSpecs: ${tx.hash}\n`);
       await tx.wait();
       return tx.hash;
     } catch (error) {

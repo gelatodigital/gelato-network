@@ -7,8 +7,8 @@ import { IGelatoCondition } from "../../gelato_conditions/IGelatoCondition.sol";
 
 interface IGelatoProviders {
 
-    // IceCream - Will be whitelised by providers and selected by users
-    struct IceCream {
+    // TaskSpec - Will be whitelised by providers and selected by users
+    struct TaskSpec {
         IGelatoCondition condition;   // Address: optional AddressZero for self-conditional actions
         Action[] actions;
         uint256 gasPriceCeil;  // GasPriceCeil
@@ -39,13 +39,13 @@ interface IGelatoProviders {
     );
 
     // Actions
-    event LogProvideIceCream(address indexed provider, bytes32 indexed iceCreamHash);
-    event LogUnprovideIceCream(address indexed provider, bytes32 indexed iceCreamHash);
-    event LogSetIceCreamGasPriceCeil(
+    event LogProvideTaskSpec(address indexed provider, bytes32 indexed taskSpecHash);
+    event LogUnprovideTaskSpec(address indexed provider, bytes32 indexed taskSpecHash);
+    event LogSetTaskSpecGasPriceCeil(
         address indexed provider,
-        bytes32 iceCreamHash,
-        uint256 oldIceCreamGasPriceCeil,
-        uint256 newIceCreamGasPriceCeil
+        bytes32 taskSpecHash,
+        uint256 oldTaskSpecGasPriceCeil,
+        uint256 newTaskSpecGasPriceCeil
     );
 
     // Provider Module
@@ -66,7 +66,7 @@ interface IGelatoProviders {
     /// @param _condition Address of condition which will be checked
     /// @param _actions Acion Struct defined in IGelatoCore
     /// @return Expected to return "OK"
-    function isIceCreamProvided(
+    function isTaskSpecProvided(
         address _provider,
         IGelatoCondition _condition,
         Action[] calldata _actions
@@ -85,8 +85,8 @@ interface IGelatoProviders {
         returns(string memory);
 
 
-    /// @notice Validate if provider module and seleced IceCream is whitelisted by provider
-    /// @dev Combines "isIceCreamProvided" and providerModuleChecks
+    /// @notice Validate if provider module and seleced TaskSpec is whitelisted by provider
+    /// @dev Combines "isTaskSpecProvided" and providerModuleChecks
     /// @param _ec Execution Claim defined in IGelatoCore
     /// @return res Expected to return "OK"
     function isExecClaimProvided(ExecClaim calldata _ec)
@@ -95,7 +95,7 @@ interface IGelatoProviders {
         returns(string memory res);
 
 
-    /// @notice Validate if selected IceCream is whitelisted by provider and that current gelatoGasPrice is below GasPriceCeil
+    /// @notice Validate if selected TaskSpec is whitelisted by provider and that current gelatoGasPrice is below GasPriceCeil
     /// @dev If gasPriceCeil is != 0, Ice Cream is whitelisted
     /// @param _ec Execution Claim defined in IGelatoCore
     /// @param _gelatoGasPrice Execution Claim defined in IGelatoCore
@@ -127,20 +127,20 @@ interface IGelatoProviders {
 
     // (Un-)provide Ice Cream
 
-    /// @notice Whitelist IceCreams (A combination of a Condition, Action(s) and a gasPriceCeil) that users can select from
+    /// @notice Whitelist TaskSpecs (A combination of a Condition, Action(s) and a gasPriceCeil) that users can select from
     /// @dev If gasPriceCeil is == 0, Ice Cream will be executed at any gas price (no ceil)
-    /// @param _IceCreams Execution Claim List defined in IGelatoCore
-    function provideIceCreams(IceCream[] calldata _IceCreams) external;
+    /// @param _TaskSpecs Execution Claim List defined in IGelatoCore
+    function provideTaskSpecs(TaskSpec[] calldata _TaskSpecs) external;
 
-    /// @notice De-whitelist IceCreams (A combination of a Condition, Action(s) and a gasPriceCeil) that users can select from
+    /// @notice De-whitelist TaskSpecs (A combination of a Condition, Action(s) and a gasPriceCeil) that users can select from
     /// @dev If gasPriceCeil was set to NO_CEIL, Input NO_CEIL constant as GasPriceCeil
-    /// @param _IceCreams Execution Claim List defined in IGelatoCore
-    function unprovideIceCreams(IceCream[] calldata _IceCreams) external;
+    /// @param _TaskSpecs Execution Claim List defined in IGelatoCore
+    function unprovideTaskSpecs(TaskSpec[] calldata _TaskSpecs) external;
 
     /// @notice Update gasPriceCeil of selected Ice Cream
-    /// @param _iceCreamHash Result of iceCreamHash()
+    /// @param _taskSpecHash Result of taskSpecHash()
     /// @param _gasPriceCeil New gas price ceil for Ice Cream
-    function setIceCreamGasPriceCeil(bytes32 _iceCreamHash, uint256 _gasPriceCeil) external;
+    function setTaskSpecGasPriceCeil(bytes32 _taskSpecHash, uint256 _gasPriceCeil) external;
 
     // Provider Module
     /// @notice Whitelist new provider Module(s)
@@ -153,26 +153,26 @@ interface IGelatoProviders {
 
     // Batch (un-)provide
 
-    /// @notice Whitelist new executor, IceCream(s) and Module(s) in one tx
+    /// @notice Whitelist new executor, TaskSpec(s) and Module(s) in one tx
     /// @param _executor Address of new executor of provider
-    /// @param _IceCreams List of Ice Cream which will be whitelisted by provider
+    /// @param _TaskSpecs List of Ice Cream which will be whitelisted by provider
     /// @param _modules List of module addresses which will be whitelisted by provider
     function batchProvide(
         address _executor,
-        IceCream[] calldata _IceCreams,
+        TaskSpec[] calldata _TaskSpecs,
         IGelatoProviderModule[] calldata _modules
     )
         external
         payable;
 
 
-    /// @notice De-Whitelist IceCream(s), Module(s) and withdraw funds from gelato in one tx
+    /// @notice De-Whitelist TaskSpec(s), Module(s) and withdraw funds from gelato in one tx
     /// @param _withdrawAmount Amount to withdraw from ProviderFunds
-    /// @param _IceCreams List of Ice Cream which will be de-whitelisted by provider
+    /// @param _TaskSpecs List of Ice Cream which will be de-whitelisted by provider
     /// @param _modules List of module addresses which will be de-whitelisted by provider
     function batchUnprovide(
         uint256 _withdrawAmount,
-        IceCream[] calldata _IceCreams,
+        TaskSpec[] calldata _TaskSpecs,
         IGelatoProviderModule[] calldata _modules
     )
         external;
@@ -241,19 +241,19 @@ interface IGelatoProviders {
     // Ice Cream and Gas Price Ceil
     /// @notice The maximum gas price the transaction will be executed with
     /// @param _provider Address of provider
-    /// @param _iceCreamHash Hash of provider IceCream
+    /// @param _taskSpecHash Hash of provider TaskSpec
     /// @return Max gas price an executor will execute the transaction with in wei
-    function iceCreamGasPriceCeil(address _provider, bytes32 _iceCreamHash)
+    function taskSpecGasPriceCeil(address _provider, bytes32 _taskSpecHash)
         external
         view
         returns(uint256);
 
-    /// @notice Compute an IceCreamHash
+    /// @notice Compute an TaskSpecHash
     /// @dev action.data can be 0
     /// @param _condition Address of condition instance
     /// @param _noDataActions Action List
     /// @return keccak256 hash of encoded condition address and Action List
-    function iceCreamHash(IGelatoCondition _condition, Action[] calldata _noDataActions)
+    function taskSpecHash(IGelatoCondition _condition, Action[] calldata _noDataActions)
         external
         view
         returns(bytes32);

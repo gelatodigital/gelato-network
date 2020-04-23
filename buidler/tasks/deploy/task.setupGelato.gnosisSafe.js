@@ -1,6 +1,6 @@
 import { task } from "@nomiclabs/buidler/config";
 import { constants, utils } from "ethers";
-import IceCream from "../../../src/classes/gelato/IceCream";
+import TaskSpec from "../../../src/classes/gelato/TaskSpec";
 
 const GAS_PRICE = utils.parseUnits("9", "gwei");
 
@@ -161,8 +161,8 @@ export default task("setupgelato-gnosissafeproxy")
       });
 
       // Provider
-      // Create IceCream condition, actions, gasPriceCeil
-      const iceCream = new IceCream({
+      // Create TaskSpec condition, actions, gasPriceCeil
+      const taskSpec = new TaskSpec({
         condition: taskArgs.condition,
         actions: actionArray,
         gasPriceCeil: utils.parseUnits("20", "gwei"),
@@ -173,7 +173,7 @@ export default task("setupgelato-gnosissafeproxy")
         providerindex: 2,
         funds: "1",
         gelatoexecutor: gelatoExecutorAddress,
-        iceCreams: [iceCream],
+        taskSpecs: [taskSpec],
         modules: [providerModuleGnosisSafeProxy.address],
         // events: taskArgs.events,  < = BUIDLER EVM events bug for structs
         log: taskArgs.log,
