@@ -17,5 +17,4 @@ import "./internal/collection.iTasks.gnosis-safe-proxy";
 // === CPK Factory ===
 import "./cpk_factory/task.createGelatoUserProxyOnCpk";
 import "./cpk_factory/task.determineCpkProxyAddress";
-
-
+import "./cpk_factory/task.createCpkProxyAndSwap";
