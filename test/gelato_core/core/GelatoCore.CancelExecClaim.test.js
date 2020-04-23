@@ -119,7 +119,7 @@ describe("GelatoCore.cancelTask", function () {
 
     await gelatoCore
       .connect(provider)
-      .batchProvide(
+      .multiProvide(
         executorAddress,
         [newTaskSpec2],
         [providerModuleGelatoUserProxy.address]
@@ -214,7 +214,7 @@ describe("GelatoCore.cancelTask", function () {
       const submitTaskTx = await userProxy.submitTask(task);
       await submitTaskTx.wait();
 
-      await expect(userProxy.batchCancelTasks([taskReceipt, taskReceipt2]))
+      await expect(userProxy.multiCancelTasks([taskReceipt, taskReceipt2]))
         .to.emit(gelatoCore, "LogTaskCancelled")
         .withArgs(taskReceipt.id)
         .to.emit(gelatoCore, "LogTaskCancelled")
@@ -229,7 +229,7 @@ describe("GelatoCore.cancelTask", function () {
       await expect(
         gelatoCore
           .connect(provider)
-          .batchCancelTasks([taskReceipt, taskReceipt2])
+          .multiCancelTasks([taskReceipt, taskReceipt2])
       )
         .to.emit(gelatoCore, "LogTaskCancelled")
         .withArgs(taskReceipt.id)

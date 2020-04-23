@@ -26,7 +26,7 @@ contract ProviderModuleGnosisSafeProxy is
     constructor(bytes32[] memory hashes, address[] memory masterCopies, address _gelatoCore)
         public
     {
-        batchProvide(hashes, masterCopies);
+        multiProvide(hashes, masterCopies);
         gelatoCore = _gelatoCore;
     }
 
@@ -144,7 +144,7 @@ contract ProviderModuleGnosisSafeProxy is
     }
 
     // Batch (un-)provide
-    function batchProvide(bytes32[] memory _hashes, address[] memory _mastercopies)
+    function multiProvide(bytes32[] memory _hashes, address[] memory _mastercopies)
         public
         override
         onlyOwner
@@ -153,7 +153,7 @@ contract ProviderModuleGnosisSafeProxy is
         provideMastercopies(_mastercopies);
     }
 
-    function batchUnprovide(bytes32[] calldata _hashes, address[] calldata _mastercopies)
+    function multiUnprovide(bytes32[] calldata _hashes, address[] calldata _mastercopies)
         external
         override
         onlyOwner

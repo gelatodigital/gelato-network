@@ -99,7 +99,7 @@ interface IGelatoCore {
     /// @notice Batch Cancel tasks
     /// @dev Callable only by userProxy or selected provider
     /// @param _taskReceipts TaskReceipt Array, consisting of user task, user proxy address and id
-    function batchCancelTasks(TaskReceipt[] calldata _taskReceipts) external;
+    function multiCancelTasks(TaskReceipt[] calldata _taskReceipts) external;
 
     /// @notice Compute hash of task receipt
     /// @param _TR TaskReceipt, consisting of user task, user proxy address and id

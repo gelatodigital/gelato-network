@@ -241,7 +241,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     }
 
     // Batch (un-)provide
-    function batchProvide(
+    function multiProvide(
         address _executor,
         TaskSpec[] memory _TaskSpecs,
         IGelatoProviderModule[] memory _modules
@@ -256,7 +256,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         addProviderModules(_modules);
     }
 
-    function batchUnprovide(
+    function multiUnprovide(
         uint256 _withdrawAmount,
         TaskSpec[] memory _TaskSpecs,
         IGelatoProviderModule[] memory _modules

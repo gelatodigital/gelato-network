@@ -168,10 +168,10 @@ describe("Multisend with Gelato User Proxy Test", function () {
       gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
     });
 
-    // Call batchProvider(executor, TaskSpecs[], providerModules[])
+    // Call multiProvideexecutor, TaskSpecs[], providerModules[])
     await gelatoCore
       .connect(provider)
-      .batchProvide(
+      .multiProvide(
         executorAddress,
         [newTaskSpec],
         [providerModuleGelatoUserProxy.address]

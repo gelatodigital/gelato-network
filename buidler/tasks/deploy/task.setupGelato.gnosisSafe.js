@@ -168,7 +168,7 @@ export default task("setupgelato-gnosissafeproxy")
         gasPriceCeil: utils.parseUnits("20", "gwei"),
       });
 
-      await run("gc-batchprovide", {
+      await run("gc-multiprovide", {
         gelatocoreaddress: gelatoCore.address,
         providerindex: 2,
         funds: "1",

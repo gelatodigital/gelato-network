@@ -101,7 +101,7 @@ describe("GelatoCore.Execute", function () {
 
     // Register new provider TaskSpec on core with provider EDITS NEED ä#######################
 
-    // Call batchProvider( for mockConditionDummy + actionERC20TransferFrom
+    // Call multiProvide for mockConditionDummy + actionERC20TransferFrom
     // Provider registers new condition
     const MockActionDummy = await ethers.getContractFactory(
       "MockActionDummy",
@@ -124,10 +124,10 @@ describe("GelatoCore.Execute", function () {
       gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
     });
 
-    // Call batchProvider( for actionWithdrawBatchExchange
+    // Call multiProvide for actionWithdrawBatchExchange
     await gelatoCore
       .connect(provider)
-      .batchProvide(
+      .multiProvide(
         executorAddress,
         [newTaskSpec],
         [providerModuleGelatoUserProxy.address]

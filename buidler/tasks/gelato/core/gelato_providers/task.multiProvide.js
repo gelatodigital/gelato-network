@@ -3,8 +3,8 @@ import { defaultNetwork } from "../../../../../buidler.config";
 import { utils, constants } from "ethers";
 
 export default task(
-  "gc-batchprovide",
-  `Sends tx and --funds to GelatoCore.batchProvide() on [--network] (default: ${defaultNetwork})`
+  "gc-multiprovide",
+  `Sends tx and --funds to GelatoCore.multiProvide() on [--network] (default: ${defaultNetwork})`
 )
   .addOptionalParam("taskSpecs", "Already created TaskSpecs")
   .addOptionalParam("funds", "The amount of ETH funds to provide")
@@ -75,7 +75,7 @@ export default task(
             : [taskArgs.modules];
 
         if (taskArgs.log)
-          console.log("\n gc-batchprovide TaskArgs:\n", taskArgs);
+          console.log("\n gc-multiprovide TaskArgs:\n", taskArgs);
       }
 
       const gelatoCore = await run("instantiateContract", {
@@ -89,7 +89,7 @@ export default task(
       // address _executor,
       // TaskSpec[] memory _TaskSpecs,
       // IGelatoProviderModule[] memory _modules
-      const tx = await gelatoCore.batchProvide(
+      const tx = await gelatoCore.multiProvide(
         taskArgs.gelatoexecutor,
         taskArgs.taskSpecs,
         taskArgs.modules,
@@ -98,7 +98,7 @@ export default task(
         }
       );
 
-      if (taskArgs.log) console.log(`\n\ntxHash batchProvide: ${tx.hash}`);
+      if (taskArgs.log) console.log(`\n\ntxHash multiProvide: ${tx.hash}`);
       const { blockHash: blockhash } = await tx.wait();
 
       if (taskArgs.events) {

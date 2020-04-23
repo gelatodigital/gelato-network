@@ -123,9 +123,9 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH PROVIDE", function () {
 
   // We test different functionality of the contract as normal Mocha tests.
 
-  // batchProvide
-  describe("GelatoCore.GelatoProviders.batchProvide", function () {
-    it("Should allow anyone to batchProvide", async function () {
+  // multiProvide
+  describe("GelatoCore.GelatoProviders.multiProvide", function () {
+    it("Should allow anyone to multiProvide", async function () {
       // minExecutorStake needed for providerAssignsExecutor()
       const minExecutorStake = await gelatoCore.minExecutorStake();
       // stakeExecutor()
@@ -144,9 +144,9 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH PROVIDE", function () {
         otherTaskSpec.actions
       );
 
-      // batchProvide()
+      // multiProvide()
       await expect(
-        gelatoCore.batchProvide(
+        gelatoCore.multiProvide(
           executorAddress,
           [taskSpec, otherTaskSpec],
           [providerModule.address, otherProviderModule.address],

@@ -176,16 +176,16 @@ describe("GelatoCore.Execute", function () {
       gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
     });
 
-    // Call batchProvider( for actionWithdrawBatchExchange
+    // Call multiProvide for actionWithdrawBatchExchange
     await gelatoCore
       .connect(provider)
-      .batchProvide(
+      .multiProvide(
         executorAddress,
         [newTaskSpec],
         [providerModuleGelatoUserProxy.address]
       );
 
-    // Call batchProvider( for mockConditionDummy + actionERC20TransferFrom
+    // Call multiProvide for mockConditionDummy + actionERC20TransferFrom
     const newTaskSpec2 = new TaskSpec({
       condition: mockConditionDummy.address,
       actions: [actionERC20TransferFromGelato],
@@ -272,7 +272,7 @@ describe("GelatoCore.Execute", function () {
 
       await gelatoCore
         .connect(provider)
-        .batchProvide(
+        .multiProvide(
           constants.AddressZero,
           [newTaskSpec2],
           [constants.AddressZero]
@@ -387,7 +387,7 @@ describe("GelatoCore.Execute", function () {
 
       await gelatoCore
         .connect(provider)
-        .batchProvide(
+        .multiProvide(
           constants.AddressZero,
           [newTaskSpec2],
           [constants.AddressZero]
@@ -517,7 +517,7 @@ describe("GelatoCore.Execute", function () {
 
       await gelatoCore
         .connect(provider)
-        .batchProvide(
+        .multiProvide(
           constants.AddressZero,
           [newTaskSpec2],
           [constants.AddressZero]
@@ -640,7 +640,7 @@ describe("GelatoCore.Execute", function () {
 
       await gelatoCore
         .connect(provider)
-        .batchProvide(
+        .multiProvide(
           constants.AddressZero,
           [newTaskSpec2],
           [constants.AddressZero]

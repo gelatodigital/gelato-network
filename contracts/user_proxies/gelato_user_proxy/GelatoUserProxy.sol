@@ -69,12 +69,12 @@ contract GelatoUserProxy is IGelatoUserProxy {
         }
     }
 
-    function batchCancelTasks(TaskReceipt[] memory _TRs) public override onlyUser {
-        try IGelatoCore(gelatoCore).batchCancelTasks(_TRs) {
+    function multiCancelTasks(TaskReceipt[] memory _TRs) public override onlyUser {
+        try IGelatoCore(gelatoCore).multiCancelTasks(_TRs) {
         } catch Error(string memory err) {
-            revert(string(abi.encodePacked("GelatoUserProxy.batchCancelTasks:", err)));
+            revert(string(abi.encodePacked("GelatoUserProxy.multiCancelTasks:", err)));
         } catch {
-            revert("GelatoUserProxy.batchCancelTasks:undefinded");
+            revert("GelatoUserProxy.multiCancelTasks:undefinded");
         }
     }
 

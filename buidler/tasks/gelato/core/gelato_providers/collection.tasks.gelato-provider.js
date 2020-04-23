@@ -1,7 +1,7 @@
 // ==== GelatoProvider ===
 // Registration
-import "./task.batchProvide";
-import "./task.batchUnprovide";
+import "./task.multiProvide";
+import "./task.multiUnprovide";
 // Funding
 import "./provide_funds/task.providerFunds";
 import "./provide_funds/task.provideFunds";

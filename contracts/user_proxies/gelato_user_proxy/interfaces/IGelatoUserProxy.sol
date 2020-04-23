@@ -19,7 +19,7 @@ interface IGelatoUserProxy {
 
     /// @notice Cancel multiple task receipts on gelato
     /// @param _TRs Task Receipts to cancel
-    function batchCancelTasks(TaskReceipt[] calldata _TRs) external;
+    function multiCancelTasks(TaskReceipt[] calldata _TRs) external;
 
     /// @notice Execute an action
     /// @param _action Action to execute

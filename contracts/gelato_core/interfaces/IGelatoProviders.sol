@@ -157,7 +157,7 @@ interface IGelatoProviders {
     /// @param _executor Address of new executor of provider
     /// @param _TaskSpecs List of Task Spec which will be whitelisted by provider
     /// @param _modules List of module addresses which will be whitelisted by provider
-    function batchProvide(
+    function multiProvide(
         address _executor,
         TaskSpec[] calldata _TaskSpecs,
         IGelatoProviderModule[] calldata _modules
@@ -170,7 +170,7 @@ interface IGelatoProviders {
     /// @param _withdrawAmount Amount to withdraw from ProviderFunds
     /// @param _TaskSpecs List of Task Spec which will be de-whitelisted by provider
     /// @param _modules List of module addresses which will be de-whitelisted by provider
-    function batchUnprovide(
+    function multiUnprovide(
         uint256 _withdrawAmount,
         TaskSpec[] calldata _TaskSpecs,
         IGelatoProviderModule[] calldata _modules

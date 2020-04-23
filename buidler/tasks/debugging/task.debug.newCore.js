@@ -63,7 +63,7 @@ export default task("gc-debug-newcore")
       });
 
       // Provider
-      await run("gc-batchprovide", {
+      await run("gc-multiprovide", {
         gelatocoreaddress: gelatoCore.address,
         ethamount: "0.2",
         modules: [providerModuleGelatoUserProxy.address],

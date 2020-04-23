@@ -124,8 +124,8 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH UNPROVIDE", function () 
   // We test different functionality of the contract as normal Mocha tests.
 
   // removeProviderModules
-  describe("GelatoCore.GelatoProviders.batchUnprovide", function () {
-    it("Should allow Providers to batchUnprovide", async function () {
+  describe("GelatoCore.GelatoProviders.multiUnprovide", function () {
+    it("Should allow Providers to multiUnprovide", async function () {
       // minExecutorStake needed for providerAssignsExecutor()
       const minExecutorStake = await gelatoCore.minExecutorStake();
       // stakeExecutor()
@@ -144,9 +144,9 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH UNPROVIDE", function () 
         otherTaskSpec.actions
       );
 
-      // batchProvide()
+      // multiProvide()
       const providedFunds = utils.bigNumberify(42069);
-      await gelatoCore.batchProvide(
+      await gelatoCore.multiProvide(
         executorAddress,
         [taskSpec, otherTaskSpec],
         [providerModule.address, otherProviderModule.address],
@@ -155,9 +155,9 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH UNPROVIDE", function () 
 
       expect(await gelatoCore.isExecutorAssigned(executorAddress)).to.be.true;
 
-      // batchUnprovide()
+      // multiUnprovide()
       await expect(
-        gelatoCore.batchUnprovide(
+        gelatoCore.multiUnprovide(
           providedFunds,
           [taskSpec, otherTaskSpec],
           [providerModule.address, otherProviderModule.address]

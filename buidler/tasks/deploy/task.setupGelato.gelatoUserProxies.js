@@ -16,7 +16,7 @@ export default task(
   )
   .addOptionalParam(
     "conditionname",
-    "A condition contract to deploy and batchProvide on ProviderModuleGelatoUserProxy"
+    "A condition contract to deploy and multiProvide on ProviderModuleGelatoUserProxy"
   )
   .addFlag("events", "Logs parsed Event Logs to stdout")
   .addFlag("log", "Log taskArgs and tx hashes inter alia")
@@ -159,7 +159,7 @@ export default task(
 
       await gelatoCore
         .connect(provider)
-        .batchProvide(
+        .multiProvide(
           executorAddress,
           [taskSpec],
           [providerModuleGelatoUserProxy.address]
