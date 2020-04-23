@@ -157,11 +157,6 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
         )
       ).to.be.false;
 
-      // numOfProviderModules
-      expect(
-        await gelatoCore.numOfProviderModules(providerAddress)
-      ).to.be.equal(initialState.numOfProviderModules);
-
       // providerModules
       expect(
         (await gelatoCore.providerModules(providerAddress)).length
@@ -184,11 +179,6 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
           providerModule.address
         )
       ).to.be.true;
-
-      // numOfProviderModules
-      expect(
-        await gelatoCore.numOfProviderModules(providerAddress)
-      ).to.be.equal(initialState.numOfProviderModules + 1);
 
       // providerModules
       expect(
@@ -242,11 +232,6 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
           otherProviderModule.address
         )
       ).to.be.true;
-
-      // numOfProviderModules
-      expect(
-        await gelatoCore.numOfProviderModules(providerAddress)
-      ).to.be.equal(initialState.numOfProviderModules + 2);
 
       // providerModules
       expect(
@@ -365,11 +350,6 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
         )
       ).to.be.true;
 
-      // numOfProviderModules
-      expect(
-        await gelatoCore.numOfProviderModules(providerAddress)
-      ).to.be.equal(initialState.numOfProviderModules + 1);
-
       // providerModules
       expect(
         (await gelatoCore.providerModules(providerAddress)).length
@@ -413,11 +393,6 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
           otherProviderModule.address
         )
       ).to.be.false;
-
-      // numOfProviderModules
-      expect(
-        await gelatoCore.numOfProviderModules(providerAddress)
-      ).to.be.equal(initialState.numOfProviderModules);
 
       // providerModules
       expect(

@@ -7,7 +7,7 @@ import { utils } from "ethers";
 // GelatoProviders creation time variable values
 import initialState from "./GelatoProviders.initialState";
 
-describe("GelatoCore - GelatoProviders - Setters: IceCreamS", function () {
+describe("GelatoCore - GelatoProviders - Setters: IceCreams", function () {
   // We define the ContractFactory and Address variables here and assign them in
   // a beforeEach hook.
   let GelatoCoreFactory;

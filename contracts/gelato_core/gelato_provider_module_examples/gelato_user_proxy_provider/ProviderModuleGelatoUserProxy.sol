@@ -11,8 +11,7 @@ import {
 } from "../../../user_proxies/gelato_user_proxy/interfaces/IGelatoUserProxy.sol";
 
 contract ProviderModuleGelatoUserProxy is GelatoProviderModuleStandard {
-    // Make this immutable after solidity-coverage done
-    address public gelatoUserProxyFactory;
+    address public immutable gelatoUserProxyFactory;
 
     constructor(address _gelatoUserProxyFactory) public {
         gelatoUserProxyFactory = _gelatoUserProxyFactory;

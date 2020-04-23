@@ -258,11 +258,6 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH PROVIDE", function () {
         )
       ).to.be.true;
 
-      // numOfProviderModules
-      expect(
-        await gelatoCore.numOfProviderModules(providerAddress)
-      ).to.be.equal(initialState.numOfProviderModules + 2);
-
       // providerModules
       expect(
         (await gelatoCore.providerModules(providerAddress)).length

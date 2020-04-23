@@ -166,10 +166,6 @@ interface IGelatoProviders {
         external
         view
         returns(bool);
-    function numOfProviderModules(address _provider)
-        external
-        view
-        returns(uint256);
     function providerModules(address _provider)
         external
         view

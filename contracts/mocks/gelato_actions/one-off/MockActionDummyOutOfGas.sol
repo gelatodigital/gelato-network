@@ -6,7 +6,8 @@ contract MockActionDummyOutOfGas is GelatoActionsStandard {
 
     uint256 public overflowVar;
 
-    function action(bytes calldata) external payable override virtual {
+    function action(bytes calldata _data) external payable override virtual {
+        action(abi.decode(_data, (bool)));
     }
 
     function action(bool) public payable virtual {
@@ -23,9 +24,8 @@ contract MockActionDummyOutOfGas is GelatoActionsStandard {
         return termsOk(isOk);
     }
 
-    function termsOk(bool _isOk) public pure virtual returns(string memory)
-    {
+    function termsOk(bool _isOk) public pure virtual returns(string memory) {
         if(_isOk) return OK;
-        revert("Action TermsOk not ok");
+        revert("MockActionDummyOutOfGas.termsOk");
     }
 }
