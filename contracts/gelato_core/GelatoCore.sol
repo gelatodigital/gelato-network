@@ -49,7 +49,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         // Check Provider details
         string memory isProvided;
         if (msg.sender == _task.provider.addr) isProvided = providerModuleChecks(taskReceipt);
-        else isProvided = isTaskReceiptProvided(taskReceipt);
+        else isProvided = isTaskProvided(taskReceipt);
         require(
             isProvided.startsWithOk(),
             string(abi.encodePacked("GelatoCore.submitTask.isProvided:", isProvided))

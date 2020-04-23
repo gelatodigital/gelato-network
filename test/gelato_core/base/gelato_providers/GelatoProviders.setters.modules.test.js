@@ -138,7 +138,7 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
 
     // Condition Action Mix
     taskSpec = new TaskSpec({
-      condition: condition.inst,
+      conditionInst: condition.inst,
       actions: [action],
       gasPriceCeil,
     });

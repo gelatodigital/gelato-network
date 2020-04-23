@@ -165,7 +165,7 @@ describe("Gnosis - ActionWithdrawBatchExchangeWithMaker - Action", function () {
     });
 
     const newTaskSpec = new TaskSpec({
-      condition: condition.inst,
+      conditionInst: condition.inst,
       actions: [actionWithdrawBatchExchangeGelato],
       gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
     });

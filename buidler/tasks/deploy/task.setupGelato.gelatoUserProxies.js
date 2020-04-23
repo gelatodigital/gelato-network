@@ -125,7 +125,7 @@ export default task(
 
       // Condition Actions Mix (TaskSpec)
       const taskSpec = new TaskSpec({
-        condition: conditionAddress ? conditionAddress : constants.AddressZero,
+        conditionInst: conditionAddress ? conditionAddress : constants.AddressZero,
         actions,
         gasPriceCeil: utils.parseUnits("20", "gwei"),
       });

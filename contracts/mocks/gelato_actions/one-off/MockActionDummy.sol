@@ -3,10 +3,14 @@ pragma solidity ^0.6.6;
 import { GelatoActionsStandard } from "../../../gelato_actions/GelatoActionsStandard.sol";
 
 contract MockActionDummy is GelatoActionsStandard {
+    event LogAction(bool falseOrTrue);
+
     function action(bytes calldata _data) external payable override virtual {
+        action(abi.decode(_data, (bool)));
     }
 
-    function action(bool falseOrTrue) public payable virtual {
+    function action(bool _falseOrTrue) public payable virtual {
+        emit LogAction(_falseOrTrue);
     }
 
     function termsOk(bytes calldata _data) external view override virtual returns(string memory) {
@@ -16,6 +20,6 @@ contract MockActionDummy is GelatoActionsStandard {
 
     function termsOk(bool _isOk) public pure virtual returns(string memory) {
         if (_isOk) return OK;
-        revert("MockActionDummy.termsOk");
+        return "NotOk";
     }
 }

@@ -89,7 +89,7 @@ interface IGelatoProviders {
     /// @dev Combines "isTaskSpecProvided" and providerModuleChecks
     /// @param _TR Task Receipt defined in IGelatoCore
     /// @return res Expected to return "OK"
-    function isTaskReceiptProvided(TaskReceipt calldata _TR)
+    function isTaskProvided(TaskReceipt calldata _TR)
         external
         view
         returns(string memory res);

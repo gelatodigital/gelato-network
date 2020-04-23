@@ -8,23 +8,19 @@ import {
 
 contract GelatoUserProxy is IGelatoUserProxy {
 
+    address public immutable override factory;
     address public immutable override user;
     address public immutable override gelatoCore;
 
-    constructor(
-        address _user,
-        address _gelatoCore,
-        Task[] memory _optionalSubmitTasks,
-        Action[] memory _optionalActions
-    )
+    constructor(address _user, address _gelatoCore)
         public
         payable
         noZeroAddress(_user)
         noZeroAddress(_gelatoCore)
     {
+        factory = msg.sender;
         user = _user;
         gelatoCore = _gelatoCore;
-        _initialize(_gelatoCore, _optionalSubmitTasks, _optionalActions);
     }
 
     receive() external payable {}
@@ -39,15 +35,22 @@ contract GelatoUserProxy is IGelatoUserProxy {
         _;
     }
 
+    modifier userOrFactory() {
+        require(
+            msg.sender == user || msg.sender == factory,
+            "GelatoUserProxy.userOrFactory: failed");
+        _;
+    }
+
     modifier auth() {
         require(
-            msg.sender == gelatoCore || msg.sender == user,
+            msg.sender == gelatoCore || msg.sender == user || msg.sender == factory,
             "GelatoUserProxy.auth: failed"
         );
         _;
     }
 
-    function submitTask(Task memory _task) public override onlyUser {
+    function submitTask(Task memory _task) public override userOrFactory {
         try IGelatoCore(gelatoCore).submitTask(_task) {
         } catch Error(string memory err) {
             revert(string(abi.encodePacked("GelatoUserProxy.submitTask:", err)));
@@ -56,7 +59,7 @@ contract GelatoUserProxy is IGelatoUserProxy {
         }
     }
 
-    function multiSubmitTasks(Task[] memory _tasks) public override onlyUser {
+    function multiSubmitTasks(Task[] memory _tasks) public override userOrFactory {
         for (uint i = 0; i < _tasks.length; i++) submitTask(_tasks[i]);
     }
 
@@ -148,42 +151,6 @@ contract GelatoUserProxy is IGelatoUserProxy {
                 }
             } else {
                 revert("GelatoUserProxy.delegatecallAction:UnexpectedReturndata");
-            }
-        }
-    }
-
-    function _initialize(
-        address _gelatoCore,
-        Task[] memory _tasks,
-        Action[] memory _actions
-    )
-        private
-    {
-        if (_tasks.length != 0) {
-            for (uint i = 0; i < _tasks.length; i++) {
-                try IGelatoCore(_gelatoCore).submitTask(_tasks[i]) {
-                } catch Error(string memory err) {
-                    revert(
-                        string(
-                            abi.encodePacked(
-                                "GelatoUserProxy._initialize.submitTask:", err
-                            )
-                        )
-                    );
-                } catch {
-                    revert("GelatoUserProxy._initialize.submitTask:undefined");
-                }
-            }
-        }
-
-        if (_actions.length != 0) {
-            for (uint i = 0; i < _actions.length; i++) {
-                if (_actions[i].operation == Operation.Call)
-                    callAction(_actions[i].inst, _actions[i].data, _actions[i].value);
-                else if (_actions[i].operation == Operation.Delegatecall)
-                    delegatecallAction(address(_actions[i].inst), _actions[i].data);
-                else
-                    revert("GelatoUserProxy._initialize: invalid operation");
             }
         }
     }

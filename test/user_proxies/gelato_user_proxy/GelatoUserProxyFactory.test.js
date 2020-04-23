@@ -2,18 +2,34 @@
 // => only dependency we need is "chai"
 const { expect } = require("chai");
 
+const { run } = require("@nomiclabs/buidler");
+
 describe("User Proxies - GelatoUserProxy - FACTORY", function () {
   let GelatoCoreFactory;
   let GelatoUserProxyFactoryFactory;
+  let ProviderModuleGelatoUserProxyFactory;
+  let SelfProviderModuleGelatoUserProxyFactory;
+  let ActionFactory;
 
   let gelatoCore;
   let gelatoUserProxyFactory;
+  let action;
+  let providerModuleGelatoUserProxy;
+  let selfProviderModuleGelatoUserProxy;
 
   let user;
   let otherUser;
+  let provider;
+  let executor;
 
   let userAddress;
   let otherUserAddress;
+  let providerAddress;
+  let executorAddress;
+
+  let optionalAction;
+  let otherOptionalAction;
+  let optionalTask;
 
   beforeEach(async function () {
     // Get the ContractFactory, contract instance, and Signers here.
@@ -30,10 +46,12 @@ describe("User Proxies - GelatoUserProxy - FACTORY", function () {
     await gelatoCore.deployed();
     await gelatoUserProxyFactory.deployed();
 
-    // users
-    [user, otherUser] = await ethers.getSigners();
+    // tx signers
+    [user, otherUser, provider, executor] = await ethers.getSigners();
     userAddress = await user.getAddress();
     otherUserAddress = await otherUser.getAddress();
+    providerAddress = await provider.getAddress();
+    executorAddress = await executor.getAddress();
   });
 
   describe("GelatoUserProxyFactory.constructor", function () {
@@ -126,6 +144,120 @@ describe("User Proxies - GelatoUserProxy - FACTORY", function () {
       // isGelatoProxyUser: secondProxy
       expect(await gelatoUserProxyFactory.isGelatoProxyUser(userAddress)).to.be
         .true;
+    });
+  });
+
+  describe("GelatoUserProxyFactory.create: _submitTasks & _execActions", function () {
+    beforeEach(async function () {
+      // Get the ContractFactory, contract instance, and Signers here.
+      ProviderModuleGelatoUserProxyFactory = await ethers.getContractFactory(
+        "ProviderModuleGelatoUserProxy"
+      );
+      SelfProviderModuleGelatoUserProxyFactory = await ethers.getContractFactory(
+        "SelfProviderModuleGelatoUserProxy"
+      );
+      ActionFactory = await ethers.getContractFactory("MockActionDummy");
+
+      providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxyFactory.deploy(
+        gelatoUserProxyFactory.address
+      );
+      selfProviderModuleGelatoUserProxy = await SelfProviderModuleGelatoUserProxyFactory.deploy();
+      action = await ActionFactory.deploy();
+
+      await providerModuleGelatoUserProxy.deployed();
+      await selfProviderModuleGelatoUserProxy.deployed();
+      await action.deployed();
+
+      // Action
+      const actionData = await run("abi-encode-withselector", {
+        contractname: "MockActionDummy",
+        functionname: "action(bool)",
+        inputs: [true],
+      });
+      optionalAction = new Action({
+        inst: action.address,
+        data: actionData,
+        operation: Operation.Delegatecall,
+      });
+
+      const otherActionData = await run("abi-encode-withselector", {
+        contractname: "MockActionDummy",
+        functionname: "action(bool)",
+        inputs: [false],
+      });
+      otherOptionalAction = new Action({
+        inst: action.address,
+        data: otherActionData,
+        operation: Operation.Call,
+      });
+
+      // optionalTask
+      optionalTask = new Task({
+        provider: new GelatoProvider({
+          addr: providerAddress,
+          module: providerModuleGelatoUserProxy.address,
+        }),
+        actions: [optionalAction],
+      });
+
+      // stakeExecutor
+      const stakeTx = await gelatoCore.connect(executor).stakeExecutor({
+        value: await gelatoCore.minExecutorStake(),
+      });
+      await stakeTx.wait();
+
+      // multiProvide: provider
+      let multiProvideTx = await gelatoCore.connect(provider).multiProvide(
+        executorAddress,
+        [
+          new TaskSpec({
+            actions: [optionalAction],
+            gasPriceCeil: utils.parseUnits("20", "gwei"),
+          }),
+        ],
+        [providerModuleGelatoUserProxy.address]
+      );
+      await multiProvideTx.wait();
+
+      // multiProvide: selfProvider
+      multiProvideTx = await gelatoCore.multiProvide(
+        executorAddress,
+        [],
+        [selfProviderModuleGelatoUserProxy.address]
+      );
+      await multiProvideTx.wait();
+    });
+
+    it("Should submit optional Tasks", async function () {
+      await expect(gelatoUserProxyFactory.create([optionalTask], [])).to.emit(
+        gelatoCore,
+        "LogSubmitTask"
+      );
+      await expect(
+        gelatoUserProxyFactory.create([optionalTask, optionalTask], [])
+      )
+        .to.emit(gelatoCore, "LogSubmitTask")
+        .and.to.emit(gelatoCore, "LogSubmitTask");
+    });
+
+    it("Should exec optional Actions", async function () {
+      await expect(gelatoUserProxyFactory.create([], [optionalAction])).to.not
+        .be.reverted;
+
+      await expect(
+        gelatoUserProxyFactory.create([], [optionalAction, otherOptionalAction])
+      )
+        .to.emit(action, "LogAction")
+        .withArgs(false);
+    });
+
+    it("Should exec submit optional Tasks and exec optional Actions", async function () {
+      await expect(
+        gelatoUserProxyFactory.create([optionalTask], [otherOptionalAction])
+      )
+        .to.emit(gelatoCore, "LogSubmitTask")
+        .and.to.emit(action, "LogAction")
+        .withArgs(false);
     });
   });
 });
