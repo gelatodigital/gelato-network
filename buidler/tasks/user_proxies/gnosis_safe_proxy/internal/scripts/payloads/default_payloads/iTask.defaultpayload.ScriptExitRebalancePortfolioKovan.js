@@ -13,44 +13,44 @@ export default internalTask(
     "Address of recipient of fund withdrawal - defaults to Signer account 0."
   )
   .addFlag("log")
-  .setAction(async taskArgs => {
+  .setAction(async (taskArgs) => {
     try {
-      const executionClaim = await run("fetchExecutionClaim", {
-        executionclaimid: taskArgs.inputs[0]
+      const taskReceipt = await run("fetchTaskReceipt", {
+        taskreceiptid: taskArgs.inputs[0],
       });
 
       if (!taskArgs.recipient) {
         taskArgs.recipient = await run("ethers", {
           signer: true,
-          address: true
+          address: true,
         });
       }
 
       // console.log(`
       //   \n Withdraw Address: ${taskArgs.recipient}\n
-      //   \n ProviderExecutor: ${executionClaim.selectedProviderAndExecutor}\n
-      //   \n ExecutionClaimId: ${executionClaim.executionClaimId}\n
-      //   \n ConditionAction: ${executionClaim.conditionAndAction}\n
-      //   \n Condition Payload: ${executionClaim.conditionData}\n
-      //   \n Actin Payload: ${executionClaim.actionData}\n
-      //   \n Expiry Date: ${executionClaim.executionClaimExpiryDate}\n
+      //   \n ProviderExecutor: ${taskReceipt.selectedProviderAndExecutor}\n
+      //   \n TaskReceiptId: ${taskReceipt.taskReceiptId}\n
+      //   \n ConditionAction: ${taskReceipt.conditionAndAction}\n
+      //   \n Condition Payload: ${taskReceipt.conditionData}\n
+      //   \n Actin Payload: ${taskReceipt.actionData}\n
+      //   \n Expiry Date: ${taskReceipt.taskReceiptExpiryDate}\n
       // `);
 
       const inputs = [
         taskArgs.recipient,
-        executionClaim.selectedProviderAndExecutor,
-        executionClaim.executionClaimId,
-        executionClaim.conditionAndAction,
-        executionClaim.conditionData,
-        executionClaim.actionData,
-        executionClaim.executionClaimExpiryDate
+        taskReceipt.selectedProviderAndExecutor,
+        taskReceipt.taskReceiptId,
+        taskReceipt.conditionAndAction,
+        taskReceipt.conditionData,
+        taskReceipt.actionData,
+        taskReceipt.taskReceiptExpiryDate,
       ];
 
       const payloadWithSelector = await run("abi-encode-withselector", {
         contractname: "ScriptExitRebalancePortfolioKovan",
         functionname: "exitRebalancingPortfolio",
         inputs,
-        log: taskArgs.log
+        log: taskArgs.log,
       });
 
       if (taskArgs.log) console.log(payloadWithSelector);

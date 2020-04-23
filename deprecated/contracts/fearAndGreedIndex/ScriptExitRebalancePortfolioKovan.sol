@@ -57,11 +57,11 @@ contract ScriptExitRebalancePortfolioKovan {
     function exitRebalancingPortfolio(
         address payable _withdrawAddress,
         address[2] calldata _selectedProviderAndExecutor,
-        uint256 _executionClaimId,
+        uint256 _taskReceiptId,
         address[2] calldata _conditionAndAction,
         bytes calldata _conditionData,
         bytes calldata _actionData,
-        uint256 _executionClaimExpiryDate
+        uint256 _taskReceiptExpiryDate
     )
         external
     {
@@ -109,20 +109,20 @@ contract ScriptExitRebalancePortfolioKovan {
         if (etherBalance > 0) _withdrawAddress.sendValue(etherBalance);
 
 
-        // 3. Cancel Execution Claim
-        try gelatoCore.cancelExecutionClaim(
+        // 3. Cancel task
+        try gelatoCore.cancelTask(
             _selectedProviderAndExecutor,
-            _executionClaimId,
+            _taskReceiptId,
             address(this),
             _conditionAndAction,
             _conditionData,
             _actionData,
-            _executionClaimExpiryDate
+            _taskReceiptExpiryDate
         )  {
         } catch Error(string memory error) {
             emit LogFailure(error);
         } catch {
-            emit LogFailure("cancelExecutionClaim error");
+            emit LogFailure("cancelTask error");
         }
 
         emit LogExit();

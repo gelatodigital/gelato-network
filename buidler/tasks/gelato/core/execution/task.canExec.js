@@ -6,14 +6,14 @@ export default task(
   "gc-canexec",
   `Calls GelatoCore.canExec() on [--network] (default: ${defaultNetwork})`
 )
-  .addPositionalParam("execclaimid")
+  .addPositionalParam("taskreceiptid")
   .addOptionalPositionalParam(
     "executorindex",
     "Mnenomic generated account to sign the tx",
     1,
     types.int
   )
-  .addOptionalParam("execclaim", "Supply LogExecClaimMinted values in an obj")
+  .addOptionalParam("taskreceipt", "Supply LogSubmitTask values in an obj")
   .addOptionalParam("fromblock", "Search for event logs from block number.")
   .addOptionalParam("toblock", "Search for event logs to block number.")
   .addOptionalParam("blockhash", "Search a specific block")
@@ -22,9 +22,9 @@ export default task(
   .addFlag("log", "Logs return values to stdout")
   .setAction(async (taskArgs) => {
     try {
-      if (!taskArgs.execclaim) {
-        taskArgs.execclaim = await run("fetchExecClaim", {
-          execclaimid: taskArgs.execclaimid,
+      if (!taskArgs.taskreceipt) {
+        taskArgs.taskreceipt = await run("fetchTaskReceipt", {
+          taskreceiptid: taskArgs.taskreceiptid,
           fromblock: taskArgs.fromblock,
           toblock: taskArgs.toblock,
           blockhash: taskArgs.blockhash,
@@ -32,8 +32,8 @@ export default task(
           stringify: taskArgs.stringify,
         });
       }
-      if (!taskArgs.execclaim)
-        throw new Error("\nUnable to fetch execClaim from events");
+      if (!taskArgs.taskreceipt)
+        throw new Error("\nUnable to fetch taskReceipt from events");
 
       const {
         [taskArgs.executorindex]: gelatoExecutor,
@@ -50,8 +50,8 @@ export default task(
         write: true,
       });
 
-      // const { execClaimHash } = await run("event-getparsedlog", {
-      //   execclaimid: taskArgs.execclaimid,
+      // const { taskReceiptHash } = await run("event-getparsedlog", {
+      //   taskreceiptid: taskArgs.taskreceiptid,
       //   fromblock: taskArgs.fromblock,
       //   toblock: taskArgs.toblock,
       //   blockhash: taskArgs.blockhash,
@@ -61,7 +61,7 @@ export default task(
       // const gelatoGasPrice = await gelatoCore.gelatoGasPrice();
       // const gelatoMaxGas = await gelatoCore.gelatoMaxGas();
       const actions = [];
-      for (const action of taskArgs.execclaim[2][2]) {
+      for (const action of taskArgs.taskreceipt[2][2]) {
         actions.push({
           inst: action[0],
           data: action[1],
@@ -71,30 +71,30 @@ export default task(
         });
       }
 
-      const execClaim = {
-        id: taskArgs.execclaim[0],
-        userProxy: taskArgs.execclaim[1],
+      const taskReceipt = {
+        id: taskArgs.taskreceipt[0],
+        userProxy: taskArgs.taskreceipt[1],
         task: {
           provider: {
-            addr: taskArgs.execclaim[2][0][0],
-            module: taskArgs.execclaim[2][0][1],
+            addr: taskArgs.taskreceipt[2][0][0],
+            module: taskArgs.taskreceipt[2][0][1],
           },
           condition: {
-            inst: taskArgs.execclaim[2][1][0],
-            data: taskArgs.execclaim[2][1][1],
+            inst: taskArgs.taskreceipt[2][1][0],
+            data: taskArgs.taskreceipt[2][1][1],
           },
           actions,
-          expiryDate: taskArgs.execclaim[2][3],
+          expiryDate: taskArgs.taskreceipt[2][3],
         },
       };
-      if (taskArgs.log) console.log(execClaim);
+      if (taskArgs.log) console.log(taskReceipt);
 
       const GAS_PRICE = utils.parseUnits("9", "gwei");
       const GELATO_MAX_GAS = 7000000;
 
       try {
         const canExecResult = await gelatoCore.canExec(
-          execClaim,
+          taskReceipt,
           GELATO_MAX_GAS,
           GAS_PRICE
         );

@@ -11,8 +11,8 @@ errors.setLogLevel("error");
 // Classes
 const Action = require("./src/classes/gelato/Action").default;
 const Condition = require("./src/classes/gelato/Condition").default;
-const IceCream = require("./src/classes/gelato/IceCream").default;
-const ExecClaim = require("./src/classes/gelato/ExecClaim").default;
+const TaskSpec = require("./src/classes/gelato/TaskSpec").default;
+const TaskReceipt = require("./src/classes/gelato/TaskReceipt").default;
 const GelatoProvider = require("./src/classes/gelato/GelatoProvider").default;
 const Task = require("./src/classes/gelato/Task").default;
 // Objects
@@ -30,8 +30,8 @@ extendEnvironment((bre) => {
   // Classes
   bre.Action = Action;
   bre.Condition = Condition;
-  bre.IceCream = IceCream;
-  bre.ExecClaim = ExecClaim;
+  bre.TaskSpec = TaskSpec;
+  bre.TaskReceipt = TaskReceipt;
   bre.GelatoProvider = GelatoProvider;
   bre.Task = Task;
   // Objects
@@ -165,7 +165,7 @@ require("./buidler/tasks/events/collection.tasks.events");
 // _____ ACTIONS
 require("./buidler/tasks/gelato/actions/collection.tasks.actions");
 // _____ CORE
-// GasAdmin, Executors, Providers, Minting, ...
+// GasAdmin, Executors, Providers, submitTask, ...
 require("./buidler/tasks/gelato/core/collection.tasks.gelato-core");
 // _____ CONDITIONS
 require("./buidler/tasks/gelato/conditions/collection.tasks.conditions");

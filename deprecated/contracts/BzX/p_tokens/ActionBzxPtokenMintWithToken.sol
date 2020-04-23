@@ -39,7 +39,7 @@ contract ActionBzxPtokenMintWithToken is GelatoActionsStandard {
         }
 
         // !! Dapp Interaction !!
-        try IBzxPtoken(_destination).mintWithToken(
+        try IBzxPtoken(_destination).createWithToken(
             _user,  // receiver
             _sendToken,
             _sendAmt,
@@ -52,8 +52,8 @@ contract ActionBzxPtokenMintWithToken is GelatoActionsStandard {
                 _sendToken,
                 _sendAmt,
                 _destination,  // pToken
-                _destination,  // receiveToken == minted pToken
-                receiveAmt,  // minted pTokens
+                _destination,  // receiveToken == created pToken
+                receiveAmt,  // created pTokens
                 _user  // receiver
             );
         } catch {

@@ -2,7 +2,7 @@ pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
 import { ActionERC20TransferFrom, ActionData as SuperActionData } from "../one_offs/ActionERC20TransferFrom.sol";
-import { ExecClaim, IGelatoCore } from "../../../gelato_core/interfaces/IGelatoCore.sol";
+import { TaskReceipt, IGelatoCore } from "../../../gelato_core/interfaces/IGelatoCore.sol";
 import { IGelatoAction } from "../../IGelatoAction.sol";
 import { SafeMath } from "../../../external/SafeMath.sol";
 import { GelatoString } from "../../../libraries/GelatoString.sol";
@@ -19,17 +19,17 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
     function action(bytes calldata _actionData) external payable override virtual {
         (SuperActionData memory superActionData,
          ActionData memory actionData,
-         ExecClaim memory execClaim) = abi.decode(
+         TaskReceipt memory taskReceipt) = abi.decode(
              _actionData[4:],
-             (SuperActionData,ActionData,ExecClaim)
+             (SuperActionData,ActionData,TaskReceipt)
          );
-         action(superActionData, actionData, execClaim);
+         action(superActionData, actionData, taskReceipt);
     }
 
     function action(
         SuperActionData memory _superActionData,
         ActionData memory _actionData,
-        ExecClaim memory _ec
+        TaskReceipt memory _TR
     )
         public
         payable
@@ -41,28 +41,28 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
         // Duedate for next chained action call
          _actionData.dueDate = _actionData.dueDate.add(_actionData.timeOffset);
          // Max 3 days delay, else automatic expiry
-        _ec.task.expiryDate = _actionData.dueDate.add(3 days);
+        _TR.task.expiryDate = _actionData.dueDate.add(3 days);
 
         // Encode updated ActionChainedTimedERC20TransferFromKovan payload into actionData
         // @DEV we could maybe use some assembly here to only swap the dueDateValue
-        // _ec.task.actionData = abi.encodeWithSelector(
+        // _TR.task.actionData = abi.encodeWithSelector(
         //     IGelatoAction.action.selector,
         //     _superActionData,
         //     _actionData,
-        //     _ec
+        //     _TR
         // );
 
-        // // Mint: ExecClaim Chain continues with Updated Payloads
-        // try IGelatoCore(GELATO_CORE).mintExecClaim(_ec.task) {
+        // // Submit:TaskReceipt Chain continues with Updated Payloads
+        // try IGelatoCore(GELATO_CORE).submitTask(_TR.task) {
         // } catch Error(string memory error) {
         //     revert(
         //         string(abi.encodePacked(
-        //             "ActionChainedTimedERC20TransferFromKovan.mintExecClaim",
+        //             "ActionChainedTimedERC20TransferFromKovan.submitTask",
         //             error
         //         ))
         //     );
         // } catch {
-        //     revert("ActionChainedTimedERC20TransferFromKovan.mintExecClaim:undefined");
+        //     revert("ActionChainedTimedERC20TransferFromKovan.submitTask:undefined");
         // }
     }
 
@@ -78,9 +78,9 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
         // Decode: Calldata Array actionData without Selector
         (SuperActionData memory superActionData,
          ActionData memory actionData,
-         ExecClaim memory execClaim) = abi.decode(
+         TaskReceipt memory taskReceipt) = abi.decode(
              _actionData[4:],
-             (SuperActionData,ActionData,ExecClaim)
+             (SuperActionData,ActionData,TaskReceipt)
         );
 
         // Check: ActionERC20TransferFrom._actionConditionsCheck
@@ -90,10 +90,10 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
         if (transferStatus.startsWithOk()) return transferStatus;
 
         // Else: Check and Return current contract actionTermsOk
-        return termsOk(actionData, execClaim);
+        return termsOk(actionData, taskReceipt);
     }
 
-    function termsOk(ActionData memory _actionData, ExecClaim memory _ec)
+    function termsOk(ActionData memory _actionData, TaskReceipt memory _TR)
         public
         view
         virtual
@@ -104,9 +104,9 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
 
         GelatoCore gelatoCore = GelatoCore(GELATO_CORE);
 
-        if (_ec.userProxy != _ec.task.provider.addr) {
-            string memory isProvided = gelatoCore.isExecClaimProvided(
-                _ec
+        if (_TR.userProxy != _TR.task.provider.addr) {
+            string memory isProvided = gelatoCore.isTaskReceiptProvided(
+                _TR
             );
             if (!isProvided.startsWithOk()) {
                 return string(

@@ -24,96 +24,96 @@ struct Action {
     bool termsOkCheck;
 }
 
-struct Task {
+struct Task {  //
     Provider provider;
-    Condition condition;
+    Condition condition;  // optional
     Action[] actions;
     uint256 expiryDate;  // subject to rent payments; 0 == infinity.
 }
 
-struct ExecClaim {
+struct TaskReceipt {  // TaskReceipt
     uint256 id;
     address userProxy;
     Task task;
 }
 
 interface IGelatoCore {
-    event LogExecClaimMinted(
+    event LogSubmitTask(
         address indexed executor,
-        uint256 indexed execClaimId,
-        bytes32 indexed execClaimHash,
-        ExecClaim execClaim
+        uint256 indexed taskReceiptId,
+        bytes32 indexed taskReceiptHash,
+        TaskReceipt taskReceipt
     );
 
     event LogExecSuccess(
         address indexed executor,
-        uint256 indexed execClaimId,
+        uint256 indexed taskReceiptId,
         uint256 executorSuccessFee,
         uint256 sysAdminSuccessFee
     );
     event LogCanExecFailed(
         address indexed executor,
-        uint256 indexed execClaimId,
+        uint256 indexed taskReceiptId,
         string reason
     );
     event LogExecFailed(
         address indexed executor,
-        uint256 indexed execClaimId,
+        uint256 indexed taskReceiptId,
         uint256 executorRefund,
         string reason
     );
     event LogExecutionRevert(
         address indexed executor,
-        uint256 indexed execClaimId,
+        uint256 indexed taskReceiptId,
         uint256 executorRefund
     );
 
-    event LogExecClaimCancelled(uint256 indexed execClaimId);
+    event LogTaskCancelled(uint256 indexed taskReceiptId);
 
     // ================  Exec Suite =========================
-    /// @notice Create a gelato task that will be executed if the specified condition and action(s) terms are fulfilled
+    /// @notice Submit a gelato task that will be executed if the specified condition and action(s) terms are fulfilled
     /// @dev Use only through a Proxy contract which is defined in the selected provider module
     /// @param _task Seleted provider, condition and action details, plus the expiry date after which the task is rendered useless
-    function mintExecClaim(Task calldata _task) external;
+    function submitTask(Task calldata _task) external;
 
-    /// @notice Off-chain validation for executors to see if an execution claim is executable
+    /// @notice Off-chain validation for executors to see if an task receipt is executable
     /// @dev Only used for off-chain validation
-    /// @param _ec ExecutionClaim, consisting of user task, user proxy address and id
+    /// @param _TR TaskReceipt, consisting of user task, user proxy address and id
     /// @param _gelatoMaxGas Gas Limit to send to exec by executor to receive a full refund even if tx reverts
     /// @param _execTxGasPrice Gas Price of gelatoCore's gas price oracle
-    function canExec(ExecClaim calldata _ec, uint256 _gelatoMaxGas, uint256 _execTxGasPrice)
+    function canExec(TaskReceipt calldata _TR, uint256 _gelatoMaxGas, uint256 _execTxGasPrice)
         external
         view
         returns(string memory);
 
     /// @notice Executes the users task after conducting all condition and actions(s) term(s) checks
     /// @dev Executor gets refunded, even if the specified action(s) revert
-    /// @param _ec ExecutionClaim, consisting of user task, user proxy address and id
-    function exec(ExecClaim calldata _ec) external;
+    /// @param _TR TaskReceipt, consisting of user task, user proxy address and id
+    function exec(TaskReceipt calldata _TR) external;
 
-    /// @notice Cancel execution claim
+    /// @notice Cancel task
     /// @dev Callable only by userProxy or selected provider
-    /// @param _ec ExecutionClaim, consisting of user task, user proxy address and id
-    function cancelExecClaim(ExecClaim calldata _ec) external;
+    /// @param _TR TaskReceipt, consisting of user task, user proxy address and id
+    function cancelTask(TaskReceipt calldata _TR) external;
 
-    /// @notice Batch Cancel execution claims
+    /// @notice Batch Cancel tasks
     /// @dev Callable only by userProxy or selected provider
-    /// @param _execClaims ExecutionClaim Array, consisting of user task, user proxy address and id
-    function batchCancelExecClaims(ExecClaim[] calldata _execClaims) external;
+    /// @param _taskReceipts TaskReceipt Array, consisting of user task, user proxy address and id
+    function multiCancelTasks(TaskReceipt[] calldata _taskReceipts) external;
 
-    /// @notice Compute hash of execution claim
-    /// @param _ec ExecutionClaim, consisting of user task, user proxy address and id
-    /// @return hash of execClaim
-    function hashExecClaim(ExecClaim calldata _ec) external pure returns(bytes32);
+    /// @notice Compute hash of task receipt
+    /// @param _TR TaskReceipt, consisting of user task, user proxy address and id
+    /// @return hash of taskReceipt
+    function hashTaskReceipt(TaskReceipt calldata _TR) external pure returns(bytes32);
 
     // ================  Getters =========================
-    /// @notice Returns the executionClaimId of the last ExecClaim minted
-    /// @return currentId currentId, last ExecutionClaimId minted
-    function currentExecClaimId() external view returns(uint256 currentId);
+    /// @notice Returns the taskReceiptId of the last TaskReceipt submitted
+    /// @return currentId currentId, last TaskReceiptId submitted
+    function currentTaskReceiptId() external view returns(uint256 currentId);
 
-    /// @notice Returns computed execClaim hash, used to check for execClaim validity
-    /// @param _execClaimId Id of execClaim emitted in minting event
-    /// @return hash of execClaim
-    function execClaimHash(uint256 _execClaimId) external view returns(bytes32);
+    /// @notice Returns computed taskReceipt hash, used to check for taskReceipt validity
+    /// @param _taskReceiptId Id of taskReceipt emitted in submission event
+    /// @return hash of taskReceipt
+    function taskReceiptHash(uint256 _taskReceiptId) external view returns(bytes32);
 
 }

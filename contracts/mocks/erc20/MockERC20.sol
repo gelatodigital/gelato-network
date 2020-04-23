@@ -236,13 +236,13 @@ abstract contract ERC20 is IERC20 {
     }
 
     /**
-     * @dev Internal function that mints an amount of the token and assigns it to
+     * @dev Internal function that creates an amount of the token and assigns it to
      * an account. This encapsulates the modification of balances such that the
      * proper events are emitted.
      * @param account The account that will receive the created tokens.
      * @param value The amount that will be created.
      */
-    function _mint(address account, uint256 value) internal {
+    function _create(address account, uint256 value) internal {
         require(account != address(0));
 
         _totalSupply = _totalSupply.add(value);
@@ -344,24 +344,24 @@ pragma solidity ^0.6.6;
 
 /**
  * @title Testnet Dai
- * @dev ERC20 minting logic
+ * @dev ERC20 submission logic
  * Sourced from OpenZeppelin and thoroughly butchered to remove security guards.
- * Anybody can mint - STRICTLY FOR TEST PURPOSES
+ * Anybody can create - STRICTLY FOR TEST PURPOSES
  */
 contract MockERC20 is ERC20, ERC20Detailed {
 
-    constructor(string memory _name, uint256 _mintAmount, address _to, uint8 _decimals) public ERC20Detailed(_name, "TEST", _decimals) {
-        mint(_to, _mintAmount);
+    constructor(string memory _name, uint256 _createAmount, address _to, uint8 _decimals) public ERC20Detailed(_name, "TEST", _decimals) {
+        create(_to, _createAmount);
     }
 
     /**
-    * @dev Function to mint tokens
-    * @param to The address that will receive the minted tokens.
-    * @param value The amount of tokens to mint.
+    * @dev Function to create tokens
+    * @param to The address that will receive the created tokens.
+    * @param value The amount of tokens to create.
     * @return A boolean that indicates if the operation was successful.
     */
-    function mint(address to, uint256 value) public returns (bool) {
-        _mint(to, value);
+    function create(address to, uint256 value) public returns (bool) {
+        _create(to, value);
         return true;
     }
 }

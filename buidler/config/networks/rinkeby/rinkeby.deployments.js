@@ -6,9 +6,6 @@ export const deployments = {
   ActionWithdrawBatchExchangeWithMaker:
     "0xfe7f2F6959b2CB8bf2aaA7808f9316174969aBec",
   ActionPlaceOrderBatchExchange: "0xDBF368e549604CC78684e83955C73346860D6EA2",
-  // BzX
-  ActionBzxPtokenBurnToToken: "0x0",
-  ActionBzxPtokenMintWithToken: "0x0",
   // erc20
   ActionERC20Transfer: "0x0",
   ActionERC20TransferFrom: "0x38a020C3392C28658F19dC0DBC9aD9D2Bb32b71f",
@@ -51,8 +48,8 @@ export const deployments = {
   // Enable GelatoCore Module
   ScriptGnosisSafeEnableGelatoCore:
     "0x5EF44De4b98F2bcE0E29c344E7B2Fb8f0282A0Cf",
-  // Enable GelatoCore Module and Mint
-  ScriptGnosisSafeEnableGelatoCoreAndMint: "0x0",
+  // Enable GelatoCore Module and Submit Task
+  ScriptGnosisSafeEnableGelatoCoreAndSubmit: "0x0",
   // Enter the Rebalancing Chained Action
   ScriptEnterPortfolioRebalancingRinkeby: "0x0",
   ScriptExitRebalancePortfolioRinkeby: "0x0",

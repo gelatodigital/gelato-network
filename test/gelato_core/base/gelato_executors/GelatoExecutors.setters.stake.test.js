@@ -305,8 +305,8 @@ describe("GelatoCore - GelatoExecutors - Setters: FUNDS", function () {
   });
 
   // withdrawExcessExecutorStake
-  describe("GelatoCore.GelatoExecutors.batchReassignProviders", function () {
-    it("Should allow Executors to batchReassignProviders", async function () {
+  describe("GelatoCore.GelatoExecutors.multiReassignProviders", function () {
+    it("Should allow Executors to multiReassignProviders", async function () {
       // stakeExecutor(): executor
       let tx = await gelatoCore.stakeExecutor({
         value: minExecutorStake,
@@ -341,9 +341,9 @@ describe("GelatoCore - GelatoExecutors - Setters: FUNDS", function () {
         otherExecutorAddress
       );
 
-      // batchReassignProviders
+      // multiReassignProviders
       await expect(
-        gelatoCore.batchReassignProviders(
+        gelatoCore.multiReassignProviders(
           [providerAddress, otherProviderAddress],
           otherExecutorAddress
         )

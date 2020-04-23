@@ -8,12 +8,12 @@ import { SafeMath } from "../external/SafeMath.sol";
 import { Math } from "../external/Math.sol";
 import { IGelatoProviderModule } from "./interfaces/IGelatoProviderModule.sol";
 import { ProviderModuleSet } from "../libraries/ProviderModuleSet.sol";
-import { Action, Operation, ExecClaim } from "./interfaces/IGelatoCore.sol";
+import { Action, Operation, TaskReceipt } from "./interfaces/IGelatoCore.sol";
 import { GelatoString } from "../libraries/GelatoString.sol";
 import { IGelatoCondition } from "../gelato_conditions/IGelatoCondition.sol";
 
 /// @title GelatoProviders
-/// @notice Provider Management API - Whitelist IceCreams
+/// @notice Provider Management API - Whitelist TaskSpecs
 /// @dev Find all NatSpecs inside IGelatoProviders
 abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
 
@@ -22,7 +22,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     using SafeMath for uint256;
     using GelatoString for string;
 
-    // This is only for internal use by iceCreamHash()
+    // This is only for internal use by taskSpecHash()
     struct NoDataAction {
         address inst;
         Operation operation;
@@ -36,12 +36,12 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     mapping(address => uint256) public override executorStake;
     mapping(address => address) public override executorByProvider;
     mapping(address => uint256) public override executorProvidersCount;
-    // The Condition-Actions-Combo Gas-Price-Ceil => iceCreamGasPriceCeil
-    mapping(address => mapping(bytes32 => uint256)) public override iceCreamGasPriceCeil;
+    // The Condition-Actions-Combo Gas-Price-Ceil => taskSpecGasPriceCeil
+    mapping(address => mapping(bytes32 => uint256)) public override taskSpecGasPriceCeil;
     mapping(address => ProviderModuleSet.Set) internal _providerModules;
 
-    // GelatoCore: mintExecClaim/collectExecClaimRent Gate
-    function isIceCreamProvided(
+    // GelatoCore: submitTask Gate
+    function isTaskSpecProvided(
         address _provider,
         IGelatoCondition _condition,
         Action[] memory _actions
@@ -51,55 +51,55 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         override
         returns(string memory)
     {
-        bytes32 iceCreamHash = iceCreamHash(_condition, _actions);
-        if (iceCreamGasPriceCeil[_provider][iceCreamHash] == 0) return "IceCreamNotProvided";
+        bytes32 taskSpecHash = taskSpecHash(_condition, _actions);
+        if (taskSpecGasPriceCeil[_provider][taskSpecHash] == 0) return "TaskSpecNotProvided";
         return OK;
     }
 
-    // IGelatoProviderModule: GelatoCore mintExecClaim/canExec Gate
-    function providerModuleChecks(ExecClaim memory _ec)
+    // IGelatoProviderModule: GelatoCore submitTask/canExec Gate
+    function providerModuleChecks(TaskReceipt memory _TR)
         public
         view
         override
         returns(string memory)
     {
-        if (!isModuleProvided(_ec.task.provider.addr, _ec.task.provider.module))
+        if (!isModuleProvided(_TR.task.provider.addr, _TR.task.provider.module))
             return "InvalidProviderModule";
 
         IGelatoProviderModule providerModule = IGelatoProviderModule(
-            _ec.task.provider.module
+            _TR.task.provider.module
         );
 
-        try providerModule.isProvided(_ec) returns(string memory res) {
+        try providerModule.isProvided(_TR) returns(string memory res) {
             return res;
         } catch {
             return "GelatoProviders.providerModuleChecks";
         }
     }
 
-    // GelatoCore: combined mintExecClaim Gate
-    function isExecClaimProvided(ExecClaim memory _ec)
+    // GelatoCore: combined submitTask Gate
+    function isTaskReceiptProvided(TaskReceipt memory _TR)
         public
         view
         override
         returns(string memory res)
     {
-        res = isIceCreamProvided(_ec.task.provider.addr, _ec.task.condition.inst, _ec.task.actions);
-        if (res.startsWithOk()) return providerModuleChecks(_ec);
+        res = isTaskSpecProvided(_TR.task.provider.addr, _TR.task.condition.inst, _TR.task.actions);
+        if (res.startsWithOk()) return providerModuleChecks(_TR);
     }
 
     // GelatoCore canExec Gate
-    function providerCanExec(ExecClaim memory _ec, uint256 _gelatoGasPrice)
+    function providerCanExec(TaskReceipt memory _TR, uint256 _gelatoGasPrice)
         public
         view
         override
         returns(string memory)
     {
         // Will only return if a) action is not whitelisted & b) gelatoGasPrice is higher than gasPriceCeiling
-        bytes32 iceCreamHash = iceCreamHash(_ec.task.condition.inst, _ec.task.actions);
-        if (_gelatoGasPrice > iceCreamGasPriceCeil[_ec.task.provider.addr][iceCreamHash])
-            return "iceCreamGasPriceCeil-OR-notProvided";
-        return providerModuleChecks(_ec);
+        bytes32 taskSpecHash = taskSpecHash(_TR.task.condition.inst, _TR.task.actions);
+        if (_gelatoGasPrice > taskSpecGasPriceCeil[_TR.task.provider.addr][taskSpecHash])
+            return "taskSpecGasPriceCeil-OR-notProvided";
+        return providerModuleChecks(_TR);
     }
 
     // Provider Funding
@@ -181,38 +181,38 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     }
 
     // (Un-)provide Condition Action Combos at different Gas Price Ceils
-    function provideIceCreams(IceCream[] memory _IceCreams) public override {
-        for (uint i; i < _IceCreams.length; i++) {
-            if (_IceCreams[i].gasPriceCeil == 0) _IceCreams[i].gasPriceCeil = NO_CEIL;
-            bytes32 iceCreamHash = iceCreamHash(_IceCreams[i].condition, _IceCreams[i].actions);
-            setIceCreamGasPriceCeil(iceCreamHash, _IceCreams[i].gasPriceCeil);
-            emit LogProvideIceCream(msg.sender, iceCreamHash);
+    function provideTaskSpecs(TaskSpec[] memory _TaskSpecs) public override {
+        for (uint i; i < _TaskSpecs.length; i++) {
+            if (_TaskSpecs[i].gasPriceCeil == 0) _TaskSpecs[i].gasPriceCeil = NO_CEIL;
+            bytes32 taskSpecHash = taskSpecHash(_TaskSpecs[i].condition, _TaskSpecs[i].actions);
+            setTaskSpecGasPriceCeil(taskSpecHash, _TaskSpecs[i].gasPriceCeil);
+            emit LogProvideTaskSpec(msg.sender, taskSpecHash);
         }
     }
 
-    function unprovideIceCreams(IceCream[] memory _IceCreams) public override {
-        for (uint i; i < _IceCreams.length; i++) {
-            bytes32 iceCreamHash = iceCreamHash(_IceCreams[i].condition, _IceCreams[i].actions);
+    function unprovideTaskSpecs(TaskSpec[] memory _TaskSpecs) public override {
+        for (uint i; i < _TaskSpecs.length; i++) {
+            bytes32 taskSpecHash = taskSpecHash(_TaskSpecs[i].condition, _TaskSpecs[i].actions);
             require(
-                iceCreamGasPriceCeil[msg.sender][iceCreamHash] != 0,
-                "GelatoProviders.unprovideIceCreams: redundant"
+                taskSpecGasPriceCeil[msg.sender][taskSpecHash] != 0,
+                "GelatoProviders.unprovideTaskSpecs: redundant"
             );
-            delete iceCreamGasPriceCeil[msg.sender][iceCreamHash];
-            emit LogUnprovideIceCream(msg.sender, iceCreamHash);
+            delete taskSpecGasPriceCeil[msg.sender][taskSpecHash];
+            emit LogUnprovideTaskSpec(msg.sender, taskSpecHash);
         }
     }
 
-    function setIceCreamGasPriceCeil(bytes32 _iceCreamHash, uint256 _gasPriceCeil) public override {
-            uint256 currentIceCreamGasPriceCeil = iceCreamGasPriceCeil[msg.sender][_iceCreamHash];
+    function setTaskSpecGasPriceCeil(bytes32 _taskSpecHash, uint256 _gasPriceCeil) public override {
+            uint256 currentTaskSpecGasPriceCeil = taskSpecGasPriceCeil[msg.sender][_taskSpecHash];
             require(
-                currentIceCreamGasPriceCeil != _gasPriceCeil,
-                "GelatoProviders.setIceCreamGasPriceCeil: redundant"
+                currentTaskSpecGasPriceCeil != _gasPriceCeil,
+                "GelatoProviders.setTaskSpecGasPriceCeil: redundant"
             );
-            iceCreamGasPriceCeil[msg.sender][_iceCreamHash] = _gasPriceCeil;
-            emit LogSetIceCreamGasPriceCeil(
+            taskSpecGasPriceCeil[msg.sender][_taskSpecHash] = _gasPriceCeil;
+            emit LogSetTaskSpecGasPriceCeil(
                 msg.sender,
-                _iceCreamHash,
-                currentIceCreamGasPriceCeil,
+                _taskSpecHash,
+                currentTaskSpecGasPriceCeil,
                 _gasPriceCeil
             );
     }
@@ -241,9 +241,9 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     }
 
     // Batch (un-)provide
-    function batchProvide(
+    function multiProvide(
         address _executor,
-        IceCream[] memory _IceCreams,
+        TaskSpec[] memory _TaskSpecs,
         IGelatoProviderModule[] memory _modules
     )
         public
@@ -252,20 +252,20 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     {
         if (msg.value != 0) provideFunds(msg.sender);
         if (_executor != address(0)) providerAssignsExecutor(_executor);
-        provideIceCreams(_IceCreams);
+        provideTaskSpecs(_TaskSpecs);
         addProviderModules(_modules);
     }
 
-    function batchUnprovide(
+    function multiUnprovide(
         uint256 _withdrawAmount,
-        IceCream[] memory _IceCreams,
+        TaskSpec[] memory _TaskSpecs,
         IGelatoProviderModule[] memory _modules
     )
         public
         override
     {
         if (_withdrawAmount != 0) unprovideFunds(_withdrawAmount);
-        unprovideIceCreams(_IceCreams);
+        unprovideTaskSpecs(_TaskSpecs);
         removeProviderModules(_modules);
     }
 
@@ -303,8 +303,8 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         return executorProvidersCount[_executor] != 0;
     }
 
-    // Helper fn that can also be called to query iceCreamHash off-chain
-    function iceCreamHash(IGelatoCondition _condition, Action[] memory _actions)
+    // Helper fn that can also be called to query taskSpecHash off-chain
+    function taskSpecHash(IGelatoCondition _condition, Action[] memory _actions)
         public
         view
         override

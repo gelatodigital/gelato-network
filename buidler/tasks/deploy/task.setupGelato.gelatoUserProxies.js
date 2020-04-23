@@ -16,7 +16,7 @@ export default task(
   )
   .addOptionalParam(
     "conditionname",
-    "A condition contract to deploy and batchProvide on ProviderModuleGelatoUserProxy"
+    "A condition contract to deploy and multiProvide on ProviderModuleGelatoUserProxy"
   )
   .addFlag("events", "Logs parsed Event Logs to stdout")
   .addFlag("log", "Log taskArgs and tx hashes inter alia")
@@ -111,7 +111,7 @@ export default task(
         }
       }
 
-      // NoDataActions for IceCream
+      // NoDataActions for TaskSpec
       const actions = [];
       for (const address of actionAddresses) {
         const action = new NoDataAction({
@@ -123,8 +123,8 @@ export default task(
         actions.push(action);
       }
 
-      // Condition Actions Mix (IceCream)
-      const iceCream = new IceCream({
+      // Condition Actions Mix (TaskSpec)
+      const taskSpec = new TaskSpec({
         condition: conditionAddress ? conditionAddress : constants.AddressZero,
         actions,
         gasPriceCeil: utils.parseUnits("20", "gwei"),
@@ -159,9 +159,9 @@ export default task(
 
       await gelatoCore
         .connect(provider)
-        .batchProvide(
+        .multiProvide(
           executorAddress,
-          [iceCream],
+          [taskSpec],
           [providerModuleGelatoUserProxy.address]
         );
 
@@ -177,7 +177,7 @@ export default task(
         gelatoCore,
         gelatoUserProxyFactory,
         providerModuleGelatoUserProxy,
-        iceCream,
+        taskSpec,
         conditionAddress,
       };
     } catch (error) {

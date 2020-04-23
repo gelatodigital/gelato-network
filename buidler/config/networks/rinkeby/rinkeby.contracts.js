@@ -2,16 +2,11 @@ export const contracts = [
   // ==== Rinkeby ===
   // === Actions ===
   // = One-Off =
-  // BzX
-  "ActionBzxPtokenBurnToToken",
-  "ActionBzxPtokenMintWithToken",
   // ERC20
   "ActionERC20Transfer",
   "ActionERC20TransferFrom",
   // Kyber
   "ActionKyberTradeRinkeby",
-  // Multimint
-  "ActionMultiMintForConditionTimestampPassed",
   // Portfolio Mgmt
   "ActionRebalancePortfolioRinkeby",
   // Gnosis Batch Exchange
@@ -47,7 +42,7 @@ export const contracts = [
   // === Scripts ===
   // GnosisSafe
   "ScriptGnosisSafeEnableGelatoCore",
-  "ScriptGnosisSafeEnableGelatoCoreAndMint",
+  "ScriptGnosisSafeEnableGelatoCoreAndSubmit",
   // Action specific scripts
   "ScriptEnterPortfolioRebalancingRinkeby",
   "ScriptExitRebalancePortfolioRinkeby",

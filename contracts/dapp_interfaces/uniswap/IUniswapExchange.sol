@@ -18,7 +18,7 @@ interface IUniswapExchange {
         view
         returns (uint256 ethBought);
 
-    function ethToTokenSwapInput(uint256 minTokens, uint256 deadline)
+    function ethToTokenSwapInput(uint256 MintTokens, uint256 deadline)
         external
         payable
         returns (uint256 tokensBought);
@@ -29,7 +29,7 @@ interface IUniswapExchange {
         returns (uint256 tokensSold);
 
     function ethToTokenTransferInput(
-        uint256 minTokens,
+        uint256 MintTokens,
         uint256 deadline,
         address recipient
     ) external payable returns (uint256 tokensBought);
@@ -48,7 +48,7 @@ interface IUniswapExchange {
 
     function tokenToTokenSwapInput(
         uint256 tokensSold,
-        uint256 minTokensBought,
+        uint256 MintTokensBought,
         uint256 minEthBought,
         uint256 deadline,
         address tokenAddr

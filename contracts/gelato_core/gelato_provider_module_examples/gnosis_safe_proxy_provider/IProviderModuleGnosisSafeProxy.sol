@@ -15,10 +15,10 @@ interface IProviderModuleGnosisSafeProxy{
     function unprovideMastercopies(address[] calldata _mastercopies) external;
 
     // Batch (un-)provide
-    function batchProvide(bytes32[] calldata _hashes, address[] calldata _mastercopies)
+    function multiProvide(bytes32[] calldata _hashes, address[] calldata _mastercopies)
         external;
 
-    function batchUnprovide(bytes32[] calldata _hashes, address[] calldata _mastercopies)
+    function multiUnprovide(bytes32[] calldata _hashes, address[] calldata _mastercopies)
         external;
 
     function isProxyExtcodehashProvided(bytes32 _hash)

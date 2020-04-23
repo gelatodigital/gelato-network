@@ -6,7 +6,7 @@ export default {
   executorStake: 0,
   executorByProvider: constants.AddressZero,
   executorProvidersCount: 0,
-  iceCreamGasPriceCeil: 0,
+  taskSpecGasPriceCeil: 0,
   isModuleProvided: false,
   providerModulesLength: 0,
 };

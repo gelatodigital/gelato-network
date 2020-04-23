@@ -2,7 +2,7 @@ pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
 import { GelatoActionsStandard } from "../../../gelato_actions/GelatoActionsStandard.sol";
-import { ExecClaim, IGelatoCore } from "../../../gelato_core/interfaces/IGelatoCore.sol";
+import { TaskReceipt, IGelatoCore } from "../../../gelato_core/interfaces/IGelatoCore.sol";
 import { GelatoString } from "../../../libraries/GelatoString.sol";
 import { GelatoCore } from "../../../gelato_core/GelatoCore.sol";
 
@@ -10,22 +10,22 @@ contract MockActionChainedDummy is GelatoActionsStandard {
     using GelatoString for string;
 
     function action(bytes calldata _actionData) external payable override virtual {
-        (ExecClaim memory execClaim, GelatoCore gelatoCore) = abi.decode(
+        (TaskReceipt memory taskReceipt, GelatoCore gelatoCore) = abi.decode(
             _actionData[4:],
-            (ExecClaim,GelatoCore)
+            (TaskReceipt,GelatoCore)
         );
-        action(execClaim, gelatoCore);
+        action(taskReceipt, gelatoCore);
     }
 
-    function action(ExecClaim memory _ec, GelatoCore _gelatoCore)
+    function action(TaskReceipt memory _TR, GelatoCore _gelatoCore)
         public
         payable
         virtual
     {
-        // Mint: ExecClaim Chain continues with Updated Payloads
-        try _gelatoCore.mintExecClaim(_ec.task) {
+        // Submit:TaskReceipt Chain continues with Updated Payloads
+        try _gelatoCore.submitTask(_TR.task) {
         } catch Error(string memory error) {
-            revert(string(abi.encodePacked("MockActionChainedDummy.mintExecClaim", error)));
+            revert(string(abi.encodePacked("MockActionChainedDummy.submitTask", error)));
         } catch {
             revert("MockActionChainedDummy:undefined");
         }
@@ -41,25 +41,25 @@ contract MockActionChainedDummy is GelatoActionsStandard {
         returns(string memory)
     {
         // Decode: Calldata Array actionData without Selector
-        (ExecClaim memory execClaim, GelatoCore gelatoCore) = abi.decode(
+        (TaskReceipt memory taskReceipt, GelatoCore gelatoCore) = abi.decode(
             _actionData[4:],
-            (ExecClaim,GelatoCore)
+            (TaskReceipt,GelatoCore)
         );
 
         // Else: Check and Return current contract actionTermsOk
-        return termsOk(execClaim, gelatoCore);
+        return termsOk(taskReceipt, gelatoCore);
     }
 
-    function termsOk(ExecClaim memory _ec, GelatoCore _gelatoCore)
+    function termsOk(TaskReceipt memory _TR, GelatoCore _gelatoCore)
         public
         view
         virtual
         returns(string memory)  // actionTermsOk
     {
 
-        if (_ec.userProxy != _ec.task.provider.addr) {
-            string memory isProvided = _gelatoCore.isExecClaimProvided(
-                _ec
+        if (_TR.userProxy != _TR.task.provider.addr) {
+            string memory isProvided = _gelatoCore.isTaskReceiptProvided(
+                _TR
             );
             if (!isProvided.startsWithOk()) {
                 return string(
