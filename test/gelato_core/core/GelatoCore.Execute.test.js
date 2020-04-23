@@ -252,7 +252,7 @@ describe("GelatoCore.Execute", function () {
 
   // We test different functionality of the contract as normal Mocha tests.
   describe("GelatoCore.Exec", function () {
-    it("#1: Successfully submit and exec ActionWithdrawBatchExchange execClaim", async function () {
+    it("#1: Successfully submit and exec ActionWithdrawBatchExchange taskReceipt", async function () {
       // Get Action Payload
       const withdrawAmount = 10 * 10 ** buyDecimals;
 
@@ -310,7 +310,7 @@ describe("GelatoCore.Execute", function () {
         expiryDate: constants.HashZero,
       });
 
-      const execClaim = {
+      const taskReceipt = {
         id: 1,
         userProxy: userProxyAddress,
         task,
@@ -318,9 +318,9 @@ describe("GelatoCore.Execute", function () {
 
       // Should return "OK"
 
-      //const isProvided = await gelatoCore.isTaskSpecProvided(execClaim);
+      //const isProvided = await gelatoCore.isTaskSpecProvided(taskReceipt);
 
-      // LogSubmitTask(executor, execClaim.id, hashedExecClaim, execClaim);
+      // LogSubmitTask(executor, taskReceipt.id, hashedTaskReceipt, taskReceipt);
 
       await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
@@ -328,7 +328,7 @@ describe("GelatoCore.Execute", function () {
       );
 
       expect(
-        await gelatoCore.canExec(execClaim, GELATO_MAX_GAS, GELATO_GAS_PRICE)
+        await gelatoCore.canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE)
       ).to.be.equal(
         "ActionTermsNotOk:ActionWithdrawBatchExchange: Sell Token not withdrawable yet"
       );
@@ -336,22 +336,22 @@ describe("GelatoCore.Execute", function () {
       await expect(
         gelatoCore
           .connect(executor)
-          .exec(execClaim, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
+          .exec(taskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
       )
         .to.emit(gelatoCore, "LogCanExecFailed")
         .withArgs(
           executorAddress,
-          execClaim.id,
+          taskReceipt.id,
           "ActionTermsNotOk:ActionWithdrawBatchExchange: Sell Token not withdrawable yet"
         );
 
-      // Make ExecClaim executable
+      // Make TaskReceipt executable
       await mockBatchExchange.setValidWithdrawRequest(userProxyAddress);
 
       await expect(
         gelatoCore
           .connect(executor)
-          .exec(execClaim, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
+          .exec(taskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
       ).to.emit(gelatoCore, "LogExecSuccess");
 
       const feeAmount = FEE_USD * 10 ** buyDecimals;
@@ -417,14 +417,14 @@ describe("GelatoCore.Execute", function () {
         expiryDate: constants.HashZero,
       });
 
-      let execClaim = {
+      let taskReceipt = {
         id: 1,
         userProxy: userProxyAddress,
         task,
       };
 
       // Should return "OK"
-      // const isProvided = await gelatoCore.isTaskSpecProvided(execClaim);
+      // const isProvided = await gelatoCore.isTaskSpecProvided(taskReceipt);
 
       await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
@@ -434,10 +434,10 @@ describe("GelatoCore.Execute", function () {
       await expect(
         gelatoCore
           .connect(executor)
-          .exec(execClaim, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
+          .exec(taskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
       )
         .to.emit(gelatoCore, "LogCanExecFailed")
-        .withArgs(executorAddress, execClaim.id, "ConditionNotOk:NotOk");
+        .withArgs(executorAddress, taskReceipt.id, "ConditionNotOk:NotOk");
     });
 
     it("#3: Submit Task ActionERC20TransferFrom and revert with LogCanExecFailed in exec due to Revert Inside Condition", async function () {
@@ -505,14 +505,14 @@ describe("GelatoCore.Execute", function () {
         expiryDate: constants.HashZero,
       });
 
-      let execClaim = {
+      let taskReceipt = {
         id: 1,
         userProxy: userProxyAddress,
         task,
       };
 
       // Should return "OK"
-      // const isProvided = await gelatoCore.isTaskSpecProvided(execClaim);
+      // const isProvided = await gelatoCore.isTaskSpecProvided(taskReceipt);
 
       await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
@@ -522,12 +522,12 @@ describe("GelatoCore.Execute", function () {
       await expect(
         gelatoCore
           .connect(executor)
-          .exec(execClaim, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
+          .exec(taskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
       )
         .to.emit(gelatoCore, "LogCanExecFailed")
         .withArgs(
           executorAddress,
-          execClaim.id,
+          taskReceipt.id,
           "ConditionReverted:MockConditionDummyRevert.ok: test revert"
         );
     });
@@ -591,14 +591,14 @@ describe("GelatoCore.Execute", function () {
         expiryDate: constants.HashZero,
       });
 
-      let execClaim = {
+      let taskReceipt = {
         id: 1,
         userProxy: userProxyAddress,
         task,
       };
 
       // Should return "OK"
-      // const isProvided = await gelatoCore.isTaskSpecProvided(execClaim);
+      // const isProvided = await gelatoCore.isTaskSpecProvided(taskReceipt);
 
       await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
@@ -608,10 +608,10 @@ describe("GelatoCore.Execute", function () {
       await expect(
         gelatoCore
           .connect(executor)
-          .exec(execClaim, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
+          .exec(taskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
       )
         .to.emit(gelatoCore, "LogCanExecFailed")
-        .withArgs(executorAddress, execClaim.id, "ConditionRevertedNoMessage");
+        .withArgs(executorAddress, taskReceipt.id, "ConditionRevertedNoMessage");
     });
 
     it("#5: Submit Task ActionERC20TransferFrom and revert with LogCanExecFailed in exec due to ActionReverted", async function () {
@@ -673,14 +673,14 @@ describe("GelatoCore.Execute", function () {
         expiryDate: constants.HashZero,
       });
 
-      let execClaim = {
+      let taskReceipt = {
         id: 1,
         userProxy: userProxyAddress,
         task,
       };
 
       // Should return "OK"
-      // const isProvided = await gelatoCore.isTaskSpecProvided(execClaim);
+      // const isProvided = await gelatoCore.isTaskSpecProvided(taskReceipt);
 
       await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
@@ -690,12 +690,12 @@ describe("GelatoCore.Execute", function () {
       await expect(
         gelatoCore
           .connect(executor)
-          .exec(execClaim, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
+          .exec(taskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
       )
         .to.emit(gelatoCore, "LogCanExecFailed")
         .withArgs(
           executorAddress,
-          execClaim.id,
+          taskReceipt.id,
           "ActionReverted:MockActionDummyOutOfGas.termsOk"
         );
     });
@@ -754,14 +754,14 @@ describe("GelatoCore.Execute", function () {
         expiryDate: constants.HashZero,
       });
 
-      let execClaim = {
+      let taskReceipt = {
         id: 1,
         userProxy: userProxyAddress,
         task,
       };
 
       // Should return "OK"
-      // const isProvided = await gelatoCore.isTaskSpecProvided(execClaim);
+      // const isProvided = await gelatoCore.isTaskSpecProvided(taskReceipt);
 
       await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
@@ -771,10 +771,10 @@ describe("GelatoCore.Execute", function () {
       await expect(
         gelatoCore
           .connect(executor)
-          .exec(execClaim, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
+          .exec(taskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
       )
         .to.emit(gelatoCore, "LogCanExecFailed")
-        .withArgs(executorAddress, execClaim.id, "ActionRevertedNoMessage");
+        .withArgs(executorAddress, taskReceipt.id, "ActionRevertedNoMessage");
     });
 
     it("#7: Submit Task ActionERC20TransferFrom and revert with LogCanExecFailed in exec due to Action termsOk failure", async function () {
@@ -826,14 +826,14 @@ describe("GelatoCore.Execute", function () {
         expiryDate: constants.HashZero,
       });
 
-      let execClaim = {
+      let taskReceipt = {
         id: 1,
         userProxy: userProxyAddress,
         task,
       };
 
       // Should return "OK"
-      // const isProvided = await gelatoCore.isTaskSpecProvided(execClaim);
+      // const isProvided = await gelatoCore.isTaskSpecProvided(taskReceipt);
 
       await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
@@ -843,17 +843,17 @@ describe("GelatoCore.Execute", function () {
       await expect(
         gelatoCore
           .connect(executor)
-          .exec(execClaim, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
+          .exec(taskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
       )
         .to.emit(gelatoCore, "LogCanExecFailed")
         .withArgs(
           executorAddress,
-          execClaim.id,
+          taskReceipt.id,
           "ActionTermsNotOk:ActionERC20TransferFrom: NotOkUserProxySendTokenAllowance"
         );
     });
 
-    it("#8: Submit Task revert with InvalidExecClaimHash in exec due to ExecClaimHash not existing", async function () {
+    it("#8: Submit Task revert with InvalidTaskReceiptHash in exec due to TaskReceiptHash not existing", async function () {
       // Get Action Payload
 
       const actionData = await run("abi-encode-withselector", {
@@ -910,7 +910,7 @@ describe("GelatoCore.Execute", function () {
         expiryDate: constants.HashZero,
       });
 
-      let execClaim = {
+      let taskReceipt = {
         id: 1,
         userProxy: userProxyAddress,
         task,
@@ -919,10 +919,10 @@ describe("GelatoCore.Execute", function () {
       await expect(
         gelatoCore
           .connect(executor)
-          .exec(execClaim, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
+          .exec(taskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
       )
         .to.emit(gelatoCore, "LogCanExecFailed")
-        .withArgs(executorAddress, execClaim.id, "InvalidExecClaimHash");
+        .withArgs(executorAddress, taskReceipt.id, "InvalidTaskReceiptHash");
     });
 
     it("#9: Submit Task and revert in exec due to InvalidExecutor", async function () {
@@ -969,7 +969,7 @@ describe("GelatoCore.Execute", function () {
         expiryDate: constants.HashZero,
       });
 
-      let execClaim = {
+      let taskReceipt = {
         id: 1,
         userProxy: userProxyAddress,
         task,
@@ -983,7 +983,7 @@ describe("GelatoCore.Execute", function () {
       await expect(
         gelatoCore
           .connect(provider)
-          .exec(execClaim, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
+          .exec(taskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
       ).to.revertedWith("GelatoCore.exec: Invalid Executor");
     });
 
@@ -1047,7 +1047,7 @@ describe("GelatoCore.Execute", function () {
         expiryDate,
       });
 
-      let execClaim = {
+      let taskReceipt = {
         id: 1,
         userProxy: userProxyAddress,
         task,
@@ -1076,13 +1076,13 @@ describe("GelatoCore.Execute", function () {
       await expect(
         gelatoCore
           .connect(executor)
-          .exec(execClaim, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
+          .exec(taskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
       )
         .to.emit(gelatoCore, "LogCanExecFailed")
-        .withArgs(executorAddress, execClaim.id, "ExecClaimExpired");
+        .withArgs(executorAddress, taskReceipt.id, "TaskReceiptExpired");
     });
 
-    it("#11: Exec good execClaim, however revert  with GelatoCore.exec: Insufficient gas sent because insufficient gas was sent", async function () {
+    it("#11: Exec good taskReceipt, however revert  with GelatoCore.exec: Insufficient gas sent because insufficient gas was sent", async function () {
       // Get Action Payload
       const withdrawAmount = 10 * 10 ** buyDecimals;
 
@@ -1132,7 +1132,7 @@ describe("GelatoCore.Execute", function () {
         expiryDate: constants.HashZero,
       });
 
-      const execClaim = {
+      const taskReceipt = {
         id: 1,
         userProxy: userProxyAddress,
         task,
@@ -1140,9 +1140,9 @@ describe("GelatoCore.Execute", function () {
 
       // Should return "OK"
 
-      //const isProvided = await gelatoCore.isTaskSpecProvided(execClaim);
+      //const isProvided = await gelatoCore.isTaskSpecProvided(taskReceipt);
 
-      // LogSubmitTask(executor, execClaim.id, hashedExecClaim, execClaim);
+      // LogSubmitTask(executor, taskReceipt.id, hashedTaskReceipt, taskReceipt);
 
       await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
@@ -1150,41 +1150,41 @@ describe("GelatoCore.Execute", function () {
       );
 
       expect(
-        await gelatoCore.canExec(execClaim, GELATO_MAX_GAS, GELATO_GAS_PRICE)
+        await gelatoCore.canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE)
       ).to.be.equal(
         "ActionTermsNotOk:ActionWithdrawBatchExchange: Sell Token not withdrawable yet"
       );
 
       await gelatoCore
         .connect(executor)
-        .exec(execClaim, { gasPrice: GELATO_GAS_PRICE, gasLimit: 5000000 });
+        .exec(taskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: 5000000 });
 
       await expect(
         gelatoCore
           .connect(executor)
-          .exec(execClaim, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
+          .exec(taskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
       )
         .to.emit(gelatoCore, "LogCanExecFailed")
         .withArgs(
           executorAddress,
-          execClaim.id,
+          taskReceipt.id,
           "ActionTermsNotOk:ActionWithdrawBatchExchange: Sell Token not withdrawable yet"
         );
 
-      // Make ExecClaim executable
+      // Make TaskReceipt executable
       await mockBatchExchange.setValidWithdrawRequest(userProxyAddress);
 
       const internalGasRequirement = await gelatoCore.internalGasRequirement();
 
       await expect(
-        gelatoCore.connect(executor).exec(execClaim, {
+        gelatoCore.connect(executor).exec(taskReceipt, {
           gasPrice: GELATO_GAS_PRICE,
           gasLimit: internalGasRequirement,
         })
       ).to.revertedWith("GelatoCore.exec: Insufficient gas sent");
     });
 
-    it("#12: Exec good execClaim, however revert with LogExecutionRevert because insufficient gas was sent", async function () {
+    it("#12: Exec good taskReceipt, however revert with LogExecutionRevert because insufficient gas was sent", async function () {
       // Get Action Payload
       const withdrawAmount = 10 * 10 ** buyDecimals;
 
@@ -1234,7 +1234,7 @@ describe("GelatoCore.Execute", function () {
         expiryDate: constants.HashZero,
       });
 
-      const execClaim = {
+      const taskReceipt = {
         id: 1,
         userProxy: userProxyAddress,
         task,
@@ -1242,9 +1242,9 @@ describe("GelatoCore.Execute", function () {
 
       // Should return "OK"
 
-      //const isProvided = await gelatoCore.isTaskSpecProvided(execClaim);
+      //const isProvided = await gelatoCore.isTaskSpecProvided(taskReceipt);
 
-      // LogSubmitTask(executor, execClaim.id, hashedExecClaim, execClaim);
+      // LogSubmitTask(executor, taskReceipt.id, hashedTaskReceipt, taskReceipt);
 
       await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
@@ -1252,7 +1252,7 @@ describe("GelatoCore.Execute", function () {
       );
 
       expect(
-        await gelatoCore.canExec(execClaim, GELATO_MAX_GAS, GELATO_GAS_PRICE)
+        await gelatoCore.canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE)
       ).to.be.equal(
         "ActionTermsNotOk:ActionWithdrawBatchExchange: Sell Token not withdrawable yet"
       );
@@ -1260,22 +1260,22 @@ describe("GelatoCore.Execute", function () {
       await expect(
         gelatoCore
           .connect(executor)
-          .exec(execClaim, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
+          .exec(taskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
       )
         .to.emit(gelatoCore, "LogCanExecFailed")
         .withArgs(
           executorAddress,
-          execClaim.id,
+          taskReceipt.id,
           "ActionTermsNotOk:ActionWithdrawBatchExchange: Sell Token not withdrawable yet"
         );
 
-      // Make ExecClaim executable
+      // Make TaskReceipt executable
       await mockBatchExchange.setValidWithdrawRequest(userProxyAddress);
 
       const internalGasRequirement = await gelatoCore.internalGasRequirement();
 
       await expect(
-        gelatoCore.connect(executor).exec(execClaim, {
+        gelatoCore.connect(executor).exec(taskReceipt, {
           gasPrice: GELATO_GAS_PRICE,
           gasLimit: ethers.utils
             .bigNumberify(internalGasRequirement)
@@ -1284,7 +1284,7 @@ describe("GelatoCore.Execute", function () {
       ).to.emit(gelatoCore, "LogExecutionRevert");
     });
 
-    it("#13: Successfully submit and exec ActionWithdrawBatchExchange execClaim (self-provider)", async function () {
+    it("#13: Successfully submit and exec ActionWithdrawBatchExchange taskReceipt (self-provider)", async function () {
       // Get Action Payload
       const withdrawAmount = 10 * 10 ** buyDecimals;
 
@@ -1332,7 +1332,7 @@ describe("GelatoCore.Execute", function () {
         expiryDate: constants.HashZero,
       });
 
-      const execClaim = {
+      const taskReceipt = {
         id: 1,
         userProxy: userProxyAddress,
         task,
@@ -1340,7 +1340,7 @@ describe("GelatoCore.Execute", function () {
 
       // Should return "OK"
 
-      //const isProvided = await gelatoCore.isTaskSpecProvided(execClaim);
+      //const isProvided = await gelatoCore.isTaskSpecProvided(taskReceipt);
 
       const provideFundsPayload = await run("abi-encode-withselector", {
         contractname: "GelatoCore",
@@ -1358,7 +1358,7 @@ describe("GelatoCore.Execute", function () {
         }
       );
 
-      // Submit Claim
+      // Submit Task
       const submitTaskPayload = await run("abi-encode-withselector", {
         contractname: "GelatoCore",
         functionname: "submitTask",
@@ -1403,7 +1403,7 @@ describe("GelatoCore.Execute", function () {
       });
       actions.push(submitTaskAction);
 
-      // LogSubmitTask(executor, execClaim.id, hashedExecClaim, execClaim);
+      // LogSubmitTask(executor, taskReceipt.id, hashedTaskReceipt, taskReceipt);
 
       await expect(
         userProxy.multiExecActions(actions, {
@@ -1411,13 +1411,13 @@ describe("GelatoCore.Execute", function () {
         })
       ).to.emit(gelatoCore, "LogSubmitTask");
 
-      // Make ExecClaim executable
+      // Make TaskReceipt executable
       await mockBatchExchange.setValidWithdrawRequest(userProxyAddress);
 
       await expect(
         gelatoCore
           .connect(executor)
-          .exec(execClaim, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
+          .exec(taskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
       ).to.emit(gelatoCore, "LogExecSuccess");
     });
 
@@ -1482,16 +1482,16 @@ describe("GelatoCore.Execute", function () {
         expiryDate: constants.HashZero,
       });
 
-      let execClaim = {
+      let taskReceipt = {
         id: 1,
         userProxy: userProxyAddress,
         task,
       };
 
       // Should return "OK"
-      // const isProvided = await gelatoCore.isTaskSpecProvided(execClaim);
+      // const isProvided = await gelatoCore.isTaskSpecProvided(taskReceipt);
 
-      // LogSubmitTask(executor, execClaim.id, hashedExecClaim, execClaim);
+      // LogSubmitTask(executor, taskReceipt.id, hashedTaskReceipt, taskReceipt);
 
       await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
@@ -1499,7 +1499,7 @@ describe("GelatoCore.Execute", function () {
       );
 
       expect(
-        await gelatoCore.canExec(execClaim, GELATO_MAX_GAS, GELATO_GAS_PRICE)
+        await gelatoCore.canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE)
       ).to.be.equal(
         "ActionTermsNotOk:ActionWithdrawBatchExchange: Sell Token not withdrawable yet"
       );
@@ -1507,22 +1507,22 @@ describe("GelatoCore.Execute", function () {
       await expect(
         gelatoCore
           .connect(executor)
-          .exec(execClaim, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
+          .exec(taskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
       )
         .to.emit(gelatoCore, "LogCanExecFailed")
         .withArgs(
           executorAddress,
-          execClaim.id,
+          taskReceipt.id,
           "ActionTermsNotOk:ActionWithdrawBatchExchange: Sell Token not withdrawable yet"
         );
 
-      // Make ExecClaim executable
+      // Make TaskReceipt executable
       await mockBatchExchange.setValidWithdrawRequest(userProxyAddress);
 
       await expect(
         gelatoCore
           .connect(executor)
-          .exec(execClaim, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
+          .exec(taskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
       )
         .to.emit(gelatoCore, "LogExecFailed")
         .withArgs(
@@ -1616,7 +1616,7 @@ describe("GelatoCore.Execute", function () {
         expiryDate: constants.HashZero,
       });
 
-      let execClaim = {
+      let taskReceipt = {
         id: 1,
         userProxy: userProxyAddress,
         task,
@@ -1630,7 +1630,7 @@ describe("GelatoCore.Execute", function () {
       await expect(
         gelatoCore
           .connect(executor)
-          .exec(execClaim, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
+          .exec(taskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
       )
         .to.emit(gelatoCore, "LogExecFailed")
         .withArgs(

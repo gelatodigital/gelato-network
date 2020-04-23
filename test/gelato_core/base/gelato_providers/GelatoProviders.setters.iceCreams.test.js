@@ -29,9 +29,9 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
   let taskSpec;
   let otherTaskSpec;
 
-  // ExecClaim for isTaskSpecProvided check
-  let execClaim;
-  let otherExecClaim;
+  // TaskReceipt for isTaskSpecProvided check
+  let taskReceipt;
+  let otherTaskReceipt;
 
   let provider;
   let providerAddress;
@@ -57,7 +57,7 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
     [provider] = await ethers.getSigners();
     providerAddress = await provider.getAddress();
 
-    // Construct ExecClaim for unit test isTaskSpecProvided():
+    // Construct TaskReceipt for unit test isTaskSpecProvided():
     // GelatoProvider
     const gelatoProvider = new GelatoProvider({
       addr: providerAddress,
@@ -98,13 +98,13 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
       expiryDate: constants.Zero,
     });
 
-    // ExecClaim
-    execClaim = new ExecClaim({
+    // TaskReceipt
+    taskReceipt = new TaskReceipt({
       id: constants.Zero,
       userProxy: constants.AddressZero,
       task: task,
     });
-    otherExecClaim = new ExecClaim({
+    otherTaskReceipt = new TaskReceipt({
       id: 1,
       userProxy: constants.AddressZero,
       task: otherTask,
@@ -162,8 +162,8 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
         )
       ).to.be.equal("OK");
 
-      // isExecClaimProvided
-      expect(await gelatoCore.isExecClaimProvided(execClaim)).not.to.be.equal(
+      // isTaskReceiptProvided
+      expect(await gelatoCore.isTaskReceiptProvided(taskReceipt)).not.to.be.equal(
         "TaskSpecNotProvided"
       );
 
@@ -177,8 +177,8 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
         )
       ).to.be.equal("TaskSpecNotProvided");
 
-      // isExecClaimProvided
-      expect(await gelatoCore.isExecClaimProvided(otherExecClaim)).to.be.equal(
+      // isTaskReceiptProvided
+      expect(await gelatoCore.isTaskReceiptProvided(otherTaskReceipt)).to.be.equal(
         "TaskSpecNotProvided"
       );
     });
@@ -231,8 +231,8 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
         )
       ).to.be.equal("OK");
 
-      // isExecClaimProvided
-      expect(await gelatoCore.isExecClaimProvided(execClaim)).not.to.be.equal(
+      // isTaskReceiptProvided
+      expect(await gelatoCore.isTaskReceiptProvided(taskReceipt)).not.to.be.equal(
         "TaskSpecNotProvided"
       );
 
@@ -254,9 +254,9 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
         )
       ).to.be.equal("OK");
 
-      // isExecClaimProvided;
+      // isTaskReceiptProvided;
       expect(
-        await gelatoCore.isExecClaimProvided(otherExecClaim)
+        await gelatoCore.isTaskReceiptProvided(otherTaskReceipt)
       ).not.to.be.equal("TaskSpecNotProvided");
     });
 
@@ -308,8 +308,8 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
         )
       ).to.be.equal("OK");
 
-      // isExecClaimProvided
-      expect(await gelatoCore.isExecClaimProvided(execClaim)).not.to.be.equal(
+      // isTaskReceiptProvided
+      expect(await gelatoCore.isTaskReceiptProvided(taskReceipt)).not.to.be.equal(
         "TaskSpecNotProvided"
       );
 
@@ -323,8 +323,8 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
         )
       ).to.be.equal("TaskSpecNotProvided");
 
-      // isExecClaimProvided
-      expect(await gelatoCore.isExecClaimProvided(otherExecClaim)).to.be.equal(
+      // isTaskReceiptProvided
+      expect(await gelatoCore.isTaskReceiptProvided(otherTaskReceipt)).to.be.equal(
         "TaskSpecNotProvided"
       );
     });
@@ -384,8 +384,8 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
         )
       ).to.be.equal("TaskSpecNotProvided");
 
-      // isExecClaimProvided
-      expect(await gelatoCore.isExecClaimProvided(execClaim)).to.be.equal(
+      // isTaskReceiptProvided
+      expect(await gelatoCore.isTaskReceiptProvided(taskReceipt)).to.be.equal(
         "TaskSpecNotProvided"
       );
 
@@ -407,9 +407,9 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
         )
       ).to.be.equal("OK");
 
-      // isExecClaimProvided
+      // isTaskReceiptProvided
       expect(
-        await gelatoCore.isExecClaimProvided(otherExecClaim)
+        await gelatoCore.isTaskReceiptProvided(otherTaskReceipt)
       ).not.to.be.equal("TaskSpecNotProvided");
     });
 

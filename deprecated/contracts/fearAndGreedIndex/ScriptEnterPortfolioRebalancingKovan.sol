@@ -40,7 +40,7 @@ contract ScriptEnterPortfolioRebalancingKovan is
         // Whitelist GelatoCore as module on delegatecaller (Gnosis Safe Proxy)
         enableGelatoCoreModule(_gelatoCore);
 
-        // 2. Execute ActionChainedRebalancePortfolioKovan.chainedAction => Swaps ETH into DAI & creates new claim
+        // 2. Execute ActionChainedRebalancePortfolioKovan.chainedAction => Swaps ETH into DAI & creates new task
         chainedAction(
             _selectedProviderAndExecutor,
             _conditionAndAction

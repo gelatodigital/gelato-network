@@ -2,7 +2,7 @@ pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
 import "../interfaces/IGnosisSafe.sol";
-import { IGelatoCore, ExecClaim } from "../../../gelato_core/interfaces/IGelatoCore.sol";
+import { IGelatoCore, TaskReceipt } from "../../../gelato_core/interfaces/IGelatoCore.sol";
 
 // For debugging purposes we do not revert if anything goes wrong
 //  so that we can emit the LogFailure event. This is necessary because the
@@ -20,7 +20,7 @@ contract ScriptGnosisSafeEnableGelatoCoreAndSubmit {
     event LogFailure(string error);
 
     /// @dev This function should be delegatecalled
-    function enableModuleAndSubmit(address _gelatoCore, ExecClaim memory _ec)
+    function enableModuleAndSubmit(address _gelatoCore, TaskReceipt memory _TR)
         public
     {
         // Whitelist GelatoCore as module on delegatecaller (Gnosis Safe Proxy)
@@ -32,7 +32,7 @@ contract ScriptGnosisSafeEnableGelatoCoreAndSubmit {
         }
 
         // SubmitTask on GelatoCore from delegatecaller (Gnosis Safe Proxy)
-        try IGelatoCore(_gelatoCore).submitTask(_ec.task) {
+        try IGelatoCore(_gelatoCore).submitTask(_TR.task) {
         } catch Error(string memory error) {
             emit LogFailure(error);
         } catch {

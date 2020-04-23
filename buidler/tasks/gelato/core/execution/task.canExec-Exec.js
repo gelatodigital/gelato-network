@@ -5,7 +5,7 @@ export default task(
   "gc-canexec-exec",
   `Calls GelatoCore.canExec prior to .exec on [--network] (default: ${defaultNetwork})`
 )
-  .addPositionalParam("execclaimid")
+  .addPositionalParam("taskreceiptid")
   .addOptionalPositionalParam(
     "executorindex",
     "which mnemonic index should be selected for gelatoExecutor msg.sender (default index 1)",
@@ -13,7 +13,7 @@ export default task(
     types.int
   )
   .addOptionalParam(
-    "execclaim",
+    "taskreceipt",
     "Supply LogSubmitTask values in an obj"
   )
   .addOptionalParam(

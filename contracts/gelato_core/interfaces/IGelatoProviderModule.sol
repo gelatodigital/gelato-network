@@ -1,15 +1,15 @@
 pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
-import { Action, ExecClaim } from "./IGelatoCore.sol";
+import { Action, TaskReceipt } from "./IGelatoCore.sol";
 
 interface IGelatoProviderModule {
 
-    /// @notice Check if provider agrees to pay for inputted execution claim
+    /// @notice Check if provider agrees to pay for inputted task receipt
     /// @dev Enables arbitrary checks by provider
-    /// @param _ec Execution Claim
+    /// @param _TR Task Receipt
     /// @return "OK" if provider agrees
-    function isProvided(ExecClaim calldata _ec)
+    function isProvided(TaskReceipt calldata _TR)
         external
         view
         returns(string memory);

@@ -8,8 +8,8 @@ import "./gelato_providers/collection.tasks.gelato-provider";
 // GelatoExecutors
 import "./gelato_executors/collection.tasks.gelato-executor";
 
-// === ExecClaims ===
-import "./exec_claims/collection.tasks.exec-claims";
+// === TaskReceipts ===
+import "./task_receipts/collection.tasks.task-receipts";
 
 // === Execution Tasks ===
 import "./execution/collection.tasks.execution";

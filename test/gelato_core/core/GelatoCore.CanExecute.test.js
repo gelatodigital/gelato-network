@@ -34,7 +34,7 @@ describe("GelatoCore.Execute", function () {
   let txResponse;
   let providerModuleGelatoUserProxy;
   let gelatoCore;
-  let execClaim;
+  let taskReceipt;
   let gelatoGasPriceOracle;
   let gelatoProvider;
   let condition;
@@ -173,7 +173,7 @@ describe("GelatoCore.Execute", function () {
       expiryDate: constants.HashZero,
     });
 
-    execClaim = {
+    taskReceipt = {
       id: 1,
       userProxy: userProxyAddress,
       task,
@@ -191,7 +191,7 @@ describe("GelatoCore.Execute", function () {
       const canExecReturn = await gelatoCore
         .connect(executor)
         .canExec(
-          execClaim,
+          taskReceipt,
           GELATO_MAX_GAS,
           ethers.utils.bigNumberify("800", "Gwei")
         );
@@ -207,7 +207,7 @@ describe("GelatoCore.Execute", function () {
       const canExecReturn = await gelatoCore
         .connect(executor)
         .canExec(
-          execClaim,
+          taskReceipt,
           GELATO_MAX_GAS,
           ethers.utils.parseUnits("300", "ether")
         );
@@ -215,7 +215,7 @@ describe("GelatoCore.Execute", function () {
       expect(canExecReturn).to.equal("ProviderIlliquidity");
     });
 
-    it("#3: CanExec - Exec Claim expired", async function () {
+    it("#3: CanExec - Task Receipt expired", async function () {
       let oldBlock = await ethers.provider.getBlock();
 
       const lifespan = 420;
@@ -228,7 +228,7 @@ describe("GelatoCore.Execute", function () {
         expiryDate,
       });
 
-      let execClaim2 = {
+      let taskReceipt2 = {
         id: 2,
         userProxy: userProxyAddress,
         task: task2,
@@ -246,8 +246,8 @@ describe("GelatoCore.Execute", function () {
       expect(
         await gelatoCore
           .connect(executor)
-          .canExec(execClaim2, GELATO_MAX_GAS, GELATO_GAS_PRICE)
-      ).to.equal("ExecClaimExpired");
+          .canExec(taskReceipt2, GELATO_MAX_GAS, GELATO_GAS_PRICE)
+      ).to.equal("TaskReceiptExpired");
     });
 
     it("#4: CanExec - Fail due to provider module check failure, not whitelisted action)", async function () {
@@ -258,7 +258,7 @@ describe("GelatoCore.Execute", function () {
         expiryDate: constants.HashZero,
       });
 
-      let execClaim2 = {
+      let taskReceipt2 = {
         id: 2,
         userProxy: userProxyAddress,
         task: task2,
@@ -270,7 +270,7 @@ describe("GelatoCore.Execute", function () {
 
       const canExecReturn = await gelatoCore
         .connect(executor)
-        .canExec(execClaim2, GELATO_MAX_GAS, GELATO_GAS_PRICE);
+        .canExec(taskReceipt2, GELATO_MAX_GAS, GELATO_GAS_PRICE);
 
       expect(canExecReturn).to.equal("taskSpecGasPriceCeil-OR-notProvided");
     });
@@ -278,7 +278,7 @@ describe("GelatoCore.Execute", function () {
     it("#5: CanExec - Return Ok when called via executor)", async function () {
       const canExecReturn = await gelatoCore
         .connect(executor)
-        .canExec(execClaim, GELATO_MAX_GAS, GELATO_GAS_PRICE);
+        .canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE);
 
       expect(canExecReturn).to.equal("OK");
     });
@@ -286,7 +286,7 @@ describe("GelatoCore.Execute", function () {
     it("#6: CanExec - Return InvalidExecutor when called NOT via executor)", async function () {
       const canExecReturn = await gelatoCore
         .connect(provider)
-        .canExec(execClaim, GELATO_MAX_GAS, GELATO_GAS_PRICE);
+        .canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE);
 
       expect(canExecReturn).to.equal("InvalidExecutor");
     });

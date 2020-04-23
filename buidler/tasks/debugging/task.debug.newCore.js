@@ -87,7 +87,7 @@ export default task("gc-debug-newcore")
       const conditionData = constants.HashZero;
       const actionData = constants.HashZero;
 
-      const execClaim = {
+      const taskReceipt = {
         id: constants.HashZero,
         provider: testSigner,
         providerModule: providerModuleGelatoUserProxy.address,
@@ -109,7 +109,7 @@ export default task("gc-debug-newcore")
 
       let submitTaskTx;
       try {
-        submitTaskTx = await gelatoUserProxy.submitTask(execClaim, testSigner);
+        submitTaskTx = await gelatoUserProxy.submitTask(taskReceipt, testSigner);
       } catch (error) {
         console.error(`\n gc-debug-newcore: submitTask\n`, error);
         throw new Error(`\n gelatoUserProxy.submitTask: PRE tx error \n`);
@@ -137,26 +137,26 @@ export default task("gc-debug-newcore")
       } */
 
       // === Execution ===
-      execClaim.id = utils.bigNumberify("1");
-      execClaim.userProxy = gelatoUserProxy.address;
+      taskReceipt.id = utils.bigNumberify("1");
+      taskReceipt.userProxy = gelatoUserProxy.address;
       const iFace = await run("ethers-interface-new", {
         contractname: "GelatoCore",
       });
       console.log(iFace.events.LogSubmitTask);
       await sleep(100000);
-      const encodedExecClaim = iFace.events.LogSubmitTask.execClaim.encode(
-        execClaim
+      const encodedTaskReceipt = iFace.events.LogSubmitTask.taskReceipt.encode(
+        taskReceipt
       );
-      console.log(encodedExecClaim);
+      console.log(encodedTaskReceipt);
       await sleep(100000);
-      const execClaimHash =
+      const taskReceiptHash =
         "0x51992e18c92053b7677003e2a86c5077a7ace82639873e8e63ef55ca806188fc";
       const gelatoGasPrice = await gelatoCore.gelatoGasPrice();
       const gelatoMaxGas = await gelatoCore.gelatoMaxGas();
 
       const canExecResult = await gelatoCore.canExec(
-        execClaim,
-        execClaimHash,
+        taskReceipt,
+        taskReceiptHash,
         gelatoGasPrice,
         gelatoMaxGas
       );

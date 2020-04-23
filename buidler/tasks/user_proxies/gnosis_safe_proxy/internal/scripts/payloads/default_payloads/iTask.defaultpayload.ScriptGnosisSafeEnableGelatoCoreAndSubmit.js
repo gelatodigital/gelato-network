@@ -7,14 +7,14 @@ export default internalTask(
   .addPositionalParam("conditionname")
   .addPositionalParam("actionname")
   .addOptionalPositionalParam(
-    "execclaimexpirydate",
+    "taskreceiptexpirydate",
     "Defaults to 0 for selected gelatoExecutor's maximum",
     0,
     types.int
   )
   .addFlag("log")
   .setAction(
-    async ({ conditionname, actionname, execclaimexpirydate, log }) => {
+    async ({ conditionname, actionname, taskreceiptexpirydate, log }) => {
       try {
         const gelatoProvider = await run("bre-config", {
           addressbookcategory: "gelatoProvider",
@@ -47,7 +47,7 @@ export default internalTask(
             [conditionAddress, actionAddress],
             conditionData,
             actionData,
-            execclaimexpirydate
+            taskreceiptexpirydate
           ]
         });
         if (log) {
@@ -58,7 +58,7 @@ export default internalTask(
              \n Executor    ${gelatoExecutor}\
              \n Condition:  ${conditionname} at ${conditionAddress}\
              \n Action:     ${actionname} at ${actionAddress}\
-             \n ExpiryDate: ${execclaimexpirydate}\
+             \n ExpiryDate: ${taskreceiptexpirydate}\
              \n Payload:\n ${payload}\n`
           );
         }

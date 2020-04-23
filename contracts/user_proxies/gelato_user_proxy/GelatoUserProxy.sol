@@ -3,7 +3,7 @@ pragma experimental ABIEncoderV2;
 
 import { IGelatoUserProxy } from "./interfaces/IGelatoUserProxy.sol";
 import {
-    Action, Operation, Task, ExecClaim, IGelatoCore
+    Action, Operation, Task, TaskReceipt, IGelatoCore
 } from "../../gelato_core/interfaces/IGelatoCore.sol";
 
 contract GelatoUserProxy is IGelatoUserProxy {
@@ -60,21 +60,21 @@ contract GelatoUserProxy is IGelatoUserProxy {
         for (uint i = 0; i < _tasks.length; i++) submitTask(_tasks[i]);
     }
 
-    function cancelExecClaim(ExecClaim memory _ec) public override onlyUser {
-        try IGelatoCore(gelatoCore).cancelExecClaim(_ec) {
+    function cancelTask(TaskReceipt memory _TR) public override onlyUser {
+        try IGelatoCore(gelatoCore).cancelTask(_TR) {
         } catch Error(string memory err) {
-            revert(string(abi.encodePacked("GelatoUserProxy.cancelExecClaim:", err)));
+            revert(string(abi.encodePacked("GelatoUserProxy.cancelTask:", err)));
         } catch {
-            revert("GelatoUserProxy.cancelExecClaim:undefinded");
+            revert("GelatoUserProxy.cancelTask:undefinded");
         }
     }
 
-    function batchCancelExecClaims(ExecClaim[] memory _ecs) public override onlyUser {
-        try IGelatoCore(gelatoCore).batchCancelExecClaims(_ecs) {
+    function batchCancelTasks(TaskReceipt[] memory _TRs) public override onlyUser {
+        try IGelatoCore(gelatoCore).batchCancelTasks(_TRs) {
         } catch Error(string memory err) {
-            revert(string(abi.encodePacked("GelatoUserProxy.batchCancelExecClaims:", err)));
+            revert(string(abi.encodePacked("GelatoUserProxy.batchCancelTasks:", err)));
         } catch {
-            revert("GelatoUserProxy.batchCancelExecClaims:undefinded");
+            revert("GelatoUserProxy.batchCancelTasks:undefinded");
         }
     }
 

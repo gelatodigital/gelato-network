@@ -8,7 +8,7 @@ import { SafeMath } from "../external/SafeMath.sol";
 import { Math } from "../external/Math.sol";
 import { IGelatoProviderModule } from "./interfaces/IGelatoProviderModule.sol";
 import { ProviderModuleSet } from "../libraries/ProviderModuleSet.sol";
-import { Action, Operation, ExecClaim } from "./interfaces/IGelatoCore.sol";
+import { Action, Operation, TaskReceipt } from "./interfaces/IGelatoCore.sol";
 import { GelatoString } from "../libraries/GelatoString.sol";
 import { IGelatoCondition } from "../gelato_conditions/IGelatoCondition.sol";
 
@@ -57,20 +57,20 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     }
 
     // IGelatoProviderModule: GelatoCore submitTask/canExec Gate
-    function providerModuleChecks(ExecClaim memory _ec)
+    function providerModuleChecks(TaskReceipt memory _TR)
         public
         view
         override
         returns(string memory)
     {
-        if (!isModuleProvided(_ec.task.provider.addr, _ec.task.provider.module))
+        if (!isModuleProvided(_TR.task.provider.addr, _TR.task.provider.module))
             return "InvalidProviderModule";
 
         IGelatoProviderModule providerModule = IGelatoProviderModule(
-            _ec.task.provider.module
+            _TR.task.provider.module
         );
 
-        try providerModule.isProvided(_ec) returns(string memory res) {
+        try providerModule.isProvided(_TR) returns(string memory res) {
             return res;
         } catch {
             return "GelatoProviders.providerModuleChecks";
@@ -78,28 +78,28 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     }
 
     // GelatoCore: combined submitTask Gate
-    function isExecClaimProvided(ExecClaim memory _ec)
+    function isTaskReceiptProvided(TaskReceipt memory _TR)
         public
         view
         override
         returns(string memory res)
     {
-        res = isTaskSpecProvided(_ec.task.provider.addr, _ec.task.condition.inst, _ec.task.actions);
-        if (res.startsWithOk()) return providerModuleChecks(_ec);
+        res = isTaskSpecProvided(_TR.task.provider.addr, _TR.task.condition.inst, _TR.task.actions);
+        if (res.startsWithOk()) return providerModuleChecks(_TR);
     }
 
     // GelatoCore canExec Gate
-    function providerCanExec(ExecClaim memory _ec, uint256 _gelatoGasPrice)
+    function providerCanExec(TaskReceipt memory _TR, uint256 _gelatoGasPrice)
         public
         view
         override
         returns(string memory)
     {
         // Will only return if a) action is not whitelisted & b) gelatoGasPrice is higher than gasPriceCeiling
-        bytes32 taskSpecHash = taskSpecHash(_ec.task.condition.inst, _ec.task.actions);
-        if (_gelatoGasPrice > taskSpecGasPriceCeil[_ec.task.provider.addr][taskSpecHash])
+        bytes32 taskSpecHash = taskSpecHash(_TR.task.condition.inst, _TR.task.actions);
+        if (_gelatoGasPrice > taskSpecGasPriceCeil[_TR.task.provider.addr][taskSpecHash])
             return "taskSpecGasPriceCeil-OR-notProvided";
-        return providerModuleChecks(_ec);
+        return providerModuleChecks(_TR);
     }
 
     // Provider Funding

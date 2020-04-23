@@ -1,7 +1,7 @@
 pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
-import { IGelatoCore, Task, ExecClaim } from "./interfaces/IGelatoCore.sol";
+import { IGelatoCore, Task, TaskReceipt } from "./interfaces/IGelatoCore.sol";
 import { GelatoExecutors } from "./GelatoExecutors.sol";
 import { SafeMath } from "../external/SafeMath.sol";
 import { IGelatoCondition } from "../gelato_conditions/IGelatoCondition.sol";
@@ -10,26 +10,26 @@ import { IGelatoProviderModule } from "./interfaces/IGelatoProviderModule.sol";
 
 /// @title GelatoCore
 /// @author Luis Schliesske & Hilmar Orth
-/// @notice Exec Claim: submission, validation, execution, charging and cancellation
+/// @notice Task Receipt: submission, validation, execution, charging and cancellation
 /// @dev Find all NatSpecs inside IGelatoCore
 contract GelatoCore is IGelatoCore, GelatoExecutors {
 
     using SafeMath for uint256;
 
     // ================  STATE VARIABLES ======================================
-    // ExecClaimIds
-    uint256 public override currentExecClaimId;
-    // execClaim.id => execClaimHash
-    mapping(uint256 => bytes32) public override execClaimHash;
+    // TaskReceiptIds
+    uint256 public override currentTaskReceiptId;
+    // taskReceipt.id => taskReceiptHash
+    mapping(uint256 => bytes32) public override taskReceiptHash;
 
     // ================  SUBMIT ==============================================
     function submitTask(Task memory _task) public override { // submitTask
-        // GelatoCore will generate an ExecClaim from the _task
-        ExecClaim memory execClaim;
-        execClaim.task = _task;
+        // GelatoCore will generate an TaskReceipt from the _task
+        TaskReceipt memory taskReceipt;
+        taskReceipt.task = _task;
 
         // Smart Contract Accounts ONLY
-        execClaim.userProxy = msg.sender;
+        taskReceipt.userProxy = msg.sender;
 
         // EXECUTOR CHECKS
         address executor = executorByProvider[_task.provider.addr];
@@ -48,28 +48,28 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // Check Provider details
         string memory isProvided;
-        if (msg.sender == _task.provider.addr) isProvided = providerModuleChecks(execClaim);
-        else isProvided = isExecClaimProvided(execClaim);
+        if (msg.sender == _task.provider.addr) isProvided = providerModuleChecks(taskReceipt);
+        else isProvided = isTaskReceiptProvided(taskReceipt);
         require(
             isProvided.startsWithOk(),
             string(abi.encodePacked("GelatoCore.submitTask.isProvided:", isProvided))
         );
 
-        // Submit new execClaim
-        currentExecClaimId++;
-        execClaim.id = currentExecClaimId;
+        // Submit new taskReceipt
+        currentTaskReceiptId++;
+        taskReceipt.id = currentTaskReceiptId;
 
-        // ExecClaim Hashing
-        bytes32 hashedExecClaim = hashExecClaim(execClaim);
+        // TaskReceipt Hashing
+        bytes32 hashedTaskReceipt = hashTaskReceipt(taskReceipt);
 
-        // ExecClaim Hash registration
-        execClaimHash[execClaim.id] = hashedExecClaim;
+        // TaskReceipt Hash registration
+        taskReceiptHash[taskReceipt.id] = hashedTaskReceipt;
 
-        emit LogSubmitTask(executor, execClaim.id, hashedExecClaim, execClaim);
+        emit LogSubmitTask(executor, taskReceipt.id, hashedTaskReceipt, taskReceipt);
     }
 
     // ================  CAN EXECUTE EXECUTOR API ============================
-    function canExec(ExecClaim memory _ec, uint256 _gelatoMaxGas, uint256 _execTxGasPrice)
+    function canExec(TaskReceipt memory _TR, uint256 _gelatoMaxGas, uint256 _execTxGasPrice)
         public
         view
         override
@@ -77,22 +77,22 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     {
         if (_execTxGasPrice != _getGelatoGasPrice()) return "ExecTxGasPriceNotGelatoGasPrice";
 
-        if (!isProviderLiquid(_ec.task.provider.addr, _gelatoMaxGas, _execTxGasPrice))
+        if (!isProviderLiquid(_TR.task.provider.addr, _gelatoMaxGas, _execTxGasPrice))
             return "ProviderIlliquidity";
 
-        if (_ec.userProxy != _ec.task.provider.addr) {
-            string memory res = providerCanExec(_ec, _execTxGasPrice);
+        if (_TR.userProxy != _TR.task.provider.addr) {
+            string memory res = providerCanExec(_TR, _execTxGasPrice);
             if (!res.startsWithOk()) return res;
         }
 
-        bytes32 hashedExecClaim = hashExecClaim(_ec);
-        if (execClaimHash[_ec.id] != hashedExecClaim) return "InvalidExecClaimHash";
+        bytes32 hashedTaskReceipt = hashTaskReceipt(_TR);
+        if (taskReceiptHash[_TR.id] != hashedTaskReceipt) return "InvalidTaskReceiptHash";
 
-        if (_ec.task.expiryDate != 0 && _ec.task.expiryDate <= now) return "ExecClaimExpired";
+        if (_TR.task.expiryDate != 0 && _TR.task.expiryDate <= now) return "TaskReceiptExpired";
 
         // CHECK Condition for user proxies
-        if (_ec.task.condition.inst != IGelatoCondition(0)) {
-            try _ec.task.condition.inst.ok(_ec.task.condition.data)
+        if (_TR.task.condition.inst != IGelatoCondition(0)) {
+            try _TR.task.condition.inst.ok(_TR.task.condition.data)
                 returns(string memory condition)
             {
                 if (!condition.startsWithOk())
@@ -105,11 +105,11 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         }
 
         // CHECK Action Conditions
-        for (uint i; i < _ec.task.actions.length; i++) {
+        for (uint i; i < _TR.task.actions.length; i++) {
             // Only check termsOk if specified, else continue
-            if (!_ec.task.actions[i].termsOkCheck) continue;
+            if (!_TR.task.actions[i].termsOkCheck) continue;
 
-            try IGelatoAction(_ec.task.actions[i].inst).termsOk(_ec.task.actions[i].data)
+            try IGelatoAction(_TR.task.actions[i].inst).termsOk(_TR.task.actions[i].data)
                 returns(string memory actionTermsOk)
             {
                 if (!actionTermsOk.startsWithOk())
@@ -123,7 +123,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // Executor Validation
         if (msg.sender == address(this)) return OK;
-        else if (msg.sender == executorByProvider[_ec.task.provider.addr]) return OK;
+        else if (msg.sender == executorByProvider[_TR.task.provider.addr]) return OK;
         else return "InvalidExecutor";
     }
 
@@ -132,7 +132,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     enum ExecutorPay { Reward, Refund }
 
     // Execution Entry Point: tx.gasprice must be _getGelatoGasPrice()
-    function exec(ExecClaim memory _ec) public override {
+    function exec(TaskReceipt memory _TR) public override {
 
         // Store startGas for gas-consumption based cost and payout calcs
         uint256 startGas = gasleft();
@@ -140,7 +140,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         // CHECKS: all further checks are done during this.executionWrapper.canExec()
         require(startGas > internalGasRequirement, "GelatoCore.exec: Insufficient gas sent");
         require(
-            msg.sender == executorByProvider[_ec.task.provider.addr],
+            msg.sender == executorByProvider[_TR.task.provider.addr],
             "GelatoCore.exec: Invalid Executor"
         );
 
@@ -150,7 +150,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         ExecutionResult executionResult;
         string memory reason;
 
-        try this.executionWrapper{gas: gasleft() - internalGasRequirement}(_ec, _gelatoMaxGas)
+        try this.executionWrapper{gas: gasleft() - internalGasRequirement}(_TR, _gelatoMaxGas)
             returns(ExecutionResult _executionResult, string memory _reason)
         {
             executionResult = _executionResult;
@@ -163,85 +163,85 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         }
 
         if (executionResult == ExecutionResult.ExecSuccess) {
-            // END-1: SUCCESS => ExecClaim Deletion & Reward
-            delete execClaimHash[_ec.id];
+            // END-1: SUCCESS => TaskReceipt Deletion & Reward
+            delete taskReceiptHash[_TR.id];
             (uint256 executorSuccessFee, uint256 sysAdminSuccessFee) = _processProviderPayables(
-                _ec.task.provider.addr,
+                _TR.task.provider.addr,
                 ExecutorPay.Reward,
                 startGas,
                 _gelatoMaxGas,
                 tx.gasprice  // == gelatoGasPrice
             );
-            emit LogExecSuccess(msg.sender, _ec.id, executorSuccessFee, sysAdminSuccessFee);
+            emit LogExecSuccess(msg.sender, _TR.id, executorSuccessFee, sysAdminSuccessFee);
 
         } else if (executionResult == ExecutionResult.CanExecFailed) {
-            // END-2: CanExecFailed => No ExecClaim Deletion & No Refund
-            emit LogCanExecFailed(msg.sender, _ec.id, reason);
+            // END-2: CanExecFailed => No TaskReceipt Deletion & No Refund
+            emit LogCanExecFailed(msg.sender, _TR.id, reason);
 
         } else if (executionResult == ExecutionResult.ExecFailed) {
-            // END-3.1: ExecFailed NO gelatoMaxGas => No ExecClaim Deletion & No Refund
-            if (startGas < _gelatoMaxGas) emit LogExecFailed(msg.sender, _ec.id, 0, reason);
+            // END-3.1: ExecFailed NO gelatoMaxGas => No TaskReceipt Deletion & No Refund
+            if (startGas < _gelatoMaxGas) emit LogExecFailed(msg.sender, _TR.id, 0, reason);
             else {
                 // END-3.2 ExecFailed BUT gelatoMaxGas was used
-                //  => ExecClaim Deletion & Refund
-                delete execClaimHash[_ec.id];
+                //  => TaskReceipt Deletion & Refund
+                delete taskReceiptHash[_TR.id];
                 (uint256 executorRefund,) = _processProviderPayables(
-                    _ec.task.provider.addr,
+                    _TR.task.provider.addr,
                     ExecutorPay.Refund,
                     startGas,
                     _gelatoMaxGas,
                     tx.gasprice  // == gelatoGasPrice
                 );
-                emit LogExecFailed(msg.sender, _ec.id, executorRefund, reason);
+                emit LogExecFailed(msg.sender, _TR.id, executorRefund, reason);
             }
 
         } else {
             // executionResult == ExecutionResult.ExecutionRevert
-            // END-4.1: ExecutionReverted NO gelatoMaxGas => No ExecClaim Deletion & No Refund
-            if (startGas < _gelatoMaxGas) emit LogExecutionRevert(msg.sender, _ec.id, 0);
+            // END-4.1: ExecutionReverted NO gelatoMaxGas => No TaskReceipt Deletion & No Refund
+            if (startGas < _gelatoMaxGas) emit LogExecutionRevert(msg.sender, _TR.id, 0);
             else {
                 // END-4.2: ExecutionReverted BUT gelatoMaxGas was used
-                //  => ExecClaim Deletion & Refund
-                delete execClaimHash[_ec.id];
+                //  => TaskReceipt Deletion & Refund
+                delete taskReceiptHash[_TR.id];
                 (uint256 executorRefund,) = _processProviderPayables(
-                    _ec.task.provider.addr,
+                    _TR.task.provider.addr,
                     ExecutorPay.Refund,
                     startGas,
                     _gelatoMaxGas,
                      tx.gasprice  // == gelatoGasPrice
                 );
-                emit LogExecutionRevert(msg.sender, _ec.id, executorRefund);
+                emit LogExecutionRevert(msg.sender, _TR.id, executorRefund);
             }
         }
     }
 
     // Used by GelatoCore.exec(), to handle Out-Of-Gas from execution gracefully
-    function executionWrapper(ExecClaim memory execClaim, uint256 _gelatoMaxGas)
+    function executionWrapper(TaskReceipt memory taskReceipt, uint256 _gelatoMaxGas)
         public
         returns(ExecutionResult, string memory)
     {
         require(msg.sender == address(this), "GelatoCore.executionWrapper:onlyGelatoCore");
 
         // canExec()
-        string memory canExecRes = canExec(execClaim, _gelatoMaxGas, tx.gasprice);
+        string memory canExecRes = canExec(taskReceipt, _gelatoMaxGas, tx.gasprice);
         if (!canExecRes.startsWithOk()) return (ExecutionResult.CanExecFailed, canExecRes);
 
         // _exec()
-        (bool success, string memory error) = _exec(execClaim);
+        (bool success, string memory error) = _exec(taskReceipt);
         if (!success) return (ExecutionResult.ExecFailed, error);
 
         // Execution Success: Executor REWARD
         return (ExecutionResult.ExecSuccess, "");
     }
 
-    function _exec(ExecClaim memory _ec)
+    function _exec(TaskReceipt memory _TR)
         private
         returns(bool success, string memory error)
     {
         // INTERACTIONS
         // execPayload from ProviderModule
         bytes memory execPayload;
-        try IGelatoProviderModule(_ec.task.provider.module).execPayload(_ec.task.actions)
+        try IGelatoProviderModule(_TR.task.provider.module).execPayload(_TR.task.actions)
             returns(bytes memory _execPayload)
         {
             execPayload = _execPayload;
@@ -253,7 +253,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // Execution via UserProxy
         bytes memory revertMsg;
-        if (execPayload.length >= 4) (success, revertMsg) = _ec.userProxy.call(execPayload);
+        if (execPayload.length >= 4) (success, revertMsg) = _TR.userProxy.call(execPayload);
         else if (bytes(error).length == 0) error = "GelatoCore._exec.execPayload: invalid";
 
         // FAILURE
@@ -317,25 +317,25 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     }
 
     // ================  CANCEL USER / EXECUTOR API ============================
-    function cancelExecClaim(ExecClaim memory _ec) public override {
+    function cancelTask(TaskReceipt memory _TR) public override {
         // Checks
-        require (msg.sender == _ec.userProxy || msg.sender == _ec.task.provider.addr, "GelatoCore.cancelExecClaim: sender");
+        require (msg.sender == _TR.userProxy || msg.sender == _TR.task.provider.addr, "GelatoCore.cancelTask: sender");
         // Effects
-        bytes32 hashedExecClaim = hashExecClaim(_ec);
+        bytes32 hashedTaskReceipt = hashTaskReceipt(_TR);
         require(
-            hashedExecClaim == execClaimHash[_ec.id],
-            "GelatoCore.cancelExecClaim: invalid execClaimHash"
+            hashedTaskReceipt == taskReceiptHash[_TR.id],
+            "GelatoCore.cancelTask: invalid taskReceiptHash"
         );
-        delete execClaimHash[_ec.id];
-        emit LogExecClaimCancelled(_ec.id);
+        delete taskReceiptHash[_TR.id];
+        emit LogTaskCancelled(_TR.id);
     }
 
-    function batchCancelExecClaims(ExecClaim[] memory _execClaims) public override {
-        for (uint i; i < _execClaims.length; i++) cancelExecClaim(_execClaims[i]);
+    function batchCancelTasks(TaskReceipt[] memory _taskReceipts) public override {
+        for (uint i; i < _taskReceipts.length; i++) cancelTask(_taskReceipts[i]);
     }
 
     // Helper
-    function hashExecClaim(ExecClaim memory _ec) public pure override returns(bytes32) {
-        return keccak256(abi.encode(_ec));
+    function hashTaskReceipt(TaskReceipt memory _TR) public pure override returns(bytes32) {
+        return keccak256(abi.encode(_TR));
     }
 }

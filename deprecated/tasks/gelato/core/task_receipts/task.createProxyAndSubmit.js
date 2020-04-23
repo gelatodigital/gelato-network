@@ -243,7 +243,7 @@ export default task(
           [taskArgs.conditionaddress, taskArgs.actionaddress],
           taskArgs.conditiondata,
           taskArgs.actiondata,
-          taskArgs.execclaimexpirydate,
+          taskArgs.taskreceiptexpirydate,
           { value: utils.parseEther(taskArgs.funding), gasLimit: 3000000 }
         );
       } else {
@@ -254,7 +254,7 @@ export default task(
           [taskArgs.conditionaddress, taskArgs.actionaddress],
           taskArgs.conditiondata,
           taskArgs.actiondata,
-          taskArgs.execclaimexpirydate,
+          taskArgs.taskreceiptexpirydate,
           { value: utils.parseEther(taskArgs.funding), gasLimit: 3000000 }
         );
       }

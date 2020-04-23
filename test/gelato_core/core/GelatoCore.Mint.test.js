@@ -216,7 +216,7 @@ describe("Gelato Core - Task Submission ", function () {
   });
 
   describe("GelatoCore.submitTask Tests", function () {
-    it("#1: Successfully submit whitelisted executionClaim", async function () {
+    it("#1: Successfully submit whitelisted taskReceipt", async function () {
       const actionInputs = {
         user: sellerAddress,
         userProxy: userProxyAddress,
@@ -260,7 +260,7 @@ describe("Gelato Core - Task Submission ", function () {
         gelatoCore,
         "LogSubmitTask"
       );
-      // .withArgs(executorAddress, 1, execClaimHash, execClaimArray);
+      // .withArgs(executorAddress, 1, taskReceiptHash, taskReceiptArray);
     });
 
     it("#2: Submitting reverts => Action not whitelisted", async function () {
@@ -308,8 +308,8 @@ describe("Gelato Core - Task Submission ", function () {
         "GelatoUserProxy.submitTask:GelatoCore.submitTask.isProvided:TaskSpecNotProvided"
       );
 
-      // CouldNt get the execClaimHash to be computed off-chain
-      // .withArgs(executorAddress, 1, execClaimHash, execClaim);
+      // CouldNt get the taskReceiptHash to be computed off-chain
+      // .withArgs(executorAddress, 1, taskReceiptHash, taskReceipt);
     });
 
     it("#3: Submitting reverts => Condition not whitelisted", async function () {
@@ -614,7 +614,7 @@ describe("Gelato Core - Task Submission ", function () {
         }
       );
 
-      // Submit Claim
+      // Submit Task
       const submitTaskPayload = await run("abi-encode-withselector", {
         contractname: "GelatoCore",
         functionname: "submitTask",
@@ -747,7 +747,7 @@ describe("Gelato Core - Task Submission ", function () {
         }
       );
 
-      // Submit Claim
+      // Submit Task
       const submitTaskPayload = await run("abi-encode-withselector", {
         contractname: "GelatoCore",
         functionname: "submitTask",

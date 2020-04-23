@@ -309,7 +309,7 @@ describe("GelatoCore.Execute", function () {
         expiryDate: constants.HashZero,
       });
 
-      let execClaim = {
+      let taskReceipt = {
         id: 1,
         userProxy: userProxyAddress,
         task,
@@ -329,7 +329,7 @@ describe("GelatoCore.Execute", function () {
       await expect(
         gelatoCore
           .connect(executor)
-          .exec(execClaim, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
+          .exec(taskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
       ).to.emit(gelatoCore, "LogExecSuccess");
 
       const executorStakeAfter = await gelatoCore.executorStake(
@@ -424,7 +424,7 @@ describe("GelatoCore.Execute", function () {
         expiryDate: constants.HashZero,
       });
 
-      let execClaim = {
+      let taskReceipt = {
         id: 1,
         userProxy: userProxyAddress,
         task,
@@ -444,7 +444,7 @@ describe("GelatoCore.Execute", function () {
       const gelatoMaxGas = await gelatoCore.gelatoMaxGas();
 
       await expect(
-        gelatoCore.connect(executor).exec(execClaim, {
+        gelatoCore.connect(executor).exec(taskReceipt, {
           gasPrice: GELATO_GAS_PRICE,
           gasLimit: ethers.utils
             .bigNumberify(gelatoMaxGas)
@@ -562,7 +562,7 @@ describe("GelatoCore.Execute", function () {
         expiryDate: constants.HashZero,
       });
 
-      let execClaim = {
+      let taskReceipt = {
         id: 1,
         userProxy: userProxyAddress,
         task,
@@ -580,7 +580,7 @@ describe("GelatoCore.Execute", function () {
       );
 
       await expect(
-        gelatoCore.connect(executor).exec(execClaim, {
+        gelatoCore.connect(executor).exec(taskReceipt, {
           gasPrice: GELATO_GAS_PRICE,
           gasLimit: ethers.utils
             .bigNumberify("600000")
@@ -677,7 +677,7 @@ describe("GelatoCore.Execute", function () {
         expiryDate: constants.HashZero,
       });
 
-      let execClaim = {
+      let taskReceipt = {
         id: 1,
         userProxy: userProxyAddress,
         task,
@@ -697,7 +697,7 @@ describe("GelatoCore.Execute", function () {
       const gelatoMaxGas = await gelatoCore.gelatoMaxGas();
 
       await expect(
-        gelatoCore.connect(executor).exec(execClaim, {
+        gelatoCore.connect(executor).exec(taskReceipt, {
           gasPrice: GELATO_GAS_PRICE,
           gasLimit: ethers.utils
             .bigNumberify(gelatoMaxGas)

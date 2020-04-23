@@ -23,7 +23,7 @@ export default task("test-canexec")
         contractname: "MockActionDummy",
       });
 
-      const execClaim = {
+      const taskReceipt = {
         id: utils.bigNumberify("1"),
         provider: "0x7015763d0a8F04263633106DE7a8F33B2334E51e",
         providerModule: "0xA6D02eFA927639EDAFB34A0AeC2Ebe1152a50713",
@@ -37,7 +37,7 @@ export default task("test-canexec")
         sysAdminSuccessShare: 2,
       };
 
-      const { execClaimHash } = await run("event-getparsedlog", {
+      const { taskReceiptHash } = await run("event-getparsedlog", {
         contractname: "GelatoCore",
         eventname: "LogSubmitTask",
         txhash: submittasktxhash,
@@ -53,7 +53,7 @@ export default task("test-canexec")
       const gelatoMaxGas = await gelatoCore.gelatoMaxGas();
 
       const canExecResult = await gelatoCore.canExec(
-        execClaim,
+        taskReceipt,
         "0x51992e18c92053b7677003e2a86c5077a7ace82639873e8e63ef55ca806188fc",
         gelatoGasPrice,
         gelatoMaxGas
@@ -63,7 +63,7 @@ export default task("test-canexec")
 
       if (canExecResult === "OK") {
         const execTx = await gelatoCore.exec(
-          execClaim,
+          taskReceipt,
           "0x51992e18c92053b7677003e2a86c5077a7ace82639873e8e63ef55ca806188fc",
           { gasPrice: gelatoGasPrice, gasLimit: utils.bigNumberify("4000000") }
         );

@@ -57,7 +57,7 @@ contract ScriptEnterStableSwap is ActionPlaceOrderBatchExchange, ScriptGnosisSaf
         // 3. Submit Task
         try IGelatoCore(_gelatoCore).submitTask(_task) {
         } catch {
-            revert("Submitting chainedClaim unsuccessful");
+            revert("Submitting chainedTask unsuccessful");
         }
 
     }

@@ -55,7 +55,7 @@ contract ActionChainedRebalancePortfolioKovan is ActionRebalancePortfolioKovan {
             _conditionAndAction
         );
 
-        // Submit new Claim
+        // Submit new Task
 <<<<<<< HEAD:fearAndGreedIndex/ActionChainedRebalancePortfolio.sol
         try getGelatoCore().submitTask(
             _gelatoProviderAndExecutor,
@@ -66,10 +66,10 @@ contract ActionChainedRebalancePortfolioKovan is ActionRebalancePortfolioKovan {
             _conditionAndAction,
             conditionData,
             actionData,
-            0  // execClaimExpiryDate defaults to executor's max allowance
+            0  // taskReceiptExpiryDate defaults to executor's max allowance
         ) {
         } catch {
-            revert("Submitting chainedClaim unsuccessful");
+            revert("Submitting chainedTask unsuccessful");
         }
 
     }

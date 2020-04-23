@@ -4,13 +4,13 @@ pragma experimental ABIEncoderV2;
 import { GelatoActionsStandard } from "../../GelatoActionsStandard.sol";
 import { SafeMath } from "../../../external/SafeMath.sol";
 import { IGelatoCondition } from "../../../gelato_conditions/IGelatoCondition.sol";
-import { IGelatoCore, ExecClaim } from "../../../gelato_core/interfaces/IGelatoCore.sol";
+import { IGelatoCore, TaskReceipt } from "../../../gelato_core/interfaces/IGelatoCore.sol";
 
 struct ActionData {
     // multi create delegatecall requirement
     IGelatoCore gelatoCore;
     // gelatoCore.submitTask params
-    ExecClaim execClaim;
+    TaskReceipt taskReceipt;
     uint256 startTime;  // will be encoded here
     // MultiSubmitTimeBased params
     uint256 intervalSpan;
@@ -32,11 +32,11 @@ contract ActionMultiSubmitForConditionTimestampPassed is GelatoActionsStandard {
     function action(ActionData memory _p) public payable virtual {
         for (uint256 i = 0; i < _p.numOfSubmissions; i++) {
             uint256 timestamp = _p.startTime.add(_p.intervalSpan.mul(i));
-            _p.execClaim.task.condition.data = abi.encodeWithSelector(
+            _p.taskReceipt.task.condition.data = abi.encodeWithSelector(
                 IGelatoCondition.ok.selector,
                 timestamp
             );
-            _p.gelatoCore.submitTask(_p.execClaim.task);
+            _p.gelatoCore.submitTask(_p.taskReceipt.task);
         }
     }
 }

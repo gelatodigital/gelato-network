@@ -3,7 +3,7 @@ pragma experimental ABIEncoderV2;
 
 import "../interfaces/IScriptsCreateGnosisSafeProxyAndSubmit.sol";
 import "./ScriptsCreateGnosisSafeProxy.sol";
-import { IGelatoCore, ExecClaim } from "../../../gelato_core/interfaces/IGelatoCore.sol";
+import { IGelatoCore, TaskReceipt } from "../../../gelato_core/interfaces/IGelatoCore.sol";
 
 contract ScriptsCreateGnosisSafeProxyAndSubmit is
     IScriptsCreateGnosisSafeProxyAndSubmit,
@@ -14,14 +14,14 @@ contract ScriptsCreateGnosisSafeProxyAndSubmit is
         address _mastercopy,
         bytes memory _initializer,
         IGelatoCore _gelatoCore,
-        ExecClaim memory _ec
+        TaskReceipt memory _TR
     )
         public
         payable
         override
     {
         create(_mastercopy, _initializer);
-        _gelatoCore.submitTask(_ec.task);
+        _gelatoCore.submitTask(_TR.task);
     }
 
     function createTwo(
@@ -29,13 +29,13 @@ contract ScriptsCreateGnosisSafeProxyAndSubmit is
         bytes memory _initializer,
         uint256 _saltNonce,
         IGelatoCore _gelatoCore,
-        ExecClaim memory _ec
+        TaskReceipt memory _TR
     )
         public
         payable
         override
     {
         createTwo(_mastercopy, _initializer, _saltNonce);
-        _gelatoCore.submitTask(_ec.task);
+        _gelatoCore.submitTask(_TR.task);
     }
 }

@@ -11,7 +11,7 @@ import {
 import {
     IGnosisSafeProxy
 } from "../../../user_proxies/gnosis_safe_proxy/interfaces/IGnosisSafeProxy.sol";
-import { Action, ExecClaim } from "../../interfaces/IGelatoCore.sol";
+import { Action, TaskReceipt } from "../../interfaces/IGelatoCore.sol";
 
 contract ProviderModuleGnosisSafeProxy is
     GelatoProviderModuleStandard,
@@ -33,13 +33,13 @@ contract ProviderModuleGnosisSafeProxy is
     // ================= GELATO PROVIDER MODULE STANDARD ================
     // @dev since we check extcodehash prior to execution, we forego the execution option
     //  where the userProxy is deployed at execution time.
-    function isProvided(ExecClaim memory _ec)
+    function isProvided(TaskReceipt memory _TR)
         public
         view
         override
         returns(string memory)
     {
-        address userProxy = _ec.userProxy;
+        address userProxy = _TR.userProxy;
         bytes32 codehash;
         assembly { codehash := extcodehash(userProxy) }
         if (!isProxyExtcodehashProvided[codehash])

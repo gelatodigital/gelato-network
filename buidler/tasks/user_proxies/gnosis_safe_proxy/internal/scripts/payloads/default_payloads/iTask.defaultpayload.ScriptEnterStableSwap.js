@@ -97,7 +97,7 @@ export default internalTask(
       uint128 _buyAmount,
       uint32 _orderExpirationBatchId,
       // ChainedSubmissionParams
-      ExecClaim memory _execClaim
+      TaskReceipt memory _TR
       */
 
       if (!taskArgs.sellAmount) taskArgs.sellAmount = "4000000";
