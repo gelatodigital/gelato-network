@@ -1,197 +1,131 @@
-/* // running `npx buidler test` automatically makes use of buidler-waffle plugin
+// running `npx buidler test` automatically makes use of buidler-waffle plugin
 // => only dependency we need is "chai"
 const { expect } = require("chai");
 
-import { utils } from "ethers";
-
-// GelatoProviders creation time variable values
-import initialState from "./GelatoProviders.initialState";
-
-describe("GelatoCore - GelatoProviders - Setters: IceCreamS", function () {
-  // We define the ContractFactory and Address variables here and assign them in
-  // a beforeEach hook.
+describe("User Proxies - GelatoUserProxy - FACTORY", function () {
   let GelatoCoreFactory;
-
-  let ConditionFactory;
-  let ActionFactory;
-  let OtherActionFactory;
+  let GelatoUserProxyFactoryFactory;
 
   let gelatoCore;
+  let gelatoUserProxyFactory;
 
-  let condition;
-  let action;
-  let otherAction;
-  let actionStruct;
-  let otherActionStruct;
+  let user;
+  let otherUser;
 
-  const gasPriceCeil = utils.parseUnits("20", "gwei");
-
-  // Condition - Actions - Mix
-  let iceCream;
-  let otherIceCream;
-
-  // ExecClaim for isIceCreamProvided check
-  let execClaim;
-  let otherExecClaim;
-
-  let provider;
-  let providerAddress;
+  let userAddress;
+  let otherUserAddress;
 
   beforeEach(async function () {
     // Get the ContractFactory, contract instance, and Signers here.
     GelatoCoreFactory = await ethers.getContractFactory("GelatoCore");
-    ConditionFactory = await ethers.getContractFactory("MockConditionDummy");
-    ActionFactory = await ethers.getContractFactory("MockActionDummy");
-    OtherActionFactory = await ethers.getContractFactory("MockActionDummy");
+    GelatoUserProxyFactoryFactory = await ethers.getContractFactory(
+      "GelatoUserProxyFactory"
+    );
 
     gelatoCore = await GelatoCoreFactory.deploy();
-    condition = await ConditionFactory.deploy();
-    action = await ActionFactory.deploy();
-    otherAction = await OtherActionFactory.deploy();
+    gelatoUserProxyFactory = await GelatoUserProxyFactoryFactory.deploy(
+      gelatoCore.address
+    );
 
     await gelatoCore.deployed();
-    await condition.deployed();
-    await action.deployed();
-    await otherAction.deployed();
+    await gelatoUserProxyFactory.deployed();
 
-    // Provider
-    [provider] = await ethers.getSigners();
-    providerAddress = await provider.getAddress();
+    // users
+    [user, otherUser] = await ethers.getSigners();
+    userAddress = await user.getAddress();
+    otherUserAddress = await otherUser.getAddress();
+  });
 
-    // Construct ExecClaim for unit test isIceCreamProvided():
-    // GelatoProvider
-    const gelatoProvider = new GelatoProvider({
-      addr: providerAddress,
-      module: constants.AddressZero,
-    });
-
-    // Condition
-    const conditionStruct = new Condition({
-      inst: condition.address,
-      data: constants.HashZero,
-    });
-
-    // Action
-    const actionData = await run("abi-encode-withSelector", {
-      contractname: "MockActionDummy",
-      functionname: "action",
-      inputs: [true],
-    });
-
-    actionStruct = new Action({
-      inst: action.address,
-      data: actionData,
-      operation: Operation.Delegatecall,
-      termsOkCheck: false,
-    });
-
-
-
-    otherActionStruct = new Action({
-      inst: otherAction.address,
-      data: "0xdeadbeef",
-      operation: Operation.Delegatecall,
-      termsOkCheck: true,
-    });
-
-    // Task
-    const task = new Task({
-      provider: gelatoProvider,
-      condition: conditionStruct,
-      actions: [actionStruct],
-      expiryDate: constants.Zero,
-    });
-    const otherTask = new Task({
-      provider: gelatoProvider,
-      condition: conditionStruct,
-      actions: [actionStruct, otherActionStruct],
-      expiryDate: constants.Zero,
-    });
-
-    // ExecClaim
-    execClaim = new ExecClaim({
-      id: constants.Zero,
-      userProxy: constants.AddressZero,
-      task: task,
-    });
-    otherExecClaim = new ExecClaim({
-      id: 1,
-      userProxy: constants.AddressZero,
-      task: otherTask,
-    });
-
-    // Condition Action Mix
-    iceCream = new IceCream({
-      condition: condition.address,
-      actions: [actionStruct],
-      gasPriceCeil,
-    });
-
-    otherIceCream = new IceCream({
-      condition: condition.address,
-      actions: [actionStruct, otherActionStruct],
-      gasPriceCeil,
+  describe("GelatoUserProxyFactory.constructor", function () {
+    it("Should store gelatoCore address", async function () {
+      expect(await gelatoUserProxyFactory.gelatoCore()).to.be.equal(
+        gelatoCore.address
+      );
     });
   });
 
-  // We test different functionality of the contract as normal Mocha tests.
-
-  // provideIceCreams
-  describe("GelatoCore.GelatoProviders.provideIceCreams", function () {
-    it("Should allow anyone to provide a single IceCream", async function () {
-      // iceCreamHash
-      const iceCreamHash = await gelatoCore.iceCreamHash(
-        iceCream.condition,
-        iceCream.actions
+  describe("GelatoUserProxyFactory.create", function () {
+    it("Should allow anyone to create a userProxy", async function () {
+      // create(): user
+      await expect(gelatoUserProxyFactory.create([], [])).to.emit(
+        gelatoUserProxyFactory,
+        "LogCreation"
       );
 
-      // provideIceCreams
-      await expect(gelatoCore.provideIceCreams([iceCream]))
-        .to.emit(gelatoCore, "LogProvideIceCream")
-        .withArgs(providerAddress, iceCreamHash)
-        .and.to.emit(gelatoCore, "LogSetIceCreamGasPriceCeil")
-        .withArgs(
-          providerAddress,
-          iceCreamHash,
-          initialState.iceCreamGasPriceCeil,
-          gasPriceCeil
-        );
-
-      // iceCream
-      // iceCreamGasPriceCeil
+      // gelatoProxyByUser
+      const userGelatoProxy = await gelatoUserProxyFactory.gelatoProxyByUser(
+        userAddress
+      );
+      // userByGelatoProxy
       expect(
-        await gelatoCore.iceCreamGasPriceCeil(providerAddress, iceCreamHash)
-      ).to.be.equal(iceCream.gasPriceCeil);
+        await gelatoUserProxyFactory.userByGelatoProxy(userGelatoProxy)
+      ).to.be.equal(userAddress);
 
-      // isIceCreamProvided
+      // isGelatoUserProxy
+      expect(await gelatoUserProxyFactory.isGelatoUserProxy(userGelatoProxy)).to
+        .be.true;
+      // isGelatoProxyUser
+      expect(await gelatoUserProxyFactory.isGelatoProxyUser(userAddress)).to.be
+        .true;
+
+      // create(): otherUser
+      await expect(
+        gelatoUserProxyFactory.connect(otherUser).create([], [])
+      ).to.emit(gelatoUserProxyFactory, "LogCreation");
+
+      // gelatoProxyByUser: otherUser
+      const otherUserGelatoProxy = await gelatoUserProxyFactory.gelatoProxyByUser(
+        otherUserAddress
+      );
+      // userByGelatoProxy: otherUser
       expect(
-        await gelatoCore.isIceCreamProvided(
-          providerAddress,
-          condition.address,
-          [actionStruct]
-        )
-      ).to.be.equal("OK");
+        await gelatoUserProxyFactory.userByGelatoProxy(otherUserGelatoProxy)
+      ).to.be.equal(otherUserAddress);
 
-      // isExecClaimProvided
-      expect(await gelatoCore.isExecClaimProvided(execClaim)).not.to.be.equal(
-        "IceCreamNotProvided"
+      // isGelatoUserProxy: otherUser
+      expect(
+        await gelatoUserProxyFactory.isGelatoUserProxy(otherUserGelatoProxy)
+      ).to.be.true;
+      // isGelatoProxyUser: otherUser
+      expect(await gelatoUserProxyFactory.isGelatoProxyUser(otherUserAddress))
+        .to.be.true;
+    });
+
+    it("Should allow to re-create a userProxy", async function () {
+      // create(): user firstProxy
+      const tx = await gelatoUserProxyFactory.create([], []);
+      await tx.wait();
+
+      // gelatoProxyByUser: first proxy
+      const firstUserGelatoProxy = await gelatoUserProxyFactory.gelatoProxyByUser(
+        userAddress
       );
 
-      // otherIceCream
-      // isIceCreamProvided
-      expect(
-        await gelatoCore.isIceCreamProvided(
-          providerAddress,
-          condition.address,
-          [actionStruct, otherActionStruct]
-        )
-      ).to.be.equal("IceCreamNotProvided");
-
-      // isExecClaimProvided
-      expect(await gelatoCore.isExecClaimProvided(otherExecClaim)).to.be.equal(
-        "IceCreamNotProvided"
+      // create(): user secondProxy
+      await expect(gelatoUserProxyFactory.create([], [])).to.emit(
+        gelatoUserProxyFactory,
+        "LogCreation"
       );
+
+      // gelatoProxyByUser: secondProxy
+      const secondUserGelatoProxy = await gelatoUserProxyFactory.gelatoProxyByUser(
+        userAddress
+      );
+
+      expect(secondUserGelatoProxy).to.not.be.equal(firstUserGelatoProxy);
+
+      // userByGelatoProxy: secondProxy
+      expect(
+        await gelatoUserProxyFactory.userByGelatoProxy(secondUserGelatoProxy)
+      ).to.be.equal(userAddress);
+
+      // isGelatoUserProxy: secondProxy
+      expect(
+        await gelatoUserProxyFactory.isGelatoUserProxy(secondUserGelatoProxy)
+      ).to.be.true;
+      // isGelatoProxyUser: secondProxy
+      expect(await gelatoUserProxyFactory.isGelatoProxyUser(userAddress)).to.be
+        .true;
     });
   });
 });
- */
