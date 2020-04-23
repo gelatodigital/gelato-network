@@ -20,7 +20,7 @@ interface IGelatoExecutors {
 
     /// @notice Increase your executor stake balance
     /// @dev Msg.value has to be >= minExecutorStake
-    function increaseExecutorStake(uint256 _topUpAmount) external payable;
+    function increaseExecutorStake() external payable;
 
     /// @notice Re-assigns multiple providers to other executors
     /// @dev Executors must re-assign all providers before being able to unstake
