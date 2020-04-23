@@ -8,6 +8,5 @@ export default {
   executorProvidersCount: 0,
   iceCreamGasPriceCeil: 0,
   isModuleProvided: false,
-  numOfProviderModules: 0,
   providerModulesLength: 0,
 };

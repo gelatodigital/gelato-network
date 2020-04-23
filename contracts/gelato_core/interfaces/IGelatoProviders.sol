@@ -129,12 +129,12 @@ interface IGelatoProviders {
 
     /// @notice Whitelist IceCreams (A combination of a Condition, Action(s) and a gasPriceCeil) that users can select from
     /// @dev If gasPriceCeil is == 0, Ice Cream will be executed at any gas price (no ceil)
-    /// @param _IceCreams Execution Claim Array defined in IGelatoCore
+    /// @param _IceCreams Execution Claim List defined in IGelatoCore
     function provideIceCreams(IceCream[] calldata _IceCreams) external;
 
     /// @notice De-whitelist IceCreams (A combination of a Condition, Action(s) and a gasPriceCeil) that users can select from
     /// @dev If gasPriceCeil was set to NO_CEIL, Input NO_CEIL constant as GasPriceCeil
-    /// @param _IceCreams Execution Claim Array defined in IGelatoCore
+    /// @param _IceCreams Execution Claim List defined in IGelatoCore
     function unprovideIceCreams(IceCream[] calldata _IceCreams) external;
 
     /// @notice Update gasPriceCeil of selected Ice Cream
@@ -155,8 +155,8 @@ interface IGelatoProviders {
 
     /// @notice Whitelist new executor, IceCream(s) and Module(s) in one tx
     /// @param _executor Address of new executor of provider
-    /// @param _IceCreams Array of Ice Cream which will be whitelisted by provider
-    /// @param _modules Array of module addresses which will be whitelisted by provider
+    /// @param _IceCreams List of Ice Cream which will be whitelisted by provider
+    /// @param _modules List of module addresses which will be whitelisted by provider
     function batchProvide(
         address _executor,
         IceCream[] calldata _IceCreams,
@@ -168,8 +168,8 @@ interface IGelatoProviders {
 
     /// @notice De-Whitelist IceCream(s), Module(s) and withdraw funds from gelato in one tx
     /// @param _withdrawAmount Amount to withdraw from ProviderFunds
-    /// @param _IceCreams Array of Ice Cream which will be de-whitelisted by provider
-    /// @param _modules Array of module addresses which will be de-whitelisted by provider
+    /// @param _IceCreams List of Ice Cream which will be de-whitelisted by provider
+    /// @param _modules List of module addresses which will be de-whitelisted by provider
     function batchUnprovide(
         uint256 _withdrawAmount,
         IceCream[] calldata _IceCreams,
@@ -239,25 +239,44 @@ interface IGelatoProviders {
     function isExecutorAssigned(address _executor) external view returns(bool);
 
     // Ice Cream and Gas Price Ceil
+    /// @notice The maximum gas price the transaction will be executed with
+    /// @param _provider Address of provider
+    /// @param _iceCreamHash Hash of provider IceCream
+    /// @return Max gas price an executor will execute the transaction with in wei
     function iceCreamGasPriceCeil(address _provider, bytes32 _iceCreamHash)
         external
         view
         returns(uint256);
+
+    /// @notice Compute an IceCreamHash
+    /// @dev action.data can be 0
+    /// @param _condition Address of condition instance
+    /// @param _noDataActions Action List
+    /// @return keccak256 hash of encoded condition address and Action List
     function iceCreamHash(IGelatoCondition _condition, Action[] calldata _noDataActions)
         external
         view
         returns(bytes32);
+
+    /// @notice Constant used to specify the highest gas price available in the gelato system
+    /// @dev Input 0 as gasPriceCeil and it will be assigned to NO_CEIL
+    /// @return MAX_UINT
     function NO_CEIL() external pure returns(uint256);
 
     // Providers' Module Getters
+
+    /// @notice Check if inputted module is whitelisted by provider
+    /// @param _provider Address of provider
+    /// @param _module Address of module
+    /// @return true if it is whitelisted
     function isModuleProvided(address _provider, IGelatoProviderModule _module)
         external
         view
         returns(bool);
-    function numOfProviderModules(address _provider)
-        external
-        view
-        returns(uint256);
+
+    /// @notice Get all whitelisted provider modules from a given provider
+    /// @param _provider Address of provider
+    /// @return List of whitelisted provider modules
     function providerModules(address _provider)
         external
         view
