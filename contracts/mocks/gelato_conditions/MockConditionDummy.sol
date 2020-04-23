@@ -5,13 +5,12 @@ import { GelatoConditionsStandard } from "../../gelato_conditions/GelatoConditio
 
 contract MockConditionDummy is GelatoConditionsStandard {
     // STANDARD interface
-
-    function ok(bytes calldata data) external view virtual override returns(string memory) {
-        (bool returnOk) = abi.decode(data[4:], (bool));
+    function ok(bytes calldata _data) external view virtual override returns(string memory) {
+        bool returnOk = abi.decode(_data[4:], (bool));
         return ok(returnOk);
     }
 
-    function ok(bool returnOk) public pure virtual returns(string memory returnString) {
-       returnOk ? returnString = OK : returnString = "NotOk";
+    function ok(bool _returnOk) public pure virtual returns(string memory returnString) {
+       _returnOk ? returnString = OK : returnString = "NotOk";
     }
 }

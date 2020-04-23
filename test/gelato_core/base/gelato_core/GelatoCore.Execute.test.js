@@ -529,7 +529,7 @@ describe("GelatoCore.Execute", function () {
         .withArgs(
           executorAddress,
           execClaim.id,
-          "ConditionReverted:Condition Reverted"
+          "ConditionReverted:MockConditionDummyRevert.ok: test revert"
         );
     });
 
@@ -697,7 +697,7 @@ describe("GelatoCore.Execute", function () {
         .withArgs(
           executorAddress,
           execClaim.id,
-          "ActionReverted:Action TermsOk not ok"
+          "ActionReverted:MockActionDummyOutOfGas.termsOk"
         );
     });
 
@@ -1638,7 +1638,7 @@ describe("GelatoCore.Execute", function () {
           executorAddress,
           1,
           0,
-          "GelatoCore._exec.execPayload:Test Revert"
+          "GelatoCore._exec.execPayload:MockProviderModuleGelatoUserProxyRevert.execPayload: test revert"
         );
     });
   });
