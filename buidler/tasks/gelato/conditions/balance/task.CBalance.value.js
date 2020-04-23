@@ -27,7 +27,7 @@ export default task(
         contractname,
         read: true
       });
-      // mintExecClaim TX (payable)
+      // submitTask TX (payable)
       const value = await conditionContract.value(
         account,
         coin,

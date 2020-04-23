@@ -36,7 +36,7 @@ describe("GelatoCore - GelatoProviders - Deployment", function () {
       initialState.executorProvidersCount
     );
     expect(
-      await gelatoCore.iceCreamGasPriceCeil(testAddress, constants.HashZero)
-    ).to.equal(initialState.iceCreamGasPriceCeil);
+      await gelatoCore.taskSpecGasPriceCeil(testAddress, constants.HashZero)
+    ).to.equal(initialState.taskSpecGasPriceCeil);
   });
 });

@@ -34,12 +34,12 @@ describe("GelatoCore.Execute", function () {
   let txResponse;
   let providerModuleGelatoUserProxy;
   let gelatoCore;
-  let execClaim;
+  let taskReceipt;
   let gelatoGasPriceOracle;
   let gelatoProvider;
   let condition;
   let action;
-  let newIceCream;
+  let newTaskSpec;
 
   // ###### GelatoCore Setup ######
   beforeEach(async function () {
@@ -99,9 +99,9 @@ describe("GelatoCore.Execute", function () {
       value: ethers.utils.parseUnits("1", "ether"),
     });
 
-    // Register new provider IceCream on core with provider EDITS NEED ä#######################
+    // Register new provider TaskSpec on core with provider EDITS NEED ä#######################
 
-    // Call batchProvider( for mockConditionDummy + actionERC20TransferFrom
+    // Call multiProvide for mockConditionDummy + actionERC20TransferFrom
     // Provider registers new condition
     const MockActionDummy = await ethers.getContractFactory(
       "MockActionDummy",
@@ -118,18 +118,18 @@ describe("GelatoCore.Execute", function () {
       termsOkCheck: true,
     });
 
-    newIceCream = new IceCream({
+    newTaskSpec = new TaskSpec({
       condition: constants.AddressZero,
       actions: [mockActionDummyGelato],
       gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
     });
 
-    // Call batchProvider( for actionWithdrawBatchExchange
+    // Call multiProvide for actionWithdrawBatchExchange
     await gelatoCore
       .connect(provider)
-      .batchProvide(
+      .multiProvide(
         executorAddress,
-        [newIceCream],
+        [newTaskSpec],
         [providerModuleGelatoUserProxy.address]
       );
 
@@ -173,15 +173,15 @@ describe("GelatoCore.Execute", function () {
       expiryDate: constants.HashZero,
     });
 
-    execClaim = {
+    taskReceipt = {
       id: 1,
       userProxy: userProxyAddress,
       task,
     };
 
-    await expect(userProxy.mintExecClaim(task)).to.emit(
+    await expect(userProxy.submitTask(task)).to.emit(
       gelatoCore,
-      "LogExecClaimMinted"
+      "LogSubmitTask"
     );
   });
 
@@ -191,7 +191,7 @@ describe("GelatoCore.Execute", function () {
       const canExecReturn = await gelatoCore
         .connect(executor)
         .canExec(
-          execClaim,
+          taskReceipt,
           GELATO_MAX_GAS,
           ethers.utils.bigNumberify("800", "Gwei")
         );
@@ -207,7 +207,7 @@ describe("GelatoCore.Execute", function () {
       const canExecReturn = await gelatoCore
         .connect(executor)
         .canExec(
-          execClaim,
+          taskReceipt,
           GELATO_MAX_GAS,
           ethers.utils.parseUnits("300", "ether")
         );
@@ -215,7 +215,7 @@ describe("GelatoCore.Execute", function () {
       expect(canExecReturn).to.equal("ProviderIlliquidity");
     });
 
-    it("#3: CanExec - Exec Claim expired", async function () {
+    it("#3: CanExec - Task Receipt expired", async function () {
       let oldBlock = await ethers.provider.getBlock();
 
       const lifespan = 420;
@@ -228,14 +228,14 @@ describe("GelatoCore.Execute", function () {
         expiryDate,
       });
 
-      let execClaim2 = {
+      let taskReceipt2 = {
         id: 2,
         userProxy: userProxyAddress,
         task: task2,
       };
 
-      const mintTx = await userProxy.mintExecClaim(task2);
-      await mintTx.wait();
+      const submitTaskTx = await userProxy.submitTask(task2);
+      await submitTaskTx.wait();
 
       if (network.name === "buidlerevm")
         await ethers.provider.send("evm_increaseTime", [lifespan]);
@@ -246,8 +246,8 @@ describe("GelatoCore.Execute", function () {
       expect(
         await gelatoCore
           .connect(executor)
-          .canExec(execClaim2, GELATO_MAX_GAS, GELATO_GAS_PRICE)
-      ).to.equal("ExecClaimExpired");
+          .canExec(taskReceipt2, GELATO_MAX_GAS, GELATO_GAS_PRICE)
+      ).to.equal("TaskReceiptExpired");
     });
 
     it("#4: CanExec - Fail due to provider module check failure, not whitelisted action)", async function () {
@@ -258,27 +258,27 @@ describe("GelatoCore.Execute", function () {
         expiryDate: constants.HashZero,
       });
 
-      let execClaim2 = {
+      let taskReceipt2 = {
         id: 2,
         userProxy: userProxyAddress,
         task: task2,
       };
 
-      await userProxy.mintExecClaim(task2);
+      await userProxy.submitTask(task2);
 
-      await gelatoCore.connect(provider).unprovideIceCreams([newIceCream]);
+      await gelatoCore.connect(provider).unprovideTaskSpecs([newTaskSpec]);
 
       const canExecReturn = await gelatoCore
         .connect(executor)
-        .canExec(execClaim2, GELATO_MAX_GAS, GELATO_GAS_PRICE);
+        .canExec(taskReceipt2, GELATO_MAX_GAS, GELATO_GAS_PRICE);
 
-      expect(canExecReturn).to.equal("iceCreamGasPriceCeil-OR-notProvided");
+      expect(canExecReturn).to.equal("taskSpecGasPriceCeil-OR-notProvided");
     });
 
     it("#5: CanExec - Return Ok when called via executor)", async function () {
       const canExecReturn = await gelatoCore
         .connect(executor)
-        .canExec(execClaim, GELATO_MAX_GAS, GELATO_GAS_PRICE);
+        .canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE);
 
       expect(canExecReturn).to.equal("OK");
     });
@@ -286,7 +286,7 @@ describe("GelatoCore.Execute", function () {
     it("#6: CanExec - Return InvalidExecutor when called NOT via executor)", async function () {
       const canExecReturn = await gelatoCore
         .connect(provider)
-        .canExec(execClaim, GELATO_MAX_GAS, GELATO_GAS_PRICE);
+        .canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE);
 
       expect(canExecReturn).to.equal("InvalidExecutor");
     });

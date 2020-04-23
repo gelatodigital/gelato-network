@@ -6,14 +6,14 @@ export default task(
   "gc-exec",
   `Calls GelatoCore.exec() on [--network] (default: ${defaultNetwork})`
 )
-  .addPositionalParam("execclaimid")
+  .addPositionalParam("taskreceiptid")
   .addOptionalPositionalParam(
     "executorindex",
     "Which mnemonic index should be selected for gelatoExecutor msg.sender (default index 1)",
     1,
     types.int
   )
-  .addOptionalParam("execclaim", "Supply LogExecClaimMinted values in an obj")
+  .addOptionalParam("taskreceipt", "Supply LogSubmitTask values in an obj")
   .addOptionalParam(
     "fromblock",
     "The block number to search for event logs from",
@@ -31,9 +31,9 @@ export default task(
   .addFlag("log", "Logs return values to stdout")
   .setAction(
     async ({
-      execclaimid,
+      taskreceiptid,
       executorindex,
-      execclaim,
+      taskreceipt,
       fromblock,
       toblock,
       blockhash,
@@ -41,10 +41,10 @@ export default task(
       log,
     }) => {
       try {
-        if (!execclaim) {
-          execclaim = await run("fetchExecClaim", {
-            execclaimid,
-            execclaim,
+        if (!taskreceipt) {
+          taskreceipt = await run("fetchTaskReceipt", {
+            taskreceiptid,
+            taskreceipt,
             fromblock,
             toblock,
             blockhash,
@@ -81,13 +81,13 @@ export default task(
           console.log(
             `\n Gelato Gas Price:  ${gelatoGasPriceGwei} gwei\
              \n Gelato MAX GAS:    ${gelatoMAXGAS}\
-             \n UserProxy Address: ${execclaim[3]}\n
+             \n UserProxy Address: ${taskreceipt[3]}\n
              \n Executor Address: ${gelatoExecutor._address}\n`
           );
         }
 
         const actions = [];
-        for (const action of execclaim[2][2]) {
+        for (const action of taskreceipt[2][2]) {
           actions.push({
             inst: action[0],
             data: action[1],
@@ -97,26 +97,26 @@ export default task(
           });
         }
 
-        const execClaim = {
-          id: execclaim[0],
-          userProxy: execclaim[1],
+        const taskReceipt = {
+          id: taskreceipt[0],
+          userProxy: taskreceipt[1],
           task: {
             provider: {
-              addr: execclaim[2][0][0],
-              module: execclaim[2][0][1],
+              addr: taskreceipt[2][0][0],
+              module: taskreceipt[2][0][1],
             },
             condition: {
-              inst: execclaim[2][1][0],
-              data: execclaim[2][1][1],
+              inst: taskreceipt[2][1][0],
+              data: taskreceipt[2][1][1],
             },
             actions,
-            expiryDate: execclaim[2][3],
+            expiryDate: taskreceipt[2][3],
           },
         };
 
         let executeTx;
         try {
-          executeTx = await gelatoCore.exec(execClaim, {
+          executeTx = await gelatoCore.exec(taskReceipt, {
             gasPrice: gelatoGasPrice,
             // gasLimit: gelatoMAXGAS,
             gasLimit: 500000,

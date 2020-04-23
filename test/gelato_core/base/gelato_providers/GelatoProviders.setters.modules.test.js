@@ -25,12 +25,12 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
 
   let gelatoUserProxyAddress;
 
-  let execClaim;
-  let otherExecClaim;
-  let fakeExecClaim;
+  let taskReceipt;
+  let otherTaskReceipt;
+  let fakeTaskReceipt;
 
   // Condition - Actions - Mix
-  let iceCream;
+  let taskSpec;
   const gasPriceCeil = utils.parseUnits("20", "gwei");
 
   beforeEach(async function () {
@@ -120,24 +120,24 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
       expiryDate: constants.Zero,
     });
 
-    execClaim = new ExecClaim({
+    taskReceipt = new TaskReceipt({
       id: 0,
       userProxy: gelatoUserProxyAddress,
       task,
     });
-    otherExecClaim = new ExecClaim({
+    otherTaskReceipt = new TaskReceipt({
       id: 0,
       userProxy: gelatoUserProxyAddress,
       task: otherTask,
     });
-    fakeExecClaim = new ExecClaim({
+    fakeTaskReceipt = new TaskReceipt({
       id: 0,
       userProxy: gelatoUserProxyAddress,
       task: fakeTask,
     });
 
     // Condition Action Mix
-    iceCream = new IceCream({
+    taskSpec = new TaskSpec({
       condition: condition.inst,
       actions: [action],
       gasPriceCeil,
@@ -163,7 +163,7 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
       ).to.be.equal(initialState.providerModulesLength);
 
       // providerModuleChecks
-      expect(await gelatoCore.providerModuleChecks(execClaim)).to.be.equal(
+      expect(await gelatoCore.providerModuleChecks(taskReceipt)).to.be.equal(
         "InvalidProviderModule"
       );
 
@@ -189,17 +189,17 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
       ).to.be.equal(providerModule.address);
 
       // providerModuleChecks
-      expect(await gelatoCore.providerModuleChecks(execClaim)).to.be.equal(
+      expect(await gelatoCore.providerModuleChecks(taskReceipt)).to.be.equal(
         "OK"
       );
     });
 
     it("Should allow anyone to addProviderModules", async function () {
       // providerModuleChecks
-      expect(await gelatoCore.providerModuleChecks(execClaim)).to.be.equal(
+      expect(await gelatoCore.providerModuleChecks(taskReceipt)).to.be.equal(
         "InvalidProviderModule"
       );
-      expect(await gelatoCore.providerModuleChecks(otherExecClaim)).to.be.equal(
+      expect(await gelatoCore.providerModuleChecks(otherTaskReceipt)).to.be.equal(
         "InvalidProviderModule"
       );
 
@@ -245,11 +245,11 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
       ).to.be.equal(otherProviderModule.address);
 
       // providerModuleChecks
-      expect(await gelatoCore.providerModuleChecks(execClaim)).to.be.equal(
+      expect(await gelatoCore.providerModuleChecks(taskReceipt)).to.be.equal(
         "OK"
       );
       expect(
-        await gelatoCore.providerModuleChecks(otherExecClaim)
+        await gelatoCore.providerModuleChecks(otherTaskReceipt)
       ).to.not.be.equal("OK");
     });
 
@@ -259,14 +259,14 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
         .to.emit(gelatoCore, "LogAddProviderModule")
         .withArgs(providerAddress, fakeProviderModule.address);
 
-      expect(await gelatoCore.providerModuleChecks(fakeExecClaim)).to.be.equal(
+      expect(await gelatoCore.providerModuleChecks(fakeTaskReceipt)).to.be.equal(
         "GelatoProviders.providerModuleChecks"
       );
     });
 
     it("Should return providerModuleChecks from providerCanExec, if correct gelatoGasPrice", async function () {
-      // provideIceCreams
-      await gelatoCore.provideIceCreams([iceCream]);
+      // provideTaskSpecs
+      await gelatoCore.provideTaskSpecs([taskSpec]);
 
       // addProviderModules()
       await gelatoCore.addProviderModules([
@@ -276,29 +276,29 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
       ]);
 
       const weirdFlexButOkPrice = 0;
-      const okGelatoGasPrice = iceCream.gasPriceCeil.sub(1);
-      const alsoOkGelatoGasPrice = iceCream.gasPriceCeil;
-      const notOkGelatoGasPrice = iceCream.gasPriceCeil.add(1);
+      const okGelatoGasPrice = taskSpec.gasPriceCeil.sub(1);
+      const alsoOkGelatoGasPrice = taskSpec.gasPriceCeil;
+      const notOkGelatoGasPrice = taskSpec.gasPriceCeil.add(1);
 
-      // providerCanExec: execClaim (provided gelato user proxy)
+      // providerCanExec: taskReceipt (provided gelato user proxy)
       expect(
-        await gelatoCore.providerCanExec(execClaim, weirdFlexButOkPrice)
+        await gelatoCore.providerCanExec(taskReceipt, weirdFlexButOkPrice)
       ).to.be.equal("OK");
 
-      // providerCanExec: otherExecClaim (not provided gnosis safe)
+      // providerCanExec: otherTaskReceipt (not provided gnosis safe)
       expect(
-        await gelatoCore.providerCanExec(otherExecClaim, okGelatoGasPrice)
+        await gelatoCore.providerCanExec(otherTaskReceipt, okGelatoGasPrice)
       ).to.not.be.equal("OK");
 
-      // providerCanExec: fakeExecClaim
+      // providerCanExec: fakeTaskReceipt
       expect(
-        await gelatoCore.providerCanExec(fakeExecClaim, alsoOkGelatoGasPrice)
+        await gelatoCore.providerCanExec(fakeTaskReceipt, alsoOkGelatoGasPrice)
       ).to.be.equal("GelatoProviders.providerModuleChecks");
 
       // providerCanExec: gelatoGasPriceTooHigh
       expect(
-        await gelatoCore.providerCanExec(execClaim, notOkGelatoGasPrice)
-      ).to.be.equal("iceCreamGasPriceCeil-OR-notProvided");
+        await gelatoCore.providerCanExec(taskReceipt, notOkGelatoGasPrice)
+      ).to.be.equal("taskSpecGasPriceCeil-OR-notProvided");
     });
 
     it("Should NOT allow to add same modules again", async function () {

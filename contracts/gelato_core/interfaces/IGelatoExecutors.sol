@@ -26,7 +26,7 @@ interface IGelatoExecutors {
     /// @dev Executors must re-assign all providers before being able to unstake
     /// @param _providers List of providers to re-assign
     /// @param _newExecutor Address of new executor to assign providers to
-    function batchReassignProviders(
+    function multiReassignProviders(
         address[] calldata _providers,
         address _newExecutor
     ) external;

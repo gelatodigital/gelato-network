@@ -2,16 +2,11 @@ export const contracts = [
   // ==== Kovan ===
   // === Actions ===
   // = One-Off =
-  // BzX
-  "ActionBzxPtokenBurnToToken",
-  "ActionBzxPtokenMintWithToken",
   // ERC20
   "ActionERC20Transfer",
   "ActionERC20TransferFrom",
   // Kyber
   "ActionKyberTradeKovan",
-  // Multimint
-  "ActionMultiMintForConditionTimestampPassed",
   // Portfolio Mgmt
   "ActionRebalancePortfolioKovan",
 
@@ -47,7 +42,7 @@ export const contracts = [
   // == GnosisSafe ==
   // Scripts
   "ScriptGnosisSafeEnableGelatoCore",
-  "ScriptGnosisSafeEnableGelatoCoreAndMint",
+  "ScriptGnosisSafeEnableGelatoCoreAndSubmit",
   // Action specific scripts
   "ScriptEnterPortfolioRebalancingKovan",
   "ScriptExitRebalancePortfolioKovan",

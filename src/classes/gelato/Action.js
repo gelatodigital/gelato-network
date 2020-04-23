@@ -1,4 +1,4 @@
-import { constants, utils } from "ethers";
+import { constants } from "ethers";
 
 export const Operation = {
   Call: 0,

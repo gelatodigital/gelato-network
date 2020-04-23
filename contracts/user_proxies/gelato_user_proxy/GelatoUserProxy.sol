@@ -3,7 +3,7 @@ pragma experimental ABIEncoderV2;
 
 import { IGelatoUserProxy } from "./interfaces/IGelatoUserProxy.sol";
 import {
-    Action, Operation, Task, ExecClaim, IGelatoCore
+    Action, Operation, Task, TaskReceipt, IGelatoCore
 } from "../../gelato_core/interfaces/IGelatoCore.sol";
 
 contract GelatoUserProxy is IGelatoUserProxy {
@@ -14,7 +14,7 @@ contract GelatoUserProxy is IGelatoUserProxy {
     constructor(
         address _user,
         address _gelatoCore,
-        Task[] memory _optionalMintTasks,
+        Task[] memory _optionalSubmitTasks,
         Action[] memory _optionalActions
     )
         public
@@ -22,10 +22,9 @@ contract GelatoUserProxy is IGelatoUserProxy {
         noZeroAddress(_user)
         noZeroAddress(_gelatoCore)
     {
-
         user = _user;
         gelatoCore = _gelatoCore;
-        _initialize(_gelatoCore, _optionalMintTasks, _optionalActions);
+        _initialize(_gelatoCore, _optionalSubmitTasks, _optionalActions);
     }
 
     receive() external payable {}
@@ -48,34 +47,34 @@ contract GelatoUserProxy is IGelatoUserProxy {
         _;
     }
 
-    function mintExecClaim(Task memory _task) public override onlyUser {
-        try IGelatoCore(gelatoCore).mintExecClaim(_task) {
+    function submitTask(Task memory _task) public override onlyUser {
+        try IGelatoCore(gelatoCore).submitTask(_task) {
         } catch Error(string memory err) {
-            revert(string(abi.encodePacked("GelatoUserProxy.mintExecClaim:", err)));
+            revert(string(abi.encodePacked("GelatoUserProxy.submitTask:", err)));
         } catch {
-            revert("GelatoUserProxy.mintExecClaim:undefinded");
+            revert("GelatoUserProxy.submitTask:undefinded");
         }
     }
 
-    function multiMintExecClaims(Task[] memory _tasks) public override onlyUser {
-        for (uint i = 0; i < _tasks.length; i++) mintExecClaim(_tasks[i]);
+    function multiSubmitTasks(Task[] memory _tasks) public override onlyUser {
+        for (uint i = 0; i < _tasks.length; i++) submitTask(_tasks[i]);
     }
 
-    function cancelExecClaim(ExecClaim memory _ec) public override onlyUser {
-        try IGelatoCore(gelatoCore).cancelExecClaim(_ec) {
+    function cancelTask(TaskReceipt memory _TR) public override onlyUser {
+        try IGelatoCore(gelatoCore).cancelTask(_TR) {
         } catch Error(string memory err) {
-            revert(string(abi.encodePacked("GelatoUserProxy.cancelExecClaim:", err)));
+            revert(string(abi.encodePacked("GelatoUserProxy.cancelTask:", err)));
         } catch {
-            revert("GelatoUserProxy.cancelExecClaim:undefinded");
+            revert("GelatoUserProxy.cancelTask:undefinded");
         }
     }
 
-    function batchCancelExecClaims(ExecClaim[] memory _ecs) public override onlyUser {
-        try IGelatoCore(gelatoCore).batchCancelExecClaims(_ecs) {
+    function multiCancelTasks(TaskReceipt[] memory _TRs) public override onlyUser {
+        try IGelatoCore(gelatoCore).multiCancelTasks(_TRs) {
         } catch Error(string memory err) {
-            revert(string(abi.encodePacked("GelatoUserProxy.batchCancelExecClaims:", err)));
+            revert(string(abi.encodePacked("GelatoUserProxy.multiCancelTasks:", err)));
         } catch {
-            revert("GelatoUserProxy.batchCancelExecClaims:undefinded");
+            revert("GelatoUserProxy.multiCancelTasks:undefinded");
         }
     }
 
@@ -162,17 +161,17 @@ contract GelatoUserProxy is IGelatoUserProxy {
     {
         if (_tasks.length != 0) {
             for (uint i = 0; i < _tasks.length; i++) {
-                try IGelatoCore(_gelatoCore).mintExecClaim(_tasks[i]) {
+                try IGelatoCore(_gelatoCore).submitTask(_tasks[i]) {
                 } catch Error(string memory err) {
                     revert(
                         string(
                             abi.encodePacked(
-                                "GelatoUserProxy._initialize.mintExecClaim:", err
+                                "GelatoUserProxy._initialize.submitTask:", err
                             )
                         )
                     );
                 } catch {
-                    revert("GelatoUserProxy._initialize.mintExecClaim:undefined");
+                    revert("GelatoUserProxy._initialize.submitTask:undefined");
                 }
             }
         }

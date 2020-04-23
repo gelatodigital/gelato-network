@@ -7,7 +7,7 @@ import { utils } from "ethers";
 // GelatoProviders creation time variable values
 import initialState from "./GelatoProviders.initialState";
 
-describe("GelatoCore - GelatoProviders - Setters: IceCreams", function () {
+describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
   // We define the ContractFactory and Address variables here and assign them in
   // a beforeEach hook.
   let GelatoCoreFactory;
@@ -26,12 +26,12 @@ describe("GelatoCore - GelatoProviders - Setters: IceCreams", function () {
   const gasPriceCeil = utils.parseUnits("20", "gwei");
 
   // Condition - Actions - Mix
-  let iceCream;
-  let otherIceCream;
+  let taskSpec;
+  let otherTaskSpec;
 
-  // ExecClaim for isIceCreamProvided check
-  let execClaim;
-  let otherExecClaim;
+  // TaskReceipt for isTaskSpecProvided check
+  let taskReceipt;
+  let otherTaskReceipt;
 
   let provider;
   let providerAddress;
@@ -57,7 +57,7 @@ describe("GelatoCore - GelatoProviders - Setters: IceCreams", function () {
     [provider] = await ethers.getSigners();
     providerAddress = await provider.getAddress();
 
-    // Construct ExecClaim for unit test isIceCreamProvided():
+    // Construct TaskReceipt for unit test isTaskSpecProvided():
     // GelatoProvider
     const gelatoProvider = new GelatoProvider({
       addr: providerAddress,
@@ -98,26 +98,26 @@ describe("GelatoCore - GelatoProviders - Setters: IceCreams", function () {
       expiryDate: constants.Zero,
     });
 
-    // ExecClaim
-    execClaim = new ExecClaim({
+    // TaskReceipt
+    taskReceipt = new TaskReceipt({
       id: constants.Zero,
       userProxy: constants.AddressZero,
       task: task,
     });
-    otherExecClaim = new ExecClaim({
+    otherTaskReceipt = new TaskReceipt({
       id: 1,
       userProxy: constants.AddressZero,
       task: otherTask,
     });
 
     // Condition Action Mix
-    iceCream = new IceCream({
+    taskSpec = new TaskSpec({
       condition: condition.address,
       actions: [actionStruct],
       gasPriceCeil,
     });
 
-    otherIceCream = new IceCream({
+    otherTaskSpec = new TaskSpec({
       condition: condition.address,
       actions: [actionStruct, otherActionStruct],
       gasPriceCeil,
@@ -126,372 +126,372 @@ describe("GelatoCore - GelatoProviders - Setters: IceCreams", function () {
 
   // We test different functionality of the contract as normal Mocha tests.
 
-  // provideIceCreams
-  describe("GelatoCore.GelatoProviders.provideIceCreams", function () {
-    it("Should allow anyone to provide a single IceCream", async function () {
-      // iceCreamHash
-      const iceCreamHash = await gelatoCore.iceCreamHash(
-        iceCream.condition,
-        iceCream.actions
+  // provideTaskSpecs
+  describe("GelatoCore.GelatoProviders.provideTaskSpecs", function () {
+    it("Should allow anyone to provide a single TaskSpec", async function () {
+      // taskSpecHash
+      const taskSpecHash = await gelatoCore.taskSpecHash(
+        taskSpec.condition,
+        taskSpec.actions
       );
 
-      // provideIceCreams
-      await expect(gelatoCore.provideIceCreams([iceCream]))
-        .to.emit(gelatoCore, "LogProvideIceCream")
-        .withArgs(providerAddress, iceCreamHash)
-        .and.to.emit(gelatoCore, "LogSetIceCreamGasPriceCeil")
+      // provideTaskSpecs
+      await expect(gelatoCore.provideTaskSpecs([taskSpec]))
+        .to.emit(gelatoCore, "LogProvideTaskSpec")
+        .withArgs(providerAddress, taskSpecHash)
+        .and.to.emit(gelatoCore, "LogSetTaskSpecGasPriceCeil")
         .withArgs(
           providerAddress,
-          iceCreamHash,
-          initialState.iceCreamGasPriceCeil,
+          taskSpecHash,
+          initialState.taskSpecGasPriceCeil,
           gasPriceCeil
         );
 
-      // iceCream
-      // iceCreamGasPriceCeil
+      // taskSpec
+      // taskSpecGasPriceCeil
       expect(
-        await gelatoCore.iceCreamGasPriceCeil(providerAddress, iceCreamHash)
-      ).to.be.equal(iceCream.gasPriceCeil);
+        await gelatoCore.taskSpecGasPriceCeil(providerAddress, taskSpecHash)
+      ).to.be.equal(taskSpec.gasPriceCeil);
 
-      // isIceCreamProvided
+      // isTaskSpecProvided
       expect(
-        await gelatoCore.isIceCreamProvided(
+        await gelatoCore.isTaskSpecProvided(
           providerAddress,
           condition.address,
           [actionStruct]
         )
       ).to.be.equal("OK");
 
-      // isExecClaimProvided
-      expect(await gelatoCore.isExecClaimProvided(execClaim)).not.to.be.equal(
-        "IceCreamNotProvided"
+      // isTaskReceiptProvided
+      expect(await gelatoCore.isTaskReceiptProvided(taskReceipt)).not.to.be.equal(
+        "TaskSpecNotProvided"
       );
 
-      // otherIceCream
-      // isIceCreamProvided
+      // otherTaskSpec
+      // isTaskSpecProvided
       expect(
-        await gelatoCore.isIceCreamProvided(
+        await gelatoCore.isTaskSpecProvided(
           providerAddress,
           condition.address,
           [actionStruct, otherActionStruct]
         )
-      ).to.be.equal("IceCreamNotProvided");
+      ).to.be.equal("TaskSpecNotProvided");
 
-      // isExecClaimProvided
-      expect(await gelatoCore.isExecClaimProvided(otherExecClaim)).to.be.equal(
-        "IceCreamNotProvided"
+      // isTaskReceiptProvided
+      expect(await gelatoCore.isTaskReceiptProvided(otherTaskReceipt)).to.be.equal(
+        "TaskSpecNotProvided"
       );
     });
 
-    it("Should allow anyone to provideIceCreams", async function () {
-      // iceCreamHash
-      const iceCreamHash = await gelatoCore.iceCreamHash(
-        iceCream.condition,
-        iceCream.actions
+    it("Should allow anyone to provideTaskSpecs", async function () {
+      // taskSpecHash
+      const taskSpecHash = await gelatoCore.taskSpecHash(
+        taskSpec.condition,
+        taskSpec.actions
       );
-      // otherIceCreamHash
-      const otherIceCreamHash = await gelatoCore.iceCreamHash(
-        otherIceCream.condition,
-        otherIceCream.actions
+      // otherTaskSpecHash
+      const otherTaskSpecHash = await gelatoCore.taskSpecHash(
+        otherTaskSpec.condition,
+        otherTaskSpec.actions
       );
 
-      // provideIceCreams
-      await expect(gelatoCore.provideIceCreams([iceCream, otherIceCream]))
-        .to.emit(gelatoCore, "LogProvideIceCream")
-        .withArgs(providerAddress, iceCreamHash)
-        .and.to.emit(gelatoCore, "LogSetIceCreamGasPriceCeil")
+      // provideTaskSpecs
+      await expect(gelatoCore.provideTaskSpecs([taskSpec, otherTaskSpec]))
+        .to.emit(gelatoCore, "LogProvideTaskSpec")
+        .withArgs(providerAddress, taskSpecHash)
+        .and.to.emit(gelatoCore, "LogSetTaskSpecGasPriceCeil")
         .withArgs(
           providerAddress,
-          iceCreamHash,
-          initialState.iceCreamGasPriceCeil,
+          taskSpecHash,
+          initialState.taskSpecGasPriceCeil,
           gasPriceCeil
         )
-        .and.to.emit(gelatoCore, "LogProvideIceCream")
-        .withArgs(providerAddress, otherIceCreamHash)
-        .and.to.emit(gelatoCore, "LogSetIceCreamGasPriceCeil")
+        .and.to.emit(gelatoCore, "LogProvideTaskSpec")
+        .withArgs(providerAddress, otherTaskSpecHash)
+        .and.to.emit(gelatoCore, "LogSetTaskSpecGasPriceCeil")
         .withArgs(
           providerAddress,
-          otherIceCreamHash,
-          initialState.iceCreamGasPriceCeil,
+          otherTaskSpecHash,
+          initialState.taskSpecGasPriceCeil,
           gasPriceCeil
         );
 
-      // iceCream
-      // iceCreamGasPriceCeil
+      // taskSpec
+      // taskSpecGasPriceCeil
       expect(
-        await gelatoCore.iceCreamGasPriceCeil(providerAddress, iceCreamHash)
-      ).to.be.equal(iceCream.gasPriceCeil);
+        await gelatoCore.taskSpecGasPriceCeil(providerAddress, taskSpecHash)
+      ).to.be.equal(taskSpec.gasPriceCeil);
 
-      // isIceCreamProvided
+      // isTaskSpecProvided
       expect(
-        await gelatoCore.isIceCreamProvided(
+        await gelatoCore.isTaskSpecProvided(
           providerAddress,
           condition.address,
           [actionStruct]
         )
       ).to.be.equal("OK");
 
-      // isExecClaimProvided
-      expect(await gelatoCore.isExecClaimProvided(execClaim)).not.to.be.equal(
-        "IceCreamNotProvided"
+      // isTaskReceiptProvided
+      expect(await gelatoCore.isTaskReceiptProvided(taskReceipt)).not.to.be.equal(
+        "TaskSpecNotProvided"
       );
 
-      // otherIceCream
-      // iceCreamGasPriceCeil
+      // otherTaskSpec
+      // taskSpecGasPriceCeil
       expect(
-        await gelatoCore.iceCreamGasPriceCeil(
+        await gelatoCore.taskSpecGasPriceCeil(
           providerAddress,
-          otherIceCreamHash
+          otherTaskSpecHash
         )
-      ).to.be.equal(otherIceCream.gasPriceCeil);
+      ).to.be.equal(otherTaskSpec.gasPriceCeil);
 
-      // isIceCreamProvided
+      // isTaskSpecProvided
       expect(
-        await gelatoCore.isIceCreamProvided(
+        await gelatoCore.isTaskSpecProvided(
           providerAddress,
           condition.address,
           [actionStruct, otherActionStruct]
         )
       ).to.be.equal("OK");
 
-      // isExecClaimProvided;
+      // isTaskReceiptProvided;
       expect(
-        await gelatoCore.isExecClaimProvided(otherExecClaim)
-      ).not.to.be.equal("IceCreamNotProvided");
+        await gelatoCore.isTaskReceiptProvided(otherTaskReceipt)
+      ).not.to.be.equal("TaskSpecNotProvided");
     });
 
-    it("Should NOT allow to provide same IceCreams again", async function () {
-      await gelatoCore.provideIceCreams([iceCream]);
+    it("Should NOT allow to provide same TaskSpecs again", async function () {
+      await gelatoCore.provideTaskSpecs([taskSpec]);
 
-      await expect(gelatoCore.provideIceCreams([iceCream])).to.be.revertedWith(
-        "GelatoProviders.setIceCreamGasPriceCeil: redundant"
+      await expect(gelatoCore.provideTaskSpecs([taskSpec])).to.be.revertedWith(
+        "GelatoProviders.setTaskSpecGasPriceCeil: redundant"
       );
 
       await expect(
-        gelatoCore.provideIceCreams([otherIceCream, iceCream])
+        gelatoCore.provideTaskSpecs([otherTaskSpec, taskSpec])
       ).to.be.revertedWith(
-        "GelatoProviders.setIceCreamGasPriceCeil: redundant"
+        "GelatoProviders.setTaskSpecGasPriceCeil: redundant"
       );
     });
 
-    it("Should allow anyone to setIceCreamGasPriceCeil", async function () {
-      // iceCreamHash
-      const iceCreamHash = await gelatoCore.iceCreamHash(
-        iceCream.condition,
-        iceCream.actions
+    it("Should allow anyone to setTaskSpecGasPriceCeil", async function () {
+      // taskSpecHash
+      const taskSpecHash = await gelatoCore.taskSpecHash(
+        taskSpec.condition,
+        taskSpec.actions
       );
 
-      // setIceCreamGasPriceCeil
+      // setTaskSpecGasPriceCeil
       await expect(
-        gelatoCore.setIceCreamGasPriceCeil(iceCreamHash, gasPriceCeil)
+        gelatoCore.setTaskSpecGasPriceCeil(taskSpecHash, gasPriceCeil)
       )
-        .to.emit(gelatoCore, "LogSetIceCreamGasPriceCeil")
+        .to.emit(gelatoCore, "LogSetTaskSpecGasPriceCeil")
         .withArgs(
           providerAddress,
-          iceCreamHash,
-          initialState.iceCreamGasPriceCeil,
+          taskSpecHash,
+          initialState.taskSpecGasPriceCeil,
           gasPriceCeil
         );
 
-      // iceCream
-      // iceCreamGasPriceCeil
+      // taskSpec
+      // taskSpecGasPriceCeil
       expect(
-        await gelatoCore.iceCreamGasPriceCeil(providerAddress, iceCreamHash)
+        await gelatoCore.taskSpecGasPriceCeil(providerAddress, taskSpecHash)
       ).to.be.equal(gasPriceCeil);
 
-      // isIceCreamProvided
+      // isTaskSpecProvided
       expect(
-        await gelatoCore.isIceCreamProvided(
+        await gelatoCore.isTaskSpecProvided(
           providerAddress,
           condition.address,
           [actionStruct]
         )
       ).to.be.equal("OK");
 
-      // isExecClaimProvided
-      expect(await gelatoCore.isExecClaimProvided(execClaim)).not.to.be.equal(
-        "IceCreamNotProvided"
+      // isTaskReceiptProvided
+      expect(await gelatoCore.isTaskReceiptProvided(taskReceipt)).not.to.be.equal(
+        "TaskSpecNotProvided"
       );
 
-      // otherIceCream
-      // isIceCreamProvided
+      // otherTaskSpec
+      // isTaskSpecProvided
       expect(
-        await gelatoCore.isIceCreamProvided(
+        await gelatoCore.isTaskSpecProvided(
           providerAddress,
           condition.address,
           [actionStruct, otherActionStruct]
         )
-      ).to.be.equal("IceCreamNotProvided");
+      ).to.be.equal("TaskSpecNotProvided");
 
-      // isExecClaimProvided
-      expect(await gelatoCore.isExecClaimProvided(otherExecClaim)).to.be.equal(
-        "IceCreamNotProvided"
+      // isTaskReceiptProvided
+      expect(await gelatoCore.isTaskReceiptProvided(otherTaskReceipt)).to.be.equal(
+        "TaskSpecNotProvided"
       );
     });
 
-    it("Should NOT allow to redundantly setIceCreamGasPriceCeil", async function () {
-      // iceCreamHash
-      const iceCreamHash = await gelatoCore.iceCreamHash(
-        iceCream.condition,
-        iceCream.actions
+    it("Should NOT allow to redundantly setTaskSpecGasPriceCeil", async function () {
+      // taskSpecHash
+      const taskSpecHash = await gelatoCore.taskSpecHash(
+        taskSpec.condition,
+        taskSpec.actions
       );
 
-      // setIceCreamGasPriceCeil
-      await gelatoCore.setIceCreamGasPriceCeil(iceCreamHash, gasPriceCeil);
+      // setTaskSpecGasPriceCeil
+      await gelatoCore.setTaskSpecGasPriceCeil(taskSpecHash, gasPriceCeil);
 
       await expect(
-        gelatoCore.setIceCreamGasPriceCeil(iceCreamHash, gasPriceCeil)
+        gelatoCore.setTaskSpecGasPriceCeil(taskSpecHash, gasPriceCeil)
       ).to.be.revertedWith(
-        "GelatoProviders.setIceCreamGasPriceCeil: redundant"
+        "GelatoProviders.setTaskSpecGasPriceCeil: redundant"
       );
     });
   });
 
-  // unprovideIceCreams
-  describe("GelatoCore.GelatoProviders.unprovideIceCreams", function () {
-    it("Should allow Providers to unprovide a single IceCream", async function () {
-      // provideIceCreams
-      await gelatoCore.provideIceCreams([iceCream, otherIceCream]);
+  // unprovideTaskSpecs
+  describe("GelatoCore.GelatoProviders.unprovideTaskSpecs", function () {
+    it("Should allow Providers to unprovide a single TaskSpec", async function () {
+      // provideTaskSpecs
+      await gelatoCore.provideTaskSpecs([taskSpec, otherTaskSpec]);
 
-      // iceCreamHash
-      const iceCreamHash = await gelatoCore.iceCreamHash(
-        iceCream.condition,
-        iceCream.actions
+      // taskSpecHash
+      const taskSpecHash = await gelatoCore.taskSpecHash(
+        taskSpec.condition,
+        taskSpec.actions
       );
-      // otherIceCreamHash
-      const otherIceCreamHash = await gelatoCore.iceCreamHash(
-        otherIceCream.condition,
-        otherIceCream.actions
+      // otherTaskSpecHash
+      const otherTaskSpecHash = await gelatoCore.taskSpecHash(
+        otherTaskSpec.condition,
+        otherTaskSpec.actions
       );
 
-      // unprovideIceCreams
-      await expect(gelatoCore.unprovideIceCreams([iceCream]))
-        .to.emit(gelatoCore, "LogUnprovideIceCream")
-        .withArgs(providerAddress, iceCreamHash);
+      // unprovideTaskSpecs
+      await expect(gelatoCore.unprovideTaskSpecs([taskSpec]))
+        .to.emit(gelatoCore, "LogUnprovideTaskSpec")
+        .withArgs(providerAddress, taskSpecHash);
 
-      // iceCream
-      // iceCreamGasPriceCeil
+      // taskSpec
+      // taskSpecGasPriceCeil
       expect(
-        await gelatoCore.iceCreamGasPriceCeil(providerAddress, iceCreamHash)
-      ).to.be.equal(initialState.iceCreamGasPriceCeil);
+        await gelatoCore.taskSpecGasPriceCeil(providerAddress, taskSpecHash)
+      ).to.be.equal(initialState.taskSpecGasPriceCeil);
 
-      // isIceCreamProvided
+      // isTaskSpecProvided
       expect(
-        await gelatoCore.isIceCreamProvided(
+        await gelatoCore.isTaskSpecProvided(
           providerAddress,
           condition.address,
           [actionStruct]
         )
-      ).to.be.equal("IceCreamNotProvided");
+      ).to.be.equal("TaskSpecNotProvided");
 
-      // isExecClaimProvided
-      expect(await gelatoCore.isExecClaimProvided(execClaim)).to.be.equal(
-        "IceCreamNotProvided"
+      // isTaskReceiptProvided
+      expect(await gelatoCore.isTaskReceiptProvided(taskReceipt)).to.be.equal(
+        "TaskSpecNotProvided"
       );
 
-      // otherIceCream
-      // iceCreamGasPriceCeil
+      // otherTaskSpec
+      // taskSpecGasPriceCeil
       expect(
-        await gelatoCore.iceCreamGasPriceCeil(
+        await gelatoCore.taskSpecGasPriceCeil(
           providerAddress,
-          otherIceCreamHash
+          otherTaskSpecHash
         )
-      ).to.be.equal(otherIceCream.gasPriceCeil);
+      ).to.be.equal(otherTaskSpec.gasPriceCeil);
 
-      // isIceCreamProvided
+      // isTaskSpecProvided
       expect(
-        await gelatoCore.isIceCreamProvided(
+        await gelatoCore.isTaskSpecProvided(
           providerAddress,
           condition.address,
           [actionStruct, otherActionStruct]
         )
       ).to.be.equal("OK");
 
-      // isExecClaimProvided
+      // isTaskReceiptProvided
       expect(
-        await gelatoCore.isExecClaimProvided(otherExecClaim)
-      ).not.to.be.equal("IceCreamNotProvided");
+        await gelatoCore.isTaskReceiptProvided(otherTaskReceipt)
+      ).not.to.be.equal("TaskSpecNotProvided");
     });
 
-    it("Should allow Providers to unprovideIceCreams", async function () {
-      // provideIceCreams
-      await gelatoCore.provideIceCreams([iceCream, otherIceCream]);
+    it("Should allow Providers to unprovideTaskSpecs", async function () {
+      // provideTaskSpecs
+      await gelatoCore.provideTaskSpecs([taskSpec, otherTaskSpec]);
 
-      // iceCreamHash
-      const iceCreamHash = await gelatoCore.iceCreamHash(
-        iceCream.condition,
-        iceCream.actions
+      // taskSpecHash
+      const taskSpecHash = await gelatoCore.taskSpecHash(
+        taskSpec.condition,
+        taskSpec.actions
       );
-      // otherIceCreamHash
-      const otherIceCreamHash = await gelatoCore.iceCreamHash(
-        otherIceCream.condition,
-        otherIceCream.actions
+      // otherTaskSpecHash
+      const otherTaskSpecHash = await gelatoCore.taskSpecHash(
+        otherTaskSpec.condition,
+        otherTaskSpec.actions
       );
 
-      // unprovideIceCreams
-      await expect(gelatoCore.unprovideIceCreams([iceCream, otherIceCream]))
-        .to.emit(gelatoCore, "LogUnprovideIceCream")
-        .withArgs(providerAddress, iceCreamHash)
-        .and.to.emit(gelatoCore, "LogUnprovideIceCream")
-        .withArgs(providerAddress, otherIceCreamHash);
+      // unprovideTaskSpecs
+      await expect(gelatoCore.unprovideTaskSpecs([taskSpec, otherTaskSpec]))
+        .to.emit(gelatoCore, "LogUnprovideTaskSpec")
+        .withArgs(providerAddress, taskSpecHash)
+        .and.to.emit(gelatoCore, "LogUnprovideTaskSpec")
+        .withArgs(providerAddress, otherTaskSpecHash);
 
-      // iceCream
-      // iceCreamGasPriceCeil
+      // taskSpec
+      // taskSpecGasPriceCeil
       expect(
-        await gelatoCore.iceCreamGasPriceCeil(providerAddress, iceCreamHash)
-      ).to.be.equal(initialState.iceCreamGasPriceCeil);
+        await gelatoCore.taskSpecGasPriceCeil(providerAddress, taskSpecHash)
+      ).to.be.equal(initialState.taskSpecGasPriceCeil);
 
-      // isIceCreamProvided
+      // isTaskSpecProvided
       expect(
-        await gelatoCore.isIceCreamProvided(
+        await gelatoCore.isTaskSpecProvided(
           providerAddress,
           condition.address,
           [actionStruct]
         )
-      ).to.be.equal("IceCreamNotProvided");
+      ).to.be.equal("TaskSpecNotProvided");
 
-      // otherIceCream
-      // iceCreamGasPriceCeil
+      // otherTaskSpec
+      // taskSpecGasPriceCeil
       expect(
-        await gelatoCore.iceCreamGasPriceCeil(
+        await gelatoCore.taskSpecGasPriceCeil(
           providerAddress,
-          otherIceCreamHash
+          otherTaskSpecHash
         )
-      ).to.be.equal(initialState.iceCreamGasPriceCeil);
+      ).to.be.equal(initialState.taskSpecGasPriceCeil);
 
-      // isIceCreamProvided
+      // isTaskSpecProvided
       expect(
-        await gelatoCore.isIceCreamProvided(
+        await gelatoCore.isTaskSpecProvided(
           providerAddress,
           condition.address,
           [actionStruct, otherActionStruct]
         )
-      ).to.be.equal("IceCreamNotProvided");
+      ).to.be.equal("TaskSpecNotProvided");
     });
 
-    it("Should NOT allow Providers to unprovide not-provided IceCreams", async function () {
-      // unprovideIceCreams revert
+    it("Should NOT allow Providers to unprovide not-provided TaskSpecs", async function () {
+      // unprovideTaskSpecs revert
       await expect(
-        gelatoCore.unprovideIceCreams([iceCream])
-      ).to.be.revertedWith("GelatoProviders.unprovideIceCreams: redundant");
+        gelatoCore.unprovideTaskSpecs([taskSpec])
+      ).to.be.revertedWith("GelatoProviders.unprovideTaskSpecs: redundant");
 
-      // unprovideIceCreams revert
+      // unprovideTaskSpecs revert
       await expect(
-        gelatoCore.unprovideIceCreams([iceCream, otherIceCream])
-      ).to.be.revertedWith("GelatoProviders.unprovideIceCreams: redundant");
+        gelatoCore.unprovideTaskSpecs([taskSpec, otherTaskSpec])
+      ).to.be.revertedWith("GelatoProviders.unprovideTaskSpecs: redundant");
 
-      // provideIceCreams
-      await gelatoCore.provideIceCreams([iceCream]);
+      // provideTaskSpecs
+      await gelatoCore.provideTaskSpecs([taskSpec]);
 
-      // unprovideIceCreams revert
+      // unprovideTaskSpecs revert
       await expect(
-        gelatoCore.unprovideIceCreams([otherIceCream])
-      ).to.be.revertedWith("GelatoProviders.unprovideIceCreams: redundant");
+        gelatoCore.unprovideTaskSpecs([otherTaskSpec])
+      ).to.be.revertedWith("GelatoProviders.unprovideTaskSpecs: redundant");
 
-      // unprovideIceCreams revert
+      // unprovideTaskSpecs revert
       await expect(
-        gelatoCore.unprovideIceCreams([iceCream, otherIceCream])
-      ).to.be.revertedWith("GelatoProviders.unprovideIceCreams: redundant");
+        gelatoCore.unprovideTaskSpecs([taskSpec, otherTaskSpec])
+      ).to.be.revertedWith("GelatoProviders.unprovideTaskSpecs: redundant");
     });
   });
 });

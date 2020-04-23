@@ -11,7 +11,7 @@ import {
 import {
     IGnosisSafeProxy
 } from "../../../user_proxies/gnosis_safe_proxy/interfaces/IGnosisSafeProxy.sol";
-import { Action, ExecClaim } from "../../interfaces/IGelatoCore.sol";
+import { Action, TaskReceipt } from "../../interfaces/IGelatoCore.sol";
 
 contract ProviderModuleGnosisSafeProxy is
     GelatoProviderModuleStandard,
@@ -26,20 +26,20 @@ contract ProviderModuleGnosisSafeProxy is
     constructor(bytes32[] memory hashes, address[] memory masterCopies, address _gelatoCore)
         public
     {
-        batchProvide(hashes, masterCopies);
+        multiProvide(hashes, masterCopies);
         gelatoCore = _gelatoCore;
     }
 
     // ================= GELATO PROVIDER MODULE STANDARD ================
     // @dev since we check extcodehash prior to execution, we forego the execution option
     //  where the userProxy is deployed at execution time.
-    function isProvided(ExecClaim memory _ec)
+    function isProvided(TaskReceipt memory _TR)
         public
         view
         override
         returns(string memory)
     {
-        address userProxy = _ec.userProxy;
+        address userProxy = _TR.userProxy;
         bytes32 codehash;
         assembly { codehash := extcodehash(userProxy) }
         if (!isProxyExtcodehashProvided[codehash])
@@ -144,7 +144,7 @@ contract ProviderModuleGnosisSafeProxy is
     }
 
     // Batch (un-)provide
-    function batchProvide(bytes32[] memory _hashes, address[] memory _mastercopies)
+    function multiProvide(bytes32[] memory _hashes, address[] memory _mastercopies)
         public
         override
         onlyOwner
@@ -153,7 +153,7 @@ contract ProviderModuleGnosisSafeProxy is
         provideMastercopies(_mastercopies);
     }
 
-    function batchUnprovide(bytes32[] calldata _hashes, address[] calldata _mastercopies)
+    function multiUnprovide(bytes32[] calldata _hashes, address[] calldata _mastercopies)
         external
         override
         onlyOwner

@@ -83,7 +83,7 @@ abstract contract GelatoExecutors is IGelatoExecutors, GelatoProviders {
     }
 
     // To unstake, Executors must reassign ALL their Providers to another staked Executor
-    function batchReassignProviders(address[] calldata _providers, address _newExecutor)
+    function multiReassignProviders(address[] calldata _providers, address _newExecutor)
         external
         override
     {

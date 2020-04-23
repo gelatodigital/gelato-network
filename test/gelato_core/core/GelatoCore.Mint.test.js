@@ -5,7 +5,7 @@ const { run, ethers } = require("@nomiclabs/buidler");
 
 const GELATO_GAS_PRICE = ethers.utils.parseUnits("8", "gwei");
 
-describe("Gelato Core - Minting ", function () {
+describe("Gelato Core - Task Submission ", function () {
   let actionWithdrawBatchExchange;
   let seller;
   let provider;
@@ -131,7 +131,7 @@ describe("Gelato Core - Minting ", function () {
       value: ethers.utils.parseUnits("1", "ether"),
     });
 
-    // Register new provider IceCream on core with provider EDITS NEED ä#######################
+    // Register new provider TaskSpec on core with provider EDITS NEED ä#######################
 
     const condition = new Condition({
       inst: constants.AddressZero,
@@ -154,18 +154,18 @@ describe("Gelato Core - Minting ", function () {
       termsOkCheck: true,
     });
 
-    const newIceCream = new IceCream({
+    const newTaskSpec = new TaskSpec({
       condition: condition.inst,
       actions: [actionWithdrawBatchExchangeGelato],
       gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
     });
 
-    // Call batchProvider(executor, IceCreams[], providerModules[])
+    // Call multiProvideexecutor, TaskSpecs[], providerModules[])
     await gelatoCore
       .connect(provider)
-      .batchProvide(
+      .multiProvide(
         executorAddress,
-        [newIceCream],
+        [newTaskSpec],
         [providerModuleGelatoUserProxy.address]
       );
 
@@ -201,22 +201,22 @@ describe("Gelato Core - Minting ", function () {
     await buyToken.deployed();
 
     // Pre-fund batch Exchange
-    await buyToken.mint(
+    await buyToken.create(
       mockBatchExchange.address,
       ethers.utils.parseUnits("100", buyDecimals)
     );
-    await sellToken.mint(
+    await sellToken.create(
       mockBatchExchange.address,
       ethers.utils.parseUnits("100", sellDecimals)
     );
-    await WETH.mint(
+    await WETH.create(
       mockBatchExchange.address,
       ethers.utils.parseUnits("100", wethDecimals)
     );
   });
 
-  describe("GelatoCore.Mint Tests", function () {
-    it("#1: Successfully mint whitelisted executionClaim", async function () {
+  describe("GelatoCore.submitTask Tests", function () {
+    it("#1: Successfully submit whitelisted taskReceipt", async function () {
       const actionInputs = {
         user: sellerAddress,
         userProxy: userProxyAddress,
@@ -256,14 +256,14 @@ describe("Gelato Core - Minting ", function () {
         expiryDate: ethers.utils.bigNumberify("0"),
       });
 
-      await expect(userProxy.mintExecClaim(task)).to.emit(
+      await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
-        "LogExecClaimMinted"
+        "LogSubmitTask"
       );
-      // .withArgs(executorAddress, 1, execClaimHash, execClaimArray);
+      // .withArgs(executorAddress, 1, taskReceiptHash, taskReceiptArray);
     });
 
-    it("#2: Minting reverts => Action not whitelisted", async function () {
+    it("#2: Submitting reverts => Action not whitelisted", async function () {
       const notWhitelistedAction = actionERC20TransferFrom.address;
       const actionInputs = {
         user: sellerAddress,
@@ -304,15 +304,15 @@ describe("Gelato Core - Minting ", function () {
         expiryDate: constants.HashZero,
       });
 
-      await expect(userProxy.mintExecClaim(task)).to.be.revertedWith(
-        "GelatoUserProxy.mintExecClaim:GelatoCore.mintExecClaim.isProvided:IceCreamNotProvided"
+      await expect(userProxy.submitTask(task)).to.be.revertedWith(
+        "GelatoUserProxy.submitTask:GelatoCore.submitTask.isProvided:TaskSpecNotProvided"
       );
 
-      // CouldNt get the execClaimHash to be computed off-chain
-      // .withArgs(executorAddress, 1, execClaimHash, execClaim);
+      // CouldNt get the taskReceiptHash to be computed off-chain
+      // .withArgs(executorAddress, 1, taskReceiptHash, taskReceipt);
     });
 
-    it("#3: Minting reverts => Condition not whitelisted", async function () {
+    it("#3: Submitting reverts => Condition not whitelisted", async function () {
       const notWhitelistedCondition = actionERC20TransferFrom.address;
 
       const actionInputs = {
@@ -354,12 +354,12 @@ describe("Gelato Core - Minting ", function () {
         expiryDate: constants.HashZero,
       });
 
-      await expect(userProxy.mintExecClaim(task)).to.be.revertedWith(
-        "GelatoUserProxy.mintExecClaim:GelatoCore.mintExecClaim.isProvided:IceCreamNotProvided"
+      await expect(userProxy.submitTask(task)).to.be.revertedWith(
+        "GelatoUserProxy.submitTask:GelatoCore.submitTask.isProvided:TaskSpecNotProvided"
       );
     });
 
-    it("#4: Minting reverts => Selected Provider with Executor that is not min staked", async function () {
+    it("#4: Submitting reverts => Selected Provider with Executor that is not min staked", async function () {
       const revertingProviderAddress = sellerAddress;
 
       const actionInputs = {
@@ -401,12 +401,12 @@ describe("Gelato Core - Minting ", function () {
         expiryDate: constants.HashZero,
       });
 
-      await expect(userProxy.mintExecClaim(task)).to.be.revertedWith(
-        "GelatoCore.mintExecClaim: executorByProvider's stake is insufficient"
+      await expect(userProxy.submitTask(task)).to.be.revertedWith(
+        "GelatoCore.submitTask: executorByProvider's stake is insufficient"
       );
     });
 
-    it("#5: Minting reverts => Invalid expiryDate", async function () {
+    it("#5: Submitting reverts => Invalid expiryDate", async function () {
       const expiryDateInPast = 1586776139;
 
       const actionInputs = {
@@ -448,12 +448,12 @@ describe("Gelato Core - Minting ", function () {
         expiryDate: expiryDateInPast,
       });
 
-      await expect(userProxy.mintExecClaim(task)).to.be.revertedWith(
-        "GelatoCore.mintExecClaim: Invalid expiryDate"
+      await expect(userProxy.submitTask(task)).to.be.revertedWith(
+        "GelatoCore.submitTask: Invalid expiryDate"
       );
     });
 
-    it("#6: Minting reverts => InvalidProviderModule", async function () {
+    it("#6: Submitting reverts => InvalidProviderModule", async function () {
       const revertingProviderMouleAddress = sellerAddress;
 
       const actionInputs = {
@@ -495,16 +495,16 @@ describe("Gelato Core - Minting ", function () {
         expiryDate: constants.HashZero,
       });
 
-      // GelatoCore.mintExecClaim.isProvided:InvalidProviderModule
-      await expect(userProxy.mintExecClaim(task)).to.be.revertedWith(
-        "GelatoCore.mintExecClaim.isProvided:InvalidProviderModule"
+      // GelatoCore.submitTask.isProvided:InvalidProviderModule
+      await expect(userProxy.submitTask(task)).to.be.revertedWith(
+        "GelatoCore.submitTask.isProvided:InvalidProviderModule"
       );
     });
 
-    it("#7: Minting successful => No action Payload", async function () {
+    it("#7: Submitting successful => No action Payload", async function () {
       const noActionPayload = constants.HashZero;
 
-      // Mint ExexClaim
+      // Submit Task
       const provider = new GelatoProvider({
         addr: providerAddress,
         module: providerModuleGelatoUserProxy.address,
@@ -530,14 +530,14 @@ describe("Gelato Core - Minting ", function () {
         expiryDate: constants.HashZero,
       });
 
-      // GelatoCore.mintExecClaim.isProvided:InvalidProviderModule
-      await expect(userProxy.mintExecClaim(task)).to.emit(
+      // GelatoCore.submitTask.isProvided:InvalidProviderModule
+      await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
-        "LogExecClaimMinted"
+        "LogSubmitTask"
       );
     });
 
-    it("#8: mint success (Self-provider), not whitelisted action, assigning new executor and staking", async function () {
+    it("#8: create success (Self-provider), not whitelisted action, assigning new executor and staking", async function () {
       const actionInputs = {
         user: providerAddress,
         userProxy: userProxyAddress,
@@ -614,10 +614,10 @@ describe("Gelato Core - Minting ", function () {
         }
       );
 
-      // Mint Claim
-      const mintPayload = await run("abi-encode-withselector", {
+      // Submit Task
+      const submitTaskPayload = await run("abi-encode-withselector", {
         contractname: "GelatoCore",
-        functionname: "mintExecClaim",
+        functionname: "submitTask",
         inputs: [task],
       });
 
@@ -652,26 +652,26 @@ describe("Gelato Core - Minting ", function () {
       });
       actions.push(addProviderModuleAction);
 
-      const mintAction = new Action({
+      const submitTaskAction = new Action({
         inst: gelatoCore.address,
-        data: mintPayload,
+        data: submitTaskPayload,
         operation: Operation.Call,
       });
-      actions.push(mintAction);
+      actions.push(submitTaskAction);
 
       await expect(
         providerProxy.connect(provider).multiExecActions(actions, {
           value: ethers.utils.parseUnits("1", "ether"),
         })
       )
-        .to.emit(gelatoCore, "LogExecClaimMinted")
+        .to.emit(gelatoCore, "LogSubmitTask")
         .to.emit(gelatoCore, "LogProviderAssignsExecutor")
         .to.emit(gelatoCore, "LogProvideFunds");
 
-      // GelatoCore.mintExecClaim.isProvided:InvalidProviderModule
+      // GelatoCore.submitTask.isProvided:InvalidProviderModule
     });
 
-    it("#9: mintExecClaim reverts (Self-provider), inputting other address as provider that has not whitelisted action", async function () {
+    it("#9: submitTask reverts (Self-provider), inputting other address as provider that has not whitelisted action", async function () {
       const actionInputs = {
         user: providerAddress,
         userProxy: userProxyAddress,
@@ -747,10 +747,10 @@ describe("Gelato Core - Minting ", function () {
         }
       );
 
-      // Mint Claim
-      const mintPayload = await run("abi-encode-withselector", {
+      // Submit Task
+      const submitTaskPayload = await run("abi-encode-withselector", {
         contractname: "GelatoCore",
-        functionname: "mintExecClaim",
+        functionname: "submitTask",
         inputs: [task],
       });
 
@@ -785,20 +785,20 @@ describe("Gelato Core - Minting ", function () {
       });
       actions.push(addProviderModuleAction);
 
-      const mintAction = new Action({
+      const submitTaskAction = new Action({
         inst: gelatoCore.address,
-        data: mintPayload,
+        data: submitTaskPayload,
         operation: Operation.Call,
       });
-      actions.push(mintAction);
+      actions.push(submitTaskAction);
 
-      // GelatoCore.mintExecClaim.isProvided:InvalidProviderModule
+      // GelatoCore.submitTask.isProvided:InvalidProviderModule
       await expect(
         providerProxy.connect(provider).multiExecActions(actions, {
           value: ethers.utils.parseUnits("1", "ether"),
         })
       ).to.revertedWith(
-        "GelatoUserProxy.callAction:GelatoCore.mintExecClaim.isProvided:IceCreamNotProvided"
+        "GelatoUserProxy.callAction:GelatoCore.submitTask.isProvided:TaskSpecNotProvided"
       );
     });
   });

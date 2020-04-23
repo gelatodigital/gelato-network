@@ -11,7 +11,7 @@ const GELATO_GAS_PRICE = ethers.utils.parseUnits("8", "gwei");
 // 3. SellTokens got partially converted into buy tokens, insufficient buy tokens for withdrawal
 // 4. No sellTokens got converted into buy tokens, sufficient sell tokens for withdrawal
 // 5. No sellTokens got converted into buy tokens, insufficient sell tokens for withdrawal
-describe("GelatoCore.CancelExecClaim", function () {
+describe("GelatoCore.cancelTask", function () {
   // We define the ContractFactory and Signer variables here and assign them in
   // a beforeEach hook.
   let seller;
@@ -30,8 +30,8 @@ describe("GelatoCore.CancelExecClaim", function () {
 
   let task;
 
-  let execClaim;
-  let execClaim2;
+  let taskReceipt;
+  let taskReceipt2;
 
   // ###### GelatoCore Setup ######
   beforeEach(async function () {
@@ -86,7 +86,7 @@ describe("GelatoCore.CancelExecClaim", function () {
     );
     await providerModuleGelatoUserProxy.deployed();
 
-    // Provide IceCream
+    // Provide TaskSpec
     const MockActionDummy = await ethers.getContractFactory(
       "MockActionDummy",
       sysAdmin
@@ -104,7 +104,7 @@ describe("GelatoCore.CancelExecClaim", function () {
 
     // Provider registers new acttion
 
-    const newIceCream2 = new IceCream({
+    const newTaskSpec2 = new TaskSpec({
       condition: constants.AddressZero,
       actions: [mockActionDummyGelato],
       gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
@@ -119,9 +119,9 @@ describe("GelatoCore.CancelExecClaim", function () {
 
     await gelatoCore
       .connect(provider)
-      .batchProvide(
+      .multiProvide(
         executorAddress,
-        [newIceCream2],
+        [newTaskSpec2],
         [providerModuleGelatoUserProxy.address]
       );
 
@@ -165,76 +165,76 @@ describe("GelatoCore.CancelExecClaim", function () {
       expiryDate: constants.HashZero,
     });
 
-    execClaim = {
+    taskReceipt = {
       id: 1,
       userProxy: userProxyAddress,
       task,
     };
 
-    execClaim2 = {
+    taskReceipt2 = {
       id: 2,
       userProxy: userProxyAddress,
       task,
     };
 
-    const mintTx = await userProxy.mintExecClaim(task);
-    await mintTx.wait();
+    const submitTaskTx = await userProxy.submitTask(task);
+    await submitTaskTx.wait();
   });
 
   // We test different functionality of the contract as normal Mocha tests.
-  describe("GelatoCore.cancelExecClaim", function () {
-    it("#1: Cancel execution claim succesfully as user", async function () {
-      await expect(userProxy.cancelExecClaim(execClaim))
-        .to.emit(gelatoCore, "LogExecClaimCancelled")
-        .withArgs(execClaim.id);
+  describe("GelatoCore.cancelTask", function () {
+    it("#1: Cancel task succesfully as user", async function () {
+      await expect(userProxy.cancelTask(taskReceipt))
+        .to.emit(gelatoCore, "LogTaskCancelled")
+        .withArgs(taskReceipt.id);
     });
 
-    it("#2: Cancel execution claim succesfully as provider", async function () {
-      await expect(gelatoCore.connect(provider).cancelExecClaim(execClaim))
-        .to.emit(gelatoCore, "LogExecClaimCancelled")
-        .withArgs(execClaim.id);
+    it("#2: Cancel task succesfully as provider", async function () {
+      await expect(gelatoCore.connect(provider).cancelTask(taskReceipt))
+        .to.emit(gelatoCore, "LogTaskCancelled")
+        .withArgs(taskReceipt.id);
     });
 
-    it("#3: Cancel execution claim unsuccesfully as random third party", async function () {
+    it("#3: Cancel task unsuccesfully as random third party", async function () {
       await expect(
-        gelatoCore.connect(executor).cancelExecClaim(execClaim)
-      ).to.be.revertedWith("GelatoCore.cancelExecClaim: sender");
+        gelatoCore.connect(executor).cancelTask(taskReceipt)
+      ).to.be.revertedWith("GelatoCore.cancelTask: sender");
     });
 
-    it("#4: Cancel execution claim unsuccesfully due to wrong execClaim input", async function () {
+    it("#4: Cancel task unsuccesfully due to wrong taskReceipt input", async function () {
       await expect(
-        gelatoCore.connect(provider).cancelExecClaim(execClaim2)
+        gelatoCore.connect(provider).cancelTask(taskReceipt2)
       ).to.be.revertedWith(
-        "VM Exception while processing transaction: revert GelatoCore.cancelExecClaim: invalid execClaimHash"
+        "VM Exception while processing transaction: revert GelatoCore.cancelTask: invalid taskReceiptHash"
       );
     });
 
-    it("#5: Batch Cancel execution claim succesfully as user", async function () {
-      // mint second Claim
-      const mintTx = await userProxy.mintExecClaim(task);
-      await mintTx.wait();
+    it("#5: Batch Cancel task succesfully as user", async function () {
+      // submit second Task
+      const submitTaskTx = await userProxy.submitTask(task);
+      await submitTaskTx.wait();
 
-      await expect(userProxy.batchCancelExecClaims([execClaim, execClaim2]))
-        .to.emit(gelatoCore, "LogExecClaimCancelled")
-        .withArgs(execClaim.id)
-        .to.emit(gelatoCore, "LogExecClaimCancelled")
-        .withArgs(execClaim2.id);
+      await expect(userProxy.multiCancelTasks([taskReceipt, taskReceipt2]))
+        .to.emit(gelatoCore, "LogTaskCancelled")
+        .withArgs(taskReceipt.id)
+        .to.emit(gelatoCore, "LogTaskCancelled")
+        .withArgs(taskReceipt2.id);
     });
 
-    it("#6: Batch Cancel execution claim succesfully as provider", async function () {
-      // mint second Claim
-      const mintTx = await userProxy.mintExecClaim(task);
-      await mintTx.wait();
+    it("#6: Batch Cancel task succesfully as provider", async function () {
+      // submit second Task
+      const submitTaskTx = await userProxy.submitTask(task);
+      await submitTaskTx.wait();
 
       await expect(
         gelatoCore
           .connect(provider)
-          .batchCancelExecClaims([execClaim, execClaim2])
+          .multiCancelTasks([taskReceipt, taskReceipt2])
       )
-        .to.emit(gelatoCore, "LogExecClaimCancelled")
-        .withArgs(execClaim.id)
-        .to.emit(gelatoCore, "LogExecClaimCancelled")
-        .withArgs(execClaim2.id);
+        .to.emit(gelatoCore, "LogTaskCancelled")
+        .withArgs(taskReceipt.id)
+        .to.emit(gelatoCore, "LogTaskCancelled")
+        .withArgs(taskReceipt2.id);
     });
   });
 });
