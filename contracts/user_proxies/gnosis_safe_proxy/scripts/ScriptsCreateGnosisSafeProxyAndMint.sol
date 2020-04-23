@@ -21,7 +21,7 @@ contract ScriptsCreateGnosisSafeProxyAndMint is
         override
     {
         create(_mastercopy, _initializer);
-        _gelatoCore.mintExecClaim(_ec.task);
+        _gelatoCore.createExecClaim(_ec.task);
     }
 
     function createTwo(
@@ -36,6 +36,6 @@ contract ScriptsCreateGnosisSafeProxyAndMint is
         override
     {
         createTwo(_mastercopy, _initializer, _saltNonce);
-        _gelatoCore.mintExecClaim(_ec.task);
+        _gelatoCore.createExecClaim(_ec.task);
     }
 }
