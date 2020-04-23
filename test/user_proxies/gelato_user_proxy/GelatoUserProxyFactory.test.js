@@ -11,6 +11,7 @@ describe("GelatoCore - GelatoProviders - Setters: IceCreamS", function () {
   // We define the ContractFactory and Address variables here and assign them in
   // a beforeEach hook.
   let GelatoCoreFactory;
+
   let ConditionFactory;
   let ActionFactory;
   let OtherActionFactory;

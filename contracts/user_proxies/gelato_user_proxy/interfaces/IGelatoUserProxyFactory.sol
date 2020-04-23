@@ -21,6 +21,4 @@ interface IGelatoUserProxyFactory {
     function isGelatoProxyUser(address _user) external view returns(bool);
 
     function gelatoCore() external pure returns(address);
-
-    function proxyCreationCode() external pure returns(bytes memory);
 }

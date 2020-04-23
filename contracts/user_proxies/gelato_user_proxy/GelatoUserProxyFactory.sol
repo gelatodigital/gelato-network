@@ -42,8 +42,4 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
     function isGelatoProxyUser(address _user) public view override returns(bool) {
         return gelatoProxyByUser[_user] != GelatoUserProxy(0);
     }
-
-    function proxyCreationCode() public pure override returns(bytes memory) {
-        return type(GelatoUserProxy).creationCode;
-    }
 }
