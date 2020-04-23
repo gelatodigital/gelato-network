@@ -233,9 +233,7 @@ describe("GelatoCore - GelatoExecutors - Setters: FUNDS", function () {
     it("Should NOT allow not-staked Executors to increase stake", async function () {
       await expect(
         gelatoCore.increaseExecutorStake({ value: minExecutorStake })
-      ).to.be.revertedWith(
-        "GelatoExecutors.increaseExecutorStake: stakeExecutor first"
-      );
+      ).to.be.revertedWith("GelatoExecutors.increaseExecutorStake: no stake");
     });
 
     it("Should NOT allow Executors Stake to be below minExecutorStake after increase", async function () {
@@ -250,7 +248,9 @@ describe("GelatoCore - GelatoExecutors - Setters: FUNDS", function () {
       // increaseExecutorStake: revert
       await expect(
         gelatoCore.increaseExecutorStake({ value: 69 })
-      ).to.be.revertedWith("GelatoExecutors.increaseExecutorStake");
+      ).to.be.revertedWith(
+        "GelatoExecutors.increaseExecutorStake: below minStake"
+      );
     });
   });
 

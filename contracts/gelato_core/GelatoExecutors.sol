@@ -42,13 +42,15 @@ abstract contract GelatoExecutors is IGelatoExecutors, GelatoProviders {
     }
 
     function increaseExecutorStake() external payable override {
+        uint256 currentStake = executorStake[msg.sender];
+        require(currentStake != 0, "GelatoExecutors.increaseExecutorStake: no stake");
+        uint256 newStake = currentStake + msg.value;
+        executorStake[msg.sender] = newStake;
         require(
-            executorStake[msg.sender] != 0,
-            "GelatoExecutors.increaseExecutorStake: stakeExecutor first"
+            newStake >= minExecutorStake,
+            "GelatoExecutors.increaseExecutorStake: below minStake"
         );
-        executorStake[msg.sender] = executorStake[msg.sender].add(msg.value);
-        require(isExecutorMinStaked(msg.sender), "GelatoExecutors.increaseExecutorStake");
-        emit LogIncreaseExecutorStake(msg.sender, executorStake[msg.sender]);
+        emit LogIncreaseExecutorStake(msg.sender, newStake);
     }
 
     function withdrawExcessExecutorStake(uint256 _withdrawAmount)
