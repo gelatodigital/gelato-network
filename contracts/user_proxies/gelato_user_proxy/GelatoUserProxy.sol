@@ -14,7 +14,7 @@ contract GelatoUserProxy is IGelatoUserProxy {
     constructor(
         address _user,
         address _gelatoCore,
-        Task[] memory _optionalMintTasks,
+        Task[] memory _optionalCreateTasks,
         Action[] memory _optionalActions
     )
         public
@@ -24,7 +24,7 @@ contract GelatoUserProxy is IGelatoUserProxy {
     {
         user = _user;
         gelatoCore = _gelatoCore;
-        _initialize(_gelatoCore, _optionalMintTasks, _optionalActions);
+        _initialize(_gelatoCore, _optionalCreateTasks, _optionalActions);
     }
 
     receive() external payable {}
@@ -47,17 +47,17 @@ contract GelatoUserProxy is IGelatoUserProxy {
         _;
     }
 
-    function mintExecClaim(Task memory _task) public override onlyUser {
-        try IGelatoCore(gelatoCore).mintExecClaim(_task) {
+    function createExecClaim(Task memory _task) public override onlyUser {
+        try IGelatoCore(gelatoCore).createExecClaim(_task) {
         } catch Error(string memory err) {
-            revert(string(abi.encodePacked("GelatoUserProxy.mintExecClaim:", err)));
+            revert(string(abi.encodePacked("GelatoUserProxy.createExecClaim:", err)));
         } catch {
-            revert("GelatoUserProxy.mintExecClaim:undefinded");
+            revert("GelatoUserProxy.createExecClaim:undefinded");
         }
     }
 
-    function multiMintExecClaims(Task[] memory _tasks) public override onlyUser {
-        for (uint i = 0; i < _tasks.length; i++) mintExecClaim(_tasks[i]);
+    function multiCreateExecClaims(Task[] memory _tasks) public override onlyUser {
+        for (uint i = 0; i < _tasks.length; i++) createExecClaim(_tasks[i]);
     }
 
     function cancelExecClaim(ExecClaim memory _ec) public override onlyUser {
@@ -161,17 +161,17 @@ contract GelatoUserProxy is IGelatoUserProxy {
     {
         if (_tasks.length != 0) {
             for (uint i = 0; i < _tasks.length; i++) {
-                try IGelatoCore(_gelatoCore).mintExecClaim(_tasks[i]) {
+                try IGelatoCore(_gelatoCore).createExecClaim(_tasks[i]) {
                 } catch Error(string memory err) {
                     revert(
                         string(
                             abi.encodePacked(
-                                "GelatoUserProxy._initialize.mintExecClaim:", err
+                                "GelatoUserProxy._initialize.createExecClaim:", err
                             )
                         )
                     );
                 } catch {
-                    revert("GelatoUserProxy._initialize.mintExecClaim:undefined");
+                    revert("GelatoUserProxy._initialize.createExecClaim:undefined");
                 }
             }
         }

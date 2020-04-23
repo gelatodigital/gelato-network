@@ -211,15 +211,15 @@ describe("Gnosis - ActionWithdrawBatchExchangeWithMaker - Action", function () {
     await buyToken.deployed();
 
     // Pre-fund batch Exchange
-    await buyToken.mint(
+    await buyToken.create(
       mockBatchExchange.address,
       ethers.utils.parseUnits("100", buyDecimals)
     );
-    await sellToken.mint(
+    await sellToken.create(
       mockBatchExchange.address,
       ethers.utils.parseUnits("100", sellDecimals)
     );
-    await WETH.mint(
+    await WETH.create(
       mockBatchExchange.address,
       ethers.utils.parseUnits("100", wethDecimals)
     );

@@ -11,7 +11,7 @@ import { Task, IGelatoCore } from "../../gelato_core/interfaces/IGelatoCore.sol"
 
 /// @title ScriptEnterStableSwap
 /// @author Luis Schliesske & Hilmar Orth
-/// @notice Script that 1) whitelists gelato core as gnosis safe module, 2) places order on batch exchange and creates two withdraw requests and 3) mints execution claim on gelato for a withdraw action
+/// @notice Script that 1) whitelists gelato core as gnosis safe module, 2) places order on batch exchange and creates two withdraw requests and 3) creates execution claim on gelato for a withdraw action
 contract ScriptEnterStableSwap is ActionPlaceOrderBatchExchange, ScriptGnosisSafeEnableGelatoCore {
 
     constructor(address _batchExchange) ActionPlaceOrderBatchExchange(_batchExchange) public {
@@ -35,7 +35,7 @@ contract ScriptEnterStableSwap is ActionPlaceOrderBatchExchange, ScriptGnosisSaf
         uint128 _buyAmount,
         uint32 _orderExpirationBatchId,
         address _gelatoCore,
-        // ChainedMintingParams
+        // ChainedCreateingParams
         Task memory _task
     )
         public
@@ -54,10 +54,10 @@ contract ScriptEnterStableSwap is ActionPlaceOrderBatchExchange, ScriptGnosisSaf
             _orderExpirationBatchId
         );
 
-        // 3. Mint execution claim
-        try IGelatoCore(_gelatoCore).mintExecClaim(_task) {
+        // 3. Create execution claim
+        try IGelatoCore(_gelatoCore).createExecClaim(_task) {
         } catch {
-            revert("Minting chainedClaim unsuccessful");
+            revert("Creating chainedClaim unsuccessful");
         }
 
     }

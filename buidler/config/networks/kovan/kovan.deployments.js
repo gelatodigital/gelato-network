@@ -3,9 +3,6 @@ export const deployments = {
   // ==== One-Off Actions ====
   // Gnosis
   ActionWithdrawBatchExchange: "0x0",
-  // BzX
-  ActionBzxPtokenBurnToToken: "0x43dFFE6f0C2029e397Fa47DD27587Ef6297660C3",
-  ActionBzxPtokenMintWithToken: "0x080d3059b30D3B7EDffa1B0B9AE981f0Ce94168E",
   // erc20
   ActionERC20Transfer: "0x213719cD7c69DCA764E336bEb8D735DA01FD6c83",
   ActionERC20TransferFrom: "0xC46095e97F1C0756b852EaE04f4D5De301351113",
@@ -47,8 +44,8 @@ export const deployments = {
   // Scripts
   ScriptGnosisSafeEnableGelatoCore:
     "0x08954d0d87D2169CA4051AA612537eEDf6E6DCb4",
-  // Enable GelatoCore Module and Mint
-  ScriptGnosisSafeEnableGelatoCoreAndMint:
+  // Enable GelatoCore Module and Create
+  ScriptGnosisSafeEnableGelatoCoreAndCreate:
     "0x5993ff30b943dE4c3fDA59d88D87d1661412D101",
   // Enter the Rebalancing Chained Action
   ScriptEnterPortfolioRebalancingKovan:

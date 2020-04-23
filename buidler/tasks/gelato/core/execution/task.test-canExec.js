@@ -2,10 +2,10 @@ import { task } from "@nomiclabs/buidler/config";
 import { constants, utils } from "ethers";
 
 export default task("test-canexec")
-  .addPositionalParam("minttxhash")
-  .setAction(async ({ minttxhash }) => {
+  .addPositionalParam("createtxhash")
+  .setAction(async ({ createtxhash }) => {
     try {
-      const execIdOneMintTxHash =
+      const execIdOneCreateTxHash =
         "0xfd73c9b128b628b1ac95e1d07632694569a38226d57df135dff8f7b71abab0fb";
       const provider = await run("handleGelatoProvider");
       const user = await run("bre-config", {
@@ -39,8 +39,8 @@ export default task("test-canexec")
 
       const { execClaimHash } = await run("event-getparsedlog", {
         contractname: "GelatoCore",
-        eventname: "LogExecClaimMinted",
-        txhash: minttxhash,
+        eventname: "LogCreateExecClaim",
+        txhash: createtxhash,
         values: true
       });
 

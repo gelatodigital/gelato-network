@@ -9,20 +9,20 @@ interface IBzxPtoken {
 
 
     /**
-     * @notice Deposit assets to the pToken, which in turn mints pTokens
+     * @notice Deposit assets to the pToken, which in turn creates pTokens
         to the lender’s wallet at the current tokenPrice() rate.
      * @dev Prior ERC20 depositToken.approve(pTokenContractAddr, depositAmount) needed
-     * @param receiver address that will receive the minted pTokens.
+     * @param receiver address that will receive the createed pTokens.
      * @param depositTokenAddress  Any supported KyberToken.  However, specifying
         a token other the asset returned by the loanTokenAddress() function will
         trigger a KyberSwap into the correct asset, being subject to any trade slippage
         that may occur.
      * @param depositAmount you can cap it at loanToken
-     * @param maxPriceAllowed A slippage limit on the payout rate of the pTokens minted.
+     * @param maxPriceAllowed A slippage limit on the payout rate of the pTokens createed.
         This should be set to a value above the current price returned by `tokenPrice()`.
         A value of 0 is ignored.  ** footnote 1
      */
-    function mintWithToken(
+    function createWithToken(
         address receiver,
         address depositTokenAddress,
         uint256 depositAmount,
@@ -31,7 +31,7 @@ interface IBzxPtoken {
         external
         returns (uint256);
 
-    // function mintWithEther() omitted because requires GelatoUserProxy to store ETH
+    // function createWithEther() omitted because requires GelatoUserProxy to store ETH
 
 
     /**
@@ -90,14 +90,14 @@ interface IBzxPtoken {
 
     /// @notice Returns the token price recorded during the last checkpoint for the user.
     ///  Checkpoints occur whenever there is a token balance changing action taken by
-    ///   the user (minting, burning, or transferring).
+    ///   the user (createing, burning, or transferring).
     /// User profit since last checkpoint formula:
     ///  (tokenPrice() - checkpointPrice(user)) * balanceOf(user) / 10^36
     function checkpointPrice(address _user) external view returns (uint256 price);
 
 
     /// @notice marketLiquidityForLoan() will tell you the largest amount
-    ///  you can deposit to mint pTokens based on available liquidity in the lending pools
+    ///  you can deposit to create pTokens based on available liquidity in the lending pools
     function marketLiquidityForLoan() external view returns(uint256 maxDepositAmount);
 
     /// @notice Returns the owner's balance of the underlying asset.
@@ -111,6 +111,6 @@ depositA
 
 maxPriceAllowed: maxPriceAllowed is to regulate the changes in tokenPrice() between
  when it's first queried off-chain, and when it's mined later. it doesn't really have
- relevance if you query it during a transaction, then submit the mint
+ relevance if you query it during a transaction, then submit the create
 
 */

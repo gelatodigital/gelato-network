@@ -18,7 +18,7 @@ export default internalTask(
       });
       if (log) {
         console.log(
-          `\n Payload for ScriptGnosisSafeEnableGelatoCoreAndMint\
+          `\n Payload for ScriptGnosisSafeEnableGelatoCoreAndCreate\
              \n GelatoCore: ${gelatoCoreAddress}\
              \n Payload:\n ${payload}\n`
         );

@@ -177,8 +177,8 @@ describe("GelatoCore.CancelExecClaim", function () {
       task,
     };
 
-    const mintTx = await userProxy.mintExecClaim(task);
-    await mintTx.wait();
+    const createExecClaimTx = await userProxy.createExecClaim(task);
+    await createExecClaimTx.wait();
   });
 
   // We test different functionality of the contract as normal Mocha tests.
@@ -210,9 +210,9 @@ describe("GelatoCore.CancelExecClaim", function () {
     });
 
     it("#5: Batch Cancel execution claim succesfully as user", async function () {
-      // mint second Claim
-      const mintTx = await userProxy.mintExecClaim(task);
-      await mintTx.wait();
+      // create second Claim
+      const createExecClaimTx = await userProxy.createExecClaim(task);
+      await createExecClaimTx.wait();
 
       await expect(userProxy.batchCancelExecClaims([execClaim, execClaim2]))
         .to.emit(gelatoCore, "LogExecClaimCancelled")
@@ -222,9 +222,9 @@ describe("GelatoCore.CancelExecClaim", function () {
     });
 
     it("#6: Batch Cancel execution claim succesfully as provider", async function () {
-      // mint second Claim
-      const mintTx = await userProxy.mintExecClaim(task);
-      await mintTx.wait();
+      // create second Claim
+      const createExecClaimTx = await userProxy.createExecClaim(task);
+      await createExecClaimTx.wait();
 
       await expect(
         gelatoCore

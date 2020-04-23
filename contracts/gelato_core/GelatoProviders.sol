@@ -40,7 +40,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     mapping(address => mapping(bytes32 => uint256)) public override iceCreamGasPriceCeil;
     mapping(address => ProviderModuleSet.Set) internal _providerModules;
 
-    // GelatoCore: mintExecClaim/collectExecClaimRent Gate
+    // GelatoCore: createExecClaim/collectExecClaimRent Gate
     function isIceCreamProvided(
         address _provider,
         IGelatoCondition _condition,
@@ -56,7 +56,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         return OK;
     }
 
-    // IGelatoProviderModule: GelatoCore mintExecClaim/canExec Gate
+    // IGelatoProviderModule: GelatoCore createExecClaim/canExec Gate
     function providerModuleChecks(ExecClaim memory _ec)
         public
         view
@@ -77,7 +77,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         }
     }
 
-    // GelatoCore: combined mintExecClaim Gate
+    // GelatoCore: combined createExecClaim Gate
     function isExecClaimProvided(ExecClaim memory _ec)
         public
         view

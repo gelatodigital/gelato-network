@@ -2,16 +2,13 @@ export const contracts = [
   // === Actions ===
   // === Actions ===
   // = One-Off =
-  // BzX
-  "ActionBzxPtokenBurnToToken",
-  "ActionBzxPtokenMintWithToken",
   // ERC20
   "ActionERC20Transfer",
   "ActionERC20TransferFrom",
   // Kyber
   "ActionKyberTradeKovan",
-  // Multimint
-  "ActionMultiMintForConditionTimestampPassed",
+  // Multicreate
+  "ActionMultiCreateForConditionTimestampPassed",
   // Portfolio Mgmt
   "ActionRebalancePortfolio",
   // Gnosis
@@ -52,7 +49,7 @@ export const contracts = [
   // = GnosisSafeProxy =
   // Scripts
   "ScriptGnosisSafeEnableGelatoCore",
-  "ScriptGnosisSafeEnableGelatoCoreAndMint",
+  "ScriptGnosisSafeEnableGelatoCoreAndCreate",
 
   // === Mocks ====
   // Conditions

@@ -23,8 +23,8 @@ import "../../dapp_interfaces/uniswap/IUniswapExchange.sol";
 /// @title ScriptEnterPortfolioRebalancingKovan
 /// @notice Script to be run during Gnosis Safe Proxy setup for Gelato integration & execute ChainedRebalancingAction
 /// @dev Should be delegatecalled from gnosisSafeProxy.setup.setupModules(to,data):
-///       - <to> address of this contract: ScriptGnosisSafeEnableGelatoCoreAndMint
-///       - <data> encodedPayload for enableModuleAndMint
+///       - <to> address of this contract: ScriptGnosisSafeEnableGelatoCoreAndCreate
+///       - <data> encodedPayload for enableModuleAndCreate
 contract ScriptEnterPortfolioRebalancingKovan is
     ScriptGnosisSafeEnableGelatoCore,
     ActionChainedRebalancePortfolioKovan
@@ -52,7 +52,7 @@ contract ScriptEnterPortfolioRebalancingKovan is
         // 2. Execute ActionRebalancePortfolio.action => Swaps ETH into DAI
         action(payable(_gelatoProviderAndExecutor[0]));
 =======
-        // 2. Execute ActionChainedRebalancePortfolioKovan.chainedAction => Swaps ETH into DAI & mints new claim
+        // 2. Execute ActionChainedRebalancePortfolioKovan.chainedAction => Swaps ETH into DAI & creates new claim
         chainedAction(
             _selectedProviderAndExecutor,
             _conditionAndAction

@@ -83,7 +83,7 @@ export default task("gc-debug-newcore")
         log
       });
 
-      // === Minting ===
+      // === Creating ===
       const conditionData = constants.HashZero;
       const actionData = constants.HashZero;
 
@@ -107,31 +107,31 @@ export default task("gc-debug-newcore")
         write: true
       });
 
-      let mintTx;
+      let createTx;
       try {
-        mintTx = await gelatoUserProxy.mintExecClaim(execClaim, testSigner);
+        createTx = await gelatoUserProxy.createExecClaim(execClaim, testSigner);
       } catch (error) {
-        console.error(`\n gc-debug-newcore: mintExecClaim\n`, error);
-        throw new Error(`\n gelatoUserProxy.mintExecClaim: PRE tx error \n`);
+        console.error(`\n gc-debug-newcore: createExecClaim\n`, error);
+        throw new Error(`\n gelatoUserProxy.createExecClaim: PRE tx error \n`);
       }
 
-      let mintTxBlockHash;
+      let createTxBlockHash;
       try {
-        const { blockHash } = await mintTx.wait();
-        mintTxBlockHash = blockHash;
+        const { blockHash } = await createTx.wait();
+        createTxBlockHash = blockHash;
       } catch (error) {
-        console.error(`\n gc-debug-newcore: mintExecClaim\n`, error);
-        throw new Error(`\n gelatoUserProxy.mintExecClaim: tx error \n`);
+        console.error(`\n gc-debug-newcore: createExecClaim\n`, error);
+        throw new Error(`\n gelatoUserProxy.createExecClaim: tx error \n`);
       }
 
       /* buidlerEVM bug
       if (events) {
         await run("event-getparsedlog", {
           contractname: "GelatoCore",
-          eventname: "LogExecClaimMinted",
+          eventname: "LogCreateExecClaim",
           contractaddress: gelatoCore.address,
-          txhash: mintTx.hash,
-          blockhash: mintTxBlockHash,
+          txhash: createTx.hash,
+          blockhash: createTxBlockHash,
           log: true
         });
       } */
@@ -142,9 +142,9 @@ export default task("gc-debug-newcore")
       const iFace = await run("ethers-interface-new", {
         contractname: "GelatoCore"
       });
-      console.log(iFace.events.LogExecClaimMinted);
+      console.log(iFace.events.LogCreateExecClaim);
       await sleep(100000);
-      const encodedExecClaim = iFace.events.LogExecClaimMinted.execClaim.encode(
+      const encodedExecClaim = iFace.events.LogCreateExecClaim.execClaim.encode(
         execClaim
       );
       console.log(encodedExecClaim);

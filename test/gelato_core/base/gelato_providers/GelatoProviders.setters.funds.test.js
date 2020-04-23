@@ -137,7 +137,7 @@ describe("GelatoCore - GelatoProviders - Setters: FUNDS", function () {
   });
 
   // unprovideFunds
-  it("Should allow minFunded Providers to unassign Executor and unprovideFunds", async function () {
+  it("Should allow Providers to unprovideFunds", async function () {
     // providedFunds required for providerAssignsExecutor
     const providedFunds = utils.bigNumberify(42069);
 

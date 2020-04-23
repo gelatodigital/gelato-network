@@ -165,7 +165,7 @@ require("./buidler/tasks/events/collection.tasks.events");
 // _____ ACTIONS
 require("./buidler/tasks/gelato/actions/collection.tasks.actions");
 // _____ CORE
-// GasAdmin, Executors, Providers, Minting, ...
+// GasAdmin, Executors, Providers, Creating, ...
 require("./buidler/tasks/gelato/core/collection.tasks.gelato-core");
 // _____ CONDITIONS
 require("./buidler/tasks/gelato/conditions/collection.tasks.conditions");

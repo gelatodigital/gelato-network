@@ -27,13 +27,13 @@ export default task(
         write: true,
       });
 
-      const optionalMintTasks = [];
+      const optionalCreateTasks = [];
       const optionalActions = [];
 
       let creationTx;
       try {
         creationTx = await gelatoUserProxyFactory.create(
-          optionalMintTasks,
+          optionalCreateTasks,
           optionalActions,
           {
             value: utils.parseEther(taskArgs.funding),

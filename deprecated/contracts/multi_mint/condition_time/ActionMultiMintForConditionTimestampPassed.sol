@@ -7,19 +7,19 @@ import { IGelatoCondition } from "../../../gelato_conditions/IGelatoCondition.so
 import { IGelatoCore, ExecClaim } from "../../../gelato_core/interfaces/IGelatoCore.sol";
 
 struct ActionData {
-    // multi mint delegatecall requirement
+    // multi create delegatecall requirement
     IGelatoCore gelatoCore;
-    // gelatoCore.mintExecClaim params
+    // gelatoCore.createExecClaim params
     ExecClaim execClaim;
     uint256 startTime;  // will be encoded here
-    // MultiMintTimeBased params
+    // MultiCreateTimeBased params
     uint256 intervalSpan;
-    uint256 numOfMints;
+    uint256 numOfCreates;
 }
 
 // CAUTION this contract is not up to date with Action standards due to missing return values
 //  (GelatoCore.Enums.ExecutionResult, uint8 reason) - not possible due to stack too deep
-contract ActionMultiMintForConditionTimestampPassed is GelatoActionsStandard {
+contract ActionMultiCreateForConditionTimestampPassed is GelatoActionsStandard {
 
     using SafeMath for uint256;
 
@@ -30,13 +30,13 @@ contract ActionMultiMintForConditionTimestampPassed is GelatoActionsStandard {
 
     // Specific Implementation: Caution when using storage in delegatecall
     function action(ActionData memory _p) public payable virtual {
-        for (uint256 i = 0; i < _p.numOfMints; i++) {
+        for (uint256 i = 0; i < _p.numOfCreates; i++) {
             uint256 timestamp = _p.startTime.add(_p.intervalSpan.mul(i));
             _p.execClaim.task.condition.data = abi.encodeWithSelector(
                 IGelatoCondition.ok.selector,
                 timestamp
             );
-            _p.gelatoCore.mintExecClaim(_p.execClaim.task);
+            _p.gelatoCore.createExecClaim(_p.execClaim.task);
         }
     }
 }

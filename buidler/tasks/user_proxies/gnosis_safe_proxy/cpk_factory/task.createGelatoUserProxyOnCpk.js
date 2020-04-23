@@ -12,7 +12,7 @@ export default task(
   )
   .addOptionalParam(
     "saltnonce",
-    "Supply for createTwoProxyAndMint()",
+    "Supply for createTwoProxyAndCreate()",
     // CPK global salt
     '0xcfe33a586323e7325be6aa6ecd8b4600d232a9037e83c8ece69413b777dabe65',
     types.string

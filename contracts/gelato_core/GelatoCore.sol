@@ -10,7 +10,7 @@ import { IGelatoProviderModule } from "./interfaces/IGelatoProviderModule.sol";
 
 /// @title GelatoCore
 /// @author Luis Schliesske & Hilmar Orth
-/// @notice Exec Claim: minting, validation, execution, charging and cancellation
+/// @notice Exec Claim: createing, validation, execution, charging and cancellation
 /// @dev Find all NatSpecs inside IGelatoCore
 contract GelatoCore is IGelatoCore, GelatoExecutors {
 
@@ -22,8 +22,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     // execClaim.id => execClaimHash
     mapping(uint256 => bytes32) public override execClaimHash;
 
-    // ================  MINTING ==============================================
-    function mintExecClaim(Task memory _task) public override {
+    // ================  CREATE ==============================================
+    function createExecClaim(Task memory _task) public override {
         // GelatoCore will generate an ExecClaim from the _task
         ExecClaim memory execClaim;
         execClaim.task = _task;
@@ -35,14 +35,14 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         address executor = executorByProvider[_task.provider.addr];
         require(
             isExecutorMinStaked(executor),
-            "GelatoCore.mintExecClaim: executorByProvider's stake is insufficient"
+            "GelatoCore.createExecClaim: executorByProvider's stake is insufficient"
         );
 
         // User checks
         if (_task.expiryDate != 0) {
             require(
                 _task.expiryDate >= now,
-                "GelatoCore.mintExecClaim: Invalid expiryDate"
+                "GelatoCore.createExecClaim: Invalid expiryDate"
             );
         }
 
@@ -52,10 +52,10 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         else isProvided = isExecClaimProvided(execClaim);
         require(
             isProvided.startsWithOk(),
-            string(abi.encodePacked("GelatoCore.mintExecClaim.isProvided:", isProvided))
+            string(abi.encodePacked("GelatoCore.createExecClaim.isProvided:", isProvided))
         );
 
-        // Mint new execClaim
+        // Create new execClaim
         currentExecClaimId++;
         execClaim.id = currentExecClaimId;
 
@@ -65,7 +65,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         // ExecClaim Hash registration
         execClaimHash[execClaim.id] = hashedExecClaim;
 
-        emit LogExecClaimMinted(executor, execClaim.id, hashedExecClaim, execClaim);
+        emit LogCreateExecClaim(executor, execClaim.id, hashedExecClaim, execClaim);
     }
 
     // ================  CAN EXECUTE EXECUTOR API ============================

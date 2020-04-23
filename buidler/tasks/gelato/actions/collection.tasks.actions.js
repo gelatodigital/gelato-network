@@ -1,6 +1,6 @@
-// ===== MultiMint ========
+// ===== MultiCreate ========
 // For TimeCondition
-import "./multi_mint/condition_timestamp_passed/implementations/task.multimint.actionKyberTrade";
+import "../../../../deprecated/tasks/gelato/gelato_actions/multi_create/condition_timestamp_passed/implementations/task.multicreate.actionKyberTrade";
 
 // ===== Rebalance Portfolio ========
 import "./rebalancePortfolio/task.ARebalancePortfolio.action";

@@ -22,10 +22,10 @@ contract MockActionChainedDummy is GelatoActionsStandard {
         payable
         virtual
     {
-        // Mint: ExecClaim Chain continues with Updated Payloads
-        try _gelatoCore.mintExecClaim(_ec.task) {
+        // Create: ExecClaim Chain continues with Updated Payloads
+        try _gelatoCore.createExecClaim(_ec.task) {
         } catch Error(string memory error) {
-            revert(string(abi.encodePacked("MockActionChainedDummy.mintExecClaim", error)));
+            revert(string(abi.encodePacked("MockActionChainedDummy.createExecClaim", error)));
         } catch {
             revert("MockActionChainedDummy:undefined");
         }

@@ -179,9 +179,9 @@ describe("GelatoCore.Execute", function () {
       task,
     };
 
-    await expect(userProxy.mintExecClaim(task)).to.emit(
+    await expect(userProxy.createExecClaim(task)).to.emit(
       gelatoCore,
-      "LogExecClaimMinted"
+      "LogCreateExecClaim"
     );
   });
 
@@ -234,8 +234,8 @@ describe("GelatoCore.Execute", function () {
         task: task2,
       };
 
-      const mintTx = await userProxy.mintExecClaim(task2);
-      await mintTx.wait();
+      const createExecClaimTx = await userProxy.createExecClaim(task2);
+      await createExecClaimTx.wait();
 
       if (network.name === "buidlerevm")
         await ethers.provider.send("evm_increaseTime", [lifespan]);
@@ -264,7 +264,7 @@ describe("GelatoCore.Execute", function () {
         task: task2,
       };
 
-      await userProxy.mintExecClaim(task2);
+      await userProxy.createExecClaim(task2);
 
       await gelatoCore.connect(provider).unprovideIceCreams([newIceCream]);
 

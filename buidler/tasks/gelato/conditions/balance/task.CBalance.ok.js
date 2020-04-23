@@ -26,7 +26,7 @@ export default task(
         contractname: "ConditionBalance",
         read: true
       });
-      // mintExecClaim TX (payable)
+      // createExecClaim TX (payable)
       const ok = await conditionContract.ok(
         account,
         coin,
