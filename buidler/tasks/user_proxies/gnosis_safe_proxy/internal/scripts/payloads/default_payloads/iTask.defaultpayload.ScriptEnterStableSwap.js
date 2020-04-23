@@ -74,7 +74,7 @@ export default internalTask(
 
       const actionAddress = await run("bre-config", {
         deployments: true,
-        contractname: "ActionWithdrawBatchExchange",
+        contractname: "ActionWithdrawBatchExchangeWithMaker",
       });
 
       if (!taskArgs.gelatoprovidermodule) {
@@ -125,7 +125,7 @@ export default internalTask(
       const actionWithdrawFromBatchExchangePayload = await run(
         "abi-encode-withselector",
         {
-          contractname: "ActionWithdrawBatchExchange",
+          contractname: "ActionWithdrawBatchExchangeWithMaker",
           functionname: "action",
           inputs: [
             useraddress,
@@ -136,7 +136,7 @@ export default internalTask(
         }
       );
 
-      const actionWithdrawFromBatchExchange = new Action({
+      const actionWithdrawFromBatchExchangeWithMaker = new Action({
         inst: actionAddress,
         data: actionWithdrawFromBatchExchangePayload,
         operation: 1,
@@ -147,7 +147,7 @@ export default internalTask(
       const taskWithdrawBatchExchange = {
         provider: gelatoProvider,
         condition: condition,
-        actions: [actionWithdrawFromBatchExchange],
+        actions: [actionWithdrawFromBatchExchangeWithMaker],
         expiryDate: constants.HashZero,
       };
 

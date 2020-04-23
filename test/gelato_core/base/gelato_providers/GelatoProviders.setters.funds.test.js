@@ -137,59 +137,6 @@ describe("GelatoCore - GelatoProviders - Setters: FUNDS", function () {
   });
 
   // unprovideFunds
-  it("Should NOT allow Providers with an assigned Executor to unprovide their funds", async function () {
-    // providedFunds required for providerAssignsExecutor
-    const providedFunds = utils.bigNumberify(42069);
-
-    // provideFunds()
-    await expect(
-      gelatoCore.provideFunds(providerAddress, {
-        value: providedFunds,
-      })
-    )
-      .to.emit(gelatoCore, "LogProvideFunds")
-      .withArgs(providerAddress, providedFunds, providedFunds);
-    expect(await gelatoCore.providerFunds(providerAddress)).to.be.equal(
-      providedFunds
-    );
-
-    // stakeExecutor() (needed for providerAssignsExecutor())
-    await gelatoCore
-      .connect(executor)
-      .stakeExecutor({ value: await gelatoCore.minExecutorStake() });
-    expect(await gelatoCore.executorStake(executorAddress)).to.be.equal(
-      await gelatoCore.minExecutorStake()
-    );
-
-    // providerAssignsExecutor (needs minExecutorStake)
-    await expect(gelatoCore.providerAssignsExecutor(executorAddress))
-      .to.emit(gelatoCore, "LogProviderAssignsExecutor")
-      .withArgs(
-        providerAddress,
-        initialState.executorByProvider,
-        executorAddress
-      );
-    expect(await gelatoCore.executorByProvider(providerAddress)).to.be.equal(
-      executorAddress
-    );
-
-    // unprovideFunds
-    await expect(gelatoCore.unprovideFunds(1)).to.be.revertedWith(
-      "GelatoProviders.unprovideFunds: Must un-assign executor first"
-    );
-
-    // providerFunds
-    expect(await gelatoCore.providerFunds(providerAddress)).to.be.equal(
-      providedFunds
-    );
-
-    // executorByProvider
-    expect(await gelatoCore.executorByProvider(providerAddress)).to.be.equal(
-      executorAddress
-    );
-  });
-
-  // unprovideFunds
   it("Should allow minFunded Providers to unassign Executor and unprovideFunds", async function () {
     // providedFunds required for providerAssignsExecutor
     const providedFunds = utils.bigNumberify(42069);
@@ -230,21 +177,6 @@ describe("GelatoCore - GelatoProviders - Setters: FUNDS", function () {
     // executorByProvider
     expect(await gelatoCore.executorByProvider(providerAddress)).to.be.equal(
       executorAddress
-    );
-
-    // unprovideFunds() revert
-    await expect(gelatoCore.unprovideFunds(1)).to.be.revertedWith(
-      "GelatoProviders.unprovideFunds: Must un-assign executor first"
-    );
-
-    // provider unassigns Executor
-    await expect(gelatoCore.providerAssignsExecutor(constants.AddressZero))
-      .to.emit(gelatoCore, "LogProviderAssignsExecutor")
-      .withArgs(providerAddress, executorAddress, constants.AddressZero);
-
-    // executorByProvider
-    expect(await gelatoCore.executorByProvider(providerAddress)).to.be.equal(
-      constants.AddressZero
     );
 
     // unprovideFunds

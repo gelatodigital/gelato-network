@@ -3,8 +3,12 @@
 const { expect } = require("chai");
 const { run, ethers } = require("@nomiclabs/buidler");
 const FEE_USD = 3;
-const FEE_ETH = 17000000000000000;
-//
+// (10 ** 18 * (FEE_USD * 10 ** 18)) / 172040000000000000000 - 1;
+const FEE_ETH = ethers.utils
+  .parseUnits("1", "18")
+  .mul(ethers.utils.parseUnits("3", "18"))
+  .div(ethers.utils.bigNumberify("172040000000000000000"));
+
 const GELATO_GAS_PRICE = ethers.utils.parseUnits("8", "gwei");
 
 // ##### Gnosis Action Test Cases #####
@@ -13,7 +17,7 @@ const GELATO_GAS_PRICE = ethers.utils.parseUnits("8", "gwei");
 // 3. SellTokens got partially converted into buy tokens, insufficient buy tokens for withdrawal
 // 4. No sellTokens got converted into buy tokens, sufficient sell tokens for withdrawal
 // 5. No sellTokens got converted into buy tokens, insufficient sell tokens for withdrawal
-describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
+describe("Gnosis - ActionWithdrawBatchExchangeWithMaker - Action", function () {
   // We define the ContractFactory and Signer variables here and assign them in
   // a beforeEach hook.
   let actionWithdrawBatchExchange;
@@ -100,7 +104,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
     const actionERC20TransferFrom = await ActionERC20TransferFrom.deploy();
     await actionERC20TransferFrom.deployed();
 
-    // // #### ActionWithdrawBatchExchange Start ####
+    // // #### ActionWithdrawBatchExchangeWithMaker Start ####
     const MockBatchExchange = await ethers.getContractFactory(
       "MockBatchExchange"
     );
@@ -117,15 +121,20 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
     );
     await WETH.deployed();
 
-    const ActionWithdrawBatchExchange = await ethers.getContractFactory(
-      "ActionWithdrawBatchExchange"
+    const Medianizer2 = await ethers.getContractFactory("Medianizer2");
+    const medianizer2 = await Medianizer2.deploy();
+    await medianizer2.deployed();
+
+    const ActionWithdrawBatchExchangeWithMaker = await ethers.getContractFactory(
+      "ActionWithdrawBatchExchangeWithMaker"
     );
-    actionWithdrawBatchExchange = await ActionWithdrawBatchExchange.deploy(
+    actionWithdrawBatchExchange = await ActionWithdrawBatchExchangeWithMaker.deploy(
       mockBatchExchange.address,
       WETH.address,
-      providerAddress
+      providerAddress,
+      medianizer2.address
     );
-    // // #### ActionWithdrawBatchExchange End ####
+    // // #### ActionWithdrawBatchExchangeWithMaker End ####
 
     // Call provideFunds(value) with provider on core
     await gelatoCore.connect(provider).provideFunds(providerAddress, {
@@ -217,7 +226,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
   });
 
   // We test different functionality of the contract as normal Mocha tests.
-  describe("ActionWithdrawBatchExchange.action", function () {
+  describe("ActionWithdrawBatchExchangeWithMaker.action", function () {
     it("Case #1: No sellTokens withdrawable, 10 buyTokens (non weth) withdrawable to pay fees", async function () {
       const withdrawAmount = 10 * 10 ** buyDecimals;
 
@@ -239,7 +248,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       // );
 
       const withdrawPayload = await run("abi-encode-withselector", {
-        contractname: "ActionWithdrawBatchExchange",
+        contractname: "ActionWithdrawBatchExchangeWithMaker",
         functionname: "action",
         inputs: [
           sellerAddress,
@@ -289,7 +298,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       await tx.wait();
 
       const withdrawPayload = await run("abi-encode-withselector", {
-        contractname: "ActionWithdrawBatchExchange",
+        contractname: "ActionWithdrawBatchExchangeWithMaker",
         functionname: "action",
         inputs: [
           sellerAddress,
@@ -339,7 +348,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       await tx.wait();
 
       const withdrawPayload = await run("abi-encode-withselector", {
-        contractname: "ActionWithdrawBatchExchange",
+        contractname: "ActionWithdrawBatchExchangeWithMaker",
         functionname: "action",
         inputs: [
           sellerAddress,
@@ -357,7 +366,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         termsOkCheck: true,
       };
       await expect(userProxy.execAction(gelatoAction)).to.be.revertedWith(
-        "GelatoUserProxy.delegatecallAction:ActionWithdrawBatchExchange: Insufficient balance for user to pay for withdrawal 2"
+        "GelatoUserProxy.delegatecallAction:ActionWithdrawBatchExchangeWithMaker: Insufficient balance for user to pay for withdrawal 2"
       );
 
       const providerBalance = await buyToken.balanceOf(providerAddress);
@@ -390,7 +399,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       // );
 
       const withdrawPayload = await run("abi-encode-withselector", {
-        contractname: "ActionWithdrawBatchExchange",
+        contractname: "ActionWithdrawBatchExchangeWithMaker",
         functionname: "action",
         inputs: [
           sellerAddress,
@@ -409,7 +418,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       };
 
       await expect(userProxy.execAction(gelatoAction)).to.be.revertedWith(
-        "GelatoUserProxy.delegatecallAction:ActionWithdrawBatchExchange: Insufficient balance for user to pay for withdrawal 2"
+        "GelatoUserProxy.delegatecallAction:ActionWithdrawBatchExchangeWithMaker: Insufficient balance for user to pay for withdrawal 2"
       );
 
       const providerBalance = await WETH.balanceOf(providerAddress);
@@ -434,7 +443,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       await tx.wait();
 
       const withdrawPayload = await run("abi-encode-withselector", {
-        contractname: "ActionWithdrawBatchExchange",
+        contractname: "ActionWithdrawBatchExchangeWithMaker",
         functionname: "action",
         inputs: [
           sellerAddress,
@@ -485,7 +494,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       await tx.wait();
 
       const withdrawPayload = await run("abi-encode-withselector", {
-        contractname: "ActionWithdrawBatchExchange",
+        contractname: "ActionWithdrawBatchExchangeWithMaker",
         functionname: "action",
         inputs: [
           sellerAddress,
@@ -533,7 +542,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       await tx.wait();
 
       const withdrawPayload = await run("abi-encode-withselector", {
-        contractname: "ActionWithdrawBatchExchange",
+        contractname: "ActionWithdrawBatchExchangeWithMaker",
         functionname: "action",
         inputs: [
           sellerAddress,
@@ -551,7 +560,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         termsOkCheck: true,
       };
       await expect(userProxy.execAction(gelatoAction)).to.be.revertedWith(
-        "GelatoUserProxy.delegatecallAction:ActionWithdrawBatchExchange: Insufficient balance for user to pay for withdrawal 1"
+        "GelatoUserProxy.delegatecallAction:ActionWithdrawBatchExchangeWithMaker: Insufficient balance for user to pay for withdrawal 1"
       );
 
       const providerBalance = await sellToken.balanceOf(providerAddress);
@@ -577,7 +586,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       await tx.wait();
 
       const withdrawPayload = await run("abi-encode-withselector", {
-        contractname: "ActionWithdrawBatchExchange",
+        contractname: "ActionWithdrawBatchExchangeWithMaker",
         functionname: "action",
         inputs: [
           sellerAddress,
@@ -596,7 +605,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       };
 
       await expect(userProxy.execAction(gelatoAction)).to.be.revertedWith(
-        "GelatoUserProxy.delegatecallAction:ActionWithdrawBatchExchange: Insufficient balance for user to pay for withdrawal 1"
+        "GelatoUserProxy.delegatecallAction:ActionWithdrawBatchExchangeWithMaker: Insufficient balance for user to pay for withdrawal 1"
       );
 
       const providerBalance = await WETH.balanceOf(providerAddress);

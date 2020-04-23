@@ -19,6 +19,9 @@ export const addressBook = {
     ETH: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
     proxy: "0x0",
   },
+  maker: {
+    medianizer2: "0x7e8f5b24d89F8F32786d564a5bA76Eb806a74872",
+  },
   gnosisProtocol: {
     batchExchange: "0xC576eA7bd102F7E476368a5E98FA455d1Ea34dE2",
   },
