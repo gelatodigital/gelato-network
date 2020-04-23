@@ -20,3 +20,6 @@ import "./provider_module/task.isModuleProvided";
 
 // === GelatoProviderModuleExample ===
 import "./provider_module/collection.tasks.gelato-provider-module";
+
+// NEW
+import "./provide_iceCream/task.provideIceCream";

@@ -7,6 +7,11 @@ import { SafeERC20 } from "../../external/SafeERC20.sol";
 import { SafeMath } from "../../external/SafeMath.sol";
 import { IBatchExchange } from "../../dapp_interfaces/gnosis/IBatchExchange.sol";
 
+
+/// @title ActionPlaceOrderBatchExchange
+/// @author Luis Schliesske & Hilmar Orth
+/// @notice Gelato action that 1) withdraws funds form user's  EOA, 2) deposits on Batch Exchange, 3) Places order on batch exchange and 4) requests future withdraw on batch exchange
+
 contract ActionPlaceOrderBatchExchange is GelatoActionsStandard {
 
     using SafeMath for uint256;
@@ -25,6 +30,14 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandard {
         action(_user, _userProxy, _sellToken, _buyToken, _sellAmount, _buyAmount, _orderExpirationBatchId);
     }
 
+    /// @notice Place order on Batch Exchange and request future withdraw for buy and sell token
+    /// @param _user Users EOA address
+    /// @param _userProxy Users Proxy address
+    /// @param _sellToken Token to sell on Batch Exchange
+    /// @param _buyToken Token to buy on Batch Exchange
+    /// @param _sellAmount Amount to sell
+    /// @param _buyAmount Amount to receive (at least)
+    /// @param _orderExpirationBatchId Expiration batch id of order and id used to request withdrawals for
     function action(
         address _user,
         address _userProxy,
@@ -88,18 +101,6 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandard {
 
     }
 
-    /*
-
-    address _user,
-    address _userProxy,
-    address _sellToken,
-    address _buyToken,
-    uint128 _sellAmount,
-    uint128 _buyAmount,
-    uint32 _orderExpirationBatchId
-
-    */
-
     // ======= ACTION CONDITIONS CHECK =========
     // Overriding and extending GelatoActionsStandard's function (optional)
     function termsOk(bytes calldata _actionData)
@@ -113,6 +114,11 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandard {
         return _actionConditionsCheck(_user, _userProxy, _sellToken, _sellAmount);
     }
 
+    /// @notice Verify that EOA has sufficinet balance and gave proxy adequate allowance
+    /// @param _user Users EOA address
+    /// @param _userProxy Users Proxy address
+    /// @param _sellToken Token to sell on Batch Exchange
+    /// @param _sellAmount Amount to sell
     function _actionConditionsCheck(
         address _user, address _userProxy, address _sellToken, uint128 _sellAmount
     )

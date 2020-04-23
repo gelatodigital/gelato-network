@@ -86,6 +86,17 @@ export default task(
           );
         }
 
+        const actions = [];
+        for (const action of execclaim[2][2]) {
+          actions.push({
+            inst: action[0],
+            data: action[1],
+            operation: action[2],
+            value: action[3],
+            termsOkCheck: action[4],
+          });
+        }
+
         const execClaim = {
           id: execclaim[0],
           userProxy: execclaim[1],
@@ -98,15 +109,7 @@ export default task(
               inst: execclaim[2][1][0],
               data: execclaim[2][1][1],
             },
-            actions: [
-              {
-                inst: execclaim[2][2][0][0],
-                data: execclaim[2][2][0][1],
-                operation: execclaim[2][2][0][2],
-                value: execclaim[2][2][0][3],
-                termsOkCheck: execclaim[2][2][0][4],
-              },
-            ],
+            actions,
             expiryDate: execclaim[2][3],
           },
         };
