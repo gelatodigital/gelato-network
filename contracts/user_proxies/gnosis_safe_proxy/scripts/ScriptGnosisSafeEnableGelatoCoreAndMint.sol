@@ -32,11 +32,11 @@ contract ScriptGnosisSafeEnableGelatoCoreAndMint {
         }
 
         // Mint on GelatoCore from delegatecaller (Gnosis Safe Proxy)
-        try IGelatoCore(_gelatoCore).createExecClaim(_ec.task) {
+        try IGelatoCore(_gelatoCore).mintExecClaim(_ec.task) {
         } catch Error(string memory error) {
             emit LogFailure(error);
         } catch {
-            emit LogFailure("createExecClaim error");
+            emit LogFailure("mintExecClaim error");
         }
     }
 }
