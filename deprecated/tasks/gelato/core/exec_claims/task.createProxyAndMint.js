@@ -1,12 +1,12 @@
 import { task, types } from "@nomiclabs/buidler/config";
-import { defaultNetwork } from "../../../../../../buidler.config";
+import { defaultNetwork } from "../../../../../buidler.config";
 import { constants, utils } from "ethers";
 
 export default task(
-  "gc-createproxyandcreate",
-  `Sends tx to GelatoCore.createProxyAndCreate() or if --createtwo to .createTwoProxyAndCreate()  on [--network] (default: ${defaultNetwork})`
+  "gc-createproxyandsubmit",
+  `Sends tx to GelatoCore.createProxyAndSubmit() or if --createtwo to .createTwoProxyAndSubmit()  on [--network] (default: ${defaultNetwork})`
 )
-  // GelatoCore.createExecClaim params
+  // GelatoCore.submitTask params
   .addOptionalPositionalParam(
     "conditionname",
     "Must exist inside buidler.config. Defaults to address 0 for self-conditional actions"
@@ -34,7 +34,7 @@ export default task(
     constants.Zero
   )
   // GnosisSafeProxy Setup
-  .addFlag("createtwo", "Call gelatoCore.createTwoProxyAndCreate()")
+  .addFlag("createtwo", "Call gelatoCore.createTwoProxyAndSubmit()")
   .addOptionalParam(
     "mastercopy",
     "The deployed implementation code the created proxy should point to"
@@ -42,7 +42,7 @@ export default task(
   .addOptionalParam("initializer", "Payload for gnosis safe proxy setup tasks")
   .addOptionalParam(
     "saltnonce",
-    "Supply for createTwoProxyAndCreate()",
+    "Supply for createTwoProxyAndSubmit()",
     42069,
     types.int
   )
@@ -102,7 +102,7 @@ export default task(
   .setAction(async (taskArgs) => {
     try {
       // Command Line Argument Checks
-      // Condition and Action for createing
+      // Condition and Action for submission
       if (!taskArgs.actionname && !taskArgs.actionaddress)
         throw new Error(`\n Must supply <actionname> or --actionaddress`);
       if (
@@ -179,7 +179,7 @@ export default task(
       }
       // ============
 
-      // ==== GelatoCore.createExecClaim Params ====
+      // ==== GelatoCore.submitTask Params ====
       // Selected Provider and Executor
       taskArgs.gelatoprovider = await run("handleGelatoProvider", {
         gelatoprovider: taskArgs.gelatoprovider,
@@ -235,7 +235,7 @@ export default task(
 
       let creationTx;
       if (taskArgs.createtwo) {
-        creationTx = await gelatoCore.createTwoProxyAndCreate(
+        creationTx = await gelatoCore.createTwoProxyAndSubmit(
           taskArgs.mastercopy,
           taskArgs.initializer,
           taskArgs.saltnonce,
@@ -247,7 +247,7 @@ export default task(
           { value: utils.parseEther(taskArgs.funding), gasLimit: 3000000 }
         );
       } else {
-        creationTx = await gelatoCore.createProxyAndCreate(
+        creationTx = await gelatoCore.createProxyAndSubmit(
           taskArgs.mastercopy,
           taskArgs.initializer,
           [taskArgs.gelatoprovider, taskArgs.gelatoexecutor],
@@ -278,17 +278,17 @@ export default task(
           console.log("\n✅ LogGnosisSafeProxyCreation\n", parsedCreateLog);
         else console.log("\n❌ LogGnosisSafeProxyCreation not found");
 
-        const parsedCreateingLog = await run("event-getparsedlog", {
+        const parsedSubmissionLog = await run("event-getparsedlog", {
           contractname: "GelatoCore",
-          eventname: "LogCreateExecClaim",
+          eventname: "LogSubmitTask",
           txhash: creationTx.hash,
           blockHash,
           values: true,
           stringify: true,
         });
-        if (parsedCreateingLog)
-          console.log("\n✅ LogCreateExecClaim\n", parsedCreateingLog);
-        else console.log("\n❌ LogCreateExecClaim not found");
+        if (parsedSubmissionLog)
+          console.log("\n✅ LogSubmitTask\n", parsedSubmissionLog);
+        else console.log("\n❌ LogSubmitTask not found");
       }
 
       return creationTx.hash;

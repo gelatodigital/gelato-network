@@ -16,7 +16,7 @@ struct Condition {
 
 enum Operation { Call, Delegatecall }
 
-struct Action {  
+struct Action {
     address inst;
     bytes data;
     Operation operation;
@@ -38,7 +38,7 @@ struct ExecClaim {  // TaskReceipt
 }
 
 interface IGelatoCore {
-    event LogCreateExecClaim(
+    event LogSubmitTask(
         address indexed executor,
         uint256 indexed execClaimId,
         bytes32 indexed execClaimHash,
@@ -71,10 +71,10 @@ interface IGelatoCore {
     event LogExecClaimCancelled(uint256 indexed execClaimId);
 
     // ================  Exec Suite =========================
-    /// @notice Create a gelato task that will be executed if the specified condition and action(s) terms are fulfilled
+    /// @notice Submit a gelato task that will be executed if the specified condition and action(s) terms are fulfilled
     /// @dev Use only through a Proxy contract which is defined in the selected provider module
     /// @param _task Seleted provider, condition and action details, plus the expiry date after which the task is rendered useless
-    function createExecClaim(Task calldata _task) external;
+    function submitTask(Task calldata _task) external;
 
     /// @notice Off-chain validation for executors to see if an execution claim is executable
     /// @dev Only used for off-chain validation
@@ -107,12 +107,12 @@ interface IGelatoCore {
     function hashExecClaim(ExecClaim calldata _ec) external pure returns(bytes32);
 
     // ================  Getters =========================
-    /// @notice Returns the executionClaimId of the last ExecClaim createed
-    /// @return currentId currentId, last ExecutionClaimId createed
+    /// @notice Returns the executionClaimId of the last ExecClaim submitted
+    /// @return currentId currentId, last ExecutionClaimId submitted
     function currentExecClaimId() external view returns(uint256 currentId);
 
     /// @notice Returns computed execClaim hash, used to check for execClaim validity
-    /// @param _execClaimId Id of execClaim emitted in createing event
+    /// @param _execClaimId Id of execClaim emitted in submission event
     /// @return hash of execClaim
     function execClaimHash(uint256 _execClaimId) external view returns(bytes32);
 

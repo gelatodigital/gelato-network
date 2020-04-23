@@ -9,7 +9,7 @@ export default internalTask(
   .setAction(async ({ contractname, payload }) => {
     try {
       if (payload) return payload;
-      payload = await run(`gc-createexecclaim:defaultpayload:${contractname}`);
+      payload = await run(`gc-submittask:defaultpayload:${contractname}`);
       return payload;
     } catch (err) {
       console.error(err);

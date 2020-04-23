@@ -252,7 +252,7 @@ describe("GelatoCore.Execute", function () {
 
   // We test different functionality of the contract as normal Mocha tests.
   describe("GelatoCore.Exec", function () {
-    it("#1: Successfully create and execute ActionWithdrawBatchExchange execClaim", async function () {
+    it("#1: Successfully submit and exec ActionWithdrawBatchExchange execClaim", async function () {
       // Get Action Payload
       const withdrawAmount = 10 * 10 ** buyDecimals;
 
@@ -284,7 +284,7 @@ describe("GelatoCore.Execute", function () {
         ],
       });
 
-      // Create ExexClaim
+      // Submit Task
       const gelatoProvider = new GelatoProvider({
         addr: providerAddress,
         module: providerModuleGelatoUserProxy.address,
@@ -320,11 +320,11 @@ describe("GelatoCore.Execute", function () {
 
       //const isProvided = await gelatoCore.isTaskSpecProvided(execClaim);
 
-      // LogCreateExecClaim(executor, execClaim.id, hashedExecClaim, execClaim);
+      // LogSubmitTask(executor, execClaim.id, hashedExecClaim, execClaim);
 
-      await expect(userProxy.createExecClaim(task)).to.emit(
+      await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
-        "LogCreateExecClaim"
+        "LogSubmitTask"
       );
 
       expect(
@@ -368,7 +368,7 @@ describe("GelatoCore.Execute", function () {
       );
     });
 
-    it("#2: Create ActionERC20TransferFrom and revert with LogCanExecFailed in exec due to other string than 'Ok' being returned inside Condition", async function () {
+    it("#2: Submit Task ActionERC20TransferFrom and revert with LogCanExecFailed in exec due to other string than 'Ok' being returned inside Condition", async function () {
       // Get Action Payload
 
       const actionData = await run("abi-encode-withselector", {
@@ -391,7 +391,7 @@ describe("GelatoCore.Execute", function () {
         inputs: [false],
       });
 
-      // Create ExexClaim
+      // Submit Task
       const gelatoProvider = new GelatoProvider({
         addr: providerAddress,
         module: providerModuleGelatoUserProxy.address,
@@ -426,9 +426,9 @@ describe("GelatoCore.Execute", function () {
       // Should return "OK"
       // const isProvided = await gelatoCore.isTaskSpecProvided(execClaim);
 
-      await expect(userProxy.createExecClaim(task)).to.emit(
+      await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
-        "LogCreateExecClaim"
+        "LogSubmitTask"
       );
 
       await expect(
@@ -440,7 +440,7 @@ describe("GelatoCore.Execute", function () {
         .withArgs(executorAddress, execClaim.id, "ConditionNotOk:NotOk");
     });
 
-    it("#3: Create ActionERC20TransferFrom and revert with LogCanExecFailed in exec due to Revert Inside Condition", async function () {
+    it("#3: Submit Task ActionERC20TransferFrom and revert with LogCanExecFailed in exec due to Revert Inside Condition", async function () {
       // Get Action Payload
 
       // Provider registers new condition
@@ -479,7 +479,7 @@ describe("GelatoCore.Execute", function () {
         inputs: [false],
       });
 
-      // Create ExexClaim
+      // Submit Task
       const gelatoProvider = new GelatoProvider({
         addr: providerAddress,
         module: providerModuleGelatoUserProxy.address,
@@ -514,9 +514,9 @@ describe("GelatoCore.Execute", function () {
       // Should return "OK"
       // const isProvided = await gelatoCore.isTaskSpecProvided(execClaim);
 
-      await expect(userProxy.createExecClaim(task)).to.emit(
+      await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
-        "LogCreateExecClaim"
+        "LogSubmitTask"
       );
 
       await expect(
@@ -532,7 +532,7 @@ describe("GelatoCore.Execute", function () {
         );
     });
 
-    it("#4: Create ActionERC20TransferFrom and revert with LogCanExecFailed in exec due to Condition Reverting with no message", async function () {
+    it("#4: Submit Task ActionERC20TransferFrom and revert with LogCanExecFailed in exec due to Condition Reverting with no message", async function () {
       // @DEV registering an action as a condition (with no ok function)
 
       // Provider registers new condition
@@ -565,7 +565,7 @@ describe("GelatoCore.Execute", function () {
         inputs: [false],
       });
 
-      // Create ExexClaim
+      // Submit Task
       const gelatoProvider = new GelatoProvider({
         addr: providerAddress,
         module: providerModuleGelatoUserProxy.address,
@@ -600,9 +600,9 @@ describe("GelatoCore.Execute", function () {
       // Should return "OK"
       // const isProvided = await gelatoCore.isTaskSpecProvided(execClaim);
 
-      await expect(userProxy.createExecClaim(task)).to.emit(
+      await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
-        "LogCreateExecClaim"
+        "LogSubmitTask"
       );
 
       await expect(
@@ -614,7 +614,7 @@ describe("GelatoCore.Execute", function () {
         .withArgs(executorAddress, execClaim.id, "ConditionRevertedNoMessage");
     });
 
-    it("#5: Create ActionERC20TransferFrom and revert with LogCanExecFailed in exec due to ActionReverted", async function () {
+    it("#5: Submit Task ActionERC20TransferFrom and revert with LogCanExecFailed in exec due to ActionReverted", async function () {
       // @DEV registering an action with reverting termsOk
 
       // Provider registers new condition
@@ -647,7 +647,7 @@ describe("GelatoCore.Execute", function () {
       const encoder = ethers.utils.defaultAbiCoder;
       const actionData = await encoder.encode(["bool"], [false]);
 
-      // Create ExexClaim
+      // Submit Task
       const gelatoProvider = new GelatoProvider({
         addr: providerAddress,
         module: providerModuleGelatoUserProxy.address,
@@ -682,9 +682,9 @@ describe("GelatoCore.Execute", function () {
       // Should return "OK"
       // const isProvided = await gelatoCore.isTaskSpecProvided(execClaim);
 
-      await expect(userProxy.createExecClaim(task)).to.emit(
+      await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
-        "LogCreateExecClaim"
+        "LogSubmitTask"
       );
 
       await expect(
@@ -700,7 +700,7 @@ describe("GelatoCore.Execute", function () {
         );
     });
 
-    it("#6: Create ActionERC20TransferFrom and revert with LogCanExecFailed in exec due to ActionRevertedNoMessage", async function () {
+    it("#6: Submit Task ActionERC20TransferFrom and revert with LogCanExecFailed in exec due to ActionRevertedNoMessage", async function () {
       // @DEV Use condition contract as an action to see termsOk revert
       const MockConditionDummyRevert = await ethers.getContractFactory(
         "MockConditionDummyRevert",
@@ -728,7 +728,7 @@ describe("GelatoCore.Execute", function () {
       const encoder = ethers.utils.defaultAbiCoder;
       const actionData = await encoder.encode(["bool"], [false]);
 
-      // Create ExexClaim
+      // Submit Task
       const gelatoProvider = new GelatoProvider({
         addr: providerAddress,
         module: providerModuleGelatoUserProxy.address,
@@ -763,9 +763,9 @@ describe("GelatoCore.Execute", function () {
       // Should return "OK"
       // const isProvided = await gelatoCore.isTaskSpecProvided(execClaim);
 
-      await expect(userProxy.createExecClaim(task)).to.emit(
+      await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
-        "LogCreateExecClaim"
+        "LogSubmitTask"
       );
 
       await expect(
@@ -777,7 +777,7 @@ describe("GelatoCore.Execute", function () {
         .withArgs(executorAddress, execClaim.id, "ActionRevertedNoMessage");
     });
 
-    it("#7: Create ActionERC20TransferFrom and revert with LogCanExecFailed in exec due to Action termsOk failure", async function () {
+    it("#7: Submit Task ActionERC20TransferFrom and revert with LogCanExecFailed in exec due to Action termsOk failure", async function () {
       // Get Action Payload
 
       const actionData = await run("abi-encode-withselector", {
@@ -800,7 +800,7 @@ describe("GelatoCore.Execute", function () {
         inputs: [true],
       });
 
-      // Create ExexClaim
+      // Submit Task
       const gelatoProvider = new GelatoProvider({
         addr: providerAddress,
         module: providerModuleGelatoUserProxy.address,
@@ -835,9 +835,9 @@ describe("GelatoCore.Execute", function () {
       // Should return "OK"
       // const isProvided = await gelatoCore.isTaskSpecProvided(execClaim);
 
-      await expect(userProxy.createExecClaim(task)).to.emit(
+      await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
-        "LogCreateExecClaim"
+        "LogSubmitTask"
       );
 
       await expect(
@@ -853,7 +853,7 @@ describe("GelatoCore.Execute", function () {
         );
     });
 
-    it("#8: Create revert with InvalidExecClaimHash in exec due to ExecClaimHash not existing", async function () {
+    it("#8: Submit Task revert with InvalidExecClaimHash in exec due to ExecClaimHash not existing", async function () {
       // Get Action Payload
 
       const actionData = await run("abi-encode-withselector", {
@@ -882,9 +882,9 @@ describe("GelatoCore.Execute", function () {
         inputs: [true],
       });
 
-      // Create ExexClaim
+      // Submit Task
 
-      // Create ExexClaim
+      // Submit Task
       const gelatoProvider = new GelatoProvider({
         addr: providerAddress,
         module: providerModuleGelatoUserProxy.address,
@@ -925,7 +925,7 @@ describe("GelatoCore.Execute", function () {
         .withArgs(executorAddress, execClaim.id, "InvalidExecClaimHash");
     });
 
-    it("#9: Create and revert in exec due to InvalidExecutor", async function () {
+    it("#9: Submit Task and revert in exec due to InvalidExecutor", async function () {
       // Get Action Payload
 
       const MockConditionDummy = await ethers.getContractFactory(
@@ -951,7 +951,7 @@ describe("GelatoCore.Execute", function () {
 
       await gelatoCore.connect(provider).provideTaskSpecs([newTaskSpec2]);
 
-      // Create ExexClaim
+      // Submit Task
       const gelatoProvider = new GelatoProvider({
         addr: providerAddress,
         module: providerModuleGelatoUserProxy.address,
@@ -975,9 +975,9 @@ describe("GelatoCore.Execute", function () {
         task,
       };
 
-      await expect(userProxy.createExecClaim(task)).to.emit(
+      await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
-        "LogCreateExecClaim"
+        "LogSubmitTask"
       );
 
       await expect(
@@ -987,7 +987,7 @@ describe("GelatoCore.Execute", function () {
       ).to.revertedWith("GelatoCore.exec: Invalid Executor");
     });
 
-    it("#10: Create and revert with Expired in exec due to expiry date having passed", async function () {
+    it("#10: Submit Task and revert with Expired in exec due to expiry date having passed", async function () {
       // Get Action Payload
       const actionData = await run("abi-encode-withselector", {
         contractname: "ActionERC20TransferFrom",
@@ -1015,9 +1015,9 @@ describe("GelatoCore.Execute", function () {
         inputs: [true],
       });
 
-      // Create ExexClaim
+      // Submit Task
 
-      // Create ExexClaim
+      // Submit Task
       const gelatoProvider = new GelatoProvider({
         addr: providerAddress,
         module: providerModuleGelatoUserProxy.address,
@@ -1053,9 +1053,9 @@ describe("GelatoCore.Execute", function () {
         task,
       };
 
-      await expect(userProxy.createExecClaim(task)).to.emit(
+      await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
-        "LogCreateExecClaim"
+        "LogSubmitTask"
       );
 
       // Get a promise for your call
@@ -1106,7 +1106,7 @@ describe("GelatoCore.Execute", function () {
         ],
       });
 
-      // Create ExexClaim
+      // Submit Task
       const gelatoProvider = new GelatoProvider({
         addr: providerAddress,
         module: providerModuleGelatoUserProxy.address,
@@ -1142,11 +1142,11 @@ describe("GelatoCore.Execute", function () {
 
       //const isProvided = await gelatoCore.isTaskSpecProvided(execClaim);
 
-      // LogCreateExecClaim(executor, execClaim.id, hashedExecClaim, execClaim);
+      // LogSubmitTask(executor, execClaim.id, hashedExecClaim, execClaim);
 
-      await expect(userProxy.createExecClaim(task)).to.emit(
+      await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
-        "LogCreateExecClaim"
+        "LogSubmitTask"
       );
 
       expect(
@@ -1208,7 +1208,7 @@ describe("GelatoCore.Execute", function () {
         ],
       });
 
-      // Create ExexClaim
+      // Submit Task
       const gelatoProvider = new GelatoProvider({
         addr: providerAddress,
         module: providerModuleGelatoUserProxy.address,
@@ -1244,11 +1244,11 @@ describe("GelatoCore.Execute", function () {
 
       //const isProvided = await gelatoCore.isTaskSpecProvided(execClaim);
 
-      // LogCreateExecClaim(executor, execClaim.id, hashedExecClaim, execClaim);
+      // LogSubmitTask(executor, execClaim.id, hashedExecClaim, execClaim);
 
-      await expect(userProxy.createExecClaim(task)).to.emit(
+      await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
-        "LogCreateExecClaim"
+        "LogSubmitTask"
       );
 
       expect(
@@ -1284,7 +1284,7 @@ describe("GelatoCore.Execute", function () {
       ).to.emit(gelatoCore, "LogExecutionRevert");
     });
 
-    it("#13: Successfully create and execute ActionWithdrawBatchExchange execClaim (self-provider)", async function () {
+    it("#13: Successfully submit and exec ActionWithdrawBatchExchange execClaim (self-provider)", async function () {
       // Get Action Payload
       const withdrawAmount = 10 * 10 ** buyDecimals;
 
@@ -1306,7 +1306,7 @@ describe("GelatoCore.Execute", function () {
         ],
       });
 
-      // Create ExexClaim
+      // Submit Task
       const gelatoProvider = new GelatoProvider({
         addr: userProxyAddress,
         module: providerModuleGelatoUserProxy.address,
@@ -1358,10 +1358,10 @@ describe("GelatoCore.Execute", function () {
         }
       );
 
-      // Create Claim
-      const createPayload = await run("abi-encode-withselector", {
+      // Submit Claim
+      const submitTaskPayload = await run("abi-encode-withselector", {
         contractname: "GelatoCore",
-        functionname: "createExecClaim",
+        functionname: "submitTask",
         inputs: [task],
       });
 
@@ -1396,20 +1396,20 @@ describe("GelatoCore.Execute", function () {
       });
       actions.push(addProviderModuleAction);
 
-      const createAction = new Action({
+      const submitTaskAction = new Action({
         inst: gelatoCore.address,
-        data: createPayload,
+        data: submitTaskPayload,
         operation: Operation.Call,
       });
-      actions.push(createAction);
+      actions.push(submitTaskAction);
 
-      // LogCreateExecClaim(executor, execClaim.id, hashedExecClaim, execClaim);
+      // LogSubmitTask(executor, execClaim.id, hashedExecClaim, execClaim);
 
       await expect(
         userProxy.multiExecActions(actions, {
           value: ethers.utils.parseUnits("1", "ether"),
         })
-      ).to.emit(gelatoCore, "LogCreateExecClaim");
+      ).to.emit(gelatoCore, "LogSubmitTask");
 
       // Make ExecClaim executable
       await mockBatchExchange.setValidWithdrawRequest(userProxyAddress);
@@ -1422,7 +1422,7 @@ describe("GelatoCore.Execute", function () {
     });
 
     // Exec Failed tests
-    it("#14: Create ActionWithdraw and revert with LogExecFailed in exec due action call reverting (to insufficient withdraw balance in WithdrawAction)", async function () {
+    it("#14: Submit Task ActionWithdraw and revert with LogExecFailed in exec due action call reverting (to insufficient withdraw balance in WithdrawAction)", async function () {
       // Get Action Payload
       const withdrawAmount = 1 * 10 ** buyDecimals;
 
@@ -1454,9 +1454,9 @@ describe("GelatoCore.Execute", function () {
         ],
       });
 
-      // Create ExexClaim
+      // Submit Task
 
-      // Create ExexClaim
+      // Submit Task
       const gelatoProvider = new GelatoProvider({
         addr: providerAddress,
         module: providerModuleGelatoUserProxy.address,
@@ -1491,11 +1491,11 @@ describe("GelatoCore.Execute", function () {
       // Should return "OK"
       // const isProvided = await gelatoCore.isTaskSpecProvided(execClaim);
 
-      // LogCreateExecClaim(executor, execClaim.id, hashedExecClaim, execClaim);
+      // LogSubmitTask(executor, execClaim.id, hashedExecClaim, execClaim);
 
-      await expect(userProxy.createExecClaim(task)).to.emit(
+      await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
-        "LogCreateExecClaim"
+        "LogSubmitTask"
       );
 
       expect(
@@ -1541,7 +1541,7 @@ describe("GelatoCore.Execute", function () {
       );
     });
 
-    it("#15: Create DummyAction and revert with LogExecFailed in exec due execPayload reverting (due to revert in ProviderModule)", async function () {
+    it("#15: Submit Task DummyAction and revert with LogExecFailed in exec due execPayload reverting (due to revert in ProviderModule)", async function () {
       // Provider registers new condition
       const MockActionDummy = await ethers.getContractFactory(
         "MockActionDummy",
@@ -1622,9 +1622,9 @@ describe("GelatoCore.Execute", function () {
         task,
       };
 
-      await expect(userProxy.createExecClaim(task)).to.emit(
+      await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
-        "LogCreateExecClaim"
+        "LogSubmitTask"
       );
 
       await expect(

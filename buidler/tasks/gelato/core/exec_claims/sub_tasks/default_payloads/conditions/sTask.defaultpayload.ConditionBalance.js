@@ -2,7 +2,7 @@ import { internalTask } from "@nomiclabs/buidler/config";
 import { utils } from "ethers";
 
 export default internalTask(
-  "gc-createexecclaim:defaultpayload:ConditionBalance",
+  "gc-submittask:defaultpayload:ConditionBalance",
   `Returns a hardcoded conditionData of ConditionBalance`
 )
   .addFlag("log")

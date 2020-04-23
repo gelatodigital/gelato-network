@@ -59,10 +59,10 @@ contract ActionRequestWithdraw is GelatoActionsStandard {
             revert("batchExchange.requestWithdraw _buyToken failed");
         }
 
-        // 3. Create gelato execClaim for withdraw
-        try IGelatoCore(_gelatoCore).createExecClaim(_task) {
+        // 3. Submit gelato execClaim for withdraw
+        try IGelatoCore(_gelatoCore).submitTask(_task) {
         } catch {
-            revert("Creating chainedClaim unsuccessful");
+            revert("Submitting chainedClaim unsuccessful");
         }
 
     }

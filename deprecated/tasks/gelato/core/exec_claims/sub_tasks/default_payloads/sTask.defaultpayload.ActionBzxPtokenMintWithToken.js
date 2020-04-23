@@ -2,7 +2,7 @@ import { internalTask } from "@nomiclabs/buidler/config";
 import { utils } from "ethers";
 
 export default internalTask(
-  "gc-createexecclaim:defaultpayload:ActionBzxPtokenMintWithToken",
+  "gc-submittask:defaultpayload:ActionBzxPtokenMintWithToken",
   `Returns a hardcoded actionData of ActionBzxPtokenMintWithToken`
 )
   .addFlag("log")

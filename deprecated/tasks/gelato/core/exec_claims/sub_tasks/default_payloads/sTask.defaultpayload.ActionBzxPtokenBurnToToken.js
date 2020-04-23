@@ -1,7 +1,7 @@
 import { internalTask } from "@nomiclabs/buidler/config";
 
 export default internalTask(
-  "gc-createexecclaim:defaultpayload:ActionBzxPtokenBurnToToken",
+  "gc-submittask:defaultpayload:ActionBzxPtokenBurnToToken",
   `Returns a hardcoded actionData of ActionBzxPtokenBurnToToken`
 )
   .addFlag("log")

@@ -10,17 +10,17 @@ import { IGelatoCore, ExecClaim } from "../../../gelato_core/interfaces/IGelatoC
 //  their message. see ModuleManager.setupModules require expression:
 // https://github.com/gnosis/safe-contracts/blob/aa0f3345b609a816ace6c448960ddb852b8a1bbd/contracts/base/ModuleManager.sol#L29
 
-/// @title ScriptGnosisSafeEnableGelatoCoreAndCreate
+/// @title ScriptGnosisSafeEnableGelatoCoreAndSubmit
 /// @notice Script to be run during Gnosis Safe Proxy setup for Gelato integration
 /// @dev Should be delegatecalled from gnosisSafeProxy.setup.setupModules(to,data):
-///       - <to> address of this contract: ScriptGnosisSafeEnableGelatoCoreAndCreate
-///       - <data> encodedPayload for enableModuleAndCreate
-contract ScriptGnosisSafeEnableGelatoCoreAndCreate {
+///       - <to> address of this contract: ScriptGnosisSafeEnableGelatoCoreAndSubmit
+///       - <data> encodedPayload for enableModuleAndSubmit
+contract ScriptGnosisSafeEnableGelatoCoreAndSubmit {
 
     event LogFailure(string error);
 
     /// @dev This function should be delegatecalled
-    function enableModuleAndCreate(address _gelatoCore, ExecClaim memory _ec)
+    function enableModuleAndSubmit(address _gelatoCore, ExecClaim memory _ec)
         public
     {
         // Whitelist GelatoCore as module on delegatecaller (Gnosis Safe Proxy)
@@ -31,12 +31,12 @@ contract ScriptGnosisSafeEnableGelatoCoreAndCreate {
             emit LogFailure("enableModule error");
         }
 
-        // Create on GelatoCore from delegatecaller (Gnosis Safe Proxy)
-        try IGelatoCore(_gelatoCore).createExecClaim(_ec.task) {
+        // SubmitTask on GelatoCore from delegatecaller (Gnosis Safe Proxy)
+        try IGelatoCore(_gelatoCore).submitTask(_ec.task) {
         } catch Error(string memory error) {
             emit LogFailure(error);
         } catch {
-            emit LogFailure("createExecClaim error");
+            emit LogFailure("submitTask error");
         }
     }
 }

@@ -25,7 +25,7 @@ contract ActionChainedRebalancePortfolioKovan is ActionRebalancePortfolioKovan {
 
     // function action(address _executor, address _gasProvider) external virtual returns(uint256) {
     function chainedAction(
-        // ChainedCreateingParams
+        // ChainedSubmissionParams
 <<<<<<< HEAD:fearAndGreedIndex/ActionChainedRebalancePortfolio.sol
         address[2] calldata _gelatoProviderAndExecutor,
         address[2] calldata _conditionAndAction
@@ -55,12 +55,12 @@ contract ActionChainedRebalancePortfolioKovan is ActionRebalancePortfolioKovan {
             _conditionAndAction
         );
 
-        // Create new Claim
+        // Submit new Claim
 <<<<<<< HEAD:fearAndGreedIndex/ActionChainedRebalancePortfolio.sol
-        try getGelatoCore().createExecClaim(
+        try getGelatoCore().submitTask(
             _gelatoProviderAndExecutor,
 =======
-        try gelatoCore.createExecutionClaim(
+        try gelatoCore.submitTask(
             _selectedProviderAndExecutor,
 >>>>>>> gnoAutomatedWithdrawal:fearAndGreedIndex/ActionChainedRebalancePortfolioKovan.sol
             _conditionAndAction,
@@ -69,7 +69,7 @@ contract ActionChainedRebalancePortfolioKovan is ActionRebalancePortfolioKovan {
             0  // execClaimExpiryDate defaults to executor's max allowance
         ) {
         } catch {
-            revert("Creating chainedClaim unsuccessful");
+            revert("Submitting chainedClaim unsuccessful");
         }
 
     }

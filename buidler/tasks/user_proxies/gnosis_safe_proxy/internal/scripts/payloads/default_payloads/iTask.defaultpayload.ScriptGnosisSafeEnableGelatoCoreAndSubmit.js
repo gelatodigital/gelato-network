@@ -1,7 +1,7 @@
 import { internalTask } from "@nomiclabs/buidler/config";
 
 export default internalTask(
-  "gsp:scripts:defaultpayload:ScriptGnosisSafeEnableGelatoCoreAndCreate",
+  "gsp:scripts:defaultpayload:ScriptGnosisSafeEnableGelatoCoreAndSubmit",
   `Returns a hardcoded payload for the 'data' field of the initializer payload`
 )
   .addPositionalParam("conditionname")
@@ -33,14 +33,14 @@ export default internalTask(
           contractname: actionname
         });
         const conditionData = await run(
-          "gc-createexecclaim:defaultpayload:ConditionTimestampPassed"
+          "gc-submittask:defaultpayload:ConditionTimestampPassed"
         );
         const actionData = await run(
-          "gc-createexecclaim:defaultpayload:ActionERC20TransferFrom"
+          "gc-submittask:defaultpayload:ActionERC20TransferFrom"
         );
         const payload = await run("abi-encode-withselector", {
-          contractname: "ScriptGnosisSafeEnableGelatoCoreAndCreate",
-          functionname: "enableModuleAndCreate",
+          contractname: "ScriptGnosisSafeEnableGelatoCoreAndSubmit",
+          functionname: "enableModuleAndSubmit",
           inputs: [
             gelatoCore.address,
             [gelatoProvider, gelatoExecutor],
@@ -52,7 +52,7 @@ export default internalTask(
         });
         if (log) {
           console.log(
-            `\n Payload for ScriptGnosisSafeEnableGelatoCoreAndCreate\
+            `\n Payload for ScriptGnosisSafeEnableGelatoCoreAndSubmit\
              \n GelatoCore: ${gelatoCore.address}\
              \n Provider:   ${gelatoProvider}\
              \n Executor    ${gelatoExecutor}\

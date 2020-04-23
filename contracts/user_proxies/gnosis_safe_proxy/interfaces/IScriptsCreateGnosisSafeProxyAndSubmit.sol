@@ -3,7 +3,7 @@ pragma experimental ABIEncoderV2;
 
 import { IGelatoCore, ExecClaim } from "../../../gelato_core/interfaces/IGelatoCore.sol";
 
-interface IScriptsCreateGnosisSafeProxyAndCreate {
+interface IScriptsCreateGnosisSafeProxyAndSubmit {
     function create(
         address _mastercopy,
         bytes calldata _initializer,

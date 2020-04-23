@@ -11,7 +11,7 @@ import { Task, IGelatoCore } from "../../gelato_core/interfaces/IGelatoCore.sol"
 
 /// @title ScriptEnterStableSwap
 /// @author Luis Schliesske & Hilmar Orth
-/// @notice Script that 1) whitelists gelato core as gnosis safe module, 2) places order on batch exchange and creates two withdraw requests and 3) creates execution claim on gelato for a withdraw action
+/// @notice Script that 1) whitelists gelato core as gnosis safe module, 2) places order on batch exchange and submits two withdraw requests and 3) submits Task on gelato for a withdraw action
 contract ScriptEnterStableSwap is ActionPlaceOrderBatchExchange, ScriptGnosisSafeEnableGelatoCore {
 
     constructor(address _batchExchange) ActionPlaceOrderBatchExchange(_batchExchange) public {
@@ -26,7 +26,7 @@ contract ScriptEnterStableSwap is ActionPlaceOrderBatchExchange, ScriptGnosisSaf
     /// @param _buyAmount Amount to receive (at least)
     /// @param _orderExpirationBatchId Expiration batch id of order and id used to request withdrawals for
     /// @param _gelatoCore Address of gelatoCore
-    /// @param _task Task which will be created on gelato (ActionWithdrawFromBatchExchangeWithMaker)
+    /// @param _task Task which will be submitted on gelato (ActionWithdrawFromBatchExchangeWithMaker)
     function enterStableSwap(
         address _user,
         address _sellToken,
@@ -35,7 +35,7 @@ contract ScriptEnterStableSwap is ActionPlaceOrderBatchExchange, ScriptGnosisSaf
         uint128 _buyAmount,
         uint32 _orderExpirationBatchId,
         address _gelatoCore,
-        // ChainedCreateingParams
+        // ChainedSubmissionParams
         Task memory _task
     )
         public
@@ -54,10 +54,10 @@ contract ScriptEnterStableSwap is ActionPlaceOrderBatchExchange, ScriptGnosisSaf
             _orderExpirationBatchId
         );
 
-        // 3. Create execution claim
-        try IGelatoCore(_gelatoCore).createExecClaim(_task) {
+        // 3. Submit Task
+        try IGelatoCore(_gelatoCore).submitTask(_task) {
         } catch {
-            revert("Creating chainedClaim unsuccessful");
+            revert("Submitting chainedClaim unsuccessful");
         }
 
     }

@@ -14,7 +14,7 @@ export default task(
   )
   .addOptionalParam(
     "execclaim",
-    "Supply LogCreateExecClaim values in an obj"
+    "Supply LogSubmitTask values in an obj"
   )
   .addOptionalParam(
     "fromblock",

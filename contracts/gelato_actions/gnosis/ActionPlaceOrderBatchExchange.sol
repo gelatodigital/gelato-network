@@ -57,7 +57,7 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandard {
         - [ ] b) calls ‘deposit’  token in EpochTokenLocker contract
         - [ ] c) calls ‘placeOrder’ in BatchExchange contract, inputting valid until 3 auctions from current one
         - [ ] d) calls ‘requestFutureWithdraw’ with batch id of the n + 3 and amount arbitrary high (higher than expected output) contract in EpochTokenLocker
-        - [ ] e) creates an execution claim on gelato with condition = address(0) and action “withdraw()” in EpochTokenLocker contract
+        - [ ] e) submits a task on gelato with condition = address(0) and action “withdraw()” in EpochTokenLocker contract
         */
 
         // 1. Transfer sellToken to proxy

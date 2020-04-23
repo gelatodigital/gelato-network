@@ -1,15 +1,15 @@
 pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
-import "../interfaces/IScriptsCreateGnosisSafeProxyAndCreate.sol";
+import "../interfaces/IScriptsCreateGnosisSafeProxyAndSubmit.sol";
 import "./ScriptsCreateGnosisSafeProxy.sol";
 import { IGelatoCore, ExecClaim } from "../../../gelato_core/interfaces/IGelatoCore.sol";
 
-contract ScriptsCreateGnosisSafeProxyAndCreate is
-    IScriptsCreateGnosisSafeProxyAndCreate,
+contract ScriptsCreateGnosisSafeProxyAndSubmit is
+    IScriptsCreateGnosisSafeProxyAndSubmit,
     ScriptsCreateGnosisSafeProxy
 {
-    // ========= Proxy Creation and Creating in 1 tx
+    // ========= Proxy Creation and Submitting in 1 tx
     function create(
         address _mastercopy,
         bytes memory _initializer,
@@ -21,7 +21,7 @@ contract ScriptsCreateGnosisSafeProxyAndCreate is
         override
     {
         create(_mastercopy, _initializer);
-        _gelatoCore.createExecClaim(_ec.task);
+        _gelatoCore.submitTask(_ec.task);
     }
 
     function createTwo(
@@ -36,6 +36,6 @@ contract ScriptsCreateGnosisSafeProxyAndCreate is
         override
     {
         createTwo(_mastercopy, _initializer, _saltNonce);
-        _gelatoCore.createExecClaim(_ec.task);
+        _gelatoCore.submitTask(_ec.task);
     }
 }

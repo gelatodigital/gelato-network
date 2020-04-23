@@ -40,7 +40,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     mapping(address => mapping(bytes32 => uint256)) public override taskSpecGasPriceCeil;
     mapping(address => ProviderModuleSet.Set) internal _providerModules;
 
-    // GelatoCore: createExecClaim Gate
+    // GelatoCore: submitTask Gate
     function isTaskSpecProvided(
         address _provider,
         IGelatoCondition _condition,
@@ -56,7 +56,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         return OK;
     }
 
-    // IGelatoProviderModule: GelatoCore createExecClaim/canExec Gate
+    // IGelatoProviderModule: GelatoCore submitTask/canExec Gate
     function providerModuleChecks(ExecClaim memory _ec)
         public
         view
@@ -77,7 +77,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         }
     }
 
-    // GelatoCore: combined createExecClaim Gate
+    // GelatoCore: combined submitTask Gate
     function isExecClaimProvided(ExecClaim memory _ec)
         public
         view

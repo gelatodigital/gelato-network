@@ -18,7 +18,7 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
     constructor(address _gelatoCore) public { gelatoCore = _gelatoCore; }
 
     // create
-    function create(Task[] calldata _optionalCreateTasks, Action[] calldata _optionalActions)
+    function create(Task[] calldata _optionalSubmitTasks, Action[] calldata _optionalActions)
         external
         payable
         override
@@ -27,7 +27,7 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         userProxy = new GelatoUserProxy{value: msg.value}(
             msg.sender,
             gelatoCore,
-            _optionalCreateTasks,
+            _optionalSubmitTasks,
             _optionalActions
         );
         gelatoProxyByUser[msg.sender] = userProxy;

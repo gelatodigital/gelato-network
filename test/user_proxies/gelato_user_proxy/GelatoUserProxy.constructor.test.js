@@ -22,7 +22,7 @@ describe("User Proxies - GelatoUserProxy - CONSTRUCTOR", function () {
   let notUserAddress;
 
   let actionStruct;
-  let createExecClaimTask;
+  let submitTaskTask;
 
   beforeEach(async function () {
     // Get the ContractFactory, contract instance, and Signers here.
@@ -64,8 +64,8 @@ describe("User Proxies - GelatoUserProxy - CONSTRUCTOR", function () {
       operation: Operation.Delegatecall,
     });
 
-    // createExecClaimTask
-    createExecClaimTask = new Task({
+    // submitTaskTask
+    submitTaskTask = new Task({
       provider: new GelatoProvider({
         addr: userAddress,
         module: selfProviderModuleGelatoUserProxy.address,

@@ -18,39 +18,39 @@ export default task("gc-debug-newcore")
       // GelatoCore
       const gelatoCore = await run("deploy", {
         contractname: "GelatoCore",
-        log
+        log,
       });
       // Condition
       const condition = await run("deploy", {
         contractname: CONDITION_NAME,
-        log
+        log,
       });
       // Action
       const action = await run("deploy", {
         contractname: ACTION_NAME,
-        log
+        log,
       });
       // GelatoUserProxy Factory
       const gelatoUserProxyFactory = await run("deploy", {
         contractname: "GelatoUserProxyFactory",
         constructorargs: [gelatoCore.address],
-        log
+        log,
       });
       // ProviderModule GelatoUserProxy
       const extcodehash = await gelatoUserProxyFactory.proxyExtcodehash();
       const actionWithGasPriceCeil = {
         _address: action.address,
-        gasPriceCeil: utils.parseUnits("20", "gwei")
+        gasPriceCeil: utils.parseUnits("20", "gwei"),
       };
       const providerModuleGelatoUserProxy = await run("deploy", {
         contractname: "ProviderModuleGelatoUserProxy",
         constructorargs: [
           [extcodehash],
           condition ? [condition.address] : [constants.AddressZero],
-          [actionWithGasPriceCeil]
+          [actionWithGasPriceCeil],
         ],
         events,
-        log
+        log,
       });
 
       // === GelatoCore setup ===
@@ -59,7 +59,7 @@ export default task("gc-debug-newcore")
         gelatocoreaddress: gelatoCore.address,
         executorindex: testSignerIndex,
         events,
-        log
+        log,
       });
 
       // Provider
@@ -72,7 +72,7 @@ export default task("gc-debug-newcore")
         gelatoexecutor: testSigner,
         providerindex: testSignerIndex,
         events,
-        log
+        log,
       });
 
       // === GelatoUserProxy setup ===
@@ -80,10 +80,10 @@ export default task("gc-debug-newcore")
         factoryaddress: gelatoUserProxyFactory.address,
         funding: "0",
         events,
-        log
+        log,
       });
 
-      // === Creating ===
+      // === Task Submission ===
       const conditionData = constants.HashZero;
       const actionData = constants.HashZero;
 
@@ -98,40 +98,40 @@ export default task("gc-debug-newcore")
         actionData: actionData,
         expiryDate: constants.HashZero,
         executorSuccessShare: 5,
-        sysAdminSuccessShare: 2
+        sysAdminSuccessShare: 2,
       };
 
       const gelatoUserProxy = await run("instantiateContract", {
         contractname: "GelatoUserProxy",
         contractaddress: gelatoUserProxyAddress,
-        write: true
+        write: true,
       });
 
-      let createTx;
+      let submitTaskTx;
       try {
-        createTx = await gelatoUserProxy.createExecClaim(execClaim, testSigner);
+        submitTaskTx = await gelatoUserProxy.submitTask(execClaim, testSigner);
       } catch (error) {
-        console.error(`\n gc-debug-newcore: createExecClaim\n`, error);
-        throw new Error(`\n gelatoUserProxy.createExecClaim: PRE tx error \n`);
+        console.error(`\n gc-debug-newcore: submitTask\n`, error);
+        throw new Error(`\n gelatoUserProxy.submitTask: PRE tx error \n`);
       }
 
-      let createTxBlockHash;
+      let submitTaskTxBlockHash;
       try {
-        const { blockHash } = await createTx.wait();
-        createTxBlockHash = blockHash;
+        const { blockHash } = await submitTaskTx.wait();
+        submitTaskTxBlockHash = blockHash;
       } catch (error) {
-        console.error(`\n gc-debug-newcore: createExecClaim\n`, error);
-        throw new Error(`\n gelatoUserProxy.createExecClaim: tx error \n`);
+        console.error(`\n gc-debug-newcore: submitTask\n`, error);
+        throw new Error(`\n gelatoUserProxy.submitTask: tx error \n`);
       }
 
       /* buidlerEVM bug
       if (events) {
         await run("event-getparsedlog", {
           contractname: "GelatoCore",
-          eventname: "LogCreateExecClaim",
+          eventname: "LogSubmitTask",
           contractaddress: gelatoCore.address,
-          txhash: createTx.hash,
-          blockhash: createTxBlockHash,
+          txhash: submitTaskTx.hash,
+          blockhash: submitTaskTxBlockHash,
           log: true
         });
       } */
@@ -140,11 +140,11 @@ export default task("gc-debug-newcore")
       execClaim.id = utils.bigNumberify("1");
       execClaim.userProxy = gelatoUserProxy.address;
       const iFace = await run("ethers-interface-new", {
-        contractname: "GelatoCore"
+        contractname: "GelatoCore",
       });
-      console.log(iFace.events.LogCreateExecClaim);
+      console.log(iFace.events.LogSubmitTask);
       await sleep(100000);
-      const encodedExecClaim = iFace.events.LogCreateExecClaim.execClaim.encode(
+      const encodedExecClaim = iFace.events.LogSubmitTask.execClaim.encode(
         execClaim
       );
       console.log(encodedExecClaim);

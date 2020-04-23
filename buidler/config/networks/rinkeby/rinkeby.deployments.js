@@ -48,8 +48,8 @@ export const deployments = {
   // Enable GelatoCore Module
   ScriptGnosisSafeEnableGelatoCore:
     "0x5EF44De4b98F2bcE0E29c344E7B2Fb8f0282A0Cf",
-  // Enable GelatoCore Module and Create
-  ScriptGnosisSafeEnableGelatoCoreAndCreate: "0x0",
+  // Enable GelatoCore Module and Submit Task
+  ScriptGnosisSafeEnableGelatoCoreAndSubmit: "0x0",
   // Enter the Rebalancing Chained Action
   ScriptEnterPortfolioRebalancingRinkeby: "0x0",
   ScriptExitRebalancePortfolioRinkeby: "0x0",

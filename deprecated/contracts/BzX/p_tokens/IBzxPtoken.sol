@@ -12,13 +12,13 @@ interface IBzxPtoken {
      * @notice Deposit assets to the pToken, which in turn creates pTokens
         to the lender’s wallet at the current tokenPrice() rate.
      * @dev Prior ERC20 depositToken.approve(pTokenContractAddr, depositAmount) needed
-     * @param receiver address that will receive the createed pTokens.
+     * @param receiver address that will receive the created pTokens.
      * @param depositTokenAddress  Any supported KyberToken.  However, specifying
         a token other the asset returned by the loanTokenAddress() function will
         trigger a KyberSwap into the correct asset, being subject to any trade slippage
         that may occur.
      * @param depositAmount you can cap it at loanToken
-     * @param maxPriceAllowed A slippage limit on the payout rate of the pTokens createed.
+     * @param maxPriceAllowed A slippage limit on the payout rate of the pTokens created.
         This should be set to a value above the current price returned by `tokenPrice()`.
         A value of 0 is ignored.  ** footnote 1
      */
@@ -90,7 +90,7 @@ interface IBzxPtoken {
 
     /// @notice Returns the token price recorded during the last checkpoint for the user.
     ///  Checkpoints occur whenever there is a token balance changing action taken by
-    ///   the user (createing, burning, or transferring).
+    ///   the user (submission, burning, or transferring).
     /// User profit since last checkpoint formula:
     ///  (tokenPrice() - checkpointPrice(user)) * balanceOf(user) / 10^36
     function checkpointPrice(address _user) external view returns (uint256 price);

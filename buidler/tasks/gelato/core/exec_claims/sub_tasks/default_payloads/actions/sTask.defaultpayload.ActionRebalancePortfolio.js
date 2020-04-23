@@ -1,7 +1,7 @@
 import { internalTask } from "@nomiclabs/buidler/config";
 
 export default internalTask(
-  "gc-create:defaultpayload:ActionRebalancePortfolioKovan",
+  "gc-submit:defaultpayload:ActionRebalancePortfolioKovan",
   `Returns a hardcoded actionData of ActionRebalancePortfolioKovan`
 )
   .addOptionalPositionalParam(

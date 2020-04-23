@@ -2,7 +2,7 @@ import { internalTask } from "@nomiclabs/buidler/config";
 import { utils } from "ethers";
 
 export default internalTask(
-  "gc-createexecclaim:defaultpayload:ActionChainedTimedERC20TransferFromKovan",
+  "gc-submittask:defaultpayload:ActionChainedTimedERC20TransferFromKovan",
   `Returns a hardcoded actionData of ActionChainedTimedERC20TransferFromKovan`
 )
   .addFlag("log")

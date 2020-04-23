@@ -3,8 +3,8 @@ import { defaultNetwork } from "../../../../../buidler.config";
 import { constants } from "ethers";
 
 export default task(
-  "gc-createexecclaim",
-  `Sends tx to GelatoCore.createExecClaim() or --selfprovide to createSelfProvidedExecClaim() on [--network] (default: ${defaultNetwork})`
+  "gc-submittask",
+  `Sends tx to GelatoCore.submitTask() on [--network] (default: ${defaultNetwork})`
 )
   .addOptionalPositionalParam(
     "conditionname",
@@ -162,7 +162,7 @@ export default task(
       }
 
       if (taskArgs.log)
-        console.log("\n gc-createexecclaim TaskArgs:\n", taskArgs, "\n");
+        console.log("\n gc-submittask TaskArgs:\n", taskArgs, "\n");
 
       if (taskArgs.log) console.log("\n Task:\n", taskArgs.task);
 
@@ -173,46 +173,47 @@ export default task(
         write: true,
       });
 
-      // Send Creating Tx
-      let createTxHash;
+      // Send Task Submission Tx
+      let submitTaskTxHash;
 
-      // Wrap Create function in Gnosis Safe Transaction
+      // Wrap Submit function in Gnosis Safe Transaction
       const safeAddress = await run("gc-determineCpkProxyAddress");
-      createTxHash = await run("gsp-exectransaction", {
+      submitTaskTxHash = await run("gsp-exectransaction", {
         gnosissafeproxyaddress: safeAddress,
         contractname: "GelatoCore",
         inputs: [taskArgs.task],
-        functionname: "createExecClaim",
+        functionname: "submitTask",
         operation: 0,
         log: true,
       });
 
-      // const tx = await gelatoCore.createExecClaim(task, {
+      // const tx = await gelatoCore.submitTask(task, {
       //   gasLimit: 1000000,
       // });
-      // createTxHash = tx.hash;
+      // submitTaskTxHash = tx.hash;
 
-      if (taskArgs.log) console.log(`\n createTx Hash: ${createTxHash}\n`);
+      if (taskArgs.log)
+        console.log(`\n submitTaskTx Hash: ${submitTaskTxHash}\n`);
 
       // // Wait for tx to get mined
-      // const { blockHash: blockhash } = await createTx.wait();
+      // const { blockHash: blockhash } = await submitTaskTx.wait();
 
       // Event Emission verification
       if (taskArgs.events) {
-        const parsedCreateingLog = await run("event-getparsedlog", {
+        const parsedSubmissionLog = await run("event-getparsedlog", {
           contractname: "GelatoCore",
           contractaddress: taskArgs.gelatocoreaddress,
-          eventname: "LogCreateExecClaim",
-          txhash: createTxHash,
+          eventname: "LogSubmitTask",
+          txhash: submitTaskTxHash,
           values: true,
           stringify: true,
         });
-        if (parsedCreateingLog)
-          console.log("\n✅ LogCreateExecClaim\n", parsedCreateingLog);
-        else console.log("\n❌ LogCreateExecClaim not found");
+        if (parsedSubmissionLog)
+          console.log("\n✅ LogSubmitTask\n", parsedSubmissionLog);
+        else console.log("\n❌ LogSubmitTask not found");
       }
 
-      return createTxHash;
+      return submitTaskTxHash;
     } catch (error) {
       console.error(error, "\n");
       process.exit(1);

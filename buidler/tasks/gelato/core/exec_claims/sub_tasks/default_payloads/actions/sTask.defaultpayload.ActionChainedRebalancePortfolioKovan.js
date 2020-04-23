@@ -3,7 +3,7 @@ import { AddressZero } from "ethers/constants";
 import { BigNumber } from "ethers/utils";
 
 export default internalTask(
-  "gc-create:defaultpayload:ActionChainedRebalancePortfolioKovan",
+  "gc-submit:defaultpayload:ActionChainedRebalancePortfolioKovan",
   `Returns a hardcoded actionData of ActionChainedRebalancePortfolioKovan`
 )
   .addOptionalPositionalParam(

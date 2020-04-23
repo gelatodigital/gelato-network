@@ -315,8 +315,8 @@ describe("GelatoCore.Execute", function () {
         task,
       };
 
-      const createExecClaimTx = await userProxy.createExecClaim(task);
-      await createExecClaimTx.wait();
+      const submitTaskTx = await userProxy.submitTask(task);
+      await submitTaskTx.wait();
 
       const executorBalanceBefore = await ethers.provider.getBalance(
         executorAddress
@@ -430,8 +430,8 @@ describe("GelatoCore.Execute", function () {
         task,
       };
 
-      const createExecClaimTx = await userProxy.createExecClaim(task);
-      await createExecClaimTx.wait();
+      const submitTaskTx = await userProxy.submitTask(task);
+      await submitTaskTx.wait();
 
       const executorBalanceBefore = await ethers.provider.getBalance(
         executorAddress
@@ -568,8 +568,8 @@ describe("GelatoCore.Execute", function () {
         task,
       };
 
-      const createExecClaimTx = await userProxy.createExecClaim(task);
-      await createExecClaimTx.wait();
+      const submitTaskTx = await userProxy.submitTask(task);
+      await submitTaskTx.wait();
 
       const executorBalanceBefore = await ethers.provider.getBalance(
         executorAddress
@@ -683,8 +683,8 @@ describe("GelatoCore.Execute", function () {
         task,
       };
 
-      const createExecClaimTx = await userProxy.createExecClaim(task);
-      await createExecClaimTx.wait();
+      const submitTaskTx = await userProxy.submitTask(task);
+      await submitTaskTx.wait();
 
       const executorBalanceBefore = await ethers.provider.getBalance(
         executorAddress

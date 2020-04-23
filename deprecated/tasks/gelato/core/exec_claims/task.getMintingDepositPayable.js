@@ -3,8 +3,8 @@ import { defaultNetwork } from "../../../../../buidler.config";
 import { utils } from "ethers";
 
 export default task(
-  "gc-getcreateingdepositpayable",
-  `Return GelatoCore.getCreateingDepositPayable() on [--network] (default: ${defaultNetwork})`
+  "gc-getsubmissiondepositpayable",
+  `Return GelatoCore.getSubmissionDepositPayable() on [--network] (default: ${defaultNetwork})`
 )
   .addPositionalParam("conditionname", "must exist inside buidler.config")
   .addPositionalParam("actionname", "must exist inside buidler.config")
@@ -32,27 +32,27 @@ export default task(
         read: true
       });
       // Contract Call
-      const createingDepositPayable = await gelatoCore.getCreateingDepositPayable(
+      const submissionDepositPayable = await gelatoCore.getSubmissionDepositPayable(
         taskArgs.gelatoexecutor,
         conditionAddress,
         actionAddress
       );
 
       if (taskArgs.log) {
-        const createingDepositPayableETH = utils.formatUnits(
-          createingDepositPayable,
+        const submissionDepositPayableETH = utils.formatUnits(
+          submissionDepositPayable,
           "ether"
         );
         console.log(
           `\nCondition-Action-Combo: ${taskArgs.conditionname}-${taskArgs.actionname}`
         );
         console.log(
-          `CreateingDepositPayable:        ${createingDepositPayableETH} ETH`
+          `SubmissionDepositPayable:        ${submissionDepositPayableETH} ETH`
         );
         const ethUSDPrice = await run("eth", { usd: true });
         console.log(
-          `CreateingDepositPayable in USD: ${(
-            ethUSDPrice * parseFloat(createingDepositPayableETH)
+          `SubmissionDepositPayable in USD: ${(
+            ethUSDPrice * parseFloat(submissionDepositPayableETH)
           ).toFixed(2)}$`
         );
         await run("gc-executorprice", {
@@ -61,7 +61,7 @@ export default task(
         });
       }
 
-      return createingDepositPayable;
+      return submissionDepositPayable;
     } catch (error) {
       console.error(error, "\n");
       process.exit(1);

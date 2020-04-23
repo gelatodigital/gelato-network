@@ -21,7 +21,7 @@ export default task(
         // Search Log with txhash
         execClaim = await run("event-getparsedlog", {
           contractname: "GelatoCore",
-          eventname: "LogCreateExecClaim",
+          eventname: "LogSubmitTask",
           txhash: taskArgs.txhash,
           fromblock: taskArgs.fromblock,
           toblock: taskArgs.toblock,
@@ -33,7 +33,7 @@ export default task(
         // Search Logs
         const execClaims = await run("event-getparsedlogs", {
           contractname: "GelatoCore",
-          eventname: "LogCreateExecClaim",
+          eventname: "LogSubmitTask",
           fromblock: taskArgs.fromblock,
           toblock: taskArgs.toblock,
           blockhash: taskArgs.blockhash,

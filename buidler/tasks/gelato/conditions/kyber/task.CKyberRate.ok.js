@@ -30,7 +30,7 @@ export default task(
         contractname: "ConditionKyberRate",
         read: true
       });
-      // createExecClaim TX (payable)
+      // submitTask TX (payable)
       const ok = await conditionContract.ok(
         src,
         srcamt,

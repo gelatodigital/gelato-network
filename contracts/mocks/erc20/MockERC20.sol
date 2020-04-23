@@ -344,7 +344,7 @@ pragma solidity ^0.6.6;
 
 /**
  * @title Testnet Dai
- * @dev ERC20 createing logic
+ * @dev ERC20 submission logic
  * Sourced from OpenZeppelin and thoroughly butchered to remove security guards.
  * Anybody can create - STRICTLY FOR TEST PURPOSES
  */
@@ -356,7 +356,7 @@ contract MockERC20 is ERC20, ERC20Detailed {
 
     /**
     * @dev Function to create tokens
-    * @param to The address that will receive the createed tokens.
+    * @param to The address that will receive the created tokens.
     * @param value The amount of tokens to create.
     * @return A boolean that indicates if the operation was successful.
     */

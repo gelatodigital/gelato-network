@@ -2,7 +2,7 @@ import { internalTask } from "@nomiclabs/buidler/config";
 import { utils } from "ethers";
 
 export default internalTask(
-  "gc-createexecclaim:defaultpayload:ActionKyberTrade",
+  "gc-submittask:defaultpayload:ActionKyberTrade",
   `Returns a hardcoded actionData of ActionKyberTrade`
 )
   .addFlag("log")

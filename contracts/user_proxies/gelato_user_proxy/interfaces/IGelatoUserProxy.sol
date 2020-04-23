@@ -5,13 +5,13 @@ import { Action, Task, ExecClaim } from "../../../gelato_core/interfaces/IGelato
 
 interface IGelatoUserProxy {
 
-    /// @notice Create a task on gelato
+    /// @notice Submit a task on gelato
     /// @param _task Task to create
-    function createExecClaim(Task calldata _task) external;
+    function submitTask(Task calldata _task) external;
 
-    /// @notice Create multiple tasks on gelato
+    /// @notice Submit multiple tasks on gelato
     /// @param _tasks Task to create
-    function multiCreateExecClaims(Task[] calldata _tasks) external;
+    function multiSubmitTasks(Task[] calldata _tasks) external;
 
     /// @notice Cancel an execution claim on gelato
     /// @param _ec Execution Claim to cancel

@@ -2,7 +2,7 @@ import { internalTask } from "@nomiclabs/buidler/config";
 import { utils } from "ethers";
 
 export default internalTask(
-  "gc-createexecclaim:defaultpayload:ConditionKyberRateKovan",
+  "gc-submittask:defaultpayload:ConditionKyberRateKovan",
   `Returns a hardcoded actionData of ConditionKyberRateKovan`
 )
   .addFlag("log")

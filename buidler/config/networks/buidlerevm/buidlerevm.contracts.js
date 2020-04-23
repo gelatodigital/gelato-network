@@ -7,8 +7,6 @@ export const contracts = [
   "ActionERC20TransferFrom",
   // Kyber
   "ActionKyberTradeKovan",
-  // Multicreate
-  "ActionMultiCreateForConditionTimestampPassed",
   // Portfolio Mgmt
   "ActionRebalancePortfolio",
   // Gnosis
@@ -49,7 +47,7 @@ export const contracts = [
   // = GnosisSafeProxy =
   // Scripts
   "ScriptGnosisSafeEnableGelatoCore",
-  "ScriptGnosisSafeEnableGelatoCoreAndCreate",
+  "ScriptGnosisSafeEnableGelatoCoreAndSubmit",
 
   // === Mocks ====
   // Conditions

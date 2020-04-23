@@ -1,7 +1,7 @@
 import { internalTask } from "@nomiclabs/buidler/config";
 
 export default internalTask(
-	"gc-createexecclaim:defaultpayload:ConditionFearGreedIndex",
+	"gc-submittask:defaultpayload:ConditionFearGreedIndex",
 	`Returns a hardcoded conditionData of ConditionFearGreedIndex`
 )
 	.addFlag("log")

@@ -61,7 +61,7 @@ interface IGelatoProviders {
     // =========== GELATO PROVIDER APIs ==============
 
     /// @notice Validation that checks whether inputetd Ice Cream is being offered by the selected provider
-    /// @dev Checked in createExecClaim() if provider != userProxy
+    /// @dev Checked in submitTask() if provider != userProxy
     /// @param _provider Address of selected provider
     /// @param _condition Address of condition which will be checked
     /// @param _actions Acion Struct defined in IGelatoCore
@@ -76,7 +76,7 @@ interface IGelatoProviders {
         returns(string memory);
 
     /// @notice Validates that provider has provider module whitelisted + conducts isProvided check in ProviderModule
-    /// @dev Checked in createExecClaim() if provider == userProxy
+    /// @dev Checked in submitTask() if provider == userProxy
     /// @param _ec Execution Claim defined in IGelatoCore
     /// @return Expected to return "OK"
     function providerModuleChecks(ExecClaim calldata _ec)

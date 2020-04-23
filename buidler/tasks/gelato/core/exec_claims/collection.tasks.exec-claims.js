@@ -1,6 +1,6 @@
 // === GelatoCore ===
-// createExecClaim
-import "./task.createExecClaim";
+// submitTask
+import "./task.submitTask";
 // currentExecClaimId
 import "./task.currentExecClaimId";
 

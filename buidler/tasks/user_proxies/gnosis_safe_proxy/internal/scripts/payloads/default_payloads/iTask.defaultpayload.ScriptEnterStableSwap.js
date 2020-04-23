@@ -96,7 +96,7 @@ export default internalTask(
       uint128 _sellAmount,
       uint128 _buyAmount,
       uint32 _orderExpirationBatchId,
-      // ChainedCreateingParams
+      // ChainedSubmissionParams
       ExecClaim memory _execClaim
       */
 

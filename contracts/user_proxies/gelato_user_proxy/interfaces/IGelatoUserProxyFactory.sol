@@ -10,10 +10,10 @@ interface IGelatoUserProxyFactory {
     // create
 
     /// @notice Create gelato user proxy
-    /// @param _optionalCreateTasks Optional tasks to create on gelato
+    /// @param _optionalSubmitTasks Optional tasks to create on gelato
     /// @param _setupActions Optional actions to execute
     /// @return userProxy address of deployed proxy contract
-    function create(Task[] calldata _optionalCreateTasks, Action[] calldata _setupActions)
+    function create(Task[] calldata _optionalSubmitTasks, Action[] calldata _setupActions)
         external
         payable
         returns(GelatoUserProxy userProxy);

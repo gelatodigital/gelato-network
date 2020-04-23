@@ -52,12 +52,12 @@ contract ActionBzxPtokenMintWithToken is GelatoActionsStandard {
                 _sendToken,
                 _sendAmt,
                 _destination,  // pToken
-                _destination,  // receiveToken == createed pToken
-                receiveAmt,  // createed pTokens
+                _destination,  // receiveToken == created pToken
+                receiveAmt,  // created pTokens
                 _user  // receiver
             );
         } catch {
-            revert("ErrorPtokenCreateWithToken");
+            revert("ErrorPtokenMintWithToken");
         }
     }
 

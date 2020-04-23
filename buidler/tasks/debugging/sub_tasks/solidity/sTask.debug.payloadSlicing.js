@@ -14,7 +14,7 @@ export default internalTask("debug:payloadslicing")
 
       let payload;
       if (!taskArgs[1])
-        payload = await run(`gc-createexecclaim:defaultpayload:${contractname}`);
+        payload = await run(`gc-submittask:defaultpayload:${contractname}`);
       else payload = taskArgs[1];
 
       const contract = await run("deploy", {

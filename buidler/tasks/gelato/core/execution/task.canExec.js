@@ -13,7 +13,7 @@ export default task(
     1,
     types.int
   )
-  .addOptionalParam("execclaim", "Supply LogCreateExecClaim values in an obj")
+  .addOptionalParam("execclaim", "Supply LogSubmitTask values in an obj")
   .addOptionalParam("fromblock", "Search for event logs from block number.")
   .addOptionalParam("toblock", "Search for event logs to block number.")
   .addOptionalParam("blockhash", "Search a specific block")

@@ -6,8 +6,8 @@ import { defaultNetwork } from "../../../../../../../buidler.config";
 import { utils } from "ethers";
 
 export default task(
-  "ga-multicreate",
-  `TX to ActionMultiCreateForConditionTimestampPassed on [--network] (default: ${defaultNetwork})`
+  "ga-multisubmit",
+  `TX to ActionMultiSubmitForConditionTimestampPassed on [--network] (default: ${defaultNetwork})`
 )
   .addFlag("log", "Logs return values to stdout")
   .setAction(async ({ log }) => {
@@ -19,78 +19,78 @@ export default task(
 
       // Contract Addresses
       const {
-        ActionMultiCreateForConditionTimestampPassed: actionMultiCreateTimeConditionAddress
+        ActionMultiSubmitForConditionTimestampPassed: actionMultiSubmitTimeConditionAddress,
       } = await run("bre-config", { deployments: true });
 
-      // Non-Default Params for ActionMultiCreateForConditionTimestampPassed
+      // Non-Default Params for ActionMultiSubmitForConditionTimestampPassed
       const { default: gelatoexecutor } = await run("bre-config", {
-        addressbookcategory: "gelatoExecutor"
+        addressbookcategory: "gelatoExecutor",
       });
-      const numberofcreates = "2";
+      const numberofsubmissions = "2";
 
-      // Encode the payload for the call to MultiCreateForTimeCondition.multiCreate
-      const actionMultiCreateForConditionTimestampPassedPayloadWithSelector = await run(
-        "gc-createexecclaim:defaultpayload:ActionMultiCreateForConditionTimestampPassed",
+      // Encode the payload for the call to MultiSubmitForTimeCondition.multiCreate
+      const actionMultiSubmitForConditionTimestampPassedPayloadWithSelector = await run(
+        "gc-submittask:defaultpayload:ActionMultiSubmitForConditionTimestampPassed",
         {
           gelatoexecutor,
-          numberofcreates,
-          log
+          numberofsubmissions,
+          log,
         }
       );
 
       // ReadInstance of GelatoCore
-      const createinDepositPerCreate = await run("gc-getcreateingdepositpayable", {
+      const depositPerSubmission = await run("gc-getsubmissiondepositpayable", {
         gelatoexecutor,
         conditionname: "ConditionTimestampPassed",
         actionname: "ActionKyberTrade",
-        log
+        log,
       });
 
       // MSG VALUE for payable create function
-      const msgValue = createinDepositPerCreate.mul(numberofcreates);
+      const msgValue = depositPerSubmission.mul(numberofsubmissions);
 
       if (log) {
         const msgValueETH = utils.formatUnits(msgValue, "ether");
         const ethUSDPrice = await run("eth", { usd: true, log });
         const msgValueUSD = (ethUSDPrice * parseFloat(msgValueETH)).toFixed(2);
         console.log(
-          `\nCreateing Deposit for ${numberofcreates} creates: ${msgValueETH}ETH (${msgValueUSD}$)\n`
+          `\nSubmission Deposit for ${numberofsubmissions} creates: ${msgValueETH}ETH (${msgValueUSD}$)\n`
         );
       }
 
       // send tx to PAYABLE contract method
       // Read-Write Instance of UserProxy
       const { luis: userProxyAddress } = await run("bre-config", {
-        addressbookcategory: "userProxy"
+        addressbookcategory: "userProxy",
       });
       const userProxyContract = await run("instantiateContract", {
         contractname: "GelatoUserProxy",
         contractaddress: userProxyAddress,
-        write: true
+        write: true,
       });
 
-      // ❗Send TX To MultiCreate
-      const multiCreateTx = await userProxyContract.delegatecall(
-        actionMultiCreateTimeConditionAddress,
-        actionMultiCreateForConditionTimestampPassedPayloadWithSelector,
+      // ❗Send TX To MultiSubmit
+      const multiSubmitTx = await userProxyContract.delegatecall(
+        actionMultiSubmitTimeConditionAddress,
+        actionMultiSubmitForConditionTimestampPassedPayloadWithSelector,
         {
           value: msgValue,
-          gasLimit: 3500000
+          gasLimit: 3500000,
         }
       );
       if (log)
         console.log(
-          `\nuserProxy.executeDelegatecall(multiCreateForTimeCondition) txHash:\n${multiCreateTx.hash}`
+          `\nuserProxy.executeDelegatecall(multiCreateForTimeCondition) txHash:\n${multiSubmitTx.hash}`
         );
       if (log) console.log("\nwaiting for transaction to get mined\n");
 
       // Wait for TX to get mined
-      await multiCreateTx.wait();
+      await multiSubmitTx.wait();
 
       // Automatic ERC20 Approval
       if (log) console.log("\nCaution: ERC20 Approval for userProxy needed\n");
 
-      return multiCreateTx.hash;
+      return multiSubmitTx.hash;
     } catch (err) {
       console.log(err);
     }

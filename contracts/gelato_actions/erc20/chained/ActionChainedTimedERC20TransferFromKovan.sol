@@ -52,17 +52,17 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
         //     _ec
         // );
 
-        // // Create: ExecClaim Chain continues with Updated Payloads
-        // try IGelatoCore(GELATO_CORE).createExecClaim(_ec.task) {
+        // // Submit:ExecClaim Chain continues with Updated Payloads
+        // try IGelatoCore(GELATO_CORE).submitTask(_ec.task) {
         // } catch Error(string memory error) {
         //     revert(
         //         string(abi.encodePacked(
-        //             "ActionChainedTimedERC20TransferFromKovan.createExecClaim",
+        //             "ActionChainedTimedERC20TransferFromKovan.submitTask",
         //             error
         //         ))
         //     );
         // } catch {
-        //     revert("ActionChainedTimedERC20TransferFromKovan.createExecClaim:undefined");
+        //     revert("ActionChainedTimedERC20TransferFromKovan.submitTask:undefined");
         // }
     }
 

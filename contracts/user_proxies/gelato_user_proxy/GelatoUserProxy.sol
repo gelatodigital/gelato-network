@@ -14,7 +14,7 @@ contract GelatoUserProxy is IGelatoUserProxy {
     constructor(
         address _user,
         address _gelatoCore,
-        Task[] memory _optionalCreateTasks,
+        Task[] memory _optionalSubmitTasks,
         Action[] memory _optionalActions
     )
         public
@@ -24,7 +24,7 @@ contract GelatoUserProxy is IGelatoUserProxy {
     {
         user = _user;
         gelatoCore = _gelatoCore;
-        _initialize(_gelatoCore, _optionalCreateTasks, _optionalActions);
+        _initialize(_gelatoCore, _optionalSubmitTasks, _optionalActions);
     }
 
     receive() external payable {}
@@ -47,17 +47,17 @@ contract GelatoUserProxy is IGelatoUserProxy {
         _;
     }
 
-    function createExecClaim(Task memory _task) public override onlyUser {
-        try IGelatoCore(gelatoCore).createExecClaim(_task) {
+    function submitTask(Task memory _task) public override onlyUser {
+        try IGelatoCore(gelatoCore).submitTask(_task) {
         } catch Error(string memory err) {
-            revert(string(abi.encodePacked("GelatoUserProxy.createExecClaim:", err)));
+            revert(string(abi.encodePacked("GelatoUserProxy.submitTask:", err)));
         } catch {
-            revert("GelatoUserProxy.createExecClaim:undefinded");
+            revert("GelatoUserProxy.submitTask:undefinded");
         }
     }
 
-    function multiCreateExecClaims(Task[] memory _tasks) public override onlyUser {
-        for (uint i = 0; i < _tasks.length; i++) createExecClaim(_tasks[i]);
+    function multiSubmitTasks(Task[] memory _tasks) public override onlyUser {
+        for (uint i = 0; i < _tasks.length; i++) submitTask(_tasks[i]);
     }
 
     function cancelExecClaim(ExecClaim memory _ec) public override onlyUser {
@@ -161,17 +161,17 @@ contract GelatoUserProxy is IGelatoUserProxy {
     {
         if (_tasks.length != 0) {
             for (uint i = 0; i < _tasks.length; i++) {
-                try IGelatoCore(_gelatoCore).createExecClaim(_tasks[i]) {
+                try IGelatoCore(_gelatoCore).submitTask(_tasks[i]) {
                 } catch Error(string memory err) {
                     revert(
                         string(
                             abi.encodePacked(
-                                "GelatoUserProxy._initialize.createExecClaim:", err
+                                "GelatoUserProxy._initialize.submitTask:", err
                             )
                         )
                     );
                 } catch {
-                    revert("GelatoUserProxy._initialize.createExecClaim:undefined");
+                    revert("GelatoUserProxy._initialize.submitTask:undefined");
                 }
             }
         }

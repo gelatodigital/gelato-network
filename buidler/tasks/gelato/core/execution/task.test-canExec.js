@@ -2,25 +2,25 @@ import { task } from "@nomiclabs/buidler/config";
 import { constants, utils } from "ethers";
 
 export default task("test-canexec")
-  .addPositionalParam("createtxhash")
-  .setAction(async ({ createtxhash }) => {
+  .addPositionalParam("submittasktxhash")
+  .setAction(async ({ submittasktxhash }) => {
     try {
-      const execIdOneCreateTxHash =
+      const execIdOneSubmitTxHash =
         "0xfd73c9b128b628b1ac95e1d07632694569a38226d57df135dff8f7b71abab0fb";
       const provider = await run("handleGelatoProvider");
       const user = await run("bre-config", {
         addressbookcategory: "userProxy",
-        addressbookentry: "luis"
+        addressbookentry: "luis",
       });
 
       const condition = await run("bre-config", {
         deployments: true,
-        contractname: "MockConditionDummy"
+        contractname: "MockConditionDummy",
       });
 
       const action = await run("bre-config", {
         deployments: true,
-        contractname: "MockActionDummy"
+        contractname: "MockActionDummy",
       });
 
       const execClaim = {
@@ -34,19 +34,19 @@ export default task("test-canexec")
         actionData: constants.HashZero,
         expiryDate: "0x5ecc1408",
         executorSuccessShare: 5,
-        sysAdminSuccessShare: 2
+        sysAdminSuccessShare: 2,
       };
 
       const { execClaimHash } = await run("event-getparsedlog", {
         contractname: "GelatoCore",
-        eventname: "LogCreateExecClaim",
-        txhash: createtxhash,
-        values: true
+        eventname: "LogSubmitTask",
+        txhash: submittasktxhash,
+        values: true,
       });
 
       const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
-        write: true
+        write: true,
       });
 
       const gelatoGasPrice = await gelatoCore.gelatoGasPrice();
@@ -75,7 +75,7 @@ export default task("test-canexec")
           contractname: "GelatoCore",
           txhash: execTx.hash,
           blockhash,
-          log: true
+          log: true,
         });
       }
     } catch (error) {
