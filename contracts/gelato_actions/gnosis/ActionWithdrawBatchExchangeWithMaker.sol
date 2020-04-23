@@ -9,6 +9,9 @@ import { IBatchExchange } from "../../dapp_interfaces/gnosis/IBatchExchange.sol"
 import { IMedianizer } from "../../dapp_interfaces/maker/IMakerMedianizer.sol";
 
 
+/// @title ActionWithdrawBatchExchangeWithMaker
+/// @author Luis Schliesske & Hilmar Orth
+/// @notice Gelato action that 1) withdraws funds from Batch Exchange and 2) sends funds back to users EOA (minus fee)
 contract ActionWithdrawBatchExchangeWithMaker is GelatoActionsStandard {
 
     using SafeMath for uint256;
@@ -38,13 +41,18 @@ contract ActionWithdrawBatchExchangeWithMaker is GelatoActionsStandard {
 
 
     function action(bytes calldata _actionData) external payable override virtual {
-        (address _user, address _proxyAddress, address _sellToken, address _buyToken) = abi.decode(_actionData, (address, address, address, address));
-        action(_user, _proxyAddress, _sellToken, _buyToken);
+        (address _user, address _userProxy, address _sellToken, address _buyToken) = abi.decode(_actionData, (address, address, address, address));
+        action(_user, _userProxy, _sellToken, _buyToken);
     }
 
+    /// @notice Withdraw sell and buy token from Batch Exchange and send funds back to _user EOA
+    /// @param _user Users EOA address
+    /// @param _userProxy Users Proxy address
+    /// @param _sellToken Token to sell on Batch Exchange
+    /// @param _buyToken Token to buy on Batch Exchange
     function action(
         address _user,
-        address _proxyAddress,
+        address _userProxy,
         address _sellToken,
         address _buyToken
     )
@@ -56,15 +64,15 @@ contract ActionWithdrawBatchExchangeWithMaker is GelatoActionsStandard {
 
         // 1. Fetch sellToken Balance
         IERC20 sellToken = IERC20(_sellToken);
-        uint256 preSellTokenBalance = sellToken.balanceOf(_proxyAddress);
+        uint256 preSellTokenBalance = sellToken.balanceOf(_userProxy);
 
         // 2. Fetch buyToken Balance
         IERC20 buyToken = IERC20(_buyToken);
-        uint256 preBuyTokenBalance = buyToken.balanceOf(_proxyAddress);
+        uint256 preBuyTokenBalance = buyToken.balanceOf(_userProxy);
 
         // 3. Withdraw buy token and pay provider fee (if possible)
-        try batchExchange.withdraw(_proxyAddress, _buyToken) {
-            uint256 postBuyTokenBalance = buyToken.balanceOf(_proxyAddress);
+        try batchExchange.withdraw(_userProxy, _buyToken) {
+            uint256 postBuyTokenBalance = buyToken.balanceOf(_userProxy);
             uint256 buyTokenWithdrawAmount = postBuyTokenBalance.sub(preBuyTokenBalance);
 
             // 4. Check if buy tokens got withdrawn
@@ -98,8 +106,8 @@ contract ActionWithdrawBatchExchangeWithMaker is GelatoActionsStandard {
         }
 
         // 5. Withdraw sell token and pay fee (if not paid already)
-        try batchExchange.withdraw(_proxyAddress, _sellToken) {
-            uint256 postSellTokenBalance = sellToken.balanceOf(_proxyAddress);
+        try batchExchange.withdraw(_userProxy, _sellToken) {
+            uint256 postSellTokenBalance = sellToken.balanceOf(_userProxy);
             uint256 sellTokenWithdrawAmount = postSellTokenBalance.sub(preSellTokenBalance);
 
             // 6. Check if buy tokens got withdrawn
@@ -161,17 +169,21 @@ contract ActionWithdrawBatchExchangeWithMaker is GelatoActionsStandard {
         virtual
         returns(string memory)  // actionCondition
     {
-        (, address _proxyAddress, address _sellToken, address _buyToken) = abi.decode(
+        (, address _userProxy, address _sellToken, address _buyToken) = abi.decode(
             _actionData[4:],
             (address,address,address,address)
         );
         return _actionConditionsCheck(
-            _proxyAddress, _sellToken, _buyToken
+            _userProxy, _sellToken, _buyToken
         );
     }
 
+    /// @notice Verify that _userProxy has two valid withdraw request on batch exchange (for buy and sell token)
+    /// @param _userProxy Users Proxy address
+    /// @param _sellToken Token to sell on Batch Exchange
+    /// @param _buyToken Amount to sell
     function _actionConditionsCheck(
-        address _proxyAddress,
+        address _userProxy,
         address _sellToken,
         address _buyToken
     )
@@ -190,13 +202,13 @@ contract ActionWithdrawBatchExchangeWithMaker is GelatoActionsStandard {
         // @ DEV: Problem, as we dont have a way to on-chain check if there are actually funds that can be withdrawn, the business model relies on the assumption that sufficient funds are availabe to be withdrawn in order to compensate the executor
 
 
-        bool sellTokenWithdrawable = batchExchange.hasValidWithdrawRequest(_proxyAddress, _sellToken);
+        bool sellTokenWithdrawable = batchExchange.hasValidWithdrawRequest(_userProxy, _sellToken);
 
         if (!sellTokenWithdrawable) {
             return "ActionWithdrawBatchExchangeWithMaker: Sell Token not withdrawable yet";
         }
 
-        bool buyTokenWithdrawable = batchExchange.hasValidWithdrawRequest(_proxyAddress, _buyToken);
+        bool buyTokenWithdrawable = batchExchange.hasValidWithdrawRequest(_userProxy, _buyToken);
 
         if (!buyTokenWithdrawable) {
             return "ActionWithdrawBatchExchangeWithMaker: Buy Token not withdrawable yet";
