@@ -18,9 +18,6 @@ contract ActionWithdrawBatchExchange is GelatoActionsStandard {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
-    // $3 FEE
-    uint256 public constant FEE_USD = 3;
-
     // Gelato Provider // Pays execution cost and receives fee in return
     address private immutable gelatoProvider;
 
