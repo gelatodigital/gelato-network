@@ -32,12 +32,65 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         emit LogCreation(msg.sender, userProxy);
     }
 
+    // A standard _saltNonce can be used for deterministic shared address derivation
+    function createTwo(
+        uint256 _saltNonce,
+        Task[] memory _optionalSubmitTasks,
+        Action[] memory _optionalActions
+    )
+        public
+        payable
+        override
+        returns(GelatoUserProxy userProxy)
+    {
+        // Standard Way of deriving salt
+        bytes32 salt = keccak256(abi.encode(msg.sender, _saltNonce));
+
+        // Deploy userProxy with create2
+        userProxy = new GelatoUserProxy{salt: salt, value: msg.value}(msg.sender, gelatoCore);
+        require(
+            address(userProxy) == predictProxyAddress(msg.sender, _saltNonce),
+            "GelatoUserProxyFactory.createTwo: wrong address prediction"
+        );
+        gelatoProxyByUser[msg.sender] = userProxy;
+        userByGelatoProxy[userProxy] = msg.sender;
+
+        // Optional setup
+        if (_optionalSubmitTasks.length != 0) _submitTasks(userProxy, _optionalSubmitTasks);
+        if (_optionalActions.length != 0) _execActions(userProxy, _optionalActions);
+
+        // Success
+        emit LogCreation(msg.sender, userProxy);
+    }
+
+    function predictProxyAddress(address _user, uint256 _saltNonce)
+        public
+        view
+        override
+        returns(address)
+    {
+        // Standard Way of deriving salt
+        bytes32 salt = keccak256(abi.encode(_user, _saltNonce));
+
+        // Derive undeployed userProxy address
+        return address(uint(keccak256(abi.encodePacked(
+            byte(0xff),
+            address(this),
+            salt,
+            keccak256(abi.encodePacked(proxyCreationCode(), abi.encode(_user, gelatoCore)))
+        ))));
+    }
+
     function isGelatoUserProxy(address _proxy) public view override returns(bool) {
         return userByGelatoProxy[GelatoUserProxy(payable(_proxy))] != address(0);
     }
 
     function isGelatoProxyUser(address _user) public view override returns(bool) {
         return gelatoProxyByUser[_user] != GelatoUserProxy(0);
+    }
+
+    function proxyCreationCode() public pure override returns(bytes memory) {
+        return type(GelatoUserProxy).creationCode;
     }
 
     function _submitTasks(GelatoUserProxy _userProxy, Task[] memory _tasks) private {

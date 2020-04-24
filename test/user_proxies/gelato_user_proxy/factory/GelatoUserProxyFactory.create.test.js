@@ -4,7 +4,7 @@ const { expect } = require("chai");
 
 const { run } = require("@nomiclabs/buidler");
 
-describe("User Proxies - GelatoUserProxy - FACTORY", function () {
+describe("User Proxies - GelatoUserProxyFactory: CREATE", function () {
   let GelatoCoreFactory;
   let GelatoUserProxyFactoryFactory;
   let ProviderModuleGelatoUserProxyFactory;
