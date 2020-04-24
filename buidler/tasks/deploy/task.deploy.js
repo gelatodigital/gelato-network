@@ -80,7 +80,6 @@ export default task(
       if (taskArgs.constructorargs) {
         const args = taskArgs.constructorargs;
         contract = await contractFactory.deploy(...args, {
-          gasPrice: ethers.utils.parseUnits("13", "gwei"),
           nonce: currentNonce,
         });
       } else {
