@@ -163,7 +163,7 @@ export default task("setupgelato-gnosissafeproxy")
       // Provider
       // Create TaskSpec condition, actions, gasPriceCeil
       const taskSpec = new TaskSpec({
-        condition: taskArgs.condition,
+        conditionInst: taskArgs.condition,
         actions: actionArray,
         gasPriceCeil: utils.parseUnits("20", "gwei"),
       });

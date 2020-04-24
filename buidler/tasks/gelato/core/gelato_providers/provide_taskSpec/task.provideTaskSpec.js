@@ -64,7 +64,7 @@ export default task(
       const gasPriceCeil = utils.parseUnits(taskArgs.gaspriceceil, "gwei");
       // Create TaskSpec condition, actions, gasPriceCeil
       const taskSpec = new TaskSpec({
-        condition: taskArgs.condition,
+        conditionInst: taskArgs.condition,
         actions: actionArray,
         gasPriceCeil,
       });

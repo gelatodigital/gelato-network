@@ -119,7 +119,7 @@ describe("GelatoCore.Execute", function () {
     });
 
     newTaskSpec = new TaskSpec({
-      condition: constants.AddressZero,
+      conditionInst: constants.AddressZero,
       actions: [mockActionDummyGelato],
       gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
     });

@@ -105,7 +105,7 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
         GelatoCore gelatoCore = GelatoCore(GELATO_CORE);
 
         if (_TR.userProxy != _TR.task.provider.addr) {
-            string memory isProvided = gelatoCore.isTaskReceiptProvided(
+            string memory isProvided = gelatoCore.isTaskProvided(
                 _TR
             );
             if (!isProvided.startsWithOk()) {

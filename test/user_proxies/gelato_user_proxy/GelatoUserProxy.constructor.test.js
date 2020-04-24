@@ -7,28 +7,37 @@ const { run } = require("@nomiclabs/buidler");
 describe("User Proxies - GelatoUserProxy - CONSTRUCTOR", function () {
   let GelatoCoreFactory;
   let GelatoUserProxyFactoryFactory;
+  let ProviderModuleGelatoUserProxyFactory;
   let SelfProviderModuleGelatoUserProxyFactory;
   let ActionFactory;
 
   let gelatoCore;
   let gelatoUserProxyFactory;
   let action;
+  let providerModuleGelatoUserProxy;
   let selfProviderModuleGelatoUserProxy;
 
   let user;
   let notUser;
+  let provider;
+  let executor;
 
   let userAddress;
   let notUserAddress;
+  let providerAddress;
+  let executorAddress;
 
-  let actionStruct;
-  let submitTaskTask;
+  let optionalAction;
+  let optionalTask;
 
   beforeEach(async function () {
     // Get the ContractFactory, contract instance, and Signers here.
     GelatoCoreFactory = await ethers.getContractFactory("GelatoCore");
     GelatoUserProxyFactoryFactory = await ethers.getContractFactory(
       "GelatoUserProxyFactory"
+    );
+    ProviderModuleGelatoUserProxyFactory = await ethers.getContractFactory(
+      "ProviderModuleGelatoUserProxy"
     );
     SelfProviderModuleGelatoUserProxyFactory = await ethers.getContractFactory(
       "SelfProviderModuleGelatoUserProxy"
@@ -39,18 +48,24 @@ describe("User Proxies - GelatoUserProxy - CONSTRUCTOR", function () {
     gelatoUserProxyFactory = await GelatoUserProxyFactoryFactory.deploy(
       gelatoCore.address
     );
+    providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxyFactory.deploy(
+      gelatoUserProxyFactory.address
+    );
     selfProviderModuleGelatoUserProxy = await SelfProviderModuleGelatoUserProxyFactory.deploy();
     action = await ActionFactory.deploy();
 
     await gelatoCore.deployed();
     await gelatoUserProxyFactory.deployed();
+    await providerModuleGelatoUserProxy.deployed();
     await selfProviderModuleGelatoUserProxy.deployed();
     await action.deployed();
 
     // users
-    [user, notUser] = await ethers.getSigners();
+    [user, notUser, provider, executor] = await ethers.getSigners();
     userAddress = await user.getAddress();
     notUserAddress = await notUser.getAddress();
+    providerAddress = await provider.getAddress();
+    executorAddress = await executor.getAddress();
 
     // Action
     const actionData = await run("abi-encode-withselector", {
@@ -58,20 +73,47 @@ describe("User Proxies - GelatoUserProxy - CONSTRUCTOR", function () {
       functionname: "action(bool)",
       inputs: [true],
     });
-    actionStruct = new Action({
+    optionalAction = new Action({
       inst: action.address,
       data: actionData,
       operation: Operation.Delegatecall,
     });
 
-    // submitTaskTask
-    submitTaskTask = new Task({
+    // optionalTask
+    optionalTask = new Task({
       provider: new GelatoProvider({
-        addr: userAddress,
-        module: selfProviderModuleGelatoUserProxy.address,
+        addr: providerAddress,
+        module: providerModuleGelatoUserProxy.address,
       }),
-      actions: [actionStruct],
+      actions: [optionalAction],
     });
+
+    // stakeExecutor
+    const stakeTx = await gelatoCore.connect(executor).stakeExecutor({
+      value: await gelatoCore.minExecutorStake(),
+    });
+    await stakeTx.wait();
+
+    // multiProvide: provider
+    let multiProvideTx = await gelatoCore.connect(provider).multiProvide(
+      executorAddress,
+      [
+        new TaskSpec({
+          actions: [optionalAction],
+          gasPriceCeil: utils.parseUnits("20", "gwei"),
+        }),
+      ],
+      [providerModuleGelatoUserProxy.address]
+    );
+    await multiProvideTx.wait();
+
+    // multiProvide: selfProvider
+    multiProvideTx = await gelatoCore.multiProvide(
+      executorAddress,
+      [],
+      [selfProviderModuleGelatoUserProxy.address]
+    );
+    await multiProvideTx.wait();
   });
 
   describe("GelatoUserProxyFactory.constructor: state vars", function () {
@@ -103,52 +145,4 @@ describe("User Proxies - GelatoUserProxy - CONSTRUCTOR", function () {
       );
     });
   });
-
-  //   describe("GelatoUserProxyFactory.create", function () {
-  //     it("Should allow anyone to create a userProxy", async function () {
-  //       // create(): user
-  //       await expect(gelatoUserProxyFactory.create([], [])).to.emit(
-  //         gelatoUserProxyFactory,
-  //         "LogCreation"
-  //       );
-
-  //       // gelatoProxyByUser
-  //       const userGelatoProxy = await gelatoUserProxyFactory.gelatoProxyByUser(
-  //         userAddress
-  //       );
-  //       // userByGelatoProxy
-  //       expect(
-  //         await gelatoUserProxyFactory.userByGelatoProxy(userGelatoProxy)
-  //       ).to.be.equal(userAddress);
-
-  //       // isGelatoUserProxy
-  //       expect(await gelatoUserProxyFactory.isGelatoUserProxy(userGelatoProxy)).to
-  //         .be.true;
-  //       // isGelatoProxyUser
-  //       expect(await gelatoUserProxyFactory.isGelatoProxyUser(userAddress)).to.be
-  //         .true;
-
-  //       // create(): otherUser
-  //       await expect(
-  //         gelatoUserProxyFactory.connect(otherUser).create([], [])
-  //       ).to.emit(gelatoUserProxyFactory, "LogCreation");
-
-  //       // gelatoProxyByUser: otherUser
-  //       const otherUserGelatoProxy = await gelatoUserProxyFactory.gelatoProxyByUser(
-  //         otherUserAddress
-  //       );
-  //       // userByGelatoProxy: otherUser
-  //       expect(
-  //         await gelatoUserProxyFactory.userByGelatoProxy(otherUserGelatoProxy)
-  //       ).to.be.equal(otherUserAddress);
-
-  //       // isGelatoUserProxy: otherUser
-  //       expect(
-  //         await gelatoUserProxyFactory.isGelatoUserProxy(otherUserGelatoProxy)
-  //       ).to.be.true;
-  //       // isGelatoProxyUser: otherUser
-  //       expect(await gelatoUserProxyFactory.isGelatoProxyUser(otherUserAddress))
-  //         .to.be.true;
-  //     });
-  //   });
 });
