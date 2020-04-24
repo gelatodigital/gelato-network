@@ -48,4 +48,8 @@ export const contracts = [
   "ScriptExitRebalancePortfolioRinkeby",
   // Gnosis BatchExchange
   "ScriptEnterStableSwap",
+  "Medianizer2",
+
+  // Helpers
+  "FeeFinder",
 ];

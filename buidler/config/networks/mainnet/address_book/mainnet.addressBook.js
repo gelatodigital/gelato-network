@@ -26,4 +26,7 @@ export const addressBook = {
   gelatoProvider: {
     default: "0x5B753BF02a42bC73B5846dfd16a8F2e082b99a6a", // Luis Account3
   },
+  uniswap: {
+    uniswapFactoy: "0xc0a47dFe034B400B47bDaD5FecDa2621de6c4d95",
+  },
 };

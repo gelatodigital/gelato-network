@@ -53,4 +53,10 @@ export const deployments = {
   ScriptEnterPortfolioRebalancingRinkeby: "0x0",
   ScriptExitRebalancePortfolioRinkeby: "0x0",
   ScriptEnterStableSwap: "0xA3169f09832D7389811D9333440507Bd4aeB4a2a",
+
+  // Maker
+  Medianizer2: "0x642CC986A17A3e508fddb21fF4485D1A6A8B1DA4",
+
+  // Helpers
+  FeeFinder: "0x220D8543325364D004661F73E0253C7CC6a4ACc1",
 };
