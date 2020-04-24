@@ -58,27 +58,21 @@ describe("GelatoCore - GelatoGasPriceOracle - Setters:", function () {
   describe("GelatoCore.GelatoGasPriceOracle.setOracle", function () {
     it("Should let the owner setOracle", async function () {
       // oracle
-      expect(await gelatoGasPriceOracle.oracle()).to.be.equal(
-        ownerAddress
-      );
+      expect(await gelatoGasPriceOracle.oracle()).to.be.equal(ownerAddress);
 
       // setOracle()
       await expect(gelatoGasPriceOracle.setOracle(oracleAddress))
-        .to.emit(gelatoGasPriceOracle, "LogSetOracle")
+        .to.emit(gelatoGasPriceOracle, "LogOracleSet")
         .withArgs(ownerAddress, oracleAddress);
 
       // oracle
-      expect(await gelatoGasPriceOracle.oracle()).to.be.equal(
-        oracleAddress
-      );
+      expect(await gelatoGasPriceOracle.oracle()).to.be.equal(oracleAddress);
     });
 
     it("Should NOT let non-Owners setOracle", async function () {
       // setOracle: revert
       await expect(
-        gelatoGasPriceOracle
-          .connect(randomGuy)
-          .setOracle(oracleAddress)
+        gelatoGasPriceOracle.connect(randomGuy).setOracle(oracleAddress)
       ).to.be.revertedWith("Ownable: caller is not the owner");
 
       // setOracle
@@ -86,9 +80,7 @@ describe("GelatoCore - GelatoGasPriceOracle - Setters:", function () {
 
       // setOracle: revert
       await expect(
-        gelatoGasPriceOracle
-          .connect(oracle)
-          .setOracle(randomGuyAddress)
+        gelatoGasPriceOracle.connect(oracle).setOracle(randomGuyAddress)
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
   });
@@ -103,7 +95,7 @@ describe("GelatoCore - GelatoGasPriceOracle - Setters:", function () {
 
       // setGelatoCore()
       await expect(gelatoGasPriceOracle.setGelatoCore(otherGelatoCore.address))
-        .to.emit(gelatoGasPriceOracle, "LogSetGelatoCore")
+        .to.emit(gelatoGasPriceOracle, "LogGelatoCoreSet")
         .withArgs(gelatoCore.address, otherGelatoCore.address);
 
       // oracle
@@ -139,7 +131,7 @@ describe("GelatoCore - GelatoGasPriceOracle - Setters:", function () {
 
       // setGasPrice()
       await expect(gelatoGasPriceOracle.setGasPrice(newGasPrice))
-        .to.emit(gelatoGasPriceOracle, "LogSetGasPrice")
+        .to.emit(gelatoGasPriceOracle, "LogGasPriceSet")
         .withArgs(initialState.gasPrice, newGasPrice);
 
       // setOracle()
@@ -147,11 +139,9 @@ describe("GelatoCore - GelatoGasPriceOracle - Setters:", function () {
 
       // setGasPrice()
       await expect(
-        gelatoGasPriceOracle
-          .connect(oracle)
-          .setGasPrice(newGasPrice.add(69420))
+        gelatoGasPriceOracle.connect(oracle).setGasPrice(newGasPrice.add(69420))
       )
-        .to.emit(gelatoGasPriceOracle, "LogSetGasPrice")
+        .to.emit(gelatoGasPriceOracle, "LogGasPriceSet")
         .withArgs(newGasPrice, newGasPrice.add(69420));
 
       // gasPrice

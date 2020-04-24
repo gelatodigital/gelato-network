@@ -2,7 +2,7 @@ export const deployments = {
   // ========== Rinkeby ===========
   // ==== One-Off Actions ====
   // Gnosis
-  ActionWithdrawBatchExchange: "0xb5F2b9d675907832B66dB506985242b26615D377",
+  ActionWithdrawBatchExchange: "0xf9A9F03EB2246957308E544e2994582e19950f7c",
   ActionPlaceOrderBatchExchange: "0xDBF368e549604CC78684e83955C73346860D6EA2",
   // erc20
   ActionERC20Transfer: "0x0",
@@ -20,10 +20,10 @@ export const deployments = {
   ActionChainedRebalancePortfolioRinkeby: "0x0",
 
   // ===== Gelato Core ====
-  GelatoCore: "0x4406B9E0b31B3A1A68a3b8921A41B4705f47637b",
-  GelatoGasPriceOracle: "0x47e83007E18B6Bc21A0A29241b7f80Ce88fF943a",
+  GelatoCore: "0x9587bA2A2AdE6512F960F59eD9c7E9021D081A07",
+  GelatoGasPriceOracle: "0xeb7AA218faD35cE401114203722ee1b6506cD5b1",
   ProviderModuleGelatoUserProxy: "0x0",
-  ProviderModuleGnosisSafeProxy: "0x47Ee9c199f13853Fbb5a35F5B77E621ef31e8b52",
+  ProviderModuleGnosisSafeProxy: "0x8187B4cb7B82132363DCE0BC9e16E47a04f175F6",
 
   // ==== Conditions ====
   // == Balances ==

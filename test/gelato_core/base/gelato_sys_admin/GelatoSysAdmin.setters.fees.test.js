@@ -31,7 +31,7 @@ describe("GelatoCore - GelatoSysAdmin - Setters: FEES", function () {
 
       // Every transaction and call is sent with the owner by default
       await expect(gelatoCore.setExecutorSuccessShare(69))
-        .to.emit(gelatoCore, "LogSetExecutorSuccessShare")
+        .to.emit(gelatoCore, "LogExecutorSuccessShareSet")
         .withArgs(executorSuccessShare, 69, sysAdminSuccessShare.add(69));
 
       // executorSuccessShare
@@ -60,7 +60,7 @@ describe("GelatoCore - GelatoSysAdmin - Setters: FEES", function () {
 
       // Every transaction and call is sent with the owner by default
       await expect(gelatoCore.setSysAdminSuccessShare(96))
-        .to.emit(gelatoCore, "LogSetSysAdminSuccessShare")
+        .to.emit(gelatoCore, "LogSysAdminSuccessShareSet")
         .withArgs(sysAdminSuccessShare, 96, executorSuccessShare.add(96));
 
       // sysAdminSuccessShare

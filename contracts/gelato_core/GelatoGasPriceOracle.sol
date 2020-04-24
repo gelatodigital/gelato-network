@@ -27,19 +27,19 @@ contract GelatoGasPriceOracle is IGelatoGasPriceOracle, Ownable {
         _;
     }
 
-    function setOracle(address _newOracle) public override onlyOwner {
-        emit LogSetOracle(oracle, _newOracle);
-        oracle = _newOracle;
+    function setOracle(address _newOracleAdmin) public override onlyOwner {
+        emit LogOracleSet(oracle, _newOracleAdmin);
+        oracle = _newOracleAdmin;
     }
 
     function setGelatoCore(address _newGelatoCore) public override onlyOwner  {
-        emit LogSetGelatoCore(gelatoCore, _newGelatoCore);
+        emit LogGelatoCoreSet(gelatoCore, _newGelatoCore);
         gelatoCore = _newGelatoCore;
     }
 
     function setGasPrice(uint256 _newGasPrice) public override onlyOracle {
         require(_newGasPrice != 0, "gasPrice cannot be zero");
-        emit LogSetGasPrice(gasPrice, _newGasPrice);
+        emit LogGasPriceSet(gasPrice, _newGasPrice);
         gasPrice = _newGasPrice;
     }
 

@@ -34,7 +34,7 @@ describe("GelatoCore - GelatoProviders - Setters: FUNDS", function () {
   describe("GelatoCore.GelatoProviders.provideFunds", function () {
     it("Should allow anyone to provideFunds to their own Provider", async function () {
       await expect(gelatoCore.provideFunds(providerAddress, { value: 69420 }))
-        .to.emit(gelatoCore, "LogProvideFunds")
+        .to.emit(gelatoCore, "LogFundsProvided")
         .withArgs(providerAddress, 69420, 69420);
       expect(await gelatoCore.providerFunds(providerAddress)).to.be.equal(
         69420
@@ -45,7 +45,7 @@ describe("GelatoCore - GelatoProviders - Setters: FUNDS", function () {
           .connect(otherProvider)
           .provideFunds(otherProviderAddress, { value: 42069 })
       )
-        .to.emit(gelatoCore, "LogProvideFunds")
+        .to.emit(gelatoCore, "LogFundsProvided")
         .withArgs(otherProviderAddress, 42069, 42069);
       expect(await gelatoCore.providerFunds(otherProviderAddress)).to.be.equal(
         42069
@@ -56,7 +56,7 @@ describe("GelatoCore - GelatoProviders - Setters: FUNDS", function () {
       await expect(
         gelatoCore.provideFunds(otherProviderAddress, { value: 69420 })
       )
-        .to.emit(gelatoCore, "LogProvideFunds")
+        .to.emit(gelatoCore, "LogFundsProvided")
         .withArgs(otherProviderAddress, 69420, 69420);
       expect(await gelatoCore.providerFunds(otherProviderAddress)).to.be.equal(
         69420
@@ -67,7 +67,7 @@ describe("GelatoCore - GelatoProviders - Setters: FUNDS", function () {
           .connect(otherProvider)
           .provideFunds(providerAddress, { value: 42069 })
       )
-        .to.emit(gelatoCore, "LogProvideFunds")
+        .to.emit(gelatoCore, "LogFundsProvided")
         .withArgs(providerAddress, 42069, 42069);
       expect(await gelatoCore.providerFunds(providerAddress)).to.be.equal(
         42069
@@ -86,7 +86,7 @@ describe("GelatoCore - GelatoProviders - Setters: FUNDS", function () {
     it("Should allow Providers to unprovide their funds", async function () {
       // provideFunds
       await expect(gelatoCore.provideFunds(providerAddress, { value: 69420 }))
-        .to.emit(gelatoCore, "LogProvideFunds")
+        .to.emit(gelatoCore, "LogFundsProvided")
         .withArgs(providerAddress, 69420, 69420);
       expect(await gelatoCore.providerFunds(providerAddress)).to.be.equal(
         69420
@@ -94,7 +94,7 @@ describe("GelatoCore - GelatoProviders - Setters: FUNDS", function () {
 
       // unprovideFunds
       await expect(gelatoCore.unprovideFunds(69420))
-        .to.emit(gelatoCore, "LogUnprovideFunds")
+        .to.emit(gelatoCore, "LogFundsUnprovided")
         .withArgs(providerAddress, 69420, 0);
       expect(await gelatoCore.providerFunds(providerAddress)).to.be.equal(0);
 
@@ -104,7 +104,7 @@ describe("GelatoCore - GelatoProviders - Setters: FUNDS", function () {
           .connect(otherProvider)
           .provideFunds(otherProviderAddress, { value: 42069 })
       )
-        .to.emit(gelatoCore, "LogProvideFunds")
+        .to.emit(gelatoCore, "LogFundsProvided")
         .withArgs(otherProviderAddress, 42069, 42069);
       expect(await gelatoCore.providerFunds(otherProviderAddress)).to.be.equal(
         42069
@@ -112,7 +112,7 @@ describe("GelatoCore - GelatoProviders - Setters: FUNDS", function () {
 
       // otherProvider: unprovideFunds
       await expect(gelatoCore.connect(otherProvider).unprovideFunds(69))
-        .to.emit(gelatoCore, "LogUnprovideFunds")
+        .to.emit(gelatoCore, "LogFundsUnprovided")
         .withArgs(otherProviderAddress, 69, 42000);
       expect(await gelatoCore.providerFunds(otherProviderAddress)).to.be.equal(
         42000
@@ -122,7 +122,7 @@ describe("GelatoCore - GelatoProviders - Setters: FUNDS", function () {
     it("Should automatically unprovideFunds(all) if surplus withdrawamount", async function () {
       // provideFunds
       await expect(gelatoCore.provideFunds(providerAddress, { value: 69420 }))
-        .to.emit(gelatoCore, "LogProvideFunds")
+        .to.emit(gelatoCore, "LogFundsProvided")
         .withArgs(providerAddress, 69420, 69420);
       expect(await gelatoCore.providerFunds(providerAddress)).to.be.equal(
         69420
@@ -130,7 +130,7 @@ describe("GelatoCore - GelatoProviders - Setters: FUNDS", function () {
 
       // unprovideFunds
       await expect(gelatoCore.unprovideFunds(999999999999))
-        .to.emit(gelatoCore, "LogUnprovideFunds")
+        .to.emit(gelatoCore, "LogFundsUnprovided")
         .withArgs(providerAddress, 69420, 0);
       expect(await gelatoCore.providerFunds(providerAddress)).to.be.equal(0);
     });
@@ -147,7 +147,7 @@ describe("GelatoCore - GelatoProviders - Setters: FUNDS", function () {
         value: providedFunds,
       })
     )
-      .to.emit(gelatoCore, "LogProvideFunds")
+      .to.emit(gelatoCore, "LogFundsProvided")
       .withArgs(providerAddress, providedFunds, providedFunds);
 
     // providerFunds
@@ -167,7 +167,7 @@ describe("GelatoCore - GelatoProviders - Setters: FUNDS", function () {
 
     // providerAssignsExecutor (needs executoMinStake)
     await expect(gelatoCore.providerAssignsExecutor(executorAddress))
-      .to.emit(gelatoCore, "LogProviderAssignsExecutor")
+      .to.emit(gelatoCore, "LogProviderAssignedExecutor")
       .withArgs(
         providerAddress,
         initialState.executorByProvider,
@@ -181,7 +181,7 @@ describe("GelatoCore - GelatoProviders - Setters: FUNDS", function () {
 
     // unprovideFunds
     await expect(gelatoCore.unprovideFunds(providedFunds))
-      .to.emit(gelatoCore, "LogUnprovideFunds")
+      .to.emit(gelatoCore, "LogFundsUnprovided")
       .withArgs(providerAddress, providedFunds, 0);
     expect(await gelatoCore.providerFunds(providerAddress)).to.be.equal(0);
   });

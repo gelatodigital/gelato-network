@@ -2,11 +2,11 @@ pragma solidity ^0.6.6;
 
 interface IGelatoGasPriceOracle {
     // Owner
-    event LogSetOracle(address indexed oldOracle, address indexed newOracle);
-    event LogSetGelatoCore(address indexed oldGelatoCore, address indexed newGelatoCore);
+    event LogOracleSet(address indexed oldOracle, address indexed newOracle);
+    event LogGelatoCoreSet(address indexed oldGelatoCore, address indexed newGelatoCore);
 
     // Oracle
-    event LogSetGasPrice(uint256 indexed oldGasPrice, uint256 indexed newGasPrice);
+    event LogGasPriceSet(uint256 indexed oldGasPrice, uint256 indexed newGasPrice);
 
     // Owner
 

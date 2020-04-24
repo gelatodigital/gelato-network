@@ -12,10 +12,7 @@ export default task(
     1,
     types.int
   )
-  .addOptionalParam(
-    "taskreceipt",
-    "Supply LogSubmitTask values in an obj"
-  )
+  .addOptionalParam("taskreceipt", "Supply LogTaskSubmitted values in an obj")
   .addOptionalParam(
     "fromblock",
     "The block number to search for event logs from",
@@ -31,7 +28,7 @@ export default task(
   .addOptionalParam("blockhash", "Search a specific block")
   .addOptionalParam("txhash", "Filter for a specific tx")
   .addFlag("log", "Logs return values to stdout")
-  .setAction(async taskArgs => {
+  .setAction(async (taskArgs) => {
     try {
       const canExecuteReturn = await run("gc-canexec", taskArgs);
       if (canExecuteReturn === "ok") await run("gc-exec", taskArgs);

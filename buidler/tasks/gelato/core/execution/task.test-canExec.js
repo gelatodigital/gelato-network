@@ -39,7 +39,7 @@ export default task("test-canexec")
 
       const { taskReceiptHash } = await run("event-getparsedlog", {
         contractname: "GelatoCore",
-        eventname: "LogSubmitTask",
+        eventname: "LogTaskSubmitted",
         txhash: submittasktxhash,
         values: true,
       });

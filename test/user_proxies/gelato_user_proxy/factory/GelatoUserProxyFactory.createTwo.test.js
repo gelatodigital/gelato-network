@@ -322,7 +322,7 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE TWO", function () {
       )
         .to.emit(gelatoUserProxyFactory, "LogCreation")
         .withArgs(userAddress, userProxyAddress, FUNDING)
-        .and.to.emit(gelatoCore, "LogSubmitTask");
+        .and.to.emit(gelatoCore, "LogTaskSubmitted");
       // withArgs not possible: suspect buidlerevm or ethers struct parsing bug
       // .withArgs(
       //   executorAddress,
@@ -330,7 +330,7 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE TWO", function () {
       //   firstTaskReceiptHash,
       //   firstTaskReceipt
       // )
-      // .and.to.emit(gelatoCore, "LogSubmitTask")
+      // .and.to.emit(gelatoCore, "LogTaskSubmitted")
       // .withArgs(
       //   executorAddress,
       //   secondTaskReceiptId,
@@ -378,7 +378,7 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE TWO", function () {
       )
         .to.emit(gelatoUserProxyFactory, "LogCreation")
         .withArgs(userAddress, userProxyAddress, FUNDING)
-        .and.to.emit(gelatoCore, "LogSubmitTask")
+        .and.to.emit(gelatoCore, "LogTaskSubmitted")
         .and.to.emit(action, "LogAction")
         .withArgs(false);
     });

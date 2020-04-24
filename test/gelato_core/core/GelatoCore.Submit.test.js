@@ -317,7 +317,7 @@ describe("Gelato Core - Task Submission ", function () {
 
       await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
-        "LogSubmitTask"
+        "LogTaskSubmitted"
       );
       // .withArgs(executorAddress, 1, taskReceiptHash, taskReceiptArray);
     });
@@ -592,7 +592,7 @@ describe("Gelato Core - Task Submission ", function () {
       // GelatoCore.submitTask.isProvided:InvalidProviderModule
       await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
-        "LogSubmitTask"
+        "LogTaskSubmitted"
       );
     });
 
@@ -723,9 +723,9 @@ describe("Gelato Core - Task Submission ", function () {
           value: ethers.utils.parseUnits("1", "ether"),
         })
       )
-        .to.emit(gelatoCore, "LogSubmitTask")
-        .to.emit(gelatoCore, "LogProviderAssignsExecutor")
-        .to.emit(gelatoCore, "LogProvideFunds");
+        .to.emit(gelatoCore, "LogTaskSubmitted")
+        .to.emit(gelatoCore, "LogProviderAssignedExecutor")
+        .to.emit(gelatoCore, "LogFundsProvided");
 
       // GelatoCore.submitTask.isProvided:InvalidProviderModule
     });

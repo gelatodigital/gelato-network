@@ -1,12 +1,12 @@
 pragma solidity ^0.6.6;
 
 interface IGelatoExecutors {
-    event LogStakeExecutor(address indexed executor, uint256 stake);
-    event LogUnstakeExecutor(
+    event LogExecutorStaked(address indexed executor, uint256 stake);
+    event LogExecutorUnstaked(
         address indexed executor);
-    event LogIncreaseExecutorStake(address indexed executor, uint256 newStake);
+    event LogExecutorStakeIncreased(address indexed executor, uint256 newStake);
 
-    event LogWithdrawExecutorBalance(
+    event LogExecutorBalanceWithdrawn(
         address indexed executor,
         uint256 withdrawAmount
     );

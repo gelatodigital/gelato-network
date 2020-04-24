@@ -153,39 +153,39 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH PROVIDE", function () {
           { value: 42069 }
         )
       )
-        // LogProvideFunds
-        .to.emit(gelatoCore, "LogProvideFunds")
+        // LogFundsProvided
+        .to.emit(gelatoCore, "LogFundsProvided")
         .withArgs(providerAddress, 42069, 42069)
-        // LogProviderAssignsExecutor
-        .and.to.emit(gelatoCore, "LogProviderAssignsExecutor")
+        // LogProviderAssignedExecutor
+        .and.to.emit(gelatoCore, "LogProviderAssignedExecutor")
         .withArgs(
           providerAddress,
           initialState.executorByProvider,
           executorAddress
         )
-        // LogProvideTaskSpec & LogSetTaskSpecGasPriceCeil
-        .and.to.emit(gelatoCore, "LogProvideTaskSpec")
+        // LogTaskSpecProvided & LogTaskSpecGasPriceCeilSet
+        .and.to.emit(gelatoCore, "LogTaskSpecProvided")
         .withArgs(providerAddress, taskSpecHash)
-        .and.to.emit(gelatoCore, "LogSetTaskSpecGasPriceCeil")
+        .and.to.emit(gelatoCore, "LogTaskSpecGasPriceCeilSet")
         .withArgs(
           providerAddress,
           taskSpecHash,
           initialState.taskSpecGasPriceCeil,
           gasPriceCeil
         )
-        .and.to.emit(gelatoCore, "LogProvideTaskSpec")
+        .and.to.emit(gelatoCore, "LogTaskSpecProvided")
         .withArgs(providerAddress, otherTaskSpecHash)
-        .and.to.emit(gelatoCore, "LogSetTaskSpecGasPriceCeil")
+        .and.to.emit(gelatoCore, "LogTaskSpecGasPriceCeilSet")
         .withArgs(
           providerAddress,
           otherTaskSpecHash,
           initialState.taskSpecGasPriceCeil,
           gasPriceCeil
         )
-        // LogAddProviderModule
-        .and.to.emit(gelatoCore, "LogAddProviderModule")
+        // LogProviderModuleAdded
+        .and.to.emit(gelatoCore, "LogProviderModuleAdded")
         .withArgs(providerAddress, providerModule.address)
-        .and.to.emit(gelatoCore, "LogAddProviderModule")
+        .and.to.emit(gelatoCore, "LogProviderModuleAdded")
         .withArgs(providerAddress, otherProviderModule.address);
 
       // providerFunds

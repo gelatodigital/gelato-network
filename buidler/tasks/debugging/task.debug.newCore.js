@@ -109,7 +109,10 @@ export default task("gc-debug-newcore")
 
       let submitTaskTx;
       try {
-        submitTaskTx = await gelatoUserProxy.submitTask(taskReceipt, testSigner);
+        submitTaskTx = await gelatoUserProxy.submitTask(
+          taskReceipt,
+          testSigner
+        );
       } catch (error) {
         console.error(`\n gc-debug-newcore: submitTask\n`, error);
         throw new Error(`\n gelatoUserProxy.submitTask: PRE tx error \n`);
@@ -128,7 +131,7 @@ export default task("gc-debug-newcore")
       if (events) {
         await run("event-getparsedlog", {
           contractname: "GelatoCore",
-          eventname: "LogSubmitTask",
+          eventname: "LogTaskSubmitted",
           contractaddress: gelatoCore.address,
           txhash: submitTaskTx.hash,
           blockhash: submitTaskTxBlockHash,
@@ -142,9 +145,9 @@ export default task("gc-debug-newcore")
       const iFace = await run("ethers-interface-new", {
         contractname: "GelatoCore",
       });
-      console.log(iFace.events.LogSubmitTask);
+      console.log(iFace.events.LogTaskSubmitted);
       await sleep(100000);
-      const encodedTaskReceipt = iFace.events.LogSubmitTask.taskReceipt.encode(
+      const encodedTaskReceipt = iFace.events.LogTaskSubmitted.taskReceipt.encode(
         taskReceipt
       );
       console.log(encodedTaskReceipt);
