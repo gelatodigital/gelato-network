@@ -29,6 +29,7 @@ describe("GelatoCore.Execute", function () {
   let userProxyAddress;
   let sellToken; //DAI
   let buyToken; //USDC
+  let testToken; //GUSD
   let ActionWithdrawBatchExchange;
   let MockERC20;
   let MockBatchExchange;
@@ -39,6 +40,7 @@ describe("GelatoCore.Execute", function () {
   let sellDecimals;
   let buyDecimals;
   let wethDecimals;
+  let testDecimals;
   let tx;
   let txResponse;
   let providerModuleGelatoUserProxy;
@@ -132,14 +134,85 @@ describe("GelatoCore.Execute", function () {
     );
     await WETH.deployed();
 
+    // DEPLOY DUMMY ERC20s
+    // // Deploy Sell Token
+    sellDecimals = 18;
+    sellToken = await MockERC20.deploy(
+      "DAI",
+      (100 * 10 ** sellDecimals).toString(),
+      sellerAddress,
+      sellDecimals
+    );
+    await sellToken.deployed();
+
+    // //  Deploy Buy Token
+    buyDecimals = 6;
+    buyToken = await MockERC20.deploy(
+      "USDC",
+      (100 * 10 ** buyDecimals).toString(),
+      sellerAddress,
+      buyDecimals
+    );
+    await buyToken.deployed();
+
+    // //  Deploy Test Token
+    testDecimals = 6;
+    testToken = await MockERC20.deploy(
+      "GUSD",
+      (100 * 10 ** testDecimals).toString(),
+      sellerAddress,
+      buyDecimals
+    );
+    await testToken.deployed();
+
+    // Pre-fund batch Exchange
+    await buyToken.create(
+      mockBatchExchange.address,
+      ethers.utils.parseUnits("100", buyDecimals)
+    );
+    await sellToken.create(
+      mockBatchExchange.address,
+      ethers.utils.parseUnits("100", sellDecimals)
+    );
+    await WETH.create(
+      mockBatchExchange.address,
+      ethers.utils.parseUnits("100", wethDecimals)
+    );
+
+    const Medianizer2 = await ethers.getContractFactory("Medianizer2");
+    const medianizer2 = await Medianizer2.deploy();
+    await medianizer2.deployed();
+
+    // Deploy Fee Finder
+    const FeeFinder = await ethers.getContractFactory("FeeFinder");
+
+    // Deploy Test feefinder (Assuming we only hit hard coded tokens, not testing uniswap, kyber or maker oracle)
+    const feeFinder = await FeeFinder.deploy(
+      sellToken.address,
+      buyToken.address,
+      testToken.address,
+      sellToken.address,
+      buyToken.address,
+      sellToken.address,
+      sellToken.address,
+      WETH.address,
+      medianizer2.address,
+      medianizer2.address,
+      medianizer2.address,
+      medianizer2.address
+    );
+    await feeFinder.deployed();
+
     const ActionWithdrawBatchExchange = await ethers.getContractFactory(
       "ActionWithdrawBatchExchange"
     );
     actionWithdrawBatchExchange = await ActionWithdrawBatchExchange.deploy(
       mockBatchExchange.address,
-      WETH.address,
-      providerAddress
+      providerAddress,
+      feeFinder.address
     );
+    await actionWithdrawBatchExchange.deployed();
+
     // // #### ActionWithdrawBatchExchange End ####
 
     // Call provideFunds(value) with provider on core

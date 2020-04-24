@@ -20,9 +20,9 @@ export default task(
   .setAction(async ({ useraddress, saltnonce, log }) => {
     try {
       if (!useraddress) {
-        const signers = await ethers.getSigners()
-        const signer = signers[0]
-        useraddress = signer._address
+        const signers = await ethers.getSigners();
+        const signer = signers[0];
+        useraddress = await signer.getAddress();
       }
 
       // Generate CPK Gnosis Safe Proxy address
@@ -31,9 +31,6 @@ export default task(
           "0xcfe33a586323e7325be6aa6ecd8b4600d232a9037e83c8ece69413b777dabe65";
       // const saltnonce = "0xcfe33a586323e7325be6aa6ecd8b4600d232a9037e83c8ece69413b777dabe65"
       // const proxyFactory = "0x336c19296d3989e9e0c2561ef21c964068657c38"
-
-      console.log(useraddress);
-      console.log(saltnonce);
 
       const create2Salt = utils.keccak256(
         utils.defaultAbiCoder.encode(

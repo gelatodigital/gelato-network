@@ -53,27 +53,23 @@ export default task("setupgelato-gnosissafeproxy")
       for (const action of taskArgs.actions) {
         if (!tempArray.includes(action)) {
           let actionconstructorargs;
-          if (action === "ActionWithdrawBatchExchangeWithMaker") {
+          if (action === "ActionWithdrawBatchExchange") {
             const batchExchange = await run("bre-config", {
               addressbookcategory: "gnosisProtocol",
               addressbookentry: "batchExchange",
             });
 
-            const medianizer2 = await run("bre-config", {
-              addressbookcategory: "maker",
-              addressbookentry: "medianizer2",
-            });
-
-            const { WETH: weth } = await run("bre-config", {
-              addressbookcategory: "erc20",
+            const feeFinderAddress = await run("bre-config", {
+              contractname: "FeeFinder",
+              log: taskArgs.log,
+              deployments: true,
             });
 
             // address _batchExchange, address _weth, address _gelatoProvider
             actionconstructorargs = [
               batchExchange,
-              weth,
               gelatoProviderAddress,
-              medianizer2,
+              feeFinderAddress,
             ];
           }
           const deployedAction = await run("deploy", {

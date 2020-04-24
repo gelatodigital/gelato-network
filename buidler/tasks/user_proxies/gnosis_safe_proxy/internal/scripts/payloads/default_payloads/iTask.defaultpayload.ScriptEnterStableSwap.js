@@ -7,27 +7,27 @@ export default internalTask(
 )
   .addOptionalPositionalParam(
     "sellToken",
-    "Token to sell on BatchExchange -default USDC",
-    "0x4dbcdf9b62e891a7cec5a2568c3f4faf9e8abe2b"
-  )
-  .addOptionalPositionalParam(
-    "buyToken",
-    "Token to buy on BatchExchange -default DAI",
+    "Token to sell on BatchExchange -default DAI",
     "0x5592ec0cfb4dbc12d3ab100b257153436a1f0fea"
   )
   .addOptionalPositionalParam(
+    "buyToken",
+    "Token to buy on BatchExchange -default USDC",
+    "0x4dbcdf9b62e891a7cec5a2568c3f4faf9e8abe2b"
+  )
+  .addOptionalPositionalParam(
     "sellAmount",
-    "Amount to sell -default 4 (4000000 USDC) (4)",
-    "4000000"
+    "Amount to sell -default 4 (4000000000000000000 DAI) (4)",
+    "4000000000000000000"
   )
   .addOptionalPositionalParam(
     "buyAmount",
-    "Amount to buy -default 3.8 (3800000000000000000 DAI (3.8))",
-    "3800000000000000000"
+    "Amount to buy -default 3.8 (3800000 USDC (3.8))",
+    "3800000"
   )
   .addOptionalParam(
     "orderExpirationBatchId",
-    "will be +2 batches from current batch"
+    "will be +1 batch from current batch"
   )
   .addOptionalParam("gelatoprovider", "handleGelatoProvider default")
   .addOptionalParam("gelatoprovidermodule", "bre config")
@@ -74,7 +74,7 @@ export default internalTask(
 
       const actionAddress = await run("bre-config", {
         deployments: true,
-        contractname: "ActionWithdrawBatchExchangeWithMaker",
+        contractname: "ActionWithdrawBatchExchange",
       });
 
       if (!taskArgs.gelatoprovidermodule) {
@@ -89,28 +89,19 @@ export default internalTask(
         contractname: "GelatoCore",
       });
 
-      /*
-      address _user,
-      address _sellToken,
-      address _buyToken,
-      uint128 _sellAmount,
-      uint128 _buyAmount,
-      uint32 _orderExpirationBatchId,
-      // ChainedSubmissionParams
-      TaskReceipt memory _TR
-      */
+      // if (!taskArgs.sellAmount) taskArgs.sellAmount = "4000000";
+      // if (!taskArgs.buyAmount) taskArgs.buyAmount = "3800000000000000000";
+      // if (!taskArgs.sellToken)
+      //   taskArgs.sellToken = "0x4dbcdf9b62e891a7cec5a2568c3f4faf9e8abe2b";
+      // if (!taskArgs.buyToken)
+      //   taskArgs.buyToken = "0x5592ec0cfb4dbc12d3ab100b257153436a1f0fea";
 
-      if (!taskArgs.sellAmount) taskArgs.sellAmount = "4000000";
-      if (!taskArgs.buyAmount) taskArgs.buyAmount = "3800000000000000000";
+      if (!taskArgs.sellAmount) taskArgs.sellAmount = "4000000000000000000";
+      if (!taskArgs.buyAmount) taskArgs.buyAmount = "3800000";
       if (!taskArgs.sellToken)
-        taskArgs.sellToken = "0x4dbcdf9b62e891a7cec5a2568c3f4faf9e8abe2b";
+        taskArgs.sellToken = "0x5592ec0cfb4dbc12d3ab100b257153436a1f0fea";
       if (!taskArgs.buyToken)
-        taskArgs.buyToken = "0x5592ec0cfb4dbc12d3ab100b257153436a1f0fea";
-
-      // if (!taskArgs.sellAmount) taskArgs.sellAmount = "4000000000000000000"
-      // if (!taskArgs.buyAmount) taskArgs.buyAmount = "3800000"
-      // if (!taskArgs.sellToken) taskArgs.sellToken = "0x5592ec0cfb4dbc12d3ab100b257153436a1f0fea"
-      // if (!taskArgs.buyToken) taskArgs.buyToken = "0x4dbcdf9b62e891a7cec5a2568c3f4faf9e8abe2b"
+        taskArgs.buyToken = "0x4dbcdf9b62e891a7cec5a2568c3f4faf9e8abe2b";
 
       const gelatoProvider = new GelatoProvider({
         addr: taskArgs.gelatoprovider,
@@ -125,7 +116,7 @@ export default internalTask(
       const actionWithdrawFromBatchExchangePayload = await run(
         "abi-encode-withselector",
         {
-          contractname: "ActionWithdrawBatchExchangeWithMaker",
+          contractname: "ActionWithdrawBatchExchange",
           functionname: "action",
           inputs: [
             useraddress,
