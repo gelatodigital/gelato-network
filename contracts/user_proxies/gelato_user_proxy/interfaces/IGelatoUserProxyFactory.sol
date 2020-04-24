@@ -5,7 +5,11 @@ import { GelatoUserProxy } from "../GelatoUserProxy.sol";
 import { Action, Task } from "../../../gelato_core/interfaces/IGelatoCore.sol";
 
 interface IGelatoUserProxyFactory {
-    event LogCreation(address indexed user, GelatoUserProxy indexed userProxy);
+    event LogCreation(
+        address indexed user,
+        GelatoUserProxy indexed userProxy,
+        uint256 funding
+    );
 
     /// @notice Create gelato user proxy
     /// @param _optionalSubmitTasks Optional tasks to create on gelato

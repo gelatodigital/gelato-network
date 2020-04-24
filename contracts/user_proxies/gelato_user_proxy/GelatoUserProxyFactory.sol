@@ -29,7 +29,7 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         userByGelatoProxy[userProxy] = msg.sender;
         if (_optionalSubmitTasks.length != 0) _submitTasks(userProxy, _optionalSubmitTasks);
         if (_optionalActions.length != 0) _execActions(userProxy, _optionalActions);
-        emit LogCreation(msg.sender, userProxy);
+        emit LogCreation(msg.sender, userProxy, msg.value);
     }
 
     // A standard _saltNonce can be used for deterministic shared address derivation
@@ -60,7 +60,7 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         if (_optionalActions.length != 0) _execActions(userProxy, _optionalActions);
 
         // Success
-        emit LogCreation(msg.sender, userProxy);
+        emit LogCreation(msg.sender, userProxy, msg.value);
     }
 
     function predictProxyAddress(address _user, uint256 _saltNonce)
