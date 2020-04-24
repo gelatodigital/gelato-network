@@ -109,13 +109,13 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH PROVIDE", function () {
 
     // Condition Action Mix
     taskSpec = new TaskSpec({
-      condition: condition.address,
+      conditionInst: condition.address,
       actions: [actionStruct],
       gasPriceCeil,
     });
 
     otherTaskSpec = new TaskSpec({
-      condition: condition.address,
+      conditionInst: condition.address,
       actions: [actionStruct, otherActionStruct],
       gasPriceCeil,
     });

@@ -171,7 +171,7 @@ describe("GelatoCore.Execute", function () {
     });
 
     const newTaskSpec = new TaskSpec({
-      condition: condition.inst,
+      conditionInst: condition.inst,
       actions: [actionWithdrawBatchExchangeGelato],
       gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
     });
@@ -187,7 +187,7 @@ describe("GelatoCore.Execute", function () {
 
     // Call multiProvide for mockConditionDummy + actionERC20TransferFrom
     const newTaskSpec2 = new TaskSpec({
-      condition: mockConditionDummy.address,
+      conditionInst: mockConditionDummy.address,
       actions: [actionERC20TransferFromGelato],
       gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
     });
@@ -263,7 +263,7 @@ describe("GelatoCore.Execute", function () {
       // Provider registers new acttion
 
       const newTaskSpec2 = new TaskSpec({
-        condition: constants.AddressZero,
+        conditionInst: constants.AddressZero,
         actions: [mockActionDummyGelato],
         gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
       });
@@ -378,7 +378,7 @@ describe("GelatoCore.Execute", function () {
       // Provider registers new acttion
 
       const newTaskSpec2 = new TaskSpec({
-        condition: constants.AddressZero,
+        conditionInst: constants.AddressZero,
         actions: [mockActionDummyRevertGelato],
         gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
       });
@@ -505,7 +505,7 @@ describe("GelatoCore.Execute", function () {
       // Provider registers new acttion
 
       const newTaskSpec2 = new TaskSpec({
-        condition: constants.AddressZero,
+        conditionInst: constants.AddressZero,
         actions: [
           mockActionDummyOutOfGasGelato,
           mockActionDummyOutOfGasGelato2,
@@ -631,7 +631,7 @@ describe("GelatoCore.Execute", function () {
       // Provider registers new acttion
 
       const newTaskSpec2 = new TaskSpec({
-        condition: constants.AddressZero,
+        conditionInst: constants.AddressZero,
         actions: [mockActionDummyOutOfGasGelato, mockActionDummyOutOfGasGelato],
         gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
       });

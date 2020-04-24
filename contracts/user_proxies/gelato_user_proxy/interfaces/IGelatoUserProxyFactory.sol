@@ -5,9 +5,11 @@ import { GelatoUserProxy } from "../GelatoUserProxy.sol";
 import { Action, Task } from "../../../gelato_core/interfaces/IGelatoCore.sol";
 
 interface IGelatoUserProxyFactory {
-    event LogCreation(address indexed user, GelatoUserProxy indexed userProxy);
-
-    // create
+    event LogCreation(
+        address indexed user,
+        GelatoUserProxy indexed userProxy,
+        uint256 funding
+    );
 
     /// @notice Create gelato user proxy
     /// @param _optionalSubmitTasks Optional tasks to create on gelato
@@ -18,7 +20,20 @@ interface IGelatoUserProxyFactory {
         payable
         returns(GelatoUserProxy userProxy);
 
+    function createTwo(
+        uint256 _saltNonce,
+        Task[] calldata _optionalSubmitTasks,
+        Action[] calldata _optionalActions
+    )
+        external
+        payable
+        returns(GelatoUserProxy userProxy);
+
     // ______ State Read APIs __________________
+    function predictProxyAddress(address _user, uint256 _saltNonce)
+        external
+        view
+        returns(address);
 
     /// @notice Get address of proxy contract from user address (EOA)
     /// @param _user Address of user (EOA)
@@ -43,4 +58,6 @@ interface IGelatoUserProxyFactory {
     /// @notice Returns address of gelato
     /// @return Gelato core address
     function gelatoCore() external pure returns(address);
+
+    function proxyCreationCode() external pure returns(bytes memory);
 }

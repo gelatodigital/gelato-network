@@ -105,7 +105,7 @@ describe("GelatoCore.cancelTask", function () {
     // Provider registers new acttion
 
     const newTaskSpec2 = new TaskSpec({
-      condition: constants.AddressZero,
+      conditionInst: constants.AddressZero,
       actions: [mockActionDummyGelato],
       gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
     });

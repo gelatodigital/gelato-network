@@ -78,7 +78,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     }
 
     // GelatoCore: combined submitTask Gate
-    function isTaskReceiptProvided(TaskReceipt memory _TR)
+    function isTaskProvided(TaskReceipt memory _TR)
         public
         view
         override
