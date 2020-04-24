@@ -38,7 +38,7 @@ struct TaskReceipt {  // TaskReceipt
 }
 
 interface IGelatoCore {
-    event LogSubmitTask(
+    event LogTaskSubmitted(
         address indexed executor,
         uint256 indexed taskReceiptId,
         bytes32 indexed taskReceiptHash,
@@ -62,7 +62,7 @@ interface IGelatoCore {
         uint256 executorRefund,
         string reason
     );
-    event LogExecutionRevert(
+    event LogExecutionReverted(
         address indexed executor,
         uint256 indexed taskReceiptId,
         uint256 executorRefund

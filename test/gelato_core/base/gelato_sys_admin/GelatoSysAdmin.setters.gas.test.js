@@ -31,7 +31,7 @@ describe("GelatoCore - GelatoSysAdmin - Setters: GAS/GAS-PRICE", function () {
     it("Should let the owner setGelatoGasPriceOracle", async function () {
       // Every transaction and call is sent with the owner by default
       await expect(gelatoCore.setGelatoGasPriceOracle(oracleAddress))
-        .to.emit(gelatoCore, "LogSetGelatoGasPriceOracle")
+        .to.emit(gelatoCore, "LogGelatoGasPriceOracleSet")
         .withArgs(initialState.gelatoGasPriceOracle, oracleAddress);
 
       expect(await gelatoCore.gelatoGasPriceOracle()).to.be.equal(
@@ -53,7 +53,7 @@ describe("GelatoCore - GelatoSysAdmin - Setters: GAS/GAS-PRICE", function () {
     it("Should let the owner setGelatoMaxGas", async function () {
       // Every transaction and call is sent with the owner by default
       await expect(gelatoCore.setGelatoMaxGas(100))
-        .to.emit(gelatoCore, "LogSetGelatoMaxGas")
+        .to.emit(gelatoCore, "LogGelatoMaxGasSet")
         .withArgs(initialState.gelatoMaxGas, 100);
 
       expect(await gelatoCore.gelatoMaxGas()).to.be.equal(100);
@@ -73,7 +73,7 @@ describe("GelatoCore - GelatoSysAdmin - Setters: GAS/GAS-PRICE", function () {
     it("Should let the owner setInternalGasRequirement", async function () {
       // Every transaction and call is sent with the owner by default
       await expect(gelatoCore.setInternalGasRequirement(100))
-        .to.emit(gelatoCore, "LogSetInternalGasRequirement")
+        .to.emit(gelatoCore, "LogInternalGasRequirementSet")
         .withArgs(initialState.internalGasRequirement, 100);
 
       expect(await gelatoCore.internalGasRequirement()).to.be.equal(100);

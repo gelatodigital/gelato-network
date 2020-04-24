@@ -32,7 +32,7 @@ describe("GelatoCore - GelatoSysAdmin - Setters: FUNDS/STAKE", function () {
     it("Should let the owner setMinExecutorStake", async function () {
       // Every transaction and call is sent with the owner by default
       await expect(gelatoCore.setMinExecutorStake(69420))
-        .to.emit(gelatoCore, "LogSetMinExecutorStake")
+        .to.emit(gelatoCore, "LogMinExecutorStakeSet")
         .withArgs(initialState.minExecutorStake, 69420);
 
       expect(await gelatoCore.minExecutorStake()).to.be.equal(69420);
@@ -52,7 +52,7 @@ describe("GelatoCore - GelatoSysAdmin - Setters: FUNDS/STAKE", function () {
     it("Should let the owner withdrawSysAdminFunds", async function () {
       // Every transaction and call is sent with the owner by default
       await expect(gelatoCore.withdrawSysAdminFunds(0, ownerAddress))
-        .to.emit(gelatoCore, "LogWithdrawSysAdminFunds")
+        .to.emit(gelatoCore, "LogSysAdminFundsWithdrawn")
         .withArgs(initialState.sysAdminFunds, 0);
 
       expect(await gelatoCore.sysAdminFunds()).to.be.equal(0);
@@ -61,7 +61,7 @@ describe("GelatoCore - GelatoSysAdmin - Setters: FUNDS/STAKE", function () {
     it("Should NOT let the owner withdraw non-existant funds", async function () {
       // Every transaction and call is sent with the owner by default
       await expect(gelatoCore.withdrawSysAdminFunds(69420, ownerAddress))
-        .to.emit(gelatoCore, "LogWithdrawSysAdminFunds")
+        .to.emit(gelatoCore, "LogSysAdminFundsWithdrawn")
         .withArgs(initialState.sysAdminFunds, 0);
 
       expect(await gelatoCore.sysAdminFunds()).to.be.equal(0);

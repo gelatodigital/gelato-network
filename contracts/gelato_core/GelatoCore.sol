@@ -65,7 +65,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         // TaskReceipt Hash registration
         taskReceiptHash[taskReceipt.id] = hashedTaskReceipt;
 
-        emit LogSubmitTask(executor, taskReceipt.id, hashedTaskReceipt, taskReceipt);
+        emit LogTaskSubmitted(executor, taskReceipt.id, hashedTaskReceipt, taskReceipt);
     }
 
     // ================  CAN EXECUTE EXECUTOR API ============================
@@ -198,7 +198,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         } else {
             // executionResult == ExecutionResult.ExecutionRevert
             // END-4.1: ExecutionReverted NO gelatoMaxGas => No TaskReceipt Deletion & No Refund
-            if (startGas < _gelatoMaxGas) emit LogExecutionRevert(msg.sender, _TR.id, 0);
+            if (startGas < _gelatoMaxGas) emit LogExecutionReverted(msg.sender, _TR.id, 0);
             else {
                 // END-4.2: ExecutionReverted BUT gelatoMaxGas was used
                 //  => TaskReceipt Deletion & Refund
@@ -210,7 +210,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
                     _gelatoMaxGas,
                      tx.gasprice  // == gelatoGasPrice
                 );
-                emit LogExecutionRevert(msg.sender, _TR.id, executorRefund);
+                emit LogExecutionReverted(msg.sender, _TR.id, executorRefund);
             }
         }
     }

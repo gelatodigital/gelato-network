@@ -181,7 +181,7 @@ describe("GelatoCore.Execute", function () {
 
     await expect(userProxy.submitTask(task)).to.emit(
       gelatoCore,
-      "LogSubmitTask"
+      "LogTaskSubmitted"
     );
   });
 

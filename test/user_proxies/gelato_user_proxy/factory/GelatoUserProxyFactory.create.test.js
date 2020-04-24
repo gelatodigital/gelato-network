@@ -230,11 +230,11 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE", function () {
     it("Should submit optional Tasks", async function () {
       await expect(gelatoUserProxyFactory.create([optionalTask], [])).to.emit(
         gelatoCore,
-        "LogSubmitTask"
+        "LogTaskSubmitted"
       );
       await expect(
         gelatoUserProxyFactory.create([optionalTask, optionalTask], [])
-      ).to.emit(gelatoCore, "LogSubmitTask");
+      ).to.emit(gelatoCore, "LogTaskSubmitted");
     });
 
     it("Should exec optional Actions", async function () {
@@ -252,7 +252,7 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE", function () {
       await expect(
         gelatoUserProxyFactory.create([optionalTask], [otherOptionalAction])
       )
-        .to.emit(gelatoCore, "LogSubmitTask")
+        .to.emit(gelatoCore, "LogTaskSubmitted")
         .and.to.emit(action, "LogAction")
         .withArgs(false);
     });

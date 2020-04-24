@@ -13,7 +13,7 @@ export default task(
     1,
     types.int
   )
-  .addOptionalParam("taskreceipt", "Supply LogSubmitTask values in an obj")
+  .addOptionalParam("taskreceipt", "Supply LogTaskSubmitted values in an obj")
   .addOptionalParam(
     "fromblock",
     "The block number to search for event logs from",

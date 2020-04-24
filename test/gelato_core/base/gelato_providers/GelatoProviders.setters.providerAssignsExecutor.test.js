@@ -61,7 +61,7 @@ describe("GelatoCore - GelatoProviders - Setters: EXECUTOR", function () {
 
       // providerAssignsExecutor
       await expect(gelatoCore.providerAssignsExecutor(executorAddress))
-        .to.emit(gelatoCore, "LogProviderAssignsExecutor")
+        .to.emit(gelatoCore, "LogProviderAssignedExecutor")
         .withArgs(
           providerAddress,
           initialState.executorByProvider,
@@ -128,7 +128,7 @@ describe("GelatoCore - GelatoProviders - Setters: EXECUTOR", function () {
 
       // providerAssignsExecutor: otherExecutor
       await expect(gelatoCore.providerAssignsExecutor(otherExecutorAddress))
-        .to.emit(gelatoCore, "LogProviderAssignsExecutor")
+        .to.emit(gelatoCore, "LogProviderAssignedExecutor")
         .withArgs(providerAddress, executorAddress, otherExecutorAddress);
       // executorProvidersCount(prevExecutor)
       expect(
@@ -161,7 +161,7 @@ describe("GelatoCore - GelatoProviders - Setters: EXECUTOR", function () {
 
       // providerAssignsExecutor
       await expect(gelatoCore.providerAssignsExecutor(executorAddress))
-        .to.emit(gelatoCore, "LogProviderAssignsExecutor")
+        .to.emit(gelatoCore, "LogProviderAssignedExecutor")
         .withArgs(
           providerAddress,
           initialState.executorByProvider,

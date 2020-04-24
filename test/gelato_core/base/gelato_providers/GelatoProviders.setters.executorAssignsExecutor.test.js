@@ -68,7 +68,7 @@ describe("GelatoCore - GelatoProviders - Setters: EXECUTOR", function () {
           otherExecutorAddress
         )
       )
-        .to.emit(gelatoCore, "LogExecutorAssignsExecutor")
+        .to.emit(gelatoCore, "LogExecutorAssignedExecutor")
         .withArgs(providerAddress, executorAddress, otherExecutorAddress);
       // executorProvidersCount(executor)
       expect(
