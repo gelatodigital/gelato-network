@@ -51,7 +51,7 @@ export const deployments = {
   // Enter the Rebalancing Chained Action
   ScriptEnterPortfolioRebalancingRinkeby: "0x0",
   ScriptExitRebalancePortfolioRinkeby: "0x0",
-  ScriptEnterStableSwap: "0xA3169f09832D7389811D9333440507Bd4aeB4a2a",
+  ScriptEnterStableSwap: "0xE3fA17CE2021118fb09a169732F18E5d4B4D9127",
 
   // Maker
   Medianizer2: "0x642CC986A17A3e508fddb21fF4485D1A6A8B1DA4",
