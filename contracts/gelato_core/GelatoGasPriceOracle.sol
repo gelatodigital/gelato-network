@@ -5,20 +5,20 @@ import "../external/Ownable.sol";
 
 contract GelatoGasPriceOracle is IGelatoGasPriceOracle, Ownable {
 
-    address public override oracleAdmin;
+    address public override oracle;
     address public override gelatoCore;
 
     // This gasPrice is pulled into GelatoCore.exec() via GelatoSysAdmin._getGelatoGasPrice()
     uint256 private gasPrice;
 
     constructor(address _gelatoCore, uint256 _gasPrice) public {
-        setOracleAdmin(msg.sender);
+        setOracle(msg.sender);
         setGelatoCore(_gelatoCore);
         setGasPrice(_gasPrice);
     }
 
-    modifier onlyOracleAdmin {
-        require(msg.sender == oracleAdmin, "GelatoGasPriceOracle.onlyOracleAdmin");
+    modifier onlyOracle {
+        require(msg.sender == oracle, "GelatoGasPriceOracle.onlyOracle");
         _;
     }
 
@@ -27,9 +27,9 @@ contract GelatoGasPriceOracle is IGelatoGasPriceOracle, Ownable {
         _;
     }
 
-    function setOracleAdmin(address _newOracleAdmin) public override onlyOwner {
-        emit LogSetOracleAdmin(oracleAdmin, _newOracleAdmin);
-        oracleAdmin = _newOracleAdmin;
+    function setOracle(address _newOracle) public override onlyOwner {
+        emit LogSetOracle(oracle, _newOracle);
+        oracle = _newOracle;
     }
 
     function setGelatoCore(address _newGelatoCore) public override onlyOwner  {
@@ -37,7 +37,7 @@ contract GelatoGasPriceOracle is IGelatoGasPriceOracle, Ownable {
         gelatoCore = _newGelatoCore;
     }
 
-    function setGasPrice(uint256 _newGasPrice) public override onlyOracleAdmin {
+    function setGasPrice(uint256 _newGasPrice) public override onlyOracle {
         require(_newGasPrice != 0, "gasPrice cannot be zero");
         emit LogSetGasPrice(gasPrice, _newGasPrice);
         gasPrice = _newGasPrice;

@@ -75,7 +75,7 @@ describe("GelatoCore - GelatoProviders - Getters: LIQUIDITY", function () {
         )
       ).to.be.true;
 
-      // increase gelatoGasPrice (connected executor is Owner and OracleAdmin)
+      // increase gelatoGasPrice (connected executor is Owner and Oracle)
       await gelatoGasPriceOracle.setGasPrice(gelatoGasPrice.add(1));
       // isProviderLiquid: after gasPrice increase
       expect(

@@ -41,7 +41,7 @@ describe("GelatoCore - GelatoSysAdmin - Deployment", function () {
   // We test different functionality of the contract as normal Mocha tests.
   it("Should initialize only the creation time state variables", async function () {
     expect(await gelatoGasPriceOracle.owner()).to.equal(ownerAddress);
-    expect(await gelatoGasPriceOracle.oracleAdmin()).to.equal(ownerAddress);
+    expect(await gelatoGasPriceOracle.oracle()).to.equal(ownerAddress);
     expect(await gelatoGasPriceOracle.gelatoCore()).to.equal(
       gelatoCore.address
     );
