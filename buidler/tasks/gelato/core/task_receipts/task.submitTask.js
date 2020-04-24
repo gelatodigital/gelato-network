@@ -203,14 +203,14 @@ export default task(
         const parsedSubmissionLog = await run("event-getparsedlog", {
           contractname: "GelatoCore",
           contractaddress: taskArgs.gelatocoreaddress,
-          eventname: "LogSubmitTask",
+          eventname: "LogTaskSubmitted",
           txhash: submitTaskTxHash,
           values: true,
           stringify: true,
         });
         if (parsedSubmissionLog)
-          console.log("\n✅ LogSubmitTask\n", parsedSubmissionLog);
-        else console.log("\n❌ LogSubmitTask not found");
+          console.log("\n✅ LogTaskSubmitted\n", parsedSubmissionLog);
+        else console.log("\n❌ LogTaskSubmitted not found");
       }
 
       return submitTaskTxHash;

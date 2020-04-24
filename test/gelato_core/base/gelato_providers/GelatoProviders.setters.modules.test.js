@@ -169,7 +169,7 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
 
       // addProviderModules()
       await expect(gelatoCore.addProviderModules([providerModule.address]))
-        .to.emit(gelatoCore, "LogAddProviderModule")
+        .to.emit(gelatoCore, "LogProviderModuleAdded")
         .withArgs(providerAddress, providerModule.address);
 
       // isModuleProvided
@@ -199,9 +199,9 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
       expect(await gelatoCore.providerModuleChecks(taskReceipt)).to.be.equal(
         "InvalidProviderModule"
       );
-      expect(await gelatoCore.providerModuleChecks(otherTaskReceipt)).to.be.equal(
-        "InvalidProviderModule"
-      );
+      expect(
+        await gelatoCore.providerModuleChecks(otherTaskReceipt)
+      ).to.be.equal("InvalidProviderModule");
 
       // addProviderModules()
       await expect(
@@ -210,9 +210,9 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
           otherProviderModule.address,
         ])
       )
-        .to.emit(gelatoCore, "LogAddProviderModule")
+        .to.emit(gelatoCore, "LogProviderModuleAdded")
         .withArgs(providerAddress, providerModule.address)
-        .and.to.emit(gelatoCore, "LogAddProviderModule")
+        .and.to.emit(gelatoCore, "LogProviderModuleAdded")
         .withArgs(providerAddress, otherProviderModule.address);
 
       // providerModule
@@ -256,12 +256,12 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
     it("Should catch non-conform providerModuleChecks()", async function () {
       // addProviderModules()
       await expect(gelatoCore.addProviderModules([fakeProviderModule.address]))
-        .to.emit(gelatoCore, "LogAddProviderModule")
+        .to.emit(gelatoCore, "LogProviderModuleAdded")
         .withArgs(providerAddress, fakeProviderModule.address);
 
-      expect(await gelatoCore.providerModuleChecks(fakeTaskReceipt)).to.be.equal(
-        "GelatoProviders.providerModuleChecks"
-      );
+      expect(
+        await gelatoCore.providerModuleChecks(fakeTaskReceipt)
+      ).to.be.equal("GelatoProviders.providerModuleChecks");
     });
 
     it("Should return providerModuleChecks from providerCanExec, if correct gelatoGasPrice", async function () {
@@ -331,7 +331,7 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
 
       // removeProviderModules
       await expect(gelatoCore.removeProviderModules([providerModule.address]))
-        .to.emit(gelatoCore, "LogRemoveProviderModule")
+        .to.emit(gelatoCore, "LogProviderModuleRemoved")
         .withArgs(providerAddress, providerModule.address);
 
       // providerModule: isModuleProvided
@@ -373,9 +373,9 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
           otherProviderModule.address,
         ])
       )
-        .to.emit(gelatoCore, "LogRemoveProviderModule")
+        .to.emit(gelatoCore, "LogProviderModuleRemoved")
         .withArgs(providerAddress, providerModule.address)
-        .and.to.emit(gelatoCore, "LogRemoveProviderModule")
+        .and.to.emit(gelatoCore, "LogProviderModuleRemoved")
         .withArgs(providerAddress, otherProviderModule.address);
 
       // providerModule: isModuleProvided

@@ -15,33 +15,33 @@ interface IGelatoProviders {
     }
 
     // Provider Funding
-    event LogProvideFunds(
+    event LogFundsProvided(
         address indexed provider,
         uint256 amount,
         uint256 newProviderFunds
     );
-    event LogUnprovideFunds(
+    event LogFundsUnprovided(
         address indexed provider,
         uint256 realWithdrawAmount,
         uint256 newProviderFunds
     );
 
     // Executor By Provider
-    event LogProviderAssignsExecutor(
+    event LogProviderAssignedExecutor(
         address indexed provider,
         address indexed oldExecutor,
         address indexed newExecutor
     );
-    event LogExecutorAssignsExecutor(
+    event LogExecutorAssignedExecutor(
         address indexed provider,
         address indexed oldExecutor,
         address indexed newExecutor
     );
 
     // Actions
-    event LogProvideTaskSpec(address indexed provider, bytes32 indexed taskSpecHash);
-    event LogUnprovideTaskSpec(address indexed provider, bytes32 indexed taskSpecHash);
-    event LogSetTaskSpecGasPriceCeil(
+    event LogTaskSpecProvided(address indexed provider, bytes32 indexed taskSpecHash);
+    event LogTaskSpecUnprovided(address indexed provider, bytes32 indexed taskSpecHash);
+    event LogTaskSpecGasPriceCeilSet(
         address indexed provider,
         bytes32 taskSpecHash,
         uint256 oldTaskSpecGasPriceCeil,
@@ -49,11 +49,11 @@ interface IGelatoProviders {
     );
 
     // Provider Module
-    event LogAddProviderModule(
+    event LogProviderModuleAdded(
         address indexed provider,
         IGelatoProviderModule indexed module
     );
-    event LogRemoveProviderModule(
+    event LogProviderModuleRemoved(
         address indexed provider,
         IGelatoProviderModule indexed module
     );

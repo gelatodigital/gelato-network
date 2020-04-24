@@ -163,18 +163,18 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH UNPROVIDE", function () 
           [providerModule.address, otherProviderModule.address]
         )
       )
-        // LogUnprovideFunds
-        .to.emit(gelatoCore, "LogUnprovideFunds")
+        // LogFundsUnprovided
+        .to.emit(gelatoCore, "LogFundsUnprovided")
         .withArgs(providerAddress, providedFunds, 0)
-        // LogUnprovideTaskSpec
-        .and.to.emit(gelatoCore, "LogUnprovideTaskSpec")
+        // LogTaskSpecUnprovided
+        .and.to.emit(gelatoCore, "LogTaskSpecUnprovided")
         .withArgs(providerAddress, taskSpecHash)
-        .and.to.emit(gelatoCore, "LogUnprovideTaskSpec")
+        .and.to.emit(gelatoCore, "LogTaskSpecUnprovided")
         .withArgs(providerAddress, otherTaskSpecHash)
-        // LogRemoveProviderModule
-        .and.to.emit(gelatoCore, "LogRemoveProviderModule")
+        // LogProviderModuleRemoved
+        .and.to.emit(gelatoCore, "LogProviderModuleRemoved")
         .withArgs(providerAddress, providerModule.address)
-        .and.to.emit(gelatoCore, "LogRemoveProviderModule")
+        .and.to.emit(gelatoCore, "LogProviderModuleRemoved")
         .withArgs(providerAddress, otherProviderModule.address);
 
       // providerFunds

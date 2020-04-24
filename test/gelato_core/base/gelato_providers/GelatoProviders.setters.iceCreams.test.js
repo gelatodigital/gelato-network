@@ -137,9 +137,9 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
 
       // provideTaskSpecs
       await expect(gelatoCore.provideTaskSpecs([taskSpec]))
-        .to.emit(gelatoCore, "LogProvideTaskSpec")
+        .to.emit(gelatoCore, "LogTaskSpecProvided")
         .withArgs(providerAddress, taskSpecHash)
-        .and.to.emit(gelatoCore, "LogSetTaskSpecGasPriceCeil")
+        .and.to.emit(gelatoCore, "LogTaskSpecGasPriceCeilSet")
         .withArgs(
           providerAddress,
           taskSpecHash,
@@ -197,18 +197,18 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
 
       // provideTaskSpecs
       await expect(gelatoCore.provideTaskSpecs([taskSpec, otherTaskSpec]))
-        .to.emit(gelatoCore, "LogProvideTaskSpec")
+        .to.emit(gelatoCore, "LogTaskSpecProvided")
         .withArgs(providerAddress, taskSpecHash)
-        .and.to.emit(gelatoCore, "LogSetTaskSpecGasPriceCeil")
+        .and.to.emit(gelatoCore, "LogTaskSpecGasPriceCeilSet")
         .withArgs(
           providerAddress,
           taskSpecHash,
           initialState.taskSpecGasPriceCeil,
           gasPriceCeil
         )
-        .and.to.emit(gelatoCore, "LogProvideTaskSpec")
+        .and.to.emit(gelatoCore, "LogTaskSpecProvided")
         .withArgs(providerAddress, otherTaskSpecHash)
-        .and.to.emit(gelatoCore, "LogSetTaskSpecGasPriceCeil")
+        .and.to.emit(gelatoCore, "LogTaskSpecGasPriceCeilSet")
         .withArgs(
           providerAddress,
           otherTaskSpecHash,
@@ -255,9 +255,9 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
       ).to.be.equal("OK");
 
       // isTaskProvided;
-      expect(
-        await gelatoCore.isTaskProvided(otherTaskReceipt)
-      ).not.to.be.equal("TaskSpecNotProvided");
+      expect(await gelatoCore.isTaskProvided(otherTaskReceipt)).not.to.be.equal(
+        "TaskSpecNotProvided"
+      );
     });
 
     it("Should NOT allow to provide same TaskSpecs again", async function () {
@@ -285,7 +285,7 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
       await expect(
         gelatoCore.setTaskSpecGasPriceCeil(taskSpecHash, gasPriceCeil)
       )
-        .to.emit(gelatoCore, "LogSetTaskSpecGasPriceCeil")
+        .to.emit(gelatoCore, "LogTaskSpecGasPriceCeilSet")
         .withArgs(
           providerAddress,
           taskSpecHash,
@@ -366,7 +366,7 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
 
       // unprovideTaskSpecs
       await expect(gelatoCore.unprovideTaskSpecs([taskSpec]))
-        .to.emit(gelatoCore, "LogUnprovideTaskSpec")
+        .to.emit(gelatoCore, "LogTaskSpecUnprovided")
         .withArgs(providerAddress, taskSpecHash);
 
       // taskSpec
@@ -408,9 +408,9 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
       ).to.be.equal("OK");
 
       // isTaskProvided
-      expect(
-        await gelatoCore.isTaskProvided(otherTaskReceipt)
-      ).not.to.be.equal("TaskSpecNotProvided");
+      expect(await gelatoCore.isTaskProvided(otherTaskReceipt)).not.to.be.equal(
+        "TaskSpecNotProvided"
+      );
     });
 
     it("Should allow Providers to unprovideTaskSpecs", async function () {
@@ -430,9 +430,9 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
 
       // unprovideTaskSpecs
       await expect(gelatoCore.unprovideTaskSpecs([taskSpec, otherTaskSpec]))
-        .to.emit(gelatoCore, "LogUnprovideTaskSpec")
+        .to.emit(gelatoCore, "LogTaskSpecUnprovided")
         .withArgs(providerAddress, taskSpecHash)
-        .and.to.emit(gelatoCore, "LogUnprovideTaskSpec")
+        .and.to.emit(gelatoCore, "LogTaskSpecUnprovided")
         .withArgs(providerAddress, otherTaskSpecHash);
 
       // taskSpec

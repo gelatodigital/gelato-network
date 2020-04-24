@@ -38,7 +38,7 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
     // The oracle defines the system-critical gelatoGasPrice
     function setGelatoGasPriceOracle(address _newOracle) external override onlyOwner {
         require(_newOracle != address(0), "GelatoSysAdmin.setGelatoGasPriceOracle: 0");
-        emit LogSetGelatoGasPriceOracle(address(gelatoGasPriceOracle), _newOracle);
+        emit LogGelatoGasPriceOracleSet(address(gelatoGasPriceOracle), _newOracle);
         gelatoGasPriceOracle = IGelatoGasPriceOracle(_newOracle);
     }
 
@@ -55,25 +55,25 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
 
     // exec-tx gas
     function setGelatoMaxGas(uint256 _newMaxGas) external override onlyOwner {
-        emit LogSetGelatoMaxGas(gelatoMaxGas, _newMaxGas);
+        emit LogGelatoMaxGasSet(gelatoMaxGas, _newMaxGas);
         gelatoMaxGas = _newMaxGas;
     }
 
     // exec-tx GelatoCore internal gas requirement
     function setInternalGasRequirement(uint256 _newRequirement) external override onlyOwner {
-        emit LogSetInternalGasRequirement(internalGasRequirement, _newRequirement);
+        emit LogInternalGasRequirementSet(internalGasRequirement, _newRequirement);
         internalGasRequirement = _newRequirement;
     }
 
     // Minimum Executor Stake Per Provider
     function setMinExecutorStake(uint256 _newMin) external override onlyOwner {
-        emit LogSetMinExecutorStake(minExecutorStake, _newMin);
+        emit LogMinExecutorStakeSet(minExecutorStake, _newMin);
         minExecutorStake = _newMin;
     }
 
     // Executors' profit share on exec costs
     function setExecutorSuccessShare(uint256 _percentage) external override onlyOwner {
-        emit LogSetExecutorSuccessShare(
+        emit LogExecutorSuccessShareSet(
             executorSuccessShare,
             _percentage,
             _percentage + sysAdminSuccessShare
@@ -84,7 +84,7 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
 
     // Sys Admin (DAO) Business Model
     function setSysAdminSuccessShare(uint256 _percentage) external override onlyOwner {
-        emit LogSetSysAdminSuccessShare(
+        emit LogSysAdminSuccessShareSet(
             sysAdminSuccessShare,
             _percentage,
             executorSuccessShare + _percentage
@@ -109,7 +109,7 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
         sysAdminFunds = newSysAdminFunds;
 
         _to.sendValue(realWithdrawAmount);
-        emit LogWithdrawSysAdminFunds(currentBalance, newSysAdminFunds);
+        emit LogSysAdminFundsWithdrawn(currentBalance, newSysAdminFunds);
     }
 
     // Executors' total fee for a successful exec

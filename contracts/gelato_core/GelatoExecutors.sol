@@ -27,7 +27,7 @@ abstract contract GelatoExecutors is IGelatoExecutors, GelatoProviders {
             "GelatoExecutors.stakeExecutor: minExecutorStake"
         );
         executorStake[msg.sender] = msg.value;
-        emit LogStakeExecutor(msg.sender, msg.value);
+        emit LogExecutorStaked(msg.sender, msg.value);
     }
 
     function unstakeExecutor() external override {
@@ -42,7 +42,7 @@ abstract contract GelatoExecutors is IGelatoExecutors, GelatoProviders {
         );
         delete executorStake[msg.sender];
         msg.sender.sendValue(unbondedStake);
-        emit LogUnstakeExecutor(msg.sender);
+        emit LogExecutorUnstaked(msg.sender);
     }
 
     function increaseExecutorStake() external payable override {
@@ -54,7 +54,7 @@ abstract contract GelatoExecutors is IGelatoExecutors, GelatoProviders {
             newStake >= minExecutorStake,
             "GelatoExecutors.increaseExecutorStake: below minStake"
         );
-        emit LogIncreaseExecutorStake(msg.sender, newStake);
+        emit LogExecutorStakeIncreased(msg.sender, newStake);
     }
 
     function withdrawExcessExecutorStake(uint256 _withdrawAmount)
@@ -79,7 +79,7 @@ abstract contract GelatoExecutors is IGelatoExecutors, GelatoProviders {
 
         // Interaction
         msg.sender.sendValue(realWithdrawAmount);
-        emit LogWithdrawExecutorBalance(msg.sender, realWithdrawAmount);
+        emit LogExecutorBalanceWithdrawn(msg.sender, realWithdrawAmount);
     }
 
     // To unstake, Executors must reassign ALL their Providers to another staked Executor

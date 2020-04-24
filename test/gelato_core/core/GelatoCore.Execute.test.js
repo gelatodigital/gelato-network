@@ -359,11 +359,11 @@ describe("GelatoCore.Execute", function () {
 
       //const isProvided = await gelatoCore.isTaskSpecProvided(taskReceipt);
 
-      // LogSubmitTask(executor, taskReceipt.id, hashedTaskReceipt, taskReceipt);
+      // LogTaskSubmitted(executor, taskReceipt.id, hashedTaskReceipt, taskReceipt);
 
       await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
-        "LogSubmitTask"
+        "LogTaskSubmitted"
       );
 
       expect(
@@ -467,7 +467,7 @@ describe("GelatoCore.Execute", function () {
 
       await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
-        "LogSubmitTask"
+        "LogTaskSubmitted"
       );
 
       await expect(
@@ -555,7 +555,7 @@ describe("GelatoCore.Execute", function () {
 
       await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
-        "LogSubmitTask"
+        "LogTaskSubmitted"
       );
 
       await expect(
@@ -641,7 +641,7 @@ describe("GelatoCore.Execute", function () {
 
       await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
-        "LogSubmitTask"
+        "LogTaskSubmitted"
       );
 
       await expect(
@@ -727,7 +727,7 @@ describe("GelatoCore.Execute", function () {
 
       await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
-        "LogSubmitTask"
+        "LogTaskSubmitted"
       );
 
       await expect(
@@ -808,7 +808,7 @@ describe("GelatoCore.Execute", function () {
 
       await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
-        "LogSubmitTask"
+        "LogTaskSubmitted"
       );
 
       await expect(
@@ -880,7 +880,7 @@ describe("GelatoCore.Execute", function () {
 
       await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
-        "LogSubmitTask"
+        "LogTaskSubmitted"
       );
 
       await expect(
@@ -1020,7 +1020,7 @@ describe("GelatoCore.Execute", function () {
 
       await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
-        "LogSubmitTask"
+        "LogTaskSubmitted"
       );
 
       await expect(
@@ -1098,7 +1098,7 @@ describe("GelatoCore.Execute", function () {
 
       await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
-        "LogSubmitTask"
+        "LogTaskSubmitted"
       );
 
       // Get a promise for your call
@@ -1185,11 +1185,11 @@ describe("GelatoCore.Execute", function () {
 
       //const isProvided = await gelatoCore.isTaskSpecProvided(taskReceipt);
 
-      // LogSubmitTask(executor, taskReceipt.id, hashedTaskReceipt, taskReceipt);
+      // LogTaskSubmitted(executor, taskReceipt.id, hashedTaskReceipt, taskReceipt);
 
       await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
-        "LogSubmitTask"
+        "LogTaskSubmitted"
       );
 
       expect(
@@ -1227,7 +1227,7 @@ describe("GelatoCore.Execute", function () {
       ).to.revertedWith("GelatoCore.exec: Insufficient gas sent");
     });
 
-    it("#12: Exec good taskReceipt, however revert with LogExecutionRevert because insufficient gas was sent", async function () {
+    it("#12: Exec good taskReceipt, however revert with LogExecutionReverted because insufficient gas was sent", async function () {
       // Get Action Payload
       const withdrawAmount = 10 * 10 ** buyDecimals;
 
@@ -1287,11 +1287,11 @@ describe("GelatoCore.Execute", function () {
 
       //const isProvided = await gelatoCore.isTaskSpecProvided(taskReceipt);
 
-      // LogSubmitTask(executor, taskReceipt.id, hashedTaskReceipt, taskReceipt);
+      // LogTaskSubmitted(executor, taskReceipt.id, hashedTaskReceipt, taskReceipt);
 
       await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
-        "LogSubmitTask"
+        "LogTaskSubmitted"
       );
 
       expect(
@@ -1324,7 +1324,7 @@ describe("GelatoCore.Execute", function () {
             .bigNumberify(internalGasRequirement)
             .add(ethers.utils.bigNumberify("50000")),
         })
-      ).to.emit(gelatoCore, "LogExecutionRevert");
+      ).to.emit(gelatoCore, "LogExecutionReverted");
     });
 
     it("#13: Successfully submit and exec ActionWithdrawBatchExchange taskReceipt (self-provider)", async function () {
@@ -1446,13 +1446,13 @@ describe("GelatoCore.Execute", function () {
       });
       actions.push(submitTaskAction);
 
-      // LogSubmitTask(executor, taskReceipt.id, hashedTaskReceipt, taskReceipt);
+      // LogTaskSubmitted(executor, taskReceipt.id, hashedTaskReceipt, taskReceipt);
 
       await expect(
         userProxy.multiExecActions(actions, {
           value: ethers.utils.parseUnits("1", "ether"),
         })
-      ).to.emit(gelatoCore, "LogSubmitTask");
+      ).to.emit(gelatoCore, "LogTaskSubmitted");
 
       // Make TaskReceipt executable
       await mockBatchExchange.setValidWithdrawRequest(userProxyAddress);
@@ -1534,11 +1534,11 @@ describe("GelatoCore.Execute", function () {
       // Should return "OK"
       // const isProvided = await gelatoCore.isTaskSpecProvided(taskReceipt);
 
-      // LogSubmitTask(executor, taskReceipt.id, hashedTaskReceipt, taskReceipt);
+      // LogTaskSubmitted(executor, taskReceipt.id, hashedTaskReceipt, taskReceipt);
 
       await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
-        "LogSubmitTask"
+        "LogTaskSubmitted"
       );
 
       expect(
@@ -1667,7 +1667,7 @@ describe("GelatoCore.Execute", function () {
 
       await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
-        "LogSubmitTask"
+        "LogTaskSubmitted"
       );
 
       await expect(

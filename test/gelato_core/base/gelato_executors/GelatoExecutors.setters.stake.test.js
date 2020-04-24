@@ -59,7 +59,7 @@ describe("GelatoCore - GelatoExecutors - Setters: FUNDS", function () {
 
       // stakeExecutor(): executor
       await expect(gelatoCore.stakeExecutor({ value: minExecutorStake }))
-        .to.emit(gelatoCore, "LogStakeExecutor")
+        .to.emit(gelatoCore, "LogExecutorStaked")
         .withArgs(executorAddress, minExecutorStake);
 
       // executorBalance
@@ -79,7 +79,7 @@ describe("GelatoCore - GelatoExecutors - Setters: FUNDS", function () {
           .connect(otherExecutor)
           .stakeExecutor({ value: minExecutorStake.add(69) })
       )
-        .to.emit(gelatoCore, "LogStakeExecutor")
+        .to.emit(gelatoCore, "LogExecutorStaked")
         .withArgs(otherExecutorAddress, minExecutorStake.add(69));
 
       // executorStake: otherExecutor
@@ -121,7 +121,7 @@ describe("GelatoCore - GelatoExecutors - Setters: FUNDS", function () {
 
       // unstakeExecutor()
       await expect(gelatoCore.unstakeExecutor())
-        .to.emit(gelatoCore, "LogUnstakeExecutor")
+        .to.emit(gelatoCore, "LogExecutorUnstaked")
         .withArgs(executorAddress);
 
       // executorBalance
@@ -141,7 +141,7 @@ describe("GelatoCore - GelatoExecutors - Setters: FUNDS", function () {
 
       // otherExecutor: unstakeExecutor
       await expect(gelatoCore.connect(otherExecutor).unstakeExecutor())
-        .to.emit(gelatoCore, "LogUnstakeExecutor")
+        .to.emit(gelatoCore, "LogExecutorUnstaked")
         .withArgs(otherExecutorAddress);
       expect(await gelatoCore.executorStake(otherExecutorAddress)).to.be.equal(
         0
@@ -189,7 +189,7 @@ describe("GelatoCore - GelatoExecutors - Setters: FUNDS", function () {
 
       // unstakeExecutor
       await expect(gelatoCore.unstakeExecutor())
-        .to.emit(gelatoCore, "LogUnstakeExecutor")
+        .to.emit(gelatoCore, "LogExecutorUnstaked")
         .withArgs(executorAddress);
 
       // executorStake
@@ -215,7 +215,7 @@ describe("GelatoCore - GelatoExecutors - Setters: FUNDS", function () {
       await expect(
         gelatoCore.increaseExecutorStake({ value: utils.parseEther("1") })
       )
-        .to.emit(gelatoCore, "LogIncreaseExecutorStake")
+        .to.emit(gelatoCore, "LogExecutorStakeIncreased")
         .withArgs(executorAddress, minExecutorStake.add(utils.parseEther("1")));
 
       // executorBalance
@@ -280,7 +280,7 @@ describe("GelatoCore - GelatoExecutors - Setters: FUNDS", function () {
       await expect(
         gelatoCore.withdrawExcessExecutorStake(utils.parseEther("0.5"))
       )
-        .to.emit(gelatoCore, "LogWithdrawExecutorBalance")
+        .to.emit(gelatoCore, "LogExecutorBalanceWithdrawn")
         .withArgs(executorAddress, utils.parseEther("0.5"));
 
       // executorBalance
@@ -348,9 +348,9 @@ describe("GelatoCore - GelatoExecutors - Setters: FUNDS", function () {
           otherExecutorAddress
         )
       )
-        .to.emit(gelatoCore, "LogExecutorAssignsExecutor")
+        .to.emit(gelatoCore, "LogExecutorAssignedExecutor")
         .withArgs(providerAddress, executorAddress, otherExecutorAddress)
-        .and.to.emit(gelatoCore, "LogExecutorAssignsExecutor")
+        .and.to.emit(gelatoCore, "LogExecutorAssignedExecutor")
         .withArgs(otherProviderAddress, executorAddress, otherExecutorAddress);
 
       // executorByProvider(provider)

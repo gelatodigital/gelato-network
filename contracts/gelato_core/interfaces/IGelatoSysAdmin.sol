@@ -4,17 +4,17 @@ import { IGelatoGasPriceOracle } from "./IGelatoGasPriceOracle.sol";
 
 interface IGelatoSysAdmin {
     // Events
-    event LogSetGelatoGasPriceOracle(address indexed oldOracle, address indexed newOracle);
+    event LogGelatoGasPriceOracleSet(address indexed oldOracle, address indexed newOracle);
 
-    event LogSetGelatoMaxGas(uint256 oldMaxGas, uint256 newMaxGas);
-    event LogSetInternalGasRequirement(uint256 oldRequirment, uint256 newRequirment);
+    event LogGelatoMaxGasSet(uint256 oldMaxGas, uint256 newMaxGas);
+    event LogInternalGasRequirementSet(uint256 oldRequirment, uint256 newRequirment);
 
-    event LogSetMinExecutorStake(uint256 oldMin, uint256 newMin);
+    event LogMinExecutorStakeSet(uint256 oldMin, uint256 newMin);
 
-    event LogSetExecutorSuccessShare(uint256 oldShare, uint256 newShare, uint256 total);
-    event LogSetSysAdminSuccessShare(uint256 oldShare, uint256 newShare, uint256 total);
+    event LogExecutorSuccessShareSet(uint256 oldShare, uint256 newShare, uint256 total);
+    event LogSysAdminSuccessShareSet(uint256 oldShare, uint256 newShare, uint256 total);
 
-    event LogWithdrawSysAdminFunds(uint256 oldBalance, uint256 newBalance);
+    event LogSysAdminFundsWithdrawn(uint256 oldBalance, uint256 newBalance);
 
     // State Writing
 

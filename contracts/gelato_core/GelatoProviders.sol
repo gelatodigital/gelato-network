@@ -106,7 +106,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     function provideFunds(address _provider) public payable override {
         require(msg.value > 0, "GelatoProviders.provideFunds: zero value");
         uint256 newProviderFunds = providerFunds[_provider].add(msg.value);
-        emit LogProvideFunds(_provider, msg.value, newProviderFunds);
+        emit LogFundsProvided(_provider, msg.value, newProviderFunds);
         providerFunds[_provider] = newProviderFunds;
     }
 
@@ -126,7 +126,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         // Interaction
         msg.sender.sendValue(realWithdrawAmount);
 
-        emit LogUnprovideFunds(msg.sender, realWithdrawAmount, newProviderFunds);
+        emit LogFundsUnprovided(msg.sender, realWithdrawAmount, newProviderFunds);
     }
 
     // Called by Providers
@@ -150,7 +150,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         executorByProvider[msg.sender] = _newExecutor;
         if (_newExecutor != address(0)) executorProvidersCount[_newExecutor]++;
 
-        emit LogProviderAssignsExecutor(msg.sender, currentExecutor, _newExecutor);
+        emit LogProviderAssignedExecutor(msg.sender, currentExecutor, _newExecutor);
     }
 
     // Called by Executors
@@ -177,7 +177,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         executorByProvider[_provider] = _newExecutor;
         executorProvidersCount[_newExecutor]++;
 
-        emit LogExecutorAssignsExecutor(_provider, currentExecutor, _newExecutor);
+        emit LogExecutorAssignedExecutor(_provider, currentExecutor, _newExecutor);
     }
 
     // (Un-)provide Condition Action Combos at different Gas Price Ceils
@@ -186,7 +186,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
             if (_TaskSpecs[i].gasPriceCeil == 0) _TaskSpecs[i].gasPriceCeil = NO_CEIL;
             bytes32 taskSpecHash = taskSpecHash(_TaskSpecs[i].condition, _TaskSpecs[i].actions);
             setTaskSpecGasPriceCeil(taskSpecHash, _TaskSpecs[i].gasPriceCeil);
-            emit LogProvideTaskSpec(msg.sender, taskSpecHash);
+            emit LogTaskSpecProvided(msg.sender, taskSpecHash);
         }
     }
 
@@ -198,7 +198,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
                 "GelatoProviders.unprovideTaskSpecs: redundant"
             );
             delete taskSpecGasPriceCeil[msg.sender][taskSpecHash];
-            emit LogUnprovideTaskSpec(msg.sender, taskSpecHash);
+            emit LogTaskSpecUnprovided(msg.sender, taskSpecHash);
         }
     }
 
@@ -209,7 +209,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
                 "GelatoProviders.setTaskSpecGasPriceCeil: redundant"
             );
             taskSpecGasPriceCeil[msg.sender][_taskSpecHash] = _gasPriceCeil;
-            emit LogSetTaskSpecGasPriceCeil(
+            emit LogTaskSpecGasPriceCeilSet(
                 msg.sender,
                 _taskSpecHash,
                 currentTaskSpecGasPriceCeil,
@@ -225,7 +225,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
                 "GelatoProviders.addProviderModules: redundant"
             );
             _providerModules[msg.sender].add(_modules[i]);
-            emit LogAddProviderModule(msg.sender, _modules[i]);
+            emit LogProviderModuleAdded(msg.sender, _modules[i]);
         }
     }
 
@@ -236,7 +236,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
                 "GelatoProviders.removeProviderModules: redundant"
             );
             _providerModules[msg.sender].remove(_modules[i]);
-            emit LogRemoveProviderModule(msg.sender, _modules[i]);
+            emit LogProviderModuleRemoved(msg.sender, _modules[i]);
         }
     }
 
