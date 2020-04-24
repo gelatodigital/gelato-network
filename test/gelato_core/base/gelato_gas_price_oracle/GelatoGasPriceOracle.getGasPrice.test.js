@@ -13,8 +13,8 @@ describe("GelatoCore - GelatoGasPriceOracle: getGasPrice", function () {
   let gelatoCore;
   let gelatoGasPriceOracle;
 
-  let oracleAdmin;
-  let oracleAdminAddress;
+  let oracle;
+  let oracleAddress;
 
   before(async function () {
     // Get the ContractFactory, contract instance, and Signers here.
@@ -32,8 +32,8 @@ describe("GelatoCore - GelatoGasPriceOracle: getGasPrice", function () {
     await gelatoCore.deployed();
     await gelatoGasPriceOracle.deployed();
 
-    [oracleAdmin] = await ethers.getSigners();
-    oracleAdminAddress = await oracleAdmin.getAddress();
+    [oracle] = await ethers.getSigners();
+    oracleAddress = await oracle.getAddress();
   });
 
   it("Should NOT let anyone but GelatoCore read the oracle", async function () {
@@ -42,17 +42,17 @@ describe("GelatoCore - GelatoGasPriceOracle: getGasPrice", function () {
       "GelatoGasPriceOracle.onlyGelatoCore"
     );
 
-    // setOracleAdmin
-    await gelatoGasPriceOracle.setOracleAdmin(oracleAdminAddress);
+    // setOracle
+    await gelatoGasPriceOracle.setOracle(oracleAddress);
 
     // setGelatoGasPrice
     await gelatoGasPriceOracle
-      .connect(oracleAdmin)
+      .connect(oracle)
       .setGasPrice(initialState.gasPrice.add(42069));
 
     // getGasPrice
     await expect(
-      gelatoGasPriceOracle.connect(oracleAdmin).getGasPrice()
+      gelatoGasPriceOracle.connect(oracle).getGasPrice()
     ).to.be.revertedWith("GelatoGasPriceOracle.onlyGelatoCore");
   });
 });

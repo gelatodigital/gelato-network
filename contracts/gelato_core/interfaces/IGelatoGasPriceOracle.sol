@@ -2,25 +2,25 @@ pragma solidity ^0.6.6;
 
 interface IGelatoGasPriceOracle {
     // Owner
-    event LogOracleAdminSet(address indexed oldOracleAdmin, address indexed newOracleAdmin);
+    event LogOracleSet(address indexed oldOracle, address indexed newOracle);
     event LogGelatoCoreSet(address indexed oldGelatoCore, address indexed newGelatoCore);
 
-    // OracleAdmin
+    // Oracle
     event LogGasPriceSet(uint256 indexed oldGasPrice, uint256 indexed newGasPrice);
 
     // Owner
 
     /// @notice Set new address that can set the gas price
     /// @dev Only callable by owner
-    /// @param _newOracleAdmin Address of new oracle admin
-    function setOracleAdmin(address _newOracleAdmin) external;
+    /// @param _newOracle Address of new oracle admin
+    function setOracle(address _newOracle) external;
 
     /// @notice Set new address of gelato core
     /// @dev Only callable by owner
     /// @param _newGelatoCore Address of new gelato core
     function setGelatoCore(address _newGelatoCore) external;
 
-    // OracleAdmin
+    // Oracle
 
     /// @notice Set new gelato gas price
     /// @dev Only callable by oracle admin
@@ -29,7 +29,7 @@ interface IGelatoGasPriceOracle {
 
     /// @notice Get address of oracle admin that can set gas prices
     /// @return Oracle Admin address
-    function oracleAdmin() external view returns(address);
+    function oracle() external view returns(address);
 
     /// @notice Get address of gelato core
     /// @return Gelato Core address
