@@ -8,7 +8,7 @@ import { IKyber } from '../dapp_interfaces/kyber/IKyber.sol';
 import { IERC20 } from '../external/IERC20.sol';
 import { SafeMath } from '../external/SafeMath.sol';
 
-contract ExchangeRateFinder {
+contract FeeFinder {
 
     using SafeMath for uint256;
 
@@ -65,15 +65,27 @@ contract ExchangeRateFinder {
         medianizer = IMedianizer(_medianizer);
     }
 
-    function getFeeAmount(address _token) view public returns(uint256 feeAmount) {
-        feeAmount = checkHardcodedTokens(_token);
-        if(feeAmount == 0) feeAmount = getUniswapRate(_token);
-        if(feeAmount == 0) feeAmount = getKyberRate(_token);
-        require(feeAmount != 0, "ExchangeRateFinder.getFeeAmount: Could not find exchange rate for feeToken");
+    /// @notice Get the fee amount based on the inputted fee token
+    /// @dev Returns 0 if no matching fee token was found
+    function getFeeAmount(address _feeToken) view public returns(uint256 feeAmount) {
+        feeAmount = checkHardcodedTokens(_feeToken);
+        if(feeAmount == 0) feeAmount = getUniswapRate(_feeToken);
+        if(feeAmount == 0) feeAmount = getKyberRate(_feeToken);
     }
 
-    function getUniswapRate(address _token) view public returns(uint256 feeAmount) {
-        IUniswapExchange feeTokenExchange = uniswapFactory.getExchange(IERC20(_token));
+    function checkHardcodedTokens(address _feeToken) view public returns(uint256 feeAmount) {
+        if (_feeToken == DAI) feeAmount = 3*10**18;
+        if (_feeToken == USDT) feeAmount = 3*10**6;
+        if (_feeToken == GUSD) feeAmount = 3*10**2;
+        if (_feeToken == TUSD) feeAmount = 3*10**18;
+        if (_feeToken == USDC) feeAmount = 3*10**6;
+        if (_feeToken == PAX) feeAmount = 3*10**18;
+        if (_feeToken == sUSD) feeAmount = 3*10**18;
+        if (_feeToken == WETH) feeAmount = getMakerEthOracleRate();
+    }
+
+    function getUniswapRate(address _feeToken) view public returns(uint256 feeAmount) {
+        IUniswapExchange feeTokenExchange = uniswapFactory.getExchange(IERC20(_feeToken));
         if(feeTokenExchange != IUniswapExchange(0)) {
             // 1. Get Price of X DAI to ETH
             try uniswapDaiExchange.getTokenToEthInputPrice(feeDAIWei)
@@ -90,10 +102,10 @@ contract ExchangeRateFinder {
         }
     }
 
-    function getKyberRate(address _token) view public returns(uint256 feeAmount) {
-        uint256 decimals = getDecimals(_token);
+    function getKyberRate(address _feeToken) view public returns(uint256 feeAmount) {
+        uint256 decimals = getDecimals(_feeToken);
 
-        try kyber.getExpectedRate(DAI, _token, feeAmount)
+        try kyber.getExpectedRate(DAI, _feeToken, feeAmount)
             returns(uint256 expectedRate, uint256)
         {
             if (expectedRate != 0) {
@@ -106,33 +118,22 @@ contract ExchangeRateFinder {
         }
     }
 
-    function checkHardcodedTokens(address _token) view public returns(uint256 feeAmount) {
-        if (_token == DAI) feeAmount = 3*10**18;
-        if (_token == GUSD) feeAmount = 3*10**2;
-        if (_token == USDT) feeAmount = 3*10**6;
-        if (_token == TUSD) feeAmount = 3*10**18;
-        if (_token == USDC) feeAmount = 3*10**6;
-        if (_token == PAX) feeAmount = 3*10**18;
-        if (_token == sUSD) feeAmount = 3*10**18;
-        if (_token == WETH) feeAmount = getMakerEthOracleRate();
-    }
-
     function getMakerEthOracleRate() view public returns(uint256 feeAmount) {
         uint256 ethPrice = uint256(medianizer.read());
         feeAmount = 10**18  * feeDAIWei / ethPrice;
     }
 
-    function getDecimals(address _token)
+    function getDecimals(address _feeToken)
         internal
         view
         returns(uint256)
     {
-        (bool success, bytes memory data) = address(_token).staticcall{gas: 20000}(
+        (bool success, bytes memory data) = address(_feeToken).staticcall{gas: 20000}(
             abi.encodeWithSignature("decimals()")
         );
 
         if (!success) {
-            (success, data) = address(_token).staticcall{gas: 20000}(
+            (success, data) = address(_feeToken).staticcall{gas: 20000}(
                 abi.encodeWithSignature("DECIMALS()")
             );
         }

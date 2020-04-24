@@ -53,7 +53,7 @@ export default task("setupgelato-gnosissafeproxy")
       for (const action of taskArgs.actions) {
         if (!tempArray.includes(action)) {
           let actionconstructorargs;
-          if (action === "ActionWithdrawBatchExchangeWithMaker") {
+          if (action === "ActionWithdrawBatchExchange") {
             const batchExchange = await run("bre-config", {
               addressbookcategory: "gnosisProtocol",
               addressbookentry: "batchExchange",

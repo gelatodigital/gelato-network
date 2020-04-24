@@ -17,7 +17,7 @@ const GELATO_GAS_PRICE = ethers.utils.parseUnits("8", "gwei");
 // 3. SellTokens got partially converted into buy tokens, insufficient buy tokens for withdrawal
 // 4. No sellTokens got converted into buy tokens, sufficient sell tokens for withdrawal
 // 5. No sellTokens got converted into buy tokens, insufficient sell tokens for withdrawal
-describe("Gnosis - ActionWithdrawBatchExchangeWithMaker - Action", function () {
+describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
   // We define the ContractFactory and Signer variables here and assign them in
   // a beforeEach hook.
   let actionWithdrawBatchExchange;
@@ -34,12 +34,14 @@ describe("Gnosis - ActionWithdrawBatchExchangeWithMaker - Action", function () {
   let userProxyAddress;
   let sellToken; //DAI
   let buyToken; //USDC
+  let testToken; //GUSD
   let MockERC20;
   let mockBatchExchange;
   let WETH;
   let sellDecimals;
   let buyDecimals;
   let wethDecimals;
+  let testDecimals;
   let tx;
   let txResponse;
   let gelatoCore;
@@ -104,7 +106,7 @@ describe("Gnosis - ActionWithdrawBatchExchangeWithMaker - Action", function () {
     const actionERC20TransferFrom = await ActionERC20TransferFrom.deploy();
     await actionERC20TransferFrom.deployed();
 
-    // // #### ActionWithdrawBatchExchangeWithMaker Start ####
+    // // #### ActionWithdrawBatchExchange Start ####
     const MockBatchExchange = await ethers.getContractFactory(
       "MockBatchExchange"
     );
@@ -121,20 +123,86 @@ describe("Gnosis - ActionWithdrawBatchExchangeWithMaker - Action", function () {
     );
     await WETH.deployed();
 
+    // DEPLOY DUMMY ERC20s
+    // // Deploy Sell Token
+    sellDecimals = 18;
+    sellToken = await MockERC20.deploy(
+      "DAI",
+      (100 * 10 ** sellDecimals).toString(),
+      sellerAddress,
+      sellDecimals
+    );
+    await sellToken.deployed();
+
+    // //  Deploy Buy Token
+    buyDecimals = 6;
+    buyToken = await MockERC20.deploy(
+      "USDC",
+      (100 * 10 ** buyDecimals).toString(),
+      sellerAddress,
+      buyDecimals
+    );
+    await buyToken.deployed();
+
+    // //  Deploy Test Token
+    testDecimals = 6;
+    testToken = await MockERC20.deploy(
+      "GUSD",
+      (100 * 10 ** testDecimals).toString(),
+      sellerAddress,
+      buyDecimals
+    );
+    await testToken.deployed();
+
+    // Pre-fund batch Exchange
+    await buyToken.create(
+      mockBatchExchange.address,
+      ethers.utils.parseUnits("100", buyDecimals)
+    );
+    await sellToken.create(
+      mockBatchExchange.address,
+      ethers.utils.parseUnits("100", sellDecimals)
+    );
+    await WETH.create(
+      mockBatchExchange.address,
+      ethers.utils.parseUnits("100", wethDecimals)
+    );
+
     const Medianizer2 = await ethers.getContractFactory("Medianizer2");
     const medianizer2 = await Medianizer2.deploy();
     await medianizer2.deployed();
 
-    const ActionWithdrawBatchExchangeWithMaker = await ethers.getContractFactory(
-      "ActionWithdrawBatchExchangeWithMaker"
-    );
-    actionWithdrawBatchExchange = await ActionWithdrawBatchExchangeWithMaker.deploy(
-      mockBatchExchange.address,
+    // Deploy Fee Finder
+    const FeeFinder = await ethers.getContractFactory("FeeFinder");
+
+    // Deploy Test feefinder (Assuming we only hit hard coded tokens, not testing uniswap, kyber or maker oracle)
+    const feeFinder = await FeeFinder.deploy(
+      sellToken.address,
+      buyToken.address,
+      constants.AddressZero,
+      constants.AddressZero,
+      buyToken.address,
+      constants.AddressZero,
+      constants.AddressZero,
       WETH.address,
-      providerAddress,
+      medianizer2.address,
+      medianizer2.address,
+      medianizer2.address,
       medianizer2.address
     );
-    // // #### ActionWithdrawBatchExchangeWithMaker End ####
+    await feeFinder.deployed();
+
+    const ActionWithdrawBatchExchange = await ethers.getContractFactory(
+      "ActionWithdrawBatchExchange"
+    );
+    actionWithdrawBatchExchange = await ActionWithdrawBatchExchange.deploy(
+      mockBatchExchange.address,
+      providerAddress,
+      feeFinder.address
+    );
+
+    await actionWithdrawBatchExchange.deployed();
+    // // #### ActionWithdrawBatchExchange End ####
 
     // Call provideFunds(value) with provider on core
     await gelatoCore.connect(provider).provideFunds(providerAddress, {
@@ -188,45 +256,10 @@ describe("Gnosis - ActionWithdrawBatchExchangeWithMaker - Action", function () {
       sellerAddress
     );
     userProxy = await ethers.getContractAt("GelatoUserProxy", userProxyAddress);
-
-    // DEPLOY DUMMY ERC20s
-    // // Deploy Sell Token
-    sellDecimals = 18;
-    sellToken = await MockERC20.deploy(
-      "DAI",
-      (100 * 10 ** sellDecimals).toString(),
-      sellerAddress,
-      sellDecimals
-    );
-    await sellToken.deployed();
-
-    // //  Deploy Buy Token
-    buyDecimals = 6;
-    buyToken = await MockERC20.deploy(
-      "USDC",
-      (100 * 10 ** buyDecimals).toString(),
-      sellerAddress,
-      buyDecimals
-    );
-    await buyToken.deployed();
-
-    // Pre-fund batch Exchange
-    await buyToken.create(
-      mockBatchExchange.address,
-      ethers.utils.parseUnits("100", buyDecimals)
-    );
-    await sellToken.create(
-      mockBatchExchange.address,
-      ethers.utils.parseUnits("100", sellDecimals)
-    );
-    await WETH.create(
-      mockBatchExchange.address,
-      ethers.utils.parseUnits("100", wethDecimals)
-    );
   });
 
   // We test different functionality of the contract as normal Mocha tests.
-  describe("ActionWithdrawBatchExchangeWithMaker.action", function () {
+  describe("ActionWithdrawBatchExchange.action", function () {
     it("Case #1: No sellTokens withdrawable, 10 buyTokens (non weth) withdrawable to pay fees", async function () {
       const withdrawAmount = 10 * 10 ** buyDecimals;
 
@@ -248,7 +281,7 @@ describe("Gnosis - ActionWithdrawBatchExchangeWithMaker - Action", function () {
       // );
 
       const withdrawPayload = await run("abi-encode-withselector", {
-        contractname: "ActionWithdrawBatchExchangeWithMaker",
+        contractname: "ActionWithdrawBatchExchange",
         functionname: "action",
         inputs: [
           sellerAddress,
@@ -298,7 +331,7 @@ describe("Gnosis - ActionWithdrawBatchExchangeWithMaker - Action", function () {
       await tx.wait();
 
       const withdrawPayload = await run("abi-encode-withselector", {
-        contractname: "ActionWithdrawBatchExchangeWithMaker",
+        contractname: "ActionWithdrawBatchExchange",
         functionname: "action",
         inputs: [
           sellerAddress,
@@ -348,7 +381,7 @@ describe("Gnosis - ActionWithdrawBatchExchangeWithMaker - Action", function () {
       await tx.wait();
 
       const withdrawPayload = await run("abi-encode-withselector", {
-        contractname: "ActionWithdrawBatchExchangeWithMaker",
+        contractname: "ActionWithdrawBatchExchange",
         functionname: "action",
         inputs: [
           sellerAddress,
@@ -366,7 +399,7 @@ describe("Gnosis - ActionWithdrawBatchExchangeWithMaker - Action", function () {
         termsOkCheck: true,
       };
       await expect(userProxy.execAction(gelatoAction)).to.be.revertedWith(
-        "GelatoUserProxy.delegatecallAction:ActionWithdrawBatchExchangeWithMaker: Insufficient balance for user to pay for withdrawal 2"
+        "GelatoUserProxy.delegatecallAction:ActionWithdrawBatchExchange: Insufficient balance for user to pay for withdrawal 2"
       );
 
       const providerBalance = await buyToken.balanceOf(providerAddress);
@@ -399,7 +432,7 @@ describe("Gnosis - ActionWithdrawBatchExchangeWithMaker - Action", function () {
       // );
 
       const withdrawPayload = await run("abi-encode-withselector", {
-        contractname: "ActionWithdrawBatchExchangeWithMaker",
+        contractname: "ActionWithdrawBatchExchange",
         functionname: "action",
         inputs: [
           sellerAddress,
@@ -418,7 +451,7 @@ describe("Gnosis - ActionWithdrawBatchExchangeWithMaker - Action", function () {
       };
 
       await expect(userProxy.execAction(gelatoAction)).to.be.revertedWith(
-        "GelatoUserProxy.delegatecallAction:ActionWithdrawBatchExchangeWithMaker: Insufficient balance for user to pay for withdrawal 2"
+        "GelatoUserProxy.delegatecallAction:ActionWithdrawBatchExchange: Insufficient balance for user to pay for withdrawal 2"
       );
 
       const providerBalance = await WETH.balanceOf(providerAddress);
@@ -443,7 +476,7 @@ describe("Gnosis - ActionWithdrawBatchExchangeWithMaker - Action", function () {
       await tx.wait();
 
       const withdrawPayload = await run("abi-encode-withselector", {
-        contractname: "ActionWithdrawBatchExchangeWithMaker",
+        contractname: "ActionWithdrawBatchExchange",
         functionname: "action",
         inputs: [
           sellerAddress,
@@ -494,7 +527,7 @@ describe("Gnosis - ActionWithdrawBatchExchangeWithMaker - Action", function () {
       await tx.wait();
 
       const withdrawPayload = await run("abi-encode-withselector", {
-        contractname: "ActionWithdrawBatchExchangeWithMaker",
+        contractname: "ActionWithdrawBatchExchange",
         functionname: "action",
         inputs: [
           sellerAddress,
@@ -542,7 +575,7 @@ describe("Gnosis - ActionWithdrawBatchExchangeWithMaker - Action", function () {
       await tx.wait();
 
       const withdrawPayload = await run("abi-encode-withselector", {
-        contractname: "ActionWithdrawBatchExchangeWithMaker",
+        contractname: "ActionWithdrawBatchExchange",
         functionname: "action",
         inputs: [
           sellerAddress,
@@ -560,7 +593,7 @@ describe("Gnosis - ActionWithdrawBatchExchangeWithMaker - Action", function () {
         termsOkCheck: true,
       };
       await expect(userProxy.execAction(gelatoAction)).to.be.revertedWith(
-        "GelatoUserProxy.delegatecallAction:ActionWithdrawBatchExchangeWithMaker: Insufficient balance for user to pay for withdrawal 1"
+        "GelatoUserProxy.delegatecallAction:ActionWithdrawBatchExchange: Insufficient balance for user to pay for withdrawal 1"
       );
 
       const providerBalance = await sellToken.balanceOf(providerAddress);
@@ -586,7 +619,7 @@ describe("Gnosis - ActionWithdrawBatchExchangeWithMaker - Action", function () {
       await tx.wait();
 
       const withdrawPayload = await run("abi-encode-withselector", {
-        contractname: "ActionWithdrawBatchExchangeWithMaker",
+        contractname: "ActionWithdrawBatchExchange",
         functionname: "action",
         inputs: [
           sellerAddress,
@@ -605,7 +638,7 @@ describe("Gnosis - ActionWithdrawBatchExchangeWithMaker - Action", function () {
       };
 
       await expect(userProxy.execAction(gelatoAction)).to.be.revertedWith(
-        "GelatoUserProxy.delegatecallAction:ActionWithdrawBatchExchangeWithMaker: Insufficient balance for user to pay for withdrawal 1"
+        "GelatoUserProxy.delegatecallAction:ActionWithdrawBatchExchange: Insufficient balance for user to pay for withdrawal 1"
       );
 
       const providerBalance = await WETH.balanceOf(providerAddress);

@@ -3,8 +3,7 @@ export const deployments = {
   // ==== One-Off Actions ====
   // Gnosis
   ActionWithdrawBatchExchange: "0x7a0986883e84DB63A18b1AA96F8B4EC25fD904a6",
-  ActionWithdrawBatchExchangeWithMaker:
-    "0xfe7f2F6959b2CB8bf2aaA7808f9316174969aBec",
+  ActionWithdrawBatchExchange: "0xfe7f2F6959b2CB8bf2aaA7808f9316174969aBec",
   ActionPlaceOrderBatchExchange: "0xDBF368e549604CC78684e83955C73346860D6EA2",
   // erc20
   ActionERC20Transfer: "0x0",
