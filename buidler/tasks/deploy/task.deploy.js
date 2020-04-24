@@ -83,7 +83,7 @@ export default task(
           nonce: currentNonce,
         });
       } else {
-        contract = await contractFactory.deploy();
+        contract = await contractFactory.deploy({ nonce: currentNonce });
       }
 
       if (taskArgs.log) {
