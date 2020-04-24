@@ -23,5 +23,8 @@ export const deployments = {
 
   // === Debugging ===
   // Conditions
-  ConditionKyberRateError: "0xe0EFd26650D020cc03489D4E7FB5106E119683c8"
+  ConditionKyberRateError: "0xe0EFd26650D020cc03489D4E7FB5106E119683c8",
+
+  // === Helpers ===
+  ExchangeRateFinder: "0xa569FdBe176DA5706148b8563Cf4214F937C1Dc5",
 };

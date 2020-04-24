@@ -14,4 +14,6 @@ export const contracts = [
   "ConditionTimestampPassed",
   // Debugging
   "ConditionKyberRateError",
+  // Helpers
+  "ExchangeRateFinder",
 ];

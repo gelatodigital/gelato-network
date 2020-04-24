@@ -34,6 +34,18 @@ export default task(
 
       if (taskArgs.log) console.log("\n deploy taskArgs:", taskArgs, "\n");
 
+      let deployer;
+      if (!taskArgs.signerindex) [deployer] = await ethers.getSigners();
+      else {
+        const { [taskArgs.signerindex]: _deployer } = await ethers.getSigners();
+        deployer = _deployer;
+      }
+
+      const currentNonce = await ethers.provider.getTransactionCount(
+        await deployer.getAddress()
+      );
+      if (taskArgs.log) console.log(`Current Nonce: ${currentNonce}`);
+
       if (networkname == "mainnet") {
         console.log(
           "\nMAINNET action: are you sure you want to proceed? - hit 'ctrl + c' to abort\n"
@@ -43,13 +55,6 @@ export default task(
 
       const { contractname } = taskArgs;
       await run("checkContractName", { contractname, networkname });
-
-      let deployer;
-      if (!taskArgs.signerindex) [deployer] = await ethers.getSigners();
-      else {
-        const { [taskArgs.signerindex]: _deployer } = await ethers.getSigners();
-        deployer = _deployer;
-      }
 
       if (taskArgs.log) {
         console.log(`
@@ -74,7 +79,10 @@ export default task(
       let contract;
       if (taskArgs.constructorargs) {
         const args = taskArgs.constructorargs;
-        contract = await contractFactory.deploy(...args);
+        contract = await contractFactory.deploy(...args, {
+          gasPrice: ethers.utils.parseUnits("13", "gwei"),
+          nonce: currentNonce,
+        });
       } else {
         contract = await contractFactory.deploy();
       }
