@@ -74,13 +74,13 @@ contract FeeFinder {
     }
 
     function checkHardcodedTokens(address _feeToken) view public returns(uint256 feeAmount) {
-        if (_feeToken == DAI) feeAmount = 3*10**18;
-        if (_feeToken == USDT) feeAmount = 3*10**6;
-        if (_feeToken == GUSD) feeAmount = 3*10**2;
-        if (_feeToken == TUSD) feeAmount = 3*10**18;
-        if (_feeToken == USDC) feeAmount = 3*10**6;
-        if (_feeToken == PAX) feeAmount = 3*10**18;
-        if (_feeToken == sUSD) feeAmount = 3*10**18;
+        if (_feeToken == DAI) feeAmount = feeDAI*10**18;
+        if (_feeToken == USDT) feeAmount = feeDAI*10**6;
+        if (_feeToken == GUSD) feeAmount = feeDAI*10**2;
+        if (_feeToken == TUSD) feeAmount = feeDAI*10**18;
+        if (_feeToken == USDC) feeAmount = feeDAI*10**6;
+        if (_feeToken == PAX) feeAmount = feeDAI*10**18;
+        if (_feeToken == sUSD) feeAmount = feeDAI*10**18;
         if (_feeToken == WETH) feeAmount = getMakerEthOracleRate();
     }
 
