@@ -27,7 +27,7 @@ contract ActionWithdrawBatchExchange is GelatoActionsStandard {
     // BatchExchange
     IBatchExchange public immutable batchExchange;
 
-    // Exchange Rate finder
+    // Fee finder
     FeeFinder public immutable feeFinder;
 
     constructor(address _batchExchange, address _gelatoProvider, address _exchangeRateFinder) public {
