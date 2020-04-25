@@ -65,8 +65,18 @@ contract FeeFinder {
         medianizer = IMedianizer(_medianizer);
     }
 
+
+    /// @notice Is the inputted _feeToken accepted in this smart contract?
+    /// @dev Off-chain API for UIs to see if _feeToken is accepted by smart contract
+    /// @param _feeToken token held in proxy contract that will used to pay the fees to the provider
+    function isFeeTokenEligible(address _feeToken) view public returns(bool feeTokenAccepted) {
+        uint256 feeAmount = getFeeAmount(_feeToken);
+        feeTokenAccepted = feeAmount == 0 ?  false : true;
+    }
+
     /// @notice Get the fee amount based on the inputted fee token
     /// @dev Returns 0 if no matching fee token was found
+    /// @param _feeToken token held in proxy contract that will used to pay the fees to the provider
     function getFeeAmount(address _feeToken) view public returns(uint256 feeAmount) {
         feeAmount = checkHardcodedTokens(_feeToken);
         if(feeAmount == 0) feeAmount = getUniswapRate(_feeToken);
