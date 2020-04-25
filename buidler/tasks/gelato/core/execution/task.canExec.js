@@ -89,14 +89,15 @@ export default task(
       };
       if (taskArgs.log) console.log(taskReceipt);
 
-      const GAS_PRICE = utils.parseUnits("9", "gwei");
       const GELATO_MAX_GAS = 7000000;
+
+      const gelatoGasPrice = await run("fetchCurrentGasPrice");
 
       try {
         const canExecResult = await gelatoCore.canExec(
           taskReceipt,
           GELATO_MAX_GAS,
-          GAS_PRICE
+          gelatoGasPrice
         );
         if (taskArgs.log) console.log(`\n Can Exec Result: ${canExecResult}\n`);
         return canExecResult;

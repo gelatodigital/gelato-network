@@ -61,13 +61,7 @@ export default task(
           write: true,
         });
 
-        let gelatoGasPrice;
-        try {
-          gelatoGasPrice = await gelatoCore.gelatoGasPrice();
-        } catch (error) {
-          console.log("Using default gas price of 9 gwei");
-          gelatoGasPrice = utils.parseUnits("9", "gwei");
-        }
+        const gelatoGasPrice = await run("fetchCurrentGasPrice");
 
         const gelatoGasPriceGwei = utils.formatUnits(gelatoGasPrice, "gwei");
         let gelatoMAXGAS;
