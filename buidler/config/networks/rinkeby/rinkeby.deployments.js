@@ -21,7 +21,7 @@ export const deployments = {
 
   // ===== Gelato Core ====
   GelatoCore: "0x9587bA2A2AdE6512F960F59eD9c7E9021D081A07",
-  GelatoGasPriceOracle: "0xeb7AA218faD35cE401114203722ee1b6506cD5b1",
+  GelatoGasPriceOracle: "0x56F5B424d766B8c7Acd529C32AAc89139baEf570",
   ProviderModuleGelatoUserProxy: "0x0",
   ProviderModuleGnosisSafeProxy: "0x8187B4cb7B82132363DCE0BC9e16E47a04f175F6",
 
