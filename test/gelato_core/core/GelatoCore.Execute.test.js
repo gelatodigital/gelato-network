@@ -1817,5 +1817,80 @@ describe("GelatoCore.Execute", function () {
           .sub(ethers.utils.bigNumberify(feeAmount))
       );
     });
+
+    it("#15: Submitting malicious task that withdraws funds as an action should revert)", async function () {
+      const provideFundsAmount = ethers.utils.parseEther("1");
+
+      // Instantiate ProviderModule that reverts in execPayload()
+
+      const multiProvideData = await run("abi-encode-withselector", {
+        contractname: "GelatoCore",
+        functionname: "multiProvide",
+        inputs: [executorAddress, [], [providerModuleGelatoUserProxy.address]],
+      });
+
+      await userProxy.execAction(
+        {
+          inst: gelatoCore.address,
+          data: multiProvideData,
+          termsOkCheck: false,
+          value: provideFundsAmount,
+          operation: Operation.Call,
+        },
+        { value: provideFundsAmount }
+      );
+
+      const unProvideFundsData = await run("abi-encode-withselector", {
+        contractname: "GelatoCore",
+        functionname: "unprovideFunds",
+        inputs: [ethers.utils.parseUnits("1", "ether")],
+      });
+
+      const unProvideFundsAction = new Action({
+        inst: gelatoCore.address,
+        data: unProvideFundsData,
+        operation: Operation.Call,
+        value: 0,
+        termsOkCheck: false,
+      });
+
+      // Provider batch providers dummy action and revertinng module
+
+      const gelatoProvider = new GelatoProvider({
+        addr: userProxyAddress,
+        module: providerModuleGelatoUserProxy.address,
+      });
+
+      const condition = new Condition({
+        inst: constants.AddressZero,
+        data: constants.HashZero,
+      });
+
+      const task = new Task({
+        provider: gelatoProvider,
+        condition,
+        actions: [unProvideFundsAction],
+        expiryDate: constants.HashZero,
+      });
+
+      let taskReceipt = {
+        id: 1,
+        userProxy: userProxyAddress,
+        task,
+      };
+
+      await expect(userProxy.submitTask(task)).to.emit(
+        gelatoCore,
+        "LogTaskSubmitted"
+      );
+
+      await expect(
+        gelatoCore
+          .connect(executor)
+          .exec(taskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
+      ).to.revertedWith(
+        "GelatoCore._processProviderPayables: providerFunds underflow"
+      );
+    });
   });
 });
