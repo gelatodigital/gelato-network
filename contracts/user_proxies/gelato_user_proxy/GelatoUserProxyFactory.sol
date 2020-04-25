@@ -27,16 +27,16 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         userProxy = new GelatoUserProxy{value: msg.value}(msg.sender, gelatoCore);
         gelatoProxyByUser[msg.sender] = userProxy;
         userByGelatoProxy[userProxy] = msg.sender;
-        if (_optionalSubmitTasks.length != 0) _submitTasks(userProxy, _optionalSubmitTasks);
         if (_optionalActions.length != 0) _execActions(userProxy, _optionalActions);
+        if (_optionalSubmitTasks.length != 0) _submitTasks(userProxy, _optionalSubmitTasks);
         emit LogCreation(msg.sender, userProxy, msg.value);
     }
 
     // A standard _saltNonce can be used for deterministic shared address derivation
     function createTwo(
         uint256 _saltNonce,
-        Task[] memory _optionalSubmitTasks,
-        Action[] memory _optionalActions
+        Action[] memory _optionalActions,
+        Task[] memory _optionalSubmitTasks
     )
         public
         payable
@@ -56,8 +56,8 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         userByGelatoProxy[userProxy] = msg.sender;
 
         // Optional setup
-        if (_optionalSubmitTasks.length != 0) _submitTasks(userProxy, _optionalSubmitTasks);
         if (_optionalActions.length != 0) _execActions(userProxy, _optionalActions);
+        if (_optionalSubmitTasks.length != 0) _submitTasks(userProxy, _optionalSubmitTasks);
 
         // Success
         emit LogCreation(msg.sender, userProxy, msg.value);
