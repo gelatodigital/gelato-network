@@ -41,11 +41,6 @@ export default task(
         deployer = _deployer;
       }
 
-      const currentNonce = await ethers.provider.getTransactionCount(
-        await deployer.getAddress()
-      );
-      if (taskArgs.log) console.log(`Current Nonce: ${currentNonce}`);
-
       if (networkname == "mainnet") {
         console.log(
           "\nMAINNET action: are you sure you want to proceed? - hit 'ctrl + c' to abort\n"
@@ -56,12 +51,17 @@ export default task(
       const { contractname } = taskArgs;
       await run("checkContractName", { contractname, networkname });
 
+      const currentNonce = await ethers.provider.getTransactionCount(
+        await deployer.getAddress()
+      );
+
       if (taskArgs.log) {
         console.log(`
           \n Deployment: 🚢 \
           \n Network:  ${networkname.toUpperCase()}\
           \n Contract: ${contractname}\
-          \n Deployer: ${deployer._address}\n
+          \n Deployer: ${deployer._address}\
+          \n Nonce:    ${currentNonce}\n
         `);
       }
 
