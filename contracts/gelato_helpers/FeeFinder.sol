@@ -115,16 +115,18 @@ contract FeeFinder {
     function getKyberRate(address _feeToken) view public returns(uint256 feeAmount) {
         uint256 decimals = getDecimals(_feeToken);
 
-        try kyber.getExpectedRate(DAI, _feeToken, feeAmount)
-            returns(uint256 expectedRate, uint256)
-        {
-            if (expectedRate != 0) {
-                // 18 == daiDecimals
-                uint256 decimalFactor = (10 ** 18) / (10 ** decimals);
-                feeAmount = expectedRate.mul(feeDAI).div(decimalFactor);
-            } else feeAmount = 0;
-        } catch {
-            feeAmount = 0;
+        if (decimals != 0) {
+            try kyber.getExpectedRate(DAI, _feeToken, feeAmount)
+                returns(uint256 expectedRate, uint256)
+            {
+                if (expectedRate != 0) {
+                    // 18 == daiDecimals
+                    uint256 decimalFactor = (10 ** 18) / (10 ** decimals);
+                    feeAmount = expectedRate.mul(feeDAI).div(decimalFactor);
+                } else feeAmount = 0;
+            } catch {
+                feeAmount = 0;
+            }
         }
     }
 
@@ -151,7 +153,7 @@ contract FeeFinder {
         if (success) {
             return abi.decode(data, (uint256));
         } else {
-            revert("ActionWithdrawBatchExchange.getDecimals no decimals found");
+            return 0;
         }
     }
 }

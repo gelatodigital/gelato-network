@@ -55,6 +55,7 @@ describe("GelatoCore.Execute", function () {
   let mockConditionDummy;
   let mockConditionDummyRevert;
   let actionERC20TransferFromGelato;
+  let feeExtractor;
 
   // ###### GelatoCore Setup ######
   beforeEach(async function () {
@@ -180,10 +181,10 @@ describe("GelatoCore.Execute", function () {
     await medianizer2.deployed();
 
     // Deploy Fee Finder
-    const FeeFinder = await ethers.getContractFactory("FeeFinder");
+    const FeeExtractor = await ethers.getContractFactory("FeeExtractor");
 
     // Deploy Test feefinder (Assuming we only hit hard coded tokens, not testing uniswap, kyber or maker oracle)
-    const feeFinder = await FeeFinder.deploy(
+    feeExtractor = await FeeExtractor.deploy(
       sellToken.address,
       buyToken.address,
       testToken.address,
@@ -195,9 +196,10 @@ describe("GelatoCore.Execute", function () {
       medianizer2.address,
       medianizer2.address,
       medianizer2.address,
-      medianizer2.address
+      medianizer2.address,
+      providerAddress
     );
-    await feeFinder.deployed();
+    await feeExtractor.deployed();
 
     const ActionWithdrawBatchExchange = await ethers.getContractFactory(
       "ActionWithdrawBatchExchange"
@@ -205,7 +207,7 @@ describe("GelatoCore.Execute", function () {
     actionWithdrawBatchExchange = await ActionWithdrawBatchExchange.deploy(
       mockBatchExchange.address,
       providerAddress,
-      feeFinder.address
+      feeExtractor.address
     );
 
     await actionWithdrawBatchExchange.deployed();
@@ -1818,7 +1820,7 @@ describe("GelatoCore.Execute", function () {
       );
     });
 
-    it("#15: Submitting malicious task that withdraws funds as an action should revert)", async function () {
+    it("#17: Submitting malicious task that withdraws funds as an action should revert)", async function () {
       const provideFundsAmount = ethers.utils.parseEther("1");
 
       // Instantiate ProviderModule that reverts in execPayload()
@@ -1890,6 +1892,166 @@ describe("GelatoCore.Execute", function () {
           .exec(taskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
       ).to.revertedWith(
         "GelatoCore._processProviderPayables: providerFunds underflow"
+      );
+    });
+
+    it("#18: Successfully submit and exec ActionWithdrawBatchExchange taskReceipt WITH ONLY .calls", async function () {
+      // Set up Batch Exchange
+      const withdrawAmount = 10 * 10 ** buyDecimals;
+      const sellerBalanceBefore = await buyToken.balanceOf(sellerAddress);
+      tx = await mockBatchExchange.setWithdrawAmount(
+        buyToken.address,
+        withdrawAmount
+      );
+      await tx.wait();
+
+      // Deploy BatchExchange Condition
+      const ConditionBatchExchangeFundsWithdrawable = await ethers.getContractFactory(
+        "ConditionBatchExchangeFundsWithdrawable"
+      );
+
+      const conditionBatchExchangeFundsWithdrawable = await ConditionBatchExchangeFundsWithdrawable.deploy(
+        mockBatchExchange.address
+      );
+      await conditionBatchExchangeFundsWithdrawable.deployed();
+
+      const conditionPayload = await run("abi-encode-withselector", {
+        contractname: "ConditionBatchExchangeFundsWithdrawable",
+        functionname: "ok",
+        inputs: [userProxyAddress, sellToken.address, buyToken.address],
+      });
+
+      const condition = new Condition({
+        inst: conditionBatchExchangeFundsWithdrawable.address,
+        data: conditionPayload,
+      });
+
+      const withdrawBatchExchangeDataSellToken = await run(
+        "abi-encode-withselector",
+        {
+          contractname: "MockBatchExchange",
+          functionname: "withdraw",
+          inputs: [userProxyAddress, sellToken.address],
+        }
+      );
+
+      const withdrawBatchExchangeDataBuyToken = await run(
+        "abi-encode-withselector",
+        {
+          contractname: "MockBatchExchange",
+          functionname: "withdraw",
+          inputs: [userProxyAddress, buyToken.address],
+        }
+      );
+
+      const actionWithdrawBatchExchangeSellToken = new Action({
+        inst: mockBatchExchange.address,
+        data: withdrawBatchExchangeDataSellToken,
+        operation: Operation.Call,
+        value: 0,
+        termsOkCheck: false,
+      });
+
+      const actionWithdrawBatchExchangeBuyToken = new Action({
+        inst: mockBatchExchange.address,
+        data: withdrawBatchExchangeDataBuyToken,
+        operation: Operation.Call,
+        value: 0,
+        termsOkCheck: false,
+      });
+
+      // Setup 2nd Action
+      const safeTransferWithFeeData = await run("abi-encode-withselector", {
+        contractname: "FeeExtractor",
+        functionname: "safeTransferWithFee",
+        inputs: [[sellToken.address, buyToken.address], sellerAddress],
+      });
+
+      const actionSafeTransferWithFee = new Action({
+        inst: feeExtractor.address,
+        data: safeTransferWithFeeData,
+        operation: Operation.Delegatecall,
+        value: 0,
+        termsOkCheck: false,
+      });
+
+      const taskSpec = new TaskSpec({
+        conditionInst: conditionBatchExchangeFundsWithdrawable.address,
+        actions: [
+          actionWithdrawBatchExchangeSellToken,
+          actionWithdrawBatchExchangeBuyToken,
+          actionSafeTransferWithFee,
+        ],
+        gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
+      });
+
+      //  IGelatoCondition condition Action[] actions; uint256 gasPriceCeil;
+      await gelatoCore.connect(provider).provideTaskSpecs([taskSpec]);
+
+      // Submit Task
+      const gelatoProvider = new GelatoProvider({
+        addr: providerAddress,
+        module: providerModuleGelatoUserProxy.address,
+      });
+
+      const task = new Task({
+        provider: gelatoProvider,
+        condition,
+        actions: [
+          actionWithdrawBatchExchangeSellToken,
+          actionWithdrawBatchExchangeBuyToken,
+          actionSafeTransferWithFee,
+        ],
+        expiryDate: constants.HashZero,
+      });
+
+      const taskReceipt = {
+        id: 1,
+        userProxy: userProxyAddress,
+        task,
+      };
+
+      await expect(userProxy.submitTask(task)).to.emit(
+        gelatoCore,
+        "LogTaskSubmitted"
+      );
+
+      expect(
+        await gelatoCore.canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE)
+      ).to.be.equal("ConditionNotOk:SellTokenNotWithdrawable");
+
+      await expect(
+        gelatoCore
+          .connect(executor)
+          .exec(taskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
+      )
+        .to.emit(gelatoCore, "LogCanExecFailed")
+        .withArgs(
+          executorAddress,
+          taskReceipt.id,
+          "ConditionNotOk:SellTokenNotWithdrawable"
+        );
+
+      // Make TaskReceipt executable
+      await mockBatchExchange.setValidWithdrawRequest(userProxyAddress);
+
+      await expect(
+        gelatoCore
+          .connect(executor)
+          .exec(taskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
+      ).to.emit(gelatoCore, "LogExecSuccess");
+
+      const feeAmount = FEE_USD * 10 ** buyDecimals;
+
+      const providerBalance = await buyToken.balanceOf(providerAddress);
+      expect(providerBalance).to.be.equal(ethers.utils.bigNumberify(feeAmount));
+      const sellerBalanceAfter = await buyToken.balanceOf(sellerAddress);
+
+      expect(ethers.utils.bigNumberify(sellerBalanceAfter)).to.be.equal(
+        ethers.utils
+          .bigNumberify(sellerBalanceBefore)
+          .add(ethers.utils.bigNumberify(withdrawAmount))
+          .sub(ethers.utils.bigNumberify(feeAmount))
       );
     });
   });
