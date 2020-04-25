@@ -2,6 +2,9 @@
 // GelatoSysAdmin
 import "./gelato_sys_admin/collection.tasks.gelato-sys-admin";
 
+// GelatoGasPriceOracle
+import "./gelato_gas_price_oracle/collection.tasks.gelato-gas-price-oracle";
+
 // GelatoProvider
 import "./gelato_providers/collection.tasks.gelato-provider";
 
