@@ -70,9 +70,13 @@ module.exports = {
       contracts: buidlerevmConfig.contracts,
       gas: 15000000,
       blockGasLimit: 20000000,
+      // Custom
+      filters: { defaultFromBlock: 1 },
     },
     coverage: {
       url: "http://127.0.0.1:8555",
+      // Custom
+      filters: { defaultFromBlock: 1 },
     },
     mainnet: {
       // Standard

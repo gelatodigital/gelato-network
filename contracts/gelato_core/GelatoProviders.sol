@@ -1,7 +1,7 @@
 pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
-import { IGelatoProviders } from "./interfaces/IGelatoProviders.sol";
+import { IGelatoProviders, TaskSpec } from "./interfaces/IGelatoProviders.sol";
 import { GelatoSysAdmin } from "./GelatoSysAdmin.sol";
 import { Address } from "../external/Address.sol";
 import { SafeMath } from "../external/SafeMath.sol";
@@ -118,6 +118,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     {
         uint256 previousProviderFunds = providerFunds[msg.sender];
         realWithdrawAmount = Math.min(_withdrawAmount, previousProviderFunds);
+        require(realWithdrawAmount != 0, "GelatoProviders.unprovideFunds: 0");
         uint256 newProviderFunds = previousProviderFunds - realWithdrawAmount;
 
         // Effects

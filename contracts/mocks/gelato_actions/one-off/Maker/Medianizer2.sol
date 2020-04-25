@@ -15,7 +15,7 @@ contract Medianizer2 {
 
     function testView()
         public
-        view
+        pure
         returns(uint256)
     {
         uint256 etherUSDPrice = uint256(read());

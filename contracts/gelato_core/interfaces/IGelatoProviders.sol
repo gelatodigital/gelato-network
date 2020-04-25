@@ -5,15 +5,14 @@ import { IGelatoProviderModule } from "./IGelatoProviderModule.sol";
 import { Action, TaskReceipt } from "../interfaces/IGelatoCore.sol";
 import { IGelatoCondition } from "../../gelato_conditions/IGelatoCondition.sol";
 
+// TaskSpec - Will be whitelised by providers and selected by users
+struct TaskSpec {
+    IGelatoCondition condition;   // Address: optional AddressZero for self-conditional actions
+    Action[] actions;
+    uint256 gasPriceCeil;  // GasPriceCeil
+}
+
 interface IGelatoProviders {
-
-    // TaskSpec - Will be whitelised by providers and selected by users
-    struct TaskSpec {
-        IGelatoCondition condition;   // Address: optional AddressZero for self-conditional actions
-        Action[] actions;
-        uint256 gasPriceCeil;  // GasPriceCeil
-    }
-
     // Provider Funding
     event LogFundsProvided(
         address indexed provider,

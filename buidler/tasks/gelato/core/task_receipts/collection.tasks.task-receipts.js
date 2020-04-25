@@ -9,4 +9,4 @@ import "./sub_tasks/collection.sTasks.task-receipts";
 
 // === Internal ===
 import "./internal/iTask.fetchTaskReceipt";
-import "./internal/iTask.fetchCurrentGasPrice";
+import "../gelato_gas_price_oracle/task.fetchGelatoGasPrice";
