@@ -22,8 +22,8 @@ interface IGelatoUserProxyFactory {
 
     function createTwo(
         uint256 _saltNonce,
-        Task[] calldata _optionalSubmitTasks,
-        Action[] calldata _optionalActions
+        Action[] calldata _optionalActions,
+        Task[] calldata _optionalSubmitTasks
     )
         external
         payable

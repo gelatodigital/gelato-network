@@ -95,7 +95,7 @@ describe("GelatoCore.Execute", function () {
       "GelatoUserProxyFactory",
       sysAdmin
     );
-    const gelatoUserProxyFactory = await GelatoUserProxyFactory.deploy(
+    gelatoUserProxyFactory = await GelatoUserProxyFactory.deploy(
       gelatoCore.address
     );
     await gelatoUserProxyFactory.deployed();
@@ -1682,6 +1682,140 @@ describe("GelatoCore.Execute", function () {
           0,
           "GelatoCore._exec.execPayload:MockProviderModuleGelatoUserProxyRevert.execPayload: test revert"
         );
+    });
+
+    it("#16: Create Gelato User Proxy, approve it to move tokens, sell on batch exchange and create gelato task in one transaction", async function () {
+      // 1. Determine new proxy address
+      const saltnonce = "420";
+      const sysProxyAddress = await gelatoUserProxyFactory.predictProxyAddress(
+        sysAdminAddress,
+        saltnonce
+      );
+
+      /// Get Action Payload
+      const withdrawAmount = 10 * 10 ** buyDecimals;
+
+      const sysAdminBalanceBefore = await buyToken.balanceOf(sysAdminAddress);
+
+      // 3. MockBatchExchange Set withdraw amount
+      tx = await mockBatchExchange.setWithdrawAmount(
+        buyToken.address,
+        withdrawAmount
+      );
+      await tx.wait();
+
+      // 4. Withdraw Funds from BatchExchange with withdraw action
+
+      // const abiCoder = ethers.utils.defaultAbiCoder;
+      // const withdrawPayload = abiCoder.encode(
+      //   ["address", "address", "address", "address"],
+      //   [sysAdminAddress, userProxyAddress, sellToken.address, buyToken.address]
+      // );
+
+      const actionData = await run("abi-encode-withselector", {
+        contractname: "ActionWithdrawBatchExchange",
+        functionname: "action",
+        inputs: [
+          sysAdminAddress,
+          sysProxyAddress,
+          sellToken.address,
+          buyToken.address,
+        ],
+      });
+
+      // Submit Task
+      const gelatoProvider = new GelatoProvider({
+        addr: providerAddress,
+        module: providerModuleGelatoUserProxy.address,
+      });
+
+      const condition = new Condition({
+        inst: constants.AddressZero,
+        data: constants.HashZero,
+      });
+
+      const action = new Action({
+        inst: actionWithdrawBatchExchange.address,
+        data: actionData,
+        operation: Operation.Delegatecall,
+        value: 0,
+        termsOkCheck: true,
+      });
+
+      const task = new Task({
+        provider: gelatoProvider,
+        condition,
+        actions: [action],
+        expiryDate: constants.HashZero,
+      });
+
+      const taskReceipt = {
+        id: 1,
+        userProxy: sysProxyAddress,
+        task,
+      };
+
+      const stakeAmount = ethers.utils.parseEther("1");
+
+      const stakeEthPayload = await run("abi-encode-withselector", {
+        contractname: "GelatoCore",
+        functionname: "provideFunds",
+        inputs: [sysProxyAddress],
+      });
+
+      const stakeEthAction = new Action({
+        inst: gelatoCore.address,
+        data: stakeEthPayload,
+        operation: Operation.Call,
+        value: stakeAmount,
+        termsOkCheck: false,
+      });
+
+      await expect(
+        gelatoUserProxyFactory.createTwo(saltnonce, [stakeEthAction], [task], {
+          value: stakeAmount,
+        })
+      ).to.emit(gelatoCore, "LogTaskSubmitted");
+
+      expect(
+        await gelatoCore.canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE)
+      ).to.be.equal(
+        "ActionTermsNotOk:ActionWithdrawBatchExchange: Sell Token not withdrawable yet"
+      );
+
+      await expect(
+        gelatoCore
+          .connect(executor)
+          .exec(taskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
+      )
+        .to.emit(gelatoCore, "LogCanExecFailed")
+        .withArgs(
+          executorAddress,
+          taskReceipt.id,
+          "ActionTermsNotOk:ActionWithdrawBatchExchange: Sell Token not withdrawable yet"
+        );
+
+      // Make TaskReceipt executable
+      await mockBatchExchange.setValidWithdrawRequest(sysProxyAddress);
+
+      await expect(
+        gelatoCore
+          .connect(executor)
+          .exec(taskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
+      ).to.emit(gelatoCore, "LogExecSuccess");
+
+      const feeAmount = FEE_USD * 10 ** buyDecimals;
+
+      const providerBalance = await buyToken.balanceOf(providerAddress);
+      expect(providerBalance).to.be.equal(ethers.utils.bigNumberify(feeAmount));
+      const sysAdminBalanceAfter = await buyToken.balanceOf(sysAdminAddress);
+
+      expect(ethers.utils.bigNumberify(sysAdminBalanceAfter)).to.be.equal(
+        ethers.utils
+          .bigNumberify(sysAdminBalanceBefore)
+          .add(ethers.utils.bigNumberify(withdrawAmount))
+          .sub(ethers.utils.bigNumberify(feeAmount))
+      );
     });
   });
 });
