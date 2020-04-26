@@ -6,7 +6,7 @@
   "author": "The guys from gelato-digital",
   "private": false,
   "scripts": {
-    "coverage": "npx buidler coverage --network coverage"
+    "coverage": "npx buidler coverage --network coverage && cat coverage/lcov.info | coveralls"
   },
   "devDependencies": {
     "@babel/core": "7.7.4",
@@ -16,6 +16,7 @@
     "@nomiclabs/buidler-ethers": "1.2.0",
     "@nomiclabs/buidler-waffle": "1.2.0",
     "chai": "^4.2.0",
+    "coveralls": "^3.1.0",
     "dotenv": "^8.2.0",
     "ethereum-waffle": "2.4.1",
     "ethers": "4.0.47",

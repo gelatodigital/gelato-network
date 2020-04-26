@@ -1,4 +1,5 @@
 [![CircleCI](https://circleci.com/gh/gelatodigital/gelato-V1.svg?style=shield&circle-token=d72f3799a6ac81e89e2e0f9a29f7633baef8252b)](https://circleci.com/gh/gelatodigital/gelato-V1)
+[![Coverage Status](https://coveralls.io/repos/github/gelatodigital/gelato-V1/badge.svg?t=esHbYY)](https://coveralls.io/github/gelatodigital/gelato-V1)
 
 # What is gelato?
 
