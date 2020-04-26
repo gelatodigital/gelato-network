@@ -6,7 +6,7 @@ pragma solidity >=0.5.0 <0.7.0;
 /// @author Gonçalo Sá - <goncalo.sa@consensys.net>
 /// @author Stefan George - <stefan@gnosis.io>
 /// @author Richard Meissner - <richard@gnosis.io>
-contract MultiSend {
+contract Multisend {
 
     bytes32 constant private GUARD_VALUE = keccak256("multisend.guard.bytes32");
 
@@ -27,7 +27,7 @@ contract MultiSend {
     function multiSend(bytes memory transactions)
         public
     {
-        require(guard != GUARD_VALUE, "MultiSend should only be called via delegatecall");
+        require(guard != GUARD_VALUE, "Multisend should only be called via delegatecall");
         // solium-disable-next-line security/no-inline-assembly
         assembly {
             let length := mload(transactions)
