@@ -17,7 +17,7 @@ const GELATO_GAS_PRICE = initialStateGasPriceOracle.gasPrice;
 // 3. SellTokens got partially converted into buy tokens, insufficient buy tokens for withdrawal
 // 4. No sellTokens got converted into buy tokens, sufficient sell tokens for withdrawal
 // 5. No sellTokens got converted into buy tokens, insufficient sell tokens for withdrawal
-describe("GelatoCore.Execute", function () {
+describe("GelatoCore.exec", function () {
   // We define the ContractFactory and Signer variables here and assign them in
   // a beforeEach hook.
   let seller;

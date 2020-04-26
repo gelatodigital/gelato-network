@@ -91,7 +91,7 @@ export default task(
 
       const GELATO_MAX_GAS = 7000000;
 
-      const gelatoGasPrice = await run("fetchCurrentGasPrice");
+      const gelatoGasPrice = await run("fetchGelatoGasPrice");
 
       try {
         const canExecResult = await gelatoCore.canExec(

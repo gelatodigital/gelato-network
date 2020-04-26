@@ -1,8 +1,8 @@
 pragma solidity ^0.6.6;
 
-import { GelatoActionsStandard } from "../../../gelato_actions/GelatoActionsStandard.sol";
-import { SafeERC20 } from "../../../external/SafeERC20.sol";
-import { IERC20 } from "../../../external/IERC20.sol";
+import { GelatoActionsStandard } from "../../../../gelato_actions/GelatoActionsStandard.sol";
+import { SafeERC20 } from "../../../../external/SafeERC20.sol";
+import { IERC20 } from "../../../../external/IERC20.sol";
 
 contract MockBatchExchange is GelatoActionsStandard {
 
