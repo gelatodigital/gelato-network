@@ -65,8 +65,18 @@ contract FeeFinder {
         medianizer = IMedianizer(_medianizer);
     }
 
+
+    /// @notice Is the inputted _feeToken accepted in this smart contract?
+    /// @dev Off-chain API for UIs to see if _feeToken is accepted by smart contract
+    /// @param _feeToken token held in proxy contract that will used to pay the fees to the provider
+    function isFeeTokenEligible(address _feeToken) view public returns(bool feeTokenAccepted) {
+        uint256 feeAmount = getFeeAmount(_feeToken);
+        feeTokenAccepted = feeAmount == 0 ?  false : true;
+    }
+
     /// @notice Get the fee amount based on the inputted fee token
     /// @dev Returns 0 if no matching fee token was found
+    /// @param _feeToken token held in proxy contract that will used to pay the fees to the provider
     function getFeeAmount(address _feeToken) view public returns(uint256 feeAmount) {
         feeAmount = checkHardcodedTokens(_feeToken);
         if(feeAmount == 0) feeAmount = getUniswapRate(_feeToken);
@@ -105,16 +115,18 @@ contract FeeFinder {
     function getKyberRate(address _feeToken) view public returns(uint256 feeAmount) {
         uint256 decimals = getDecimals(_feeToken);
 
-        try kyber.getExpectedRate(DAI, _feeToken, feeAmount)
-            returns(uint256 expectedRate, uint256)
-        {
-            if (expectedRate != 0) {
-                // 18 == daiDecimals
-                uint256 decimalFactor = (10 ** 18) / (10 ** decimals);
-                feeAmount = expectedRate.mul(feeDAI).div(decimalFactor);
-            } else feeAmount = 0;
-        } catch {
-            feeAmount = 0;
+        if (decimals != 0) {
+            try kyber.getExpectedRate(DAI, _feeToken, feeAmount)
+                returns(uint256 expectedRate, uint256)
+            {
+                if (expectedRate != 0) {
+                    // 18 == daiDecimals
+                    uint256 decimalFactor = (10 ** 18) / (10 ** decimals);
+                    feeAmount = expectedRate.mul(feeDAI).div(decimalFactor);
+                } else feeAmount = 0;
+            } catch {
+                feeAmount = 0;
+            }
         }
     }
 
@@ -141,7 +153,7 @@ contract FeeFinder {
         if (success) {
             return abi.decode(data, (uint256));
         } else {
-            revert("ActionWithdrawBatchExchange.getDecimals no decimals found");
+            return 0;
         }
     }
 }

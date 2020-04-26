@@ -118,7 +118,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     {
         uint256 previousProviderFunds = providerFunds[msg.sender];
         realWithdrawAmount = Math.min(_withdrawAmount, previousProviderFunds);
-        require(realWithdrawAmount != 0, "GelatoProviders.unprovideFunds: 0");
+
         uint256 newProviderFunds = previousProviderFunds - realWithdrawAmount;
 
         // Effects
