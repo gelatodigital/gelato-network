@@ -293,7 +293,10 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         uint256 estExecTxGas = _startGas <= _gelatoMaxGas ? _startGas : _gelatoMaxGas;
 
         // ExecutionCost (- consecutive state writes + gas refund from deletion)
-        uint256 estGasConsumed = EXEC_TX_OVERHEAD + estExecTxGas - gasleft();
+        uint256 estGasConsumed = (EXEC_TX_OVERHEAD + estExecTxGas).sub(
+            gasleft(),
+            "GelatoCore._processProviderPayables: estGasConsumed underflow"
+        );
 
         if (_payType == ExecutorPay.Reward) {
             executorCompensation = executorSuccessFee(estGasConsumed, _gelatoGasPrice);
@@ -310,7 +313,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             executorCompensation = estGasConsumed.mul(_gelatoGasPrice);
             providerFunds[_provider] = providerFunds[_provider].sub(
                 executorCompensation,
-                "GelatoCore._processProviderPayables:  providerFunds underflow"
+                "GelatoCore._processProviderPayables: providerFunds underflow"
             );
             executorStake[msg.sender] += executorCompensation;
         }

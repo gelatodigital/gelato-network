@@ -15,4 +15,4 @@ import './kyber/task.CKyberRate.value';
 import './fearGreedIndex/task.CFearGreedIndex.current';
 import './fearGreedIndex/task.CFearGreedIndex.ok';
 import './fearGreedIndex/task.CFearGreedIndex.set';
-import './fearGreedIndex/task.CFearGreedIndex.transferownership';
+import './fearGreedIndex/task.CFearGreedIndex.transferOwnership';

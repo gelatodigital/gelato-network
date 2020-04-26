@@ -39,17 +39,17 @@ export default task(
       blockhash,
       fromblock,
       toblock,
-      log
+      log,
     }) => {
       try {
         if (!contractaddress) {
           contractaddress = await run("bre-config", {
             deployments: true,
-            contractname
+            contractname,
           });
         }
         const contractInterface = await run("ethers-interface-new", {
-          contractname
+          contractname,
         });
 
         if (!contractInterface.events[eventname]) {
@@ -66,9 +66,9 @@ export default task(
 
         if (!blockhash) {
           const {
-            filters: { defaultFromBlock, defaultToBlock }
+            filters: { defaultFromBlock, defaultToBlock },
           } = await run("bre-network", { c: true });
-          if (!fromblock) fromblock = defaultFromBlock;
+          if (fromblock === undefined) fromblock = defaultFromBlock;
           if (!toblock) toblock = defaultToBlock;
         }
 
@@ -77,7 +77,7 @@ export default task(
           blockHash: blockhash,
           fromBlock: fromblock,
           toBlock: toblock,
-          topics: [contractInterface.events[eventname].topic]
+          topics: [contractInterface.events[eventname].topic],
         };
 
         const eventlogs = await ethers.provider.getLogs(filter);

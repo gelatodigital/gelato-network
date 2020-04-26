@@ -8,14 +8,12 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE", function () {
   let GelatoCoreFactory;
   let GelatoUserProxyFactoryFactory;
   let ProviderModuleGelatoUserProxyFactory;
-  let SelfProviderModuleGelatoUserProxyFactory;
   let ActionFactory;
 
   let gelatoCore;
   let gelatoUserProxyFactory;
   let action;
   let providerModuleGelatoUserProxy;
-  let selfProviderModuleGelatoUserProxy;
 
   let user;
   let otherUser;
@@ -152,19 +150,14 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE", function () {
       ProviderModuleGelatoUserProxyFactory = await ethers.getContractFactory(
         "ProviderModuleGelatoUserProxy"
       );
-      SelfProviderModuleGelatoUserProxyFactory = await ethers.getContractFactory(
-        "SelfProviderModuleGelatoUserProxy"
-      );
       ActionFactory = await ethers.getContractFactory("MockActionDummy");
 
       providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxyFactory.deploy(
         gelatoUserProxyFactory.address
       );
-      selfProviderModuleGelatoUserProxy = await SelfProviderModuleGelatoUserProxyFactory.deploy();
       action = await ActionFactory.deploy();
 
       await providerModuleGelatoUserProxy.deployed();
-      await selfProviderModuleGelatoUserProxy.deployed();
       await action.deployed();
 
       // Action
@@ -206,7 +199,7 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE", function () {
       await stakeTx.wait();
 
       // multiProvide: provider
-      let multiProvideTx = await gelatoCore.connect(provider).multiProvide(
+      const multiProvideTx = await gelatoCore.connect(provider).multiProvide(
         executorAddress,
         [
           new TaskSpec({
@@ -215,14 +208,6 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE", function () {
           }),
         ],
         [providerModuleGelatoUserProxy.address]
-      );
-      await multiProvideTx.wait();
-
-      // multiProvide: selfProvider
-      multiProvideTx = await gelatoCore.multiProvide(
-        executorAddress,
-        [],
-        [selfProviderModuleGelatoUserProxy.address]
       );
       await multiProvideTx.wait();
     });

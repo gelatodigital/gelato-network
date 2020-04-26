@@ -61,7 +61,7 @@ export default task(
           write: true,
         });
 
-        const gelatoGasPrice = await run("fetchCurrentGasPrice");
+        const gelatoGasPrice = await run("fetchGelatoGasPrice");
 
         const gelatoGasPriceGwei = utils.formatUnits(gelatoGasPrice, "gwei");
         let gelatoMAXGAS;

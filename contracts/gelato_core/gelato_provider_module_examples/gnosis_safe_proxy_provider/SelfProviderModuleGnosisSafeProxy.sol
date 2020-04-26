@@ -2,7 +2,7 @@ pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
 import { GelatoProviderModuleStandard } from "../../GelatoProviderModuleStandard.sol";
-import { MultiSend } from "../../../external/MultiSend.sol";
+import { Multisend } from "../../../external/Multisend.sol";
 import {
     IGnosisSafe
 } from "../../../user_proxies/gnosis_safe_proxy/interfaces/IGnosisSafe.sol";
@@ -27,7 +27,7 @@ contract SelfProviderModuleGnosisSafeProxy is GelatoProviderModuleStandard {
                 _actions[0].operation
             );
         } else if (_actions.length > 1) {
-            // Action.Operation encoded into multiSendPayload and handled by MultiSend
+            // Action.Operation encoded into multiSendPayload and handled by Multisend
             bytes memory multiSendPayload;
 
             for (uint i; i < _actions.length; i++ ) {
@@ -42,7 +42,7 @@ contract SelfProviderModuleGnosisSafeProxy is GelatoProviderModuleStandard {
             }
 
             multiSendPayload = abi.encodeWithSelector(
-                MultiSend.multiSend.selector,
+                Multisend.multiSend.selector,
                 multiSendPayload
             );
 

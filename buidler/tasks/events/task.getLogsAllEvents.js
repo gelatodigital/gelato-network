@@ -69,7 +69,7 @@ export default task(
           const {
             filters: { defaultFromBlock, defaultToBlock }
           } = await run("bre-network", { c: true });
-          if (!fromblock) fromblock = defaultFromBlock;
+          if (fromblock === undefined) fromblock = defaultFromBlock;
           if (!toblock) toblock = defaultToBlock;
         }
 

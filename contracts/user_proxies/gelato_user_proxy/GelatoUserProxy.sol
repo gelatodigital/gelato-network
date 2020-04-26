@@ -116,10 +116,9 @@ contract GelatoUserProxy is IGelatoUserProxy {
                 assembly { selector := mload(add(0x20, err)) }
                 if (selector == 0x08c379a0) {  // Function selector for Error(string)
                     assembly { err := add(err, 68) }
-                    revert(string(abi.encodePacked(
-                        "GelatoUserProxy.callAction:",
-                        string(err)
-                    )));
+                    revert(
+                        string(abi.encodePacked("GelatoUserProxy.callAction:", string(err)))
+                    );
                 } else {
                     revert("GelatoUserProxy.callAction:NoErrorSelector");
                 }
@@ -142,10 +141,11 @@ contract GelatoUserProxy is IGelatoUserProxy {
                 assembly { selector := mload(add(0x20, err)) }
                 if (selector == 0x08c379a0) {  // Function selector for Error(string)
                     assembly { err := add(err, 68) }
-                    revert(string(abi.encodePacked(
-                        "GelatoUserProxy.delegatecallAction:",
-                        string(err)
-                    )));
+                    revert(
+                        string(
+                            abi.encodePacked("GelatoUserProxy.delegatecallAction:", string(err))
+                        )
+                    );
                 } else {
                     revert("GelatoUserProxy.delegatecallAction:NoErrorSelector");
                 }
