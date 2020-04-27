@@ -120,12 +120,19 @@ export default task("setupgelato-gnosissafeproxy")
         });
       }
 
+      // get multisend contract
+      const multiSendAddress = await run("bre-config", {
+        addressbookcategory: "gnosisSafe",
+        addressbookentry: "multiSend",
+      });
+
       const providerModuleGnosisSafeProxy = await run("deploy", {
         contractname: "ProviderModuleGnosisSafeProxy",
         constructorargs: [
           [extcodehash],
           [taskArgs.mastercopy],
           gelatoCore.address,
+          multiSendAddress,
         ],
         events: taskArgs.events,
         log: taskArgs.log,
