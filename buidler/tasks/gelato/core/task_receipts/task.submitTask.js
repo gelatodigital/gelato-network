@@ -67,7 +67,7 @@ export default task(
         }
 
         // Handle GelatoProvider
-        // Provider.inst
+        // Provider.addr
 
         if (!taskArgs.gelatoprovider)
           taskArgs.gelatoprovider = await run("handleGelatoProvider", {
@@ -106,7 +106,7 @@ export default task(
         // Handle Actions
         const actions = [];
         for (const actionname of taskArgs.actionnames) {
-          // Action.inst
+          // Action.addr
           if (taskArgs.actionaddresses) {
             if (!taskArgs.actionaddresses[actionname]) {
               taskArgs.actionaddresses[actionname] = await run("bre-config", {
@@ -126,7 +126,7 @@ export default task(
 
             // Action
             const action = new Action({
-              inst: taskArgs.actionaddresses[actionname],
+              addr: taskArgs.actionaddresses[actionname],
               data: taskArgs.actiondata[actionname],
               operation: taskArgs.operations[actionname],
             });
@@ -143,7 +143,7 @@ export default task(
 
             // Action
             const action = new Action({
-              inst: actionAddress,
+              addr: actionAddress,
               data: defaultData,
               operation: 1,
               termsOkCheck: true,
@@ -155,7 +155,7 @@ export default task(
         // TASK
         taskArgs.task = new Task({
           provider: gelatoProvider,
-          condition,
+          conditions: [condition],
           actions,
           expiryDate: constants.HashZero,
         });

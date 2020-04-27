@@ -74,7 +74,7 @@ describe("User Proxies - GelatoUserProxy - CONSTRUCTOR", function () {
       inputs: [true],
     });
     optionalAction = new Action({
-      inst: action.address,
+      addr: action.address,
       data: actionData,
       operation: Operation.Delegatecall,
     });

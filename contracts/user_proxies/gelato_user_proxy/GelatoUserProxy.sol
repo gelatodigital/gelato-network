@@ -84,9 +84,9 @@ contract GelatoUserProxy is IGelatoUserProxy {
     // @dev we have to write duplicate code due to calldata _action FeatureNotImplemented
     function execAction(Action memory _action) public payable override auth {
         if (_action.operation == Operation.Call)
-            callAction(_action.inst, _action.data, _action.value);
+            callAction(_action.addr, _action.data, _action.value);
         else if (_action.operation == Operation.Delegatecall)
-            delegatecallAction(_action.inst, _action.data);
+            delegatecallAction(_action.addr, _action.data);
         else
             revert("GelatoUserProxy.execAction: invalid operation");
     }
@@ -95,9 +95,9 @@ contract GelatoUserProxy is IGelatoUserProxy {
     function multiExecActions(Action[] memory _actions) public payable override auth {
         for (uint i = 0; i < _actions.length; i++) {
             if (_actions[i].operation == Operation.Call)
-                callAction(_actions[i].inst, _actions[i].data, _actions[i].value);
+                callAction(_actions[i].addr, _actions[i].data, _actions[i].value);
             else if (_actions[i].operation == Operation.Delegatecall)
-                delegatecallAction(address(_actions[i].inst), _actions[i].data);
+                delegatecallAction(address(_actions[i].addr), _actions[i].data);
             else
                 revert("GelatoUserProxy.multiExecActions: invalid operation");
         }

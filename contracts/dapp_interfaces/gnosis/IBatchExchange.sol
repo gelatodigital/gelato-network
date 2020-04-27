@@ -34,7 +34,7 @@ interface IBatchExchange {
         view
         returns (bool);
 
-    function tokenAddressToIdMap(address inst)
+    function tokenAddressToIdMap(address addr)
         external
         view
         returns (uint16);

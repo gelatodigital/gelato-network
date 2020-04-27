@@ -17,21 +17,21 @@ struct Condition {
 enum Operation { Call, Delegatecall }
 
 struct Action {
-    address inst;
+    address addr;
     bytes data;
     Operation operation;
     uint256 value;
     bool termsOkCheck;
 }
 
-struct Task {  //
+struct Task {
     Provider provider;
-    Condition condition;  // optional
+    Condition[] conditions;  // optional
     Action[] actions;
-    uint256 expiryDate;  // subject to rent payments; 0 == infinity.
+    uint256 expiryDate;  // 0 == infinity.
 }
 
-struct TaskReceipt {  // TaskReceipt
+struct TaskReceipt {
     uint256 id;
     address userProxy;
     Task task;
@@ -71,34 +71,38 @@ interface IGelatoCore {
     event LogTaskCancelled(uint256 indexed taskReceiptId);
 
     // ================  Exec Suite =========================
-    /// @notice Submit a gelato task that will be executed if the specified condition and action(s) terms are fulfilled
-    /// @dev Use only through a Proxy contract which is defined in the selected provider module
-    /// @param _task Seleted provider, condition and action details, plus the expiry date after which the task is rendered useless
+    /// @notice Submit a gelato task that will be executed under the specified conditions
+    /// @dev This function must be called from a contract account provided by Provider
+    /// @param _task Selected provider, conditions, actions, expiry date of the task
     function submitTask(Task calldata _task) external;
 
-    /// @notice Off-chain validation for executors to see if an task receipt is executable
-    /// @dev Only used for off-chain validation
+    /// @notice Off-chain API for executors to check, if a TaskReceipt is executable
+    /// @dev GelatoCore checks this during execution, in order to safeguard the Conditions
     /// @param _TR TaskReceipt, consisting of user task, user proxy address and id
-    /// @param _gelatoMaxGas Gas Limit to send to exec by executor to receive a full refund even if tx reverts
-    /// @param _execTxGasPrice Gas Price of gelatoCore's gas price oracle
+    /// @param _gelatoMaxGas If  this is used by an Executor and a revert happens,
+    ///  the Executor gets a refund from the Provider and the TaskReceipt is annulated.
+    /// @param _execTxGasPrice Must be used by Executors. Gas Price fed by gelatoCore's
+    ///  Gas Price Oracle. Executors can query the current gelatoGasPrice from events.
     function canExec(TaskReceipt calldata _TR, uint256 _gelatoMaxGas, uint256 _execTxGasPrice)
         external
         view
         returns(string memory);
 
-    /// @notice Executes the users task after conducting all condition and actions(s) term(s) checks
-    /// @dev Executor gets refunded, even if the specified action(s) revert
-    /// @param _TR TaskReceipt, consisting of user task, user proxy address and id
+    /// @notice Executors call this when Conditions allow it to execute submitted Tasks.
+    /// @dev Executors get rewarded for successful Execution. The Task remains open until
+    ///   successfully executed, or when the execution failed, despite of gelatoMaxGas usage.
+    ///   In the latter case Executors are refunded by the Task Provider.
+    /// @param _TR TaskReceipt: id, userProxy, Task.
     function exec(TaskReceipt calldata _TR) external;
 
     /// @notice Cancel task
     /// @dev Callable only by userProxy or selected provider
-    /// @param _TR TaskReceipt, consisting of user task, user proxy address and id
+    /// @param _TR TaskReceipt: id, userProxy, Task.
     function cancelTask(TaskReceipt calldata _TR) external;
 
     /// @notice Batch Cancel tasks
     /// @dev Callable only by userProxy or selected provider
-    /// @param _taskReceipts TaskReceipt Array, consisting of user task, user proxy address and id
+    /// @param _taskReceipts TaskReceipts: id, userProxy, Task.
     function multiCancelTasks(TaskReceipt[] calldata _taskReceipts) external;
 
     /// @notice Compute hash of task receipt

@@ -6,8 +6,8 @@ export const Operation = {
 };
 
 class Action {
-  constructor({ inst, data, operation, value, termsOkCheck }) {
-    if (!inst) throw new Error("\nAction: no inst passed to constructor\n");
+  constructor({ addr, data, operation, value, termsOkCheck }) {
+    if (!addr) throw new Error("\nAction: no addr passed to constructor\n");
     if (operation === undefined)
       throw new Error("\nAction: no operation passed to constructor\n");
     if (operation !== Operation.Call && operation !== Operation.Delegatecall) {
@@ -27,7 +27,7 @@ class Action {
       );
     }
 
-    this.inst = inst;
+    this.addr = addr;
     this.data = data ? data : constants.HashZero;
     this.operation = operation;
     this.value = value ? value : constants.Zero;

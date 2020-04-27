@@ -96,7 +96,7 @@ describe("GelatoCore.cancelTask", function () {
     await mockActionDummy.deployed();
 
     const mockActionDummyGelato = new Action({
-      inst: mockActionDummy.address,
+      addr: mockActionDummy.address,
       data: constants.HashZero,
       operation: Operation.Delegatecall,
       termsOkCheck: true,
@@ -105,7 +105,6 @@ describe("GelatoCore.cancelTask", function () {
     // Provider registers new acttion
 
     const newTaskSpec2 = new TaskSpec({
-      conditionInst: constants.AddressZero,
       actions: [mockActionDummyGelato],
       gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
     });
@@ -145,13 +144,8 @@ describe("GelatoCore.cancelTask", function () {
       module: providerModuleGelatoUserProxy.address,
     });
 
-    const condition = new Condition({
-      inst: constants.AddressZero,
-      data: constants.HashZero,
-    });
-
     const action = new Action({
-      inst: mockActionDummy.address,
+      addr: mockActionDummy.address,
       data: actionData,
       operation: Operation.Delegatecall,
       value: 0,
@@ -160,7 +154,6 @@ describe("GelatoCore.cancelTask", function () {
 
     task = new Task({
       provider: gelatoProvider,
-      condition,
       actions: [action],
       expiryDate: constants.HashZero,
     });
@@ -182,59 +175,55 @@ describe("GelatoCore.cancelTask", function () {
   });
 
   // We test different functionality of the contract as normal Mocha tests.
-  describe("GelatoCore.cancelTask", function () {
-    it("#1: Cancel task succesfully as user", async function () {
-      await expect(userProxy.cancelTask(taskReceipt))
-        .to.emit(gelatoCore, "LogTaskCancelled")
-        .withArgs(taskReceipt.id);
-    });
+  it("#1: Cancel task succesfully as user", async function () {
+    await expect(userProxy.cancelTask(taskReceipt))
+      .to.emit(gelatoCore, "LogTaskCancelled")
+      .withArgs(taskReceipt.id);
+  });
 
-    it("#2: Cancel task succesfully as provider", async function () {
-      await expect(gelatoCore.connect(provider).cancelTask(taskReceipt))
-        .to.emit(gelatoCore, "LogTaskCancelled")
-        .withArgs(taskReceipt.id);
-    });
+  it("#2: Cancel task succesfully as provider", async function () {
+    await expect(gelatoCore.connect(provider).cancelTask(taskReceipt))
+      .to.emit(gelatoCore, "LogTaskCancelled")
+      .withArgs(taskReceipt.id);
+  });
 
-    it("#3: Cancel task unsuccesfully as random third party", async function () {
-      await expect(
-        gelatoCore.connect(executor).cancelTask(taskReceipt)
-      ).to.be.revertedWith("GelatoCore.cancelTask: sender");
-    });
+  it("#3: Cancel task unsuccesfully as random third party", async function () {
+    await expect(
+      gelatoCore.connect(executor).cancelTask(taskReceipt)
+    ).to.be.revertedWith("GelatoCore.cancelTask: sender");
+  });
 
-    it("#4: Cancel task unsuccesfully due to wrong taskReceipt input", async function () {
-      await expect(
-        gelatoCore.connect(provider).cancelTask(taskReceipt2)
-      ).to.be.revertedWith(
-        "VM Exception while processing transaction: revert GelatoCore.cancelTask: invalid taskReceiptHash"
-      );
-    });
+  it("#4: Cancel task unsuccesfully due to wrong taskReceipt input", async function () {
+    await expect(
+      gelatoCore.connect(provider).cancelTask(taskReceipt2)
+    ).to.be.revertedWith(
+      "VM Exception while processing transaction: revert GelatoCore.cancelTask: invalid taskReceiptHash"
+    );
+  });
 
-    it("#5: Batch Cancel task succesfully as user", async function () {
-      // submit second Task
-      const submitTaskTx = await userProxy.submitTask(task);
-      await submitTaskTx.wait();
+  it("#5: Batch Cancel task succesfully as user", async function () {
+    // submit second Task
+    const submitTaskTx = await userProxy.submitTask(task);
+    await submitTaskTx.wait();
 
-      await expect(userProxy.multiCancelTasks([taskReceipt, taskReceipt2]))
-        .to.emit(gelatoCore, "LogTaskCancelled")
-        .withArgs(taskReceipt.id)
-        .to.emit(gelatoCore, "LogTaskCancelled")
-        .withArgs(taskReceipt2.id);
-    });
+    await expect(userProxy.multiCancelTasks([taskReceipt, taskReceipt2]))
+      .to.emit(gelatoCore, "LogTaskCancelled")
+      .withArgs(taskReceipt.id)
+      .to.emit(gelatoCore, "LogTaskCancelled")
+      .withArgs(taskReceipt2.id);
+  });
 
-    it("#6: Batch Cancel task succesfully as provider", async function () {
-      // submit second Task
-      const submitTaskTx = await userProxy.submitTask(task);
-      await submitTaskTx.wait();
+  it("#6: Batch Cancel task succesfully as provider", async function () {
+    // submit second Task
+    const submitTaskTx = await userProxy.submitTask(task);
+    await submitTaskTx.wait();
 
-      await expect(
-        gelatoCore
-          .connect(provider)
-          .multiCancelTasks([taskReceipt, taskReceipt2])
-      )
-        .to.emit(gelatoCore, "LogTaskCancelled")
-        .withArgs(taskReceipt.id)
-        .to.emit(gelatoCore, "LogTaskCancelled")
-        .withArgs(taskReceipt2.id);
-    });
+    await expect(
+      gelatoCore.connect(provider).multiCancelTasks([taskReceipt, taskReceipt2])
+    )
+      .to.emit(gelatoCore, "LogTaskCancelled")
+      .withArgs(taskReceipt.id)
+      .to.emit(gelatoCore, "LogTaskCancelled")
+      .withArgs(taskReceipt2.id);
   });
 });
