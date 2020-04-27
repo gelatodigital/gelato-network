@@ -12,7 +12,7 @@ import { IBatchExchange } from "../../dapp_interfaces/gnosis/IBatchExchange.sol"
 /// @author Luis Schliesske & Hilmar Orth
 /// @notice Gelato action that 1) withdraws funds form user's  EOA, 2) deposits on Batch Exchange, 3) Places order on batch exchange and 4) requests future withdraw on batch exchange
 
-contract ActionPlaceOrderBatchExchange is GelatoActionsStandard {
+contract ActionPlaceOrderBatchExchange  {
 
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
@@ -23,11 +23,6 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandard {
 
     constructor(address _batchExchange) public {
         batchExchange = IBatchExchange(_batchExchange);
-    }
-
-    function action(bytes calldata _actionData) external payable override virtual {
-        (address _user, address _userProxy, address _sellToken, address _buyToken, uint128 _sellAmount, uint128 _buyAmount, uint32 _orderExpirationBatchId) = abi.decode(_actionData, (address, address, address, address, uint128, uint128, uint32));
-        action(_user, _userProxy, _sellToken, _buyToken, _sellAmount, _buyAmount, _orderExpirationBatchId);
     }
 
     /// @notice Place order on Batch Exchange and request future withdraw for buy and sell token
@@ -106,12 +101,11 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandard {
     function termsOk(bytes calldata _actionData)
         external
         view
-        override
         virtual
         returns(string memory)  // actionCondition
     {
         (address _user, address _userProxy, address _sellToken, , uint128 _sellAmount, ,) = abi.decode(_actionData, (address, address, address, address, uint128, uint128, uint32));
-        return _actionConditionsCheck(_user, _userProxy, _sellToken, _sellAmount);
+        return _actionProviderTermsCheck(_user, _userProxy, _sellToken, _sellAmount);
     }
 
     /// @notice Verify that EOA has sufficinet balance and gave proxy adequate allowance
@@ -119,7 +113,7 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandard {
     /// @param _userProxy Users Proxy address
     /// @param _sellToken Token to sell on Batch Exchange
     /// @param _sellAmount Amount to sell
-    function _actionConditionsCheck(
+    function _actionProviderTermsCheck(
         address _user, address _userProxy, address _sellToken, uint128 _sellAmount
     )
         internal
@@ -144,7 +138,7 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandard {
         }
 
         // STANDARD return string to signal actionConditions Ok
-        return OK;
+        return "OK";
     }
 
 

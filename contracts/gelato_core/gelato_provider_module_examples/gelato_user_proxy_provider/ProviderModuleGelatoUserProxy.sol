@@ -33,7 +33,7 @@ contract ProviderModuleGelatoUserProxy is GelatoProviderModuleStandard {
 
     function execPayload(Action[] calldata _actions)
         external
-        pure
+        view
         override
         returns(bytes memory)
     {

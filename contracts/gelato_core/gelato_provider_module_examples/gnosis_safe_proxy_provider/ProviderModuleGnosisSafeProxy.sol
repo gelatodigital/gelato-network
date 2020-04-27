@@ -56,7 +56,7 @@ contract ProviderModuleGnosisSafeProxy is
 
     function execPayload(Action[] calldata _actions)
         external
-        pure
+        view
         override
         returns(bytes memory)
     {
