@@ -19,11 +19,6 @@ contract ActionERC20Transfer is GelatoActionsStandard {
     // using SafeERC20 for IERC20; <- internal library methods vs. try/catch
     using Address for address;
 
-    function action(bytes calldata _actionData) external payable override virtual {
-        (ActionData memory _p) = abi.decode(_actionData[4:], (ActionData));
-         action(_p);
-    }
-
     function action(ActionData memory _p) public payable virtual {
         require(address(this) == _p.userProxy, "NotOkUserProxy");
         IERC20 sendERC20 = IERC20(_p.sendToken);
@@ -36,7 +31,7 @@ contract ActionERC20Transfer is GelatoActionsStandard {
 
     // ===== ACTION CONDITIONS CHECK ========
     // Overriding and extending GelatoActionsStandard's function (optional)
-    function termsOk(bytes calldata _actionData)
+    function termsOk(address, bytes calldata _actionData)
         external
         view
         override

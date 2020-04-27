@@ -111,7 +111,10 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             // Only check termsOk if specified, else continue
             if (!_TR.task.actions[i].termsOkCheck) continue;
 
-            try IGelatoAction(_TR.task.actions[i].addr).termsOk(_TR.task.actions[i].data)
+            try IGelatoAction(_TR.task.actions[i].addr).termsOk(
+                _TR.userProxy,
+                _TR.task.actions[i].data
+            )
                 returns(string memory actionTermsOk)
             {
                 if (!actionTermsOk.startsWithOk())

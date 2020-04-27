@@ -33,12 +33,6 @@ contract ActionWithdrawBatchExchange is GelatoActionsStandard {
         feeFinder = FeeFinder(_exchangeRateFinder);
     }
 
-
-    function action(bytes calldata _actionData) external payable override virtual {
-        (address _user, address _userProxy, address _sellToken, address _buyToken) = abi.decode(_actionData, (address, address, address, address));
-        action(_user, _userProxy, _sellToken, _buyToken);
-    }
-
     /// @notice Withdraw sell and buy token from Batch Exchange and send funds back to _user EOA
     /// @param _user Users EOA address
     /// @param _userProxy Users Proxy address
@@ -151,7 +145,7 @@ contract ActionWithdrawBatchExchange is GelatoActionsStandard {
 
     // ======= ACTION CONDITIONS CHECK =========
     // Overriding and extending GelatoActionsStandard's function (optional)
-    function termsOk(bytes calldata _actionData)
+    function termsOk(address, bytes calldata _actionData)
         external
         view
         override
