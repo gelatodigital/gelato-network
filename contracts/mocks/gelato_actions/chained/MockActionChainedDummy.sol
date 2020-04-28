@@ -2,20 +2,24 @@ pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
 import { GelatoActionsStandard } from "../../../gelato_actions/GelatoActionsStandard.sol";
-import { TaskReceipt, IGelatoCore } from "../../../gelato_core/interfaces/IGelatoCore.sol";
+import { Task, IGelatoCore } from "../../../gelato_core/interfaces/IGelatoCore.sol";
 import { GelatoString } from "../../../libraries/GelatoString.sol";
 import { GelatoCore } from "../../../gelato_core/GelatoCore.sol";
 
 contract MockActionChainedDummy is GelatoActionsStandard {
     using GelatoString for string;
 
-    function action(TaskReceipt memory _TR, GelatoCore _gelatoCore)
+    GelatoCore public immutable gelatoCore;
+
+    constructor(GelatoCore _gelatoCore) public { gelatoCore = _gelatoCore; }
+
+    function action(Task memory _task)
         public
         payable
         virtual
     {
-        // Submit:TaskReceipt Chain continues with Updated Payloads
-        try _gelatoCore.submitTask(_TR.task) {
+        // Submit:Task Chain continues with Updated Payloads
+        try gelatoCore.submitTask(_task) {
         } catch Error(string memory error) {
             revert(string(abi.encodePacked("MockActionChainedDummy.submitTask", error)));
         } catch {
@@ -25,7 +29,7 @@ contract MockActionChainedDummy is GelatoActionsStandard {
 
     // ======= ACTION CONDITIONS CHECK =========
     // Overriding and extending GelatoActionsStandard's function (optional)
-    function termsOk(bytes calldata _actionData, address _userProxy)
+    function termsOk(address _userProxy, bytes calldata _actionData)
         external
         view
         override
@@ -33,26 +37,20 @@ contract MockActionChainedDummy is GelatoActionsStandard {
         returns(string memory)
     {
         // Decode: Calldata Array actionData without Selector
-        (TaskReceipt memory taskReceipt, GelatoCore gelatoCore) = abi.decode(
-            _actionData[4:],
-            (TaskReceipt,GelatoCore)
-        );
+        (Task memory task) = abi.decode(_actionData[4:], (Task));
 
         // Else: Check and Return current contract actionTermsOk
-        return termsOk(taskReceipt, gelatoCore, _userProxy);
+        return termsOk(_userProxy, task);
     }
 
-    function termsOk(TaskReceipt memory _TR, GelatoCore _gelatoCore, address _userProxy)
+    function termsOk(address _userProxy, Task memory _task)
         public
         view
         virtual
         returns(string memory)  // actionTermsOk
     {
-
-        if (_userProxy != _TR.task.provider.addr) {
-            string memory isProvided = _gelatoCore.isTaskProvided(
-                _TR
-            );
+        if (_userProxy != _task.provider.addr) {
+            string memory isProvided = gelatoCore.isTaskProvided(_userProxy, _task);
             if (!isProvided.startsWithOk()) {
                 return string(
                     abi.encodePacked(

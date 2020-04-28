@@ -23,49 +23,61 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     mapping(uint256 => bytes32) public override taskReceiptHash;
 
     // ================  SUBMIT ==============================================
-    function submitTask(Task memory _task) public override { // submitTask
-        // GelatoCore will generate an TaskReceipt from the _task
-        TaskReceipt memory taskReceipt;
-        taskReceipt.task = _task;
-
-        // Smart Contract Accounts ONLY
-        taskReceipt.userProxy = msg.sender;
-
+    function canSubmitTask(address _executor, address _userProxy, Task memory _task)
+        public
+        view
+        override
+        returns(string memory)
+    {
         // EXECUTOR CHECKS
-        address executor = executorByProvider[_task.provider.addr];
-        require(
-            isExecutorMinStaked(executor),
-            "GelatoCore.submitTask: executorByProvider's stake is insufficient"
-        );
+        if (!isExecutorMinStaked(_executor)) return "GelatoCore.canSubmitTask: executorStake";
 
-        // User checks
-        if (_task.expiryDate != 0) {
-            require(
-                _task.expiryDate >= now,
-                "GelatoCore.submitTask: Invalid expiryDate"
-            );
-        }
+        // ExpiryDate
+        else if (_task.expiryDate != 0)
+            if (_task.expiryDate < now) return "GelatoCore.canSubmitTask: expiryDate";
 
         // Check Provider details
         string memory isProvided;
-        if (msg.sender == _task.provider.addr) isProvided = providerModuleChecks(taskReceipt);
-        else isProvided = isTaskProvided(taskReceipt);
-        require(
-            isProvided.startsWithOk(),
-            string(abi.encodePacked("GelatoCore.submitTask.isProvided:", isProvided))
-        );
+        if (_userProxy == _task.provider.addr)
+            isProvided = providerModuleChecks(_userProxy, _task);
+        else isProvided = isTaskProvided(_userProxy, _task);
+        if (!isProvided.startsWithOk())
+            return string(abi.encodePacked("GelatoCore.canSubmitTask.isProvided:", isProvided));
 
-        // Submit new taskReceipt
-        currentTaskReceiptId++;
-        taskReceipt.id = currentTaskReceiptId;
+        // Success
+        return OK;
+    }
 
-        // TaskReceipt Hashing
+    function submitTask(Task memory _task) public override { // submitTask
+        // Executor
+        address executor = executorByProvider[_task.provider.addr];
+
+        // canSubmit Gate
+        string memory canSubmitRes = canSubmitTask(executor, msg.sender, _task);
+        require(canSubmitRes.startsWithOk(), canSubmitRes);
+
+        // Increment TaskReceipt ID storage
+        uint256 nextTaskId = currentTaskReceiptId + 1;
+        currentTaskReceiptId = nextTaskId;
+
+        // Generate new Task Receipt
+        TaskReceipt memory taskReceipt = TaskReceipt({
+            id: nextTaskId,
+            userProxy: msg.sender, // Smart Contract Accounts ONLY
+            task: _task
+        });
+
+        // Hash TaskReceipt
         bytes32 hashedTaskReceipt = hashTaskReceipt(taskReceipt);
 
-        // TaskReceipt Hash registration
+        // Store TaskReceipt Hash
         taskReceiptHash[taskReceipt.id] = hashedTaskReceipt;
 
         emit LogTaskSubmitted(executor, taskReceipt.id, hashedTaskReceipt, taskReceipt);
+    }
+
+    function multiSubmitTasks(Task[] memory _tasks) public override {
+        for (uint i; i < _tasks.length; i++) submitTask(_tasks[i]);
     }
 
     // ================  CAN EXECUTE EXECUTOR API ============================
@@ -112,7 +124,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             if (!_TR.task.actions[i].termsOkCheck) continue;
 
             try IGelatoAction(_TR.task.actions[i].addr).termsOk(
-                _TR.task.actions[i].data, _TR.userProxy
+                _TR.userProxy,
+                _TR.task.actions[i].data
             )
                 returns(string memory actionTermsOk)
             {
@@ -123,6 +136,13 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             } catch {
                 return "ActionRevertedNoMessage";
             }
+        }
+
+        // Optional chained Task Resubmission validation
+        if (_TR.task.autoSubmitNextTask) {
+            string memory canSubmitRes = canSubmitTask(msg.sender, _TR.userProxy, _TR.task);
+            if (!canSubmitRes.startsWithOk())
+                return string(abi.encodePacked("TaskCannotResubmitItself", canSubmitRes));
         }
 
         // Executor Validation
@@ -281,7 +301,29 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
                 }
             }
         }
+
+        // Optional: automated next Task Submission
+        if (_TR.task.autoSubmitNextTask) _submitNextTask(_TR);
     }
+
+    function _submitNextTask(TaskReceipt memory _TR) private {
+        // Increment TaskReceipt.id in storage ...
+        currentTaskReceiptId++;
+        // ... and sync with memory TaskReceipt to reflect new Receipt
+        _TR.id++;
+
+        // Hash new TaskReceipt
+        bytes32 hashedTaskReceipt = hashTaskReceipt(_TR);
+
+        // Store new TaskReceipt Hash
+        taskReceiptHash[_TR.id] = hashedTaskReceipt;
+
+        emit LogTaskSubmitted(msg.sender, _TR.id, hashedTaskReceipt, _TR);
+
+        // Reset currently being execute TaskReceipt.id for correct value in ExecEvents
+        _TR.id--;
+    }
+
 
     function _processProviderPayables(
         address _provider,
@@ -326,7 +368,10 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     // ================  CANCEL USER / EXECUTOR API ============================
     function cancelTask(TaskReceipt memory _TR) public override {
         // Checks
-        require (msg.sender == _TR.userProxy || msg.sender == _TR.task.provider.addr, "GelatoCore.cancelTask: sender");
+        require(
+            msg.sender == _TR.userProxy || msg.sender == _TR.task.provider.addr,
+            "GelatoCore.cancelTask: sender"
+        );
         // Effects
         bytes32 hashedTaskReceipt = hashTaskReceipt(_TR);
         require(

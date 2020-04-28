@@ -11,7 +11,7 @@ import {
 import {
     IGnosisSafeProxy
 } from "../../../user_proxies/gnosis_safe_proxy/interfaces/IGnosisSafeProxy.sol";
-import { Action, TaskReceipt } from "../../interfaces/IGelatoCore.sol";
+import { Action, Task } from "../../interfaces/IGelatoCore.sol";
 
 contract ProviderModuleGnosisSafeProxy is
     GelatoProviderModuleStandard,
@@ -35,21 +35,20 @@ contract ProviderModuleGnosisSafeProxy is
     // ================= GELATO PROVIDER MODULE STANDARD ================
     // @dev since we check extcodehash prior to execution, we forego the execution option
     //  where the userProxy is deployed at execution time.
-    function isProvided(TaskReceipt memory _TR)
+    function isProvided(address _userProxy, Task memory)
         public
         view
         override
         returns(string memory)
     {
-        address userProxy = _TR.userProxy;
         bytes32 codehash;
-        assembly { codehash := extcodehash(userProxy) }
+        assembly { codehash := extcodehash(_userProxy) }
         if (!isProxyExtcodehashProvided[codehash])
             return "ProviderModuleGnosisSafeProxy.isProvided:InvalidGSPCodehash";
-        address mastercopy = IGnosisSafeProxy(userProxy).masterCopy();
+        address mastercopy = IGnosisSafeProxy(_userProxy).masterCopy();
         if (!isMastercopyProvided[mastercopy])
             return "ProviderModuleGnosisSafeProxy.isProvided:InvalidGSPMastercopy";
-        if (!isGelatoCoreWhitelisted(userProxy))
+        if (!isGelatoCoreWhitelisted(_userProxy))
             return "ProviderModuleGnosisSafeProxy.isProvided:GelatoCoreNotWhitelisted";
         return OK;
     }

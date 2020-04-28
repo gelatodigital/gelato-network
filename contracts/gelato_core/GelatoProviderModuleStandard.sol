@@ -2,13 +2,13 @@ pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
 import { IGelatoProviderModule } from "./interfaces/IGelatoProviderModule.sol";
-import { TaskReceipt } from "./interfaces/IGelatoCore.sol";
+import { Task } from "./interfaces/IGelatoCore.sol";
 
 abstract contract GelatoProviderModuleStandard is IGelatoProviderModule {
 
     string internal constant OK = "OK";
 
-    function isProvided(TaskReceipt calldata)
+    function isProvided(address, Task calldata)
         external
         view
         override

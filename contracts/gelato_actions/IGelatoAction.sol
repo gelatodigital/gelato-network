@@ -22,6 +22,8 @@ interface IGelatoAction {
     );
 
 
-    function termsOk(bytes calldata _actionData, address _userProxy) external view returns (string memory);
-
+    function termsOk(address _userProxy, bytes calldata _actionData)
+        external
+        view
+        returns(string memory);
 }

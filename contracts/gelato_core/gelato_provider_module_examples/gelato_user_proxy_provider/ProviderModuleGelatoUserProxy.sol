@@ -2,7 +2,7 @@ pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
 import { GelatoProviderModuleStandard } from "../../GelatoProviderModuleStandard.sol";
-import { Action, TaskReceipt } from "../../interfaces/IGelatoCore.sol";
+import { Action, Task } from "../../interfaces/IGelatoCore.sol";
 import {
     IGelatoUserProxyFactory
 } from "../../../user_proxies/gelato_user_proxy/interfaces/IGelatoUserProxyFactory.sol";
@@ -18,14 +18,14 @@ contract ProviderModuleGelatoUserProxy is GelatoProviderModuleStandard {
     }
 
     // ================= GELATO PROVIDER MODULE STANDARD ================
-    function isProvided(TaskReceipt calldata _TR)
+    function isProvided(address _userProxy, Task calldata)
         external
         view
         override
         returns(string memory)
     {
         bool proxyOk = IGelatoUserProxyFactory(gelatoUserProxyFactory).isGelatoUserProxy(
-            _TR.userProxy
+            _userProxy
         );
         if (!proxyOk) return "ProviderModuleGelatoUserProxy.isProvided:InvalidUserProxy";
         return OK;

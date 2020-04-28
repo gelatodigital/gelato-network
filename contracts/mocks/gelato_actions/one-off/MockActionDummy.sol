@@ -1,5 +1,7 @@
 pragma solidity ^0.6.6;
 
+import "@nomiclabs/buidler/console.sol";
+
 import { GelatoActionsStandard } from "../../../gelato_actions/GelatoActionsStandard.sol";
 
 contract MockActionDummy is GelatoActionsStandard {
@@ -9,7 +11,7 @@ contract MockActionDummy is GelatoActionsStandard {
         emit LogAction(_falseOrTrue);
     }
 
-    function termsOk(bytes calldata _data, address) external view override virtual returns(string memory) {
+    function termsOk(address, bytes calldata _data) external view override virtual returns(string memory) {
         bool isOk = abi.decode(_data, (bool));
         return termsOk(isOk);
     }

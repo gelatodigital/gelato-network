@@ -32,13 +32,13 @@ contract MockActionMaliciousProvider  {
 
     function multiProvide(
         address _executor,
-        TaskSpec[] calldata _TaskSpecs,
+        TaskSpec[] calldata _taskSpecs,
         IGelatoProviderModule[] calldata _modules
     )
         external
         payable
     {
-        try gelato.multiProvide{value: msg.value}(_executor, _TaskSpecs, _modules) {
+        try gelato.multiProvide{value: msg.value}(_executor, _taskSpecs, _modules) {
         } catch Error(string memory err) {
             revert(
                 string(abi.encodePacked("MockActionMaliciousProvider.multiProvide:", err))

@@ -326,10 +326,6 @@ describe("GelatoCore.exec", function () {
         task,
       };
 
-      // Should return "OK"
-
-      //const isProvided = await gelatoCore.isTaskSpecProvided(taskReceipt);
-
       // LogTaskSubmitted(executor, taskReceipt.id, hashedTaskReceipt, taskReceipt);
       await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
@@ -472,9 +468,6 @@ describe("GelatoCore.exec", function () {
         task,
       };
 
-      // Should return "OK"
-      // const isProvided = await gelatoCore.isTaskSpecProvided(taskReceipt);
-
       await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
         "LogTaskSubmitted"
@@ -558,9 +551,6 @@ describe("GelatoCore.exec", function () {
         task,
       };
 
-      // Should return "OK"
-      // const isProvided = await gelatoCore.isTaskSpecProvided(taskReceipt);
-
       await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
         "LogTaskSubmitted"
@@ -643,9 +633,6 @@ describe("GelatoCore.exec", function () {
         task,
       };
 
-      // Should return "OK"
-      // const isProvided = await gelatoCore.isTaskSpecProvided(taskReceipt);
-
       await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
         "LogTaskSubmitted"
@@ -722,9 +709,6 @@ describe("GelatoCore.exec", function () {
         task,
       };
 
-      // Should return "OK"
-      // const isProvided = await gelatoCore.isTaskSpecProvided(taskReceipt);
-
       await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
         "LogTaskSubmitted"
@@ -796,9 +780,6 @@ describe("GelatoCore.exec", function () {
         task,
       };
 
-      // Should return "OK"
-      // const isProvided = await gelatoCore.isTaskSpecProvided(taskReceipt);
-
       await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
         "LogTaskSubmitted"
@@ -866,9 +847,6 @@ describe("GelatoCore.exec", function () {
         userProxy: userProxyAddress,
         task,
       };
-
-      // Should return "OK"
-      // const isProvided = await gelatoCore.isTaskSpecProvided(taskReceipt);
 
       await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
@@ -1153,10 +1131,6 @@ describe("GelatoCore.exec", function () {
         task,
       };
 
-      // Should return "OK"
-
-      //const isProvided = await gelatoCore.isTaskSpecProvided(taskReceipt);
-
       // LogTaskSubmitted(executor, taskReceipt.id, hashedTaskReceipt, taskReceipt);
 
       await expect(userProxy.submitTask(task)).to.emit(
@@ -1243,10 +1217,6 @@ describe("GelatoCore.exec", function () {
         userProxy: userProxyAddress,
         task,
       };
-
-      // Should return "OK"
-
-      //const isProvided = await gelatoCore.isTaskSpecProvided(taskReceipt);
 
       // LogTaskSubmitted(executor, taskReceipt.id, hashedTaskReceipt, taskReceipt);
 
