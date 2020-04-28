@@ -38,17 +38,13 @@ contract ActionPlaceOrderBatchExchange  {
     /// @param _sellAmount Amount to sell
     /// @param _buyAmount Amount to receive (at least)
     /// @param _orderExpirationBatchId Expiration batch id of order and id used to request withdrawals for
-    /// @param _task Task which will be submitted on gelato (ActionWithdrawFromBatchExchangeWithMaker)
     function action(
         address _user,
         address _sellToken,
         address _buyToken,
         uint128 _sellAmount,
         uint128 _buyAmount,
-        uint32 _orderExpirationBatchId,
-        // Withdraw
-        address _gelatoCore,
-        Task memory _task
+        uint32 _orderExpirationBatchId
     )
         public
         virtual
@@ -99,12 +95,6 @@ contract ActionPlaceOrderBatchExchange  {
         try batchExchange.requestFutureWithdraw(_buyToken, MAX_UINT, _orderExpirationBatchId) {}
         catch {
             revert("batchExchange.requestFutureWithdraw _buyToken failed");
-        }
-
-        // 9. Submit Task to withdraw from batch exchange
-        try IGelatoCore(_gelatoCore).submitTask(_task) {
-        } catch {
-            revert("_gelatoCore.submitTask: Submitting chainedTask unsuccessful");
         }
 
     }

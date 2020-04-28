@@ -3,8 +3,8 @@ import { defaultNetwork } from "../../../../../buidler.config";
 import { constants, utils } from "ethers";
 
 export default task(
-  "gc-createCpkProxyAndSwap",
-  `Creates Cpk proxy for user, sells on batch exchange and tasks a gelato bot to withdraw the funds later and send them back to the users EOA on ${defaultNetwork})`
+  "gc-timetrade",
+  `Creates a gelato task that sells sellToken on Batch Exchange every X mintues/hours/days on ${defaultNetwork})`
 )
   .addOptionalParam(
     "mnemonicIndex",
@@ -32,18 +32,8 @@ export default task(
     "5000000000000000"
   )
   .addOptionalParam(
-    "batchId",
-    "Batch Exchange Batch Id after which which the funds will be automatically withdrawn"
-  )
-  .addOptionalParam(
     "gelatoprovider",
     "Gelato Provider who pays ETH on gelato for the users transaction, defaults to provider of gelato core team"
-  )
-  .addOptionalParam(
-    "saltnonce",
-    "CPK factory faltnonce, defaults to standard",
-    "0xcfe33a586323e7325be6aa6ecd8b4600d232a9037e83c8ece69413b777dabe65",
-    types.string
   )
   .addFlag("log", "Logs return values to stdout")
   .setAction(async (taskArgs) => {

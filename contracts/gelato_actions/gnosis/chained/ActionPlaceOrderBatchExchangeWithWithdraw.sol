@@ -124,7 +124,7 @@ contract ActionPlaceOrderBatchExchangeWithWithdraw  {
         virtual
         returns(string memory)  // actionCondition
     {
-        (address _user, address _sellToken, , uint128 _sellAmount, ,) = abi.decode(_actionData, (address, address, address, uint128, uint128, uint32));
+        (address _user, address _sellToken, , uint128 _sellAmount, , , ,) = abi.decode(_actionData, (address, address, address, uint128, uint128, uint32, address, Task));
         return _actionProviderTermsCheck(_user, _userProxy, _sellToken, _sellAmount);
     }
 
