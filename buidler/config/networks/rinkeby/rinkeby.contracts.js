@@ -18,6 +18,8 @@ export const contracts = [
   "ActionChainedTimedERC20TransferFromRinkeby",
   // Portfolio Mgmt
   "ActionChainedRebalancePortfolioRinkeby",
+  // Gnosis
+  "ActionPlaceOrderBatchExchangeWithWithdraw",
 
   // === GelatoCore ===
   "GelatoCore",
@@ -51,5 +53,5 @@ export const contracts = [
   "Medianizer2",
 
   // Helpers
-  "FeeFinder",
+  "FeeExtractor",
 ];

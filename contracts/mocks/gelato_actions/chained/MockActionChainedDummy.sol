@@ -33,7 +33,7 @@ contract MockActionChainedDummy is GelatoActionsStandard {
 
     // ======= ACTION CONDITIONS CHECK =========
     // Overriding and extending GelatoActionsStandard's function (optional)
-    function termsOk(bytes calldata _actionData)
+    function termsOk(bytes calldata _actionData, address _userProxy)
         external
         view
         override
@@ -47,17 +47,17 @@ contract MockActionChainedDummy is GelatoActionsStandard {
         );
 
         // Else: Check and Return current contract actionTermsOk
-        return termsOk(taskReceipt, gelatoCore);
+        return termsOk(taskReceipt, gelatoCore, _userProxy);
     }
 
-    function termsOk(TaskReceipt memory _TR, GelatoCore _gelatoCore)
+    function termsOk(TaskReceipt memory _TR, GelatoCore _gelatoCore, address _userProxy)
         public
         view
         virtual
         returns(string memory)  // actionTermsOk
     {
 
-        if (_TR.userProxy != _TR.task.provider.addr) {
+        if (_userProxy != _TR.task.provider.addr) {
             string memory isProvided = _gelatoCore.isTaskProvided(
                 _TR
             );

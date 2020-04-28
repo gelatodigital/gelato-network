@@ -1,12 +1,13 @@
 pragma solidity ^0.6.3;
 pragma experimental ABIEncoderV2;
 
-import { ScriptGnosisSafeEnableGelatoCore } from "../../user_proxies/gnosis_safe_proxy/scripts/ScriptGnosisSafeEnableGelatoCore.sol";
-import { IGelatoCore } from "../../gelato_core/interfaces/IGelatoCore.sol";
-import { ActionWithdrawBatchExchange } from "./ActionWithdrawBatchExchange.sol";
-import { ActionPlaceOrderBatchExchange } from "./ActionPlaceOrderBatchExchange.sol";
-import { IBatchExchange } from "../../dapp_interfaces/gnosis/IBatchExchange.sol";
-import { Task, IGelatoCore } from "../../gelato_core/interfaces/IGelatoCore.sol";
+import { ScriptGnosisSafeEnableGelatoCore } from "../../../contracts/user_proxies/gnosis_safe_proxy/scripts/ScriptGnosisSafeEnableGelatoCore.sol";
+import { IGelatoCore } from "../../../contracts/gelato_core/interfaces/IGelatoCore.sol";
+import { ActionWithdrawBatchExchangeOld } from "./ActionWithdrawBatchExchangeOld.sol";
+import { ActionPlaceOrderBatchExchange } from "../../../contracts/gelato_actions/gnosis/ActionPlaceOrderBatchExchange.sol";
+import { IBatchExchange } from "../../../contracts/dapp_interfaces/gnosis/IBatchExchange.sol";
+import { Task, IGelatoCore } from "../../../contracts/gelato_core/interfaces/IGelatoCore.sol";
+import { FeeExtractor } from "../../../contracts/gelato_helpers/FeeExtractor.sol";
 
 
 /// @title ScriptEnterStableSwap
@@ -14,8 +15,7 @@ import { Task, IGelatoCore } from "../../gelato_core/interfaces/IGelatoCore.sol"
 /// @notice Script that 1) whitelists gelato core as gnosis safe module, 2) places order on batch exchange and submits two withdraw requests and 3) submits Task on gelato for a withdraw action
 contract ScriptEnterStableSwap is ActionPlaceOrderBatchExchange, ScriptGnosisSafeEnableGelatoCore {
 
-    constructor(address _batchExchange) ActionPlaceOrderBatchExchange(_batchExchange) public {
-    }
+    constructor(address _batchExchange, address _feeExtractor) ActionPlaceOrderBatchExchange(_batchExchange, _feeExtractor) public {}
 
     /// @notice Place order on Batch Exchange and request future withdraw for buy and sell token
     /// @dev Only delegate call into this script
@@ -26,7 +26,7 @@ contract ScriptEnterStableSwap is ActionPlaceOrderBatchExchange, ScriptGnosisSaf
     /// @param _buyAmount Amount to receive (at least)
     /// @param _orderExpirationBatchId Expiration batch id of order and id used to request withdrawals for
     /// @param _gelatoCore Address of gelatoCore
-    /// @param _task Task which will be submitted on gelato (ActionWithdrawFromBatchExchangeWithMaker)
+    /// @param _task Task which will be submitted on gelato (ActionWithdrawFromBatchExchange)
     function enterStableSwap(
         address _user,
         address _sellToken,
@@ -46,19 +46,14 @@ contract ScriptEnterStableSwap is ActionPlaceOrderBatchExchange, ScriptGnosisSaf
         // 2. Execute Trade on BatchExchange
         action(
             _user,
-            address(this),
             _sellToken,
             _buyToken,
             _sellAmount,
             _buyAmount,
-            _orderExpirationBatchId
+            _orderExpirationBatchId,
+            _gelatoCore,
+            _task
         );
-
-        // 3. Submit Task
-        try IGelatoCore(_gelatoCore).submitTask(_task) {
-        } catch {
-            revert("Submitting chainedTask unsuccessful");
-        }
 
     }
 

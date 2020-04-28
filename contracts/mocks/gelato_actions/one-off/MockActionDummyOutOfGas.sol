@@ -18,7 +18,7 @@ contract MockActionDummyOutOfGas is GelatoActionsStandard {
         assert(false);
     }
 
-    function termsOk(bytes calldata data) external view override virtual returns(string memory) {
+    function termsOk(bytes calldata data, address) external view override virtual returns(string memory) {
         (bool isOk) = abi.decode(data, (bool));
         address(this).staticcall(abi.encodePacked(this.placeholder.selector));
         return termsOk(isOk);

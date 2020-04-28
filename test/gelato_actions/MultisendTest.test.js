@@ -124,14 +124,6 @@ describe("Multisend with Gelato User Proxy Test", function () {
     );
     await WETH.deployed();
 
-    const ActionWithdrawBatchExchange = await ethers.getContractFactory(
-      "ActionWithdrawBatchExchange"
-    );
-    actionWithdrawBatchExchange = await ActionWithdrawBatchExchange.deploy(
-      mockBatchExchange.address,
-      WETH.address,
-      providerAddress
-    );
     // // #### ActionWithdrawBatchExchange End ####
 
     // Call provideFunds(value) with provider on core
@@ -153,29 +145,6 @@ describe("Multisend with Gelato User Proxy Test", function () {
       termsOkCheck: true,
       value: 0,
     });
-
-    const actionWithdrawBatchExchangeGelato = new Action({
-      inst: actionWithdrawBatchExchange.address,
-      data: constants.HashZero,
-      operation: Operation.Delegatecall,
-      termsOkCheck: true,
-      value: 0,
-    });
-
-    const newTaskSpec = new TaskSpec({
-      conditionInst: condition.inst,
-      actions: [actionWithdrawBatchExchangeGelato],
-      gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
-    });
-
-    // Call multiProvideexecutor, TaskSpecs[], providerModules[])
-    await gelatoCore
-      .connect(provider)
-      .multiProvide(
-        executorAddress,
-        [newTaskSpec],
-        [providerModuleGelatoUserProxy.address]
-      );
 
     // Create UserProxy
     const createTx = await gelatoUserProxyFactory

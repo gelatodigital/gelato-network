@@ -12,7 +12,7 @@ abstract contract GelatoActionsStandard is IGelatoAction {
         return IGelatoAction.action.selector;
     }
 
-    function termsOk(bytes calldata)  // _actionData
+    function termsOk(bytes calldata, address)  // _actionData
         external
         view
         override

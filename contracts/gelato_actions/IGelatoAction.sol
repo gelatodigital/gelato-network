@@ -23,7 +23,7 @@ interface IGelatoAction {
 
     function action(bytes calldata _actionData) external payable;
 
-    function termsOk(bytes calldata _actionData) external view returns (string memory);
+    function termsOk(bytes calldata _actionData, address _userProxy) external view returns (string memory);
 
     function actionStandardSelector() external pure returns(bytes4);
 }

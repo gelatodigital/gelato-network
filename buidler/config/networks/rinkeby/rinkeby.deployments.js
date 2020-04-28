@@ -2,8 +2,10 @@ export const deployments = {
   // ========== Rinkeby ===========
   // ==== One-Off Actions ====
   // Gnosis
-  ActionWithdrawBatchExchange: "0xf9A9F03EB2246957308E544e2994582e19950f7c",
-  ActionPlaceOrderBatchExchange: "0xDBF368e549604CC78684e83955C73346860D6EA2",
+  ActionWithdrawBatchExchange: "0x1b3f567c4a6f064FE770498F734C4C25F4C0239e",
+  ActionPlaceOrderBatchExchange: "0xA5C2Fe84D9E8f90024f5D573FC17Fb176226b25b",
+  ActionPlaceOrderBatchExchangeWithWithdraw:
+    "0xA36F8de45b1B1A348cBe26d9ED1a5Cf26eC2da9F",
   // erc20
   ActionERC20Transfer: "0x0",
   ActionERC20TransferFrom: "0x38a020C3392C28658F19dC0DBC9aD9D2Bb32b71f",
@@ -20,10 +22,10 @@ export const deployments = {
   ActionChainedRebalancePortfolioRinkeby: "0x0",
 
   // ===== Gelato Core ====
-  GelatoCore: "0x9587bA2A2AdE6512F960F59eD9c7E9021D081A07",
-  GelatoGasPriceOracle: "0x56F5B424d766B8c7Acd529C32AAc89139baEf570",
+  GelatoCore: "0x310D17c1B5023f2CfCF37eFb54EA6a1532000ACc",
+  GelatoGasPriceOracle: "0xA48751C5C5C8Ed452e19E650AB9FF7Df0b6Ba762",
   ProviderModuleGelatoUserProxy: "0x0",
-  ProviderModuleGnosisSafeProxy: "0x8187B4cb7B82132363DCE0BC9e16E47a04f175F6",
+  ProviderModuleGnosisSafeProxy: "0xa5DCeC8D4A11BDEA5E888Ca2978e88CFd083C037",
 
   // ==== Conditions ====
   // == Balances ==
@@ -58,4 +60,5 @@ export const deployments = {
 
   // Helpers
   FeeFinder: "0x220D8543325364D004661F73E0253C7CC6a4ACc1",
+  FeeExtractor: "0x58c26C4D995e800D40a19cC45d4FACE05b7477Df",
 };

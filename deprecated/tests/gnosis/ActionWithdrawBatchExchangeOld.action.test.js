@@ -173,10 +173,10 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
     await medianizer2.deployed();
 
     // Deploy Fee Finder
-    const FeeFinder = await ethers.getContractFactory("FeeFinder");
+    const FeeExtractor = await ethers.getContractFactory("FeeExtractor");
 
     // Deploy Test feefinder (Assuming we only hit hard coded tokens, not testing uniswap, kyber or maker oracle)
-    const feeFinder = await FeeFinder.deploy(
+    const feeExtractor = await FeeExtractor.deploy(
       sellToken.address,
       buyToken.address,
       constants.AddressZero,
@@ -190,15 +190,14 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       medianizer2.address,
       medianizer2.address
     );
-    await feeFinder.deployed();
+    await feeExtractor.deployed();
 
     const ActionWithdrawBatchExchange = await ethers.getContractFactory(
       "ActionWithdrawBatchExchange"
     );
     actionWithdrawBatchExchange = await ActionWithdrawBatchExchange.deploy(
       mockBatchExchange.address,
-      providerAddress,
-      feeFinder.address
+      feeExtractor.address
     );
 
     await actionWithdrawBatchExchange.deployed();

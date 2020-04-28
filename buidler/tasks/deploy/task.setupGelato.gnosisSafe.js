@@ -59,8 +59,8 @@ export default task("setupgelato-gnosissafeproxy")
               addressbookentry: "batchExchange",
             });
 
-            const feeFinderAddress = await run("bre-config", {
-              contractname: "FeeFinder",
+            const feeExtractorAddress = await run("bre-config", {
+              contractname: "FeeExtractor",
               log: taskArgs.log,
               deployments: true,
             });
@@ -69,7 +69,7 @@ export default task("setupgelato-gnosissafeproxy")
             actionconstructorargs = [
               batchExchange,
               gelatoProviderAddress,
-              feeFinderAddress,
+              feeExtractorAddress,
             ];
           }
           const deployedAction = await run("deploy", {

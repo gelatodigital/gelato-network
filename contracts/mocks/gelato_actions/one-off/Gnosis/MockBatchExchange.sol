@@ -4,7 +4,7 @@ import { GelatoActionsStandard } from "../../../../gelato_actions/GelatoActionsS
 import { SafeERC20 } from "../../../../external/SafeERC20.sol";
 import { IERC20 } from "../../../../external/IERC20.sol";
 
-contract MockBatchExchange is GelatoActionsStandard {
+contract MockBatchExchange {
 
     using SafeERC20 for IERC20;
 
@@ -16,7 +16,7 @@ contract MockBatchExchange is GelatoActionsStandard {
 
     uint256 public counter;
 
-    function action(bytes calldata) external payable override virtual {
+    function action(bytes calldata) external payable virtual {
     }
 
     function withdraw(address _proxyAddress, address _token)

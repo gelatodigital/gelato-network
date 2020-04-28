@@ -11,7 +11,7 @@ contract MockActionDummyRevert is GelatoActionsStandard {
         revert("MockActionDummyRevert.action: test revert");
     }
 
-    function termsOk(bytes calldata data) external view override virtual returns(string memory) {
+    function termsOk(bytes calldata data, address) external view override virtual returns(string memory) {
         bool isOk = abi.decode(data, (bool));
         return termsOk(isOk);
     }

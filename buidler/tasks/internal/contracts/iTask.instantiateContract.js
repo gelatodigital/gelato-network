@@ -21,7 +21,7 @@ export default internalTask(
       if (!contractaddress) {
         contractaddress = await run("bre-config", {
           deployments: true,
-          contractname
+          contractname,
         });
       }
       const abi = await run("abi-get", { contractname });

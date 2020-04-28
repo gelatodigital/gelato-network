@@ -1,22 +1,22 @@
 pragma solidity ^0.6.5;
 pragma experimental ABIEncoderV2;
 
-import { GelatoActionsStandard } from "../GelatoActionsStandard.sol";
-import { IGelatoAction } from "../IGelatoAction.sol";
-import { IERC20 } from "../../external/IERC20.sol";
-import { SafeERC20 } from "../../external/SafeERC20.sol";
-import { SafeMath } from "../../external/SafeMath.sol";
-import { IBatchExchange } from "../../dapp_interfaces/gnosis/IBatchExchange.sol";
-import { Task, IGelatoCore } from "../../gelato_core/interfaces/IGelatoCore.sol";
-import { FeeExtractor } from "../../gelato_helpers/FeeExtractor.sol";
+import { GelatoActionsStandard } from "../../GelatoActionsStandard.sol";
+import { IGelatoAction } from "../../IGelatoAction.sol";
+import { IERC20 } from "../../../external/IERC20.sol";
+import { SafeERC20 } from "../../../external/SafeERC20.sol";
+import { SafeMath } from "../../../external/SafeMath.sol";
+import { IBatchExchange } from "../../../dapp_interfaces/gnosis/IBatchExchange.sol";
+import { Task, IGelatoCore } from "../../../gelato_core/interfaces/IGelatoCore.sol";
+import { FeeExtractor } from "../../../gelato_helpers/FeeExtractor.sol";
 
 
 
-/// @title ActionPlaceOrderBatchExchange
+/// @title ActionPlaceOrderBatchExchangeWithWithdraw
 /// @author Luis Schliesske & Hilmar Orth
-/// @notice Gelato action that 1) withdraws funds form user's  EOA, 2) deposits on Batch Exchange, 3) Places order on batch exchange and 4) requests future withdraw on batch exchange
+/// @notice Gelato action that 1) executes PlaceOrder on Batch Exchange, 2) buys withdraw credit from provider and 3) creates withdraw task on gelato
 
-contract ActionPlaceOrderBatchExchange  {
+contract ActionPlaceOrderBatchExchangeWithWithdraw  {
 
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
@@ -64,6 +64,13 @@ contract ActionPlaceOrderBatchExchange  {
         // 1. Transfer sellToken to proxy
         IERC20 sellToken = IERC20(_sellToken);
         sellToken.safeTransferFrom(_user, address(this), _sellAmount);
+
+        // 2. Pay fee to provider
+        uint256 fee = feeExtractor.getFeeAmount(_sellToken);
+        sellToken.safeIncreaseAllowance(address(feeExtractor), fee);
+        feeExtractor.payFee(_sellToken, fee);
+        // Deduct fee from sell amount
+        _sellAmount -= uint128(fee);
 
 
         // 2. Fetch token Ids for sell & buy token on Batch Exchange
