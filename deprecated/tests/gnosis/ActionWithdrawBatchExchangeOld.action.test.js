@@ -216,7 +216,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
     });
 
     const actionERC20TransferFromGelato = new Action({
-      inst: actionERC20TransferFrom.address,
+      addr: actionERC20TransferFrom.address,
       data: constants.HashZero,
       operation: Operation.Delegatecall,
       value: 0,
@@ -224,7 +224,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
     });
 
     const actionWithdrawBatchExchangeGelato = new Action({
-      inst: actionWithdrawBatchExchange.address,
+      addr: actionWithdrawBatchExchange.address,
       data: constants.HashZero,
       operation: Operation.Delegatecall,
       value: 0,
@@ -232,7 +232,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
     });
 
     const newTaskSpec = new TaskSpec({
-      conditionInst: condition.inst,
+      conditions: [condition.inst],
       actions: [actionWithdrawBatchExchangeGelato],
       gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
     });
@@ -291,7 +291,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       });
 
       const gelatoAction = {
-        inst: actionWithdrawBatchExchange.address,
+        addr: actionWithdrawBatchExchange.address,
         data: withdrawPayload,
         operation: Operation.Delegatecall,
         value: 0,
@@ -341,7 +341,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       });
 
       const gelatoAction = {
-        inst: actionWithdrawBatchExchange.address,
+        addr: actionWithdrawBatchExchange.address,
         data: withdrawPayload,
         operation: Operation.Delegatecall,
         value: 0,
@@ -391,7 +391,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       });
 
       const gelatoAction = {
-        inst: actionWithdrawBatchExchange.address,
+        addr: actionWithdrawBatchExchange.address,
         data: withdrawPayload,
         operation: Operation.Delegatecall,
         value: 0,
@@ -442,7 +442,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       });
 
       const gelatoAction = {
-        inst: actionWithdrawBatchExchange.address,
+        addr: actionWithdrawBatchExchange.address,
         data: withdrawPayload,
         operation: Operation.Delegatecall,
         value: 0,
@@ -486,7 +486,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       });
 
       const gelatoAction = {
-        inst: actionWithdrawBatchExchange.address,
+        addr: actionWithdrawBatchExchange.address,
         data: withdrawPayload,
         operation: Operation.Delegatecall,
         value: 0,
@@ -537,7 +537,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       });
 
       const gelatoAction = {
-        inst: actionWithdrawBatchExchange.address,
+        addr: actionWithdrawBatchExchange.address,
         data: withdrawPayload,
         operation: Operation.Delegatecall,
         value: 0,
@@ -585,7 +585,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       });
 
       const gelatoAction = {
-        inst: actionWithdrawBatchExchange.address,
+        addr: actionWithdrawBatchExchange.address,
         data: withdrawPayload,
         operation: Operation.Delegatecall,
         value: 0,
@@ -629,7 +629,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       });
 
       const gelatoAction = {
-        inst: actionWithdrawBatchExchange.address,
+        addr: actionWithdrawBatchExchange.address,
         data: withdrawPayload,
         operation: Operation.Delegatecall,
         value: 0,

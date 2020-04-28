@@ -92,7 +92,7 @@ export default task("gc-debug-newcore")
         provider: testSigner,
         providerModule: providerModuleGelatoUserProxy.address,
         user: constants.AddressZero,
-        condition: condition ? condition.address : constants.AddressZero,
+        conditions: condition ? [condition.address] : [constants.AddressZero],
         action: action.address,
         conditionData: conditionData,
         actionData: actionData,

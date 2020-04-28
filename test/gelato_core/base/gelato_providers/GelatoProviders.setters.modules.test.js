@@ -97,31 +97,24 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
       addr: providerAddress,
       module: fakeProviderModule.address,
     });
-    const condition = new Condition({
-      inst: constants.AddressZero,
-      data: constants.HashZero,
-    });
     const action = new Action({
-      inst: constants.AddressZero,
+      addr: constants.AddressZero,
       data: constants.HashZero,
       operation: Operation.Call,
       termsOkCheck: true,
     });
     const task = new Task({
       provider: gelatoProvider,
-      condition,
       actions: [action],
       expiryDate: constants.Zero,
     });
     const otherTask = new Task({
       provider: otherGelatoProvider,
-      condition,
       actions: [action],
       expiryDate: constants.Zero,
     });
     const fakeTask = new Task({
       provider: fakeGelatoProvider,
-      condition,
       actions: [action],
       expiryDate: constants.Zero,
     });
@@ -142,9 +135,8 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
       task: fakeTask,
     });
 
-    // Condition Action Mix
+    // Task Spec
     taskSpec = new TaskSpec({
-      conditionInst: condition.inst,
       actions: [action],
       gasPriceCeil,
     });

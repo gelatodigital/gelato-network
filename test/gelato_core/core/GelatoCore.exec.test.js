@@ -220,29 +220,21 @@ describe("GelatoCore.exec", function () {
 
     // Register new provider TaskSpec on core with provider EDITS NEED ä#######################
 
-    const condition = new Condition({
-      inst: constants.AddressZero,
-      data: constants.HashZero,
-    });
-
     actionERC20TransferFromGelato = new Action({
-      inst: actionERC20TransferFrom.address,
+      addr: actionERC20TransferFrom.address,
       data: constants.HashZero,
       operation: Operation.Delegatecall,
-      value: 0,
       termsOkCheck: true,
     });
 
     const actionWithdrawBatchExchangeGelato = new Action({
-      inst: actionWithdrawBatchExchange.address,
+      addr: actionWithdrawBatchExchange.address,
       data: constants.HashZero,
       operation: Operation.Delegatecall,
-      value: 0,
       termsOkCheck: true,
     });
 
     const newTaskSpec = new TaskSpec({
-      conditionInst: condition.inst,
       actions: [actionWithdrawBatchExchangeGelato],
       gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
     });
@@ -258,7 +250,7 @@ describe("GelatoCore.exec", function () {
 
     // Call multiProvide for mockConditionDummy + actionERC20TransferFrom
     const newTaskSpec2 = new TaskSpec({
-      conditionInst: mockConditionDummy.address,
+      conditions: [mockConditionDummy.address],
       actions: [actionERC20TransferFromGelato],
       gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
     });
@@ -291,12 +283,10 @@ describe("GelatoCore.exec", function () {
   });
 
   // We test different functionality of the contract as normal Mocha tests.
-  describe("GelatoCore.Exec", function () {
+  describe("GelatoCore.exec", function () {
     it("#1: Successfully submit and exec ActionWithdrawBatchExchange taskReceipt", async function () {
       // Get Action Payload
       const withdrawAmount = 10 * 10 ** buyDecimals;
-
-      const sellerBalanceBefore = await buyToken.balanceOf(sellerAddress);
 
       // 3. MockBatchExchange Set withdraw amount
       tx = await mockBatchExchange.setWithdrawAmount(
@@ -305,17 +295,9 @@ describe("GelatoCore.exec", function () {
       );
       await tx.wait();
 
-      // 4. Withdraw Funds from BatchExchange with withdraw action
-
-      // const abiCoder = ethers.utils.defaultAbiCoder;
-      // const withdrawPayload = abiCoder.encode(
-      //   ["address", "address", "address", "address"],
-      //   [sellerAddress, userProxyAddress, sellToken.address, buyToken.address]
-      // );
-
       const actionData = await run("abi-encode-withselector", {
         contractname: "ActionWithdrawBatchExchange",
-        functionname: "doubleWithdraw",
+        functionname: "action",
         inputs: [sellToken.address, buyToken.address],
       });
 
@@ -325,22 +307,15 @@ describe("GelatoCore.exec", function () {
         module: providerModuleGelatoUserProxy.address,
       });
 
-      const condition = new Condition({
-        inst: constants.AddressZero,
-        data: constants.HashZero,
-      });
-
       const action = new Action({
-        inst: actionWithdrawBatchExchange.address,
+        addr: actionWithdrawBatchExchange.address,
         data: actionData,
         operation: Operation.Delegatecall,
-        value: 0,
         termsOkCheck: true,
       });
 
       const task = new Task({
         provider: gelatoProvider,
-        condition,
         actions: [action],
         expiryDate: constants.HashZero,
       });
@@ -356,7 +331,6 @@ describe("GelatoCore.exec", function () {
       //const isProvided = await gelatoCore.isTaskSpecProvided(taskReceipt);
 
       // LogTaskSubmitted(executor, taskReceipt.id, hashedTaskReceipt, taskReceipt);
-
       await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
         "LogTaskSubmitted"
@@ -416,21 +390,21 @@ describe("GelatoCore.exec", function () {
 
       await userProxy.connect(seller).multiExecActions([
         {
-          inst: sellToken.address,
+          addr: sellToken.address,
           data: transferFromData,
           operation: Operation.Call,
           termsOkCheck: false,
           value: 0,
         },
         {
-          inst: sellToken.address,
+          addr: sellToken.address,
           data: approvalData,
           operation: Operation.Call,
           termsOkCheck: false,
           value: 0,
         },
         {
-          inst: feeExtractor.address,
+          addr: feeExtractor.address,
           data: payFeeData,
           operation: Operation.Call,
           termsOkCheck: false,
@@ -450,7 +424,7 @@ describe("GelatoCore.exec", function () {
 
       const actionData = await run("abi-encode-withselector", {
         contractname: "ActionERC20TransferFrom",
-        functionname: "transferFrom",
+        functionname: "action",
         inputs: [
           {
             user: sellerAddress,
@@ -479,16 +453,15 @@ describe("GelatoCore.exec", function () {
       });
 
       const action = new Action({
-        inst: actionERC20TransferFrom.address,
+        addr: actionERC20TransferFrom.address,
         data: actionData,
         operation: Operation.Delegatecall,
-        value: 0,
         termsOkCheck: true,
       });
 
       const task = new Task({
         provider: gelatoProvider,
-        condition,
+        conditions: [condition],
         actions: [action],
         expiryDate: constants.HashZero,
       });
@@ -528,7 +501,7 @@ describe("GelatoCore.exec", function () {
       await mockConditionDummyRevert.deployed();
 
       const newTaskSpec2 = new TaskSpec({
-        conditionInst: mockConditionDummyRevert.address,
+        conditions: [mockConditionDummyRevert.address],
         actions: [actionERC20TransferFromGelato],
         gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
       });
@@ -537,7 +510,7 @@ describe("GelatoCore.exec", function () {
 
       const actionData = await run("abi-encode-withselector", {
         contractname: "ActionERC20TransferFrom",
-        functionname: "transferFrom",
+        functionname: "action",
         inputs: [
           {
             user: sellerAddress,
@@ -566,16 +539,15 @@ describe("GelatoCore.exec", function () {
       });
 
       const action = new Action({
-        inst: actionERC20TransferFrom.address,
+        addr: actionERC20TransferFrom.address,
         data: actionData,
         operation: Operation.Delegatecall,
-        value: 0,
         termsOkCheck: true,
       });
 
       const task = new Task({
         provider: gelatoProvider,
-        condition,
+        conditions: [condition],
         actions: [action],
         expiryDate: constants.HashZero,
       });
@@ -613,7 +585,7 @@ describe("GelatoCore.exec", function () {
       // Provider registers new condition
 
       const newTaskSpec2 = new TaskSpec({
-        conditionInst: actionERC20TransferFrom.address,
+        conditions: [actionERC20TransferFrom.address],
         actions: [actionERC20TransferFromGelato],
         gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
       });
@@ -622,7 +594,7 @@ describe("GelatoCore.exec", function () {
 
       const actionData = await run("abi-encode-withselector", {
         contractname: "ActionERC20TransferFrom",
-        functionname: "transferFrom",
+        functionname: "action",
         inputs: [
           {
             user: sellerAddress,
@@ -651,7 +623,7 @@ describe("GelatoCore.exec", function () {
       });
 
       const action = new Action({
-        inst: actionERC20TransferFrom.address,
+        addr: actionERC20TransferFrom.address,
         data: actionData,
         operation: Operation.Delegatecall,
         value: 0,
@@ -660,7 +632,7 @@ describe("GelatoCore.exec", function () {
 
       const task = new Task({
         provider: gelatoProvider,
-        condition,
+        conditions: [condition],
         actions: [action],
         expiryDate: constants.HashZero,
       });
@@ -688,7 +660,7 @@ describe("GelatoCore.exec", function () {
         .withArgs(
           executorAddress,
           taskReceipt.id,
-          "ConditionRevertedNoMessage"
+          "ConditionReverted:undefined"
         );
     });
 
@@ -705,7 +677,7 @@ describe("GelatoCore.exec", function () {
       await mockActionDummyRevert.deployed();
 
       const mockActionDummyRevertGelato = new Action({
-        inst: mockActionDummyRevert.address,
+        addr: mockActionDummyRevert.address,
         data: constants.HashZero,
         operation: Operation.Delegatecall,
         value: 0,
@@ -715,7 +687,6 @@ describe("GelatoCore.exec", function () {
       // Provider registers new acttion
 
       const newTaskSpec2 = new TaskSpec({
-        conditionInst: constants.AddressZero,
         actions: [mockActionDummyRevertGelato],
         gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
       });
@@ -731,13 +702,8 @@ describe("GelatoCore.exec", function () {
         module: providerModuleGelatoUserProxy.address,
       });
 
-      const condition = new Condition({
-        inst: constants.AddressZero,
-        data: constants.HashZero,
-      });
-
       const action = new Action({
-        inst: mockActionDummyRevert.address,
+        addr: mockActionDummyRevert.address,
         data: actionData,
         operation: Operation.Delegatecall,
         value: 0,
@@ -746,7 +712,6 @@ describe("GelatoCore.exec", function () {
 
       const task = new Task({
         provider: gelatoProvider,
-        condition,
         actions: [action],
         expiryDate: constants.HashZero,
       });
@@ -788,7 +753,7 @@ describe("GelatoCore.exec", function () {
       await mockConditionDummyRevert.deployed();
 
       const revertingAction = new Action({
-        inst: mockConditionDummyRevert.address,
+        addr: mockConditionDummyRevert.address,
         data: constants.HashZero,
         operation: Operation.Delegatecall,
         value: 0,
@@ -796,7 +761,6 @@ describe("GelatoCore.exec", function () {
       });
 
       const newTaskSpec2 = new TaskSpec({
-        conditionInst: constants.AddressZero,
         actions: [revertingAction],
         gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
       });
@@ -812,13 +776,8 @@ describe("GelatoCore.exec", function () {
         module: providerModuleGelatoUserProxy.address,
       });
 
-      const condition = new Condition({
-        inst: constants.AddressZero,
-        data: constants.HashZero,
-      });
-
       const action = new Action({
-        inst: mockConditionDummyRevert.address,
+        addr: mockConditionDummyRevert.address,
         data: actionData,
         operation: Operation.Delegatecall,
         value: 0,
@@ -827,7 +786,6 @@ describe("GelatoCore.exec", function () {
 
       const task = new Task({
         provider: gelatoProvider,
-        condition,
         actions: [action],
         expiryDate: constants.HashZero,
       });
@@ -860,7 +818,7 @@ describe("GelatoCore.exec", function () {
 
       const actionData = await run("abi-encode-withselector", {
         contractname: "ActionERC20TransferFrom",
-        functionname: "transferFrom",
+        functionname: "action",
         inputs: [
           {
             user: sellerAddress,
@@ -889,7 +847,7 @@ describe("GelatoCore.exec", function () {
       });
 
       const action = new Action({
-        inst: actionERC20TransferFrom.address,
+        addr: actionERC20TransferFrom.address,
         data: actionData,
         operation: Operation.Delegatecall,
         value: 0,
@@ -898,7 +856,7 @@ describe("GelatoCore.exec", function () {
 
       const task = new Task({
         provider: gelatoProvider,
-        condition,
+        conditions: [condition],
         actions: [action],
         expiryDate: constants.HashZero,
       });
@@ -935,7 +893,7 @@ describe("GelatoCore.exec", function () {
 
       const actionData = await run("abi-encode-withselector", {
         contractname: "ActionERC20TransferFrom",
-        functionname: "transferFrom",
+        functionname: "action",
         inputs: [
           {
             user: sellerAddress,
@@ -972,7 +930,7 @@ describe("GelatoCore.exec", function () {
       });
 
       const action = new Action({
-        inst: actionERC20TransferFrom.address,
+        addr: actionERC20TransferFrom.address,
         data: actionData,
         operation: Operation.Delegatecall,
         value: 0,
@@ -981,7 +939,7 @@ describe("GelatoCore.exec", function () {
 
       const task = new Task({
         provider: gelatoProvider,
-        condition,
+        conditions: [condition],
         actions: [action],
         expiryDate: constants.HashZero,
       });
@@ -1012,7 +970,7 @@ describe("GelatoCore.exec", function () {
       await mockConditionDummy.deployed();
 
       const mockConditionAsAction = new Action({
-        inst: mockConditionDummy.address,
+        addr: mockConditionDummy.address,
         data: constants.HashZero,
         operation: Operation.Delegatecall,
         value: 0,
@@ -1020,7 +978,6 @@ describe("GelatoCore.exec", function () {
       });
 
       const newTaskSpec2 = new TaskSpec({
-        conditionInst: constants.AddressZero,
         actions: [mockConditionAsAction],
         gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
       });
@@ -1033,14 +990,8 @@ describe("GelatoCore.exec", function () {
         module: providerModuleGelatoUserProxy.address,
       });
 
-      const condition = new Condition({
-        inst: constants.AddressZero,
-        data: constants.HashZero,
-      });
-
       const task = new Task({
         provider: gelatoProvider,
-        condition,
         actions: [mockConditionAsAction],
         expiryDate: constants.HashZero,
       });
@@ -1067,7 +1018,7 @@ describe("GelatoCore.exec", function () {
       // Get Action Payload
       const actionData = await run("abi-encode-withselector", {
         contractname: "ActionERC20TransferFrom",
-        functionname: "transferFrom",
+        functionname: "action",
         inputs: [
           {
             user: sellerAddress,
@@ -1104,7 +1055,7 @@ describe("GelatoCore.exec", function () {
       });
 
       const action = new Action({
-        inst: actionERC20TransferFrom.address,
+        addr: actionERC20TransferFrom.address,
         data: actionData,
         operation: Operation.Delegatecall,
         termsOkCheck: true,
@@ -1117,7 +1068,7 @@ describe("GelatoCore.exec", function () {
 
       const task = new Task({
         provider: gelatoProvider,
-        condition,
+        conditions: [condition],
         actions: [action],
         expiryDate,
       });
@@ -1172,7 +1123,7 @@ describe("GelatoCore.exec", function () {
 
       const actionData = await run("abi-encode-withselector", {
         contractname: "ActionWithdrawBatchExchange",
-        functionname: "doubleWithdraw",
+        functionname: "action",
         inputs: [sellToken.address, buyToken.address],
       });
 
@@ -1182,13 +1133,8 @@ describe("GelatoCore.exec", function () {
         module: providerModuleGelatoUserProxy.address,
       });
 
-      const condition = new Condition({
-        inst: constants.AddressZero,
-        data: constants.HashZero,
-      });
-
       const action = new Action({
-        inst: actionWithdrawBatchExchange.address,
+        addr: actionWithdrawBatchExchange.address,
         data: actionData,
         operation: Operation.Delegatecall,
         value: 0,
@@ -1197,7 +1143,6 @@ describe("GelatoCore.exec", function () {
 
       const task = new Task({
         provider: gelatoProvider,
-        condition,
         actions: [action],
         expiryDate: constants.HashZero,
       });
@@ -1269,7 +1214,7 @@ describe("GelatoCore.exec", function () {
 
       const actionData = await run("abi-encode-withselector", {
         contractname: "ActionWithdrawBatchExchange",
-        functionname: "doubleWithdraw",
+        functionname: "action",
         inputs: [sellToken.address, buyToken.address],
       });
 
@@ -1279,13 +1224,8 @@ describe("GelatoCore.exec", function () {
         module: providerModuleGelatoUserProxy.address,
       });
 
-      const condition = new Condition({
-        inst: constants.AddressZero,
-        data: constants.HashZero,
-      });
-
       const action = new Action({
-        inst: actionWithdrawBatchExchange.address,
+        addr: actionWithdrawBatchExchange.address,
         data: actionData,
         operation: Operation.Delegatecall,
         value: 0,
@@ -1294,7 +1234,6 @@ describe("GelatoCore.exec", function () {
 
       const task = new Task({
         provider: gelatoProvider,
-        condition,
         actions: [action],
         expiryDate: constants.HashZero,
       });
@@ -1362,7 +1301,7 @@ describe("GelatoCore.exec", function () {
 
       const actionData = await run("abi-encode-withselector", {
         contractname: "ActionWithdrawBatchExchange",
-        functionname: "doubleWithdraw",
+        functionname: "action",
         inputs: [sellToken.address, buyToken.address],
       });
 
@@ -1372,13 +1311,8 @@ describe("GelatoCore.exec", function () {
         module: providerModuleGelatoUserProxy.address,
       });
 
-      const condition = new Condition({
-        inst: constants.AddressZero,
-        data: constants.HashZero,
-      });
-
       const action = new Action({
-        inst: actionWithdrawBatchExchange.address,
+        addr: actionWithdrawBatchExchange.address,
         data: actionData,
         operation: Operation.Delegatecall,
         value: 0,
@@ -1387,7 +1321,6 @@ describe("GelatoCore.exec", function () {
 
       const task = new Task({
         provider: gelatoProvider,
-        condition,
         actions: [action],
         expiryDate: constants.HashZero,
       });
@@ -1397,10 +1330,6 @@ describe("GelatoCore.exec", function () {
         userProxy: userProxyAddress,
         task,
       };
-
-      // Should return "OK"
-
-      //const isProvided = await gelatoCore.isTaskSpecProvided(taskReceipt);
 
       const provideFundsPayload = await run("abi-encode-withselector", {
         contractname: "GelatoCore",
@@ -1435,7 +1364,7 @@ describe("GelatoCore.exec", function () {
       const actions = [];
 
       const provideFundsAction = new Action({
-        inst: gelatoCore.address,
+        addr: gelatoCore.address,
         data: provideFundsPayload,
         operation: Operation.Call,
         value: ethers.utils.parseUnits("1", "ether"),
@@ -1443,28 +1372,27 @@ describe("GelatoCore.exec", function () {
       actions.push(provideFundsAction);
 
       const assignExecutorAction = new Action({
-        inst: gelatoCore.address,
+        addr: gelatoCore.address,
         data: providerAssignsExecutorPayload,
         operation: Operation.Call,
       });
       actions.push(assignExecutorAction);
 
       const addProviderModuleAction = new Action({
-        inst: gelatoCore.address,
+        addr: gelatoCore.address,
         data: addProviderModulePayload,
         operation: Operation.Call,
       });
       actions.push(addProviderModuleAction);
 
       const submitTaskAction = new Action({
-        inst: gelatoCore.address,
+        addr: gelatoCore.address,
         data: submitTaskPayload,
         operation: Operation.Call,
       });
       actions.push(submitTaskAction);
 
       // LogTaskSubmitted(executor, taskReceipt.id, hashedTaskReceipt, taskReceipt);
-
       await expect(
         userProxy.multiExecActions(actions, {
           value: ethers.utils.parseUnits("1", "ether"),
@@ -1507,21 +1435,21 @@ describe("GelatoCore.exec", function () {
 
       await userProxy.connect(seller).multiExecActions([
         {
-          inst: sellToken.address,
+          addr: sellToken.address,
           data: transferFromData,
           operation: Operation.Call,
           termsOkCheck: false,
           value: 0,
         },
         {
-          inst: sellToken.address,
+          addr: sellToken.address,
           data: approvalData,
           operation: Operation.Call,
           termsOkCheck: false,
           value: 0,
         },
         {
-          inst: feeExtractor.address,
+          addr: feeExtractor.address,
           data: payFeeData,
           operation: Operation.Call,
           termsOkCheck: false,
@@ -1547,17 +1475,15 @@ describe("GelatoCore.exec", function () {
       await mockActionDummy.deployed();
 
       const mockActionDummyGelato = new Action({
-        inst: mockActionDummy.address,
+        addr: mockActionDummy.address,
         data: constants.HashZero,
         operation: Operation.Delegatecall,
-        value: 0,
         termsOkCheck: true,
       });
 
       // Provider registers new acttion
 
       const newTaskSpec2 = new TaskSpec({
-        conditionInst: constants.AddressZero,
         actions: [mockActionDummyGelato],
         gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
       });
@@ -1591,13 +1517,8 @@ describe("GelatoCore.exec", function () {
         module: mockProviderModuleGelatoUserProxyRevert.address,
       });
 
-      const condition = new Condition({
-        inst: constants.AddressZero,
-        data: constants.HashZero,
-      });
-
       const action = new Action({
-        inst: mockActionDummy.address,
+        addr: mockActionDummy.address,
         data: actionData,
         operation: Operation.Delegatecall,
         value: 0,
@@ -1606,7 +1527,6 @@ describe("GelatoCore.exec", function () {
 
       const task = new Task({
         provider: gelatoProvider,
-        condition,
         actions: [action],
         expiryDate: constants.HashZero,
       });
@@ -1658,7 +1578,7 @@ describe("GelatoCore.exec", function () {
 
       const actionData = await run("abi-encode-withselector", {
         contractname: "ActionWithdrawBatchExchange",
-        functionname: "doubleWithdraw",
+        functionname: "action",
         inputs: [sellToken.address, buyToken.address],
       });
 
@@ -1668,22 +1588,15 @@ describe("GelatoCore.exec", function () {
         module: providerModuleGelatoUserProxy.address,
       });
 
-      const condition = new Condition({
-        inst: constants.AddressZero,
-        data: constants.HashZero,
-      });
-
       const action = new Action({
-        inst: actionWithdrawBatchExchange.address,
+        addr: actionWithdrawBatchExchange.address,
         data: actionData,
         operation: Operation.Delegatecall,
-        value: 0,
         termsOkCheck: true,
       });
 
       const task = new Task({
         provider: gelatoProvider,
-        condition,
         actions: [action],
         expiryDate: constants.HashZero,
       });
@@ -1703,7 +1616,7 @@ describe("GelatoCore.exec", function () {
       });
 
       const stakeEthAction = new Action({
-        inst: gelatoCore.address,
+        addr: gelatoCore.address,
         data: stakeEthPayload,
         operation: Operation.Call,
         value: stakeAmount,
@@ -1738,21 +1651,21 @@ describe("GelatoCore.exec", function () {
           [
             stakeEthAction,
             {
-              inst: sellToken.address,
+              addr: sellToken.address,
               data: transferFromData,
               operation: Operation.Call,
               termsOkCheck: false,
               value: 0,
             },
             {
-              inst: sellToken.address,
+              addr: sellToken.address,
               data: approvalData,
               operation: Operation.Call,
               termsOkCheck: false,
               value: 0,
             },
             {
-              inst: feeExtractor.address,
+              addr: feeExtractor.address,
               data: payFeeData,
               operation: Operation.Call,
               termsOkCheck: false,
@@ -1807,7 +1720,7 @@ describe("GelatoCore.exec", function () {
 
       await userProxy.execAction(
         {
-          inst: gelatoCore.address,
+          addr: gelatoCore.address,
           data: multiProvideData,
           termsOkCheck: false,
           value: provideFundsAmount,
@@ -1823,10 +1736,9 @@ describe("GelatoCore.exec", function () {
       });
 
       const unProvideFundsAction = new Action({
-        inst: gelatoCore.address,
+        addr: gelatoCore.address,
         data: unProvideFundsData,
         operation: Operation.Call,
-        value: 0,
         termsOkCheck: false,
       });
 
@@ -1837,14 +1749,8 @@ describe("GelatoCore.exec", function () {
         module: providerModuleGelatoUserProxy.address,
       });
 
-      const condition = new Condition({
-        inst: constants.AddressZero,
-        data: constants.HashZero,
-      });
-
       const task = new Task({
         provider: gelatoProvider,
-        condition,
         actions: [unProvideFundsAction],
         expiryDate: constants.HashZero,
       });
@@ -1919,7 +1825,7 @@ describe("GelatoCore.exec", function () {
       );
 
       const actionWithdrawBatchExchangeSellToken = new Action({
-        inst: mockBatchExchange.address,
+        addr: mockBatchExchange.address,
         data: withdrawBatchExchangeDataSellToken,
         operation: Operation.Call,
         value: 0,
@@ -1927,7 +1833,7 @@ describe("GelatoCore.exec", function () {
       });
 
       const actionWithdrawBatchExchangeBuyToken = new Action({
-        inst: mockBatchExchange.address,
+        addr: mockBatchExchange.address,
         data: withdrawBatchExchangeDataBuyToken,
         operation: Operation.Call,
         value: 0,
@@ -1935,7 +1841,7 @@ describe("GelatoCore.exec", function () {
       });
 
       const taskSpec = new TaskSpec({
-        conditionInst: conditionBatchExchangeFundsWithdrawable.address,
+        conditions: [conditionBatchExchangeFundsWithdrawable.address],
         actions: [
           actionWithdrawBatchExchangeSellToken,
           actionWithdrawBatchExchangeBuyToken,
@@ -1954,7 +1860,7 @@ describe("GelatoCore.exec", function () {
 
       const task = new Task({
         provider: gelatoProvider,
-        condition,
+        conditions: [condition],
         actions: [
           actionWithdrawBatchExchangeSellToken,
           actionWithdrawBatchExchangeBuyToken,

@@ -83,7 +83,7 @@ export default task(
         const actions = [];
         for (const action of taskreceipt[2][2]) {
           actions.push({
-            inst: action[0],
+            addr: action[0],
             data: action[1],
             operation: action[2],
             value: action[3],
@@ -99,10 +99,12 @@ export default task(
               addr: taskreceipt[2][0][0],
               module: taskreceipt[2][0][1],
             },
-            condition: {
-              inst: taskreceipt[2][1][0],
-              data: taskreceipt[2][1][1],
-            },
+            conditions: [
+              {
+                addr: taskreceipt[2][1][0],
+                data: taskreceipt[2][1][1],
+              },
+            ],
             actions,
             expiryDate: taskreceipt[2][3],
           },

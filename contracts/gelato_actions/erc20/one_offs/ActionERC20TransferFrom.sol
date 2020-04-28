@@ -17,12 +17,7 @@ contract ActionERC20TransferFrom is GelatoActionsStandard {
     // using SafeERC20 for IERC20; <- internal library methods vs. try/catch
     using Address for address;
 
-    function action(bytes calldata _actionData) external payable override virtual {
-        (ActionData memory _p) = abi.decode(_actionData, (ActionData));
-         transferFrom(_p);
-    }
-
-    function transferFrom(ActionData memory _p) public payable virtual {
+    function action(ActionData memory _p) public payable virtual {
         IERC20 sendERC20 = IERC20(_p.sendToken);
         try sendERC20.transferFrom(_p.user, _p.destination, _p.sendAmount) {
             emit LogOneWay(_p.user, _p.sendToken, _p.sendAmount, _p.destination);

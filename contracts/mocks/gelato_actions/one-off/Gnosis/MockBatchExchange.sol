@@ -16,9 +16,6 @@ contract MockBatchExchange {
 
     uint256 public counter;
 
-    function action(bytes calldata) external payable virtual {
-    }
-
     function withdraw(address _proxyAddress, address _token)
         public
     {

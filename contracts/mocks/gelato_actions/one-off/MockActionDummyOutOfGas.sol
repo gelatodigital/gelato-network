@@ -6,10 +6,6 @@ contract MockActionDummyOutOfGas is GelatoActionsStandard {
 
     uint256 public overflowVar;
 
-    function action(bytes calldata _data) external payable override virtual {
-        action(abi.decode(_data, (bool)));
-    }
-
     function action(bool) public payable virtual {
         assert(false);
     }

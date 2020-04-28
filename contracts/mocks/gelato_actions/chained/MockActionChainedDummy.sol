@@ -9,14 +9,6 @@ import { GelatoCore } from "../../../gelato_core/GelatoCore.sol";
 contract MockActionChainedDummy is GelatoActionsStandard {
     using GelatoString for string;
 
-    function action(bytes calldata _actionData) external payable override virtual {
-        (TaskReceipt memory taskReceipt, GelatoCore gelatoCore) = abi.decode(
-            _actionData[4:],
-            (TaskReceipt,GelatoCore)
-        );
-        action(taskReceipt, gelatoCore);
-    }
-
     function action(TaskReceipt memory _TR, GelatoCore _gelatoCore)
         public
         payable

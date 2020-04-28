@@ -16,10 +16,6 @@ contract MockActionMaliciousProvider  {
 
     receive() external payable {}
 
-    function action(bytes calldata) external payable virtual {
-        action();
-    }
-
     function action() public payable virtual {
         uint256 providerFunds = gelato.providerFunds(address(this));
         try gelato.unprovideFunds(providerFunds) {

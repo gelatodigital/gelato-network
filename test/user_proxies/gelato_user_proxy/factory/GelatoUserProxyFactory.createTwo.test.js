@@ -194,7 +194,7 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE TWO", function () {
         inputs: [true],
       });
       optionalAction = new Action({
-        inst: action.address,
+        addr: action.address,
         data: actionData,
         operation: Operation.Delegatecall,
       });
@@ -205,7 +205,7 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE TWO", function () {
         inputs: [false],
       });
       otherOptionalAction = new Action({
-        inst: action.address,
+        addr: action.address,
         data: otherActionData,
         operation: Operation.Call,
       });

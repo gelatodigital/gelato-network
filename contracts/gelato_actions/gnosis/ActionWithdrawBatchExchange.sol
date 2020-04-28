@@ -29,16 +29,10 @@ contract ActionWithdrawBatchExchange is GelatoActionsStandard {
         feeExtractor = FeeExtractor(_feeExtractor);
     }
 
-
-    function action(bytes calldata _actionData) external payable override virtual {
-        (address _sellToken, address _buyToken) = abi.decode(_actionData, (address, address));
-        doubleWithdraw(_sellToken, _buyToken);
-    }
-
     /// @notice Withdraw sell and buy token from Batch Exchange and send funds back to _user EOA
     /// @param _sellToken Token to sell on Batch Exchange
     /// @param _buyToken Token to buy on Batch Exchange
-    function doubleWithdraw(
+    function action(
         address _sellToken,
         address _buyToken
     )

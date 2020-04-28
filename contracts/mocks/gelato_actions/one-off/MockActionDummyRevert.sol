@@ -3,10 +3,6 @@ pragma solidity ^0.6.6;
 import { GelatoActionsStandard } from "../../../gelato_actions/GelatoActionsStandard.sol";
 
 contract MockActionDummyRevert is GelatoActionsStandard {
-    function action(bytes calldata _data) external payable override virtual {
-        action(abi.decode(_data, (bool)));
-    }
-
     function action(bool) public payable virtual {
         revert("MockActionDummyRevert.action: test revert");
     }

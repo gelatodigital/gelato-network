@@ -196,7 +196,7 @@ export default task(
       "abi-encode-withselector",
       {
         contractname: "ActionWithdrawBatchExchange",
-        functionname: "doubleWithdraw",
+        functionname: "action",
         inputs: [taskArgs.sellToken, taskArgs.buyToken],
       }
     );

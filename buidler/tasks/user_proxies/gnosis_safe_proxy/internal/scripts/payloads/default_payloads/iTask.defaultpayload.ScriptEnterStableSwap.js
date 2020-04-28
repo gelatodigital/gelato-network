@@ -108,10 +108,7 @@ export default internalTask(
         module: taskArgs.gelatoprovidermodule,
       });
 
-      const condition = new Condition({
-        inst: constants.AddressZero,
-        data: constants.HashZero,
-      });
+
 
       const actionWithdrawFromBatchExchangePayload = await run(
         "abi-encode-withselector",
@@ -128,7 +125,7 @@ export default internalTask(
       );
 
       const actionWithdrawFromBatchExchangeWithMaker = new Action({
-        inst: actionAddress,
+        addr: actionAddress,
         data: actionWithdrawFromBatchExchangePayload,
         operation: 1,
         value: 0,
@@ -137,7 +134,7 @@ export default internalTask(
 
       const taskWithdrawBatchExchange = {
         provider: gelatoProvider,
-        condition: condition,
+        conditions: [condition],
         actions: [actionWithdrawFromBatchExchangeWithMaker],
         expiryDate: constants.HashZero,
       };

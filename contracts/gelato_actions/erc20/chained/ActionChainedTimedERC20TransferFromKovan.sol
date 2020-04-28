@@ -16,16 +16,6 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
 
     address public constant GELATO_CORE = 0x40134bf777a126B0E6208e8BdD6C567F2Ce648d2;
 
-    function action(bytes calldata _actionData) external payable override virtual {
-        (SuperActionData memory superActionData,
-         ActionData memory actionData,
-         TaskReceipt memory taskReceipt) = abi.decode(
-             _actionData[4:],
-             (SuperActionData,ActionData,TaskReceipt)
-         );
-         action(superActionData, actionData, taskReceipt);
-    }
-
     function action(
         SuperActionData memory _superActionData,
         ActionData memory _actionData,
@@ -36,7 +26,7 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
         virtual
     {
         // Internal Call: ActionERC20TransferFrom.action()
-        super.transferFrom(_superActionData);
+        super.action(_superActionData);
 
         // Duedate for next chained action call
          _actionData.dueDate = _actionData.dueDate.add(_actionData.timeOffset);

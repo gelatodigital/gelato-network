@@ -63,7 +63,7 @@ contract ProviderModuleGnosisSafeProxy is
         if( _actions.length == 1) {
             return abi.encodeWithSelector(
                 IGnosisSafe.execTransactionFromModuleReturnData.selector,
-                _actions[0].inst,  // to
+                _actions[0].addr,  // to
                 _actions[0].value,  // value
                 _actions[0].data,
                 _actions[0].operation
@@ -75,7 +75,7 @@ contract ProviderModuleGnosisSafeProxy is
             for (uint i; i < _actions.length; i++ ) {
                 bytes memory payloadPart = abi.encodePacked(
                     _actions[i].operation,
-                    _actions[i].inst,  // to
+                    _actions[i].addr,  // to
                     _actions[i].value,  // value
                     _actions[i].data.length,
                     _actions[i].data

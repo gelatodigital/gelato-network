@@ -5,10 +5,6 @@ import { GelatoActionsStandard } from "../../../gelato_actions/GelatoActionsStan
 contract MockActionDummy is GelatoActionsStandard {
     event LogAction(bool falseOrTrue);
 
-    function action(bytes calldata _data) external payable override virtual {
-        action(abi.decode(_data, (bool)));
-    }
-
     function action(bool _falseOrTrue) public payable virtual {
         emit LogAction(_falseOrTrue);
     }

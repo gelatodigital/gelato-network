@@ -191,29 +191,21 @@ describe("Gelato Core - Task Submission ", function () {
 
     // Register new provider TaskSpec on core with provider EDITS NEED ä#######################
 
-    const condition = new Condition({
-      inst: constants.AddressZero,
-      data: constants.HashZero,
-    });
-
     actionERC20TransferFromGelato = new Action({
-      inst: actionERC20TransferFrom.address,
+      addr: actionERC20TransferFrom.address,
       data: constants.HashZero,
       operation: Operation.Delegatecall,
-      value: 0,
       termsOkCheck: true,
     });
 
     const actionWithdrawBatchExchangeGelato = new Action({
-      inst: actionWithdrawBatchExchange.address,
+      addr: actionWithdrawBatchExchange.address,
       data: constants.HashZero,
       operation: Operation.Delegatecall,
-      value: 0,
       termsOkCheck: true,
     });
 
     const newTaskSpec = new TaskSpec({
-      conditionInst: condition.inst,
       actions: [actionWithdrawBatchExchangeGelato],
       gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
     });
@@ -284,7 +276,7 @@ describe("Gelato Core - Task Submission ", function () {
 
       const actionPayload = await run("abi-encode-withselector", {
         contractname: "ActionERC20TransferFrom",
-        functionname: "transferFrom",
+        functionname: "action",
         inputs: [actionInputs],
       });
 
@@ -293,13 +285,8 @@ describe("Gelato Core - Task Submission ", function () {
         module: providerModuleGelatoUserProxy.address,
       });
 
-      const condition = new Condition({
-        inst: constants.AddressZero,
-        data: constants.HashZero,
-      });
-
       const action = new Action({
-        inst: actionWithdrawBatchExchange.address,
+        addr: actionWithdrawBatchExchange.address,
         data: actionPayload,
         operation: Operation.Delegatecall,
         value: 0,
@@ -308,7 +295,6 @@ describe("Gelato Core - Task Submission ", function () {
 
       const task = new Task({
         provider,
-        condition,
         actions: [action],
         expiryDate: ethers.utils.bigNumberify("0"),
       });
@@ -331,7 +317,7 @@ describe("Gelato Core - Task Submission ", function () {
 
       const actionPayload = await run("abi-encode-withselector", {
         contractname: "ActionERC20TransferFrom",
-        functionname: "transferFrom",
+        functionname: "action",
         inputs: [actionInputs],
       });
 
@@ -340,13 +326,8 @@ describe("Gelato Core - Task Submission ", function () {
         module: providerModuleGelatoUserProxy.address,
       });
 
-      const condition = new Condition({
-        inst: constants.AddressZero,
-        data: constants.HashZero,
-      });
-
       const action = new Action({
-        inst: notWhitelistedAction,
+        addr: notWhitelistedAction,
         data: actionPayload,
         operation: Operation.Delegatecall,
         value: 0,
@@ -355,7 +336,6 @@ describe("Gelato Core - Task Submission ", function () {
 
       const task = new Task({
         provider,
-        condition,
         actions: [action],
         expiryDate: constants.HashZero,
       });
@@ -380,7 +360,7 @@ describe("Gelato Core - Task Submission ", function () {
 
       const actionPayload = await run("abi-encode-withselector", {
         contractname: "ActionERC20TransferFrom",
-        functionname: "transferFrom",
+        functionname: "action",
         inputs: [actionInputs],
       });
 
@@ -395,7 +375,7 @@ describe("Gelato Core - Task Submission ", function () {
       });
 
       const action = new Action({
-        inst: actionWithdrawBatchExchange.address,
+        addr: actionWithdrawBatchExchange.address,
         data: actionPayload,
         operation: Operation.Delegatecall,
         value: 0,
@@ -404,7 +384,7 @@ describe("Gelato Core - Task Submission ", function () {
 
       const task = new Task({
         provider,
-        condition,
+        conditions: [condition],
         actions: [action],
         expiryDate: constants.HashZero,
       });
@@ -426,7 +406,7 @@ describe("Gelato Core - Task Submission ", function () {
 
       const actionPayload = await run("abi-encode-withselector", {
         contractname: "ActionERC20TransferFrom",
-        functionname: "transferFrom",
+        functionname: "action",
         inputs: [actionInputs],
       });
 
@@ -435,13 +415,8 @@ describe("Gelato Core - Task Submission ", function () {
         module: providerModuleGelatoUserProxy.address,
       });
 
-      const condition = new Condition({
-        inst: constants.AddressZero,
-        data: constants.HashZero,
-      });
-
       const action = new Action({
-        inst: actionWithdrawBatchExchange.address,
+        addr: actionWithdrawBatchExchange.address,
         data: actionPayload,
         operation: Operation.Delegatecall,
         value: 0,
@@ -450,7 +425,6 @@ describe("Gelato Core - Task Submission ", function () {
 
       const task = new Task({
         provider,
-        condition,
         actions: [action],
         expiryDate: constants.HashZero,
       });
@@ -472,7 +446,7 @@ describe("Gelato Core - Task Submission ", function () {
 
       const actionPayload = await run("abi-encode-withselector", {
         contractname: "ActionERC20TransferFrom",
-        functionname: "transferFrom",
+        functionname: "action",
         inputs: [actionInputs],
       });
 
@@ -481,13 +455,8 @@ describe("Gelato Core - Task Submission ", function () {
         module: providerModuleGelatoUserProxy.address,
       });
 
-      const condition = new Condition({
-        inst: constants.AddressZero,
-        data: constants.HashZero,
-      });
-
       const action = new Action({
-        inst: actionWithdrawBatchExchange.address,
+        addr: actionWithdrawBatchExchange.address,
         data: actionPayload,
         operation: Operation.Delegatecall,
         value: 0,
@@ -496,7 +465,6 @@ describe("Gelato Core - Task Submission ", function () {
 
       const task = new Task({
         provider,
-        condition,
         actions: [action],
         expiryDate: expiryDateInPast,
       });
@@ -518,7 +486,7 @@ describe("Gelato Core - Task Submission ", function () {
 
       const actionPayload = await run("abi-encode-withselector", {
         contractname: "ActionERC20TransferFrom",
-        functionname: "transferFrom",
+        functionname: "action",
         inputs: [actionInputs],
       });
 
@@ -527,13 +495,8 @@ describe("Gelato Core - Task Submission ", function () {
         module: revertingProviderMouleAddress,
       });
 
-      const condition = new Condition({
-        inst: constants.AddressZero,
-        data: constants.HashZero,
-      });
-
       const action = new Action({
-        inst: actionWithdrawBatchExchange.address,
+        addr: actionWithdrawBatchExchange.address,
         data: actionPayload,
         operation: Operation.Delegatecall,
         value: 0,
@@ -542,7 +505,6 @@ describe("Gelato Core - Task Submission ", function () {
 
       const task = new Task({
         provider,
-        condition,
         actions: [action],
         expiryDate: constants.HashZero,
       });
@@ -562,13 +524,8 @@ describe("Gelato Core - Task Submission ", function () {
         module: providerModuleGelatoUserProxy.address,
       });
 
-      const condition = new Condition({
-        inst: constants.AddressZero,
-        data: constants.HashZero,
-      });
-
       const action = new Action({
-        inst: actionWithdrawBatchExchange.address,
+        addr: actionWithdrawBatchExchange.address,
         data: noActionPayload,
         operation: Operation.Delegatecall,
         value: 0,
@@ -577,7 +534,6 @@ describe("Gelato Core - Task Submission ", function () {
 
       const task = new Task({
         provider,
-        condition,
         actions: [action],
         expiryDate: constants.HashZero,
       });
@@ -599,7 +555,7 @@ describe("Gelato Core - Task Submission ", function () {
 
       const actionPayload = await run("abi-encode-withselector", {
         contractname: "ActionERC20TransferFrom",
-        functionname: "transferFrom",
+        functionname: "action",
         inputs: [actionInputs],
       });
 
@@ -622,20 +578,15 @@ describe("Gelato Core - Task Submission ", function () {
         module: providerModuleGelatoUserProxy.address,
       });
 
-      const condition = new Condition({
-        inst: constants.AddressZero,
-        data: constants.HashZero,
-      });
-
       const action = new Action({
-        inst: actionWithdrawBatchExchange.address,
+        addr: actionWithdrawBatchExchange.address,
         data: actionPayload,
         operation: Operation.Delegatecall,
         termsOkCheck: true,
       });
 
       const action2 = new Action({
-        inst: constants.AddressZero,
+        addr: constants.AddressZero,
         data: constants.HashZero,
         operation: Operation.Call,
         termsOkCheck: true,
@@ -643,7 +594,6 @@ describe("Gelato Core - Task Submission ", function () {
 
       const task = new Task({
         provider: gelatoProvider,
-        condition,
         actions: [action, action2],
         expiryDate: constants.HashZero,
       });
@@ -682,7 +632,7 @@ describe("Gelato Core - Task Submission ", function () {
       const actions = [];
 
       const provideFundsAction = new Action({
-        inst: gelatoCore.address,
+        addr: gelatoCore.address,
         data: provideFundsPayload,
         operation: Operation.Call,
         value: ethers.utils.parseUnits("1", "ether"),
@@ -690,21 +640,21 @@ describe("Gelato Core - Task Submission ", function () {
       actions.push(provideFundsAction);
 
       const assignExecutorAction = new Action({
-        inst: gelatoCore.address,
+        addr: gelatoCore.address,
         data: providerAssignsExecutorPayload,
         operation: Operation.Call,
       });
       actions.push(assignExecutorAction);
 
       const addProviderModuleAction = new Action({
-        inst: gelatoCore.address,
+        addr: gelatoCore.address,
         data: addProviderModulePayload,
         operation: Operation.Call,
       });
       actions.push(addProviderModuleAction);
 
       const submitTaskAction = new Action({
-        inst: gelatoCore.address,
+        addr: gelatoCore.address,
         data: submitTaskPayload,
         operation: Operation.Call,
       });
@@ -733,7 +683,7 @@ describe("Gelato Core - Task Submission ", function () {
 
       const actionPayload = await run("abi-encode-withselector", {
         contractname: "ActionERC20TransferFrom",
-        functionname: "transferFrom",
+        functionname: "action",
         inputs: [actionInputs],
       });
 
@@ -756,20 +706,15 @@ describe("Gelato Core - Task Submission ", function () {
         module: providerModuleGelatoUserProxy.address,
       });
 
-      const condition = new Condition({
-        inst: constants.AddressZero,
-        data: constants.HashZero,
-      });
-
       const action = new Action({
-        inst: actionWithdrawBatchExchange.address,
+        addr: actionWithdrawBatchExchange.address,
         data: actionPayload,
         operation: Operation.Delegatecall,
         termsOkCheck: true,
       });
 
       const action2 = new Action({
-        inst: actionWithdrawBatchExchange.address,
+        addr: actionWithdrawBatchExchange.address,
         data: constants.HashZero,
         operation: Operation.Call,
         termsOkCheck: true,
@@ -777,7 +722,6 @@ describe("Gelato Core - Task Submission ", function () {
 
       const task = new Task({
         provider: gelatoProvider,
-        condition,
         actions: [action, action2],
         expiryDate: constants.HashZero,
       });
@@ -815,7 +759,7 @@ describe("Gelato Core - Task Submission ", function () {
       const actions = [];
 
       const provideFundsAction = new Action({
-        inst: gelatoCore.address,
+        addr: gelatoCore.address,
         data: provideFundsPayload,
         operation: Operation.Call,
         value: ethers.utils.parseUnits("1", "ether"),
@@ -823,21 +767,21 @@ describe("Gelato Core - Task Submission ", function () {
       actions.push(provideFundsAction);
 
       const assignExecutorAction = new Action({
-        inst: gelatoCore.address,
+        addr: gelatoCore.address,
         data: providerAssignsExecutorPayload,
         operation: Operation.Call,
       });
       actions.push(assignExecutorAction);
 
       const addProviderModuleAction = new Action({
-        inst: gelatoCore.address,
+        addr: gelatoCore.address,
         data: addProviderModulePayload,
         operation: Operation.Call,
       });
       actions.push(addProviderModuleAction);
 
       const submitTaskAction = new Action({
-        inst: gelatoCore.address,
+        addr: gelatoCore.address,
         data: submitTaskPayload,
         operation: Operation.Call,
       });

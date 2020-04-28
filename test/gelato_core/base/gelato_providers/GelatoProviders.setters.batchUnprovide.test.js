@@ -100,27 +100,27 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH UNPROVIDE", function () 
 
     // Action
     actionStruct = new Action({
-      inst: action.address,
+      addr: action.address,
       data: "0xdeadbeef",
       operation: Operation.Delegatecall,
       termsOkCheck: false,
     });
     otherActionStruct = new Action({
-      inst: otherAction.address,
+      addr: otherAction.address,
       data: "0xdeadbeef",
       operation: Operation.Delegatecall,
       termsOkCheck: true,
     });
 
-    // Condition Action Mix
+    // Task Spec
     taskSpec = new TaskSpec({
-      conditionInst: condition.address,
+      conditions: [condition.address],
       actions: [actionStruct],
       gasPriceCeil,
     });
 
     otherTaskSpec = new TaskSpec({
-      conditionInst: condition.address,
+      conditions: [condition.address],
       actions: [actionStruct, otherActionStruct],
       gasPriceCeil,
     });
@@ -139,13 +139,13 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH UNPROVIDE", function () 
         .stakeExecutor({ value: minExecutorStake });
 
       // taskSpecHash
-      const taskSpecHash = await gelatoCore.taskSpecHash(
-        taskSpec.condition,
+      const taskSpecHash = await gelatoCore.hashTaskSpec(
+        taskSpec.conditions,
         taskSpec.actions
       );
       // otherTaskSpecHash
-      const otherTaskSpecHash = await gelatoCore.taskSpecHash(
-        otherTaskSpec.condition,
+      const otherTaskSpecHash = await gelatoCore.hashTaskSpec(
+        otherTaskSpec.conditions,
         otherTaskSpec.actions
       );
 
@@ -196,7 +196,7 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH UNPROVIDE", function () 
       expect(
         await gelatoCore.isTaskSpecProvided(
           providerAddress,
-          condition.address,
+          [condition.address],
           [actionStruct]
         )
       ).to.be.equal("TaskSpecNotProvided");
@@ -214,7 +214,7 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH UNPROVIDE", function () 
       expect(
         await gelatoCore.isTaskSpecProvided(
           providerAddress,
-          condition.address,
+          [condition.address],
           [actionStruct, otherActionStruct]
         )
       ).to.be.equal("TaskSpecNotProvided");

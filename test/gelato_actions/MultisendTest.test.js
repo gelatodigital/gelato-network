@@ -139,7 +139,7 @@ describe("Multisend with Gelato User Proxy Test", function () {
     });
 
     const actionERC20TransferFromGelato = new Action({
-      inst: actionERC20TransferFrom.address,
+      addr: actionERC20TransferFrom.address,
       data: constants.HashZero,
       operation: Operation.Delegatecall,
       termsOkCheck: true,
@@ -223,7 +223,7 @@ describe("Multisend with Gelato User Proxy Test", function () {
     );
 
     const action = new Action({
-      inst: multisend.address,
+      addr: multisend.address,
       data: encodedMultisendData,
       operation: Operation.Delegatecall,
     });
