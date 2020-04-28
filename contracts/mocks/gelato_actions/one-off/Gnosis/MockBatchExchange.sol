@@ -16,9 +16,6 @@ contract MockBatchExchange is GelatoActionsStandard {
 
     uint256 public counter;
 
-    function action(bytes calldata) external payable override virtual {
-    }
-
     function withdraw(address _proxyAddress, address _token)
         public
     {

@@ -1,15 +1,15 @@
 import { constants } from "ethers";
-import Condition from "./Condition";
 
 class Task {
-  constructor({ provider, condition, actions, expiryDate }) {
-    if (!provider) throw new Error("Task: no provider");
-    if (!actions || !actions.length) throw new Error("Task: no actions");
+  constructor({ provider, conditions, actions, expiryDate }) {
+    if (!provider) throw new Error("\nTask: no provider\n");
+    if (conditions && (!Array.isArray(conditions) || !conditions.length))
+      throw new Error("\nTask: optional conditions must be non-empty Array\n");
+    if (!actions || !Array.isArray(actions) || !actions.length)
+      throw new Error("\nTask: actions must be non-empty Array\n");
 
     this.provider = provider;
-    this.condition = condition
-      ? condition
-      : new Condition({ inst: undefined, data: undefined });
+    this.conditions = conditions ? conditions : [];
     this.actions = actions;
     this.expiryDate = expiryDate ? expiryDate : constants.Zero;
   }

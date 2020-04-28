@@ -115,7 +115,7 @@ export default task(
       const actions = [];
       for (const address of actionAddresses) {
         const action = new NoDataAction({
-          inst: address,
+          addr: address,
           data: constants.HashZero,
           operation: Operation.Delegatecall,
           termsOkCheck: true,
@@ -125,7 +125,9 @@ export default task(
 
       // Condition Actions Mix (TaskSpec)
       const taskSpec = new TaskSpec({
-        conditionInst: conditionAddress ? conditionAddress : constants.AddressZero,
+        conditions: conditionAddress
+          ? [conditionAddress]
+          : [constants.AddressZero],
         actions,
         gasPriceCeil: utils.parseUnits("20", "gwei"),
       });

@@ -25,11 +25,6 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandard {
         batchExchange = IBatchExchange(_batchExchange);
     }
 
-    function action(bytes calldata _actionData) external payable override virtual {
-        (address _user, address _userProxy, address _sellToken, address _buyToken, uint128 _sellAmount, uint128 _buyAmount, uint32 _orderExpirationBatchId) = abi.decode(_actionData, (address, address, address, address, uint128, uint128, uint32));
-        action(_user, _userProxy, _sellToken, _buyToken, _sellAmount, _buyAmount, _orderExpirationBatchId);
-    }
-
     /// @notice Place order on Batch Exchange and request future withdraw for buy and sell token
     /// @param _user Users EOA address
     /// @param _userProxy Users Proxy address
@@ -103,7 +98,7 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandard {
 
     // ======= ACTION CONDITIONS CHECK =========
     // Overriding and extending GelatoActionsStandard's function (optional)
-    function termsOk(bytes calldata _actionData)
+    function termsOk(address, bytes calldata _actionData)
         external
         view
         override

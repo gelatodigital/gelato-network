@@ -228,7 +228,7 @@ describe("GelatoCore.exec", function () {
     });
 
     actionERC20TransferFromGelato = new Action({
-      inst: actionERC20TransferFrom.address,
+      addr: actionERC20TransferFrom.address,
       data: constants.HashZero,
       operation: Operation.Delegatecall,
       value: 0,
@@ -236,7 +236,7 @@ describe("GelatoCore.exec", function () {
     });
 
     const actionWithdrawBatchExchangeGelato = new Action({
-      inst: actionWithdrawBatchExchange.address,
+      addr: actionWithdrawBatchExchange.address,
       data: constants.HashZero,
       operation: Operation.Delegatecall,
       value: 0,
@@ -244,7 +244,7 @@ describe("GelatoCore.exec", function () {
     });
 
     const newTaskSpec = new TaskSpec({
-      conditionInst: condition.inst,
+      conditions: [condition.inst],
       actions: [actionWithdrawBatchExchangeGelato],
       gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
     });
@@ -260,7 +260,7 @@ describe("GelatoCore.exec", function () {
 
     // Call multiProvide for mockConditionDummy + actionERC20TransferFrom
     const newTaskSpec2 = new TaskSpec({
-      conditionInst: mockConditionDummy.address,
+      conditions: [mockConditionDummy.address],
       actions: [actionERC20TransferFromGelato],
       gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
     });
@@ -326,7 +326,7 @@ describe("GelatoCore.exec", function () {
       await mockActionDummy.deployed();
 
       const mockActionDummyGelato = new Action({
-        inst: mockActionDummy.address,
+        addr: mockActionDummy.address,
         data: constants.HashZero,
         operation: Operation.Delegatecall,
         value: 0,
@@ -336,7 +336,6 @@ describe("GelatoCore.exec", function () {
       // Provider registers new acttion
 
       const newTaskSpec2 = new TaskSpec({
-        conditionInst: constants.AddressZero,
         actions: [mockActionDummyGelato],
         gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
       });
@@ -362,13 +361,10 @@ describe("GelatoCore.exec", function () {
         module: providerModuleGelatoUserProxy.address,
       });
 
-      const condition = new Condition({
-        inst: constants.AddressZero,
-        data: constants.HashZero,
-      });
+
 
       const action = new Action({
-        inst: mockActionDummy.address,
+        addr: mockActionDummy.address,
         data: actionData,
         operation: Operation.Delegatecall,
         value: 0,
@@ -377,7 +373,6 @@ describe("GelatoCore.exec", function () {
 
       const task = new Task({
         provider: gelatoProvider,
-        condition,
         actions: [action],
         expiryDate: constants.HashZero,
       });
@@ -441,7 +436,7 @@ describe("GelatoCore.exec", function () {
       await mockActionDummyRevert.deployed();
 
       const mockActionDummyRevertGelato = new Action({
-        inst: mockActionDummyRevert.address,
+        addr: mockActionDummyRevert.address,
         data: constants.HashZero,
         operation: Operation.Delegatecall,
         value: 0,
@@ -451,7 +446,6 @@ describe("GelatoCore.exec", function () {
       // Provider registers new acttion
 
       const newTaskSpec2 = new TaskSpec({
-        conditionInst: constants.AddressZero,
         actions: [mockActionDummyRevertGelato],
         gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
       });
@@ -477,13 +471,10 @@ describe("GelatoCore.exec", function () {
         module: providerModuleGelatoUserProxy.address,
       });
 
-      const condition = new Condition({
-        inst: constants.AddressZero,
-        data: constants.HashZero,
-      });
+
 
       const action = new Action({
-        inst: mockActionDummyRevert.address,
+        addr: mockActionDummyRevert.address,
         data: actionData,
         operation: Operation.Delegatecall,
         value: 0,
@@ -492,7 +483,6 @@ describe("GelatoCore.exec", function () {
 
       const task = new Task({
         provider: gelatoProvider,
-        condition,
         actions: [action],
         expiryDate: constants.HashZero,
       });
@@ -560,7 +550,7 @@ describe("GelatoCore.exec", function () {
       await mockActionDummyOutOfGas.deployed();
 
       const mockActionDummyOutOfGasGelato = new Action({
-        inst: mockActionDummyOutOfGas.address,
+        addr: mockActionDummyOutOfGas.address,
         data: constants.HashZero,
         operation: Operation.Delegatecall,
         value: 0,
@@ -568,7 +558,7 @@ describe("GelatoCore.exec", function () {
       });
 
       const mockActionDummyOutOfGasGelato2 = new Action({
-        inst: mockActionDummyOutOfGas.address,
+        addr: mockActionDummyOutOfGas.address,
         data: constants.HashZero,
         operation: Operation.Delegatecall,
         value: 0,
@@ -578,7 +568,6 @@ describe("GelatoCore.exec", function () {
       // Provider registers new acttion
 
       const newTaskSpec2 = new TaskSpec({
-        conditionInst: constants.AddressZero,
         actions: [
           mockActionDummyOutOfGasGelato,
           mockActionDummyOutOfGasGelato2,
@@ -607,13 +596,10 @@ describe("GelatoCore.exec", function () {
         module: providerModuleGelatoUserProxy.address,
       });
 
-      const condition = new Condition({
-        inst: constants.AddressZero,
-        data: constants.HashZero,
-      });
+
 
       const action = new Action({
-        inst: mockActionDummyOutOfGas.address,
+        addr: mockActionDummyOutOfGas.address,
         data: actionData,
         operation: Operation.Delegatecall,
         value: 0,
@@ -621,7 +607,7 @@ describe("GelatoCore.exec", function () {
       });
 
       const action2 = new Action({
-        inst: mockActionDummyOutOfGas.address,
+        addr: mockActionDummyOutOfGas.address,
         data: actionData,
         operation: Operation.Delegatecall,
         value: 0,
@@ -630,7 +616,6 @@ describe("GelatoCore.exec", function () {
 
       const task = new Task({
         provider: gelatoProvider,
-        condition,
         actions: [action, action2],
         expiryDate: constants.HashZero,
       });
@@ -694,7 +679,7 @@ describe("GelatoCore.exec", function () {
       await mockActionDummyOutOfGas.deployed();
 
       const mockActionDummyOutOfGasGelato = new Action({
-        inst: mockActionDummyOutOfGas.address,
+        addr: mockActionDummyOutOfGas.address,
         data: constants.HashZero,
         operation: Operation.Delegatecall,
         value: 0,
@@ -704,7 +689,6 @@ describe("GelatoCore.exec", function () {
       // Provider registers new acttion
 
       const newTaskSpec2 = new TaskSpec({
-        conditionInst: constants.AddressZero,
         actions: [mockActionDummyOutOfGasGelato, mockActionDummyOutOfGasGelato],
         gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
       });
@@ -730,13 +714,10 @@ describe("GelatoCore.exec", function () {
         module: providerModuleGelatoUserProxy.address,
       });
 
-      const condition = new Condition({
-        inst: constants.AddressZero,
-        data: constants.HashZero,
-      });
+
 
       const action = new Action({
-        inst: mockActionDummyOutOfGas.address,
+        addr: mockActionDummyOutOfGas.address,
         data: actionData,
         operation: Operation.Delegatecall,
         value: 0,
@@ -745,7 +726,6 @@ describe("GelatoCore.exec", function () {
 
       const task = new Task({
         provider: gelatoProvider,
-        condition,
         actions: [action, action],
         expiryDate: constants.HashZero,
       });

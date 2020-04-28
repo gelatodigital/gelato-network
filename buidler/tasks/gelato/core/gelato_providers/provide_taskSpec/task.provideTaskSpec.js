@@ -41,11 +41,11 @@ export default task(
         actionAddresses.push(actionAddress);
       }
 
-      // inst, data, operation, value, termsOkCheck
+      // addr, data, operation, value, termsOkCheck
       const actionArray = [];
       for (const actionAddress of actionAddresses) {
         const action = new Action({
-          inst: actionAddress,
+          addr: actionAddress,
           data: constants.HashZero,
           operation: Operation.Delegatecall,
           termsOkCheck: true,
@@ -64,7 +64,7 @@ export default task(
       const gasPriceCeil = utils.parseUnits(taskArgs.gaspriceceil, "gwei");
       // Create TaskSpec condition, actions, gasPriceCeil
       const taskSpec = new TaskSpec({
-        conditionInst: taskArgs.condition,
+        conditions: [taskArgs.condition],
         actions: actionArray,
         gasPriceCeil,
       });

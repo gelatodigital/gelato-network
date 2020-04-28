@@ -7,7 +7,7 @@ import { IGelatoCondition } from "../../gelato_conditions/IGelatoCondition.sol";
 
 // TaskSpec - Will be whitelised by providers and selected by users
 struct TaskSpec {
-    IGelatoCondition condition;   // Address: optional AddressZero for self-conditional actions
+    IGelatoCondition[] conditions;   // Address: optional AddressZero for self-conditional actions
     Action[] actions;
     uint256 gasPriceCeil;  // GasPriceCeil
 }
@@ -59,15 +59,15 @@ interface IGelatoProviders {
 
     // =========== GELATO PROVIDER APIs ==============
 
-    /// @notice Validation that checks whether inputetd Task Spec is being offered by the selected provider
-    /// @dev Checked in submitTask() if provider != userProxy
+    /// @notice Validation that checks whether Task Spec is being offered by the selected provider
+    /// @dev Checked in submitTask(), unless provider == userProxy
     /// @param _provider Address of selected provider
-    /// @param _condition Address of condition which will be checked
+    /// @param _conditions Address of conditions which will be checked
     /// @param _actions Acion Struct defined in IGelatoCore
     /// @return Expected to return "OK"
     function isTaskSpecProvided(
         address _provider,
-        IGelatoCondition _condition,
+        IGelatoCondition[] calldata _conditions,
         Action[] calldata _actions
     )
         external
@@ -137,7 +137,7 @@ interface IGelatoProviders {
     function unprovideTaskSpecs(TaskSpec[] calldata _TaskSpecs) external;
 
     /// @notice Update gasPriceCeil of selected Task Spec
-    /// @param _taskSpecHash Result of taskSpecHash()
+    /// @param _taskSpecHash Result of hashTaskSpec()
     /// @param _gasPriceCeil New gas price ceil for Task Spec
     function setTaskSpecGasPriceCeil(bytes32 _taskSpecHash, uint256 _gasPriceCeil) external;
 
@@ -249,10 +249,10 @@ interface IGelatoProviders {
 
     /// @notice Compute an TaskSpecHash
     /// @dev action.data can be 0
-    /// @param _condition Address of condition instance
-    /// @param _noDataActions Action List
+    /// @param _conditions Addressess of condition instances
+    /// @param _actions List of Actions
     /// @return keccak256 hash of encoded condition address and Action List
-    function taskSpecHash(IGelatoCondition _condition, Action[] calldata _noDataActions)
+    function hashTaskSpec(IGelatoCondition[] calldata _conditions, Action[] calldata _actions)
         external
         view
         returns(bytes32);

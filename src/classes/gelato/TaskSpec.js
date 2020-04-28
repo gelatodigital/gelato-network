@@ -1,13 +1,15 @@
-import { constants } from "ethers";
-
 // TaskSpec
 class TaskSpec {
-  constructor({ conditionInst, actions, gasPriceCeil }) {
-    if (!actions || !actions.length)
-      throw new Error("\n TaskSpec: no actions passed to constructor \n ");
+  constructor({ conditions, actions, gasPriceCeil }) {
+    if (conditions && (!Array.isArray(conditions) || !conditions.length))
+      throw new Error(
+        "\nTaskSpec: optional conditions must be non-empty Array\n"
+      );
+    if (!actions || !Array.isArray(actions) || !actions.length)
+      throw new Error("\nTaskSpec: actions must be non-empty Array\n");
     if (!gasPriceCeil)
       throw new Error("\n TaskSpec: no gasPriceCeil passed to constructor \n ");
-    this.condition = conditionInst ? conditionInst : constants.AddressZero;
+    this.conditions = conditions ? conditions : [];
     this.actions = actions;
     this.gasPriceCeil = gasPriceCeil;
   }

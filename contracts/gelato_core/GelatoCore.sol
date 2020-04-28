@@ -91,16 +91,18 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         if (_TR.task.expiryDate != 0 && _TR.task.expiryDate <= now) return "TaskReceiptExpired";
 
         // CHECK Condition for user proxies
-        if (_TR.task.condition.inst != IGelatoCondition(0)) {
-            try _TR.task.condition.inst.ok(_TR.task.condition.data)
-                returns(string memory condition)
-            {
-                if (!condition.startsWithOk())
-                    return string(abi.encodePacked("ConditionNotOk:", condition));
-            } catch Error(string memory error) {
-                return string(abi.encodePacked("ConditionReverted:", error));
-            } catch {
-                return "ConditionRevertedNoMessage";
+        if (_TR.task.conditions.length != 0) {
+            for (uint i; i < _TR.task.conditions.length; i++) {
+                try _TR.task.conditions[i].inst.ok(_TR.task.conditions[i].data)
+                    returns(string memory condition)
+                {
+                    if (!condition.startsWithOk())
+                        return string(abi.encodePacked("ConditionNotOk:", condition));
+                } catch Error(string memory error) {
+                    return string(abi.encodePacked("ConditionReverted:", error));
+                } catch {
+                    return "ConditionReverted:undefined";
+                }
             }
         }
 
@@ -109,7 +111,10 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             // Only check termsOk if specified, else continue
             if (!_TR.task.actions[i].termsOkCheck) continue;
 
-            try IGelatoAction(_TR.task.actions[i].inst).termsOk(_TR.task.actions[i].data)
+            try IGelatoAction(_TR.task.actions[i].addr).termsOk(
+                _TR.userProxy,
+                _TR.task.actions[i].data
+            )
                 returns(string memory actionTermsOk)
             {
                 if (!actionTermsOk.startsWithOk())
