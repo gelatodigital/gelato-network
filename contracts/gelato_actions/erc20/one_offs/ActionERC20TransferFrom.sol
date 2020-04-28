@@ -17,10 +17,10 @@ contract ActionERC20TransferFrom is GelatoActionsStandard {
     // using SafeERC20 for IERC20; <- internal library methods vs. try/catch
     using Address for address;
 
-    function action(ActionData memory _p) public payable virtual {
-        IERC20 sendERC20 = IERC20(_p.sendToken);
-        try sendERC20.transferFrom(_p.user, _p.destination, _p.sendAmount) {
-            emit LogOneWay(_p.user, _p.sendToken, _p.sendAmount, _p.destination);
+    function action(ActionData memory _d) public payable virtual {
+        IERC20 sendERC20 = IERC20(_d.sendToken);
+        try sendERC20.transferFrom(_d.user, _d.destination, _d.sendAmount) {
+            emit LogOneWay(_d.user, _d.sendToken, _d.sendAmount, _d.destination);
         } catch {
             revert("ActionERC20TransferFrom: ErrorTransferFromUser");
         }
@@ -28,38 +28,41 @@ contract ActionERC20TransferFrom is GelatoActionsStandard {
 
     // ======= ACTION CONDITIONS CHECK =========
     // Overriding and extending GelatoActionsStandard's function (optional)
-    function termsOk(bytes calldata _actionData, address _userProxy)
+    function termsOk(address _userProxy, bytes calldata _actionData)
         external
         view
         override
         virtual
         returns(string memory)  // actionTermsOk
     {
-        (ActionData memory _p) = abi.decode(_actionData[4:], (ActionData));
-        return termsOk(_p, _userProxy);
+        (ActionData memory _d) = abi.decode(_actionData[4:], (ActionData));
+        return termsOk(_userProxy, _d);
     }
 
-    function termsOk(ActionData memory _p, address _userProxy) public view virtual returns(string memory) {
-        if (!_p.sendToken.isContract())
+    function termsOk(address _userProxy, ActionData memory _d)
+        public
+        view
+        virtual
+        returns(string memory)
+    {
+        if (!_d.sendToken.isContract())
             return "ActionERC20TransferFrom: NotOkSendTokenAddress";
 
-        IERC20 sendERC20 = IERC20(_p.sendToken);
-        try sendERC20.balanceOf(_p.user) returns(uint256 sendERC20Balance) {
-            if (sendERC20Balance < _p.sendAmount)
+        IERC20 sendERC20 = IERC20(_d.sendToken);
+        try sendERC20.balanceOf(_d.user) returns(uint256 sendERC20Balance) {
+            if (sendERC20Balance < _d.sendAmount)
                 return "ActionERC20TransferFrom: NotOkUserSendTokenBalance";
         } catch {
             return "ActionERC20TransferFrom: ErrorBalanceOf";
         }
-        try sendERC20.allowance(_p.user, _userProxy)
-            returns(uint256 userProxySendTokenAllowance)
-        {
-            if (userProxySendTokenAllowance < _p.sendAmount)
+
+        try sendERC20.allowance(_d.user, _userProxy) returns(uint256 allowance) {
+            if (allowance < _d.sendAmount)
                 return "ActionERC20TransferFrom: NotOkUserProxySendTokenAllowance";
         } catch {
             return "ActionERC20TransferFrom: ErrorAllowance";
         }
 
-        // STANDARD return string to signal actionConditions Ok
         return OK;
     }
 }

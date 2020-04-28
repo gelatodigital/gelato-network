@@ -60,7 +60,12 @@ contract GelatoUserProxy is IGelatoUserProxy {
     }
 
     function multiSubmitTasks(Task[] memory _tasks) public override userOrFactory {
-        for (uint i = 0; i < _tasks.length; i++) submitTask(_tasks[i]);
+        try IGelatoCore(gelatoCore).multiSubmitTasks(_tasks) {
+        } catch Error(string memory err) {
+            revert(string(abi.encodePacked("GelatoUserProxy.multiSubmitTasks:", err)));
+        } catch {
+            revert("GelatoUserProxy.multiSubmitTasks:undefinded");
+        }
     }
 
     function cancelTask(TaskReceipt memory _TR) public override onlyUser {

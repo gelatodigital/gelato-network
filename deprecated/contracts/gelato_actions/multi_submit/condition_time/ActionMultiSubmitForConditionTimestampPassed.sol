@@ -24,19 +24,19 @@ contract ActionMultiSubmitForConditionTimestampPassed is GelatoActionsStandard {
     using SafeMath for uint256;
 
     function action(bytes calldata _actionData) external payable override virtual {
-        ActionData memory _p = abi.decode(_actionData[4:], (ActionData));
-        action(_p);
+        ActionData memory _data = abi.decode(_actionData[4:], (ActionData));
+        action(_data);
     }
 
     // Specific Implementation: Caution when using storage in delegatecall
-    function action(ActionData memory _p) public payable virtual {
-        for (uint256 i = 0; i < _p.numOfSubmissions; i++) {
-            uint256 timestamp = _p.startTime.add(_p.intervalSpan.mul(i));
-            _p.taskReceipt.task.conditions.data = abi.encodeWithSelector(
+    function action(ActionData memory _data) public payable virtual {
+        for (uint256 i = 0; i < _data.numOfSubmissions; i++) {
+            uint256 timestamp = _data.startTime.add(_data.intervalSpan.mul(i));
+            _data.taskReceipt.task.conditions.data = abi.encodeWithSelector(
                 IGelatoCondition.ok.selector,
                 timestamp
             );
-            _p.gelatoCore.submitTask(_p.taskReceipt.task);
+            _data.gelatoCore.submitTask(_data.taskReceipt.task);
         }
     }
 }

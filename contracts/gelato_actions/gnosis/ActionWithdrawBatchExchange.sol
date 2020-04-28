@@ -32,14 +32,7 @@ contract ActionWithdrawBatchExchange is GelatoActionsStandard {
     /// @notice Withdraw sell and buy token from Batch Exchange and send funds back to _user EOA
     /// @param _sellToken Token to sell on Batch Exchange
     /// @param _buyToken Token to buy on Batch Exchange
-    function action(
-        address _sellToken,
-        address _buyToken
-    )
-        public
-        virtual
-    {
-
+    function action(address _sellToken, address _buyToken) public virtual {
         // 3. Withdraw buy token and pay provider fee (if possible)
         try batchExchange.withdraw(address(this), _buyToken) {}
         catch {
@@ -58,7 +51,7 @@ contract ActionWithdrawBatchExchange is GelatoActionsStandard {
 
     // ======= ACTION CONDITIONS CHECK =========
     // Overriding and extending GelatoActionsStandard's function (optional)
-    function termsOk(bytes calldata _actionData, address _userProxy)
+    function termsOk(address _userProxy, bytes calldata _actionData)
         external
         view
         override
@@ -69,53 +62,38 @@ contract ActionWithdrawBatchExchange is GelatoActionsStandard {
             _actionData[4:],
             (address,address)
         );
-        return _actionConditionsCheck(
-            _userProxy, _sellToken, _buyToken
-        );
+        return termsOk(_userProxy, _sellToken, _buyToken);
     }
 
     /// @notice Verify that _userProxy has two valid withdraw request on batch exchange (for buy and sell token)
     /// @param _userProxy Users Proxy address
     /// @param _sellToken Token to sell on Batch Exchange
     /// @param _buyToken Amount to sell
-    function _actionConditionsCheck(
-        address _userProxy,
-        address _sellToken,
-        address _buyToken
-    )
-        internal
+    function termsOk(address _userProxy, address _sellToken, address _buyToken)
+        public
         view
         virtual
         returns(string memory)  // actionCondition
     {
-
         bool sellTokenWithdrawable = batchExchange.hasValidWithdrawRequest(_userProxy, _sellToken);
 
-        if (!sellTokenWithdrawable) {
+        if (!sellTokenWithdrawable)
             return "ActionWithdrawBatchExchange: Sell Token not withdrawable yet";
-        }
 
         bool buyTokenWithdrawable = batchExchange.hasValidWithdrawRequest(_userProxy, _buyToken);
 
-        if (!buyTokenWithdrawable) {
+        if (!buyTokenWithdrawable)
             return "ActionWithdrawBatchExchange: Buy Token not withdrawable yet";
-        }
 
         bool proxyHasCredit = feeExtractor.proxyHasCredit(_userProxy);
 
-        if (!proxyHasCredit) {
+        if (!proxyHasCredit)
             return "ActionWithdrawBatchExchange: Proxy has insufficient credit";
-        }
 
         return OK;
-
     }
 
-    function getDecimals(address _token)
-        internal
-        view
-        returns(uint256)
-    {
+    function getDecimals(address _token) internal view returns(uint256) {
         (bool success, bytes memory data) = address(_token).staticcall{gas: 20000}(
             abi.encodeWithSignature("decimals()")
         );

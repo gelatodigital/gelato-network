@@ -70,12 +70,23 @@ interface IGelatoCore {
 
     event LogTaskCancelled(uint256 indexed taskReceiptId);
 
-    // ================  Exec Suite =========================
+    function canSubmitTask(address _executor, address _userProxy, Task calldata _task)
+        external
+        view
+        returns(string memory);
+
     /// @notice Submit a gelato task that will be executed under the specified conditions
     /// @dev This function must be called from a contract account provided by Provider
     /// @param _task Selected provider, conditions, actions, expiry date of the task
     function submitTask(Task calldata _task) external;
 
+    /// @notice Submit a gelato task that will be executed under the specified conditions
+    /// @dev This function must be called from a contract account provided by Provider
+    /// @param _tasks Selected provider, conditions, actions, expiry date of the task
+    function multiSubmitTasks(Task[] calldata _tasks) external;
+
+
+    // ================  Exec Suite =========================
     /// @notice Off-chain API for executors to check, if a TaskReceipt is executable
     /// @dev GelatoCore checks this during execution, in order to safeguard the Conditions
     /// @param _TR TaskReceipt, consisting of user task, user proxy address and id

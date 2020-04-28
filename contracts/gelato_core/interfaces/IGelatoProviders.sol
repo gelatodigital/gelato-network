@@ -2,14 +2,14 @@ pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
 import { IGelatoProviderModule } from "./IGelatoProviderModule.sol";
-import { Action, TaskReceipt } from "../interfaces/IGelatoCore.sol";
+import { Action, Task, TaskReceipt } from "../interfaces/IGelatoCore.sol";
 import { IGelatoCondition } from "../../gelato_conditions/IGelatoCondition.sol";
 
 // TaskSpec - Will be whitelised by providers and selected by users
 struct TaskSpec {
     IGelatoCondition[] conditions;   // Address: optional AddressZero for self-conditional actions
     Action[] actions;
-    uint256 gasPriceCeil;  // GasPriceCeil
+    uint256 gasPriceCeil;
 }
 
 interface IGelatoProviders {
@@ -62,23 +62,19 @@ interface IGelatoProviders {
     /// @notice Validation that checks whether Task Spec is being offered by the selected provider
     /// @dev Checked in submitTask(), unless provider == userProxy
     /// @param _provider Address of selected provider
-    /// @param _conditions Address of conditions which will be checked
-    /// @param _actions Acion Struct defined in IGelatoCore
+    /// @param _taskSpec Task Spec
     /// @return Expected to return "OK"
-    function isTaskSpecProvided(
-        address _provider,
-        IGelatoCondition[] calldata _conditions,
-        Action[] calldata _actions
-    )
+    function isTaskSpecProvided(address _provider, TaskSpec calldata _taskSpec)
         external
         view
         returns(string memory);
 
     /// @notice Validates that provider has provider module whitelisted + conducts isProvided check in ProviderModule
     /// @dev Checked in submitTask() if provider == userProxy
-    /// @param _TR Task Receipt defined in IGelatoCore
+    /// @param _userProxy userProxy passed by GelatoCore during submission and exec
+    /// @param _task Task defined in IGelatoCore
     /// @return Expected to return "OK"
-    function providerModuleChecks(TaskReceipt calldata _TR)
+    function providerModuleChecks(address _userProxy, Task calldata _task)
         external
         view
         returns(string memory);
@@ -86,9 +82,10 @@ interface IGelatoProviders {
 
     /// @notice Validate if provider module and seleced TaskSpec is whitelisted by provider
     /// @dev Combines "isTaskSpecProvided" and providerModuleChecks
-    /// @param _TR Task Receipt defined in IGelatoCore
+    /// @param _userProxy userProxy passed by GelatoCore during submission and exec
+    /// @param _task Task defined in IGelatoCore
     /// @return res Expected to return "OK"
-    function isTaskProvided(TaskReceipt calldata _TR)
+    function isTaskProvided(address _userProxy, Task calldata _task)
         external
         view
         returns(string memory res);
@@ -128,13 +125,13 @@ interface IGelatoProviders {
 
     /// @notice Whitelist TaskSpecs (A combination of a Condition, Action(s) and a gasPriceCeil) that users can select from
     /// @dev If gasPriceCeil is == 0, Task Spec will be executed at any gas price (no ceil)
-    /// @param _TaskSpecs Task Receipt List defined in IGelatoCore
-    function provideTaskSpecs(TaskSpec[] calldata _TaskSpecs) external;
+    /// @param _taskSpecs Task Receipt List defined in IGelatoCore
+    function provideTaskSpecs(TaskSpec[] calldata _taskSpecs) external;
 
     /// @notice De-whitelist TaskSpecs (A combination of a Condition, Action(s) and a gasPriceCeil) that users can select from
     /// @dev If gasPriceCeil was set to NO_CEIL, Input NO_CEIL constant as GasPriceCeil
-    /// @param _TaskSpecs Task Receipt List defined in IGelatoCore
-    function unprovideTaskSpecs(TaskSpec[] calldata _TaskSpecs) external;
+    /// @param _taskSpecs Task Receipt List defined in IGelatoCore
+    function unprovideTaskSpecs(TaskSpec[] calldata _taskSpecs) external;
 
     /// @notice Update gasPriceCeil of selected Task Spec
     /// @param _taskSpecHash Result of hashTaskSpec()
@@ -154,11 +151,11 @@ interface IGelatoProviders {
 
     /// @notice Whitelist new executor, TaskSpec(s) and Module(s) in one tx
     /// @param _executor Address of new executor of provider
-    /// @param _TaskSpecs List of Task Spec which will be whitelisted by provider
+    /// @param _taskSpecs List of Task Spec which will be whitelisted by provider
     /// @param _modules List of module addresses which will be whitelisted by provider
     function multiProvide(
         address _executor,
-        TaskSpec[] calldata _TaskSpecs,
+        TaskSpec[] calldata _taskSpecs,
         IGelatoProviderModule[] calldata _modules
     )
         external
@@ -167,11 +164,11 @@ interface IGelatoProviders {
 
     /// @notice De-Whitelist TaskSpec(s), Module(s) and withdraw funds from gelato in one tx
     /// @param _withdrawAmount Amount to withdraw from ProviderFunds
-    /// @param _TaskSpecs List of Task Spec which will be de-whitelisted by provider
+    /// @param _taskSpecs List of Task Spec which will be de-whitelisted by provider
     /// @param _modules List of module addresses which will be de-whitelisted by provider
     function multiUnprovide(
         uint256 _withdrawAmount,
-        TaskSpec[] calldata _TaskSpecs,
+        TaskSpec[] calldata _taskSpecs,
         IGelatoProviderModule[] calldata _modules
     )
         external;
@@ -248,14 +245,10 @@ interface IGelatoProviders {
         returns(uint256);
 
     /// @notice Compute an TaskSpecHash
-    /// @dev action.data can be 0
-    /// @param _conditions Addressess of condition instances
-    /// @param _actions List of Actions
+    /// @dev action.data will be striped before hashing
+    /// @param _taskSpec TaskSpec
     /// @return keccak256 hash of encoded condition address and Action List
-    function hashTaskSpec(IGelatoCondition[] calldata _conditions, Action[] calldata _actions)
-        external
-        view
-        returns(bytes32);
+    function hashTaskSpec(TaskSpec calldata _taskSpec) external view returns(bytes32);
 
     /// @notice Constant used to specify the highest gas price available in the gelato system
     /// @dev Input 0 as gasPriceCeil and it will be assigned to NO_CEIL
