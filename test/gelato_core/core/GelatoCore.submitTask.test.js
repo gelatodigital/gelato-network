@@ -178,7 +178,6 @@ describe("Gelato Core - Task Submission ", function () {
     );
     actionWithdrawBatchExchange = await ActionWithdrawBatchExchange.deploy(
       mockBatchExchange.address,
-      providerAddress,
       feeFinder.address
     );
 
@@ -278,7 +277,6 @@ describe("Gelato Core - Task Submission ", function () {
     it("#1: Successfully submit whitelisted taskReceipt", async function () {
       const actionInputs = {
         user: sellerAddress,
-        userProxy: userProxyAddress,
         sendToken: sellToken.address,
         destination: sellerAddress,
         sendAmount: ethers.utils.parseUnits("1", "ether"),
@@ -286,7 +284,7 @@ describe("Gelato Core - Task Submission ", function () {
 
       const actionPayload = await run("abi-encode-withselector", {
         contractname: "ActionERC20TransferFrom",
-        functionname: "action",
+        functionname: "transferFrom",
         inputs: [actionInputs],
       });
 
@@ -326,7 +324,6 @@ describe("Gelato Core - Task Submission ", function () {
       const notWhitelistedAction = actionERC20TransferFrom.address;
       const actionInputs = {
         user: sellerAddress,
-        userProxy: userProxyAddress,
         sendToken: sellToken.address,
         destination: sellerAddress,
         sendAmount: ethers.utils.parseUnits("1", "ether"),
@@ -334,7 +331,7 @@ describe("Gelato Core - Task Submission ", function () {
 
       const actionPayload = await run("abi-encode-withselector", {
         contractname: "ActionERC20TransferFrom",
-        functionname: "action",
+        functionname: "transferFrom",
         inputs: [actionInputs],
       });
 
@@ -376,7 +373,6 @@ describe("Gelato Core - Task Submission ", function () {
 
       const actionInputs = {
         user: sellerAddress,
-        userProxy: userProxyAddress,
         sendToken: sellToken.address,
         destination: sellerAddress,
         sendAmount: ethers.utils.parseUnits("1", "ether"),
@@ -384,7 +380,7 @@ describe("Gelato Core - Task Submission ", function () {
 
       const actionPayload = await run("abi-encode-withselector", {
         contractname: "ActionERC20TransferFrom",
-        functionname: "action",
+        functionname: "transferFrom",
         inputs: [actionInputs],
       });
 
@@ -423,7 +419,6 @@ describe("Gelato Core - Task Submission ", function () {
 
       const actionInputs = {
         user: sellerAddress,
-        userProxy: userProxyAddress,
         sendToken: sellToken.address,
         destination: sellerAddress,
         sendAmount: ethers.utils.parseUnits("1", "ether"),
@@ -431,7 +426,7 @@ describe("Gelato Core - Task Submission ", function () {
 
       const actionPayload = await run("abi-encode-withselector", {
         contractname: "ActionERC20TransferFrom",
-        functionname: "action",
+        functionname: "transferFrom",
         inputs: [actionInputs],
       });
 
@@ -470,7 +465,6 @@ describe("Gelato Core - Task Submission ", function () {
 
       const actionInputs = {
         user: sellerAddress,
-        userProxy: userProxyAddress,
         sendToken: sellToken.address,
         destination: sellerAddress,
         sendAmount: ethers.utils.parseUnits("1", "ether"),
@@ -478,7 +472,7 @@ describe("Gelato Core - Task Submission ", function () {
 
       const actionPayload = await run("abi-encode-withselector", {
         contractname: "ActionERC20TransferFrom",
-        functionname: "action",
+        functionname: "transferFrom",
         inputs: [actionInputs],
       });
 
@@ -517,7 +511,6 @@ describe("Gelato Core - Task Submission ", function () {
 
       const actionInputs = {
         user: sellerAddress,
-        userProxy: userProxyAddress,
         sendToken: sellToken.address,
         destination: sellerAddress,
         sendAmount: ethers.utils.parseUnits("1", "ether"),
@@ -525,7 +518,7 @@ describe("Gelato Core - Task Submission ", function () {
 
       const actionPayload = await run("abi-encode-withselector", {
         contractname: "ActionERC20TransferFrom",
-        functionname: "action",
+        functionname: "transferFrom",
         inputs: [actionInputs],
       });
 
@@ -599,7 +592,6 @@ describe("Gelato Core - Task Submission ", function () {
     it("#8: create success (Self-provider), not whitelisted action, assigning new executor and staking", async function () {
       const actionInputs = {
         user: providerAddress,
-        userProxy: userProxyAddress,
         sendToken: sellToken.address,
         destination: sellerAddress,
         sendAmount: ethers.utils.parseUnits("1", "ether"),
@@ -607,7 +599,7 @@ describe("Gelato Core - Task Submission ", function () {
 
       const actionPayload = await run("abi-encode-withselector", {
         contractname: "ActionERC20TransferFrom",
-        functionname: "action",
+        functionname: "transferFrom",
         inputs: [actionInputs],
       });
 
@@ -741,7 +733,7 @@ describe("Gelato Core - Task Submission ", function () {
 
       const actionPayload = await run("abi-encode-withselector", {
         contractname: "ActionERC20TransferFrom",
-        functionname: "action",
+        functionname: "transferFrom",
         inputs: [actionInputs],
       });
 
