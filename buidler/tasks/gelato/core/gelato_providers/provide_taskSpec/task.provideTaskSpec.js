@@ -27,7 +27,7 @@ export default task(
         });
         taskArgs.condition = conditionInstance.address;
       } else {
-        taskArgs.condition = constants.AddressZero;
+        taskArgs.condition = undefined;
       }
 
       // Action
@@ -64,7 +64,7 @@ export default task(
       const gasPriceCeil = utils.parseUnits(taskArgs.gaspriceceil, "gwei");
       // Create TaskSpec condition, actions, gasPriceCeil
       const taskSpec = new TaskSpec({
-        conditions: [taskArgs.condition],
+        conditions: taskArgs.condition ? [taskArgs.condition] : undefined,
         actions: actionArray,
         gasPriceCeil,
       });

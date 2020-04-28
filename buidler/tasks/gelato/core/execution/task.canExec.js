@@ -70,6 +70,13 @@ export default task(
           termsOkCheck: action[4],
         });
       }
+      const conditions = [];
+      for (const condition of taskArgs.taskreceipt[2][1]) {
+        conditions.push({
+          inst: condition[0],
+          data: condition[1],
+        });
+      }
 
       const taskReceipt = {
         id: taskArgs.taskreceipt[0],
@@ -79,12 +86,7 @@ export default task(
             addr: taskArgs.taskreceipt[2][0][0],
             module: taskArgs.taskreceipt[2][0][1],
           },
-          conditions: [
-            {
-              addr: taskArgs.taskreceipt[2][1][0],
-              data: taskArgs.taskreceipt[2][1][1],
-            },
-          ],
+          conditions,
           actions,
           expiryDate: taskArgs.taskreceipt[2][3],
         },

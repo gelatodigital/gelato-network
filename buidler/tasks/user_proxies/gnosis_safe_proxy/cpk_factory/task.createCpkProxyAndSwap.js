@@ -18,8 +18,8 @@ export default task(
   )
   .addOptionalParam(
     "buyToken",
-    "address of token to buy (default USDC)",
-    "0x4dbcdf9b62e891a7cec5a2568c3f4faf9e8abe2b"
+    "address of token to buy (default WETH)",
+    "0xc778417e063141139fce010982780140aa0cd5ab"
   )
   .addOptionalParam(
     "sellAmount",
@@ -28,8 +28,8 @@ export default task(
   )
   .addOptionalParam(
     "buyAmount",
-    "amount of buy token to purchase (default 3.8*10**6)",
-    "3800000"
+    "amount of buy token to purchase (default 0.005*10**18)",
+    "5000000000000000"
   )
   .addOptionalParam(
     "batchId",
@@ -71,18 +71,31 @@ export default task(
       write: true,
     });
 
-    // Check if user has sufficient balance
+    // Get the required fee from the providers Fee Contract
+    const feeExtractor = await run("instantiateContract", {
+      deployments: true,
+      contractname: "FeeExtractor",
+      read: true,
+    });
+
+    const requiredFee = await feeExtractor.getFeeAmount(taskArgs.sellToken);
+
+    // Check if user has sufficient balance (sell Amount plus required Fee)
     const sellTokenBalance = await sellToken.balanceOf(userAddress);
-    if (
-      parseInt(sellTokenBalance.toString()) <
-      parseInt(taskArgs.sellAmount.toString())
-    )
+    const totalSellAmountMinusFee = ethers.utils
+      .bigNumberify(taskArgs.sellAmount)
+      .sub(requiredFee);
+    if (sellTokenBalance.lte(ethers.utils.bigNumberify(taskArgs.sellAmount)))
       throw new Error("Insufficient sellToken to conduct enter stableswap");
 
     if (taskArgs.log)
-      console.log(
-        `Approve gnosis safe for ${taskArgs.sellAmount} ${taskArgs.sellToken}`
-      );
+      console.log(`
+          Approve gnosis safe to move ${taskArgs.sellAmount} of token: ${taskArgs.sellToken}\n
+          Inputted Sell Volume:              ${taskArgs.sellAmount}\n
+          Fee for automated withdrawal:    - ${requiredFee}\n
+          ------------------------------------------------------------\n
+          Amount that will be sold:        = ${totalSellAmountMinusFee}
+          `);
 
     await sellToken.approve(safeAddress, taskArgs.sellAmount);
 
@@ -149,6 +162,45 @@ export default task(
       ]
     );
 
+    // // Encode Approving Fee Extractor to transferFrom fees from userProxy
+    // const encodedApprovalForFeeExtractor = await run(
+    //   "abi-encode-withselector",
+    //   {
+    //     contractname: "IERC20",
+    //     functionname: "approve",
+    //     inputs: [feeExtractor.address, requiredFee],
+    //   }
+    // );
+
+    // const encodedApprovalForFeeExtractorMultiSend = ethers.utils.solidityPack(
+    //   ["uint8", "address", "uint256", "uint256", "bytes"],
+    //   [
+    //     0, //operation
+    //     sellToken, //to
+    //     0, // value
+    //     ethers.utils.hexDataLength(encodedApprovalForFeeExtractor), // data length
+    //     encodedApprovalForFeeExtractor, // data
+    //   ]
+    // );
+
+    // // Encode Provider Fee Payment
+    // const encodedFeePayment = await run("abi-encode-withselector", {
+    //   contractname: "FeeExtractor",
+    //   functionname: "payFee",
+    //   inputs: [taskArgs.sellToken, requiredFee],
+    // });
+
+    // const encodedFeePaymentMultiSend = ethers.utils.solidityPack(
+    //   ["uint8", "address", "uint256", "uint256", "bytes"],
+    //   [
+    //     0, //operation
+    //     feeExtractor.address, //to
+    //     0, // value
+    //     ethers.utils.hexDataLength(encodedFeePayment), // data length
+    //     encodedFeePayment, // data
+    //   ]
+    // );
+
     // Fetch BatchId if it was not passed
     const batchExchangeAddress = await run("bre-config", {
       addressbook: true,
@@ -187,11 +239,6 @@ export default task(
       module: gnosisSafeProviderModuleAddress,
     });
 
-    const condition = new Condition({
-      inst: constants.AddressZero,
-      data: constants.HashZero,
-    });
-
     const actionWithdrawFromBatchExchangePayload = await run(
       "abi-encode-withselector",
       {
@@ -207,19 +254,18 @@ export default task(
     });
 
     const actionWithdrawBatchExchange = new Action({
-      inst: actionAddress,
+      addr: actionAddress,
       data: actionWithdrawFromBatchExchangePayload,
       operation: 1,
       value: 0,
       termsOkCheck: true,
     });
 
-    const taskWithdrawBatchExchange = {
+    const taskWithdrawBatchExchange = new Task({
       provider: gelatoProvider,
-      condition: condition,
       actions: [actionWithdrawBatchExchange],
       expiryDate: constants.HashZero,
-    };
+    });
 
     // Get Sell on batch exchange calldata
     const placeOrderBatchExchangeData = await run("abi-encode-withselector", {
@@ -285,7 +331,6 @@ export default task(
           ethers.utils.concat([placeOrderBatchExchangeDataMultiSend])
         ),
       ]);
-      console.log("only placeOrder");
     }
 
     let submitTaskTxHash;
