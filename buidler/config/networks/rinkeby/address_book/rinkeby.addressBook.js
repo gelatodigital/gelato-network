@@ -13,6 +13,7 @@ export const addressBook = {
     mastercopy: "0x34CfAC646f301356fAa8B21e94227e3583Fe3F5F",
     gnosisSafeProxyFactory: "0x76E2cFc1F5Fa8F6a5b3fC4c8F4788F0116861F9B",
     cpkFactory: "0x336c19296d3989e9e0c2561ef21c964068657c38",
+    multiSend: "0x29CAa04Fa05A046a05C85A50e8f2af8cf9A05BaC",
   },
   kyber: {
     // rinkeby

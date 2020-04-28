@@ -4,7 +4,7 @@ import { GelatoActionsStandard } from "../../../../gelato_actions/GelatoActionsS
 import { SafeERC20 } from "../../../../external/SafeERC20.sol";
 import { IERC20 } from "../../../../external/IERC20.sol";
 
-contract MockBatchExchange is GelatoActionsStandard {
+contract MockBatchExchange {
 
     using SafeERC20 for IERC20;
 

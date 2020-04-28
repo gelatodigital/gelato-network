@@ -8,7 +8,7 @@ contract MockProviderModuleGelatoUserProxyRevert is GelatoProviderModuleStandard
     // Incorrect execPayload func on purpose
     function execPayload(Action[] calldata)
         external
-        pure
+        view
         override
         returns(bytes memory)
     {

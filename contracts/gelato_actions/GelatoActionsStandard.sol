@@ -8,7 +8,7 @@ abstract contract GelatoActionsStandard is IGelatoAction {
 
     string internal constant OK = "OK";
 
-    function termsOk(address, bytes calldata)  // userProxy, _actionData
+    function termsOk(bytes calldata, address)  // _actionData
         external
         view
         override

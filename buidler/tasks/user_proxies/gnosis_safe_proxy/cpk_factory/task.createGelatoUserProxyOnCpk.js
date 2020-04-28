@@ -14,7 +14,7 @@ export default task(
     "saltnonce",
     "Supply for createTwoProxyAndSubmit()",
     // CPK global salt
-    '0xcfe33a586323e7325be6aa6ecd8b4600d232a9037e83c8ece69413b777dabe65',
+    "0xcfe33a586323e7325be6aa6ecd8b4600d232a9037e83c8ece69413b777dabe65",
     types.string
   )
   .addOptionalParam("initializer", "Payload for gnosis safe proxy setup tasks")
@@ -79,11 +79,11 @@ export default task(
   )
 
   .addFlag("log", "Logs return values to stdout")
-  .setAction(async taskArgs => {
+  .setAction(async (taskArgs) => {
     try {
       // Command Line Argument Checks
       // Gnosis Safe creation
-      if (!taskArgs.initializer && !taskArgs.setup)
+      if (!taskArgs.initializer && !taskArgs.setup && !taskArgs.data)
         throw new Error("Must provide initializer payload or --setup args");
       else if (taskArgs.initializer && taskArgs.setup)
         throw new Error("Provide EITHER initializer payload OR --setup args");
@@ -94,7 +94,7 @@ export default task(
       if (!taskArgs.mastercopy) {
         taskArgs.mastercopy = await run("bre-config", {
           addressbookcategory: "gnosisSafe",
-          addressbookentry: "mastercopy"
+          addressbookentry: "mastercopy",
         });
       }
 
@@ -104,7 +104,7 @@ export default task(
       if (taskArgs.setup && !taskArgs.owners) {
         const signerAddress = await run("ethers", {
           signer: true,
-          address: true
+          address: true,
         });
         taskArgs.owners = [signerAddress];
         if (!Array.isArray(taskArgs.owners))
@@ -118,7 +118,7 @@ export default task(
         if (taskArgs.to === constants.AddressZero) {
           taskArgs.to = await run("bre-config", {
             deployments: true,
-            contractname: taskArgs.defaultpayloadscript
+            contractname: taskArgs.defaultpayloadscript,
           });
         }
       }
@@ -132,12 +132,12 @@ export default task(
           taskArgs.fallbackhandler,
           taskArgs.paymenttoken,
           taskArgs.payment,
-          taskArgs.paymentreceiver
+          taskArgs.paymentreceiver,
         ];
         taskArgs.initializer = await run("abi-encode-withselector", {
           contractname: "IGnosisSafe",
           functionname: "setup",
-          inputs
+          inputs,
         });
       }
       // ============
@@ -147,17 +147,26 @@ export default task(
       // CPKFactory interaction
       const cpkFactoryAddress = await run("bre-config", {
         addressbookcategory: "gnosisSafe",
-        addressbookentry: "cpkFactory"
-      })
+        addressbookentry: "cpkFactory",
+      });
 
-      if(taskArgs.log) console.log(`CPK Factory: ${cpkFactoryAddress}`)
+      if (taskArgs.log) console.log(`CPK Factory: ${cpkFactoryAddress}`);
 
       const cpkFactory = await run("instantiateContract", {
         contractaddress: cpkFactoryAddress,
-        contractname: 'CPKFactory',
-        write: true
+        contractname: "CPKFactory",
+        write: true,
       });
 
+      console.log(
+        taskArgs.mastercopy,
+        taskArgs.saltnonce,
+        taskArgs.fallbackhandler,
+        taskArgs.to,
+        taskArgs.value,
+        taskArgs.data,
+        taskArgs.operation
+      );
       let creationTx = await cpkFactory.createProxyAndExecTransaction(
         taskArgs.mastercopy,
         taskArgs.saltnonce,
@@ -166,7 +175,7 @@ export default task(
         taskArgs.value,
         taskArgs.data,
         taskArgs.operation,
-        {  gasLimit: 3000000 }
+        { gasLimit: 3000000 }
       );
 
       if (taskArgs.log)
@@ -183,7 +192,7 @@ export default task(
           txhash: creationTx.hash,
           blockHash,
           values: true,
-          stringify: true
+          stringify: true,
         });
         if (parsedCreateLog)
           console.log("\n✅ ProxyCreation\n", parsedCreateLog);

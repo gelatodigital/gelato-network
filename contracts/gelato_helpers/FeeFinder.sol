@@ -6,15 +6,22 @@ import { IMedianizer } from "../dapp_interfaces/maker/IMakerMedianizer.sol";
 
 import { IKyber } from '../dapp_interfaces/kyber/IKyber.sol';
 import { IERC20 } from '../external/IERC20.sol';
+import { Ownable } from '../external/Ownable.sol';
 import { SafeMath } from '../external/SafeMath.sol';
 
-contract FeeFinder {
+/// @notice Contract to set and calculate fees paid for the batchExchange withdraw action
+contract FeeFinder is Ownable {
 
     using SafeMath for uint256;
 
     // Fee
     uint256 public constant feeDAI = 3; //DAI
     uint256 public constant feeDAIWei = 3 ether; //DAI
+
+    mapping(address => uint256) public proxyHasPaidForAction;
+    // Stores the prepayment amount in DAI for a certain action
+    mapping(address => uint256) public prepaymentAmount;
+
 
     // Hardcoded Tokens
     address public immutable DAI;
@@ -63,6 +70,24 @@ contract FeeFinder {
         uniswapFactory = IUniswapFactory(_uniswapFactory);
         uniswapDaiExchange = IUniswapExchange(_uniswapDaiExchange);
         medianizer = IMedianizer(_medianizer);
+    }
+
+
+    function buyCredit(address _payer) internal {
+        proxyHasPaidForAction[_payer] += 1;
+    }
+
+    function proxyHasCredit(address _payer)
+        external
+        view
+        returns (bool userHasCredit)
+    {
+        userHasCredit = proxyHasPaidForAction[_payer] > 0 ? true : false;
+    }
+
+    function redeemCredit() external {
+        proxyHasPaidForAction[msg.sender] = proxyHasPaidForAction[msg.sender].sub(1,
+        "FeeFinder: All credit used up");
     }
 
 

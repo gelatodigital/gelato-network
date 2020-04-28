@@ -9,7 +9,7 @@ import {
 import { IGelatoProviderModule } from "../../../gelato_core/interfaces/IGelatoProviderModule.sol";
 
 // This Action is the Provider and must be called from any UserProxy with .call a
-contract MockActionMaliciousProvider is GelatoActionsStandard {
+contract MockActionMaliciousProvider  {
     IGelatoProviders immutable gelato;
 
     constructor(IGelatoProviders _gelato) public { gelato = _gelato; }

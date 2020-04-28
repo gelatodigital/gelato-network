@@ -59,6 +59,10 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH PROVIDE", function () {
       "ProviderModuleGnosisSafeProxy"
     );
 
+    const Multisend = await ethers.getContractFactory("Multisend");
+
+    const multisend = await Multisend.deploy();
+
     gelatoCore = await GelatoCore.deploy();
 
     condition = await ConditionFactory.deploy();
@@ -75,7 +79,8 @@ describe("GelatoCore - GelatoProviders - Setters: BATCH PROVIDE", function () {
     otherProviderModule = await OtherProviderModuleFactory.deploy(
       [constants.HashZero], // hashes
       [constants.AddressZero], // masterCopies
-      gelatoCore.address
+      gelatoCore.address,
+      multisend.address
     );
 
     await gelatoCore.deployed();

@@ -8,7 +8,6 @@ import { Address } from "../../../external/Address.sol";
 
 struct ActionData {
     address user;
-    address userProxy;
     address sendToken;
     address destination;
     uint256 sendAmount;
@@ -19,7 +18,6 @@ contract ActionERC20TransferFrom is GelatoActionsStandard {
     using Address for address;
 
     function action(ActionData memory _p) public payable virtual {
-        require(address(this) == _p.userProxy, "ActionERC20TransferFrom: UserProxy");
         IERC20 sendERC20 = IERC20(_p.sendToken);
         try sendERC20.transferFrom(_p.user, _p.destination, _p.sendAmount) {
             emit LogOneWay(_p.user, _p.sendToken, _p.sendAmount, _p.destination);
@@ -30,7 +28,7 @@ contract ActionERC20TransferFrom is GelatoActionsStandard {
 
     // ======= ACTION CONDITIONS CHECK =========
     // Overriding and extending GelatoActionsStandard's function (optional)
-    function termsOk(address, bytes calldata _actionData)
+    function termsOk(bytes calldata _actionData, address _userProxy)
         external
         view
         override
@@ -38,10 +36,10 @@ contract ActionERC20TransferFrom is GelatoActionsStandard {
         returns(string memory)  // actionTermsOk
     {
         (ActionData memory _p) = abi.decode(_actionData[4:], (ActionData));
-        return termsOk(_p);
+        return termsOk(_p, _userProxy);
     }
 
-    function termsOk(ActionData memory _p) public view virtual returns(string memory) {
+    function termsOk(ActionData memory _p, address _userProxy) public view virtual returns(string memory) {
         if (!_p.sendToken.isContract())
             return "ActionERC20TransferFrom: NotOkSendTokenAddress";
 
@@ -52,7 +50,7 @@ contract ActionERC20TransferFrom is GelatoActionsStandard {
         } catch {
             return "ActionERC20TransferFrom: ErrorBalanceOf";
         }
-        try sendERC20.allowance(_p.user, _p.userProxy)
+        try sendERC20.allowance(_p.user, _userProxy)
             returns(uint256 userProxySendTokenAllowance)
         {
             if (userProxySendTokenAllowance < _p.sendAmount)

@@ -18,5 +18,5 @@ interface IGelatoProviderModule {
     /// @dev Encoded multiple actions into a multisend
     /// @param _actions List of actions to execute
     /// @return Encoded payload that will be used for low-level .call on user proxy
-    function execPayload(Action[] calldata _actions) external pure returns(bytes memory);
+    function execPayload(Action[] calldata _actions) external view returns(bytes memory);
 }

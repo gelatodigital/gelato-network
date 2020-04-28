@@ -58,7 +58,7 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
 
     // ======= ACTION CONDITIONS CHECK =========
     // Overriding and extending GelatoActionsStandard's function (optional)
-    function termsOk(address, bytes calldata _actionData)
+    function termsOk(bytes calldata _actionData, address _userProxy)
         external
         view
         override
@@ -74,16 +74,16 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
         );
 
         // Check: ActionERC20TransferFrom._actionConditionsCheck
-        string memory transferStatus = super.termsOk(superActionData);
+        string memory transferStatus = super.termsOk(superActionData, _userProxy);
 
         // If: Base actionTermsOk: NOT OK => Return
         if (transferStatus.startsWithOk()) return transferStatus;
 
         // Else: Check and Return current contract actionTermsOk
-        return termsOk(actionData, taskReceipt);
+        return termsOk(actionData, taskReceipt, _userProxy);
     }
 
-    function termsOk(ActionData memory _actionData, TaskReceipt memory _TR)
+    function termsOk(ActionData memory _actionData, TaskReceipt memory _TR, address _userProxy)
         public
         view
         virtual
@@ -94,7 +94,7 @@ contract ActionChainedTimedERC20TransferFromKovan is ActionERC20TransferFrom {
 
         GelatoCore gelatoCore = GelatoCore(GELATO_CORE);
 
-        if (_TR.userProxy != _TR.task.provider.addr) {
+        if (_userProxy != _TR.task.provider.addr) {
             string memory isProvided = gelatoCore.isTaskProvided(
                 _TR
             );

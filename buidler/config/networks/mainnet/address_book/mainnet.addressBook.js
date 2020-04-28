@@ -8,6 +8,12 @@ export const addressBook = {
     // Mainnet
     default: "0x4B7363b8a7DaB76ff73dFbA00801bdDcE699F3A2", // Luis Account2
   },
+  gnosisSafe: {
+    mastercopy: "0x0",
+    gnosisSafeProxyFactory: "0x0",
+    cpkFactory: "0x0",
+    multiSend: "0x0",
+  },
   kyber: {
     // Mainnet
     ETH: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",

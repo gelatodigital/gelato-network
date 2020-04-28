@@ -20,14 +20,16 @@ contract ProviderModuleGnosisSafeProxy is
 {
     mapping(bytes32 => bool) public override isProxyExtcodehashProvided;
     mapping(address => bool) public override isMastercopyProvided;
-    address public override gelatoCore;
-    address public constant override MULTI_SEND = 0x29CAa04Fa05A046a05C85A50e8f2af8cf9A05BaC;
+    address public override immutable gelatoCore;
+    // 0x29CAa04Fa05A046a05C85A50e8f2af8cf9A05BaC on Rinkeby
+    address public override immutable multiSend;
 
-    constructor(bytes32[] memory hashes, address[] memory masterCopies, address _gelatoCore)
+    constructor(bytes32[] memory hashes, address[] memory masterCopies, address _gelatoCore, address _multiSend)
         public
     {
         multiProvide(hashes, masterCopies);
         gelatoCore = _gelatoCore;
+        multiSend = _multiSend;
     }
 
     // ================= GELATO PROVIDER MODULE STANDARD ================
@@ -54,7 +56,7 @@ contract ProviderModuleGnosisSafeProxy is
 
     function execPayload(Action[] calldata _actions)
         external
-        pure
+        view
         override
         returns(bytes memory)
     {
@@ -88,7 +90,7 @@ contract ProviderModuleGnosisSafeProxy is
 
             return abi.encodeWithSelector(
                 IGnosisSafe.execTransactionFromModuleReturnData.selector,
-                MULTI_SEND,  // to
+                multiSend,  // to
                 0,  // value
                 multiSendPayload,  // data
                 IGnosisSafe.Operation.DelegateCall

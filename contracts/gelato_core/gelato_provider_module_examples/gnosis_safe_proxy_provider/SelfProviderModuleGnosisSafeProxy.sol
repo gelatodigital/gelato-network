@@ -14,7 +14,7 @@ contract SelfProviderModuleGnosisSafeProxy is GelatoProviderModuleStandard {
     // SelfProvider only needs to provide execPayload. isProvided() handled by Standard.
     function execPayload(Action[] calldata _actions)
         external
-        pure
+        view
         override
         returns(bytes memory)
     {
