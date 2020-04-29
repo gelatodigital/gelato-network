@@ -52,9 +52,11 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         // Executor
         address executor = executorByProvider[_task.provider.addr];
 
-        // canSubmit Gate
-        string memory canSubmitRes = canSubmitTask(executor, msg.sender, _task);
-        require(canSubmitRes.startsWithOk(), canSubmitRes);
+        // canSubmit Gate: GelatoCore submission went through in canExec()
+        if (msg.sender != address(this)) {
+            string memory canSubmitRes = canSubmitTask(executor, msg.sender, _task);
+            require(canSubmitRes.startsWithOk(), canSubmitRes);
+        }
 
         // Increment TaskReceipt ID storage
         uint256 nextTaskId = currentTaskReceiptId + 1;
