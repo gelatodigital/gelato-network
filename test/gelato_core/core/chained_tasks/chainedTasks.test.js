@@ -1,16 +1,15 @@
-/* // running `npx buidler test` automatically makes use of buidler-waffle plugin
+// running `npx buidler test` automatically makes use of buidler-waffle plugin
 // => only dependency we need is "chai"
 const { expect } = require("chai");
 
 const { run } = require("@nomiclabs/buidler");
 
-const GAS = 500000;
 const GELATO_GAS_PRICE = utils.parseUnits("10", "gwei");
 
 const SALT_NONCE = 42069;
 const FUNDING = utils.parseEther("1");
 
-describe("Gelato Actions - CHAINED TASKS - GelatoUserProxy setup", function () {
+describe("Gelato Actions - CHAINED TASKS - GelatoUserProxy", function () {
   let GelatoCoreFactory;
   let GelatoGasPriceOracleFactory;
   let GelatoUserProxyFactoryFactory;
@@ -77,11 +76,11 @@ describe("Gelato Actions - CHAINED TASKS - GelatoUserProxy setup", function () {
 
     gelatoMaxGas = await gelatoCore.gelatoMaxGas();
     executorSuccessFee = await gelatoCore.executorSuccessFee(
-      GAS,
+      await gelatoCore.gelatoMaxGas(),
       GELATO_GAS_PRICE
     );
     sysAdminSuccessFee = await gelatoCore.sysAdminSuccessFee(
-      GAS,
+      await gelatoCore.gelatoMaxGas(),
       GELATO_GAS_PRICE
     );
 
@@ -114,6 +113,13 @@ describe("Gelato Actions - CHAINED TASKS - GelatoUserProxy setup", function () {
       operation: Operation.Call,
     });
 
+    // TaskSpec
+    const taskSpec = new TaskSpec({
+      actions: [actionDummyStruct],
+      autoSubmitNextTask: true,
+      gasPriceCeil: utils.parseUnits("20", "gwei"),
+    });
+
     // stakeExecutor
     const stakeTx = await gelatoCore.connect(executor).stakeExecutor({
       value: await gelatoCore.minExecutorStake(),
@@ -121,21 +127,14 @@ describe("Gelato Actions - CHAINED TASKS - GelatoUserProxy setup", function () {
     await stakeTx.wait();
 
     // multiProvide: provider
-    const multiProvideTx = await gelatoCore.connect(provider).multiProvide(
-      executorAddress,
-      [
-        new TaskSpec({
-          actions: [actionDummyStruct, submitActionStruct],
-          gasPriceCeil: utils.parseUnits("20", "gwei"),
-        }),
-        new TaskSpec({
-          actions: [actionDummyStruct],
-          gasPriceCeil: utils.parseUnits("20", "gwei"),
-        }),
-      ],
-      [providerModuleGelatoUserProxy.address],
-      { value: utils.parseEther("1") }
-    );
+    const multiProvideTx = await gelatoCore
+      .connect(provider)
+      .multiProvide(
+        executorAddress,
+        [taskSpec],
+        [providerModuleGelatoUserProxy.address],
+        { value: utils.parseEther("1") }
+      );
     await multiProvideTx.wait();
 
     // Chained Task
@@ -146,7 +145,7 @@ describe("Gelato Actions - CHAINED TASKS - GelatoUserProxy setup", function () {
     });
   });
 
-  it("Should allow to enter a Task Chain upon creating a GelatoUserProxy", async function () {
+  it("Should allow to enter an Infinite Task Chain upon creating a GelatoUserProxy", async function () {
     // chainedTaskReceipt
     let chainedTaskReceiptId = (await gelatoCore.currentTaskReceiptId()).add(1);
     const chainedTaskReceipt = new TaskReceipt({
@@ -154,17 +153,15 @@ describe("Gelato Actions - CHAINED TASKS - GelatoUserProxy setup", function () {
       userProxy: userProxyAddress,
       task: chainedTask,
     });
-    const chainedTaskReceiptHash = await gelatoCore.hashTaskReceipt(
+    let chainedTaskReceiptHash = await gelatoCore.hashTaskReceipt(
       chainedTaskReceipt
     );
 
     await expect(
-      gelatoUserProxyFactory.createTwo(SALT_NONCE, [], [chainedTask], {
-        value: FUNDING,
-      })
+      gelatoUserProxyFactory.createTwo(SALT_NONCE, [], [chainedTask])
     )
       .to.emit(gelatoUserProxyFactory, "LogCreation")
-      .withArgs(userAddress, userProxyAddress, FUNDING)
+      .withArgs(userAddress, userProxyAddress, 0)
       .and.to.emit(gelatoCore, "LogTaskSubmitted");
     // withArgs not possible: suspect buidlerevm or ethers struct parsing bug
     // .withArgs(
@@ -173,59 +170,38 @@ describe("Gelato Actions - CHAINED TASKS - GelatoUserProxy setup", function () {
     //   chainedTaskReceiptHash,
     //   chainedTaskReceipt
     // )
-    // .and.to.emit(gelatoCore, "LogTaskSubmitted")
-    // .withArgs(
-    //   executorAddress,
-    //   secondTaskReceiptId,
-    //   secondTaskReceiptHash,
-    //   secondTaskReceipt
-    // );
 
-    // canExec
-    expect(
-      await gelatoCore
-        .connect(executor)
-        .canExec(chainedTaskReceipt, gelatoMaxGas, GELATO_GAS_PRICE)
-    ).to.be.equal("OK");
+    for (let i = 0; i < 10; i++) {
+      // canExec
+      expect(
+        await gelatoCore
+          .connect(executor)
+          .canExec(
+            executorAddress,
+            chainedTaskReceipt,
+            gelatoMaxGas,
+            GELATO_GAS_PRICE
+          )
+      ).to.be.equal("OK");
 
-    // Exec ActionDummyTask and expect it to be submitted again
-    await expect(
-      gelatoCore
-        .connect(executor)
-        .exec(chainedTaskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: GAS })
-    )
-      .to.emit(actionDummy, "LogAction")
-      .withArgs(true)
-      .and.to.emit(gelatoCore, "LogExecSuccess")
-      .and.to.emit(gelatoCore, "LogTaskSubmitted");
+      // Exec ActionDummyTask and expect it to be resubmitted automatically
+      await expect(
+        gelatoCore.connect(executor).exec(chainedTaskReceipt, {
+          gasPrice: GELATO_GAS_PRICE,
+          gasLimit: await gelatoCore.gelatoMaxGas(),
+        })
+      )
+        .to.emit(actionDummy, "LogAction")
+        .withArgs(true)
+        .and.to.emit(gelatoCore, "LogExecSuccess")
+        .and.to.emit(gelatoCore, "LogTaskSubmitted");
 
-    // // Update the Task Receipt for Second Go
-    // chainedTaskReceiptId = await gelatoCore.currentTaskReceiptId();
-    // chainedTaskReceipt.id = chainedTaskReceiptId;
-
-    // // canExec
-    // expect(
-    //   await gelatoCore
-    //     .connect(executor)
-    //     .canExec(chainedTaskReceipt, gelatoMaxGas, GELATO_GAS_PRICE)
-    // ).to.be.equal("OK");
-
-    // // Exec ActionDummyTask again and expect it to be submitted once again
-    // await expect(
-    //   gelatoCore
-    //     .connect(executor)
-    //     .exec(chainedTaskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: GAS })
-    // )
-    //   .to.emit(actionDummy, "LogAction")
-    //   .withArgs(true)
-    //   .to.emit(gelatoCore, "LogExecSuccess")
-    //   .withArgs(
-    //     executorAddress,
-    //     chainedTaskReceiptId,
-    //     executorSuccessFee,
-    //     sysAdminSuccessFee
-    //   )
-    //   .and.to.emit(gelatoCore, "LogTaskSubmitted");
+      // // Update the Task Receipt for Second Go
+      chainedTaskReceiptId = chainedTaskReceiptId.add(1);
+      chainedTaskReceipt.id = chainedTaskReceiptId;
+      chainedTaskReceiptHash = await gelatoCore.hashTaskReceipt(
+        chainedTaskReceipt
+      );
+    }
   });
 });
- */

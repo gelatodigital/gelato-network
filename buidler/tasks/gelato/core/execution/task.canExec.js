@@ -97,6 +97,7 @@ export default task(
 
       try {
         const canExecResult = await gelatoCore.canExec(
+          await gelatoExecutor.getAddress(),
           taskReceipt,
           GELATO_MAX_GAS,
           gelatoGasPrice

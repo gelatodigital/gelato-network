@@ -333,7 +333,12 @@ describe("GelatoCore.exec", function () {
       );
 
       expect(
-        await gelatoCore.canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE)
+        await gelatoCore.canExec(
+          executorAddress,
+          taskReceipt,
+          GELATO_MAX_GAS,
+          GELATO_GAS_PRICE
+        )
       ).to.be.equal(
         "ActionTermsNotOk:ActionWithdrawBatchExchange: Sell Token not withdrawable yet"
       );
@@ -354,7 +359,12 @@ describe("GelatoCore.exec", function () {
       await mockBatchExchange.setValidWithdrawRequest(userProxyAddress);
 
       expect(
-        await gelatoCore.canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE)
+        await gelatoCore.canExec(
+          executorAddress,
+          taskReceipt,
+          GELATO_MAX_GAS,
+          GELATO_GAS_PRICE
+        )
       ).to.be.equal(
         "ActionTermsNotOk:ActionWithdrawBatchExchange: Proxy has insufficient credit"
       );
@@ -1139,7 +1149,12 @@ describe("GelatoCore.exec", function () {
       );
 
       expect(
-        await gelatoCore.canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE)
+        await gelatoCore.canExec(
+          executorAddress,
+          taskReceipt,
+          GELATO_MAX_GAS,
+          GELATO_GAS_PRICE
+        )
       ).to.be.equal(
         "ActionTermsNotOk:ActionWithdrawBatchExchange: Sell Token not withdrawable yet"
       );
@@ -1226,7 +1241,12 @@ describe("GelatoCore.exec", function () {
       );
 
       expect(
-        await gelatoCore.canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE)
+        await gelatoCore.canExec(
+          executorAddress,
+          taskReceipt,
+          GELATO_MAX_GAS,
+          GELATO_GAS_PRICE
+        )
       ).to.be.equal(
         "ActionTermsNotOk:ActionWithdrawBatchExchange: Sell Token not withdrawable yet"
       );
@@ -1373,7 +1393,12 @@ describe("GelatoCore.exec", function () {
       await mockBatchExchange.setValidWithdrawRequest(userProxyAddress);
 
       expect(
-        await gelatoCore.canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE)
+        await gelatoCore.canExec(
+          executorAddress,
+          taskReceipt,
+          GELATO_MAX_GAS,
+          GELATO_GAS_PRICE
+        )
       ).to.be.equal(
         "ActionTermsNotOk:ActionWithdrawBatchExchange: Proxy has insufficient credit"
       );
@@ -1650,7 +1675,12 @@ describe("GelatoCore.exec", function () {
       ).to.emit(gelatoCore, "LogTaskSubmitted");
 
       expect(
-        await gelatoCore.canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE)
+        await gelatoCore.canExec(
+          executorAddress,
+          taskReceipt,
+          GELATO_MAX_GAS,
+          GELATO_GAS_PRICE
+        )
       ).to.be.equal(
         "ActionTermsNotOk:ActionWithdrawBatchExchange: Sell Token not withdrawable yet"
       );
@@ -1850,7 +1880,12 @@ describe("GelatoCore.exec", function () {
       );
 
       expect(
-        await gelatoCore.canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE)
+        await gelatoCore.canExec(
+          executorAddress,
+          taskReceipt,
+          GELATO_MAX_GAS,
+          GELATO_GAS_PRICE
+        )
       ).to.be.equal("ConditionNotOk:SellTokenNotWithdrawable");
 
       await expect(
