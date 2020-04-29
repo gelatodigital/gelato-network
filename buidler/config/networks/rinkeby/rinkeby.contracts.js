@@ -21,6 +21,7 @@ export const contracts = [
   // Gnosis
   "ActionPlaceOrderBatchExchangeWithWithdraw",
   "ActionWithdrawBatchExchangeChained",
+  "ActionPlaceOrderBatchExchangeChained",
 
   // === GelatoCore ===
   "GelatoCore",

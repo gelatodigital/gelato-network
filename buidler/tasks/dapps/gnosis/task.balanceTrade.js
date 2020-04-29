@@ -2,8 +2,8 @@ import { task, types } from "@nomiclabs/buidler/config";
 import { constants, utils } from "ethers";
 
 export default task(
-  "gc-timetrade",
-  `Creates a gelato task that sells sellToken on Batch Exchange every X mintues/hours/days on Rinkeby`
+  "gc-balanceTrade",
+  `Creates a gelato task that sells sellToken on Batch Exchange every time users sellToken Balance reaches a certain balance on Rinkeby`
 )
   .addOptionalParam(
     "mnemonicIndex",
@@ -31,14 +31,21 @@ export default task(
     "5000000000000000"
   )
   .addOptionalParam(
+    "increaseAmount",
+    "Amount in sellToken balance increase that should trigger the order placement - default: 10*10**18",
+    "10000000000000000000",
+    types.string
+  )
+  .addOptionalParam(
     "frequency",
     "how often it should be done, important for accurate approvals and expiry date",
-    "5"
+    "5",
+    types.string
   )
   .addOptionalParam(
     "seconds",
-    "how many seconds between each trade - default & min is 300 (1 batch) - must be divisible by 300",
-    "300",
+    "how many seconds between each order placement & withdrawRequest - default & min is 300 (1 batch) - must be divisible by 300",
+    "600",
     types.string
   )
   .addOptionalParam(
@@ -217,73 +224,37 @@ export default task(
       module: gnosisSafeProviderModuleAddress,
     });
 
-    const actionPlaceOrderBatchExchangeWithWithdraw = await run("bre-config", {
-      deployments: true,
-      contractname: "ActionPlaceOrderBatchExchangeWithWithdraw",
-    });
+    // ############################################### Dummy Place Order
 
-    // ############################################### DUMMY WITHDRAW
-    const withdrawChainedActionAddress = await run("bre-config", {
-      contractname: "ActionWithdrawBatchExchangeChained",
-      deployments: true,
-    });
+    const actionPlaceOrderBatchExchangeChainedAddress = await run(
+      "bre-config",
+      {
+        deployments: true,
+        contractname: "ActionPlaceOrderBatchExchangeChained",
+      }
+    );
 
-    const dummyWithdrawAction = new Action({
-      addr: withdrawChainedActionAddress,
+    const dummyPlaceOrderAction = new Action({
+      addr: actionPlaceOrderBatchExchangeChainedAddress,
       data: constants.HashZero,
       operation: 1,
       value: 0,
       termsOkCheck: true,
     });
 
-    const dummyWithdrawTask = new Task({
+    const dummyPlaceOrderTask = new Task({
       provider: gelatoProvider,
-      actions: [dummyWithdrawAction],
+      actions: [dummyPlaceOrderAction],
       expiryDate: constants.HashZero,
     });
 
-    // ############################################### Real Withdraw
+    // ############################################### Dummy Place Order END
 
-    const actionWithdrawFromBatchExchangeChainedPayload = await run(
-      "abi-encode-withselector",
-      {
-        contractname: "ActionWithdrawBatchExchangeChained",
-        functionname: "actionChained",
-        inputs: [
-          userAddress,
-          taskArgs.sellToken,
-          taskArgs.buyToken,
-          taskArgs.sellAmount,
-          taskArgs.buyAmount,
-          batchDuration,
-          // Withdraw action inputs
-          gelatoCore.address,
-          dummyWithdrawTask,
-        ],
-      }
-    );
-
-    const actionWithdrawBatchExchange = new Action({
-      addr: withdrawChainedActionAddress,
-      data: actionWithdrawFromBatchExchangeChainedPayload,
-      operation: 1,
-      value: 0,
-      termsOkCheck: true,
-    });
-
-    const taskWithdrawBatchExchange = new Task({
-      provider: gelatoProvider,
-      actions: [actionWithdrawBatchExchange],
-      expiryDate: constants.HashZero,
-    });
-
-    // ############################################### Withdraw END
-
-    // ############################################### Place Order
+    // ############################################### Real Place Order
 
     // Get Sell on batch exchange calldata
     const placeOrderBatchExchangeData = await run("abi-encode-withselector", {
-      contractname: "ActionPlaceOrderBatchExchangeWithWithdraw",
+      contractname: "ActionPlaceOrderBatchExchangeChained",
       functionname: "action",
       inputs: [
         userAddress,
@@ -292,22 +263,65 @@ export default task(
         taskArgs.sellAmount,
         taskArgs.buyAmount,
         batchDuration,
-        // Withdraw action inputs
         gelatoCore.address,
-        taskWithdrawBatchExchange,
+        dummyPlaceOrderTask,
       ],
     });
 
-    // encode for Multi send
+    const conditionAddress = await run("bre-config", {
+      deployments: true,
+      contractname: "ConditionBalance",
+    });
+
+    // address _account, address _token, uint256 _refBalance, bool _greaterElseSmaller
+    const referenceBalance = ethers.utils
+      .bigNumberify(sellTokenBalance)
+      .add(ethers.utils.bigNumberify(taskArgs.increaseAmount));
+
+    const conditionData = await run("abi-encode-withselector", {
+      contractname: "ConditionBalance",
+      functionname: "ok",
+      inputs: [userAddress, taskArgs.sellToken, referenceBalance, true],
+    });
+
+    const condition = new Condition({
+      inst: conditionAddress,
+      data: conditionData,
+    });
+
+    const realPlaceOrderAction = new Action({
+      addr: actionPlaceOrderBatchExchangeChainedAddress,
+      data: placeOrderBatchExchangeData,
+      operation: 1,
+      value: 0,
+      termsOkCheck: true,
+    });
+
+    const realPlaceOrderTask = new Task({
+      provider: gelatoProvider,
+      conditions: [condition],
+      actions: [realPlaceOrderAction],
+      expiryDate: constants.HashZero,
+    });
+
+    // ############################################### Reak Place Order END
+
+    // ############################################### Encode Submit Task on Gelato Core
+
+    const submitTaskPayload = await run("abi-encode-withselector", {
+      contractname: "GelatoCore",
+      functionname: "submitTask",
+      inputs: [realPlaceOrderTask],
+    });
 
     const placeOrderBatchExchangeDataMultiSend = ethers.utils.solidityPack(
       ["uint8", "address", "uint256", "uint256", "bytes"],
       [
-        1, //operation
-        actionPlaceOrderBatchExchangeWithWithdraw, //to
+        0, //operation => .Call
+        gelatoCore.address, //to
         0, // value
-        ethers.utils.hexDataLength(placeOrderBatchExchangeData), // data length
-        placeOrderBatchExchangeData, // data
+        ethers.utils.hexDataLength(submitTaskPayload), // data length
+        submitTaskPayload, // data
       ]
     );
 

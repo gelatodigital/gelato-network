@@ -23,6 +23,8 @@ export const deployments = {
     "0xd6a4f5CDfA6B38404D1747fC53f85C957910E576",
   ActionWithdrawBatchExchangeChained:
     "0x407E41940DDcEB42F3cC73d3A446CF39012334Db",
+  ActionPlaceOrderBatchExchangeChained:
+    "0x4Dc492e7B85Dd20cAF8aecB15445690F65b7a726",
 
   // ===== Gelato Core ====
   GelatoCore: "0xaE530CfD7190991DF16f64Cf3Bbca4B98AfeBB4C",
@@ -32,7 +34,7 @@ export const deployments = {
 
   // ==== Conditions ====
   // == Balances ==
-  ConditionBalance: "0x0",
+  ConditionBalance: "0x29712a389E06eC7C91016932c23FcB085AF241Fb",
   // == Indices ==
   // fearAndGreed
   ConditionFearGreedIndex: "0x0",

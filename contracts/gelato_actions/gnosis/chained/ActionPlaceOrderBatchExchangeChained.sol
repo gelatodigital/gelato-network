@@ -12,11 +12,11 @@ import { FeeExtractor } from "../../../gelato_helpers/FeeExtractor.sol";
 
 
 
-/// @title ActionPlaceOrderBatchExchangeWithWithdraw
+/// @title ActionPlaceOrderBatchExchange
 /// @author Luis Schliesske & Hilmar Orth
-/// @notice Gelato action that 1) executes PlaceOrder on Batch Exchange, 2) buys withdraw credit from provider and 3) creates withdraw task on gelato
+/// @notice Gelato action that 1) withdraws funds form user's  EOA, 2) deposits on Batch Exchange, 3) Places order on batch exchange and 4) requests future withdraw on batch exchange
 
-contract ActionPlaceOrderBatchExchangeWithWithdraw  {
+contract ActionPlaceOrderBatchExchangeChained  {
 
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
@@ -24,7 +24,7 @@ contract ActionPlaceOrderBatchExchangeWithWithdraw  {
     uint256 public constant MAX_UINT = uint256(-1);
     uint32 public constant BATCH_TIME = 300;
 
-    IBatchExchange public immutable batchExchange;
+    IBatchExchange private immutable batchExchange;
     FeeExtractor public immutable feeExtractor;
 
     constructor(address _batchExchange, address _feeExtractor) public {
@@ -39,7 +39,6 @@ contract ActionPlaceOrderBatchExchangeWithWithdraw  {
     /// @param _sellAmount Amount to sell
     /// @param _buyAmount Amount to receive (at least)
     /// @param _batchDuration After how many batches funds should be
-    /// @param _task Task which will be submitted on gelato (ActionWithdrawFromBatchExchangeWithMaker)
     function action(
         address _user,
         address _sellToken,
@@ -49,29 +48,15 @@ contract ActionPlaceOrderBatchExchangeWithWithdraw  {
         uint32 _batchDuration,
         // Withdraw
         address _gelatoCore,
-        Task memory _task
+        Task memory _taskWithdraw
     )
         public
         virtual
     {
-        /*
-        - [ ] a) transferFrom an ERC20 from the proxies owner account to the proxy,
-        - [ ] b) calls ‘deposit’  token in EpochTokenLocker contract
-        - [ ] c) calls ‘placeOrder’ in BatchExchange contract, inputting valid until 3 auctions from current one
-        - [ ] d) calls ‘requestFutureWithdraw’ with batch id of the n + 3 and amount arbitrary high (higher than expected output) contract in EpochTokenLocker
-        - [ ] e) submits a task on gelato with condition = address(0) and action “withdraw()” in EpochTokenLocker contract
-        */
 
         // 1. Transfer sellToken to proxy
         IERC20 sellToken = IERC20(_sellToken);
         sellToken.safeTransferFrom(_user, address(this), _sellAmount);
-
-        // 2. Pay fee to provider
-        uint256 fee = feeExtractor.getFeeAmount(_sellToken);
-        sellToken.safeIncreaseAllowance(address(feeExtractor), fee);
-        feeExtractor.payFee(_sellToken, fee);
-        // Deduct fee from sell amount
-        _sellAmount -= uint128(fee);
 
 
         // 2. Fetch token Ids for sell & buy token on Batch Exchange
@@ -112,10 +97,24 @@ contract ActionPlaceOrderBatchExchangeWithWithdraw  {
             revert("batchExchange.requestFutureWithdraw _buyToken failed");
         }
 
-        // 8. Submit Task to withdraw from batch exchange
-        try IGelatoCore(_gelatoCore).submitTask(_task) {
-        } catch {
-            revert("_gelatoCore.submitTask: Submitting chainedTask unsuccessful");
+        bytes memory placeOrderPayload = abi.encodeWithSelector(
+            this.action.selector,
+            _user,
+            _sellToken,
+            _buyToken,
+            _sellAmount,
+            _buyAmount,
+            _batchDuration,
+            // Withdraw
+            _gelatoCore,
+            _taskWithdraw
+        );
+
+        _taskWithdraw.actions[0].data = placeOrderPayload;
+
+        try IGelatoCore(_gelatoCore).submitTask(_taskWithdraw){}
+        catch{
+            revert("ActionPlaceOrderBatchExchange.action: Failed to create chained Task");
         }
 
     }
@@ -128,8 +127,18 @@ contract ActionPlaceOrderBatchExchangeWithWithdraw  {
         virtual
         returns(string memory)  // actionCondition
     {
-        (address _user, address _sellToken, , uint128 _sellAmount, , , ,) = abi.decode(_actionData[4:], (address, address, address, uint128, uint128, uint32, address, Task));
-        return _actionProviderTermsCheck(_user, _userProxy, _sellToken, _sellAmount);
+        (
+            address _user,
+            address _sellToken,
+            address _buyToken,
+            uint128 _sellAmount,
+            ,
+            ,
+            // Withdraw
+            ,
+        ) = abi.decode(_actionData[4:], (address,address,address,uint128,uint128,uint32,address,Task));
+
+        return _actionProviderTermsCheck(_user, _userProxy, _sellToken, _buyToken, _sellAmount);
     }
 
     /// @notice Verify that EOA has sufficinet balance and gave proxy adequate allowance
@@ -138,7 +147,7 @@ contract ActionPlaceOrderBatchExchangeWithWithdraw  {
     /// @param _sellToken Token to sell on Batch Exchange
     /// @param _sellAmount Amount to sell
     function _actionProviderTermsCheck(
-        address _user, address _userProxy, address _sellToken, uint128 _sellAmount
+        address _user, address _userProxy, address _sellToken, address _buyToken, uint128 _sellAmount
     )
         internal
         view
@@ -159,6 +168,18 @@ contract ActionPlaceOrderBatchExchangeWithWithdraw  {
                 return "ActionPlaceOrderBatchExchange: NotOkUserProxySendTokenAllowance";
         } catch {
             return "ActionPlaceOrderBatchExchange: ErrorAllowance";
+        }
+
+        bool sellTokenWithdrawable = batchExchange.hasValidWithdrawRequest(_userProxy, _sellToken);
+
+        if (!sellTokenWithdrawable) {
+            return "ActionWithdrawBatchExchange: Sell Token not withdrawable yet";
+        }
+
+        bool buyTokenWithdrawable = batchExchange.hasValidWithdrawRequest(_userProxy, _buyToken);
+
+        if (!buyTokenWithdrawable) {
+            return "ActionWithdrawBatchExchange: Buy Token not withdrawable yet";
         }
 
         // STANDARD return string to signal actionConditions Ok
