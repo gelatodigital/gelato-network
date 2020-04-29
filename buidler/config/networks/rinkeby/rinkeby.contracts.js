@@ -20,6 +20,7 @@ export const contracts = [
   "ActionChainedRebalancePortfolioRinkeby",
   // Gnosis
   "ActionPlaceOrderBatchExchangeWithWithdraw",
+  "ActionWithdrawBatchExchangeChained",
 
   // === GelatoCore ===
   "GelatoCore",

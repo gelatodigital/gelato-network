@@ -32,8 +32,10 @@ export default task(
     "5000000000000000"
   )
   .addOptionalParam(
-    "batchId",
-    "Batch Exchange Batch Id after which which the funds will be automatically withdrawn"
+    "batchDuration",
+    "Batch Exchange Batch duration after which which the funds will be automatically withdrawn (e.g. 1 after one batch",
+    "1",
+    types.string
   )
   .addOptionalParam(
     "gelatoprovider",
@@ -83,6 +85,9 @@ export default task(
       throw Error(
         "Sell Token not accepted by provider, choose a different token"
       );
+
+    if (ethers.utils.bigNumberify(taskArgs.sellAmount).lte(requiredFee))
+      throw new Error("Sell Amount must be greater than fees");
 
     // Check if user has sufficient balance (sell Amount plus required Fee)
     const sellTokenBalance = await sellToken.balanceOf(userAddress);
@@ -166,45 +171,6 @@ export default task(
       ]
     );
 
-    // // Encode Approving Fee Extractor to transferFrom fees from userProxy
-    // const encodedApprovalForFeeExtractor = await run(
-    //   "abi-encode-withselector",
-    //   {
-    //     contractname: "IERC20",
-    //     functionname: "approve",
-    //     inputs: [feeExtractor.address, requiredFee],
-    //   }
-    // );
-
-    // const encodedApprovalForFeeExtractorMultiSend = ethers.utils.solidityPack(
-    //   ["uint8", "address", "uint256", "uint256", "bytes"],
-    //   [
-    //     0, //operation
-    //     sellToken, //to
-    //     0, // value
-    //     ethers.utils.hexDataLength(encodedApprovalForFeeExtractor), // data length
-    //     encodedApprovalForFeeExtractor, // data
-    //   ]
-    // );
-
-    // // Encode Provider Fee Payment
-    // const encodedFeePayment = await run("abi-encode-withselector", {
-    //   contractname: "FeeExtractor",
-    //   functionname: "payFee",
-    //   inputs: [taskArgs.sellToken, requiredFee],
-    // });
-
-    // const encodedFeePaymentMultiSend = ethers.utils.solidityPack(
-    //   ["uint8", "address", "uint256", "uint256", "bytes"],
-    //   [
-    //     0, //operation
-    //     feeExtractor.address, //to
-    //     0, // value
-    //     ethers.utils.hexDataLength(encodedFeePayment), // data length
-    //     encodedFeePayment, // data
-    //   ]
-    // );
-
     // Fetch BatchId if it was not passed
     const batchExchangeAddress = await run("bre-config", {
       addressbook: true,
@@ -219,17 +185,14 @@ export default task(
     const currentBatchId = await batchExchange.getCurrentBatchId();
     const currentBatchIdBN = ethers.utils.bigNumberify(currentBatchId);
 
-    if (!taskArgs.batchId) {
-      // Withdraw in 1 batch
-      taskArgs.batchId = currentBatchIdBN.add(ethers.utils.bigNumberify("1"));
-    }
+    // Batch when we will withdraw the funds
+    const withdrawBatch = currentBatchIdBN.add(
+      ethers.utils.bigNumberify(taskArgs.batchDuration)
+    );
 
     if (taskArgs.log)
       console.log(
-        `
-      Action will withdraw in Batch Id: ${taskArgs.batchId}\n
-      Current Batch id: ${currentBatchId}\n
-      `
+        `Current Batch id: ${currentBatchId}\nAction is expected to withdraw after Batch Id: ${withdrawBatch}\n`
       );
 
     // Get submit task to withdraw from batchExchange on gelato calldata
@@ -281,7 +244,7 @@ export default task(
         taskArgs.buyToken,
         taskArgs.sellAmount,
         taskArgs.buyAmount,
-        taskArgs.batchId,
+        taskArgs.batchDuration,
         // Withdraw action inputs
         gelatoCore.address,
         taskWithdrawBatchExchange,

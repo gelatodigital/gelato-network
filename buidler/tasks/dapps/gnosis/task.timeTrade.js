@@ -1,10 +1,9 @@
 import { task, types } from "@nomiclabs/buidler/config";
-import { defaultNetwork } from "../../../../../buidler.config";
 import { constants, utils } from "ethers";
 
 export default task(
   "gc-timetrade",
-  `Creates a gelato task that sells sellToken on Batch Exchange every X mintues/hours/days on ${defaultNetwork})`
+  `Creates a gelato task that sells sellToken on Batch Exchange every X mintues/hours/days on Rinkeby`
 )
   .addOptionalParam(
     "mnemonicIndex",
@@ -23,7 +22,7 @@ export default task(
   )
   .addOptionalParam(
     "sellAmount",
-    "amount to sell on batch exchange (default 4*10**18)",
+    "amount to sell on batch exchange (default 5*10**18)",
     "5000000000000000000"
   )
   .addOptionalParam(
@@ -32,11 +31,32 @@ export default task(
     "5000000000000000"
   )
   .addOptionalParam(
+    "frequency",
+    "how often it should be done, important for accurate approvals and expiry date",
+    "5"
+  )
+  .addOptionalParam(
+    "seconds",
+    "how many seconds between each trade - default & min is 300 (1 batch) - must be divisible by 300",
+    "300",
+    types.string
+  )
+  .addOptionalParam(
     "gelatoprovider",
     "Gelato Provider who pays ETH on gelato for the users transaction, defaults to provider of gelato core team"
   )
   .addFlag("log", "Logs return values to stdout")
   .setAction(async (taskArgs) => {
+    if (parseInt(taskArgs.seconds) % 300 !== 0)
+      throw new Error(
+        `Passed seconds must be divisible by 300 seconds (duration of one batch)`
+      );
+
+    // Batch Exchange Batch duration after which which the funds will be automatically withdrawn (e.g. 1 after one batch
+    const batchDuration = ethers.utils
+      .bigNumberify(taskArgs.seconds)
+      .div(ethers.utils.bigNumberify("300"));
+
     // 1. Determine CPK proxy address of user (mnemoric index 0 by default)
     const { [taskArgs.mnemonicIndex]: user } = await ethers.getSigners();
     const userAddress = await user.getAddress();
@@ -82,6 +102,9 @@ export default task(
     if (sellTokenBalance.lte(ethers.utils.bigNumberify(taskArgs.sellAmount)))
       throw new Error("Insufficient sellToken to conduct enter stableswap");
 
+    if (ethers.utils.bigNumberify(taskArgs.sellAmount).lte(requiredFee))
+      throw new Error("Sell Amount must be greater than fees");
+
     if (taskArgs.log)
       console.log(`
           Approve gnosis safe to move ${taskArgs.sellAmount} of token: ${taskArgs.sellToken}\n
@@ -91,7 +114,10 @@ export default task(
           Amount that will be sold:        = ${totalSellAmountMinusFee}
           `);
 
-    await sellToken.approve(safeAddress, taskArgs.sellAmount);
+    const totalSellAmount = ethers.utils
+      .bigNumberify(taskArgs.sellAmount)
+      .mul(ethers.utils.bigNumberify(taskArgs.frequency));
+    await sellToken.approve(safeAddress, totalSellAmount);
 
     let safeDeployed = false;
     let gnosisSafe;
@@ -156,45 +182,6 @@ export default task(
       ]
     );
 
-    // // Encode Approving Fee Extractor to transferFrom fees from userProxy
-    // const encodedApprovalForFeeExtractor = await run(
-    //   "abi-encode-withselector",
-    //   {
-    //     contractname: "IERC20",
-    //     functionname: "approve",
-    //     inputs: [feeExtractor.address, requiredFee],
-    //   }
-    // );
-
-    // const encodedApprovalForFeeExtractorMultiSend = ethers.utils.solidityPack(
-    //   ["uint8", "address", "uint256", "uint256", "bytes"],
-    //   [
-    //     0, //operation
-    //     sellToken, //to
-    //     0, // value
-    //     ethers.utils.hexDataLength(encodedApprovalForFeeExtractor), // data length
-    //     encodedApprovalForFeeExtractor, // data
-    //   ]
-    // );
-
-    // // Encode Provider Fee Payment
-    // const encodedFeePayment = await run("abi-encode-withselector", {
-    //   contractname: "FeeExtractor",
-    //   functionname: "payFee",
-    //   inputs: [taskArgs.sellToken, requiredFee],
-    // });
-
-    // const encodedFeePaymentMultiSend = ethers.utils.solidityPack(
-    //   ["uint8", "address", "uint256", "uint256", "bytes"],
-    //   [
-    //     0, //operation
-    //     feeExtractor.address, //to
-    //     0, // value
-    //     ethers.utils.hexDataLength(encodedFeePayment), // data length
-    //     encodedFeePayment, // data
-    //   ]
-    // );
-
     // Fetch BatchId if it was not passed
     const batchExchangeAddress = await run("bre-config", {
       addressbook: true,
@@ -209,17 +196,14 @@ export default task(
     const currentBatchId = await batchExchange.getCurrentBatchId();
     const currentBatchIdBN = ethers.utils.bigNumberify(currentBatchId);
 
-    if (!taskArgs.batchId) {
-      // Withdraw in 1 batch
-      taskArgs.batchId = currentBatchIdBN.add(ethers.utils.bigNumberify("1"));
-    }
+    // Batch when we will withdraw the funds
+    const withdrawBatch = currentBatchIdBN.add(
+      ethers.utils.bigNumberify(batchDuration)
+    );
 
     if (taskArgs.log)
       console.log(
-        `
-      Action will withdraw in Batch Id: ${taskArgs.batchId}\n
-      Current Batch id: ${currentBatchId}\n
-      `
+        `Current Batch id: ${currentBatchId}\nAction is expected to withdraw after Batch Id: ${withdrawBatch}\n`
       );
 
     // Get submit task to withdraw from batchExchange on gelato calldata
@@ -233,23 +217,55 @@ export default task(
       module: gnosisSafeProviderModuleAddress,
     });
 
-    const actionWithdrawFromBatchExchangePayload = await run(
-      "abi-encode-withselector",
-      {
-        contractname: "ActionWithdrawBatchExchange",
-        functionname: "action",
-        inputs: [userAddress, taskArgs.sellToken, taskArgs.buyToken],
-      }
-    );
+    const actionPlaceOrderBatchExchangeWithWithdraw = await run("bre-config", {
+      deployments: true,
+      contractname: "ActionPlaceOrderBatchExchangeWithWithdraw",
+    });
 
-    const actionAddress = await run("bre-config", {
-      contractname: "ActionWithdrawBatchExchange",
+    // ############################################### DUMMY WITHDRAW
+    const withdrawChainedActionAddress = await run("bre-config", {
+      contractname: "ActionWithdrawBatchExchangeChained",
       deployments: true,
     });
 
+    const dummyWithdrawAction = new Action({
+      addr: withdrawChainedActionAddress,
+      data: constants.HashZero,
+      operation: 1,
+      value: 0,
+      termsOkCheck: true,
+    });
+
+    const dummyWithdrawTask = new Task({
+      provider: gelatoProvider,
+      actions: [dummyWithdrawAction],
+      expiryDate: constants.HashZero,
+    });
+
+    // ############################################### Real Withdraw
+
+    const actionWithdrawFromBatchExchangeChainedPayload = await run(
+      "abi-encode-withselector",
+      {
+        contractname: "ActionWithdrawBatchExchangeChained",
+        functionname: "actionChained",
+        inputs: [
+          userAddress,
+          taskArgs.sellToken,
+          taskArgs.buyToken,
+          taskArgs.sellAmount,
+          taskArgs.buyAmount,
+          batchDuration,
+          // Withdraw action inputs
+          gelatoCore.address,
+          dummyWithdrawTask,
+        ],
+      }
+    );
+
     const actionWithdrawBatchExchange = new Action({
-      addr: actionAddress,
-      data: actionWithdrawFromBatchExchangePayload,
+      addr: withdrawChainedActionAddress,
+      data: actionWithdrawFromBatchExchangeChainedPayload,
       operation: 1,
       value: 0,
       termsOkCheck: true,
@@ -261,6 +277,10 @@ export default task(
       expiryDate: constants.HashZero,
     });
 
+    // ############################################### Withdraw END
+
+    // ############################################### Place Order
+
     // Get Sell on batch exchange calldata
     const placeOrderBatchExchangeData = await run("abi-encode-withselector", {
       contractname: "ActionPlaceOrderBatchExchangeWithWithdraw",
@@ -271,7 +291,7 @@ export default task(
         taskArgs.buyToken,
         taskArgs.sellAmount,
         taskArgs.buyAmount,
-        taskArgs.batchId,
+        "1", // batchDuration,
         // Withdraw action inputs
         gelatoCore.address,
         taskWithdrawBatchExchange,
@@ -279,10 +299,6 @@ export default task(
     });
 
     // encode for Multi send
-    const actionPlaceOrderBatchExchangeWithWithdraw = await run("bre-config", {
-      deployments: true,
-      contractname: "ActionPlaceOrderBatchExchangeWithWithdraw",
-    });
 
     const placeOrderBatchExchangeDataMultiSend = ethers.utils.solidityPack(
       ["uint8", "address", "uint256", "uint256", "bytes"],

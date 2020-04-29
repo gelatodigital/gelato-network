@@ -22,8 +22,9 @@ contract ActionPlaceOrderBatchExchangeWithWithdraw  {
     using SafeERC20 for IERC20;
 
     uint256 public constant MAX_UINT = uint256(-1);
+    uint32 public constant BATCH_TIME = 300;
 
-    IBatchExchange private immutable batchExchange;
+    IBatchExchange public immutable batchExchange;
     FeeExtractor public immutable feeExtractor;
 
     constructor(address _batchExchange, address _feeExtractor) public {
@@ -37,7 +38,7 @@ contract ActionPlaceOrderBatchExchangeWithWithdraw  {
     /// @param _buyToken Token to buy on Batch Exchange
     /// @param _sellAmount Amount to sell
     /// @param _buyAmount Amount to receive (at least)
-    /// @param _orderExpirationBatchId Expiration batch id of order and id used to request withdrawals for
+    /// @param _batchDuration After how many batches funds should be
     /// @param _task Task which will be submitted on gelato (ActionWithdrawFromBatchExchangeWithMaker)
     function action(
         address _user,
@@ -45,7 +46,7 @@ contract ActionPlaceOrderBatchExchangeWithWithdraw  {
         address _buyToken,
         uint128 _sellAmount,
         uint128 _buyAmount,
-        uint32 _orderExpirationBatchId,
+        uint32 _batchDuration,
         // Withdraw
         address _gelatoCore,
         Task memory _task
@@ -86,16 +87,19 @@ contract ActionPlaceOrderBatchExchangeWithWithdraw  {
             revert("batchExchange.deposit _sellToken failed");
         }
 
+        // Get current batch id
+        uint32 withdrawBatchId = uint32(now / BATCH_TIME) + _batchDuration;
+
         // 5. Place Order on Batch Exchange
         // uint16 buyToken, uint16 sellToken, uint32 validUntil, uint128 buyAmount, uint128 sellAmount
-        try batchExchange.placeOrder(buyTokenId, sellTokenId, _orderExpirationBatchId, _buyAmount, _sellAmount) {}
+        try batchExchange.placeOrder(buyTokenId, sellTokenId, withdrawBatchId, _buyAmount, _sellAmount) {}
         catch {
             revert("batchExchange.placeOrderfailed");
         }
 
         // 6. Request future withdraw on Batch Exchange for sellToken
         // requestFutureWithdraw(address token, uint256 amount, uint32 batchId)
-        try batchExchange.requestFutureWithdraw(_sellToken, _sellAmount, _orderExpirationBatchId) {}
+        try batchExchange.requestFutureWithdraw(_sellToken, _sellAmount, withdrawBatchId) {}
         catch {
             revert("batchExchange.requestFutureWithdraw _sellToken failed");
         }
@@ -103,12 +107,12 @@ contract ActionPlaceOrderBatchExchangeWithWithdraw  {
         // 7. Request future withdraw on Batch Exchange for sellToken
         // @DEV using MAX_UINT as we don't know in advance how much buyToken we will get
         // requestFutureWithdraw(address token, uint256 amount, uint32 batchId)
-        try batchExchange.requestFutureWithdraw(_buyToken, MAX_UINT, _orderExpirationBatchId) {}
+        try batchExchange.requestFutureWithdraw(_buyToken, MAX_UINT, withdrawBatchId) {}
         catch {
             revert("batchExchange.requestFutureWithdraw _buyToken failed");
         }
 
-        // 9. Submit Task to withdraw from batch exchange
+        // 8. Submit Task to withdraw from batch exchange
         try IGelatoCore(_gelatoCore).submitTask(_task) {
         } catch {
             revert("_gelatoCore.submitTask: Submitting chainedTask unsuccessful");
