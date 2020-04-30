@@ -3,7 +3,7 @@ import { defaultNetwork } from "../../../../../buidler.config";
 import { constants, utils } from "ethers";
 
 export default task(
-  "gc-createCpkProxyAndSwap",
+  "gc-createCpkProxyAndSellOnBatchExchange",
   `Creates Cpk proxy for user, sells on batch exchange and tasks a gelato bot to withdraw the funds later and send them back to the users EOA on ${defaultNetwork})`
 )
   .addOptionalParam(
@@ -119,7 +119,7 @@ export default task(
         signer: user,
       });
       // Do a test call to see if contract exist
-      const name = await gnosisSafe.getOwners();
+      await gnosisSafe.getOwners();
       // If instantiated, contract exist
       safeDeployed = true;
       console.log("User already has safe deployed");
@@ -127,15 +127,13 @@ export default task(
       console.log("safe not deployed, deploy safe and execute tx");
     }
 
-    // Check if gelato core is a whitelisted module
-
-    let gelatoIsWhitelisted = false;
-
     const gelatoCore = await run("instantiateContract", {
       contractname: "GelatoCore",
       write: true,
     });
 
+    // Check if gelato core is a whitelisted module
+    let gelatoIsWhitelisted = false;
     if (safeDeployed) {
       const whitelistedModules = await gnosisSafe.getModules();
       for (const module of whitelistedModules) {
@@ -326,9 +324,6 @@ export default task(
     if (taskArgs.log)
       console.log(`\n submitTaskTx Hash: ${submitTaskTxHash}\n`);
 
-    // // Wait for tx to get mined
-    // const { blockHash: blockhash } = await submitTaskTx.wait();
-
     // Event Emission verification
     if (taskArgs.events) {
       const parsedSubmissionLog = await run("event-getparsedlog", {
@@ -345,6 +340,4 @@ export default task(
     }
 
     return submitTaskTxHash;
-
-    // 4. If proxy was deployed, only execTx, if not, createProxyAndExecTx
   });

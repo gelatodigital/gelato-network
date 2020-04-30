@@ -209,17 +209,6 @@ export default task(
       module: gnosisSafeProviderModuleAddress,
     });
 
-    // ############## Condition
-
-    /*
-    address _src,
-    uint256 _srcAmt,
-    address _dest,
-    uint256 _refRate,
-    bool _greaterElseSmaller
-    */
-    // priceDifference
-
     const conditionAddress = await run("bre-config", {
       deployments: true,
       contractname: "ConditionKyberRate",
