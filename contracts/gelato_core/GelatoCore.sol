@@ -161,7 +161,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     }
 
     // ================  EXECUTE EXECUTOR API ============================
-    enum ExecutionResult { ExecSuccess, CanExecFailed, ExecFailed, ExecutionRevert }
+    enum ExecutionResult { ExecSuccess, CanExecFailed, ExecRevert }
     enum ExecutorPay { Reward, Refund }
 
     // Execution Entry Point: tx.gasprice must be _getGelatoGasPrice()
@@ -192,11 +192,14 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         {
             executionResult = _executionResult;
             reason = _reason;
-
+        } catch Error(string memory error) {
+            executionResult = ExecutionResult.ExecRevert;
+            reason = error;
         } catch {
             // If any of the external calls in executionWrapper resulted in e.g. out of gas,
             // Executor is eligible for a Refund, but only if Executor sent gelatoMaxGas.
-            executionResult = ExecutionResult.ExecutionRevert;
+            executionResult = ExecutionResult.ExecRevert;
+            reason = "GelatoCore.executionWrapper:undefined";
         }
 
         if (executionResult == ExecutionResult.ExecSuccess) {
@@ -215,29 +218,12 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             // END-2: CanExecFailed => No TaskReceipt Deletion & No Refund
             emit LogCanExecFailed(msg.sender, _TR.id, reason);
 
-        } else if (executionResult == ExecutionResult.ExecFailed) {
-            // END-3.1: ExecFailed NO gelatoMaxGas => No TaskReceipt Deletion & No Refund
-            if (startGas < _gelatoMaxGas) emit LogExecFailed(msg.sender, _TR.id, 0, reason);
-            else {
-                // END-3.2 ExecFailed BUT gelatoMaxGas was used
-                //  => TaskReceipt Deletion & Refund
-                delete taskReceiptHash[_TR.id];
-                (uint256 executorRefund,) = _processProviderPayables(
-                    _TR.task.provider.addr,
-                    ExecutorPay.Refund,
-                    startGas,
-                    _gelatoMaxGas,
-                    tx.gasprice  // == gelatoGasPrice
-                );
-                emit LogExecFailed(msg.sender, _TR.id, executorRefund, reason);
-            }
-
         } else {
-            // executionResult == ExecutionResult.ExecutionRevert
-            // END-4.1: ExecutionReverted NO gelatoMaxGas => No TaskReceipt Deletion & No Refund
-            if (startGas < _gelatoMaxGas) emit LogExecutionReverted(msg.sender, _TR.id, 0);
+            // executionResult == ExecutionResult.ExecRevert
+            // END-3.1: ExecReverted NO gelatoMaxGas => No TaskReceipt Deletion & No Refund
+            if (startGas < _gelatoMaxGas) emit LogExecReverted(msg.sender, _TR.id, 0, reason);
             else {
-                // END-4.2: ExecutionReverted BUT gelatoMaxGas was used
+                // END-3.2: ExecReverted BUT gelatoMaxGas was used
                 //  => TaskReceipt Deletion & Refund
                 delete taskReceiptHash[_TR.id];
                 (uint256 executorRefund,) = _processProviderPayables(
@@ -247,7 +233,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
                     _gelatoMaxGas,
                      tx.gasprice  // == gelatoGasPrice
                 );
-                emit LogExecutionReverted(msg.sender, _TR.id, executorRefund);
+                emit LogExecReverted(msg.sender, _TR.id, executorRefund, reason);
             }
         }
     }
@@ -267,22 +253,22 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         string memory canExecRes = canExec(_executor, taskReceipt, _gelatoMaxGas, tx.gasprice);
         if (!canExecRes.startsWithOk()) return (ExecutionResult.CanExecFailed, canExecRes);
 
-        // _exec()
-        (bool success, string memory error) = _exec(taskReceipt);
-        if (!success) return (ExecutionResult.ExecFailed, error);
+        // Will revert if exec failed => will be caught in exec flow
+        _exec(taskReceipt);
 
         // Execution Success: Executor REWARD
         return (ExecutionResult.ExecSuccess, "");
     }
 
-    function _exec(TaskReceipt memory _TR)
-        private
-        returns(bool success, string memory error)
-    {
+    function _exec(TaskReceipt memory _TR) private {
+        // We revert with an error msg in case of detected reverts
+        string memory error;
+
         // INTERACTIONS
-        // execPayload from ProviderModule
+        // execPayload and proxyReturndataCheck values read from ProviderModule
         bytes memory execPayload;
         bool proxyReturndataCheck;
+
         try IGelatoProviderModule(_TR.task.provider.module).execPayload(_TR.task.actions)
             returns(bytes memory _execPayload, bool _proxyReturndataCheck)
         {
@@ -291,21 +277,30 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         } catch Error(string memory _error) {
             error = string(abi.encodePacked("GelatoCore._exec.execPayload:", _error));
         } catch {
-            error = "GelatoCore._exec.execPayload";
+            error = "GelatoCore._exec.execPayload:undefined";
         }
 
         // Execution via UserProxy
+        bool success;
         bytes memory returndata;
+
         if (execPayload.length >= 4) (success, returndata) = _TR.userProxy.call(execPayload);
         else if (bytes(error).length == 0) error = "GelatoCore._exec.execPayload: invalid";
 
         // Check if actions reverts were caught by userProxy
-        if (success && proxyReturndataCheck)
-            success = _TR.task.provider.module.execRevertCheck(returndata);
+        if (success && proxyReturndataCheck) {
+            try _TR.task.provider.module.execRevertCheck(returndata) returns(bool _success) {
+                success = _success;
+            } catch Error(string memory _error) {
+                error = string(abi.encodePacked("GelatoCore._exec.execRevertCheck:", _error));
+            } catch {
+                error = "GelatoCore._exec.execRevertCheck:undefined";
+            }
+        }
 
-        // Failure: reverts, caught or uncaught, were detected
-        if (!success) {
-            // Error string decoding for revertMsg from userProxy.call
+        // FAILURE: reverts, caught or uncaught in userProxy.call, were detected
+        if (!success || bytes(error).length != 0) {
+            // Error string decoding for returndata from userProxy.call
             if (bytes(error).length == 0) {
                 // 32-length, 4-ErrorSelector, UTF-8 returndata
                 if (returndata.length % 32 == 4) {
@@ -323,8 +318,11 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
                     error = "GelatoCore._exec:UnexpectedReturndata";
                 }
             }
+            // We revert all state from userProxy.call
+            revert(error);  //  we catch this revert in exec flow
         }
 
+        // SUCCESS
         // Optional: automated next Task Submission
         if (_TR.task.autoSubmitNextTask) _submitNextTask(_TR);
     }
@@ -346,7 +344,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         // Reset currently being execute TaskReceipt.id for correct value in ExecEvents
         _TR.id--;
     }
-
 
     function _processProviderPayables(
         address _provider,

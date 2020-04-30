@@ -57,16 +57,11 @@ interface IGelatoCore {
         uint256 indexed taskReceiptId,
         string reason
     );
-    event LogExecFailed(
+    event LogExecReverted(
         address indexed executor,
         uint256 indexed taskReceiptId,
         uint256 executorRefund,
         string reason
-    );
-    event LogExecutionReverted(
-        address indexed executor,
-        uint256 indexed taskReceiptId,
-        uint256 executorRefund
     );
 
     event LogTaskCancelled(uint256 indexed taskReceiptId);

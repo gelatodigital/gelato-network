@@ -43,8 +43,8 @@
 [igelatocore-logtasksubmitted-address-uint256-bytes32-struct-taskreceipt-]: #IGelatoCore-LogTaskSubmitted-address-uint256-bytes32-struct-TaskReceipt-
 [igelatocore-logexecsuccess-address-uint256-uint256-uint256-]: #IGelatoCore-LogExecSuccess-address-uint256-uint256-uint256-
 [igelatocore-logcanexecfailed-address-uint256-string-]: #IGelatoCore-LogCanExecFailed-address-uint256-string-
-[igelatocore-logexecfailed-address-uint256-uint256-string-]: #IGelatoCore-LogExecFailed-address-uint256-uint256-string-
-[igelatocore-logexecutionreverted-address-uint256-uint256-]: #IGelatoCore-LogExecutionReverted-address-uint256-uint256-
+[igelatocore-logexecfailed-address-uint256-uint256-string-]: #IGelatoCore-LogExecReverted-address-uint256-uint256-string-
+[igelatocore-logexecutionreverted-address-uint256-uint256-]: #IGelatoCore-LogExecReverted-address-uint256-uint256-
 [igelatocore-logtaskcancelled-uint256-]: #IGelatoCore-LogTaskCancelled-uint256-
 [igelatoexecutors]: #IGelatoExecutors
 [igelatoexecutors-stakeexecutor--]: #IGelatoExecutors-stakeExecutor--
@@ -170,8 +170,8 @@
 - [`LogTaskSubmitted(address executor, uint256 taskReceiptId, bytes32 taskReceiptHash, struct TaskReceipt taskReceipt)`][igelatocore-logtasksubmitted-address-uint256-bytes32-struct-taskreceipt-]
 - [`LogExecSuccess(address executor, uint256 taskReceiptId, uint256 executorSuccessFee, uint256 sysAdminSuccessFee)`][igelatocore-logexecsuccess-address-uint256-uint256-uint256-]
 - [`LogCanExecFailed(address executor, uint256 taskReceiptId, string reason)`][igelatocore-logcanexecfailed-address-uint256-string-]
-- [`LogExecFailed(address executor, uint256 taskReceiptId, uint256 executorRefund, string reason)`][igelatocore-logexecfailed-address-uint256-uint256-string-]
-- [`LogExecutionReverted(address executor, uint256 taskReceiptId, uint256 executorRefund)`][igelatocore-logexecutionreverted-address-uint256-uint256-]
+- [`LogExecReverted(address executor, uint256 taskReceiptId, uint256 executorRefund, string reason)`][igelatocore-logexecfailed-address-uint256-uint256-string-]
+- [`LogExecReverted(address executor, uint256 taskReceiptId, uint256 executorRefund)`][igelatocore-logexecutionreverted-address-uint256-uint256-]
 - [`LogTaskCancelled(uint256 taskReceiptId)`][igelatocore-logtaskcancelled-uint256-]
 
 ### <span id="IGelatoCore-submitTask-struct-Task-"></span> `submitTask(struct Task _task)` (external)
@@ -222,9 +222,9 @@ Returns computed taskReceipt hash, used to check for taskReceipt validity
 
 ### <span id="IGelatoCore-LogCanExecFailed-address-uint256-string-"></span> `LogCanExecFailed(address executor, uint256 taskReceiptId, string reason)`
 
-### <span id="IGelatoCore-LogExecFailed-address-uint256-uint256-string-"></span> `LogExecFailed(address executor, uint256 taskReceiptId, uint256 executorRefund, string reason)`
+### <span id="IGelatoCore-LogExecReverted-address-uint256-uint256-string-"></span> `LogExecReverted(address executor, uint256 taskReceiptId, uint256 executorRefund, string reason)`
 
-### <span id="IGelatoCore-LogExecutionReverted-address-uint256-uint256-"></span> `LogExecutionReverted(address executor, uint256 taskReceiptId, uint256 executorRefund)`
+### <span id="IGelatoCore-LogExecReverted-address-uint256-uint256-"></span> `LogExecReverted(address executor, uint256 taskReceiptId, uint256 executorRefund)`
 
 ### <span id="IGelatoCore-LogTaskCancelled-uint256-"></span> `LogTaskCancelled(uint256 taskReceiptId)`
 
