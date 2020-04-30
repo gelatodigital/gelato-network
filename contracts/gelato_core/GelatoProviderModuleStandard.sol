@@ -17,4 +17,14 @@ abstract contract GelatoProviderModuleStandard is IGelatoProviderModule {
     {
         return OK;
     }
+
+    function execRevertCheck(bytes calldata)
+        external
+        view
+        override
+        virtual
+        returns(bool reverted)
+    {
+        reverted = false;
+    }
 }

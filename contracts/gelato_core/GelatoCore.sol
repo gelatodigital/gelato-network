@@ -282,10 +282,12 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         // INTERACTIONS
         // execPayload from ProviderModule
         bytes memory execPayload;
+        bool proxyReturndataCheck;
         try IGelatoProviderModule(_TR.task.provider.module).execPayload(_TR.task.actions)
-            returns(bytes memory _execPayload)
+            returns(bytes memory _execPayload, bool _proxyReturndataCheck)
         {
             execPayload = _execPayload;
+            proxyReturndataCheck = _proxyReturndataCheck;
         } catch Error(string memory _error) {
             error = string(abi.encodePacked("GelatoCore._exec.execPayload:", _error));
         } catch {
@@ -293,22 +295,26 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         }
 
         // Execution via UserProxy
-        bytes memory revertMsg;
-        if (execPayload.length >= 4) (success, revertMsg) = _TR.userProxy.call(execPayload);
+        bytes memory returndata;
+        if (execPayload.length >= 4) (success, returndata) = _TR.userProxy.call(execPayload);
         else if (bytes(error).length == 0) error = "GelatoCore._exec.execPayload: invalid";
 
-        // FAILURE
+        // Check if actions reverts were caught by userProxy
+        if (success && proxyReturndataCheck)
+            success = _TR.task.provider.module.execRevertCheck(returndata);
+
+        // Failure: reverts, caught or uncaught, were detected
         if (!success) {
             // Error string decoding for revertMsg from userProxy.call
             if (bytes(error).length == 0) {
-                // 32-length, 4-ErrorSelector, UTF-8 revertMsg
-                if (revertMsg.length % 32 == 4) {
+                // 32-length, 4-ErrorSelector, UTF-8 returndata
+                if (returndata.length % 32 == 4) {
                     bytes4 selector;
-                    assembly { selector := mload(add(0x20, revertMsg)) }
+                    assembly { selector := mload(add(0x20, returndata)) }
                     if (selector == 0x08c379a0) {  // Function selector for Error(string)
-                        assembly { revertMsg := add(revertMsg, 68) }
+                        assembly { returndata := add(returndata, 68) }
                         error = string(
-                            abi.encodePacked("GelatoCore._exec:", string(revertMsg))
+                            abi.encodePacked("GelatoCore._exec:", string(returndata))
                         );
                     } else {
                         error = "GelatoCore._exec:NoErrorSelector";
