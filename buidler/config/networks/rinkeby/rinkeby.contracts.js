@@ -35,7 +35,7 @@ export const contracts = [
   // Indices
   "ConditionFearGreedIndex",
   // Prices
-  "ConditionKyberRateRinkeby",
+  "ConditionKyberRate",
   // Time
   "ConditionTimestampPassed",
   // Gnosis

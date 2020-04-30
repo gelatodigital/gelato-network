@@ -40,7 +40,7 @@ export const deployments = {
   ConditionFearGreedIndex: "0x0",
   // == Price ==
   // Kyber
-  ConditionKyberRateRinkeby: "0x0",
+  ConditionKyberRate: "0x4F2935cd565E88832721ea5465D21593894274Cd",
   // == Time ==
   // Timestamps
   ConditionTimestampPassed: "0x0",
