@@ -24,7 +24,7 @@ export const deployments = {
   ActionWithdrawBatchExchangeChained:
     "0x407E41940DDcEB42F3cC73d3A446CF39012334Db",
   ActionPlaceOrderBatchExchangeChained:
-    "0x4Dc492e7B85Dd20cAF8aecB15445690F65b7a726",
+    "0x13C24a7c008f6C33F3A9fF103A871D734Fe3573f",
 
   // ===== Gelato Core ====
   GelatoCore: "0xaE530CfD7190991DF16f64Cf3Bbca4B98AfeBB4C",

@@ -45,6 +45,12 @@ export default task(
     "gelatoprovider",
     "Gelato Provider who pays ETH on gelato for the users transaction, defaults to provider of gelato core team"
   )
+  .addOptionalParam(
+    "saltnonce",
+    "CPK factory faltnonce, defaults to standard",
+    "0xcfe33a586323e7325be6aa6ecd8b4600d232a9037e83c8ece69413b777dabe65",
+    types.string
+  )
   .addFlag("log", "Logs return values to stdout")
   .setAction(async (taskArgs) => {
     if (parseInt(taskArgs.seconds) % 300 !== 0)
@@ -311,7 +317,6 @@ export default task(
         to: multiSendAddress,
         data: encodedMultisendData,
         operation: 1,
-        log: true,
       });
     } else {
       submitTaskTxHash = await run("gc-submitgelatouserproxyoncpk", {
@@ -319,7 +324,6 @@ export default task(
         to: multiSendAddress,
         data: encodedMultisendData,
         operation: 1,
-        log: true,
         saltnonce: taskArgs.saltnonce,
         fallbackhandler: "0x40A930851BD2e590Bd5A5C981b436de25742E980", // default
         value: 0,

@@ -12,11 +12,11 @@ import { FeeExtractor } from "../../../gelato_helpers/FeeExtractor.sol";
 
 
 
-/// @title ActionPlaceOrderBatchExchange
+/// @title ActionPlaceOrderBatchExchangeChained
 /// @author Luis Schliesske & Hilmar Orth
 /// @notice Gelato action that 1) withdraws funds form user's  EOA, 2) deposits on Batch Exchange, 3) Places order on batch exchange and 4) requests future withdraw on batch exchange
 
-contract ActionPlaceOrderBatchExchangeChained  {
+contract ActionPlaceOrderBatchExchangeChainedChained  {
 
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
@@ -114,7 +114,7 @@ contract ActionPlaceOrderBatchExchangeChained  {
 
         try IGelatoCore(_gelatoCore).submitTask(_taskWithdraw){}
         catch{
-            revert("ActionPlaceOrderBatchExchange.action: Failed to create chained Task");
+            revert("ActionPlaceOrderBatchExchangeChained.action: Failed to create chained Task");
         }
 
     }
@@ -157,29 +157,29 @@ contract ActionPlaceOrderBatchExchangeChained  {
         IERC20 sendERC20 = IERC20(_sellToken);
         try sendERC20.balanceOf(_user) returns(uint256 sendERC20Balance) {
             if (sendERC20Balance < _sellAmount)
-                return "ActionPlaceOrderBatchExchange: NotOkUserSendTokenBalance";
+                return "ActionPlaceOrderBatchExchangeChained: NotOkUserSendTokenBalance";
         } catch {
-            return "ActionPlaceOrderBatchExchange: ErrorBalanceOf";
+            return "ActionPlaceOrderBatchExchangeChained: ErrorBalanceOf";
         }
         try sendERC20.allowance(_user, _userProxy)
             returns(uint256 userProxySendTokenAllowance)
         {
             if (userProxySendTokenAllowance < _sellAmount)
-                return "ActionPlaceOrderBatchExchange: NotOkUserProxySendTokenAllowance";
+                return "ActionPlaceOrderBatchExchangeChained: NotOkUserProxySendTokenAllowance";
         } catch {
-            return "ActionPlaceOrderBatchExchange: ErrorAllowance";
+            return "ActionPlaceOrderBatchExchangeChained: ErrorAllowance";
         }
 
         bool sellTokenWithdrawable = batchExchange.hasValidWithdrawRequest(_userProxy, _sellToken);
 
         if (!sellTokenWithdrawable) {
-            return "ActionWithdrawBatchExchange: Sell Token not withdrawable yet";
+            return "ActionPlaceOrderBatchExchangeChained: Sell Token not withdrawable yet";
         }
 
         bool buyTokenWithdrawable = batchExchange.hasValidWithdrawRequest(_userProxy, _buyToken);
 
         if (!buyTokenWithdrawable) {
-            return "ActionWithdrawBatchExchange: Buy Token not withdrawable yet";
+            return "ActionPlaceOrderBatchExchangeChained: Buy Token not withdrawable yet";
         }
 
         // STANDARD return string to signal actionConditions Ok
