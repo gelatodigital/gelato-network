@@ -224,6 +224,29 @@ export default task(
       module: gnosisSafeProviderModuleAddress,
     });
 
+    // ############## Condition
+
+    const conditionAddress = await run("bre-config", {
+      deployments: true,
+      contractname: "ConditionBalance",
+    });
+
+    // address _account, address _token, uint256 _refBalance, bool _greaterElseSmaller
+    const referenceBalance = ethers.utils
+      .bigNumberify(sellTokenBalance)
+      .add(ethers.utils.bigNumberify(taskArgs.increaseAmount));
+
+    const conditionData = await run("abi-encode-withselector", {
+      contractname: "ConditionBalance",
+      functionname: "ok",
+      inputs: [userAddress, taskArgs.sellToken, referenceBalance, true],
+    });
+
+    const condition = new Condition({
+      inst: conditionAddress,
+      data: conditionData,
+    });
+
     // ############################################### Dummy Place Order
 
     const actionPlaceOrderBatchExchangeChainedAddress = await run(
@@ -244,6 +267,7 @@ export default task(
 
     const dummyPlaceOrderTask = new Task({
       provider: gelatoProvider,
+      conditions: [condition],
       actions: [dummyPlaceOrderAction],
       expiryDate: constants.HashZero,
     });
@@ -266,27 +290,6 @@ export default task(
         gelatoCore.address,
         dummyPlaceOrderTask,
       ],
-    });
-
-    const conditionAddress = await run("bre-config", {
-      deployments: true,
-      contractname: "ConditionBalance",
-    });
-
-    // address _account, address _token, uint256 _refBalance, bool _greaterElseSmaller
-    const referenceBalance = ethers.utils
-      .bigNumberify(sellTokenBalance)
-      .add(ethers.utils.bigNumberify(taskArgs.increaseAmount));
-
-    const conditionData = await run("abi-encode-withselector", {
-      contractname: "ConditionBalance",
-      functionname: "ok",
-      inputs: [userAddress, taskArgs.sellToken, referenceBalance, true],
-    });
-
-    const condition = new Condition({
-      inst: conditionAddress,
-      data: conditionData,
     });
 
     const realPlaceOrderAction = new Action({
@@ -314,7 +317,7 @@ export default task(
       inputs: [realPlaceOrderTask],
     });
 
-    const placeOrderBatchExchangeDataMultiSend = ethers.utils.solidityPack(
+    const submitTaskMultiSend = ethers.utils.solidityPack(
       ["uint8", "address", "uint256", "uint256", "bytes"],
       [
         0, //operation => .Call
@@ -343,17 +346,12 @@ export default task(
     if (!gelatoIsWhitelisted) {
       encodedMultisendData = multiSend.interface.functions.multiSend.encode([
         ethers.utils.hexlify(
-          ethers.utils.concat([
-            enableGelatoDataMultiSend,
-            placeOrderBatchExchangeDataMultiSend,
-          ])
+          ethers.utils.concat([enableGelatoDataMultiSend, submitTaskMultiSend])
         ),
       ]);
     } else {
       encodedMultisendData = multiSend.interface.functions.multiSend.encode([
-        ethers.utils.hexlify(
-          ethers.utils.concat([placeOrderBatchExchangeDataMultiSend])
-        ),
+        ethers.utils.hexlify(ethers.utils.concat([submitTaskMultiSend])),
       ]);
     }
 
