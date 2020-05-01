@@ -183,6 +183,7 @@ describe("GelatoCore.canExec", function () {
     const canExecReturn = await gelatoCore
       .connect(executor)
       .canExec(
+        executorAddress,
         taskReceipt,
         GELATO_MAX_GAS,
         ethers.utils.bigNumberify("800", "Gwei")
@@ -199,6 +200,7 @@ describe("GelatoCore.canExec", function () {
     const canExecReturn = await gelatoCore
       .connect(executor)
       .canExec(
+        executorAddress,
         taskReceipt,
         GELATO_MAX_GAS,
         ethers.utils.parseUnits("300", "ether")
@@ -237,7 +239,12 @@ describe("GelatoCore.canExec", function () {
     expect(
       await gelatoCore
         .connect(executor)
-        .canExec(taskReceipt2, GELATO_MAX_GAS, GELATO_GAS_PRICE)
+        .canExec(
+          executorAddress,
+          taskReceipt2,
+          GELATO_MAX_GAS,
+          GELATO_GAS_PRICE
+        )
     ).to.equal("TaskReceiptExpired");
   });
 
@@ -260,7 +267,7 @@ describe("GelatoCore.canExec", function () {
 
     const canExecReturn = await gelatoCore
       .connect(executor)
-      .canExec(taskReceipt2, GELATO_MAX_GAS, GELATO_GAS_PRICE);
+      .canExec(executorAddress, taskReceipt2, GELATO_MAX_GAS, GELATO_GAS_PRICE);
 
     expect(canExecReturn).to.equal("taskSpecGasPriceCeil-OR-notProvided");
   });
@@ -268,7 +275,7 @@ describe("GelatoCore.canExec", function () {
   it("#5: CanExec - Return Ok when called via executor)", async function () {
     const canExecReturn = await gelatoCore
       .connect(executor)
-      .canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE);
+      .canExec(executorAddress, taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE);
 
     expect(canExecReturn).to.equal("OK");
   });
@@ -276,7 +283,7 @@ describe("GelatoCore.canExec", function () {
   it("#6: CanExec - Return InvalidExecutor when called NOT via executor)", async function () {
     const canExecReturn = await gelatoCore
       .connect(provider)
-      .canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE);
+      .canExec(executorAddress, taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE);
 
     expect(canExecReturn).to.equal("InvalidExecutor");
   });

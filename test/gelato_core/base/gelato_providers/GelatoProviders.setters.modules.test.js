@@ -25,6 +25,10 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
 
   let gelatoUserProxyAddress;
 
+  let task;
+  let otherTask;
+  let fakeTask;
+
   let taskReceipt;
   let otherTaskReceipt;
   let fakeTaskReceipt;
@@ -103,17 +107,18 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
       operation: Operation.Call,
       termsOkCheck: true,
     });
-    const task = new Task({
+
+    task = new Task({
       provider: gelatoProvider,
       actions: [action],
       expiryDate: constants.Zero,
     });
-    const otherTask = new Task({
+    otherTask = new Task({
       provider: otherGelatoProvider,
       actions: [action],
       expiryDate: constants.Zero,
     });
-    const fakeTask = new Task({
+    fakeTask = new Task({
       provider: fakeGelatoProvider,
       actions: [action],
       expiryDate: constants.Zero,
@@ -161,9 +166,9 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
       ).to.be.equal(initialState.providerModulesLength);
 
       // providerModuleChecks
-      expect(await gelatoCore.providerModuleChecks(taskReceipt)).to.be.equal(
-        "InvalidProviderModule"
-      );
+      expect(
+        await gelatoCore.providerModuleChecks(gelatoUserProxyAddress, task)
+      ).to.be.equal("InvalidProviderModule");
 
       // addProviderModules()
       await expect(gelatoCore.addProviderModules([providerModule.address]))
@@ -187,18 +192,18 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
       ).to.be.equal(providerModule.address);
 
       // providerModuleChecks
-      expect(await gelatoCore.providerModuleChecks(taskReceipt)).to.be.equal(
-        "OK"
-      );
+      expect(
+        await gelatoCore.providerModuleChecks(gelatoUserProxyAddress, task)
+      ).to.be.equal("OK");
     });
 
     it("Should allow anyone to addProviderModules", async function () {
       // providerModuleChecks
-      expect(await gelatoCore.providerModuleChecks(taskReceipt)).to.be.equal(
-        "InvalidProviderModule"
-      );
       expect(
-        await gelatoCore.providerModuleChecks(otherTaskReceipt)
+        await gelatoCore.providerModuleChecks(gelatoUserProxyAddress, task)
+      ).to.be.equal("InvalidProviderModule");
+      expect(
+        await gelatoCore.providerModuleChecks(gelatoUserProxyAddress, otherTask)
       ).to.be.equal("InvalidProviderModule");
 
       // addProviderModules()
@@ -243,11 +248,11 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
       ).to.be.equal(otherProviderModule.address);
 
       // providerModuleChecks
-      expect(await gelatoCore.providerModuleChecks(taskReceipt)).to.be.equal(
-        "OK"
-      );
       expect(
-        await gelatoCore.providerModuleChecks(otherTaskReceipt)
+        await gelatoCore.providerModuleChecks(gelatoUserProxyAddress, task)
+      ).to.be.equal("OK");
+      expect(
+        await gelatoCore.providerModuleChecks(gelatoUserProxyAddress, otherTask)
       ).to.not.be.equal("OK");
     });
 
@@ -258,7 +263,7 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
         .withArgs(providerAddress, fakeProviderModule.address);
 
       expect(
-        await gelatoCore.providerModuleChecks(fakeTaskReceipt)
+        await gelatoCore.providerModuleChecks(gelatoUserProxyAddress, fakeTask)
       ).to.be.equal("GelatoProviders.providerModuleChecks");
     });
 

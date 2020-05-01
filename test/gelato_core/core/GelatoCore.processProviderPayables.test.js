@@ -512,7 +512,7 @@ describe("GelatoCore.processProviderPayables", function () {
             .bigNumberify(gelatoMaxGas)
             .add(ethers.utils.bigNumberify("50000")),
         })
-      ).to.emit(gelatoCore, "LogExecFailed");
+      ).to.emit(gelatoCore, "LogExecReverted");
 
       const executorStakeAfter = await gelatoCore.executorStake(
         executorAddress
@@ -538,7 +538,7 @@ describe("GelatoCore.processProviderPayables", function () {
       );
     });
 
-    it("#3: Executor's stake on gelato REMAINS UNCHANGED after unsuccessfull execution from an out of gas revert (LogExecutionReverted) with gas sent being LESS than gelatoMaxGas", async function () {
+    it("#3: Executor's stake on gelato REMAINS UNCHANGED after unsuccessfull execution from an out of gas revert (LogExecReverted) with gas sent being LESS than gelatoMaxGas", async function () {
       // Provider registers new condition
       const MockActionDummyOutOfGas = await ethers.getContractFactory(
         "MockActionDummyOutOfGas",
@@ -644,8 +644,8 @@ describe("GelatoCore.processProviderPayables", function () {
             // .bigNumberify(gelatoMaxGas)
             .add(ethers.utils.bigNumberify("50000")),
         })
-      ).to.emit(gelatoCore, "LogExecutionReverted");
-      // ).to.emit(gelatoCore, "LogExecFailed");
+      ).to.emit(gelatoCore, "LogExecReverted");
+      // ).to.emit(gelatoCore, "LogExecReverted");
 
       const executorStakeAfter = await gelatoCore.executorStake(
         executorAddress
@@ -667,7 +667,7 @@ describe("GelatoCore.processProviderPayables", function () {
       );
     });
 
-    it("#4: Executor's stake on gelato INCREASES after unsuccessfull execution from an out of gas revert (LogExecutionReverted) with gas sent being MORE than gelatoMaxGas", async function () {
+    it("#4: Executor's stake on gelato INCREASES after unsuccessfull execution from an out of gas revert (LogExecReverted) with gas sent being MORE than gelatoMaxGas", async function () {
       // Provider registers new condition
       const MockActionDummyOutOfGas = await ethers.getContractFactory(
         "MockActionDummyOutOfGas",
@@ -755,8 +755,8 @@ describe("GelatoCore.processProviderPayables", function () {
             .bigNumberify(gelatoMaxGas)
             .add(ethers.utils.bigNumberify("50000")),
         })
-      ).to.emit(gelatoCore, "LogExecutionReverted");
-      // ).to.emit(gelatoCore, "LogExecFailed");
+      ).to.emit(gelatoCore, "LogExecReverted");
+      // ).to.emit(gelatoCore, "LogExecReverted");
 
       const executorStakeAfter = await gelatoCore.executorStake(
         executorAddress
