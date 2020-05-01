@@ -317,6 +317,7 @@ export default task(
         to: multiSendAddress,
         data: encodedMultisendData,
         operation: 1,
+        log: true,
       });
     } else {
       submitTaskTxHash = await run("gc-submitgelatouserproxyoncpk", {
@@ -327,6 +328,7 @@ export default task(
         saltnonce: taskArgs.saltnonce,
         fallbackhandler: "0x40A930851BD2e590Bd5A5C981b436de25742E980", // default
         value: 0,
+        log: true,
       });
     }
 

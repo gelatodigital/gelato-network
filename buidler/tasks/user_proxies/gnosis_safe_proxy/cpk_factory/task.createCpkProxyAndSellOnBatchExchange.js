@@ -7,9 +7,10 @@ export default task(
   `Creates Cpk proxy for user, sells on batch exchange and tasks a gelato bot to withdraw the funds later and send them back to the users EOA on ${defaultNetwork})`
 )
   .addOptionalParam(
-    "mnemonicIndex",
+    "mnemonicindex",
     "index of mnemonic in .env that will be used for the user address",
-    "0"
+    "0",
+    types.string
   )
   .addOptionalParam(
     "sellToken",
@@ -50,7 +51,7 @@ export default task(
   .addFlag("log", "Logs return values to stdout")
   .setAction(async (taskArgs) => {
     // 1. Determine CPK proxy address of user (mnemoric index 0 by default)
-    const { [taskArgs.mnemonicIndex]: user } = await ethers.getSigners();
+    const { [taskArgs.mnemonicindex]: user } = await ethers.getSigners();
     const userAddress = await user.getAddress();
     const safeAddress = await run("gc-determineCpkProxyAddress", {
       useraddress: userAddress,
