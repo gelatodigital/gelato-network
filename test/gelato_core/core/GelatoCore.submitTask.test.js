@@ -341,7 +341,7 @@ describe("Gelato Core - Task Submission ", function () {
       });
 
       await expect(userProxy.submitTask(task)).to.be.revertedWith(
-        "GelatoUserProxy.submitTask:GelatoCore.submitTask.isProvided:TaskSpecNotProvided"
+        "GelatoUserProxy.submitTask:GelatoCore.canSubmitTask.isProvided:TaskSpecNotProvided"
       );
 
       // CouldNt get the taskReceiptHash to be computed off-chain
@@ -390,7 +390,7 @@ describe("Gelato Core - Task Submission ", function () {
       });
 
       await expect(userProxy.submitTask(task)).to.be.revertedWith(
-        "GelatoUserProxy.submitTask:GelatoCore.submitTask.isProvided:TaskSpecNotProvided"
+        "GelatoUserProxy.submitTask:GelatoCore.canSubmitTask.isProvided:TaskSpecNotProvided"
       );
     });
 
@@ -430,7 +430,7 @@ describe("Gelato Core - Task Submission ", function () {
       });
 
       await expect(userProxy.submitTask(task)).to.be.revertedWith(
-        "GelatoCore.submitTask: executorByProvider's stake is insufficient"
+        "GelatoCore.canSubmitTask: executorStake"
       );
     });
 
@@ -470,7 +470,7 @@ describe("Gelato Core - Task Submission ", function () {
       });
 
       await expect(userProxy.submitTask(task)).to.be.revertedWith(
-        "GelatoCore.submitTask: Invalid expiryDate"
+        "GelatoCore.canSubmitTask: expiryDate"
       );
     });
 
@@ -509,9 +509,9 @@ describe("Gelato Core - Task Submission ", function () {
         expiryDate: constants.HashZero,
       });
 
-      // GelatoCore.submitTask.isProvided:InvalidProviderModule
+      // GelatoCore.canSubmitTask.isProvided:InvalidProviderModule
       await expect(userProxy.submitTask(task)).to.be.revertedWith(
-        "GelatoCore.submitTask.isProvided:InvalidProviderModule"
+        "GelatoCore.canSubmitTask.isProvided:InvalidProviderModule"
       );
     });
 
@@ -538,7 +538,7 @@ describe("Gelato Core - Task Submission ", function () {
         expiryDate: constants.HashZero,
       });
 
-      // GelatoCore.submitTask.isProvided:InvalidProviderModule
+      // GelatoCore.canSubmitTask.isProvided:InvalidProviderModule
       await expect(userProxy.submitTask(task)).to.emit(
         gelatoCore,
         "LogTaskSubmitted"
@@ -669,7 +669,7 @@ describe("Gelato Core - Task Submission ", function () {
         .to.emit(gelatoCore, "LogProviderAssignedExecutor")
         .to.emit(gelatoCore, "LogFundsProvided");
 
-      // GelatoCore.submitTask.isProvided:InvalidProviderModule
+      // GelatoCore.canSubmitTask.isProvided:InvalidProviderModule
     });
 
     it("#9: submitTask reverts (Self-provider), inputting other address as provider that has not whitelisted action", async function () {
@@ -787,13 +787,13 @@ describe("Gelato Core - Task Submission ", function () {
       });
       actions.push(submitTaskAction);
 
-      // GelatoCore.submitTask.isProvided:InvalidProviderModule
+      // GelatoCore.canSubmitTask.isProvided:InvalidProviderModule
       await expect(
         providerProxy.connect(provider).multiExecActions(actions, {
           value: ethers.utils.parseUnits("1", "ether"),
         })
       ).to.revertedWith(
-        "GelatoUserProxy.callAction:GelatoCore.submitTask.isProvided:TaskSpecNotProvided"
+        "GelatoUserProxy.callAction:GelatoCore.canSubmitTask.isProvided:TaskSpecNotProvided"
       );
     });
   });

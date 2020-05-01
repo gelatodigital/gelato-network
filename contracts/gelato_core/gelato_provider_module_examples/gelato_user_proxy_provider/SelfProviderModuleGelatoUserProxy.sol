@@ -14,15 +14,15 @@ contract SelfProviderModuleGelatoUserProxy is GelatoProviderModuleStandard {
         view
         override
         virtual
-        returns(bytes memory)
+        returns(bytes memory payload, bool)  // bool==false: no execRevertCheck
     {
         if (_actions.length > 1) {
-            return abi.encodeWithSelector(
+            payload = abi.encodeWithSelector(
                 IGelatoUserProxy.multiExecActions.selector,
                 _actions
             );
         } else if (_actions.length == 1) {
-            return abi.encodeWithSelector(
+            payload = abi.encodeWithSelector(
                 IGelatoUserProxy.execAction.selector,
                 _actions[0]
             );

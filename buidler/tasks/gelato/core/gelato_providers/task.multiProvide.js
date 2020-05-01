@@ -87,7 +87,7 @@ export default task(
 
       // GelatoCore contract call from provider account
       // address _executor,
-      // TaskSpec[] memory _TaskSpecs,
+      // TaskSpec[] memory _taskSpecs,
       // IGelatoProviderModule[] memory _modules
       const tx = await gelatoCore.multiProvide(
         taskArgs.gelatoexecutor,

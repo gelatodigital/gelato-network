@@ -43,8 +43,8 @@
 [igelatocore-logtasksubmitted-address-uint256-bytes32-struct-taskreceipt-]: #IGelatoCore-LogTaskSubmitted-address-uint256-bytes32-struct-TaskReceipt-
 [igelatocore-logexecsuccess-address-uint256-uint256-uint256-]: #IGelatoCore-LogExecSuccess-address-uint256-uint256-uint256-
 [igelatocore-logcanexecfailed-address-uint256-string-]: #IGelatoCore-LogCanExecFailed-address-uint256-string-
-[igelatocore-logexecfailed-address-uint256-uint256-string-]: #IGelatoCore-LogExecFailed-address-uint256-uint256-string-
-[igelatocore-logexecutionreverted-address-uint256-uint256-]: #IGelatoCore-LogExecutionReverted-address-uint256-uint256-
+[igelatocore-logexecfailed-address-uint256-uint256-string-]: #IGelatoCore-LogExecReverted-address-uint256-uint256-string-
+[igelatocore-logexecutionreverted-address-uint256-uint256-]: #IGelatoCore-LogExecReverted-address-uint256-uint256-
 [igelatocore-logtaskcancelled-uint256-]: #IGelatoCore-LogTaskCancelled-uint256-
 [igelatoexecutors]: #IGelatoExecutors
 [igelatoexecutors-stakeexecutor--]: #IGelatoExecutors-stakeExecutor--
@@ -170,8 +170,8 @@
 - [`LogTaskSubmitted(address executor, uint256 taskReceiptId, bytes32 taskReceiptHash, struct TaskReceipt taskReceipt)`][igelatocore-logtasksubmitted-address-uint256-bytes32-struct-taskreceipt-]
 - [`LogExecSuccess(address executor, uint256 taskReceiptId, uint256 executorSuccessFee, uint256 sysAdminSuccessFee)`][igelatocore-logexecsuccess-address-uint256-uint256-uint256-]
 - [`LogCanExecFailed(address executor, uint256 taskReceiptId, string reason)`][igelatocore-logcanexecfailed-address-uint256-string-]
-- [`LogExecFailed(address executor, uint256 taskReceiptId, uint256 executorRefund, string reason)`][igelatocore-logexecfailed-address-uint256-uint256-string-]
-- [`LogExecutionReverted(address executor, uint256 taskReceiptId, uint256 executorRefund)`][igelatocore-logexecutionreverted-address-uint256-uint256-]
+- [`LogExecReverted(address executor, uint256 taskReceiptId, uint256 executorRefund, string reason)`][igelatocore-logexecfailed-address-uint256-uint256-string-]
+- [`LogExecReverted(address executor, uint256 taskReceiptId, uint256 executorRefund)`][igelatocore-logexecutionreverted-address-uint256-uint256-]
 - [`LogTaskCancelled(uint256 taskReceiptId)`][igelatocore-logtaskcancelled-uint256-]
 
 ### <span id="IGelatoCore-submitTask-struct-Task-"></span> `submitTask(struct Task _task)` (external)
@@ -222,9 +222,9 @@ Returns computed taskReceipt hash, used to check for taskReceipt validity
 
 ### <span id="IGelatoCore-LogCanExecFailed-address-uint256-string-"></span> `LogCanExecFailed(address executor, uint256 taskReceiptId, string reason)`
 
-### <span id="IGelatoCore-LogExecFailed-address-uint256-uint256-string-"></span> `LogExecFailed(address executor, uint256 taskReceiptId, uint256 executorRefund, string reason)`
+### <span id="IGelatoCore-LogExecReverted-address-uint256-uint256-string-"></span> `LogExecReverted(address executor, uint256 taskReceiptId, uint256 executorRefund, string reason)`
 
-### <span id="IGelatoCore-LogExecutionReverted-address-uint256-uint256-"></span> `LogExecutionReverted(address executor, uint256 taskReceiptId, uint256 executorRefund)`
+### <span id="IGelatoCore-LogExecReverted-address-uint256-uint256-"></span> `LogExecReverted(address executor, uint256 taskReceiptId, uint256 executorRefund)`
 
 ### <span id="IGelatoCore-LogTaskCancelled-uint256-"></span> `LogTaskCancelled(uint256 taskReceiptId)`
 
@@ -351,13 +351,13 @@ Encoded multiple actions into a multisend
 - [`unprovideFunds(uint256 _withdrawAmount)`][igelatoproviders-unprovidefunds-uint256-]
 - [`providerAssignsExecutor(address _executor)`][igelatoproviders-providerassignsexecutor-address-]
 - [`executorAssignsExecutor(address _provider, address _newExecutor)`][igelatoproviders-executorassignsexecutor-address-address-]
-- [`provideTaskSpecs(struct IGelatoProviders.TaskSpec[] _TaskSpecs)`][igelatoproviders-providetaskspecs-struct-igelatoproviders-taskspec---]
-- [`unprovideTaskSpecs(struct IGelatoProviders.TaskSpec[] _TaskSpecs)`][igelatoproviders-unprovidetaskspecs-struct-igelatoproviders-taskspec---]
+- [`provideTaskSpecs(struct IGelatoProviders.TaskSpec[] _taskSpecs)`][igelatoproviders-providetaskspecs-struct-igelatoproviders-taskspec---]
+- [`unprovideTaskSpecs(struct IGelatoProviders.TaskSpec[] _taskSpecs)`][igelatoproviders-unprovidetaskspecs-struct-igelatoproviders-taskspec---]
 - [`setTaskSpecGasPriceCeil(bytes32 _taskSpecHash, uint256 _gasPriceCeil)`][igelatoproviders-settaskspecgaspriceceil-bytes32-uint256-]
 - [`addProviderModules(contract IGelatoProviderModule[] _modules)`][igelatoproviders-addprovidermodules-contract-igelatoprovidermodule---]
 - [`removeProviderModules(contract IGelatoProviderModule[] _modules)`][igelatoproviders-removeprovidermodules-contract-igelatoprovidermodule---]
-- [`multiProvide(address _executor, struct IGelatoProviders.TaskSpec[] _TaskSpecs, contract IGelatoProviderModule[] _modules)`][igelatoproviders-multiprovide-address-struct-igelatoproviders-taskspec---contract-igelatoprovidermodule---]
-- [`multiUnprovide(uint256 _withdrawAmount, struct IGelatoProviders.TaskSpec[] _TaskSpecs, contract IGelatoProviderModule[] _modules)`][igelatoproviders-multiunprovide-uint256-struct-igelatoproviders-taskspec---contract-igelatoprovidermodule---]
+- [`multiProvide(address _executor, struct IGelatoProviders.TaskSpec[] _taskSpecs, contract IGelatoProviderModule[] _modules)`][igelatoproviders-multiprovide-address-struct-igelatoproviders-taskspec---contract-igelatoprovidermodule---]
+- [`multiUnprovide(uint256 _withdrawAmount, struct IGelatoProviders.TaskSpec[] _taskSpecs, contract IGelatoProviderModule[] _modules)`][igelatoproviders-multiunprovide-uint256-struct-igelatoproviders-taskspec---contract-igelatoprovidermodule---]
 - [`providerFunds(address _provider)`][igelatoproviders-providerfunds-address-]
 - [`minExecProviderFunds(uint256 _gelatoMaxGas, uint256 _gelatoGasPrice)`][igelatoproviders-minexecproviderfunds-uint256-uint256-]
 - [`isProviderLiquid(address _provider, uint256 _gelatoMaxGas, uint256 _gelatoGasPrice)`][igelatoproviders-isproviderliquid-address-uint256-uint256-]
@@ -421,13 +421,13 @@ Assign executor as provider
 
 Assign executor as previous selected executor
 
-### <span id="IGelatoProviders-provideTaskSpecs-struct-IGelatoProviders-TaskSpec---"></span> `provideTaskSpecs(struct IGelatoProviders.TaskSpec[] _TaskSpecs)` (external)
+### <span id="IGelatoProviders-provideTaskSpecs-struct-IGelatoProviders-TaskSpec---"></span> `provideTaskSpecs(struct IGelatoProviders.TaskSpec[] _taskSpecs)` (external)
 
 Whitelist TaskSpecs (A combination of a Condition, Action(s) and a gasPriceCeil) that users can select from
 
 If gasPriceCeil is == 0, Task Spec will be executed at any gas price (no ceil)
 
-### <span id="IGelatoProviders-unprovideTaskSpecs-struct-IGelatoProviders-TaskSpec---"></span> `unprovideTaskSpecs(struct IGelatoProviders.TaskSpec[] _TaskSpecs)` (external)
+### <span id="IGelatoProviders-unprovideTaskSpecs-struct-IGelatoProviders-TaskSpec---"></span> `unprovideTaskSpecs(struct IGelatoProviders.TaskSpec[] _taskSpecs)` (external)
 
 De-whitelist TaskSpecs (A combination of a Condition, Action(s) and a gasPriceCeil) that users can select from
 
@@ -445,11 +445,11 @@ Whitelist new provider Module(s)
 
 De-Whitelist new provider Module(s)
 
-### <span id="IGelatoProviders-multiProvide-address-struct-IGelatoProviders-TaskSpec---contract-IGelatoProviderModule---"></span> `multiProvide(address _executor, struct IGelatoProviders.TaskSpec[] _TaskSpecs, contract IGelatoProviderModule[] _modules)` (external)
+### <span id="IGelatoProviders-multiProvide-address-struct-IGelatoProviders-TaskSpec---contract-IGelatoProviderModule---"></span> `multiProvide(address _executor, struct IGelatoProviders.TaskSpec[] _taskSpecs, contract IGelatoProviderModule[] _modules)` (external)
 
 Whitelist new executor, TaskSpec(s) and Module(s) in one tx
 
-### <span id="IGelatoProviders-multiUnprovide-uint256-struct-IGelatoProviders-TaskSpec---contract-IGelatoProviderModule---"></span> `multiUnprovide(uint256 _withdrawAmount, struct IGelatoProviders.TaskSpec[] _TaskSpecs, contract IGelatoProviderModule[] _modules)` (external)
+### <span id="IGelatoProviders-multiUnprovide-uint256-struct-IGelatoProviders-TaskSpec---contract-IGelatoProviderModule---"></span> `multiUnprovide(uint256 _withdrawAmount, struct IGelatoProviders.TaskSpec[] _taskSpecs, contract IGelatoProviderModule[] _modules)` (external)
 
 De-Whitelist TaskSpec(s), Module(s) and withdraw funds from gelato in one tx
 

@@ -10,7 +10,7 @@ contract MockProviderModuleGelatoUserProxyRevert is GelatoProviderModuleStandard
         external
         view
         override
-        returns(bytes memory)
+        returns(bytes memory, bool)
     {
         revert("MockProviderModuleGelatoUserProxyRevert.execPayload: test revert");
     }
