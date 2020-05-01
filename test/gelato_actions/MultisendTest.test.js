@@ -52,8 +52,11 @@ describe("Multisend with Gelato User Proxy Test", function () {
     // Get signers
     [seller, provider, executor, sysAdmin] = await ethers.getSigners();
     sellerAddress = await seller.getAddress();
+
     providerAddress = await provider.getAddress();
+
     executorAddress = await executor.getAddress();
+
     sysAdminAddress = await sysAdmin.getAddress();
 
     // Deploy Gelato Core with SysAdmin + Stake Executor
