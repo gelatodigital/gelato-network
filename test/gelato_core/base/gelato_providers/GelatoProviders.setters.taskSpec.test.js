@@ -29,12 +29,13 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
   let taskSpec;
   let otherTaskSpec;
 
-  // TaskReceipt for isTaskSpecProvided check
-  let taskReceipt;
-  let otherTaskReceipt;
+  let task;
+  let otherTask;
 
   let provider;
   let providerAddress;
+
+  const userProxyAddress = constants.AddressZero;
 
   beforeEach(async function () {
     // Get the ContractFactory, contract instance, and Signers here.
@@ -84,32 +85,6 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
       termsOkCheck: true,
     });
 
-    // Task
-    const task = new Task({
-      provider: gelatoProvider,
-      conditions: [conditionStruct],
-      actions: [actionStruct],
-      expiryDate: constants.Zero,
-    });
-    const otherTask = new Task({
-      provider: gelatoProvider,
-      conditions: [conditionStruct],
-      actions: [actionStruct, otherActionStruct],
-      expiryDate: constants.Zero,
-    });
-
-    // TaskReceipt
-    taskReceipt = new TaskReceipt({
-      id: constants.Zero,
-      userProxy: constants.AddressZero,
-      task: task,
-    });
-    otherTaskReceipt = new TaskReceipt({
-      id: 1,
-      userProxy: constants.AddressZero,
-      task: otherTask,
-    });
-
     // Task Spec
     taskSpec = new TaskSpec({
       conditions: [condition.address],
@@ -122,6 +97,20 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
       actions: [actionStruct, otherActionStruct],
       gasPriceCeil,
     });
+
+    // Task
+    task = new Task({
+      provider: gelatoProvider,
+      conditions: [conditionStruct],
+      actions: [actionStruct],
+      expiryDate: constants.Zero,
+    });
+    otherTask = new Task({
+      provider: gelatoProvider,
+      conditions: [conditionStruct],
+      actions: [actionStruct, otherActionStruct],
+      expiryDate: constants.Zero,
+    });
   });
 
   // We test different functionality of the contract as normal Mocha tests.
@@ -130,10 +119,7 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
   describe("GelatoCore.GelatoProviders.provideTaskSpecs", function () {
     it("Should allow anyone to provide a single TaskSpec", async function () {
       // taskSpecHash
-      const taskSpecHash = await gelatoCore.hashTaskSpec(
-        taskSpec.conditions,
-        taskSpec.actions
-      );
+      const taskSpecHash = await gelatoCore.hashTaskSpec(taskSpec);
 
       // provideTaskSpecs
       await expect(gelatoCore.provideTaskSpecs([taskSpec]))
@@ -155,45 +141,31 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
 
       // isTaskSpecProvided
       expect(
-        await gelatoCore.isTaskSpecProvided(
-          providerAddress,
-          [condition.address],
-          [actionStruct]
-        )
+        await gelatoCore.isTaskSpecProvided(providerAddress, taskSpec)
       ).to.be.equal("OK");
 
       // isTaskProvided
-      expect(await gelatoCore.isTaskProvided(taskReceipt)).not.to.be.equal(
-        "TaskSpecNotProvided"
-      );
+      expect(
+        await gelatoCore.isTaskProvided(userProxyAddress, task)
+      ).not.to.be.equal("TaskSpecNotProvided");
 
       // otherTaskSpec
       // isTaskSpecProvided
       expect(
-        await gelatoCore.isTaskSpecProvided(
-          providerAddress,
-          [condition.address],
-          [actionStruct, otherActionStruct]
-        )
+        await gelatoCore.isTaskSpecProvided(providerAddress, otherTaskSpec)
       ).to.be.equal("TaskSpecNotProvided");
 
       // isTaskProvided
-      expect(await gelatoCore.isTaskProvided(otherTaskReceipt)).to.be.equal(
-        "TaskSpecNotProvided"
-      );
+      expect(
+        await gelatoCore.isTaskProvided(userProxyAddress, otherTask)
+      ).to.be.equal("TaskSpecNotProvided");
     });
 
     it("Should allow anyone to provideTaskSpecs", async function () {
       // taskSpecHash
-      const taskSpecHash = await gelatoCore.hashTaskSpec(
-        taskSpec.conditions,
-        taskSpec.actions
-      );
+      const taskSpecHash = await gelatoCore.hashTaskSpec(taskSpec);
       // otherTaskSpecHash
-      const otherTaskSpecHash = await gelatoCore.hashTaskSpec(
-        otherTaskSpec.conditions,
-        otherTaskSpec.actions
-      );
+      const otherTaskSpecHash = await gelatoCore.hashTaskSpec(otherTaskSpec);
 
       // provideTaskSpecs
       await expect(gelatoCore.provideTaskSpecs([taskSpec, otherTaskSpec]))
@@ -224,17 +196,13 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
 
       // isTaskSpecProvided
       expect(
-        await gelatoCore.isTaskSpecProvided(
-          providerAddress,
-          [condition.address],
-          [actionStruct]
-        )
+        await gelatoCore.isTaskSpecProvided(providerAddress, taskSpec)
       ).to.be.equal("OK");
 
       // isTaskProvided
-      expect(await gelatoCore.isTaskProvided(taskReceipt)).not.to.be.equal(
-        "TaskSpecNotProvided"
-      );
+      expect(
+        await gelatoCore.isTaskProvided(userProxyAddress, task)
+      ).not.to.be.equal("TaskSpecNotProvided");
 
       // otherTaskSpec
       // taskSpecGasPriceCeil
@@ -247,17 +215,13 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
 
       // isTaskSpecProvided
       expect(
-        await gelatoCore.isTaskSpecProvided(
-          providerAddress,
-          [condition.address],
-          [actionStruct, otherActionStruct]
-        )
+        await gelatoCore.isTaskSpecProvided(providerAddress, otherTaskSpec)
       ).to.be.equal("OK");
 
       // isTaskProvided;
-      expect(await gelatoCore.isTaskProvided(otherTaskReceipt)).not.to.be.equal(
-        "TaskSpecNotProvided"
-      );
+      expect(
+        await gelatoCore.isTaskProvided(userProxyAddress, otherTask)
+      ).not.to.be.equal("TaskSpecNotProvided");
     });
 
     it("Should NOT allow to provide same TaskSpecs again", async function () {
@@ -276,10 +240,7 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
 
     it("Should allow anyone to setTaskSpecGasPriceCeil", async function () {
       // taskSpecHash
-      const taskSpecHash = await gelatoCore.hashTaskSpec(
-        taskSpec.conditions,
-        taskSpec.actions
-      );
+      const taskSpecHash = await gelatoCore.hashTaskSpec(taskSpec);
 
       // setTaskSpecGasPriceCeil
       await expect(
@@ -301,40 +262,29 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
 
       // isTaskSpecProvided
       expect(
-        await gelatoCore.isTaskSpecProvided(
-          providerAddress,
-          [condition.address],
-          [actionStruct]
-        )
+        await gelatoCore.isTaskSpecProvided(providerAddress, taskSpec)
       ).to.be.equal("OK");
 
       // isTaskProvided
-      expect(await gelatoCore.isTaskProvided(taskReceipt)).not.to.be.equal(
-        "TaskSpecNotProvided"
-      );
+      expect(
+        await gelatoCore.isTaskProvided(userProxyAddress, task)
+      ).not.to.be.equal("TaskSpecNotProvided");
 
       // otherTaskSpec
       // isTaskSpecProvided
       expect(
-        await gelatoCore.isTaskSpecProvided(
-          providerAddress,
-          [condition.address],
-          [actionStruct, otherActionStruct]
-        )
+        await gelatoCore.isTaskSpecProvided(providerAddress, otherTaskSpec)
       ).to.be.equal("TaskSpecNotProvided");
 
       // isTaskProvided
-      expect(await gelatoCore.isTaskProvided(otherTaskReceipt)).to.be.equal(
-        "TaskSpecNotProvided"
-      );
+      expect(
+        await gelatoCore.isTaskProvided(userProxyAddress, otherTask)
+      ).to.be.equal("TaskSpecNotProvided");
     });
 
     it("Should NOT allow to redundantly setTaskSpecGasPriceCeil", async function () {
       // taskSpecHash
-      const taskSpecHash = await gelatoCore.hashTaskSpec(
-        taskSpec.conditions,
-        taskSpec.actions
-      );
+      const taskSpecHash = await gelatoCore.hashTaskSpec(taskSpec);
 
       // setTaskSpecGasPriceCeil
       await gelatoCore.setTaskSpecGasPriceCeil(taskSpecHash, gasPriceCeil);
@@ -354,15 +304,9 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
       await gelatoCore.provideTaskSpecs([taskSpec, otherTaskSpec]);
 
       // taskSpecHash
-      const taskSpecHash = await gelatoCore.hashTaskSpec(
-        taskSpec.conditions,
-        taskSpec.actions
-      );
+      const taskSpecHash = await gelatoCore.hashTaskSpec(taskSpec);
       // otherTaskSpecHash
-      const otherTaskSpecHash = await gelatoCore.hashTaskSpec(
-        otherTaskSpec.conditions,
-        otherTaskSpec.actions
-      );
+      const otherTaskSpecHash = await gelatoCore.hashTaskSpec(otherTaskSpec);
 
       // unprovideTaskSpecs
       await expect(gelatoCore.unprovideTaskSpecs([taskSpec]))
@@ -377,17 +321,13 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
 
       // isTaskSpecProvided
       expect(
-        await gelatoCore.isTaskSpecProvided(
-          providerAddress,
-          [condition.address],
-          [actionStruct]
-        )
+        await gelatoCore.isTaskSpecProvided(providerAddress, taskSpec)
       ).to.be.equal("TaskSpecNotProvided");
 
       // isTaskProvided
-      expect(await gelatoCore.isTaskProvided(taskReceipt)).to.be.equal(
-        "TaskSpecNotProvided"
-      );
+      expect(
+        await gelatoCore.isTaskProvided(userProxyAddress, task)
+      ).to.be.equal("TaskSpecNotProvided");
 
       // otherTaskSpec
       // taskSpecGasPriceCeil
@@ -400,17 +340,13 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
 
       // isTaskSpecProvided
       expect(
-        await gelatoCore.isTaskSpecProvided(
-          providerAddress,
-          [condition.address],
-          [actionStruct, otherActionStruct]
-        )
+        await gelatoCore.isTaskSpecProvided(providerAddress, otherTaskSpec)
       ).to.be.equal("OK");
 
       // isTaskProvided
-      expect(await gelatoCore.isTaskProvided(otherTaskReceipt)).not.to.be.equal(
-        "TaskSpecNotProvided"
-      );
+      expect(
+        await gelatoCore.isTaskProvided(userProxyAddress, otherTask)
+      ).not.to.be.equal("TaskSpecNotProvided");
     });
 
     it("Should allow Providers to unprovideTaskSpecs", async function () {
@@ -418,15 +354,9 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
       await gelatoCore.provideTaskSpecs([taskSpec, otherTaskSpec]);
 
       // taskSpecHash
-      const taskSpecHash = await gelatoCore.hashTaskSpec(
-        taskSpec.conditions,
-        taskSpec.actions
-      );
+      const taskSpecHash = await gelatoCore.hashTaskSpec(taskSpec);
       // otherTaskSpecHash
-      const otherTaskSpecHash = await gelatoCore.hashTaskSpec(
-        otherTaskSpec.conditions,
-        otherTaskSpec.actions
-      );
+      const otherTaskSpecHash = await gelatoCore.hashTaskSpec(otherTaskSpec);
 
       // unprovideTaskSpecs
       await expect(gelatoCore.unprovideTaskSpecs([taskSpec, otherTaskSpec]))
@@ -443,11 +373,7 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
 
       // isTaskSpecProvided
       expect(
-        await gelatoCore.isTaskSpecProvided(
-          providerAddress,
-          [condition.address],
-          [actionStruct]
-        )
+        await gelatoCore.isTaskSpecProvided(providerAddress, taskSpec)
       ).to.be.equal("TaskSpecNotProvided");
 
       // otherTaskSpec
@@ -461,11 +387,7 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
 
       // isTaskSpecProvided
       expect(
-        await gelatoCore.isTaskSpecProvided(
-          providerAddress,
-          [condition.address],
-          [actionStruct, otherActionStruct]
-        )
+        await gelatoCore.isTaskSpecProvided(providerAddress, otherTaskSpec)
       ).to.be.equal("TaskSpecNotProvided");
     });
 

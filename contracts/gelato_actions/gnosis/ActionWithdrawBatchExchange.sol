@@ -75,7 +75,7 @@ contract ActionWithdrawBatchExchange is GelatoActionsStandard {
 
     // ======= ACTION CONDITIONS CHECK =========
     // Overriding and extending GelatoActionsStandard's function (optional)
-    function termsOk(bytes calldata _actionData, address _userProxy)
+    function termsOk(address _userProxy, bytes calldata _actionData)
         external
         view
         override
@@ -86,45 +86,34 @@ contract ActionWithdrawBatchExchange is GelatoActionsStandard {
             _actionData[4:],
             (address,address,address)
         );
-        return _actionConditionsCheck(
-            _userProxy, _sellToken, _buyToken
-        );
+        return termsOk(_userProxy, _sellToken, _buyToken);
     }
 
     /// @notice Verify that _userProxy has two valid withdraw request on batch exchange (for buy and sell token)
     /// @param _userProxy Users Proxy address
     /// @param _sellToken Token to sell on Batch Exchange
     /// @param _buyToken Amount to sell
-    function _actionConditionsCheck(
-        address _userProxy,
-        address _sellToken,
-        address _buyToken
-    )
-        internal
+    function termsOk(address _userProxy, address _sellToken, address _buyToken)
+        public
         view
         virtual
         returns(string memory)  // actionCondition
     {
-
         bool sellTokenWithdrawable = batchExchange.hasValidWithdrawRequest(_userProxy, _sellToken);
 
-        if (!sellTokenWithdrawable) {
+        if (!sellTokenWithdrawable)
             return "ActionWithdrawBatchExchange: Sell Token not withdrawable yet";
-        }
 
         bool buyTokenWithdrawable = batchExchange.hasValidWithdrawRequest(_userProxy, _buyToken);
 
-        if (!buyTokenWithdrawable) {
+        if (!buyTokenWithdrawable)
             return "ActionWithdrawBatchExchange: Buy Token not withdrawable yet";
-        }
 
         bool proxyHasCredit = feeExtractor.proxyHasCredit(_userProxy);
 
-        if (!proxyHasCredit) {
+        if (!proxyHasCredit)
             return "ActionWithdrawBatchExchange: Proxy has insufficient credit";
-        }
 
         return OK;
-
     }
 }

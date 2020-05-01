@@ -22,7 +22,7 @@ jobs: # a collection of steps
           name: npx buidler compile
           command: npx buidler compile
       - run: # run tests
-          name: test
+          name: npx buidler test
           command: npx buidler test
       - run: # run coverage report
           name: yarn coverage

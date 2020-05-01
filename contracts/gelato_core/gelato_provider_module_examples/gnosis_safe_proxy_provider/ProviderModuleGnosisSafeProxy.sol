@@ -11,7 +11,7 @@ import {
 import {
     IGnosisSafeProxy
 } from "../../../user_proxies/gnosis_safe_proxy/interfaces/IGnosisSafeProxy.sol";
-import { Action, TaskReceipt } from "../../interfaces/IGelatoCore.sol";
+import { Action, Task } from "../../interfaces/IGelatoCore.sol";
 
 contract ProviderModuleGnosisSafeProxy is
     GelatoProviderModuleStandard,
@@ -24,7 +24,12 @@ contract ProviderModuleGnosisSafeProxy is
     // 0x29CAa04Fa05A046a05C85A50e8f2af8cf9A05BaC on Rinkeby
     address public override immutable multiSend;
 
-    constructor(bytes32[] memory hashes, address[] memory masterCopies, address _gelatoCore, address _multiSend)
+    constructor(
+        bytes32[] memory hashes,
+        address[] memory masterCopies,
+        address _gelatoCore,
+        address _multiSend
+    )
         public
     {
         multiProvide(hashes, masterCopies);
@@ -35,21 +40,20 @@ contract ProviderModuleGnosisSafeProxy is
     // ================= GELATO PROVIDER MODULE STANDARD ================
     // @dev since we check extcodehash prior to execution, we forego the execution option
     //  where the userProxy is deployed at execution time.
-    function isProvided(TaskReceipt memory _TR)
+    function isProvided(address _userProxy, Task memory)
         public
         view
         override
         returns(string memory)
     {
-        address userProxy = _TR.userProxy;
         bytes32 codehash;
-        assembly { codehash := extcodehash(userProxy) }
+        assembly { codehash := extcodehash(_userProxy) }
         if (!isProxyExtcodehashProvided[codehash])
             return "ProviderModuleGnosisSafeProxy.isProvided:InvalidGSPCodehash";
-        address mastercopy = IGnosisSafeProxy(userProxy).masterCopy();
+        address mastercopy = IGnosisSafeProxy(_userProxy).masterCopy();
         if (!isMastercopyProvided[mastercopy])
             return "ProviderModuleGnosisSafeProxy.isProvided:InvalidGSPMastercopy";
-        if (!isGelatoCoreWhitelisted(userProxy))
+        if (!isGelatoCoreWhitelisted(_userProxy))
             return "ProviderModuleGnosisSafeProxy.isProvided:GelatoCoreNotWhitelisted";
         return OK;
     }
@@ -58,13 +62,16 @@ contract ProviderModuleGnosisSafeProxy is
         external
         view
         override
-        returns(bytes memory)
+        returns(bytes memory payload, bool proxyReturndataCheck)
     {
-        if( _actions.length == 1) {
-            return abi.encodeWithSelector(
+        // execTransactionFromModuleReturnData catches reverts so must check for reverts
+        proxyReturndataCheck = true;
+
+        if ( _actions.length == 1) {
+            payload = abi.encodeWithSelector(
                 IGnosisSafe.execTransactionFromModuleReturnData.selector,
                 _actions[0].addr,  // to
-                _actions[0].value,  // value
+                _actions[0].value,
                 _actions[0].data,
                 _actions[0].operation
             );
@@ -76,7 +83,7 @@ contract ProviderModuleGnosisSafeProxy is
                 bytes memory payloadPart = abi.encodePacked(
                     _actions[i].operation,
                     _actions[i].addr,  // to
-                    _actions[i].value,  // value
+                    _actions[i].value,
                     _actions[i].data.length,
                     _actions[i].data
                 );
@@ -88,7 +95,7 @@ contract ProviderModuleGnosisSafeProxy is
                 multiSendPayload
             );
 
-            return abi.encodeWithSelector(
+            payload = abi.encodeWithSelector(
                 IGnosisSafe.execTransactionFromModuleReturnData.selector,
                 multiSend,  // to
                 0,  // value
@@ -98,6 +105,16 @@ contract ProviderModuleGnosisSafeProxy is
         } else {
             revert("ProviderModuleGnosisSafeProxy.execPayload: 0 _actions length");
         }
+    }
+
+    function execRevertCheck(bytes calldata _proxyReturndata)
+        external
+        view
+        override
+        virtual
+        returns(bool reverted)
+    {
+        (reverted,) = abi.decode(_proxyReturndata, (bool,bytes));
     }
 
     // GnosisSafeProxy

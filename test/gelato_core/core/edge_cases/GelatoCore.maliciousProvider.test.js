@@ -114,10 +114,7 @@ describe("GelatoCore - EdgeCase: Malicious Provider", function () {
       gasPriceCeil: utils.parseUnits("20", "gwei"),
     });
 
-    const taskSpecHash = await gelatoCore.hashTaskSpec(
-      [],
-      [mockActionMaliciousProviderStruct]
-    );
+    const taskSpecHash = await gelatoCore.hashTaskSpec(taskSpec);
 
     await expect(
       mockActionMaliciousProvider.multiProvide(

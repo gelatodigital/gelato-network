@@ -137,7 +137,7 @@ export default task(
             "LogCanExecSuccess",
             "LogCanExecFailed",
             "LogExecSuccess",
-            "LogExecFailed",
+            "LogExecReverted",
           ];
 
           const executionEvents = [];
