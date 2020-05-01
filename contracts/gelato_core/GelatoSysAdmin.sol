@@ -30,7 +30,7 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
         internalGasRequirement = 100000;
         minExecutorStake = 1 ether;  // production: 1 ETH
         executorSuccessShare = 50;  // 50% of successful execution cost
-        sysAdminSuccessShare = 20;  // 20% of successful executibon cost
+        sysAdminSuccessShare = 20;  // 20% of successful execution cost
         totalSuccessShare = 70;
     }
 
