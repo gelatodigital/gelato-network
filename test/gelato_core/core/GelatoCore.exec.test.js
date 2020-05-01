@@ -298,7 +298,7 @@ describe("GelatoCore.exec", function () {
       const actionData = await run("abi-encode-withselector", {
         contractname: "ActionWithdrawBatchExchange",
         functionname: "action",
-        inputs: [sellToken.address, buyToken.address],
+        inputs: [sellerAddress, sellToken.address, buyToken.address],
       });
 
       // Submit Task
@@ -1112,7 +1112,7 @@ describe("GelatoCore.exec", function () {
       const actionData = await run("abi-encode-withselector", {
         contractname: "ActionWithdrawBatchExchange",
         functionname: "action",
-        inputs: [sellToken.address, buyToken.address],
+        inputs: [sellerAddress, sellToken.address, buyToken.address],
       });
 
       // Submit Task
@@ -1204,7 +1204,7 @@ describe("GelatoCore.exec", function () {
       const actionData = await run("abi-encode-withselector", {
         contractname: "ActionWithdrawBatchExchange",
         functionname: "action",
-        inputs: [sellToken.address, buyToken.address],
+        inputs: [sellerAddress, sellToken.address, buyToken.address],
       });
 
       // Submit Task
@@ -1292,7 +1292,7 @@ describe("GelatoCore.exec", function () {
       const actionData = await run("abi-encode-withselector", {
         contractname: "ActionWithdrawBatchExchange",
         functionname: "action",
-        inputs: [sellToken.address, buyToken.address],
+        inputs: [sellerAddress, sellToken.address, buyToken.address],
       });
 
       // Submit Task
@@ -1574,7 +1574,7 @@ describe("GelatoCore.exec", function () {
       const actionData = await run("abi-encode-withselector", {
         contractname: "ActionWithdrawBatchExchange",
         functionname: "action",
-        inputs: [sellToken.address, buyToken.address],
+        inputs: [sellerAddress, sellToken.address, buyToken.address],
       });
 
       // Submit Task
