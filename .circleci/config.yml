@@ -1,4 +1,6 @@
 version: 2.1 # use CircleCI 2.1
+orbs:
+  coveralls: coveralls/coveralls@1.0.6
 jobs: # a collection of steps
   build: # runs not using Workflows must have a `build` job as entry point
     working_directory: ~/gelato-V1-ci # directory where steps will run
@@ -18,16 +20,22 @@ jobs: # a collection of steps
           key: yarn-packages-{{ checksum "yarn.lock" }}
           paths:
             - ./node_modules
-      - run: # compile
-          name: npx buidler compile
+      - run: # Compile
+          name: Compile
           command: npx buidler compile
-      - run: # run tests
-          name: npx buidler test
-          command: npx buidler test
-      - run: # run coverage report
+      - run: # Buidlerevm RPC node
+          name: Spin up buidlerevm localhost RPC
+          command: npx buidler node
+          # important: buidler node as background process
+          background: true
+      - run: # Tests
+          name: Tests on localhost for gas report
+          command: yarn test
+      - run: # Coverage
           name: yarn coverage
           command: yarn coverage
-      - store_artifacts: # for display in Artifacts: https://circleci.com/docs/2.0/artifacts/
-          path: coverage
-          prefix: coverage
-      # See https://circleci.com/docs/2.0/deployment-integrations/ for deploy examples
+      - coveralls/upload # upload lcov.info to coveralls.io
+    #   - store_artifacts: # for display in Artifacts: https://circleci.com/docs/2.0/artifacts/
+    #       path: coverage
+    #       prefix: coverage
+    # See https://circleci.com/docs/2.0/deployment-integrations/ for deploy examples

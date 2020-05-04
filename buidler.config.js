@@ -68,8 +68,6 @@ module.exports = {
     buidlerevm: {
       hardfork: "istanbul",
       contracts: buidlerevmConfig.contracts,
-      gas: 15000000,
-      blockGasLimit: 20000000,
       // Custom
       filters: { defaultFromBlock: 1 },
     },
@@ -124,11 +122,9 @@ module.exports = {
 };
 
 // ================================= PLUGINS =========================================
-// buidler-ethers
 usePlugin("@nomiclabs/buidler-ethers");
-// buidler-waffle
+usePlugin("buidler-gas-reporter");
 usePlugin("@nomiclabs/buidler-waffle");
-// solidity-coverage
 usePlugin("solidity-coverage");
 
 // ================================= TASKS =========================================
