@@ -21,13 +21,13 @@ export default task(
 
       // Condition
       if (taskArgs.condition !== "0") {
-        const conditionInstance = await run("config", {
+        const conditionAddress = await run("bre-config", {
           contractname: taskArgs.condition,
           deployments: true,
         });
-        taskArgs.condition = conditionInstance.address;
+        taskArgs.condition = conditionAddress;
       } else {
-        taskArgs.condition = constants.AddressZero;
+        taskArgs.condition = undefined;
       }
 
       // Action
@@ -64,10 +64,12 @@ export default task(
       const gasPriceCeil = utils.parseUnits(taskArgs.gaspriceceil, "gwei");
       // Create TaskSpec condition, actions, gasPriceCeil
       const taskSpec = new TaskSpec({
-        conditions: [taskArgs.condition],
+        conditions: taskArgs.condition ? [taskArgs.condition] : undefined,
         actions: actionArray,
         gasPriceCeil,
       });
+
+      if (taskArgs.log) console.log(taskArgs.condition, actionArray);
 
       const tx = await gelatoCore.provideTaskSpecs([taskSpec], {
         gasLimit: 1000000,

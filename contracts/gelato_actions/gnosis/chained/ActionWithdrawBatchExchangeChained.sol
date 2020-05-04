@@ -1,41 +1,45 @@
 pragma solidity ^0.6.5;
+pragma experimental ABIEncoderV2;
 
-import { GelatoActionsStandard } from "../GelatoActionsStandard.sol";
-import { IGelatoAction } from "../IGelatoAction.sol";
-import { IERC20 } from "../../external/IERC20.sol";
-import { IBatchExchange } from "../../dapp_interfaces/gnosis/IBatchExchange.sol";
-import { IMedianizer } from "../../dapp_interfaces/maker/IMakerMedianizer.sol";
-import { FeeExtractor } from "../../gelato_helpers/FeeExtractor.sol";
-import { SafeERC20 } from "../../external/SafeERC20.sol";
-import { SafeMath } from "../../external/SafeMath.sol";
+import { GelatoActionsStandard } from "../../GelatoActionsStandard.sol";
+import { IGelatoAction } from "../../IGelatoAction.sol";
+import { IERC20 } from "../../../external/IERC20.sol";
+import { SafeERC20 } from "../../../external/SafeERC20.sol";
+import { SafeMath } from "../../../external/SafeMath.sol";
+import { IBatchExchange } from "../../../dapp_interfaces/gnosis/IBatchExchange.sol";
+import { Task, Provider, IGelatoCore, Condition, Action } from "../../../gelato_core/interfaces/IGelatoCore.sol";
+import { FeeExtractor } from "../../../gelato_helpers/FeeExtractor.sol";
+import {IGelatoProviderModule} from "../../../gelato_core/interfaces/IGelatoProviderModule.sol";
+import {IGelatoCondition} from "../../../gelato_conditions/IGelatoCondition.sol";
+import {ActionPlaceOrderBatchExchangeWithWithdraw} from "./ActionPlaceOrderBatchExchangeWithWithdraw.sol";
 
 
-/// @title ActionWithdrawBatchExchange
+/// @title ActionWithdrawBatchExchangeChained
 /// @author Luis Schliesske & Hilmar Orth
 /// @notice Gelato action that 1) withdraws funds from Batch Exchange and 2) sends funds back to users EOA (minus fee)
-contract ActionWithdrawBatchExchange is GelatoActionsStandard {
+contract ActionWithdrawBatchExchangeChained is ActionPlaceOrderBatchExchangeWithWithdraw {
 
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
-    // BatchExchange
-    IBatchExchange public immutable batchExchange;
-
-    // Fee finder
-    FeeExtractor public immutable feeExtractor;
-
-    constructor(address _batchExchange, address _feeExtractor) public {
-        batchExchange = IBatchExchange(_batchExchange);
-        feeExtractor = FeeExtractor(_feeExtractor);
-    }
+    constructor(address _batchExchange, address _feeExtractor) ActionPlaceOrderBatchExchangeWithWithdraw(
+        _batchExchange,
+        _feeExtractor
+    ) public {}
 
     /// @notice Withdraw sell and buy token from Batch Exchange and send funds back to _user EOA
     /// @param _sellToken Token to sell on Batch Exchange
     /// @param _buyToken Token to buy on Batch Exchange
-    function action(
+    function actionChained(
         address _user,
         address _sellToken,
-        address _buyToken
+        address _buyToken,
+        uint128 _sellAmount,
+        uint128 _buyAmount,
+        uint32 _batchDuration,
+        // Withdraw
+        address _gelatoCore,
+        Task memory _taskWithdraw
     )
         public
         virtual
@@ -71,49 +75,98 @@ contract ActionWithdrawBatchExchange is GelatoActionsStandard {
             revert("ActionWithdrawBatchExchange.withdraw _sellToken failed");
         }
 
+
+        bytes memory withdrawPayload = abi.encodeWithSelector(
+            this.actionChained.selector,
+            _user,
+            _sellToken,
+            _buyToken,
+            _sellAmount,
+            _buyAmount,
+            _batchDuration,
+            _gelatoCore,
+            _taskWithdraw
+        );
+
+        _taskWithdraw.actions[0].data = withdrawPayload;
+
+        action(
+            _user,
+            _sellToken,
+            _buyToken,
+            _sellAmount,
+            _buyAmount,
+            _batchDuration,
+            // Withdraw
+            _gelatoCore,
+            _taskWithdraw
+        );
+
     }
 
     // ======= ACTION CONDITIONS CHECK =========
     // Overriding and extending GelatoActionsStandard's function (optional)
-    function termsOk(address _userProxy, bytes calldata _actionData)
+    function termsOk(bytes calldata _actionData, address _userProxy)
         external
         view
         override
         virtual
         returns(string memory)  // actionCondition
     {
-        (, address _sellToken, address _buyToken) = abi.decode(
+        (address _user, address _sellToken, address _buyToken, uint128 _sellAmount) = abi.decode(
             _actionData[4:],
-            (address,address,address)
+            (address,address,address,uint128)
         );
-        return termsOk(_userProxy, _sellToken, _buyToken);
+        return _actionConditionsCheck(
+            _userProxy, _sellToken, _buyToken, _user, _sellAmount
+        );
     }
 
     /// @notice Verify that _userProxy has two valid withdraw request on batch exchange (for buy and sell token)
     /// @param _userProxy Users Proxy address
     /// @param _sellToken Token to sell on Batch Exchange
     /// @param _buyToken Amount to sell
-    function termsOk(address _userProxy, address _sellToken, address _buyToken)
-        public
+    function _actionConditionsCheck(
+        address _userProxy,
+        address _sellToken,
+        address _buyToken,
+        address _user,
+        uint128 _sellAmount
+    )
+        internal
         view
         virtual
         returns(string memory)  // actionCondition
     {
+
         bool sellTokenWithdrawable = batchExchange.hasValidWithdrawRequest(_userProxy, _sellToken);
 
-        if (!sellTokenWithdrawable)
+        if (!sellTokenWithdrawable) {
             return "ActionWithdrawBatchExchange: Sell Token not withdrawable yet";
+        }
 
         bool buyTokenWithdrawable = batchExchange.hasValidWithdrawRequest(_userProxy, _buyToken);
 
-        if (!buyTokenWithdrawable)
+        if (!buyTokenWithdrawable) {
             return "ActionWithdrawBatchExchange: Buy Token not withdrawable yet";
+        }
 
         bool proxyHasCredit = feeExtractor.proxyHasCredit(_userProxy);
 
-        if (!proxyHasCredit)
+        if (!proxyHasCredit) {
             return "ActionWithdrawBatchExchange: Proxy has insufficient credit";
+        }
 
-        return OK;
+        try IERC20(_sellToken).allowance(_user, _userProxy)
+            returns(uint256 userProxySendTokenAllowance)
+        {
+            if (userProxySendTokenAllowance < _sellAmount)
+                return "ActionPlaceOrderBatchExchange: NotOkUserProxySendTokenAllowance";
+        } catch {
+            return "ActionPlaceOrderBatchExchange: ErrorAllowance";
+        }
+
+        return "OK";
+
     }
 }

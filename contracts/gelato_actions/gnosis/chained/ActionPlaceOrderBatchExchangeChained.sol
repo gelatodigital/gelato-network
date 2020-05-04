@@ -1,22 +1,22 @@
 pragma solidity ^0.6.5;
 pragma experimental ABIEncoderV2;
 
-import { GelatoActionsStandard } from "../GelatoActionsStandard.sol";
-import { IGelatoAction } from "../IGelatoAction.sol";
-import { IERC20 } from "../../external/IERC20.sol";
-import { SafeERC20 } from "../../external/SafeERC20.sol";
-import { SafeMath } from "../../external/SafeMath.sol";
-import { IBatchExchange } from "../../dapp_interfaces/gnosis/IBatchExchange.sol";
-import { Task, IGelatoCore } from "../../gelato_core/interfaces/IGelatoCore.sol";
-import { FeeExtractor } from "../../gelato_helpers/FeeExtractor.sol";
+import { GelatoActionsStandard } from "../../GelatoActionsStandard.sol";
+import { IGelatoAction } from "../../IGelatoAction.sol";
+import { IERC20 } from "../../../external/IERC20.sol";
+import { SafeERC20 } from "../../../external/SafeERC20.sol";
+import { SafeMath } from "../../../external/SafeMath.sol";
+import { IBatchExchange } from "../../../dapp_interfaces/gnosis/IBatchExchange.sol";
+import { Task, IGelatoCore } from "../../../gelato_core/interfaces/IGelatoCore.sol";
+import { FeeExtractor } from "../../../gelato_helpers/FeeExtractor.sol";
 
 
 
-/// @title ActionPlaceOrderBatchExchange
+/// @title ActionPlaceOrderBatchExchangeChained
 /// @author Luis Schliesske & Hilmar Orth
 /// @notice Gelato action that 1) withdraws funds form user's  EOA, 2) deposits on Batch Exchange, 3) Places order on batch exchange and 4) requests future withdraw on batch exchange
 
-contract ActionPlaceOrderBatchExchange  {
+contract ActionPlaceOrderBatchExchangeChainedChained  {
 
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
@@ -45,18 +45,14 @@ contract ActionPlaceOrderBatchExchange  {
         address _buyToken,
         uint128 _sellAmount,
         uint128 _buyAmount,
-        uint32 _batchDuration
+        uint32 _batchDuration,
+        // Withdraw
+        address _gelatoCore,
+        Task memory _taskWithdraw
     )
         public
         virtual
     {
-        /*
-        - [ ] a) transferFrom an ERC20 from the proxies owner account to the proxy,
-        - [ ] b) calls ‘deposit’  token in EpochTokenLocker contract
-        - [ ] c) calls ‘placeOrder’ in BatchExchange contract, inputting valid until 3 auctions from current one
-        - [ ] d) calls ‘requestFutureWithdraw’ with batch id of the n + 3 and amount arbitrary high (higher than expected output) contract in EpochTokenLocker
-        - [ ] e) submits a task on gelato with condition = address(0) and action “withdraw()” in EpochTokenLocker contract
-        */
 
         // 1. Transfer sellToken to proxy
         IERC20 sellToken = IERC20(_sellToken);
@@ -101,6 +97,26 @@ contract ActionPlaceOrderBatchExchange  {
             revert("batchExchange.requestFutureWithdraw _buyToken failed");
         }
 
+        bytes memory placeOrderPayload = abi.encodeWithSelector(
+            this.action.selector,
+            _user,
+            _sellToken,
+            _buyToken,
+            _sellAmount,
+            _buyAmount,
+            _batchDuration,
+            // Withdraw
+            _gelatoCore,
+            _taskWithdraw
+        );
+
+        _taskWithdraw.actions[0].data = placeOrderPayload;
+
+        try IGelatoCore(_gelatoCore).submitTask(_taskWithdraw){}
+        catch{
+            revert("ActionPlaceOrderBatchExchangeChained.action: Failed to create chained Task");
+        }
+
     }
 
     // ======= ACTION CONDITIONS CHECK =========
@@ -111,8 +127,18 @@ contract ActionPlaceOrderBatchExchange  {
         virtual
         returns(string memory)  // actionCondition
     {
-        (address _user, address _sellToken, , uint128 _sellAmount, ,) = abi.decode(_actionData, (address, address, address, uint128, uint128, uint32));
-        return _actionProviderTermsCheck(_user, _userProxy, _sellToken, _sellAmount);
+        (
+            address _user,
+            address _sellToken,
+            address _buyToken,
+            uint128 _sellAmount,
+            ,
+            ,
+            // Withdraw
+            ,
+        ) = abi.decode(_actionData[4:], (address,address,address,uint128,uint128,uint32,address,Task));
+
+        return _actionProviderTermsCheck(_user, _userProxy, _sellToken, _buyToken, _sellAmount);
     }
 
     /// @notice Verify that EOA has sufficinet balance and gave proxy adequate allowance
@@ -121,7 +147,7 @@ contract ActionPlaceOrderBatchExchange  {
     /// @param _sellToken Token to sell on Batch Exchange
     /// @param _sellAmount Amount to sell
     function _actionProviderTermsCheck(
-        address _user, address _userProxy, address _sellToken, uint128 _sellAmount
+        address _user, address _userProxy, address _sellToken, address _buyToken, uint128 _sellAmount
     )
         internal
         view
@@ -131,17 +157,29 @@ contract ActionPlaceOrderBatchExchange  {
         IERC20 sendERC20 = IERC20(_sellToken);
         try sendERC20.balanceOf(_user) returns(uint256 sendERC20Balance) {
             if (sendERC20Balance < _sellAmount)
-                return "ActionPlaceOrderBatchExchange: NotOkUserSendTokenBalance";
+                return "ActionPlaceOrderBatchExchangeChained: NotOkUserSendTokenBalance";
         } catch {
-            return "ActionPlaceOrderBatchExchange: ErrorBalanceOf";
+            return "ActionPlaceOrderBatchExchangeChained: ErrorBalanceOf";
         }
         try sendERC20.allowance(_user, _userProxy)
             returns(uint256 userProxySendTokenAllowance)
         {
             if (userProxySendTokenAllowance < _sellAmount)
-                return "ActionPlaceOrderBatchExchange: NotOkUserProxySendTokenAllowance";
+                return "ActionPlaceOrderBatchExchangeChained: NotOkUserProxySendTokenAllowance";
         } catch {
-            return "ActionPlaceOrderBatchExchange: ErrorAllowance";
+            return "ActionPlaceOrderBatchExchangeChained: ErrorAllowance";
+        }
+
+        bool sellTokenWithdrawable = batchExchange.hasValidWithdrawRequest(_userProxy, _sellToken);
+
+        if (!sellTokenWithdrawable) {
+            return "ActionPlaceOrderBatchExchangeChained: Sell Token not withdrawable yet";
+        }
+
+        bool buyTokenWithdrawable = batchExchange.hasValidWithdrawRequest(_userProxy, _buyToken);
+
+        if (!buyTokenWithdrawable) {
+            return "ActionPlaceOrderBatchExchangeChained: Buy Token not withdrawable yet";
         }
 
         // STANDARD return string to signal actionConditions Ok

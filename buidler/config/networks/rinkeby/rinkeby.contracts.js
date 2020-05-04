@@ -20,6 +20,8 @@ export const contracts = [
   "ActionChainedRebalancePortfolioRinkeby",
   // Gnosis
   "ActionPlaceOrderBatchExchangeWithWithdraw",
+  "ActionWithdrawBatchExchangeChained",
+  "ActionPlaceOrderBatchExchangeChained",
 
   // === GelatoCore ===
   "GelatoCore",
@@ -33,7 +35,7 @@ export const contracts = [
   // Indices
   "ConditionFearGreedIndex",
   // Prices
-  "ConditionKyberRateRinkeby",
+  "ConditionKyberRate",
   // Time
   "ConditionTimestampPassed",
   // Gnosis

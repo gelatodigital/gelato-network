@@ -38,8 +38,6 @@ export default task("setupgelato-gnosissafeproxy")
           log: taskArgs.log,
         });
         taskArgs.condition = conditionInstance.address;
-      } else {
-        taskArgs.condition = constants.AddressZero;
       }
 
       // === GelatoCore setup ===
@@ -54,7 +52,7 @@ export default task("setupgelato-gnosissafeproxy")
         if (!tempArray.includes(action)) {
           let actionconstructorargs;
           if (action === "ActionWithdrawBatchExchange") {
-            const batchExchange = await run("bre-config", {
+            const batchExchangeAddress = await run("bre-config", {
               addressbookcategory: "gnosisProtocol",
               addressbookentry: "batchExchange",
             });
@@ -66,11 +64,7 @@ export default task("setupgelato-gnosissafeproxy")
             });
 
             // address _batchExchange, address _weth, address _gelatoProvider
-            actionconstructorargs = [
-              batchExchange,
-              gelatoProviderAddress,
-              feeExtractorAddress,
-            ];
+            actionconstructorargs = [batchExchangeAddress, feeExtractorAddress];
           }
           const deployedAction = await run("deploy", {
             contractname: action,
@@ -166,7 +160,7 @@ export default task("setupgelato-gnosissafeproxy")
       // Provider
       // Create TaskSpec condition, actions, gasPriceCeil
       const taskSpec = new TaskSpec({
-        conditions: [taskArgs.condition],
+        conditions: taskArgs.condition ? [taskArgs.condition] : undefined,
         actions: actionArray,
         gasPriceCeil: utils.parseUnits("20", "gwei"),
       });

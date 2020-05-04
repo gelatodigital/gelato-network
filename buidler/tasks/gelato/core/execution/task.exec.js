@@ -90,6 +90,13 @@ export default task(
             termsOkCheck: action[4],
           });
         }
+        const conditions = [];
+        for (const condition of taskreceipt[2][1]) {
+          conditions.push({
+            inst: condition[0],
+            data: condition[1],
+          });
+        }
 
         const taskReceipt = {
           id: taskreceipt[0],
@@ -99,12 +106,7 @@ export default task(
               addr: taskreceipt[2][0][0],
               module: taskreceipt[2][0][1],
             },
-            conditions: [
-              {
-                addr: taskreceipt[2][1][0],
-                data: taskreceipt[2][1][1],
-              },
-            ],
+            conditions: conditions,
             actions,
             expiryDate: taskreceipt[2][3],
           },
@@ -115,7 +117,7 @@ export default task(
           executeTx = await gelatoCore.exec(taskReceipt, {
             gasPrice: gelatoGasPrice,
             // gasLimit: gelatoMAXGAS,
-            gasLimit: 500000,
+            gasLimit: 1500000,
           });
         } catch (error) {
           console.error(`gelatoCore.exec() PRE-EXECUTION error\n`, error);

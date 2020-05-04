@@ -4,27 +4,22 @@ pragma experimental ABIEncoderV2;
 import { GelatoConditionsStandard } from "../GelatoConditionsStandard.sol";
 import { IERC20 } from "../../external/IERC20.sol";
 
-contract ConditionBalance is GelatoConditionsStandard {
+contract ConditionBalance is  GelatoConditionsStandard {
 
-    // STANDARD Interface
-    // Caution: use 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE for ETH token
-    function ok(bytes calldata _conditionData)
+     function ok(bytes calldata _conditionDataWithSelector)
         external
         view
         override
         virtual
-        returns(string memory)  // executable?, reason
+        returns(string memory)
     {
-        // Extract condition.ok() params from payload
-        (address account,
-         address token,
-         uint256 refBalance,
-         bool greaterElseSmaller) = abi.decode(
-             _conditionData[4:],
-             (address,address,uint256,bool)
-         );
-        return ok(account, token, refBalance, greaterElseSmaller);
+        (address _account, address _token, uint256 _refBalance, bool _greaterElseSmaller) = abi.decode(
+            _conditionDataWithSelector[4:],
+            (address,address,uint256,bool)
+        );
+        return ok(_account, _token, _refBalance, _greaterElseSmaller);
     }
+
 
     // Specific Implementation
     function ok(address _account, address _token, uint256 _refBalance, bool _greaterElseSmaller)

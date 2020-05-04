@@ -109,7 +109,9 @@ describe("GelatoCore - GelatoExecutors - Setters: FUNDS", function () {
   describe("GelatoCore.GelatoExecutors.unstakeExecutor", function () {
     it("Should allow Executors to unstake", async function () {
       // stakeExecutor
-      let tx = await gelatoCore.stakeExecutor({ value: minExecutorStake });
+      let tx = await gelatoCore
+        .connect(executor)
+        .stakeExecutor({ value: minExecutorStake });
       await tx.wait();
 
       // executorBalance
