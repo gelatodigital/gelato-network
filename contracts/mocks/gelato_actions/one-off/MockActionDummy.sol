@@ -1,7 +1,5 @@
 pragma solidity ^0.6.6;
 
-import "@nomiclabs/buidler/console.sol";
-
 import { GelatoActionsStandard } from "../../../gelato_actions/GelatoActionsStandard.sol";
 
 contract MockActionDummy is GelatoActionsStandard {

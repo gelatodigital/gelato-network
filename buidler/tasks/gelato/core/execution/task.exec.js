@@ -109,6 +109,7 @@ export default task(
             conditions: conditions,
             actions,
             expiryDate: taskreceipt[2][3],
+            autoSubmitNextTask: taskreceipt[2][4],
           },
         };
 
@@ -117,7 +118,7 @@ export default task(
           executeTx = await gelatoCore.exec(taskReceipt, {
             gasPrice: gelatoGasPrice,
             // gasLimit: gelatoMAXGAS,
-            gasLimit: 1500000,
+            gasLimit: 500000,
           });
         } catch (error) {
           console.error(`gelatoCore.exec() PRE-EXECUTION error\n`, error);

@@ -16,7 +16,7 @@ import { FeeExtractor } from "../../../gelato_helpers/FeeExtractor.sol";
 /// @author Luis Schliesske & Hilmar Orth
 /// @notice Gelato action that 1) withdraws funds form user's  EOA, 2) deposits on Batch Exchange, 3) Places order on batch exchange and 4) requests future withdraw on batch exchange
 
-contract ActionPlaceOrderBatchExchangeChainedChained  {
+contract ActionPlaceOrderBatchExchangeChained  {
 
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
@@ -25,11 +25,9 @@ contract ActionPlaceOrderBatchExchangeChainedChained  {
     uint32 public constant BATCH_TIME = 300;
 
     IBatchExchange private immutable batchExchange;
-    FeeExtractor public immutable feeExtractor;
 
-    constructor(address _batchExchange, address _feeExtractor) public {
+    constructor(address _batchExchange) public {
         batchExchange = IBatchExchange(_batchExchange);
-        feeExtractor = FeeExtractor(_feeExtractor);
     }
 
     /// @notice Place order on Batch Exchange and request future withdraw for buy and sell token
@@ -121,7 +119,7 @@ contract ActionPlaceOrderBatchExchangeChainedChained  {
 
     // ======= ACTION CONDITIONS CHECK =========
     // Overriding and extending GelatoActionsStandard's function (optional)
-    function termsOk(bytes calldata _actionData, address _userProxy)
+    function termsOk(address _userProxy, bytes calldata _actionData)
         external
         view
         virtual

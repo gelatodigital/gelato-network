@@ -25,11 +25,9 @@ contract ActionPlaceOrderBatchExchange  {
     uint32 public constant BATCH_TIME = 300;
 
     IBatchExchange private immutable batchExchange;
-    FeeExtractor public immutable feeExtractor;
 
-    constructor(address _batchExchange, address _feeExtractor) public {
+    constructor(address _batchExchange) public {
         batchExchange = IBatchExchange(_batchExchange);
-        feeExtractor = FeeExtractor(_feeExtractor);
     }
 
     /// @notice Place order on Batch Exchange and request future withdraw for buy and sell token
@@ -105,13 +103,18 @@ contract ActionPlaceOrderBatchExchange  {
 
     // ======= ACTION CONDITIONS CHECK =========
     // Overriding and extending GelatoActionsStandard's function (optional)
-    function termsOk(bytes calldata _actionData, address _userProxy)
+    function termsOk(address _userProxy, bytes calldata _actionData)
         external
         view
         virtual
         returns(string memory)  // actionCondition
     {
-        (address _user, address _sellToken, , uint128 _sellAmount, ,) = abi.decode(_actionData, (address, address, address, uint128, uint128, uint32));
+        (address _user,
+        address _sellToken,
+        ,
+        uint128 _sellAmount,
+        ,
+        ) = abi.decode(_actionData[4:], (address, address, address, uint128, uint128, uint32));
         return _actionProviderTermsCheck(_user, _userProxy, _sellToken, _sellAmount);
     }
 

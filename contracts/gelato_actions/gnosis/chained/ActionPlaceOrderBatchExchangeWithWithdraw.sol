@@ -122,7 +122,7 @@ contract ActionPlaceOrderBatchExchangeWithWithdraw  {
 
     // ======= ACTION CONDITIONS CHECK =========
     // Overriding and extending GelatoActionsStandard's function (optional)
-    function termsOk(bytes calldata _actionData, address _userProxy)
+    function termsOk(address _userProxy, bytes calldata _actionData)
         external
         view
         virtual
