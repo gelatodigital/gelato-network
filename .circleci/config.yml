@@ -24,13 +24,18 @@ jobs: # a collection of steps
           name: Compile
           command: npx buidler compile
       - run: # Buidlerevm RPC node
-          name: Spin up buidlerevm localhost RPC
-          command: npx buidler node
+          name: Spin up buidlerevm node on localhost RPC
+          # || true makes buidler node process return 0 when pkill node
+          command: npx buidler node || true
           # important: buidler node as background process
           background: true
       - run: # Tests
-          name: Tests on localhost for gas report
+          name: Tests and Gas Report on buidlerevm RPC
           command: yarn test
+      - run: # Shut down buidler node
+          name: Shut down buidlerevm node
+          command: pkill node
+          when: always
       - run: # Coverage
           name: yarn coverage
           command: yarn coverage
