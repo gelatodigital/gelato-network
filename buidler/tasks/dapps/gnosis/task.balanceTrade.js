@@ -46,7 +46,7 @@ export default task(
   .addOptionalParam(
     "seconds",
     "how many seconds between each order placement & withdrawRequest - default & min is 300 (1 batch) - must be divisible by 300",
-    "600",
+    "300",
     types.string
   )
   .addOptionalParam(
@@ -300,7 +300,7 @@ export default task(
     // Revert if task spec is not provided
     if (isProvided == 0) {
       // await gelatoCore.provideTaskSpecs([taskSpec]);
-      throw Error("Task Spec is not whitelisted by provider");
+      throw Error("Task Spec is not whitelisted by selected provider");
     } else console.log("already provided");
 
     // ############################################### Encode Submit Task on Gelato Core
