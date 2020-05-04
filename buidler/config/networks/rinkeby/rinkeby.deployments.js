@@ -35,6 +35,7 @@ export const deployments = {
   // ==== Conditions ====
   // == Balances ==
   ConditionBalance: "0x29712a389E06eC7C91016932c23FcB085AF241Fb",
+  ConditionBalanceStateful: "0x0A5Cb504e4684E8F730F582AB9b9AA671115e60C",
   // == Indices ==
   // fearAndGreed
   ConditionFearGreedIndex: "0x0",

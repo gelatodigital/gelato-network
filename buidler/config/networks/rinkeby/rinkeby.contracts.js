@@ -32,6 +32,7 @@ export const contracts = [
   // === Conditions ===
   // Balances
   "ConditionBalance",
+  "ConditionBalanceStateful",
   // Indices
   "ConditionFearGreedIndex",
   // Prices

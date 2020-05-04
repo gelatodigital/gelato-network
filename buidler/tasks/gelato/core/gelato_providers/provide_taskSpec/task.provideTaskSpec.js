@@ -34,12 +34,16 @@ export default task(
       // Action
       let actionAddresses = [];
       for (const action of taskArgs.actions) {
-        const actionAddress = await run("bre-config", {
-          contractname: action,
-          deployments: true,
-        });
-
-        actionAddresses.push(actionAddress);
+        try {
+          const actionAddress = await run("bre-config", {
+            contractname: action,
+            deployments: true,
+          });
+          actionAddresses.push(actionAddress);
+        } catch {
+          // We assume if we fail, that user inputted address directly
+          actionAddresses.push(action);
+        }
       }
 
       // addr, data, operation, value, termsOkCheck

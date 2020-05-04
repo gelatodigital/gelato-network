@@ -1,5 +1,6 @@
 import { task, types } from "@nomiclabs/buidler/config";
 import { constants, utils } from "ethers";
+import TaskSpec from "../../../../src/classes/gelato/TaskSpec";
 
 export default task(
   "gc-balancetradetwo",
@@ -71,7 +72,10 @@ export default task(
       .div(ethers.utils.bigNumberify("300"));
 
     // 1. Determine CPK proxy address of user (mnemoric index 0 by default)
-    const { [taskArgs.mnemonicIndex]: user } = await ethers.getSigners();
+    const {
+      [taskArgs.mnemonicIndex]: user,
+      [2]: provider,
+    } = await ethers.getSigners();
     const userAddress = await user.getAddress();
     const safeAddress = await run("gc-determineCpkProxyAddress", {
       useraddress: userAddress,
@@ -158,6 +162,7 @@ export default task(
     const gelatoCore = await run("instantiateContract", {
       contractname: "GelatoCore",
       write: true,
+      signer: provider,
     });
 
     if (safeDeployed) {
@@ -234,18 +239,15 @@ export default task(
 
     const conditionAddress = await run("bre-config", {
       deployments: true,
-      contractname: "ConditionBalance",
+      contractname: "ConditionBalanceStateful",
     });
 
-    // address _account, address _token, uint256 _refBalance, bool _greaterElseSmaller
-    const referenceBalance = ethers.utils
-      .bigNumberify(sellTokenBalance)
-      .add(ethers.utils.bigNumberify(taskArgs.increaseAmount));
+    // address _account, address _token, uint256 _refBalance, bool _greaterElseSmalle
 
     const conditionData = await run("abi-encode-withselector", {
-      contractname: "ConditionBalance",
+      contractname: "ConditionBalanceStateful",
       functionname: "ok",
-      inputs: [userAddress, taskArgs.sellToken, referenceBalance, true],
+      inputs: [safeAddress, userAddress, taskArgs.sellToken, true],
     });
 
     const condition = new Condition({
@@ -275,19 +277,56 @@ export default task(
     const placeOrderAction = new Action({
       addr: placeOrderBatchExchangeAddress,
       data: placeOrderBatchExchangeData,
-      operation: 1,
-      value: 0,
+      operation: Operation.Delegatecall,
       termsOkCheck: true,
+    });
+
+    const setConditionData = await run("abi-encode-withselector", {
+      contractname: "ConditionBalanceStateful",
+      functionname: "setRefBalance",
+      inputs: [taskArgs.increaseAmount, taskArgs.sellToken, userAddress, true],
+    });
+
+    const setConditionBalanceAction = new Action({
+      addr: conditionAddress,
+      data: setConditionData,
+      operation: Operation.Call,
+      termsOkCheck: false,
     });
 
     const placeOrderTask = new Task({
       provider: gelatoProvider,
       conditions: [condition],
-      actions: [placeOrderAction],
+      actions: [placeOrderAction, setConditionBalanceAction],
       expiryDate: constants.HashZero,
       autoSubmitNextTask: true,
     });
 
+    // ######### Check if Provider has whitelisted TaskSpec #########
+    // 1. Cast Task to TaskSpec
+    const taskSpec = new TaskSpec({
+      conditions: [condition.inst],
+      actions: [placeOrderAction, setConditionBalanceAction],
+      autoSubmitNextTask: true,
+      gasPriceCeil: 0, // Placeholder
+    });
+
+    // 2. Hash Task Spec
+    const taskSpecHash = await gelatoCore.hashTaskSpec(taskSpec);
+    console.log(taskSpecHash);
+
+    // Check if taskSpecHash's gasPriceCeil is != 0
+    const isProvided = await gelatoCore.taskSpecGasPriceCeil(
+      gelatoProvider.addr,
+      taskSpecHash
+    );
+
+    // Revert if task spec is not provided
+    if (isProvided == 0) {
+      console.log("Providing new taskSpec");
+      await gelatoCore.provideTaskSpecs([taskSpec]);
+      console.log("New task spec provided");
+    } else console.log("already provided");
     // ############################################### Real Place Order END
 
     // ############################################### Encode Submit Task on Gelato Core
@@ -298,10 +337,21 @@ export default task(
       inputs: [placeOrderTask],
     });
 
+    const setConditionMultiSend = ethers.utils.solidityPack(
+      ["uint8", "address", "uint256", "uint256", "bytes"],
+      [
+        Operation.Call, //operation => .Call
+        conditionAddress, //to
+        0, // value
+        ethers.utils.hexDataLength(setConditionData), // data length
+        setConditionData, // data
+      ]
+    );
+
     const submitTaskMultiSend = ethers.utils.solidityPack(
       ["uint8", "address", "uint256", "uint256", "bytes"],
       [
-        0, //operation => .Call
+        Operation.Call, //operation => .Call
         gelatoCore.address, //to
         0, // value
         ethers.utils.hexDataLength(submitTaskPayload), // data length
@@ -327,12 +377,18 @@ export default task(
     if (!gelatoIsWhitelisted) {
       encodedMultisendData = multiSend.interface.functions.multiSend.encode([
         ethers.utils.hexlify(
-          ethers.utils.concat([enableGelatoDataMultiSend, submitTaskMultiSend])
+          ethers.utils.concat([
+            enableGelatoDataMultiSend,
+            setConditionMultiSend,
+            submitTaskMultiSend,
+          ])
         ),
       ]);
     } else {
       encodedMultisendData = multiSend.interface.functions.multiSend.encode([
-        ethers.utils.hexlify(ethers.utils.concat([submitTaskMultiSend])),
+        ethers.utils.hexlify(
+          ethers.utils.concat([setConditionMultiSend, submitTaskMultiSend])
+        ),
       ]);
     }
 

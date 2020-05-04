@@ -7,7 +7,7 @@ class TaskSpec {
       );
     if (!actions || !Array.isArray(actions) || !actions.length)
       throw new Error("\nTaskSpec: actions must be non-empty Array\n");
-    if (!gasPriceCeil)
+    if (gasPriceCeil === undefined)
       throw new Error("\n TaskSpec: no gasPriceCeil passed to constructor \n ");
 
     if (autoSubmitNextTask && typeof autoSubmitNextTask !== "boolean") {
