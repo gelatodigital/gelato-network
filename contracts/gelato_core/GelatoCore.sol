@@ -21,6 +21,10 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     uint256 public override currentTaskReceiptId;
     // taskReceipt.id => taskReceiptHash
     mapping(uint256 => bytes32) public override taskReceiptHash;
+    // Task Cycle Ids
+    uint256 public override currentTaskCycleId;
+    // taskCycleId => cycled tasks
+    mapping(uint256 => Task[]) public taskCycle;
 
     // ================  SUBMIT ==============================================
     function canSubmitTask(address _userProxy, Task memory _task)
@@ -29,9 +33,18 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         override
         returns(string memory)
     {
+        address executor = executorByProvider[_task.provider.addr];
+
+        // Optional Task Cycle checks: special permissions for GelatoCore && executor
+        if (msg.sender != address(this) && msg.sender != executor) {
+            require(
+                _task.cycle.id == 0 && _task.cycle.index == 0,
+                "GelatoCore.canSubmitTask: _task.cycle.id and .index must be 0"
+            );
+        }
+
         // EXECUTOR CHECKS
-        if (!isExecutorMinStaked(executorByProvider[_task.provider.addr]))
-            return "GelatoCore.canSubmitTask: executor not minStaked";
+        if (!isExecutorMinStaked(executor)) return "GelatoCore.canSubmitTask: executorStake";
 
         // ExpiryDate
         else if (_task.expiryDate != 0)
@@ -49,18 +62,18 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         return OK;
     }
 
-    function submitTask(Task memory _task) public override { // submitTask
+    function submitTask(Task memory _task) public override {
         // canSubmit Gate
         string memory canSubmitRes = canSubmitTask(msg.sender, _task);
         require(canSubmitRes.startsWithOk(), canSubmitRes);
 
         // Increment TaskReceipt ID storage
-        uint256 nextTaskId = currentTaskReceiptId + 1;
-        currentTaskReceiptId = nextTaskId;
+        uint256 nextTaskReceiptId = currentTaskReceiptId + 1;
+        currentTaskReceiptId = nextTaskReceiptId;
 
         // Generate new Task Receipt
         TaskReceipt memory taskReceipt = TaskReceipt({
-            id: nextTaskId,
+            id: nextTaskReceiptId,
             userProxy: msg.sender, // Smart Contract Accounts ONLY
             task: _task
         });
@@ -76,6 +89,36 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
     function multiSubmitTasks(Task[] memory _tasks) public override {
         for (uint i; i < _tasks.length; i++) submitTask(_tasks[i]);
+    }
+
+    function submitTaskCycle(Task[] memory _tasks) public override {
+        // Increment CycleID storage
+        uint256 nextTaskCycleId = currentTaskCycleId + 1;
+        currentTaskCycleId = nextTaskCycleId;
+
+        // Assign CycleId and indices to all tasks of this cycle
+        for (uint256 index; index < _tasks.length; index++) {
+            _tasks[index].cycle.id = nextTaskCycleId;
+            _tasks[index].cycle.index = index;
+        }
+
+        // Store Task Cycle ("Copying struct memory[] to storage not yet supported")
+        Task[] storage _taskCycle = taskCycle[nextTaskCycleId];
+        for (uint i; i < _tasks.length; i++) {
+            _taskCycle[nextTaskCycleId].provider = _tasks[i].provider;
+            for (uint c; c < _tasks[i].conditions.length; c++)
+                _taskCycle[nextTaskCycleId].conditions[c] = _tasks[i].conditions[c];
+            for (uint a; a < _tasks[i].actions.length; a++)
+                _taskCycle[nextTaskCycleId].actions[a] = _tasks[i].actions[a];
+            _taskCycle[nextTaskCycleId].expiryDate = _tasks[i].expiryDate;
+            _taskCycle[nextTaskCycleId].autoResubmitSelf = _tasks[i].autoResubmitSelf;
+            _taskCycle[nextTaskCycleId].cycle = _tasks[i].cycle;
+        }
+
+        // Start Cycle: GelatoCore based task submission permissions => external call
+        this.submitTask(_tasks[0]);
+
+        emit LogTaskCycleSubmitted(nextTaskCycleId);
     }
 
     // ================  CAN EXECUTE EXECUTOR API ============================
@@ -136,11 +179,24 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             }
         }
 
-        // Optional chained Task Resubmission validation
-        if (_TR.task.autoSubmitNextTask) {
-            string memory canSubmitRes = canSubmitTask(_TR.userProxy, _TR.task);
-            if (!canSubmitRes.startsWithOk())
-                return string(abi.encodePacked("TaskCannotResubmitItself:", canSubmitRes));
+        // Optional chained Task auto-resubmit validation
+        if (_TR.task.autoResubmitSelf) {
+            string memory canResubmitSelf = canSubmitTask(_TR.userProxy, _TR.task);
+            if (!canResubmitSelf.startsWithOk())
+                return string(abi.encodePacked("CannotAutoResubmitSelf:", canResubmitSelf));
+        }
+
+        // Optional chained Task auto-submit validation
+        if (_TR.task.cycle.id != 0) {
+            uint256 nextTaskIndex;
+            if (_TR.task.cycle.index == _TR.task.cycle.length - 1) nextTaskIndex = 0;
+            else nextTaskIndex = _TR.task.cycle.index + 1;
+            string memory canSubmitNext = canSubmitTask(
+                _TR.userProxy,
+                taskCycle[_TR.task.cycle.id][nextTaskIndex]
+            );
+            if (!canSubmitNext.startsWithOk())
+                return string(abi.encodePacked("CannotAutoSubmitNextTask:", canSubmitNext));
         }
 
         // Executor Validation
@@ -305,15 +361,27 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         }
 
         // SUCCESS
-        // Optional: automated next Task Submission
-        if (_TR.task.autoSubmitNextTask) _submitNextTask(_TR);
+        // Optional: Automated Cyclic Task Resubmission
+        if (_TR.task.autoResubmitSelf) _submitNextTask(_TR, true);
+
+        // Optional: Automated Cyclic Task Submission
+        if (_TR.task.cycle.id != 0) _submitNextTask(_TR, false);
     }
 
-    function _submitNextTask(TaskReceipt memory _TR) private {
+    function _submitNextTask(TaskReceipt memory _TR, bool _resubmitSelf) private {
         // Increment TaskReceipt.id in storage ...
         currentTaskReceiptId++;
         // ... and sync with memory TaskReceipt to reflect new Receipt
         _TR.id++;
+
+        // If we submit a new Task, we overwrite the current task field.
+        // We won't reset the _TR.task field, if overwritten. Not needed in cont. exec flow.
+        if (!_resubmitSelf) {
+            uint256 nextTaskIndex;
+            if (_TR.task.cycle.index == _TR.task.cycle.length - 1) nextTaskIndex = 0;
+            else nextTaskIndex = _TR.task.cycle.index + 1;
+            _TR.task = taskCycle[_TR.task.cycle.id][nextTaskIndex];
+        }
 
         // Hash new TaskReceipt
         bytes32 hashedTaskReceipt = hashTaskReceipt(_TR);

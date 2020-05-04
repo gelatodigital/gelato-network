@@ -116,7 +116,6 @@ describe("Gelato Actions - CHAINED TASKS - GelatoUserProxy", function () {
     // TaskSpec
     const taskSpec = new TaskSpec({
       actions: [actionDummyStruct],
-      autoSubmitNextTask: true,
       gasPriceCeil: utils.parseUnits("20", "gwei"),
     });
 
@@ -141,7 +140,7 @@ describe("Gelato Actions - CHAINED TASKS - GelatoUserProxy", function () {
     chainedTask = new Task({
       provider: gelatoProvider,
       actions: [actionDummyStruct],
-      autoSubmitNextTask: true,
+      autoResubmitSelf: true,
     });
   });
 

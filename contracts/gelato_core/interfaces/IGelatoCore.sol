@@ -24,12 +24,15 @@ struct Action {
     bool termsOkCheck;
 }
 
+struct Cycle { uint256 id; uint256 index; uint256 length; }
+
 struct Task {
     Provider provider;
     Condition[] conditions;  // optional
     Action[] actions;
     uint256 expiryDate;  // 0 == infinity.
-    bool autoSubmitNextTask;  // optional for infinite automation
+    bool autoResubmitSelf;
+    Cycle cycle;  // optional but must be empty: auto-filled by GelatoCore.submitTaskCycle
 }
 
 struct TaskReceipt {
@@ -44,6 +47,8 @@ interface IGelatoCore {
         bytes32 indexed taskReceiptHash,
         TaskReceipt taskReceipt
     );
+
+    event LogTaskCycleSubmitted(uint256 indexed cycleId);
 
     event LogExecSuccess(
         address indexed executor,
@@ -65,6 +70,10 @@ interface IGelatoCore {
 
     event LogTaskCancelled(uint256 indexed taskReceiptId);
 
+    /// @notice API to query whether Task can be submitted successfully.
+    /// @dev In submitTask the msg.sender must be the same as _userProxy here.
+    /// @param _userProxy The userProxy from which the task will be submitted.
+    /// @param _task Selected provider, conditions, actions, expiry date of the task
     function canSubmitTask(address _userProxy, Task calldata _task)
         external
         view
@@ -75,11 +84,15 @@ interface IGelatoCore {
     /// @param _task Selected provider, conditions, actions, expiry date of the task
     function submitTask(Task calldata _task) external;
 
-    /// @notice Submit a gelato task that will be executed under the specified conditions
+    /// @notice Submit gelato tasks that will be executed under the specified conditions
     /// @dev This function must be called from a contract account provided by Provider
     /// @param _tasks Selected provider, conditions, actions, expiry date of the task
     function multiSubmitTasks(Task[] calldata _tasks) external;
 
+    /// @notice Submit a list of tasks that form an infine cycle of task auto submissions.
+    /// @dev This function must be called from a contract account provided by Provider
+    /// @param _tasks Selected provider, conditions, actions, expiry date of the tasks
+    function submitTaskCycle(Task[] calldata _tasks) external;
 
     // ================  Exec Suite =========================
     /// @notice Off-chain API for executors to check, if a TaskReceipt is executable
@@ -119,11 +132,19 @@ interface IGelatoCore {
     // ================  Getters =========================
     /// @notice Returns the taskReceiptId of the last TaskReceipt submitted
     /// @return currentId currentId, last TaskReceiptId submitted
-    function currentTaskReceiptId() external view returns(uint256 currentId);
+    function currentTaskReceiptId() external view returns(uint256);
+
+    /// @notice Returns the taskCycleId of the last Task Cycle submitted
+    /// @return The last used taskCycleId
+    function currentTaskCycleId() external view returns(uint256);
+
+    /// @notice Returns the array of cyclic Tasks with _taskCycleId.
+    /// @param _taskCycleId The unique id the task cycle was stored under by GelatoCore.
+    /// @return The sequence of Tasks in the Cycle with id _taskCycleId
+    // function taskCycle(uint256 _taskCycleId) external view returns(Task[] memory);
 
     /// @notice Returns computed taskReceipt hash, used to check for taskReceipt validity
     /// @param _taskReceiptId Id of taskReceipt emitted in submission event
     /// @return hash of taskReceipt
     function taskReceiptHash(uint256 _taskReceiptId) external view returns(bytes32);
-
 }
