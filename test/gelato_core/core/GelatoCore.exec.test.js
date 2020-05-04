@@ -1073,7 +1073,7 @@ describe("GelatoCore.exec", function () {
       );
 
       // Get a promise for your call
-      if (network.name === "buidlerevm")
+      if (network.name === "buidlerevm" || network.name === "localhost")
         await ethers.provider.send("evm_increaseTime", [lifespan]);
 
       if (network.name === "coverage")
