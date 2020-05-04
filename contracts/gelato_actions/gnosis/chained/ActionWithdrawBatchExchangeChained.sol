@@ -11,18 +11,18 @@ import { Task, Provider, IGelatoCore, Condition, Action } from "../../../gelato_
 import { FeeExtractor } from "../../../gelato_helpers/FeeExtractor.sol";
 import {IGelatoProviderModule} from "../../../gelato_core/interfaces/IGelatoProviderModule.sol";
 import {IGelatoCondition} from "../../../gelato_conditions/IGelatoCondition.sol";
-import {ActionPlaceOrderBatchExchangeWithWithdraw} from "./ActionPlaceOrderBatchExchangeWithWithdraw.sol";
+import {ActionPlaceOrderBatchExchangePayFee} from "./ActionPlaceOrderBatchExchangePayFee.sol";
 
 
 /// @title ActionWithdrawBatchExchangeChained
 /// @author Luis Schliesske & Hilmar Orth
 /// @notice Gelato action that 1) withdraws funds from Batch Exchange and 2) sends funds back to users EOA (minus fee)
-contract ActionWithdrawBatchExchangeChained is ActionPlaceOrderBatchExchangeWithWithdraw {
+contract ActionWithdrawBatchExchangeChained is ActionPlaceOrderBatchExchangePayFee {
 
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
-    constructor(address _batchExchange, address _feeExtractor) ActionPlaceOrderBatchExchangeWithWithdraw(
+    constructor(address _batchExchange, address _feeExtractor) ActionPlaceOrderBatchExchangePayFee(
         _batchExchange,
         _feeExtractor
     ) public {}
@@ -96,10 +96,7 @@ contract ActionWithdrawBatchExchangeChained is ActionPlaceOrderBatchExchangeWith
             _buyToken,
             _sellAmount,
             _buyAmount,
-            _batchDuration,
-            // Withdraw
-            _gelatoCore,
-            _taskWithdraw
+            _batchDuration
         );
 
     }

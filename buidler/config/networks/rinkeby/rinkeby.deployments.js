@@ -19,8 +19,8 @@ export const deployments = {
   // Portfolio Mgmt
   ActionChainedRebalancePortfolioRinkeby: "0x0",
   // gnosis
-  ActionPlaceOrderBatchExchangeWithWithdraw:
-    "0xd6a4f5CDfA6B38404D1747fC53f85C957910E576",
+  ActionPlaceOrderBatchExchangePayFee:
+    "0xA66Dc4AacF4D23118ce148474d349b75a6A4E3C8",
   ActionWithdrawBatchExchangeChained:
     "0x407E41940DDcEB42F3cC73d3A446CF39012334Db",
   ActionPlaceOrderBatchExchangeChained:

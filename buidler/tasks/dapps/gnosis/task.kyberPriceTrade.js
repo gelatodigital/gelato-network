@@ -53,7 +53,10 @@ export default task(
       .div(ethers.utils.bigNumberify("300"));
 
     // 1. Determine CPK proxy address of user (mnemoric index 0 by default)
-    const { [taskArgs.mnemonicIndex]: user } = await ethers.getSigners();
+    const {
+      [taskArgs.mnemonicIndex]: user,
+      [2]: provider,
+    } = await ethers.getSigners();
     const userAddress = await user.getAddress();
     const safeAddress = await run("gc-determineCpkProxyAddress", {
       useraddress: userAddress,
@@ -137,6 +140,7 @@ export default task(
     const gelatoCore = await run("instantiateContract", {
       contractname: "GelatoCore",
       write: true,
+      signer: provider,
     });
 
     if (safeDeployed) {
@@ -291,19 +295,39 @@ export default task(
       expiryDate: constants.HashZero,
     });
 
+    // ######### Check if Provider has whitelisted TaskSpec #########
+    // 1. Cast Task to TaskSpec
+    const taskSpec1 = new TaskSpec({
+      actions: [actionWithdrawBatchExchange],
+      autoSubmitNextTask: false,
+      gasPriceCeil: 0, // Placeholder
+    });
+
+    // 2. Hash Task Spec
+    const taskSpecHash1 = await gelatoCore.hashTaskSpec(taskSpec1);
+
+    // Check if taskSpecHash's gasPriceCeil is != 0
+    const isProvided1 = await gelatoCore.taskSpecGasPriceCeil(
+      gelatoProvider.addr,
+      taskSpecHash1
+    );
+
+    // Revert if task spec is not provided
+    if (isProvided1 == 0) {
+      // await gelatoCore.provideTaskSpecs([taskSpec1]);
+      throw Error("Task Spec 1 is not whitelisted by provider");
+    } else console.log("already provided");
+
     // ############################################### Place Order
 
     // Get Sell on batch exchange calldata
-    const actionPlaceOrderBatchExchangeChainedAddress = await run(
-      "bre-config",
-      {
-        deployments: true,
-        contractname: "ActionPlaceOrderBatchExchangeWithWithdraw",
-      }
-    );
+    const actionPlaceOrderBatchExchangePayFeeAddress = await run("bre-config", {
+      deployments: true,
+      contractname: "ActionPlaceOrderBatchExchangePayFee",
+    });
 
     const placeOrderBatchExchangeData = await run("abi-encode-withselector", {
-      contractname: "ActionPlaceOrderBatchExchangeWithWithdraw",
+      contractname: "ActionPlaceOrderBatchExchangePayFee",
       functionname: "action",
       inputs: [
         userAddress,
@@ -312,26 +336,61 @@ export default task(
         taskArgs.sellAmount,
         1, //buyAmount => market order
         batchDuration,
-        gelatoCore.address,
-        taskWithdrawBatchExchange,
       ],
     });
 
     const realPlaceOrderAction = new Action({
-      addr: actionPlaceOrderBatchExchangeChainedAddress,
+      addr: actionPlaceOrderBatchExchangePayFeeAddress,
       data: placeOrderBatchExchangeData,
       operation: 1,
       value: 0,
       termsOkCheck: true,
     });
 
-    const realPlaceOrderTask = new Task({
+    const submitWithTaskData = await run("abi-encode-withselector", {
+      contractname: "GelatoCore",
+      functionname: "submitTask",
+      inputs: [taskWithdrawBatchExchange],
+    });
+
+    const submitTaskAction = new Action({
+      addr: gelatoCore.address,
+      data: submitWithTaskData,
+      operation: Operation.Call,
+      value: 0,
+      termsOkCheck: false,
+    });
+
+    const placeOrderAndSubmitWithdrawTask = new Task({
       provider: gelatoProvider,
       conditions: [condition],
-      actions: [realPlaceOrderAction],
+      actions: [realPlaceOrderAction, submitTaskAction],
       expiryDate: constants.HashZero,
     });
 
+    // ######### Check if Provider has whitelisted TaskSpec #########
+    // 1. Cast Task to TaskSpec
+    const taskSpec2 = new TaskSpec({
+      conditions: [condition.inst],
+      actions: [realPlaceOrderAction, submitTaskAction],
+      autoSubmitNextTask: false,
+      gasPriceCeil: 0, // Placeholder
+    });
+
+    // 2. Hash Task Spec
+    const taskSpecHash2 = await gelatoCore.hashTaskSpec(taskSpec2);
+
+    // Check if taskSpecHash's gasPriceCeil is != 0
+    const isProvided2 = await gelatoCore.taskSpecGasPriceCeil(
+      gelatoProvider.addr,
+      taskSpecHash2
+    );
+
+    // Revert if task spec is not provided
+    if (isProvided2 == 0) {
+      // await gelatoCore.provideTaskSpecs([taskSpec2]);
+      throw Error("Task Spec 2 is not whitelisted by provider");
+    } else console.log("already provided");
     // ############################################### Reak Place Order END
 
     // ############################################### Encode Submit Task on Gelato Core
@@ -339,13 +398,13 @@ export default task(
     const submitTaskPayload = await run("abi-encode-withselector", {
       contractname: "GelatoCore",
       functionname: "submitTask",
-      inputs: [realPlaceOrderTask],
+      inputs: [placeOrderAndSubmitWithdrawTask],
     });
 
     const submitTaskMultiSend = ethers.utils.solidityPack(
       ["uint8", "address", "uint256", "uint256", "bytes"],
       [
-        0, //operation => .Call
+        Operation.Call, //operation => .Call
         gelatoCore.address, //to
         0, // value
         ethers.utils.hexDataLength(submitTaskPayload), // data length

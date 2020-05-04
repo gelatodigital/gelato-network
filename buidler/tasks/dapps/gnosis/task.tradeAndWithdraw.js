@@ -1,9 +1,9 @@
 import { task, types } from "@nomiclabs/buidler/config";
-import { defaultNetwork } from "../../../../../buidler.config";
+import { defaultNetwork } from "../../../../buidler.config";
 import { constants, utils } from "ethers";
 
 export default task(
-  "gc-createCpkProxyAndSellOnBatchExchange",
+  "gc-tradeandwithdraw",
   `Creates Cpk proxy for user, sells on batch exchange and tasks a gelato bot to withdraw the funds later and send them back to the users EOA on ${defaultNetwork})`
 )
   .addOptionalParam(
@@ -33,9 +33,9 @@ export default task(
     "5000000000000000"
   )
   .addOptionalParam(
-    "batchDuration",
-    "Batch Exchange Batch duration after which which the funds will be automatically withdrawn (e.g. 1 after one batch",
-    "1",
+    "seconds",
+    "how many seconds between each trade - default & min is 300 (1 batch) - must be divisible by 300",
+    "300",
     types.string
   )
   .addOptionalParam(
@@ -50,8 +50,20 @@ export default task(
   )
   .addFlag("log", "Logs return values to stdout")
   .setAction(async (taskArgs) => {
+    if (parseInt(taskArgs.seconds) % 300 !== 0)
+      throw new Error(
+        `Passed seconds must be divisible by 300 seconds (duration of one batch)`
+      );
+
+    // Batch Exchange Batch duration after which which the funds will be automatically withdrawn (e.g. 1 after one batch
+    const batchDuration = ethers.utils
+      .bigNumberify(taskArgs.seconds)
+      .div(ethers.utils.bigNumberify("300"));
     // 1. Determine CPK proxy address of user (mnemoric index 0 by default)
-    const { [taskArgs.mnemonicindex]: user } = await ethers.getSigners();
+    const {
+      [taskArgs.mnemonicindex]: user,
+      [2]: provider,
+    } = await ethers.getSigners();
     const userAddress = await user.getAddress();
     const safeAddress = await run("gc-determineCpkProxyAddress", {
       useraddress: userAddress,
@@ -131,6 +143,7 @@ export default task(
     const gelatoCore = await run("instantiateContract", {
       contractname: "GelatoCore",
       write: true,
+      signer: provider,
     });
 
     // Check if gelato core is a whitelisted module
@@ -186,7 +199,7 @@ export default task(
 
     // Batch when we will withdraw the funds
     const withdrawBatch = currentBatchIdBN.add(
-      ethers.utils.bigNumberify(taskArgs.batchDuration)
+      ethers.utils.bigNumberify(batchDuration)
     );
 
     if (taskArgs.log)
@@ -227,15 +240,40 @@ export default task(
       termsOkCheck: true,
     });
 
-    const taskWithdrawBatchExchange = new Task({
+    const withdrawTask = new Task({
       provider: gelatoProvider,
       actions: [actionWithdrawBatchExchange],
       expiryDate: constants.HashZero,
+      autoSubmitNextTask: false,
     });
+
+    // ######### Check if Provider has whitelisted TaskSpec #########
+    // 1. Cast Task to TaskSpec
+    const taskSpec = new TaskSpec({
+      actions: [actionWithdrawBatchExchange],
+      autoSubmitNextTask: false,
+      gasPriceCeil: 0, // Placeholder
+    });
+
+    // 2. Hash Task Spec
+    const taskSpecHash = await gelatoCore.hashTaskSpec(taskSpec);
+
+    // Check if taskSpecHash's gasPriceCeil is != 0
+    const isProvided = await gelatoCore.taskSpecGasPriceCeil(
+      gelatoProvider.addr,
+      taskSpecHash
+    );
+
+    // Revert if task spec is not provided
+    if (isProvided == 0) {
+      // await gelatoCore.provideTaskSpecs([taskSpec]);
+      throw Error("Task Spec is not whitelisted by provider");
+    } else console.log("already provided");
+    // ############################################### Real Place Order END
 
     // Get Sell on batch exchange calldata
     const placeOrderBatchExchangeData = await run("abi-encode-withselector", {
-      contractname: "ActionPlaceOrderBatchExchangeWithWithdraw",
+      contractname: "ActionPlaceOrderBatchExchangePayFee",
       functionname: "action",
       inputs: [
         userAddress,
@@ -243,27 +281,41 @@ export default task(
         taskArgs.buyToken,
         taskArgs.sellAmount,
         taskArgs.buyAmount,
-        taskArgs.batchDuration,
-        // Withdraw action inputs
-        gelatoCore.address,
-        taskWithdrawBatchExchange,
+        batchDuration,
       ],
     });
 
     // encode for Multi send
-    const actionPlaceOrderBatchExchangeWithWithdraw = await run("bre-config", {
+    const actionPlaceOrderBatchExchange = await run("bre-config", {
       deployments: true,
-      contractname: "ActionPlaceOrderBatchExchangeWithWithdraw",
+      contractname: "ActionPlaceOrderBatchExchangePayFee",
     });
 
     const placeOrderBatchExchangeDataMultiSend = ethers.utils.solidityPack(
       ["uint8", "address", "uint256", "uint256", "bytes"],
       [
         1, //operation
-        actionPlaceOrderBatchExchangeWithWithdraw, //to
+        actionPlaceOrderBatchExchange, //to
         0, // value
         ethers.utils.hexDataLength(placeOrderBatchExchangeData), // data length
         placeOrderBatchExchangeData, // data
+      ]
+    );
+
+    const submitTaskPayload = await run("abi-encode-withselector", {
+      contractname: "GelatoCore",
+      functionname: "submitTask",
+      inputs: [withdrawTask],
+    });
+
+    const submitTaskMultiSend = ethers.utils.solidityPack(
+      ["uint8", "address", "uint256", "uint256", "bytes"],
+      [
+        Operation.Call, //operation => .Call
+        gelatoCore.address, //to
+        0, // value
+        ethers.utils.hexDataLength(submitTaskPayload), // data length
+        submitTaskPayload, // data
       ]
     );
 
@@ -288,13 +340,17 @@ export default task(
           ethers.utils.concat([
             enableGelatoDataMultiSend,
             placeOrderBatchExchangeDataMultiSend,
+            submitTaskMultiSend,
           ])
         ),
       ]);
     } else {
       encodedMultisendData = multiSend.interface.functions.multiSend.encode([
         ethers.utils.hexlify(
-          ethers.utils.concat([placeOrderBatchExchangeDataMultiSend])
+          ethers.utils.concat([
+            placeOrderBatchExchangeDataMultiSend,
+            submitTaskMultiSend,
+          ])
         ),
       ]);
     }

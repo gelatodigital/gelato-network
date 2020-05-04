@@ -64,7 +64,10 @@ export default task(
       .div(ethers.utils.bigNumberify("300"));
 
     // 1. Determine CPK proxy address of user (mnemoric index 0 by default)
-    const { [taskArgs.mnemonicIndex]: user } = await ethers.getSigners();
+    const {
+      [taskArgs.mnemonicIndex]: user,
+      [2]: provider,
+    } = await ethers.getSigners();
     const userAddress = await user.getAddress();
     const safeAddress = await run("gc-determineCpkProxyAddress", {
       useraddress: userAddress,
@@ -151,6 +154,7 @@ export default task(
     const gelatoCore = await run("instantiateContract", {
       contractname: "GelatoCore",
       write: true,
+      signer: provider,
     });
 
     if (safeDeployed) {
@@ -275,6 +279,30 @@ export default task(
       expiryDate: constants.HashZero,
       autoSubmitNextTask: true,
     });
+
+    // ######### Check if Provider has whitelisted TaskSpec #########
+    // 1. Cast Task to TaskSpec
+    const taskSpec = new TaskSpec({
+      conditions: [condition.inst],
+      actions: [placeOrderAction],
+      autoSubmitNextTask: true,
+      gasPriceCeil: 0, // Placeholder
+    });
+
+    // 2. Hash Task Spec
+    const taskSpecHash = await gelatoCore.hashTaskSpec(taskSpec);
+
+    // Check if taskSpecHash's gasPriceCeil is != 0
+    const isProvided = await gelatoCore.taskSpecGasPriceCeil(
+      gelatoProvider.addr,
+      taskSpecHash
+    );
+
+    // Revert if task spec is not provided
+    if (isProvided == 0) {
+      // await gelatoCore.provideTaskSpecs([taskSpec]);
+      throw Error("Task Spec is not whitelisted by provider");
+    } else console.log("already provided");
 
     // encode for Multi send
     const placeOrderBatchExchangeDataMultiSend = ethers.utils.solidityPack(

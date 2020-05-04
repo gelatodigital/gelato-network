@@ -19,7 +19,7 @@ export const contracts = [
   // Portfolio Mgmt
   "ActionChainedRebalancePortfolioRinkeby",
   // Gnosis
-  "ActionPlaceOrderBatchExchangeWithWithdraw",
+  "ActionPlaceOrderBatchExchangePayFee",
   "ActionWithdrawBatchExchangeChained",
   "ActionPlaceOrderBatchExchangeChained",
 

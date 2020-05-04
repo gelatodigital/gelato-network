@@ -290,7 +290,6 @@ export default task(
 
     // 2. Hash Task Spec
     const taskSpecHash = await gelatoCore.hashTaskSpec(taskSpec);
-    console.log(taskSpecHash);
 
     // Check if taskSpecHash's gasPriceCeil is != 0
     const isProvided = await gelatoCore.taskSpecGasPriceCeil(
@@ -300,12 +299,9 @@ export default task(
 
     // Revert if task spec is not provided
     if (isProvided == 0) {
-      console.log("Providing new taskSpec");
       // await gelatoCore.provideTaskSpecs([taskSpec]);
-      console.log("New task spec provided");
       throw Error("Task Spec is not whitelisted by provider");
     } else console.log("already provided");
-    // ############################################### Real Place Order END
 
     // ############################################### Encode Submit Task on Gelato Core
 
