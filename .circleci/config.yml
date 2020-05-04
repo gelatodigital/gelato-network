@@ -31,7 +31,7 @@ jobs: # a collection of steps
           background: true
       - run: # Tests
           name: Tests and Gas Report on buidlerevm RPC
-          command: yarn test
+          command: yarn test-gas
       - run: # Shut down buidler node
           name: Shut down buidlerevm node
           command: pkill node
