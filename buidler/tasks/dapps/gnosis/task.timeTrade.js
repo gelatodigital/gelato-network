@@ -160,7 +160,6 @@ export default task(
         }
       }
     }
-
     if (taskArgs.log)
       console.log(`Is gelato an enabled module? ${gelatoIsWhitelisted}`);
 
