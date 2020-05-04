@@ -4,7 +4,7 @@ import { expect } from "chai";
 
 import initialState from "./GelatoProviders.initialState";
 
-describe("GelatoCore - GelatoProviders - Setters: BATCH PROVIDE", function () {
+describe("GelatoCore - GelatoProviders - Setters: MULTI PROVIDE", function () {
   // We define the ContractFactory and Address variables here and assign them in
   // a beforeEach hook.
   let GelatoCore;

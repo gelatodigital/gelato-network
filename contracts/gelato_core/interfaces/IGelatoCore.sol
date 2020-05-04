@@ -40,7 +40,6 @@ struct TaskReceipt {
 
 interface IGelatoCore {
     event LogTaskSubmitted(
-        address indexed executor,
         uint256 indexed taskReceiptId,
         bytes32 indexed taskReceiptHash,
         TaskReceipt taskReceipt
@@ -66,7 +65,7 @@ interface IGelatoCore {
 
     event LogTaskCancelled(uint256 indexed taskReceiptId);
 
-    function canSubmitTask(address _executor, address _userProxy, Task calldata _task)
+    function canSubmitTask(address _userProxy, Task calldata _task)
         external
         view
         returns(string memory);
@@ -85,18 +84,12 @@ interface IGelatoCore {
     // ================  Exec Suite =========================
     /// @notice Off-chain API for executors to check, if a TaskReceipt is executable
     /// @dev GelatoCore checks this during execution, in order to safeguard the Conditions
-    /// @param _executor The executor. GelatoCore passes this for auto-submissions.
     /// @param _TR TaskReceipt, consisting of user task, user proxy address and id
     /// @param _gelatoMaxGas If  this is used by an Executor and a revert happens,
     ///  the Executor gets a refund from the Provider and the TaskReceipt is annulated.
     /// @param _execTxGasPrice Must be used by Executors. Gas Price fed by gelatoCore's
     ///  Gas Price Oracle. Executors can query the current gelatoGasPrice from events.
-    function canExec(
-        address _executor,
-        TaskReceipt calldata _TR,
-        uint256 _gelatoMaxGas,
-        uint256 _execTxGasPrice
-    )
+    function canExec(TaskReceipt calldata _TR, uint256 _gelatoMaxGas, uint256 _execTxGasPrice)
         external
         view
         returns(string memory);
