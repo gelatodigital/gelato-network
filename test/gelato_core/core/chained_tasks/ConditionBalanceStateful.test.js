@@ -3,14 +3,14 @@
 const { expect } = require("chai");
 const { run, ethers } = require("@nomiclabs/buidler");
 
-import initialStateSysAdmin from "../gelato_core/base/gelato_sys_admin/GelatoSysAdmin.initialState";
-import initialStateGasPriceOracle from "../gelato_core/base/gelato_gas_price_oracle/GelatoGasPriceOracle.initialState";
+import initialStateSysAdmin from "../../base/gelato_sys_admin/GelatoSysAdmin.initialState";
+import initialStateGasPriceOracle from "../../base/gelato_gas_price_oracle/GelatoGasPriceOracle.initialState";
 import { constants } from "ethers";
 
 const GELATO_MAX_GAS = initialStateSysAdmin.gelatoMaxGas;
 const GELATO_GAS_PRICE = initialStateGasPriceOracle.gasPrice;
 
-describe("Balanced based Condition integration test with 10x auto execution", function () {
+describe("Condition Balance Stateful: Balanced based Condition integration test with 10x auto executions", function () {
   // We define the ContractFactory and Signer variables here and assign them in
   // a beforeEach hook.
   let seller;
@@ -23,15 +23,10 @@ describe("Balanced based Condition integration test with 10x auto execution", fu
   let executorAddress;
   let sysAdminAddress;
   let userProxyAddress;
-  let tx;
-  let txResponse;
   let providerModuleGelatoUserProxy;
   let gelatoCore;
-  let taskReceipt;
   let gelatoGasPriceOracle;
   let gelatoProvider;
-  let condition;
-  let action;
   let newTaskSpec;
   let MockERC20;
   let sellToken;
@@ -255,7 +250,7 @@ describe("Balanced based Condition integration test with 10x auto execution", fu
 
     let canExecReturn = await gelatoCore
       .connect(executor)
-      .canExec(executorAddress, taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE);
+      .canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE);
 
     expect(canExecReturn).to.equal(
       "ConditionNotOk:NotOkERC20BalanceIsNotGreaterThanRefBalance"
@@ -265,7 +260,7 @@ describe("Balanced based Condition integration test with 10x auto execution", fu
 
     canExecReturn = await gelatoCore
       .connect(executor)
-      .canExec(executorAddress, taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE);
+      .canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE);
 
     expect(canExecReturn).to.equal("OK");
 
@@ -284,12 +279,7 @@ describe("Balanced based Condition integration test with 10x auto execution", fu
 
       canExecReturn = await gelatoCore
         .connect(executor)
-        .canExec(
-          executorAddress,
-          taskReceipt,
-          GELATO_MAX_GAS,
-          GELATO_GAS_PRICE
-        );
+        .canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE);
 
       expect(canExecReturn).to.equal(
         "ConditionNotOk:NotOkERC20BalanceIsNotGreaterThanRefBalance"
@@ -299,12 +289,7 @@ describe("Balanced based Condition integration test with 10x auto execution", fu
 
       canExecReturn = await gelatoCore
         .connect(executor)
-        .canExec(
-          executorAddress,
-          taskReceipt,
-          GELATO_MAX_GAS,
-          GELATO_GAS_PRICE
-        );
+        .canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE);
 
       expect(canExecReturn).to.equal("OK");
 

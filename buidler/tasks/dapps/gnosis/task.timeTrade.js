@@ -105,27 +105,18 @@ export default task(
 
     // Check if user has sufficient balance (sell Amount plus required Fee)
     const sellTokenBalance = await sellToken.balanceOf(userAddress);
-    const totalSellAmountMinusFee = ethers.utils
-      .bigNumberify(taskArgs.sellAmount)
-      .sub(requiredFee);
+
     if (sellTokenBalance.lte(ethers.utils.bigNumberify(taskArgs.sellAmount)))
       throw new Error("Insufficient sellToken to conduct enter stableswap");
-
-    if (ethers.utils.bigNumberify(taskArgs.sellAmount).lte(requiredFee))
-      throw new Error("Sell Amount must be greater than fees");
-
-    if (taskArgs.log)
-      console.log(`
-          Approve gnosis safe to move ${taskArgs.sellAmount} of token: ${taskArgs.sellToken}\n
-          Inputted Sell Volume:              ${taskArgs.sellAmount}\n
-          Fee for automated withdrawal:    - ${requiredFee}\n
-          ------------------------------------------------------------\n
-          Amount that will be sold:        = ${totalSellAmountMinusFee}
-          `);
 
     const totalSellAmount = ethers.utils
       .bigNumberify(taskArgs.sellAmount)
       .mul(ethers.utils.bigNumberify(taskArgs.frequency));
+
+    if (taskArgs.log)
+      console.log(`
+          Approve gnosis safe to move ${totalSellAmount} of token: ${taskArgs.sellToken}\n`);
+
     await sellToken.approve(safeAddress, totalSellAmount);
 
     let safeDeployed = false;
@@ -139,7 +130,7 @@ export default task(
         signer: user,
       });
       // Do a test call to see if contract exist
-      const name = await gnosisSafe.getOwners();
+      gnosisSafe.getOwners();
       // If instantiated, contract exist
       safeDeployed = true;
       console.log("User already has safe deployed");

@@ -1,17 +1,18 @@
 pragma solidity ^0.6.5;
 pragma experimental ABIEncoderV2;
 
-import { GelatoActionsStandard } from "../../GelatoActionsStandard.sol";
-import { IGelatoAction } from "../../IGelatoAction.sol";
-import { IERC20 } from "../../../external/IERC20.sol";
-import { SafeERC20 } from "../../../external/SafeERC20.sol";
-import { SafeMath } from "../../../external/SafeMath.sol";
-import { IBatchExchange } from "../../../dapp_interfaces/gnosis/IBatchExchange.sol";
-import { Task, Provider, IGelatoCore, Condition, Action } from "../../../gelato_core/interfaces/IGelatoCore.sol";
-import { FeeExtractor } from "../../../gelato_helpers/FeeExtractor.sol";
-import {IGelatoProviderModule} from "../../../gelato_core/interfaces/IGelatoProviderModule.sol";
-import {IGelatoCondition} from "../../../gelato_conditions/IGelatoCondition.sol";
-import {ActionPlaceOrderBatchExchangePayFee} from "./ActionPlaceOrderBatchExchangePayFee.sol";
+import { GelatoActionsStandard } from "../../../../contracts/gelato_actions/GelatoActionsStandard.sol";
+import { IGelatoAction } from "../../../../contracts/gelato_actions/IGelatoAction.sol";
+import { IERC20 } from "../../../../contracts/external/IERC20.sol";
+import { SafeERC20 } from "../../../../contracts/external/SafeERC20.sol";
+import { SafeMath } from "../../../../contracts/external/SafeMath.sol";
+import { Math } from "../../../../contracts/external/Math.sol";
+import { Order, IBatchExchange } from "../../../../contracts/dapp_interfaces/gnosis/IBatchExchange.sol";
+import { Task, IGelatoCore } from "../../../../contracts/gelato_core/interfaces/IGelatoCore.sol";
+import { FeeExtractor } from "../../../../contracts/gelato_helpers/FeeExtractor.sol";
+import {IGelatoProviderModule} from "../../../../contracts/gelato_core/interfaces/IGelatoProviderModule.sol";
+import {IGelatoCondition} from "../../../../contracts//gelato_conditions/IGelatoCondition.sol";
+import {ActionPlaceOrderBatchExchangePayFee} from "../../../../contracts/gelato_actions/gnosis/chained/ActionPlaceOrderBatchExchangePayFee.sol";
 
 
 /// @title ActionWithdrawBatchExchangeChained
