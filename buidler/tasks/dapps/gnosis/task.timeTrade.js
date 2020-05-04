@@ -223,33 +223,33 @@ export default task(
       module: gnosisSafeProviderModuleAddress,
     });
 
-    const actionPlaceOrderBatchExchangeChained = await run("bre-config", {
+    // ############## Condition #####################
+
+    const conditionAddress = await run("bre-config", {
       deployments: true,
-      contractname: "ActionPlaceOrderBatchExchangeChained",
+      contractname: "ConditionBatchExchangeFundsWithdrawable",
     });
 
-    // ############################################### Dummy Place Order Task
-
-    const dummyPlaceOrderAction = new Action({
-      addr: actionPlaceOrderBatchExchangeChained,
-      data: constants.HashZero,
-      operation: 1,
-      value: 0,
-      termsOkCheck: true,
+    const conditionData = await run("abi-encode-withselector", {
+      contractname: "ConditionBatchExchangeFundsWithdrawable",
+      functionname: "ok",
+      inputs: [safeAddress, taskArgs.sellToken, taskArgs.buyToken],
     });
 
-    const dummyPlaceOrderTask = new Task({
-      provider: gelatoProvider,
-      actions: [dummyPlaceOrderAction],
-      // no condition, as termsOk handle it
-      expiryDate: constants.HashZero,
+    const condition = new Condition({
+      inst: conditionAddress,
+      data: conditionData,
     });
 
-    // ############################################### Place Order
+    // ############## Condition END #####################
 
-    // Get Sell on batch exchange calldata
+    const placeOrderBatchExchangeAddress = await run("bre-config", {
+      deployments: true,
+      contractname: "ActionPlaceOrderBatchExchange",
+    });
+
     const placeOrderBatchExchangeData = await run("abi-encode-withselector", {
-      contractname: "ActionPlaceOrderBatchExchangeChained",
+      contractname: "ActionPlaceOrderBatchExchange",
       functionname: "action",
       inputs: [
         userAddress,
@@ -258,22 +258,50 @@ export default task(
         taskArgs.sellAmount,
         taskArgs.buyAmount,
         batchDuration,
-        // Withdraw action inputs
-        gelatoCore.address,
-        dummyPlaceOrderTask,
       ],
     });
 
-    // encode for Multi send
+    const placeOrderAction = new Action({
+      addr: placeOrderBatchExchangeAddress,
+      data: placeOrderBatchExchangeData,
+      operation: Operation.Delegatecall,
+      termsOkCheck: true,
+    });
 
+    const placeOrderTask = new Task({
+      provider: gelatoProvider,
+      conditions: [condition],
+      actions: [placeOrderAction],
+      expiryDate: constants.HashZero,
+      autoSubmitNextTask: true,
+    });
+
+    // encode for Multi send
     const placeOrderBatchExchangeDataMultiSend = ethers.utils.solidityPack(
       ["uint8", "address", "uint256", "uint256", "bytes"],
       [
         1, //operation
-        actionPlaceOrderBatchExchangeChained, //to
+        placeOrderBatchExchangeAddress, //to
         0, // value
         ethers.utils.hexDataLength(placeOrderBatchExchangeData), // data length
         placeOrderBatchExchangeData, // data
+      ]
+    );
+
+    const submitTaskPayload = await run("abi-encode-withselector", {
+      contractname: "GelatoCore",
+      functionname: "submitTask",
+      inputs: [placeOrderTask],
+    });
+
+    const submitTaskMultiSend = ethers.utils.solidityPack(
+      ["uint8", "address", "uint256", "uint256", "bytes"],
+      [
+        Operation.Call, //operation => .Call
+        gelatoCore.address, //to
+        0, // value
+        ethers.utils.hexDataLength(submitTaskPayload), // data length
+        submitTaskPayload, // data
       ]
     );
 
@@ -298,13 +326,17 @@ export default task(
           ethers.utils.concat([
             enableGelatoDataMultiSend,
             placeOrderBatchExchangeDataMultiSend,
+            submitTaskMultiSend,
           ])
         ),
       ]);
     } else {
       encodedMultisendData = multiSend.interface.functions.multiSend.encode([
         ethers.utils.hexlify(
-          ethers.utils.concat([placeOrderBatchExchangeDataMultiSend])
+          ethers.utils.concat([
+            placeOrderBatchExchangeDataMultiSend,
+            submitTaskMultiSend,
+          ])
         ),
       ]);
     }

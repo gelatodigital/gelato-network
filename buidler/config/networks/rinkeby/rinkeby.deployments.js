@@ -47,7 +47,7 @@ export const deployments = {
   ConditionTimestampPassed: "0x0",
   // Gnosis
   ConditionBatchExchangeFundsWithdrawable:
-    "0x7FbbAE131b7855EDbbd8F3b74a4c5c6a2D24a3Db",
+    "0x66A11882E861B85685668fB3e72a7c6b74753352",
 
   // ==== Scripts ====
   // == GnosisSafe ==

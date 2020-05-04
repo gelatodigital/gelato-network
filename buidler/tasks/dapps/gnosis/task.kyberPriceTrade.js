@@ -33,7 +33,7 @@ export default task(
   .addOptionalParam(
     "seconds",
     "how many seconds between each order placement & withdrawRequest - default & min is 300 (1 batch) - must be divisible by 300",
-    "600",
+    "300",
     types.string
   )
   .addOptionalParam(
