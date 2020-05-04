@@ -23,14 +23,15 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     mapping(uint256 => bytes32) public override taskReceiptHash;
 
     // ================  SUBMIT ==============================================
-    function canSubmitTask(address _executor, address _userProxy, Task memory _task)
+    function canSubmitTask(address _userProxy, Task memory _task)
         public
         view
         override
         returns(string memory)
     {
         // EXECUTOR CHECKS
-        if (!isExecutorMinStaked(_executor)) return "GelatoCore.canSubmitTask: executorStake";
+        if (!isExecutorMinStaked(executorByProvider[_task.provider.addr]))
+            return "GelatoCore.canSubmitTask: executor not minStaked";
 
         // ExpiryDate
         else if (_task.expiryDate != 0)
@@ -49,11 +50,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     }
 
     function submitTask(Task memory _task) public override { // submitTask
-        // Executor
-        address executor = executorByProvider[_task.provider.addr];
-
         // canSubmit Gate
-        string memory canSubmitRes = canSubmitTask(executor, msg.sender, _task);
+        string memory canSubmitRes = canSubmitTask(msg.sender, _task);
         require(canSubmitRes.startsWithOk(), canSubmitRes);
 
         // Increment TaskReceipt ID storage
@@ -73,7 +71,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         // Store TaskReceipt Hash
         taskReceiptHash[taskReceipt.id] = hashedTaskReceipt;
 
-        emit LogTaskSubmitted(executor, taskReceipt.id, hashedTaskReceipt, taskReceipt);
+        emit LogTaskSubmitted(taskReceipt.id, hashedTaskReceipt, taskReceipt);
     }
 
     function multiSubmitTasks(Task[] memory _tasks) public override {
@@ -81,12 +79,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     }
 
     // ================  CAN EXECUTE EXECUTOR API ============================
-    function canExec(
-        address _executor,
-        TaskReceipt memory _TR,
-        uint256 _gelatoMaxGas,
-        uint256 _execTxGasPrice
-    )
+    function canExec(TaskReceipt memory _TR, uint256 _gelatoMaxGas, uint256 _execTxGasPrice)
         public
         view
         override
@@ -145,17 +138,14 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // Optional chained Task Resubmission validation
         if (_TR.task.autoSubmitNextTask) {
-            string memory canSubmitRes = canSubmitTask(_executor, _TR.userProxy, _TR.task);
+            string memory canSubmitRes = canSubmitTask(_TR.userProxy, _TR.task);
             if (!canSubmitRes.startsWithOk())
                 return string(abi.encodePacked("TaskCannotResubmitItself:", canSubmitRes));
         }
 
         // Executor Validation
         if (msg.sender == address(this)) return OK;
-        else if (
-            msg.sender == executorByProvider[_TR.task.provider.addr] &&
-            msg.sender == _executor
-        )
+        else if (msg.sender == executorByProvider[_TR.task.provider.addr])
             return OK;
         else return "InvalidExecutor";
     }
@@ -183,11 +173,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         ExecutionResult executionResult;
         string memory reason;
 
-        try this.executionWrapper{gas: gasleft() - internalGasRequirement}(
-            msg.sender,  // executor
-            _TR,
-            _gelatoMaxGas
-        )
+        try this.executionWrapper{gas: gasleft() - internalGasRequirement}(_TR, _gelatoMaxGas)
             returns(ExecutionResult _executionResult, string memory _reason)
         {
             executionResult = _executionResult;
@@ -239,18 +225,14 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     }
 
     // Used by GelatoCore.exec(), to handle Out-Of-Gas from execution gracefully
-    function executionWrapper(
-        address _executor,
-        TaskReceipt memory taskReceipt,
-        uint256 _gelatoMaxGas
-    )
+    function executionWrapper(TaskReceipt memory taskReceipt, uint256 _gelatoMaxGas)
         public
         returns(ExecutionResult, string memory)
     {
         require(msg.sender == address(this), "GelatoCore.executionWrapper:onlyGelatoCore");
 
         // canExec()
-        string memory canExecRes = canExec(_executor, taskReceipt, _gelatoMaxGas, tx.gasprice);
+        string memory canExecRes = canExec(taskReceipt, _gelatoMaxGas, tx.gasprice);
         if (!canExecRes.startsWithOk()) return (ExecutionResult.CanExecFailed, canExecRes);
 
         // Will revert if exec failed => will be caught in exec flow
@@ -339,7 +321,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         // Store new TaskReceipt Hash
         taskReceiptHash[_TR.id] = hashedTaskReceipt;
 
-        emit LogTaskSubmitted(msg.sender, _TR.id, hashedTaskReceipt, _TR);
+        emit LogTaskSubmitted(_TR.id, hashedTaskReceipt, _TR);
 
         // Reset currently being execute TaskReceipt.id for correct value in ExecEvents
         _TR.id--;
