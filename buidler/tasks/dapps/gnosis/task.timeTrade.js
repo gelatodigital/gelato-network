@@ -64,7 +64,10 @@ export default task(
       .div(ethers.utils.bigNumberify("300"));
 
     // 1. Determine CPK proxy address of user (mnemoric index 0 by default)
-    const { [taskArgs.mnemonicIndex]: user } = await ethers.getSigners();
+    const {
+      [taskArgs.mnemonicIndex]: user,
+      [2]: provider,
+    } = await ethers.getSigners();
     const userAddress = await user.getAddress();
     const safeAddress = await run("gc-determineCpkProxyAddress", {
       useraddress: userAddress,
@@ -102,27 +105,18 @@ export default task(
 
     // Check if user has sufficient balance (sell Amount plus required Fee)
     const sellTokenBalance = await sellToken.balanceOf(userAddress);
-    const totalSellAmountMinusFee = ethers.utils
-      .bigNumberify(taskArgs.sellAmount)
-      .sub(requiredFee);
+
     if (sellTokenBalance.lte(ethers.utils.bigNumberify(taskArgs.sellAmount)))
       throw new Error("Insufficient sellToken to conduct enter stableswap");
-
-    if (ethers.utils.bigNumberify(taskArgs.sellAmount).lte(requiredFee))
-      throw new Error("Sell Amount must be greater than fees");
-
-    if (taskArgs.log)
-      console.log(`
-          Approve gnosis safe to move ${taskArgs.sellAmount} of token: ${taskArgs.sellToken}\n
-          Inputted Sell Volume:              ${taskArgs.sellAmount}\n
-          Fee for automated withdrawal:    - ${requiredFee}\n
-          ------------------------------------------------------------\n
-          Amount that will be sold:        = ${totalSellAmountMinusFee}
-          `);
 
     const totalSellAmount = ethers.utils
       .bigNumberify(taskArgs.sellAmount)
       .mul(ethers.utils.bigNumberify(taskArgs.frequency));
+
+    if (taskArgs.log)
+      console.log(`
+          Approve gnosis safe to move ${totalSellAmount} of token: ${taskArgs.sellToken}\n`);
+
     await sellToken.approve(safeAddress, totalSellAmount);
 
     let safeDeployed = false;
@@ -136,7 +130,7 @@ export default task(
         signer: user,
       });
       // Do a test call to see if contract exist
-      const name = await gnosisSafe.getOwners();
+      gnosisSafe.getOwners();
       // If instantiated, contract exist
       safeDeployed = true;
       console.log("User already has safe deployed");
@@ -151,6 +145,7 @@ export default task(
     const gelatoCore = await run("instantiateContract", {
       contractname: "GelatoCore",
       write: true,
+      signer: provider,
     });
 
     if (safeDeployed) {
@@ -165,7 +160,6 @@ export default task(
         }
       }
     }
-
     if (taskArgs.log)
       console.log(`Is gelato an enabled module? ${gelatoIsWhitelisted}`);
 
@@ -223,33 +217,33 @@ export default task(
       module: gnosisSafeProviderModuleAddress,
     });
 
-    const actionPlaceOrderBatchExchangeChained = await run("bre-config", {
+    // ############## Condition #####################
+
+    const conditionAddress = await run("bre-config", {
       deployments: true,
-      contractname: "ActionPlaceOrderBatchExchangeChained",
+      contractname: "ConditionBatchExchangeFundsWithdrawable",
     });
 
-    // ############################################### Dummy Place Order Task
-
-    const dummyPlaceOrderAction = new Action({
-      addr: actionPlaceOrderBatchExchangeChained,
-      data: constants.HashZero,
-      operation: 1,
-      value: 0,
-      termsOkCheck: true,
+    const conditionData = await run("abi-encode-withselector", {
+      contractname: "ConditionBatchExchangeFundsWithdrawable",
+      functionname: "ok",
+      inputs: [safeAddress, taskArgs.sellToken, taskArgs.buyToken],
     });
 
-    const dummyPlaceOrderTask = new Task({
-      provider: gelatoProvider,
-      actions: [dummyPlaceOrderAction],
-      // no condition, as termsOk handle it
-      expiryDate: constants.HashZero,
+    const condition = new Condition({
+      inst: conditionAddress,
+      data: conditionData,
     });
 
-    // ############################################### Place Order
+    // ############## Condition END #####################
 
-    // Get Sell on batch exchange calldata
+    const placeOrderBatchExchangeAddress = await run("bre-config", {
+      deployments: true,
+      contractname: "ActionPlaceOrderBatchExchange",
+    });
+
     const placeOrderBatchExchangeData = await run("abi-encode-withselector", {
-      contractname: "ActionPlaceOrderBatchExchangeChained",
+      contractname: "ActionPlaceOrderBatchExchange",
       functionname: "action",
       inputs: [
         userAddress,
@@ -258,22 +252,74 @@ export default task(
         taskArgs.sellAmount,
         taskArgs.buyAmount,
         batchDuration,
-        // Withdraw action inputs
-        gelatoCore.address,
-        dummyPlaceOrderTask,
       ],
     });
 
-    // encode for Multi send
+    const placeOrderAction = new Action({
+      addr: placeOrderBatchExchangeAddress,
+      data: placeOrderBatchExchangeData,
+      operation: Operation.Delegatecall,
+      termsOkCheck: true,
+    });
 
+    const placeOrderTask = new Task({
+      provider: gelatoProvider,
+      conditions: [condition],
+      actions: [placeOrderAction],
+      expiryDate: constants.HashZero,
+      autoSubmitNextTask: true,
+    });
+
+    // ######### Check if Provider has whitelisted TaskSpec #########
+    // 1. Cast Task to TaskSpec
+    const taskSpec = new TaskSpec({
+      conditions: [condition.inst],
+      actions: [placeOrderAction],
+      autoSubmitNextTask: true,
+      gasPriceCeil: 0, // Placeholder
+    });
+
+    // 2. Hash Task Spec
+    const taskSpecHash = await gelatoCore.hashTaskSpec(taskSpec);
+
+    // Check if taskSpecHash's gasPriceCeil is != 0
+    const isProvided = await gelatoCore.taskSpecGasPriceCeil(
+      gelatoProvider.addr,
+      taskSpecHash
+    );
+
+    // Revert if task spec is not provided
+    if (isProvided == 0) {
+      // await gelatoCore.provideTaskSpecs([taskSpec]);
+      throw Error("Task Spec is not whitelisted by provider");
+    } else console.log("already provided");
+
+    // encode for Multi send
     const placeOrderBatchExchangeDataMultiSend = ethers.utils.solidityPack(
       ["uint8", "address", "uint256", "uint256", "bytes"],
       [
         1, //operation
-        actionPlaceOrderBatchExchangeChained, //to
+        placeOrderBatchExchangeAddress, //to
         0, // value
         ethers.utils.hexDataLength(placeOrderBatchExchangeData), // data length
         placeOrderBatchExchangeData, // data
+      ]
+    );
+
+    const submitTaskPayload = await run("abi-encode-withselector", {
+      contractname: "GelatoCore",
+      functionname: "submitTask",
+      inputs: [placeOrderTask],
+    });
+
+    const submitTaskMultiSend = ethers.utils.solidityPack(
+      ["uint8", "address", "uint256", "uint256", "bytes"],
+      [
+        Operation.Call, //operation => .Call
+        gelatoCore.address, //to
+        0, // value
+        ethers.utils.hexDataLength(submitTaskPayload), // data length
+        submitTaskPayload, // data
       ]
     );
 
@@ -298,13 +344,17 @@ export default task(
           ethers.utils.concat([
             enableGelatoDataMultiSend,
             placeOrderBatchExchangeDataMultiSend,
+            submitTaskMultiSend,
           ])
         ),
       ]);
     } else {
       encodedMultisendData = multiSend.interface.functions.multiSend.encode([
         ethers.utils.hexlify(
-          ethers.utils.concat([placeOrderBatchExchangeDataMultiSend])
+          ethers.utils.concat([
+            placeOrderBatchExchangeDataMultiSend,
+            submitTaskMultiSend,
+          ])
         ),
       ]);
     }

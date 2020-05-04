@@ -109,6 +109,7 @@ export default task(
             conditions: conditions,
             actions,
             expiryDate: taskreceipt[2][3],
+            autoSubmitNextTask: taskreceipt[2][4],
           },
         };
 
