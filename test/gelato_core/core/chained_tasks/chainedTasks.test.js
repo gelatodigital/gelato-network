@@ -176,12 +176,7 @@ describe("Gelato Actions - CHAINED TASKS - GelatoUserProxy", function () {
       expect(
         await gelatoCore
           .connect(executor)
-          .canExec(
-            executorAddress,
-            chainedTaskReceipt,
-            gelatoMaxGas,
-            GELATO_GAS_PRICE
-          )
+          .canExec(chainedTaskReceipt, gelatoMaxGas, GELATO_GAS_PRICE)
       ).to.be.equal("OK");
 
       // Exec ActionDummyTask and expect it to be resubmitted automatically

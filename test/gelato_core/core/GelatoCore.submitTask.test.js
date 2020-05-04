@@ -430,7 +430,7 @@ describe("Gelato Core - Task Submission ", function () {
       });
 
       await expect(userProxy.submitTask(task)).to.be.revertedWith(
-        "GelatoCore.canSubmitTask: executorStake"
+        "GelatoCore.canSubmitTask: executor not minStaked"
       );
     });
 
