@@ -296,24 +296,13 @@ export default task(
     });
 
     // ######### Check if Provider has whitelisted TaskSpec #########
-    // 1. Cast Task to TaskSpec
-    const taskSpec1 = new TaskSpec({
-      actions: [actionWithdrawBatchExchange],
-      autoSubmitNextTask: false,
-      gasPriceCeil: 0, // Placeholder
+    let isProvided = await run("gc-check-if-provided", {
+      task: taskWithdrawBatchExchange,
+      provider: gelatoProvider.addr,
+      // taskspecname: "balanceTrade",
     });
 
-    // 2. Hash Task Spec
-    const taskSpecHash1 = await gelatoCore.hashTaskSpec(taskSpec1);
-
-    // Check if taskSpecHash's gasPriceCeil is != 0
-    const isProvided1 = await gelatoCore.taskSpecGasPriceCeil(
-      gelatoProvider.addr,
-      taskSpecHash1
-    );
-
-    // Revert if task spec is not provided
-    if (isProvided1 == 0) {
+    if (!isProvided) {
       // await gelatoCore.provideTaskSpecs([taskSpec1]);
       throw Error(
         `Task Spec 1 is not provided by provider: ${taskArgs.gelatoprovider}. Please provide it by running the gc-providetaskspec script`
@@ -371,26 +360,14 @@ export default task(
     });
 
     // ######### Check if Provider has whitelisted TaskSpec #########
-    // 1. Cast Task to TaskSpec
-    const taskSpec2 = new TaskSpec({
-      conditions: [condition.inst],
-      actions: [realPlaceOrderAction, submitTaskAction],
-      autoSubmitNextTask: false,
-      gasPriceCeil: 0, // Placeholder
+    isProvided = await run("gc-check-if-provided", {
+      task: placeOrderAndSubmitWithdrawTask,
+      provider: gelatoProvider.addr,
+      // taskspecname: "balanceTrade",
     });
 
-    // 2. Hash Task Spec
-    const taskSpecHash2 = await gelatoCore.hashTaskSpec(taskSpec2);
-
-    // Check if taskSpecHash's gasPriceCeil is != 0
-    const isProvided2 = await gelatoCore.taskSpecGasPriceCeil(
-      gelatoProvider.addr,
-      taskSpecHash2
-    );
-
-    // Revert if task spec is not provided
-    if (isProvided2 == 0) {
-      // await gelatoCore.provideTaskSpecs([taskSpec2]);
+    if (!isProvided) {
+      // await gelatoCore.provideTaskSpecs([taskSpec1]);
       throw Error(
         `Task Spec 2 is not provided by provider: ${taskArgs.gelatoprovider}. Please provide it by running the gc-providetaskspec script`
       );

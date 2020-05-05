@@ -271,26 +271,14 @@ export default task(
     });
 
     // ######### Check if Provider has whitelisted TaskSpec #########
-    // 1. Cast Task to TaskSpec
-    const taskSpec = new TaskSpec({
-      conditions: [condition.inst],
-      actions: [placeOrderAction],
-      autoSubmitNextTask: true,
-      gasPriceCeil: 0, // Placeholder
+    const isProvided = await run("gc-check-if-provided", {
+      task: placeOrderTask,
+      provider: gelatoProvider.addr,
+      // taskspecname: "balanceTrade",
     });
 
-    // 2. Hash Task Spec
-    const taskSpecHash = await gelatoCore.hashTaskSpec(taskSpec);
-
-    // Check if taskSpecHash's gasPriceCeil is != 0
-    const isProvided = await gelatoCore.taskSpecGasPriceCeil(
-      gelatoProvider.addr,
-      taskSpecHash
-    );
-
-    // Revert if task spec is not provided
-    if (isProvided == 0) {
-      // await gelatoCore.provideTaskSpecs([taskSpec]);
+    if (!isProvided) {
+      // await gelatoCore.provideTaskSpecs([taskSpec1]);
       throw Error(
         `Task Spec is not provided by provider: ${taskArgs.gelatoprovider}. Please provide it by running the gc-providetaskspec script`
       );
