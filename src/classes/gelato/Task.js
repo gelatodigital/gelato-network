@@ -1,7 +1,7 @@
 class Task {
-  constructor({ base, cycle }) {
+  constructor({ base, next, cycle }) {
     if (!base) throw new Error("\nTask: no base provided\n");
-    if (cycle && (!Array.isArray(cycle) || !base.cycle.length))
+    if (cycle && (!Array.isArray(cycle) || !cycle.length))
       throw new Error("\nTask: cycle be non-empty Array\n");
 
     _checkTaskBaseMembers(base);
@@ -9,7 +9,7 @@ class Task {
       for (const _base of cycle) _checkTaskBaseMembers(_base);
 
     this.base = base;
-    this.next = 0;
+    this.next = next === undefined ? 1 : next;
     this.cycle = cycle ? cycle : [];
   }
 }

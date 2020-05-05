@@ -7,9 +7,8 @@ const { run } = require("@nomiclabs/buidler");
 const GELATO_GAS_PRICE = utils.parseUnits("10", "gwei");
 
 const SALT_NONCE = 42069;
-const FUNDING = utils.parseEther("1");
 
-describe("Gelato Actions - CHAINED TASKS - GelatoUserProxy", function () {
+describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
   let GelatoCoreFactory;
   let GelatoGasPriceOracleFactory;
   let GelatoUserProxyFactoryFactory;
@@ -32,7 +31,9 @@ describe("Gelato Actions - CHAINED TASKS - GelatoUserProxy", function () {
 
   let userProxyAddress;
 
-  let chainedTask;
+  let task;
+  let secondTaskBase;
+  let secondTask;
 
   let gelatoMaxGas;
   let executorSuccessFee;
@@ -101,21 +102,33 @@ describe("Gelato Actions - CHAINED TASKS - GelatoUserProxy", function () {
       module: providerModuleGelatoUserProxy.address,
     });
 
-    // Action
-    const actionDummyData = await run("abi-encode-withselector", {
+    // Actions
+    const firstActionDummyData = await run("abi-encode-withselector", {
       contractname: "MockActionDummy",
       functionname: "action(bool)",
       inputs: [true],
     });
-    const actionDummyStruct = new Action({
+    const firstActionDummyStruct = new Action({
       addr: actionDummy.address,
-      data: actionDummyData,
+      data: firstActionDummyData,
+      operation: Operation.Call,
+    });
+
+    const secondActionDummyData = await run("abi-encode-withselector", {
+      contractname: "MockActionDummy",
+      functionname: "action(bool)",
+      inputs: [false],
+    });
+
+    const secondActionDummyStruct = new Action({
+      addr: actionDummy.address,
+      data: secondActionDummyData,
       operation: Operation.Call,
     });
 
     // TaskSpec
-    const taskSpec = new TaskSpec({
-      actions: [actionDummyStruct],
+    const firstTaskSpec = new TaskSpec({
+      actions: [firstActionDummyStruct],
       gasPriceCeil: utils.parseUnits("20", "gwei"),
     });
 
@@ -130,74 +143,125 @@ describe("Gelato Actions - CHAINED TASKS - GelatoUserProxy", function () {
       .connect(provider)
       .multiProvide(
         executorAddress,
-        [taskSpec],
+        [firstTaskSpec],
         [providerModuleGelatoUserProxy.address],
         { value: utils.parseEther("1") }
       );
     await multiProvideTx.wait();
 
-    // Chained Task
-    chainedTask = new Task({
+    // Tasks for cycle
+    task = new Task({
       base: new TaskBase({
         provider: gelatoProvider,
-        actions: [actionDummyStruct],
-        autoResubmitSelf: true,
+        actions: [firstActionDummyStruct],
+        autoResubmitSelf: false,
       }),
+    });
+
+    secondTaskBase = new TaskBase({
+      provider: gelatoProvider,
+      actions: [secondActionDummyStruct],
+      autoResubmitSelf: false,
     });
   });
 
-  it("Should allow to enter an Infinite Task Chain upon creating a GelatoUserProxy", async function () {
-    // chainedTaskReceipt
-    let chainedTaskReceiptId = (await gelatoCore.currentTaskReceiptId()).add(1);
-    const chainedTaskReceipt = new TaskReceipt({
-      id: chainedTaskReceiptId,
-      userProxy: userProxyAddress,
-      task: chainedTask,
+  it("Should allow to enter an Arbitrary Task Cycle upon creating a GelatoUserProxy", async function () {
+    // derive firstTaskReceipt for event checks
+    // we derive the complete task as auto-filled by GelatoCore._createTaskCycle
+    task.cycle = [task.base, secondTaskBase];
+    secondTask = new Task({
+      base: secondTaskBase,
+      next: 0,
+      cycle: [task.base, secondTaskBase],
     });
-    let chainedTaskReceiptHash = await gelatoCore.hashTaskReceipt(
-      chainedTaskReceipt
+
+    let firstTaskReceiptId = (await gelatoCore.currentTaskReceiptId()).add(1);
+    let firstTaskReceipt = new TaskReceipt({
+      id: firstTaskReceiptId,
+      userProxy: userProxyAddress,
+      task: task,
+    });
+    let firstTaskReceiptHash = await gelatoCore.hashTaskReceipt(
+      firstTaskReceipt
     );
 
-    await expect(
-      gelatoUserProxyFactory.createTwo(SALT_NONCE, [], [chainedTask], false)
-    )
+    let secondTaskReceiptId = firstTaskReceiptId.add(1);
+    let secondTaskReceipt = new TaskReceipt({
+      id: secondTaskReceiptId,
+      userProxy: userProxyAddress,
+      task: secondTask,
+    });
+    let secondTaskReceiptHash = await gelatoCore.hashTaskReceipt(
+      secondTaskReceipt
+    );
+
+    await expect(gelatoUserProxyFactory.createTwo(SALT_NONCE, [], [task], true))
       .to.emit(gelatoUserProxyFactory, "LogCreation")
       .withArgs(userAddress, userProxyAddress, 0)
       .and.to.emit(gelatoCore, "LogTaskSubmitted");
     // withArgs not possible: suspect buidlerevm or ethers struct parsing bug
     // .withArgs(
     //   executorAddress,
-    //   chainedTaskReceiptId,
-    //   chainedTaskReceiptHash,
-    //   chainedTaskReceipt
+    //   firstTaskReceiptId,
+    //   firstTaskReceiptHash,
+    //   firstTaskReceipt
     // )
 
+    let firstTask = true;
     for (let i = 0; i < 10; i++) {
+      console.log(firstTaskReceipt);
+      console.log(secondTaskReceipt);
+
       // canExec
       expect(
         await gelatoCore
           .connect(executor)
-          .canExec(chainedTaskReceipt, gelatoMaxGas, GELATO_GAS_PRICE)
+          .canExec(
+            firstTask ? firstTaskReceipt : secondTaskReceipt,
+            gelatoMaxGas,
+            GELATO_GAS_PRICE
+          )
       ).to.be.equal("OK");
 
       // Exec ActionDummyTask and expect it to be resubmitted automatically
       await expect(
-        gelatoCore.connect(executor).exec(chainedTaskReceipt, {
-          gasPrice: GELATO_GAS_PRICE,
-          gasLimit: await gelatoCore.gelatoMaxGas(),
-        })
+        gelatoCore
+          .connect(executor)
+          .exec(firstTask ? firstTaskReceipt : secondTaskReceipt, {
+            gasPrice: GELATO_GAS_PRICE,
+            gasLimit: gelatoMaxGas,
+          })
       )
         .to.emit(actionDummy, "LogAction")
-        .withArgs(true)
+        .withArgs(firstTask ? true : false)
         .and.to.emit(gelatoCore, "LogExecSuccess")
         .and.to.emit(gelatoCore, "LogTaskSubmitted");
 
-      // // Update the Task Receipt for Second Go
-      chainedTaskReceiptId = chainedTaskReceiptId.add(1);
-      chainedTaskReceipt.id = chainedTaskReceiptId;
-      chainedTaskReceiptHash = await gelatoCore.hashTaskReceipt(
-        chainedTaskReceipt
-      );
+      // Update the Task Receipt for Second Go
+      if (firstTask) {
+        firstTaskReceiptId = firstTaskReceiptId.add(2);
+        firstTaskReceipt.id = firstTaskReceiptId;
+        firstTaskReceipt.task.next =
+          firstTaskReceipt.task.next == firstTaskReceipt.task.cycle.length - 1
+            ? 0
+            : firstTaskReceipt.task.next + 1;
+        firstTaskReceiptHash = await gelatoCore.hashTaskReceipt(
+          firstTaskReceipt
+        );
+        firstTask = false;
+      } else {
+        secondTaskReceiptId = firstTaskReceiptId.add(1);
+        secondTaskReceipt.id = secondTaskReceiptId;
+        secondTaskReceipt.task.next =
+          secondTaskReceipt.task.next == secondTaskReceipt.task.cycle.length - 1
+            ? 0
+            : secondTaskReceipt.task.next + 1;
+        secondTaskReceiptHash = await gelatoCore.hashTaskReceipt(
+          secondTaskReceipt
+        );
+        firstTask = true;
+      }
+      console.log("heree");
     }
   });
 });

@@ -1,6 +1,8 @@
 pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
+import "@nomiclabs/buidler/console.sol";
+
 import { IGelatoCore, TaskBase, Task, TaskReceipt } from "./interfaces/IGelatoCore.sol";
 import { GelatoExecutors } from "./GelatoExecutors.sol";
 import { SafeMath } from "../external/SafeMath.sol";
@@ -75,6 +77,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     }
 
     function multiSubmitTasks(Task[] memory _tasks, bool _cycle) public override {
+        console.log("multiSubmitTasks");
         if (_cycle) {
             _createTaskCycle(_tasks);
             submitTask(_tasks[0]);
@@ -333,17 +336,29 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     }
 
     function _submitNextTask(TaskReceipt memory _TR, bool _resubmitSelf) private {
+        console.log("_submitNextTask: currentTaskReceiptId:%s", currentTaskReceiptId);
+
         // Increment TaskReceipt.id in storage ...
         currentTaskReceiptId++;
+
+        console.log("_submitNextTask: currentTaskReceiptId:%s", currentTaskReceiptId);
+
+        console.log("_submitNextTask: _TR.id:%s", _TR.id);
+
         // ... and sync with memory TaskReceipt to reflect new Receipt
         _TR.id++;
 
         // If we submit a new Task, we overwrite the current task field.
         // We won't reset the _TR.task field, if overwritten. Not needed in cont. exec flow.
-        if (!_resubmitSelf) _TR.task = _getNextTaskInCycle(_TR.task);
+        if (!_resubmitSelf) {
+            _TR.task = _getNextTaskInCycle(_TR.task);
+        }
 
         // Hash new TaskReceipt
         bytes32 hashedTaskReceipt = hashTaskReceipt(_TR);
+        console.log("_submitNextTask: _TR.id:%s", _TR.id);
+        console.log("hashedTaskReceipt:%");
+        console.logBytes32(hashedTaskReceipt);
 
         // Store new TaskReceipt Hash
         taskReceiptHash[_TR.id] = hashedTaskReceipt;
@@ -352,6 +367,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // Reset currently being execute TaskReceipt.id for correct value in ExecEvents
         _TR.id--;
+        console.log("_submitNextTask END: _TR.id:%s", _TR.id);
     }
 
     function _processProviderPayables(
@@ -417,7 +433,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     }
 
     function _createTaskCycle(Task[] memory _tasks) private pure {
-        if (_tasks[0].next != 0) _tasks[0].next = 0;
+        // We set next to 1 as 0 will be init submitted from Task.base
+        if (_tasks[0].next != 1) _tasks[0].next = 1;
         for (uint i; i < _tasks.length; i++) {
             _tasks[0].cycle[i].provider = _tasks[i].base.provider;
             _tasks[0].cycle[i].conditions = _tasks[i].base.conditions;
@@ -427,7 +444,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         }
     }
 
-    function _getNextTaskInCycle(Task memory _task) private pure returns(Task memory task) {
+    function _getNextTaskInCycle(Task memory _task) private view returns(Task memory task) {
+        console.log("_getNext _task.next in: %s", _task.next);
         uint256 next;
         if (_task.next == _task.cycle.length - 1) next = 0;
         else next = _task.next + 1;
@@ -439,8 +457,9 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
                 expiryDate: _task.cycle[next].expiryDate,
                 autoResubmitSelf: _task.cycle[next].autoResubmitSelf
             }),
-            next: next + 1,
+            next: next,
             cycle: _task.cycle
         });
+        console.log("_getNext next:%s task.next:%s", next, task.next);
     }
 }
