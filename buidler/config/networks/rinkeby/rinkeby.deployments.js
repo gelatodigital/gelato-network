@@ -2,8 +2,8 @@ export const deployments = {
   // ========== Rinkeby ===========
   // ==== One-Off Actions ====
   // Gnosis
-  ActionWithdrawBatchExchange: "0x2457166408a44c2268e73AD6E1EeB08d0d14b1a3",
-  ActionPlaceOrderBatchExchange: "0xA5C2Fe84D9E8f90024f5D573FC17Fb176226b25b",
+  ActionWithdrawBatchExchange: "0xE52D98E9ce5eaB002860D79cD837c5d7C1258fcC",
+  ActionPlaceOrderBatchExchange: "0x97C2068714F7B5359da8cC3D05b6E6D8019b582c",
   // erc20
   ActionERC20Transfer: "0x0",
   ActionERC20TransferFrom: "0x38a020C3392C28658F19dC0DBC9aD9D2Bb32b71f",
@@ -19,22 +19,23 @@ export const deployments = {
   // Portfolio Mgmt
   ActionChainedRebalancePortfolioRinkeby: "0x0",
   // gnosis
-  ActionPlaceOrderBatchExchangeWithWithdraw:
-    "0xd6a4f5CDfA6B38404D1747fC53f85C957910E576",
+  ActionPlaceOrderBatchExchangePayFee:
+    "0xA66Dc4AacF4D23118ce148474d349b75a6A4E3C8",
   ActionWithdrawBatchExchangeChained:
     "0x407E41940DDcEB42F3cC73d3A446CF39012334Db",
   ActionPlaceOrderBatchExchangeChained:
-    "0x13C24a7c008f6C33F3A9fF103A871D734Fe3573f",
+    "0xF536876f81A8504609C13069615647F0A6CAe2F1",
 
   // ===== Gelato Core ====
-  GelatoCore: "0xaE530CfD7190991DF16f64Cf3Bbca4B98AfeBB4C",
-  GelatoGasPriceOracle: "0x52380c1a3bed165b3cc8a186C0959eEe7202BbbA",
+  GelatoCore: "0xe2F32A922dCd4A960BE4F7F7624d42cA583F8ECc",
+  GelatoGasPriceOracle: "0x4c42527fC8EF5D7D8C6050664877399d8eE20D0f",
   ProviderModuleGelatoUserProxy: "0x0",
-  ProviderModuleGnosisSafeProxy: "0xa791E98E7cDb046238079019327Dee0581CbDbfA",
+  ProviderModuleGnosisSafeProxy: "0x49f7f32f3f82A3b2f923FFFd547075c00002Fe4b",
 
   // ==== Conditions ====
   // == Balances ==
   ConditionBalance: "0x29712a389E06eC7C91016932c23FcB085AF241Fb",
+  ConditionBalanceStateful: "0x0A5Cb504e4684E8F730F582AB9b9AA671115e60C",
   // == Indices ==
   // fearAndGreed
   ConditionFearGreedIndex: "0x0",
@@ -46,7 +47,7 @@ export const deployments = {
   ConditionTimestampPassed: "0x0",
   // Gnosis
   ConditionBatchExchangeFundsWithdrawable:
-    "0x7FbbAE131b7855EDbbd8F3b74a4c5c6a2D24a3Db",
+    "0x66A11882E861B85685668fB3e72a7c6b74753352",
 
   // ==== Scripts ====
   // == GnosisSafe ==

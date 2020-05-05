@@ -7,6 +7,7 @@ export default task(
 )
   .addPositionalParam("condition", "0 for no condition")
   .addPositionalParam("gaspriceceil", "in Gwei (e.g. 20)")
+  .addFlag("auto", "if true, task is re-creating itself after execution")
   .addVariadicPositionalParam("actions")
   .addFlag("log", "Logs return values to stdout")
   .setAction(async (taskArgs) => {
@@ -33,12 +34,16 @@ export default task(
       // Action
       let actionAddresses = [];
       for (const action of taskArgs.actions) {
-        const actionAddress = await run("bre-config", {
-          contractname: action,
-          deployments: true,
-        });
-
-        actionAddresses.push(actionAddress);
+        try {
+          const actionAddress = await run("bre-config", {
+            contractname: action,
+            deployments: true,
+          });
+          actionAddresses.push(actionAddress);
+        } catch {
+          // We assume if we fail, that user inputted address directly
+          actionAddresses.push(action);
+        }
       }
 
       // addr, data, operation, value, termsOkCheck
@@ -67,6 +72,7 @@ export default task(
         conditions: taskArgs.condition ? [taskArgs.condition] : undefined,
         actions: actionArray,
         gasPriceCeil,
+        autoSubmitNextTask: taskArgs.auto ? true : false,
       });
 
       if (taskArgs.log) console.log(taskArgs.condition, actionArray);

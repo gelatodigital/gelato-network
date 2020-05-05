@@ -19,7 +19,7 @@ export const contracts = [
   // Portfolio Mgmt
   "ActionChainedRebalancePortfolioRinkeby",
   // Gnosis
-  "ActionPlaceOrderBatchExchangeWithWithdraw",
+  "ActionPlaceOrderBatchExchangePayFee",
   "ActionWithdrawBatchExchangeChained",
   "ActionPlaceOrderBatchExchangeChained",
 
@@ -32,6 +32,7 @@ export const contracts = [
   // === Conditions ===
   // Balances
   "ConditionBalance",
+  "ConditionBalanceStateful",
   // Indices
   "ConditionFearGreedIndex",
   // Prices

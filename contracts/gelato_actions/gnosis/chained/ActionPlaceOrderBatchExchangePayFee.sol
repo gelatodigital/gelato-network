@@ -16,7 +16,7 @@ import { FeeExtractor } from "../../../gelato_helpers/FeeExtractor.sol";
 /// @author Luis Schliesske & Hilmar Orth
 /// @notice Gelato action that 1) executes PlaceOrder on Batch Exchange, 2) buys withdraw credit from provider and 3) creates withdraw task on gelato
 
-contract ActionPlaceOrderBatchExchangeWithWithdraw  {
+contract ActionPlaceOrderBatchExchangePayFee  {
 
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
@@ -39,17 +39,13 @@ contract ActionPlaceOrderBatchExchangeWithWithdraw  {
     /// @param _sellAmount Amount to sell
     /// @param _buyAmount Amount to receive (at least)
     /// @param _batchDuration After how many batches funds should be
-    /// @param _task Task which will be submitted on gelato (ActionWithdrawFromBatchExchangeWithMaker)
     function action(
         address _user,
         address _sellToken,
         address _buyToken,
         uint128 _sellAmount,
         uint128 _buyAmount,
-        uint32 _batchDuration,
-        // Withdraw
-        address _gelatoCore,
-        Task memory _task
+        uint32 _batchDuration
     )
         public
         virtual
@@ -112,17 +108,11 @@ contract ActionPlaceOrderBatchExchangeWithWithdraw  {
             revert("batchExchange.requestFutureWithdraw _buyToken failed");
         }
 
-        // 8. Submit Task to withdraw from batch exchange
-        try IGelatoCore(_gelatoCore).submitTask(_task) {
-        } catch {
-            revert("_gelatoCore.submitTask: Submitting chainedTask unsuccessful");
-        }
-
     }
 
     // ======= ACTION CONDITIONS CHECK =========
     // Overriding and extending GelatoActionsStandard's function (optional)
-    function termsOk(bytes calldata _actionData, address _userProxy)
+    function termsOk(address _userProxy, bytes calldata _actionData)
         external
         view
         virtual

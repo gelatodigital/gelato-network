@@ -1,14 +1,15 @@
 pragma solidity ^0.6.5;
 pragma experimental ABIEncoderV2;
 
-import { GelatoActionsStandard } from "../../GelatoActionsStandard.sol";
-import { IGelatoAction } from "../../IGelatoAction.sol";
-import { IERC20 } from "../../../external/IERC20.sol";
-import { SafeERC20 } from "../../../external/SafeERC20.sol";
-import { SafeMath } from "../../../external/SafeMath.sol";
-import { IBatchExchange } from "../../../dapp_interfaces/gnosis/IBatchExchange.sol";
-import { Task, IGelatoCore } from "../../../gelato_core/interfaces/IGelatoCore.sol";
-import { FeeExtractor } from "../../../gelato_helpers/FeeExtractor.sol";
+import { GelatoActionsStandard } from "../../../../contracts/gelato_actions/GelatoActionsStandard.sol";
+import { IGelatoAction } from "../../../../contracts/gelato_actions/IGelatoAction.sol";
+import { IERC20 } from "../../../../contracts/external/IERC20.sol";
+import { SafeERC20 } from "../../../../contracts/external/SafeERC20.sol";
+import { SafeMath } from "../../../../contracts/external/SafeMath.sol";
+import { Math } from "../../../../contracts/external/Math.sol";
+import { Order, IBatchExchange } from "../../../../contracts/dapp_interfaces/gnosis/IBatchExchange.sol";
+import { Task, IGelatoCore } from "../../../../contracts/gelato_core/interfaces/IGelatoCore.sol";
+import { FeeExtractor } from "../../../../contracts/gelato_helpers/FeeExtractor.sol";
 
 
 
@@ -16,7 +17,7 @@ import { FeeExtractor } from "../../../gelato_helpers/FeeExtractor.sol";
 /// @author Luis Schliesske & Hilmar Orth
 /// @notice Gelato action that 1) withdraws funds form user's  EOA, 2) deposits on Batch Exchange, 3) Places order on batch exchange and 4) requests future withdraw on batch exchange
 
-contract ActionPlaceOrderBatchExchangeChainedChained  {
+contract ActionPlaceOrderBatchExchangeChained  {
 
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
@@ -25,11 +26,9 @@ contract ActionPlaceOrderBatchExchangeChainedChained  {
     uint32 public constant BATCH_TIME = 300;
 
     IBatchExchange private immutable batchExchange;
-    FeeExtractor public immutable feeExtractor;
 
-    constructor(address _batchExchange, address _feeExtractor) public {
+    constructor(address _batchExchange) public {
         batchExchange = IBatchExchange(_batchExchange);
-        feeExtractor = FeeExtractor(_feeExtractor);
     }
 
     /// @notice Place order on Batch Exchange and request future withdraw for buy and sell token
@@ -121,7 +120,7 @@ contract ActionPlaceOrderBatchExchangeChainedChained  {
 
     // ======= ACTION CONDITIONS CHECK =========
     // Overriding and extending GelatoActionsStandard's function (optional)
-    function termsOk(bytes calldata _actionData, address _userProxy)
+    function termsOk(address _userProxy, bytes calldata _actionData)
         external
         view
         virtual
