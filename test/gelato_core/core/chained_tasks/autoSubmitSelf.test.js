@@ -138,9 +138,11 @@ describe("Gelato Actions - CHAINED TASKS - GelatoUserProxy", function () {
 
     // Chained Task
     chainedTask = new Task({
-      provider: gelatoProvider,
-      actions: [actionDummyStruct],
-      autoResubmitSelf: true,
+      base: new TaskBase({
+        provider: gelatoProvider,
+        actions: [actionDummyStruct],
+        autoResubmitSelf: true,
+      }),
     });
   });
 
@@ -157,7 +159,7 @@ describe("Gelato Actions - CHAINED TASKS - GelatoUserProxy", function () {
     );
 
     await expect(
-      gelatoUserProxyFactory.createTwo(SALT_NONCE, [], [chainedTask])
+      gelatoUserProxyFactory.createTwo(SALT_NONCE, [], [chainedTask], false)
     )
       .to.emit(gelatoUserProxyFactory, "LogCreation")
       .withArgs(userAddress, userProxyAddress, 0)

@@ -260,7 +260,7 @@ describe("GelatoCore.exec", function () {
     // Create UserProxy
     const createTx = await gelatoUserProxyFactory
       .connect(seller)
-      .create([], []);
+      .create([], [], false);
     await createTx.wait();
     userProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
       sellerAddress
@@ -315,9 +315,11 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
-        actions: [action],
-        expiryDate: constants.HashZero,
+        base: new TaskBase({
+          provider: gelatoProvider,
+          actions: [action],
+          expiryDate: constants.HashZero,
+        }),
       });
 
       const taskReceipt = {
@@ -456,10 +458,12 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
-        conditions: [condition],
-        actions: [action],
-        expiryDate: constants.HashZero,
+        base: new TaskBase({
+          provider: gelatoProvider,
+          conditions: [condition],
+          actions: [action],
+          expiryDate: constants.HashZero,
+        }),
       });
 
       let taskReceipt = {
@@ -539,10 +543,12 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
-        conditions: [condition],
-        actions: [action],
-        expiryDate: constants.HashZero,
+        base: new TaskBase({
+          provider: gelatoProvider,
+          conditions: [condition],
+          actions: [action],
+          expiryDate: constants.HashZero,
+        }),
       });
 
       let taskReceipt = {
@@ -621,10 +627,12 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
-        conditions: [condition],
-        actions: [action],
-        expiryDate: constants.HashZero,
+        base: new TaskBase({
+          provider: gelatoProvider,
+          conditions: [condition],
+          actions: [action],
+          expiryDate: constants.HashZero,
+        }),
       });
 
       let taskReceipt = {
@@ -698,9 +706,11 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
-        actions: [action],
-        expiryDate: constants.HashZero,
+        base: new TaskBase({
+          provider: gelatoProvider,
+          actions: [action],
+          expiryDate: constants.HashZero,
+        }),
       });
 
       let taskReceipt = {
@@ -769,9 +779,11 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
-        actions: [action],
-        expiryDate: constants.HashZero,
+        base: new TaskBase({
+          provider: gelatoProvider,
+          actions: [action],
+          expiryDate: constants.HashZero,
+        }),
       });
 
       let taskReceipt = {
@@ -836,10 +848,12 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
-        conditions: [condition],
-        actions: [action],
-        expiryDate: constants.HashZero,
+        base: new TaskBase({
+          provider: gelatoProvider,
+          conditions: [condition],
+          actions: [action],
+          expiryDate: constants.HashZero,
+        }),
       });
 
       let taskReceipt = {
@@ -916,10 +930,12 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
-        conditions: [condition],
-        actions: [action],
-        expiryDate: constants.HashZero,
+        base: new TaskBase({
+          provider: gelatoProvider,
+          conditions: [condition],
+          actions: [action],
+          expiryDate: constants.HashZero,
+        }),
       });
 
       let taskReceipt = {
@@ -969,9 +985,11 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
-        actions: [mockConditionAsAction],
-        expiryDate: constants.HashZero,
+        base: new TaskBase({
+          provider: gelatoProvider,
+          actions: [mockConditionAsAction],
+          expiryDate: constants.HashZero,
+        }),
       });
 
       let taskReceipt = {
@@ -1045,10 +1063,12 @@ describe("GelatoCore.exec", function () {
       const expiryDate = oldBlock.timestamp + lifespan;
 
       const task = new Task({
-        provider: gelatoProvider,
-        conditions: [condition],
-        actions: [action],
-        expiryDate,
+        base: new TaskBase({
+          provider: gelatoProvider,
+          conditions: [condition],
+          actions: [action],
+          expiryDate,
+        }),
       });
 
       let taskReceipt = {
@@ -1120,9 +1140,11 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
-        actions: [action],
-        expiryDate: constants.HashZero,
+        base: new TaskBase({
+          provider: gelatoProvider,
+          actions: [action],
+          expiryDate: constants.HashZero,
+        }),
       });
 
       const taskReceipt = {
@@ -1207,9 +1229,11 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
-        actions: [action],
-        expiryDate: constants.HashZero,
+        base: new TaskBase({
+          provider: gelatoProvider,
+          actions: [action],
+          expiryDate: constants.HashZero,
+        }),
       });
 
       const taskReceipt = {
@@ -1290,9 +1314,11 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
-        actions: [action],
-        expiryDate: constants.HashZero,
+        base: new TaskBase({
+          provider: gelatoProvider,
+          actions: [action],
+          expiryDate: constants.HashZero,
+        }),
       });
 
       const taskReceipt = {
@@ -1496,9 +1522,11 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
-        actions: [action],
-        expiryDate: constants.HashZero,
+        base: new TaskBase({
+          provider: gelatoProvider,
+          actions: [action],
+          expiryDate: constants.HashZero,
+        }),
       });
 
       let taskReceipt = {
@@ -1566,9 +1594,11 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
-        actions: [action],
-        expiryDate: constants.HashZero,
+        base: new TaskBase({
+          provider: gelatoProvider,
+          actions: [action],
+          expiryDate: constants.HashZero,
+        }),
       });
 
       const taskReceipt = {
@@ -1643,6 +1673,7 @@ describe("GelatoCore.exec", function () {
             },
           ],
           [task],
+          false,
           {
             value: stakeAmount,
           }
@@ -1720,9 +1751,11 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
-        actions: [unProvideFundsAction],
-        expiryDate: constants.HashZero,
+        base: new TaskBase({
+          provider: gelatoProvider,
+          actions: [unProvideFundsAction],
+          expiryDate: constants.HashZero,
+        }),
       });
 
       let taskReceipt = {
@@ -1829,13 +1862,15 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
-        conditions: [condition],
-        actions: [
-          actionWithdrawBatchExchangeSellToken,
-          actionWithdrawBatchExchangeBuyToken,
-        ],
-        expiryDate: constants.HashZero,
+        base: new TaskBase({
+          provider: gelatoProvider,
+          conditions: [condition],
+          actions: [
+            actionWithdrawBatchExchangeSellToken,
+            actionWithdrawBatchExchangeBuyToken,
+          ],
+          expiryDate: constants.HashZero,
+        }),
       });
 
       const taskReceipt = {

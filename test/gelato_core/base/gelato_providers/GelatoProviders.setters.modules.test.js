@@ -64,7 +64,7 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
     [provider, user] = await ethers.getSigners();
     providerAddress = await provider.getAddress();
 
-    await gelatoUserProxyFactory.connect(user).create([], []);
+    await gelatoUserProxyFactory.connect(user).create([], [], false);
     gelatoUserProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
       await user.getAddress()
     );
@@ -109,19 +109,24 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
     });
 
     task = new Task({
-      provider: gelatoProvider,
-      actions: [action],
-      expiryDate: constants.Zero,
+      base: new TaskBase({provider: gelatoProvider,
+        actions: [action],
+        expiryDate: constants.Zero,
+      }),
     });
     otherTask = new Task({
-      provider: otherGelatoProvider,
-      actions: [action],
-      expiryDate: constants.Zero,
+      base: new TaskBase({
+        provider: otherGelatoProvider,
+        actions: [action],
+        expiryDate: constants.Zero,
+      }),
     });
     fakeTask = new Task({
-      provider: fakeGelatoProvider,
-      actions: [action],
-      expiryDate: constants.Zero,
+      base: new TaskBase({
+        provider: fakeGelatoProvider,
+        actions: [action],
+        expiryDate: constants.Zero,
+      }),
     });
 
     taskReceipt = new TaskReceipt({

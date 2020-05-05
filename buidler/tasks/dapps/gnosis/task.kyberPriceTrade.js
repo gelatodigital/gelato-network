@@ -290,16 +290,17 @@ export default task(
     });
 
     const taskWithdrawBatchExchange = new Task({
-      provider: gelatoProvider,
-      actions: [actionWithdrawBatchExchange],
-      expiryDate: constants.HashZero,
+      base: new TaskBase({
+        provider: gelatoProvider,
+        actions: [actionWithdrawBatchExchange],
+        expiryDate: constants.HashZero,
+      }),
     });
 
     // ######### Check if Provider has whitelisted TaskSpec #########
     // 1. Cast Task to TaskSpec
     const taskSpec1 = new TaskSpec({
       actions: [actionWithdrawBatchExchange],
-      autoSubmitNextTask: false,
       gasPriceCeil: 0, // Placeholder
     });
 
@@ -362,10 +363,12 @@ export default task(
     });
 
     const placeOrderAndSubmitWithdrawTask = new Task({
-      provider: gelatoProvider,
-      conditions: [condition],
-      actions: [realPlaceOrderAction, submitTaskAction],
-      expiryDate: constants.HashZero,
+      base: new TaskBase({
+        provider: gelatoProvider,
+        conditions: [condition],
+        actions: [realPlaceOrderAction, submitTaskAction],
+        expiryDate: constants.HashZero,
+      }),
     });
 
     // ######### Check if Provider has whitelisted TaskSpec #########
@@ -373,7 +376,6 @@ export default task(
     const taskSpec2 = new TaskSpec({
       conditions: [condition.inst],
       actions: [realPlaceOrderAction, submitTaskAction],
-      autoSubmitNextTask: false,
       gasPriceCeil: 0, // Placeholder
     });
 

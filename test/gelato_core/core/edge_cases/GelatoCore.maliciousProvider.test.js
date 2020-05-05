@@ -146,11 +146,13 @@ describe("GelatoCore - EdgeCase: Malicious Provider", function () {
 
     // task to be submitted by userProxy
     task = new Task({
-      provider: new GelatoProvider({
-        addr: mockActionMaliciousProvider.address,
-        module: providerModuleGelatoUserProxy.address,
+      base: new TaskBase({
+        provider: new GelatoProvider({
+          addr: mockActionMaliciousProvider.address,
+          module: providerModuleGelatoUserProxy.address,
+        }),
+        actions: [mockActionMaliciousProviderStruct],
       }),
-      actions: [mockActionMaliciousProviderStruct],
     });
 
     // taskReceipt
@@ -164,7 +166,9 @@ describe("GelatoCore - EdgeCase: Malicious Provider", function () {
 
     // create UserProxy and submitTask
     await expect(
-      gelatoUserProxyFactory.connect(user).createTwo(SALT_NONCE, [], [task])
+      gelatoUserProxyFactory
+        .connect(user)
+        .createTwo(SALT_NONCE, [], [task], false)
     )
       .to.emit(gelatoUserProxyFactory, "LogCreation")
       .withArgs(userAddress, userProxyAddress, 0)

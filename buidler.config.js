@@ -31,10 +31,11 @@ extendEnvironment((bre) => {
   // Classes
   bre.Action = Action;
   bre.Condition = Condition;
-  bre.TaskSpec = TaskSpec;
-  bre.TaskReceipt = TaskReceipt;
   bre.GelatoProvider = GelatoProvider;
   bre.Task = Task;
+  bre.TaskBase = TaskBase;
+  bre.TaskSpec = TaskSpec;
+  bre.TaskReceipt = TaskReceipt;
   // Objects
   bre.Operation = Operation;
   // Functions

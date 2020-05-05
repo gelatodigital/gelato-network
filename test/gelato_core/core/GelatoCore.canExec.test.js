@@ -135,7 +135,7 @@ describe("GelatoCore.canExec", function () {
     // Create UserProxy
     const createTx = await gelatoUserProxyFactory
       .connect(seller)
-      .create([], []);
+      .create([], [], false);
     await createTx.wait();
     userProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
       sellerAddress
@@ -161,9 +161,11 @@ describe("GelatoCore.canExec", function () {
     });
 
     const task = new Task({
-      provider: gelatoProvider,
-      actions: [action],
-      expiryDate: constants.HashZero,
+      base: new TaskBase({
+        provider: gelatoProvider,
+        actions: [action],
+        expiryDate: constants.HashZero,
+      }),
     });
 
     taskReceipt = {
@@ -214,9 +216,11 @@ describe("GelatoCore.canExec", function () {
     const expiryDate = oldBlock.timestamp + lifespan;
 
     const task2 = new Task({
-      provider: gelatoProvider,
-      actions: [action],
-      expiryDate,
+      base: new TaskBase({
+        provider: gelatoProvider,
+        actions: [action],
+        expiryDate,
+      }),
     });
 
     let taskReceipt2 = {
@@ -243,9 +247,11 @@ describe("GelatoCore.canExec", function () {
 
   it("#4: CanExec - Fail due to provider module check failure, not whitelisted action)", async function () {
     const task2 = new Task({
-      provider: gelatoProvider,
-      actions: [action],
-      expiryDate: constants.HashZero,
+      base: new TaskBase({
+        provider: gelatoProvider,
+        actions: [action],
+        expiryDate: constants.HashZero,
+      }),
     });
 
     let taskReceipt2 = {

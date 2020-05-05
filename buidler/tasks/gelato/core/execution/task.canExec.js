@@ -89,7 +89,7 @@ export default task(
           conditions,
           actions,
           expiryDate: taskArgs.taskreceipt[2][3],
-          autoSubmitNextTask: taskArgs.taskreceipt[2][4],
+          autoResubmitSelf: taskArgs.taskreceipt[2][4],
         },
       };
       if (taskArgs.log) console.log(taskReceipt);

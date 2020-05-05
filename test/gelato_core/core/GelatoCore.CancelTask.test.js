@@ -127,7 +127,7 @@ describe("GelatoCore.cancelTask", function () {
     // Create UserProxy
     const createTx = await gelatoUserProxyFactory
       .connect(seller)
-      .create([], []);
+      .create([], [], false);
     await createTx.wait();
     userProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
       sellerAddress
@@ -153,9 +153,11 @@ describe("GelatoCore.cancelTask", function () {
     });
 
     task = new Task({
-      provider: gelatoProvider,
-      actions: [action],
-      expiryDate: constants.HashZero,
+      base: new TaskBase({
+        provider: gelatoProvider,
+        actions: [action],
+        expiryDate: constants.HashZero,
+      }),
     });
 
     taskReceipt = {
@@ -201,25 +203,37 @@ describe("GelatoCore.cancelTask", function () {
     );
   });
 
-  it("#5: Batch Cancel task succesfully as user", async function () {
+  it("#5: Multi Cancel task succesfully as user", async function () {
     // submit second Task
     const submitTaskTx = await userProxy.submitTask(task);
     await submitTaskTx.wait();
 
-    await expect(userProxy.multiCancelTasks([taskReceipt, taskReceipt2]))
-      .to.emit(gelatoCore, "LogTaskCancelled")
-      .withArgs(taskReceipt.id)
-      .to.emit(gelatoCore, "LogTaskCancelled")
-      .withArgs(taskReceipt2.id);
-  });
+    const firstCancelData = await run("abi-encode-withselector", {
+      contractname: "GelatoCore",
+      functionname: "cancelTask",
+      inputs: [taskReceipt],
+    });
 
-  it("#6: Batch Cancel task succesfully as provider", async function () {
-    // submit second Task
-    const submitTaskTx = await userProxy.submitTask(task);
-    await submitTaskTx.wait();
+    const secondCancelData = await run("abi-encode-withselector", {
+      contractname: "GelatoCore",
+      functionname: "cancelTask",
+      inputs: [taskReceipt2],
+    });
+
+    const firstCancelAction = new Action({
+      addr: gelatoCore.address,
+      data: firstCancelData,
+      operation: Operation.Call,
+    });
+
+    const secondCancelAction = new Action({
+      addr: gelatoCore.address,
+      data: secondCancelData,
+      operation: Operation.Call,
+    });
 
     await expect(
-      gelatoCore.connect(provider).multiCancelTasks([taskReceipt, taskReceipt2])
+      userProxy.multiExecActions([firstCancelAction, secondCancelAction])
     )
       .to.emit(gelatoCore, "LogTaskCancelled")
       .withArgs(taskReceipt.id)

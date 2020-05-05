@@ -241,17 +241,17 @@ export default task(
     });
 
     const withdrawTask = new Task({
-      provider: gelatoProvider,
-      actions: [actionWithdrawBatchExchange],
-      expiryDate: constants.HashZero,
-      autoSubmitNextTask: false,
+      base: new TaskBase({
+        provider: gelatoProvider,
+        actions: [actionWithdrawBatchExchange],
+        expiryDate: constants.HashZero,
+      }),
     });
 
     // ######### Check if Provider has whitelisted TaskSpec #########
     // 1. Cast Task to TaskSpec
     const taskSpec = new TaskSpec({
       actions: [actionWithdrawBatchExchange],
-      autoSubmitNextTask: false,
       gasPriceCeil: 0, // Placeholder
     });
 

@@ -1,40 +1,28 @@
-
-
 class Task {
-  constructor({ taskBase, cycle }) {
-    if (!taskBase) throw new Error("\nTask: no taskBase provided\n");
-    if (cycle && (!Array.isArray(cycle) || !taskBase.cycle.length))
+  constructor({ base, cycle }) {
+    if (!base) throw new Error("\nTask: no base provided\n");
+    if (cycle && (!Array.isArray(cycle) || !base.cycle.length))
       throw new Error("\nTask: cycle be non-empty Array\n");
 
-    _checkTaskBaseMembers(taskBase);
-    if (cycle)
-      for (const _taskBase of cycle) _checkTaskBaseMembers(_taskBase);
+    _checkTaskBaseMembers(base);
+    if (cycle !== undefined)
+      for (const _base of cycle) _checkTaskBaseMembers(_base);
 
-    this.taskBase = taskBase;
+    this.base = base;
     this.next = 0;
     this.cycle = cycle ? cycle : [];
   }
 }
 
-function _checkTaskBaseMembers(taskBase) {
-  if (!taskBase.provider) throw new Error("\nTask: no provider\n");
-  if (
-    taskBase.conditions &&
-    (!Array.isArray(taskBase.conditions) || !taskBase.conditions.length)
-  )
+async function _checkTaskBaseMembers(base) {
+  if (!base.provider) throw new Error("\nTask: no provider\n");
+  if (base.conditions && !Array.isArray(base.conditions))
     throw new Error("\nTask: optional conditions must be non-empty Array\n");
-  if (
-    !taskBase.actions ||
-    !Array.isArray(taskBase.actions) ||
-    !taskBase.actions.length
-  )
-    throw new Error("\nTask: taskBase.actions must be non-empty Array\n");
-  if (
-    taskBase.autoResubmitSelf &&
-    typeof taskBase.autoResubmitSelf !== "boolean"
-  ) {
+  if (!base.actions || !Array.isArray(base.actions) || !base.actions.length)
+    throw new Error("\nTask: base.actions must be non-empty Array\n");
+  if (base.autoResubmitSelf && typeof base.autoResubmitSelf !== "boolean") {
     throw new Error(
-      "\nTask: taskBase.autoResubmitSelf must be boolean if defined\n"
+      "\nTask: base.autoResubmitSelf must be boolean if defined\n"
     );
   }
 }

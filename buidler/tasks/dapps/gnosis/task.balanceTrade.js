@@ -276,7 +276,7 @@ export default task(
       conditions: [condition],
       actions: [placeOrderAction, setConditionBalanceAction],
       expiryDate: constants.HashZero,
-      autoSubmitNextTask: true,
+      autoResubmitSelf: true,
     });
 
     // ######### Check if Provider has whitelisted TaskSpec #########
@@ -284,7 +284,6 @@ export default task(
     const taskSpec = new TaskSpec({
       conditions: [condition.inst],
       actions: [placeOrderAction, setConditionBalanceAction],
-      autoSubmitNextTask: true,
       gasPriceCeil: 0, // Placeholder
     });
 

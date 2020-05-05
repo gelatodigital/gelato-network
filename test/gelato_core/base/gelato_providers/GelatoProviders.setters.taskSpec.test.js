@@ -100,16 +100,18 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
 
     // Task
     task = new Task({
-      provider: gelatoProvider,
-      conditions: [conditionStruct],
-      actions: [actionStruct],
-      expiryDate: constants.Zero,
+      base: new TaskBase({provider: gelatoProvider,
+        conditions: [conditionStruct],
+        actions: [actionStruct],
+        expiryDate: constants.Zero,
+      }),
     });
     otherTask = new Task({
-      provider: gelatoProvider,
-      conditions: [conditionStruct],
-      actions: [actionStruct, otherActionStruct],
-      expiryDate: constants.Zero,
+      base: new TaskBase({provider: gelatoProvider,
+        conditions: [conditionStruct],
+        actions: [actionStruct, otherActionStruct],
+        expiryDate: constants.Zero,
+      }),
     });
   });
 

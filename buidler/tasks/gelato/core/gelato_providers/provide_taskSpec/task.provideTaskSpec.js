@@ -7,7 +7,6 @@ export default task(
 )
   .addPositionalParam("condition", "0 for no condition")
   .addPositionalParam("gaspriceceil", "in Gwei (e.g. 20)")
-  .addFlag("auto", "if true, task is re-creating itself after execution")
   .addVariadicPositionalParam("actions")
   .addFlag("log", "Logs return values to stdout")
   .setAction(async (taskArgs) => {
@@ -72,7 +71,6 @@ export default task(
         conditions: taskArgs.condition ? [taskArgs.condition] : undefined,
         actions: actionArray,
         gasPriceCeil,
-        autoSubmitNextTask: taskArgs.auto ? true : false,
       });
 
       if (taskArgs.log) console.log(taskArgs.condition, actionArray);
