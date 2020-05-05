@@ -24,7 +24,7 @@ struct Action {
     bool termsOkCheck;
 }
 
-struct BaseTask {
+struct TaskBase {
     Provider provider;
     Condition[] conditions;  // optional
     Action[] actions;
@@ -33,9 +33,9 @@ struct BaseTask {
 }
 
 struct Task {
-    BaseTask base;
+    TaskBase base;
     uint256 next; // optional for cyclic tasks: auto-filled by multiSubmitTask()
-    BaseTask[] cycle;  // optional for cyclic tasks: auto-filled multiSubmitTasks()
+    TaskBase[] cycle;  // optional for cyclic tasks: auto-filled multiSubmitTasks()
 }
 
 struct TaskReceipt {
@@ -118,11 +118,6 @@ interface IGelatoCore {
     /// @dev Callable only by userProxy or selected provider
     /// @param _TR TaskReceipt: id, userProxy, Task.
     function cancelTask(TaskReceipt calldata _TR) external;
-
-    /// @notice Batch Cancel tasks
-    /// @dev Callable only by userProxy or selected provider
-    /// @param _taskReceipts TaskReceipts: id, userProxy, Task.
-    function multiCancelTasks(TaskReceipt[] calldata _taskReceipts) external;
 
     /// @notice Compute hash of task receipt
     /// @param _TR TaskReceipt, consisting of user task, user proxy address and id

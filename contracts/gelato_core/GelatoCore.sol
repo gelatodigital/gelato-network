@@ -1,7 +1,7 @@
 pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
-import { IGelatoCore, BaseTask, Task, TaskReceipt } from "./interfaces/IGelatoCore.sol";
+import { IGelatoCore, TaskBase, Task, TaskReceipt } from "./interfaces/IGelatoCore.sol";
 import { GelatoExecutors } from "./GelatoExecutors.sol";
 import { SafeMath } from "../external/SafeMath.sol";
 import { IGelatoCondition } from "../gelato_conditions/IGelatoCondition.sol";
@@ -103,7 +103,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         bytes32 hashedTaskReceipt = hashTaskReceipt(_TR);
         if (taskReceiptHash[_TR.id] != hashedTaskReceipt) return "InvalidTaskReceiptHash";
 
-        if (_TR.task.base.expiryDate != 0 && _TR.task.base.expiryDate <= now) return "TaskReceiptExpired";
+        if (_TR.task.base.expiryDate != 0 && _TR.task.base.expiryDate <= now)
+            return "TaskReceiptExpired";
 
         // CHECK Condition for user proxies
         if (_TR.task.base.conditions.length != 0) {
@@ -410,10 +411,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         emit LogTaskCancelled(_TR.id);
     }
 
-    function multiCancelTasks(TaskReceipt[] memory _taskReceipts) public override {
-        for (uint i; i < _taskReceipts.length; i++) cancelTask(_taskReceipts[i]);
-    }
-
     // Helpers
     function hashTaskReceipt(TaskReceipt memory _TR) public pure override returns(bytes32) {
         return keccak256(abi.encode(_TR));
@@ -435,7 +432,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         if (_task.next == _task.cycle.length - 1) next = 0;
         else next = _task.next + 1;
         task = Task({
-            base: BaseTask({
+            base: TaskBase({
                 provider: _task.cycle[next].provider,
                 conditions: _task.cycle[next].conditions,
                 actions: _task.cycle[next].actions,

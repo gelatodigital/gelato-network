@@ -77,15 +77,6 @@ contract GelatoUserProxy is IGelatoUserProxy {
         }
     }
 
-    function multiCancelTasks(TaskReceipt[] memory _TRs) public override onlyUser {
-        try IGelatoCore(gelatoCore).multiCancelTasks(_TRs) {
-        } catch Error(string memory err) {
-            revert(string(abi.encodePacked("GelatoUserProxy.multiCancelTasks:", err)));
-        } catch {
-            revert("GelatoUserProxy.multiCancelTasks:undefinded");
-        }
-    }
-
     // @dev we have to write duplicate code due to calldata _action FeatureNotImplemented
     function execAction(Action memory _action) public payable override auth {
         if (_action.operation == Operation.Call)
