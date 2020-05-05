@@ -7,7 +7,8 @@
   "private": false,
   "scripts": {
     "coverage": "npx buidler coverage --network coverage",
-    "test": "npx buidler test --network localhost"
+    "test": "npx buidler test",
+    "test-gas": "export REPORT_GAS=true && npx buidler test --network localhost"
   },
   "devDependencies": {
     "@babel/core": "7.7.4",

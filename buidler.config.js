@@ -64,6 +64,9 @@ const mainnetConfig = require("./buidler/config/networks/mainnetConfig");
 
 module.exports = {
   defaultNetwork: DEFAULT_NETWORK ? DEFAULT_NETWORK : "buidlerevm",
+  gasReporter: {
+    enabled: process.env.REPORT_GAS ? true : false,
+  },
   networks: {
     buidlerevm: {
       hardfork: "istanbul",
