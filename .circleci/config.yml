@@ -29,9 +29,12 @@ jobs: # a collection of steps
           command: npx buidler node || true
           # important: buidler node as background process
           background: true
-      - run: # Tests
+      - run: # Tests and Gas report
           name: Tests and Gas Report on buidlerevm RPC
           command: yarn test-gas
+      - run: # eth-gas-reporter codechecks
+          name: eth-gas-reporter/codechecks
+          command: npx codechecks
       - run: # Shut down buidler node
           name: Shut down buidlerevm node
           command: pkill node
