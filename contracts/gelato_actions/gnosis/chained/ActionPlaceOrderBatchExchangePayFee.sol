@@ -12,7 +12,7 @@ import { FeeExtractor } from "../../../gelato_helpers/FeeExtractor.sol";
 
 
 
-/// @title ActionPlaceOrderBatchExchangeWithWithdraw
+/// @title ActionPlaceOrderBatchExchangePayFee
 /// @author Luis Schliesske & Hilmar Orth
 /// @notice Gelato action that 1) executes PlaceOrder on Batch Exchange, 2) buys withdraw credit from provider and 3) creates withdraw task on gelato
 

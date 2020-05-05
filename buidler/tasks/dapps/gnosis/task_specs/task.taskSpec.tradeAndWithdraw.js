@@ -28,7 +28,7 @@ export default internalTask(
 
       // ##### Create Task Spec
       const taskSpec = new TaskSpec({
-        actions: [withdrawTask],
+        actions: [actionWithdrawBatchExchange],
         autoSubmitNextTask: false,
         gasPriceCeil: 0, // Infinte gas price
       });
