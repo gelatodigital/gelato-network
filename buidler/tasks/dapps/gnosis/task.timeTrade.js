@@ -3,7 +3,7 @@ import { constants, utils } from "ethers";
 
 export default task(
   "gc-timetrade",
-  `Creates a gelato task that sells sellToken on Batch Exchange every X mintues/hours/days on Rinkeby`
+  `Creates a gelato task that sells sellToken on Batch Exchange every X seconds on Rinkeby`
 )
   .addOptionalParam(
     "mnemonicIndex",
@@ -291,7 +291,9 @@ export default task(
     // Revert if task spec is not provided
     if (isProvided == 0) {
       // await gelatoCore.provideTaskSpecs([taskSpec]);
-      throw Error("Task Spec is not whitelisted by provider");
+      throw Error(
+        `Task Spec is not provided by provider: ${taskArgs.gelatoprovider}. Please provide it by running the gc-providetaskspec script`
+      );
     } else console.log("already provided");
 
     // encode for Multi send

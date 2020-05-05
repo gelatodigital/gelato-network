@@ -4,7 +4,7 @@ import { constants, utils } from "ethers";
 
 export default task(
   "gc-tradeandwithdraw",
-  `Creates Cpk proxy for user, sells on batch exchange and tasks a gelato bot to withdraw the funds later and send them back to the users EOA on ${defaultNetwork})`
+  `Deploys CPK proxy if not deployed yet, sells sellTokens on batch exchange and tasks gelato to withdraw the funds later and send them back to the users EOA`
 )
   .addOptionalParam(
     "mnemonicindex",
@@ -267,7 +267,9 @@ export default task(
     // Revert if task spec is not provided
     if (isProvided == 0) {
       // await gelatoCore.provideTaskSpecs([taskSpec]);
-      throw Error("Task Spec is not whitelisted by provider");
+      throw Error(
+        `Task Spec is not provided by provider: ${taskArgs.gelatoprovider}. Please provide it by running the gc-providetaskspec script`
+      );
     } else console.log("already provided");
     // ############################################### Real Place Order END
 

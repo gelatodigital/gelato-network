@@ -3,7 +3,7 @@ import { constants, utils } from "ethers";
 
 export default task(
   "gc-kyberPriceTrade",
-  `Creates a gelato task that market sells sellToken on Batch Exchange if a certain price is reached on rinkeby`
+  `Creates a gelato task that market sells sellToken on Batch Exchange if a certain price is reached on kyber, while scheduling a withdraw task that withdraws the tokens and sends them back to the users EOA after x seconds have passed`
 )
   .addOptionalParam(
     "mnemonicIndex",
@@ -125,7 +125,7 @@ export default task(
         signer: user,
       });
       // Do a test call to see if contract exist
-      const name = await gnosisSafe.getOwners();
+      await gnosisSafe.getOwners();
       // If instantiated, contract exist
       safeDeployed = true;
       console.log("User already has safe deployed");
@@ -315,7 +315,9 @@ export default task(
     // Revert if task spec is not provided
     if (isProvided1 == 0) {
       // await gelatoCore.provideTaskSpecs([taskSpec1]);
-      throw Error("Task Spec 1 is not whitelisted by provider");
+      throw Error(
+        `Task Spec 1 is not provided by provider: ${taskArgs.gelatoprovider}. Please provide it by running the gc-providetaskspec script`
+      );
     } else console.log("already provided");
 
     // ############################################### Place Order
@@ -389,7 +391,9 @@ export default task(
     // Revert if task spec is not provided
     if (isProvided2 == 0) {
       // await gelatoCore.provideTaskSpecs([taskSpec2]);
-      throw Error("Task Spec 2 is not whitelisted by provider");
+      throw Error(
+        `Task Spec 2 is not provided by provider: ${taskArgs.gelatoprovider}. Please provide it by running the gc-providetaskspec script`
+      );
     } else console.log("already provided");
     // ############################################### Reak Place Order END
 
