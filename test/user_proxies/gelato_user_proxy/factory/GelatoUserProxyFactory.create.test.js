@@ -144,7 +144,7 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE", function () {
     });
   });
 
-  describe("GelatoUserProxyFactory.create: _submitTasks & _execActions", function () {
+  describe("GelatoUserProxyFactory.create: _tasks & _execActions", function () {
     beforeEach(async function () {
       // Get the ContractFactory, contract instance, and Signers here.
       ProviderModuleGelatoUserProxyFactory = await ethers.getContractFactory(

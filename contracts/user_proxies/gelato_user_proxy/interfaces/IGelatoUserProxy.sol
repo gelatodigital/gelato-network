@@ -11,7 +11,7 @@ interface IGelatoUserProxy {
 
     /// @notice Submit multiple tasks on gelato
     /// @param _tasks Task to create
-    function multiSubmitTasks(Task[] calldata _tasks) external;
+    function multiSubmitTasks(Task[] calldata _tasks, bool _cycle) external;
 
     /// @notice Cancel an task receipt on gelato
     /// @param _TR Task Receipt to cancel

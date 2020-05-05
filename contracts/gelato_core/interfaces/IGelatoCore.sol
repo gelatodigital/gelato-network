@@ -24,15 +24,18 @@ struct Action {
     bool termsOkCheck;
 }
 
-struct Cycle { uint256 id; uint256 index; uint256 length; }
-
-struct Task {
+struct BaseTask {
     Provider provider;
     Condition[] conditions;  // optional
     Action[] actions;
     uint256 expiryDate;  // 0 == infinity.
     bool autoResubmitSelf;
-    Cycle cycle;  // optional but must be empty: auto-filled by GelatoCore.submitTaskCycle
+}
+
+struct Task {
+    BaseTask base;
+    uint256 next; // optional for cyclic tasks: auto-filled by multiSubmitTask()
+    BaseTask[] cycle;  // optional for cyclic tasks: auto-filled multiSubmitTasks()
 }
 
 struct TaskReceipt {
@@ -87,12 +90,9 @@ interface IGelatoCore {
     /// @notice Submit gelato tasks that will be executed under the specified conditions
     /// @dev This function must be called from a contract account provided by Provider
     /// @param _tasks Selected provider, conditions, actions, expiry date of the task
-    function multiSubmitTasks(Task[] calldata _tasks) external;
-
-    /// @notice Submit a list of tasks that form an infine cycle of task auto submissions.
-    /// @dev This function must be called from a contract account provided by Provider
-    /// @param _tasks Selected provider, conditions, actions, expiry date of the tasks
-    function submitTaskCycle(Task[] calldata _tasks) external;
+    /// @param _cycle If true, GelatoCore will create a task cycle according to the
+    ///   sequence of _tasks and enter into the cycle by submitting the first task.
+    function multiSubmitTasks(Task[] calldata _tasks, bool _cycle) external;
 
     // ================  Exec Suite =========================
     /// @notice Off-chain API for executors to check, if a TaskReceipt is executable
@@ -133,15 +133,6 @@ interface IGelatoCore {
     /// @notice Returns the taskReceiptId of the last TaskReceipt submitted
     /// @return currentId currentId, last TaskReceiptId submitted
     function currentTaskReceiptId() external view returns(uint256);
-
-    /// @notice Returns the taskCycleId of the last Task Cycle submitted
-    /// @return The last used taskCycleId
-    function currentTaskCycleId() external view returns(uint256);
-
-    /// @notice Returns the array of cyclic Tasks with _taskCycleId.
-    /// @param _taskCycleId The unique id the task cycle was stored under by GelatoCore.
-    /// @return The sequence of Tasks in the Cycle with id _taskCycleId
-    // function taskCycle(uint256 _taskCycleId) external view returns(Task[] memory);
 
     /// @notice Returns computed taskReceipt hash, used to check for taskReceipt validity
     /// @param _taskReceiptId Id of taskReceipt emitted in submission event

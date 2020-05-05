@@ -110,7 +110,7 @@ contract ActionPlaceOrderBatchExchangeChainedChained  {
             _taskWithdraw
         );
 
-        _taskWithdraw.actions[0].data = placeOrderPayload;
+        _taskWithdraw.base.actions[0].data = placeOrderPayload;
 
         try IGelatoCore(_gelatoCore).submitTask(_taskWithdraw){}
         catch{

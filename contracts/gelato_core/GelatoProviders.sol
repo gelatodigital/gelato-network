@@ -61,11 +61,11 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         override
         returns(string memory)
     {
-        if (!isModuleProvided(_task.provider.addr, _task.provider.module))
+        if (!isModuleProvided(_task.base.provider.addr, _task.base.provider.module))
             return "InvalidProviderModule";
 
         IGelatoProviderModule providerModule = IGelatoProviderModule(
-            _task.provider.module
+            _task.base.provider.module
         );
 
         try providerModule.isProvided(_userProxy, _task) returns(string memory res) {
@@ -83,7 +83,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         returns(string memory res)
     {
         TaskSpec memory _taskSpec = _castTaskToSpec(_task);
-        res = isTaskSpecProvided(_task.provider.addr, _taskSpec);
+        res = isTaskSpecProvided(_task.base.provider.addr, _taskSpec);
         if (res.startsWithOk()) return providerModuleChecks(_userProxy, _task);
     }
 
@@ -95,7 +95,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         returns(string memory)
     {
         bytes32 taskSpecHash = hashTaskSpec(_castTaskToSpec(_TR.task));
-        if (_gelatoGasPrice > taskSpecGasPriceCeil[_TR.task.provider.addr][taskSpecHash])
+        if (_gelatoGasPrice > taskSpecGasPriceCeil[_TR.task.base.provider.addr][taskSpecHash])
             return "taskSpecGasPriceCeil-OR-notProvided";
         return providerModuleChecks(_TR.userProxy, _TR.task);
     }
@@ -346,8 +346,8 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         returns(TaskSpec memory taskSpec)
     {
         taskSpec = TaskSpec({
-            conditions: _stripConditionData(_task.conditions),
-            actions: _task.actions,
+            conditions: _stripConditionData(_task.base.conditions),
+            actions: _task.base.actions,
             gasPriceCeil: 0  // placeholder
         });
     }
