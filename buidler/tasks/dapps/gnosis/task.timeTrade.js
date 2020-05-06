@@ -3,7 +3,7 @@ import { constants, utils } from "ethers";
 
 export default task(
   "gc-timetrade",
-  `Creates a gelato task that sells sellToken on Batch Exchange every X mintues/hours/days on Rinkeby`
+  `Creates a gelato task that sells sellToken on Batch Exchange every X seconds on Rinkeby`
 )
   .addOptionalParam(
     "mnemonicIndex",
@@ -89,19 +89,6 @@ export default task(
       contractname: "ERC20",
       write: true,
     });
-
-    // Get the required fee from the providers Fee Contract
-    const feeExtractor = await run("instantiateContract", {
-      deployments: true,
-      contractname: "FeeExtractor",
-      read: true,
-    });
-
-    const requiredFee = await feeExtractor.getFeeAmount(taskArgs.sellToken);
-    if (requiredFee.eq(constants.Zero))
-      throw Error(
-        "Sell Token not accepted by provider, choose a different token"
-      );
 
     // Check if user has sufficient balance (sell Amount plus required Fee)
     const sellTokenBalance = await sellToken.balanceOf(userAddress);
@@ -271,27 +258,17 @@ export default task(
     });
 
     // ######### Check if Provider has whitelisted TaskSpec #########
-    // 1. Cast Task to TaskSpec
-    const taskSpec = new TaskSpec({
-      conditions: [condition.inst],
-      actions: [placeOrderAction],
-      autoSubmitNextTask: true,
-      gasPriceCeil: 0, // Placeholder
+    const isProvided = await run("gc-check-if-provided", {
+      task: placeOrderTask,
+      provider: gelatoProvider.addr,
+      // taskspecname: "balanceTrade",
     });
 
-    // 2. Hash Task Spec
-    const taskSpecHash = await gelatoCore.hashTaskSpec(taskSpec);
-
-    // Check if taskSpecHash's gasPriceCeil is != 0
-    const isProvided = await gelatoCore.taskSpecGasPriceCeil(
-      gelatoProvider.addr,
-      taskSpecHash
-    );
-
-    // Revert if task spec is not provided
-    if (isProvided == 0) {
-      // await gelatoCore.provideTaskSpecs([taskSpec]);
-      throw Error("Task Spec is not whitelisted by provider");
+    if (!isProvided) {
+      // await gelatoCore.provideTaskSpecs([taskSpec1]);
+      throw Error(
+        `Task Spec is not provided by provider: ${taskArgs.gelatoprovider}. Please provide it by running the gc-providetaskspec script`
+      );
     } else console.log("already provided");
 
     // encode for Multi send

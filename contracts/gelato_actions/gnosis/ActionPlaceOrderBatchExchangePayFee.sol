@@ -1,18 +1,18 @@
 pragma solidity ^0.6.5;
 pragma experimental ABIEncoderV2;
 
-import { GelatoActionsStandard } from "../../GelatoActionsStandard.sol";
-import { IGelatoAction } from "../../IGelatoAction.sol";
-import { IERC20 } from "../../../external/IERC20.sol";
-import { SafeERC20 } from "../../../external/SafeERC20.sol";
-import { SafeMath } from "../../../external/SafeMath.sol";
-import { IBatchExchange } from "../../../dapp_interfaces/gnosis/IBatchExchange.sol";
-import { Task, IGelatoCore } from "../../../gelato_core/interfaces/IGelatoCore.sol";
-import { FeeExtractor } from "../../../gelato_helpers/FeeExtractor.sol";
+import { GelatoActionsStandard } from "../GelatoActionsStandard.sol";
+import { IGelatoAction } from "../IGelatoAction.sol";
+import { IERC20 } from "../../external/IERC20.sol";
+import { SafeERC20 } from "../../external/SafeERC20.sol";
+import { SafeMath } from "../../external/SafeMath.sol";
+import { IBatchExchange } from "../../dapp_interfaces/gnosis/IBatchExchange.sol";
+import { Task, IGelatoCore } from "../../gelato_core/interfaces/IGelatoCore.sol";
+import { FeeExtractor } from "../../gelato_helpers/FeeExtractor.sol";
 
 
 
-/// @title ActionPlaceOrderBatchExchangeWithWithdraw
+/// @title ActionPlaceOrderBatchExchangePayFee
 /// @author Luis Schliesske & Hilmar Orth
 /// @notice Gelato action that 1) executes PlaceOrder on Batch Exchange, 2) buys withdraw credit from provider and 3) creates withdraw task on gelato
 

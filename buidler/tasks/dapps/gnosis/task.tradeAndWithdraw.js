@@ -4,7 +4,7 @@ import { constants, utils } from "ethers";
 
 export default task(
   "gc-tradeandwithdraw",
-  `Creates Cpk proxy for user, sells on batch exchange and tasks a gelato bot to withdraw the funds later and send them back to the users EOA on ${defaultNetwork})`
+  `Deploys CPK proxy if not deployed yet, sells sellTokens on batch exchange and tasks gelato to withdraw the funds later and sends them back to the users EOA`
 )
   .addOptionalParam(
     "mnemonicindex",
@@ -40,7 +40,9 @@ export default task(
   )
   .addOptionalParam(
     "gelatoprovider",
-    "Gelato Provider who pays ETH on gelato for the users transaction, defaults to provider of gelato core team"
+    "Gelato Provider who pays ETH on gelato for the users transaction, defaults to provider of gelato core team",
+    "0x518eAa8f962246bCe2FA49329Fe998B66d67cbf8",
+    types.string
   )
   .addOptionalParam(
     "saltnonce",
@@ -59,27 +61,24 @@ export default task(
     const batchDuration = ethers.utils
       .bigNumberify(taskArgs.seconds)
       .div(ethers.utils.bigNumberify("300"));
-    // 1. Determine CPK proxy address of user (mnemoric index 0 by default)
-    const {
-      [taskArgs.mnemonicindex]: user,
-      [2]: provider,
-    } = await ethers.getSigners();
+
+    // Determine CPK proxy address of user (mnemoric index 0 by default)
+    const { [taskArgs.mnemonicindex]: user } = await ethers.getSigners();
     const userAddress = await user.getAddress();
     const safeAddress = await run("gc-determineCpkProxyAddress", {
       useraddress: userAddress,
       saltnonce: taskArgs.saltnonce,
     });
 
-    // Deterimine provider
-    if (!taskArgs.gelatoprovider)
-      taskArgs.gelatoprovider = await run("handleGelatoProvider", {
-        gelatoprovider: taskArgs.gelatoprovider,
-      });
+    // // Deterimine provider
+    // if (!taskArgs.gelatoprovider)
+    //   taskArgs.gelatoprovider = await run("handleGelatoProvider", {
+    //     gelatoprovider: taskArgs.gelatoprovider,
+    //   });
 
     if (taskArgs.log) console.log(`Safe Address: ${safeAddress}`);
 
-    // 2. Approve proxy address to move X amount of DAI
-
+    // Approve proxy address to move X amount of DAI
     const sellToken = await run("instantiateContract", {
       contractaddress: taskArgs.sellToken,
       contractname: "ERC20",
@@ -96,7 +95,7 @@ export default task(
     const requiredFee = await feeExtractor.getFeeAmount(taskArgs.sellToken);
     if (requiredFee.eq(constants.Zero))
       throw Error(
-        "Sell Token not accepted by provider, choose a different token"
+        "Sell Token not accepted by provider as payment method for fee, choose a different token"
       );
 
     if (ethers.utils.bigNumberify(taskArgs.sellAmount).lte(requiredFee))
@@ -107,6 +106,7 @@ export default task(
     const totalSellAmountMinusFee = ethers.utils
       .bigNumberify(taskArgs.sellAmount)
       .sub(requiredFee);
+
     if (sellTokenBalance.lte(ethers.utils.bigNumberify(taskArgs.sellAmount)))
       throw new Error("Insufficient sellToken to conduct enter stableswap");
 
@@ -121,11 +121,17 @@ export default task(
 
     await sellToken.approve(safeAddress, taskArgs.sellAmount);
 
+    const gelatoCore = await run("instantiateContract", {
+      contractname: "GelatoCore",
+      write: true,
+      signer: provider,
+    });
+
     let safeDeployed = false;
-    let gnosisSafe;
+    let gelatoIsWhitelisted = false;
     try {
       // check if Proxy is already deployed
-      gnosisSafe = await run("instantiateContract", {
+      const gnosisSafe = await run("instantiateContract", {
         contractname: "IGnosisSafe",
         contractaddress: safeAddress,
         write: true,
@@ -135,20 +141,9 @@ export default task(
       await gnosisSafe.getOwners();
       // If instantiated, contract exist
       safeDeployed = true;
-      console.log("User already has safe deployed");
-    } catch (error) {
-      console.log("safe not deployed, deploy safe and execute tx");
-    }
+      if (taskArgs.log) console.log("User already has safe deployed");
 
-    const gelatoCore = await run("instantiateContract", {
-      contractname: "GelatoCore",
-      write: true,
-      signer: provider,
-    });
-
-    // Check if gelato core is a whitelisted module
-    let gelatoIsWhitelisted = false;
-    if (safeDeployed) {
+      // Check if gelato is whitelisted module
       const whitelistedModules = await gnosisSafe.getModules();
       for (const module of whitelistedModules) {
         if (
@@ -159,10 +154,11 @@ export default task(
           break;
         }
       }
+      if (taskArgs.log)
+        console.log(`Is gelato an enabled module? ${gelatoIsWhitelisted}`);
+    } catch (error) {
+      console.log("safe not deployed, deploy safe and execute tx");
     }
-
-    if (taskArgs.log)
-      console.log(`Is gelato an enabled module? ${gelatoIsWhitelisted}`);
 
     // Get enable gelatoCore as module calldata
     const enableGelatoData = await run("abi-encode-withselector", {
@@ -171,7 +167,7 @@ export default task(
       inputs: [gelatoCore.address],
     });
 
-    // encode for Multi send
+    // Encode enable gelatoCore for Multi send
     const enableGelatoDataMultiSend = ethers.utils.solidityPack(
       ["uint8", "address", "uint256", "uint256", "bytes"],
       [
@@ -207,7 +203,8 @@ export default task(
         `Current Batch id: ${currentBatchId}\nAction is expected to withdraw after Batch Id: ${withdrawBatch}\n`
       );
 
-    // Get submit task to withdraw from batchExchange on gelato calldata
+    // ##### Provider Module
+    // Define which gelato provider and which provider module to select
     const gnosisSafeProviderModuleAddress = await run("bre-config", {
       deployments: true,
       contractname: "ProviderModuleGnosisSafeProxy",
@@ -216,6 +213,12 @@ export default task(
     const gelatoProvider = new GelatoProvider({
       addr: taskArgs.gelatoprovider,
       module: gnosisSafeProviderModuleAddress,
+    });
+
+    // ##### Actions
+    const actionAddress = await run("bre-config", {
+      contractname: "ActionWithdrawBatchExchange",
+      deployments: true,
     });
 
     const actionWithdrawFromBatchExchangePayload = await run(
@@ -227,11 +230,6 @@ export default task(
       }
     );
 
-    const actionAddress = await run("bre-config", {
-      contractname: "ActionWithdrawBatchExchange",
-      deployments: true,
-    });
-
     const actionWithdrawBatchExchange = new Action({
       addr: actionAddress,
       data: actionWithdrawFromBatchExchangePayload,
@@ -239,6 +237,8 @@ export default task(
       value: 0,
       termsOkCheck: true,
     });
+
+    // ##### Task (no condition as we check termsOk in action)
 
     const withdrawTask = new Task({
       provider: gelatoProvider,
@@ -248,28 +248,17 @@ export default task(
     });
 
     // ######### Check if Provider has whitelisted TaskSpec #########
-    // 1. Cast Task to TaskSpec
-    const taskSpec = new TaskSpec({
-      actions: [actionWithdrawBatchExchange],
-      autoSubmitNextTask: false,
-      gasPriceCeil: 0, // Placeholder
+    const isProvided = await run("gc-check-if-provided", {
+      task: withdrawTask,
+      provider: gelatoProvider.addr,
+      // taskspecname: "balanceTrade",
     });
 
-    // 2. Hash Task Spec
-    const taskSpecHash = await gelatoCore.hashTaskSpec(taskSpec);
-
-    // Check if taskSpecHash's gasPriceCeil is != 0
-    const isProvided = await gelatoCore.taskSpecGasPriceCeil(
-      gelatoProvider.addr,
-      taskSpecHash
-    );
-
-    // Revert if task spec is not provided
-    if (isProvided == 0) {
-      // await gelatoCore.provideTaskSpecs([taskSpec]);
-      throw Error("Task Spec is not whitelisted by provider");
+    if (!isProvided) {
+      throw Error(
+        `Task Spec is not provided by provider: ${taskArgs.gelatoprovider}. Please provide it by running the gc-providetaskspec script`
+      );
     } else console.log("already provided");
-    // ############################################### Real Place Order END
 
     // Get Sell on batch exchange calldata
     const placeOrderBatchExchangeData = await run("abi-encode-withselector", {
@@ -308,6 +297,7 @@ export default task(
       inputs: [withdrawTask],
     });
 
+    // Encode for MULTI SEND
     const submitTaskMultiSend = ethers.utils.solidityPack(
       ["uint8", "address", "uint256", "uint256", "bytes"],
       [
@@ -319,7 +309,6 @@ export default task(
       ]
     );
 
-    // Encode into MULTI SEND
     // Get Multisend address
     const multiSendAddress = await run("bre-config", {
       contractaddress: "MultiSend",
@@ -357,7 +346,6 @@ export default task(
 
     let submitTaskTxHash;
     if (safeDeployed) {
-      console.log("Exec Tx");
       submitTaskTxHash = await run("gsp-exectransaction", {
         gnosissafeproxyaddress: safeAddress,
         to: multiSendAddress,
