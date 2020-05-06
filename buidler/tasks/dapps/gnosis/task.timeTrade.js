@@ -90,19 +90,6 @@ export default task(
       write: true,
     });
 
-    // Get the required fee from the providers Fee Contract
-    const feeExtractor = await run("instantiateContract", {
-      deployments: true,
-      contractname: "FeeExtractor",
-      read: true,
-    });
-
-    const requiredFee = await feeExtractor.getFeeAmount(taskArgs.sellToken);
-    if (requiredFee.eq(constants.Zero))
-      throw Error(
-        "Sell Token not accepted by provider, choose a different token"
-      );
-
     // Check if user has sufficient balance (sell Amount plus required Fee)
     const sellTokenBalance = await sellToken.balanceOf(userAddress);
 

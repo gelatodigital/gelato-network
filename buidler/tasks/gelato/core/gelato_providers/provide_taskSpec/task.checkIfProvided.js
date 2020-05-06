@@ -37,7 +37,8 @@ export default task(
         }
         // conditions, actions, autoSubmitNextTask, gasPriceCeil
         taskSpec = new TaskSpec({
-          conditions: conditionAddresses,
+          conditions:
+            conditionAddresses.length > 0 ? conditionAddresses : undefined,
           actions: taskArgs.task.actions,
           autoSubmitNextTask: taskArgs.task.autoSubmitNextTask,
           gasPriceCeil: 0,

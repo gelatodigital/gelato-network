@@ -121,6 +121,12 @@ export default task(
 
     await sellToken.approve(safeAddress, taskArgs.sellAmount);
 
+    const gelatoCore = await run("instantiateContract", {
+      contractname: "GelatoCore",
+      write: true,
+      signer: provider,
+    });
+
     let safeDeployed = false;
     let gelatoIsWhitelisted = false;
     try {
@@ -153,12 +159,6 @@ export default task(
     } catch (error) {
       console.log("safe not deployed, deploy safe and execute tx");
     }
-
-    const gelatoCore = await run("instantiateContract", {
-      contractname: "GelatoCore",
-      write: true,
-      signer: provider,
-    });
 
     // Get enable gelatoCore as module calldata
     const enableGelatoData = await run("abi-encode-withselector", {
