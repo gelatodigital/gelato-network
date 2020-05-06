@@ -333,10 +333,13 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     }
 
     function _submitNextTask(TaskReceipt memory _TR, bool _resubmitSelf) private {
-        // Increment TaskReceipt.id in storage ...
-        currentTaskReceiptId++;
+        // Increment TaskReceipt ID storage
+        uint256 nextTaskReceiptId = currentTaskReceiptId + 1;
+        currentTaskReceiptId = nextTaskReceiptId;
+
         // ... and sync with memory TaskReceipt to reflect new Receipt
-        _TR.id++;
+        uint256 currentTRId = _TR.id;
+        _TR.id = nextTaskReceiptId;
 
         // If we submit a new Task, we overwrite the current task field.
         // We won't reset the _TR.task field, if overwritten. Not needed in cont. exec flow.
@@ -350,8 +353,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         emit LogTaskSubmitted(_TR.id, hashedTaskReceipt, _TR);
 
-        // Reset currently being execute TaskReceipt.id for correct value in ExecEvents
-        _TR.id--;
+        // Reset currently being executed TaskReceipt.id for correct value in ExecEvents
+        _TR.id = currentTRId;
     }
 
     function _processProviderPayables(
@@ -431,7 +434,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     function _getNextTaskInCycle(Task memory _task) private pure returns(Task memory task) {
         // We use a copy of _task.next because otherwise somehow contract size increases
         uint256 next = _task.next;
-        if (next == _task.cycle.length) next  = 0;
+        if (next == _task.cycle.length) next = 0;
         task = Task({
             base: TaskBase({
                 provider: _task.cycle[next].provider,
