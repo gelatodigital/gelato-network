@@ -74,13 +74,9 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         emit LogTaskSubmitted(taskReceipt.id, hashedTaskReceipt, taskReceipt);
     }
 
-    function multiSubmitTasks(Task[] memory _tasks, bool _cycle) public override {
-        if (_cycle) {
-            _createTaskCycle(_tasks);
-            submitTask(_tasks[0]);
-        } else {
-            for (uint i; i < _tasks.length; i++) submitTask(_tasks[i]);
-        }
+    function submitTaskCycle(Task[] memory _tasks) public override {
+        _createTaskCycle(_tasks);
+        submitTask(_tasks[0]);
     }
 
     // ================  CAN EXECUTE EXECUTOR API ============================

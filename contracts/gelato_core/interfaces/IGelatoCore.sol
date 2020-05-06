@@ -87,12 +87,10 @@ interface IGelatoCore {
     /// @param _task Selected provider, conditions, actions, expiry date of the task
     function submitTask(Task calldata _task) external;
 
-    /// @notice Submit gelato tasks that will be executed under the specified conditions
+    /// @notice Submit a repeated sequence of tasks to be executed, starting with the first.
     /// @dev This function must be called from a contract account provided by Provider
     /// @param _tasks Selected provider, conditions, actions, expiry date of the task
-    /// @param _cycle If true, GelatoCore will create a task cycle according to the
-    ///   sequence of _tasks and enter into the cycle by submitting the first task.
-    function multiSubmitTasks(Task[] calldata _tasks, bool _cycle) external;
+    function submitTaskCycle(Task[] calldata _tasks) external;
 
     // ================  Exec Suite =========================
     /// @notice Off-chain API for executors to check, if a TaskReceipt is executable

@@ -97,11 +97,20 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
     function _submitTasks(GelatoUserProxy _userProxy, Task[] memory _tasks, bool _cycle)
         private
     {
-        try _userProxy.multiSubmitTasks(_tasks, _cycle) {
-        } catch Error(string memory err) {
-            revert(string(abi.encodePacked("GelatoUserProxyFactory._submitTasks:", err)));
-        } catch {
-            revert("GelatoUserProxyFactory._submitTasks:undefined");
+        if (_cycle) {
+            try _userProxy.submitTaskCycle(_tasks) {
+            } catch Error(string memory err) {
+                revert(string(abi.encodePacked("GelatoUserProxyFactory.submitTaskCycle:", err)));
+            } catch {
+                revert("GelatoUserProxyFactory.submitTaskCycle:undefined");
+            }
+        } else {
+            try _userProxy.multiSubmitTasks(_tasks) {
+            } catch Error(string memory err) {
+                revert(string(abi.encodePacked("GelatoUserProxyFactory.multiSubmitTasks:", err)));
+            } catch {
+                revert("GelatoUserProxyFactory.multiSubmitTasks:undefined");
+            }
         }
     }
 

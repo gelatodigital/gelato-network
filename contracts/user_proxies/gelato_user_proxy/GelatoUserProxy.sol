@@ -59,22 +59,35 @@ contract GelatoUserProxy is IGelatoUserProxy {
         }
     }
 
-    function multiSubmitTasks(Task[] memory _tasks, bool _cycle) public override userOrFactory {
-        try IGelatoCore(gelatoCore).multiSubmitTasks(_tasks, _cycle) {
+    function multiSubmitTasks(Task[] memory _tasks) public override userOrFactory {
+        for (uint i; i < _tasks.length; i++) submitTask(_tasks[i]);
+    }
+
+    function submitTaskCycle(Task[] memory _tasks) public override userOrFactory {
+        try IGelatoCore(gelatoCore).submitTaskCycle(_tasks) {
         } catch Error(string memory err) {
-            revert(string(abi.encodePacked("GelatoUserProxy.multiSubmitTasks:", err)));
+            revert(string(abi.encodePacked("GelatoUserProxy.submitTaskCycle:", err)));
         } catch {
-            revert("GelatoUserProxy.multiSubmitTasks:undefinded");
+            revert("GelatoUserProxy.submitTaskCycle:undefinded");
         }
     }
 
-    function cancelTask(TaskReceipt memory _TR) public override onlyUser {
+    function cancelTask(TaskReceipt memory _TR) public override {
+        require(
+            msg.sender == user || msg.sender == _TR.task.base.provider.addr,
+            "GelatoUserProxy.cancelTask: msg.sender"
+        );
+
         try IGelatoCore(gelatoCore).cancelTask(_TR) {
         } catch Error(string memory err) {
             revert(string(abi.encodePacked("GelatoUserProxy.cancelTask:", err)));
         } catch {
             revert("GelatoUserProxy.cancelTask:undefinded");
         }
+    }
+
+    function multiCancelTasks(TaskReceipt[] memory _TRs) public override {
+        for (uint i; i < _TRs.length; i++) cancelTask(_TRs[i]);
     }
 
     // @dev we have to write duplicate code due to calldata _action FeatureNotImplemented

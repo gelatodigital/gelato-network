@@ -10,12 +10,22 @@ interface IGelatoUserProxy {
     function submitTask(Task calldata _task) external;
 
     /// @notice Submit multiple tasks on gelato
-    /// @param _tasks Task to create
-    function multiSubmitTasks(Task[] calldata _tasks, bool _cycle) external;
+    /// @param _tasks Tasks to submit
+    function multiSubmitTasks(Task[] calldata _tasks) external;
 
-    /// @notice Cancel an task receipt on gelato
+    /// @notice Submit multiple tasks on gelato
+    /// @param _tasks Cyclic Task sequence to enter into.
+    function submitTaskCycle(Task[] calldata _tasks) external;
+
+    /// @notice Cancel a task receipt on gelato
+    /// @dev Proxy users or the Task providers can cancel.
     /// @param _TR Task Receipt to cancel
     function cancelTask(TaskReceipt calldata _TR) external;
+
+    /// @notice Cancel Tasks with their receipts on gelato
+    /// @dev Proxy users or the Task providers can cancel.
+    /// @param _TRs Task Receipts of Tasks to cancel
+    function multiCancelTasks(TaskReceipt[] calldata _TRs) external;
 
     /// @notice Execute an action
     /// @param _action Action to execute

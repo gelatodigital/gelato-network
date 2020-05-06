@@ -208,32 +208,20 @@ describe("GelatoCore.cancelTask", function () {
     const submitTaskTx = await userProxy.submitTask(task);
     await submitTaskTx.wait();
 
-    const firstCancelData = await run("abi-encode-withselector", {
-      contractname: "GelatoCore",
-      functionname: "cancelTask",
-      inputs: [taskReceipt],
-    });
+    await expect(userProxy.multiCancelTasks([taskReceipt, taskReceipt2]))
+      .to.emit(gelatoCore, "LogTaskCancelled")
+      .withArgs(taskReceipt.id)
+      .to.emit(gelatoCore, "LogTaskCancelled")
+      .withArgs(taskReceipt2.id);
+  });
 
-    const secondCancelData = await run("abi-encode-withselector", {
-      contractname: "GelatoCore",
-      functionname: "cancelTask",
-      inputs: [taskReceipt2],
-    });
-
-    const firstCancelAction = new Action({
-      addr: gelatoCore.address,
-      data: firstCancelData,
-      operation: Operation.Call,
-    });
-
-    const secondCancelAction = new Action({
-      addr: gelatoCore.address,
-      data: secondCancelData,
-      operation: Operation.Call,
-    });
+  it("#6: Multi Cancel task succesfully as provider", async function () {
+    // submit second Task
+    const submitTaskTx = await userProxy.submitTask(task);
+    await submitTaskTx.wait();
 
     await expect(
-      userProxy.multiExecActions([firstCancelAction, secondCancelAction])
+      userProxy.connect(provider).multiCancelTasks([taskReceipt, taskReceipt2])
     )
       .to.emit(gelatoCore, "LogTaskCancelled")
       .withArgs(taskReceipt.id)
