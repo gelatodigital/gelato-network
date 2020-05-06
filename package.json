@@ -10,7 +10,7 @@
     "test": "npx buidler test",
     "test-debug": "export BUIDLER_DEBUG=true && yarn test",
     "test-gas": "export REPORT_GAS=true && npx buidler test --network localhost",
-    "test-gas-debug": "export BUIDLER_DEBUG=true && npx buidler bre-config --log && yarn test-gas"
+    "test-gas-debug": "export BUIDLER_DEBUG=true && yarn test-gas"
   },
   "devDependencies": {
     "@babel/core": "7.7.4",

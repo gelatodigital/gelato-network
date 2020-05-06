@@ -9,6 +9,10 @@ const GELATO_GAS_PRICE = utils.parseUnits("10", "gwei");
 const SALT_NONCE = 42069;
 
 describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
+
+  // Tests use for loops that have timed out on coverage (ganache)
+  this.timeout(30000)
+
   let GelatoCoreFactory;
   let GelatoGasPriceOracleFactory;
   let GelatoUserProxyFactoryFactory;

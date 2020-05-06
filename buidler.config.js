@@ -88,6 +88,10 @@ module.exports = {
       // Custom
       filters: { defaultFromBlock: 1 },
     },
+    localhost: {
+      allowUnlimitedContractSize: process.env.BUIDLER_DEBUG ? true : false,
+      filters: { defaultFromBlock: 1 },
+    },
     mainnet: {
       // Standard
       accounts: { mnemonic: MAINNET_MNEMONIC },
