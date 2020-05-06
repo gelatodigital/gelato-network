@@ -220,7 +220,6 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
       provider: gelatoProvider,
       conditions: [condition],
       actions: [action, actionSetRef],
-      expiryData: 0,
       autoSubmitNextTask: true,
     });
 

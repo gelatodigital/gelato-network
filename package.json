@@ -7,12 +7,14 @@
   "private": false,
   "scripts": {
     "coverage": "npx buidler coverage --network coverage",
-    "test": "npx buidler test --network localhost"
+    "test": "npx buidler test",
+    "test-gas": "export REPORT_GAS=true && npx buidler test --network localhost"
   },
   "devDependencies": {
     "@babel/core": "7.7.4",
     "@babel/preset-env": "7.7.4",
     "@babel/register": "7.7.4",
+    "@codechecks/client": "^0.1.10",
     "@nomiclabs/buidler": "1.2.0",
     "@nomiclabs/buidler-ethers": "1.2.0",
     "@nomiclabs/buidler-waffle": "1.2.0",
