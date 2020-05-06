@@ -1,2 +1,5 @@
 checks:
   - name: eth-gas-reporter/codechecks
+settings:
+  branches:
+    - core-refactor
