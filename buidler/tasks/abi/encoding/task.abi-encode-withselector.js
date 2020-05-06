@@ -1,10 +1,15 @@
-import { task } from "@nomiclabs/buidler/config";
+import { task, types } from "@nomiclabs/buidler/config";
 import { utils } from "ethers";
 
 export default task("abi-encode-withselector")
   .addPositionalParam("contractname")
   .addPositionalParam("functionname")
-  .addOptionalVariadicPositionalParam("inputs")
+  .addOptionalVariadicPositionalParam(
+    "inputs",
+    "Array of function params",
+    undefined,
+    types.json
+  )
   .addFlag("log")
   .setAction(async (taskArgs) => {
     try {

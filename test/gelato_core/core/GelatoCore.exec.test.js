@@ -1083,11 +1083,7 @@ describe("GelatoCore.exec", function () {
       );
 
       // Get a promise for your call
-      if (network.name === "buidlerevm" || network.name === "localhost")
-        await ethers.provider.send("evm_increaseTime", [lifespan]);
-
-      if (network.name === "coverage")
-        await ethers.provider.send("evm_mine", [expiryDate]);
+      await ethers.provider.send("evm_mine", [expiryDate]);
 
       // Do random Tx to increment time
       await buyToken.create(

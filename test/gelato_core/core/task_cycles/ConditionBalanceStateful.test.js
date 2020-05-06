@@ -212,7 +212,7 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
     const actionSetRef = new Action({
       addr: conditionBalanceStateful.address,
       data: setRefData,
-      operation: Operation.Cagll,
+      operation: Operation.Call,
     });
 
     const task = new Task({

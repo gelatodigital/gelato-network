@@ -13,11 +13,13 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
   let GelatoGasPriceOracleFactory;
   let GelatoUserProxyFactoryFactory;
   let ProviderModuleGelatoUserProxyFactory;
+  let ConditionDummyFactory;
   let ActionDummyFactory;
 
   let gelatoCore;
   let gelatoGasPriceOracle;
   let gelatoUserProxyFactory;
+  let conditionDummy;
   let actionDummy;
   let providerModuleGelatoUserProxy;
 
@@ -53,6 +55,9 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
       "ProviderModuleGelatoUserProxy"
     );
     ActionDummyFactory = await ethers.getContractFactory("MockActionDummy");
+    ConditionDummyFactory = await ethers.getContractFactory(
+      "MockConditionDummy"
+    );
 
     gelatoCore = await GelatoCoreFactory.deploy();
     gelatoGasPriceOracle = await GelatoGasPriceOracleFactory.deploy(
@@ -66,12 +71,14 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
       gelatoUserProxyFactory.address
     );
     actionDummy = await ActionDummyFactory.deploy();
+    conditionDummy = await ConditionDummyFactory.deploy();
 
     await gelatoCore.deployed();
     await gelatoGasPriceOracle.deployed();
     await gelatoUserProxyFactory.deployed();
     await providerModuleGelatoUserProxy.deployed();
     await actionDummy.deployed();
+    await conditionDummy.deployed();
 
     await gelatoCore.setGelatoGasPriceOracle(gelatoGasPriceOracle.address);
 
@@ -126,9 +133,24 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
       operation: Operation.Call,
     });
 
+    const dummyConditionStruct = new Condition({
+      inst: conditionDummy.address,
+      data: await run("abi-encode-withselector", {
+        contractname: "MockConditionDummy",
+        functionname: "ok(bool)",
+        inputs: [true],
+      }),
+    });
+
     // TaskSpec
     const firstTaskSpec = new TaskSpec({
       actions: [firstActionDummyStruct],
+      gasPriceCeil: utils.parseUnits("20", "gwei"),
+    });
+
+    const secondTaskSpec = new TaskSpec({
+      conditions: [conditionDummy.address],
+      actions: [secondActionDummyStruct],
       gasPriceCeil: utils.parseUnits("20", "gwei"),
     });
 
@@ -143,7 +165,7 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
       .connect(provider)
       .multiProvide(
         executorAddress,
-        [firstTaskSpec],
+        [firstTaskSpec, secondTaskSpec],
         [providerModuleGelatoUserProxy.address],
         { value: utils.parseEther("1") }
       );
@@ -160,6 +182,7 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
 
     secondTaskBase = new TaskBase({
       provider: gelatoProvider,
+      conditions: [dummyConditionStruct],
       actions: [secondActionDummyStruct],
       autoResubmitSelf: false,
     });
@@ -169,48 +192,57 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
     // derive firstTaskReceipt for event checks
     // we derive the complete task as auto-filled by GelatoCore._createTaskCycle
     task.cycle = [task.base, secondTaskBase];
-    secondTask = new Task({
-      base: secondTaskBase,
-      next: 0,
-      cycle: [task.base, secondTaskBase],
-    });
+    // secondTask = new Task({
+    //   base: secondTaskBase,
+    //   next: 0,
+    //   cycle: [task.base, secondTaskBase],
+    // });
 
-    let firstTaskReceiptId = (await gelatoCore.currentTaskReceiptId()).add(1);
-    let firstTaskReceipt = new TaskReceipt({
-      id: firstTaskReceiptId,
-      userProxy: userProxyAddress,
-      task: task,
-    });
-    let firstTaskReceiptHash = await gelatoCore.hashTaskReceipt(
-      firstTaskReceipt
-    );
-
-    let secondTaskReceiptId = firstTaskReceiptId.add(1);
-    let secondTaskReceipt = new TaskReceipt({
-      id: secondTaskReceiptId,
-      userProxy: userProxyAddress,
-      task: secondTask,
-    });
-    let secondTaskReceiptHash = await gelatoCore.hashTaskReceipt(
-      secondTaskReceipt
-    );
+    // let firstTaskReceipt = new TaskReceipt({
+    //   id: currentReceiptId,
+    //   userProxy: userProxyAddress,
+    //   task: task,
+    // });
+    // let secondTaskReceiptHash = await gelatoCore.hashTaskReceipt(
+    //   secondTaskReceipt
+    // );
 
     await expect(gelatoUserProxyFactory.createTwo(SALT_NONCE, [], [task], true))
       .to.emit(gelatoUserProxyFactory, "LogCreation")
       .withArgs(userAddress, userProxyAddress, 0)
       .and.to.emit(gelatoCore, "LogTaskSubmitted");
-    // withArgs not possible: suspect buidlerevm or ethers struct parsing bug
-    // .withArgs(
-    //   executorAddress,
-    //   firstTaskReceiptId,
-    //   firstTaskReceiptHash,
-    //   firstTaskReceipt
-    // )
+    // does not work due to ethers-waffle nested structs bug
+    // .withArgs(currentReceiptId, firstTaskReceiptHash, firstTaskReceipt);
 
+    // currentReceiptId
+    let currentReceiptId = await gelatoCore.currentTaskReceiptId();
+
+    // First Cyclic Task
+    let {
+      taskReceiptObj: firstTaskReceipt,
+      taskReceiptArray: firstTaskReceiptArray,
+    } = await run("fetchTaskReceipt", {
+      contractaddress: gelatoCore.address,
+      taskreceiptid: currentReceiptId.toString(),
+    });
+    let firstTaskReceiptHash = await gelatoCore.hashTaskReceipt(
+      firstTaskReceipt
+    );
+
+    // Second Cyclic Task
+    let secondTaskReceipt;
+    let secondTaskReceiptArray;
+    let secondTaskReceiptHash;
+
+    // Flag to switch between 2 tasks.
     let firstTask = true;
+
     for (let i = 0; i < 10; i++) {
-      console.log(firstTaskReceipt);
-      console.log(secondTaskReceipt);
+      //console.log("\n", currentReceiptId);
+      //console.log("\nFirstTaskReceipt:\n", firstTaskReceipt, "\n");
+      // console.log("\nFirstTaskReceiptHash:\n", firstTaskReceiptHash, "\n");
+      //console.log("\nSecondTaskReceipt:\n", secondTaskReceipt, "\n");
+      // console.log("\nSecondTaskReceiptHash:\n", secondTaskReceiptHash, "\n");
 
       // canExec
       expect(
@@ -224,44 +256,83 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
       ).to.be.equal("OK");
 
       // Exec ActionDummyTask and expect it to be resubmitted automatically
-      await expect(
-        gelatoCore
-          .connect(executor)
-          .exec(firstTask ? firstTaskReceipt : secondTaskReceipt, {
-            gasPrice: GELATO_GAS_PRICE,
-            gasLimit: gelatoMaxGas,
-          })
-      )
-        .to.emit(actionDummy, "LogAction")
-        .withArgs(firstTask ? true : false)
-        .and.to.emit(gelatoCore, "LogExecSuccess")
-        .and.to.emit(gelatoCore, "LogTaskSubmitted");
+      if (i > 0) {
+        await expect(
+          gelatoCore
+            .connect(executor)
+            .exec(firstTask ? firstTaskReceipt : secondTaskReceipt, {
+              gasPrice: GELATO_GAS_PRICE,
+              gasLimit: gelatoMaxGas,
+            })
+        )
+          .to.emit(actionDummy, "LogAction")
+          .withArgs(firstTask ? true : false)
+          .and.to.emit(gelatoCore, "LogExecSuccess")
+          .and.to.emit(gelatoCore, "LogTaskSubmitted");
+        // .withArgs(
+        //   currentReceiptId.add(1),
+        //   firstTask
+        //     ? secondTaskReceiptHash
+        //     : firstTaskReceiptHash,
+        //   firstTask
+        //     ? secondTaskReceiptArray
+        //     : firstTaskReceiptArray
+        // );
+      } else {
+        // First go we do not check Args as hard to convert taskReceipt to Array
+        await expect(
+          gelatoCore
+            .connect(executor)
+            .exec(firstTask ? firstTaskReceipt : secondTaskReceipt, {
+              gasPrice: GELATO_GAS_PRICE,
+              gasLimit: gelatoMaxGas,
+            })
+        )
+          .to.emit(actionDummy, "LogAction")
+          .withArgs(firstTask ? true : false)
+          .and.to.emit(gelatoCore, "LogExecSuccess")
+          .and.to.emit(gelatoCore, "LogTaskSubmitted");
+      }
+
+      // check currentReceiptId
+      expect(await gelatoCore.currentTaskReceiptId()).to.equal(
+        currentReceiptId.add(1)
+      );
+      // increment currentReceiptId
+      currentReceiptId = currentReceiptId.add(1);
 
       // Update the Task Receipt for Second Go
       if (firstTask) {
-        firstTaskReceiptId = firstTaskReceiptId.add(2);
-        firstTaskReceipt.id = firstTaskReceiptId;
-        firstTaskReceipt.task.next =
-          firstTaskReceipt.task.next == firstTaskReceipt.task.cycle.length - 1
-            ? 0
-            : firstTaskReceipt.task.next + 1;
-        firstTaskReceiptHash = await gelatoCore.hashTaskReceipt(
-          firstTaskReceipt
-        );
         firstTask = false;
-      } else {
-        secondTaskReceiptId = firstTaskReceiptId.add(1);
-        secondTaskReceipt.id = secondTaskReceiptId;
-        secondTaskReceipt.task.next =
-          secondTaskReceipt.task.next == secondTaskReceipt.task.cycle.length - 1
-            ? 0
-            : secondTaskReceipt.task.next + 1;
+        secondTaskReceipt = await run("fetchTaskReceipt", {
+          contractaddress: gelatoCore.address,
+          taskreceiptid: currentReceiptId.toString(),
+          obj: true,
+        });
+        secondTaskReceiptArray = await run("fetchTaskReceipt", {
+          contractaddress: gelatoCore.address,
+          taskreceiptid: currentReceiptId.toString(),
+          array: true,
+        });
         secondTaskReceiptHash = await gelatoCore.hashTaskReceipt(
           secondTaskReceipt
         );
+      } else {
         firstTask = true;
+        firstTaskReceipt = await run("fetchTaskReceipt", {
+          contractaddress: gelatoCore.address,
+          taskreceiptid: currentReceiptId.toString(),
+          obj: true,
+        });
+        firstTaskReceiptArray = await run("fetchTaskReceipt", {
+          contractaddress: gelatoCore.address,
+          taskreceiptid: currentReceiptId.toString(),
+          array: true,
+        });
+        firstTaskReceiptHash = await gelatoCore.hashTaskReceipt(
+          firstTaskReceipt
+        );
       }
-      console.log("heree");
     }
   });
 });

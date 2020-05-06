@@ -17,7 +17,12 @@ export default task(
     "contractaddress",
     "An address of a deployed instance of <contractname>. Defaults to network.deployments.<contractname>"
   )
-  .addOptionalParam("eventlogs", "Provide the event logs to be parsed")
+  .addOptionalParam(
+    "eventlogs",
+    "Provide the event logs to be parsed",
+    undefined,
+    types.json
+  )
   .addOptionalParam(
     "fromblock",
     "The block number to search for event eventlogs from",
@@ -27,7 +32,7 @@ export default task(
   .addOptionalParam(
     "toblock",
     "The block number up until which to look for",
-    undefined, // placeholder default ...
+    "latest", // placeholder default ...
     types.number // ... only to enforce type
   )
   .addOptionalParam("blockhash", "Search a specific block")
@@ -79,6 +84,8 @@ export default task(
           );
         }
       }
+
+      if (taskArgs.log) console.log("\n event-getparsedlogs", taskArgs, "\n");
 
       let parsedLogs = await run("ethers-interface-parseLogs", {
         contractname: taskArgs.contractname,

@@ -840,25 +840,26 @@
     "@nodelib/fs.scandir" "2.1.3"
     fastq "^1.6.0"
 
-"@nomiclabs/buidler-ethers@1.2.0":
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/@nomiclabs/buidler-ethers/-/buidler-ethers-1.2.0.tgz#069ee095372f43919030e1a3b4079dbf96d14fab"
-  integrity sha512-JwILMiRTRNsJrP1eh56OHgjL3yqJX8ktRMulOqO1CpMAjRfGaKNNG78Vv32lJ9LV+FDWQyEZJA0eeRR0JJ0hqQ==
+"@nomiclabs/buidler-ethers@1.3.3-rc.0":
+  version "1.3.3-rc.0"
+  resolved "https://registry.yarnpkg.com/@nomiclabs/buidler-ethers/-/buidler-ethers-1.3.3-rc.0.tgz#04595f9fed7033365a0646787e467a9be27caeee"
+  integrity sha512-KdYjLA3lITlj7/D5dEjghJXhH3XOXADMHVTl5FEyfDXbO233xD28clEQBmsHG4e/lRmV23s4kSzg/0CyOwMiLw==
 
-"@nomiclabs/buidler-waffle@1.2.0":
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/@nomiclabs/buidler-waffle/-/buidler-waffle-1.2.0.tgz#587153d3d4648ca60842b687151679ebfd329c9b"
-  integrity sha512-8xZRgC0O/bxmfFlCjU8H+akcTvFbSbEHbNWl6g2+cTCTrw5Gx4yv2WsPTXuhok3Q8KlPrXkn1nt01qHef3UPyg==
+"@nomiclabs/buidler-waffle@1.3.3-rc.0":
+  version "1.3.3-rc.0"
+  resolved "https://registry.yarnpkg.com/@nomiclabs/buidler-waffle/-/buidler-waffle-1.3.3-rc.0.tgz#2ab1ab52b55fb6a3f4d11fa8f0716c1c19f78267"
+  integrity sha512-VJmL9MPARlTRdW2NXiABfibkviFWuOmkx8COR/851sA2W4Dv4prIdx6L37Shkui9p4TRGWdg4K22EgMomOwzKw==
   dependencies:
     "@types/sinon-chai" "^3.2.3"
     "@types/web3" "1.0.19"
 
-"@nomiclabs/buidler@1.2.0":
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/@nomiclabs/buidler/-/buidler-1.2.0.tgz#79a0a6f1c6ab4985ab5dca888fb9edf304279693"
-  integrity sha512-4jnJgvcG15tG5HHDuxR0l8eCqx0Fdt3KnYjamtp63Ht3vAoEoU2zNOFtDghElMkApZxvqzDzjfhOdPi70yCnKw==
+"@nomiclabs/buidler@1.3.3-rc.0":
+  version "1.3.3-rc.0"
+  resolved "https://registry.yarnpkg.com/@nomiclabs/buidler/-/buidler-1.3.3-rc.0.tgz#8ec1697f245fbde2e5ae76e2cf2633f4c918d9ba"
+  integrity sha512-RQNabPSa0V8VEYQBHdLKciozBnJoQGm46FtNtMcEAcYHsJcdK5K8Zz5vZOIZ8yA9W/VV5hK8H/MWd+SHnZP7MQ==
   dependencies:
     "@nomiclabs/ethereumjs-vm" "^4.1.1"
+    "@solidity-parser/parser" "^0.5.2"
     "@types/bn.js" "^4.11.5"
     "@types/lru-cache" "^5.1.0"
     abort-controller "^3.0.0"
@@ -893,7 +894,6 @@
     semver "^6.3.0"
     slash "^3.0.0"
     solc "0.5.15"
-    solidity-parser-antlr "^0.4.2"
     source-map-support "^0.5.13"
     ts-essentials "^2.0.7"
     tsort "0.0.1"
@@ -8473,11 +8473,6 @@ solidity-docgen@^0.4.1:
     minimatch "^3.0.4"
     semver "^7.1.3"
     solc "^0.6.4"
-
-solidity-parser-antlr@^0.4.2:
-  version "0.4.11"
-  resolved "https://registry.yarnpkg.com/solidity-parser-antlr/-/solidity-parser-antlr-0.4.11.tgz#af43e1f13b3b88309a875455f5d6e565b05ee5f1"
-  integrity sha512-4jtxasNGmyC0midtjH/lTFPZYvTTUMy6agYcF+HoMnzW8+cqo3piFrINb4ZCzpPW+7tTVFCGa5ubP34zOzeuMg==
 
 sort-keys-length@^1.0.0:
   version "1.0.1"

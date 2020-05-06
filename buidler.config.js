@@ -20,11 +20,16 @@ const TaskReceipt = require("./src/classes/gelato/TaskReceipt").default;
 const { Operation } = require("./src/classes/gelato/Action");
 
 // Helpers
+// Async
+const sleep = require("./src/scripts/helpers/async/sleep").default;
+// Gelato
+const convertTaskReceiptArrayToObj = require("./src/scripts/helpers/gelato/convertTaskReceiptLogToObj")
+  .default;
+// Nested Objects
 const checkNestedObj = require("./src/scripts/helpers/nestedObjects/checkNestedObj")
   .default;
 const getNestedObj = require("./src/scripts/helpers/nestedObjects/getNestedObj")
   .default;
-const sleep = require("./src/scripts/helpers/async/sleep").default;
 
 // ================================= BRE extension ==================================
 extendEnvironment((bre) => {
@@ -39,6 +44,7 @@ extendEnvironment((bre) => {
   // Objects
   bre.Operation = Operation;
   // Functions
+  bre.convertTaskReceiptArrayToObj = convertTaskReceiptArrayToObj;
   bre.checkNestedObj = checkNestedObj;
   bre.getNestedObj = getNestedObj;
   bre.sleep = sleep;
@@ -73,6 +79,7 @@ module.exports = {
     buidlerevm: {
       hardfork: "istanbul",
       contracts: buidlerevmConfig.contracts,
+      allowUnlimitedContractSize: process.env.BUIDLER_DEBUG ? true : false,
       // Custom
       filters: { defaultFromBlock: 1 },
     },

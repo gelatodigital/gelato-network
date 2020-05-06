@@ -232,11 +232,7 @@ describe("GelatoCore.canExec", function () {
     const submitTaskTx = await userProxy.submitTask(task2);
     await submitTaskTx.wait();
 
-    if (network.name === "buidlerevm" || network.name === "localhost")
-      await ethers.provider.send("evm_increaseTime", [lifespan]);
-
-    if (network.name === "coverage")
-      await ethers.provider.send("evm_mine", [expiryDate]);
+    await ethers.provider.send("evm_mine", [expiryDate]);
 
     expect(
       await gelatoCore
