@@ -47,7 +47,9 @@ function convertTaskReceiptObjToArray(taskReceiptObj) {
     taskReceiptObj.task.base.conditions
   );
 
-  const actions = _convertToArrayOfActionArrays(taskReceiptObj.base.actions);
+  const actions = _convertToArrayOfActionArrays(
+    taskReceiptObj.task.base.actions
+  );
 
   const base = [
     provider,
@@ -74,7 +76,7 @@ function _convertToProviderArray(providerObj) {
 function _convertToArrayOfConditionArrays(arrayOfConditionObjs) {
   const conditions = [];
   for (const conditionObj of arrayOfConditionObjs) {
-    conditionArray = [conditionObj.inst, conditionObj.data];
+    const conditionArray = [conditionObj.inst, conditionObj.data];
     conditions.push(conditionArray);
   }
   return conditions;
@@ -83,7 +85,7 @@ function _convertToArrayOfConditionArrays(arrayOfConditionObjs) {
 function _convertToArrayOfActionArrays(arrayOfActionObjs) {
   const actions = [];
   for (const actionObj of arrayOfActionObjs) {
-    actionArray = [
+    const actionArray = [
       actionObj.addr,
       actionObj.data,
       actionObj.operation,
@@ -98,7 +100,7 @@ function _convertToArrayOfActionArrays(arrayOfActionObjs) {
 function _convertToArrayOfTaskBaseArrays(arrayOfTaskBaseObjs) {
   const taskBases = [];
   for (const taskBaseObj of arrayOfTaskBaseObjs) {
-    taskBaseArray = [
+    const taskBaseArray = [
       _convertToProviderArray(taskBaseObj.provider),
       _convertToArrayOfConditionArrays(taskBaseObj.conditions),
       _convertToArrayOfActionArrays(taskBaseObj.actions),

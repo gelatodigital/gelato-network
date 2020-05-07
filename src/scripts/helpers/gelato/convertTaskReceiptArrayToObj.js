@@ -105,7 +105,7 @@ function convertTaskReceiptArrayToObj(taskReceiptArray) {
   const task = new Task({
     base,
     next: taskReceiptArray[TASK][NEXT],
-    cycle,
+    cycle: cycle ? cycle : [],
   });
 
   const taskReceiptObj = new TaskReceipt({
