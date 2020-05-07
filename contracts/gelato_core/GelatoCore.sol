@@ -411,6 +411,10 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         emit LogTaskCancelled(_TR.id);
     }
 
+    function multiCancelTasks(TaskReceipt[] memory _taskReceipts) public override {
+        for (uint i; i < _taskReceipts.length; i++) cancelTask(_taskReceipts[i]);
+    }
+
     // Helpers
     function hashTaskReceipt(TaskReceipt memory _TR) public pure override returns(bytes32) {
         return keccak256(abi.encode(_TR));

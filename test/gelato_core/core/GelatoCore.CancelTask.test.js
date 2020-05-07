@@ -203,7 +203,7 @@ describe("GelatoCore.cancelTask", function () {
     );
   });
 
-  it("#5: Multi Cancel task succesfully as user", async function () {
+  it("#5: Multi Cancel task succesfully as user via userProxy", async function () {
     // submit second Task
     const submitTaskTx = await userProxy.submitTask(task);
     await submitTaskTx.wait();
@@ -215,13 +215,13 @@ describe("GelatoCore.cancelTask", function () {
       .withArgs(taskReceipt2.id);
   });
 
-  it("#6: Multi Cancel task succesfully as provider", async function () {
+  it("#6: Multi Cancel tasks succesfully via GelatoCore as provider", async function () {
     // submit second Task
     const submitTaskTx = await userProxy.submitTask(task);
     await submitTaskTx.wait();
 
     await expect(
-      userProxy.connect(provider).multiCancelTasks([taskReceipt, taskReceipt2])
+      gelatoCore.connect(provider).multiCancelTasks([taskReceipt, taskReceipt2])
     )
       .to.emit(gelatoCore, "LogTaskCancelled")
       .withArgs(taskReceipt.id)

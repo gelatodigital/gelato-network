@@ -72,12 +72,7 @@ contract GelatoUserProxy is IGelatoUserProxy {
         }
     }
 
-    function cancelTask(TaskReceipt memory _TR) public override {
-        require(
-            msg.sender == user || msg.sender == _TR.task.base.provider.addr,
-            "GelatoUserProxy.cancelTask: msg.sender"
-        );
-
+    function cancelTask(TaskReceipt memory _TR) public override onlyUser {
         try IGelatoCore(gelatoCore).cancelTask(_TR) {
         } catch Error(string memory err) {
             revert(string(abi.encodePacked("GelatoUserProxy.cancelTask:", err)));
@@ -86,8 +81,13 @@ contract GelatoUserProxy is IGelatoUserProxy {
         }
     }
 
-    function multiCancelTasks(TaskReceipt[] memory _TRs) public override {
-        for (uint i; i < _TRs.length; i++) cancelTask(_TRs[i]);
+    function multiCancelTasks(TaskReceipt[] memory _TRs) public override onlyUser {
+        try IGelatoCore(gelatoCore).multiCancelTasks(_TRs) {
+        } catch Error(string memory err) {
+            revert(string(abi.encodePacked("GelatoUserProxy.multiCancelTasks:", err)));
+        } catch {
+            revert("GelatoUserProxy.multiCancelTasks:undefinded");
+        }
     }
 
     // @dev we have to write duplicate code due to calldata _action FeatureNotImplemented
