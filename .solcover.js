@@ -15,5 +15,6 @@ module.exports = {
     "mocks",
     "user_proxies/gelato_user_proxy/interfaces/",
     "user_proxies/gnosis_safe_proxy/",
+    "user_proxies/ds_proxy/",
   ],
 };

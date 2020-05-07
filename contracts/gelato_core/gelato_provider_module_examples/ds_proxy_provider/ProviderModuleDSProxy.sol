@@ -4,7 +4,7 @@ pragma experimental ABIEncoderV2;
 import { GelatoProviderModuleStandard } from "../../GelatoProviderModuleStandard.sol";
 import { Action, Task } from "../../interfaces/IGelatoCore.sol";
 import {
-    DSProxy, DSProxyFactory
+    DSProxyFactory
 } from "../../../user_proxies/ds_proxy/Proxy.sol";
 import {
     IDSProxy
