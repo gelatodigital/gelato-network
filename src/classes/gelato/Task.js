@@ -1,7 +1,10 @@
+import { utils } from "ethers";
+
 class Task {
   constructor({ base, next, cycle }) {
     if (!base) throw new Error("\nTask: no base provided\n");
-    if (cycle && (!Array.isArray(cycle) || !cycle.length))
+    if (next !== undefined) next = utils.bigNumberify(next);
+    if (cycle && !Array.isArray(cycle))
       throw new Error("\nTask: cycle be non-empty Array\n");
 
     _checkTaskBaseMembers(base);
@@ -9,7 +12,7 @@ class Task {
       for (const _base of cycle) _checkTaskBaseMembers(_base);
 
     this.base = base;
-    this.next = next === undefined ? 1 : next;
+    this.next = next === undefined ? utils.bigNumberify("1") : next;
     this.cycle = cycle ? cycle : [];
   }
 }
