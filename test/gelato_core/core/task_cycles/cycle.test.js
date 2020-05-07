@@ -244,17 +244,6 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
     cyclicTask2ReceiptAsArray = convertTaskReceiptObjToArray(
       cyclicTask2ReceiptAsObj
     );
-
-    // TaskReceiptHash: Task
-    taskReceiptHash = await gelatoCore.hashTaskReceipt(taskReceiptAsObj);
-    // TaskReceiptHash: CyclicTask1
-    cyclicTask1ReceiptHash = await gelatoCore.hashTaskReceipt(
-      cyclicTask1ReceiptAsObj
-    );
-    // TaskReceiptHash: CyclicTask2
-    cyclicTask2ReceiptHash = await gelatoCore.hashTaskReceipt(
-      cyclicTask2ReceiptAsObj
-    );
   });
 
   it("Should allow to enter an Arbitrary Task Cycle upon creating a GelatoUserProxy", async function () {
@@ -313,6 +302,27 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
         ).to.be.true;
       }
 
+      // Make sure The TaskHashes are correct
+      if (cyclicTask1WasSubmitted) {
+        // TaskReceiptHash: CyclicTask1
+        cyclicTask1ReceiptHash = await gelatoCore.hashTaskReceipt(
+          cyclicTask1ReceiptAsObj
+        );
+        // gelatoCore.taskReceiptHash: cyclicTask-1
+        expect(
+          await gelatoCore.taskReceiptHash(cyclicTask1ReceiptAsObj.id)
+        ).to.be.equal(cyclicTask1ReceiptHash);
+      } else {
+        // TaskReceiptHash: CyclicTask2
+        cyclicTask2ReceiptHash = await gelatoCore.hashTaskReceipt(
+          cyclicTask2ReceiptAsObj
+        );
+        // gelatoCore.taskReceiptHash: cyclicTask-2
+        expect(
+          await gelatoCore.taskReceiptHash(cyclicTask2ReceiptAsObj.id)
+        ).to.be.equal(cyclicTask2ReceiptHash);
+      }
+
       // canExec
       expect(
         await gelatoCore
@@ -355,18 +365,3 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
     }
   });
 });
-
-function nestedArraysAreEqual(a, b) {
-  if (a === b) return true;
-  if (a == null || b == null) return false;
-  if (a.length != b.length) return false;
-
-  for (var i = 0; i < a.length; ++i) {
-    // console.log(
-    //   `${a[i]} !== ${b[i]}  ? : ${a[i].toString() !== b[i].toString()}`
-    // );
-    if (Array.isArray(a[i])) return nestedArraysAreEqual(a[i], b[i]);
-    if (a[i].toString() !== b[i].toString()) return false;
-  }
-  return true;
-}

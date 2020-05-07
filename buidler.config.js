@@ -27,6 +27,9 @@ const convertTaskReceiptArrayToObj = require("./src/scripts/helpers/gelato/conve
   .default;
 const convertTaskReceiptObjToArray = require("./src/scripts/helpers/gelato/convertTaskReceiptObjToArray")
   .default;
+// Nested Arrays
+const nestedArraysAreEqual = require("./src/scripts/helpers/nestedArrays/nestedArraysAreEqual")
+  .default;
 // Nested Objects
 const checkNestedObj = require("./src/scripts/helpers/nestedObjects/checkNestedObj")
   .default;
@@ -51,6 +54,8 @@ extendEnvironment((bre) => {
   // Gelato
   bre.convertTaskReceiptArrayToObj = convertTaskReceiptArrayToObj;
   bre.convertTaskReceiptObjToArray = convertTaskReceiptObjToArray;
+  // Nested Arrays
+  bre.nestedArraysAreEqual = nestedArraysAreEqual;
   // Nested Objects
   bre.checkNestedObj = checkNestedObj;
   bre.getNestedObj = getNestedObj;
