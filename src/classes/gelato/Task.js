@@ -12,7 +12,8 @@ class Task {
       for (const _base of cycle) _checkTaskBaseMembers(_base);
 
     this.base = base;
-    this.next = next === undefined ? utils.bigNumberify("1") : next;
+    this.next =
+      next === undefined ? utils.bigNumberify("1") : utils.bigNumberify(next);
     this.cycle = cycle ? cycle : [];
   }
 }

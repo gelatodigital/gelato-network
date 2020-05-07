@@ -268,28 +268,49 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
     // Doesnt work due to waffle bug
     // .withArgs(taskReceiptAsObj.id, taskReceiptHash, taskReceiptAsArray);
 
-    let fetchedCyclicTask1ReceiptAsArray = await run("fetchTaskReceipt", {
-      taskreceiptid: "1",
-      contractaddress: gelatoCore.address,
-      array: true,
-    });
-
     // Flag to switch between 2 tasks.
     let cyclicTask1WasSubmitted = true;
     for (let i = 0; i < 10; i++) {
-      // Update currentTaskReceiptId
+      // Update TaskReceipt.id from currentTaskReceiptId
       currentTaskReceiptId = await gelatoCore.currentTaskReceiptId();
-      if (cyclicTask1WasSubmitted)
+      if (cyclicTask1WasSubmitted) {
         cyclicTask1ReceiptAsObj.id = currentTaskReceiptId;
-      else cyclicTask2ReceiptAsObj.id = currentTaskReceiptId;
+        cyclicTask1ReceiptAsArray = convertTaskReceiptObjToArray(
+          cyclicTask1ReceiptAsObj
+        );
+      } else {
+        cyclicTask2ReceiptAsObj.id = currentTaskReceiptId;
+        cyclicTask2ReceiptAsArray = convertTaskReceiptObjToArray(
+          cyclicTask2ReceiptAsObj
+        );
+      }
 
-      let fetchedCyclicTask2ReceiptAsArray;
-      if (!cyclicTask1WasSubmitted) {
-        fetchedCyclicTask2ReceiptAsArray = await run("fetchTaskReceipt", {
-          taskreceiptid: "2",
+      // Fetch the TaskReceipt of the last submitted Task and compare
+      //  with our locally constructed TaskReceipt copy
+      if (cyclicTask1WasSubmitted) {
+        const fetchedCyclicTask1ReceiptAsArray = await run("fetchTaskReceipt", {
+          taskreceiptid: cyclicTask1ReceiptAsObj.id.toString(),
           contractaddress: gelatoCore.address,
           array: true,
         });
+        expect(
+          nestedArraysAreEqual(
+            fetchedCyclicTask1ReceiptAsArray,
+            cyclicTask1ReceiptAsArray
+          )
+        ).to.be.true;
+      } else {
+        const fetchedCyclicTask2ReceiptAsArray = await run("fetchTaskReceipt", {
+          taskreceiptid: cyclicTask2ReceiptAsObj.id.toString(),
+          contractaddress: gelatoCore.address,
+          array: true,
+        });
+        expect(
+          nestedArraysAreEqual(
+            fetchedCyclicTask2ReceiptAsArray,
+            cyclicTask2ReceiptAsArray
+          )
+        ).to.be.true;
       }
 
       // canExec
@@ -305,7 +326,7 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
           )
       ).to.be.equal("OK");
 
-      // Exec ActionDummyTask and expect it to be resubmitted automatically
+      // Exec ActionDummyTask-X and expect ActionDummyTask-Y to be automitically submitted
       await expect(
         gelatoCore
           .connect(executor)
@@ -329,14 +350,13 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
         currentTaskReceiptId.add(1)
       );
 
-      // Update the Task Receipt for Second Go
-      if (cyclicTask1WasSubmitted) cyclicTask1WasSubmitted = false;
-      else cyclicTask1WasSubmitted = true;
+      // If cyclicTask1WasSubmitted => false because now cyclicTask2 was submitted
+      cyclicTask1WasSubmitted = cyclicTask1WasSubmitted ? false : true;
     }
   });
 });
 
-function nestedArraysEqual(a, b) {
+function nestedArraysAreEqual(a, b) {
   if (a === b) return true;
   if (a == null || b == null) return false;
   if (a.length != b.length) return false;
@@ -345,7 +365,7 @@ function nestedArraysEqual(a, b) {
     // console.log(
     //   `${a[i]} !== ${b[i]}  ? : ${a[i].toString() !== b[i].toString()}`
     // );
-    if (Array.isArray(a[i])) return nestedArraysEqual(a[i], b[i]);
+    if (Array.isArray(a[i])) return nestedArraysAreEqual(a[i], b[i]);
     if (a[i].toString() !== b[i].toString()) return false;
   }
   return true;
