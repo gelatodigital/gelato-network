@@ -118,7 +118,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             }
         }
 
-        // CHECK Action Conditions
+        // CHECK Action Terms
         for (uint i; i < _TR.task.base.actions.length; i++) {
             // Only check termsOk if specified, else continue
             if (!_TR.task.base.actions[i].termsOkCheck) continue;
@@ -140,6 +140,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // Optional chained Task auto-resubmit validation
         if (_TR.task.base.autoResubmitSelf) {
+            if (_TR.task.cycle.length != 0) return "CyclicTasksCannotAutoResubmitSelf";
             string memory canResubmitSelf = canSubmitTask(_TR.userProxy, _TR.task);
             if (!canResubmitSelf.startsWithOk())
                 return string(abi.encodePacked("CannotAutoResubmitSelf:", canResubmitSelf));
@@ -417,13 +418,17 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
     function _createTaskCycle(Task[] memory _tasks) private pure {
         // We set next to 1 as 0 will be init submitted from Task.base
-        if (_tasks[0].next != 1) _tasks[0].next = 1;
+        _tasks[0].next = 1;
         for (uint i; i < _tasks.length; i++) {
+            require(
+                _tasks[i].base.autoResubmitSelf == false,
+                "GelatoCore._createTaskCycle: cyclic tasks cannot autoResubmitSelf"
+            );
             _tasks[0].cycle[i].provider = _tasks[i].base.provider;
             _tasks[0].cycle[i].conditions = _tasks[i].base.conditions;
             _tasks[0].cycle[i].actions = _tasks[i].base.actions;
             _tasks[0].cycle[i].expiryDate = _tasks[i].base.expiryDate;
-            _tasks[0].cycle[i].autoResubmitSelf = _tasks[i].base.autoResubmitSelf;
+            _tasks[0].cycle[i].autoResubmitSelf = false;
         }
     }
 

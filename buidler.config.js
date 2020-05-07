@@ -23,7 +23,9 @@ const { Operation } = require("./src/classes/gelato/Action");
 // Async
 const sleep = require("./src/scripts/helpers/async/sleep").default;
 // Gelato
-const convertTaskReceiptArrayToObj = require("./src/scripts/helpers/gelato/convertTaskReceiptLogToObj")
+const convertTaskReceiptArrayToObj = require("./src/scripts/helpers/gelato/convertTaskReceiptArrayToObj")
+  .default;
+const convertTaskReceiptObjToArray = require("./src/scripts/helpers/gelato/convertTaskReceiptObjToArray")
   .default;
 // Nested Objects
 const checkNestedObj = require("./src/scripts/helpers/nestedObjects/checkNestedObj")
@@ -44,10 +46,14 @@ extendEnvironment((bre) => {
   // Objects
   bre.Operation = Operation;
   // Functions
+  // Async
+  bre.sleep = sleep;
+  // Gelato
   bre.convertTaskReceiptArrayToObj = convertTaskReceiptArrayToObj;
+  bre.convertTaskReceiptObjToArray = convertTaskReceiptObjToArray;
+  // Nested Objects
   bre.checkNestedObj = checkNestedObj;
   bre.getNestedObj = getNestedObj;
-  bre.sleep = sleep;
   // Libraries
   bre.constants = constants;
   bre.utils = utils;
