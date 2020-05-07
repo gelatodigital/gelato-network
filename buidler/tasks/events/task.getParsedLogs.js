@@ -32,7 +32,7 @@ export default task(
   .addOptionalParam(
     "toblock",
     "The block number up until which to look for",
-    "latest", // placeholder default ...
+    undefined, // placeholder default ...
     types.number // ... only to enforce type
   )
   .addOptionalParam("blockhash", "Search a specific block")
@@ -62,7 +62,8 @@ export default task(
         throw new Error("\n--stringify --values [--filtervalue] or --property");
 
       let eventlogs = taskArgs.eventlogs;
-      if (!eventlogs) {
+
+      if (!eventlogs || !eventlogs.length) {
         let loggingActivated;
         if (taskArgs.log) {
           loggingActivated = true;
@@ -107,11 +108,12 @@ export default task(
           // filterkey/value
           if (taskArgs.filterkey) {
             parsedLogs = parsedLogs.filter((parsedLog) =>
-              checkNestedObj(parsedLog, "values", taskArgs.filterkey)
+              checkNestedObj(parsedLog.parsedLog, "values", taskArgs.filterkey)
             );
             if (taskArgs.filtervalue) {
               parsedLogs = parsedLogs.filter((parsedLog) => {
-                const filteredValue = parsedLog.values[taskArgs.filterkey];
+                const filteredValue =
+                  parsedLog.parsedLog.values[taskArgs.filterkey];
                 return taskArgs.strcmp
                   ? filteredValue.toString() === taskArgs.filtervalue.toString()
                   : filteredValue == taskArgs.filtervalue;
@@ -121,10 +123,10 @@ export default task(
           // Mutate parsedLog to contain values only
           for (const [index, parsedLog] of parsedLogs.entries()) {
             const copy = {};
-            for (const key in parsedLog.values) {
+            for (const key in parsedLog.parsedLog.values) {
               copy[key] = taskArgs.stringify
-                ? parsedLog.values[key].toString()
-                : parsedLog.values[key];
+                ? parsedLog.parsedLog.values[key].toString()
+                : parsedLog.parsedLog.values[key];
             }
             parsedLogs[index] = copy;
           }
@@ -144,8 +146,8 @@ export default task(
           for (const [index, parsedLog] of parsedLogs.entries()) {
             parsedLogs[index] = {
               [taskArgs.property]: taskArgs.stringify
-                ? parsedLog.values[taskArgs.property].toString()
-                : parsedLog.values[taskArgs.property],
+                ? parsedLog.parsedLog.values[taskArgs.property].toString()
+                : parsedLog.parsedLog.values[taskArgs.property],
             };
           }
         }
@@ -155,7 +157,7 @@ export default task(
       if (taskArgs.log) {
         if (parsedLogs.length) {
           console.log(
-            `\n Parsed Logs for ${taskArgs.contractname} ${
+            `\n ✅ Parsed Logs for ${taskArgs.contractname} ${
               taskArgs.eventname ? taskArgs.eventname : ""
             }\n`
           );

@@ -27,7 +27,7 @@ export default task(
   .addOptionalParam(
     "toblock",
     "The block number up until which to look for",
-    "latest", // placeholder default ...
+    undefined, // placeholder default ...
     types.number // ... only to enforce type
   )
   .addOptionalParam("blockhash", "Search a specific block")
@@ -38,7 +38,7 @@ export default task(
   .addFlag("values")
   .addFlag("stringify")
   .addFlag("log", "Logs return values to stdout")
-  .setAction(async taskArgs => {
+  .setAction(async (taskArgs) => {
     try {
       if (taskArgs.property && taskArgs.values)
         throw new Error("\n Cannot search for --property and --values");
@@ -82,7 +82,7 @@ export default task(
 
       let parsedLogWithTxHash = await run("ethers-interface-parseLogs", {
         contractname: taskArgs.contractname,
-        eventlogs: logWithTxHash
+        eventlogs: logWithTxHash,
       });
 
       if (!parsedLogWithTxHash) {
@@ -99,12 +99,16 @@ export default task(
           // Filtering
           if (taskArgs.filterkey) {
             if (
-              !checkNestedObj(parsedLogWithTxHash, "values", taskArgs.filterkey)
+              !checkNestedObj(
+                parsedLogWithTxHash.parsedLog,
+                "values",
+                taskArgs.filterkey
+              )
             )
               parsedLogWithTxHash = undefined;
             if (taskArgs.filtervalue) {
               const filteredValue = getNestedObj(
-                parsedLogWithTxHash,
+                parsedLogWithTxHash.parsedLog,
                 "values",
                 taskArgs.filterkey
               );
@@ -118,10 +122,10 @@ export default task(
           }
           if (parsedLogWithTxHash) {
             const copy = {};
-            for (const key in parsedLogWithTxHash.values) {
+            for (const key in parsedLogWithTxHash.parsedLog.values) {
               copy[key] = taskArgs.stringify
-                ? parsedLogWithTxHash.values[key].toString()
-                : parsedLogWithTxHash.values[key];
+                ? parsedLogWithTxHash.parsedLog.values[key].toString()
+                : parsedLogWithTxHash.parsedLog.values[key];
             }
             parsedLogWithTxHash = copy;
           }
@@ -142,8 +146,10 @@ export default task(
           if (parsedLogWithTxHash) {
             parsedLogWithTxHash = {
               [taskArgs.property]: taskArgs.stringify
-                ? parsedLogWithTxHash.values[taskArgs.property].toString()
-                : parsedLogWithTxHash.values[taskArgs.property]
+                ? parsedLogWithTxHash.parsedLog.values[
+                    taskArgs.property
+                  ].toString()
+                : parsedLogWithTxHash.parsedLog.values[taskArgs.property],
             };
           }
         }

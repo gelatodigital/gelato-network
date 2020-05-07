@@ -87,16 +87,16 @@ module.exports = {
       contracts: buidlerevmConfig.contracts,
       allowUnlimitedContractSize: process.env.BUIDLER_DEBUG ? true : false,
       // Custom
-      filters: { defaultFromBlock: 1 },
+      filters: { defaultFromBlock: 1, defaultToBlock: "latest" },
     },
     coverage: {
       url: "http://127.0.0.1:8555",
       // Custom
-      filters: { defaultFromBlock: 1 },
+      filters: { defaultFromBlock: 1, defaultToBlock: "latest" },
     },
     localhost: {
       allowUnlimitedContractSize: process.env.BUIDLER_DEBUG ? true : false,
-      filters: { defaultFromBlock: 1 },
+      filters: { defaultFromBlock: 1, defaultToBlock: "latest" },
     },
     mainnet: {
       // Standard

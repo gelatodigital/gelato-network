@@ -26,7 +26,7 @@ export default task(
   .addOptionalParam(
     "toblock",
     "The block number up until which to look for",
-    "latest", // placeholder default ...
+    undefined, // placeholder default ...
     types.number // ... only to enforce type
   )
   .addOptionalParam("blockhash", "Search a specific block")
