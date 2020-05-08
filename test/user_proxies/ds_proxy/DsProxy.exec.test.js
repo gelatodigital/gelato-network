@@ -209,7 +209,7 @@ describe("Testing DS Proxy Module delpoyment and ds proxy execution with gelato"
             user: sellerAddress,
             sendToken: sellToken.address,
             destination: executorAddress,
-            sendAmount: sendAmount,
+            sendAmount,
           },
         ],
       });
@@ -229,13 +229,12 @@ describe("Testing DS Proxy Module delpoyment and ds proxy execution with gelato"
       const task = new Task({
         provider: gelatoProvider,
         actions: [action],
-        expiryDate: constants.HashZero,
       });
-      const taskReceipt = {
+      const taskReceipt = new TaskReceipt({
         id: 1,
         userProxy: userProxyAddress,
         task,
-      };
+      });
 
       // Submit Task Data encoded
       // Mint through minting script
@@ -285,7 +284,7 @@ describe("Testing DS Proxy Module delpoyment and ds proxy execution with gelato"
             user: sellerAddress,
             sendToken: sellToken.address,
             destination: executorAddress,
-            sendAmount: sendAmount,
+            sendAmount,
           },
         ],
       });
@@ -307,11 +306,11 @@ describe("Testing DS Proxy Module delpoyment and ds proxy execution with gelato"
         actions: [action, action, action],
         expiryDate: constants.HashZero,
       });
-      const taskReceipt = {
+      const taskReceipt = new TaskReceipt({
         id: 1,
         userProxy: userProxyAddress,
         task,
-      };
+      });
 
       // Submit new task spec as provider
       const newTaskSpec = new TaskSpec({
@@ -384,11 +383,11 @@ describe("Testing DS Proxy Module delpoyment and ds proxy execution with gelato"
         actions: [action],
         expiryDate: constants.HashZero,
       });
-      const taskReceipt = {
+      const taskReceipt = new TaskReceipt({
         id: 1,
         userProxy: userProxyAddress,
         task,
-      };
+      });
 
       // Submit new task spec as provider
       const newTaskSpec = new TaskSpec({

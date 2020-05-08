@@ -707,8 +707,8 @@ Get the address of gelato
 
 ## <span id="IGelatoUserProxyFactory"></span> `IGelatoUserProxyFactory`
 
-- [`create(struct Task[] _optionalSubmitTasks, struct Action[] _setupActions)`][igelatouserproxyfactory-create-struct-task---struct-action---]
-- [`createTwo(uint256 _saltNonce, struct Task[] _optionalSubmitTasks, struct Action[] _optionalActions)`][igelatouserproxyfactory-createtwo-uint256-struct-task---struct-action---]
+- [`create(struct Task[] _tasks, struct Action[] _actions)`][igelatouserproxyfactory-create-struct-task---struct-action---]
+- [`createTwo(uint256 _saltNonce, struct Task[] _tasks, struct Action[] _optionalActions)`][igelatouserproxyfactory-createtwo-uint256-struct-task---struct-action---]
 - [`predictProxyAddress(address _user, uint256 _saltNonce)`][igelatouserproxyfactory-predictproxyaddress-address-uint256-]
 - [`gelatoProxyByUser(address _user)`][igelatouserproxyfactory-gelatoproxybyuser-address-]
 - [`userByGelatoProxy(contract GelatoUserProxy _proxy)`][igelatouserproxyfactory-userbygelatoproxy-contract-gelatouserproxy-]
@@ -718,11 +718,11 @@ Get the address of gelato
 - [`proxyCreationCode()`][igelatouserproxyfactory-proxycreationcode--]
 - [`LogCreation(address user, contract GelatoUserProxy userProxy, uint256 funding)`][igelatouserproxyfactory-logcreation-address-contract-gelatouserproxy-uint256-]
 
-### <span id="IGelatoUserProxyFactory-create-struct-Task---struct-Action---"></span> `create(struct Task[] _optionalSubmitTasks, struct Action[] _setupActions) → contract GelatoUserProxy userProxy` (external)
+### <span id="IGelatoUserProxyFactory-create-struct-Task---struct-Action---"></span> `create(struct Task[] _tasks, struct Action[] _actions) → contract GelatoUserProxy userProxy` (external)
 
 Create gelato user proxy
 
-### <span id="IGelatoUserProxyFactory-createTwo-uint256-struct-Task---struct-Action---"></span> `createTwo(uint256 _saltNonce, struct Task[] _optionalSubmitTasks, struct Action[] _optionalActions) → contract GelatoUserProxy userProxy` (external)
+### <span id="IGelatoUserProxyFactory-createTwo-uint256-struct-Task---struct-Action---"></span> `createTwo(uint256 _saltNonce, struct Task[] _tasks, struct Action[] _optionalActions) → contract GelatoUserProxy userProxy` (external)
 
 ### <span id="IGelatoUserProxyFactory-predictProxyAddress-address-uint256-"></span> `predictProxyAddress(address _user, uint256 _saltNonce) → address` (external)
 

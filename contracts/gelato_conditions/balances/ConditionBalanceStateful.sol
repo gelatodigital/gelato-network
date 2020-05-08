@@ -5,7 +5,7 @@ import { GelatoConditionsStandard } from "../GelatoConditionsStandard.sol";
 import { IERC20 } from "../../external/IERC20.sol";
 import { SafeMath } from "../../external/SafeMath.sol";
 
-contract ConditionBalanceStateful is  GelatoConditionsStandard {
+contract ConditionBalanceStateful is GelatoConditionsStandard {
 
     using SafeMath for uint256;
 
@@ -61,17 +61,21 @@ contract ConditionBalanceStateful is  GelatoConditionsStandard {
         }
     }
 
-    function setRefBalance(uint256 _change, address _token, address _account, bool _plusOrMinus) public {
+    function setRefBalance(
+        uint256 _change,
+        address _token,
+        address _account,
+        bool _plusOrMinus
+    )
+        public
+    {
         uint256 newRefBalance;
         uint256 currentBalance;
-        if (_token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) {
+        if (_token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) {  // ETH
             currentBalance = _account.balance;
-
         } else {
-            // ERC20 balances
             IERC20 erc20 = IERC20(_token);
             currentBalance = erc20.balanceOf(_account);
-
         }
         newRefBalance = _plusOrMinus ? currentBalance + _change : currentBalance.sub(_change);
         proxyTokenBalanceRef[msg.sender][_account][_token] = newRefBalance;

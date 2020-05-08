@@ -11,35 +11,52 @@ errors.setLogLevel("error");
 // Classes
 const Action = require("./src/classes/gelato/Action").default;
 const Condition = require("./src/classes/gelato/Condition").default;
-const TaskSpec = require("./src/classes/gelato/TaskSpec").default;
-const TaskReceipt = require("./src/classes/gelato/TaskReceipt").default;
 const GelatoProvider = require("./src/classes/gelato/GelatoProvider").default;
 const Task = require("./src/classes/gelato/Task").default;
+const TaskSpec = require("./src/classes/gelato/TaskSpec").default;
+const TaskReceipt = require("./src/classes/gelato/TaskReceipt").default;
 // Objects
 const { Operation } = require("./src/classes/gelato/Action");
 
 // Helpers
+// Async
+const sleep = require("./src/scripts/helpers/async/sleep").default;
+// Gelato
+const convertTaskReceiptArrayToObj = require("./src/scripts/helpers/gelato/convertTaskReceiptArrayToObj")
+  .default;
+const convertTaskReceiptObjToArray = require("./src/scripts/helpers/gelato/convertTaskReceiptObjToArray")
+  .default;
+// Nested Arrays
+const nestedArraysAreEqual = require("./src/scripts/helpers/nestedArrays/nestedArraysAreEqual")
+  .default;
+// Nested Objects
 const checkNestedObj = require("./src/scripts/helpers/nestedObjects/checkNestedObj")
   .default;
 const getNestedObj = require("./src/scripts/helpers/nestedObjects/getNestedObj")
   .default;
-const sleep = require("./src/scripts/helpers/async/sleep").default;
 
 // ================================= BRE extension ==================================
 extendEnvironment((bre) => {
   // Classes
   bre.Action = Action;
   bre.Condition = Condition;
-  bre.TaskSpec = TaskSpec;
-  bre.TaskReceipt = TaskReceipt;
   bre.GelatoProvider = GelatoProvider;
   bre.Task = Task;
+  bre.TaskSpec = TaskSpec;
+  bre.TaskReceipt = TaskReceipt;
   // Objects
   bre.Operation = Operation;
   // Functions
+  // Async
+  bre.sleep = sleep;
+  // Gelato
+  bre.convertTaskReceiptArrayToObj = convertTaskReceiptArrayToObj;
+  bre.convertTaskReceiptObjToArray = convertTaskReceiptObjToArray;
+  // Nested Arrays
+  bre.nestedArraysAreEqual = nestedArraysAreEqual;
+  // Nested Objects
   bre.checkNestedObj = checkNestedObj;
   bre.getNestedObj = getNestedObj;
-  bre.sleep = sleep;
   // Libraries
   bre.constants = constants;
   bre.utils = utils;
@@ -71,13 +88,18 @@ module.exports = {
     buidlerevm: {
       hardfork: "istanbul",
       contracts: buidlerevmConfig.contracts,
+      allowUnlimitedContractSize: process.env.BUIDLER_DEBUG ? true : false,
       // Custom
-      filters: { defaultFromBlock: 1 },
+      filters: { defaultFromBlock: 1, defaultToBlock: "latest" },
     },
     coverage: {
       url: "http://127.0.0.1:8555",
       // Custom
-      filters: { defaultFromBlock: 1 },
+      filters: { defaultFromBlock: 1, defaultToBlock: "latest" },
+    },
+    localhost: {
+      allowUnlimitedContractSize: process.env.BUIDLER_DEBUG ? true : false,
+      filters: { defaultFromBlock: 1, defaultToBlock: "latest" },
     },
     mainnet: {
       // Standard
@@ -126,7 +148,7 @@ module.exports = {
 
 // ================================= PLUGINS =========================================
 usePlugin("@nomiclabs/buidler-ethers");
-usePlugin("buidler-gas-reporter");
+// usePlugin("buidler-gas-reporter");
 usePlugin("@nomiclabs/buidler-waffle");
 usePlugin("solidity-coverage");
 

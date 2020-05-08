@@ -18,7 +18,7 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
     constructor(address _gelatoCore) public { gelatoCore = _gelatoCore; }
 
     // create: public due to UnimplementedFeatureError structs
-    function create(Task[] memory _optionalSubmitTasks, Action[] memory _optionalActions)
+    function create(Task[] memory _tasks, Action[] memory _actions, bool _cycle)
         public
         payable
         override
@@ -27,16 +27,17 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         userProxy = new GelatoUserProxy{value: msg.value}(msg.sender, gelatoCore);
         gelatoProxyByUser[msg.sender] = userProxy;
         userByGelatoProxy[userProxy] = msg.sender;
-        if (_optionalActions.length != 0) _execActions(userProxy, _optionalActions);
-        if (_optionalSubmitTasks.length != 0) _submitTasks(userProxy, _optionalSubmitTasks);
+        if (_actions.length != 0) _execActions(userProxy, _actions);
+        if (_tasks.length != 0) _submitTasks(userProxy, _tasks, _cycle);
         emit LogCreation(msg.sender, userProxy, msg.value);
     }
 
     // A standard _saltNonce can be used for deterministic shared address derivation
     function createTwo(
         uint256 _saltNonce,
-        Action[] memory _optionalActions,
-        Task[] memory _optionalSubmitTasks
+        Action[] memory _actions,
+        Task[] memory _tasks,
+        bool _cycle
     )
         public
         payable
@@ -56,8 +57,8 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         userByGelatoProxy[userProxy] = msg.sender;
 
         // Optional setup
-        if (_optionalActions.length != 0) _execActions(userProxy, _optionalActions);
-        if (_optionalSubmitTasks.length != 0) _submitTasks(userProxy, _optionalSubmitTasks);
+        if (_actions.length != 0) _execActions(userProxy, _actions);
+        if (_tasks.length != 0) _submitTasks(userProxy, _tasks, _cycle);
 
         // Success
         emit LogCreation(msg.sender, userProxy, msg.value);
@@ -93,33 +94,32 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         return type(GelatoUserProxy).creationCode;
     }
 
-    function _submitTasks(GelatoUserProxy _userProxy, Task[] memory _tasks) private {
-        try _userProxy.multiSubmitTasks(_tasks) {
-        } catch Error(string memory err) {
-            revert(
-                string(
-                    abi.encodePacked(
-                        "GelatoUserProxyFactory._initialize._submitTasks:", err
-                    )
-                )
-            );
-        } catch {
-            revert("GelatoUserProxyFactory._initialize._submitTasks:undefined");
+    function _submitTasks(GelatoUserProxy _userProxy, Task[] memory _tasks, bool _cycle)
+        private
+    {
+        if (_cycle) {
+            try _userProxy.submitTaskCycle(_tasks) {
+            } catch Error(string memory err) {
+                revert(string(abi.encodePacked("GelatoUserProxyFactory.submitTaskCycle:", err)));
+            } catch {
+                revert("GelatoUserProxyFactory.submitTaskCycle:undefined");
+            }
+        } else {
+            try _userProxy.multiSubmitTasks(_tasks) {
+            } catch Error(string memory err) {
+                revert(string(abi.encodePacked("GelatoUserProxyFactory.multiSubmitTasks:", err)));
+            } catch {
+                revert("GelatoUserProxyFactory.multiSubmitTasks:undefined");
+            }
         }
     }
 
     function _execActions(GelatoUserProxy _userProxy, Action[] memory _actions) private {
         try _userProxy.multiExecActions(_actions) {
         } catch Error(string memory err) {
-            revert(
-                string(
-                    abi.encodePacked(
-                        "GelatoUserProxyFactory._initialize._execActions:", err
-                    )
-                )
-            );
+            revert(string(abi.encodePacked("GelatoUserProxyFactory._execActions:", err)));
         } catch {
-            revert("GelatoUserProxyFactory._initialize._execActions:undefined");
+            revert("GelatoUserProxyFactory._execActions:undefined");
         }
     }
 }

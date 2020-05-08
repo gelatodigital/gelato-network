@@ -222,7 +222,7 @@ describe("Gelato Core - Task Submission ", function () {
     // Create UserProxy
     const createTx = await gelatoUserProxyFactory
       .connect(seller)
-      .create([], []);
+      .create([], [], false);
     await createTx.wait();
     userProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
       sellerAddress
@@ -430,7 +430,7 @@ describe("Gelato Core - Task Submission ", function () {
       });
 
       await expect(userProxy.submitTask(task)).to.be.revertedWith(
-        "GelatoCore.canSubmitTask: executor not minStaked"
+        "GelatoCore.canSubmitTask: executorStake"
       );
     });
 
@@ -562,7 +562,7 @@ describe("Gelato Core - Task Submission ", function () {
       // 2. Create Proxy for Provider
       const createTx = await gelatoUserProxyFactory
         .connect(provider)
-        .create([], []);
+        .create([], [], false);
       await createTx.wait();
 
       const providerProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
@@ -690,7 +690,7 @@ describe("Gelato Core - Task Submission ", function () {
       // 2. Create Proxy for Provider
       const createTx = await gelatoUserProxyFactory
         .connect(provider)
-        .create([], []);
+        .create([], [], false);
       await createTx.wait();
 
       const providerProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(

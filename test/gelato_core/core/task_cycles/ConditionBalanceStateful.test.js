@@ -95,7 +95,7 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
     // Create UserProxy
     const createTx = await gelatoUserProxyFactory
       .connect(seller)
-      .create([], []);
+      .create([], [], false);
     await createTx.wait();
     userProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
       sellerAddress
@@ -161,7 +161,6 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
       conditions: [condition.inst],
       actions: [mockActionDummyGelato, actionSetRef],
       gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
-      autoSubmitNextTask: true,
     });
 
     // Call multiProvide for actionWithdrawBatchExchange
@@ -220,7 +219,7 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
       provider: gelatoProvider,
       conditions: [condition],
       actions: [action, actionSetRef],
-      autoSubmitNextTask: true,
+      autoResubmitSelf: true,
     });
 
     const submitTaskData = await run("abi-encode-withselector", {
@@ -237,11 +236,11 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
       value: 0,
     });
 
-    const taskReceipt = {
+    const taskReceipt = new TaskReceipt({
       id: 1,
       userProxy: userProxyAddress,
       task,
-    };
+    });
 
     await userProxy
       .connect(seller)
@@ -268,9 +267,8 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
         gasPrice: GELATO_GAS_PRICE,
         gasLimit: GELATO_MAX_GAS,
       })
-    )
-      .to.emit(gelatoCore, "LogExecSuccess")
-      .to.emit(gelatoCore, "LogTaskSubmitted");
+    ).to.emit(gelatoCore, "LogExecSuccess");
+    // .to.emit(gelatoCore, "LogTaskSubmitted");
 
     // ##################################### First execution DONE
     for (let i = 0; i < 10; i++) {
@@ -297,9 +295,8 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
           gasPrice: GELATO_GAS_PRICE,
           gasLimit: GELATO_MAX_GAS,
         })
-      )
-        .to.emit(gelatoCore, "LogExecSuccess")
-        .to.emit(gelatoCore, "LogTaskSubmitted");
+      ).to.emit(gelatoCore, "LogExecSuccess");
+      // .to.emit(gelatoCore, "LogTaskSubmitted");
     }
 
     // ##################################### Second execution DONE

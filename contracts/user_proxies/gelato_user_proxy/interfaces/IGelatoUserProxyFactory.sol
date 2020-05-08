@@ -12,18 +12,19 @@ interface IGelatoUserProxyFactory {
     );
 
     /// @notice Create gelato user proxy
-    /// @param _optionalSubmitTasks Optional tasks to create on gelato
-    /// @param _setupActions Optional actions to execute
+    /// @param _tasks Optional tasks to create on gelato
+    /// @param _actions Optional actions to execute
     /// @return userProxy address of deployed proxy contract
-    function create(Task[] calldata _optionalSubmitTasks, Action[] calldata _setupActions)
+    function create(Task[] calldata _tasks, Action[] calldata _actions, bool _cycle)
         external
         payable
         returns(GelatoUserProxy userProxy);
 
     function createTwo(
         uint256 _saltNonce,
-        Action[] calldata _optionalActions,
-        Task[] calldata _optionalSubmitTasks
+        Action[] calldata _actions,
+        Task[] calldata _tasks,
+        bool cycle
     )
         external
         payable

@@ -317,9 +317,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
             });
             noDataActions[i] = noDataAction;
         }
-        return keccak256(
-            abi.encode(_taskSpec.conditions, noDataActions, _taskSpec.autoSubmitNextTask)
-        );
+        return keccak256(abi.encode(_taskSpec.conditions, noDataActions));
     }
 
     // Providers' Module Getters
@@ -350,7 +348,6 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         taskSpec = TaskSpec({
             conditions: _stripConditionData(_task.conditions),
             actions: _task.actions,
-            autoSubmitNextTask: _task.autoSubmitNextTask,
             gasPriceCeil: 0  // placeholder
         });
     }

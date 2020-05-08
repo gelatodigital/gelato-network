@@ -7,9 +7,8 @@ const { run } = require("@nomiclabs/buidler");
 const GELATO_GAS_PRICE = utils.parseUnits("10", "gwei");
 
 const SALT_NONCE = 42069;
-const FUNDING = utils.parseEther("1");
 
-describe("Gelato Actions - CHAINED TASKS - GelatoUserProxy", function () {
+describe("Gelato Actions - TASK CYCLES - AUTO-RESUBMIT-SELF", function () {
   let GelatoCoreFactory;
   let GelatoGasPriceOracleFactory;
   let GelatoUserProxyFactoryFactory;
@@ -116,7 +115,6 @@ describe("Gelato Actions - CHAINED TASKS - GelatoUserProxy", function () {
     // TaskSpec
     const taskSpec = new TaskSpec({
       actions: [actionDummyStruct],
-      autoSubmitNextTask: true,
       gasPriceCeil: utils.parseUnits("20", "gwei"),
     });
 
@@ -141,7 +139,7 @@ describe("Gelato Actions - CHAINED TASKS - GelatoUserProxy", function () {
     chainedTask = new Task({
       provider: gelatoProvider,
       actions: [actionDummyStruct],
-      autoSubmitNextTask: true,
+      autoResubmitSelf: true,
     });
   });
 
@@ -158,7 +156,7 @@ describe("Gelato Actions - CHAINED TASKS - GelatoUserProxy", function () {
     );
 
     await expect(
-      gelatoUserProxyFactory.createTwo(SALT_NONCE, [], [chainedTask])
+      gelatoUserProxyFactory.createTwo(SALT_NONCE, [], [chainedTask], false)
     )
       .to.emit(gelatoUserProxyFactory, "LogCreation")
       .withArgs(userAddress, userProxyAddress, 0)

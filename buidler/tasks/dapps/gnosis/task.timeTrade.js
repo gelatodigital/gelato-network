@@ -254,7 +254,7 @@ export default task(
       conditions: [condition],
       actions: [placeOrderAction],
       expiryDate: constants.HashZero,
-      autoSubmitNextTask: true,
+      autoResubmitSelf: true,
     });
 
     // ######### Check if Provider has whitelisted TaskSpec #########

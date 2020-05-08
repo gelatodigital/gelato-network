@@ -108,8 +108,6 @@ export default internalTask(
         module: taskArgs.gelatoprovidermodule,
       });
 
-
-
       const actionWithdrawFromBatchExchangePayload = await run(
         "abi-encode-withselector",
         {
@@ -132,12 +130,12 @@ export default internalTask(
         termsOkCheck: true,
       });
 
-      const taskWithdrawBatchExchange = {
+      const taskWithdrawBatchExchange = new Task({
         provider: gelatoProvider,
         conditions: [condition],
         actions: [actionWithdrawFromBatchExchangeWithMaker],
         expiryDate: constants.HashZero,
-      };
+      });
 
       const inputs = [
         useraddress,

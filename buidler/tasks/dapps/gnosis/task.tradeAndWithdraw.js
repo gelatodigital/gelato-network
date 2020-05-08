@@ -244,7 +244,6 @@ export default task(
       provider: gelatoProvider,
       actions: [actionWithdrawBatchExchange],
       expiryDate: constants.HashZero,
-      autoSubmitNextTask: false,
     });
 
     // ######### Check if Provider has whitelisted TaskSpec #########
