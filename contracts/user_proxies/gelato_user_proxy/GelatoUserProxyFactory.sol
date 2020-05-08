@@ -28,7 +28,7 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         gelatoProxyByUser[msg.sender] = userProxy;
         userByGelatoProxy[userProxy] = msg.sender;
         if (_actions.length != 0) _execActions(userProxy, _actions);
-        if (_tasks.length != 0) _submitTasks(userProxy, _tasks, _cycle);
+        // if (_tasks.length != 0) _submitTasks(userProxy, _tasks, _cycle);
         emit LogCreation(msg.sender, userProxy, msg.value);
     }
 
@@ -58,7 +58,7 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
 
         // Optional setup
         if (_actions.length != 0) _execActions(userProxy, _actions);
-        if (_tasks.length != 0) _submitTasks(userProxy, _tasks, _cycle);
+        // if (_tasks.length != 0) _submitTasks(userProxy, _tasks, _cycle);
 
         // Success
         emit LogCreation(msg.sender, userProxy, msg.value);
@@ -94,25 +94,25 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         return type(GelatoUserProxy).creationCode;
     }
 
-    function _submitTasks(GelatoUserProxy _userProxy, Task[] memory _tasks, bool _cycle)
-        private
-    {
-        if (_cycle) {
-            try _userProxy.submitTaskCycle(_tasks) {
-            } catch Error(string memory err) {
-                revert(string(abi.encodePacked("GelatoUserProxyFactory.submitTaskCycle:", err)));
-            } catch {
-                revert("GelatoUserProxyFactory.submitTaskCycle:undefined");
-            }
-        } else {
-            try _userProxy.multiSubmitTasks(_tasks) {
-            } catch Error(string memory err) {
-                revert(string(abi.encodePacked("GelatoUserProxyFactory.multiSubmitTasks:", err)));
-            } catch {
-                revert("GelatoUserProxyFactory.multiSubmitTasks:undefined");
-            }
-        }
-    }
+    // function _submitTasks(GelatoUserProxy _userProxy, Task[] memory _tasks, bool _cycle)
+    //     private
+    // {
+    //     if (_cycle) {
+    //         try _userProxy.submitTaskCycle(_tasks) {
+    //         } catch Error(string memory err) {
+    //             revert(string(abi.encodePacked("GelatoUserProxyFactory.submitTaskCycle:", err)));
+    //         } catch {
+    //             revert("GelatoUserProxyFactory.submitTaskCycle:undefined");
+    //         }
+    //     } else {
+    //         try _userProxy.multiSubmitTasks(_tasks) {
+    //         } catch Error(string memory err) {
+    //             revert(string(abi.encodePacked("GelatoUserProxyFactory.multiSubmitTasks:", err)));
+    //         } catch {
+    //             revert("GelatoUserProxyFactory.multiSubmitTasks:undefined");
+    //         }
+    //     }
+    // }
 
     function _execActions(GelatoUserProxy _userProxy, Action[] memory _actions) private {
         try _userProxy.multiExecActions(_actions) {

@@ -66,8 +66,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         require(canSubmitRes.startsWithOk(), canSubmitRes);
 
         uint256 next = 1;
-        Task[] memory cycle = _createTaskCycle(_tasks);
-        storeTaskReceipt(_tasks[0], next, cycle, msg.sender);
+        storeTaskReceipt(_tasks[0], next, _tasks, msg.sender);
     }
 
     function storeTaskReceipt(Task memory _task, uint256 _next, Task[] memory _cycle, address _proxy) private {
@@ -413,20 +412,23 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         return keccak256(abi.encode(_TR));
     }
 
-    function _createTaskCycle(Task[] memory _tasks) private pure returns (Task[] memory cycle) {
-        // We set next to 1 as 0 will be init submitted from Task.task
-        for (uint i; i < _tasks.length; i++) {
-            require(
-                _tasks[i].autoResubmitSelf == false,
-                "GelatoCore._createTaskCycle: cyclic tasks cannot autoResubmitSelf"
-            );
-            cycle[i].provider = _tasks[i].provider;
-            cycle[i].conditions = _tasks[i].conditions;
-            cycle[i].actions = _tasks[i].actions;
-            cycle[i].expiryDate = _tasks[i].expiryDate;
-            cycle[i].autoResubmitSelf = false;
-        }
-    }
+    // function _createTaskCycle(Task[] memory _tasks) private pure returns (Task[] memory cycle) {
+    //     // We set next to 1 as 0 will be init submitted from Task.task
+    //     for (uint i; i < _tasks.length; i++) {
+    //         require(
+    //             _tasks[i].autoResubmitSelf == false,
+    //             "GelatoCore._createTaskCycle: cyclic tasks cannot autoResubmitSelf"
+    //         );
+    //         Task memory task = Task({
+    //             provider: _tasks[i].provider,
+    //             conditions: _tasks[i].conditions,
+    //             actions: _tasks[i].actions,
+    //             expiryDate: _tasks[i].expiryDate,
+    //             autoResubmitSelf: false
+    //         });
+    //         // cycle.push(task);
+    //     }
+    // }
 
     function _getNextTaskInCycle(TaskReceipt memory _TR, uint256 _next) private pure returns(Task memory task) {
         task = Task(
