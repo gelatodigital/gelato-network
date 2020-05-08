@@ -23,22 +23,22 @@ jobs: # a collection of steps
       - run: # Compile
           name: Compile
           command: npx buidler compile
-      - run: # Buidlerevm RPC node
-          name: Spin up buidlerevm node on localhost RPC
+      #- run: # Buidlerevm RPC node
+          #name: Spin up buidlerevm node on localhost RPC
           # || true makes buidler node process return 0 when pkill node
-          command: npx buidler node || true
+          #command: npx buidler node || true
           # important: buidler node as background process
-          background: true
-      - run: # Tests and Gas report
-          name: Tests and Gas Report on buidlerevm RPC
-          command: yarn test-gas
-      - run: # eth-gas-reporter codechecks
-          name: eth-gas-reporter/codechecks
-          command: npx codechecks
-      - run: # Shut down buidler node
-          name: Shut down buidlerevm node
-          command: pkill node
-          when: always
+          #background: true
+      - run: # Tests (and Gas report disabled temporarily)
+          name: Tests (Gas Report on buidlerevm RPC disabled temp)
+          command: npx buidler test
+      #- run: # eth-gas-reporter codechecks
+          #name: eth-gas-reporter/codechecks
+          #command: npx codechecks
+      #- run: # Shut down buidler node
+          #name: Shut down buidlerevm node
+          #command: pkill node
+          #when: always
       - run: # Coverage
           name: yarn coverage
           command: yarn coverage
