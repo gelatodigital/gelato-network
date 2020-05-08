@@ -162,14 +162,12 @@ describe("GelatoCore.cancelTask", function () {
       id: 1,
       userProxy: userProxyAddress,
       task,
-      next: 0,
     });
 
     taskReceipt2 = new TaskReceipt({
       id: 2,
       userProxy: userProxyAddress,
       task,
-      next: 0,
     });
 
     await expect(userProxy.submitTask(task)).to.emit(

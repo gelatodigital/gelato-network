@@ -14,7 +14,7 @@ import "../../dapp_interfaces/uniswap/IUniswapExchange.sol";
 //  so that we can emit the LogFailure event. This is necessary because the
 //  delegatecalling GnosisSafeProxy low-level catches reverts and overrides
 //  their message. see ModuleManager.setupModules require expression:
-// https://github.com/gnosis/safe-contracts/blob/aa0f3345b609a816ace6c448960ddb852b8a1bbd/contracts/task/ModuleManager.sol#L29
+// https://github.com/gnosis/safe-contracts/blob/aa0f3345b609a816ace6c448960ddb852b8a1bbd/contracts/base/ModuleManager.sol#L29
 
 /// @title ScriptExitRebalancePortfolioKovan
 /// @notice Script to be run when exitting ActionChaninedRebalancePorfolio

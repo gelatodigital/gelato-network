@@ -56,8 +56,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // Generate new Task Receipt with empty cycle
         Task[] memory emptyCycle;
-        storeTaskReceipt(_task, 0, emptyCycle, msg.sender);
-
+        _storeTaskReceipt(msg.sender, _task, 0, emptyCycle);
     }
 
     function submitTaskCycle(Task[] memory _tasks) public override {
@@ -66,11 +65,16 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         string memory canSubmitRes = canSubmitTask(msg.sender, _tasks[0]);
         require(canSubmitRes.startsWithOk(), canSubmitRes);
 
-        uint256 next = 1;
-        storeTaskReceipt(_tasks[0], next, _tasks, msg.sender);
+        _storeTaskReceipt(msg.sender, _tasks[0], 1, _tasks);  // next == 1 at start
     }
 
-    function storeTaskReceipt(Task memory _task, uint256 _next, Task[] memory _cycle, address _proxy) private {
+    function _storeTaskReceipt(
+        address _userProxy,
+        Task memory _task,
+        uint256 _next,
+        Task[] memory _cycle
+    )
+        private
         // Increment TaskReceipt ID storage
         uint256 nextTaskReceiptId = currentTaskReceiptId + 1;
         currentTaskReceiptId = nextTaskReceiptId;
@@ -78,7 +82,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         // Generate new Task Receipt
         TaskReceipt memory taskReceipt = TaskReceipt({
             id: nextTaskReceiptId,
-            userProxy: _proxy, // Smart Contract Accounts ONLY
+            userProxy: _userProxy, // Smart Contract Accounts ONLY
             task: _task,
             next: _next,
             cycle: _cycle
@@ -338,7 +342,14 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // SUCCESS
         // Optional: Automated Cyclic Task Resubmission
-        if (_TR.task.autoResubmitSelf) storeTaskReceipt(_TR.task, _TR.next /* = 0 */, _TR.cycle, _TR.userProxy);
+        if (_TR.task.autoResubmitSelf) {
+            _storeTaskReceipt(
+                _TR.userProxy,
+                _TR.task,
+                0,  // next
+                _TR.cycle
+            );
+        }
 
         // Optional: Automated Cyclic Task Submission
         if (_TR.cycle.length != 0) {

@@ -86,15 +86,15 @@ function _convertToArrayOfActionArrays(arrayOfActionObjs) {
   return actions;
 }
 
-function _convertToArrayOfTaskArrays(arrayOfTaskObjects) {
+function _convertToArrayOfTaskArrays(arrayOfTaskObjs) {
   const tasks = [];
-  for (const individualTask of arrayOfTaskObjects) {
+  for (const taskObj of arrayOfTaskObjs) {
     const taskArray = [
-      _convertToProviderArray(individualTask.provider),
-      _convertToArrayOfConditionArrays(individualTask.conditions),
-      _convertToArrayOfActionArrays(individualTask.actions),
-      individualTask.expiryDate,
-      individualTask.autoResubmitSelf,
+      _convertToProviderArray(taskObj.provider),
+      _convertToArrayOfConditionArrays(taskObj.conditions),
+      _convertToArrayOfActionArrays(taskObj.actions),
+      taskObj.expiryDate,
+      taskObj.autoResubmitSelf,
     ];
     tasks.push(taskArray);
   }

@@ -72,7 +72,7 @@ function convertTaskReceiptArrayToObj(taskReceiptArray) {
 
   const actions = _convertToArrayOfActionObjs(taskReceiptArray[TASK][ACTIONS]);
 
-  const cycle = _convertToArrayOfTaskBaseObjs(taskReceiptArray[CYCLE]);
+  const cycle = _convertToArrayOfTaskObjs(taskReceiptArray[CYCLE]);
 
   const task = new Task({
     provider,
@@ -128,7 +128,7 @@ function _convertToArrayOfActionObjs(actionsLog) {
   return actions;
 }
 
-function _convertToArrayOfTaskBaseObjs(cycleLog) {
+function _convertToArrayOfTaskObjs(cycleLog) {
   const tasks = [];
   for (let task of cycleLog) {
     task = new Task({

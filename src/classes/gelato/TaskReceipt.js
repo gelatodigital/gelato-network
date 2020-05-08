@@ -10,7 +10,7 @@ class TaskReceipt {
 
     _checkTaskBaseMembers(task);
     if (cycle !== undefined)
-      for (const _task of cycle) _checkTaskBaseMembers(_task);
+      for (const task of cycle) checkTaskMembers(task);
 
     this.id = id !== undefined ? utils.bigNumberify(id) : constants.Zero;
     this.userProxy = userProxy;
@@ -21,7 +21,7 @@ class TaskReceipt {
   }
 }
 
-async function _checkTaskBaseMembers(task) {
+async function checkTaskMembers(task) {
   if (!task.provider) throw new Error("\nTask: no provider\n");
   if (task.conditions && !Array.isArray(task.conditions))
     throw new Error("\nTask: optional conditions must be non-empty Array\n");
