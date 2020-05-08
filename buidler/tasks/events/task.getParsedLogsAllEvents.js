@@ -18,13 +18,13 @@ export default task(
     "fromblock",
     "The block number to search for event eventlogs from",
     undefined, // placeholder default ...
-    types.number // ... only to enforce type
+    types.int // ... only to enforce type
   )
   .addOptionalParam(
     "toblock",
     "The block number up until which to look for",
-    "latest", // placeholder default ...
-    types.number // ... only to enforce type
+    undefined, // placeholder default ...
+    types.int // ... only to enforce type
   )
   .addOptionalParam("blockhash", "Search a specific block")
   .addOptionalParam("property", "A specific key-value pair to search for")
@@ -66,14 +66,33 @@ export default task(
 
       taskArgs.eventlogs = eventlogs;
 
-      if (loggingActivated) taskArgs.log = true;
-
       const parsedLogs = await run("event-getparsedlogs", taskArgs);
 
       if (!parsedLogs.length) {
         throw new Error(
           `\n event-getparsedlogsallevents: ${taskArgs.contractname} no events found \n`
         );
+      }
+
+      if (loggingActivated) taskArgs.log = true;
+
+      if (taskArgs.log) {
+        if (!parsedLogs.length) {
+          console.log(
+            `\n❌  No parsed eventsLogs for ${
+              taskArgs.contractname
+            } from block ${
+              taskArgs.fromblock ? taskArgs.fromblock : taskArgs.blockhash
+            } ${taskArgs.blockhash ? "." : `to block ${taskArgs.toblock}`}`
+          );
+        } else {
+          console.log(
+            `\n ✅ Parsed Events Logs for ${taskArgs.contractname} from block ${
+              taskArgs.fromblock ? taskArgs.fromblock : taskArgs.blockhash
+            } ${taskArgs.blockhash ? "" : `to block ${taskArgs.toblock}`}`
+          );
+          for (const parsedLog of parsedLogs) console.log("\n", parsedLog);
+        }
       }
 
       return parsedLogs;

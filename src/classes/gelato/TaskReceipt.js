@@ -1,3 +1,5 @@
+import { constants, utils } from "ethers";
+
 class TaskReceipt {
   constructor({ id, userProxy, task, next, cycle }) {
     if (userProxy === undefined) throw new Error("TaskReceipt: no userProxy");
@@ -10,7 +12,7 @@ class TaskReceipt {
     if (cycle !== undefined)
       for (const _task of cycle) _checkTaskBaseMembers(_task);
 
-    this.id = id !== undefined ? id : 0;
+    this.id = id !== undefined ? utils.bigNumberify(id) : constants.Zero;
     this.userProxy = userProxy;
     this.task = task;
     this.next = next === undefined ? utils.bigNumberify("0") : next;
