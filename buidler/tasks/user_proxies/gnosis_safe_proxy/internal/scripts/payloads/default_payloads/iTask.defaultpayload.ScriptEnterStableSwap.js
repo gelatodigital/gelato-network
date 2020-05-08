@@ -131,12 +131,10 @@ export default internalTask(
       });
 
       const taskWithdrawBatchExchange = new Task({
-        base: new TaskBase({
-          provider: gelatoProvider,
-          conditions: [condition],
-          actions: [actionWithdrawFromBatchExchangeWithMaker],
-          expiryDate: constants.HashZero,
-        }),
+        provider: gelatoProvider,
+        conditions: [condition],
+        actions: [actionWithdrawFromBatchExchangeWithMaker],
+        expiryDate: constants.HashZero,
       });
 
       const inputs = [

@@ -153,27 +153,29 @@ describe("GelatoCore.cancelTask", function () {
     });
 
     task = new Task({
-      base: new TaskBase({
-        provider: gelatoProvider,
-        actions: [action],
-        expiryDate: constants.HashZero,
-      }),
+      provider: gelatoProvider,
+      actions: [action],
+      expiryDate: constants.HashZero,
     });
 
-    taskReceipt = {
+    taskReceipt = new TaskReceipt({
       id: 1,
       userProxy: userProxyAddress,
       task,
-    };
+      next: 0,
+    });
 
-    taskReceipt2 = {
+    taskReceipt2 = new TaskReceipt({
       id: 2,
       userProxy: userProxyAddress,
       task,
-    };
+      next: 0,
+    });
 
-    const submitTaskTx = await userProxy.submitTask(task);
-    await submitTaskTx.wait();
+    await expect(userProxy.submitTask(task)).to.emit(
+      gelatoCore,
+      "LogTaskSubmitted"
+    );
   });
 
   // We test different functionality of the contract as normal Mocha tests.

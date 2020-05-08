@@ -1,7 +1,7 @@
 pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
-import { IGelatoCore, TaskBase, Task, TaskReceipt } from "./interfaces/IGelatoCore.sol";
+import { IGelatoCore, Task, TaskReceipt } from "./interfaces/IGelatoCore.sol";
 import { GelatoExecutors } from "./GelatoExecutors.sol";
 import { SafeMath } from "../external/SafeMath.sol";
 import { IGelatoCondition } from "../gelato_conditions/IGelatoCondition.sol";
@@ -30,16 +30,16 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         returns(string memory)
     {
         // EXECUTOR CHECKS
-        if (!isExecutorMinStaked(executorByProvider[_task.base.provider.addr]))
+        if (!isExecutorMinStaked(executorByProvider[_task.provider.addr]))
             return "GelatoCore.canSubmitTask: executorStake";
 
         // ExpiryDate
-        else if (_task.base.expiryDate != 0)
-            if (_task.base.expiryDate < now) return "GelatoCore.canSubmitTask: expiryDate";
+        else if (_task.expiryDate != 0)
+            if (_task.expiryDate < now) return "GelatoCore.canSubmitTask: expiryDate";
 
         // Check Provider details
         string memory isProvided;
-        if (_userProxy == _task.base.provider.addr)
+        if (_userProxy == _task.provider.addr)
             isProvided = providerModuleChecks(_userProxy, _task);
         else isProvided = isTaskProvided(_userProxy, _task);
         if (!isProvided.startsWithOk())
@@ -54,6 +54,23 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         string memory canSubmitRes = canSubmitTask(msg.sender, _task);
         require(canSubmitRes.startsWithOk(), canSubmitRes);
 
+        // Generate new Task Receipt with empty cycle
+        Task[] memory emptyCycle;
+        storeTaskReceipt(_task, 0, emptyCycle, msg.sender);
+
+    }
+
+    function submitTaskCycle(Task[] memory _tasks) public override {
+        // Check first task via canSubmit Gate
+        string memory canSubmitRes = canSubmitTask(msg.sender, _tasks[0]);
+        require(canSubmitRes.startsWithOk(), canSubmitRes);
+
+        uint256 next = 1;
+        Task[] memory cycle = _createTaskCycle(_tasks);
+        storeTaskReceipt(_tasks[0], next, cycle, msg.sender);
+    }
+
+    function storeTaskReceipt(Task memory _task, uint256 _next, Task[] memory _cycle, address _proxy) private {
         // Increment TaskReceipt ID storage
         uint256 nextTaskReceiptId = currentTaskReceiptId + 1;
         currentTaskReceiptId = nextTaskReceiptId;
@@ -61,8 +78,10 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         // Generate new Task Receipt
         TaskReceipt memory taskReceipt = TaskReceipt({
             id: nextTaskReceiptId,
-            userProxy: msg.sender, // Smart Contract Accounts ONLY
-            task: _task
+            userProxy: _proxy, // Smart Contract Accounts ONLY
+            task: _task,
+            next: _next,
+            cycle: _cycle
         });
 
         // Hash TaskReceipt
@@ -74,11 +93,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         emit LogTaskSubmitted(taskReceipt.id, hashedTaskReceipt, taskReceipt);
     }
 
-    function submitTaskCycle(Task[] memory _tasks) public override {
-        _createTaskCycle(_tasks);
-        submitTask(_tasks[0]);
-    }
-
     // ================  CAN EXECUTE EXECUTOR API ============================
     function canExec(TaskReceipt memory _TR, uint256 _gelatoMaxGas, uint256 _execTxGasPrice)
         public
@@ -88,10 +102,10 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     {
         if (_execTxGasPrice != _getGelatoGasPrice()) return "ExecTxGasPriceNotGelatoGasPrice";
 
-        if (!isProviderLiquid(_TR.task.base.provider.addr, _gelatoMaxGas, _execTxGasPrice))
+        if (!isProviderLiquid(_TR.task.provider.addr, _gelatoMaxGas, _execTxGasPrice))
             return "ProviderIlliquidity";
 
-        if (_TR.userProxy != _TR.task.base.provider.addr) {
+        if (_TR.userProxy != _TR.task.provider.addr) {
             string memory res = providerCanExec(_TR, _execTxGasPrice);
             if (!res.startsWithOk()) return res;
         }
@@ -99,13 +113,13 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         bytes32 hashedTaskReceipt = hashTaskReceipt(_TR);
         if (taskReceiptHash[_TR.id] != hashedTaskReceipt) return "InvalidTaskReceiptHash";
 
-        if (_TR.task.base.expiryDate != 0 && _TR.task.base.expiryDate <= now)
+        if (_TR.task.expiryDate != 0 && _TR.task.expiryDate <= now)
             return "TaskReceiptExpired";
 
         // CHECK Condition for user proxies
-        if (_TR.task.base.conditions.length != 0) {
-            for (uint i; i < _TR.task.base.conditions.length; i++) {
-                try _TR.task.base.conditions[i].inst.ok(_TR.task.base.conditions[i].data)
+        if (_TR.task.conditions.length != 0) {
+            for (uint i; i < _TR.task.conditions.length; i++) {
+                try _TR.task.conditions[i].inst.ok(_TR.task.conditions[i].data)
                     returns(string memory condition)
                 {
                     if (!condition.startsWithOk())
@@ -119,13 +133,13 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         }
 
         // CHECK Action Terms
-        for (uint i; i < _TR.task.base.actions.length; i++) {
+        for (uint i; i < _TR.task.actions.length; i++) {
             // Only check termsOk if specified, else continue
-            if (!_TR.task.base.actions[i].termsOkCheck) continue;
+            if (!_TR.task.actions[i].termsOkCheck) continue;
 
-            try IGelatoAction(_TR.task.base.actions[i].addr).termsOk(
+            try IGelatoAction(_TR.task.actions[i].addr).termsOk(
                 _TR.userProxy,
-                _TR.task.base.actions[i].data
+                _TR.task.actions[i].data
             )
                 returns(string memory actionTermsOk)
             {
@@ -139,18 +153,19 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         }
 
         // Optional chained Task auto-resubmit validation
-        if (_TR.task.base.autoResubmitSelf) {
-            if (_TR.task.cycle.length != 0) return "CyclicTasksCannotAutoResubmitSelf";
+        if (_TR.task.autoResubmitSelf) {
+            if (_TR.cycle.length != 0) return "CyclicTasksCannotAutoResubmitSelf";
             string memory canResubmitSelf = canSubmitTask(_TR.userProxy, _TR.task);
             if (!canResubmitSelf.startsWithOk())
                 return string(abi.encodePacked("CannotAutoResubmitSelf:", canResubmitSelf));
         }
 
         // // Optional chained Task auto-submit validation
-        if (_TR.task.cycle.length != 0) {
+        if (_TR.cycle.length != 0) {
+            uint256 next = _TR.next == _TR.cycle.length ? 0 : _TR.next + 1;
             string memory canSubmitNext = canSubmitTask(
                 _TR.userProxy,
-                _getNextTaskInCycle(_TR.task)
+                _getNextTaskInCycle(_TR, next)
             );
             if (!canSubmitNext.startsWithOk())
                 return string(abi.encodePacked("CannotSubmitNextTaskInCycle:", canSubmitNext));
@@ -158,7 +173,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // Executor Validation
         if (msg.sender == address(this)) return OK;
-        else if (msg.sender == executorByProvider[_TR.task.base.provider.addr])
+        else if (msg.sender == executorByProvider[_TR.task.provider.addr])
             return OK;
         else return "InvalidExecutor";
     }
@@ -176,7 +191,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         // CHECKS: all further checks are done during this.executionWrapper.canExec()
         require(startGas > internalGasRequirement, "GelatoCore.exec: Insufficient gas sent");
         require(
-            msg.sender == executorByProvider[_TR.task.base.provider.addr],
+            msg.sender == executorByProvider[_TR.task.provider.addr],
             "GelatoCore.exec: Invalid Executor"
         );
 
@@ -205,7 +220,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             // END-1: SUCCESS => TaskReceipt Deletion & Reward
             delete taskReceiptHash[_TR.id];
             (uint256 executorSuccessFee, uint256 sysAdminSuccessFee) = _processProviderPayables(
-                _TR.task.base.provider.addr,
+                _TR.task.provider.addr,
                 ExecutorPay.Reward,
                 startGas,
                 _gelatoMaxGas,
@@ -226,7 +241,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
                 //  => TaskReceipt Deletion & Refund
                 delete taskReceiptHash[_TR.id];
                 (uint256 executorRefund,) = _processProviderPayables(
-                    _TR.task.base.provider.addr,
+                    _TR.task.provider.addr,
                     ExecutorPay.Refund,
                     startGas,
                     _gelatoMaxGas,
@@ -264,8 +279,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         bytes memory execPayload;
         bool proxyReturndataCheck;
 
-        try IGelatoProviderModule(_TR.task.base.provider.module).execPayload(
-            _TR.task.base.actions
+        try IGelatoProviderModule(_TR.task.provider.module).execPayload(
+            _TR.task.actions
         )
             returns(bytes memory _execPayload, bool _proxyReturndataCheck)
         {
@@ -286,7 +301,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // Check if actions reverts were caught by userProxy
         if (success && proxyReturndataCheck) {
-            try _TR.task.base.provider.module.execRevertCheck(returndata)
+            try _TR.task.provider.module.execRevertCheck(returndata)
                 returns(bool _success)
             {
                 success = _success;
@@ -323,35 +338,13 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // SUCCESS
         // Optional: Automated Cyclic Task Resubmission
-        if (_TR.task.base.autoResubmitSelf) _submitNextTask(_TR, true);
+        if (_TR.task.autoResubmitSelf) storeTaskReceipt(_TR.task, _TR.next /* = 0 */, _TR.cycle, _TR.userProxy);
 
         // Optional: Automated Cyclic Task Submission
-        if (_TR.task.cycle.length != 0) _submitNextTask(_TR, false);
-    }
-
-    function _submitNextTask(TaskReceipt memory _TR, bool _resubmitSelf) private {
-        // Increment TaskReceipt ID storage
-        uint256 nextTaskReceiptId = currentTaskReceiptId + 1;
-        currentTaskReceiptId = nextTaskReceiptId;
-
-        // ... and sync with memory TaskReceipt to reflect new Receipt
-        uint256 currentTRId = _TR.id;
-        _TR.id = nextTaskReceiptId;
-
-        // If we submit a new Task, we overwrite the current task field.
-        // We won't reset the _TR.task field, if overwritten. Not needed in cont. exec flow.
-        if (!_resubmitSelf) _TR.task = _getNextTaskInCycle(_TR.task);
-
-        // Hash new TaskReceipt
-        bytes32 hashedTaskReceipt = hashTaskReceipt(_TR);
-
-        // Store new TaskReceipt Hash
-        taskReceiptHash[_TR.id] = hashedTaskReceipt;
-
-        emit LogTaskSubmitted(_TR.id, hashedTaskReceipt, _TR);
-
-        // Reset currently being executed TaskReceipt.id for correct value in ExecEvents
-        _TR.id = currentTRId;
+        if (_TR.cycle.length != 0) {
+            uint256 next = _TR.next == _TR.cycle.length ? 0 : _TR.next + 1;
+            storeTaskReceipt(_getNextTaskInCycle(_TR, next), next, _TR.cycle, _TR.userProxy);
+        }
     }
 
     function _processProviderPayables(
@@ -398,7 +391,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     function cancelTask(TaskReceipt memory _TR) public override {
         // Checks
         require(
-            msg.sender == _TR.userProxy || msg.sender == _TR.task.base.provider.addr,
+            msg.sender == _TR.userProxy || msg.sender == _TR.task.provider.addr,
             "GelatoCore.cancelTask: sender"
         );
         // Effects
@@ -420,36 +413,30 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         return keccak256(abi.encode(_TR));
     }
 
-    function _createTaskCycle(Task[] memory _tasks) private pure {
-        // We set next to 1 as 0 will be init submitted from Task.base
-        _tasks[0].next = 1;
+    function _createTaskCycle(Task[] memory _tasks) private pure returns (Task[] memory cycle) {
+        // We set next to 1 as 0 will be init submitted from Task.task
         for (uint i; i < _tasks.length; i++) {
             require(
-                _tasks[i].base.autoResubmitSelf == false,
+                _tasks[i].autoResubmitSelf == false,
                 "GelatoCore._createTaskCycle: cyclic tasks cannot autoResubmitSelf"
             );
-            _tasks[0].cycle[i].provider = _tasks[i].base.provider;
-            _tasks[0].cycle[i].conditions = _tasks[i].base.conditions;
-            _tasks[0].cycle[i].actions = _tasks[i].base.actions;
-            _tasks[0].cycle[i].expiryDate = _tasks[i].base.expiryDate;
-            _tasks[0].cycle[i].autoResubmitSelf = false;
+            cycle[i].provider = _tasks[i].provider;
+            cycle[i].conditions = _tasks[i].conditions;
+            cycle[i].actions = _tasks[i].actions;
+            cycle[i].expiryDate = _tasks[i].expiryDate;
+            cycle[i].autoResubmitSelf = false;
         }
     }
 
-    function _getNextTaskInCycle(Task memory _task) private pure returns(Task memory task) {
-        // We use a copy of _task.next because otherwise somehow contract size increases
-        uint256 next = _task.next;
-        if (next == _task.cycle.length) next = 0;
-        task = Task({
-            base: TaskBase({
-                provider: _task.cycle[next].provider,
-                conditions: _task.cycle[next].conditions,
-                actions: _task.cycle[next].actions,
-                expiryDate: _task.cycle[next].expiryDate,
-                autoResubmitSelf: _task.cycle[next].autoResubmitSelf
-            }),
-            next: next + 1,
-            cycle: _task.cycle
-        });
+    function _getNextTaskInCycle(TaskReceipt memory _TR, uint256 _next) private pure returns(Task memory task) {
+        task = Task(
+            {
+                provider: _TR.cycle[_next].provider,
+                conditions: _TR.cycle[_next].conditions,
+                actions: _TR.cycle[_next].actions,
+                expiryDate: _TR.cycle[_next].expiryDate,
+                autoResubmitSelf: _TR.cycle[_next].autoResubmitSelf
+            }
+        );
     }
 }

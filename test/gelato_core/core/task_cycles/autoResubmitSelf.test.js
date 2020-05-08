@@ -137,11 +137,9 @@ describe("Gelato Actions - TASK CYCLES - AUTO-RESUBMIT-SELF", function () {
 
     // Chained Task
     chainedTask = new Task({
-      base: new TaskBase({
-        provider: gelatoProvider,
-        actions: [actionDummyStruct],
-        autoResubmitSelf: true,
-      }),
+      provider: gelatoProvider,
+      actions: [actionDummyStruct],
+      autoResubmitSelf: true,
     });
   });
 

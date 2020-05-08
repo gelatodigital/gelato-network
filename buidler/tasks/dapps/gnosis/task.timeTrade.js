@@ -263,13 +263,11 @@ export default task(
     });
 
     const placeOrderTask = new Task({
-      base: new TaskBase({
-        provider: gelatoProvider,
-        conditions: [condition],
-        actions: [placeOrderAction],
-        expiryDate: constants.HashZero,
-        autoResubmitSelf: true,
-      }),
+      provider: gelatoProvider,
+      conditions: [condition],
+      actions: [placeOrderAction],
+      expiryDate: constants.HashZero,
+      autoResubmitSelf: true,
     });
 
     // ######### Check if Provider has whitelisted TaskSpec #########

@@ -19,19 +19,6 @@ struct Action {
     bool termsOkCheck;
 }
 
-struct TaskBase {
-    Provider provider;
-    Condition[] conditions;  // optional
-    Action[] actions;
-    uint256 expiryDate;  // 0 == infinity.
-    bool autoResubmitSelf;
-}
-
-struct Task {
-    TaskBase base;
-    uint256 next; // optional for cyclic tasks: auto-filled by multiSubmitTask()
-    TaskBase[] cycle;  // optional for cyclic tasks: auto-filled submitTaskCycle()
-}
 
 struct TaskReceipt {
     uint256 id;

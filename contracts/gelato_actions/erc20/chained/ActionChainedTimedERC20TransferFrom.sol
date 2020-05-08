@@ -32,11 +32,11 @@ contract ActionChainedTimedERC20TransferFrom is ActionERC20TransferFrom {
         // Duedate for next chained action call
          _actionData.dueDate = _actionData.dueDate.add(_actionData.timeOffset);
          // Max 3 days delay, else automatic expiry
-        _task.base.expiryDate = _actionData.dueDate.add(3 days);
+        _task.expiryDate = _actionData.dueDate.add(3 days);
 
         // Encode updated ActionChainedTimedERC20TransferFromKovan payload into actionData
         // @DEV we could maybe use some assembly here to only swap the dueDateValue
-        _task.base.actions[0].data = abi.encodeWithSelector(
+        _task.actions[0].data = abi.encodeWithSelector(
             this.chainedAction.selector,
             _superActionData,
             _actionData,
@@ -90,7 +90,7 @@ contract ActionChainedTimedERC20TransferFrom is ActionERC20TransferFrom {
         if (_actionData.dueDate >= block.timestamp)
             return "ActionChainedTimedERC20TransferFromKovan.termsOk: TimestampDidNotPass";
 
-        if (_userProxy != _task.base.provider.addr) {
+        if (_userProxy != _task.provider.addr) {
             string memory isProvided = gelatoCore.isTaskProvided(_userProxy, _task);
             if (!isProvided.startsWithOk()) {
                 return string(

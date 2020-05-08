@@ -109,24 +109,19 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
     });
 
     task = new Task({
-      base: new TaskBase({provider: gelatoProvider,
-        actions: [action],
-        expiryDate: constants.Zero,
-      }),
+      provider: gelatoProvider,
+      actions: [action],
+      expiryDate: constants.Zero,
     });
     otherTask = new Task({
-      base: new TaskBase({
-        provider: otherGelatoProvider,
-        actions: [action],
-        expiryDate: constants.Zero,
-      }),
+      provider: otherGelatoProvider,
+      actions: [action],
+      expiryDate: constants.Zero,
     });
     fakeTask = new Task({
-      base: new TaskBase({
-        provider: fakeGelatoProvider,
-        actions: [action],
-        expiryDate: constants.Zero,
-      }),
+      provider: fakeGelatoProvider,
+      actions: [action],
+      expiryDate: constants.Zero,
     });
 
     taskReceipt = new TaskReceipt({
