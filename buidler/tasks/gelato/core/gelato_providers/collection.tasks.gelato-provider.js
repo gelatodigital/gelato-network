@@ -23,3 +23,4 @@ import "./provider_module/collection.tasks.gelato-provider-module";
 
 // NEW
 import "./provide_taskSpec/task.provideTaskSpec";
+import "./provide_taskSpec/task.checkIfProvided";

@@ -1,10 +1,9 @@
 import { task, types } from "@nomiclabs/buidler/config";
 import { constants, utils } from "ethers";
-import TaskSpec from "../../../../src/classes/gelato/TaskSpec";
 
 export default task(
   "gc-balancetrade",
-  `Creates a gelato task that sells sellToken on Batch Exchange every time users sellToken Balance reaches a certain balance on Rinkeby`
+  `Creates a gelato task that sells sellToken on Batch Exchange every time users sellToken Balance reaches a certain threshold on Rinkeby`
 )
   .addOptionalParam(
     "mnemonicIndex",
@@ -28,8 +27,8 @@ export default task(
   )
   .addOptionalParam(
     "buyAmount",
-    "amount of buy token to purchase (default 0.005*10**18)",
-    "5000000000000000"
+    "amount of buy token to purchase (default 1 => market order)",
+    "1"
   )
   .addOptionalParam(
     "increaseAmount",
@@ -51,7 +50,9 @@ export default task(
   )
   .addOptionalParam(
     "gelatoprovider",
-    "Gelato Provider who pays ETH on gelato for the users transaction, defaults to provider of gelato core team"
+    "Gelato Provider who pays ETH on gelato for the users transaction, defaults to provider of gelato core team",
+    "0x518eAa8f962246bCe2FA49329Fe998B66d67cbf8",
+    types.string
   )
   .addOptionalParam(
     "saltnonce",
@@ -74,7 +75,7 @@ export default task(
     // 1. Determine CPK proxy address of user (mnemoric index 0 by default)
     const {
       [taskArgs.mnemonicIndex]: user,
-      [2]: provider,
+      // [2]: provider,
     } = await ethers.getSigners();
     const userAddress = await user.getAddress();
     const safeAddress = await run("gc-determineCpkProxyAddress", {
@@ -139,7 +140,7 @@ export default task(
     const gelatoCore = await run("instantiateContract", {
       contractname: "GelatoCore",
       write: true,
-      signer: provider,
+      // signer: provider,
     });
 
     if (safeDeployed) {
@@ -280,26 +281,17 @@ export default task(
     });
 
     // ######### Check if Provider has whitelisted TaskSpec #########
-    // 1. Cast Task to TaskSpec
-    const taskSpec = new TaskSpec({
-      conditions: [condition.inst],
-      actions: [placeOrderAction, setConditionBalanceAction],
-      gasPriceCeil: 0, // Placeholder
+    const isProvided = await run("gc-check-if-provided", {
+      task: placeOrderTask,
+      provider: gelatoProvider.addr,
+      // taskspecname: "balanceTrade",
     });
 
-    // 2. Hash Task Spec
-    const taskSpecHash = await gelatoCore.hashTaskSpec(taskSpec);
-
-    // Check if taskSpecHash's gasPriceCeil is != 0
-    const isProvided = await gelatoCore.taskSpecGasPriceCeil(
-      gelatoProvider.addr,
-      taskSpecHash
-    );
-
-    // Revert if task spec is not provided
-    if (isProvided == 0) {
-      // await gelatoCore.provideTaskSpecs([taskSpec]);
-      throw Error("Task Spec is not whitelisted by selected provider");
+    if (!isProvided) {
+      // await gelatoCore.provideTaskSpecs([taskSpec1]);
+      throw Error(
+        `Task Spec is not provided by provider: ${taskArgs.gelatoprovider}. Please provide it by running the gc-providetaskspec script`
+      );
     } else console.log("already provided");
 
     // ############################################### Encode Submit Task on Gelato Core
@@ -391,9 +383,6 @@ export default task(
     if (taskArgs.log)
       console.log(`\n submitTaskTx Hash: ${submitTaskTxHash}\n`);
 
-    // // Wait for tx to get mined
-    // const { blockHash: blockhash } = await submitTaskTx.wait();
-
     // Event Emission verification
     if (taskArgs.events) {
       const parsedSubmissionLog = await run("event-getparsedlog", {
@@ -410,6 +399,4 @@ export default task(
     }
 
     return submitTaskTxHash;
-
-    // 4. If proxy was deployed, only execTx, if not, createProxyAndExecTx
   });
