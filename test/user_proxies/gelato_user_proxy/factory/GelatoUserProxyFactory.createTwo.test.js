@@ -216,13 +216,11 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE TWO", function () {
 
       // optionalTask
       optionalTask = new Task({
-        base: new TaskBase({
-          provider: new GelatoProvider({
-            addr: providerAddress,
-            module: providerModuleGelatoUserProxy.address,
-          }),
-          actions: [optionalAction],
+        provider: new GelatoProvider({
+          addr: providerAddress,
+          module: providerModuleGelatoUserProxy.address,
         }),
+        actions: [optionalAction],
       });
 
       // stakeExecutor

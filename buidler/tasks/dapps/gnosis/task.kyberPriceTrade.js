@@ -290,11 +290,9 @@ export default task(
     });
 
     const taskWithdrawBatchExchange = new Task({
-      base: new TaskBase({
-        provider: gelatoProvider,
-        actions: [actionWithdrawBatchExchange],
-        expiryDate: constants.HashZero,
-      }),
+      provider: gelatoProvider,
+      actions: [actionWithdrawBatchExchange],
+      expiryDate: constants.HashZero,
     });
 
     // ######### Check if Provider has whitelisted TaskSpec #########
@@ -363,12 +361,10 @@ export default task(
     });
 
     const placeOrderAndSubmitWithdrawTask = new Task({
-      base: new TaskBase({
-        provider: gelatoProvider,
-        conditions: [condition],
-        actions: [realPlaceOrderAction, submitTaskAction],
-        expiryDate: constants.HashZero,
-      }),
+      provider: gelatoProvider,
+      conditions: [condition],
+      actions: [realPlaceOrderAction, submitTaskAction],
+      expiryDate: constants.HashZero,
     });
 
     // ######### Check if Provider has whitelisted TaskSpec #########

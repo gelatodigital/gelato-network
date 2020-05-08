@@ -216,12 +216,10 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
     });
 
     const task = new Task({
-      base: new TaskBase({
-        provider: gelatoProvider,
-        conditions: [condition],
-        actions: [action, actionSetRef],
-        autoResubmitSelf: true,
-      }),
+      provider: gelatoProvider,
+      conditions: [condition],
+      actions: [action, actionSetRef],
+      autoResubmitSelf: true,
     });
 
     const submitTaskData = await run("abi-encode-withselector", {
@@ -238,11 +236,11 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
       value: 0,
     });
 
-    const taskReceipt = {
+    const taskReceipt = new TaskReceipt({
       id: 1,
       userProxy: userProxyAddress,
       task,
-    };
+    });
 
     await userProxy
       .connect(seller)

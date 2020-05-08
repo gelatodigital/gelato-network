@@ -146,13 +146,11 @@ describe("GelatoCore - EdgeCase: Malicious Provider", function () {
 
     // task to be submitted by userProxy
     task = new Task({
-      base: new TaskBase({
-        provider: new GelatoProvider({
-          addr: mockActionMaliciousProvider.address,
-          module: providerModuleGelatoUserProxy.address,
-        }),
-        actions: [mockActionMaliciousProviderStruct],
+      provider: new GelatoProvider({
+        addr: mockActionMaliciousProvider.address,
+        module: providerModuleGelatoUserProxy.address,
       }),
+      actions: [mockActionMaliciousProviderStruct],
     });
 
     // taskReceipt

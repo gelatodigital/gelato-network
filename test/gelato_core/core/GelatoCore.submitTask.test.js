@@ -294,11 +294,9 @@ describe("Gelato Core - Task Submission ", function () {
       });
 
       const task = new Task({
-        base: new TaskBase({
-          provider,
-          actions: [action],
-          expiryDate: ethers.utils.bigNumberify("0"),
-        }),
+        provider,
+        actions: [action],
+        expiryDate: ethers.utils.bigNumberify("0"),
       });
 
       await expect(userProxy.submitTask(task)).to.emit(
@@ -337,11 +335,9 @@ describe("Gelato Core - Task Submission ", function () {
       });
 
       const task = new Task({
-        base: new TaskBase({
-          provider,
-          actions: [action],
-          expiryDate: constants.HashZero,
-        }),
+        provider,
+        actions: [action],
+        expiryDate: constants.HashZero,
       });
 
       await expect(userProxy.submitTask(task)).to.be.revertedWith(
@@ -387,12 +383,10 @@ describe("Gelato Core - Task Submission ", function () {
       });
 
       const task = new Task({
-        base: new TaskBase({
-          provider,
-          conditions: [condition],
-          actions: [action],
-          expiryDate: constants.HashZero,
-        }),
+        provider,
+        conditions: [condition],
+        actions: [action],
+        expiryDate: constants.HashZero,
       });
 
       await expect(userProxy.submitTask(task)).to.be.revertedWith(
@@ -430,11 +424,9 @@ describe("Gelato Core - Task Submission ", function () {
       });
 
       const task = new Task({
-        base: new TaskBase({
-          provider,
-          actions: [action],
-          expiryDate: constants.HashZero,
-        }),
+        provider,
+        actions: [action],
+        expiryDate: constants.HashZero,
       });
 
       await expect(userProxy.submitTask(task)).to.be.revertedWith(
@@ -472,11 +464,9 @@ describe("Gelato Core - Task Submission ", function () {
       });
 
       const task = new Task({
-        base: new TaskBase({
-          provider,
-          actions: [action],
-          expiryDate: expiryDateInPast,
-        }),
+        provider,
+        actions: [action],
+        expiryDate: expiryDateInPast,
       });
 
       await expect(userProxy.submitTask(task)).to.be.revertedWith(
@@ -514,11 +504,9 @@ describe("Gelato Core - Task Submission ", function () {
       });
 
       const task = new Task({
-        base: new TaskBase({
-          provider,
-          actions: [action],
-          expiryDate: constants.HashZero,
-        }),
+        provider,
+        actions: [action],
+        expiryDate: constants.HashZero,
       });
 
       // GelatoCore.canSubmitTask.isProvided:InvalidProviderModule
@@ -545,11 +533,9 @@ describe("Gelato Core - Task Submission ", function () {
       });
 
       const task = new Task({
-        base: new TaskBase({
-          provider,
-          actions: [action],
-          expiryDate: constants.HashZero,
-        }),
+        provider,
+        actions: [action],
+        expiryDate: constants.HashZero,
       });
 
       // GelatoCore.canSubmitTask.isProvided:InvalidProviderModule
@@ -607,11 +593,9 @@ describe("Gelato Core - Task Submission ", function () {
       });
 
       const task = new Task({
-        base: new TaskBase({
-          provider: gelatoProvider,
-          actions: [action, action2],
-          expiryDate: constants.HashZero,
-        }),
+        provider: gelatoProvider,
+        actions: [action, action2],
+        expiryDate: constants.HashZero,
       });
 
       // Fund Ether to Core with providerProxy
@@ -737,11 +721,9 @@ describe("Gelato Core - Task Submission ", function () {
       });
 
       const task = new Task({
-        base: new TaskBase({
-          provider: gelatoProvider,
-          actions: [action, action2],
-          expiryDate: constants.HashZero,
-        }),
+        provider: gelatoProvider,
+        actions: [action, action2],
+        expiryDate: constants.HashZero,
       });
 
       const provideFundsPayload = await run("abi-encode-withselector", {

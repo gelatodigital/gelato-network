@@ -41,14 +41,9 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
   let currentTaskCycleReceiptId;
   let gelatoMaxGas;
 
-  // TaskBases
-  let taskBase1;
-  let taskBase2;
-
   // Tasks
-  let interceptTask;
-  let cyclicTask1;
-  let cyclicTask2;
+  let task1;
+  let task2;
 
   // TaskReceipts
   let interceptTaskReceiptAsObj;
@@ -190,62 +185,43 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
       );
     await multiProvideTx.wait();
 
-    // TaskBase-1: ActionDummy-1:true
-    taskBase1 = new TaskBase({
+    // Task-1: ActionDummy-1:true
+    task1 = new Task({
       provider: gelatoProvider,
       actions: [firstActionDummyStruct],
     });
 
-    // Base-2: firstDummyConditionStruct-1:ok=true && actionDummy-2:false
-    taskBase2 = new TaskBase({
+    // Task-2: firstDummyConditionStruct-1:ok=true && actionDummy-2:false
+    task2 = new Task({
       provider: gelatoProvider,
       conditions: [firstDummyConditionStruct],
       actions: [secondActionDummyStruct],
     });
 
-    // Task:
-    interceptTask = new Task({ base: taskBase1, next: "1" });
-
-    // CyclicTask:
-    cyclicTask1 = new Task({
-      base: taskBase1, // dynamic
-      next: 1, // static: auto-filled by GelatoCore upon cycle creation
-      cycle: [taskBase1, taskBase2], // static: auto-filled by GelatoCore upon cycle creation
-    });
-    // Always auto-submitted by GelatoCore after cyclicTask1
-    cyclicTask2 = new Task({
-      base: taskBase2, // dynamic
-      next: 2, // static: auto-filled by GelatoCore upon cycle creation
-      cycle: [taskBase1, taskBase2], // static
-    });
-
-    // TaskReceipt: Task
+    // TaskReceipt: InterceptTask
     interceptTaskReceiptAsObj = new TaskReceipt({
+      id: 0,
       userProxy: userProxyAddress,
-      task: interceptTask,
+      task: task1,
     });
-    interceptTaskReceiptAsArray = convertTaskReceiptObjToArray(
-      interceptTaskReceiptAsObj
-    );
 
-    // TaskReceipt: CyclicTask-1
+    // TaskReceipt: CyclicTask1
     cyclicTask1ReceiptAsObj = new TaskReceipt({
+      id: 1,
       userProxy: userProxyAddress,
-      task: cyclicTask1,
+      task: task1, // dynamic
+      next: 1, // dynamic: auto-filled by GelatoCore upon cycle creation
+      cycle: [task1, task2], // static: auto-filled by GelatoCore upon cycle creation
     });
 
-    cyclicTask1ReceiptAsArray = convertTaskReceiptObjToArray(
-      cyclicTask1ReceiptAsObj
-    );
-
-    // TaskReceipt: CyclicTask-2
+    // TaskReceipt: CyclicTask2
     cyclicTask2ReceiptAsObj = new TaskReceipt({
+      id: 1,
       userProxy: userProxyAddress,
-      task: cyclicTask2,
+      task: task2, // dynamic
+      next: 0, // After first execution, next will be placed to 0
+      cycle: [task1, task2], // static
     });
-    cyclicTask2ReceiptAsArray = convertTaskReceiptObjToArray(
-      cyclicTask2ReceiptAsObj
-    );
   });
 
   it("Should allow to enter an Arbitrary Task Cycle upon creating a GelatoUserProxy", async function () {
@@ -253,7 +229,7 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
 
     // CreateTwo userProxy and submit interceptTask in one tx
     await expect(
-      gelatoUserProxyFactory.createTwo(SALT_NONCE, [], [cyclicTask1], false)
+      gelatoUserProxyFactory.createTwo(SALT_NONCE, [], [task1, task2], true)
     )
       .to.emit(gelatoUserProxyFactory, "LogCreation")
       .withArgs(userAddress, userProxyAddress, 0)
@@ -286,8 +262,8 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
           // INTERCEPT TASK SUBMISSION & Execution
           // console.log("\nIntercept");
 
-          // Submit normal interceptTask (ActionDummy-1: true)
-          await expect(gelatoUserProxy.submitTask(interceptTask)).to.emit(
+          // Submit normal task1 (ActionDummy-1: true)
+          await expect(gelatoUserProxy.submitTask(task1)).to.emit(
             gelatoCore,
             "LogTaskSubmitted"
           );

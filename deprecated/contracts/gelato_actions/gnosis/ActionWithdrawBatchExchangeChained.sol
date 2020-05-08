@@ -89,7 +89,7 @@ contract ActionWithdrawBatchExchangeChained is ActionPlaceOrderBatchExchangePayF
             _taskWithdraw
         );
 
-        _taskWithdraw.base.actions[0].data = withdrawPayload;
+        _taskWithdraw.task.actions[0].data = withdrawPayload;
 
         action(
             _user,

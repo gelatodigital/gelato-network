@@ -2,7 +2,6 @@ import Action from "../../../classes/gelato/Action";
 import Condition from "../../../classes/gelato/Condition";
 import GelatoProvider from "../../../classes/gelato/GelatoProvider";
 import Task from "../../../classes/gelato/Task";
-import TaskBase from "../../../classes/gelato/TaskBase";
 import TaskReceipt from "../../../classes/gelato/TaskReceipt";
 
 /*
@@ -26,19 +25,7 @@ struct Action {
     bool termsOkCheck;
 }
 
-struct TaskBase {
-    Provider provider;
-    Condition[] conditions;  // optional
-    Action[] actions;
-    uint256 expiryDate;  // 0 == infinity.
-    bool autoResubmitSelf;
-}
 
-struct Task {
-    TaskBase base;
-    uint256 next; // optional for cyclic tasks: auto-filled by multiSubmitTask()
-    TaskBase[] cycle;  // optional for cyclic tasks: auto-filled submitTaskCycle()
-}
 
 struct TaskReceipt {
     uint256 id;
@@ -62,56 +49,45 @@ const OPERATION = 2;
 const VALUE = 3;
 const TERMS_OK_CHECK = 4;
 
-// TaskBase
+// Task
 const PROVIDER = 0;
 const CONDITIONS = 1;
 const ACTIONS = 2;
 const EXPIRY_DATE = 3;
 const AUTO_RESUBMIT_SELF = 4;
 
-// Task
-const BASE = 0;
-const NEXT = 1;
-const CYCLE = 2;
-
 // TaskReceipt
 const ID = 0;
 const USER_PROXY = 1;
 const TASK = 2;
+const NEXT = 3;
+const CYCLE = 4;
 
 function convertTaskReceiptArrayToObj(taskReceiptArray) {
-  const provider = _convertToProviderObj(
-    taskReceiptArray[TASK][BASE][PROVIDER]
-  );
+  const provider = _convertToProviderObj(taskReceiptArray[TASK][PROVIDER]);
 
   const conditions = _convertToArrayOfConditionObjs(
-    taskReceiptArray[TASK][BASE][CONDITIONS]
+    taskReceiptArray[TASK][CONDITIONS]
   );
 
-  const actions = _convertToArrayOfActionObjs(
-    taskReceiptArray[TASK][BASE][ACTIONS]
-  );
+  const actions = _convertToArrayOfActionObjs(taskReceiptArray[TASK][ACTIONS]);
 
-  const base = new TaskBase({
+  const cycle = _convertToArrayOfTaskObjs(taskReceiptArray[CYCLE]);
+
+  const task = new Task({
     provider,
     conditions,
     actions,
-    expiryDate: taskReceiptArray[TASK][BASE][EXPIRY_DATE],
-    autoResubmitSelf: taskReceiptArray[TASK][BASE][AUTO_RESUBMIT_SELF],
-  });
-
-  const cycle = _convertToArrayOfTaskBaseObjs(taskReceiptArray[TASK][CYCLE]);
-
-  const task = new Task({
-    base,
-    next: taskReceiptArray[TASK][NEXT],
-    cycle: cycle ? cycle : [],
+    expiryDate: taskReceiptArray[TASK][EXPIRY_DATE],
+    autoResubmitSelf: taskReceiptArray[TASK][AUTO_RESUBMIT_SELF],
   });
 
   const taskReceiptObj = new TaskReceipt({
     id: taskReceiptArray[ID],
     userProxy: taskReceiptArray[USER_PROXY],
     task,
+    next: taskReceiptArray[TASK][NEXT],
+    cycle: cycle ? cycle : [],
   });
 
   return taskReceiptObj;
@@ -152,19 +128,19 @@ function _convertToArrayOfActionObjs(actionsLog) {
   return actions;
 }
 
-function _convertToArrayOfTaskBaseObjs(cycleLog) {
-  const taskBases = [];
-  for (let taskBase of cycleLog) {
-    taskBase = new TaskBase({
-      provider: _convertToProviderObj(taskBase[PROVIDER]),
-      conditions: _convertToArrayOfConditionObjs(taskBase[CONDITIONS]),
-      actions: _convertToArrayOfActionObjs(taskBase[ACTIONS]),
-      expiryDate: taskBase[EXPIRY_DATE],
-      autoResubmitSelf: taskBase[AUTO_RESUBMIT_SELF],
+function _convertToArrayOfTaskObjs(cycleLog) {
+  const tasks = [];
+  for (let task of cycleLog) {
+    task = new Task({
+      provider: _convertToProviderObj(task[PROVIDER]),
+      conditions: _convertToArrayOfConditionObjs(task[CONDITIONS]),
+      actions: _convertToArrayOfActionObjs(task[ACTIONS]),
+      expiryDate: task[EXPIRY_DATE],
+      autoResubmitSelf: task[AUTO_RESUBMIT_SELF],
     });
-    taskBases.push(taskBase);
+    tasks.push(task);
   }
-  return taskBases;
+  return tasks;
 }
 
 export default convertTaskReceiptArrayToObj;

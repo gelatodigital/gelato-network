@@ -369,18 +369,16 @@ describe("GelatoCore.processProviderPayables", function () {
       });
 
       const task = new Task({
-        base: new TaskBase({
-          provider: gelatoProvider,
-          actions: [action],
-          expiryDate: constants.HashZero,
-        }),
+        provider: gelatoProvider,
+        actions: [action],
+        expiryDate: constants.HashZero,
       });
 
-      let taskReceipt = {
+      let taskReceipt = new TaskReceipt({
         id: 1,
         userProxy: userProxyAddress,
         task,
-      };
+      });
 
       const submitTaskTx = await userProxy.submitTask(task);
       await submitTaskTx.wait();
@@ -479,18 +477,16 @@ describe("GelatoCore.processProviderPayables", function () {
       });
 
       const task = new Task({
-        base: new TaskBase({
-          provider: gelatoProvider,
-          actions: [action],
-          expiryDate: constants.HashZero,
-        }),
+        provider: gelatoProvider,
+        actions: [action],
+        expiryDate: constants.HashZero,
       });
 
-      let taskReceipt = {
+      let taskReceipt = new TaskReceipt({
         id: 1,
         userProxy: userProxyAddress,
         task,
-      };
+      });
 
       const submitTaskTx = await userProxy.submitTask(task);
       await submitTaskTx.wait();
@@ -612,18 +608,16 @@ describe("GelatoCore.processProviderPayables", function () {
       });
 
       const task = new Task({
-        base: new TaskBase({
-          provider: gelatoProvider,
-          actions: [action, action2],
-          expiryDate: constants.HashZero,
-        }),
+        provider: gelatoProvider,
+        actions: [action, action2],
+        expiryDate: constants.HashZero,
       });
 
-      let taskReceipt = {
+      let taskReceipt = new TaskReceipt({
         id: 1,
         userProxy: userProxyAddress,
         task,
-      };
+      });
 
       const submitTaskTx = await userProxy.submitTask(task);
       await submitTaskTx.wait();
@@ -722,18 +716,16 @@ describe("GelatoCore.processProviderPayables", function () {
       });
 
       const task = new Task({
-        base: new TaskBase({
-          provider: gelatoProvider,
-          actions: [action, action],
-          expiryDate: constants.HashZero,
-        }),
+        provider: gelatoProvider,
+        actions: [action, action],
+        expiryDate: constants.HashZero,
       });
 
-      let taskReceipt = {
+      let taskReceipt = new TaskReceipt({
         id: 1,
         userProxy: userProxyAddress,
         task,
-      };
+      });
 
       const submitTaskTx = await userProxy.submitTask(task);
       await submitTaskTx.wait();

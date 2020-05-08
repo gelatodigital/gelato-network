@@ -24,7 +24,7 @@ struct Action {
     bool termsOkCheck;
 }
 
-struct TaskBase {
+struct Task {
     Provider provider;
     Condition[] conditions;  // optional
     Action[] actions;
@@ -32,16 +32,12 @@ struct TaskBase {
     bool autoResubmitSelf;
 }
 
-struct Task {
-    TaskBase base;
-    uint256 next; // optional for cyclic tasks: auto-filled by multiSubmitTask()
-    TaskBase[] cycle;  // optional for cyclic tasks: auto-filled multiSubmitTasks()
-}
-
 struct TaskReceipt {
     uint256 id;
     address userProxy;
     Task task;
+    uint256 next; // optional for cyclic tasks: auto-filled by multiSubmitTask()
+    Task[] cycle;  // optional for cyclic tasks: auto-filled multiSubmitTasks()
 }
 
 interface IGelatoCore {

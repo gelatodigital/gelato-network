@@ -161,18 +161,16 @@ describe("GelatoCore.canExec", function () {
     });
 
     const task = new Task({
-      base: new TaskBase({
-        provider: gelatoProvider,
-        actions: [action],
-        expiryDate: constants.HashZero,
-      }),
+      provider: gelatoProvider,
+      actions: [action],
+      expiryDate: constants.HashZero,
     });
 
-    taskReceipt = {
+    taskReceipt = new TaskReceipt({
       id: 1,
       userProxy: userProxyAddress,
       task,
-    };
+    });
 
     await expect(userProxy.submitTask(task)).to.emit(
       gelatoCore,
@@ -216,21 +214,21 @@ describe("GelatoCore.canExec", function () {
     const expiryDate = oldBlock.timestamp + lifespan;
 
     const task2 = new Task({
-      base: new TaskBase({
-        provider: gelatoProvider,
-        actions: [action],
-        expiryDate,
-      }),
+      provider: gelatoProvider,
+      actions: [action],
+      expiryDate,
     });
 
-    let taskReceipt2 = {
+    let taskReceipt2 = new TaskReceipt({
       id: 2,
       userProxy: userProxyAddress,
       task: task2,
-    };
+    });
 
-    const submitTaskTx = await userProxy.submitTask(task2);
-    await submitTaskTx.wait();
+    await expect(userProxy.submitTask(task2)).to.emit(
+      gelatoCore,
+      "LogTaskSubmitted"
+    );
 
     await ethers.provider.send("evm_mine", [expiryDate]);
 
@@ -243,18 +241,16 @@ describe("GelatoCore.canExec", function () {
 
   it("#4: CanExec - Fail due to provider module check failure, not whitelisted action)", async function () {
     const task2 = new Task({
-      base: new TaskBase({
-        provider: gelatoProvider,
-        actions: [action],
-        expiryDate: constants.HashZero,
-      }),
+      provider: gelatoProvider,
+      actions: [action],
+      expiryDate: constants.HashZero,
     });
 
-    let taskReceipt2 = {
+    let taskReceipt2 = new TaskReceipt({
       id: 2,
       userProxy: userProxyAddress,
       task: task2,
-    };
+    });
 
     await userProxy.submitTask(task2);
 

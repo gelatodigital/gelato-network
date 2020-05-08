@@ -154,12 +154,10 @@ export default task(
 
         // TASK
         taskArgs.task = new Task({
-          base: new TaskBase({
-            provider: gelatoProvider,
-            conditions: [condition],
-            actions,
-            expiryDate: constants.HashZero,
-          }),
+          provider: gelatoProvider,
+          conditions: [condition],
+          actions,
+          expiryDate: constants.HashZero,
         });
       }
 
