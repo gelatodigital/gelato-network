@@ -15,7 +15,8 @@ class TaskReceipt {
     this.id = id !== undefined ? utils.bigNumberify(id) : constants.Zero;
     this.userProxy = userProxy;
     this.task = task;
-    this.next = next === undefined ? utils.bigNumberify("0") : next;
+    this.next =
+      next === undefined ? utils.bigNumberify("0") : utils.bigNumberify(next);
     this.cycle = cycle ? cycle : [];
   }
 }
