@@ -250,6 +250,7 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
     await expect(
       gelatoUserProxy.connect(user).submitTaskCycle([task1, task2])
     ).to.emit(gelatoCore, "LogTaskSubmitted");
+
     // Doesnt work due to waffle bug
     // .withArgs(cyclicTaskReceipt1.id, taskReceipt1Hash, taskReceipt1AsArray);
 

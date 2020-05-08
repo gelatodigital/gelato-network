@@ -28,7 +28,7 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         gelatoProxyByUser[msg.sender] = userProxy;
         userByGelatoProxy[userProxy] = msg.sender;
         if (_actions.length != 0) _execActions(userProxy, _actions);
-        // if (_tasks.length != 0) _submitTasks(userProxy, _tasks, _cycle);
+        if (_tasks.length != 0) _submitTasks(userProxy, _tasks, _cycle);
         emit LogCreation(msg.sender, userProxy, msg.value);
     }
 
