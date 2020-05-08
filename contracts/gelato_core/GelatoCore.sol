@@ -75,6 +75,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         Task[] memory _cycle
     )
         private
+    {
         // Increment TaskReceipt ID storage
         uint256 nextTaskReceiptId = currentTaskReceiptId + 1;
         currentTaskReceiptId = nextTaskReceiptId;
@@ -166,11 +167,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // // Optional chained Task auto-submit validation
         if (_TR.cycle.length != 0) {
-            string memory canSubmitNext = canSubmitTask(
-                _TR.userProxy,
-                _TR.cycle[_TR.next]
-                //_getNextTaskInCycle(_TR, next)
-            );
+            string memory canSubmitNext = canSubmitTask(_TR.userProxy, _TR.cycle[_TR.next]);
             if (!canSubmitNext.startsWithOk())
                 return string(abi.encodePacked("CannotSubmitNextTaskInCycle:", canSubmitNext));
         }
@@ -354,7 +351,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         // Optional: Automated Cyclic Task Submission
         if (_TR.cycle.length != 0) {
             uint256 next = _TR.next == _TR.cycle.length - 1 ? 0 : _TR.next + 1;
-            storeTaskReceipt(_TR.cycle[_TR.next], next, _TR.cycle, _TR.userProxy);
+            _storeTaskReceipt(_TR.userProxy, _TR.cycle[_TR.next], next, _TR.cycle);
         }
     }
 
