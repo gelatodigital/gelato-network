@@ -27,13 +27,13 @@ export default task(
     "fromblock",
     "The block number to search for event eventlogs from",
     undefined, // placeholder default ...
-    types.number // ... only to enforce type
+    types.int // ... only to enforce type
   )
   .addOptionalParam(
     "toblock",
     "The block number up until which to look for",
     undefined, // placeholder default ...
-    types.number // ... only to enforce type
+    types.int // ... only to enforce type
   )
   .addOptionalParam("blockhash", "Search a specific block")
   .addOptionalParam("property", "A specific key-value pair to search for")
@@ -86,7 +86,7 @@ export default task(
         }
       }
 
-      if (taskArgs.log) console.log("\n event-getparsedlogs", taskArgs, "\n");
+      // if (taskArgs.log) console.log("\n event-getparsedlogs", taskArgs, "\n");
 
       let parsedLogs = await run("ethers-interface-parseLogs", {
         contractname: taskArgs.contractname,

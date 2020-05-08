@@ -209,13 +209,13 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
     // CyclicTask:
     cyclicTask1 = new Task({
       base: taskBase1, // dynamic
-      next: 1, // dynamic: auto-filled by GelatoCore upon cycle creation
+      next: 1, // static: auto-filled by GelatoCore upon cycle creation
       cycle: [taskBase1, taskBase2], // static: auto-filled by GelatoCore upon cycle creation
     });
     // Always auto-submitted by GelatoCore after cyclicTask1
     cyclicTask2 = new Task({
       base: taskBase2, // dynamic
-      next: 2, // dynamic
+      next: 2, // static: auto-filled by GelatoCore
       cycle: [taskBase1, taskBase2], // static
     });
 
@@ -259,6 +259,7 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
 
     // Flag to switch between 2 tasks.
     let cyclicTask1WasSubmitted = true;
+
     for (let i = 0; i < 10; i++) {
       // Update TaskReceipt.id from currentTaskReceiptId
       currentTaskReceiptId = await gelatoCore.currentTaskReceiptId();

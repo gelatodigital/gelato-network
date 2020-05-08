@@ -22,13 +22,13 @@ export default task(
     "fromblock",
     "The block number to search for event logs from",
     undefined, // placeholder default ...
-    types.number // ... only to enforce type
+    types.int // ... only to enforce type
   )
   .addOptionalParam(
     "toblock",
     "The block number up until which to look for",
     undefined, // placeholder default ...
-    types.number // ... only to enforce type
+    types.int // ... only to enforce type
   )
   .addOptionalParam("blockhash", "Search a specific block")
   .addOptionalParam("property", "A specific key-value pair to search for")

@@ -19,13 +19,13 @@ export default task(
     "fromblock",
     "The block number to search for event logs from",
     undefined, // default
-    types.number
+    types.int
   )
   .addOptionalParam(
     "toblock",
     "The block number up until which to look for",
     undefined, // default
-    types.number
+    types.int
   )
   .addOptionalParam("blockhash", "Search a specific block")
   .addOptionalParam("txhash", "Filter for a specific tx")
