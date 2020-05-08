@@ -198,54 +198,50 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
       actions: [secondActionDummyStruct],
     });
 
-    cyclicTask1ReceiptAsObj = new TaskReceipt({
-      id: 1,
-      userProxy: userProxyAddress,
-      task: task1, // dynamic
-      next: "1", // dynamic: auto-filled by GelatoCore upon cycle creation
-      cycle: [task1, task2], // static: auto-filled by GelatoCore upon cycle creation
-    });
-
-    cyclicTask2ReceiptAsObj = new TaskReceipt({
-      id: 1,
-      userProxy: userProxyAddress,
-      task: task2, // dynamic
-      next: "0", // After first execution, next will be placed to 0
-      cycle: [task1, task2], // static
-    });
-
-    // Intercept Task
+    // TaskReceipt: InterceptTask
     interceptTaskReceiptAsObj = new TaskReceipt({
       id: 0,
       userProxy: userProxyAddress,
       task: task1,
     });
 
-    // Create UserProxy
-    const createTx = await gelatoUserProxyFactory
-      .connect(user)
-      .createTwo(SALT_NONCE, [], [], false);
-    await createTx.wait();
+    // TaskReceipt: CyclicTask1
+    cyclicTask1ReceiptAsObj = new TaskReceipt({
+      id: 1,
+      userProxy: userProxyAddress,
+      task: task1, // dynamic
+      next: 1, // dynamic: auto-filled by GelatoCore upon cycle creation
+      cycle: [task1, task2], // static: auto-filled by GelatoCore upon cycle creation
+    });
 
-    gelatoUserProxy = await ethers.getContractAt(
-      "GelatoUserProxy",
-      userProxyAddress
-    );
+    // TaskReceipt: CyclicTask2
+    cyclicTask2ReceiptAsObj = new TaskReceipt({
+      id: 1,
+      userProxy: userProxyAddress,
+      task: task2, // dynamic
+      next: 0, // After first execution, next will be placed to 0
+      cycle: [task1, task2], // static
+    });
   });
 
   it("Should allow to enter an Arbitrary Task Cycle upon creating a GelatoUserProxy", async function () {
     // console.log("\n INIT \n");
 
-    const canExecResult = await gelatoCore.canSubmitTask(
-      userProxyAddress,
-      task1
-    );
-    await expect(canExecResult).to.equal("OK");
-
-    // Submit Task: cyclicTaskReceipt1 (task1 and task2)
+    // CreateTwo userProxy and submit interceptTask in one tx
     await expect(
-      gelatoUserProxy.connect(user).submitTaskCycle([task1, task2])
-    ).to.emit(gelatoCore, "LogTaskSubmitted");
+      gelatoUserProxyFactory.createTwo(SALT_NONCE, [], [task1, task2], true)
+    )
+      .to.emit(gelatoUserProxyFactory, "LogCreation")
+      .withArgs(userAddress, userProxyAddress, 0)
+      .and.to.emit(gelatoCore, "LogTaskSubmitted");
+    // Doesnt work due to waffle bug
+    // .withArgs(interceptTaskReceiptAsObj.id, interceptTaskReceiptHash, interceptTaskReceiptAsArray);
+
+    // GelatoUserProxy Instance to submit interceptant tasks
+    gelatoUserProxy = await ethers.getContractAt(
+      "GelatoUserProxy",
+      userProxyAddress
+    );
 
     // Flag to switch between 2 tasks.
     let cyclicTask1WasSubmitted = true;
