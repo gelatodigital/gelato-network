@@ -10,7 +10,7 @@ import { IGelatoProviderModule } from "./interfaces/IGelatoProviderModule.sol";
 
 /// @title GelatoCore
 /// @author Luis Schliesske & Hilmar Orth
-/// @notice Task Receipt: submission, validation, execution, charging and cancellation
+/// @notice Task: submission, validation, execution, charging and cancellation
 /// @dev Find all NatSpecs inside IGelatoCore
 contract GelatoCore is IGelatoCore, GelatoExecutors {
 
@@ -62,6 +62,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
     function submitTaskCycle(Task[] memory _tasks) public override {
         // Check first task via canSubmit Gate
+        require(_tasks.length > 1, "GelatoCore.submitTaskCycle:InvalidTaskLength");
         string memory canSubmitRes = canSubmitTask(msg.sender, _tasks[0]);
         require(canSubmitRes.startsWithOk(), canSubmitRes);
 
@@ -161,10 +162,10 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // // Optional chained Task auto-submit validation
         if (_TR.cycle.length != 0) {
-            uint256 next = _TR.next == _TR.cycle.length ? 0 : _TR.next + 1;
             string memory canSubmitNext = canSubmitTask(
                 _TR.userProxy,
-                _getNextTaskInCycle(_TR, next)
+                _TR.cycle[_TR.next]
+                //_getNextTaskInCycle(_TR, next)
             );
             if (!canSubmitNext.startsWithOk())
                 return string(abi.encodePacked("CannotSubmitNextTaskInCycle:", canSubmitNext));
@@ -341,8 +342,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // Optional: Automated Cyclic Task Submission
         if (_TR.cycle.length != 0) {
-            uint256 next = _TR.next == _TR.cycle.length ? 0 : _TR.next + 1;
-            storeTaskReceipt(_getNextTaskInCycle(_TR, next), next, _TR.cycle, _TR.userProxy);
+            uint256 next = _TR.next == _TR.cycle.length - 1 ? 0 : _TR.next + 1;
+            storeTaskReceipt(_TR.cycle[_TR.next], next, _TR.cycle, _TR.userProxy);
         }
     }
 
@@ -410,35 +411,5 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     // Helpers
     function hashTaskReceipt(TaskReceipt memory _TR) public pure override returns(bytes32) {
         return keccak256(abi.encode(_TR));
-    }
-
-    // function _createTaskCycle(Task[] memory _tasks) private pure returns (Task[] memory cycle) {
-    //     // We set next to 1 as 0 will be init submitted from Task.task
-    //     for (uint i; i < _tasks.length; i++) {
-    //         require(
-    //             _tasks[i].autoResubmitSelf == false,
-    //             "GelatoCore._createTaskCycle: cyclic tasks cannot autoResubmitSelf"
-    //         );
-    //         Task memory task = Task({
-    //             provider: _tasks[i].provider,
-    //             conditions: _tasks[i].conditions,
-    //             actions: _tasks[i].actions,
-    //             expiryDate: _tasks[i].expiryDate,
-    //             autoResubmitSelf: false
-    //         });
-    //         // cycle.push(task);
-    //     }
-    // }
-
-    function _getNextTaskInCycle(TaskReceipt memory _TR, uint256 _next) private pure returns(Task memory task) {
-        task = Task(
-            {
-                provider: _TR.cycle[_next].provider,
-                conditions: _TR.cycle[_next].conditions,
-                actions: _TR.cycle[_next].actions,
-                expiryDate: _TR.cycle[_next].expiryDate,
-                autoResubmitSelf: _TR.cycle[_next].autoResubmitSelf
-            }
-        );
     }
 }

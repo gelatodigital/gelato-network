@@ -4,7 +4,7 @@ class TaskReceipt {
   constructor({ id, userProxy, task, next, cycle }) {
     if (userProxy === undefined) throw new Error("TaskReceipt: no userProxy");
     if (task === undefined) throw new Error("TaskReceipt: no Task object");
-    if (next !== undefined) next = utils.bigNumberify(next);
+    // if (next !== undefined) next = utils.bigNumberify(next);
     if (cycle && !Array.isArray(cycle))
       throw new Error("\nTask: cycle be non-empty Array\n");
 

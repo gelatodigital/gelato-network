@@ -57,33 +57,29 @@ const EXPIRY_DATE = 3;
 const AUTO_RESUBMIT_SELF = 4;
 
 // TaskReceipt
-const NEXT = 1;
-const CYCLE = 2;
 const ID = 0;
 const USER_PROXY = 1;
 const TASK = 2;
+const NEXT = 3;
+const CYCLE = 4;
 
 function convertTaskReceiptArrayToObj(taskReceiptArray) {
-  const provider = _convertToProviderObj(
-    taskReceiptArray[TASK][BASE][PROVIDER]
-  );
+  const provider = _convertToProviderObj(taskReceiptArray[TASK][PROVIDER]);
 
   const conditions = _convertToArrayOfConditionObjs(
-    taskReceiptArray[TASK][BASE][CONDITIONS]
+    taskReceiptArray[TASK][CONDITIONS]
   );
 
-  const actions = _convertToArrayOfActionObjs(
-    taskReceiptArray[TASK][BASE][ACTIONS]
-  );
+  const actions = _convertToArrayOfActionObjs(taskReceiptArray[TASK][ACTIONS]);
 
-  const cycle = _convertToArrayOfTaskBaseObjs(taskReceiptArray[TASK][CYCLE]);
+  const cycle = _convertToArrayOfTaskBaseObjs(taskReceiptArray[CYCLE]);
 
   const task = new Task({
     provider,
     conditions,
     actions,
-    expiryDate: taskReceiptArray[TASK][BASE][EXPIRY_DATE],
-    autoResubmitSelf: taskReceiptArray[TASK][BASE][AUTO_RESUBMIT_SELF],
+    expiryDate: taskReceiptArray[TASK][EXPIRY_DATE],
+    autoResubmitSelf: taskReceiptArray[TASK][AUTO_RESUBMIT_SELF],
   });
 
   const taskReceiptObj = new TaskReceipt({
@@ -133,18 +129,18 @@ function _convertToArrayOfActionObjs(actionsLog) {
 }
 
 function _convertToArrayOfTaskBaseObjs(cycleLog) {
-  const taskBases = [];
-  for (let taskBase of cycleLog) {
-    taskBase = new Task({
-      provider: _convertToProviderObj(taskBase[PROVIDER]),
-      conditions: _convertToArrayOfConditionObjs(taskBase[CONDITIONS]),
-      actions: _convertToArrayOfActionObjs(taskBase[ACTIONS]),
-      expiryDate: taskBase[EXPIRY_DATE],
-      autoResubmitSelf: taskBase[AUTO_RESUBMIT_SELF],
+  const tasks = [];
+  for (let task of cycleLog) {
+    task = new Task({
+      provider: _convertToProviderObj(task[PROVIDER]),
+      conditions: _convertToArrayOfConditionObjs(task[CONDITIONS]),
+      actions: _convertToArrayOfActionObjs(task[ACTIONS]),
+      expiryDate: task[EXPIRY_DATE],
+      autoResubmitSelf: task[AUTO_RESUBMIT_SELF],
     });
-    taskBases.push(taskBase);
+    tasks.push(task);
   }
-  return taskBases;
+  return tasks;
 }
 
 export default convertTaskReceiptArrayToObj;
