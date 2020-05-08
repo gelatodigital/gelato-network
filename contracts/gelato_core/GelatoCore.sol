@@ -159,7 +159,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // Optional chained Task auto-resubmit validation
         if (_TR.task.autoResubmitSelf) {
-            if (_TR.cycle.length != 0) return "CyclicTasksCannotAutoResubmitSelf";
             string memory canResubmitSelf = canSubmitTask(_TR.userProxy, _TR.task);
             if (!canResubmitSelf.startsWithOk())
                 return string(abi.encodePacked("CannotAutoResubmitSelf:", canResubmitSelf));
