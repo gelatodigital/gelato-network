@@ -105,8 +105,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         override
         returns(string memory)
     {
-        if (tx.gasprice < _gelatoGasPrice) return "ExecTxGasPriceNotEqualOrGreaterThanGelatoGasPrice";
-
         if (!isProviderLiquid(_TR.task.provider.addr, _gelatoMaxGas, _gelatoGasPrice))
             return "ProviderIlliquidity";
 
@@ -190,6 +188,11 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // CHECKS: all further checks are done during this.executionWrapper.canExec()
         require(startGas > internalGasRequirement, "GelatoCore.exec: Insufficient gas sent");
+
+        // memcopy of gelatoGasPrice, to avoid multiple storage reads
+        uint256 gelatoGasPrice = _getGelatoGasPrice();
+        require(tx.gasprice >= gelatoGasPrice, "GelatoCore.exec: tx.gasprice below gelatoGasPrice");
+
         require(
             msg.sender == executorByProvider[_TR.task.provider.addr],
             "GelatoCore.exec: Invalid Executor"
@@ -202,7 +205,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         ExecutionResult executionResult;
         string memory reason;
 
-        try this.executionWrapper{gas: gasleft() - internalGasRequirement}(_TR, _gelatoMaxGas, _gelatoGasPrice)
+        try this.executionWrapper{gas: gasleft() - internalGasRequirement}(_TR, _gelatoMaxGas, gelatoGasPrice)
             returns(ExecutionResult _executionResult, string memory _reason)
         {
             executionResult = _executionResult;
@@ -225,7 +228,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
                 ExecutorPay.Reward,
                 startGas,
                 _gelatoMaxGas,
-                _gelatoGasPrice
+                gelatoGasPrice
             );
             emit LogExecSuccess(msg.sender, _TR.id, executorSuccessFee, sysAdminSuccessFee);
 
@@ -246,7 +249,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
                     ExecutorPay.Refund,
                     startGas,
                     _gelatoMaxGas,
-                     _gelatoGasPrice
+                     gelatoGasPrice
                 );
                 emit LogExecReverted(msg.sender, _TR.id, executorRefund, reason);
             }
