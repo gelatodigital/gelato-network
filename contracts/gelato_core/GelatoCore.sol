@@ -188,13 +188,15 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // CHECKS: all further checks are done during this.executionWrapper.canExec()
         require(startGas > internalGasRequirement, "GelatoCore.exec: Insufficient gas sent");
+
+        // memcopy of gelatoGasPrice, to avoid multiple storage reads
+        uint256 _gelatoGasPrice = _getGelatoGasPrice();
+        require(tx.gasprice >= _gelatoGasPrice, "GelatoCore.exec: tx.gasprice below gelatoGasPrice");
+
         require(
             msg.sender == executorByProvider[_TR.task.provider.addr],
             "GelatoCore.exec: Invalid Executor"
         );
-        // memcopy of gelatoGasPrice, to avoid multiple storage reads
-        uint256 _gelatoGasPrice = _getGelatoGasPrice();
-        require(tx.gasprice >= _gelatoGasPrice, "GelatoCore.exec: tx.gasprice below gelatoGasPrice");
 
         // memcopy of gelatoMaxGas, to avoid multiple storage reads
         uint256 _gelatoMaxGas = gelatoMaxGas;
