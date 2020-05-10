@@ -27,10 +27,11 @@ export const deployments = {
     "0xF536876f81A8504609C13069615647F0A6CAe2F1",
 
   // ===== Gelato Core ====
-  GelatoCore: "0xe2F32A922dCd4A960BE4F7F7624d42cA583F8ECc",
-  GelatoGasPriceOracle: "0x4c42527fC8EF5D7D8C6050664877399d8eE20D0f",
+  GelatoCore: "0x6B7720fFa476e1a85f7301F54Bb2009a3CEE6B1c",
+  GelatoGasPriceOracle: "0x02C0d77f2dc8C9A4c6dD3898278bEe9FAdf5dbe9",
   ProviderModuleGelatoUserProxy: "0x0",
-  ProviderModuleGnosisSafeProxy: "0x49f7f32f3f82A3b2f923FFFd547075c00002Fe4b",
+  ProviderModuleGnosisSafeProxy: "0x42b6303BAdEB2d5038FcEd9c1C2F2f5CD8eA9568",
+  ProviderModuleDsProxy: "0x0",
 
   // ==== Conditions ====
   // == Balances ==

@@ -11,7 +11,9 @@ export default task(
   )
   .addOptionalVariadicPositionalParam(
     "constructorargs",
-    "A collection of arguments to pass to the contract constructor"
+    "A collection of arguments to pass to the contract constructor",
+    undefined,
+    types.json
   )
   .addOptionalParam(
     "signerindex",

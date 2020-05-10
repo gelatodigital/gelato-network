@@ -9,7 +9,9 @@ export default internalTask(
   .addOptionalParam("contractaddress")
   .addOptionalParam(
     "signer",
-    "The signer object (private key) that will be used to send tx to the contract"
+    "The signer object (private key) that will be used to send tx to the contract",
+    undefined,
+    types.json
   )
   .addFlag("read")
   .addFlag("write")

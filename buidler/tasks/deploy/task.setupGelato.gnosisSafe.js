@@ -48,56 +48,61 @@ export default task("setupgelato-gnosissafeproxy")
       // Action
       let actionAddresses = [];
       let tempArray = [];
-      for (const action of taskArgs.actions) {
-        if (!tempArray.includes(action)) {
-          let actionconstructorargs;
-          if (action === "ActionWithdrawBatchExchange") {
-            const batchExchangeAddress = await run("bre-config", {
-              addressbookcategory: "gnosisProtocol",
-              addressbookentry: "batchExchange",
-            });
+      if (taskArgs.actions.length >= 1)
+        for (const action of taskArgs.actions) {
+          if (!tempArray.includes(action)) {
+            let actionconstructorargs;
+            if (action === "ActionWithdrawBatchExchange") {
+              const batchExchangeAddress = await run("bre-config", {
+                addressbookcategory: "gnosisProtocol",
+                addressbookentry: "batchExchange",
+              });
 
-            const feeExtractorAddress = await run("bre-config", {
-              contractname: "FeeExtractor",
-              log: taskArgs.log,
-              deployments: true,
-            });
+              const feeExtractorAddress = await run("bre-config", {
+                contractname: "FeeExtractor",
+                log: taskArgs.log,
+                deployments: true,
+              });
 
-            // address _batchExchange, address _weth, address _gelatoProvider
-            actionconstructorargs = [batchExchangeAddress, feeExtractorAddress];
-          }
-          const deployedAction = await run("deploy", {
-            contractname: action,
-            log: taskArgs.log,
-            constructorargs: actionconstructorargs,
-          });
-
-          tempArray.push(action);
-          actionAddresses.push(deployedAction.address);
-        } else {
-          let i = 0;
-          for (const tempAction of taskArgs.actions) {
-            if (tempAction === action) {
-              actionAddresses.push(actionAddresses[i]);
-              tempArray.push(action);
-              break;
+              // address _batchExchange, address _weth, address _gelatoProvider
+              actionconstructorargs = [
+                batchExchangeAddress,
+                feeExtractorAddress,
+              ];
             }
-            i = i + 1;
+            const deployedAction = await run("deploy", {
+              contractname: action,
+              log: taskArgs.log,
+              constructorargs: actionconstructorargs,
+            });
+
+            tempArray.push(action);
+            actionAddresses.push(deployedAction.address);
+          } else {
+            let i = 0;
+            for (const tempAction of taskArgs.actions) {
+              if (tempAction === action) {
+                actionAddresses.push(actionAddresses[i]);
+                tempArray.push(action);
+                break;
+              }
+              i = i + 1;
+            }
           }
         }
-      }
 
       // addr, data, operation, value, termsOkCheck
       const actionArray = [];
-      for (const actionAddress of actionAddresses) {
-        const action = new Action({
-          addr: actionAddress,
-          data: constants.HashZero,
-          operation: Operation.Delegatecall,
-          termsOkCheck: true,
-        });
-        actionArray.push(action);
-      }
+      if (actionAddresses.length >= 1)
+        for (const actionAddress of actionAddresses) {
+          const action = new Action({
+            addr: actionAddress,
+            data: constants.HashZero,
+            operation: Operation.Delegatecall,
+            termsOkCheck: true,
+          });
+          actionArray.push(action);
+        }
 
       // ProviderModule Gnosis Safe
       // 1. Get extcodehash of Gnosis Safe

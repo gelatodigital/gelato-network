@@ -10,6 +10,12 @@ export default internalTask(
     try {
       if (network.name != "rinkeby") throw new Error("\nwrong network!");
 
+      const gelatoCore = await run("instantiateContract", {
+        contractname: "GelatoCore",
+        write: true,
+        // signer: provider,
+      });
+
       // ##### Condition
       const conditionAddress = await run("bre-config", {
         deployments: true,
