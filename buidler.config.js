@@ -148,7 +148,7 @@ module.exports = {
 
 // ================================= PLUGINS =========================================
 usePlugin("@nomiclabs/buidler-ethers");
-// usePlugin("buidler-gas-reporter");
+usePlugin("buidler-gas-reporter");
 usePlugin("@nomiclabs/buidler-waffle");
 usePlugin("solidity-coverage");
 
