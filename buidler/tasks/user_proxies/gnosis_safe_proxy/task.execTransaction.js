@@ -10,7 +10,10 @@ export default task(
     "gnosissafeproxyaddress",
     "The address of the gnosis safe proxy we call"
   )
-  .addPositionalParam("contractname", "The contract whose abi has the function")
+  .addOptionalPositionalParam(
+    "contractname",
+    "The contract whose abi has the function"
+  )
   .addOptionalVariadicPositionalParam(
     "inputs",
     "The parameters for --functionname or for the defaultpayloadscript for <contractname>"

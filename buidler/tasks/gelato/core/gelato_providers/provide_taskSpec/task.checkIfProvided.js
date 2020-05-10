@@ -7,7 +7,9 @@ export default task(
 )
   .addOptionalPositionalParam(
     "task",
-    "the task object - not possible through cli"
+    "the task object - not possible through cli",
+    undefined,
+    types.json
   )
   .addOptionalPositionalParam(
     "taskspecname",

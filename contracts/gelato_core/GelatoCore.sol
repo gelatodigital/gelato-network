@@ -200,7 +200,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // memcopy of gelatoMaxGas, to avoid multiple storage reads
         uint256 _gelatoMaxGas = gelatoMaxGas;
-        uint256 _gelatoGasPrice = _getGelatoGasPrice();
 
         ExecutionResult executionResult;
         string memory reason;

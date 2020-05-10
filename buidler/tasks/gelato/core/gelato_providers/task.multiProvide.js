@@ -6,13 +6,20 @@ export default task(
   "gc-multiprovide",
   `Sends tx and --funds to GelatoCore.multiProvide() on [--network] (default: ${defaultNetwork})`
 )
-  .addOptionalParam("taskSpecs", "Already created TaskSpecs")
+  .addOptionalParam(
+    "taskSpecs",
+    "Already created TaskSpecs",
+    undefined,
+    types.json
+  )
   .addOptionalParam("funds", "The amount of ETH funds to provide")
   .addOptionalParam("gelatoexecutor", "The provider's assigned gelatoExecutor")
-  .addOptionalParam("conditions", "Only one via CLI.")
+  .addOptionalParam("conditions", "Only one via CLI.", undefined, types.json)
   .addOptionalParam(
     "actions",
-    "Cannot be passed via CLI as it is an Array of ActionsWithGasPriceCeil objs"
+    "Cannot be passed via CLI as it is an Array of ActionsWithGasPriceCeil objs",
+    undefined,
+    types.json
   )
   .addOptionalParam(
     "action",
@@ -68,8 +75,7 @@ export default task(
           taskArgs.actions.push(actionWithGasPriceCeil);
         }
 
-        if (!taskArgs.modules) taskArgs.modules = [];
-        else
+        if (taskArgs.modules)
           taskArgs.modules = Array.isArray(taskArgs.modules)
             ? taskArgs.modules
             : [taskArgs.modules];
@@ -91,8 +97,8 @@ export default task(
       // IGelatoProviderModule[] memory _modules
       const tx = await gelatoCore.multiProvide(
         taskArgs.gelatoexecutor,
-        taskArgs.taskSpecs,
-        taskArgs.modules,
+        taskArgs.taskSpecs ? taskArgs.taskSpecs : [],
+        taskArgs.modules ? taskArgs.modules : [],
         {
           value: utils.parseEther(taskArgs.funds ? taskArgs.funds : "0"),
         }

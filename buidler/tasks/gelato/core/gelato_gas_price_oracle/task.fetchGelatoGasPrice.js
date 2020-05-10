@@ -32,7 +32,8 @@ export default task(
         contractname: "GelatoGasPriceOracle",
         eventlogs: lastLog,
       });
-      const gelatoGasPrice = parsedLastLog.values.newGasPrice;
+
+      const gelatoGasPrice = parsedLastLog.parsedLog.values.newGasPrice;
 
       if (taskArgs.log) {
         console.log(

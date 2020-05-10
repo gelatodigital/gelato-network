@@ -221,7 +221,6 @@ export default task(
     });
 
     // address _account, address _token, uint256 _refBalance, bool _greaterElseSmalle
-
     const conditionData = await run("abi-encode-withselector", {
       contractname: "ConditionBalanceStateful",
       functionname: "ok",
