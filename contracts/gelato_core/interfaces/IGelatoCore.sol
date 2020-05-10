@@ -29,22 +29,25 @@ struct Task {
     Condition[] conditions;  // optional
     Action[] actions;
     uint256 expiryDate;  // 0 == infinity.
-    bool autoSubmitNextTask;  // optional for infinite automation
+    bool autoResubmitSelf;
 }
 
 struct TaskReceipt {
     uint256 id;
     address userProxy;
     Task task;
+    uint256 next; // optional for cyclic tasks: auto-filled by multiSubmitTask()
+    Task[] cycle;  // optional for cyclic tasks: auto-filled multiSubmitTasks()
 }
 
 interface IGelatoCore {
     event LogTaskSubmitted(
-        address indexed executor,
         uint256 indexed taskReceiptId,
         bytes32 indexed taskReceiptHash,
         TaskReceipt taskReceipt
     );
+
+    event LogTaskCycleSubmitted(uint256 indexed cycleId);
 
     event LogExecSuccess(
         address indexed executor,
@@ -66,7 +69,11 @@ interface IGelatoCore {
 
     event LogTaskCancelled(uint256 indexed taskReceiptId);
 
-    function canSubmitTask(address _executor, address _userProxy, Task calldata _task)
+    /// @notice API to query whether Task can be submitted successfully.
+    /// @dev In submitTask the msg.sender must be the same as _userProxy here.
+    /// @param _userProxy The userProxy from which the task will be submitted.
+    /// @param _task Selected provider, conditions, actions, expiry date of the task
+    function canSubmitTask(address _userProxy, Task calldata _task)
         external
         view
         returns(string memory);
@@ -76,27 +83,20 @@ interface IGelatoCore {
     /// @param _task Selected provider, conditions, actions, expiry date of the task
     function submitTask(Task calldata _task) external;
 
-    /// @notice Submit a gelato task that will be executed under the specified conditions
+    /// @notice Submit a repeated sequence of tasks to be executed, starting with the first.
     /// @dev This function must be called from a contract account provided by Provider
     /// @param _tasks Selected provider, conditions, actions, expiry date of the task
-    function multiSubmitTasks(Task[] calldata _tasks) external;
-
+    function submitTaskCycle(Task[] calldata _tasks) external;
 
     // ================  Exec Suite =========================
     /// @notice Off-chain API for executors to check, if a TaskReceipt is executable
     /// @dev GelatoCore checks this during execution, in order to safeguard the Conditions
-    /// @param _executor The executor. GelatoCore passes this for auto-submissions.
     /// @param _TR TaskReceipt, consisting of user task, user proxy address and id
     /// @param _gelatoMaxGas If  this is used by an Executor and a revert happens,
     ///  the Executor gets a refund from the Provider and the TaskReceipt is annulated.
     /// @param _execTxGasPrice Must be used by Executors. Gas Price fed by gelatoCore's
     ///  Gas Price Oracle. Executors can query the current gelatoGasPrice from events.
-    function canExec(
-        address _executor,
-        TaskReceipt calldata _TR,
-        uint256 _gelatoMaxGas,
-        uint256 _execTxGasPrice
-    )
+    function canExec(TaskReceipt calldata _TR, uint256 _gelatoMaxGas, uint256 _execTxGasPrice)
         external
         view
         returns(string memory);
@@ -113,7 +113,7 @@ interface IGelatoCore {
     /// @param _TR TaskReceipt: id, userProxy, Task.
     function cancelTask(TaskReceipt calldata _TR) external;
 
-    /// @notice Batch Cancel tasks
+    /// @notice Cancel multiple tasks at once
     /// @dev Callable only by userProxy or selected provider
     /// @param _taskReceipts TaskReceipts: id, userProxy, Task.
     function multiCancelTasks(TaskReceipt[] calldata _taskReceipts) external;
@@ -126,11 +126,10 @@ interface IGelatoCore {
     // ================  Getters =========================
     /// @notice Returns the taskReceiptId of the last TaskReceipt submitted
     /// @return currentId currentId, last TaskReceiptId submitted
-    function currentTaskReceiptId() external view returns(uint256 currentId);
+    function currentTaskReceiptId() external view returns(uint256);
 
     /// @notice Returns computed taskReceipt hash, used to check for taskReceipt validity
     /// @param _taskReceiptId Id of taskReceipt emitted in submission event
     /// @return hash of taskReceipt
     function taskReceiptHash(uint256 _taskReceiptId) external view returns(bytes32);
-
 }

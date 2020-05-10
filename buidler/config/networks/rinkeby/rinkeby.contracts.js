@@ -19,7 +19,9 @@ export const contracts = [
   // Portfolio Mgmt
   "ActionChainedRebalancePortfolioRinkeby",
   // Gnosis
-  "ActionPlaceOrderBatchExchangeWithWithdraw",
+  "ActionPlaceOrderBatchExchangePayFee",
+  "ActionWithdrawBatchExchangeChained",
+  "ActionPlaceOrderBatchExchangeChained",
 
   // === GelatoCore ===
   "GelatoCore",
@@ -30,10 +32,11 @@ export const contracts = [
   // === Conditions ===
   // Balances
   "ConditionBalance",
+  "ConditionBalanceStateful",
   // Indices
   "ConditionFearGreedIndex",
   // Prices
-  "ConditionKyberRateRinkeby",
+  "ConditionKyberRate",
   // Time
   "ConditionTimestampPassed",
   // Gnosis

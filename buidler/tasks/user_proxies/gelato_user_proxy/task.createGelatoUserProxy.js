@@ -35,6 +35,7 @@ export default task(
         creationTx = await gelatoUserProxyFactory.create(
           optionalSubmitTasks,
           optionalActions,
+          false,
           {
             value: utils.parseEther(taskArgs.funding),
           }

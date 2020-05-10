@@ -18,7 +18,7 @@ export const addressBook = {
   kyber: {
     // rinkeby
     ETH: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
-    proxy: "0x0",
+    proxy: "0xF77eC7Ed5f5B9a5aee4cfa6FFCaC6A4C315BaC76",
   },
   maker: {
     medianizer2: "0x7e8f5b24d89F8F32786d564a5bA76Eb806a74872",

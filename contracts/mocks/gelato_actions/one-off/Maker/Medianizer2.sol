@@ -13,14 +13,12 @@ contract Medianizer2 {
     }
 
 
-    function testView()
+    function returnEthUsd()
         public
         pure
         returns(uint256)
     {
-        uint256 etherUSDPrice = uint256(read());
-        return 1 ether * 3 ether / etherUSDPrice;
-        // return 1 ether * 3 ether /
+        return uint256(read());
     }
 
 }

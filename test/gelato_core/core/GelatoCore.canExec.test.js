@@ -135,7 +135,7 @@ describe("GelatoCore.canExec", function () {
     // Create UserProxy
     const createTx = await gelatoUserProxyFactory
       .connect(seller)
-      .create([], []);
+      .create([], [], false);
     await createTx.wait();
     userProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
       sellerAddress
@@ -166,11 +166,11 @@ describe("GelatoCore.canExec", function () {
       expiryDate: constants.HashZero,
     });
 
-    taskReceipt = {
+    taskReceipt = new TaskReceipt({
       id: 1,
       userProxy: userProxyAddress,
       task,
-    };
+    });
 
     await expect(userProxy.submitTask(task)).to.emit(
       gelatoCore,
@@ -183,7 +183,6 @@ describe("GelatoCore.canExec", function () {
     const canExecReturn = await gelatoCore
       .connect(executor)
       .canExec(
-        executorAddress,
         taskReceipt,
         GELATO_MAX_GAS,
         ethers.utils.bigNumberify("800", "Gwei")
@@ -200,7 +199,6 @@ describe("GelatoCore.canExec", function () {
     const canExecReturn = await gelatoCore
       .connect(executor)
       .canExec(
-        executorAddress,
         taskReceipt,
         GELATO_MAX_GAS,
         ethers.utils.parseUnits("300", "ether")
@@ -221,30 +219,23 @@ describe("GelatoCore.canExec", function () {
       expiryDate,
     });
 
-    let taskReceipt2 = {
+    let taskReceipt2 = new TaskReceipt({
       id: 2,
       userProxy: userProxyAddress,
       task: task2,
-    };
+    });
 
-    const submitTaskTx = await userProxy.submitTask(task2);
-    await submitTaskTx.wait();
+    await expect(userProxy.submitTask(task2)).to.emit(
+      gelatoCore,
+      "LogTaskSubmitted"
+    );
 
-    if (network.name === "buidlerevm")
-      await ethers.provider.send("evm_increaseTime", [lifespan]);
-
-    if (network.name === "coverage")
-      await ethers.provider.send("evm_mine", [expiryDate]);
+    await ethers.provider.send("evm_mine", [expiryDate]);
 
     expect(
       await gelatoCore
         .connect(executor)
-        .canExec(
-          executorAddress,
-          taskReceipt2,
-          GELATO_MAX_GAS,
-          GELATO_GAS_PRICE
-        )
+        .canExec(taskReceipt2, GELATO_MAX_GAS, GELATO_GAS_PRICE)
     ).to.equal("TaskReceiptExpired");
   });
 
@@ -255,11 +246,11 @@ describe("GelatoCore.canExec", function () {
       expiryDate: constants.HashZero,
     });
 
-    let taskReceipt2 = {
+    let taskReceipt2 = new TaskReceipt({
       id: 2,
       userProxy: userProxyAddress,
       task: task2,
-    };
+    });
 
     await userProxy.submitTask(task2);
 
@@ -267,7 +258,7 @@ describe("GelatoCore.canExec", function () {
 
     const canExecReturn = await gelatoCore
       .connect(executor)
-      .canExec(executorAddress, taskReceipt2, GELATO_MAX_GAS, GELATO_GAS_PRICE);
+      .canExec(taskReceipt2, GELATO_MAX_GAS, GELATO_GAS_PRICE);
 
     expect(canExecReturn).to.equal("taskSpecGasPriceCeil-OR-notProvided");
   });
@@ -275,7 +266,7 @@ describe("GelatoCore.canExec", function () {
   it("#5: CanExec - Return Ok when called via executor)", async function () {
     const canExecReturn = await gelatoCore
       .connect(executor)
-      .canExec(executorAddress, taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE);
+      .canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE);
 
     expect(canExecReturn).to.equal("OK");
   });
@@ -283,7 +274,7 @@ describe("GelatoCore.canExec", function () {
   it("#6: CanExec - Return InvalidExecutor when called NOT via executor)", async function () {
     const canExecReturn = await gelatoCore
       .connect(provider)
-      .canExec(executorAddress, taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE);
+      .canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE);
 
     expect(canExecReturn).to.equal("InvalidExecutor");
   });

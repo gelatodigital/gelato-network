@@ -5,7 +5,7 @@ export default internalTask(
   "handleNetworkName",
   `Throws if networkname is invalid OR returns the connected [--network] (default: ${defaultNetwork}), if networkname is undefined`
 )
-  .addParam("networkname")
+  .addOptionalParam("networkname")
   .setAction(async ({ networkname }) => {
     try {
       if (networkname) await run("checkNetworkName", { networkname });

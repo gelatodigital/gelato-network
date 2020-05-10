@@ -18,16 +18,14 @@ abstract contract GelatoExecutors is IGelatoExecutors, GelatoProviders {
 
     // Executor De/Registrations and Staking
     function stakeExecutor() external payable override {
+        uint256 currentStake = executorStake[msg.sender];
+        uint256 newStake = currentStake + msg.value;
         require(
-            executorStake[msg.sender] == 0,
-            "GelatoExecutors.stakeExecutor: already registered"
+            newStake >= minExecutorStake,
+            "GelatoExecutors.stakeExecutor: below minStake"
         );
-        require(
-            msg.value >= minExecutorStake,
-            "GelatoExecutors.stakeExecutor: minExecutorStake"
-        );
-        executorStake[msg.sender] = msg.value;
-        emit LogExecutorStaked(msg.sender, msg.value);
+        executorStake[msg.sender] = newStake;
+        emit LogExecutorStaked(msg.sender, currentStake, newStake);
     }
 
     function unstakeExecutor() external override {
@@ -43,18 +41,6 @@ abstract contract GelatoExecutors is IGelatoExecutors, GelatoProviders {
         delete executorStake[msg.sender];
         msg.sender.sendValue(unbondedStake);
         emit LogExecutorUnstaked(msg.sender);
-    }
-
-    function increaseExecutorStake() external payable override {
-        uint256 currentStake = executorStake[msg.sender];
-        require(currentStake != 0, "GelatoExecutors.increaseExecutorStake: no stake");
-        uint256 newStake = currentStake + msg.value;
-        executorStake[msg.sender] = newStake;
-        require(
-            newStake >= minExecutorStake,
-            "GelatoExecutors.increaseExecutorStake: below minStake"
-        );
-        emit LogExecutorStakeIncreased(msg.sender, newStake);
     }
 
     function withdrawExcessExecutorStake(uint256 _withdrawAmount)

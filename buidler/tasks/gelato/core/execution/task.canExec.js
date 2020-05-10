@@ -1,35 +1,50 @@
 import { task, types } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../../buidler.config";
-import { constants, utils } from "ethers";
 
 export default task(
   "gc-canexec",
   `Calls GelatoCore.canExec() on [--network] (default: ${defaultNetwork})`
 )
   .addPositionalParam("taskreceiptid")
+  .addOptionalParam("contractaddress", "Address of GelatoCore")
   .addOptionalPositionalParam(
     "executorindex",
     "Mnenomic generated account to sign the tx",
     1,
     types.int
   )
-  .addOptionalParam("taskreceipt", "Supply LogTaskSubmitted values in an obj")
-  .addOptionalParam("fromblock", "Search for event logs from block number.")
-  .addOptionalParam("toblock", "Search for event logs to block number.")
+  .addOptionalParam(
+    "taskreceipt",
+    "Supply LogTaskSubmitted values in an obj",
+    undefined,
+    types.json
+  )
+  .addOptionalParam(
+    "fromblock",
+    "Search for event logs from block number.",
+    undefined,
+    types.int
+  )
+  .addOptionalParam(
+    "toblock",
+    "Search for event logs to block number.",
+    undefined,
+    types.int
+  )
   .addOptionalParam("blockhash", "Search a specific block")
   .addOptionalParam("txhash", "Filter for a specific tx")
-  .addFlag("stringify")
   .addFlag("log", "Logs return values to stdout")
   .setAction(async (taskArgs) => {
     try {
       if (!taskArgs.taskreceipt) {
         taskArgs.taskreceipt = await run("fetchTaskReceipt", {
           taskreceiptid: taskArgs.taskreceiptid,
+          obj: true,
+          contractaddress: taskArgs.contractaddress,
           fromblock: taskArgs.fromblock,
           toblock: taskArgs.toblock,
           blockhash: taskArgs.blockhash,
           txhash: taskArgs.txhash,
-          stringify: taskArgs.stringify,
         });
       }
       if (!taskArgs.taskreceipt)
@@ -41,65 +56,23 @@ export default task(
 
       if (taskArgs.log) {
         console.log(taskArgs);
-        console.log(`\n Executor: ${gelatoExecutor._address}\n`);
+        console.log(`\n Executor: ${await gelatoExecutor.getAddress}\n`);
       }
 
       const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
+        contractaddress: taskArgs.contractaddress,
         signer: gelatoExecutor,
         write: true,
       });
 
-      // const { taskReceiptHash } = await run("event-getparsedlog", {
-      //   taskreceiptid: taskArgs.taskreceiptid,
-      //   fromblock: taskArgs.fromblock,
-      //   toblock: taskArgs.toblock,
-      //   blockhash: taskArgs.blockhash,
-      //   txhash: taskArgs.txhash,
-      //   stringify: taskArgs.stringify,
-      // });
-      // const gelatoGasPrice = await gelatoCore.gelatoGasPrice();
-      // const gelatoMaxGas = await gelatoCore.gelatoMaxGas();
-      const actions = [];
-      for (const action of taskArgs.taskreceipt[2][2]) {
-        actions.push({
-          addr: action[0],
-          data: action[1],
-          operation: action[2],
-          value: action[3],
-          termsOkCheck: action[4],
-        });
-      }
-
-      const taskReceipt = {
-        id: taskArgs.taskreceipt[0],
-        userProxy: taskArgs.taskreceipt[1],
-        task: {
-          provider: {
-            addr: taskArgs.taskreceipt[2][0][0],
-            module: taskArgs.taskreceipt[2][0][1],
-          },
-          conditions: [
-            {
-              addr: taskArgs.taskreceipt[2][1][0],
-              data: taskArgs.taskreceipt[2][1][1],
-            },
-          ],
-          actions,
-          expiryDate: taskArgs.taskreceipt[2][3],
-        },
-      };
-      if (taskArgs.log) console.log(taskReceipt);
-
-      const GELATO_MAX_GAS = 7000000;
-
+      const gelatoMaxGas = await gelatoCore.gelatoMaxGas();
       const gelatoGasPrice = await run("fetchGelatoGasPrice");
 
       try {
         const canExecResult = await gelatoCore.canExec(
-          await gelatoExecutor.getAddress(),
-          taskReceipt,
-          GELATO_MAX_GAS,
+          taskArgs.taskreceipt,
+          gelatoMaxGas,
           gelatoGasPrice
         );
         if (taskArgs.log) console.log(`\n Can Exec Result: ${canExecResult}\n`);

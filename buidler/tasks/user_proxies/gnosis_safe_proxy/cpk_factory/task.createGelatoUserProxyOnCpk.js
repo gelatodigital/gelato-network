@@ -158,15 +158,6 @@ export default task(
         write: true,
       });
 
-      console.log(
-        taskArgs.mastercopy,
-        taskArgs.saltnonce,
-        taskArgs.fallbackhandler,
-        taskArgs.to,
-        taskArgs.value,
-        taskArgs.data,
-        taskArgs.operation
-      );
       let creationTx = await cpkFactory.createProxyAndExecTransaction(
         taskArgs.mastercopy,
         taskArgs.saltnonce,

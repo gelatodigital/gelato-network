@@ -7,6 +7,7 @@ export default task(
   `Calls GelatoCore.exec() on [--network] (default: ${defaultNetwork})`
 )
   .addPositionalParam("taskreceiptid")
+  .addOptionalParam("contractaddress", "Address of GelatoCore")
   .addOptionalPositionalParam(
     "executorindex",
     "Which mnemonic index should be selected for gelatoExecutor msg.sender (default index 1)",
@@ -18,13 +19,13 @@ export default task(
     "fromblock",
     "The block number to search for event logs from",
     undefined, // default
-    types.number
+    types.int
   )
   .addOptionalParam(
     "toblock",
     "The block number up until which to look for",
     undefined, // default
-    types.number
+    types.int
   )
   .addOptionalParam("blockhash", "Search a specific block")
   .addOptionalParam("txhash", "Filter for a specific tx")
@@ -32,6 +33,7 @@ export default task(
   .setAction(
     async ({
       taskreceiptid,
+      contractaddress,
       executorindex,
       taskreceipt,
       fromblock,
@@ -44,7 +46,8 @@ export default task(
         if (!taskreceipt) {
           taskreceipt = await run("fetchTaskReceipt", {
             taskreceiptid,
-            taskreceipt,
+            obj: true,
+            contractaddress,
             fromblock,
             toblock,
             blockhash,
@@ -80,42 +83,12 @@ export default task(
           );
         }
 
-        const actions = [];
-        for (const action of taskreceipt[2][2]) {
-          actions.push({
-            addr: action[0],
-            data: action[1],
-            operation: action[2],
-            value: action[3],
-            termsOkCheck: action[4],
-          });
-        }
-
-        const taskReceipt = {
-          id: taskreceipt[0],
-          userProxy: taskreceipt[1],
-          task: {
-            provider: {
-              addr: taskreceipt[2][0][0],
-              module: taskreceipt[2][0][1],
-            },
-            conditions: [
-              {
-                addr: taskreceipt[2][1][0],
-                data: taskreceipt[2][1][1],
-              },
-            ],
-            actions,
-            expiryDate: taskreceipt[2][3],
-          },
-        };
-
         let executeTx;
         try {
-          executeTx = await gelatoCore.exec(taskReceipt, {
+          executeTx = await gelatoCore.exec(taskreceipt, {
             gasPrice: gelatoGasPrice,
             // gasLimit: gelatoMAXGAS,
-            gasLimit: 500000,
+            gasLimit: 1500000,
           });
         } catch (error) {
           console.error(`gelatoCore.exec() PRE-EXECUTION error\n`, error);
@@ -132,7 +105,6 @@ export default task(
 
         if (executeTxReceipt && log) {
           const eventNames = [
-            "LogCanExecSuccess",
             "LogCanExecFailed",
             "LogExecSuccess",
             "LogExecReverted",

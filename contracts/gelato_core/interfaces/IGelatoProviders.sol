@@ -9,7 +9,6 @@ import { IGelatoCondition } from "../../gelato_conditions/IGelatoCondition.sol";
 struct TaskSpec {
     IGelatoCondition[] conditions;   // Address: optional AddressZero for self-conditional actions
     Action[] actions;
-    bool autoSubmitNextTask;
     uint256 gasPriceCeil;
 }
 
@@ -245,8 +244,8 @@ interface IGelatoProviders {
         view
         returns(uint256);
 
-    /// @notice Compute an TaskSpecHash
-    /// @dev action.data will be striped before hashing
+    /// @notice Returns the hash of the formatted TaskSpec.
+    /// @dev The action.data field of each Action is stripped before hashing.
     /// @param _taskSpec TaskSpec
     /// @return keccak256 hash of encoded condition address and Action List
     function hashTaskSpec(TaskSpec calldata _taskSpec) external view returns(bytes32);

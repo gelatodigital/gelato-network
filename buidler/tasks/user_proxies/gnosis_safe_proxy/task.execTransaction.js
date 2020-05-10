@@ -175,7 +175,7 @@ export default task(
         );
         for (const event of executionEvents) console.log(event);
       }
-
+      console.log(executeTxReceipt);
       return executeTxReceipt.hash;
     } catch (error) {
       console.error(error, "\n");

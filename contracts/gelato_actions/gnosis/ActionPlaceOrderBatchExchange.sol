@@ -22,13 +22,12 @@ contract ActionPlaceOrderBatchExchange  {
     using SafeERC20 for IERC20;
 
     uint256 public constant MAX_UINT = uint256(-1);
+    uint32 public constant BATCH_TIME = 300;
 
     IBatchExchange private immutable batchExchange;
-    FeeExtractor public immutable feeExtractor;
 
-    constructor(address _batchExchange, address _feeExtractor) public {
+    constructor(address _batchExchange) public {
         batchExchange = IBatchExchange(_batchExchange);
-        feeExtractor = FeeExtractor(_feeExtractor);
     }
 
     /// @notice Place order on Batch Exchange and request future withdraw for buy and sell token
@@ -37,29 +36,18 @@ contract ActionPlaceOrderBatchExchange  {
     /// @param _buyToken Token to buy on Batch Exchange
     /// @param _sellAmount Amount to sell
     /// @param _buyAmount Amount to receive (at least)
-    /// @param _orderExpirationBatchId Expiration batch id of order and id used to request withdrawals for
-    /// @param _task Task which will be submitted on gelato (ActionWithdrawFromBatchExchangeWithMaker)
+    /// @param _batchDuration After how many batches funds should be
     function action(
         address _user,
         address _sellToken,
         address _buyToken,
         uint128 _sellAmount,
         uint128 _buyAmount,
-        uint32 _orderExpirationBatchId,
-        // Withdraw
-        address _gelatoCore,
-        Task memory _task
+        uint32 _batchDuration
     )
         public
         virtual
     {
-        /*
-        - [ ] a) transferFrom an ERC20 from the proxies owner account to the proxy,
-        - [ ] b) calls ‘deposit’  token in EpochTokenLocker contract
-        - [ ] c) calls ‘placeOrder’ in BatchExchange contract, inputting valid until 3 auctions from current one
-        - [ ] d) calls ‘requestFutureWithdraw’ with batch id of the n + 3 and amount arbitrary high (higher than expected output) contract in EpochTokenLocker
-        - [ ] e) submits a task on gelato with condition = address(0) and action “withdraw()” in EpochTokenLocker contract
-        */
 
         // 1. Transfer sellToken to proxy
         IERC20 sellToken = IERC20(_sellToken);
@@ -79,16 +67,19 @@ contract ActionPlaceOrderBatchExchange  {
             revert("batchExchange.deposit _sellToken failed");
         }
 
+        // Get current batch id
+        uint32 withdrawBatchId = uint32(now / BATCH_TIME) + _batchDuration;
+
         // 5. Place Order on Batch Exchange
         // uint16 buyToken, uint16 sellToken, uint32 validUntil, uint128 buyAmount, uint128 sellAmount
-        try batchExchange.placeOrder(buyTokenId, sellTokenId, _orderExpirationBatchId, _buyAmount, _sellAmount) {}
+        try batchExchange.placeOrder(buyTokenId, sellTokenId, withdrawBatchId, _buyAmount, _sellAmount) {}
         catch {
             revert("batchExchange.placeOrderfailed");
         }
 
         // 6. Request future withdraw on Batch Exchange for sellToken
         // requestFutureWithdraw(address token, uint256 amount, uint32 batchId)
-        try batchExchange.requestFutureWithdraw(_sellToken, _sellAmount, _orderExpirationBatchId) {}
+        try batchExchange.requestFutureWithdraw(_sellToken, _sellAmount, withdrawBatchId) {}
         catch {
             revert("batchExchange.requestFutureWithdraw _sellToken failed");
         }
@@ -96,28 +87,27 @@ contract ActionPlaceOrderBatchExchange  {
         // 7. Request future withdraw on Batch Exchange for sellToken
         // @DEV using MAX_UINT as we don't know in advance how much buyToken we will get
         // requestFutureWithdraw(address token, uint256 amount, uint32 batchId)
-        try batchExchange.requestFutureWithdraw(_buyToken, MAX_UINT, _orderExpirationBatchId) {}
+        try batchExchange.requestFutureWithdraw(_buyToken, MAX_UINT, withdrawBatchId) {}
         catch {
             revert("batchExchange.requestFutureWithdraw _buyToken failed");
-        }
-
-        // 9. Submit Task to withdraw from batch exchange
-        try IGelatoCore(_gelatoCore).submitTask(_task) {
-        } catch {
-            revert("_gelatoCore.submitTask: Submitting chainedTask unsuccessful");
         }
 
     }
 
     // ======= ACTION CONDITIONS CHECK =========
     // Overriding and extending GelatoActionsStandard's function (optional)
-    function termsOk(bytes calldata _actionData, address _userProxy)
+    function termsOk(address _userProxy, bytes calldata _actionData)
         external
         view
         virtual
         returns(string memory)  // actionCondition
     {
-        (address _user, address _sellToken, , uint128 _sellAmount, ,) = abi.decode(_actionData, (address, address, address, uint128, uint128, uint32));
+        (address _user,
+        address _sellToken,
+        ,
+        uint128 _sellAmount,
+        ,
+        ) = abi.decode(_actionData[4:], (address, address, address, uint128, uint128, uint32));
         return _actionProviderTermsCheck(_user, _userProxy, _sellToken, _sellAmount);
     }
 

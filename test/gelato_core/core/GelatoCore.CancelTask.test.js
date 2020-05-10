@@ -127,7 +127,7 @@ describe("GelatoCore.cancelTask", function () {
     // Create UserProxy
     const createTx = await gelatoUserProxyFactory
       .connect(seller)
-      .create([], []);
+      .create([], [], false);
     await createTx.wait();
     userProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
       sellerAddress
@@ -158,20 +158,22 @@ describe("GelatoCore.cancelTask", function () {
       expiryDate: constants.HashZero,
     });
 
-    taskReceipt = {
+    taskReceipt = new TaskReceipt({
       id: 1,
       userProxy: userProxyAddress,
       task,
-    };
+    });
 
-    taskReceipt2 = {
+    taskReceipt2 = new TaskReceipt({
       id: 2,
       userProxy: userProxyAddress,
       task,
-    };
+    });
 
-    const submitTaskTx = await userProxy.submitTask(task);
-    await submitTaskTx.wait();
+    await expect(userProxy.submitTask(task)).to.emit(
+      gelatoCore,
+      "LogTaskSubmitted"
+    );
   });
 
   // We test different functionality of the contract as normal Mocha tests.
@@ -201,7 +203,7 @@ describe("GelatoCore.cancelTask", function () {
     );
   });
 
-  it("#5: Batch Cancel task succesfully as user", async function () {
+  it("#5: Multi Cancel task succesfully as user via userProxy", async function () {
     // submit second Task
     const submitTaskTx = await userProxy.submitTask(task);
     await submitTaskTx.wait();
@@ -213,7 +215,7 @@ describe("GelatoCore.cancelTask", function () {
       .withArgs(taskReceipt2.id);
   });
 
-  it("#6: Batch Cancel task succesfully as provider", async function () {
+  it("#6: Multi Cancel tasks succesfully via GelatoCore as provider", async function () {
     // submit second Task
     const submitTaskTx = await userProxy.submitTask(task);
     await submitTaskTx.wait();

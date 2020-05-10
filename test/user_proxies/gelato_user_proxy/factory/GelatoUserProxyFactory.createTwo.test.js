@@ -66,7 +66,7 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE TWO", function () {
   describe("GelatoUserProxyFactory.createTwo", function () {
     it("Should allow anyone to createTwo a userProxy", async function () {
       // createTwo(): user
-      await expect(gelatoUserProxyFactory.createTwo(SALT_NONCE, [], []))
+      await expect(gelatoUserProxyFactory.createTwo(SALT_NONCE, [], [], false))
         .to.emit(gelatoUserProxyFactory, "LogCreation")
         .withArgs(userAddress, userProxyAddress, 0);
 
@@ -96,7 +96,9 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE TWO", function () {
 
       // createTwo(): otherUser
       await expect(
-        gelatoUserProxyFactory.connect(otherUser).createTwo(SALT_NONCE, [], [])
+        gelatoUserProxyFactory
+          .connect(otherUser)
+          .createTwo(SALT_NONCE, [], [], false)
       )
         .to.emit(gelatoUserProxyFactory, "LogCreation")
         .withArgs(otherUserAddress, predictedOtherUserProxyAddress, 0);
@@ -133,7 +135,7 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE TWO", function () {
       );
 
       // createTwo(): user
-      await expect(gelatoUserProxyFactory.createTwo(SALT_NONCE, [], []))
+      await expect(gelatoUserProxyFactory.createTwo(SALT_NONCE, [], [], false))
         .to.emit(gelatoUserProxyFactory, "LogCreation")
         .withArgs(userAddress, userProxyAddress, 0);
 
@@ -144,7 +146,9 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE TWO", function () {
       );
 
       // createTwo(): user secondProxy
-      await expect(gelatoUserProxyFactory.createTwo(OTHER_SALT_NONCE, [], []))
+      await expect(
+        gelatoUserProxyFactory.createTwo(OTHER_SALT_NONCE, [], [], false)
+      )
         .to.emit(gelatoUserProxyFactory, "LogCreation")
         .withArgs(userAddress, secondUserProxyAddress, 0);
 
@@ -241,15 +245,21 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE TWO", function () {
 
     it("Should NOT allow to re-createTwo a userProxy using the same salt", async function () {
       // createTwo(): user
-      await expect(gelatoUserProxyFactory.createTwo(SALT_NONCE, [], []))
+      await expect(gelatoUserProxyFactory.createTwo(SALT_NONCE, [], [], false))
         .to.emit(gelatoUserProxyFactory, "LogCreation")
         .withArgs(userAddress, userProxyAddress, 0);
 
       // createTwo(): user revertv
       await expect(
-        gelatoUserProxyFactory.createTwo(SALT_NONCE, [], [optionalTask], {
-          value: utils.parseEther("1"),
-        })
+        gelatoUserProxyFactory.createTwo(
+          SALT_NONCE,
+          [],
+          [optionalTask],
+          false,
+          {
+            value: utils.parseEther("1"),
+          }
+        )
       ).to.be.reverted;
 
       // userByGelatoProxy:
@@ -275,7 +285,7 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE TWO", function () {
 
       // createTwo(): user
       await expect(
-        gelatoUserProxyFactory.createTwo(SALT_NONCE, [], [], {
+        gelatoUserProxyFactory.createTwo(SALT_NONCE, [], [], false, {
           value: FUNDING,
         })
       )
@@ -315,6 +325,7 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE TWO", function () {
           SALT_NONCE,
           [],
           [optionalTask, optionalTask],
+          false,
           {
             value: FUNDING,
           }
@@ -351,6 +362,7 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE TWO", function () {
           SALT_NONCE,
           [optionalAction, otherOptionalAction],
           [],
+          false,
           {
             value: FUNDING,
           }
@@ -371,6 +383,7 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE TWO", function () {
           SALT_NONCE,
           [otherOptionalAction],
           [optionalTask],
+          false,
           {
             value: FUNDING,
           }

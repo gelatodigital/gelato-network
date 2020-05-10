@@ -32,16 +32,40 @@ contract ActionWithdrawBatchExchange is GelatoActionsStandard {
     /// @notice Withdraw sell and buy token from Batch Exchange and send funds back to _user EOA
     /// @param _sellToken Token to sell on Batch Exchange
     /// @param _buyToken Token to buy on Batch Exchange
-    function action(address _sellToken, address _buyToken) public virtual {
-        // 3. Withdraw buy token and pay provider fee (if possible)
-        try batchExchange.withdraw(address(this), _buyToken) {}
+    function action(
+        address _user,
+        address _sellToken,
+        address _buyToken
+    )
+        public
+        virtual
+    {
+
+        // 1. Withdraw buy tokens
+        IERC20 buyToken = IERC20(_buyToken);
+        uint256 preBuyTokenBalance = buyToken.balanceOf(address(this));
+        try batchExchange.withdraw(address(this), _buyToken) {
+            uint256 postBuyTokenBalance = buyToken.balanceOf(address(this));
+            if (postBuyTokenBalance > preBuyTokenBalance) {
+                uint256 withdrawAmount = postBuyTokenBalance - preBuyTokenBalance;
+                buyToken.safeTransfer(_user, withdrawAmount);
+            }
+        }
         catch {
            // Do not revert, as order might not have been fulfilled.
            revert("ActionWithdrawBatchExchange.withdraw _buyToken failed");
         }
 
-        // 5. Withdraw sell token and pay fee (if not paid already)
-        try batchExchange.withdraw(address(this), _sellToken) {}
+        // 5. Withdraw sell tokens
+        IERC20 sellToken = IERC20(_sellToken);
+        uint256 preSellTokenBalance = sellToken.balanceOf(address(this));
+        try batchExchange.withdraw(address(this), _sellToken) {
+            uint256 postSellTokenBalance = sellToken.balanceOf(address(this));
+            if (postSellTokenBalance > preSellTokenBalance) {
+                uint256 withdrawAmount = postSellTokenBalance - preSellTokenBalance;
+                sellToken.safeTransfer(_user, withdrawAmount);
+            }
+        }
         catch {
             // Do not revert, as order might have been filled completely
             revert("ActionWithdrawBatchExchange.withdraw _sellToken failed");
@@ -58,9 +82,9 @@ contract ActionWithdrawBatchExchange is GelatoActionsStandard {
         virtual
         returns(string memory)  // actionCondition
     {
-        (address _sellToken, address _buyToken) = abi.decode(
+        (, address _sellToken, address _buyToken) = abi.decode(
             _actionData[4:],
-            (address,address)
+            (address,address,address)
         );
         return termsOk(_userProxy, _sellToken, _buyToken);
     }
@@ -91,23 +115,5 @@ contract ActionWithdrawBatchExchange is GelatoActionsStandard {
             return "ActionWithdrawBatchExchange: Proxy has insufficient credit";
 
         return OK;
-    }
-
-    function getDecimals(address _token) internal view returns(uint256) {
-        (bool success, bytes memory data) = address(_token).staticcall{gas: 20000}(
-            abi.encodeWithSignature("decimals()")
-        );
-
-        if (!success) {
-            (success, data) = address(_token).staticcall{gas: 20000}(
-                abi.encodeWithSignature("DECIMALS()")
-            );
-        }
-
-        if (success) {
-            return abi.decode(data, (uint256));
-        } else {
-            revert("ActionWithdrawBatchExchange.getDecimals no decimals found");
-        }
     }
 }

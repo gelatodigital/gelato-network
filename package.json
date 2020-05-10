@@ -6,15 +6,21 @@
   "author": "The guys from gelato-digital",
   "private": false,
   "scripts": {
-    "coverage": "npx buidler coverage --network coverage && cat coverage/lcov.info | coveralls"
+    "coverage": "npx buidler coverage --network coverage",
+    "test": "npx buidler test",
+    "test-debug": "export BUIDLER_DEBUG=true && yarn test",
+    "test-gas": "export REPORT_GAS=true && npx buidler test --network localhost",
+    "test-gas-debug": "export BUIDLER_DEBUG=true && yarn test-gas"
   },
   "devDependencies": {
     "@babel/core": "7.7.4",
     "@babel/preset-env": "7.7.4",
     "@babel/register": "7.7.4",
-    "@nomiclabs/buidler": "1.2.0",
-    "@nomiclabs/buidler-ethers": "1.2.0",
-    "@nomiclabs/buidler-waffle": "1.2.0",
+    "@codechecks/client": "^0.1.10",
+    "@nomiclabs/buidler": "1.3.3-rc.0",
+    "@nomiclabs/buidler-ethers": "1.3.3-rc.0",
+    "@nomiclabs/buidler-waffle": "1.3.3-rc.0",
+    "buidler-gas-reporter": "^0.1.3",
     "chai": "^4.2.0",
     "coveralls": "^3.1.0",
     "dotenv": "^8.2.0",
@@ -22,7 +28,7 @@
     "ethers": "4.0.47",
     "prettier": "^2.0.3",
     "solc": "^0.6.6",
-    "solidity-coverage": "https://github.com/sc-forks/solidity-coverage.git",
+    "solidity-coverage": "0.7.5",
     "solidity-docgen": "^0.4.1"
   }
 }

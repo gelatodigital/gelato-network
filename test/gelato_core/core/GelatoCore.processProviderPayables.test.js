@@ -269,7 +269,7 @@ describe("GelatoCore.processProviderPayables", function () {
     // Create UserProxy
     const createTx = await gelatoUserProxyFactory
       .connect(seller)
-      .create([], []);
+      .create([], [], false);
     await createTx.wait();
     userProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
       sellerAddress
@@ -360,8 +360,6 @@ describe("GelatoCore.processProviderPayables", function () {
         module: providerModuleGelatoUserProxy.address,
       });
 
-
-
       const action = new Action({
         addr: mockActionDummy.address,
         data: actionData,
@@ -376,11 +374,11 @@ describe("GelatoCore.processProviderPayables", function () {
         expiryDate: constants.HashZero,
       });
 
-      let taskReceipt = {
+      let taskReceipt = new TaskReceipt({
         id: 1,
         userProxy: userProxyAddress,
         task,
-      };
+      });
 
       const submitTaskTx = await userProxy.submitTask(task);
       await submitTaskTx.wait();
@@ -470,8 +468,6 @@ describe("GelatoCore.processProviderPayables", function () {
         module: providerModuleGelatoUserProxy.address,
       });
 
-
-
       const action = new Action({
         addr: mockActionDummyRevert.address,
         data: actionData,
@@ -486,11 +482,11 @@ describe("GelatoCore.processProviderPayables", function () {
         expiryDate: constants.HashZero,
       });
 
-      let taskReceipt = {
+      let taskReceipt = new TaskReceipt({
         id: 1,
         userProxy: userProxyAddress,
         task,
-      };
+      });
 
       const submitTaskTx = await userProxy.submitTask(task);
       await submitTaskTx.wait();
@@ -595,8 +591,6 @@ describe("GelatoCore.processProviderPayables", function () {
         module: providerModuleGelatoUserProxy.address,
       });
 
-
-
       const action = new Action({
         addr: mockActionDummyOutOfGas.address,
         data: actionData,
@@ -619,11 +613,11 @@ describe("GelatoCore.processProviderPayables", function () {
         expiryDate: constants.HashZero,
       });
 
-      let taskReceipt = {
+      let taskReceipt = new TaskReceipt({
         id: 1,
         userProxy: userProxyAddress,
         task,
-      };
+      });
 
       const submitTaskTx = await userProxy.submitTask(task);
       await submitTaskTx.wait();
@@ -713,8 +707,6 @@ describe("GelatoCore.processProviderPayables", function () {
         module: providerModuleGelatoUserProxy.address,
       });
 
-
-
       const action = new Action({
         addr: mockActionDummyOutOfGas.address,
         data: actionData,
@@ -729,11 +721,11 @@ describe("GelatoCore.processProviderPayables", function () {
         expiryDate: constants.HashZero,
       });
 
-      let taskReceipt = {
+      let taskReceipt = new TaskReceipt({
         id: 1,
         userProxy: userProxyAddress,
         task,
-      };
+      });
 
       const submitTaskTx = await userProxy.submitTask(task);
       await submitTaskTx.wait();
