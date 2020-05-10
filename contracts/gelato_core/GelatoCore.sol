@@ -105,8 +105,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         override
         returns(string memory)
     {
-        if (tx.gasprice < _gelatoGasPrice) return "ExecTxGasPriceNotEqualOrGreaterThanGelatoGasPrice";
-
         if (!isProviderLiquid(_TR.task.provider.addr, _gelatoMaxGas, _gelatoGasPrice))
             return "ProviderIlliquidity";
 
@@ -194,10 +192,11 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             msg.sender == executorByProvider[_TR.task.provider.addr],
             "GelatoCore.exec: Invalid Executor"
         );
+        uint256 _gelatoGasPrice = _getGelatoGasPrice();
+        require(tx.gasprice >= _gelatoGasPrice, "GelatoCore.exec: Not Equal Or Greater Than gelatoGasPrice");
 
         // memcopy of gelatoMaxGas, to avoid multiple storage reads
         uint256 _gelatoMaxGas = gelatoMaxGas;
-        uint256 _gelatoGasPrice = _getGelatoGasPrice();
 
         ExecutionResult executionResult;
         string memory reason;

@@ -179,16 +179,16 @@ describe("GelatoCore.canExec", function () {
   });
 
   // We test different functionality of the contract as normal Mocha tests.
-  it("#1: CanExec - Call view func with incorrect Gas Price)", async function () {
+  it("#1: CanExec - Call view func with too low Gas Price is OK as we check it in exec)", async function () {
     const canExecReturn = await gelatoCore
       .connect(executor)
       .canExec(
         taskReceipt,
         GELATO_MAX_GAS,
-        ethers.utils.bigNumberify("800", "Gwei")
+        ethers.utils.parseUnits("1", "gwei")
       );
 
-    expect(canExecReturn).to.equal("ExecTxGasPriceNotGelatoGasPrice");
+    expect(canExecReturn).to.equal("OK");
   });
 
   it("#2: CanExec - Call view func with too high gas price leading to insufficient provider funds)", async function () {
@@ -277,5 +277,17 @@ describe("GelatoCore.canExec", function () {
       .canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE);
 
     expect(canExecReturn).to.equal("InvalidExecutor");
+  });
+
+  it("#7: CanExec - Call view func with higher Gas Price)", async function () {
+    const canExecReturn = await gelatoCore
+      .connect(executor)
+      .canExec(
+        taskReceipt,
+        GELATO_MAX_GAS,
+        ethers.utils.bigNumberify("800", "Gwei")
+      );
+
+    expect(canExecReturn).to.equal("OK");
   });
 });
