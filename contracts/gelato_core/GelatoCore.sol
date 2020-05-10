@@ -227,7 +227,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
                 ExecutorPay.Reward,
                 startGas,
                 _gelatoMaxGas,
-                _gelatoGasPrice
+                gelatoGasPrice
             );
             emit LogExecSuccess(msg.sender, _TR.id, executorSuccessFee, sysAdminSuccessFee);
 
