@@ -99,19 +99,17 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     }
 
     // ================  CAN EXECUTE EXECUTOR API ============================
-    function canExec(TaskReceipt memory _TR, uint256 _gelatoMaxGas, uint256 _execTxGasPrice)
+    function canExec(TaskReceipt memory _TR, uint256 _gelatoMaxGas, uint256 _gelatoGasPrice)
         public
         view
         override
         returns(string memory)
     {
-        if (_execTxGasPrice != _getGelatoGasPrice()) return "ExecTxGasPriceNotGelatoGasPrice";
-
-        if (!isProviderLiquid(_TR.task.provider.addr, _gelatoMaxGas, _execTxGasPrice))
+        if (!isProviderLiquid(_TR.task.provider.addr, _gelatoMaxGas, _gelatoGasPrice))
             return "ProviderIlliquidity";
 
         if (_TR.userProxy != _TR.task.provider.addr) {
-            string memory res = providerCanExec(_TR, _execTxGasPrice);
+            string memory res = providerCanExec(_TR, _gelatoGasPrice);
             if (!res.startsWithOk()) return res;
         }
 
@@ -182,7 +180,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     enum ExecutionResult { ExecSuccess, CanExecFailed, ExecRevert }
     enum ExecutorPay { Reward, Refund }
 
-    // Execution Entry Point: tx.gasprice must be _getGelatoGasPrice()
+    // Execution Entry Point: tx.gasprice must be greater or equal to _getGelatoGasPrice()
     function exec(TaskReceipt memory _TR) public override {
 
         // Store startGas for gas-consumption based cost and payout calcs
@@ -190,6 +188,11 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // CHECKS: all further checks are done during this.executionWrapper.canExec()
         require(startGas > internalGasRequirement, "GelatoCore.exec: Insufficient gas sent");
+
+        // memcopy of gelatoGasPrice, to avoid multiple storage reads
+        uint256 gelatoGasPrice = _getGelatoGasPrice();
+        require(tx.gasprice >= gelatoGasPrice, "GelatoCore.exec: tx.gasprice below gelatoGasPrice");
+
         require(
             msg.sender == executorByProvider[_TR.task.provider.addr],
             "GelatoCore.exec: Invalid Executor"
@@ -201,7 +204,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         ExecutionResult executionResult;
         string memory reason;
 
-        try this.executionWrapper{gas: gasleft() - internalGasRequirement}(_TR, _gelatoMaxGas)
+        try this.executionWrapper{gas: gasleft() - internalGasRequirement}(_TR, _gelatoMaxGas, gelatoGasPrice)
             returns(ExecutionResult _executionResult, string memory _reason)
         {
             executionResult = _executionResult;
@@ -224,7 +227,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
                 ExecutorPay.Reward,
                 startGas,
                 _gelatoMaxGas,
-                tx.gasprice  // == gelatoGasPrice
+                gelatoGasPrice
             );
             emit LogExecSuccess(msg.sender, _TR.id, executorSuccessFee, sysAdminSuccessFee);
 
@@ -245,7 +248,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
                     ExecutorPay.Refund,
                     startGas,
                     _gelatoMaxGas,
-                     tx.gasprice  // == gelatoGasPrice
+                     gelatoGasPrice
                 );
                 emit LogExecReverted(msg.sender, _TR.id, executorRefund, reason);
             }
@@ -253,14 +256,14 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     }
 
     // Used by GelatoCore.exec(), to handle Out-Of-Gas from execution gracefully
-    function executionWrapper(TaskReceipt memory taskReceipt, uint256 _gelatoMaxGas)
+    function executionWrapper(TaskReceipt memory taskReceipt, uint256 _gelatoMaxGas, uint256 _gelatoGasPrice)
         public
         returns(ExecutionResult, string memory)
     {
         require(msg.sender == address(this), "GelatoCore.executionWrapper:onlyGelatoCore");
 
         // canExec()
-        string memory canExecRes = canExec(taskReceipt, _gelatoMaxGas, tx.gasprice);
+        string memory canExecRes = canExec(taskReceipt, _gelatoMaxGas, _gelatoGasPrice);
         if (!canExecRes.startsWithOk()) return (ExecutionResult.CanExecFailed, canExecRes);
 
         // Will revert if exec failed => will be caught in exec flow
