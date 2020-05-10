@@ -190,8 +190,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         require(startGas > internalGasRequirement, "GelatoCore.exec: Insufficient gas sent");
 
         // memcopy of gelatoGasPrice, to avoid multiple storage reads
-        uint256 _gelatoGasPrice = _getGelatoGasPrice();
-        require(tx.gasprice >= _gelatoGasPrice, "GelatoCore.exec: tx.gasprice below gelatoGasPrice");
+        uint256 gelatoGasPrice = _getGelatoGasPrice();
+        require(tx.gasprice >= gelatoGasPrice, "GelatoCore.exec: tx.gasprice below gelatoGasPrice");
 
         require(
             msg.sender == executorByProvider[_TR.task.provider.addr],
@@ -204,7 +204,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         ExecutionResult executionResult;
         string memory reason;
 
-        try this.executionWrapper{gas: gasleft() - internalGasRequirement}(_TR, _gelatoMaxGas, _gelatoGasPrice)
+        try this.executionWrapper{gas: gasleft() - internalGasRequirement}(_TR, _gelatoMaxGas, gelatoGasPrice)
             returns(ExecutionResult _executionResult, string memory _reason)
         {
             executionResult = _executionResult;
@@ -248,7 +248,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
                     ExecutorPay.Refund,
                     startGas,
                     _gelatoMaxGas,
-                     _gelatoGasPrice
+                     gelatoGasPrice
                 );
                 emit LogExecReverted(msg.sender, _TR.id, executorRefund, reason);
             }
