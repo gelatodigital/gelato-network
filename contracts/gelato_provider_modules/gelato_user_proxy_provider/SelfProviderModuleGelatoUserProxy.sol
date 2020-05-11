@@ -1,11 +1,11 @@
 pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
-import { GelatoProviderModuleStandard } from "../../GelatoProviderModuleStandard.sol";
-import { Action } from "../../interfaces/IGelatoCore.sol";
+import { GelatoProviderModuleStandard } from "../GelatoProviderModuleStandard.sol";
+import { Action, Task } from "../../gelato_core/interfaces/IGelatoCore.sol";
 import {
     IGelatoUserProxy
-} from "../../../user_proxies/gelato_user_proxy/interfaces/IGelatoUserProxy.sol";
+} from "../../user_proxies/gelato_user_proxy/interfaces/IGelatoUserProxy.sol";
 
 contract SelfProviderModuleGelatoUserProxy is GelatoProviderModuleStandard {
     // SelfProvider only needs to provide execPayload. isProvided() handled by Standard.

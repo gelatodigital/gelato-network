@@ -1,7 +1,7 @@
 pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
-import { GelatoProviderModuleStandard } from "../../../gelato_core/GelatoProviderModuleStandard.sol";
+import { GelatoProviderModuleStandard } from "../../../gelato_provider_modules/GelatoProviderModuleStandard.sol";
 import { Action } from "../../../gelato_core/interfaces/IGelatoCore.sol";
 
 contract MockProviderModuleGelatoUserProxyRevert is GelatoProviderModuleStandard {

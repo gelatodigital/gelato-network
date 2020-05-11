@@ -1,17 +1,17 @@
 pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
-import { GelatoProviderModuleStandard } from "../../GelatoProviderModuleStandard.sol";
-import { Action, Task } from "../../interfaces/IGelatoCore.sol";
+import { GelatoProviderModuleStandard } from "../GelatoProviderModuleStandard.sol";
+import { Action, Task } from "../../gelato_core/interfaces/IGelatoCore.sol";
 import {
     DSProxyFactory
-} from "../../../user_proxies/ds_proxy/Proxy.sol";
+} from "../../user_proxies/ds_proxy/Proxy.sol";
 import {
     IDSProxy
-} from "../../../user_proxies/ds_proxy/interfaces/IProxy.sol";
-import { DSAuthority } from "../../../user_proxies/ds_proxy/Auth.sol";
+} from "../../user_proxies/ds_proxy/interfaces/IProxy.sol";
+import { DSAuthority } from "../../user_proxies/ds_proxy/Auth.sol";
 
-import { Multisend } from "../../../external/Multisend.sol";
+import { Multisend } from "../../external/Multisend.sol";
 
 contract ProviderModuleDSProxy is GelatoProviderModuleStandard {
 

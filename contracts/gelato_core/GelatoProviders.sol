@@ -6,7 +6,7 @@ import { GelatoSysAdmin } from "./GelatoSysAdmin.sol";
 import { Address } from "../external/Address.sol";
 import { SafeMath } from "../external/SafeMath.sol";
 import { Math } from "../external/Math.sol";
-import { IGelatoProviderModule } from "./interfaces/IGelatoProviderModule.sol";
+import { IGelatoProviderModule } from "../gelato_provider_modules/IGelatoProviderModule.sol";
 import { ProviderModuleSet } from "../libraries/ProviderModuleSet.sol";
 import {
     Condition, Action, Operation, Task, TaskReceipt

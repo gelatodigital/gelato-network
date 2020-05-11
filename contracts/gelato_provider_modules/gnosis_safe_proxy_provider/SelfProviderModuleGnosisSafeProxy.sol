@@ -1,12 +1,12 @@
 pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
-import { GelatoProviderModuleStandard } from "../../GelatoProviderModuleStandard.sol";
-import { Multisend } from "../../../external/Multisend.sol";
+import { GelatoProviderModuleStandard } from "../GelatoProviderModuleStandard.sol";
+import { Multisend } from "../../external/Multisend.sol";
 import {
     IGnosisSafe
-} from "../../../user_proxies/gnosis_safe_proxy/interfaces/IGnosisSafe.sol";
-import { Action } from "../../interfaces/IGelatoCore.sol";
+} from "../../user_proxies/gnosis_safe_proxy/interfaces/IGnosisSafe.sol";
+import { Action, Task } from "../../gelato_core/interfaces/IGelatoCore.sol";
 
 contract SelfProviderModuleGnosisSafeProxy is GelatoProviderModuleStandard {
     address public immutable multiSend;
