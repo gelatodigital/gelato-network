@@ -16,7 +16,8 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
     uint256 public constant override EXEC_TX_OVERHEAD = 55000;
     string internal constant OK = "OK";
 
-    IGelatoGasPriceOracle public override gelatoGasPriceOracle;
+    address public override gelatoGasPriceOracle;
+    bytes public override oracleRequestData;
     uint256 public override gelatoMaxGas;
     uint256 public override internalGasRequirement;
     uint256 public override minExecutorStake;
@@ -26,6 +27,8 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
     uint256 public override sysAdminFunds;
 
     constructor() public {
+        gelatoGasPriceOracle = 0xA417221ef64b1549575C977764E651c9FAB50141; // LINK mainnet
+        oracleRequestData = abi.encodeWithSignature("latestAnswer()");  // LINK mainnet
         gelatoMaxGas = 7000000;  // 7 mio initial
         internalGasRequirement = 100000;
         minExecutorStake = 1000000000000000000;  // production: 1 ETH
@@ -38,18 +41,45 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
     // The oracle defines the system-critical gelatoGasPrice
     function setGelatoGasPriceOracle(address _newOracle) external override onlyOwner {
         require(_newOracle != address(0), "GelatoSysAdmin.setGelatoGasPriceOracle: 0");
-        emit LogGelatoGasPriceOracleSet(address(gelatoGasPriceOracle), _newOracle);
-        gelatoGasPriceOracle = IGelatoGasPriceOracle(_newOracle);
+        emit LogGelatoGasPriceOracleSet(gelatoGasPriceOracle, _newOracle);
+        gelatoGasPriceOracle = _newOracle;
+    }
+
+    function setOracleRequestData(bytes calldata _requestData) external override onlyOwner {
+        emit LogOracleRequestDataSet(oracleRequestData, _requestData);
+        oracleRequestData = _requestData;
     }
 
     // exec-tx gasprice: pulled in from the Oracle by the Executor during exec()
     function _getGelatoGasPrice() internal view returns(uint256) {
-        try gelatoGasPriceOracle.getGasPrice() returns(uint256 gasPrice) {
-            return gasPrice;
-        } catch Error(string memory err) {
-            revert(string(abi.encodePacked("GelatoSysAdmin.gelatoGasPrice:", err)));
-        } catch {
-            revert("GelatoSysAdmin.gelatoGasPrice:undefined");
+        (bool success, bytes memory returndata) = gelatoGasPriceOracle.staticcall(
+            oracleRequestData
+        );
+        if (!success) {
+            // FAILURE
+            // 68: 32-location, 32-length, 4-ErrorSelector, UTF-8 err
+            if (returndata.length % 32 == 4) {
+                bytes4 selector;
+                assembly { selector := mload(add(0x20, returndata)) }
+                if (selector == 0x08c379a0) {  // Function selector for Error(string)
+                    assembly { returndata := add(returndata, 68) }
+                    revert(
+                        string(
+                            abi.encodePacked(
+                                "GelatoSysAdmin._getGelatoGasPrice:", string(returndata)
+                            )
+                        )
+                    );
+                } else {
+                    revert("GelatoSysAdmin._getGelatoGasPrice:NoErrorSelector");
+                }
+            } else {
+                revert("GelatoSysAdmin._getGelatoGasPrice:UnexpectedReturndata");
+            }
+        } else {
+            int oracleGasPrice = abi.decode(returndata, (int256));
+            if (oracleGasPrice <= 0) revert("GelatoSysAdmin._getGelatoGasPrice:0orBelow");
+            return uint256(oracleGasPrice);
         }
     }
 
