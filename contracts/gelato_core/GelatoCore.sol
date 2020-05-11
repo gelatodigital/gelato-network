@@ -191,7 +191,10 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // memcopy of gelatoGasPrice, to avoid multiple storage reads
         uint256 gelatoGasPrice = _getGelatoGasPrice();
-        require(tx.gasprice >= gelatoGasPrice, "GelatoCore.exec: tx.gasprice below gelatoGasPrice");
+        require(
+            tx.gasprice >= gelatoGasPrice,
+            "GelatoCore.exec: tx.gasprice below gelatoGasPrice"
+        );
 
         require(
             msg.sender == executorByProvider[_TR.task.provider.addr],
@@ -205,7 +208,11 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         ExecutionResult executionResult;
         string memory reason;
 
-        try this.executionWrapper{gas: gasleft() - internalGasRequirement}(_TR, _gelatoMaxGas, gelatoGasPrice)
+        try this.executionWrapper{gas: gasleft() - internalGasRequirement}(
+            _TR,
+            _gelatoMaxGas,
+            gelatoGasPrice
+        )
             returns(ExecutionResult _executionResult, string memory _reason)
         {
             executionResult = _executionResult;
@@ -257,7 +264,11 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     }
 
     // Used by GelatoCore.exec(), to handle Out-Of-Gas from execution gracefully
-    function executionWrapper(TaskReceipt memory taskReceipt, uint256 _gelatoMaxGas, uint256 _gelatoGasPrice)
+    function executionWrapper(
+        TaskReceipt memory taskReceipt,
+        uint256 _gelatoMaxGas,
+        uint256 _gelatoGasPrice
+    )
         public
         returns(ExecutionResult, string memory)
     {

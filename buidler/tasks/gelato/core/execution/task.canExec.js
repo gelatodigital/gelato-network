@@ -53,10 +53,10 @@ export default task(
       const {
         [taskArgs.executorindex]: gelatoExecutor,
       } = await ethers.getSigners();
-
+      const excecutorAddress = await gelatoExecutor.getAddress();
       if (taskArgs.log) {
         console.log(taskArgs);
-        console.log(`\n Executor: ${await gelatoExecutor.getAddress}\n`);
+        console.log(`\n Executor: ${excecutorAddress}\n`);
       }
 
       const gelatoCore = await run("instantiateContract", {

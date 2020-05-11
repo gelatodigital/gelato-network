@@ -9,4 +9,4 @@ import "./gnosis/task.tradeAndWithdraw";
 
 // ==== Task Specs ====
 // // ==== Gnosis ====
-import "./gnosis/task_specs/task.taskSpec.balanceTrade";
+import "./gnosis/task_specs/collection.tasks.taskSpecs.gnosis";

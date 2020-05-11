@@ -73,20 +73,21 @@ export default task(
         });
       }
 
+      // Gelato Provider is the 3rd signer account
+      const { 2: gelatoProvider } = await ethers.getSigners();
+
       const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
         signer: gelatoProvider,
         write: true,
       });
 
-      // Gelato Provider is the 3rd signer account
-      const { 2: gelatoProvider } = await ethers.getSigners();
-
       const tx = await gelatoCore.provideTaskSpecs([taskSpec], {
         gasLimit: 1000000,
       });
       if (taskArgs.log) console.log(`\n txHash provideTaskSpecs: ${tx.hash}\n`);
       await tx.wait();
+      if (taskArgs.log) console.log(`\n ✅\n`);
       return tx.hash;
     } catch (error) {
       console.error(error, "\n");
