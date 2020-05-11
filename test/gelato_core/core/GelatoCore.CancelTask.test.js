@@ -180,13 +180,13 @@ describe("GelatoCore.cancelTask", function () {
   it("#1: Cancel task succesfully as user", async function () {
     await expect(userProxy.cancelTask(taskReceipt))
       .to.emit(gelatoCore, "LogTaskCancelled")
-      .withArgs(taskReceipt.id);
+      .withArgs(taskReceipt.id, userProxyAddress);
   });
 
   it("#2: Cancel task succesfully as provider", async function () {
     await expect(gelatoCore.connect(provider).cancelTask(taskReceipt))
       .to.emit(gelatoCore, "LogTaskCancelled")
-      .withArgs(taskReceipt.id);
+      .withArgs(taskReceipt.id, providerAddress);
   });
 
   it("#3: Cancel task unsuccesfully as random third party", async function () {
@@ -210,9 +210,9 @@ describe("GelatoCore.cancelTask", function () {
 
     await expect(userProxy.multiCancelTasks([taskReceipt, taskReceipt2]))
       .to.emit(gelatoCore, "LogTaskCancelled")
-      .withArgs(taskReceipt.id)
+      .withArgs(taskReceipt.id, userProxyAddress)
       .to.emit(gelatoCore, "LogTaskCancelled")
-      .withArgs(taskReceipt2.id);
+      .withArgs(taskReceipt2.id, userProxyAddress);
   });
 
   it("#6: Multi Cancel tasks succesfully via GelatoCore as provider", async function () {
@@ -224,8 +224,8 @@ describe("GelatoCore.cancelTask", function () {
       gelatoCore.connect(provider).multiCancelTasks([taskReceipt, taskReceipt2])
     )
       .to.emit(gelatoCore, "LogTaskCancelled")
-      .withArgs(taskReceipt.id)
+      .withArgs(taskReceipt.id, providerAddress)
       .to.emit(gelatoCore, "LogTaskCancelled")
-      .withArgs(taskReceipt2.id);
+      .withArgs(taskReceipt2.id, providerAddress);
   });
 });

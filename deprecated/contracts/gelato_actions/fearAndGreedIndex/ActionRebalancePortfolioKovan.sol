@@ -145,7 +145,7 @@ contract ActionRebalancePortfolioKovan is GelatoActionsStandard {
                     "ActionRebalancePortfolioKovan._action: eth fee underflow 4"
                 ),
                 // Deadline
-                now
+                block.timestamp
             )
             returns(uint256 amountOfDaiAcquired) {
                 emit LogTwoWay(
@@ -189,7 +189,7 @@ contract ActionRebalancePortfolioKovan is GelatoActionsStandard {
                     fee, "ActionRebalancePortfolioKovan._action: howMuchDaiToSellSubFee underflow2"
                 ),
                 1,
-                now)
+                block.timestamp)
             returns (uint256 amountOfEthAcquired) {
                 emit LogTwoWay(
                     address(this),  // origin

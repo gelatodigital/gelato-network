@@ -34,8 +34,9 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             return "GelatoCore.canSubmitTask: executorStake";
 
         // ExpiryDate
-        else if (_task.expiryDate != 0)
-            if (_task.expiryDate < now) return "GelatoCore.canSubmitTask: expiryDate";
+        if (_task.expiryDate != 0)
+            if (_task.expiryDate < block.timestamp)
+                return "GelatoCore.canSubmitTask: expiryDate";
 
         // Check Provider details
         string memory isProvided;
@@ -116,10 +117,10 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         bytes32 hashedTaskReceipt = hashTaskReceipt(_TR);
         if (taskReceiptHash[_TR.id] != hashedTaskReceipt) return "InvalidTaskReceiptHash";
 
-        if (_TR.task.expiryDate != 0 && _TR.task.expiryDate <= now)
+        if (_TR.task.expiryDate != 0 && _TR.task.expiryDate <= block.timestamp)
             return "TaskReceiptExpired";
 
-        // CHECK Condition for user proxies
+        // Optional CHECK Condition for user proxies
         if (_TR.task.conditions.length != 0) {
             for (uint i; i < _TR.task.conditions.length; i++) {
                 try _TR.task.conditions[i].inst.ok(_TR.task.conditions[i].data)
@@ -135,7 +136,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             }
         }
 
-        // CHECK Action Terms
+        // Optional CHECK Action Terms
         for (uint i; i < _TR.task.actions.length; i++) {
             // Only check termsOk if specified, else continue
             if (!_TR.task.actions[i].termsOkCheck) continue;
@@ -187,7 +188,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         uint256 startGas = gasleft();
 
         // CHECKS: all further checks are done during this.executionWrapper.canExec()
-        require(startGas > internalGasRequirement, "GelatoCore.exec: Insufficient gas sent");
+        uint256 _internalGasRequirement = internalGasRequirement;
+        require(startGas > _internalGasRequirement, "GelatoCore.exec: Insufficient gas sent");
 
         // memcopy of gelatoGasPrice, to avoid multiple storage reads
         uint256 gelatoGasPrice = _getGelatoGasPrice();
@@ -207,7 +209,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         ExecutionResult executionResult;
         string memory reason;
 
-        try this.executionWrapper{gas: gasleft() - internalGasRequirement}(
+        try this.executionWrapper{gas: gasleft() - _internalGasRequirement}(
             _TR,
             _gelatoMaxGas,
             gelatoGasPrice
@@ -356,7 +358,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             _storeTaskReceipt(
                 _TR.userProxy,
                 _TR.task,
-                0,  // next
+                _TR.next,
                 _TR.cycle
             );
         }
@@ -422,7 +424,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             "GelatoCore.cancelTask: invalid taskReceiptHash"
         );
         delete taskReceiptHash[_TR.id];
-        emit LogTaskCancelled(_TR.id);
+        emit LogTaskCancelled(_TR.id, msg.sender);
     }
 
     function multiCancelTasks(TaskReceipt[] memory _taskReceipts) public override {

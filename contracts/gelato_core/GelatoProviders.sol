@@ -64,15 +64,17 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         if (!isModuleProvided(_task.provider.addr, _task.provider.module))
             return "InvalidProviderModule";
 
-        IGelatoProviderModule providerModule = IGelatoProviderModule(
-            _task.provider.module
-        );
+        if (_userProxy != _task.provider.addr) {
+            IGelatoProviderModule providerModule = IGelatoProviderModule(
+                _task.provider.module
+            );
 
-        try providerModule.isProvided(_userProxy, _task) returns(string memory res) {
-            return res;
-        } catch {
-            return "GelatoProviders.providerModuleChecks";
-        }
+            try providerModule.isProvided(_userProxy, _task) returns(string memory res) {
+                return res;
+            } catch {
+                return "GelatoProviders.providerModuleChecks";
+            }
+        } else return OK;
     }
 
     // GelatoCore: combined submitTask Gate
@@ -108,7 +110,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         providerFunds[_provider] = newProviderFunds;
     }
 
-    // @dev change to withdraw funds
+    // Unprovide funds
     function unprovideFunds(uint256 _withdrawAmount)
         public
         override

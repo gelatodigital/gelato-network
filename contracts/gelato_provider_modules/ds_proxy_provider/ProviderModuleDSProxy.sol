@@ -20,7 +20,8 @@ contract ProviderModuleDSProxy is GelatoProviderModuleStandard {
     address public immutable multiSend;
 
     constructor(
-        address _dsProxyFactory,address _gelatoCore,
+        address _dsProxyFactory,
+        address _gelatoCore,
         address _multiSend
     )
         public

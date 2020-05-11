@@ -65,7 +65,7 @@ contract ActionUniswapTradeKovan is GelatoActionsStandard {
                         _sendAmt,
                         1,
                         1,
-                        now,
+                        block.timestamp,
                         _user,
                         _receiveToken
                     )
@@ -83,7 +83,7 @@ contract ActionUniswapTradeKovan is GelatoActionsStandard {
                     try sendTokenExchange.tokenToEthTransferInput(
                         _sendAmt,
                         1,
-                        now,
+                        block.timestamp,
                         _user
                     )
                         returns (uint256 returnEthAmount)
@@ -128,7 +128,7 @@ contract ActionUniswapTradeKovan is GelatoActionsStandard {
             // !! Dapp Interaction !!
             try receiveTokenExchange.ethToTokenTransferInput{value: _sendAmount}(
                 1,
-                now,
+                block.timestamp,
                 _user
             )
             returns (uint256 returnReceiveTokenAmount){
