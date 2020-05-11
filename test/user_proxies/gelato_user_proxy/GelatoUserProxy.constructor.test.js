@@ -8,14 +8,12 @@ describe("User Proxies - GelatoUserProxy - CONSTRUCTOR", function () {
   let GelatoCoreFactory;
   let GelatoUserProxyFactoryFactory;
   let ProviderModuleGelatoUserProxyFactory;
-  let SelfProviderModuleGelatoUserProxyFactory;
   let ActionFactory;
 
   let gelatoCore;
   let gelatoUserProxyFactory;
   let action;
   let providerModuleGelatoUserProxy;
-  let selfProviderModuleGelatoUserProxy;
 
   let user;
   let notUser;
@@ -39,9 +37,7 @@ describe("User Proxies - GelatoUserProxy - CONSTRUCTOR", function () {
     ProviderModuleGelatoUserProxyFactory = await ethers.getContractFactory(
       "ProviderModuleGelatoUserProxy"
     );
-    SelfProviderModuleGelatoUserProxyFactory = await ethers.getContractFactory(
-      "SelfProviderModuleGelatoUserProxy"
-    );
+
     ActionFactory = await ethers.getContractFactory("MockActionDummy");
 
     gelatoCore = await GelatoCoreFactory.deploy();
@@ -51,13 +47,11 @@ describe("User Proxies - GelatoUserProxy - CONSTRUCTOR", function () {
     providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxyFactory.deploy(
       gelatoUserProxyFactory.address
     );
-    selfProviderModuleGelatoUserProxy = await SelfProviderModuleGelatoUserProxyFactory.deploy();
     action = await ActionFactory.deploy();
 
     await gelatoCore.deployed();
     await gelatoUserProxyFactory.deployed();
     await providerModuleGelatoUserProxy.deployed();
-    await selfProviderModuleGelatoUserProxy.deployed();
     await action.deployed();
 
     // users
@@ -104,14 +98,6 @@ describe("User Proxies - GelatoUserProxy - CONSTRUCTOR", function () {
         }),
       ],
       [providerModuleGelatoUserProxy.address]
-    );
-    await multiProvideTx.wait();
-
-    // multiProvide: selfProvider
-    multiProvideTx = await gelatoCore.multiProvide(
-      executorAddress,
-      [],
-      [selfProviderModuleGelatoUserProxy.address]
     );
     await multiProvideTx.wait();
   });

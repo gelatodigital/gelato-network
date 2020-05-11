@@ -67,7 +67,7 @@ interface IGelatoCore {
         string reason
     );
 
-    event LogTaskCancelled(uint256 indexed taskReceiptId);
+    event LogTaskCancelled(uint256 indexed taskReceiptId, address indexed cancellor);
 
     /// @notice API to query whether Task can be submitted successfully.
     /// @dev In submitTask the msg.sender must be the same as _userProxy here.

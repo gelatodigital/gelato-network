@@ -76,7 +76,7 @@ contract ActionPlaceOrderBatchExchangePayFee  {
         }
 
         // Get current batch id
-        uint32 withdrawBatchId = uint32(now / BATCH_TIME) + _order.batchDuration;
+        uint32 withdrawBatchId = uint32(block.timestamp / BATCH_TIME) + _order.batchDuration;
 
         // 5. Place Order on Batch Exchange
         // uint16 buyToken, uint16 sellToken, uint32 validUntil, uint128 buyAmount, uint128 sellAmount

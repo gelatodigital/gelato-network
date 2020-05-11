@@ -1082,8 +1082,6 @@ describe("GelatoCore.exec", function () {
       // Get Action Payload
       const withdrawAmount = 10 * 10 ** buyDecimals;
 
-      const sellerBalanceBefore = await buyToken.balanceOf(sellerAddress);
-
       // 3. MockBatchExchange Set withdraw amount
       tx = await mockBatchExchange.setWithdrawAmount(
         buyToken.address,
@@ -1165,11 +1163,9 @@ describe("GelatoCore.exec", function () {
       ).to.revertedWith("GelatoCore.exec: Insufficient gas sent");
     });
 
-    it("#12: Exec good taskReceipt, however revert with LogExecReverted because insufficient gas was sent", async function () {
+    it("#12a: Exec good taskReceipt, however revert with LogExecReverted because insufficient gas was sent", async function () {
       // Get Action Payload
       const withdrawAmount = 10 * 10 ** buyDecimals;
-
-      const sellerBalanceBefore = await buyToken.balanceOf(sellerAddress);
 
       // 3. MockBatchExchange Set withdraw amount
       tx = await mockBatchExchange.setWithdrawAmount(
@@ -1248,6 +1244,89 @@ describe("GelatoCore.exec", function () {
             .add(ethers.utils.bigNumberify("50000")),
         })
       ).to.emit(gelatoCore, "LogExecReverted");
+    });
+
+    it("#12b: Exec good taskReceipt, however revert with LogCanExecFailed because EVEN LESS insufficient gas was sent", async function () {
+      // Get Action Payload
+      const withdrawAmount = 10 * 10 ** buyDecimals;
+
+      // 3. MockBatchExchange Set withdraw amount
+      tx = await mockBatchExchange.setWithdrawAmount(
+        buyToken.address,
+        withdrawAmount
+      );
+      await tx.wait();
+
+      const actionData = await run("abi-encode-withselector", {
+        contractname: "ActionWithdrawBatchExchange",
+        functionname: "action",
+        inputs: [sellerAddress, sellToken.address, buyToken.address],
+      });
+
+      // Submit Task
+      const gelatoProvider = new GelatoProvider({
+        addr: providerAddress,
+        module: providerModuleGelatoUserProxy.address,
+      });
+
+      const action = new Action({
+        addr: actionWithdrawBatchExchange.address,
+        data: actionData,
+        operation: Operation.Delegatecall,
+        value: 0,
+        termsOkCheck: true,
+      });
+
+      const task = new Task({
+        provider: gelatoProvider,
+        actions: [action],
+        expiryDate: constants.HashZero,
+      });
+
+      const taskReceipt = new TaskReceipt({
+        id: 1,
+        userProxy: userProxyAddress,
+        task,
+      });
+
+      // LogTaskSubmitted(taskReceipt.id, hashedTaskReceipt, taskReceipt);
+
+      await expect(userProxy.submitTask(task)).to.emit(
+        gelatoCore,
+        "LogTaskSubmitted"
+      );
+
+      expect(
+        await gelatoCore.canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE)
+      ).to.be.equal(
+        "ActionTermsNotOk:ActionWithdrawBatchExchange: Sell Token not withdrawable yet"
+      );
+
+      await expect(
+        gelatoCore
+          .connect(executor)
+          .exec(taskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
+      )
+        .to.emit(gelatoCore, "LogCanExecFailed")
+        .withArgs(
+          executorAddress,
+          taskReceipt.id,
+          "ActionTermsNotOk:ActionWithdrawBatchExchange: Sell Token not withdrawable yet"
+        );
+
+      // Make TaskReceipt executable
+      await mockBatchExchange.setValidWithdrawRequest(userProxyAddress);
+
+      const internalGasRequirement = await gelatoCore.internalGasRequirement();
+
+      await expect(
+        gelatoCore.connect(executor).exec(taskReceipt, {
+          gasPrice: GELATO_GAS_PRICE,
+          gasLimit: ethers.utils
+            .bigNumberify(internalGasRequirement)
+            .add(ethers.utils.bigNumberify("35000")),
+        })
+      ).to.emit(gelatoCore, "LogCanExecFailed");
     });
 
     it("#13: Successfully submit and exec ActionWithdrawBatchExchange taskReceipt (self-provider)", async function () {
