@@ -5,7 +5,6 @@ export default task(
   `Returns the current gelato gas price used for calling canExec and exec`
 )
   .addOptionalParam("gelatocoreaddress")
-  .addOptionalParam("fromblock", "", undefined, types.int)
   .addFlag("log", "Logs return values to stdout")
   .setAction(async (taskArgs) => {
     try {
@@ -15,25 +14,16 @@ export default task(
         read: true,
       });
 
-      // Fetch gelato Gas price
-      const gelatoGasPriceOracleAddress = await gelatoCore.gelatoGasPriceOracle();
+      const oracleAbi = ["function lastAnswer() returns(int)"];
 
-      const logsSetGasPrice = await run("event-getlogs", {
-        contractname: "GelatoGasPriceOracle",
-        contractaddress: gelatoGasPriceOracleAddress,
-        eventname: "LogGasPriceSet",
-        fromblock: taskArgs.fromblock,
-      });
+      // Get gelatoGasPriceOracleAddress
+      const gelatoGasPriceOracle = await ethers.getContractAt(
+        oracleAbi,
+        await gelatoCore.gelatoGasPriceOracle()
+      );
 
-      if (!logsSetGasPrice)
-        throw new Error(`\n fetchGelatoGasPrice: no LogGasPriceSet \n`);
-      const lastLog = logsSetGasPrice[logsSetGasPrice.length - 1];
-      const parsedLastLog = await run("ethers-interface-parseLogs", {
-        contractname: "GelatoGasPriceOracle",
-        eventlogs: lastLog,
-      });
-
-      const gelatoGasPrice = parsedLastLog.parsedLog.values.newGasPrice;
+      // lastAnswer is used by GelatoGasPriceOracle as well as the Chainlink Oracle
+      const gelatoGasPrice = await gelatoGasPriceOracle.lastAnswer();
 
       if (taskArgs.log) {
         console.log(

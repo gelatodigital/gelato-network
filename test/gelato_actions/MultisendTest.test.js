@@ -72,7 +72,6 @@ describe("Multisend with Gelato User Proxy Test", function () {
       sysAdmin
     );
     const gelatoGasPriceOracle = await GelatoGasPriceOracle.deploy(
-      gelatoCore.address,
       GELATO_GAS_PRICE
     );
 

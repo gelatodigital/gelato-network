@@ -80,7 +80,6 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
 
     gelatoCore = await GelatoCoreFactory.deploy();
     gelatoGasPriceOracle = await GelatoGasPriceOracleFactory.deploy(
-      gelatoCore.address,
       GELATO_GAS_PRICE
     );
     gelatoUserProxyFactory = await GelatoUserProxyFactoryFactory.deploy(

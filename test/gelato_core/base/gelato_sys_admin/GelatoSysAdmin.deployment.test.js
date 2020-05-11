@@ -6,6 +6,7 @@ import { expect } from "chai";
 import initialState from "./GelatoSysAdmin.initialState";
 const {
   gelatoGasPriceOracle,
+  oracleRequestData,
   gelatoMaxGas,
   internalGasRequirement,
   minExecutorStake,
@@ -34,6 +35,7 @@ describe("GelatoCore - GelatoSysAdmin - Deployment", function () {
     expect(await gelatoCore.gelatoGasPriceOracle()).to.equal(
       gelatoGasPriceOracle
     );
+    expect(await gelatoCore.oracleRequestData()).to.equal(oracleRequestData);
     expect(await gelatoCore.gelatoMaxGas()).to.equal(gelatoMaxGas);
     expect(await gelatoCore.internalGasRequirement()).to.equal(
       internalGasRequirement

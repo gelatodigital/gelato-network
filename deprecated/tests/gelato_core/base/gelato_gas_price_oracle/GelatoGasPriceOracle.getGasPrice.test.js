@@ -2,7 +2,7 @@
 // => only dependency we need is "chai"
 const { expect } = require("chai");
 
-import initialState from "./GelatoGasPriceOracle.initialState";
+import initialState from "../../../../../test/gelato_core/base/gelato_gas_price_oracle/GelatoGasPriceOracle.initialState";
 
 describe("GelatoCore - GelatoGasPriceOracle: getGasPrice", function () {
   // We define the ContractFactory and Signer variables here and assign them in
@@ -25,7 +25,6 @@ describe("GelatoCore - GelatoGasPriceOracle: getGasPrice", function () {
 
     gelatoCore = await GelatoCoreFactory.deploy();
     gelatoGasPriceOracle = await GelatoGasPriceOracleFactory.deploy(
-      gelatoCore.address,
       initialState.gasPrice
     );
 
@@ -38,7 +37,7 @@ describe("GelatoCore - GelatoGasPriceOracle: getGasPrice", function () {
 
   it("Should NOT let anyone but GelatoCore read the oracle", async function () {
     // getGasPrice
-    await expect(gelatoGasPriceOracle.getGasPrice()).to.be.revertedWith(
+    await expect(gelatoGasPriceOracle.latestAnswer()).to.be.revertedWith(
       "GelatoGasPriceOracle.onlyGelatoCore"
     );
 

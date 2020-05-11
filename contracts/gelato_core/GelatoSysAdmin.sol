@@ -27,8 +27,8 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
     uint256 public override sysAdminFunds;
 
     constructor() public {
-        gelatoGasPriceOracle = 0xA417221ef64b1549575C977764E651c9FAB50141; // LINK mainnet
-        oracleRequestData = abi.encodeWithSignature("latestAnswer()");  // LINK mainnet
+        gelatoGasPriceOracle = 0xA417221ef64b1549575C977764E651c9FAB50141; // LINK oracle
+        oracleRequestData = abi.encodeWithSelector(0x50d25bcd); // "latestAnswer()" selector
         gelatoMaxGas = 7000000;  // 7 mio initial
         internalGasRequirement = 100000;
         minExecutorStake = 1000000000000000000;  // production: 1 ETH

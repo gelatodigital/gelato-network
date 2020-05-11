@@ -1,6 +1,7 @@
 // running `npx buidler test` automatically makes use of buidler-waffle plugin
 // => only dependency we need is "chai"
 const { expect } = require("chai");
+import { run } from "@nomiclabs/buidler";
 
 // GelatoSysAdmin creation time variable values
 import initialState from "./GelatoSysAdmin.initialState";
@@ -40,10 +41,35 @@ describe("GelatoCore - GelatoSysAdmin - Setters: GAS/GAS-PRICE", function () {
     });
 
     it("Should NOT let non-Owners setGelatoGasPriceOracle", async function () {
-      // gelatoCore.connect returns the same GelatoCore contract instance,
-      // but associated to a different signer
       await expect(
         gelatoCore.connect(notOwner).setGelatoGasPriceOracle(oracleAddress)
+      ).to.be.revertedWith("Ownable: caller is not the owner");
+    });
+  });
+
+  // setOracleRequestData
+  describe("GelatoCore.GelatoSysAdmin.setOracleRequestData", function () {
+    it("Should let the owner setOracleRequestData", async function () {
+      const newOracleRequestData = await run("abi-encode-withselector", {
+        contractname: "GelatoGasPriceOracle",
+        functionname: "latestAnswer",
+      });
+      await expect(gelatoCore.setOracleRequestData(newOracleRequestData))
+        .to.emit(gelatoCore, "LogOracleRequestDataSet")
+        .withArgs(initialState.oracleRequestData, newOracleRequestData);
+
+      expect(await gelatoCore.oracleRequestData()).to.be.equal(
+        newOracleRequestData
+      );
+    });
+
+    it("Should NOT let non-Owners setOracleRequestData", async function () {
+      const newOracleRequestData = await run("abi-encode-withselector", {
+        contractname: "GelatoGasPriceOracle",
+        functionname: "latestAnswer",
+      });
+      await expect(
+        gelatoCore.connect(notOwner).setOracleRequestData(newOracleRequestData)
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
   });
@@ -51,7 +77,6 @@ describe("GelatoCore - GelatoSysAdmin - Setters: GAS/GAS-PRICE", function () {
   // setGelatoMaxGas
   describe("GelatoCore.GelatoSysAdmin.setGelatoMaxGas", function () {
     it("Should let the owner setGelatoMaxGas", async function () {
-      // Every transaction and call is sent with the owner by default
       await expect(gelatoCore.setGelatoMaxGas(100))
         .to.emit(gelatoCore, "LogGelatoMaxGasSet")
         .withArgs(initialState.gelatoMaxGas, 100);
@@ -60,8 +85,6 @@ describe("GelatoCore - GelatoSysAdmin - Setters: GAS/GAS-PRICE", function () {
     });
 
     it("Should NOT let non-Owners setGelatoMaxGas", async function () {
-      // gelatoCore.connect returns the same GelatoCore contract instance,
-      // but associated to a different signer
       await expect(
         gelatoCore.connect(notOwner).setGelatoMaxGas(100)
       ).to.be.revertedWith("Ownable: caller is not the owner");
@@ -71,7 +94,6 @@ describe("GelatoCore - GelatoSysAdmin - Setters: GAS/GAS-PRICE", function () {
   // setInternalGasRequirement
   describe("GelatoCore.GelatoSysAdmin.setInternalGasRequirement", function () {
     it("Should let the owner setInternalGasRequirement", async function () {
-      // Every transaction and call is sent with the owner by default
       await expect(gelatoCore.setInternalGasRequirement(100))
         .to.emit(gelatoCore, "LogInternalGasRequirementSet")
         .withArgs(initialState.internalGasRequirement, 100);
@@ -80,8 +102,6 @@ describe("GelatoCore - GelatoSysAdmin - Setters: GAS/GAS-PRICE", function () {
     });
 
     it("Should NOT let non-Owners setInternalGasRequirement", async function () {
-      // gelatoCore.connect returns the same GelatoCore contract instance,
-      // but associated to a different signer
       await expect(
         gelatoCore.connect(notOwner).setInternalGasRequirement(100)
       ).to.be.revertedWith("Ownable: caller is not the owner");

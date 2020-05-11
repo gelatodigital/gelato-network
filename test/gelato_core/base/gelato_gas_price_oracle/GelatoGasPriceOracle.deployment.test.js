@@ -4,13 +4,11 @@ import { expect } from "chai";
 
 import initialState from "./GelatoGasPriceOracle.initialState";
 
-describe("GelatoCore - GelatoSysAdmin - Deployment", function () {
+describe("GelatoCore - GelatoGasPriceOracle - Deployment", function () {
   // We define the ContractFactory and Signer variables here and assign them in
   // a beforeEach hook.
-  let GelatoCoreFactory;
   let GelatoGasPriceOracleFactory;
 
-  let gelatoCore;
   let gelatoGasPriceOracle;
 
   let owner;
@@ -18,20 +16,14 @@ describe("GelatoCore - GelatoSysAdmin - Deployment", function () {
 
   before(async function () {
     // Get the ContractFactory, contract instance, and Signers here.
-    GelatoCoreFactory = await ethers.getContractFactory("GelatoCore");
     GelatoGasPriceOracleFactory = await ethers.getContractFactory(
       "GelatoGasPriceOracle"
     );
 
-    gelatoCore = await GelatoCoreFactory.deploy();
-    gelatoGasPriceOracle = await GelatoCoreFactory.deploy();
     gelatoGasPriceOracle = await GelatoGasPriceOracleFactory.deploy(
-      gelatoCore.address,
       initialState.gasPrice
     );
 
-    await gelatoCore.deployed();
-    await gelatoGasPriceOracle.deployed();
     await gelatoGasPriceOracle.deployed();
 
     [owner] = await ethers.getSigners();
@@ -42,11 +34,8 @@ describe("GelatoCore - GelatoSysAdmin - Deployment", function () {
   it("Should initialize only the creation time state variables", async function () {
     expect(await gelatoGasPriceOracle.owner()).to.equal(ownerAddress);
     expect(await gelatoGasPriceOracle.oracle()).to.equal(ownerAddress);
-    expect(await gelatoGasPriceOracle.gelatoCore()).to.equal(
-      gelatoCore.address
-    );
-    await expect(gelatoGasPriceOracle.getGasPrice()).to.be.revertedWith(
-      "GelatoGasPriceOracle.onlyGelatoCore"
+    expect(await gelatoGasPriceOracle.latestAnswer()).to.be.equal(
+      initialState.gasPrice
     );
   });
 });

@@ -73,7 +73,6 @@ describe("GelatoCore.processProviderPayables", function () {
       sysAdmin
     );
     const gelatoGasPriceOracle = await GelatoGasPriceOracle.deploy(
-      gelatoCore.address,
       GELATO_GAS_PRICE
     );
 

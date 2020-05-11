@@ -59,7 +59,6 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
       sysAdmin
     );
     gelatoGasPriceOracle = await GelatoGasPriceOracle.deploy(
-      gelatoCore.address,
       GELATO_GAS_PRICE
     );
     await gelatoGasPriceOracle.deployed();

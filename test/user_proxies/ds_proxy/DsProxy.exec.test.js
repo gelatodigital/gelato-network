@@ -57,7 +57,6 @@ describe("Testing DS Proxy Module delpoyment and ds proxy execution with gelato"
       sysAdmin
     );
     const gelatoGasPriceOracle = await GelatoGasPriceOracle.deploy(
-      gelatoCore.address,
       GELATO_GAS_PRICE
     );
     await gelatoGasPriceOracle.deployed();

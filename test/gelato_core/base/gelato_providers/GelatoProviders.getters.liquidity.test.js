@@ -26,7 +26,6 @@ describe("GelatoCore - GelatoProviders - Getters: LIQUIDITY", function () {
 
     gelatoCore = await GelatoCore.deploy();
     gelatoGasPriceOracle = await GelatoGasPriceOracleFactory.deploy(
-      gelatoCore.address,
       initialStateGelatoGasPriceOracle.gasPrice
     );
 

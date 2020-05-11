@@ -54,7 +54,6 @@ describe("Gelato Actions - TASK CYCLES - AUTO-RESUBMIT-SELF", function () {
 
     gelatoCore = await GelatoCoreFactory.deploy();
     gelatoGasPriceOracle = await GelatoGasPriceOracleFactory.deploy(
-      gelatoCore.address,
       GELATO_GAS_PRICE
     );
     gelatoUserProxyFactory = await GelatoUserProxyFactoryFactory.deploy(

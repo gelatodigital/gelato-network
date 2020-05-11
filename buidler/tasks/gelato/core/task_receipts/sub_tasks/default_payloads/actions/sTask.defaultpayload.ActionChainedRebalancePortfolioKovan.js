@@ -19,7 +19,7 @@ export default internalTask(
     types.int
   )
   .addFlag("log")
-  .setAction(async ({ executorindex = 1, providerindex = 2, log = true }) => {
+  .setAction(async ({ executorindex, providerindex, log = true }) => {
     try {
       const signers = await ethers.getSigners();
       const gelatoExecutor = signers[parseInt(executorindex)];
@@ -29,25 +29,25 @@ export default internalTask(
       const actionContract = await run("instantiateContract", {
         contractname: "ActionChainedRebalancePortfolioKovan",
         read: true,
-        log
+        log,
       });
 
       const conditionContract = await run("instantiateContract", {
         contractname: "ConditionFearGreedIndex",
         read: true,
-        log
+        log,
       });
 
       const conditionAndAction = [
         conditionContract.address,
-        actionContract.address
+        actionContract.address,
       ];
 
       const actionData = await run("abi-encode-withselector", {
         contractname: "ActionChainedRebalancePortfolioKovan",
         functionname: "chainedAction",
         inputs: [providerAndExecutor, conditionAndAction],
-        log
+        log,
       });
 
       if (log) console.log(actionData);

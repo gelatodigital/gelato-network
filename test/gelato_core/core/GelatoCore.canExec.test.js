@@ -64,7 +64,6 @@ describe("GelatoCore.canExec", function () {
       sysAdmin
     );
     gelatoGasPriceOracle = await GelatoGasPriceOracle.deploy(
-      gelatoCore.address,
       GELATO_GAS_PRICE
     );
     await gelatoGasPriceOracle.deployed();

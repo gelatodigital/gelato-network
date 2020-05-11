@@ -63,7 +63,6 @@ describe("Gelato Core - Task Submission ", function () {
       sysAdmin
     );
     const gelatoGasPriceOracle = await GelatoGasPriceOracle.deploy(
-      gelatoCore.address,
       GELATO_GAS_PRICE
     );
 
