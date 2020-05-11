@@ -65,7 +65,7 @@ contract ActionUniswapTrade is GelatoActionsStandard {
                         _sendAmt,
                         1,
                         1,
-                        now,
+                        block.timestamp,
                         _user,
                         _receiveToken
                     )
@@ -83,7 +83,7 @@ contract ActionUniswapTrade is GelatoActionsStandard {
                     try sendTokenExchange.tokenToEthTransferInput(
                         _sendAmt,
                         1,
-                        now,
+                        block.timestamp,
                         _user
                     )
                         returns (uint256 returnEthAmount)
@@ -130,7 +130,7 @@ contract ActionUniswapTrade is GelatoActionsStandard {
                 value: _sendAmount
             }(
                 1,
-                now,
+                block.timestamp,
                 _user
             )
             returns (uint256 returnReceiveTokenAmount){

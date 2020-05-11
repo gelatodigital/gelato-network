@@ -83,7 +83,7 @@ contract ScriptExitRebalancePortfolioKovan {
                 try uniswapExchange.tokenToEthTransferInput(
                     safeOwnerDaiBalance,
                     1,
-                    now,
+                    block.timestamp,
                     _withdrawAddress
                 )
                 returns (uint256 amountOfEthAcquired) {
