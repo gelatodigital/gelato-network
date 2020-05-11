@@ -35,7 +35,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // ExpiryDate
         if (_task.expiryDate != 0)
-            if (_task.expiryDate < block.timestamp) return "GelatoCore.canSubmitTask: expiryDate";
+            if (_task.expiryDate < block.timestamp)
+                return "GelatoCore.canSubmitTask: expiryDate";
 
         // Check Provider details
         string memory isProvided;
