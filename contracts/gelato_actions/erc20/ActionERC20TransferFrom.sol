@@ -1,10 +1,10 @@
 pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
-import { GelatoActionsStandard } from "../../GelatoActionsStandard.sol";
-import { IERC20 } from "../../../external/IERC20.sol";
+import { GelatoActionsStandard } from "../GelatoActionsStandard.sol";
+import { IERC20 } from "../../external/IERC20.sol";
 // import "../../../external/SafeERC20.sol";
-import { Address } from "../../../external/Address.sol";
+import { Address } from "../../external/Address.sol";
 
 struct ActionData {
     address user;

@@ -178,6 +178,22 @@ abstract contract ERC20 is IERC20 {
     }
 
     /**
+     * @dev Destroys `amount` tokens from the caller.
+     *
+     * See {ERC20-_burn}.
+     */
+    function burn(uint256 amount) public virtual {
+        _burn(msg.sender, amount);
+    }
+
+    function burnFrom(address account, uint256 amount) public virtual {
+        uint256 decreasedAllowance = allowance(account, msg.sender).sub(amount);
+
+        _approve(account, msg.sender, decreasedAllowance);
+        _burn(account, amount);
+    }
+
+    /**
      * @dev Transfer tokens from one address to another.
      * Note that while this function emits an Approval event, this is not required as per the specification,
      * and other compliant implementations may not emit the event.
@@ -228,7 +244,7 @@ abstract contract ERC20 is IERC20 {
      * @param value The amount to be transferred.
      */
     function _transfer(address from, address to, uint256 value) internal {
-        require(to != address(0));
+        //require(to != address(0));
 
         _balances[from] = _balances[from].sub(value);
         _balances[to] = _balances[to].add(value);
