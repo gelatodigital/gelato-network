@@ -1,6 +1,7 @@
 pragma solidity ^0.6.6;
 
-import "../gelato_core/interfaces/IGelatoProviderModule.sol";
+import { IGelatoProviderModule } from "../gelato_provider_modules/IGelatoProviderModule.sol";
+
 
 /**
  * @dev Library for managing

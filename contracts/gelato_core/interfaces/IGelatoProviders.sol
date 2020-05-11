@@ -1,7 +1,7 @@
 pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
-import { IGelatoProviderModule } from "./IGelatoProviderModule.sol";
+import { IGelatoProviderModule } from "../../gelato_provider_modules/IGelatoProviderModule.sol";
 import { Action, Task, TaskReceipt } from "../interfaces/IGelatoCore.sol";
 import { IGelatoCondition } from "../../gelato_conditions/IGelatoCondition.sol";
 

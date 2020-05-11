@@ -1,8 +1,8 @@
 pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
-import { IGelatoProviderModule } from "./interfaces/IGelatoProviderModule.sol";
-import { Task } from "./interfaces/IGelatoCore.sol";
+import { IGelatoProviderModule } from "./IGelatoProviderModule.sol";
+import { Task } from "../gelato_core/interfaces/IGelatoCore.sol";
 
 abstract contract GelatoProviderModuleStandard is IGelatoProviderModule {
 

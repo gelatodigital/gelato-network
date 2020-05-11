@@ -6,7 +6,7 @@ import { GelatoExecutors } from "./GelatoExecutors.sol";
 import { SafeMath } from "../external/SafeMath.sol";
 import { IGelatoCondition } from "../gelato_conditions/IGelatoCondition.sol";
 import { IGelatoAction } from "../gelato_actions/IGelatoAction.sol";
-import { IGelatoProviderModule } from "./interfaces/IGelatoProviderModule.sol";
+import { IGelatoProviderModule } from "../gelato_provider_modules/IGelatoProviderModule.sol";
 
 /// @title GelatoCore
 /// @author Luis Schliesske & Hilmar Orth

@@ -1,14 +1,14 @@
 pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
-import { GelatoProviderModuleStandard } from "../../GelatoProviderModuleStandard.sol";
-import { Action, Task } from "../../interfaces/IGelatoCore.sol";
+import { GelatoProviderModuleStandard } from "../GelatoProviderModuleStandard.sol";
+import { Action, Task } from "../../gelato_core/interfaces/IGelatoCore.sol";
 import {
     IGelatoUserProxyFactory
-} from "../../../user_proxies/gelato_user_proxy/interfaces/IGelatoUserProxyFactory.sol";
+} from "../../user_proxies/gelato_user_proxy/interfaces/IGelatoUserProxyFactory.sol";
 import {
     IGelatoUserProxy
-} from "../../../user_proxies/gelato_user_proxy/interfaces/IGelatoUserProxy.sol";
+} from "../../user_proxies/gelato_user_proxy/interfaces/IGelatoUserProxy.sol";
 
 contract ProviderModuleGelatoUserProxy is GelatoProviderModuleStandard {
     address public immutable gelatoUserProxyFactory;

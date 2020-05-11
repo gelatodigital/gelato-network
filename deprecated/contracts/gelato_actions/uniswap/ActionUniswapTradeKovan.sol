@@ -1,6 +1,6 @@
 pragma solidity ^0.6.6;
 
-import "../GelatoActionsStandard.sol";
+import "../../../../gelato_actions/GelatoActionsStandard.sol";
 import "../../external/IERC20.sol";
 // import "../../external/SafeERC20.sol";
 import "../../dapp_interfaces/uniswap/IUniswapExchange.sol";

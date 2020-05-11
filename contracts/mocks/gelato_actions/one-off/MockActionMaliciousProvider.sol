@@ -6,7 +6,7 @@ import {
     IGelatoProviders,
     TaskSpec
 } from "../../../gelato_core/interfaces/IGelatoProviders.sol";
-import { IGelatoProviderModule } from "../../../gelato_core/interfaces/IGelatoProviderModule.sol";
+import { IGelatoProviderModule } from "../../../gelato_provider_modules/IGelatoProviderModule.sol";
 
 // This Action is the Provider and must be called from any UserProxy with .call a
 contract MockActionMaliciousProvider  {
