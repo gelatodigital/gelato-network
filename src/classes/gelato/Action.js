@@ -31,7 +31,7 @@ class Action {
     this.data = data ? data : constants.HashZero;
     this.operation = operation;
     this.value = value ? value : constants.Zero;
-    this.termsOkCheck = termsOkCheck ? termsOkCheck : false;
+    this.termsOkCheck = termsOkCheck === true ? termsOkCheck : false;
   }
 }
 

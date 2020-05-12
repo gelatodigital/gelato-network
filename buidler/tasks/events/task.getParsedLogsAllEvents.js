@@ -58,26 +58,30 @@ export default task(
 
       const eventlogs = await run("event-getlogsallevents", taskArgs);
 
-      if (!eventlogs) {
-        throw new Error(
-          `\n event-getparsedlogsallevents: ${taskArgs.contractname} no events found \n`
-        );
+      if (loggingActivated) taskArgs.log = true;
+
+      if (!eventlogs.length) {
+        if (taskArgs.log) {
+          console.log(
+            `\n ❌ event-getparsedlogsallevents: ${taskArgs.contractname} no events found \n`
+          );
+        }
+        return [];
       }
 
       taskArgs.eventlogs = eventlogs;
 
-      const parsedLogs = await run("event-getparsedlogs", taskArgs);
-
-      if (!parsedLogs.length) {
-        throw new Error(
-          `\n event-getparsedlogsallevents: ${taskArgs.contractname} no events found \n`
-        );
+      if (taskArgs.log) {
+        loggingActivated = true;
+        taskArgs.log = false;
       }
+
+      const parsedLogs = await run("event-getparsedlogs", taskArgs);
 
       if (loggingActivated) taskArgs.log = true;
 
-      if (taskArgs.log) {
-        if (!parsedLogs.length) {
+      if (!parsedLogs.length) {
+        if (taskArgs.log) {
           console.log(
             `\n❌  No parsed eventsLogs for ${
               taskArgs.contractname
@@ -85,7 +89,10 @@ export default task(
               taskArgs.fromblock ? taskArgs.fromblock : taskArgs.blockhash
             } ${taskArgs.blockhash ? "." : `to block ${taskArgs.toblock}`}`
           );
-        } else {
+        }
+        return [];
+      } else {
+        if (taskArgs.log) {
           console.log(
             `\n ✅ Parsed Events Logs for ${taskArgs.contractname} from block ${
               taskArgs.fromblock ? taskArgs.fromblock : taskArgs.blockhash
@@ -93,9 +100,8 @@ export default task(
           );
           for (const parsedLog of parsedLogs) console.log("\n", parsedLog);
         }
+        return parsedLogs;
       }
-
-      return parsedLogs;
     } catch (error) {
       console.error(error, "\n");
     }

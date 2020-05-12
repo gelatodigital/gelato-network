@@ -99,16 +99,12 @@ export default task(
           // Filtering
           if (taskArgs.filterkey) {
             if (
-              !checkNestedObj(
-                parsedLogWithTxHash.parsedLog,
-                "values",
-                taskArgs.filterkey
-              )
+              !checkNestedObj(parsedLogWithTxHash, "values", taskArgs.filterkey)
             )
               parsedLogWithTxHash = undefined;
             if (taskArgs.filtervalue) {
               const filteredValue = getNestedObj(
-                parsedLogWithTxHash.parsedLog,
+                parsedLogWithTxHash,
                 "values",
                 taskArgs.filterkey
               );
@@ -122,10 +118,10 @@ export default task(
           }
           if (parsedLogWithTxHash) {
             const copy = {};
-            for (const key in parsedLogWithTxHash.parsedLog.values) {
+            for (const key in parsedLogWithTxHash.values) {
               copy[key] = taskArgs.stringify
-                ? parsedLogWithTxHash.parsedLog.values[key].toString()
-                : parsedLogWithTxHash.parsedLog.values[key];
+                ? parsedLogWithTxHash.values[key].toString()
+                : parsedLogWithTxHash.values[key];
             }
             parsedLogWithTxHash = copy;
           }
@@ -146,10 +142,8 @@ export default task(
           if (parsedLogWithTxHash) {
             parsedLogWithTxHash = {
               [taskArgs.property]: taskArgs.stringify
-                ? parsedLogWithTxHash.parsedLog.values[
-                    taskArgs.property
-                  ].toString()
-                : parsedLogWithTxHash.parsedLog.values[taskArgs.property],
+                ? parsedLogWithTxHash.values[taskArgs.property].toString()
+                : parsedLogWithTxHash.values[taskArgs.property],
             };
           }
         }

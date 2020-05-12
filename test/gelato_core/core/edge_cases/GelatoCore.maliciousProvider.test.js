@@ -54,9 +54,8 @@ describe("GelatoCore - EdgeCase: Malicious Provider", function () {
       "MockActionMaliciousProvider"
     );
 
-    gelatoCore = await GelatoCoreFactory.deploy();
+    gelatoCore = await GelatoCoreFactory.deploy(gelatoSysAdminInitialState);
     gelatoGasPriceOracle = await GelatoGasPriceOracleFactory.deploy(
-      gelatoCore.address,
       GELATO_GAS_PRICE
     );
     gelatoUserProxyFactory = await GelatoUserProxyFactoryFactory.deploy(

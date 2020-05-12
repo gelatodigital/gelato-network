@@ -5,12 +5,11 @@ const { run, ethers } = require("@nomiclabs/buidler");
 
 import initialStateSysAdmin from "../../base/gelato_sys_admin/GelatoSysAdmin.initialState";
 import initialStateGasPriceOracle from "../../base/gelato_gas_price_oracle/GelatoGasPriceOracle.initialState";
-import { constants } from "ethers";
 
 const GELATO_MAX_GAS = initialStateSysAdmin.gelatoMaxGas;
 const GELATO_GAS_PRICE = initialStateGasPriceOracle.gasPrice;
 
-describe("Condition Balance Stateful: Balanced based Condition integration test with 10x auto executions", function () {
+describe("Condition Balance Stateful: Balanced based Condition integration test with 10x auto resubmissions", function () {
   // We define the ContractFactory and Signer variables here and assign them in
   // a beforeEach hook.
   let seller;
@@ -32,7 +31,10 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
   let sellToken;
   let sellDecimals;
   let conditionBalanceStateful;
+  let conditionBalanceStatefulStruct;
   let mockActionDummy;
+  let mockActionDummyStruct;
+  let actionSetRefStruct;
 
   // ###### GelatoCore Setup ######
   beforeEach(async function () {
@@ -45,7 +47,7 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
 
     // Deploy Gelato Core with SysAdmin + Stake Executor
     const GelatoCore = await ethers.getContractFactory("GelatoCore", sysAdmin);
-    gelatoCore = await GelatoCore.deploy();
+    gelatoCore = await GelatoCore.deploy(gelatoSysAdminInitialState);
     await gelatoCore.deployed();
     await gelatoCore
       .connect(executor)
@@ -57,7 +59,6 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
       sysAdmin
     );
     gelatoGasPriceOracle = await GelatoGasPriceOracle.deploy(
-      gelatoCore.address,
       GELATO_GAS_PRICE
     );
     await gelatoGasPriceOracle.deployed();
@@ -107,12 +108,7 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
     // DEPLOY DUMMY ERC20s
     // // Deploy Sell Token
     sellDecimals = 18;
-    sellToken = await MockERC20.deploy(
-      "DAI",
-      (100 * 10 ** sellDecimals).toString(),
-      sellerAddress,
-      sellDecimals
-    );
+    sellToken = await MockERC20.deploy("DAI", 0, sellerAddress, sellDecimals);
     await sellToken.deployed();
 
     // Register new provider TaskSpec on core with provider #######################
@@ -123,9 +119,8 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
     conditionBalanceStateful = await ConditionBalanceStateful.deploy();
     await conditionBalanceStateful.deployed();
 
-    const condition = new Condition({
+    conditionBalanceStatefulStruct = new Condition({
       inst: conditionBalanceStateful.address,
-      data: constants.HashZero,
     });
 
     // Call multiProvide for mockConditionDummy + actionERC20TransferFrom
@@ -138,10 +133,9 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
     mockActionDummy = await MockActionDummy.deploy();
     await mockActionDummy.deployed();
 
-    const mockActionDummyGelato = new Action({
+    mockActionDummyStruct = new Action({
       addr: mockActionDummy.address,
-      data: constants.HashZero,
-      operation: Operation.Delegatecall,
+      operation: Operation.Call,
       termsOkCheck: true,
     });
 
@@ -150,16 +144,15 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
       module: providerModuleGelatoUserProxy.address,
     });
 
-    const actionSetRef = new Action({
+    actionSetRefStruct = new Action({
       addr: conditionBalanceStateful.address,
-      data: constants.HashZero,
       operation: Operation.Call,
     });
 
     newTaskSpec = new TaskSpec({
       provider: gelatoProvider,
-      conditions: [condition.inst],
-      actions: [mockActionDummyGelato, actionSetRef],
+      conditions: [conditionBalanceStatefulStruct.inst],
+      actions: [mockActionDummyStruct, actionSetRefStruct],
       gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
     });
 
@@ -174,42 +167,32 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
   });
 
   // We test different functionality of the contract as normal Mocha tests.
-  it("#1: Succesfully exec Condition Balance Stateful task 10 times in a row ", async function () {
+  it("#1: Succesfully exec and auto-resubmits Task based on refBalance delta increase", async function () {
     // address _proxy, address _account, address _token, uint256, bool _greaterElseSmaller
     const conditionData = await run("abi-encode-withselector", {
       contractname: "ConditionBalanceStateful",
       functionname: "ok",
       inputs: [userProxyAddress, sellerAddress, sellToken.address, true],
     });
+    conditionBalanceStatefulStruct.data = conditionData;
 
     const actionData = await run("abi-encode-withselector", {
       contractname: "MockActionDummy",
       functionname: "action",
       inputs: [true],
     });
-
-    let condition = new Condition({
-      inst: conditionBalanceStateful.address,
-      data: conditionData,
-    });
-
-    let action = new Action({
-      addr: mockActionDummy.address,
-      data: actionData,
-      operation: Operation.Delegatecall,
-      termsOkCheck: true,
-    });
+    mockActionDummyStruct.data = actionData;
 
     // Set RefBalance and create task on gelato in one tx
-    let changeFactor = ethers.utils.parseUnits("1", sellDecimals);
+    const refBalanceDelta = ethers.utils.parseUnits("1", sellDecimals);
 
     const setRefData = await run("abi-encode-withselector", {
       contractname: "ConditionBalanceStateful",
-      functionname: "setRefBalance",
-      inputs: [changeFactor, sellToken.address, sellerAddress, true],
+      functionname: "setRefBalanceDelta",
+      inputs: [sellerAddress, sellToken.address, refBalanceDelta],
     });
 
-    const actionSetRef = new Action({
+    const actionSetRefStruct = new Action({
       addr: conditionBalanceStateful.address,
       data: setRefData,
       operation: Operation.Call,
@@ -217,8 +200,8 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
 
     const task = new Task({
       provider: gelatoProvider,
-      conditions: [condition],
-      actions: [action, actionSetRef],
+      conditions: [conditionBalanceStatefulStruct],
+      actions: [mockActionDummyStruct, actionSetRefStruct],
       autoResubmitSelf: true,
     });
 
@@ -228,12 +211,10 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
       inputs: [task],
     });
 
-    const actionSubmitTask = new Action({
+    const actionSubmitTaskStruct = new Action({
       addr: gelatoCore.address,
       data: submitTaskData,
       operation: Operation.Call,
-      termsOkCheck: false,
-      value: 0,
     });
 
     const taskReceipt = new TaskReceipt({
@@ -244,7 +225,7 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
 
     await userProxy
       .connect(seller)
-      .multiExecActions([actionSetRef, actionSubmitTask]);
+      .multiExecActions([actionSetRefStruct, actionSubmitTaskStruct]);
 
     let canExecReturn = await gelatoCore
       .connect(executor)
@@ -254,7 +235,7 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
       "ConditionNotOk:NotOkERC20BalanceIsNotGreaterThanRefBalance"
     );
 
-    await sellToken.create(sellerAddress, changeFactor);
+    await sellToken.create(sellerAddress, refBalanceDelta);
 
     canExecReturn = await gelatoCore
       .connect(executor)
@@ -267,8 +248,11 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
         gasPrice: GELATO_GAS_PRICE,
         gasLimit: GELATO_MAX_GAS,
       })
-    ).to.emit(gelatoCore, "LogExecSuccess");
-    // .to.emit(gelatoCore, "LogTaskSubmitted");
+    )
+      .to.emit(mockActionDummy, "LogAction")
+      .withArgs(true)
+      .and.to.emit(gelatoCore, "LogExecSuccess")
+      .and.to.emit(gelatoCore, "LogTaskSubmitted");
 
     // ##################################### First execution DONE
     for (let i = 0; i < 10; i++) {
@@ -282,7 +266,7 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
         "ConditionNotOk:NotOkERC20BalanceIsNotGreaterThanRefBalance"
       );
 
-      await sellToken.create(sellerAddress, changeFactor);
+      await sellToken.create(sellerAddress, refBalanceDelta);
 
       canExecReturn = await gelatoCore
         .connect(executor)
@@ -295,10 +279,192 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
           gasPrice: GELATO_GAS_PRICE,
           gasLimit: GELATO_MAX_GAS,
         })
-      ).to.emit(gelatoCore, "LogExecSuccess");
-      // .to.emit(gelatoCore, "LogTaskSubmitted");
+      )
+        .to.emit(mockActionDummy, "LogAction")
+        .withArgs(true)
+        .and.to.emit(gelatoCore, "LogExecSuccess")
+        .and.to.emit(gelatoCore, "LogTaskSubmitted");
     }
 
-    // ##################################### Second execution DONE
+    // ##################################### Next execution DONE
+  });
+
+  // We test different functionality of the contract as normal Mocha tests.
+  it("#2: Succesfully exec and auto-resubmits Task based on refBalance delta decrease", async function () {
+    // address _proxy, address _account, address _token, uint256, bool _greaterElseSmaller
+    const conditionData = await run("abi-encode-withselector", {
+      contractname: "ConditionBalanceStateful",
+      functionname: "ok",
+      inputs: [userProxyAddress, sellerAddress, sellToken.address, false],
+    });
+    conditionBalanceStatefulStruct.data = conditionData;
+
+    const actionData = await run("abi-encode-withselector", {
+      contractname: "MockActionDummy",
+      functionname: "action",
+      inputs: [false],
+    });
+    mockActionDummyStruct.data = actionData;
+
+    // Set RefBalance and create task on gelato in one tx
+    const refBalanceDeltaAbs = ethers.utils.parseUnits("10", sellDecimals);
+    const refBalanceDeltaDecrease = ethers.utils.parseUnits(
+      "-10",
+      sellDecimals
+    );
+
+    const setRefData = await run("abi-encode-withselector", {
+      contractname: "ConditionBalanceStateful",
+      functionname: "setRefBalanceDelta",
+      inputs: [sellerAddress, sellToken.address, refBalanceDeltaDecrease],
+    });
+
+    const actionSetRefStruct = new Action({
+      addr: conditionBalanceStateful.address,
+      data: setRefData,
+      operation: Operation.Call,
+    });
+
+    const task = new Task({
+      provider: gelatoProvider,
+      conditions: [conditionBalanceStatefulStruct],
+      actions: [mockActionDummyStruct, actionSetRefStruct],
+      autoResubmitSelf: true,
+    });
+
+    const submitTaskData = await run("abi-encode-withselector", {
+      contractname: "GelatoCore",
+      functionname: "submitTask",
+      inputs: [task],
+    });
+
+    const actionSubmitTaskStruct = new Action({
+      addr: gelatoCore.address,
+      data: submitTaskData,
+      operation: Operation.Call,
+    });
+
+    const taskReceipt = new TaskReceipt({
+      id: 1,
+      userProxy: userProxyAddress,
+      task,
+    });
+
+    await expect(
+      userProxy
+        .connect(seller)
+        .multiExecActions([actionSetRefStruct, actionSubmitTaskStruct])
+    ).to.be.revertedWith(
+      "ConditionBalanceStateful.setRefBalanceDelta: underflow"
+    );
+
+    const initialSellTokenBalance = utils.bigNumberify(
+      (100 * 10 ** sellDecimals).toString()
+    );
+
+    await sellToken.create(sellerAddress, initialSellTokenBalance);
+
+    await expect(
+      userProxy
+        .connect(seller)
+        .multiExecActions([actionSetRefStruct, actionSubmitTaskStruct])
+    ).to.not.be.reverted;
+
+    expect(
+      await conditionBalanceStateful.refBalance(
+        userProxyAddress,
+        sellerAddress,
+        sellToken.address
+      )
+    ).to.be.equal(initialSellTokenBalance.sub(refBalanceDeltaAbs));
+
+    expect(
+      await gelatoCore
+        .connect(executor)
+        .canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE)
+    ).to.equal("ConditionNotOk:NotOkERC20BalanceIsNotSmallerThanRefBalance");
+
+    await expect(sellToken.burn(refBalanceDeltaAbs)).to.not.be.reverted;
+
+    expect(
+      await gelatoCore
+        .connect(executor)
+        .canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE)
+    ).to.equal("OK");
+
+    await expect(
+      gelatoCore.connect(executor).exec(taskReceipt, {
+        gasPrice: GELATO_GAS_PRICE,
+        gasLimit: GELATO_MAX_GAS,
+      })
+    )
+      .to.emit(mockActionDummy, "LogAction")
+      .withArgs(false)
+      .and.to.emit(gelatoCore, "LogExecSuccess")
+      .and.to.emit(gelatoCore, "LogTaskSubmitted");
+
+    // ##################################### First execution DONE
+    let currentSellTokenBalance;
+    for (let i = 0; i < 11; i++) {
+      taskReceipt.id++;
+
+      currentSellTokenBalance = await sellToken.balanceOf(sellerAddress);
+
+      expect(
+        await conditionBalanceStateful.refBalance(
+          userProxyAddress,
+          sellerAddress,
+          sellToken.address
+        )
+      ).to.be.equal(currentSellTokenBalance.sub(refBalanceDeltaAbs));
+
+      expect(
+        await gelatoCore
+          .connect(executor)
+          .canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE)
+      ).to.equal("ConditionNotOk:NotOkERC20BalanceIsNotSmallerThanRefBalance");
+
+      // We burn sellTokens
+      await expect(sellToken.burn(refBalanceDeltaAbs)).to.not.be.reverted;
+
+      currentSellTokenBalance = await sellToken.balanceOf(sellerAddress);
+
+      if (currentSellTokenBalance.lt(refBalanceDeltaAbs)) {
+        await expect(
+          gelatoCore.connect(executor).exec(taskReceipt, {
+            gasPrice: GELATO_GAS_PRICE,
+            gasLimit: GELATO_MAX_GAS,
+          })
+        ).to.emit(gelatoCore, "LogExecReverted");
+        break;
+      } else {
+        expect(
+          await conditionBalanceStateful.refBalance(
+            userProxyAddress,
+            sellerAddress,
+            sellToken.address
+          )
+        ).to.equal(currentSellTokenBalance);
+
+        expect(
+          await gelatoCore
+            .connect(executor)
+            .canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE)
+        ).to.equal("OK");
+
+        await expect(
+          gelatoCore.connect(executor).exec(taskReceipt, {
+            gasPrice: GELATO_GAS_PRICE,
+            gasLimit: GELATO_MAX_GAS,
+          })
+        )
+          .to.emit(mockActionDummy, "LogAction")
+          .withArgs(false)
+          .and.to.emit(gelatoCore, "LogExecSuccess")
+          .and.to.emit(gelatoCore, "LogTaskSubmitted");
+      }
+    }
+
+    // ##################################### Next execution DONE
   });
 });

@@ -26,7 +26,7 @@ describe("GelatoCore - GelatoExecutors - Setters: FUNDS", function () {
   beforeEach(async function () {
     // Get the ContractFactory, contract instance, and Signers here.
     GelatoCore = await ethers.getContractFactory("GelatoCore");
-    gelatoCore = await GelatoCore.deploy();
+    gelatoCore = await GelatoCore.deploy(gelatoSysAdminInitialState);
 
     await gelatoCore.deployed();
 

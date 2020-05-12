@@ -44,7 +44,7 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
     ActionFactory = await ethers.getContractFactory("MockActionDummy");
     OtherActionFactory = await ethers.getContractFactory("MockActionDummy");
 
-    gelatoCore = await GelatoCoreFactory.deploy();
+    gelatoCore = await GelatoCoreFactory.deploy(gelatoSysAdminInitialState);
     condition = await ConditionFactory.deploy();
     action = await ActionFactory.deploy();
     otherAction = await OtherActionFactory.deploy();

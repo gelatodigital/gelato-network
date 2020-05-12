@@ -80,6 +80,10 @@ export default task(
         console.log(`\n TaskReceipt Array:\n`, taskReceiptArray);
       if (taskArgs.log && taskArgs.obj)
         console.log(`\n TaskReceipt Obj:\n`, taskReceiptObj);
+      else if (taskArgs.log) {
+        console.log(`\n TaskReceipt Array:\n`, taskReceiptArray);
+        console.log(`\n TaskReceipt Obj:\n`, taskReceiptObj);
+      }
 
       // Return
       if (taskArgs.array && !taskArgs.obj) return taskReceiptArray;

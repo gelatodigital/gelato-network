@@ -23,14 +23,6 @@ export default task("setupgelato-gnosissafeproxy")
         log: taskArgs.log,
       });
 
-      // GelatoGasPriceOracle
-      const gelatoGasPriceOracle = await run("deploy", {
-        contractname: "GelatoGasPriceOracle",
-        constructorargs: [gelatoCore.address, GAS_PRICE.toString()],
-        events: taskArgs.events,
-        log: taskArgs.log,
-      });
-
       // Condition
       if (taskArgs.condition) {
         const conditionInstance = await run("deploy", {
@@ -48,7 +40,7 @@ export default task("setupgelato-gnosissafeproxy")
       // Action
       let actionAddresses = [];
       let tempArray = [];
-      if (taskArgs.actions.length >= 1)
+      if (taskArgs.actions)
         for (const action of taskArgs.actions) {
           if (!tempArray.includes(action)) {
             let actionconstructorargs;
@@ -146,18 +138,9 @@ export default task("setupgelato-gnosissafeproxy")
         operation: 1,
       });
 
-      // GelatoSysAdmin
-      await run("gc-setgelatogaspriceoracle", {
-        gelatocoreaddress: gelatoCore.address,
-        oracle: gelatoGasPriceOracle.address,
-        events: taskArgs.events,
-        log: taskArgs.log,
-      });
-
       // Executor
       await run("gc-stakeexecutor", {
         gelatocoreaddress: gelatoCore.address,
-        executorindex: 1,
         events: taskArgs.events,
         log: taskArgs.log,
       });
@@ -172,7 +155,6 @@ export default task("setupgelato-gnosissafeproxy")
 
       await run("gc-multiprovide", {
         gelatocoreaddress: gelatoCore.address,
-        providerindex: 2,
         funds: "1",
         gelatoexecutor: gelatoExecutorAddress,
         taskSpecs: [taskSpec],

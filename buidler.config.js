@@ -17,6 +17,8 @@ const TaskSpec = require("./src/classes/gelato/TaskSpec").default;
 const TaskReceipt = require("./src/classes/gelato/TaskReceipt").default;
 // Objects
 const { Operation } = require("./src/classes/gelato/Action");
+const gelatoSysAdminInitialState = require("./test/gelato_core/base/gelato_sys_admin/GelatoSysAdmin.initialState")
+  .default;
 
 // Helpers
 // Async
@@ -46,6 +48,7 @@ extendEnvironment((bre) => {
   bre.TaskReceipt = TaskReceipt;
   // Objects
   bre.Operation = Operation;
+  bre.gelatoSysAdminInitialState = gelatoSysAdminInitialState;
   // Functions
   // Async
   bre.sleep = sleep;

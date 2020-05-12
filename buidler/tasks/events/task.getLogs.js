@@ -99,11 +99,7 @@ export default task(
           }
         }
 
-        if (!eventlogs.length) {
-          throw new Error(
-            `\n event-getlogs: ${contractname}.${eventname} not found \n`
-          );
-        }
+        if (!eventlogs.length) return [];
 
         return eventlogs;
       } catch (error) {

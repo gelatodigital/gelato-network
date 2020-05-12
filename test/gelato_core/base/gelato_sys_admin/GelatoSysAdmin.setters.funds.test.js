@@ -18,7 +18,7 @@ describe("GelatoCore - GelatoSysAdmin - Setters: FUNDS/STAKE", function () {
   beforeEach(async function () {
     // Get the ContractFactory, contract instance, and Signers here.
     GelatoCore = await ethers.getContractFactory("GelatoCore");
-    gelatoCore = await GelatoCore.deploy();
+    gelatoCore = await GelatoCore.deploy(gelatoSysAdminInitialState);
     await gelatoCore.deployed();
     [owner, notOwner] = await ethers.getSigners();
     ownerAddress = await owner.getAddress();
@@ -53,7 +53,7 @@ describe("GelatoCore - GelatoSysAdmin - Setters: FUNDS/STAKE", function () {
       // Every transaction and call is sent with the owner by default
       await expect(gelatoCore.withdrawSysAdminFunds(0, ownerAddress))
         .to.emit(gelatoCore, "LogSysAdminFundsWithdrawn")
-        .withArgs(initialState.sysAdminFunds, 0);
+        .withArgs(0, 0);
 
       expect(await gelatoCore.sysAdminFunds()).to.be.equal(0);
     });
@@ -62,7 +62,7 @@ describe("GelatoCore - GelatoSysAdmin - Setters: FUNDS/STAKE", function () {
       // Every transaction and call is sent with the owner by default
       await expect(gelatoCore.withdrawSysAdminFunds(69420, ownerAddress))
         .to.emit(gelatoCore, "LogSysAdminFundsWithdrawn")
-        .withArgs(initialState.sysAdminFunds, 0);
+        .withArgs(0, 0);
 
       expect(await gelatoCore.sysAdminFunds()).to.be.equal(0);
     });

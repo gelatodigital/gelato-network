@@ -5,6 +5,7 @@ const { expect } = require("chai");
 // GelatoProviders creation time variable values
 import initialStateGelatoGasPriceOracle from "../gelato_gas_price_oracle/GelatoGasPriceOracle.initialState";
 
+
 describe("GelatoCore - GelatoProviders - Getters: LIQUIDITY", function () {
   // We define the ContractFactory and Address variables here and assign them in
   // a beforeEach hook.
@@ -24,9 +25,8 @@ describe("GelatoCore - GelatoProviders - Getters: LIQUIDITY", function () {
       "GelatoGasPriceOracle"
     );
 
-    gelatoCore = await GelatoCore.deploy();
+    gelatoCore = await GelatoCore.deploy(gelatoSysAdminInitialState);
     gelatoGasPriceOracle = await GelatoGasPriceOracleFactory.deploy(
-      gelatoCore.address,
       initialStateGelatoGasPriceOracle.gasPrice
     );
 

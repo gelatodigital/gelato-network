@@ -3,8 +3,20 @@ pragma solidity ^0.6.6;
 import { IGelatoGasPriceOracle } from "./IGelatoGasPriceOracle.sol";
 
 interface IGelatoSysAdmin {
+    struct GelatoSysAdminInitialState {
+        address gelatoGasPriceOracle;
+        bytes oracleRequestData;
+        uint256 gelatoMaxGas;
+        uint256 internalGasRequirement;
+        uint256 minExecutorStake;
+        uint256 executorSuccessShare;
+        uint256 sysAdminSuccessShare;
+        uint256 totalSuccessShare;
+    }
+
     // Events
     event LogGelatoGasPriceOracleSet(address indexed oldOracle, address indexed newOracle);
+    event LogOracleRequestDataSet(bytes oldData, bytes newData);
 
     event LogGelatoMaxGasSet(uint256 oldMaxGas, uint256 newMaxGas);
     event LogInternalGasRequirementSet(uint256 oldRequirment, uint256 newRequirment);
@@ -22,6 +34,11 @@ interface IGelatoSysAdmin {
     /// @dev Only callable by sysAdmin
     /// @param _newOracle Address of new oracle
     function setGelatoGasPriceOracle(address _newOracle) external;
+
+    /// @notice Assign new gas price oracle
+    /// @dev Only callable by sysAdmin
+    /// @param _requestData The encoded payload for the staticcall to the oracle.
+    function setOracleRequestData(bytes calldata _requestData) external;
 
     /// @notice Assign new maximum gas limit providers can consume in executionWrapper()
     /// @dev Only callable by sysAdmin
@@ -59,7 +76,10 @@ interface IGelatoSysAdmin {
     function EXEC_TX_OVERHEAD() external pure returns(uint256);
 
     /// @notice Addess of current Gelato Gas Price Oracle
-    function gelatoGasPriceOracle() external view returns(IGelatoGasPriceOracle);
+    function gelatoGasPriceOracle() external view returns(address);
+
+    /// @notice Getter for oracleRequestData state variable
+    function oracleRequestData() external view returns(bytes memory);
 
     /// @notice Gas limit an executor has to submit to get refunded even if actions revert
     function gelatoMaxGas() external view returns(uint256);

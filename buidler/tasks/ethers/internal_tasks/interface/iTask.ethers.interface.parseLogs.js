@@ -12,7 +12,7 @@ export default internalTask("ethers-interface-parseLogs")
         const parsedLogsWithTxHash = eventlogs.map((log) => {
           const parsedLog = contractInterface.parseLog(log);
           const parsedLogWithTxHash = {
-            parsedLog,
+            ...parsedLog,
             transactionHash: log.transactionHash,
           };
           return parsedLogWithTxHash;
@@ -21,7 +21,7 @@ export default internalTask("ethers-interface-parseLogs")
       } else {
         const parsedLog = contractInterface.parseLog(eventlogs);
         const parsedLogWithTxHash = {
-          parsedLog,
+          ...parsedLog,
           transactionHash: eventlogs.transactionHash,
         };
         return parsedLogWithTxHash;

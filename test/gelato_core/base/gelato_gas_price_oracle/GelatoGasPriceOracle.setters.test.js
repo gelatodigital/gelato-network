@@ -7,7 +7,6 @@ import initialState from "./GelatoGasPriceOracle.initialState";
 describe("GelatoCore - GelatoGasPriceOracle - Setters:", function () {
   // We define the ContractFactory and Signer variables here and assign them in
   // a beforeEach hook.
-  let GelatoCoreFactory;
   let GelatoGasPriceOracleFactory;
 
   let owner;
@@ -18,33 +17,19 @@ describe("GelatoCore - GelatoGasPriceOracle - Setters:", function () {
   let oracleAddress;
   let randomGuyAddress;
 
-  let gelatoCore;
-  let otherGelatoCore;
   let gelatoGasPriceOracle;
 
   beforeEach(async function () {
     // Get the ContractFactory, contract instance, and Signers here.
-    GelatoCoreFactory = await ethers.getContractFactory("GelatoCore");
     GelatoGasPriceOracleFactory = await ethers.getContractFactory(
       "GelatoGasPriceOracle"
     );
 
-    gelatoCore = await GelatoCoreFactory.deploy();
-    otherGelatoCore = await GelatoCoreFactory.deploy();
-
-    if (gelatoCore === otherGelatoCore) {
-      throw new Error(
-        "GelatoGasPriceOracle.setters.test: GelatoCore identical"
-      );
-    }
-
     gelatoGasPriceOracle = await GelatoGasPriceOracleFactory.deploy(
-      gelatoCore.address,
       initialState.gasPrice
     );
 
     await gelatoGasPriceOracle.deployed();
-    await gelatoCore.deployed();
 
     [owner, oracle, randomGuy] = await ethers.getSigners();
     ownerAddress = await owner.getAddress();
@@ -85,45 +70,6 @@ describe("GelatoCore - GelatoGasPriceOracle - Setters:", function () {
     });
   });
 
-  // setGelatoCore
-  describe("GelatoCore.GelatoGasPriceOracle.setGelatoCore", function () {
-    it("Should let the owner setGelatoCore", async function () {
-      // oracle
-      expect(await gelatoGasPriceOracle.gelatoCore()).to.be.equal(
-        gelatoCore.address
-      );
-
-      // setGelatoCore()
-      await expect(gelatoGasPriceOracle.setGelatoCore(otherGelatoCore.address))
-        .to.emit(gelatoGasPriceOracle, "LogGelatoCoreSet")
-        .withArgs(gelatoCore.address, otherGelatoCore.address);
-
-      // oracle
-      expect(await gelatoGasPriceOracle.gelatoCore()).to.be.equal(
-        otherGelatoCore.address
-      );
-    });
-
-    it("Should NOT let non-Owners setOracle", async function () {
-      // setGelatoCore: revert
-      await expect(
-        gelatoGasPriceOracle
-          .connect(randomGuy)
-          .setGelatoCore(otherGelatoCore.address)
-      ).to.be.revertedWith("Ownable: caller is not the owner");
-
-      // setOracle
-      await gelatoGasPriceOracle.setOracle(oracleAddress);
-
-      // setGelatoCore: revert
-      await expect(
-        gelatoGasPriceOracle
-          .connect(oracle)
-          .setGelatoCore(otherGelatoCore.address)
-      ).to.be.revertedWith("Ownable: caller is not the owner");
-    });
-  });
-
   // setGasPrice
   describe("GelatoCore.GelatoGasPriceOracle.setGasPrice", function () {
     it("Should let the oracle setGasPrice", async function () {
@@ -145,8 +91,8 @@ describe("GelatoCore - GelatoGasPriceOracle - Setters:", function () {
         .withArgs(newGasPrice, newGasPrice.add(69420));
 
       // gasPrice
-      await expect(gelatoGasPriceOracle.getGasPrice()).to.be.revertedWith(
-        "GelatoGasPriceOracle.onlyGelatoCore"
+      expect(await gelatoGasPriceOracle.latestAnswer()).to.be.equal(
+        newGasPrice.add(69420)
       );
     });
 

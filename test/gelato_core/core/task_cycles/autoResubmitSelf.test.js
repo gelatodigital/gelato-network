@@ -52,9 +52,8 @@ describe("Gelato Actions - TASK CYCLES - AUTO-RESUBMIT-SELF", function () {
     );
     ActionDummyFactory = await ethers.getContractFactory("MockActionDummy");
 
-    gelatoCore = await GelatoCoreFactory.deploy();
+    gelatoCore = await GelatoCoreFactory.deploy(gelatoSysAdminInitialState);
     gelatoGasPriceOracle = await GelatoGasPriceOracleFactory.deploy(
-      gelatoCore.address,
       GELATO_GAS_PRICE
     );
     gelatoUserProxyFactory = await GelatoUserProxyFactoryFactory.deploy(
