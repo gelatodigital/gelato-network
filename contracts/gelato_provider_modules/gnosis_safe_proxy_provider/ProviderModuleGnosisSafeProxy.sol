@@ -4,6 +4,7 @@ pragma experimental ABIEncoderV2;
 import { GelatoProviderModuleStandard } from "../GelatoProviderModuleStandard.sol";
 import { IProviderModuleGnosisSafeProxy } from "./IProviderModuleGnosisSafeProxy.sol";
 import { Ownable } from "../../external/Ownable.sol";
+import { GelatoDebug } from "../../libraries/GelatoDebug.sol";
 import { Multisend } from "../../external/Multisend.sol";
 import {
     IGnosisSafe
@@ -18,6 +19,8 @@ contract ProviderModuleGnosisSafeProxy is
     IProviderModuleGnosisSafeProxy,
     Ownable
 {
+    using GelatoDebug for bytes;
+
     mapping(bytes32 => bool) public override isProxyExtcodehashProvided;
     mapping(address => bool) public override isMastercopyProvided;
     address public override immutable gelatoCore;
@@ -109,12 +112,12 @@ contract ProviderModuleGnosisSafeProxy is
 
     function execRevertCheck(bytes calldata _proxyReturndata)
         external
-        view
+        pure
         override
         virtual
-        returns(bool reverted)
     {
-        (reverted,) = abi.decode(_proxyReturndata, (bool,bytes));
+        (bool success, bytes memory returndata) = abi.decode(_proxyReturndata, (bool,bytes));
+        if (!success) returndata.revertWithErrorString(":ProviderModuleGnosisSafeProxy:");
     }
 
     // GnosisSafeProxy

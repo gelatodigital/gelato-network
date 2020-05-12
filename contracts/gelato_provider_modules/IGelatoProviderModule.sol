@@ -25,8 +25,9 @@ interface IGelatoProviderModule {
         view
         returns(bytes memory, bool checkReturndata);
 
-    function execRevertCheck(bytes calldata _proxyReturndata)
-        external
-        view
-        returns(bool);
+
+    /// @notice Called by GelatoCore.exec to verifiy that no revert happend on userProxy
+    /// @dev If a caught revert is detected, this fn should revert with the detected error
+    /// @param _proxyReturndata Data from GelatoCore._exec.userProxy.call(execPayload)
+    function execRevertCheck(bytes calldata _proxyReturndata) external pure;
 }

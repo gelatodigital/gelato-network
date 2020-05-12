@@ -18,13 +18,9 @@ abstract contract GelatoProviderModuleStandard is IGelatoProviderModule {
         return OK;
     }
 
-    function execRevertCheck(bytes calldata)
-        external
-        view
-        override
-        virtual
-        returns(bool reverted)
-    {
-        reverted = false;
+
+    /// @dev Overriding fns should revert with the revertMsg they detected on the userProxy
+    function execRevertCheck(bytes calldata) external pure override virtual {
+        // By default no reverts detected => do nothing
     }
 }
