@@ -301,70 +301,61 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     }
 
     function _exec(TaskReceipt memory _TR) private {
-        // We revert with an error msg in case of detected reverts
-        string memory error;
-
         // INTERACTIONS
         // execPayload and proxyReturndataCheck values read from ProviderModule
         bytes memory execPayload;
         bool proxyReturndataCheck;
 
-        try IGelatoProviderModule(_TR.task.provider.module).execPayload(
-            _TR.task.actions
-        )
+        try IGelatoProviderModule(_TR.task.provider.module).execPayload(_TR.task.actions)
             returns(bytes memory _execPayload, bool _proxyReturndataCheck)
         {
             execPayload = _execPayload;
             proxyReturndataCheck = _proxyReturndataCheck;
         } catch Error(string memory _error) {
-            error = string(abi.encodePacked("GelatoCore._exec.execPayload:", _error));
+            revert(string(abi.encodePacked("GelatoCore._exec.execPayload:", _error)));
         } catch {
-            error = "GelatoCore._exec.execPayload:undefined";
+            revert("GelatoCore._exec.execPayload:undefined");
         }
 
         // Execution via UserProxy
         bool success;
-        bytes memory returndata;
-
-        if (execPayload.length >= 4) (success, returndata) = _TR.userProxy.call(execPayload);
-        else if (bytes(error).length == 0) error = "GelatoCore._exec.execPayload: invalid";
+        bytes memory userProxyReturndata;
+        if (execPayload.length >= 4)
+            (success, userProxyReturndata) = _TR.userProxy.call(execPayload);
+        else revert("GelatoCore._exec.execPayload: invalid");
 
         // Check if actions reverts were caught by userProxy
         if (success && proxyReturndataCheck) {
-            try _TR.task.provider.module.execRevertCheck(returndata)
-                returns(bool _success)
-            {
-                success = _success;
+            try _TR.task.provider.module.execRevertCheck(userProxyReturndata) {
+                // success: no revert from providerModule signifies no revert found
             } catch Error(string memory _error) {
-                error = string(abi.encodePacked("GelatoCore._exec.execRevertCheck:", _error));
+                revert(string(abi.encodePacked("GelatoCore._exec.execRevertCheck:", _error)));
             } catch {
-                error = "GelatoCore._exec.execRevertCheck:undefined";
+                revert("GelatoCore._exec.execRevertCheck:undefined");
             }
         }
 
-        // FAILURE: reverts, caught or uncaught in userProxy.call, were detected
-        if (!success || bytes(error).length != 0) {
-            // We revert all state from userProxy.call and catch revert in exec flow
-            if (bytes(error).length == 0)
-                returndata.revertWithErrorString("GelatoCore._exec:");
-            revert(error);
-        }
-
         // SUCCESS
-        // Optional: Automated Cyclic Task Resubmission
-        if (_TR.task.autoResubmitSelf) {
-            _storeTaskReceipt(
-                _TR.userProxy,
-                _TR.task,
-                _TR.next,
-                _TR.cycle
-            );
-        }
+        if (success) {
+            // Optional: Automated Cyclic Task Resubmission
+            if (_TR.task.autoResubmitSelf) {
+                _storeTaskReceipt(
+                    _TR.userProxy,
+                    _TR.task,
+                    _TR.next,
+                    _TR.cycle
+                );
+            }
 
-        // Optional: Automated Cyclic Task Submission
-        if (_TR.cycle.length != 0) {
-            uint256 next = _TR.next == _TR.cycle.length - 1 ? 0 : _TR.next + 1;
-            _storeTaskReceipt(_TR.userProxy, _TR.cycle[_TR.next], next, _TR.cycle);
+            // Optional: Automated Cyclic Task Submission
+            if (_TR.cycle.length != 0) {
+                uint256 next = _TR.next == _TR.cycle.length - 1 ? 0 : _TR.next + 1;
+                _storeTaskReceipt(_TR.userProxy, _TR.cycle[_TR.next], next, _TR.cycle);
+            }
+        } else {
+            // FAILURE: reverts, caught or uncaught in userProxy.call, were detected
+            // We revert all state from userProxy.call and catch revert in exec flow
+            userProxyReturndata.revertWithErrorString("GelatoCore._exec:");
         }
     }
 
