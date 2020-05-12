@@ -40,6 +40,8 @@ struct TaskReceipt {
     Task[] cycle;  // optional for cyclic tasks: auto-filled multiSubmitTasks()
 }
 
+
+
 interface IGelatoCore {
     event LogTaskSubmitted(
         uint256 indexed taskReceiptId,

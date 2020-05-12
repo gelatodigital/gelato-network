@@ -13,10 +13,12 @@ export default task(
   .addFlag("log", "Logs return values to stdout")
   .setAction(async ({ gelatoprovider, log }) => {
     try {
-      gelatoprovider = await run("handleGelatoProvider", { gelatoprovider });
+      const provider = getProvider();
+      if (!gelatoprovider) gelatoprovider = await provider.getAddress();
+
       const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
-        write: true
+        write: true,
       });
       const providerFunds = await gelatoCore.providerFunds(gelatoprovider);
       const providerBalanceETH = utils.formatEther(providerFunds);
