@@ -23,6 +23,7 @@ export default task(
         throw new Error(`\n Insufficient Provider Funds\n`);
       // Gelato Provider is the 3rd signer account
       const { [providerindex]: gelatoProvider } = await ethers.getSigners();
+
       if (log) {
         console.log(
           `\n Taking account with index: ${providerindex}\
@@ -32,7 +33,7 @@ export default task(
       const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
         signer: gelatoProvider,
-        write: true
+        write: true,
       });
       const tx = await gelatoCore.unprovideFunds(withdrawamount);
       if (log) console.log(`\n\ntxHash unprovideFunds: ${tx.hash}`);

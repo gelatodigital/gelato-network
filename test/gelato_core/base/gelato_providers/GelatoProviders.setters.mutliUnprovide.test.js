@@ -59,7 +59,7 @@ describe("GelatoCore - GelatoProviders - Setters: MULTI UNPROVIDE", function () 
       "ProviderModuleGnosisSafeProxy"
     );
 
-    gelatoCore = await GelatoCore.deploy();
+    gelatoCore = await GelatoCore.deploy(gelatoSysAdminInitialState);
 
     condition = await ConditionFactory.deploy();
     action = await ActionFactory.deploy();
@@ -188,10 +188,7 @@ describe("GelatoCore - GelatoProviders - Setters: MULTI UNPROVIDE", function () 
 
       // isTaskSpecProvided
       expect(
-        await gelatoCore.isTaskSpecProvided(
-          providerAddress,
-          taskSpec
-        )
+        await gelatoCore.isTaskSpecProvided(providerAddress, taskSpec)
       ).to.be.equal("TaskSpecNotProvided");
 
       // otherTaskSpec
@@ -205,10 +202,7 @@ describe("GelatoCore - GelatoProviders - Setters: MULTI UNPROVIDE", function () 
 
       // isTaskSpecProvided
       expect(
-        await gelatoCore.isTaskSpecProvided(
-          providerAddress,
-          otherTaskSpec
-        )
+        await gelatoCore.isTaskSpecProvided(providerAddress, otherTaskSpec)
       ).to.be.equal("TaskSpecNotProvided");
 
       // providerModule: isModuleProvided

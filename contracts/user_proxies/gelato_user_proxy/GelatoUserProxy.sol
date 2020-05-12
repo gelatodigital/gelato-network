@@ -2,11 +2,14 @@ pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
 import { IGelatoUserProxy } from "./interfaces/IGelatoUserProxy.sol";
+import { GelatoDebug } from "../../libraries/GelatoDebug.sol";
 import {
     Action, Operation, Task, TaskReceipt, IGelatoCore
 } from "../../gelato_core/interfaces/IGelatoCore.sol";
 
 contract GelatoUserProxy is IGelatoUserProxy {
+
+    using GelatoDebug for bytes;
 
     address public immutable override factory;
     address public immutable override user;
@@ -116,51 +119,15 @@ contract GelatoUserProxy is IGelatoUserProxy {
         private
         noZeroAddress(_action)
     {
-        (bool success, bytes memory err) = _action.call{value: _value}(_data);
-        if (!success) {
-            // FAILURE
-            // 68: 32-location, 32-length, 4-ErrorSelector, UTF-8 err
-            if (err.length % 32 == 4) {
-                bytes4 selector;
-                assembly { selector := mload(add(0x20, err)) }
-                if (selector == 0x08c379a0) {  // Function selector for Error(string)
-                    assembly { err := add(err, 68) }
-                    revert(
-                        string(abi.encodePacked("GelatoUserProxy.callAction:", string(err)))
-                    );
-                } else {
-                    revert("GelatoUserProxy.callAction:NoErrorSelector");
-                }
-            } else {
-                revert("GelatoUserProxy.callAction:UnexpectedReturndata");
-            }
-        }
+        (bool success, bytes memory returndata) = _action.call{value: _value}(_data);
+        if (!success) returndata.revertWithErrorString("GelatoUserProxy.callAction:");
     }
 
     function delegatecallAction(address _action, bytes memory _data)
         private
         noZeroAddress(_action)
     {
-        (bool success, bytes memory err) = _action.delegatecall(_data);
-        if (!success) {
-            // FAILURE
-            // 68: 32-location, 32-length, 4-ErrorSelector, UTF-8 err
-            if (err.length % 32 == 4) {
-                bytes4 selector;
-                assembly { selector := mload(add(0x20, err)) }
-                if (selector == 0x08c379a0) {  // Function selector for Error(string)
-                    assembly { err := add(err, 68) }
-                    revert(
-                        string(
-                            abi.encodePacked("GelatoUserProxy.delegatecallAction:", string(err))
-                        )
-                    );
-                } else {
-                    revert("GelatoUserProxy.delegatecallAction:NoErrorSelector");
-                }
-            } else {
-                revert("GelatoUserProxy.delegatecallAction:UnexpectedReturndata");
-            }
-        }
+        (bool success, bytes memory returndata) = _action.delegatecall(_data);
+        if (!success) returndata.revertWithErrorString("GelatoUserProxy.delegatecallAction:");
     }
 }

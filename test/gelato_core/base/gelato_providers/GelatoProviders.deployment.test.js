@@ -5,6 +5,7 @@ import { expect } from "chai";
 // GelatoProviders creation time variable values
 import initialState from "./GelatoProviders.initialState";
 
+
 describe("GelatoCore - GelatoProviders - Deployment", function () {
   // We define the ContractFactory and Signer variables here and assign them in
   // a beforeEach hook.
@@ -15,7 +16,7 @@ describe("GelatoCore - GelatoProviders - Deployment", function () {
   before(async function () {
     // Get the ContractFactory and Signers here.
     GelatoCore = await ethers.getContractFactory("GelatoCore");
-    gelatoCore = await GelatoCore.deploy();
+    gelatoCore = await GelatoCore.deploy(gelatoSysAdminInitialState);
     const [account] = await ethers.getSigners();
     testAddress = await account.getAddress();
   });

@@ -4,6 +4,8 @@ import { constants, utils } from "ethers";
 const GAS_PRICE = utils.parseUnits("9", "gwei");
 
 export default task("gc-setupgelato")
+  .addOptionalParam("providefunds", "providerFunds to supply in ETH")
+  .addOptionalParam("gelatoexecutor", "the gelatoExecutor to assign")
   .addFlag("events", "Logs parsed Event Logs to stdout")
   .addFlag("log")
   .setAction(async (taskArgs) => {
@@ -29,47 +31,26 @@ export default task("gc-setupgelato")
         log: taskArgs.log,
       });
 
-      // GelatoGasPriceOracle
-      const gelatoGasPriceOracle = await run("deploy", {
-        contractname: "GelatoGasPriceOracle",
-        constructorargs: [gelatoCore.address, GAS_PRICE.toString()],
-        events: taskArgs.events,
-        log: taskArgs.log,
-      });
-
       // === GelatoCore setup ===
-      const { 1: gelatoExecutor, 2: gelatoProvider } = await ethers.signers();
-      const gelatoExecutorAddress = await gelatoExecutor.getAddress();
-
-      // GelatoSysAdmin
-      await run("gc-setgelatogaspriceoracle", {
-        gelatocoreaddress: gelatoCore.address,
-        oracle: gelatoGasPriceOracle.address,
-        events: taskArgs.events,
-        log: taskArgs.log,
-      });
-
       // Executor
       await run("gc-stakeexecutor", {
         gelatocoreaddress: gelatoCore.address,
-        executorindex: 1,
         events: taskArgs.events,
         log: taskArgs.log,
       });
 
       await run("gc-multiprovide", {
         gelatocoreaddress: gelatoCore.address,
-        providerindex: 2,
-        funds: "1",
-        gelatoexecutor: gelatoExecutorAddress,
-        // events: taskArgs.events,  < = BUIDLER EVM events bug for structs
+        funds: taskArgs.providefunds,
+        gelatoexecutor: taskArgs.executor,
+        events: taskArgs.events,
         log: taskArgs.log,
       });
 
       if (taskArgs.log) {
         console.log(`
             GelatoCore: ${gelatoCore.address}\n
-            GelatoGasPriceOracle: ${gelatoGasPriceOracle.address}\n
+            GelatoGasPriceOracle: ${await gelatoCore.gelatoGasPriceOracle()}\n
         `);
       }
     } catch (error) {

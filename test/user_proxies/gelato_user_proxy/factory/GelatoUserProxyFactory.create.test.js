@@ -36,7 +36,7 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE", function () {
       "GelatoUserProxyFactory"
     );
 
-    gelatoCore = await GelatoCoreFactory.deploy();
+    gelatoCore = await GelatoCoreFactory.deploy(gelatoSysAdminInitialState);
     gelatoUserProxyFactory = await GelatoUserProxyFactoryFactory.deploy(
       gelatoCore.address
     );

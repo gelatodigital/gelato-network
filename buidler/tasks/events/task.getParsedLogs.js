@@ -108,12 +108,11 @@ export default task(
           // filterkey/value
           if (taskArgs.filterkey) {
             parsedLogs = parsedLogs.filter((parsedLog) =>
-              checkNestedObj(parsedLog.parsedLog, "values", taskArgs.filterkey)
+              checkNestedObj(parsedLog, "values", taskArgs.filterkey)
             );
             if (taskArgs.filtervalue) {
               parsedLogs = parsedLogs.filter((parsedLog) => {
-                const filteredValue =
-                  parsedLog.parsedLog.values[taskArgs.filterkey];
+                const filteredValue = parsedLog.values[taskArgs.filterkey];
                 return taskArgs.strcmp
                   ? filteredValue.toString() === taskArgs.filtervalue.toString()
                   : filteredValue == taskArgs.filtervalue;
@@ -123,10 +122,10 @@ export default task(
           // Mutate parsedLog to contain values only
           for (const [index, parsedLog] of parsedLogs.entries()) {
             const copy = {};
-            for (const key in parsedLog.parsedLog.values) {
+            for (const key in parsedLog.values) {
               copy[key] = taskArgs.stringify
-                ? parsedLog.parsedLog.values[key].toString()
-                : parsedLog.parsedLog.values[key];
+                ? parsedLog.values[key].toString()
+                : parsedLog.values[key];
             }
             parsedLogs[index] = copy;
           }
@@ -146,8 +145,8 @@ export default task(
           for (const [index, parsedLog] of parsedLogs.entries()) {
             parsedLogs[index] = {
               [taskArgs.property]: taskArgs.stringify
-                ? parsedLog.parsedLog.values[taskArgs.property].toString()
-                : parsedLog.parsedLog.values[taskArgs.property],
+                ? parsedLog.values[taskArgs.property].toString()
+                : parsedLog.values[taskArgs.property],
             };
           }
         }

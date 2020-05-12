@@ -40,7 +40,7 @@ describe("User Proxies - GelatoUserProxy - CONSTRUCTOR", function () {
 
     ActionFactory = await ethers.getContractFactory("MockActionDummy");
 
-    gelatoCore = await GelatoCoreFactory.deploy();
+    gelatoCore = await GelatoCoreFactory.deploy(gelatoSysAdminInitialState);
     gelatoUserProxyFactory = await GelatoUserProxyFactoryFactory.deploy(
       gelatoCore.address
     );

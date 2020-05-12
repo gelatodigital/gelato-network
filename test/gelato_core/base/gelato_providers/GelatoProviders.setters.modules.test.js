@@ -53,7 +53,7 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
       "MockConditionDummy"
     );
 
-    gelatoCore = await GelatoCoreFactory.deploy();
+    gelatoCore = await GelatoCoreFactory.deploy(gelatoSysAdminInitialState);
     await gelatoCore.deployed();
 
     gelatoUserProxyFactory = await GelatoUserProxyFactoryFactory.deploy(

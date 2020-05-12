@@ -68,7 +68,7 @@ describe("GelatoCore.exec", function () {
 
     // Deploy Gelato Core with SysAdmin + Stake Executor
     const GelatoCore = await ethers.getContractFactory("GelatoCore", sysAdmin);
-    gelatoCore = await GelatoCore.deploy();
+    gelatoCore = await GelatoCore.deploy(gelatoSysAdminInitialState);
     await gelatoCore.deployed();
 
     await gelatoCore
@@ -81,7 +81,6 @@ describe("GelatoCore.exec", function () {
       sysAdmin
     );
     const gelatoGasPriceOracle = await GelatoGasPriceOracle.deploy(
-      gelatoCore.address,
       GELATO_GAS_PRICE
     );
     await gelatoGasPriceOracle.deployed();

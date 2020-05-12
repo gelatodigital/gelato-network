@@ -10,7 +10,7 @@ const SALT_NONCE = 42069;
 
 describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
   // Tests use for loops that have timed out on coverage (ganache)
-  this.timeout(60000);
+  this.timeout(90000);
 
   let GelatoCoreFactory;
   let GelatoGasPriceOracleFactory;
@@ -78,9 +78,8 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
       "MockConditionDummy"
     );
 
-    gelatoCore = await GelatoCoreFactory.deploy();
+    gelatoCore = await GelatoCoreFactory.deploy(gelatoSysAdminInitialState);
     gelatoGasPriceOracle = await GelatoGasPriceOracleFactory.deploy(
-      gelatoCore.address,
       GELATO_GAS_PRICE
     );
     gelatoUserProxyFactory = await GelatoUserProxyFactoryFactory.deploy(
