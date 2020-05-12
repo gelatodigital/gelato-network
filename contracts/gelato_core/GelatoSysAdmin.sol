@@ -28,17 +28,6 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
     uint256 public override totalSuccessShare;
     uint256 public override sysAdminFunds;
 
-    constructor() public {
-        gelatoGasPriceOracle = 0xA417221ef64b1549575C977764E651c9FAB50141; // LINK oracle
-        oracleRequestData = abi.encodeWithSelector(0x50d25bcd); // "latestAnswer()" selector
-        gelatoMaxGas = 7000000;  // 7 mio initial
-        internalGasRequirement = 100000;
-        minExecutorStake = 1000000000000000000;  // production: 1 ETH
-        executorSuccessShare = 50;  // 50% of successful execution cost
-        sysAdminSuccessShare = 20;  // 20% of successful execution cost
-        totalSuccessShare = 70;
-    }
-
     // == The main functions of the Sys Admin (DAO) ==
     // The oracle defines the system-critical gelatoGasPrice
     function setGelatoGasPriceOracle(address _newOracle) external override onlyOwner {

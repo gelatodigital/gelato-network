@@ -4,6 +4,7 @@ import { expect } from "chai";
 
 import initialState from "./GelatoProviders.initialState";
 
+
 describe("GelatoCore - GelatoProviders - Setters: MULTI PROVIDE", function () {
   // We define the ContractFactory and Address variables here and assign them in
   // a beforeEach hook.
@@ -63,7 +64,7 @@ describe("GelatoCore - GelatoProviders - Setters: MULTI PROVIDE", function () {
 
     const multisend = await Multisend.deploy();
 
-    gelatoCore = await GelatoCore.deploy();
+    gelatoCore = await GelatoCore.deploy(gelatoSysAdminInitialState);
 
     condition = await ConditionFactory.deploy();
     action = await ActionFactory.deploy();

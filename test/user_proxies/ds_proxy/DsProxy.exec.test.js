@@ -44,7 +44,7 @@ describe("Testing DS Proxy Module delpoyment and ds proxy execution with gelato"
 
     // Deploy Gelato Core with SysAdmin + Stake Executor
     const GelatoCore = await ethers.getContractFactory("GelatoCore", sysAdmin);
-    gelatoCore = await GelatoCore.deploy();
+    gelatoCore = await GelatoCore.deploy(gelatoSysAdminInitialState);
     await gelatoCore.deployed();
 
     await gelatoCore

@@ -12,7 +12,7 @@ const {
   minExecutorStake,
   executorSuccessShare,
   sysAdminSuccessShare,
-  sysAdminFunds,
+  totalSuccessShare,
 } = initialState;
 
 describe("GelatoCore - GelatoSysAdmin - Deployment", function () {
@@ -25,7 +25,7 @@ describe("GelatoCore - GelatoSysAdmin - Deployment", function () {
   before(async function () {
     // Get the ContractFactory and Signers here.
     GelatoCore = await ethers.getContractFactory("GelatoCore");
-    gelatoCore = await GelatoCore.deploy();
+    gelatoCore = await GelatoCore.deploy(gelatoSysAdminInitialState);
     [owner] = await ethers.getSigners();
   });
 
@@ -47,6 +47,6 @@ describe("GelatoCore - GelatoSysAdmin - Deployment", function () {
     expect(await gelatoCore.sysAdminSuccessShare()).to.equal(
       sysAdminSuccessShare
     );
-    expect(await gelatoCore.sysAdminFunds()).to.equal(sysAdminFunds);
+    expect(await gelatoCore.totalSuccessShare()).to.equal(totalSuccessShare);
   });
 });

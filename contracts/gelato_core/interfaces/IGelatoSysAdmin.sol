@@ -3,6 +3,17 @@ pragma solidity ^0.6.6;
 import { IGelatoGasPriceOracle } from "./IGelatoGasPriceOracle.sol";
 
 interface IGelatoSysAdmin {
+    struct GelatoSysAdminInitialState {
+        address gelatoGasPriceOracle;
+        bytes oracleRequestData;
+        uint256 gelatoMaxGas;
+        uint256 internalGasRequirement;
+        uint256 minExecutorStake;
+        uint256 executorSuccessShare;
+        uint256 sysAdminSuccessShare;
+        uint256 totalSuccessShare;
+    }
+
     // Events
     event LogGelatoGasPriceOracleSet(address indexed oldOracle, address indexed newOracle);
     event LogOracleRequestDataSet(bytes oldData, bytes newData);

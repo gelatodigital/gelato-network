@@ -18,6 +18,18 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     using GelatoDebug for bytes;
     using SafeMath for uint256;
 
+    // Setting State Vars for GelatoSysAdmin
+    constructor(GelatoSysAdminInitialState memory _) public {
+        gelatoGasPriceOracle = _.gelatoGasPriceOracle;
+        oracleRequestData = _.oracleRequestData;
+        gelatoMaxGas = _.gelatoMaxGas;
+        internalGasRequirement = _.internalGasRequirement;
+        minExecutorStake = _.minExecutorStake;
+        executorSuccessShare = _.executorSuccessShare;
+        sysAdminSuccessShare = _.sysAdminSuccessShare;
+        totalSuccessShare = _.totalSuccessShare;
+    }
+
     // ================  STATE VARIABLES ======================================
     // TaskReceiptIds
     uint256 public override currentTaskReceiptId;

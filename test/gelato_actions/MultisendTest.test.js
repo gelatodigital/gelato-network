@@ -3,7 +3,6 @@
 const { expect } = require("chai");
 const { run, ethers } = require("@nomiclabs/buidler");
 
-//
 const GELATO_GAS_PRICE = ethers.utils.parseUnits("8", "gwei");
 
 // ##### Gnosis Action Test Cases #####
@@ -61,7 +60,7 @@ describe("Multisend with Gelato User Proxy Test", function () {
 
     // Deploy Gelato Core with SysAdmin + Stake Executor
     const GelatoCore = await ethers.getContractFactory("GelatoCore", sysAdmin);
-    gelatoCore = await GelatoCore.deploy();
+    gelatoCore = await GelatoCore.deploy(gelatoSysAdminInitialState);
     await gelatoCore
       .connect(executor)
       .stakeExecutor({ value: ethers.utils.parseUnits("1", "ether") });

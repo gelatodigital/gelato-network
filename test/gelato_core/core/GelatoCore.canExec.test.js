@@ -52,7 +52,7 @@ describe("GelatoCore.canExec", function () {
 
     // Deploy Gelato Core with SysAdmin + Stake Executor
     const GelatoCore = await ethers.getContractFactory("GelatoCore", sysAdmin);
-    gelatoCore = await GelatoCore.deploy();
+    gelatoCore = await GelatoCore.deploy(gelatoSysAdminInitialState);
     await gelatoCore.deployed();
     await gelatoCore
       .connect(executor)

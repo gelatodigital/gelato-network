@@ -23,7 +23,7 @@ describe("GelatoCore - GelatoGasPriceOracle: getGasPrice", function () {
       "GelatoGasPriceOracle"
     );
 
-    gelatoCore = await GelatoCoreFactory.deploy();
+    gelatoCore = await GelatoCoreFactory.deploy(gelatoSysAdminInitialState);
     gelatoGasPriceOracle = await GelatoGasPriceOracleFactory.deploy(
       initialState.gasPrice
     );

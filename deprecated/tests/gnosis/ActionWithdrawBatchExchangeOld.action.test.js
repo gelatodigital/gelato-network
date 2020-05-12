@@ -2,6 +2,7 @@
 // => only dependency we need is "chai"
 const { expect } = require("chai");
 const { run, ethers } = require("@nomiclabs/buidler");
+
 const FEE_USD = 3;
 // (10 ** 18 * (FEE_USD * 10 ** 18)) / 172040000000000000000 - 1;
 const FEE_ETH = ethers.utils
@@ -57,7 +58,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
 
     // Deploy Gelato Core with SysAdmin + Stake Executor
     const GelatoCore = await ethers.getContractFactory("GelatoCore", sysAdmin);
-    gelatoCore = await GelatoCore.deploy();
+    gelatoCore = await GelatoCore.deploy(gelatoSysAdminInitialState);
     await gelatoCore
       .connect(executor)
       .stakeExecutor({ value: ethers.utils.parseUnits("1", "ether") });
