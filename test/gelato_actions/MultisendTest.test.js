@@ -150,7 +150,7 @@ describe("Multisend with Gelato User Proxy Test", function () {
     // Create UserProxy
     const createTx = await gelatoUserProxyFactory
       .connect(seller)
-      .create([], [], false);
+      .create([], [], [0], [0], false);
     await createTx.wait();
     userProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
       sellerAddress

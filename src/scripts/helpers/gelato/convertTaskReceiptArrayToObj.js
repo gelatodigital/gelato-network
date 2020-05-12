@@ -53,41 +53,25 @@ const TERMS_OK_CHECK = 4;
 const PROVIDER = 0;
 const CONDITIONS = 1;
 const ACTIONS = 2;
-const EXPIRY_DATE = 3;
-const AUTO_RESUBMIT_SELF = 4;
 
 // TaskReceipt
 const ID = 0;
 const USER_PROXY = 1;
-const TASK = 2;
-const NEXT = 3;
-const CYCLE = 4;
+const INDEX = 2;
+const CYCLE = 3;
+const EXPIRY_DATE = 4;
+const ROUNDS = 5;
 
 function convertTaskReceiptArrayToObj(taskReceiptArray) {
-  const provider = _convertToProviderObj(taskReceiptArray[TASK][PROVIDER]);
-
-  const conditions = _convertToArrayOfConditionObjs(
-    taskReceiptArray[TASK][CONDITIONS]
-  );
-
-  const actions = _convertToArrayOfActionObjs(taskReceiptArray[TASK][ACTIONS]);
-
   const cycle = _convertToArrayOfTaskObjs(taskReceiptArray[CYCLE]);
-
-  const task = new Task({
-    provider,
-    conditions,
-    actions,
-    expiryDate: taskReceiptArray[TASK][EXPIRY_DATE],
-    autoResubmitSelf: taskReceiptArray[TASK][AUTO_RESUBMIT_SELF],
-  });
 
   const taskReceiptObj = new TaskReceipt({
     id: taskReceiptArray[ID],
     userProxy: taskReceiptArray[USER_PROXY],
-    task,
-    next: taskReceiptArray[TASK][NEXT],
+    index: taskReceiptArray[INDEX],
     cycle: cycle ? cycle : [],
+    expiryDate: taskReceiptArray[EXPIRY_DATE],
+    rounds: taskReceiptArray[ROUNDS],
   });
 
   return taskReceiptObj;
@@ -135,8 +119,6 @@ function _convertToArrayOfTaskObjs(cycleLog) {
       provider: _convertToProviderObj(task[PROVIDER]),
       conditions: _convertToArrayOfConditionObjs(task[CONDITIONS]),
       actions: _convertToArrayOfActionObjs(task[ACTIONS]),
-      expiryDate: task[EXPIRY_DATE],
-      autoResubmitSelf: task[AUTO_RESUBMIT_SELF],
     });
     tasks.push(task);
   }

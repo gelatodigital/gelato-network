@@ -14,14 +14,16 @@ contract ScriptsCreateGnosisSafeProxyAndSubmit is
         address _mastercopy,
         bytes memory _initializer,
         IGelatoCore _gelatoCore,
-        TaskReceipt memory _TR
+        TaskReceipt memory _TR,
+        uint256 _expiryDate,
+        uint256 _rounds
     )
         public
         payable
         override
     {
         create(_mastercopy, _initializer);
-        _gelatoCore.submitTask(_TR.task);
+        _gelatoCore.submitTask(_TR.cycle[0], _expiryDate, _rounds);
     }
 
     function createTwo(
@@ -29,13 +31,15 @@ contract ScriptsCreateGnosisSafeProxyAndSubmit is
         bytes memory _initializer,
         uint256 _saltNonce,
         IGelatoCore _gelatoCore,
-        TaskReceipt memory _TR
+        TaskReceipt memory _TR,
+        uint256 _expiryDate,
+        uint256 _rounds
     )
         public
         payable
         override
     {
         createTwo(_mastercopy, _initializer, _saltNonce);
-        _gelatoCore.submitTask(_TR.task);
+        _gelatoCore.submitTask(_TR.cycle[0], _expiryDate, _rounds);
     }
 }

@@ -93,10 +93,11 @@ interface IGelatoProviders {
 
     /// @notice Validate if selected TaskSpec is whitelisted by provider and that current gelatoGasPrice is below GasPriceCeil
     /// @dev If gasPriceCeil is != 0, Task Spec is whitelisted
-    /// @param _TR Task Receipt defined in IGelatoCore
+    /// @param _userProxy userProxy passed by GelatoCore during submission and exec
+    /// @param _task Task defined in IGelatoCore
     /// @param _gelatoGasPrice Task Receipt defined in IGelatoCore
     /// @return res Expected to return "OK"
-    function providerCanExec(TaskReceipt calldata _TR, uint256 _gelatoGasPrice)
+    function providerCanExec(address _userProxy, Task calldata _task, uint256 _gelatoGasPrice)
         external
         view
         returns(string memory res);

@@ -8,7 +8,9 @@ interface IScriptsCreateGnosisSafeProxyAndSubmit {
         address _mastercopy,
         bytes calldata _initializer,
         IGelatoCore _gelatoCore,
-        TaskReceipt calldata _TR
+        TaskReceipt calldata _TR,
+        uint256 _expiryDate,
+        uint256 _rounds
     ) external payable; // address userProxy
 
     function createTwo(
@@ -16,6 +18,8 @@ interface IScriptsCreateGnosisSafeProxyAndSubmit {
         bytes calldata _initializer,
         uint256 _saltNonce,
         IGelatoCore _gelatoCore,
-        TaskReceipt calldata _TR
+        TaskReceipt calldata _TR,
+        uint256 _expiryDate,
+        uint256 _rounds
     ) external payable;
 }

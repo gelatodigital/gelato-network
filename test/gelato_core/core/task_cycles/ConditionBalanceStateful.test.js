@@ -58,9 +58,7 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
       "GelatoGasPriceOracle",
       sysAdmin
     );
-    gelatoGasPriceOracle = await GelatoGasPriceOracle.deploy(
-      GELATO_GAS_PRICE
-    );
+    gelatoGasPriceOracle = await GelatoGasPriceOracle.deploy(GELATO_GAS_PRICE);
     await gelatoGasPriceOracle.deployed();
 
     // Set gas price oracle on core
@@ -96,7 +94,7 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
     // Create UserProxy
     const createTx = await gelatoUserProxyFactory
       .connect(seller)
-      .create([], [], false);
+      .create([], [], [0], [0], false);
     await createTx.wait();
     userProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
       sellerAddress
@@ -208,7 +206,7 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
     const submitTaskData = await run("abi-encode-withselector", {
       contractname: "GelatoCore",
       functionname: "submitTask",
-      inputs: [task],
+      inputs: [task, 0, 0],
     });
 
     const actionSubmitTaskStruct = new Action({
@@ -220,7 +218,8 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
     const taskReceipt = new TaskReceipt({
       id: 1,
       userProxy: userProxyAddress,
-      task,
+      cycle: [task],
+      rounds: 0,
     });
 
     await userProxy
@@ -329,13 +328,12 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
       provider: gelatoProvider,
       conditions: [conditionBalanceStatefulStruct],
       actions: [mockActionDummyStruct, actionSetRefStruct],
-      autoResubmitSelf: true,
     });
 
     const submitTaskData = await run("abi-encode-withselector", {
       contractname: "GelatoCore",
       functionname: "submitTask",
-      inputs: [task],
+      inputs: [task, 0, 0],
     });
 
     const actionSubmitTaskStruct = new Action({
@@ -347,7 +345,8 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
     const taskReceipt = new TaskReceipt({
       id: 1,
       userProxy: userProxyAddress,
-      task,
+      cycle: [task],
+      rounds: 0,
     });
 
     await expect(

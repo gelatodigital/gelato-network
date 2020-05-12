@@ -138,7 +138,6 @@ describe("Gelato Actions - TASK CYCLES - AUTO-RESUBMIT-SELF", function () {
     chainedTask = new Task({
       provider: gelatoProvider,
       actions: [actionDummyStruct],
-      autoResubmitSelf: true,
     });
   });
 
@@ -148,14 +147,22 @@ describe("Gelato Actions - TASK CYCLES - AUTO-RESUBMIT-SELF", function () {
     const chainedTaskReceipt = new TaskReceipt({
       id: chainedTaskReceiptId,
       userProxy: userProxyAddress,
-      task: chainedTask,
+      cycle: [chainedTask],
+      rounds: 0,
     });
     let chainedTaskReceiptHash = await gelatoCore.hashTaskReceipt(
       chainedTaskReceipt
     );
 
     await expect(
-      gelatoUserProxyFactory.createTwo(SALT_NONCE, [], [chainedTask], false)
+      gelatoUserProxyFactory.createTwo(
+        SALT_NONCE,
+        [],
+        [chainedTask],
+        [0],
+        [0],
+        false
+      )
     )
       .to.emit(gelatoUserProxyFactory, "LogCreation")
       .withArgs(userAddress, userProxyAddress, 0)

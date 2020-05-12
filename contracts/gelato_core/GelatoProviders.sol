@@ -90,16 +90,16 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     }
 
     // GelatoCore canExec Gate
-    function providerCanExec(TaskReceipt memory _TR, uint256 _gelatoGasPrice)
+    function providerCanExec(address _userProxy, Task memory _task, uint256 _gelatoGasPrice)
         public
         view
         override
         returns(string memory)
     {
-        bytes32 taskSpecHash = hashTaskSpec(_castTaskToSpec(_TR.task));
-        if (_gelatoGasPrice > taskSpecGasPriceCeil[_TR.task.provider.addr][taskSpecHash])
+        bytes32 taskSpecHash = hashTaskSpec(_castTaskToSpec(_task));
+        if (_gelatoGasPrice > taskSpecGasPriceCeil[_task.provider.addr][taskSpecHash])
             return "taskSpecGasPriceCeil-OR-notProvided";
-        return providerModuleChecks(_TR.userProxy, _TR.task);
+        return providerModuleChecks(_userProxy, _task);
     }
 
     // Provider Funding

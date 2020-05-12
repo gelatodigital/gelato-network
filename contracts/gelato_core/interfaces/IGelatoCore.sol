@@ -28,19 +28,16 @@ struct Task {
     Provider provider;
     Condition[] conditions;  // optional
     Action[] actions;
-    uint256 expiryDate;  // 0 == infinity.
-    bool autoResubmitSelf;
 }
 
 struct TaskReceipt {
     uint256 id;
     address userProxy;
-    Task task;
-    uint256 next; // optional for cyclic tasks: auto-filled by multiSubmitTask()
+    uint256 index; // optional for cyclic tasks: auto-filled by multiSubmitTask()
     Task[] cycle;  // optional for cyclic tasks: auto-filled multiSubmitTasks()
+    uint256 rounds;
+    uint256 expiryDate;
 }
-
-
 
 interface IGelatoCore {
     event LogTaskSubmitted(
@@ -75,7 +72,7 @@ interface IGelatoCore {
     /// @dev In submitTask the msg.sender must be the same as _userProxy here.
     /// @param _userProxy The userProxy from which the task will be submitted.
     /// @param _task Selected provider, conditions, actions, expiry date of the task
-    function canSubmitTask(address _userProxy, Task calldata _task)
+    function canSubmitTask(address _userProxy, Task calldata _task, uint256 _exipiryDate)
         external
         view
         returns(string memory);
@@ -83,12 +80,12 @@ interface IGelatoCore {
     /// @notice Submit a gelato task that will be executed under the specified conditions
     /// @dev This function must be called from a contract account provided by Provider
     /// @param _task Selected provider, conditions, actions, expiry date of the task
-    function submitTask(Task calldata _task) external;
+    function submitTask(Task calldata _task, uint256 _exipiryDate, uint256 _rounds) external;
 
     /// @notice Submit a repeated sequence of tasks to be executed, starting with the first.
     /// @dev This function must be called from a contract account provided by Provider
     /// @param _tasks Selected provider, conditions, actions, expiry date of the task
-    function submitTaskCycle(Task[] calldata _tasks) external;
+    function submitTaskCycle(Task[] calldata _tasks, uint256 _exipiryDate, uint256 _rounds) external;
 
     // ================  Exec Suite =========================
     /// @notice Off-chain API for executors to check, if a TaskReceipt is executable
@@ -134,4 +131,5 @@ interface IGelatoCore {
     /// @param _taskReceiptId Id of taskReceipt emitted in submission event
     /// @return hash of taskReceipt
     function taskReceiptHash(uint256 _taskReceiptId) external view returns(bytes32);
+
 }

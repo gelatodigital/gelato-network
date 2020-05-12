@@ -13,13 +13,13 @@ contract MockActionChainedDummy is GelatoActionsStandard {
 
     constructor(GelatoCore _gelatoCore) public { gelatoCore = _gelatoCore; }
 
-    function action(Task memory _task)
+    function action(Task memory _task, uint256 _expiryDate, uint256 _rounds)
         public
         payable
         virtual
     {
         // Submit:Task Chain continues with Updated Payloads
-        try gelatoCore.submitTask(_task) {
+        try gelatoCore.submitTask(_task, _expiryDate, _rounds) {
         } catch Error(string memory error) {
             revert(string(abi.encodePacked("MockActionChainedDummy.submitTask", error)));
         } catch {
@@ -37,7 +37,7 @@ contract MockActionChainedDummy is GelatoActionsStandard {
         returns(string memory)
     {
         // Decode: Calldata Array actionData without Selector
-        (Task memory task) = abi.decode(_actionData[4:], (Task));
+        (Task memory task, , ) = abi.decode(_actionData[4:], (Task, uint256, uint256));
 
         // Else: Check and Return current contract actionTermsOk
         return termsOk(_userProxy, task);

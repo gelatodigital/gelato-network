@@ -8,6 +8,9 @@ const GELATO_GAS_PRICE = utils.parseUnits("10", "gwei");
 
 const SALT_NONCE = 42069;
 
+const EXPIRY_DATE = 0;
+const ROUNDS = 1;
+
 describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
   // Tests use for loops that have timed out on coverage (ganache)
   this.timeout(90000);
@@ -201,15 +204,16 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
     interceptTaskReceiptAsObj = new TaskReceipt({
       id: 0,
       userProxy: userProxyAddress,
-      task: task1,
+      cycle: [task1],
+      rounds: ROUNDS,
     });
 
     // TaskReceipt: CyclicTask1
     cyclicTask1ReceiptAsObj = new TaskReceipt({
       id: 1,
       userProxy: userProxyAddress,
-      task: task1, // dynamic
-      next: 1, // dynamic: auto-filled by GelatoCore upon cycle creation
+      rounds: 0,
+      index: 0, // dynamic: auto-filled by GelatoCore upon cycle creation
       cycle: [task1, task2], // static: auto-filled by GelatoCore upon cycle creation
     });
 
@@ -217,8 +221,8 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
     cyclicTask2ReceiptAsObj = new TaskReceipt({
       id: 1,
       userProxy: userProxyAddress,
-      task: task2, // dynamic
-      next: 0, // After first execution, next will be placed to 0
+      rounds: 0,
+      index: 1, // After first execution, next will be placed to 0
       cycle: [task1, task2], // static
     });
   });
@@ -228,7 +232,14 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
 
     // CreateTwo userProxy and submit interceptTask in one tx
     await expect(
-      gelatoUserProxyFactory.createTwo(SALT_NONCE, [], [task1, task2], true)
+      gelatoUserProxyFactory.createTwo(
+        SALT_NONCE,
+        [],
+        [task1, task2],
+        [0],
+        [0],
+        true
+      )
     )
       .to.emit(gelatoUserProxyFactory, "LogCreation")
       .withArgs(userAddress, userProxyAddress, 0)
@@ -262,10 +273,9 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
           // console.log("\nIntercept");
 
           // Submit normal task1 (ActionDummy-1: true)
-          await expect(gelatoUserProxy.submitTask(task1)).to.emit(
-            gelatoCore,
-            "LogTaskSubmitted"
-          );
+          await expect(
+            gelatoUserProxy.submitTask(task1, EXPIRY_DATE, ROUNDS)
+          ).to.emit(gelatoCore, "LogTaskSubmitted");
 
           // Check currentTaskCycleReceiptId
           expect(await gelatoCore.currentTaskReceiptId()).to.equal(
