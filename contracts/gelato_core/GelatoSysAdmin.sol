@@ -4,12 +4,14 @@ import { IGelatoSysAdmin } from "./interfaces/IGelatoSysAdmin.sol";
 import { Ownable } from "../external/Ownable.sol";
 import { IGelatoGasPriceOracle } from "./interfaces/IGelatoGasPriceOracle.sol";
 import { Address } from "../external/Address.sol";
+import { GelatoDebug } from "../libraries/GelatoDebug.sol";
 import { SafeMath } from "../external/SafeMath.sol";
 import { Math } from "../external/Math.sol";
 
 abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
 
     using Address for address payable;
+    using GelatoDebug for bytes;
     using SafeMath for uint256;
 
     // Executor compensation for estimated tx costs not accounted for by startGas
@@ -55,32 +57,11 @@ abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
         (bool success, bytes memory returndata) = gelatoGasPriceOracle.staticcall(
             oracleRequestData
         );
-        if (!success) {
-            // FAILURE
-            // 68: 32-location, 32-length, 4-ErrorSelector, UTF-8 err
-            if (returndata.length % 32 == 4) {
-                bytes4 selector;
-                assembly { selector := mload(add(0x20, returndata)) }
-                if (selector == 0x08c379a0) {  // Function selector for Error(string)
-                    assembly { returndata := add(returndata, 68) }
-                    revert(
-                        string(
-                            abi.encodePacked(
-                                "GelatoSysAdmin._getGelatoGasPrice:", string(returndata)
-                            )
-                        )
-                    );
-                } else {
-                    revert("GelatoSysAdmin._getGelatoGasPrice:NoErrorSelector");
-                }
-            } else {
-                revert("GelatoSysAdmin._getGelatoGasPrice:UnexpectedReturndata");
-            }
-        } else {
-            int oracleGasPrice = abi.decode(returndata, (int256));
-            if (oracleGasPrice <= 0) revert("GelatoSysAdmin._getGelatoGasPrice:0orBelow");
-            return uint256(oracleGasPrice);
-        }
+        if (!success)
+            returndata.revertWithErrorString("GelatoSysAdmin._getGelatoGasPrice:");
+        int oracleGasPrice = abi.decode(returndata, (int256));
+        if (oracleGasPrice <= 0) revert("GelatoSysAdmin._getGelatoGasPrice:0orBelow");
+        return uint256(oracleGasPrice);
     }
 
     // exec-tx gas

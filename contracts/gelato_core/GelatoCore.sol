@@ -3,6 +3,7 @@ pragma experimental ABIEncoderV2;
 
 import { IGelatoCore, Task, TaskReceipt } from "./interfaces/IGelatoCore.sol";
 import { GelatoExecutors } from "./GelatoExecutors.sol";
+import { GelatoDebug } from "../libraries/GelatoDebug.sol";
 import { SafeMath } from "../external/SafeMath.sol";
 import { IGelatoCondition } from "../gelato_conditions/IGelatoCondition.sol";
 import { IGelatoAction } from "../gelato_actions/IGelatoAction.sol";
@@ -14,6 +15,7 @@ import { IGelatoProviderModule } from "../gelato_provider_modules/IGelatoProvide
 /// @dev Find all NatSpecs inside IGelatoCore
 contract GelatoCore is IGelatoCore, GelatoExecutors {
 
+    using GelatoDebug for bytes;
     using SafeMath for uint256;
 
     // ================  STATE VARIABLES ======================================
@@ -330,26 +332,10 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // FAILURE: reverts, caught or uncaught in userProxy.call, were detected
         if (!success || bytes(error).length != 0) {
-            // Error string decoding for returndata from userProxy.call
-            if (bytes(error).length == 0) {
-                // 32-length, 4-ErrorSelector, UTF-8 returndata
-                if (returndata.length % 32 == 4) {
-                    bytes4 selector;
-                    assembly { selector := mload(add(0x20, returndata)) }
-                    if (selector == 0x08c379a0) {  // Function selector for Error(string)
-                        assembly { returndata := add(returndata, 68) }
-                        error = string(
-                            abi.encodePacked("GelatoCore._exec:", string(returndata))
-                        );
-                    } else {
-                        error = "GelatoCore._exec:NoErrorSelector";
-                    }
-                } else {
-                    error = "GelatoCore._exec:UnexpectedReturndata";
-                }
-            }
-            // We revert all state from userProxy.call
-            revert(error);  //  we catch this revert in exec flow
+            // We revert all state from userProxy.call and catch revert in exec flow
+            if (bytes(error).length == 0)
+                returndata.revertWithErrorString("GelatoCore._exec:");
+            revert(error);
         }
 
         // SUCCESS
