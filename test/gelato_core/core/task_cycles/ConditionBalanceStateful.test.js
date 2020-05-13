@@ -94,7 +94,7 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
     // Create UserProxy
     const createTx = await gelatoUserProxyFactory
       .connect(seller)
-      .create([], [], [0], [0], false);
+      .create([], []);
     await createTx.wait();
     userProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
       sellerAddress
@@ -206,7 +206,7 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
     const submitTaskData = await run("abi-encode-withselector", {
       contractname: "GelatoCore",
       functionname: "submitTask",
-      inputs: [task, 0, 0],
+      inputs: [[task], 0, 0],
     });
 
     const actionSubmitTaskStruct = new Action({
@@ -218,8 +218,8 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
     const taskReceipt = new TaskReceipt({
       id: 1,
       userProxy: userProxyAddress,
-      cycle: [task],
-      rounds: 0,
+      tasks: [task],
+      countdown: 0,
     });
 
     await userProxy
@@ -333,7 +333,7 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
     const submitTaskData = await run("abi-encode-withselector", {
       contractname: "GelatoCore",
       functionname: "submitTask",
-      inputs: [task, 0, 0],
+      inputs: [[task], 0, 0],
     });
 
     const actionSubmitTaskStruct = new Action({
@@ -345,8 +345,8 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
     const taskReceipt = new TaskReceipt({
       id: 1,
       userProxy: userProxyAddress,
-      cycle: [task],
-      rounds: 0,
+      tasks: [task],
+      countdown: 0,
     });
 
     await expect(

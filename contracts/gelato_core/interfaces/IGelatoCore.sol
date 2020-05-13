@@ -33,9 +33,9 @@ struct Task {
 struct TaskReceipt {
     uint256 id;
     address userProxy;
-    uint256 index; // optional for cyclic tasks: auto-filled by multiSubmitTask()
-    Task[] cycle;  // optional for cyclic tasks: auto-filled multiSubmitTasks()
-    uint256 rounds;
+    uint256 index;
+    Task[] tasks;
+    uint256 countdown;
     uint256 expiryDate;
 }
 
@@ -45,8 +45,6 @@ interface IGelatoCore {
         bytes32 indexed taskReceiptHash,
         TaskReceipt taskReceipt
     );
-
-    event LogTaskCycleSubmitted(uint256 indexed cycleId);
 
     event LogExecSuccess(
         address indexed executor,
@@ -72,20 +70,26 @@ interface IGelatoCore {
     /// @dev In submitTask the msg.sender must be the same as _userProxy here.
     /// @param _userProxy The userProxy from which the task will be submitted.
     /// @param _task Selected provider, conditions, actions, expiry date of the task
-    function canSubmitTask(address _userProxy, Task calldata _task, uint256 _exipiryDate)
+    function canSubmitTask(address _userProxy, Task calldata _task, uint256 _expiryDate)
         external
         view
         returns(string memory);
 
-    /// @notice Submit a gelato task that will be executed under the specified conditions
+    /// @notice Submit a gelato single Task or a Task Sequence. CAUTION: NOT for submitting
+    ///   multiple standalone tasks. It's either Single or Sequence.
     /// @dev This function must be called from a contract account provided by Provider
-    /// @param _task Selected provider, conditions, actions, expiry date of the task
-    function submitTask(Task calldata _task, uint256 _exipiryDate, uint256 _rounds) external;
-
-    /// @notice Submit a repeated sequence of tasks to be executed, starting with the first.
-    /// @dev This function must be called from a contract account provided by Provider
-    /// @param _tasks Selected provider, conditions, actions, expiry date of the task
-    function submitTaskCycle(Task[] calldata _tasks, uint256 _exipiryDate, uint256 _rounds) external;
+    /// @param _taskSequence This can be a single task or a sequence of tasks.
+    ///  For single Task: _countdown=1. If a sequence of tasks are to be submitted,
+    ///  the _countdown param needs to be set with caution.
+    /// @param _countdown The number of times the sequence of tasks should be run in cycles.
+    ///  1) _countdown=1: single standalone task. Only makes sense if _tasks.length == 1.
+    ///  2) _countdown=X: number of times to run the same task or the sum of total task
+    ///   executions in the case of a sequence of different tasks.
+    ///  3) _countdown=0: infinity - run the same task or sequence of tasks infinitely.
+    /// @param _expiryDate  The expiry date of the single task or task sequence,
+    //   after which no task of the sequence can be executed any more.
+    function submitTask(Task[] calldata _taskSequence, uint256 _countdown, uint256 _expiryDate)
+        external;
 
     // ================  Exec Suite =========================
     /// @notice Off-chain API for executors to check, if a TaskReceipt is executable

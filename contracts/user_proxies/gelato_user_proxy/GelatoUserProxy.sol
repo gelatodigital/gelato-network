@@ -1,7 +1,7 @@
 pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
-import { IGelatoUserProxy } from "./interfaces/IGelatoUserProxy.sol";
+import { IGelatoUserProxy, StandaloneTaskSequence } from "./interfaces/IGelatoUserProxy.sol";
 import { GelatoDebug } from "../../libraries/GelatoDebug.sol";
 import {
     Action, Operation, Task, TaskReceipt, IGelatoCore
@@ -53,8 +53,12 @@ contract GelatoUserProxy is IGelatoUserProxy {
         _;
     }
 
-    function submitTask(Task memory _task, uint256 _exipiryDate, uint256 _rounds) public override userOrFactory {
-        try IGelatoCore(gelatoCore).submitTask(_task, _exipiryDate, _rounds) {
+    function submitTask(Task[] memory _taskSequence, uint256 _countdown, uint256 _expiryDate)
+        public
+        override
+        userOrFactory
+    {
+        try IGelatoCore(gelatoCore).submitTask(_taskSequence, _countdown, _expiryDate) {
         } catch Error(string memory err) {
             revert(string(abi.encodePacked("GelatoUserProxy.submitTask:", err)));
         } catch {
@@ -62,24 +66,17 @@ contract GelatoUserProxy is IGelatoUserProxy {
         }
     }
 
-    function multiSubmitTasks(
-        Task[] memory _tasks,
-        uint256[] memory _exipiryDate,
-        uint256[] memory _rounds
-    )
+    function multiSubmitTasks(StandaloneTaskSequence[] memory _standaloneTaskSequences)
         public
         override
         userOrFactory
     {
-        for (uint i; i < _tasks.length; i++) submitTask(_tasks[i], _exipiryDate[i], _rounds[i] );
-    }
-
-    function submitTaskCycle(Task[] memory _tasks, uint256 _exipiryDate, uint256 _rounds) public override userOrFactory {
-        try IGelatoCore(gelatoCore).submitTaskCycle(_tasks, _exipiryDate, _rounds) {
-        } catch Error(string memory err) {
-            revert(string(abi.encodePacked("GelatoUserProxy.submitTaskCycle:", err)));
-        } catch {
-            revert("GelatoUserProxy.submitTaskCycle:undefinded");
+        for (uint i; i < _standaloneTaskSequences.length; i++) {
+            submitTask(
+                _standaloneTaskSequences[i].taskSequence,
+                _standaloneTaskSequences[i].countdown,
+                _standaloneTaskSequences[i].expiryDate
+            );
         }
     }
 
@@ -95,9 +92,9 @@ contract GelatoUserProxy is IGelatoUserProxy {
     function multiCancelTasks(TaskReceipt[] memory _TRs) public override onlyUser {
         try IGelatoCore(gelatoCore).multiCancelTasks(_TRs) {
         } catch Error(string memory err) {
-            revert(string(abi.encodePacked("GelatoUserProxy.cancelTask:", err)));
+            revert(string(abi.encodePacked("GelatoUserProxy.multiCancelTasks:", err)));
         } catch {
-            revert("GelatoUserProxy.cancelTask:undefinded");
+            revert("GelatoUserProxy.multiCancelTasks:undefinded");
         }
     }
 
@@ -125,6 +122,7 @@ contract GelatoUserProxy is IGelatoUserProxy {
 
     function callAction(address _action, bytes memory _data, uint256 _value)
         public
+        override
         noZeroAddress(_action)
     {
         (bool success, bytes memory returndata) = _action.call{value: _value}(_data);
@@ -133,6 +131,7 @@ contract GelatoUserProxy is IGelatoUserProxy {
 
     function delegatecallAction(address _action, bytes memory _data)
         public
+        override
         noZeroAddress(_action)
     {
         (bool success, bytes memory returndata) = _action.delegatecall(_data);

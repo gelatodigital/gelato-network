@@ -5,7 +5,7 @@ const { run, ethers } = require("@nomiclabs/buidler");
 //
 const GELATO_GAS_PRICE = ethers.utils.parseUnits("8", "gwei");
 const EXPIRY_DATE = 0;
-const ROUNDS = 1;
+const COUNTDOWN = 1;
 
 // ##### Gnosis Action Test Cases #####
 // 1. All sellTokens got converted into buy tokens, sufficient for withdrawal
@@ -127,7 +127,7 @@ describe("GelatoCore.cancelTask", function () {
     // Create UserProxy
     const createTx = await gelatoUserProxyFactory
       .connect(seller)
-      .create([], [], [0], [0], false);
+      .create([], []);
     await createTx.wait();
     userProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
       sellerAddress
@@ -160,20 +160,20 @@ describe("GelatoCore.cancelTask", function () {
     taskReceipt = new TaskReceipt({
       id: 1,
       userProxy: userProxyAddress,
-      cycle: [task],
-      rounds: ROUNDS,
+      tasks: [task],
+      countdown: COUNTDOWN,
       expiryDate: EXPIRY_DATE,
     });
 
     taskReceipt2 = new TaskReceipt({
       id: 2,
       userProxy: userProxyAddress,
-      cycle: [task],
-      rounds: ROUNDS,
+      tasks: [task],
+      countdown: COUNTDOWN,
       expiryDate: EXPIRY_DATE,
     });
 
-    await expect(userProxy.submitTask(task, EXPIRY_DATE, ROUNDS)).to.emit(
+    await expect(userProxy.submitTask([task], COUNTDOWN, EXPIRY_DATE)).to.emit(
       gelatoCore,
       "LogTaskSubmitted"
     );
@@ -211,7 +211,7 @@ describe("GelatoCore.cancelTask", function () {
   //   const submitTaskTx = await userProxy.submitTask(
   //     task,
   //     EXPIRY_DATE,
-  //     ROUNDS
+  //     COUNTDOWN
   //   );
   //   await submitTaskTx.wait();
 
@@ -224,7 +224,7 @@ describe("GelatoCore.cancelTask", function () {
 
   // it("#6: Multi Cancel tasks succesfully via GelatoCore as provider", async function () {
   //   // submit second Task
-  //   const submitTaskTx = await userProxy.submitTask(task);
+  //   const submitTaskTx = await userProxy.submitTask([task]);
   //   await submitTaskTx.wait();
 
   //   await expect(

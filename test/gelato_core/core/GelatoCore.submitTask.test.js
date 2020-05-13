@@ -6,7 +6,7 @@ const { run, ethers } = require("@nomiclabs/buidler");
 const GELATO_GAS_PRICE = ethers.utils.parseUnits("8", "gwei");
 
 const EXPIRY_DATE = 0;
-const ROUNDS = 1;
+const COUNTDOWN = 1;
 
 describe("Gelato Core - Task Submission ", function () {
   let actionWithdrawBatchExchange;
@@ -224,7 +224,7 @@ describe("Gelato Core - Task Submission ", function () {
     // Create UserProxy
     const createTx = await gelatoUserProxyFactory
       .connect(seller)
-      .create([], [], [0], [0], false);
+      .create([], []);
     await createTx.wait();
     userProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
       sellerAddress
@@ -300,7 +300,7 @@ describe("Gelato Core - Task Submission ", function () {
         actions: [action],
       });
 
-      await expect(userProxy.submitTask(task, EXPIRY_DATE, ROUNDS)).to.emit(
+      await expect(userProxy.submitTask([task], COUNTDOWN, EXPIRY_DATE)).to.emit(
         gelatoCore,
         "LogTaskSubmitted"
       );
@@ -341,7 +341,7 @@ describe("Gelato Core - Task Submission ", function () {
       });
 
       await expect(
-        userProxy.submitTask(task, EXPIRY_DATE, ROUNDS)
+        userProxy.submitTask([task], COUNTDOWN, EXPIRY_DATE)
       ).to.be.revertedWith(
         "GelatoUserProxy.submitTask:GelatoCore.canSubmitTask.isProvided:TaskSpecNotProvided"
       );
@@ -391,7 +391,7 @@ describe("Gelato Core - Task Submission ", function () {
       });
 
       await expect(
-        userProxy.submitTask(task, EXPIRY_DATE, ROUNDS)
+        userProxy.submitTask([task], COUNTDOWN, EXPIRY_DATE)
       ).to.be.revertedWith(
         "GelatoUserProxy.submitTask:GelatoCore.canSubmitTask.isProvided:TaskSpecNotProvided"
       );
@@ -432,7 +432,7 @@ describe("Gelato Core - Task Submission ", function () {
       });
 
       await expect(
-        userProxy.submitTask(task, EXPIRY_DATE, ROUNDS)
+        userProxy.submitTask([task], COUNTDOWN, EXPIRY_DATE)
       ).to.be.revertedWith("GelatoCore.canSubmitTask: executorStake");
     });
 
@@ -471,7 +471,7 @@ describe("Gelato Core - Task Submission ", function () {
       });
 
       await expect(
-        userProxy.submitTask(task, expiryDateInPast, ROUNDS)
+        userProxy.submitTask([task], expiryDateInPast, COUNTDOWN)
       ).to.be.revertedWith("GelatoCore.canSubmitTask: expiryDate");
     });
 
@@ -511,7 +511,7 @@ describe("Gelato Core - Task Submission ", function () {
 
       // GelatoCore.canSubmitTask.isProvided:InvalidProviderModule
       await expect(
-        userProxy.submitTask(task, EXPIRY_DATE, ROUNDS)
+        userProxy.submitTask([task], COUNTDOWN, EXPIRY_DATE)
       ).to.be.revertedWith(
         "GelatoCore.canSubmitTask.isProvided:InvalidProviderModule"
       );
@@ -540,7 +540,7 @@ describe("Gelato Core - Task Submission ", function () {
       });
 
       // GelatoCore.canSubmitTask.isProvided:InvalidProviderModule
-      await expect(userProxy.submitTask(task, EXPIRY_DATE, ROUNDS)).to.emit(
+      await expect(userProxy.submitTask([task], COUNTDOWN, EXPIRY_DATE)).to.emit(
         gelatoCore,
         "LogTaskSubmitted"
       );
@@ -563,7 +563,7 @@ describe("Gelato Core - Task Submission ", function () {
       // 2. Create Proxy for Provider
       const createTx = await gelatoUserProxyFactory
         .connect(provider)
-        .create([], [], [0], [0], false);
+        .create([], []);
       await createTx.wait();
 
       const providerProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
@@ -619,7 +619,7 @@ describe("Gelato Core - Task Submission ", function () {
       const submitTaskPayload = await run("abi-encode-withselector", {
         contractname: "GelatoCore",
         functionname: "submitTask",
-        inputs: [task, EXPIRY_DATE, ROUNDS],
+        inputs: [[task], COUNTDOWN, EXPIRY_DATE],
       });
 
       // addProviderModules
@@ -690,7 +690,7 @@ describe("Gelato Core - Task Submission ", function () {
       // 2. Create Proxy for Provider
       const createTx = await gelatoUserProxyFactory
         .connect(provider)
-        .create([], [], [0], [0], false);
+        .create([], []);
       await createTx.wait();
 
       const providerProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
@@ -745,7 +745,7 @@ describe("Gelato Core - Task Submission ", function () {
       const submitTaskPayload = await run("abi-encode-withselector", {
         contractname: "GelatoCore",
         functionname: "submitTask",
-        inputs: [task, EXPIRY_DATE, ROUNDS],
+        inputs: [[task], COUNTDOWN, EXPIRY_DATE],
       });
 
       // addProviderModules

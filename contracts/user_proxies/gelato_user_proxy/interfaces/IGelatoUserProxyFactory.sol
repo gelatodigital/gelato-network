@@ -1,7 +1,7 @@
 pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
-import { GelatoUserProxy } from "../GelatoUserProxy.sol";
+import { GelatoUserProxy, StandaloneTaskSequence } from "../GelatoUserProxy.sol";
 import { Action, Task } from "../../../gelato_core/interfaces/IGelatoCore.sol";
 
 interface IGelatoUserProxyFactory {
@@ -12,16 +12,10 @@ interface IGelatoUserProxyFactory {
     );
 
     /// @notice Create gelato user proxy
-    /// @param _tasks Optional tasks to create on gelato
     /// @param _actions Optional actions to execute
+    /// @param _standaloneTaskSequence Optional tasks to create on gelato
     /// @return userProxy address of deployed proxy contract
-    function create(
-        Action[] calldata _actions,
-        Task[] calldata _tasks,
-        uint256[] calldata _exipiryDate,
-        uint256[] calldata _rounds,
-        bool _cycle
-    )
+    function create(Action[] calldata _actions, StandaloneTaskSequence[] calldata _standaloneTaskSequence)
         external
         payable
         returns(GelatoUserProxy userProxy);
@@ -29,10 +23,7 @@ interface IGelatoUserProxyFactory {
     function createTwo(
         uint256 _saltNonce,
         Action[] calldata _actions,
-        Task[] calldata _tasks,
-        uint256[] calldata _exipiryDate,
-        uint256[] calldata _rounds,
-        bool cycle
+        StandaloneTaskSequence[] calldata _standaloneTaskSequence
     )
         external
         payable
