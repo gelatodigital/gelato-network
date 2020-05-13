@@ -10,7 +10,7 @@ const PROVIDED_FUNDS = utils.parseEther("1");
 
 const SALT_NONCE = 42069;
 
-const COUNTDOWN = 1;
+const SUBMISSIONS_LEFT = 1;
 
 describe("GelatoCore - EdgeCase: Malicious Provider", function () {
   let GelatoCoreFactory;
@@ -160,7 +160,7 @@ describe("GelatoCore - EdgeCase: Malicious Provider", function () {
       id: taskReceiptId,
       userProxy: userProxyAddress,
       tasks: [task],
-      countdown: COUNTDOWN,
+      submissionsLeft: SUBMISSIONS_LEFT,
     });
     taskReceiptHash = await gelatoCore.hashTaskReceipt(taskReceipt);
 
@@ -168,11 +168,7 @@ describe("GelatoCore - EdgeCase: Malicious Provider", function () {
     await expect(
       gelatoUserProxyFactory
         .connect(user)
-        .createTwo(
-          SALT_NONCE,
-          [],
-          [new StandaloneTaskSequence({ taskSequence: [task] })]
-        )
+        .createTwo(SALT_NONCE, [], [task], [0])
     )
       .to.emit(gelatoUserProxyFactory, "LogCreation")
       .withArgs(userAddress, userProxyAddress, 0)

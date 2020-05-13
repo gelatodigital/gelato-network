@@ -12,7 +12,7 @@ const GELATO_MAX_GAS = initialStateSysAdmin.gelatoMaxGas;
 const GELATO_GAS_PRICE = initialStateGasPriceOracle.gasPrice;
 
 const EXPIRY_DATE = 0;
-const COUNTDOWN = 1;
+const SUBMISSIONS_LEFT = 1;
 
 // ##### Gnosis Action Test Cases #####
 // 1. All sellTokens got converted into buy tokens, sufficient for withdrawal
@@ -135,7 +135,7 @@ describe("GelatoCore.canExec", function () {
     // Create UserProxy
     const createTx = await gelatoUserProxyFactory
       .connect(seller)
-      .create([], []);
+      .create([], [], []);
     await createTx.wait();
     userProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
       sellerAddress
@@ -169,10 +169,10 @@ describe("GelatoCore.canExec", function () {
       id: 1,
       userProxy: userProxyAddress,
       tasks: [task],
-      countdown: COUNTDOWN,
+      submissionsLeft: SUBMISSIONS_LEFT,
     });
 
-    await expect(userProxy.submitTask([task], COUNTDOWN, EXPIRY_DATE)).to.emit(
+    await expect(userProxy.submitTask(task, EXPIRY_DATE)).to.emit(
       gelatoCore,
       "LogTaskSubmitted"
     );
@@ -222,11 +222,11 @@ describe("GelatoCore.canExec", function () {
       id: 2,
       userProxy: userProxyAddress,
       tasks: [task2],
-      countdown: COUNTDOWN,
+      submissionsLeft: SUBMISSIONS_LEFT,
       expiryDate,
     });
 
-    await expect(userProxy.submitTask([task2], COUNTDOWN, expiryDate)).to.emit(
+    await expect(userProxy.submitTask(task2, expiryDate)).to.emit(
       gelatoCore,
       "LogTaskSubmitted"
     );
@@ -250,10 +250,10 @@ describe("GelatoCore.canExec", function () {
       id: 2,
       userProxy: userProxyAddress,
       tasks: [task2],
-      countdown: COUNTDOWN,
+      submissionsLeft: SUBMISSIONS_LEFT,
     });
 
-    await userProxy.submitTask([task2], COUNTDOWN, EXPIRY_DATE);
+    await userProxy.submitTask(task2, EXPIRY_DATE);
 
     await gelatoCore.connect(provider).unprovideTaskSpecs([newTaskSpec]);
 

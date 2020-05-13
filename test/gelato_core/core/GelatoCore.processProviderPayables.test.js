@@ -6,7 +6,7 @@ const { run, ethers } = require("@nomiclabs/buidler");
 const GELATO_GAS_PRICE = ethers.utils.parseUnits("8", "gwei");
 
 const EXPIRY_DATE = 0;
-const COUNTDOWN = 1;
+const SUBMISSIONS_LEFT = 1;
 
 // ##### Gnosis Action Test Cases #####
 // 1. All sellTokens got converted into buy tokens, sufficient for withdrawal
@@ -269,7 +269,7 @@ describe("GelatoCore.processProviderPayables", function () {
     // Create UserProxy
     const createTx = await gelatoUserProxyFactory
       .connect(seller)
-      .create([], []);
+      .create([], [], []);
     await createTx.wait();
     userProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
       sellerAddress
@@ -377,14 +377,10 @@ describe("GelatoCore.processProviderPayables", function () {
         id: 1,
         userProxy: userProxyAddress,
         tasks: [task],
-        countdown: COUNTDOWN,
+        submissionsLeft: SUBMISSIONS_LEFT,
       });
 
-      const submitTaskTx = await userProxy.submitTask(
-        [task],
-        COUNTDOWN,
-        EXPIRY_DATE
-      );
+      const submitTaskTx = await userProxy.submitTask(task, EXPIRY_DATE);
       await submitTaskTx.wait();
 
       const executorBalanceBefore = await ethers.provider.getBalance(
@@ -489,14 +485,10 @@ describe("GelatoCore.processProviderPayables", function () {
         id: 1,
         userProxy: userProxyAddress,
         tasks: [task],
-        countdown: COUNTDOWN,
+        submissionsLeft: SUBMISSIONS_LEFT,
       });
 
-      const submitTaskTx = await userProxy.submitTask(
-        [task],
-        COUNTDOWN,
-        EXPIRY_DATE
-      );
+      const submitTaskTx = await userProxy.submitTask(task, EXPIRY_DATE);
       await submitTaskTx.wait();
 
       const executorBalanceBefore = await ethers.provider.getBalance(
@@ -624,14 +616,10 @@ describe("GelatoCore.processProviderPayables", function () {
         id: 1,
         userProxy: userProxyAddress,
         tasks: [task],
-        countdown: COUNTDOWN,
+        submissionsLeft: SUBMISSIONS_LEFT,
       });
 
-      const submitTaskTx = await userProxy.submitTask(
-        [task],
-        COUNTDOWN,
-        EXPIRY_DATE
-      );
+      const submitTaskTx = await userProxy.submitTask(task, EXPIRY_DATE);
       await submitTaskTx.wait();
 
       const executorBalanceBefore = await ethers.provider.getBalance(
@@ -736,14 +724,10 @@ describe("GelatoCore.processProviderPayables", function () {
         id: 1,
         userProxy: userProxyAddress,
         tasks: [task],
-        countdown: COUNTDOWN,
+        submissionsLeft: SUBMISSIONS_LEFT,
       });
 
-      const submitTaskTx = await userProxy.submitTask(
-        [task],
-        COUNTDOWN,
-        EXPIRY_DATE
-      );
+      const submitTaskTx = await userProxy.submitTask(task, EXPIRY_DATE);
       await submitTaskTx.wait();
 
       const executorBalanceBefore = await ethers.provider.getBalance(

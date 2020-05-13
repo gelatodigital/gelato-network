@@ -234,7 +234,7 @@ describe("Testing DS Proxy Module delpoyment and ds proxy execution with gelato"
         id: 1,
         userProxy: userProxyAddress,
         tasks: [task],
-        countdown: 1,
+        submissionsLeft: 1,
       });
 
       // Submit Task Data encoded
@@ -242,7 +242,7 @@ describe("Testing DS Proxy Module delpoyment and ds proxy execution with gelato"
       const submitTaskData = await run("abi-encode-withselector", {
         contractname: "SubmitTaskScript",
         functionname: "submitTask",
-        inputs: [[task], 1, 0],
+        inputs: [task, 0],
       });
 
       // LogTaskSubmitted(taskReceipt.id, hashedTaskReceipt, taskReceipt);
@@ -311,7 +311,7 @@ describe("Testing DS Proxy Module delpoyment and ds proxy execution with gelato"
         id: 1,
         userProxy: userProxyAddress,
         tasks: [task],
-        countdown: 1,
+        submissionsLeft: 1,
       });
 
       // Submit new task spec as provider
@@ -328,7 +328,7 @@ describe("Testing DS Proxy Module delpoyment and ds proxy execution with gelato"
       const submitTaskData = await run("abi-encode-withselector", {
         contractname: "SubmitTaskScript",
         functionname: "submitTask",
-        inputs: [[task], 1, 0],
+        inputs: [task, 0],
       });
 
       // LogTaskSubmitted(taskReceipt.id, hashedTaskReceipt, taskReceipt);
@@ -388,7 +388,7 @@ describe("Testing DS Proxy Module delpoyment and ds proxy execution with gelato"
         id: 1,
         userProxy: userProxyAddress,
         tasks: [task],
-        countdown: 1,
+        submissionsLeft: 1,
       });
 
       // Submit new task spec as provider
@@ -405,7 +405,7 @@ describe("Testing DS Proxy Module delpoyment and ds proxy execution with gelato"
       const submitTaskData = await run("abi-encode-withselector", {
         contractname: "SubmitTaskScript",
         functionname: "submitTask",
-        inputs: [[task], 1, 0],
+        inputs: [task, 0],
       });
 
       // LogTaskSubmitted(taskReceipt.id, hashedTaskReceipt, taskReceipt);

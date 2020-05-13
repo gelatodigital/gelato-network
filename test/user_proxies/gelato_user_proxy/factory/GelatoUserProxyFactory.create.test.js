@@ -28,7 +28,6 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE", function () {
   let actionStruct;
   let otherActionStruct;
   let task;
-  let standaloneTaskSequence;
 
   beforeEach(async function () {
     // Get the ContractFactory, contract instance, and Signers here.
@@ -65,7 +64,7 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE", function () {
     it("Should allow anyone to create a userProxy", async function () {
       // create(): user
       await expect(
-        gelatoUserProxyFactory.create([], [], {
+        gelatoUserProxyFactory.create([], [], [], {
           value: utils.parseEther("1"),
         })
       ).to.emit(gelatoUserProxyFactory, "LogCreation");
@@ -88,7 +87,7 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE", function () {
 
       // create(): otherUser
       await expect(
-        gelatoUserProxyFactory.connect(otherUser).create([], [])
+        gelatoUserProxyFactory.connect(otherUser).create([], [], [])
       ).to.emit(gelatoUserProxyFactory, "LogCreation");
 
       // gelatoProxyByUser: otherUser
@@ -111,7 +110,7 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE", function () {
 
     it("Should allow to re-create a userProxy", async function () {
       // create(): user firstProxy
-      const tx = await gelatoUserProxyFactory.create([], []);
+      const tx = await gelatoUserProxyFactory.create([], [], []);
       await tx.wait();
 
       // gelatoProxyByUser: first proxy
@@ -120,7 +119,7 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE", function () {
       );
 
       // create(): user secondProxy
-      await expect(gelatoUserProxyFactory.create([], [])).to.emit(
+      await expect(gelatoUserProxyFactory.create([], [], [])).to.emit(
         gelatoUserProxyFactory,
         "LogCreation"
       );
@@ -195,10 +194,6 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE", function () {
         actions: [actionStruct],
       });
 
-      standaloneTaskSequence = new StandaloneTaskSequence({
-        taskSequence: [task],
-      });
-
       // stakeExecutor
       const stakeTx = await gelatoCore.connect(executor).stakeExecutor({
         value: await gelatoCore.minExecutorStake(),
@@ -220,23 +215,22 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE", function () {
     });
 
     it("Should submit optional Tasks", async function () {
-      await expect(
-        gelatoUserProxyFactory.create([], [standaloneTaskSequence])
-      ).to.emit(gelatoCore, "LogTaskSubmitted");
-      await expect(
-        gelatoUserProxyFactory.create(
-          [],
-          [standaloneTaskSequence, standaloneTaskSequence]
-        )
-      ).to.emit(gelatoCore, "LogTaskSubmitted");
+      await expect(gelatoUserProxyFactory.create([], [task], [])).to.emit(
+        gelatoCore,
+        "LogTaskSubmitted"
+      );
+      await expect(gelatoUserProxyFactory.create([], [task, task], [])).to.emit(
+        gelatoCore,
+        "LogTaskSubmitted"
+      );
     });
 
     it("Should exec optional Actions", async function () {
-      await expect(gelatoUserProxyFactory.create([actionStruct], [])).to.not.be
-        .reverted;
+      await expect(gelatoUserProxyFactory.create([actionStruct], [], [])).to.not
+        .be.reverted;
 
       await expect(
-        gelatoUserProxyFactory.create([actionStruct, otherActionStruct], [])
+        gelatoUserProxyFactory.create([actionStruct, otherActionStruct], [], [])
       )
         .to.emit(action, "LogAction")
         .withArgs(false);
@@ -244,10 +238,7 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE", function () {
 
     it("Should submit optional Tasks and exec optional Actions", async function () {
       await expect(
-        gelatoUserProxyFactory.create(
-          [otherActionStruct],
-          [standaloneTaskSequence]
-        )
+        gelatoUserProxyFactory.create([otherActionStruct], [task], [])
       )
         .to.emit(gelatoCore, "LogTaskSubmitted")
         .and.to.emit(action, "LogAction")

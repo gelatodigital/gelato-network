@@ -35,7 +35,7 @@ struct TaskReceipt {
     address userProxy;
     uint256 index;
     Task[] tasks;
-    uint256 countdown;
+    uint256 submissionsLeft;
     uint256 expiryDate;
 }
 
@@ -75,20 +75,27 @@ interface IGelatoCore {
         view
         returns(string memory);
 
-    /// @notice Submit a gelato single Task or a Task Sequence. CAUTION: NOT for submitting
-    ///   multiple standalone tasks. It's either Single or Sequence.
-    /// @dev This function must be called from a contract account provided by Provider
-    /// @param _taskSequence This can be a single task or a sequence of tasks.
-    ///  For single Task: _countdown=1. If a sequence of tasks are to be submitted,
-    ///  the _countdown param needs to be set with caution.
-    /// @param _countdown The number of times the sequence of tasks should be run in cycles.
-    ///  1) _countdown=1: single standalone task. Only makes sense if _tasks.length == 1.
-    ///  2) _countdown=X: number of times to run the same task or the sum of total task
-    ///   executions in the case of a sequence of different tasks.
-    ///  3) _countdown=0: infinity - run the same task or sequence of tasks infinitely.
-    /// @param _expiryDate  The expiry date of the single task or task sequence,
-    //   after which no task of the sequence can be executed any more.
-    function submitTask(Task[] calldata _taskSequence, uint256 _countdown, uint256 _expiryDate)
+    /// @notice API to submit a single Task.
+    /// @dev You can let users submit multiple tasks at once by batching calls to this.
+    /// @param _task A Gelato Task object: provider, conditions, actions.
+    /// @param _expiryDate From then on the task cannot be executed. 0 for infinity.
+    function submitTask(Task calldata _task, uint256 _expiryDate) external;
+
+    /// @notice A Gelato Task Cycle consists of 1 or more Tasks that automatically submit
+    ///  the next one, after they have been executed.
+    /// @dev CAUTION: _sumOfRequestedTaskSubmits does not mean the number of cycles.
+    /// @param _tasks This can be a single task or a sequence of tasks.
+    /// @param _sumOfRequestedTaskSubmits The TOTAL number of Task auto-submits
+    //   that should have occured once the cycle is complete:
+    ///  1) _sumOfRequestedTaskSubmits=X: number of times to run the same task or the sum
+    ///   of total cyclic task executions in the case of a sequence of different tasks.
+    ///  2) _submissionsLeft=0: infinity - run the same task or sequence of tasks infinitely.
+    /// @param _expiryDate  After this no task of the sequence can be executed any more.
+    function submitTaskCycle(
+        Task[] calldata _tasks,
+        uint256 _sumOfRequestedTaskSubmits,
+        uint256 _expiryDate
+    )
         external;
 
     // ================  Exec Suite =========================
@@ -135,5 +142,4 @@ interface IGelatoCore {
     /// @param _taskReceiptId Id of taskReceipt emitted in submission event
     /// @return hash of taskReceipt
     function taskReceiptHash(uint256 _taskReceiptId) external view returns(bytes32);
-
 }

@@ -4,7 +4,7 @@ import { expect } from "chai";
 
 import initialState from "./GelatoProviders.initialState";
 
-const COUNTDOWN = 1;
+const SUBMISSIONS_LEFT = 1;
 
 describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function () {
   // We define the ContractFactory and Address variables here and assign them in
@@ -66,7 +66,7 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
     [provider, user] = await ethers.getSigners();
     providerAddress = await provider.getAddress();
 
-    await gelatoUserProxyFactory.connect(user).create([], []);
+    await gelatoUserProxyFactory.connect(user).create([], [], []);
     gelatoUserProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
       await user.getAddress()
     );
@@ -127,19 +127,19 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
       id: 0,
       userProxy: gelatoUserProxyAddress,
       tasks: [task],
-      countdown: COUNTDOWN,
+      submissionsLeft: SUBMISSIONS_LEFT,
     });
     otherTaskReceipt = new TaskReceipt({
       id: 0,
       userProxy: gelatoUserProxyAddress,
       tasks: [otherTask],
-      countdown: COUNTDOWN,
+      submissionsLeft: SUBMISSIONS_LEFT,
     });
     fakeTaskReceipt = new TaskReceipt({
       id: 0,
       userProxy: gelatoUserProxyAddress,
       tasks: [fakeTask],
-      countdown: COUNTDOWN,
+      submissionsLeft: SUBMISSIONS_LEFT,
     });
 
     // Task Spec

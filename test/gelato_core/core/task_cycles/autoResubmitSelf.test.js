@@ -8,7 +8,7 @@ const GELATO_GAS_PRICE = utils.parseUnits("10", "gwei");
 
 const SALT_NONCE = 42069;
 
-describe("Gelato Actions - TASK COUNTDOWN - AUTO-RESUBMIT-SELF", function () {
+describe("Gelato Actions - TASK CYCLES - AUTO-RESUBMIT-SELF", function () {
   let GelatoCoreFactory;
   let GelatoGasPriceOracleFactory;
   let GelatoUserProxyFactoryFactory;
@@ -32,7 +32,6 @@ describe("Gelato Actions - TASK COUNTDOWN - AUTO-RESUBMIT-SELF", function () {
   let userProxyAddress;
 
   let task;
-  let standaloneTaskSequence;
 
   let gelatoMaxGas;
   let executorSuccessFee;
@@ -140,12 +139,6 @@ describe("Gelato Actions - TASK COUNTDOWN - AUTO-RESUBMIT-SELF", function () {
       provider: gelatoProvider,
       actions: [actionDummyStruct],
     });
-
-    // Standalone Task
-    standaloneTaskSequence = new StandaloneTaskSequence({
-      taskSequence: [task],
-      countdown: 0, // infinite
-    });
   });
 
   it("Should allow to enter an Infinite Task Chain upon creating a GelatoUserProxy", async function () {
@@ -155,12 +148,18 @@ describe("Gelato Actions - TASK COUNTDOWN - AUTO-RESUBMIT-SELF", function () {
       id: taskReceiptId,
       userProxy: userProxyAddress,
       tasks: [task],
-      countdown: 0,
+      submissionsLeft: 0,
     });
     let taskReceiptHash = await gelatoCore.hashTaskReceipt(taskReceipt);
 
     await expect(
-      gelatoUserProxyFactory.createTwo(SALT_NONCE, [], [standaloneTaskSequence])
+      gelatoUserProxyFactory.createTwoAndSubmitTaskCycle(
+        SALT_NONCE,
+        [],
+        [task],
+        0,
+        0
+      )
     )
       .to.emit(gelatoUserProxyFactory, "LogCreation")
       .withArgs(userAddress, userProxyAddress, 0)

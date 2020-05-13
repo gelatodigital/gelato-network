@@ -66,25 +66,30 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         return OK;
     }
 
-    function submitTask(Task[] memory _taskSequence, uint256 _countdown, uint256 _expiryDate)
+    function submitTask(Task memory _task, uint256 _expiryDate) public override {
+        _canSubmitGate(_task, _expiryDate);
+        Task[] memory singleTask = new Task[](1);
+        singleTask[0] = _task;
+        _storeTaskReceipt(msg.sender, 0, singleTask, 1, _expiryDate);
+    }
+
+    function submitTaskCycle(
+        Task[] memory _tasks,
+        uint256 _sumOfRequestedTaskSubmits,  // does NOT mean the number of cycles
+        uint256 _expiryDate
+    )
         public
         override
     {
-        require(_taskSequence.length > 0, "GelatoCore.submitTasks:EmptyTaskSequence");
-
-        // canSubmit Gate
-        string memory canSubmitRes = canSubmitTask(msg.sender, _taskSequence[0], _expiryDate);
-        require(canSubmitRes.startsWithOk(), canSubmitRes);
-
-        // Generate and store new Task Receipt
-        _storeTaskReceipt(msg.sender, 0, _taskSequence, _countdown, _expiryDate);
+        _canSubmitGate(_tasks[0], _expiryDate);
+        _storeTaskReceipt(msg.sender, 0, _tasks, _sumOfRequestedTaskSubmits, _expiryDate);
     }
 
     function _storeTaskReceipt(
         address _userProxy,
         uint256 _index,
-        Task[] memory _taskSequence,
-        uint256 _countdown,
+        Task[] memory _tasks,
+        uint256 _submissionsLeft,
         uint256 _expiryDate
     )
         private
@@ -98,8 +103,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             id: nextTaskReceiptId,
             userProxy: _userProxy, // Smart Contract Accounts ONLY
             index: _index,
-            tasks: _taskSequence,
-            countdown: _countdown,  // 0=infinity, 1=once, X=maxTotalExecutions
+            tasks: _tasks,
+            submissionsLeft: _submissionsLeft,  // 0=infinity, 1=once, X=maxTotalExecutions
             expiryDate: _expiryDate
         });
 
@@ -170,7 +175,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         }
 
         // Check if we can submit the next task
-        if (_TR.countdown != 1) {
+        if (_TR.submissionsLeft != 1) {
             string memory canSubmitNext = canSubmitTask(
                 _TR.userProxy,
                 _TR.tasks[_TR.nextIndex()],
@@ -335,13 +340,13 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         // SUCCESS
         if (success) {
             // Optional: Automated Cyclic Task Submissions
-            if (_TR.countdown != 1) {
+            if (_TR.submissionsLeft != 1) {
                 _storeTaskReceipt(
                     _TR.userProxy,
                     _TR.nextIndex(),
                     _TR.tasks,
                     _TR.expiryDate,
-                    _TR.countdown == 0 ? 0 : _TR.countdown - 1
+                    _TR.submissionsLeft == 0 ? 0 : _TR.submissionsLeft - 1
                 );
             }
         } else {
@@ -413,6 +418,11 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     }
 
     // Helpers
+    function _canSubmitGate(Task memory _task, uint256 _expiryDate) private view {
+        string memory canSubmitRes = canSubmitTask(msg.sender, _task, _expiryDate);
+        require(canSubmitRes.startsWithOk(), canSubmitRes);
+    }
+
     function hashTaskReceipt(TaskReceipt memory _TR) public pure override returns(bytes32) {
         return keccak256(abi.encode(_TR));
     }

@@ -2,7 +2,7 @@ import { constants, utils } from "ethers";
 import checkTaskMembers from "../../helpers/gelato/checkTaskMembers";
 
 class TaskReceipt {
-  constructor({ id, userProxy, index, tasks, countdown, expiryDate }) {
+  constructor({ id, userProxy, index, tasks, submissionsLeft, expiryDate }) {
     if (userProxy === undefined) throw new Error("TaskReceipt: no userProxy");
     if (!tasks || !Array.isArray(tasks))
       throw new Error("\nTask: tasks must be Array\n");
@@ -14,7 +14,7 @@ class TaskReceipt {
     this.index =
       index === undefined ? constants.Zero : utils.bigNumberify(index);
     this.tasks = tasks ? tasks : [];
-    this.countdown = countdown === undefined ? 1 : countdown;
+    this.submissionsLeft = submissionsLeft === undefined ? 1 : submissionsLeft;
     this.expiryDate = expiryDate ? expiryDate : constants.Zero;
   }
 }

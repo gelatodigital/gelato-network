@@ -8,8 +8,7 @@ interface IScriptsCreateGnosisSafeProxyAndSubmit {
         address _mastercopy,
         bytes calldata _initializer,
         IGelatoCore _gelatoCore,
-        Task[] calldata _taskSequence,
-        uint256 _countdown,
+        Task calldata _task,
         uint256 _expiryDate
     )
         external
@@ -20,8 +19,7 @@ interface IScriptsCreateGnosisSafeProxyAndSubmit {
         bytes calldata _initializer,
         uint256 _saltNonce,
         IGelatoCore _gelatoCore,
-        Task[] calldata _taskSequence,
-        uint256 _countdown,
+        Task calldata _task,
         uint256 _expiryDate
     )
         external

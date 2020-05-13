@@ -1,7 +1,7 @@
 pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
-import { IGelatoUserProxy, StandaloneTaskSequence } from "./interfaces/IGelatoUserProxy.sol";
+import { IGelatoUserProxy } from "./interfaces/IGelatoUserProxy.sol";
 import { GelatoDebug } from "../../libraries/GelatoDebug.sol";
 import {
     Action, Operation, Task, TaskReceipt, IGelatoCore
@@ -53,12 +53,13 @@ contract GelatoUserProxy is IGelatoUserProxy {
         _;
     }
 
-    function submitTask(Task[] memory _taskSequence, uint256 _countdown, uint256 _expiryDate)
+    function submitTask(Task memory _task, uint256 _expiryDate)
         public
         override
         userOrFactory
     {
-        try IGelatoCore(gelatoCore).submitTask(_taskSequence, _countdown, _expiryDate) {
+
+        try IGelatoCore(gelatoCore).submitTask(_task, _expiryDate) {
         } catch Error(string memory err) {
             revert(string(abi.encodePacked("GelatoUserProxy.submitTask:", err)));
         } catch {
@@ -66,17 +67,32 @@ contract GelatoUserProxy is IGelatoUserProxy {
         }
     }
 
-    function multiSubmitTasks(StandaloneTaskSequence[] memory _standaloneTaskSequences)
+    function multiSubmitTasks(Task[] memory _tasks, uint256[] memory _expiryDates)
+        public
+        override
+    {
+        for (uint i; i < _tasks.length; i++)
+            submitTask(_tasks[i], _expiryDates.length > 0 ? _expiryDates[i] : 0);
+    }
+
+    function submitTaskCycle(
+        Task[] memory _tasks,
+        uint256 _sumOfRequestedTaskSubmits,  // does NOT mean the number of cycles
+        uint256 _expiryDate
+    )
         public
         override
         userOrFactory
     {
-        for (uint i; i < _standaloneTaskSequences.length; i++) {
-            submitTask(
-                _standaloneTaskSequences[i].taskSequence,
-                _standaloneTaskSequences[i].countdown,
-                _standaloneTaskSequences[i].expiryDate
-            );
+        try IGelatoCore(gelatoCore).submitTaskCycle(
+            _tasks,
+            _sumOfRequestedTaskSubmits,
+            _expiryDate
+        ) {
+        } catch Error(string memory err) {
+            revert(string(abi.encodePacked("GelatoUserProxy.submitTaskCycle:", err)));
+        } catch {
+            revert("GelatoUserProxy.submitTaskCycle:undefinded");
         }
     }
 

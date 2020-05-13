@@ -22,8 +22,7 @@ contract ScriptGnosisSafeEnableGelatoCoreAndSubmit {
     /// @dev This function should be delegatecalled
     function enableModuleAndSubmit(
         address _gelatoCore,
-        Task[] calldata _taskSequence,
-        uint256 _countdown,
+        Task calldata _task,
         uint256 _expiryDate
     )
         external
@@ -37,7 +36,7 @@ contract ScriptGnosisSafeEnableGelatoCoreAndSubmit {
         }
 
         // SubmitTask on GelatoCore from delegatecaller (Gnosis Safe Proxy)
-        try IGelatoCore(_gelatoCore).submitTask(_taskSequence, _countdown, _expiryDate) {
+        try IGelatoCore(_gelatoCore).submitTask(_task, _expiryDate) {
         } catch Error(string memory error) {
             emit LogFailure(error);
         } catch {

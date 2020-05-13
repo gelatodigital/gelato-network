@@ -59,7 +59,7 @@ const ID = 0;
 const USER_PROXY = 1;
 const INDEX = 2;
 const TASKS = 3;
-const COUNTDOWN = 4;
+const SUBMISSIONS_LEFT = 4;
 const EXPIRY_DATE = 5;
 
 function convertTaskReceiptArrayToObj(taskReceiptArray) {
@@ -70,7 +70,7 @@ function convertTaskReceiptArrayToObj(taskReceiptArray) {
     userProxy: taskReceiptArray[USER_PROXY],
     index: taskReceiptArray[INDEX],
     tasks: tasks ? tasks : [],
-    countdown: taskReceiptArray[COUNTDOWN],
+    submissionsLeft: taskReceiptArray[SUBMISSIONS_LEFT],
     expiryDate: taskReceiptArray[EXPIRY_DATE],
   });
 

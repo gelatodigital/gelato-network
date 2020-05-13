@@ -9,9 +9,8 @@ const GELATO_GAS_PRICE = utils.parseUnits("10", "gwei");
 const SALT_NONCE = 42069;
 
 const EXPIRY_DATE = 0;
-const COUNTDOWN = 1;
 
-describe("Gelato Actions - TASK COUNTDOWN - ARBITRARY", function () {
+describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
   // Tests use for loops that have timed out on coverage (ganache)
   this.timeout(90000);
 
@@ -47,7 +46,6 @@ describe("Gelato Actions - TASK COUNTDOWN - ARBITRARY", function () {
   // Tasks
   let task1;
   let task2;
-  let standaloneTaskSequence;
 
   // TaskReceipts
   let interceptTaskReceiptAsObj;
@@ -201,12 +199,6 @@ describe("Gelato Actions - TASK COUNTDOWN - ARBITRARY", function () {
       actions: [secondActionDummyStruct],
     });
 
-    // Standalone Task Sequence
-    standaloneTaskSequence = new StandaloneTaskSequence({
-      taskSequence: [task1, task2],
-      countdown: 0,
-    });
-
     // TaskReceipt: InterceptTask
     interceptTaskReceiptAsObj = new TaskReceipt({
       userProxy: userProxyAddress,
@@ -218,7 +210,7 @@ describe("Gelato Actions - TASK COUNTDOWN - ARBITRARY", function () {
       userProxy: userProxyAddress,
       index: 0, // dynamic: auto-filled by GelatoCore upon tasks creation
       tasks: [task1, task2], // static: auto-filled by GelatoCore upon tasks creation
-      countdown: 0,
+      submissionsLeft: 0,
     });
 
     // TaskReceipt: CyclicTask2
@@ -226,7 +218,7 @@ describe("Gelato Actions - TASK COUNTDOWN - ARBITRARY", function () {
       userProxy: userProxyAddress,
       index: 1, // After first execution, next will be placed to 0
       tasks: [task1, task2], // static
-      countdown: 0,
+      submissionsLeft: 0,
     });
   });
 
@@ -235,7 +227,13 @@ describe("Gelato Actions - TASK COUNTDOWN - ARBITRARY", function () {
 
     // CreateTwo userProxy and submit interceptTask in one tx
     await expect(
-      gelatoUserProxyFactory.createTwo(SALT_NONCE, [], [standaloneTaskSequence])
+      gelatoUserProxyFactory.createTwoAndSubmitTaskCycle(
+        SALT_NONCE,
+        [],
+        [task1, task2],
+        EXPIRY_DATE,
+        0
+      )
     )
       .to.emit(gelatoUserProxyFactory, "LogCreation")
       .withArgs(userAddress, userProxyAddress, 0)
@@ -259,7 +257,7 @@ describe("Gelato Actions - TASK COUNTDOWN - ARBITRARY", function () {
     // Init Task Cycle Id: We initiated tasks in createTwo
     currentTaskCycleReceiptId = await gelatoCore.currentTaskReceiptId();
 
-    // COUNTDOWN + INTERCEPTS
+    // SUBMISSIONS_LEFT + INTERCEPTS
     for (let i = 0; i < 20; i++) {
       if (i != 0)
         if (i == 2 || i == 5 || i == 13) {
@@ -269,9 +267,10 @@ describe("Gelato Actions - TASK COUNTDOWN - ARBITRARY", function () {
           // console.log("\nIntercept");
 
           // Submit normal task1 (ActionDummy-1: true)
-          await expect(
-            gelatoUserProxy.submitTask([task1], COUNTDOWN, EXPIRY_DATE)
-          ).to.emit(gelatoCore, "LogTaskSubmitted");
+          await expect(gelatoUserProxy.submitTask(task1, EXPIRY_DATE)).to.emit(
+            gelatoCore,
+            "LogTaskSubmitted"
+          );
 
           // Check currentTaskCycleReceiptId
           expect(await gelatoCore.currentTaskReceiptId()).to.equal(
@@ -352,7 +351,7 @@ describe("Gelato Actions - TASK COUNTDOWN - ARBITRARY", function () {
           cyclicTask2WasSubmitted = false;
         }
 
-      // 🚲  COUNTDOWN 🚲
+      // 🚲  SUBMISSIONS_LEFT 🚲
 
       // Cyclic Task Updates & Checks
       if (cyclicTask1WasSubmitted || cyclicTask1WasIntercepted) {
@@ -425,7 +424,7 @@ describe("Gelato Actions - TASK COUNTDOWN - ARBITRARY", function () {
         // console.log("CyclicTask2 Hash: " + cyclicTask2ReceiptHash + "\n");
       }
 
-      // COUNTDOWN EXEXECUTION + AUTO-SUBMISSION
+      // SUBMISSIONS_LEFT EXEXECUTION + AUTO-SUBMISSION
       // canExec
       expect(
         await gelatoCore
