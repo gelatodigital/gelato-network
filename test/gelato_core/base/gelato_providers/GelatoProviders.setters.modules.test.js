@@ -4,6 +4,8 @@ import { expect } from "chai";
 
 import initialState from "./GelatoProviders.initialState";
 
+const SUBMISSIONS_LEFT = 1;
+
 describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function () {
   // We define the ContractFactory and Address variables here and assign them in
   // a beforeEach hook.
@@ -64,7 +66,7 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
     [provider, user] = await ethers.getSigners();
     providerAddress = await provider.getAddress();
 
-    await gelatoUserProxyFactory.connect(user).create([], [], false);
+    await gelatoUserProxyFactory.connect(user).create([], [], []);
     gelatoUserProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
       await user.getAddress()
     );
@@ -111,33 +113,33 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
     task = new Task({
       provider: gelatoProvider,
       actions: [action],
-      expiryDate: constants.Zero,
     });
     otherTask = new Task({
       provider: otherGelatoProvider,
       actions: [action],
-      expiryDate: constants.Zero,
     });
     fakeTask = new Task({
       provider: fakeGelatoProvider,
       actions: [action],
-      expiryDate: constants.Zero,
     });
 
     taskReceipt = new TaskReceipt({
       id: 0,
       userProxy: gelatoUserProxyAddress,
-      task,
+      tasks: [task],
+      submissionsLeft: SUBMISSIONS_LEFT,
     });
     otherTaskReceipt = new TaskReceipt({
       id: 0,
       userProxy: gelatoUserProxyAddress,
-      task: otherTask,
+      tasks: [otherTask],
+      submissionsLeft: SUBMISSIONS_LEFT,
     });
     fakeTaskReceipt = new TaskReceipt({
       id: 0,
       userProxy: gelatoUserProxyAddress,
-      task: fakeTask,
+      tasks: [fakeTask],
+      submissionsLeft: SUBMISSIONS_LEFT,
     });
 
     // Task Spec
@@ -284,23 +286,40 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
       const notOkGelatoGasPrice = taskSpec.gasPriceCeil.add(1);
 
       // providerCanExec: taskReceipt (provided gelato user proxy)
+
       expect(
-        await gelatoCore.providerCanExec(taskReceipt, weirdFlexButOkPrice)
+        await gelatoCore.providerCanExec(
+          taskReceipt.userProxy,
+          taskReceipt.tasks[taskReceipt.index],
+          weirdFlexButOkPrice
+        )
       ).to.be.equal("OK");
 
       // providerCanExec: otherTaskReceipt (not provided gnosis safe)
       expect(
-        await gelatoCore.providerCanExec(otherTaskReceipt, okGelatoGasPrice)
+        await gelatoCore.providerCanExec(
+          otherTaskReceipt.userProxy,
+          otherTaskReceipt.tasks[otherTaskReceipt.index],
+          okGelatoGasPrice
+        )
       ).to.not.be.equal("OK");
 
       // providerCanExec: fakeTaskReceipt
       expect(
-        await gelatoCore.providerCanExec(fakeTaskReceipt, alsoOkGelatoGasPrice)
+        await gelatoCore.providerCanExec(
+          fakeTaskReceipt.userProxy,
+          fakeTaskReceipt.tasks[fakeTaskReceipt.index],
+          alsoOkGelatoGasPrice
+        )
       ).to.be.equal("GelatoProviders.providerModuleChecks");
 
       // providerCanExec: gelatoGasPriceTooHigh
       expect(
-        await gelatoCore.providerCanExec(taskReceipt, notOkGelatoGasPrice)
+        await gelatoCore.providerCanExec(
+          taskReceipt.userProxy,
+          taskReceipt.tasks[taskReceipt.index],
+          notOkGelatoGasPrice
+        )
       ).to.be.equal("taskSpecGasPriceCeil-OR-notProvided");
     });
 

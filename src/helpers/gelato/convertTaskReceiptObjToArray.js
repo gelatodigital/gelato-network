@@ -28,33 +28,31 @@ struct TaskReceipt {
  */
 
 function convertTaskReceiptObjToArray(taskReceiptObj) {
-  const provider = _convertToProviderArray(taskReceiptObj.task.provider);
-
-  const conditions = _convertToArrayOfConditionArrays(
-    taskReceiptObj.task.conditions
-  );
-
-  const actions = _convertToArrayOfActionArrays(taskReceiptObj.task.actions);
-
-  const task = [
-    provider,
-    conditions,
-    actions,
-    taskReceiptObj.task.expiryDate,
-    taskReceiptObj.task.autoResubmitSelf,
-  ];
-
-  const cycle = _convertToArrayOfTaskArrays(taskReceiptObj.cycle);
+  const tasks = _convertToArrayOfTaskArrays(taskReceiptObj.tasks);
 
   const taskReceiptArray = [
     taskReceiptObj.id,
     taskReceiptObj.userProxy,
-    task,
-    taskReceiptObj.next,
-    cycle,
+    taskReceiptObj.index,
+    tasks,
+    taskReceiptObj.submissionsLeft,
+    taskReceiptObj.expiryDate,
   ];
 
   return taskReceiptArray;
+}
+
+function _convertToArrayOfTaskArrays(arrayOfTaskObjs) {
+  const tasks = [];
+  for (const taskObj of arrayOfTaskObjs) {
+    const taskArray = [
+      _convertToProviderArray(taskObj.provider),
+      _convertToArrayOfConditionArrays(taskObj.conditions),
+      _convertToArrayOfActionArrays(taskObj.actions),
+    ];
+    tasks.push(taskArray);
+  }
+  return tasks;
 }
 
 function _convertToProviderArray(providerObj) {
@@ -84,21 +82,6 @@ function _convertToArrayOfActionArrays(arrayOfActionObjs) {
     actions.push(actionArray);
   }
   return actions;
-}
-
-function _convertToArrayOfTaskArrays(arrayOfTaskObjs) {
-  const tasks = [];
-  for (const taskObj of arrayOfTaskObjs) {
-    const taskArray = [
-      _convertToProviderArray(taskObj.provider),
-      _convertToArrayOfConditionArrays(taskObj.conditions),
-      _convertToArrayOfActionArrays(taskObj.actions),
-      taskObj.expiryDate,
-      taskObj.autoResubmitSelf,
-    ];
-    tasks.push(taskArray);
-  }
-  return tasks;
 }
 
 export default convertTaskReceiptObjToArray;

@@ -31,7 +31,7 @@ describe("Gelato Actions - TASK CYCLES - AUTO-RESUBMIT-SELF", function () {
 
   let userProxyAddress;
 
-  let chainedTask;
+  let task;
 
   let gelatoMaxGas;
   let executorSuccessFee;
@@ -134,28 +134,32 @@ describe("Gelato Actions - TASK CYCLES - AUTO-RESUBMIT-SELF", function () {
       );
     await multiProvideTx.wait();
 
-    // Chained Task
-    chainedTask = new Task({
+    // Task
+    task = new Task({
       provider: gelatoProvider,
       actions: [actionDummyStruct],
-      autoResubmitSelf: true,
     });
   });
 
   it("Should allow to enter an Infinite Task Chain upon creating a GelatoUserProxy", async function () {
-    // chainedTaskReceipt
-    let chainedTaskReceiptId = (await gelatoCore.currentTaskReceiptId()).add(1);
-    const chainedTaskReceipt = new TaskReceipt({
-      id: chainedTaskReceiptId,
+    // taskReceipt
+    let taskReceiptId = (await gelatoCore.currentTaskReceiptId()).add(1);
+    const taskReceipt = new TaskReceipt({
+      id: taskReceiptId,
       userProxy: userProxyAddress,
-      task: chainedTask,
+      tasks: [task],
+      submissionsLeft: 0,
     });
-    let chainedTaskReceiptHash = await gelatoCore.hashTaskReceipt(
-      chainedTaskReceipt
-    );
+    let taskReceiptHash = await gelatoCore.hashTaskReceipt(taskReceipt);
 
     await expect(
-      gelatoUserProxyFactory.createTwo(SALT_NONCE, [], [chainedTask], false)
+      gelatoUserProxyFactory.createTwoAndSubmitTaskCycle(
+        SALT_NONCE,
+        [],
+        [task],
+        0,
+        0
+      )
     )
       .to.emit(gelatoUserProxyFactory, "LogCreation")
       .withArgs(userAddress, userProxyAddress, 0)
@@ -163,9 +167,9 @@ describe("Gelato Actions - TASK CYCLES - AUTO-RESUBMIT-SELF", function () {
     // withArgs not possible: suspect buidlerevm or ethers struct parsing bug
     // .withArgs(
     //   executorAddress,
-    //   chainedTaskReceiptId,
-    //   chainedTaskReceiptHash,
-    //   chainedTaskReceipt
+    //   taskReceiptId,
+    //   taskReceiptHash,
+    //   taskReceipt
     // )
 
     for (let i = 0; i < 10; i++) {
@@ -173,12 +177,12 @@ describe("Gelato Actions - TASK CYCLES - AUTO-RESUBMIT-SELF", function () {
       expect(
         await gelatoCore
           .connect(executor)
-          .canExec(chainedTaskReceipt, gelatoMaxGas, GELATO_GAS_PRICE)
+          .canExec(taskReceipt, gelatoMaxGas, GELATO_GAS_PRICE)
       ).to.be.equal("OK");
 
       // Exec ActionDummyTask and expect it to be resubmitted automatically
       await expect(
-        gelatoCore.connect(executor).exec(chainedTaskReceipt, {
+        gelatoCore.connect(executor).exec(taskReceipt, {
           gasPrice: GELATO_GAS_PRICE,
           gasLimit: await gelatoCore.gelatoMaxGas(),
         })
@@ -189,11 +193,8 @@ describe("Gelato Actions - TASK CYCLES - AUTO-RESUBMIT-SELF", function () {
         .and.to.emit(gelatoCore, "LogTaskSubmitted");
 
       // // Update the Task Receipt for Second Go
-      chainedTaskReceiptId = chainedTaskReceiptId.add(1);
-      chainedTaskReceipt.id = chainedTaskReceiptId;
-      chainedTaskReceiptHash = await gelatoCore.hashTaskReceipt(
-        chainedTaskReceipt
-      );
+      taskReceipt.id++;
+      taskReceiptHash = await gelatoCore.hashTaskReceipt(taskReceipt);
     }
   });
 });
