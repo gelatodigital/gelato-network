@@ -22,19 +22,19 @@ const gelatoSysAdminInitialState = require("./test/gelato_core/base/gelato_sys_a
 
 // Helpers
 // Async
-const sleep = require("./src/scripts/helpers/async/sleep").default;
+const sleep = require("./src/helpers/async/sleep").default;
 // Gelato
-const convertTaskReceiptArrayToObj = require("./src/scripts/helpers/gelato/convertTaskReceiptArrayToObj")
+const convertTaskReceiptArrayToObj = require("./src/helpers/gelato/convertTaskReceiptArrayToObj")
   .default;
-const convertTaskReceiptObjToArray = require("./src/scripts/helpers/gelato/convertTaskReceiptObjToArray")
+const convertTaskReceiptObjToArray = require("./src/helpers/gelato/convertTaskReceiptObjToArray")
   .default;
 // Nested Arrays
-const nestedArraysAreEqual = require("./src/scripts/helpers/nestedArrays/nestedArraysAreEqual")
+const nestedArraysAreEqual = require("./src/helpers/nestedArrays/nestedArraysAreEqual")
   .default;
 // Nested Objects
-const checkNestedObj = require("./src/scripts/helpers/nestedObjects/checkNestedObj")
+const checkNestedObj = require("./src/helpers/nestedObjects/checkNestedObj")
   .default;
-const getNestedObj = require("./src/scripts/helpers/nestedObjects/getNestedObj")
+const getNestedObj = require("./src/helpers/nestedObjects/getNestedObj")
   .default;
 
 // ================================= BRE extension ==================================
@@ -64,7 +64,7 @@ extendEnvironment((bre) => {
   bre.constants = constants;
   bre.utils = utils;
   bre.getUser = () => new ethers.Wallet(USER_PK, ethers.provider);
-  bre.getProvider = () => new ethers.Wallet(PRO_PK, ethers.provider);
+  bre.getProvider = () => new ethers.Wallet(PROVIDER_PK, ethers.provider);
 });
 
 // ================================= CONFIG =========================================
@@ -75,13 +75,13 @@ const MAINNET_MNEMONIC = process.env.MAINNET_MNEMONIC;
 const INFURA_ID = process.env.INFURA_ID;
 const DEFAULT_NETWORK = process.env.DEFAULT_NETWORK;
 const USER_PK = process.env.USER_PK;
-const PRO_PK = process.env.PRO_PK;
+const PROVIDER_PK = process.env.PROVIDER_PK;
 
 assert.ok(DEV_MNEMONIC, "no DEV_MNEMONIC in process.env");
 assert.ok(MAINNET_MNEMONIC, "no MAINNET_MNEMONIC in process.env");
 assert.ok(INFURA_ID, "no Infura ID in process.env");
 assert.ok(USER_PK, "no user private key (USER_PK) found in .env");
-assert.ok(PRO_PK, "no provider private key (USER_PK) found in .env");
+assert.ok(PROVIDER_PK, "no provider private key (USER_PK) found in .env");
 
 // Config Files
 const buidlerevmConfig = require("./buidler/config/networks/buidlerevmConfig");

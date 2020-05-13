@@ -21,9 +21,7 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
     function create(
         Action[] memory _actions,
         Task[] memory _tasks,
-        uint256[] memory _exipiryDate,
-        uint256[] memory _rounds,
-        bool _cycle
+        uint256[] memory _expiryDates
     )
         public
         payable
@@ -34,7 +32,7 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         gelatoProxyByUser[msg.sender] = userProxy;
         userByGelatoProxy[userProxy] = msg.sender;
         if (_actions.length != 0) _execActions(userProxy, _actions);
-        if (_tasks.length != 0) _submitTasks(userProxy, _tasks, _exipiryDate, _rounds, _cycle);
+        if (_tasks.length != 0) _submitTasks(userProxy, _tasks, _expiryDates);
         emit LogCreation(msg.sender, userProxy, msg.value);
     }
 
@@ -43,9 +41,7 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         uint256 _saltNonce,
         Action[] memory _actions,
         Task[] memory _tasks,
-        uint256[] memory _exipiryDate,
-        uint256[] memory _rounds,
-        bool _cycle
+        uint256[] memory _expiryDates
     )
         public
         payable
@@ -66,11 +62,43 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
 
         // Optional setup
         if (_actions.length != 0) _execActions(userProxy, _actions);
-        if (_tasks.length != 0) _submitTasks(userProxy, _tasks, _exipiryDate, _rounds, _cycle);
+        if (_tasks.length != 0) _submitTasks(userProxy, _tasks, _expiryDates);
 
         // Success
         emit LogCreation(msg.sender, userProxy, msg.value);
     }
+
+    function createAndSubmitTaskCycle(
+        Action[] memory _actions,
+        Task[] memory _tasks,
+        uint256 _expiryDate,
+        uint256 _sumOfRequestedTaskSubmits
+    )
+        public
+        payable
+        override
+        returns(GelatoUserProxy userProxy)
+    {
+        userProxy = create(_actions, new Task[](0), new uint[](0));
+        _submitTaskCycle(userProxy, _tasks, _sumOfRequestedTaskSubmits, _expiryDate);
+    }
+
+    function createTwoAndSubmitTaskCycle(
+        uint256 _saltNonce,
+        Action[] memory _actions,
+        Task[] memory _tasks,
+        uint256 _expiryDate,
+        uint256 _sumOfRequestedTaskSubmits
+    )
+        public
+        payable
+        override
+        returns(GelatoUserProxy userProxy)
+    {
+        userProxy = createTwo(_saltNonce, _actions, new Task[](0), new uint[](0));
+        _submitTaskCycle(userProxy, _tasks, _sumOfRequestedTaskSubmits, _expiryDate);
+    }
+
 
     function predictProxyAddress(address _user, uint256 _saltNonce)
         public
@@ -102,32 +130,45 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         return type(GelatoUserProxy).creationCode;
     }
 
-    function _submitTasks(GelatoUserProxy _userProxy, Task[] memory _tasks, uint256[] memory _exipiryDate, uint256[] memory _rounds, bool _cycle)
-        private
-    {
-        if (_cycle) {
-            try _userProxy.submitTaskCycle(_tasks, _exipiryDate[0], _rounds[0]) {
-            } catch Error(string memory err) {
-                revert(string(abi.encodePacked("GelatoUserProxyFactory.submitTaskCycle:", err)));
-            } catch {
-                revert("GelatoUserProxyFactory.submitTaskCycle:undefined");
-            }
-        } else {
-            try _userProxy.multiSubmitTasks(_tasks, _exipiryDate, _rounds) {
-            } catch Error(string memory err) {
-                revert(string(abi.encodePacked("GelatoUserProxyFactory.multiSubmitTasks:", err)));
-            } catch {
-                revert("GelatoUserProxyFactory.multiSubmitTasks:undefined");
-            }
-        }
-    }
-
     function _execActions(GelatoUserProxy _userProxy, Action[] memory _actions) private {
         try _userProxy.multiExecActions(_actions) {
         } catch Error(string memory err) {
             revert(string(abi.encodePacked("GelatoUserProxyFactory._execActions:", err)));
         } catch {
             revert("GelatoUserProxyFactory._execActions:undefined");
+        }
+    }
+
+    function _submitTasks(
+        GelatoUserProxy _userProxy,
+        Task[] memory _tasks,
+        uint256[] memory _expiryDates
+    )
+        private
+    {
+        try _userProxy.multiSubmitTasks(_tasks, _expiryDates) {
+        } catch Error(string memory err) {
+            revert(string(abi.encodePacked("GelatoUserProxyFactory._submitTasks:", err)));
+        } catch {
+            revert("GelatoUserProxyFactory._submitTasks:undefined");
+        }
+    }
+
+    function _submitTaskCycle(
+        GelatoUserProxy _userProxy,
+        Task[] memory _tasks,
+        uint256 _sumOfRequestedTaskSubmits,
+        uint256 _expiryDate
+    )
+        private
+    {
+        try _userProxy.submitTaskCycle(_tasks, _sumOfRequestedTaskSubmits, _expiryDate) {
+        } catch Error(string memory err) {
+            revert(
+                string(abi.encodePacked("GelatoUserProxyFactory._submitTaskCycle:", err))
+            );
+        } catch {
+            revert("GelatoUserProxyFactory._submitTaskCycle:undefined");
         }
     }
 }

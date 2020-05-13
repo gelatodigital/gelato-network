@@ -94,7 +94,7 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
     // Create UserProxy
     const createTx = await gelatoUserProxyFactory
       .connect(seller)
-      .create([], [], [0], [0], false);
+      .create([], [], []);
     await createTx.wait();
     userProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
       sellerAddress
@@ -200,26 +200,25 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
       provider: gelatoProvider,
       conditions: [conditionBalanceStatefulStruct],
       actions: [mockActionDummyStruct, actionSetRefStruct],
-      autoResubmitSelf: true,
     });
 
-    const submitTaskData = await run("abi-encode-withselector", {
+    const submitTaskCycleData = await run("abi-encode-withselector", {
       contractname: "GelatoCore",
-      functionname: "submitTask",
-      inputs: [task, 0, 0],
+      functionname: "submitTaskCycle",
+      inputs: [[task], [0], [0]],
     });
 
     const actionSubmitTaskStruct = new Action({
       addr: gelatoCore.address,
-      data: submitTaskData,
+      data: submitTaskCycleData,
       operation: Operation.Call,
     });
 
     const taskReceipt = new TaskReceipt({
       id: 1,
       userProxy: userProxyAddress,
-      cycle: [task],
-      rounds: 0,
+      tasks: [task],
+      submissionsLeft: 0,
     });
 
     await userProxy
@@ -330,23 +329,23 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
       actions: [mockActionDummyStruct, actionSetRefStruct],
     });
 
-    const submitTaskData = await run("abi-encode-withselector", {
+    const submitTaskCycleData = await run("abi-encode-withselector", {
       contractname: "GelatoCore",
-      functionname: "submitTask",
-      inputs: [task, 0, 0],
+      functionname: "submitTaskCycle",
+      inputs: [[task], [0], [0]],
     });
 
     const actionSubmitTaskStruct = new Action({
       addr: gelatoCore.address,
-      data: submitTaskData,
+      data: submitTaskCycleData,
       operation: Operation.Call,
     });
 
     const taskReceipt = new TaskReceipt({
       id: 1,
       userProxy: userProxyAddress,
-      cycle: [task],
-      rounds: 0,
+      tasks: [task],
+      submissionsLeft: 0,
     });
 
     await expect(

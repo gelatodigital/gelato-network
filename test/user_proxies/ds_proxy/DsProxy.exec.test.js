@@ -233,8 +233,8 @@ describe("Testing DS Proxy Module delpoyment and ds proxy execution with gelato"
       const taskReceipt = new TaskReceipt({
         id: 1,
         userProxy: userProxyAddress,
-        cycle: [task],
-        rounds: 1,
+        tasks: [task],
+        submissionsLeft: 1,
       });
 
       // Submit Task Data encoded
@@ -242,7 +242,7 @@ describe("Testing DS Proxy Module delpoyment and ds proxy execution with gelato"
       const submitTaskData = await run("abi-encode-withselector", {
         contractname: "SubmitTaskScript",
         functionname: "submitTask",
-        inputs: [task, 0, 1],
+        inputs: [task, 0],
       });
 
       // LogTaskSubmitted(taskReceipt.id, hashedTaskReceipt, taskReceipt);
@@ -310,8 +310,8 @@ describe("Testing DS Proxy Module delpoyment and ds proxy execution with gelato"
       const taskReceipt = new TaskReceipt({
         id: 1,
         userProxy: userProxyAddress,
-        cycle: [task],
-        rounds: 1,
+        tasks: [task],
+        submissionsLeft: 1,
       });
 
       // Submit new task spec as provider
@@ -328,7 +328,7 @@ describe("Testing DS Proxy Module delpoyment and ds proxy execution with gelato"
       const submitTaskData = await run("abi-encode-withselector", {
         contractname: "SubmitTaskScript",
         functionname: "submitTask",
-        inputs: [task, 0, 1],
+        inputs: [task, 0],
       });
 
       // LogTaskSubmitted(taskReceipt.id, hashedTaskReceipt, taskReceipt);
@@ -387,8 +387,8 @@ describe("Testing DS Proxy Module delpoyment and ds proxy execution with gelato"
       const taskReceipt = new TaskReceipt({
         id: 1,
         userProxy: userProxyAddress,
-        cycle: [task],
-        rounds: 1,
+        tasks: [task],
+        submissionsLeft: 1,
       });
 
       // Submit new task spec as provider
@@ -405,7 +405,7 @@ describe("Testing DS Proxy Module delpoyment and ds proxy execution with gelato"
       const submitTaskData = await run("abi-encode-withselector", {
         contractname: "SubmitTaskScript",
         functionname: "submitTask",
-        inputs: [task, 0, 1],
+        inputs: [task, 0],
       });
 
       // LogTaskSubmitted(taskReceipt.id, hashedTaskReceipt, taskReceipt);

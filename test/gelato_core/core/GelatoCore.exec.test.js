@@ -10,7 +10,7 @@ const GELATO_MAX_GAS = initialStateSysAdmin.gelatoMaxGas;
 const GELATO_GAS_PRICE = initialStateGasPriceOracle.gasPrice;
 
 const EXPIRY_DATE = 0;
-const ROUNDS = 1;
+const SUBMISSIONS_LEFT = 1;
 
 // ##### Gnosis Action Test Cases #####
 // 1. All sellTokens got converted into buy tokens, sufficient for withdrawal
@@ -259,7 +259,7 @@ describe("GelatoCore.exec", function () {
     // Create UserProxy
     const createTx = await gelatoUserProxyFactory
       .connect(seller)
-      .create([], [], [0], [0], false);
+      .create([], [], []);
     await createTx.wait();
     userProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
       sellerAddress
@@ -321,12 +321,12 @@ describe("GelatoCore.exec", function () {
       const taskReceipt = new TaskReceipt({
         id: 1,
         userProxy: userProxyAddress,
-        cycle: [task],
-        rounds: ROUNDS,
+        tasks: [task],
+        submissionsLeft: SUBMISSIONS_LEFT,
       });
 
       // LogTaskSubmitted(taskReceipt.id, hashedTaskReceipt, taskReceipt);
-      await expect(userProxy.submitTask(task, EXPIRY_DATE, ROUNDS)).to.emit(
+      await expect(userProxy.submitTask(task, EXPIRY_DATE)).to.emit(
         gelatoCore,
         "LogTaskSubmitted"
       );
@@ -463,11 +463,11 @@ describe("GelatoCore.exec", function () {
       let taskReceipt = new TaskReceipt({
         id: 1,
         userProxy: userProxyAddress,
-        cycle: [task],
-        rounds: ROUNDS,
+        tasks: [task],
+        submissionsLeft: SUBMISSIONS_LEFT,
       });
 
-      await expect(userProxy.submitTask(task, EXPIRY_DATE, ROUNDS)).to.emit(
+      await expect(userProxy.submitTask(task, EXPIRY_DATE)).to.emit(
         gelatoCore,
         "LogTaskSubmitted"
       );
@@ -546,11 +546,11 @@ describe("GelatoCore.exec", function () {
       let taskReceipt = new TaskReceipt({
         id: 1,
         userProxy: userProxyAddress,
-        cycle: [task],
-        rounds: ROUNDS,
+        tasks: [task],
+        submissionsLeft: SUBMISSIONS_LEFT,
       });
 
-      await expect(userProxy.submitTask(task, EXPIRY_DATE, ROUNDS)).to.emit(
+      await expect(userProxy.submitTask(task, EXPIRY_DATE)).to.emit(
         gelatoCore,
         "LogTaskSubmitted"
       );
@@ -628,11 +628,11 @@ describe("GelatoCore.exec", function () {
       let taskReceipt = new TaskReceipt({
         id: 1,
         userProxy: userProxyAddress,
-        cycle: [task],
-        rounds: ROUNDS,
+        tasks: [task],
+        submissionsLeft: SUBMISSIONS_LEFT,
       });
 
-      await expect(userProxy.submitTask(task, EXPIRY_DATE, ROUNDS)).to.emit(
+      await expect(userProxy.submitTask(task, EXPIRY_DATE)).to.emit(
         gelatoCore,
         "LogTaskSubmitted"
       );
@@ -704,11 +704,11 @@ describe("GelatoCore.exec", function () {
       let taskReceipt = new TaskReceipt({
         id: 1,
         userProxy: userProxyAddress,
-        cycle: [task],
-        rounds: ROUNDS,
+        tasks: [task],
+        submissionsLeft: SUBMISSIONS_LEFT,
       });
 
-      await expect(userProxy.submitTask(task, EXPIRY_DATE, ROUNDS)).to.emit(
+      await expect(userProxy.submitTask(task, EXPIRY_DATE)).to.emit(
         gelatoCore,
         "LogTaskSubmitted"
       );
@@ -775,11 +775,11 @@ describe("GelatoCore.exec", function () {
       let taskReceipt = new TaskReceipt({
         id: 1,
         userProxy: userProxyAddress,
-        cycle: [task],
-        rounds: ROUNDS,
+        tasks: [task],
+        submissionsLeft: SUBMISSIONS_LEFT,
       });
 
-      await expect(userProxy.submitTask(task, EXPIRY_DATE, ROUNDS)).to.emit(
+      await expect(userProxy.submitTask(task, EXPIRY_DATE)).to.emit(
         gelatoCore,
         "LogTaskSubmitted"
       );
@@ -843,11 +843,11 @@ describe("GelatoCore.exec", function () {
       let taskReceipt = new TaskReceipt({
         id: 1,
         userProxy: userProxyAddress,
-        cycle: [task],
-        rounds: ROUNDS,
+        tasks: [task],
+        submissionsLeft: SUBMISSIONS_LEFT,
       });
 
-      await expect(userProxy.submitTask(task, EXPIRY_DATE, ROUNDS)).to.emit(
+      await expect(userProxy.submitTask(task, EXPIRY_DATE)).to.emit(
         gelatoCore,
         "LogTaskSubmitted"
       );
@@ -921,8 +921,8 @@ describe("GelatoCore.exec", function () {
       let taskReceipt = new TaskReceipt({
         id: 1,
         userProxy: userProxyAddress,
-        cycle: [task],
-        rounds: ROUNDS,
+        tasks: [task],
+        submissionsLeft: SUBMISSIONS_LEFT,
       });
 
       await expect(
@@ -973,11 +973,11 @@ describe("GelatoCore.exec", function () {
       let taskReceipt = new TaskReceipt({
         id: 1,
         userProxy: userProxyAddress,
-        cycle: [task],
-        rounds: ROUNDS,
+        tasks: [task],
+        submissionsLeft: SUBMISSIONS_LEFT,
       });
 
-      await expect(userProxy.submitTask(task, EXPIRY_DATE, ROUNDS)).to.emit(
+      await expect(userProxy.submitTask(task, EXPIRY_DATE)).to.emit(
         gelatoCore,
         "LogTaskSubmitted"
       );
@@ -1042,12 +1042,12 @@ describe("GelatoCore.exec", function () {
       let taskReceipt = new TaskReceipt({
         id: 1,
         userProxy: userProxyAddress,
-        cycle: [task],
-        rounds: ROUNDS,
+        tasks: [task],
+        submissionsLeft: SUBMISSIONS_LEFT,
         expiryDate: expiryDate,
       });
 
-      await expect(userProxy.submitTask(task, expiryDate, ROUNDS)).to.emit(
+      await expect(userProxy.submitTask(task, expiryDate)).to.emit(
         gelatoCore,
         "LogTaskSubmitted"
       );
@@ -1111,13 +1111,13 @@ describe("GelatoCore.exec", function () {
       const taskReceipt = new TaskReceipt({
         id: 1,
         userProxy: userProxyAddress,
-        cycle: [task],
-        rounds: ROUNDS,
+        tasks: [task],
+        submissionsLeft: SUBMISSIONS_LEFT,
       });
 
       // LogTaskSubmitted(taskReceipt.id, hashedTaskReceipt, taskReceipt);
 
-      await expect(userProxy.submitTask(task, EXPIRY_DATE, ROUNDS)).to.emit(
+      await expect(userProxy.submitTask(task, EXPIRY_DATE)).to.emit(
         gelatoCore,
         "LogTaskSubmitted"
       );
@@ -1196,13 +1196,13 @@ describe("GelatoCore.exec", function () {
       const taskReceipt = new TaskReceipt({
         id: 1,
         userProxy: userProxyAddress,
-        cycle: [task],
-        rounds: ROUNDS,
+        tasks: [task],
+        submissionsLeft: SUBMISSIONS_LEFT,
       });
 
       // LogTaskSubmitted(taskReceipt.id, hashedTaskReceipt, taskReceipt);
 
-      await expect(userProxy.submitTask(task, EXPIRY_DATE, ROUNDS)).to.emit(
+      await expect(userProxy.submitTask(task, EXPIRY_DATE)).to.emit(
         gelatoCore,
         "LogTaskSubmitted"
       );
@@ -1279,13 +1279,13 @@ describe("GelatoCore.exec", function () {
       const taskReceipt = new TaskReceipt({
         id: 1,
         userProxy: userProxyAddress,
-        cycle: [task],
-        rounds: ROUNDS,
+        tasks: [task],
+        submissionsLeft: SUBMISSIONS_LEFT,
       });
 
       // LogTaskSubmitted(taskReceipt.id, hashedTaskReceipt, taskReceipt);
 
-      await expect(userProxy.submitTask(task, EXPIRY_DATE, ROUNDS)).to.emit(
+      await expect(userProxy.submitTask(task, EXPIRY_DATE)).to.emit(
         gelatoCore,
         "LogTaskSubmitted"
       );
@@ -1362,8 +1362,8 @@ describe("GelatoCore.exec", function () {
       const taskReceipt = new TaskReceipt({
         id: 1,
         userProxy: userProxyAddress,
-        cycle: [task],
-        rounds: ROUNDS,
+        tasks: [task],
+        submissionsLeft: SUBMISSIONS_LEFT,
       });
 
       const provideFundsPayload = await run("abi-encode-withselector", {
@@ -1386,7 +1386,7 @@ describe("GelatoCore.exec", function () {
       const submitTaskPayload = await run("abi-encode-withselector", {
         contractname: "GelatoCore",
         functionname: "submitTask",
-        inputs: [task, EXPIRY_DATE, ROUNDS],
+        inputs: [task, EXPIRY_DATE],
       });
 
       // addProviderModules
@@ -1568,11 +1568,11 @@ describe("GelatoCore.exec", function () {
       let taskReceipt = new TaskReceipt({
         id: 1,
         userProxy: userProxyAddress,
-        cycle: [task],
-        rounds: ROUNDS,
+        tasks: [task],
+        submissionsLeft: SUBMISSIONS_LEFT,
       });
 
-      await expect(userProxy.submitTask(task, EXPIRY_DATE, ROUNDS)).to.emit(
+      await expect(userProxy.submitTask(task, EXPIRY_DATE)).to.emit(
         gelatoCore,
         "LogTaskSubmitted"
       );
@@ -1638,8 +1638,8 @@ describe("GelatoCore.exec", function () {
       const taskReceipt = new TaskReceipt({
         id: 1,
         userProxy: sysProxyAddress,
-        cycle: [task],
-        rounds: ROUNDS,
+        tasks: [task],
+        submissionsLeft: SUBMISSIONS_LEFT,
       });
 
       const stakeAmount = ethers.utils.parseEther("1");
@@ -1708,9 +1708,7 @@ describe("GelatoCore.exec", function () {
             },
           ],
           [task],
-          [EXPIRY_DATE],
-          [ROUNDS],
-          false,
+          [],
           {
             value: stakeAmount,
           }
@@ -1795,11 +1793,11 @@ describe("GelatoCore.exec", function () {
       let taskReceipt = new TaskReceipt({
         id: 1,
         userProxy: userProxyAddress,
-        cycle: [task],
-        rounds: ROUNDS,
+        tasks: [task],
+        submissionsLeft: SUBMISSIONS_LEFT,
       });
 
-      await expect(userProxy.submitTask(task, EXPIRY_DATE, ROUNDS)).to.emit(
+      await expect(userProxy.submitTask(task, EXPIRY_DATE)).to.emit(
         gelatoCore,
         "LogTaskSubmitted"
       );
@@ -1908,11 +1906,11 @@ describe("GelatoCore.exec", function () {
       const taskReceipt = new TaskReceipt({
         id: 1,
         userProxy: userProxyAddress,
-        cycle: [task],
-        rounds: ROUNDS,
+        tasks: [task],
+        submissionsLeft: SUBMISSIONS_LEFT,
       });
 
-      await expect(userProxy.submitTask(task, EXPIRY_DATE, ROUNDS)).to.emit(
+      await expect(userProxy.submitTask(task, EXPIRY_DATE)).to.emit(
         gelatoCore,
         "LogTaskSubmitted"
       );

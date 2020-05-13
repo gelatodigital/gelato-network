@@ -1,30 +1,22 @@
 import { constants, utils } from "ethers";
+import checkTaskMembers from "../../helpers/gelato/checkTaskMembers";
 
 class TaskReceipt {
-  constructor({ id, userProxy, task, index, expiryDate, rounds, cycle }) {
+  constructor({ id, userProxy, index, tasks, submissionsLeft, expiryDate }) {
     if (userProxy === undefined) throw new Error("TaskReceipt: no userProxy");
-    if (rounds === undefined) throw new Error("TaskReceipt: no Rounds");
-    // if (index !== undefined) index = utils.bigNumberify(index);
-    if (cycle && !Array.isArray(cycle))
-      throw new Error("\nTask: cycle be non-empty Array\n");
-    if (cycle !== undefined) for (const task of cycle) _checkTaskMembers(task);
+    if (!tasks || !Array.isArray(tasks))
+      throw new Error("\nTask: tasks must be Array\n");
+    if (!tasks.length) throw new Error("\nTask: tasks be non-empty Array\n");
+    for (const task of tasks) checkTaskMembers(task);
 
     this.id = id !== undefined ? utils.bigNumberify(id) : constants.Zero;
     this.userProxy = userProxy;
     this.index =
-      index === undefined ? utils.bigNumberify("0") : utils.bigNumberify(index);
+      index === undefined ? constants.Zero : utils.bigNumberify(index);
+    this.tasks = tasks ? tasks : [];
+    this.submissionsLeft = submissionsLeft === undefined ? 1 : submissionsLeft;
     this.expiryDate = expiryDate ? expiryDate : constants.Zero;
-    this.rounds = rounds;
-    this.cycle = cycle ? cycle : [];
   }
-}
-
-async function _checkTaskMembers(task) {
-  if (!task.provider) throw new Error("\nTask: no provider\n");
-  if (task.conditions && !Array.isArray(task.conditions))
-    throw new Error("\nTask: optional conditions must be non-empty Array\n");
-  if (!task.actions || !Array.isArray(task.actions) || !task.actions.length)
-    throw new Error("\nTask: task.actions must be non-empty Array\n");
 }
 
 export default TaskReceipt;

@@ -33,9 +33,9 @@ struct Task {
 struct TaskReceipt {
     uint256 id;
     address userProxy;
-    uint256 index; // optional for cyclic tasks: auto-filled by multiSubmitTask()
-    Task[] cycle;  // optional for cyclic tasks: auto-filled multiSubmitTasks()
-    uint256 rounds;
+    uint256 index;
+    Task[] tasks;
+    uint256 submissionsLeft;
     uint256 expiryDate;
 }
 
@@ -45,8 +45,6 @@ interface IGelatoCore {
         bytes32 indexed taskReceiptHash,
         TaskReceipt taskReceipt
     );
-
-    event LogTaskCycleSubmitted(uint256 indexed cycleId);
 
     event LogExecSuccess(
         address indexed executor,
@@ -72,20 +70,33 @@ interface IGelatoCore {
     /// @dev In submitTask the msg.sender must be the same as _userProxy here.
     /// @param _userProxy The userProxy from which the task will be submitted.
     /// @param _task Selected provider, conditions, actions, expiry date of the task
-    function canSubmitTask(address _userProxy, Task calldata _task, uint256 _exipiryDate)
+    function canSubmitTask(address _userProxy, Task calldata _task, uint256 _expiryDate)
         external
         view
         returns(string memory);
 
-    /// @notice Submit a gelato task that will be executed under the specified conditions
-    /// @dev This function must be called from a contract account provided by Provider
-    /// @param _task Selected provider, conditions, actions, expiry date of the task
-    function submitTask(Task calldata _task, uint256 _exipiryDate, uint256 _rounds) external;
+    /// @notice API to submit a single Task.
+    /// @dev You can let users submit multiple tasks at once by batching calls to this.
+    /// @param _task A Gelato Task object: provider, conditions, actions.
+    /// @param _expiryDate From then on the task cannot be executed. 0 for infinity.
+    function submitTask(Task calldata _task, uint256 _expiryDate) external;
 
-    /// @notice Submit a repeated sequence of tasks to be executed, starting with the first.
-    /// @dev This function must be called from a contract account provided by Provider
-    /// @param _tasks Selected provider, conditions, actions, expiry date of the task
-    function submitTaskCycle(Task[] calldata _tasks, uint256 _exipiryDate, uint256 _rounds) external;
+    /// @notice A Gelato Task Cycle consists of 1 or more Tasks that automatically submit
+    ///  the next one, after they have been executed.
+    /// @dev CAUTION: _sumOfRequestedTaskSubmits does not mean the number of cycles.
+    /// @param _tasks This can be a single task or a sequence of tasks.
+    /// @param _sumOfRequestedTaskSubmits The TOTAL number of Task auto-submits
+    //   that should have occured once the cycle is complete:
+    ///  1) _sumOfRequestedTaskSubmits=X: number of times to run the same task or the sum
+    ///   of total cyclic task executions in the case of a sequence of different tasks.
+    ///  2) _submissionsLeft=0: infinity - run the same task or sequence of tasks infinitely.
+    /// @param _expiryDate  After this no task of the sequence can be executed any more.
+    function submitTaskCycle(
+        Task[] calldata _tasks,
+        uint256 _sumOfRequestedTaskSubmits,
+        uint256 _expiryDate
+    )
+        external;
 
     // ================  Exec Suite =========================
     /// @notice Off-chain API for executors to check, if a TaskReceipt is executable
@@ -131,5 +142,4 @@ interface IGelatoCore {
     /// @param _taskReceiptId Id of taskReceipt emitted in submission event
     /// @return hash of taskReceipt
     function taskReceiptHash(uint256 _taskReceiptId) external view returns(bytes32);
-
 }

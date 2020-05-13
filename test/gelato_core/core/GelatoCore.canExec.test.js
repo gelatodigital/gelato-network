@@ -12,7 +12,7 @@ const GELATO_MAX_GAS = initialStateSysAdmin.gelatoMaxGas;
 const GELATO_GAS_PRICE = initialStateGasPriceOracle.gasPrice;
 
 const EXPIRY_DATE = 0;
-const ROUNDS = 1;
+const SUBMISSIONS_LEFT = 1;
 
 // ##### Gnosis Action Test Cases #####
 // 1. All sellTokens got converted into buy tokens, sufficient for withdrawal
@@ -135,7 +135,7 @@ describe("GelatoCore.canExec", function () {
     // Create UserProxy
     const createTx = await gelatoUserProxyFactory
       .connect(seller)
-      .create([], [], [0], [0], false);
+      .create([], [], []);
     await createTx.wait();
     userProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
       sellerAddress
@@ -168,11 +168,11 @@ describe("GelatoCore.canExec", function () {
     taskReceipt = new TaskReceipt({
       id: 1,
       userProxy: userProxyAddress,
-      cycle: [task],
-      rounds: ROUNDS,
+      tasks: [task],
+      submissionsLeft: SUBMISSIONS_LEFT,
     });
 
-    await expect(userProxy.submitTask(task, EXPIRY_DATE, ROUNDS)).to.emit(
+    await expect(userProxy.submitTask(task, EXPIRY_DATE)).to.emit(
       gelatoCore,
       "LogTaskSubmitted"
     );
@@ -221,12 +221,12 @@ describe("GelatoCore.canExec", function () {
     let taskReceipt2 = new TaskReceipt({
       id: 2,
       userProxy: userProxyAddress,
-      cycle: [task2],
-      rounds: ROUNDS,
+      tasks: [task2],
+      submissionsLeft: SUBMISSIONS_LEFT,
       expiryDate,
     });
 
-    await expect(userProxy.submitTask(task2, expiryDate, ROUNDS)).to.emit(
+    await expect(userProxy.submitTask(task2, expiryDate)).to.emit(
       gelatoCore,
       "LogTaskSubmitted"
     );
@@ -249,11 +249,11 @@ describe("GelatoCore.canExec", function () {
     let taskReceipt2 = new TaskReceipt({
       id: 2,
       userProxy: userProxyAddress,
-      cycle: [task2],
-      rounds: ROUNDS,
+      tasks: [task2],
+      submissionsLeft: SUBMISSIONS_LEFT,
     });
 
-    await userProxy.submitTask(task2, EXPIRY_DATE, ROUNDS);
+    await userProxy.submitTask(task2, EXPIRY_DATE);
 
     await gelatoCore.connect(provider).unprovideTaskSpecs([newTaskSpec]);
 

@@ -6,7 +6,7 @@ const { run, ethers } = require("@nomiclabs/buidler");
 const GELATO_GAS_PRICE = ethers.utils.parseUnits("8", "gwei");
 
 const EXPIRY_DATE = 0;
-const ROUNDS = 1;
+const SUBMISSIONS_LEFT = 1;
 
 // ##### Gnosis Action Test Cases #####
 // 1. All sellTokens got converted into buy tokens, sufficient for withdrawal
@@ -269,7 +269,7 @@ describe("GelatoCore.processProviderPayables", function () {
     // Create UserProxy
     const createTx = await gelatoUserProxyFactory
       .connect(seller)
-      .create([], [], [0], [0], false);
+      .create([], [], []);
     await createTx.wait();
     userProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
       sellerAddress
@@ -376,15 +376,11 @@ describe("GelatoCore.processProviderPayables", function () {
       let taskReceipt = new TaskReceipt({
         id: 1,
         userProxy: userProxyAddress,
-        cycle: [task],
-        rounds: ROUNDS,
+        tasks: [task],
+        submissionsLeft: SUBMISSIONS_LEFT,
       });
 
-      const submitTaskTx = await userProxy.submitTask(
-        task,
-        EXPIRY_DATE,
-        ROUNDS
-      );
+      const submitTaskTx = await userProxy.submitTask(task, EXPIRY_DATE);
       await submitTaskTx.wait();
 
       const executorBalanceBefore = await ethers.provider.getBalance(
@@ -488,15 +484,11 @@ describe("GelatoCore.processProviderPayables", function () {
       let taskReceipt = new TaskReceipt({
         id: 1,
         userProxy: userProxyAddress,
-        cycle: [task],
-        rounds: ROUNDS,
+        tasks: [task],
+        submissionsLeft: SUBMISSIONS_LEFT,
       });
 
-      const submitTaskTx = await userProxy.submitTask(
-        task,
-        EXPIRY_DATE,
-        ROUNDS
-      );
+      const submitTaskTx = await userProxy.submitTask(task, EXPIRY_DATE);
       await submitTaskTx.wait();
 
       const executorBalanceBefore = await ethers.provider.getBalance(
@@ -623,15 +615,11 @@ describe("GelatoCore.processProviderPayables", function () {
       let taskReceipt = new TaskReceipt({
         id: 1,
         userProxy: userProxyAddress,
-        cycle: [task],
-        rounds: ROUNDS,
+        tasks: [task],
+        submissionsLeft: SUBMISSIONS_LEFT,
       });
 
-      const submitTaskTx = await userProxy.submitTask(
-        task,
-        EXPIRY_DATE,
-        ROUNDS
-      );
+      const submitTaskTx = await userProxy.submitTask(task, EXPIRY_DATE);
       await submitTaskTx.wait();
 
       const executorBalanceBefore = await ethers.provider.getBalance(
@@ -735,15 +723,11 @@ describe("GelatoCore.processProviderPayables", function () {
       let taskReceipt = new TaskReceipt({
         id: 1,
         userProxy: userProxyAddress,
-        cycle: [task],
-        rounds: ROUNDS,
+        tasks: [task],
+        submissionsLeft: SUBMISSIONS_LEFT,
       });
 
-      const submitTaskTx = await userProxy.submitTask(
-        task,
-        EXPIRY_DATE,
-        ROUNDS
-      );
+      const submitTaskTx = await userProxy.submitTask(task, EXPIRY_DATE);
       await submitTaskTx.wait();
 
       const executorBalanceBefore = await ethers.provider.getBalance(
