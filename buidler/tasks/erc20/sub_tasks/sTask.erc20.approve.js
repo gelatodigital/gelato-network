@@ -8,14 +8,14 @@ export default internalTask(
   .addParam("erc20address")
   .addParam("spender", "address")
   .addParam("amount", "uint")
-  .addParam("events")
+  .addFlag("events")
   .addFlag("log", "Logs return values to stdout")
   .setAction(async ({ erc20address, spender, amount, events, log }) => {
     try {
       const erc20Contract = await run("instantiateContract", {
         contractname: "IERC20",
         contractaddress: erc20address,
-        write: true
+        write: true,
       });
       const tx = await erc20Contract.approve(spender, amount);
       if (log) console.log(`\napprove-txHash: ${tx.hash}\n`);
@@ -26,7 +26,7 @@ export default internalTask(
           contractaddress: taskArgs.erc20address,
           blockhash,
           txhash: tx.hash,
-          log: true
+          log: true,
         });
       }
       return tx.hash;

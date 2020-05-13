@@ -17,4 +17,18 @@ contract SubmitTaskScript {
     {
         gelatoCore.submitTask(_task, _expiryDate);
     }
+
+    /// @dev will be delegate called by ds_proxy
+    function submitTaskCycle(Task[] memory _tasks, uint256 _cycles, uint256 _expiryDate)
+        public
+    {
+        gelatoCore.submitTaskCycle(_tasks, _cycles, _expiryDate);
+    }
+
+    /// @dev will be delegate called by ds_proxy
+    function submitTaskChain(Task[] memory _tasks, uint256 _sumOfRequestedTaskSubmits, uint256 _expiryDate)
+        public
+    {
+        gelatoCore.submitTaskCycle(_tasks, _sumOfRequestedTaskSubmits, _expiryDate);
+    }
 }

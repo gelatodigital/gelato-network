@@ -20,6 +20,18 @@ interface IGelatoUserProxy {
 
     /// @notice A Gelato Task Cycle consists of 1 or more Tasks that automatically submit
     ///  the next one, after they have been executed.
+    /// @param _tasks This can be a single task or a sequence of tasks.
+    /// @param _cycles How many full cycles will be submitted
+    /// @param _expiryDate  After this no task of the sequence can be executed any more.
+    function submitTaskCycle(
+        Task[] calldata _tasks,
+        uint256 _cycles,
+        uint256 _expiryDate
+    )
+        external;
+
+    /// @notice A Gelato Task Cycle consists of 1 or more Tasks that automatically submit
+    ///  the next one, after they have been executed.
     /// @dev CAUTION: _sumOfRequestedTaskSubmits does not mean the number of cycles.
     /// @param _tasks This can be a single task or a sequence of tasks.
     /// @param _sumOfRequestedTaskSubmits The TOTAL number of Task auto-submits
@@ -28,12 +40,11 @@ interface IGelatoUserProxy {
     ///   of total cyclic task executions in the case of a sequence of different tasks.
     ///  2) _submissionsLeft=0: infinity - run the same task or sequence of tasks infinitely.
     /// @param _expiryDate  After this no task of the sequence can be executed any more.
-    function submitTaskCycle(
+    function submitTaskChain(
         Task[] calldata _tasks,
-        uint256 _sumOfRequestedTaskSubmits,
+        uint256 _sumOfRequestedTaskSubmits,  // does NOT mean the number of cycles
         uint256 _expiryDate
-    )
-        external;
+    ) external;
 
     /// @notice Cancel a task receipt on gelato
     /// @dev Proxy users or the Task providers can cancel.

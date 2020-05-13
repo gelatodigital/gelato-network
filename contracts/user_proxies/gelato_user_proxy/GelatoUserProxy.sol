@@ -77,7 +77,7 @@ contract GelatoUserProxy is IGelatoUserProxy {
 
     function submitTaskCycle(
         Task[] memory _tasks,
-        uint256 _sumOfRequestedTaskSubmits,  // does NOT mean the number of cycles
+        uint256 _cycles,  // num of full cycles
         uint256 _expiryDate
     )
         public
@@ -85,6 +85,27 @@ contract GelatoUserProxy is IGelatoUserProxy {
         userOrFactory
     {
         try IGelatoCore(gelatoCore).submitTaskCycle(
+            _tasks,
+            _cycles,
+            _expiryDate
+        ) {
+        } catch Error(string memory err) {
+            revert(string(abi.encodePacked("GelatoUserProxy.submitTaskCycle:", err)));
+        } catch {
+            revert("GelatoUserProxy.submitTaskCycle:undefinded");
+        }
+    }
+
+    function submitTaskChain(
+        Task[] memory _tasks,
+        uint256 _sumOfRequestedTaskSubmits,  // does NOT mean the number of cycles
+        uint256 _expiryDate
+    )
+        public
+        override
+        userOrFactory
+    {
+        try IGelatoCore(gelatoCore).submitTaskChain(
             _tasks,
             _sumOfRequestedTaskSubmits,
             _expiryDate
