@@ -1,5 +1,5 @@
 import { internalTask } from "@nomiclabs/buidler/config";
-import { defaultNetwork } from "../../buidler.config";
+import { defaultNetwork } from "../../../buidler.config";
 import { utils } from "ethers";
 
 export default internalTask(

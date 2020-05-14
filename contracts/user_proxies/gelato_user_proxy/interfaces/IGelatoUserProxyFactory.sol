@@ -42,20 +42,55 @@ interface IGelatoUserProxyFactory {
         payable
         returns(GelatoUserProxy userProxy);
 
+
+    /// @notice Like create but for submitting a Task Cycle to Gelato. A
+    //   Gelato Task Cycle consists of 1 or more Tasks that automatically submit
+    ///  the next one, after they have been executed
+    /// @notice A Gelato Task Cycle consists of 1 or more Tasks that automatically submit
+    ///  the next one, after they have been executed.
+    /// @param _tasks This can be a single task or a sequence of tasks.
+    /// @param _cycles How many full cycles will be submitted
+    /// @param _expiryDate  After this no task of the sequence can be executed any more.
+    function createAndSubmitTaskCycle(
+        Action[] calldata _actions,
+        Task[] calldata _tasks,
+        uint256 _expiryDate,
+        uint256 _cycles
+    )
+        external
+        payable
+        returns(GelatoUserProxy userProxy);
+
+
+    /// @notice Just like createAndSubmitTaskCycle just using create2, thus allowing for
+    ///  knowing the address the GelatoUserProxy will be assigned to in advance.
+    function createTwoAndSubmitTaskCycle(
+        uint256 _saltNonce,
+        Action[] calldata _actions,
+        Task[] calldata _tasks,
+        uint256 _expiryDate,
+        uint256 _cycles
+    )
+        external
+        payable
+        returns(GelatoUserProxy userProxy);
+
+
+
     /// @notice Like create but for submitting a Task Cycle to Gelato. A
     //   Gelato Task Cycle consists of 1 or more Tasks that automatically submit
     ///  the next one, after they have been executed
     /// @dev CAUTION: _sumOfRequestedTaskSubmits does not mean the number of cycles.
-    /// @param _taskCycle This can be a single task or a sequence of tasks.
+    /// @param _tasks This can be a single task or a sequence of tasks.
     /// @param _expiryDate  After this no task of the sequence can be executed any more.
     /// @param _sumOfRequestedTaskSubmits The TOTAL number of Task auto-submits
     //   that should have occured once the cycle is complete:
     ///  1) _sumOfRequestedTaskSubmits=X: number of times to run the same task or the sum
     ///   of total cyclic task executions in the case of a sequence of different tasks.
     ///  2) _submissionsLeft=0: infinity - run the same task or sequence of tasks infinitely.
-    function createAndSubmitTaskCycle(
+    function createAndSubmitTaskChain(
         Action[] calldata _actions,
-        Task[] calldata _taskCycle,
+        Task[] calldata _tasks,
         uint256 _expiryDate,
         uint256 _sumOfRequestedTaskSubmits
     )
@@ -63,12 +98,12 @@ interface IGelatoUserProxyFactory {
         payable
         returns(GelatoUserProxy userProxy);
 
-    /// @notice Just like createAndSubmitTaskCycle just using create2, thus allowing for
+    /// @notice Just like createAndSubmitTaskChain just using create2, thus allowing for
     ///  knowing the address the GelatoUserProxy will be assigned to in advance.
-    function createTwoAndSubmitTaskCycle(
+    function createTwoAndSubmitTaskChain(
         uint256 _saltNonce,
         Action[] calldata _actions,
-        Task[] calldata _taskCycle,
+        Task[] calldata _tasks,
         uint256 _expiryDate,
         uint256 _sumOfRequestedTaskSubmits
     )

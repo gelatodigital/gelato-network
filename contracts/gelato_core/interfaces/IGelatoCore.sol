@@ -81,17 +81,34 @@ interface IGelatoCore {
     /// @param _expiryDate From then on the task cannot be executed. 0 for infinity.
     function submitTask(Task calldata _task, uint256 _expiryDate) external;
 
+
+    /// @notice A Gelato Task Cycle consists of 1 or more Tasks that automatically submit
+    ///  the next one, after they have been executed.
+    /// @param _tasks This can be a single task or a sequence of tasks.
+    /// @param _cycles How many full cycles will be submitted
+    /// @param _expiryDate  After this no task of the sequence can be executed any more.
+    function submitTaskCycle(
+        Task[] calldata _tasks,
+        uint256 _cycles,
+        uint256 _expiryDate
+    )
+        external;
+
+
     /// @notice A Gelato Task Cycle consists of 1 or more Tasks that automatically submit
     ///  the next one, after they have been executed.
     /// @dev CAUTION: _sumOfRequestedTaskSubmits does not mean the number of cycles.
+    /// @dev If _sumOfRequestedTaskSubmits = 1 && _tasks.length = 2, only the first task
+    ///  would be submitted, but not the second
     /// @param _tasks This can be a single task or a sequence of tasks.
     /// @param _sumOfRequestedTaskSubmits The TOTAL number of Task auto-submits
-    //   that should have occured once the cycle is complete:
-    ///  1) _sumOfRequestedTaskSubmits=X: number of times to run the same task or the sum
-    ///   of total cyclic task executions in the case of a sequence of different tasks.
-    ///  2) _submissionsLeft=0: infinity - run the same task or sequence of tasks infinitely.
+    ///  that should have occured once the cycle is complete:
+    ///  _sumOfRequestedTaskSubmits = 0 => One Task will resubmit the next Task infinitly
+    ///  _sumOfRequestedTaskSubmits = 1 => One Task will resubmit no other task
+    ///  _sumOfRequestedTaskSubmits = 2 => One Task will resubmit 1 other task
+    ///  ...
     /// @param _expiryDate  After this no task of the sequence can be executed any more.
-    function submitTaskCycle(
+    function submitTaskChain(
         Task[] calldata _tasks,
         uint256 _sumOfRequestedTaskSubmits,
         uint256 _expiryDate

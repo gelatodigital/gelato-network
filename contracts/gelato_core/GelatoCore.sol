@@ -75,12 +75,26 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
     function submitTaskCycle(
         Task[] memory _tasks,
-        uint256 _sumOfRequestedTaskSubmits,  // does NOT mean the number of cycles
+        uint256 _cycles,  // how many full cycles should be submitted
         uint256 _expiryDate
     )
         public
         override
     {
+        _canSubmitGate(_tasks[0], _expiryDate);
+        _storeTaskReceipt(msg.sender, 0, _tasks, _cycles * _tasks.length, _expiryDate);
+    }
+
+    function submitTaskChain(
+        Task[] memory _tasks,
+        uint256 _sumOfRequestedTaskSubmits,  // see IGelatoCore for explanation
+        uint256 _expiryDate
+    )
+        public
+        override
+    {
+        if (_sumOfRequestedTaskSubmits != 0)
+            require(_sumOfRequestedTaskSubmits >= _tasks.length);
         _canSubmitGate(_tasks[0], _expiryDate);
         _storeTaskReceipt(msg.sender, 0, _tasks, _sumOfRequestedTaskSubmits, _expiryDate);
     }

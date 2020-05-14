@@ -1,5 +1,5 @@
 import { task } from "@nomiclabs/buidler/config";
-import { defaultNetwork } from "../../buidler.config";
+import { defaultNetwork } from "../../../buidler.config";
 import { utils, constants } from "ethers";
 
 export default task(
@@ -54,7 +54,6 @@ export default task(
       // GelatoCore contract call from provider account
       const tx = await gelatoCore.addProviderModules([providerModuleAddress]);
 
-      // if (log) console.log(`\n\ntxHash providefunds: ${tx.hash}`);
       const etherscanLink = await run("get-etherscan-link", {
         txhash: tx.hash,
       });

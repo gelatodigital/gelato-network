@@ -49,6 +49,7 @@ export const deployments = {
   // == Time ==
   // Timestamps
   ConditionTimestampPassed: "0x0",
+  ConditionTimeStateful: "0xcB557d06aD3AFa505f0eD1Cc69f99bf342f8e823",
   // Gnosis
   ConditionBatchExchangeFundsWithdrawable:
     "0x66A11882E861B85685668fB3e72a7c6b74753352",

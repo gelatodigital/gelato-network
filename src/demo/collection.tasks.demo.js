@@ -1,10 +1,10 @@
 // ==== GelatoCore ====
 
-// Top up balance on gelato
-import "./task.provideFunds";
-import "./task.unprovideFunds";
-import "./task.addProviderModule";
+// Provide whitelist TaskSpecs
+import "./provider_functions/collection.tasks.demo.providerFuncs";
 
 // ==== Helpers ====
-// Get Etherscan Link
-import "./task.getEtherscanLink";
+import "./helpers/collection.tasks.demo.helpers";
+
+// ==== Task Specs ====
+import "./task_specs/collection.tasks.specs";

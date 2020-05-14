@@ -1,5 +1,5 @@
 import { task } from "@nomiclabs/buidler/config";
-import { defaultNetwork } from "../../buidler.config";
+import { defaultNetwork } from "../../../buidler.config";
 import { utils } from "ethers";
 
 export default task(
@@ -39,7 +39,6 @@ export default task(
         value: depositAmount,
       });
 
-      // if (log) console.log(`\n\ntxHash providefunds: ${tx.hash}`);
       const etherscanLink = await run("get-etherscan-link", {
         txhash: tx.hash,
       });
