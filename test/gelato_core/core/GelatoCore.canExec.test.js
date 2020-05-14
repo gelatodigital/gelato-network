@@ -161,7 +161,6 @@ describe("GelatoCore.canExec", function () {
     });
 
     const task = new Task({
-      provider: gelatoProvider,
       actions: [action],
     });
 
@@ -173,10 +172,9 @@ describe("GelatoCore.canExec", function () {
       submissionsLeft: SUBMISSIONS_LEFT,
     });
 
-    await expect(userProxy.submitTask(task, EXPIRY_DATE)).to.emit(
-      gelatoCore,
-      "LogTaskSubmitted"
-    );
+    await expect(
+      userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE)
+    ).to.emit(gelatoCore, "LogTaskSubmitted");
   });
 
   // We test different functionality of the contract as normal Mocha tests.
@@ -215,22 +213,21 @@ describe("GelatoCore.canExec", function () {
     const expiryDate = oldBlock.timestamp + lifespan;
 
     const task2 = new Task({
-      provider: gelatoProvider,
       actions: [action],
     });
 
     let taskReceipt2 = new TaskReceipt({
       id: 2,
+      provider: gelatoProvider,
       userProxy: userProxyAddress,
       tasks: [task2],
       submissionsLeft: SUBMISSIONS_LEFT,
       expiryDate,
     });
 
-    await expect(userProxy.submitTask(task2, expiryDate)).to.emit(
-      gelatoCore,
-      "LogTaskSubmitted"
-    );
+    await expect(
+      userProxy.submitTask(gelatoProvider, task2, expiryDate)
+    ).to.emit(gelatoCore, "LogTaskSubmitted");
 
     await ethers.provider.send("evm_mine", [expiryDate]);
 
@@ -243,18 +240,18 @@ describe("GelatoCore.canExec", function () {
 
   it("#4: CanExec - Fail due to provider module check failure, not whitelisted action)", async function () {
     const task2 = new Task({
-      provider: gelatoProvider,
       actions: [action],
     });
 
     let taskReceipt2 = new TaskReceipt({
       id: 2,
+      provider: gelatoProvider,
       userProxy: userProxyAddress,
       tasks: [task2],
       submissionsLeft: SUBMISSIONS_LEFT,
     });
 
-    await userProxy.submitTask(task2, EXPIRY_DATE);
+    await userProxy.submitTask(gelatoProvider, task2, EXPIRY_DATE);
 
     await gelatoCore.connect(provider).unprovideTaskSpecs([newTaskSpec]);
 

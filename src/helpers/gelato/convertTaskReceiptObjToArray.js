@@ -52,7 +52,6 @@ function _convertToArrayOfTaskArrays(arrayOfTaskObjs) {
   const tasks = [];
   for (const taskObj of arrayOfTaskObjs) {
     const taskArray = [
-      _convertToProviderArray(taskObj.provider),
       _convertToArrayOfConditionArrays(taskObj.conditions),
       _convertToArrayOfActionArrays(taskObj.actions),
     ];

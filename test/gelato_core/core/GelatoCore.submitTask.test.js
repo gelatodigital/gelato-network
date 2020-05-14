@@ -43,6 +43,7 @@ describe("Gelato Core - Task Submission ", function () {
   let user2address;
   let actionERC20TransferFrom;
   let actionERC20TransferFromGelato;
+  let gelatoProvider;
 
   beforeEach(async function () {
     // Get signers
@@ -282,7 +283,7 @@ describe("Gelato Core - Task Submission ", function () {
         inputs: [actionInputs],
       });
 
-      const provider = new GelatoProvider({
+      gelatoProvider = new GelatoProvider({
         addr: providerAddress,
         module: providerModuleGelatoUserProxy.address,
       });
@@ -296,14 +297,12 @@ describe("Gelato Core - Task Submission ", function () {
       });
 
       const task = new Task({
-        provider,
         actions: [action],
       });
 
-      await expect(userProxy.submitTask(task, EXPIRY_DATE)).to.emit(
-        gelatoCore,
-        "LogTaskSubmitted"
-      );
+      await expect(
+        userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE)
+      ).to.emit(gelatoCore, "LogTaskSubmitted");
       // .withArgs(executorAddress, 1, taskReceiptHash, taskReceiptArray);
     });
 
@@ -322,7 +321,7 @@ describe("Gelato Core - Task Submission ", function () {
         inputs: [actionInputs],
       });
 
-      const provider = new GelatoProvider({
+      gelatoProvider = new GelatoProvider({
         addr: providerAddress,
         module: providerModuleGelatoUserProxy.address,
       });
@@ -336,11 +335,12 @@ describe("Gelato Core - Task Submission ", function () {
       });
 
       const task = new Task({
-        provider,
         actions: [action],
       });
 
-      await expect(userProxy.submitTask(task, EXPIRY_DATE)).to.be.revertedWith(
+      await expect(
+        userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE)
+      ).to.be.revertedWith(
         "GelatoUserProxy.submitTask:GelatoCore.canSubmitTask.isProvided:TaskSpecNotProvided"
       );
 
@@ -364,7 +364,7 @@ describe("Gelato Core - Task Submission ", function () {
         inputs: [actionInputs],
       });
 
-      const provider = new GelatoProvider({
+      gelatoProvider = new GelatoProvider({
         addr: providerAddress,
         module: providerModuleGelatoUserProxy.address,
       });
@@ -383,12 +383,13 @@ describe("Gelato Core - Task Submission ", function () {
       });
 
       const task = new Task({
-        provider,
         conditions: [condition],
         actions: [action],
       });
 
-      await expect(userProxy.submitTask(task, EXPIRY_DATE)).to.be.revertedWith(
+      await expect(
+        userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE)
+      ).to.be.revertedWith(
         "GelatoUserProxy.submitTask:GelatoCore.canSubmitTask.isProvided:TaskSpecNotProvided"
       );
     });
@@ -409,7 +410,7 @@ describe("Gelato Core - Task Submission ", function () {
         inputs: [actionInputs],
       });
 
-      const provider = new GelatoProvider({
+      gelatoProvider = new GelatoProvider({
         addr: revertingProviderAddress,
         module: providerModuleGelatoUserProxy.address,
       });
@@ -423,13 +424,12 @@ describe("Gelato Core - Task Submission ", function () {
       });
 
       const task = new Task({
-        provider,
         actions: [action],
       });
 
-      await expect(userProxy.submitTask(task, EXPIRY_DATE)).to.be.revertedWith(
-        "GelatoCore.canSubmitTask: executorStake"
-      );
+      await expect(
+        userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE)
+      ).to.be.revertedWith("GelatoCore.canSubmitTask: executorStake");
     });
 
     it("#5: Submitting reverts => Invalid expiryDate", async function () {
@@ -448,7 +448,7 @@ describe("Gelato Core - Task Submission ", function () {
         inputs: [actionInputs],
       });
 
-      const provider = new GelatoProvider({
+      gelatoProvider = new GelatoProvider({
         addr: providerAddress,
         module: providerModuleGelatoUserProxy.address,
       });
@@ -462,12 +462,11 @@ describe("Gelato Core - Task Submission ", function () {
       });
 
       const task = new Task({
-        provider,
         actions: [action],
       });
 
       await expect(
-        userProxy.submitTask(task, expiryDateInPast)
+        userProxy.submitTask(gelatoProvider, task, expiryDateInPast)
       ).to.be.revertedWith("GelatoCore.canSubmitTask: expiryDate");
     });
 
@@ -487,7 +486,7 @@ describe("Gelato Core - Task Submission ", function () {
         inputs: [actionInputs],
       });
 
-      const provider = new GelatoProvider({
+      gelatoProvider = new GelatoProvider({
         addr: providerAddress,
         module: revertingProviderMouleAddress,
       });
@@ -501,12 +500,13 @@ describe("Gelato Core - Task Submission ", function () {
       });
 
       const task = new Task({
-        provider,
         actions: [action],
       });
 
       // GelatoCore.canSubmitTask.isProvided:InvalidProviderModule
-      await expect(userProxy.submitTask(task, EXPIRY_DATE)).to.be.revertedWith(
+      await expect(
+        userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE)
+      ).to.be.revertedWith(
         "GelatoCore.canSubmitTask.isProvided:InvalidProviderModule"
       );
     });
@@ -515,7 +515,7 @@ describe("Gelato Core - Task Submission ", function () {
       const noActionPayload = constants.HashZero;
 
       // Submit Task
-      const provider = new GelatoProvider({
+      gelatoProvider = new GelatoProvider({
         addr: providerAddress,
         module: providerModuleGelatoUserProxy.address,
       });
@@ -529,15 +529,13 @@ describe("Gelato Core - Task Submission ", function () {
       });
 
       const task = new Task({
-        provider,
         actions: [action],
       });
 
       // GelatoCore.canSubmitTask.isProvided:InvalidProviderModule
-      await expect(userProxy.submitTask(task, EXPIRY_DATE)).to.emit(
-        gelatoCore,
-        "LogTaskSubmitted"
-      );
+      await expect(
+        userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE)
+      ).to.emit(gelatoCore, "LogTaskSubmitted");
     });
 
     it("#8: create success (Self-provider), not whitelisted action, assigning new executor and staking", async function () {

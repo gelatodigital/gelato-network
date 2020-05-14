@@ -37,6 +37,8 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
 
   const userProxyAddress = constants.AddressZero;
 
+  let gelatoProvider;
+
   beforeEach(async function () {
     // Get the ContractFactory, contract instance, and Signers here.
     GelatoCoreFactory = await ethers.getContractFactory("GelatoCore");
@@ -60,7 +62,7 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
 
     // Construct TaskReceipt for unit test isTaskSpecProvided():
     // GelatoProvider
-    const gelatoProvider = new GelatoProvider({
+    gelatoProvider = new GelatoProvider({
       addr: providerAddress,
       module: constants.AddressZero,
     });
@@ -100,13 +102,11 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
 
     // Task
     task = new Task({
-      provider: gelatoProvider,
       conditions: [conditionStruct],
       actions: [actionStruct],
       expiryDate: constants.Zero,
     });
     otherTask = new Task({
-      provider: gelatoProvider,
       conditions: [conditionStruct],
       actions: [actionStruct, otherActionStruct],
       expiryDate: constants.Zero,
@@ -146,7 +146,7 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
 
       // isTaskProvided
       expect(
-        await gelatoCore.isTaskProvided(userProxyAddress, task)
+        await gelatoCore.isTaskProvided(userProxyAddress, gelatoProvider, task)
       ).not.to.be.equal("TaskSpecNotProvided");
 
       // otherTaskSpec
@@ -157,7 +157,11 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
 
       // isTaskProvided
       expect(
-        await gelatoCore.isTaskProvided(userProxyAddress, otherTask)
+        await gelatoCore.isTaskProvided(
+          userProxyAddress,
+          gelatoProvider,
+          otherTask
+        )
       ).to.be.equal("TaskSpecNotProvided");
     });
 
@@ -201,7 +205,7 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
 
       // isTaskProvided
       expect(
-        await gelatoCore.isTaskProvided(userProxyAddress, task)
+        await gelatoCore.isTaskProvided(userProxyAddress, gelatoProvider, task)
       ).not.to.be.equal("TaskSpecNotProvided");
 
       // otherTaskSpec
@@ -220,7 +224,11 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
 
       // isTaskProvided;
       expect(
-        await gelatoCore.isTaskProvided(userProxyAddress, otherTask)
+        await gelatoCore.isTaskProvided(
+          userProxyAddress,
+          gelatoProvider,
+          otherTask
+        )
       ).not.to.be.equal("TaskSpecNotProvided");
     });
 
@@ -267,7 +275,7 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
 
       // isTaskProvided
       expect(
-        await gelatoCore.isTaskProvided(userProxyAddress, task)
+        await gelatoCore.isTaskProvided(userProxyAddress, gelatoProvider, task)
       ).not.to.be.equal("TaskSpecNotProvided");
 
       // otherTaskSpec
@@ -278,7 +286,11 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
 
       // isTaskProvided
       expect(
-        await gelatoCore.isTaskProvided(userProxyAddress, otherTask)
+        await gelatoCore.isTaskProvided(
+          userProxyAddress,
+          gelatoProvider,
+          otherTask
+        )
       ).to.be.equal("TaskSpecNotProvided");
     });
 
@@ -326,7 +338,7 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
 
       // isTaskProvided
       expect(
-        await gelatoCore.isTaskProvided(userProxyAddress, task)
+        await gelatoCore.isTaskProvided(userProxyAddress, gelatoProvider, task)
       ).to.be.equal("TaskSpecNotProvided");
 
       // otherTaskSpec
@@ -345,7 +357,11 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
 
       // isTaskProvided
       expect(
-        await gelatoCore.isTaskProvided(userProxyAddress, otherTask)
+        await gelatoCore.isTaskProvided(
+          userProxyAddress,
+          gelatoProvider,
+          otherTask
+        )
       ).not.to.be.equal("TaskSpecNotProvided");
     });
 

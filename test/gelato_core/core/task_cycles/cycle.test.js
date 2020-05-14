@@ -43,6 +43,9 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
   let currentTaskCycleReceiptId;
   let gelatoMaxGas;
 
+  // Gelato Provider
+  let gelatoProvider;
+
   // Tasks
   let task1;
   let task2;
@@ -117,7 +120,7 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
     gelatoMaxGas = await gelatoCore.gelatoMaxGas();
 
     // GelatoProvider
-    const gelatoProvider = new GelatoProvider({
+    gelatoProvider = new GelatoProvider({
       addr: providerAddress,
       module: providerModuleGelatoUserProxy.address,
     });
@@ -188,28 +191,26 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
 
     // Task-1: ActionDummy-1:true
     task1 = new Task({
-      provider: gelatoProvider,
       actions: [firstActionDummyStruct],
     });
 
     // Task-2: firstDummyConditionStruct-1:ok=true && actionDummy-2:false
     task2 = new Task({
-      provider: gelatoProvider,
       conditions: [firstDummyConditionStruct],
       actions: [secondActionDummyStruct],
     });
 
     // TaskReceipt: InterceptTask
     interceptTaskReceiptAsObj = new TaskReceipt({
-      provider: gelatoProvider,
       userProxy: userProxyAddress,
+      provider: gelatoProvider,
       tasks: [task1],
     });
 
     // TaskReceipt: CyclicTask1
     cyclicTask1ReceiptAsObj = new TaskReceipt({
-      provider: gelatoProvider,
       userProxy: userProxyAddress,
+      provider: gelatoProvider,
       index: 0, // dynamic: auto-filled by GelatoCore upon tasks creation
       tasks: [task1, task2], // static: auto-filled by GelatoCore upon tasks creation
       submissionsLeft: 0,
@@ -217,8 +218,8 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
 
     // TaskReceipt: CyclicTask2
     cyclicTask2ReceiptAsObj = new TaskReceipt({
-      provider: gelatoProvider,
       userProxy: userProxyAddress,
+      provider: gelatoProvider,
       index: 1, // After first execution, next will be placed to 0
       tasks: [task1, task2], // static
       submissionsLeft: 0,
@@ -233,6 +234,7 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
       gelatoUserProxyFactory.createTwoAndSubmitTaskCycle(
         SALT_NONCE,
         [],
+        gelatoProvider,
         [task1, task2],
         EXPIRY_DATE,
         0
@@ -270,10 +272,9 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
           // console.log("\nIntercept");
 
           // Submit normal task1 (ActionDummy-1: true)
-          await expect(gelatoUserProxy.submitTask(task1, EXPIRY_DATE)).to.emit(
-            gelatoCore,
-            "LogTaskSubmitted"
-          );
+          await expect(
+            gelatoUserProxy.submitTask(gelatoProvider, task1, EXPIRY_DATE)
+          ).to.emit(gelatoCore, "LogTaskSubmitted");
 
           // Check currentTaskCycleReceiptId
           expect(await gelatoCore.currentTaskReceiptId()).to.equal(

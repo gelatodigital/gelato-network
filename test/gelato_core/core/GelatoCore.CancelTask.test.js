@@ -30,6 +30,8 @@ describe("GelatoCore.cancelTask", function () {
   let gelatoCore;
   let mockActionDummy;
 
+  let gelatoProvider;
+
   let task;
 
   let taskReceipt;
@@ -139,7 +141,7 @@ describe("GelatoCore.cancelTask", function () {
 
     const actionData = interFace.functions.action.encode([true]);
 
-    const gelatoProvider = new GelatoProvider({
+    gelatoProvider = new GelatoProvider({
       addr: providerAddress,
       module: providerModuleGelatoUserProxy.address,
     });
@@ -153,7 +155,6 @@ describe("GelatoCore.cancelTask", function () {
     });
 
     task = new Task({
-      provider: gelatoProvider,
       actions: [action],
     });
 
@@ -168,16 +169,16 @@ describe("GelatoCore.cancelTask", function () {
 
     taskReceipt2 = new TaskReceipt({
       id: 2,
+      provider: gelatoProvider,
       userProxy: userProxyAddress,
       tasks: [task],
       submissionsLeft: SUBMISSIONS_LEFT,
       expiryDate: EXPIRY_DATE,
     });
 
-    await expect(userProxy.submitTask(task, EXPIRY_DATE)).to.emit(
-      gelatoCore,
-      "LogTaskSubmitted"
-    );
+    await expect(
+      userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE)
+    ).to.emit(gelatoCore, "LogTaskSubmitted");
   });
 
   // We test different functionality of the contract as normal Mocha tests.

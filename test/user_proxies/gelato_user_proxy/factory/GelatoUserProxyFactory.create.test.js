@@ -75,14 +75,16 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE", function () {
       const [
         userProxyAddress,
       ] = await gelatoUserProxyFactory.gelatoProxiesByUser(userAddress);
+
       // userByGelatoProxy
       expect(
-        await gelatoUserProxyFactory.getGelatoUserProxyByIndex(userProxyAddress, 0)
+        await gelatoUserProxyFactory.userByGelatoProxy(userProxyAddress)
       ).to.be.equal(userAddress);
 
       // isGelatoUserProxy
       expect(await gelatoUserProxyFactory.isGelatoUserProxy(userProxyAddress))
         .to.be.true;
+
       // isGelatoProxyUser
       expect(
         await gelatoUserProxyFactory.isGelatoProxyUser(
@@ -100,6 +102,7 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE", function () {
       const [
         otherUserProxyAddress,
       ] = await gelatoUserProxyFactory.gelatoProxiesByUser(otherUserAddress);
+
       // userByGelatoProxy: otherUser
       expect(
         await gelatoUserProxyFactory.userByGelatoProxy(otherUserProxyAddress)
@@ -109,6 +112,7 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE", function () {
       expect(
         await gelatoUserProxyFactory.isGelatoUserProxy(otherUserProxyAddress)
       ).to.be.true;
+
       // isGelatoProxyUser: otherUser
       expect(
         await gelatoUserProxyFactory.isGelatoProxyUser(

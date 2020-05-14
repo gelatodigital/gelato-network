@@ -197,7 +197,6 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
     });
 
     const task = new Task({
-      provider: gelatoProvider,
       conditions: [conditionBalanceStatefulStruct],
       actions: [mockActionDummyStruct, actionSetRefStruct],
     });
@@ -205,7 +204,7 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
     const submitTaskCycleData = await run("abi-encode-withselector", {
       contractname: "GelatoCore",
       functionname: "submitTaskCycle",
-      inputs: [[task], [0], [0]],
+      inputs: [gelatoProvider, [task], [0], [0]],
     });
 
     const actionSubmitTaskStruct = new Action({
@@ -325,7 +324,6 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
     });
 
     const task = new Task({
-      provider: gelatoProvider,
       conditions: [conditionBalanceStatefulStruct],
       actions: [mockActionDummyStruct, actionSetRefStruct],
     });
@@ -333,7 +331,7 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
     const submitTaskCycleData = await run("abi-encode-withselector", {
       contractname: "GelatoCore",
       functionname: "submitTaskCycle",
-      inputs: [[task], [0], [0]],
+      inputs: [gelatoProvider, [task], [0], [0]],
     });
 
     const actionSubmitTaskStruct = new Action({

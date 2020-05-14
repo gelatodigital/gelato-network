@@ -50,8 +50,8 @@ const VALUE = 3;
 const TERMS_OK_CHECK = 4;
 
 // Task
-const CONDITIONS = 1;
-const ACTIONS = 2;
+const CONDITIONS = 0;
+const ACTIONS = 1;
 
 // TaskReceipt
 const ID = 0;
