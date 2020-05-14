@@ -31,6 +31,15 @@ export default task(
       const user = getUser();
       const userAddress = await user.getAddress();
 
+      // Get / determine that address of the user's gelato user proxy smart contract
+      // Get Gelato User Proxy Address
+      const gelatoUserProxyAddress = await run(
+        "gelato-predict-gelato-proxy-address",
+        {
+          useraddress: userAddress,
+        }
+      );
+
       // ##### Step #1: Create condition(s)
       // Get Address Or hardcode
       const conditionAddress = await run("bre-config", {
@@ -40,10 +49,12 @@ export default task(
 
       // Encode data of function gelato should call => Call Ok Function on ConditionTimeStateful.sol
       // This checks at what time the condition should return true
+      // ConditionTimeStateful takes the proxies address as an argument to check if in its state there is
+      // a timestamp that is should compare to the current time to determine if a task is executable or not
       const conditionData = await run("abi-encode-withselector", {
         contractname: "ConditionTimeStateful",
         functionname: "ok",
-        inputs: [userAddress],
+        inputs: [gelatoUserProxyAddress],
       });
 
       // Insantiate condition object
@@ -127,14 +138,6 @@ export default task(
       });
 
       const expiryDate = 0; // 0 if the task should live forever
-
-      // Get Gelato User Proxy Address
-      const gelatoUserProxyAddress = await run(
-        "gelato-predict-gelato-proxy-address",
-        {
-          useraddress: userAddress,
-        }
-      );
 
       // Check if proxy is already deployed. If not, we deploy and submit the task in one go
       const gelatoUserProxyFactory = await run("instantiateContract", {
