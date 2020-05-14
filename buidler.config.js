@@ -77,8 +77,9 @@ const DEFAULT_NETWORK = process.env.DEFAULT_NETWORK;
 const USER_PK = process.env.USER_PK;
 const PROVIDER_PK = process.env.PROVIDER_PK;
 
-assert.ok(DEV_MNEMONIC, "no DEV_MNEMONIC in process.env");
-assert.ok(MAINNET_MNEMONIC, "no MAINNET_MNEMONIC in process.env");
+// Do not assert as users don't need them and we will migrate from them pretty soon
+// assert.ok(DEV_MNEMONIC, "no DEV_MNEMONIC in process.env");
+// assert.ok(MAINNET_MNEMONIC, "no MAINNET_MNEMONIC in process.env");
 assert.ok(INFURA_ID, "no Infura ID in process.env");
 assert.ok(USER_PK, "no user private key (USER_PK) found in .env");
 assert.ok(PROVIDER_PK, "no provider private key (USER_PK) found in .env");

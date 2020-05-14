@@ -80,7 +80,7 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         returns(GelatoUserProxy userProxy)
     {
         userProxy = create(_actions, new Task[](0), new uint[](0));
-        _submitTaskCycle(userProxy, _tasks, _cycles, _expiryDate);
+        if (_tasks.length != 0) _submitTaskCycle(userProxy, _tasks, _cycles, _expiryDate);
     }
 
     function createTwoAndSubmitTaskCycle(
@@ -96,7 +96,7 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         returns(GelatoUserProxy userProxy)
     {
         userProxy = createTwo(_saltNonce, _actions, new Task[](0), new uint[](0));
-        _submitTaskCycle(userProxy, _tasks, _cycles, _expiryDate);
+        if (_tasks.length != 0) _submitTaskCycle(userProxy, _tasks, _cycles, _expiryDate);
     }
 
     function createAndSubmitTaskChain(
@@ -111,7 +111,7 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         returns(GelatoUserProxy userProxy)
     {
         userProxy = create(_actions, new Task[](0), new uint[](0));
-        _submitTaskChain(userProxy, _tasks, _sumOfRequestedTaskSubmits, _expiryDate);
+        if (_tasks.length != 0) _submitTaskChain(userProxy, _tasks, _sumOfRequestedTaskSubmits, _expiryDate);
     }
 
     function createTwoAndSubmitTaskChain(
@@ -127,7 +127,7 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         returns(GelatoUserProxy userProxy)
     {
         userProxy = createTwo(_saltNonce, _actions, new Task[](0), new uint[](0));
-        _submitTaskChain(userProxy, _tasks, _cycles, _expiryDate);
+        if (_tasks.length != 0) _submitTaskChain(userProxy, _tasks, _cycles, _expiryDate);
     }
 
     function predictProxyAddress(address _user, uint256 _saltNonce)

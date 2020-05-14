@@ -13,6 +13,8 @@ export const contracts = [
   "ActionWithdrawBatchExchange",
   "ActionWithdrawBatchExchange",
   "ActionPlaceOrderBatchExchange",
+  // Uniswap
+  "ActionUniswapTrade",
   // = Chained =
   // ERC20
   "ActionChainedTimedERC20TransferFromRinkeby",

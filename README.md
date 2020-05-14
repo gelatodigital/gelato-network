@@ -34,6 +34,8 @@ git clone https://github.com/gelatodigital/gelato-V1.git
 cd gelato-V1
 
 yarn install
+
+npx buidler compile
 ```
 
 Create an .env file, store a private key of an account that will be your dummy user in USER_PK, a private key of your provider account in PROVIDER_PK and your infura id in INFURA_ID (make sure to put .env in .gitignore).
@@ -54,7 +56,7 @@ Developers who want to build cool automated dapps, without having to worry about
 
 **Example #1:** Swap 100 DAI to ETH on Uniswap every week
 
-**Example #2:** Automatically refinance my loan to between multiple lending protocols to always get the highest yield
+**Example #2:** Automatically refinance my loan between multiple lending protocols to always get the highest yield
 
 A **regular dapp** like uniswap.exchange requires users to interact with it manually by sending transactions every time they want to swap tokens. Users that want to sell 100 DAI every week on uniswap have to manually do it every week.
 
@@ -100,15 +102,21 @@ In order to use gelato, a provider has to do the following steps. Gelato is only
 
 #### 1. Add some balance (ETH) to gelato
 
-To top up your gelato balance by 0.1 ETH, run
+To top up your gelato balance by 1 ETH (not less, gas prices are quite high atm (14.05.20), run
 
-    npx buidler gelato-providefunds 0.1 --network rinkeby
+    npx buidler gelato-providefunds 1 --network rinkeby
 
 If you would like to withdraw your funds later, simply run
 
-    npx buidlergelato-unprovidefunds 0.1 --network rinkeby
+    npx buidler gelato-unprovidefunds 1 --network rinkeby
 
-#### 2. Define who can submit tasks and use the providers funds by whitelisting a proxy module
+#### 2. Assign your provider to the gelato executor network
+
+```
+npx builder gelato-assign-executor --network rinkeby
+```
+
+#### 3. Define who can submit tasks and use the providers funds by whitelisting a proxy module
 
 A user in the gelato system is represented by a proxy contract. A proxy contract is a smart contract account, which is fully owned by a certain user and which conducts certain actions on behalf of the user when specific conditions are fulfilled.
 
@@ -124,7 +132,7 @@ Alternatively, to enable users with gnosis safe, run:
 
 Now you enabled every user that has a gelato user proxy to be a potential customer of yours. When you start integrating Gelato in your UI, you can deploy a proxy for first time users and have them start using your service, all in one transaction, using the GelatoUserProxyFactory.
 
-#### 3. Define what users can do (whitelist a Task Spec).
+#### 4. Define what users can do (whitelist a Task Spec).
 
 You can think of the gelato executors as bots that accept submitted tasks from your users and that execute them according to what the user specified.
 
@@ -179,13 +187,13 @@ When you are done, add the path to your Task Spec file to `src/demo/task_specs/c
 To whitelist your TaskSpec and enable users to submit tasks, run:
 
 ```
-npx buidler gelato-whitelist-taskspec --name example
+npx buidler gelato-whitelist-taskspec example --network rinkeby
 ```
 
 or
 
 ```
-npx buidler gelato-whitelist-taskspec --name time-based-transfer
+npx buidler gelato-whitelist-taskspec time-based-transfer --network rinkeby
 ```
 
 That’s it from a providers point of view! 🍦
@@ -200,12 +208,16 @@ Now that you whitelisted a TaskSpec on gelato, users can submit Tasks with you b
 
 Before enabling users to submit tasks with you being listed as the provider, you should make sure that:
 
-a) The task to be submitted is indeed whitelisted by the provider (you)
+a) The task to be submitted is indeed whitelisted by the provider (you). To check if you provided the examaple Task Script, run:
+
+```
+npx builder gelato-check-if-provided --taskspecname example --network rinkeby --log
+```
 
 b) Your provider balance is sufficiently funded. To check that, run
 
 ```
-npx buidler gelato-get-provider-funds \$YOUR_PROVIDER_ADDRESS --network rinkeby
+npx buidler gelato-check-if-provider-liquid --network rinkeby
 ```
 
 c) Your users have sufficient ERC20- allowance if you plan on using the users proxy contract as a “light-proxy”.
@@ -218,7 +230,7 @@ On the other hand, a heavy-proxy will keep custody of the funds after the action
 
 **Note:** Users always have to submit tasks through their proxy contracts and never through their EOAs, otherwise it won’t work.
 
-## How to submit a task as an user - Example
+## How to submit a task as a user - Example
 
 ### Automatically transfer tokens every 2 minutes to a given address:
 
@@ -240,22 +252,28 @@ npx builder gelato-predict-gelato-proxy-address --network rinkeby
 
 **=>** e.g. 0x35dE7aCAd63E30B22C3305ac0e3fb8438697D0Fb
 
-#### 4. Approve your proxy contract to transfer 50 DAI on your behalf (using rinkeby DAI address here)
+#### 4. Approve your proxy contract to transfer 5 DAI in total on your behalf (using rinkeby DAI address here)
 
 ```
-npx builder gelato-approve-erc20 0x5592ec0cfb4dbc12d3ab100b257153436a1f0fea 50000000000000000000 0x35dE7aCAd63E30B22C3305ac0e3fb8438697D0Fb --network rinkeby
+npx builder gelato-approve-erc20 0x5592ec0cfb4dbc12d3ab100b257153436a1f0fea 5000000000000000000 0x35dE7aCAd63E30B22C3305ac0e3fb8438697D0Fb --network rinkeby
 ```
 
 #### 5. Make sure you have whitelisted the example taskSpec as a provider. If not, run:
 
 ```
-npx buidler gelato-whitelist-taskspec --name example --network rinkeby
+npx builder gelato-check-if-provided --taskspecname example --network rinkeby
 ```
 
-#### 6. Run the following script to start the automatic process of transferring tokens to a given address every 2 minutes for 5 times:
+If it is not whitelisted by your provider, run:
 
 ```
-npx builder gelato-time-based-transfer-from
+npx buidler gelato-whitelist-taskspec example --network rinkeby
+```
+
+#### 6. Run the following script to start the automatic process of transferring 1 DAI to a given destination address every 2 minutes (120 seconds) for 5 times (total of 5 DAI):
+
+```
+npx builder gelato-example-dapp --sendtoken 0x5592ec0cfb4dbc12d3ab100b257153436a1f0fea --destination 0x518eAa8f962246bCe2FA49329Fe998B66d67cbf8 --amount 1000000000000000000 --secondsdelta 120 --cycles 5 --network rinkeby
 ```
 
 Now watch your account on etherscan and observe that tokens are being transferred out of the user’s account every 2 minutes.

@@ -15,7 +15,7 @@ export default internalTask(
       });
 
       const condition = new Condition({
-        inst: conditionAddress,
+        inst: conditionAddress, // Address of the ConditionTimeStateful.sol
       });
 
       // ##### Action #1
@@ -47,7 +47,7 @@ export default internalTask(
         gasPriceCeil: 0, // Here providers can set the maximum gas price they are willing to pay. Set to 0 to allow any gas price
       });
 
-      if (log) console.log(taskSpec);
+      console.log(taskSpec);
 
       return taskSpec;
     } catch (err) {

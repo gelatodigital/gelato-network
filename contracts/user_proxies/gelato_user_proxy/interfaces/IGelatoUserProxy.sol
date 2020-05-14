@@ -46,6 +46,19 @@ interface IGelatoUserProxy {
         uint256 _expiryDate
     ) external;
 
+
+    /// @notice Execs actions and submits task cycle in one tx
+    /// @param _actions Actions to execute
+    /// @param _tasks This can be a single task or a sequence of tasks.
+    /// @param _cycles How many full cycles will be submitted
+    /// @param _expiryDate  After this no task of the sequence can be executed any more.
+    function execActionsAndSubmitTaskCycle(
+        Action[] calldata _actions,
+        Task[] calldata _tasks,
+        uint256 _cycles,
+        uint256 _expiryDate
+    ) external payable;
+
     /// @notice Cancel a task receipt on gelato
     /// @dev Proxy users or the Task providers can cancel.
     /// @param _TR Task Receipt to cancel
