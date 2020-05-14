@@ -5,11 +5,40 @@ export default task(
   "gelato-example-dapp",
   `Executes the example dapp of transfering 10 DAI from the users wallet to a destination wallet every 2 minutes for 5 times`
 )
+  .addParam(
+    "sendtoken",
+    "token which wll be sent from user EOA to destination address"
+  )
+  .addParam("destination", "address of account who should receive the tokens")
+  .addParam(
+    "amount",
+    "how many tokens should be transferred from user account to destination address"
+  )
+  .addParam(
+    "secondsdelta",
+    "how many seconds should pass until gelato executes the transaction"
+  )
+  .addOptionalParam(
+    "saltnonce",
+    "how many seconds should pass until gelato executes the transaction",
+    "42069",
+    types.string
+  )
+  .addParam("cycles", "how many times the same task should be submitted")
   .addFlag("log")
-  .setAction(async ({ log }) => {
+  .setAction(async (taskArgs) => {
     try {
       const user = getUser();
       const userAddress = await user.getAddress();
+
+      // Get / determine that address of the user's gelato user proxy smart contract
+      // Get Gelato User Proxy Address
+      const gelatoUserProxyAddress = await run(
+        "gelato-predict-gelato-proxy-address",
+        {
+          useraddress: userAddress,
+        }
+      );
 
       // ##### Step #1: Create condition(s)
       // Get Address Or hardcode
@@ -20,10 +49,12 @@ export default task(
 
       // Encode data of function gelato should call => Call Ok Function on ConditionTimeStateful.sol
       // This checks at what time the condition should return true
+      // ConditionTimeStateful takes the proxies address as an argument to check if in its state there is
+      // a timestamp that is should compare to the current time to determine if a task is executable or not
       const conditionData = await run("abi-encode-withselector", {
         contractname: "ConditionTimeStateful",
         functionname: "ok",
-        inputs: [userAddress],
+        inputs: [gelatoUserProxyAddress],
       });
 
       // Insantiate condition object
@@ -66,7 +97,7 @@ export default task(
       const actionData2 = await run("abi-encode-withselector", {
         contractname: "ConditionTimeStateful",
         functionname: "setRefTime",
-        inputs: [taskArgs.timedelta],
+        inputs: [taskArgs.secondsdelta],
       });
 
       const action2 = new Action({
@@ -94,11 +125,11 @@ export default task(
       // ##### Create Task Spec
       const task = new Task({
         provider: gelatoProvider,
-        conditions: [condition.inst], // only need the condition inst address here
+        conditions: [condition], // only need the condition inst address here
         actions: [action1, action2], // Actions will be executed from left to right after each other. If one fails, all fail
       });
 
-      if (log) console.log(task);
+      if (taskArgs.log) console.log(task);
 
       const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
@@ -107,17 +138,57 @@ export default task(
       });
 
       const expiryDate = 0; // 0 if the task should live forever
-      const rounds = 0; // 0 to re-submit same task for ever. 1 for only once. 5 for 5 times.
-      const tx = await gelatoCore.submitTask(task, rounds, expiryDate);
+
+      // Check if proxy is already deployed. If not, we deploy and submit the task in one go
+      const gelatoUserProxyFactory = await run("instantiateContract", {
+        contractname: "GelatoUserProxyFactory",
+        write: true,
+        signer: user,
+      });
+
+      let isDeployed = await gelatoUserProxyFactory.isGelatoProxyUser(
+        userAddress
+      );
+
+      let tx;
+      if (isDeployed) {
+        console.log(
+          `\nProxy already deployed, executing action and submitting Task in one Tx\n`
+        );
+        // Instantiate the users gelato proxy contract
+        const gelatoUserProxy = await run("instantiateContract", {
+          contractname: "GelatoUserProxy",
+          contractaddress: gelatoUserProxyAddress,
+          write: true,
+          signer: user,
+        });
+
+        tx = await gelatoUserProxy.execActionsAndSubmitTaskCycle(
+          [action2], // Set the value in the condition before submitting the task
+          [task], // submit the task to send tokens and update the condition value
+          0, // Task should never expire
+          taskArgs.cycles // Task should be submitted taskArgs.cycles times in total
+        );
+      } else {
+        console.log(
+          `\nDeploying Proxy, executing action and submitting Task in one Tx\n`
+        );
+        tx = await gelatoUserProxyFactory.createTwoAndSubmitTaskCycle(
+          taskArgs.saltnonce, // Saltnonce to ensure we use the same proxy we approved tokens to
+          [action2], // Set the value in the condition before submitting the task
+          [task], // submit the task to send tokens and update the condition value
+          0, // Task should never expire
+          taskArgs.cycles, // Task should be submitted taskArgs.cycles times in total
+          { gasLimit: 4000000 }
+        );
+      }
 
       const etherscanLink = await run("get-etherscan-link", {
         txhash: tx.hash,
       });
       console.log(etherscanLink);
       await tx.wait();
-      console.log(`✅ Tx mined`);
-
-      return taskSpec;
+      console.log(`✅ Tx mined, Task submitted!`);
     } catch (err) {
       console.error(err);
       process.exit(1);

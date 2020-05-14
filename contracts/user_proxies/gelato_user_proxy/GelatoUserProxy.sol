@@ -191,6 +191,17 @@ contract GelatoUserProxy is IGelatoUserProxy {
         }
     }
 
+    // @dev we have to write duplicate code due to calldata _action FeatureNotImplemented
+    function execActionsAndSubmitTaskCycle(
+        Action[] memory _actions,
+        Task[] memory _tasks,
+        uint256 _cycles,
+        uint256 _expiryDate
+    ) public payable override auth {
+        if(_actions.length > 0) multiExecActions(_actions);
+        if(_tasks.length > 0) submitTaskCycle(_tasks, _cycles, _expiryDate);
+    }
+
     function callAction(address _action, bytes memory _data, uint256 _value)
         public
         override
