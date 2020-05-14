@@ -108,7 +108,7 @@ export default task(
 
       const expiryDate = 0; // 0 if the task should live forever
       const rounds = 0; // 0 to re-submit same task for ever. 1 for only once. 5 for 5 times.
-      const tx = await gelatoCore.submitTask(task, expiryDate, rounds);
+      const tx = await gelatoCore.submitTask(task, rounds, expiryDate);
 
       const etherscanLink = await run("get-etherscan-link", {
         txhash: tx.hash,
