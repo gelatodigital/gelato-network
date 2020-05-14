@@ -1,4 +1,4 @@
-pragma solidity ^0.6.6;
+pragma solidity ^0.6.8;
 pragma experimental ABIEncoderV2;
 
 import { IGelatoExecutors } from "./interfaces/IGelatoExecutors.sol";

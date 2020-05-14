@@ -1,4 +1,4 @@
-pragma solidity ^0.6.3;
+pragma solidity ^0.6.8;
 pragma experimental ABIEncoderV2;
 
 import { ScriptGnosisSafeEnableGelatoCore } from "../../../contracts/user_proxies/gnosis_safe_proxy/scripts/ScriptGnosisSafeEnableGelatoCore.sol";

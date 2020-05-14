@@ -154,7 +154,6 @@ export default task(
 
         // TASK
         taskArgs.task = new Task({
-          provider: gelatoProvider,
           conditions: [condition],
           actions,
           expiryDate: constants.HashZero,
@@ -181,7 +180,7 @@ export default task(
       submitTaskTxHash = await run("gsp-exectransaction", {
         gnosissafeproxyaddress: safeAddress,
         contractname: "GelatoCore",
-        inputs: [taskArgs.task],
+        inputs: [gelatoProvider, taskArgs.task, taskArgs.expirydate],
         functionname: "submitTask",
         operation: 0,
         log: true,

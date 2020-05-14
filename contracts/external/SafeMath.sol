@@ -1,4 +1,4 @@
-pragma solidity ^0.6.6;
+pragma solidity ^0.6.8;
 
 /**
  * @dev Wrappers over Solidity's arithmetic operations with added overflow

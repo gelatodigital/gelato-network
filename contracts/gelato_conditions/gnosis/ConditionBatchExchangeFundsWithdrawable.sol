@@ -1,4 +1,4 @@
-pragma solidity ^0.6.6;
+pragma solidity ^0.6.8;
 
 import "../GelatoConditionsStandard.sol";
 import "../../dapp_interfaces/gnosis/IBatchExchange.sol";

@@ -8,7 +8,7 @@
 
 // File: openzeppelin-solidity/contracts/token/ERC20/IERC20.sol
 
-pragma solidity ^0.6.6;
+pragma solidity ^0.6.8;
 
 /**
  * @title ERC20 interface
@@ -34,7 +34,7 @@ interface IERC20 {
 
 // File: openzeppelin-solidity/contracts/math/SafeMath.sol
 
-pragma solidity ^0.6.6;
+pragma solidity ^0.6.8;
 
 /**
  * @title SafeMath
@@ -102,7 +102,7 @@ library SafeMath {
 
 // File: openzeppelin-solidity/contracts/token/ERC20/ERC20.sol
 
-pragma solidity ^0.6.6;
+pragma solidity ^0.6.8;
 
 
 
@@ -310,7 +310,7 @@ abstract contract ERC20 is IERC20 {
 
 // File: openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol
 
-pragma solidity ^0.6.6;
+pragma solidity ^0.6.8;
 
 
 /**
@@ -354,7 +354,7 @@ abstract contract ERC20Detailed is IERC20 {
 
 // File: contracts/RinkebyDai.sol
 
-pragma solidity ^0.6.6;
+pragma solidity ^0.6.8;
 
 
 

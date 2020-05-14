@@ -1,4 +1,4 @@
-pragma solidity ^0.6.6;
+pragma solidity ^0.6.8;
 
 library GelatoDebug {
     function revertWithErrorString(bytes memory _bytes, string memory _tracingInfo)

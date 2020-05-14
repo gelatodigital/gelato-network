@@ -1,4 +1,4 @@
-pragma solidity ^0.6.5;
+pragma solidity ^0.6.8;
 pragma experimental ABIEncoderV2;
 
 import { GelatoActionsStandard } from "../GelatoActionsStandard.sol";

@@ -1,4 +1,4 @@
-pragma solidity ^0.6.6;
+pragma solidity ^0.6.8;
 
 import { IUniswapFactory } from '../dapp_interfaces/uniswap/IUniswapFactory.sol';
 import { IUniswapExchange } from '../dapp_interfaces/uniswap/IUniswapExchange.sol';

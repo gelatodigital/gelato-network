@@ -1,4 +1,4 @@
-pragma solidity ^0.6.6;
+pragma solidity ^0.6.8;
 pragma experimental ABIEncoderV2;
 
 import { IGelatoUserProxy } from "./interfaces/IGelatoUserProxy.sol";
@@ -194,12 +194,22 @@ contract GelatoUserProxy is IGelatoUserProxy {
     // @dev we have to write duplicate code due to calldata _action FeatureNotImplemented
     function execActionsAndSubmitTaskCycle(
         Action[] memory _actions,
+        Provider memory _provider,
         Task[] memory _tasks,
         uint256 _cycles,
         uint256 _expiryDate
-    ) public payable override auth {
-        if(_actions.length > 0) multiExecActions(_actions);
-        if(_tasks.length > 0) submitTaskCycle(_tasks, _cycles, _expiryDate);
+    )
+        public
+        payable
+        override
+        auth
+    {
+        if (_actions.length == 0)
+            revert("GelatoUserProxy.execActionsAndSubmitTaskCycle: 0 actions");
+        if(_tasks.length == 0)
+            revert("GelatoUserProxy.execActionsAndSubmitTaskCycle: 0 tasks");
+        multiExecActions(_actions);
+        submitTaskCycle(_provider, _tasks, _expiryDate, _cycles);
     }
 
     function callAction(address _action, bytes memory _data, uint256 _value)

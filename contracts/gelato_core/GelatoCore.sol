@@ -1,4 +1,4 @@
-pragma solidity ^0.6.6;
+pragma solidity ^0.6.8;
 pragma experimental ABIEncoderV2;
 
 import { IGelatoCore, Provider, Task, TaskReceipt } from "./interfaces/IGelatoCore.sol";
@@ -386,8 +386,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
                     _TR.provider,
                     _TR.nextIndex(),
                     _TR.tasks,
-                    _TR.submissionsLeft == 0 ? 0 : _TR.submissionsLeft - 1,
-                    _TR.expiryDate
+                    _TR.expiryDate,
+                    _TR.submissionsLeft == 0 ? 0 : _TR.submissionsLeft - 1
                 );
             }
         } else {

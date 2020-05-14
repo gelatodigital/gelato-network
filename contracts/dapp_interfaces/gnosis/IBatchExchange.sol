@@ -1,4 +1,4 @@
-pragma solidity ^0.6.0;
+pragma solidity ^0.6.8;
 pragma experimental ABIEncoderV2;
 
 struct Order {

@@ -1,4 +1,4 @@
-pragma solidity ^0.6.6;
+pragma solidity ^0.6.8;
 pragma experimental ABIEncoderV2;
 
 import {
@@ -56,21 +56,25 @@ interface IGelatoUserProxy {
         Provider calldata _provider,
         Task[] calldata _tasks,
         uint256 _expiryDate,
-        uint256 _sumOfRequestedTaskSubmits 
+        uint256 _sumOfRequestedTaskSubmits
     ) external;
 
 
     /// @notice Execs actions and submits task cycle in one tx
     /// @param _actions Actions to execute
+    /// @param _provider Gelato Provider object: provider address and module.
     /// @param _tasks This can be a single task or a sequence of tasks.
-    /// @param _cycles How many full cycles will be submitted
     /// @param _expiryDate  After this no task of the sequence can be executed any more.
+    /// @param _cycles How many full cycles will be submitted
     function execActionsAndSubmitTaskCycle(
         Action[] calldata _actions,
+        Provider calldata _provider,
         Task[] calldata _tasks,
-        uint256 _cycles,
-        uint256 _expiryDate
-    ) external payable;
+        uint256 _expiryDate,
+        uint256 _cycles
+    )
+        external
+        payable;
 
     /// @notice Cancel a task receipt on gelato
     /// @dev Proxy users or the Task providers can cancel.
