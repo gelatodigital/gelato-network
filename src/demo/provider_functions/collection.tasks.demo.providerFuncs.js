@@ -9,3 +9,6 @@ import "./task.addProviderModule";
 
 // Provide whitelist TaskSpecs
 import "./task.provideTaskSpec";
+
+// Assign Executor
+import "./task.assignExecutor";

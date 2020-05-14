@@ -2,23 +2,19 @@ import { task } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../buidler.config";
 
 export default task(
-  "gelato-whitelist-taskspec",
+  "gelato-assign-executor",
   `Sends tx to GelatoCore.provideTaskSpecs(<TaskSpecs[]>) on [--network] (default: ${defaultNetwork})`
 )
-  .addPositionalParam(
-    "name",
-    "name of taskspec task that returns default task spec"
-  )
   .addFlag("log", "Logs return values to stdout")
   .setAction(async (taskArgs) => {
     try {
       const provider = getProvider();
 
-      let taskSpec;
-      // ###### Either use name
-      if (taskArgs.name) {
-        taskSpec = await run(`gelato-return-taskpec-${taskArgs.name}`);
-      }
+      const executorAddress = await run("bre-config", {
+        addressbook: true,
+        addressbookcategory: "gelatoExecutor",
+        addressbookentry: "default",
+      });
 
       const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
@@ -26,7 +22,7 @@ export default task(
         write: true,
       });
 
-      const tx = await gelatoCore.provideTaskSpecs([taskSpec], {
+      const tx = await gelatoCore.providerAssignsExecutor(executorAddress, {
         gasLimit: 1000000,
       });
 
@@ -35,7 +31,7 @@ export default task(
       });
       console.log(etherscanLink);
       await tx.wait();
-      console.log(`✅ Tx mined - Task Spec provided`);
+      console.log(`✅ Tx mined - Executor assignment complete`);
       return `✅ Tx mined`;
     } catch (error) {
       console.error(error, "\n");

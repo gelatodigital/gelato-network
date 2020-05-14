@@ -14,16 +14,18 @@ export default task(
         read: true,
       });
 
-      const oracleAbi = ["function lastAnswer() returns(int)"];
+      const oracleAbi = ["function latestAnswer() view returns (int256)"];
+
+      const gelatoGasPriceOracleAddress = await gelatoCore.gelatoGasPriceOracle();
 
       // Get gelatoGasPriceOracleAddress
       const gelatoGasPriceOracle = await ethers.getContractAt(
         oracleAbi,
-        await gelatoCore.gelatoGasPriceOracle()
+        gelatoGasPriceOracleAddress
       );
 
       // lastAnswer is used by GelatoGasPriceOracle as well as the Chainlink Oracle
-      const gelatoGasPrice = await gelatoGasPriceOracle.lastAnswer();
+      const gelatoGasPrice = await gelatoGasPriceOracle.latestAnswer();
 
       if (taskArgs.log) {
         console.log(

@@ -359,8 +359,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
                     _TR.userProxy,
                     _TR.nextIndex(),
                     _TR.tasks,
-                    _TR.expiryDate,
-                    _TR.submissionsLeft == 0 ? 0 : _TR.submissionsLeft - 1
+                    _TR.submissionsLeft == 0 ? 0 : _TR.submissionsLeft - 1,
+                    _TR.expiryDate
                 );
             }
         } else {
