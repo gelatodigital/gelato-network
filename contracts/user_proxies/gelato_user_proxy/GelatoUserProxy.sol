@@ -4,7 +4,7 @@ pragma experimental ABIEncoderV2;
 import { IGelatoUserProxy } from "./interfaces/IGelatoUserProxy.sol";
 import { GelatoDebug } from "../../libraries/GelatoDebug.sol";
 import {
-    Action, Operation, Task, TaskReceipt, IGelatoCore
+    Action, Operation, Provider, Task, TaskReceipt, IGelatoCore
 } from "../../gelato_core/interfaces/IGelatoCore.sol";
 
 contract GelatoUserProxy is IGelatoUserProxy {
@@ -53,13 +53,13 @@ contract GelatoUserProxy is IGelatoUserProxy {
         _;
     }
 
-    function submitTask(Task memory _task, uint256 _expiryDate)
+    function submitTask(Provider memory _provider, Task memory _task, uint256 _expiryDate)
         public
         override
         userOrFactory
     {
 
-        try IGelatoCore(gelatoCore).submitTask(_task, _expiryDate) {
+        try IGelatoCore(gelatoCore).submitTask(_provider, _task, _expiryDate) {
         } catch Error(string memory err) {
             revert(string(abi.encodePacked("GelatoUserProxy.submitTask:", err)));
         } catch {
@@ -67,15 +67,20 @@ contract GelatoUserProxy is IGelatoUserProxy {
         }
     }
 
-    function multiSubmitTasks(Task[] memory _tasks, uint256[] memory _expiryDates)
+    function multiSubmitTasks(
+        Provider[] memory _providers,
+        Task[] memory _tasks,
+        uint256[] memory _expiryDates
+    )
         public
         override
     {
         for (uint i; i < _tasks.length; i++)
-            submitTask(_tasks[i], _expiryDates.length > 0 ? _expiryDates[i] : 0);
+            submitTask(_providers[i], _tasks[i], _expiryDates.length > 0 ? _expiryDates[i] : 0);
     }
 
     function submitTaskCycle(
+        Provider memory _provider,
         Task[] memory _tasks,
         uint256 _cycles,  // num of full cycles
         uint256 _expiryDate
@@ -85,6 +90,7 @@ contract GelatoUserProxy is IGelatoUserProxy {
         userOrFactory
     {
         try IGelatoCore(gelatoCore).submitTaskCycle(
+            _provider,
             _tasks,
             _cycles,
             _expiryDate
@@ -97,6 +103,7 @@ contract GelatoUserProxy is IGelatoUserProxy {
     }
 
     function submitTaskChain(
+        Provider memory _provider,
         Task[] memory _tasks,
         uint256 _sumOfRequestedTaskSubmits,  // does NOT mean the number of cycles
         uint256 _expiryDate
@@ -106,6 +113,7 @@ contract GelatoUserProxy is IGelatoUserProxy {
         userOrFactory
     {
         try IGelatoCore(gelatoCore).submitTaskChain(
+            _provider,
             _tasks,
             _sumOfRequestedTaskSubmits,
             _expiryDate

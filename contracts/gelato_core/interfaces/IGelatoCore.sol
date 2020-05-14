@@ -25,7 +25,6 @@ struct Action {
 }
 
 struct Task {
-    Provider provider;
     Condition[] conditions;  // optional
     Action[] actions;
 }
@@ -33,6 +32,7 @@ struct Task {
 struct TaskReceipt {
     uint256 id;
     address userProxy;
+    Provider provider;
     uint256 index;
     Task[] tasks;
     uint256 submissionsLeft;
@@ -68,26 +68,40 @@ interface IGelatoCore {
 
     /// @notice API to query whether Task can be submitted successfully.
     /// @dev In submitTask the msg.sender must be the same as _userProxy here.
+    /// @param _provider Gelato Provider object: provider address and module.
     /// @param _userProxy The userProxy from which the task will be submitted.
     /// @param _task Selected provider, conditions, actions, expiry date of the task
-    function canSubmitTask(address _userProxy, Task calldata _task, uint256 _expiryDate)
+    function canSubmitTask(
+        address _userProxy,
+        Provider calldata _provider,
+        Task calldata _task,
+        uint256 _expiryDate
+    )
         external
         view
         returns(string memory);
 
     /// @notice API to submit a single Task.
     /// @dev You can let users submit multiple tasks at once by batching calls to this.
+    /// @param _provider Gelato Provider object: provider address and module.
     /// @param _task A Gelato Task object: provider, conditions, actions.
     /// @param _expiryDate From then on the task cannot be executed. 0 for infinity.
-    function submitTask(Task calldata _task, uint256 _expiryDate) external;
+    function submitTask(
+        Provider calldata _provider,
+        Task calldata _task,
+        uint256 _expiryDate
+    )
+        external;
 
 
     /// @notice A Gelato Task Cycle consists of 1 or more Tasks that automatically submit
     ///  the next one, after they have been executed.
+    /// @param _provider Gelato Provider object: provider address and module.
     /// @param _tasks This can be a single task or a sequence of tasks.
     /// @param _cycles How many full cycles will be submitted
     /// @param _expiryDate  After this no task of the sequence can be executed any more.
     function submitTaskCycle(
+        Provider calldata _provider,
         Task[] calldata _tasks,
         uint256 _cycles,
         uint256 _expiryDate
@@ -100,6 +114,7 @@ interface IGelatoCore {
     /// @dev CAUTION: _sumOfRequestedTaskSubmits does not mean the number of cycles.
     /// @dev If _sumOfRequestedTaskSubmits = 1 && _tasks.length = 2, only the first task
     ///  would be submitted, but not the second
+    /// @param _provider Gelato Provider object: provider address and module.
     /// @param _tasks This can be a single task or a sequence of tasks.
     /// @param _sumOfRequestedTaskSubmits The TOTAL number of Task auto-submits
     ///  that should have occured once the cycle is complete:
@@ -109,6 +124,7 @@ interface IGelatoCore {
     ///  ...
     /// @param _expiryDate  After this no task of the sequence can be executed any more.
     function submitTaskChain(
+        Provider calldata _provider,
         Task[] calldata _tasks,
         uint256 _sumOfRequestedTaskSubmits,
         uint256 _expiryDate

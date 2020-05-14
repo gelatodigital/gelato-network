@@ -4,7 +4,7 @@ pragma experimental ABIEncoderV2;
 import { IGelatoUserProxyFactory } from "./interfaces/IGelatoUserProxyFactory.sol";
 import { Address } from "../../external/Address.sol";
 import { GelatoUserProxy } from "./GelatoUserProxy.sol";
-import { Action, Task } from "../../gelato_core/interfaces/IGelatoCore.sol";
+import { Action, Provider, Task } from "../../gelato_core/interfaces/IGelatoCore.sol";
 
 contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
 
@@ -20,6 +20,7 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
     // create: public due to UnimplementedFeatureError structs
     function create(
         Action[] memory _actions,
+        Provider[] memory _providers,
         Task[] memory _tasks,
         uint256[] memory _expiryDates
     )
@@ -28,17 +29,15 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         override
         returns(GelatoUserProxy userProxy)
     {
-        userProxy = new GelatoUserProxy{value: msg.value}(msg.sender, gelatoCore);
-        gelatoProxyByUser[msg.sender] = userProxy;
-        userByGelatoProxy[userProxy] = msg.sender;
+        userProxy = _createGelatoUserProxyAndExecActions(_actions);
         if (_actions.length != 0) _execActions(userProxy, _actions);
-        if (_tasks.length != 0) _submitTasks(userProxy, _tasks, _expiryDates);
-        emit LogCreation(msg.sender, userProxy, msg.value);
+        if (_tasks.length != 0) _submitTasks(userProxy, _providers, _tasks, _expiryDates);
     }
 
     // A standard _saltNonce can be used for deterministic shared address derivation
     function createTwo(
         uint256 _saltNonce,
+        Provider[] memory _providers,
         Action[] memory _actions,
         Task[] memory _tasks,
         uint256[] memory _expiryDates
@@ -48,86 +47,74 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         override
         returns(GelatoUserProxy userProxy)
     {
-        // Standard Way of deriving salt
-        bytes32 salt = keccak256(abi.encode(msg.sender, _saltNonce));
-
-        // Deploy userProxy with create2
-        userProxy = new GelatoUserProxy{salt: salt, value: msg.value}(msg.sender, gelatoCore);
-        require(
-            address(userProxy) == predictProxyAddress(msg.sender, _saltNonce),
-            "GelatoUserProxyFactory.createTwo: wrong address prediction"
-        );
-        gelatoProxyByUser[msg.sender] = userProxy;
-        userByGelatoProxy[userProxy] = msg.sender;
-
-        // Optional setup
-        if (_actions.length != 0) _execActions(userProxy, _actions);
-        if (_tasks.length != 0) _submitTasks(userProxy, _tasks, _expiryDates);
-
-        // Success
-        emit LogCreation(msg.sender, userProxy, msg.value);
+        userProxy = _createTwoGelatoUserProxyAndExecActions(_saltNonce, _actions);
+        if (_tasks.length != 0) _submitTasks(userProxy, _providers, _tasks, _expiryDates);
     }
 
     function createAndSubmitTaskCycle(
         Action[] memory _actions,
+        Provider memory _provider,
         Task[] memory _tasks,
-        uint256 _expiryDate,
-        uint256 _cycles
+        uint256 _cycles,
+        uint256 _expiryDate
     )
         public
         payable
         override
         returns(GelatoUserProxy userProxy)
     {
-        userProxy = create(_actions, new Task[](0), new uint[](0));
-        _submitTaskCycle(userProxy, _tasks, _cycles, _expiryDate);
+        userProxy = _createGelatoUserProxyAndExecActions(_actions);
+        _submitTaskCycle(userProxy, _provider, _tasks, _cycles, _expiryDate);
     }
 
     function createTwoAndSubmitTaskCycle(
         uint256 _saltNonce,
         Action[] memory _actions,
+        Provider memory _provider,
         Task[] memory _tasks,
-        uint256 _expiryDate,
-        uint256 _cycles
+        uint256 _cycles,
+        uint256 _expiryDate
     )
         public
         payable
         override
         returns(GelatoUserProxy userProxy)
     {
-        userProxy = createTwo(_saltNonce, _actions, new Task[](0), new uint[](0));
-        _submitTaskCycle(userProxy, _tasks, _cycles, _expiryDate);
+        userProxy = _createTwoGelatoUserProxyAndExecActions(_saltNonce, _actions);
+        _submitTaskCycle(userProxy, _provider, _tasks, _cycles, _expiryDate);
     }
 
     function createAndSubmitTaskChain(
         Action[] memory _actions,
+        Provider memory _provider,
         Task[] memory _tasks,
-        uint256 _expiryDate,
-        uint256 _sumOfRequestedTaskSubmits
+        uint256 _sumOfRequestedTaskSubmits,
+        uint256 _expiryDate
     )
         public
         payable
         override
         returns(GelatoUserProxy userProxy)
     {
-        userProxy = create(_actions, new Task[](0), new uint[](0));
-        _submitTaskChain(userProxy, _tasks, _sumOfRequestedTaskSubmits, _expiryDate);
+        userProxy = _createGelatoUserProxyAndExecActions(_actions);
+        _submitTaskChain(userProxy, _provider, _tasks, _sumOfRequestedTaskSubmits, _expiryDate);
     }
 
     function createTwoAndSubmitTaskChain(
         uint256 _saltNonce,
         Action[] memory _actions,
+        Provider memory _provider,
         Task[] memory _tasks,
-        uint256 _expiryDate,
-        uint256 _cycles
+        uint256 _cycles,
+        uint256 _expiryDate
     )
         public
         payable
         override
         returns(GelatoUserProxy userProxy)
     {
-        userProxy = createTwo(_saltNonce, _actions, new Task[](0), new uint[](0));
-        _submitTaskChain(userProxy, _tasks, _cycles, _expiryDate);
+        userProxy = _createTwoGelatoUserProxyAndExecActions(_saltNonce, _actions);
+        _submitTaskChain(userProxy, _provider, _tasks, _cycles, _expiryDate);
     }
 
     function predictProxyAddress(address _user, uint256 _saltNonce)
@@ -160,6 +147,41 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         return type(GelatoUserProxy).creationCode;
     }
 
+    // create
+    function _createGelatoUserProxyAndExecActions(Action[] memory _actions)
+        private
+        returns(GelatoUserProxy userProxy)
+    {
+        userProxy = new GelatoUserProxy{value: msg.value}(msg.sender, gelatoCore);
+        _storeGelatoUserProxy(userProxy);
+        if (_actions.length != 0) _execActions(userProxy, _actions);
+    }
+
+    // create2
+    function _createTwoGelatoUserProxyAndExecActions(
+        uint256 _saltNonce,
+        Action[] memory _actions
+    )
+        private
+        returns(GelatoUserProxy userProxy)
+    {
+        bytes32 salt = keccak256(abi.encode(msg.sender, _saltNonce));
+        userProxy = new GelatoUserProxy{salt: salt, value: msg.value}(msg.sender, gelatoCore);
+        require(
+            address(userProxy) == predictProxyAddress(msg.sender, _saltNonce),
+            "GelatoUserProxyFactory.createTwo: wrong address prediction"
+        );
+        _storeGelatoUserProxy(userProxy);
+        if (_actions.length != 0) _execActions(userProxy, _actions);
+    }
+
+    // store and emit LogCreation
+    function _storeGelatoUserProxy(GelatoUserProxy _userProxy) private {
+        gelatoProxyByUser[msg.sender] = _userProxy;
+        userByGelatoProxy[_userProxy] = msg.sender;
+        emit LogCreation(msg.sender, _userProxy, msg.value);
+    }
+
     function _execActions(GelatoUserProxy _userProxy, Action[] memory _actions) private {
         try _userProxy.multiExecActions(_actions) {
         } catch Error(string memory err) {
@@ -171,12 +193,13 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
 
     function _submitTasks(
         GelatoUserProxy _userProxy,
+        Provider[] memory _providers,
         Task[] memory _tasks,
         uint256[] memory _expiryDates
     )
         private
     {
-        try _userProxy.multiSubmitTasks(_tasks, _expiryDates) {
+        try _userProxy.multiSubmitTasks(_providers, _tasks, _expiryDates) {
         } catch Error(string memory err) {
             revert(string(abi.encodePacked("GelatoUserProxyFactory._submitTasks:", err)));
         } catch {
@@ -186,13 +209,14 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
 
     function _submitTaskCycle(
         GelatoUserProxy _userProxy,
+        Provider memory _provider,
         Task[] memory _tasks,
         uint256 _cycles,
         uint256 _expiryDate
     )
         private
     {
-        try _userProxy.submitTaskCycle(_tasks, _cycles, _expiryDate) {
+        try _userProxy.submitTaskCycle(_provider, _tasks, _cycles, _expiryDate) {
         } catch Error(string memory err) {
             revert(
                 string(abi.encodePacked("GelatoUserProxyFactory._submitTaskCycle:", err))
@@ -204,13 +228,19 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
 
     function _submitTaskChain(
         GelatoUserProxy _userProxy,
+        Provider memory _provider,
         Task[] memory _tasks,
         uint256 _sumOfRequestedTaskSubmits,
         uint256 _expiryDate
     )
         private
     {
-        try _userProxy.submitTaskChain(_tasks, _sumOfRequestedTaskSubmits, _expiryDate) {
+        try _userProxy.submitTaskChain(
+            _provider,
+            _tasks,
+            _sumOfRequestedTaskSubmits,
+            _expiryDate
+        ) {
         } catch Error(string memory err) {
             revert(
                 string(abi.encodePacked("GelatoUserProxyFactory._submitTaskCycle:", err))
