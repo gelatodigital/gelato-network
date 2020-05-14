@@ -8,7 +8,7 @@ contract ConditionTimeStateful is GelatoConditionsStandard {
 
     using SafeMath for uint256;
 
-    // userProxy => account to monitor => token/ETH-id  => refTime
+    // userProxy => refTime
     mapping(address => uint256) public refTime;
 
      // STANDARD interface

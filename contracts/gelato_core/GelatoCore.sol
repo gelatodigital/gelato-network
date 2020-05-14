@@ -82,8 +82,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         override
     {
         _canSubmitGate(_tasks[0], _expiryDate);
-        if(_cycles != 0) _cycles * _tasks.length;
-        _storeTaskReceipt(msg.sender, 0, _tasks, _cycles, _expiryDate);
+        _storeTaskReceipt(msg.sender, 0, _tasks, _cycles * _tasks.length, _expiryDate);
     }
 
     function submitTaskChain(
