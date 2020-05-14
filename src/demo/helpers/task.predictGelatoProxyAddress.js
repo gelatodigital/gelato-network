@@ -14,7 +14,6 @@ export default task(
     "saltnonce",
     "saltnonce that takes part in deriving the address - default to global CPK nonce",
     "42069",
-    types.string
   )
 
   .addFlag("log", "Logs return values to stdout")
