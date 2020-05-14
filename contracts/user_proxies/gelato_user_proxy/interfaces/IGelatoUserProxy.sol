@@ -31,13 +31,13 @@ interface IGelatoUserProxy {
     ///  the next one, after they have been executed.
     /// @param _tasks This can be a single task or a sequence of tasks.
     /// @param _provider Gelato Provider object: provider address and module.
-    /// @param _cycles How many full cycles will be submitted
     /// @param _expiryDate  After this no task of the sequence can be executed any more.
+    /// @param _cycles How many full cycles will be submitted
     function submitTaskCycle(
         Provider calldata _provider,
         Task[] calldata _tasks,
-        uint256 _cycles,
-        uint256 _expiryDate
+        uint256 _expiryDate,
+        uint256 _cycles
     )
         external;
 
@@ -46,17 +46,17 @@ interface IGelatoUserProxy {
     /// @dev CAUTION: _sumOfRequestedTaskSubmits does not mean the number of cycles.
     /// @param _provider Gelato Provider object: provider address and module.
     /// @param _tasks This can be a single task or a sequence of tasks.
+    /// @param _expiryDate  After this no task of the sequence can be executed any more.
     /// @param _sumOfRequestedTaskSubmits The TOTAL number of Task auto-submits
     //   that should have occured once the cycle is complete:
     ///  1) _sumOfRequestedTaskSubmits=X: number of times to run the same task or the sum
     ///   of total cyclic task executions in the case of a sequence of different tasks.
     ///  2) _submissionsLeft=0: infinity - run the same task or sequence of tasks infinitely.
-    /// @param _expiryDate  After this no task of the sequence can be executed any more.
     function submitTaskChain(
         Provider calldata _provider,
         Task[] calldata _tasks,
-        uint256 _sumOfRequestedTaskSubmits,  // does NOT mean the number of cycles
-        uint256 _expiryDate
+        uint256 _expiryDate,
+        uint256 _sumOfRequestedTaskSubmits 
     ) external;
 
     /// @notice Cancel a task receipt on gelato

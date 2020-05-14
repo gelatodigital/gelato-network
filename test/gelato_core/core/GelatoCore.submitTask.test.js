@@ -224,9 +224,9 @@ describe("Gelato Core - Task Submission ", function () {
     // Create UserProxy
     const createTx = await gelatoUserProxyFactory
       .connect(seller)
-      .create([], [], []);
+      .create([], [], [], []);
     await createTx.wait();
-    userProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
+    [userProxyAddress] = await gelatoUserProxyFactory.gelatoProxiesByUser(
       sellerAddress
     );
     userProxy = await ethers.getContractAt("GelatoUserProxy", userProxyAddress);
@@ -557,12 +557,12 @@ describe("Gelato Core - Task Submission ", function () {
       // 2. Create Proxy for Provider
       const createTx = await gelatoUserProxyFactory
         .connect(provider)
-        .create([], [], []);
+        .create([], [], [], []);
       await createTx.wait();
 
-      const providerProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
-        providerAddress
-      );
+      const [
+        providerProxyAddress,
+      ] = await gelatoUserProxyFactory.gelatoProxiesByUser(providerAddress);
       const providerProxy = await ethers.getContractAt(
         "GelatoUserProxy",
         providerProxyAddress
@@ -588,7 +588,6 @@ describe("Gelato Core - Task Submission ", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         actions: [action, action2],
       });
 
@@ -613,7 +612,7 @@ describe("Gelato Core - Task Submission ", function () {
       const submitTaskPayload = await run("abi-encode-withselector", {
         contractname: "GelatoCore",
         functionname: "submitTask",
-        inputs: [task, EXPIRY_DATE],
+        inputs: [gelatoProvider, task, EXPIRY_DATE],
       });
 
       // addProviderModules
@@ -684,12 +683,12 @@ describe("Gelato Core - Task Submission ", function () {
       // 2. Create Proxy for Provider
       const createTx = await gelatoUserProxyFactory
         .connect(provider)
-        .create([], [], []);
+        .create([], [], [], []);
       await createTx.wait();
 
-      const providerProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
-        providerAddress
-      );
+      const [
+        providerProxyAddress,
+      ] = await gelatoUserProxyFactory.gelatoProxiesByUser(providerAddress);
       const providerProxy = await ethers.getContractAt(
         "GelatoUserProxy",
         providerProxyAddress
@@ -715,7 +714,6 @@ describe("Gelato Core - Task Submission ", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         actions: [action, action2],
       });
 
@@ -739,7 +737,7 @@ describe("Gelato Core - Task Submission ", function () {
       const submitTaskPayload = await run("abi-encode-withselector", {
         contractname: "GelatoCore",
         functionname: "submitTask",
-        inputs: [task, EXPIRY_DATE],
+        inputs: [gelatoProvider, task, EXPIRY_DATE],
       });
 
       // addProviderModules

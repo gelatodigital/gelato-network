@@ -226,12 +226,12 @@ describe("Testing DS Proxy Module delpoyment and ds proxy execution with gelato"
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         actions: [action],
       });
 
       const taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: 1,
@@ -242,7 +242,7 @@ describe("Testing DS Proxy Module delpoyment and ds proxy execution with gelato"
       const submitTaskData = await run("abi-encode-withselector", {
         contractname: "SubmitTaskScript",
         functionname: "submitTask",
-        inputs: [task, 0],
+        inputs: [gelatoProvider, task, 0],
       });
 
       // LogTaskSubmitted(taskReceipt.id, hashedTaskReceipt, taskReceipt);
@@ -303,12 +303,12 @@ describe("Testing DS Proxy Module delpoyment and ds proxy execution with gelato"
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         actions: [action, action, action],
       });
 
       const taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: 1,
@@ -328,7 +328,7 @@ describe("Testing DS Proxy Module delpoyment and ds proxy execution with gelato"
       const submitTaskData = await run("abi-encode-withselector", {
         contractname: "SubmitTaskScript",
         functionname: "submitTask",
-        inputs: [task, 0],
+        inputs: [gelatoProvider, task, 0],
       });
 
       // LogTaskSubmitted(taskReceipt.id, hashedTaskReceipt, taskReceipt);
@@ -381,11 +381,11 @@ describe("Testing DS Proxy Module delpoyment and ds proxy execution with gelato"
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         actions: [action],
       });
       const taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: 1,
@@ -405,7 +405,7 @@ describe("Testing DS Proxy Module delpoyment and ds proxy execution with gelato"
       const submitTaskData = await run("abi-encode-withselector", {
         contractname: "SubmitTaskScript",
         functionname: "submitTask",
-        inputs: [task, 0],
+        inputs: [gelatoProvider, task, 0],
       });
 
       // LogTaskSubmitted(taskReceipt.id, hashedTaskReceipt, taskReceipt);

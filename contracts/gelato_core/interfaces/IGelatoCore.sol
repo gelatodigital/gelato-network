@@ -35,8 +35,8 @@ struct TaskReceipt {
     Provider provider;
     uint256 index;
     Task[] tasks;
-    uint256 submissionsLeft;
     uint256 expiryDate;
+    uint256 submissionsLeft;
 }
 
 interface IGelatoCore {
@@ -98,13 +98,13 @@ interface IGelatoCore {
     ///  the next one, after they have been executed.
     /// @param _provider Gelato Provider object: provider address and module.
     /// @param _tasks This can be a single task or a sequence of tasks.
-    /// @param _cycles How many full cycles will be submitted
     /// @param _expiryDate  After this no task of the sequence can be executed any more.
+    /// @param _cycles How many full cycles will be submitted
     function submitTaskCycle(
         Provider calldata _provider,
         Task[] calldata _tasks,
-        uint256 _cycles,
-        uint256 _expiryDate
+        uint256 _expiryDate,
+        uint256 _cycles
     )
         external;
 
@@ -116,18 +116,18 @@ interface IGelatoCore {
     ///  would be submitted, but not the second
     /// @param _provider Gelato Provider object: provider address and module.
     /// @param _tasks This can be a single task or a sequence of tasks.
+    /// @param _expiryDate  After this no task of the sequence can be executed any more.
     /// @param _sumOfRequestedTaskSubmits The TOTAL number of Task auto-submits
     ///  that should have occured once the cycle is complete:
     ///  _sumOfRequestedTaskSubmits = 0 => One Task will resubmit the next Task infinitly
     ///  _sumOfRequestedTaskSubmits = 1 => One Task will resubmit no other task
     ///  _sumOfRequestedTaskSubmits = 2 => One Task will resubmit 1 other task
     ///  ...
-    /// @param _expiryDate  After this no task of the sequence can be executed any more.
     function submitTaskChain(
         Provider calldata _provider,
         Task[] calldata _tasks,
-        uint256 _sumOfRequestedTaskSubmits,
-        uint256 _expiryDate
+        uint256 _expiryDate,
+        uint256 _sumOfRequestedTaskSubmits
     )
         external;
 

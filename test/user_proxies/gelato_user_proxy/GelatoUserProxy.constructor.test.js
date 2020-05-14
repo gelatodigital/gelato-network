@@ -104,9 +104,9 @@ describe("User Proxies - GelatoUserProxy - CONSTRUCTOR", function () {
 
   describe("GelatoUserProxyFactory.constructor: state vars", function () {
     it("Should store user address", async function () {
-      const tx = await gelatoUserProxyFactory.create([], [], []);
+      const tx = await gelatoUserProxyFactory.create([], [], [], []);
       await tx.wait();
-      const gelatoUserProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
+      const gelatoUserProxyAddress = await gelatoUserProxyFactory.gelatoProxiesByUser(
         userAddress
       );
       const gelatoUserProxy = await ethers.getContractAt(
@@ -117,9 +117,9 @@ describe("User Proxies - GelatoUserProxy - CONSTRUCTOR", function () {
     });
 
     it("Should store gelatoCore address", async function () {
-      const tx = await gelatoUserProxyFactory.create([], [], []);
+      const tx = await gelatoUserProxyFactory.create([], [], [], []);
       await tx.wait();
-      const gelatoUserProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
+      const gelatoUserProxyAddress = await gelatoUserProxyFactory.gelatoProxiesByUser(
         userAddress
       );
       const gelatoUserProxy = await ethers.getContractAt(

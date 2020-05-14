@@ -94,9 +94,9 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
     // Create UserProxy
     const createTx = await gelatoUserProxyFactory
       .connect(seller)
-      .create([], [], []);
+      .create([], [], [], []);
     await createTx.wait();
-    userProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
+    [userProxyAddress] = await gelatoUserProxyFactory.gelatoProxiesByUser(
       sellerAddress
     );
     userProxy = await ethers.getContractAt("GelatoUserProxy", userProxyAddress);
@@ -216,6 +216,7 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
 
     const taskReceipt = new TaskReceipt({
       id: 1,
+      provider: gelatoProvider,
       userProxy: userProxyAddress,
       tasks: [task],
       submissionsLeft: 0,
@@ -343,6 +344,7 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
 
     const taskReceipt = new TaskReceipt({
       id: 1,
+      provider: gelatoProvider,
       userProxy: userProxyAddress,
       tasks: [task],
       submissionsLeft: 0,

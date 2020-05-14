@@ -66,8 +66,8 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
     [provider, user] = await ethers.getSigners();
     providerAddress = await provider.getAddress();
 
-    await gelatoUserProxyFactory.connect(user).create([], [], []);
-    gelatoUserProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
+    await gelatoUserProxyFactory.connect(user).create([], [], [], []);
+    gelatoUserProxyAddress = await gelatoUserProxyFactory.gelatoProxiesByUser(
       await user.getAddress()
     );
 

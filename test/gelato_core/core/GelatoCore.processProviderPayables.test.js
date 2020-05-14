@@ -269,9 +269,9 @@ describe("GelatoCore.processProviderPayables", function () {
     // Create UserProxy
     const createTx = await gelatoUserProxyFactory
       .connect(seller)
-      .create([], [], []);
+      .create([], [], [], []);
     await createTx.wait();
-    userProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
+    [userProxyAddress] = await gelatoUserProxyFactory.gelatoProxiesByUser(
       sellerAddress
     );
     userProxy = await ethers.getContractAt("GelatoUserProxy", userProxyAddress);
@@ -369,12 +369,12 @@ describe("GelatoCore.processProviderPayables", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         actions: [action],
       });
 
       let taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
@@ -477,12 +477,12 @@ describe("GelatoCore.processProviderPayables", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         actions: [action],
       });
 
       let taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
@@ -608,12 +608,12 @@ describe("GelatoCore.processProviderPayables", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         actions: [action, action2],
       });
 
       let taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
@@ -716,12 +716,12 @@ describe("GelatoCore.processProviderPayables", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         actions: [action, action],
       });
 
       let taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,

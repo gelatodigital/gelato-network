@@ -135,9 +135,9 @@ describe("GelatoCore.canExec", function () {
     // Create UserProxy
     const createTx = await gelatoUserProxyFactory
       .connect(seller)
-      .create([], [], []);
+      .create([], [], [], []);
     await createTx.wait();
-    userProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
+    [userProxyAddress] = await gelatoUserProxyFactory.gelatoProxiesByUser(
       sellerAddress
     );
     userProxy = await ethers.getContractAt("GelatoUserProxy", userProxyAddress);
@@ -167,6 +167,7 @@ describe("GelatoCore.canExec", function () {
 
     taskReceipt = new TaskReceipt({
       id: 1,
+      provider: gelatoProvider,
       userProxy: userProxyAddress,
       tasks: [task],
       submissionsLeft: SUBMISSIONS_LEFT,

@@ -201,12 +201,14 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
 
     // TaskReceipt: InterceptTask
     interceptTaskReceiptAsObj = new TaskReceipt({
+      provider: gelatoProvider,
       userProxy: userProxyAddress,
       tasks: [task1],
     });
 
     // TaskReceipt: CyclicTask1
     cyclicTask1ReceiptAsObj = new TaskReceipt({
+      provider: gelatoProvider,
       userProxy: userProxyAddress,
       index: 0, // dynamic: auto-filled by GelatoCore upon tasks creation
       tasks: [task1, task2], // static: auto-filled by GelatoCore upon tasks creation
@@ -215,6 +217,7 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
 
     // TaskReceipt: CyclicTask2
     cyclicTask2ReceiptAsObj = new TaskReceipt({
+      provider: gelatoProvider,
       userProxy: userProxyAddress,
       index: 1, // After first execution, next will be placed to 0
       tasks: [task1, task2], // static

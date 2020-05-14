@@ -33,13 +33,19 @@ function convertTaskReceiptObjToArray(taskReceiptObj) {
   const taskReceiptArray = [
     taskReceiptObj.id,
     taskReceiptObj.userProxy,
+    _convertToProviderArray(taskReceiptObj.provider),
     taskReceiptObj.index,
     tasks,
-    taskReceiptObj.submissionsLeft,
     taskReceiptObj.expiryDate,
+    taskReceiptObj.submissionsLeft,
   ];
 
   return taskReceiptArray;
+}
+
+function _convertToProviderArray(providerObj) {
+  const providerArray = [providerObj.addr, providerObj.module];
+  return providerArray;
 }
 
 function _convertToArrayOfTaskArrays(arrayOfTaskObjs) {
@@ -53,11 +59,6 @@ function _convertToArrayOfTaskArrays(arrayOfTaskObjs) {
     tasks.push(taskArray);
   }
   return tasks;
-}
-
-function _convertToProviderArray(providerObj) {
-  const providerArray = [providerObj.addr, providerObj.module];
-  return providerArray;
 }
 
 function _convertToArrayOfConditionArrays(arrayOfConditionObjs) {

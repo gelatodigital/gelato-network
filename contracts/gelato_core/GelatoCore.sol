@@ -82,29 +82,29 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         _canSubmitGate(_provider, _task, _expiryDate);
         Task[] memory singleTask = new Task[](1);
         singleTask[0] = _task;
-        _storeTaskReceipt(msg.sender, _provider, 0, singleTask, 1, _expiryDate);
+        _storeTaskReceipt(msg.sender, _provider, 0, singleTask, _expiryDate, 1);
     }
 
     function submitTaskCycle(
         Provider memory _provider,
         Task[] memory _tasks,
-        uint256 _cycles,  // how many full cycles should be submitted
-        uint256 _expiryDate
+        uint256 _expiryDate,
+        uint256 _cycles  // how many full cycles should be submitted
     )
         public
         override
     {
         _canSubmitGate(_provider, _tasks[0], _expiryDate);
         _storeTaskReceipt(
-            msg.sender, _provider, 0, _tasks, _cycles * _tasks.length, _expiryDate
+            msg.sender, _provider, 0, _tasks, _expiryDate, _cycles * _tasks.length
         );
     }
 
     function submitTaskChain(
         Provider memory _provider,
         Task[] memory _tasks,
-        uint256 _sumOfRequestedTaskSubmits,  // see IGelatoCore for explanation
-        uint256 _expiryDate
+        uint256 _expiryDate,
+        uint256 _sumOfRequestedTaskSubmits  // see IGelatoCore for explanation
     )
         public
         override
@@ -113,7 +113,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             require(_sumOfRequestedTaskSubmits >= _tasks.length);
         _canSubmitGate(_provider, _tasks[0], _expiryDate);
         _storeTaskReceipt(
-            msg.sender, _provider, 0, _tasks, _sumOfRequestedTaskSubmits, _expiryDate
+            msg.sender, _provider, 0, _tasks, _expiryDate, _sumOfRequestedTaskSubmits
         );
     }
 
@@ -122,8 +122,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         Provider memory _provider,
         uint256 _index,
         Task[] memory _tasks,
-        uint256 _submissionsLeft,
-        uint256 _expiryDate
+        uint256 _expiryDate,
+        uint256 _submissionsLeft
     )
         private
     {

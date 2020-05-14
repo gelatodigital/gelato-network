@@ -259,9 +259,9 @@ describe("GelatoCore.exec", function () {
     // Create UserProxy
     const createTx = await gelatoUserProxyFactory
       .connect(seller)
-      .create([], [], []);
+      .create([], [], [], []);
     await createTx.wait();
-    userProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
+    [userProxyAddress] = await gelatoUserProxyFactory.gelatoProxiesByUser(
       sellerAddress
     );
     userProxy = await ethers.getContractAt("GelatoUserProxy", userProxyAddress);
@@ -314,12 +314,12 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         actions: [action],
       });
 
       const taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
@@ -455,13 +455,13 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         conditions: [condition],
         actions: [action],
       });
 
       let taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
@@ -538,13 +538,13 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         conditions: [condition],
         actions: [action],
       });
 
       let taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
@@ -620,13 +620,13 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         conditions: [condition],
         actions: [action],
       });
 
       let taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
@@ -697,12 +697,12 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         actions: [action],
       });
 
       let taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
@@ -768,12 +768,12 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         actions: [action],
       });
 
       let taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
@@ -835,13 +835,13 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         conditions: [condition],
         actions: [action],
       });
 
       let taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
@@ -913,13 +913,13 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         conditions: [condition],
         actions: [action],
       });
 
       let taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
@@ -966,12 +966,12 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         actions: [mockConditionAsAction],
       });
 
       let taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
@@ -1034,13 +1034,13 @@ describe("GelatoCore.exec", function () {
       const expiryDate = oldBlock.timestamp + lifespan;
 
       const task = new Task({
-        provider: gelatoProvider,
         conditions: [condition],
         actions: [action],
       });
 
       let taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
@@ -1104,12 +1104,12 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         actions: [action],
       });
 
       const taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
@@ -1189,12 +1189,12 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         actions: [action],
       });
 
       const taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
@@ -1272,12 +1272,12 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         actions: [action],
       });
 
       const taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
@@ -1355,12 +1355,12 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         actions: [action],
       });
 
       const taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
@@ -1386,7 +1386,7 @@ describe("GelatoCore.exec", function () {
       const submitTaskPayload = await run("abi-encode-withselector", {
         contractname: "GelatoCore",
         functionname: "submitTask",
-        inputs: [task, EXPIRY_DATE],
+        inputs: [gelatoProvider, task, EXPIRY_DATE],
       });
 
       // addProviderModules
@@ -1561,12 +1561,12 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         actions: [action],
       });
 
       let taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
@@ -1631,12 +1631,12 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         actions: [action],
       });
 
       const taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: sysProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
@@ -1786,12 +1786,12 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         actions: [unProvideFundsAction],
       });
 
       let taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
@@ -1895,7 +1895,6 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         conditions: [condition],
         actions: [
           actionWithdrawBatchExchangeSellToken,
@@ -1905,6 +1904,7 @@ describe("GelatoCore.exec", function () {
 
       const taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
