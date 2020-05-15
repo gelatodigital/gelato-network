@@ -23,23 +23,23 @@ contract SubmitTaskScript {
     function submitTaskCycle(
         Provider memory _provider,
         Task[] memory _tasks,
-        uint256 _cycles,
-        uint256 _expiryDate
+        uint256 _expiryDate,
+        uint256 _cycles
     )
         public
     {
-        gelatoCore.submitTaskCycle(_provider, _tasks, _cycles, _expiryDate);
+        gelatoCore.submitTaskCycle(_provider, _tasks, _expiryDate, _cycles);
     }
 
     /// @dev will be delegate called by ds_proxy
     function submitTaskChain(
         Provider memory _provider,
         Task[] memory _tasks,
-        uint256 _sumOfRequestedTaskSubmits,
-        uint256 _expiryDate
+        uint256 _expiryDate,
+        uint256 _sumOfRequestedTaskSubmits
     )
         public
     {
-        gelatoCore.submitTaskCycle(_provider, _tasks, _sumOfRequestedTaskSubmits, _expiryDate);
+        gelatoCore.submitTaskCycle(_provider, _tasks, _expiryDate, _sumOfRequestedTaskSubmits);
     }
 }
