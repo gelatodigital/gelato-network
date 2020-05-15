@@ -10,7 +10,6 @@ const SALT_NONCE = 42069;
 
 const EXPIRY_DATE = 0;
 
-const INTERCEPT_SUBMITS = 3;
 const REQUESTED_SUBMITS = 21;
 
 describe("Gelato Actions - TASK CHAINS - ARBITRARY", function () {

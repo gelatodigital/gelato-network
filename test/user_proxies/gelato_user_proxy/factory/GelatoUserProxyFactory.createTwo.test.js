@@ -266,12 +266,11 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE TWO", function () {
 
       // createTwo(): user revertv
       await expect(
-        gelatoUserProxyFactory.createTwoExecActionsSubmitTasks(
+        gelatoUserProxyFactory.createTwoSubmitTasks(
           SALT_NONCE,
-          [],
           gelatoProvider,
           [task],
-          [],
+          [0],
           {
             value: utils.parseEther("1"),
           }
@@ -343,9 +342,8 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE TWO", function () {
       );
 
       await expect(
-        gelatoUserProxyFactory.createTwoExecActionsSubmitTasks(
+        gelatoUserProxyFactory.createTwoSubmitTasks(
           SALT_NONCE,
-          [],
           gelatoProvider,
           [task, task],
           [0, 0],
@@ -381,12 +379,9 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE TWO", function () {
       // );
 
       await expect(
-        gelatoUserProxyFactory.createTwoExecActionsSubmitTasks(
+        gelatoUserProxyFactory.createTwoExecActions(
           SALT_NONCE,
           [actionStruct, otherActionStruct],
-          gelatoProvider,
-          [],
-          [],
           {
             value: FUNDING,
           }

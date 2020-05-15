@@ -17,7 +17,7 @@ interface IGelatoUserProxy {
         external;
 
     /// @notice API to submit multiple "single" Tasks.
-    /// @dev CAUTION: The ordering of _providers<=>_tasks<=>_expiryDates must be coordinated.
+    /// @dev CAUTION: The ordering of _tasks<=>_expiryDates must be coordinated.
     /// @param _providers Gelato Provider object: provider address and module.
     /// @param _tasks An array of Gelato Task objects: provider, conditions, actions.
     /// @param _expiryDates From then on the task cannot be executed. 0 for infinity.

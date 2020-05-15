@@ -77,7 +77,10 @@ contract GelatoUserProxy is IGelatoUserProxy {
         public
         override
     {
-        require(_tasks.length == _expiryDates.length, "GelatoUserProxy.multiSubmitTasks:wrongLength");
+        require(
+            _tasks.length == _expiryDates.length,
+            "GelatoUserProxy.multiSubmitTasks: each task needs own expiryDate"
+        );
         for (uint i; i < _tasks.length; i++) {
             submitTask(_provider, _tasks[i], _expiryDates[i]);
         }
@@ -174,8 +177,8 @@ contract GelatoUserProxy is IGelatoUserProxy {
         Action[] memory _actions,
         Provider memory _provider,
         Task[] memory _tasks,
-        uint256 _cycles,
-        uint256 _expiryDate
+        uint256 _expiryDate,
+        uint256 _cycles
     )
         public
         payable
