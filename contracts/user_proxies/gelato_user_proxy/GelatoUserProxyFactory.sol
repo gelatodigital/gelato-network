@@ -321,8 +321,8 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         try _userProxy.submitTaskChain(
             _provider,
             _tasks,
-            _sumOfRequestedTaskSubmits,
-            _expiryDate
+            _expiryDate,
+            _sumOfRequestedTaskSubmits
         ) {
         } catch Error(string memory err) {
             revert(
