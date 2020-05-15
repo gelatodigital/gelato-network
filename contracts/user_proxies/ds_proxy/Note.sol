@@ -1,3 +1,5 @@
+// "SPDX-License-Identifier: UNLICENSED"
+
 /// note.sol -- the `note' modifier, for logging calls as events
 
 // This program is free software: you can redistribute it and/or modify

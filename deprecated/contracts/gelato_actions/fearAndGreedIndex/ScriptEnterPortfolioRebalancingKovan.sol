@@ -1,3 +1,4 @@
+// "SPDX-License-Identifier: UNLICENSED"
 pragma solidity ^0.6.8;
 
 import "../../gelato_core/gelato_user_proxies/gnosis_safe_proxy/interfaces/IGnosisSafe.sol";
