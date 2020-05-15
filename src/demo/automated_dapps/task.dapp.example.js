@@ -168,8 +168,8 @@ export default task(
           [action2], // Set the value in the condition before submitting the task
           gelatoProvider,
           [task], // submit the task to send tokens and update the condition value
-          taskArgs.cycles, // Task should be submitted taskArgs.cycles times in total
-          0 // Task should never expire
+          0, // Task should never expire
+          taskArgs.cycles // Task should be submitted taskArgs.cycles times in total
         );
       } else {
         console.log(

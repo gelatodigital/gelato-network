@@ -12,18 +12,10 @@ interface IGelatoUserProxyFactory {
         uint256 funding
     );
 
+    //  ==================== CREATE =======================================
     /// @notice Create a GelatoUserProxy.
     /// @return userProxy address of deployed proxy contract.
     function create()
-        external
-        payable
-        returns (GelatoUserProxy userProxy);
-
-
-    /// @notice Create a GelatoUserProxy using the create2 opcode.
-    /// @param _saltNonce salt is generated thusly: keccak256(abi.encode(_user, _saltNonce))
-    /// @return userProxy address of deployed proxy contract.
-    function createTwo(uint256 _saltNonce)
         external
         payable
         returns (GelatoUserProxy userProxy);
@@ -36,11 +28,17 @@ interface IGelatoUserProxyFactory {
         payable
         returns (GelatoUserProxy userProxy);
 
-    /// @notice Create a GelatoUserProxy using the create2 opcode and exec actions
-    /// @param _saltNonce salt is generated thusly: keccak256(abi.encode(_user, _saltNonce))
-    /// @param _actions Optional actions to execute.
+    /// @notice Create a GelatoUserProxy and submit Tasks to Gelato in the same tx.
+    /// @param _provider Provider for each of the _tasks.
+    /// @param _tasks Tasks to submit to Gelato. Must each have their own Provider.
+    /// @param _expiryDates expiryDate for each of the _tasks.
+    ///  CAUTION: The ordering of _tasks<=>_expiryDates must be coordinated.
     /// @return userProxy address of deployed proxy contract.
-    function createTwoExecActions(uint256 _saltNonce, Action[] calldata _actions)
+    function createSubmitTasks(
+        Provider calldata _provider,
+        Task[] calldata _tasks,
+        uint256[] calldata _expiryDates
+    )
         external
         payable
         returns (GelatoUserProxy userProxy);
@@ -50,7 +48,7 @@ interface IGelatoUserProxyFactory {
     /// @param _provider Provider for each of the _tasks.
     /// @param _tasks Tasks to submit to Gelato. Must each have their own Provider.
     /// @param _expiryDates expiryDate for each of the _tasks.
-    ///  CAUTION: The ordering of _providers<=>_tasks<=>_expiryDates must be coordinated.
+    ///  CAUTION: The ordering of _tasks<=>_expiryDates must be coordinated.
     /// @return userProxy address of deployed proxy contract.
     function createExecActionsSubmitTasks(
         Action[] calldata _actions,
@@ -61,27 +59,6 @@ interface IGelatoUserProxyFactory {
         external
         payable
         returns(GelatoUserProxy userProxy);
-
-    /// @notice Create a GelatoUserProxy using the create2 opcode.
-    /// @dev This allows for creating  a GelatoUserProxy instance at a specific address.
-    ///  which can be predicted and e.g. prefunded.
-    /// @param _saltNonce salt is generated thusly: keccak256(abi.encode(_user, _saltNonce))
-    /// @param _actions Optional actions to execute.
-    /// @param _provider Provider for each of the _tasks.
-    /// @param _tasks Tasks to submit to Gelato. Must each have their own Provider.
-    /// @param _expiryDates expiryDate for each of the _tasks.
-    ///  CAUTION: The ordering of _providers<=>_tasks<=>_expiryDates must be coordinated.
-    function createTwoExecActionsSubmitTasks(
-        uint256 _saltNonce,
-        Action[] calldata _actions,
-        Provider calldata _provider,
-        Task[] calldata _tasks,
-        uint256[] calldata _expiryDates
-    )
-        external
-        payable
-        returns(GelatoUserProxy userProxy);
-
 
     /// @notice Like create but for submitting a Task Cycle to Gelato. A
     //   Gelato Task Cycle consists of 1 or more Tasks that automatically submit
@@ -103,24 +80,6 @@ interface IGelatoUserProxyFactory {
         external
         payable
         returns(GelatoUserProxy userProxy);
-
-
-    /// @notice Just like createAndSubmitTaskCycle just using create2, thus allowing for
-    ///  knowing the address the GelatoUserProxy will be assigned to in advance.
-    /// @param _saltNonce salt is generated thusly: keccak256(abi.encode(_user, _saltNonce))
-    function createTwoExecActionsSubmitTaskCycle(
-        uint256 _saltNonce,
-        Action[] calldata _actions,
-        Provider calldata _provider,
-        Task[] calldata _tasks,
-        uint256 _expiryDate,
-        uint256 _cycles
-    )
-        external
-        payable
-        returns(GelatoUserProxy userProxy);
-
-
 
     /// @notice Like create but for submitting a Task Cycle to Gelato. A
     //   Gelato Task Cycle consists of 1 or more Tasks that automatically submit
@@ -146,6 +105,76 @@ interface IGelatoUserProxyFactory {
         payable
         returns(GelatoUserProxy userProxy);
 
+    //  ==================== CREATE 2 =======================================
+
+    /// @notice Create a GelatoUserProxy using the create2 opcode.
+    /// @param _saltNonce salt is generated thusly: keccak256(abi.encode(_user, _saltNonce))
+    /// @return userProxy address of deployed proxy contract.
+    function createTwo(uint256 _saltNonce)
+        external
+        payable
+        returns (GelatoUserProxy userProxy);
+
+    /// @notice Create a GelatoUserProxy using the create2 opcode and exec actions
+    /// @param _saltNonce salt is generated thusly: keccak256(abi.encode(_user, _saltNonce))
+    /// @param _actions Optional actions to execute.
+    /// @return userProxy address of deployed proxy contract.
+    function createTwoExecActions(uint256 _saltNonce, Action[] calldata _actions)
+        external
+        payable
+        returns (GelatoUserProxy userProxy);
+
+    /// @notice Create a salted GelatoUserProxy and submit Tasks to Gelato in the same tx.
+    /// @param _provider Provider for each of the _tasks.
+    /// @param _tasks Tasks to submit to Gelato. Must each have their own Provider.
+    /// @param _expiryDates expiryDate for each of the _tasks.
+    ///  CAUTION: The ordering of _tasks<=>_expiryDates must be coordinated.
+    /// @return userProxy address of deployed proxy contract.
+    function createTwoSubmitTasks(
+        uint256 _saltNonce,
+        Provider calldata _provider,
+        Task[] calldata _tasks,
+        uint256[] calldata _expiryDates
+    )
+        external
+        payable
+        returns (GelatoUserProxy userProxy);
+
+    /// @notice Create a GelatoUserProxy using the create2 opcode.
+    /// @dev This allows for creating  a GelatoUserProxy instance at a specific address.
+    ///  which can be predicted and e.g. prefunded.
+    /// @param _saltNonce salt is generated thusly: keccak256(abi.encode(_user, _saltNonce))
+    /// @param _actions Optional actions to execute.
+    /// @param _provider Provider for each of the _tasks.
+    /// @param _tasks Tasks to submit to Gelato. Must each have their own Provider.
+    /// @param _expiryDates expiryDate for each of the _tasks.
+    ///  CAUTION: The ordering of _tasks<=>_expiryDates must be coordinated.
+    function createTwoExecActionsSubmitTasks(
+        uint256 _saltNonce,
+        Action[] calldata _actions,
+        Provider calldata _provider,
+        Task[] calldata _tasks,
+        uint256[] calldata _expiryDates
+    )
+        external
+        payable
+        returns(GelatoUserProxy userProxy);
+
+    /// @notice Just like createAndSubmitTaskCycle just using create2, thus allowing for
+    ///  knowing the address the GelatoUserProxy will be assigned to in advance.
+    /// @param _saltNonce salt is generated thusly: keccak256(abi.encode(_user, _saltNonce))
+    function createTwoExecActionsSubmitTaskCycle(
+        uint256 _saltNonce,
+        Action[] calldata _actions,
+        Provider calldata _provider,
+        Task[] calldata _tasks,
+        uint256 _expiryDate,
+        uint256 _cycles
+    )
+        external
+        payable
+        returns(GelatoUserProxy userProxy);
+
     /// @notice Just like createAndSubmitTaskChain just using create2, thus allowing for
     ///  knowing the address the GelatoUserProxy will be assigned to in advance.
     /// @param _saltNonce salt is generated thusly: keccak256(abi.encode(_user, _saltNonce))
@@ -161,7 +190,7 @@ interface IGelatoUserProxyFactory {
         payable
         returns(GelatoUserProxy userProxy);
 
-    // ______ State Read APIs __________________
+    //  ==================== GETTERS =======================================
     function predictProxyAddress(address _user, uint256 _saltNonce)
         external
         view
@@ -176,7 +205,6 @@ interface IGelatoUserProxyFactory {
     /// @param _user Address of user
     /// @return array of deployed GelatoUserProxies that belong to the _user.
     function gelatoProxiesByUser(address _user) external view returns(GelatoUserProxy[] memory);
-
 
     function getGelatoUserProxyByIndex(address _user, uint256 _index)
         external
