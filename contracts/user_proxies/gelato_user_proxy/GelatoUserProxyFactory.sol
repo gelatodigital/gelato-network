@@ -49,6 +49,7 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
     function createExecActions(Action[] memory _actions)
         public
         payable
+        override
         returns (GelatoUserProxy userProxy)
     {
         userProxy = create();
@@ -58,6 +59,7 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
     function createTwoExecActions(uint256 _saltNonce, Action[] memory _actions)
         public
         payable
+        override
         returns (GelatoUserProxy userProxy)
     {
         userProxy = createTwo(_saltNonce);

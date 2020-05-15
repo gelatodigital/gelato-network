@@ -28,6 +28,23 @@ interface IGelatoUserProxyFactory {
         payable
         returns (GelatoUserProxy userProxy);
 
+    /// @notice Create a GelatoUserProxy and exec actions
+    /// @param _actions Optional actions to execute.
+    /// @return userProxy address of deployed proxy contract.
+    function createExecActions(Action[] calldata _actions)
+        external
+        payable
+        returns (GelatoUserProxy userProxy);
+
+    /// @notice Create a GelatoUserProxy using the create2 opcode and exec actions
+    /// @param _saltNonce salt is generated thusly: keccak256(abi.encode(_user, _saltNonce))
+    /// @param _actions Optional actions to execute.
+    /// @return userProxy address of deployed proxy contract.
+    function createTwoExecActions(uint256 _saltNonce, Action[] calldata _actions)
+        external
+        payable
+        returns (GelatoUserProxy userProxy);
+
     /// @notice Create a GelatoUserProxy.
     /// @param _actions Optional actions to execute.
     /// @param _provider Provider for each of the _tasks.
