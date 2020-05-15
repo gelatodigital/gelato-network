@@ -257,9 +257,7 @@ describe("GelatoCore.exec", function () {
     await gelatoCore.connect(provider).provideTaskSpecs([newTaskSpec2]);
 
     // Create UserProxy
-    const createTx = await gelatoUserProxyFactory
-      .connect(seller)
-      .create([], [], [], []);
+    const createTx = await gelatoUserProxyFactory.connect(seller).create();
     await createTx.wait();
     [userProxyAddress] = await gelatoUserProxyFactory.gelatoProxiesByUser(
       sellerAddress
@@ -1668,7 +1666,7 @@ describe("GelatoCore.exec", function () {
       });
 
       await expect(
-        gelatoUserProxyFactory.createTwo(
+        gelatoUserProxyFactory.createTwoExecActionsSubmitTasks(
           saltnonce,
           [
             stakeEthAction,
@@ -1694,9 +1692,9 @@ describe("GelatoCore.exec", function () {
               value: 0,
             },
           ],
-          [gelatoProvider],
+          gelatoProvider,
           [task],
-          [],
+          [0],
           {
             value: stakeAmount,
           }

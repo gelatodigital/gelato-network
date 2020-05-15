@@ -22,7 +22,7 @@ interface IGelatoUserProxy {
     /// @param _tasks An array of Gelato Task objects: provider, conditions, actions.
     /// @param _expiryDates From then on the task cannot be executed. 0 for infinity.
     function multiSubmitTasks(
-        Provider[] calldata _providers,
+        Provider calldata _providers,
         Task[] calldata _tasks,
         uint256[] calldata _expiryDates
     )

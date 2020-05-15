@@ -173,7 +173,13 @@ describe("GelatoCore - EdgeCase: Malicious Provider", function () {
     await expect(
       gelatoUserProxyFactory
         .connect(user)
-        .createTwo(SALT_NONCE, [], [gelatoProvider], [task], [0])
+        .createTwoExecActionsSubmitTasks(
+          SALT_NONCE,
+          [],
+          gelatoProvider,
+          [task],
+          [0]
+        )
     )
       .to.emit(gelatoUserProxyFactory, "LogCreation")
       .withArgs(userAddress, userProxyAddress, 0)

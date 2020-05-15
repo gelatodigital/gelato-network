@@ -70,40 +70,17 @@ contract GelatoUserProxy is IGelatoUserProxy {
     }
 
     function multiSubmitTasks(
-        Provider[] memory _providers,
+        Provider memory _provider,
         Task[] memory _tasks,
         uint256[] memory _expiryDates
     )
         public
         override
     {
-        if (_providers.length == 0 || _tasks.length == 0)
-            revert("GelatoUserProxy.multiSubmitTasks: 0 providers or tasks");
-
-        bool singleProvider = _providers.length == 1;
-        if (!singleProvider && _tasks.length != _providers.length)
-            revert("GelatoUserProxy.multiSubmitTasks: providers <!> tasks");
-
-        bool singleExpiry = _expiryDates.length == 1 || _expiryDates.length == 0;
-        if (!singleExpiry && _tasks.length != _expiryDates.length)
-            revert("GelatoUserProxy.multiSubmitTasks: tasks <!> expiries");
-
+        require(_tasks.length == _expiryDates.length, "GelatoUserProxy.multiSubmitTasks:wrongLength");
         for (uint i; i < _tasks.length; i++) {
-            submitTask(
-                singleProvider ? _providers[0] : _providers[i],
-                _tasks[i],
-                singleExpiry ? _getSingleExpiryDate(_expiryDates) : _expiryDates[i]
-            );
+            submitTask(_provider, _tasks[i], _expiryDates[i]);
         }
-    }
-
-    function _getSingleExpiryDate(uint256[] memory _expiryDates)
-        private
-        pure
-        returns(uint256)
-    {
-        if (_expiryDates.length == 0) return 0;
-        else return _expiryDates[0];
     }
 
     function submitTaskCycle(
@@ -146,9 +123,9 @@ contract GelatoUserProxy is IGelatoUserProxy {
             _sumOfRequestedTaskSubmits
         ) {
         } catch Error(string memory err) {
-            revert(string(abi.encodePacked("GelatoUserProxy.submitTaskCycle:", err)));
+            revert(string(abi.encodePacked("GelatoUserProxy.submitTaskChain:", err)));
         } catch {
-            revert("GelatoUserProxy.submitTaskCycle:undefinded");
+            revert("GelatoUserProxy.submitTaskChain:undefinded");
         }
     }
 
@@ -205,12 +182,8 @@ contract GelatoUserProxy is IGelatoUserProxy {
         override
         auth
     {
-        if (_actions.length == 0)
-            revert("GelatoUserProxy.execActionsAndSubmitTaskCycle: 0 actions");
-        if(_tasks.length == 0)
-            revert("GelatoUserProxy.execActionsAndSubmitTaskCycle: 0 tasks");
-        multiExecActions(_actions);
-        submitTaskCycle(_provider, _tasks, _expiryDate, _cycles);
+        if (_actions.length == 0) multiExecActions(_actions);
+        if(_tasks.length == 0) submitTaskCycle(_provider, _tasks, _expiryDate, _cycles);
     }
 
     function callAction(address _action, bytes memory _data, uint256 _value)

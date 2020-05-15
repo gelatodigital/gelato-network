@@ -90,6 +90,7 @@ export default task(
         addr: actionAddress1,
         data: actionData1, // data is can be left as 0 for Task Specs
         operation: Operation.Delegatecall, // We are using an action Script here, see smart contract: ActionERC20TransferFrom.sol
+        value: 0, // delegate calls always send 0 ETH
         termsOkCheck: true, // After the condition is checked, we will also conduct checks on the action contract
       });
 
@@ -103,6 +104,7 @@ export default task(
       const action2 = new Action({
         addr: conditionAddress, // We use the condition as an action (to dynamically set the timestamp when the users proxy contract can execute the actions next time)
         data: actionData2, // data is can be left as 0 for Task Specs
+        value: 0, // this action sends 0 ETH
         operation: Operation.Call, // We are calling the contract instance directly, without script
         termsOkCheck: false, // Always input false for actions we .call intp
       });
@@ -117,14 +119,8 @@ export default task(
         contractname: "ProviderModuleGelatoUserProxy",
       });
 
-      const gelatoProvider = new GelatoProvider({
-        addr: providerAddress, // Address of your provider account
-        module: gelatoUserProxyProviderModule, // Module defining which proxies can submit tasks
-      });
-
       // ##### Create Task Spec
       const task = new Task({
-        provider: gelatoProvider,
         conditions: [condition], // only need the condition inst address here
         actions: [action1, action2], // Actions will be executed from left to right after each other. If one fails, all fail
       });
@@ -150,6 +146,11 @@ export default task(
         userAddress
       );
 
+      const gelatoProvider = new GelatoProvider({
+        addr: providerAddress, // Address of your provider account
+        module: gelatoUserProxyProviderModule, // Module defining which proxies can submit tasks
+      });
+
       let tx;
       if (isDeployed) {
         console.log(
@@ -174,9 +175,10 @@ export default task(
         console.log(
           `\nDeploying Proxy, executing action and submitting Task in one Tx\n`
         );
-        tx = await gelatoUserProxyFactory.createTwoAndSubmitTaskCycle(
+        tx = await gelatoUserProxyFactory.createTwoExecActionsSubmitTaskCycle(
           taskArgs.saltnonce, // Saltnonce to ensure we use the same proxy we approved tokens to
           [action2], // Set the value in the condition before submitting the task
+          gelatoProvider, // Gelato Provider
           [task], // submit the task to send tokens and update the condition value
           0, // Task should never expire
           taskArgs.cycles, // Task should be submitted taskArgs.cycles times in total

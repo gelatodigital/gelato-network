@@ -32,14 +32,9 @@ export default task(
 
       let creationTx;
       try {
-        creationTx = await gelatoUserProxyFactory.create(
-          optionalSubmitTasks,
-          optionalActions,
-          false,
-          {
-            value: utils.parseEther(taskArgs.funding),
-          }
-        );
+        creationTx = await gelatoUserProxyFactory.create({
+          value: utils.parseEther(taskArgs.funding),
+        });
       } catch (error) {
         throw new Error("\n PRE creationTx submission error", error, "\n");
       }

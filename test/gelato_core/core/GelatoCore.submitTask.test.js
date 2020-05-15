@@ -223,9 +223,7 @@ describe("Gelato Core - Task Submission ", function () {
       );
 
     // Create UserProxy
-    const createTx = await gelatoUserProxyFactory
-      .connect(seller)
-      .create([], [], [], []);
+    const createTx = await gelatoUserProxyFactory.connect(seller).create();
     await createTx.wait();
     [userProxyAddress] = await gelatoUserProxyFactory.gelatoProxiesByUser(
       sellerAddress
@@ -553,9 +551,7 @@ describe("Gelato Core - Task Submission ", function () {
       });
 
       // 2. Create Proxy for Provider
-      const createTx = await gelatoUserProxyFactory
-        .connect(provider)
-        .create([], [], [], []);
+      const createTx = await gelatoUserProxyFactory.connect(provider).create();
       await createTx.wait();
 
       const [
@@ -679,9 +675,7 @@ describe("Gelato Core - Task Submission ", function () {
       });
 
       // 2. Create Proxy for Provider
-      const createTx = await gelatoUserProxyFactory
-        .connect(provider)
-        .create([], [], [], []);
+      const createTx = await gelatoUserProxyFactory.connect(provider).create();
       await createTx.wait();
 
       const [

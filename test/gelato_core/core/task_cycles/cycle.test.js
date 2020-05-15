@@ -231,7 +231,7 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
 
     // CreateTwo userProxy and submit interceptTask in one tx
     await expect(
-      gelatoUserProxyFactory.createTwoAndSubmitTaskCycle(
+      gelatoUserProxyFactory.createTwoExecActionsSubmitTaskCycle(
         SALT_NONCE,
         [],
         gelatoProvider,
