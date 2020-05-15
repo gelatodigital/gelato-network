@@ -33,7 +33,6 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         returns(GelatoUserProxy userProxy)
     {
         userProxy = _createGelatoUserProxyAndExecActions(_actions);
-        if (_actions.length != 0) _execActions(userProxy, _actions);
         if (_tasks.length != 0) _submitTasks(userProxy, _providers, _tasks, _expiryDates);
     }
 

@@ -223,7 +223,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
                 _TR.expiryDate
             );
             if (!canSubmitNext.startsWithOk())
-                return string(abi.encodePacked("CannotAutoResubmitSelf:", canSubmitNext));
+                return string(abi.encodePacked("CannotAutoSubmitNextTask:", canSubmitNext));
         }
 
         // Executor Validation
