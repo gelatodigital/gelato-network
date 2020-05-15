@@ -1,7 +1,8 @@
-pragma solidity ^0.6.6;
+// "SPDX-License-Identifier: UNLICENSED"
+pragma solidity ^0.6.8;
 pragma experimental ABIEncoderV2;
 
-import { IGelatoCore, Task, TaskReceipt } from "./interfaces/IGelatoCore.sol";
+import { IGelatoCore, Provider, Task, TaskReceipt } from "./interfaces/IGelatoCore.sol";
 import { GelatoExecutors } from "./GelatoExecutors.sol";
 import { GelatoDebug } from "../libraries/GelatoDebug.sol";
 import { GelatoTaskReceipt } from "../libraries/GelatoTaskReceipt.sol";
@@ -39,14 +40,19 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     mapping(uint256 => bytes32) public override taskReceiptHash;
 
     // ================  SUBMIT ==============================================
-    function canSubmitTask(address _userProxy, Task memory _task, uint256 _expiryDate)
+    function canSubmitTask(
+        address _userProxy,
+        Provider memory _provider,
+        Task memory _task,
+        uint256 _expiryDate
+    )
         public
         view
         override
         returns(string memory)
     {
         // EXECUTOR CHECKS
-        if (!isExecutorMinStaked(executorByProvider[_task.provider.addr]))
+        if (!isExecutorMinStaked(executorByProvider[_provider.addr]))
             return "GelatoCore.canSubmitTask: executorStake";
 
         // ExpiryDate
@@ -56,9 +62,9 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // Check Provider details
         string memory isProvided;
-        if (_userProxy == _task.provider.addr)
-            isProvided = providerModuleChecks(_userProxy, _task);
-        else isProvided = isTaskProvided(_userProxy, _task);
+        if (_userProxy == _provider.addr)
+            isProvided = providerModuleChecks(_userProxy, _provider, _task);
+        else isProvided = isTaskProvided(_userProxy, _provider, _task);
         if (!isProvided.startsWithOk())
             return string(abi.encodePacked("GelatoCore.canSubmitTask.isProvided:", isProvided));
 
@@ -66,45 +72,59 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         return OK;
     }
 
-    function submitTask(Task memory _task, uint256 _expiryDate) public override {
-        _canSubmitGate(_task, _expiryDate);
-        Task[] memory singleTask = new Task[](1);
-        singleTask[0] = _task;
-        _storeTaskReceipt(msg.sender, 0, singleTask, 1, _expiryDate);
-    }
-
-    function submitTaskCycle(
-        Task[] memory _tasks,
-        uint256 _cycles,  // how many full cycles should be submitted
+    function submitTask(
+        Provider memory _provider,
+        Task memory _task,
         uint256 _expiryDate
     )
         public
         override
     {
-        _canSubmitGate(_tasks[0], _expiryDate);
-        _storeTaskReceipt(msg.sender, 0, _tasks, _cycles * _tasks.length, _expiryDate);
+        _canSubmitGate(_provider, _task, _expiryDate);
+        Task[] memory singleTask = new Task[](1);
+        singleTask[0] = _task;
+        _storeTaskReceipt(msg.sender, _provider, 0, singleTask, _expiryDate, 1);
+    }
+
+    function submitTaskCycle(
+        Provider memory _provider,
+        Task[] memory _tasks,
+        uint256 _expiryDate,
+        uint256 _cycles  // how many full cycles should be submitted
+    )
+        public
+        override
+    {
+        _canSubmitGate(_provider, _tasks[0], _expiryDate);
+        _storeTaskReceipt(
+            msg.sender, _provider, 0, _tasks, _expiryDate, _cycles * _tasks.length
+        );
     }
 
     function submitTaskChain(
+        Provider memory _provider,
         Task[] memory _tasks,
-        uint256 _sumOfRequestedTaskSubmits,  // see IGelatoCore for explanation
-        uint256 _expiryDate
+        uint256 _expiryDate,
+        uint256 _sumOfRequestedTaskSubmits  // see IGelatoCore for explanation
     )
         public
         override
     {
         if (_sumOfRequestedTaskSubmits != 0)
             require(_sumOfRequestedTaskSubmits >= _tasks.length);
-        _canSubmitGate(_tasks[0], _expiryDate);
-        _storeTaskReceipt(msg.sender, 0, _tasks, _sumOfRequestedTaskSubmits, _expiryDate);
+        _canSubmitGate(_provider, _tasks[0], _expiryDate);
+        _storeTaskReceipt(
+            msg.sender, _provider, 0, _tasks, _expiryDate, _sumOfRequestedTaskSubmits
+        );
     }
 
     function _storeTaskReceipt(
         address _userProxy,
+        Provider memory _provider,
         uint256 _index,
         Task[] memory _tasks,
-        uint256 _submissionsLeft,
-        uint256 _expiryDate
+        uint256 _expiryDate,
+        uint256 _submissionsLeft
     )
         private
     {
@@ -116,6 +136,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         TaskReceipt memory taskReceipt = TaskReceipt({
             id: nextTaskReceiptId,
             userProxy: _userProxy, // Smart Contract Accounts ONLY
+            provider: _provider,
             index: _index,
             tasks: _tasks,
             submissionsLeft: _submissionsLeft,  // 0=infinity, 1=once, X=maxTotalExecutions
@@ -138,11 +159,16 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         override
         returns(string memory)
     {
-        if (!isProviderLiquid(_TR.task().provider.addr, _gelatoMaxGas, _gelatoGasPrice))
+        if (!isProviderLiquid(_TR.provider.addr, _gelatoMaxGas, _gelatoGasPrice))
             return "ProviderIlliquidity";
 
-        if (_TR.userProxy != _TR.task().provider.addr) {
-            string memory res = providerCanExec(_TR.userProxy, _TR.task(), _gelatoGasPrice);
+        if (_TR.userProxy != _TR.provider.addr) {
+            string memory res = providerCanExec(
+                _TR.userProxy,
+                _TR.provider,
+                _TR.task(),
+                _gelatoGasPrice
+            );
             if (!res.startsWithOk()) return res;
         }
 
@@ -192,16 +218,17 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         if (_TR.submissionsLeft != 1) {
             string memory canSubmitNext = canSubmitTask(
                 _TR.userProxy,
+                _TR.provider,
                 _TR.tasks[_TR.nextIndex()],
                 _TR.expiryDate
             );
             if (!canSubmitNext.startsWithOk())
-                return string(abi.encodePacked("CannotAutoResubmitSelf:", canSubmitNext));
+                return string(abi.encodePacked("CannotAutoSubmitNextTask:", canSubmitNext));
         }
 
         // Executor Validation
         if (msg.sender == address(this)) return OK;
-        else if (msg.sender == executorByProvider[_TR.task().provider.addr]) return OK;
+        else if (msg.sender == executorByProvider[_TR.provider.addr]) return OK;
         else return "InvalidExecutor";
     }
 
@@ -227,7 +254,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         );
 
         require(
-            msg.sender == executorByProvider[_TR.task().provider.addr],
+            msg.sender == executorByProvider[_TR.provider.addr],
             "GelatoCore.exec: Invalid Executor"
         );
 
@@ -260,7 +287,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             // END-1: SUCCESS => TaskReceipt Deletion & Reward
             delete taskReceiptHash[_TR.id];
             (uint256 executorSuccessFee, uint256 sysAdminSuccessFee) = _processProviderPayables(
-                _TR.task().provider.addr,
+                _TR.provider.addr,
                 ExecutorPay.Reward,
                 startGas,
                 _gelatoMaxGas,
@@ -281,7 +308,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
                 //  => TaskReceipt Deletion & Refund
                 delete taskReceiptHash[_TR.id];
                 (uint256 executorRefund,) = _processProviderPayables(
-                    _TR.task().provider.addr,
+                    _TR.provider.addr,
                     ExecutorPay.Refund,
                     startGas,
                     _gelatoMaxGas,
@@ -320,7 +347,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         bytes memory execPayload;
         bool proxyReturndataCheck;
 
-        try IGelatoProviderModule(_TR.task().provider.module).execPayload(
+        try IGelatoProviderModule(_TR.provider.module).execPayload(
             _TR.task().actions
         )
             returns(bytes memory _execPayload, bool _proxyReturndataCheck)
@@ -342,7 +369,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // Check if actions reverts were caught by userProxy
         if (success && proxyReturndataCheck) {
-            try _TR.task().provider.module.execRevertCheck(userProxyReturndata) {
+            try _TR.provider.module.execRevertCheck(userProxyReturndata) {
                 // success: no revert from providerModule signifies no revert found
             } catch Error(string memory _error) {
                 revert(string(abi.encodePacked("GelatoCore._exec.execRevertCheck:", _error)));
@@ -357,10 +384,11 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             if (_TR.submissionsLeft != 1) {
                 _storeTaskReceipt(
                     _TR.userProxy,
+                    _TR.provider,
                     _TR.nextIndex(),
                     _TR.tasks,
-                    _TR.submissionsLeft == 0 ? 0 : _TR.submissionsLeft - 1,
-                    _TR.expiryDate
+                    _TR.expiryDate,
+                    _TR.submissionsLeft == 0 ? 0 : _TR.submissionsLeft - 1
                 );
             }
         } else {
@@ -414,7 +442,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     function cancelTask(TaskReceipt memory _TR) public override {
         // Checks
         require(
-            msg.sender == _TR.userProxy || msg.sender == _TR.task().provider.addr,
+            msg.sender == _TR.userProxy || msg.sender == _TR.provider.addr,
             "GelatoCore.cancelTask: sender"
         );
         // Effects
@@ -432,8 +460,15 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     }
 
     // Helpers
-    function _canSubmitGate(Task memory _task, uint256 _expiryDate) private view {
-        string memory canSubmitRes = canSubmitTask(msg.sender, _task, _expiryDate);
+    function _canSubmitGate(
+        Provider memory _provider,
+        Task memory _task,
+        uint256 _expiryDate
+    )
+        private
+        view
+    {
+        string memory canSubmitRes = canSubmitTask(msg.sender, _provider, _task, _expiryDate);
         require(canSubmitRes.startsWithOk(), canSubmitRes);
     }
 

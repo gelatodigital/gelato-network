@@ -1,4 +1,5 @@
-pragma solidity ^0.6.6;
+// "SPDX-License-Identifier: UNLICENSED"
+pragma solidity ^0.6.8;
 pragma experimental ABIEncoderV2;
 
 import { GelatoConditionsStandard } from "../../gelato_conditions/GelatoConditionsStandard.sol";

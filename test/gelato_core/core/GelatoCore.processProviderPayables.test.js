@@ -267,11 +267,9 @@ describe("GelatoCore.processProviderPayables", function () {
     await gelatoCore.connect(provider).provideTaskSpecs([newTaskSpec2]);
 
     // Create UserProxy
-    const createTx = await gelatoUserProxyFactory
-      .connect(seller)
-      .create([], [], []);
+    const createTx = await gelatoUserProxyFactory.connect(seller).create();
     await createTx.wait();
-    userProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
+    [userProxyAddress] = await gelatoUserProxyFactory.gelatoProxiesByUser(
       sellerAddress
     );
     userProxy = await ethers.getContractAt("GelatoUserProxy", userProxyAddress);
@@ -369,18 +367,22 @@ describe("GelatoCore.processProviderPayables", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         actions: [action],
       });
 
       let taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
       });
 
-      const submitTaskTx = await userProxy.submitTask(task, EXPIRY_DATE);
+      const submitTaskTx = await userProxy.submitTask(
+        gelatoProvider,
+        task,
+        EXPIRY_DATE
+      );
       await submitTaskTx.wait();
 
       const executorBalanceBefore = await ethers.provider.getBalance(
@@ -477,18 +479,22 @@ describe("GelatoCore.processProviderPayables", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         actions: [action],
       });
 
       let taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
       });
 
-      const submitTaskTx = await userProxy.submitTask(task, EXPIRY_DATE);
+      const submitTaskTx = await userProxy.submitTask(
+        gelatoProvider,
+        task,
+        EXPIRY_DATE
+      );
       await submitTaskTx.wait();
 
       const executorBalanceBefore = await ethers.provider.getBalance(
@@ -608,18 +614,22 @@ describe("GelatoCore.processProviderPayables", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         actions: [action, action2],
       });
 
       let taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
       });
 
-      const submitTaskTx = await userProxy.submitTask(task, EXPIRY_DATE);
+      const submitTaskTx = await userProxy.submitTask(
+        gelatoProvider,
+        task,
+        EXPIRY_DATE
+      );
       await submitTaskTx.wait();
 
       const executorBalanceBefore = await ethers.provider.getBalance(
@@ -716,18 +726,22 @@ describe("GelatoCore.processProviderPayables", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         actions: [action, action],
       });
 
       let taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
       });
 
-      const submitTaskTx = await userProxy.submitTask(task, EXPIRY_DATE);
+      const submitTaskTx = await userProxy.submitTask(
+        gelatoProvider,
+        task,
+        EXPIRY_DATE
+      );
       await submitTaskTx.wait();
 
       const executorBalanceBefore = await ethers.provider.getBalance(

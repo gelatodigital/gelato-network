@@ -1,4 +1,5 @@
-pragma solidity ^0.6.6;
+// "SPDX-License-Identifier: UNLICENSED"
+pragma solidity ^0.6.8;
 
 /**
  * @dev Collection of functions related to the address type

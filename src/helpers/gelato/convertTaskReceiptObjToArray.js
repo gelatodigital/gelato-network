@@ -33,31 +33,31 @@ function convertTaskReceiptObjToArray(taskReceiptObj) {
   const taskReceiptArray = [
     taskReceiptObj.id,
     taskReceiptObj.userProxy,
+    _convertToProviderArray(taskReceiptObj.provider),
     taskReceiptObj.index,
     tasks,
-    taskReceiptObj.submissionsLeft,
     taskReceiptObj.expiryDate,
+    taskReceiptObj.submissionsLeft,
   ];
 
   return taskReceiptArray;
+}
+
+function _convertToProviderArray(providerObj) {
+  const providerArray = [providerObj.addr, providerObj.module];
+  return providerArray;
 }
 
 function _convertToArrayOfTaskArrays(arrayOfTaskObjs) {
   const tasks = [];
   for (const taskObj of arrayOfTaskObjs) {
     const taskArray = [
-      _convertToProviderArray(taskObj.provider),
       _convertToArrayOfConditionArrays(taskObj.conditions),
       _convertToArrayOfActionArrays(taskObj.actions),
     ];
     tasks.push(taskArray);
   }
   return tasks;
-}
-
-function _convertToProviderArray(providerObj) {
-  const providerArray = [providerObj.addr, providerObj.module];
-  return providerArray;
 }
 
 function _convertToArrayOfConditionArrays(arrayOfConditionObjs) {

@@ -1,63 +1,81 @@
-pragma solidity ^0.6.6;
+// "SPDX-License-Identifier: UNLICENSED"
+pragma solidity ^0.6.8;
 pragma experimental ABIEncoderV2;
 
-import { Action, Task, TaskReceipt } from "../../../gelato_core/interfaces/IGelatoCore.sol";
+import {
+    Action, Provider, Task, TaskReceipt
+} from "../../../gelato_core/interfaces/IGelatoCore.sol";
 
 interface IGelatoUserProxy {
 
     /// @notice API to submit a single Task.
     /// @dev You can let users submit multiple tasks at once by batching calls to this.
+    /// @param _provider Gelato Provider object: provider address and module.
     /// @param _task A Gelato Task object: provider, conditions, actions.
     /// @param _expiryDate From then on the task cannot be executed. 0 for infinity.
-    function submitTask(Task calldata _task, uint256 _expiryDate) external;
+    function submitTask(Provider calldata _provider, Task calldata _task, uint256 _expiryDate)
+        external;
 
     /// @notice API to submit multiple "single" Tasks.
-    /// @dev CAUTION: The ordering of _tasks and their _expiryDates must be coordinated.
+    /// @dev CAUTION: The ordering of _tasks<=>_expiryDates must be coordinated.
+    /// @param _providers Gelato Provider object: provider address and module.
     /// @param _tasks An array of Gelato Task objects: provider, conditions, actions.
     /// @param _expiryDates From then on the task cannot be executed. 0 for infinity.
-    function multiSubmitTasks(Task[] calldata _tasks, uint256[] calldata _expiryDates)
+    function multiSubmitTasks(
+        Provider calldata _providers,
+        Task[] calldata _tasks,
+        uint256[] calldata _expiryDates
+    )
         external;
 
     /// @notice A Gelato Task Cycle consists of 1 or more Tasks that automatically submit
     ///  the next one, after they have been executed.
     /// @param _tasks This can be a single task or a sequence of tasks.
-    /// @param _cycles How many full cycles will be submitted
+    /// @param _provider Gelato Provider object: provider address and module.
     /// @param _expiryDate  After this no task of the sequence can be executed any more.
+    /// @param _cycles How many full cycles will be submitted
     function submitTaskCycle(
+        Provider calldata _provider,
         Task[] calldata _tasks,
-        uint256 _cycles,
-        uint256 _expiryDate
+        uint256 _expiryDate,
+        uint256 _cycles
     )
         external;
 
     /// @notice A Gelato Task Cycle consists of 1 or more Tasks that automatically submit
     ///  the next one, after they have been executed.
     /// @dev CAUTION: _sumOfRequestedTaskSubmits does not mean the number of cycles.
+    /// @param _provider Gelato Provider object: provider address and module.
     /// @param _tasks This can be a single task or a sequence of tasks.
+    /// @param _expiryDate  After this no task of the sequence can be executed any more.
     /// @param _sumOfRequestedTaskSubmits The TOTAL number of Task auto-submits
     //   that should have occured once the cycle is complete:
     ///  1) _sumOfRequestedTaskSubmits=X: number of times to run the same task or the sum
     ///   of total cyclic task executions in the case of a sequence of different tasks.
     ///  2) _submissionsLeft=0: infinity - run the same task or sequence of tasks infinitely.
-    /// @param _expiryDate  After this no task of the sequence can be executed any more.
     function submitTaskChain(
+        Provider calldata _provider,
         Task[] calldata _tasks,
-        uint256 _sumOfRequestedTaskSubmits,  // does NOT mean the number of cycles
-        uint256 _expiryDate
+        uint256 _expiryDate,
+        uint256 _sumOfRequestedTaskSubmits
     ) external;
 
 
     /// @notice Execs actions and submits task cycle in one tx
     /// @param _actions Actions to execute
+    /// @param _provider Gelato Provider object: provider address and module.
     /// @param _tasks This can be a single task or a sequence of tasks.
-    /// @param _cycles How many full cycles will be submitted
     /// @param _expiryDate  After this no task of the sequence can be executed any more.
+    /// @param _cycles How many full cycles will be submitted
     function execActionsAndSubmitTaskCycle(
         Action[] calldata _actions,
+        Provider calldata _provider,
         Task[] calldata _tasks,
-        uint256 _cycles,
-        uint256 _expiryDate
-    ) external payable;
+        uint256 _expiryDate,
+        uint256 _cycles
+    )
+        external
+        payable;
 
     /// @notice Cancel a task receipt on gelato
     /// @dev Proxy users or the Task providers can cancel.

@@ -1,7 +1,8 @@
-pragma solidity ^0.6.6;
+// "SPDX-License-Identifier: UNLICENSED"
+pragma solidity ^0.6.8;
 pragma experimental ABIEncoderV2;
 
-import { IGelatoCore, Task } from "../../../gelato_core/interfaces/IGelatoCore.sol";
+import { IGelatoCore, Provider, Task } from "../../../gelato_core/interfaces/IGelatoCore.sol";
 
 contract SubmitTaskScript {
 
@@ -12,23 +13,33 @@ contract SubmitTaskScript {
     }
 
     /// @dev will be delegate called by ds_proxy
-    function submitTask(Task memory _task, uint256 _expiryDate)
+    function submitTask(Provider memory _provider, Task memory _task, uint256 _expiryDate)
         public
     {
-        gelatoCore.submitTask(_task, _expiryDate);
+        gelatoCore.submitTask(_provider, _task, _expiryDate);
     }
 
     /// @dev will be delegate called by ds_proxy
-    function submitTaskCycle(Task[] memory _tasks, uint256 _cycles, uint256 _expiryDate)
+    function submitTaskCycle(
+        Provider memory _provider,
+        Task[] memory _tasks,
+        uint256 _expiryDate,
+        uint256 _cycles
+    )
         public
     {
-        gelatoCore.submitTaskCycle(_tasks, _cycles, _expiryDate);
+        gelatoCore.submitTaskCycle(_provider, _tasks, _expiryDate, _cycles);
     }
 
     /// @dev will be delegate called by ds_proxy
-    function submitTaskChain(Task[] memory _tasks, uint256 _sumOfRequestedTaskSubmits, uint256 _expiryDate)
+    function submitTaskChain(
+        Provider memory _provider,
+        Task[] memory _tasks,
+        uint256 _expiryDate,
+        uint256 _sumOfRequestedTaskSubmits
+    )
         public
     {
-        gelatoCore.submitTaskCycle(_tasks, _sumOfRequestedTaskSubmits, _expiryDate);
+        gelatoCore.submitTaskCycle(_provider, _tasks, _expiryDate, _sumOfRequestedTaskSubmits);
     }
 }

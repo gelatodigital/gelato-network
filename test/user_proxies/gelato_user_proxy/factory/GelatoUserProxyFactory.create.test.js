@@ -27,6 +27,8 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE", function () {
 
   let actionStruct;
   let otherActionStruct;
+
+  let gelatoProvider;
   let task;
 
   beforeEach(async function () {
@@ -64,85 +66,103 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE", function () {
     it("Should allow anyone to create a userProxy", async function () {
       // create(): user
       await expect(
-        gelatoUserProxyFactory.create([], [], [], {
+        gelatoUserProxyFactory.create({
           value: utils.parseEther("1"),
         })
       ).to.emit(gelatoUserProxyFactory, "LogCreation");
 
-      // gelatoProxyByUser
-      const userGelatoProxy = await gelatoUserProxyFactory.gelatoProxyByUser(
-        userAddress
-      );
+      // gelatoProxiesByUser
+      const [
+        userProxyAddress,
+      ] = await gelatoUserProxyFactory.gelatoProxiesByUser(userAddress);
+
       // userByGelatoProxy
       expect(
-        await gelatoUserProxyFactory.userByGelatoProxy(userGelatoProxy)
+        await gelatoUserProxyFactory.userByGelatoProxy(userProxyAddress)
       ).to.be.equal(userAddress);
 
       // isGelatoUserProxy
-      expect(await gelatoUserProxyFactory.isGelatoUserProxy(userGelatoProxy)).to
-        .be.true;
+      expect(await gelatoUserProxyFactory.isGelatoUserProxy(userProxyAddress))
+        .to.be.true;
+
       // isGelatoProxyUser
-      expect(await gelatoUserProxyFactory.isGelatoProxyUser(userAddress)).to.be
-        .true;
+      expect(
+        await gelatoUserProxyFactory.isGelatoProxyUser(
+          userAddress,
+          userProxyAddress
+        )
+      ).to.be.true;
 
       // create(): otherUser
-      await expect(
-        gelatoUserProxyFactory.connect(otherUser).create([], [], [])
-      ).to.emit(gelatoUserProxyFactory, "LogCreation");
-
-      // gelatoProxyByUser: otherUser
-      const otherUserGelatoProxy = await gelatoUserProxyFactory.gelatoProxyByUser(
-        otherUserAddress
-      );
-      // userByGelatoProxy: otherUser
-      expect(
-        await gelatoUserProxyFactory.userByGelatoProxy(otherUserGelatoProxy)
-      ).to.be.equal(otherUserAddress);
-
-      // isGelatoUserProxy: otherUser
-      expect(
-        await gelatoUserProxyFactory.isGelatoUserProxy(otherUserGelatoProxy)
-      ).to.be.true;
-      // isGelatoProxyUser: otherUser
-      expect(await gelatoUserProxyFactory.isGelatoProxyUser(otherUserAddress))
-        .to.be.true;
-    });
-
-    it("Should allow to re-create a userProxy", async function () {
-      // create(): user firstProxy
-      const tx = await gelatoUserProxyFactory.create([], [], []);
-      await tx.wait();
-
-      // gelatoProxyByUser: first proxy
-      const firstUserGelatoProxy = await gelatoUserProxyFactory.gelatoProxyByUser(
-        userAddress
-      );
-
-      // create(): user secondProxy
-      await expect(gelatoUserProxyFactory.create([], [], [])).to.emit(
+      await expect(gelatoUserProxyFactory.connect(otherUser).create()).to.emit(
         gelatoUserProxyFactory,
         "LogCreation"
       );
 
-      // gelatoProxyByUser: secondProxy
-      const secondUserGelatoProxy = await gelatoUserProxyFactory.gelatoProxyByUser(
-        userAddress
+      // gelatoProxiesByUser: otherUser
+      const [
+        otherUserProxyAddress,
+      ] = await gelatoUserProxyFactory.gelatoProxiesByUser(otherUserAddress);
+
+      // userByGelatoProxy: otherUser
+      expect(
+        await gelatoUserProxyFactory.userByGelatoProxy(otherUserProxyAddress)
+      ).to.be.equal(otherUserAddress);
+
+      // isGelatoUserProxy: otherUser
+      expect(
+        await gelatoUserProxyFactory.isGelatoUserProxy(otherUserProxyAddress)
+      ).to.be.true;
+
+      // isGelatoProxyUser: otherUser
+      expect(
+        await gelatoUserProxyFactory.isGelatoProxyUser(
+          otherUserAddress,
+          otherUserProxyAddress
+        )
+      ).to.be.true;
+    });
+
+    it("Should allow to re-create a userProxy", async function () {
+      // create(): user firstProxy
+      const tx = await gelatoUserProxyFactory.create();
+      await tx.wait();
+
+      // gelatoProxiesByUser: first proxy
+      const [
+        userProxyAddress,
+      ] = await gelatoUserProxyFactory.gelatoProxiesByUser(userAddress);
+
+      // create(): user secondProxy
+      await expect(gelatoUserProxyFactory.create()).to.emit(
+        gelatoUserProxyFactory,
+        "LogCreation"
       );
 
-      expect(secondUserGelatoProxy).to.not.be.equal(firstUserGelatoProxy);
+      // gelatoProxiesByUser: secondProxy
+      const [
+        _,
+        secondUserProxyAddress,
+      ] = await gelatoUserProxyFactory.gelatoProxiesByUser(userAddress);
+
+      expect(secondUserProxyAddress).to.not.be.equal(userProxyAddress);
 
       // userByGelatoProxy: secondProxy
       expect(
-        await gelatoUserProxyFactory.userByGelatoProxy(secondUserGelatoProxy)
+        await gelatoUserProxyFactory.userByGelatoProxy(secondUserProxyAddress)
       ).to.be.equal(userAddress);
 
       // isGelatoUserProxy: secondProxy
       expect(
-        await gelatoUserProxyFactory.isGelatoUserProxy(secondUserGelatoProxy)
+        await gelatoUserProxyFactory.isGelatoUserProxy(secondUserProxyAddress)
       ).to.be.true;
       // isGelatoProxyUser: secondProxy
-      expect(await gelatoUserProxyFactory.isGelatoProxyUser(userAddress)).to.be
-        .true;
+      expect(
+        await gelatoUserProxyFactory.isGelatoProxyUser(
+          userAddress,
+          userProxyAddress
+        )
+      ).to.be.true;
     });
   });
 
@@ -185,12 +205,14 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE", function () {
         operation: Operation.Call,
       });
 
+      // gelatoProvider
+      gelatoProvider = new GelatoProvider({
+        addr: providerAddress,
+        module: providerModuleGelatoUserProxy.address,
+      });
+
       // task
       task = new Task({
-        provider: new GelatoProvider({
-          addr: providerAddress,
-          module: providerModuleGelatoUserProxy.address,
-        }),
         actions: [actionStruct],
       });
 
@@ -215,22 +237,31 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE", function () {
     });
 
     it("Should submit optional Tasks", async function () {
-      await expect(gelatoUserProxyFactory.create([], [task], [])).to.emit(
-        gelatoCore,
-        "LogTaskSubmitted"
-      );
-      await expect(gelatoUserProxyFactory.create([], [task, task], [])).to.emit(
-        gelatoCore,
-        "LogTaskSubmitted"
-      );
+      await expect(
+        gelatoUserProxyFactory.createSubmitTasks(
+          gelatoProvider,
+          [task],
+          [0] // default 0
+        )
+      ).to.emit(gelatoCore, "LogTaskSubmitted");
+      await expect(
+        gelatoUserProxyFactory.createSubmitTasks(
+          gelatoProvider,
+          [task, task],
+          [0, 0]
+        )
+      ).to.emit(gelatoCore, "LogTaskSubmitted");
     });
 
     it("Should exec optional Actions", async function () {
-      await expect(gelatoUserProxyFactory.create([actionStruct], [], [])).to.not
-        .be.reverted;
+      await expect(gelatoUserProxyFactory.createExecActions([actionStruct])).to
+        .not.be.reverted;
 
       await expect(
-        gelatoUserProxyFactory.create([actionStruct, otherActionStruct], [], [])
+        gelatoUserProxyFactory.createExecActions([
+          actionStruct,
+          otherActionStruct,
+        ])
       )
         .to.emit(action, "LogAction")
         .withArgs(false);
@@ -238,7 +269,12 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE", function () {
 
     it("Should submit optional Tasks and exec optional Actions", async function () {
       await expect(
-        gelatoUserProxyFactory.create([otherActionStruct], [task], [])
+        gelatoUserProxyFactory.createExecActionsSubmitTasks(
+          [otherActionStruct],
+          gelatoProvider,
+          [task],
+          [0]
+        )
       )
         .to.emit(gelatoCore, "LogTaskSubmitted")
         .and.to.emit(action, "LogAction")

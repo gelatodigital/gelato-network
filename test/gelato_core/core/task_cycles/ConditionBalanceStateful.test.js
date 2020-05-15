@@ -92,11 +92,9 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
     });
 
     // Create UserProxy
-    const createTx = await gelatoUserProxyFactory
-      .connect(seller)
-      .create([], [], []);
+    const createTx = await gelatoUserProxyFactory.connect(seller).create();
     await createTx.wait();
-    userProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
+    [userProxyAddress] = await gelatoUserProxyFactory.gelatoProxiesByUser(
       sellerAddress
     );
     userProxy = await ethers.getContractAt("GelatoUserProxy", userProxyAddress);
@@ -197,7 +195,6 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
     });
 
     const task = new Task({
-      provider: gelatoProvider,
       conditions: [conditionBalanceStatefulStruct],
       actions: [mockActionDummyStruct, actionSetRefStruct],
     });
@@ -205,7 +202,7 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
     const submitTaskCycleData = await run("abi-encode-withselector", {
       contractname: "GelatoCore",
       functionname: "submitTaskCycle",
-      inputs: [[task], [0], [0]],
+      inputs: [gelatoProvider, [task], [0], [0]],
     });
 
     const actionSubmitTaskStruct = new Action({
@@ -216,6 +213,7 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
 
     const taskReceipt = new TaskReceipt({
       id: 1,
+      provider: gelatoProvider,
       userProxy: userProxyAddress,
       tasks: [task],
       submissionsLeft: 0,
@@ -324,7 +322,6 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
     });
 
     const task = new Task({
-      provider: gelatoProvider,
       conditions: [conditionBalanceStatefulStruct],
       actions: [mockActionDummyStruct, actionSetRefStruct],
     });
@@ -332,7 +329,7 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
     const submitTaskCycleData = await run("abi-encode-withselector", {
       contractname: "GelatoCore",
       functionname: "submitTaskCycle",
-      inputs: [[task], [0], [0]],
+      inputs: [gelatoProvider, [task], [0], [0]],
     });
 
     const actionSubmitTaskStruct = new Action({
@@ -343,6 +340,7 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
 
     const taskReceipt = new TaskReceipt({
       id: 1,
+      provider: gelatoProvider,
       userProxy: userProxyAddress,
       tasks: [task],
       submissionsLeft: 0,

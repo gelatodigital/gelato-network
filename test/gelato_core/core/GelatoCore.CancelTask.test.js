@@ -30,6 +30,8 @@ describe("GelatoCore.cancelTask", function () {
   let gelatoCore;
   let mockActionDummy;
 
+  let gelatoProvider;
+
   let task;
 
   let taskReceipt;
@@ -125,11 +127,9 @@ describe("GelatoCore.cancelTask", function () {
       );
 
     // Create UserProxy
-    const createTx = await gelatoUserProxyFactory
-      .connect(seller)
-      .create([], [], []);
+    const createTx = await gelatoUserProxyFactory.connect(seller).create();
     await createTx.wait();
-    userProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
+    [userProxyAddress] = await gelatoUserProxyFactory.gelatoProxiesByUser(
       sellerAddress
     );
     userProxy = await ethers.getContractAt("GelatoUserProxy", userProxyAddress);
@@ -139,7 +139,7 @@ describe("GelatoCore.cancelTask", function () {
 
     const actionData = interFace.functions.action.encode([true]);
 
-    const gelatoProvider = new GelatoProvider({
+    gelatoProvider = new GelatoProvider({
       addr: providerAddress,
       module: providerModuleGelatoUserProxy.address,
     });
@@ -153,12 +153,12 @@ describe("GelatoCore.cancelTask", function () {
     });
 
     task = new Task({
-      provider: gelatoProvider,
       actions: [action],
     });
 
     taskReceipt = new TaskReceipt({
       id: 1,
+      provider: gelatoProvider,
       userProxy: userProxyAddress,
       tasks: [task],
       submissionsLeft: SUBMISSIONS_LEFT,
@@ -167,16 +167,16 @@ describe("GelatoCore.cancelTask", function () {
 
     taskReceipt2 = new TaskReceipt({
       id: 2,
+      provider: gelatoProvider,
       userProxy: userProxyAddress,
       tasks: [task],
       submissionsLeft: SUBMISSIONS_LEFT,
       expiryDate: EXPIRY_DATE,
     });
 
-    await expect(userProxy.submitTask(task, EXPIRY_DATE)).to.emit(
-      gelatoCore,
-      "LogTaskSubmitted"
-    );
+    await expect(
+      userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE)
+    ).to.emit(gelatoCore, "LogTaskSubmitted");
   });
 
   // We test different functionality of the contract as normal Mocha tests.

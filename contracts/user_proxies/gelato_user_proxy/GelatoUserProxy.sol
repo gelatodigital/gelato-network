@@ -1,13 +1,15 @@
-pragma solidity ^0.6.6;
+// "SPDX-License-Identifier: UNLICENSED"
+pragma solidity ^0.6.8;
 pragma experimental ABIEncoderV2;
 
 import { IGelatoUserProxy } from "./interfaces/IGelatoUserProxy.sol";
 import { GelatoDebug } from "../../libraries/GelatoDebug.sol";
 import {
-    Action, Operation, Task, TaskReceipt, IGelatoCore
+    Action, Operation, Provider, Task, TaskReceipt, IGelatoCore
 } from "../../gelato_core/interfaces/IGelatoCore.sol";
 
 contract GelatoUserProxy is IGelatoUserProxy {
+
 
     using GelatoDebug for bytes;
 
@@ -53,13 +55,13 @@ contract GelatoUserProxy is IGelatoUserProxy {
         _;
     }
 
-    function submitTask(Task memory _task, uint256 _expiryDate)
+    function submitTask(Provider memory _provider, Task memory _task, uint256 _expiryDate)
         public
         override
         userOrFactory
     {
 
-        try IGelatoCore(gelatoCore).submitTask(_task, _expiryDate) {
+        try IGelatoCore(gelatoCore).submitTask(_provider, _task, _expiryDate) {
         } catch Error(string memory err) {
             revert(string(abi.encodePacked("GelatoUserProxy.submitTask:", err)));
         } catch {
@@ -67,27 +69,38 @@ contract GelatoUserProxy is IGelatoUserProxy {
         }
     }
 
-    function multiSubmitTasks(Task[] memory _tasks, uint256[] memory _expiryDates)
+    function multiSubmitTasks(
+        Provider memory _provider,
+        Task[] memory _tasks,
+        uint256[] memory _expiryDates
+    )
         public
         override
     {
-        for (uint i; i < _tasks.length; i++)
-            submitTask(_tasks[i], _expiryDates.length > 0 ? _expiryDates[i] : 0);
+        require(
+            _tasks.length == _expiryDates.length,
+            "GelatoUserProxy.multiSubmitTasks: each task needs own expiryDate"
+        );
+        for (uint i; i < _tasks.length; i++) {
+            submitTask(_provider, _tasks[i], _expiryDates[i]);
+        }
     }
 
     function submitTaskCycle(
+        Provider memory _provider,
         Task[] memory _tasks,
-        uint256 _cycles,  // num of full cycles
-        uint256 _expiryDate
+        uint256 _expiryDate,
+        uint256 _cycles  // num of full cycles
     )
         public
         override
         userOrFactory
     {
         try IGelatoCore(gelatoCore).submitTaskCycle(
+            _provider,
             _tasks,
-            _cycles,
-            _expiryDate
+            _expiryDate,
+            _cycles
         ) {
         } catch Error(string memory err) {
             revert(string(abi.encodePacked("GelatoUserProxy.submitTaskCycle:", err)));
@@ -97,23 +110,25 @@ contract GelatoUserProxy is IGelatoUserProxy {
     }
 
     function submitTaskChain(
+        Provider memory _provider,
         Task[] memory _tasks,
-        uint256 _sumOfRequestedTaskSubmits,  // does NOT mean the number of cycles
-        uint256 _expiryDate
+        uint256 _expiryDate,
+        uint256 _sumOfRequestedTaskSubmits  // num of all prospective task submissions
     )
         public
         override
         userOrFactory
     {
         try IGelatoCore(gelatoCore).submitTaskChain(
+            _provider,
             _tasks,
-            _sumOfRequestedTaskSubmits,
-            _expiryDate
+            _expiryDate,
+            _sumOfRequestedTaskSubmits
         ) {
         } catch Error(string memory err) {
-            revert(string(abi.encodePacked("GelatoUserProxy.submitTaskCycle:", err)));
+            revert(string(abi.encodePacked("GelatoUserProxy.submitTaskChain:", err)));
         } catch {
-            revert("GelatoUserProxy.submitTaskCycle:undefinded");
+            revert("GelatoUserProxy.submitTaskChain:undefinded");
         }
     }
 
@@ -160,12 +175,18 @@ contract GelatoUserProxy is IGelatoUserProxy {
     // @dev we have to write duplicate code due to calldata _action FeatureNotImplemented
     function execActionsAndSubmitTaskCycle(
         Action[] memory _actions,
+        Provider memory _provider,
         Task[] memory _tasks,
-        uint256 _cycles,
-        uint256 _expiryDate
-    ) public payable override auth {
-        if(_actions.length > 0) multiExecActions(_actions);
-        if(_tasks.length > 0) submitTaskCycle(_tasks, _cycles, _expiryDate);
+        uint256 _expiryDate,
+        uint256 _cycles
+    )
+        public
+        payable
+        override
+        auth
+    {
+        if (_actions.length == 0) multiExecActions(_actions);
+        if(_tasks.length == 0) submitTaskCycle(_provider, _tasks, _expiryDate, _cycles);
     }
 
     function callAction(address _action, bytes memory _data, uint256 _value)

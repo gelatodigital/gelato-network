@@ -31,6 +31,8 @@ describe("Gelato Actions - TASK CYCLES - AUTO-RESUBMIT-SELF", function () {
 
   let userProxyAddress;
 
+  let gelatoProvider;
+
   let task;
 
   let gelatoMaxGas;
@@ -94,7 +96,7 @@ describe("Gelato Actions - TASK CYCLES - AUTO-RESUBMIT-SELF", function () {
     );
 
     // GelatoProvider
-    const gelatoProvider = new GelatoProvider({
+    gelatoProvider = new GelatoProvider({
       addr: providerAddress,
       module: providerModuleGelatoUserProxy.address,
     });
@@ -136,7 +138,6 @@ describe("Gelato Actions - TASK CYCLES - AUTO-RESUBMIT-SELF", function () {
 
     // Task
     task = new Task({
-      provider: gelatoProvider,
       actions: [actionDummyStruct],
     });
   });
@@ -147,15 +148,17 @@ describe("Gelato Actions - TASK CYCLES - AUTO-RESUBMIT-SELF", function () {
     const taskReceipt = new TaskReceipt({
       id: taskReceiptId,
       userProxy: userProxyAddress,
+      provider: gelatoProvider,
       tasks: [task],
       submissionsLeft: 0,
     });
     let taskReceiptHash = await gelatoCore.hashTaskReceipt(taskReceipt);
 
     await expect(
-      gelatoUserProxyFactory.createTwoAndSubmitTaskCycle(
+      gelatoUserProxyFactory.createTwoExecActionsSubmitTaskCycle(
         SALT_NONCE,
         [],
+        gelatoProvider,
         [task],
         0,
         0

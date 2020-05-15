@@ -1,4 +1,5 @@
-pragma solidity ^0.6.6;
+// "SPDX-License-Identifier: UNLICENSED"
+pragma solidity ^0.6.8;
 pragma experimental ABIEncoderV2;
 
 import { ActionERC20TransferFrom, ActionData as SuperActionData } from "../one_offs/ActionERC20TransferFrom.sol";
@@ -90,7 +91,7 @@ contract ActionChainedTimedERC20TransferFrom is ActionERC20TransferFrom {
         if (_actionData.dueDate >= block.timestamp)
             return "ActionChainedTimedERC20TransferFromKovan.termsOk: TimestampDidNotPass";
 
-        if (_userProxy != _task.provider.addr) {
+        if (_userProxy != _provider.addr) {
             string memory isProvided = gelatoCore.isTaskProvided(_userProxy, _task);
             if (!isProvided.startsWithOk()) {
                 return string(

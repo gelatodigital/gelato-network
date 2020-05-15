@@ -257,11 +257,9 @@ describe("GelatoCore.exec", function () {
     await gelatoCore.connect(provider).provideTaskSpecs([newTaskSpec2]);
 
     // Create UserProxy
-    const createTx = await gelatoUserProxyFactory
-      .connect(seller)
-      .create([], [], []);
+    const createTx = await gelatoUserProxyFactory.connect(seller).create();
     await createTx.wait();
-    userProxyAddress = await gelatoUserProxyFactory.gelatoProxyByUser(
+    [userProxyAddress] = await gelatoUserProxyFactory.gelatoProxiesByUser(
       sellerAddress
     );
     userProxy = await ethers.getContractAt("GelatoUserProxy", userProxyAddress);
@@ -314,22 +312,21 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         actions: [action],
       });
 
       const taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
       });
 
       // LogTaskSubmitted(taskReceipt.id, hashedTaskReceipt, taskReceipt);
-      await expect(userProxy.submitTask(task, EXPIRY_DATE)).to.emit(
-        gelatoCore,
-        "LogTaskSubmitted"
-      );
+      await expect(
+        userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE)
+      ).to.emit(gelatoCore, "LogTaskSubmitted");
 
       expect(
         await gelatoCore.canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE)
@@ -455,22 +452,21 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         conditions: [condition],
         actions: [action],
       });
 
       let taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
       });
 
-      await expect(userProxy.submitTask(task, EXPIRY_DATE)).to.emit(
-        gelatoCore,
-        "LogTaskSubmitted"
-      );
+      await expect(
+        userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE)
+      ).to.emit(gelatoCore, "LogTaskSubmitted");
 
       await expect(
         gelatoCore
@@ -538,22 +534,21 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         conditions: [condition],
         actions: [action],
       });
 
       let taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
       });
 
-      await expect(userProxy.submitTask(task, EXPIRY_DATE)).to.emit(
-        gelatoCore,
-        "LogTaskSubmitted"
-      );
+      await expect(
+        userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE)
+      ).to.emit(gelatoCore, "LogTaskSubmitted");
 
       await expect(
         gelatoCore
@@ -620,22 +615,21 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         conditions: [condition],
         actions: [action],
       });
 
       let taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
       });
 
-      await expect(userProxy.submitTask(task, EXPIRY_DATE)).to.emit(
-        gelatoCore,
-        "LogTaskSubmitted"
-      );
+      await expect(
+        userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE)
+      ).to.emit(gelatoCore, "LogTaskSubmitted");
 
       await expect(
         gelatoCore
@@ -697,21 +691,20 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         actions: [action],
       });
 
       let taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
       });
 
-      await expect(userProxy.submitTask(task, EXPIRY_DATE)).to.emit(
-        gelatoCore,
-        "LogTaskSubmitted"
-      );
+      await expect(
+        userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE)
+      ).to.emit(gelatoCore, "LogTaskSubmitted");
 
       await expect(
         gelatoCore
@@ -768,21 +761,20 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         actions: [action],
       });
 
       let taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
       });
 
-      await expect(userProxy.submitTask(task, EXPIRY_DATE)).to.emit(
-        gelatoCore,
-        "LogTaskSubmitted"
-      );
+      await expect(
+        userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE)
+      ).to.emit(gelatoCore, "LogTaskSubmitted");
 
       await expect(
         gelatoCore
@@ -835,22 +827,21 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         conditions: [condition],
         actions: [action],
       });
 
       let taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
       });
 
-      await expect(userProxy.submitTask(task, EXPIRY_DATE)).to.emit(
-        gelatoCore,
-        "LogTaskSubmitted"
-      );
+      await expect(
+        userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE)
+      ).to.emit(gelatoCore, "LogTaskSubmitted");
 
       await expect(
         gelatoCore
@@ -913,13 +904,13 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         conditions: [condition],
         actions: [action],
       });
 
       let taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
@@ -966,21 +957,20 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         actions: [mockConditionAsAction],
       });
 
       let taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
       });
 
-      await expect(userProxy.submitTask(task, EXPIRY_DATE)).to.emit(
-        gelatoCore,
-        "LogTaskSubmitted"
-      );
+      await expect(
+        userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE)
+      ).to.emit(gelatoCore, "LogTaskSubmitted");
 
       await expect(
         gelatoCore
@@ -1034,23 +1024,22 @@ describe("GelatoCore.exec", function () {
       const expiryDate = oldBlock.timestamp + lifespan;
 
       const task = new Task({
-        provider: gelatoProvider,
         conditions: [condition],
         actions: [action],
       });
 
       let taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
         expiryDate: expiryDate,
       });
 
-      await expect(userProxy.submitTask(task, expiryDate)).to.emit(
-        gelatoCore,
-        "LogTaskSubmitted"
-      );
+      await expect(
+        userProxy.submitTask(gelatoProvider, task, expiryDate)
+      ).to.emit(gelatoCore, "LogTaskSubmitted");
 
       // Get a promise for your call
       await ethers.provider.send("evm_mine", [expiryDate]);
@@ -1104,12 +1093,12 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         actions: [action],
       });
 
       const taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
@@ -1117,10 +1106,9 @@ describe("GelatoCore.exec", function () {
 
       // LogTaskSubmitted(taskReceipt.id, hashedTaskReceipt, taskReceipt);
 
-      await expect(userProxy.submitTask(task, EXPIRY_DATE)).to.emit(
-        gelatoCore,
-        "LogTaskSubmitted"
-      );
+      await expect(
+        userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE)
+      ).to.emit(gelatoCore, "LogTaskSubmitted");
 
       expect(
         await gelatoCore.canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE)
@@ -1189,12 +1177,12 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         actions: [action],
       });
 
       const taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
@@ -1202,10 +1190,9 @@ describe("GelatoCore.exec", function () {
 
       // LogTaskSubmitted(taskReceipt.id, hashedTaskReceipt, taskReceipt);
 
-      await expect(userProxy.submitTask(task, EXPIRY_DATE)).to.emit(
-        gelatoCore,
-        "LogTaskSubmitted"
-      );
+      await expect(
+        userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE)
+      ).to.emit(gelatoCore, "LogTaskSubmitted");
 
       expect(
         await gelatoCore.canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE)
@@ -1272,12 +1259,12 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         actions: [action],
       });
 
       const taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
@@ -1285,10 +1272,9 @@ describe("GelatoCore.exec", function () {
 
       // LogTaskSubmitted(taskReceipt.id, hashedTaskReceipt, taskReceipt);
 
-      await expect(userProxy.submitTask(task, EXPIRY_DATE)).to.emit(
-        gelatoCore,
-        "LogTaskSubmitted"
-      );
+      await expect(
+        userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE)
+      ).to.emit(gelatoCore, "LogTaskSubmitted");
 
       expect(
         await gelatoCore.canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE)
@@ -1355,12 +1341,12 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         actions: [action],
       });
 
       const taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
@@ -1386,7 +1372,7 @@ describe("GelatoCore.exec", function () {
       const submitTaskPayload = await run("abi-encode-withselector", {
         contractname: "GelatoCore",
         functionname: "submitTask",
-        inputs: [task, EXPIRY_DATE],
+        inputs: [gelatoProvider, task, EXPIRY_DATE],
       });
 
       // addProviderModules
@@ -1561,21 +1547,20 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         actions: [action],
       });
 
       let taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
       });
 
-      await expect(userProxy.submitTask(task, EXPIRY_DATE)).to.emit(
-        gelatoCore,
-        "LogTaskSubmitted"
-      );
+      await expect(
+        userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE)
+      ).to.emit(gelatoCore, "LogTaskSubmitted");
 
       await expect(
         gelatoCore
@@ -1631,12 +1616,12 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         actions: [action],
       });
 
       const taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: sysProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
@@ -1681,7 +1666,7 @@ describe("GelatoCore.exec", function () {
       });
 
       await expect(
-        gelatoUserProxyFactory.createTwo(
+        gelatoUserProxyFactory.createTwoExecActionsSubmitTasks(
           saltnonce,
           [
             stakeEthAction,
@@ -1707,8 +1692,9 @@ describe("GelatoCore.exec", function () {
               value: 0,
             },
           ],
+          gelatoProvider,
           [task],
-          [],
+          [0],
           {
             value: stakeAmount,
           }
@@ -1786,21 +1772,20 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         actions: [unProvideFundsAction],
       });
 
       let taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
       });
 
-      await expect(userProxy.submitTask(task, EXPIRY_DATE)).to.emit(
-        gelatoCore,
-        "LogTaskSubmitted"
-      );
+      await expect(
+        userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE)
+      ).to.emit(gelatoCore, "LogTaskSubmitted");
 
       await expect(
         gelatoCore
@@ -1895,7 +1880,6 @@ describe("GelatoCore.exec", function () {
       });
 
       const task = new Task({
-        provider: gelatoProvider,
         conditions: [condition],
         actions: [
           actionWithdrawBatchExchangeSellToken,
@@ -1905,15 +1889,15 @@ describe("GelatoCore.exec", function () {
 
       const taskReceipt = new TaskReceipt({
         id: 1,
+        provider: gelatoProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
       });
 
-      await expect(userProxy.submitTask(task, EXPIRY_DATE)).to.emit(
-        gelatoCore,
-        "LogTaskSubmitted"
-      );
+      await expect(
+        userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE)
+      ).to.emit(gelatoCore, "LogTaskSubmitted");
 
       expect(
         await gelatoCore.canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE)

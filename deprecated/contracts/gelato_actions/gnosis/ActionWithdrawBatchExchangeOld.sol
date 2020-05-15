@@ -1,4 +1,5 @@
-pragma solidity ^0.6.5;
+// "SPDX-License-Identifier: UNLICENSED"
+pragma solidity ^0.6.8;
 
 import { GelatoActionsStandard } from "../../../contracts/gelato_actions/GelatoActionsStandard.sol";
 import { IGelatoAction } from "../../../contracts/gelato_actions/IGelatoAction.sol";

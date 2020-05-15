@@ -50,17 +50,17 @@ const VALUE = 3;
 const TERMS_OK_CHECK = 4;
 
 // Task
-const PROVIDER = 0;
-const CONDITIONS = 1;
-const ACTIONS = 2;
+const CONDITIONS = 0;
+const ACTIONS = 1;
 
 // TaskReceipt
 const ID = 0;
 const USER_PROXY = 1;
-const INDEX = 2;
-const TASKS = 3;
-const SUBMISSIONS_LEFT = 4;
+const PROVIDER = 2;
+const INDEX = 3;
+const TASKS = 4;
 const EXPIRY_DATE = 5;
+const SUBMISSIONS_LEFT = 6;
 
 function convertTaskReceiptArrayToObj(taskReceiptArray) {
   const tasks = _convertToArrayOfTaskObjs(taskReceiptArray[TASKS]);
@@ -68,26 +68,14 @@ function convertTaskReceiptArrayToObj(taskReceiptArray) {
   const taskReceiptObj = new TaskReceipt({
     id: taskReceiptArray[ID],
     userProxy: taskReceiptArray[USER_PROXY],
+    provider: _convertToProviderObj(taskReceiptArray[PROVIDER]),
     index: taskReceiptArray[INDEX],
     tasks: tasks ? tasks : [],
-    submissionsLeft: taskReceiptArray[SUBMISSIONS_LEFT],
     expiryDate: taskReceiptArray[EXPIRY_DATE],
+    submissionsLeft: taskReceiptArray[SUBMISSIONS_LEFT],
   });
 
   return taskReceiptObj;
-}
-
-function _convertToArrayOfTaskObjs(tasksLog) {
-  const tasks = [];
-  for (let task of tasksLog) {
-    task = new Task({
-      provider: _convertToProviderObj(task[PROVIDER]),
-      conditions: _convertToArrayOfConditionObjs(task[CONDITIONS]),
-      actions: _convertToArrayOfActionObjs(task[ACTIONS]),
-    });
-    tasks.push(task);
-  }
-  return tasks;
 }
 
 function _convertToProviderObj(providerLog) {
@@ -96,6 +84,18 @@ function _convertToProviderObj(providerLog) {
     module: providerLog[PROVIDER_MODULE],
   });
   return provider;
+}
+
+function _convertToArrayOfTaskObjs(tasksLog) {
+  const tasks = [];
+  for (let task of tasksLog) {
+    task = new Task({
+      conditions: _convertToArrayOfConditionObjs(task[CONDITIONS]),
+      actions: _convertToArrayOfActionObjs(task[ACTIONS]),
+    });
+    tasks.push(task);
+  }
+  return tasks;
 }
 
 function _convertToArrayOfConditionObjs(conditionsLog) {
@@ -124,6 +124,5 @@ function _convertToArrayOfActionObjs(actionsLog) {
   }
   return actions;
 }
-
 
 export default convertTaskReceiptArrayToObj;

@@ -15,7 +15,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-pragma solidity >=0.5.0 <0.6.7;
+// "SPDX-License-Identifier: UNLICENSED"
+pragma solidity >=0.5.0;
 
 import { DSAuth } from "./Auth.sol";
 import { DSNote } from "./Note.sol";

@@ -1,4 +1,5 @@
-pragma solidity ^0.6.6;
+// "SPDX-License-Identifier: UNLICENSED"
+pragma solidity ^0.6.8;
 pragma experimental ABIEncoderV2;
 
 import { IGelatoProviders, TaskSpec } from "./interfaces/IGelatoProviders.sol";
@@ -9,7 +10,7 @@ import { Math } from "../external/Math.sol";
 import { IGelatoProviderModule } from "../gelato_provider_modules/IGelatoProviderModule.sol";
 import { ProviderModuleSet } from "../libraries/ProviderModuleSet.sol";
 import {
-    Condition, Action, Operation, Task, TaskReceipt
+    Condition, Action, Operation, Provider, Task, TaskReceipt
 } from "./interfaces/IGelatoCore.sol";
 import { GelatoString } from "../libraries/GelatoString.sol";
 import { IGelatoCondition } from "../gelato_conditions/IGelatoCondition.sol";
@@ -55,18 +56,22 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     }
 
     // IGelatoProviderModule: GelatoCore submitTask/canExec Gate
-    function providerModuleChecks(address _userProxy, Task memory _task)
+    function providerModuleChecks(
+        address _userProxy,
+        Provider memory _provider,
+        Task memory _task
+    )
         public
         view
         override
         returns(string memory)
     {
-        if (!isModuleProvided(_task.provider.addr, _task.provider.module))
+        if (!isModuleProvided(_provider.addr, _provider.module))
             return "InvalidProviderModule";
 
-        if (_userProxy != _task.provider.addr) {
+        if (_userProxy != _provider.addr) {
             IGelatoProviderModule providerModule = IGelatoProviderModule(
-                _task.provider.module
+                _provider.module
             );
 
             try providerModule.isProvided(_userProxy, _task) returns(string memory res) {
@@ -78,28 +83,33 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     }
 
     // GelatoCore: combined submitTask Gate
-    function isTaskProvided(address _userProxy, Task memory _task)
+    function isTaskProvided(address _userProxy, Provider memory _provider, Task memory _task)
         public
         view
         override
         returns(string memory res)
     {
         TaskSpec memory _taskSpec = _castTaskToSpec(_task);
-        res = isTaskSpecProvided(_task.provider.addr, _taskSpec);
-        if (res.startsWithOk()) return providerModuleChecks(_userProxy, _task);
+        res = isTaskSpecProvided(_provider.addr, _taskSpec);
+        if (res.startsWithOk()) return providerModuleChecks(_userProxy, _provider, _task);
     }
 
     // GelatoCore canExec Gate
-    function providerCanExec(address _userProxy, Task memory _task, uint256 _gelatoGasPrice)
+    function providerCanExec(
+        address _userProxy,
+        Provider memory _provider,
+        Task memory _task,
+        uint256 _gelatoGasPrice
+    )
         public
         view
         override
         returns(string memory)
     {
         bytes32 taskSpecHash = hashTaskSpec(_castTaskToSpec(_task));
-        if (_gelatoGasPrice > taskSpecGasPriceCeil[_task.provider.addr][taskSpecHash])
+        if (_gelatoGasPrice > taskSpecGasPriceCeil[_provider.addr][taskSpecHash])
             return "taskSpecGasPriceCeil-OR-notProvided";
-        return providerModuleChecks(_userProxy, _task);
+        return providerModuleChecks(_userProxy, _provider, _task);
     }
 
     // Provider Funding
