@@ -10,7 +10,10 @@ const SALT_NONCE = 42069;
 
 const EXPIRY_DATE = 0;
 
-describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
+const INTERCEPT_SUBMITS = 3;
+const REQUESTED_SUBMITS = 21;
+
+describe("Gelato Actions - TASK CHAINS - ARBITRARY", function () {
   // Tests use for loops that have timed out on coverage (ganache)
   this.timeout(90000);
 
@@ -40,7 +43,7 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
   let gelatoUserProxy;
 
   // Gelato variables
-  let currentTaskCycleReceiptId;
+  let currentTaskChainReceiptId;
   let gelatoMaxGas;
 
   // Gelato Provider
@@ -52,18 +55,22 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
 
   // TaskReceipts
   let interceptTaskReceiptAsObj;
-  let cyclicTask1ReceiptAsObj;
-  let cyclicTask2ReceiptAsObj;
+  let chainedTask1ReceiptAsObj;
+  let chainedTask2ReceiptAsObj;
 
   // For event tests (ethers v4 understands structs as arrays)
   let interceptTaskReceiptAsArray;
-  let cyclicTask1ReceiptAsArray;
-  let cyclicTask2ReceiptAsArray;
+  let chainedTask1ReceiptAsArray;
+  let chainedTask2ReceiptAsArray;
 
   // TaskReceiptHashes
   let interceptTaskReceiptHash;
-  let cyclicTask1ReceiptHash;
-  let cyclicTask2ReceiptHash;
+  let chainedTask1ReceiptHash;
+  let chainedTask2ReceiptHash;
+
+  // submissionsLeft
+  let taskChainSubmissionsCounter;
+  let submissionsLeft = REQUESTED_SUBMITS;
 
   beforeEach(async function () {
     // Get the ContractFactory, contract instance, and Signers here.
@@ -207,37 +214,37 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
       tasks: [task1],
     });
 
-    // TaskReceipt: CyclicTask1
-    cyclicTask1ReceiptAsObj = new TaskReceipt({
+    // TaskReceipt: ChainedTask1
+    chainedTask1ReceiptAsObj = new TaskReceipt({
       userProxy: userProxyAddress,
       provider: gelatoProvider,
       index: 0, // dynamic: auto-filled by GelatoCore upon tasks creation
       tasks: [task1, task2], // static: auto-filled by GelatoCore upon tasks creation
-      submissionsLeft: 0,
+      submissionsLeft: REQUESTED_SUBMITS,
     });
 
-    // TaskReceipt: CyclicTask2
-    cyclicTask2ReceiptAsObj = new TaskReceipt({
+    // TaskReceipt: ChainedTask2
+    chainedTask2ReceiptAsObj = new TaskReceipt({
       userProxy: userProxyAddress,
       provider: gelatoProvider,
       index: 1, // After first execution, next will be placed to 0
       tasks: [task1, task2], // static
-      submissionsLeft: 0,
+      submissionsLeft: REQUESTED_SUBMITS - 1,
     });
   });
 
-  it("Should allow to enter an Arbitrary Task Cycle upon creating a GelatoUserProxy", async function () {
+  it("Should allow to enter an Arbitrary Task Chain upon creating a GelatoUserProxy", async function () {
     // console.log("\n INIT \n");
 
     // CreateTwo userProxy and submit interceptTask in one tx
     await expect(
-      gelatoUserProxyFactory.createTwoExecActionsSubmitTaskCycle(
+      gelatoUserProxyFactory.createTwoAndSubmitTaskChain(
         SALT_NONCE,
         [],
         gelatoProvider,
         [task1, task2],
         EXPIRY_DATE,
-        0
+        REQUESTED_SUBMITS
       )
     )
       .to.emit(gelatoUserProxyFactory, "LogCreation")
@@ -253,18 +260,42 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
     );
 
     // Flag to switch between 2 tasks.
-    let cyclicTask1WasSubmitted = true;
-    let cyclicTask2WasSubmitted = false;
+    let chainedTask1WasSubmitted = true;
+    let chainedTask2WasSubmitted = false;
     let interceptTaskWasSubmitted = false;
-    let cyclicTask1WasIntercepted = false;
-    let cyclicTask2WasIntercepted = false;
+    let chainedTask1WasIntercepted = false;
+    let chainedTask2WasIntercepted = false;
 
-    // Init Task Cycle Id: We initiated tasks in createTwo
-    currentTaskCycleReceiptId = await gelatoCore.currentTaskReceiptId();
+    // Init Task Chain Id: We initiated tasks in createTwo
+    currentTaskChainReceiptId = await gelatoCore.currentTaskReceiptId();
+
+    // We need to keep track of this during interceptions
+    taskChainSubmissionsCounter = 1;
 
     // SUBMISSIONS_LEFT + INTERCEPTS
-    for (let i = 0; i < 20; i++) {
-      // console.log("\n NEW CYCLE \n");
+    for (let i = 1; i <= REQUESTED_SUBMITS + 1; i++) {
+      // Case: ALL CHAINED TASKS EXECUTED
+      if (i == REQUESTED_SUBMITS + 1) {
+        expect(
+          await gelatoCore
+            .connect(executor)
+            .canExec(
+              chainedTask1WasSubmitted || chainedTask1WasIntercepted
+                ? chainedTask1ReceiptAsObj
+                : chainedTask2ReceiptAsObj,
+              gelatoMaxGas,
+              GELATO_GAS_PRICE
+            )
+        ).to.be.equal("InvalidTaskReceiptHash");
+        break;
+      }
+
+      // console.log("\n NEW CHAIN  \n");
+      // console.log(`EXECUTING: ${i % 2 == 0 ? "B" : "A"}`);
+      // console.log(
+      // `\n TaskChain Submission Counter: ${taskChainSubmissionsCounter} \n`
+      // );
+      // console.log(`\n submissionsLeft: ${submissionsLeft} \n`);
 
       // INTERCEPT TASK SUBMISSION & Execution
       if (i == 2 || i == 5 || i == 13) {
@@ -275,9 +306,9 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
           gelatoUserProxy.submitTask(gelatoProvider, task1, EXPIRY_DATE)
         ).to.emit(gelatoCore, "LogTaskSubmitted");
 
-        // Check currentTaskCycleReceiptId
+        // Check currentTaskChainReceiptId
         expect(await gelatoCore.currentTaskReceiptId()).to.equal(
-          currentTaskCycleReceiptId.add(1)
+          currentTaskChainReceiptId.add(1)
         );
 
         // Update InterceptTaskReceipt.id
@@ -344,83 +375,149 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
 
         // Update Task Submission tracking
         interceptTaskWasSubmitted = true;
-        if (cyclicTask1WasSubmitted) cyclicTask1WasIntercepted = true;
-        else if (cyclicTask2WasSubmitted) cyclicTask2WasIntercepted = true;
-        cyclicTask1WasSubmitted = false;
-        cyclicTask2WasSubmitted = false;
+        if (chainedTask1WasSubmitted) chainedTask1WasIntercepted = true;
+        else if (chainedTask2WasSubmitted) chainedTask2WasIntercepted = true;
+        chainedTask1WasSubmitted = false;
+        chainedTask2WasSubmitted = false;
       }
 
       // 🚲  SUBMISSIONS_LEFT 🚲
 
-      // Cyclic Task Updates & Checks
-      if (cyclicTask1WasSubmitted || cyclicTask1WasIntercepted) {
-        // Update CyclicTask1 Id
-        cyclicTask1ReceiptAsObj.id = currentTaskCycleReceiptId;
-        cyclicTask1ReceiptAsArray = convertTaskReceiptObjToArray(
-          cyclicTask1ReceiptAsObj
+      // Chained Task Updates & Checks
+      if (chainedTask1WasSubmitted || chainedTask1WasIntercepted) {
+        // Update ChainedTask1Receipt Id
+        chainedTask1ReceiptAsObj.id = currentTaskChainReceiptId;
+
+        // Update ChainedTask1Receipt submissionsLeft
+        chainedTask1ReceiptAsObj.submissionsLeft = submissionsLeft;
+
+        // Convert ChainedTask1Receipt to Array for event log comparison
+        chainedTask1ReceiptAsArray = convertTaskReceiptObjToArray(
+          chainedTask1ReceiptAsObj
         );
 
-        // console.log("\n CyclicTask1 id: " + cyclicTask1ReceiptAsObj.id);
+        // console.log("\n ChainedTask1 id: " + chainedTask1ReceiptAsObj.id);
 
-        // Event TaskReceipt Emission Check: CyclicTask1
+        // Event TaskReceipt Emission Check: ChainedTask1
         // Fetch the TaskReceipt of the last submitted Task and compare
         //  with our locally constructed TaskReceipt copy
-        const fetchedCyclicTask1ReceiptAsArray = await run("fetchTaskReceipt", {
-          taskreceiptid: cyclicTask1ReceiptAsObj.id.toString(),
-          contractaddress: gelatoCore.address,
-          array: true,
-        });
+        const fetchedChainedTask1ReceiptAsArray = await run(
+          "fetchTaskReceipt",
+          {
+            taskreceiptid: chainedTask1ReceiptAsObj.id.toString(),
+            contractaddress: gelatoCore.address,
+            array: true,
+          }
+        );
         expect(
           nestedArraysAreEqual(
-            fetchedCyclicTask1ReceiptAsArray,
-            cyclicTask1ReceiptAsArray
+            fetchedChainedTask1ReceiptAsArray,
+            chainedTask1ReceiptAsArray
           )
         ).to.be.true;
 
         // HASH CHECK: CylicTask1
-        // TaskReceiptHash: CyclicTask1
-        cyclicTask1ReceiptHash = await gelatoCore.hashTaskReceipt(
-          cyclicTask1ReceiptAsObj
+        // TaskReceiptHash: ChainedTask1
+        chainedTask1ReceiptHash = await gelatoCore.hashTaskReceipt(
+          chainedTask1ReceiptAsObj
         );
-        // gelatoCore.taskReceiptHash: cyclicTask-1
+        // gelatoCore.taskReceiptHash: chainedTask-1
         expect(
-          await gelatoCore.taskReceiptHash(cyclicTask1ReceiptAsObj.id)
-        ).to.be.equal(cyclicTask1ReceiptHash);
+          await gelatoCore.taskReceiptHash(chainedTask1ReceiptAsObj.id)
+        ).to.be.equal(chainedTask1ReceiptHash);
 
-        // console.log("CyclicTask1 Hash: " + cyclicTask1ReceiptHash + "\n");
-      } else if (cyclicTask2WasSubmitted || cyclicTask2WasIntercepted) {
-        // Update CyclicTask2 Id
-        cyclicTask2ReceiptAsObj.id = currentTaskCycleReceiptId;
-        cyclicTask2ReceiptAsArray = convertTaskReceiptObjToArray(
-          cyclicTask2ReceiptAsObj
+        // console.log("ChainedTask1 Hash: " + chainedTask1ReceiptHash + "\n");
+      } else if (chainedTask2WasSubmitted || chainedTask2WasIntercepted) {
+        // Update ChainedTask2 Id
+        chainedTask2ReceiptAsObj.id = currentTaskChainReceiptId;
+
+        // Update ChainedTask2Receipt submissionsLeft
+        chainedTask2ReceiptAsObj.submissionsLeft = submissionsLeft;
+
+        // Convert ChainedTask2Receipt to Array for event log comparison
+        chainedTask2ReceiptAsArray = convertTaskReceiptObjToArray(
+          chainedTask2ReceiptAsObj
         );
 
-        // console.log("\n CyclicTask2 id: " + cyclicTask2ReceiptAsObj.id);
+        // console.log("\n ChainedTask2 id: " + chainedTask2ReceiptAsObj.id);
 
-        // Event TaskReceipt Emission Check: CyclicTask2
-        const fetchedCyclicTask2ReceiptAsArray = await run("fetchTaskReceipt", {
-          taskreceiptid: cyclicTask2ReceiptAsObj.id.toString(),
-          contractaddress: gelatoCore.address,
-          array: true,
-        });
+        // Event TaskReceipt Emission Check: ChainedTask2
+        const fetchedChainedTask2ReceiptAsArray = await run(
+          "fetchTaskReceipt",
+          {
+            taskreceiptid: chainedTask2ReceiptAsObj.id.toString(),
+            contractaddress: gelatoCore.address,
+            array: true,
+          }
+        );
         expect(
           nestedArraysAreEqual(
-            fetchedCyclicTask2ReceiptAsArray,
-            cyclicTask2ReceiptAsArray
+            fetchedChainedTask2ReceiptAsArray,
+            chainedTask2ReceiptAsArray
           )
         ).to.be.true;
 
         // HASH CHECK: CylicTask2
-        // TaskReceiptHash: CyclicTask2
-        cyclicTask2ReceiptHash = await gelatoCore.hashTaskReceipt(
-          cyclicTask2ReceiptAsObj
+        // TaskReceiptHash: ChainedTask2
+        chainedTask2ReceiptHash = await gelatoCore.hashTaskReceipt(
+          chainedTask2ReceiptAsObj
         );
-        // gelatoCore.taskReceiptHash: cyclicTask-2
+        // gelatoCore.taskReceiptHash: chainedTask-2
         expect(
-          await gelatoCore.taskReceiptHash(cyclicTask2ReceiptAsObj.id)
-        ).to.be.equal(cyclicTask2ReceiptHash);
+          await gelatoCore.taskReceiptHash(chainedTask2ReceiptAsObj.id)
+        ).to.be.equal(chainedTask2ReceiptHash);
 
-        // console.log("CyclicTask2 Hash: " + cyclicTask2ReceiptHash + "\n");
+        // console.log("ChainedTask2 Hash: " + chainedTask2ReceiptHash + "\n");
+      }
+
+      // Case: LAST CHAINED TASK EXECUTION
+      if (submissionsLeft == 1) {
+        expect(
+          await gelatoCore
+            .connect(executor)
+            .canExec(
+              chainedTask1WasSubmitted || chainedTask1WasIntercepted
+                ? chainedTask1ReceiptAsObj
+                : chainedTask2ReceiptAsObj,
+              gelatoMaxGas,
+              GELATO_GAS_PRICE
+            )
+        ).to.be.equal("OK");
+
+        // Exec ActionDummyTask-X and expect ActionDummyTask-Y to be automitically submitted
+        await expect(
+          gelatoCore
+            .connect(executor)
+            .exec(
+              chainedTask1WasSubmitted || chainedTask1WasIntercepted
+                ? chainedTask1ReceiptAsObj
+                : chainedTask2ReceiptAsObj,
+              {
+                gasPrice: GELATO_GAS_PRICE,
+                gasLimit: gelatoMaxGas,
+              }
+            )
+        )
+          .to.emit(actionDummy, "LogAction")
+          .withArgs(
+            chainedTask1WasSubmitted || chainedTask1WasIntercepted
+              ? true
+              : false
+          )
+          .and.to.emit(gelatoCore, "LogExecSuccess")
+          .and.not.to.emit(gelatoCore, "LogTaskSubmitted");
+
+        // Expect executed chained TaskReceiptHash to have been cleared
+        expect(
+          await gelatoCore.taskReceiptHash(
+            chainedTask1WasSubmitted
+              ? chainedTask1ReceiptAsObj.id
+              : chainedTask2ReceiptAsObj.id
+          )
+        ).to.be.equal(constants.HashZero);
+
+        // WE ARE DONE!
+        continue;
       }
 
       // SUBMISSIONS_LEFT EXEXECUTION + AUTO-SUBMISSION
@@ -429,9 +526,9 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
         await gelatoCore
           .connect(executor)
           .canExec(
-            cyclicTask1WasSubmitted || cyclicTask1WasIntercepted
-              ? cyclicTask1ReceiptAsObj
-              : cyclicTask2ReceiptAsObj,
+            chainedTask1WasSubmitted || chainedTask1WasIntercepted
+              ? chainedTask1ReceiptAsObj
+              : chainedTask2ReceiptAsObj,
             gelatoMaxGas,
             GELATO_GAS_PRICE
           )
@@ -442,9 +539,9 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
         gelatoCore
           .connect(executor)
           .exec(
-            cyclicTask1WasSubmitted || cyclicTask1WasIntercepted
-              ? cyclicTask1ReceiptAsObj
-              : cyclicTask2ReceiptAsObj,
+            chainedTask1WasSubmitted || chainedTask1WasIntercepted
+              ? chainedTask1ReceiptAsObj
+              : chainedTask2ReceiptAsObj,
             {
               gasPrice: GELATO_GAS_PRICE,
               gasLimit: gelatoMaxGas,
@@ -453,54 +550,58 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
       )
         .to.emit(actionDummy, "LogAction")
         .withArgs(
-          cyclicTask1WasSubmitted || cyclicTask1WasIntercepted ? true : false
+          chainedTask1WasSubmitted || chainedTask1WasIntercepted ? true : false
         )
         .and.to.emit(gelatoCore, "LogExecSuccess")
         .and.to.emit(gelatoCore, "LogTaskSubmitted");
 
-      // Expect executed cyclic TaskReceiptHash to have been cleared
+      // Expect executed chained TaskReceiptHash to have been cleared
       expect(
         await gelatoCore.taskReceiptHash(
-          cyclicTask1WasSubmitted
-            ? cyclicTask1ReceiptAsObj.id
-            : cyclicTask2ReceiptAsObj.id
+          chainedTask1WasSubmitted
+            ? chainedTask1ReceiptAsObj.id
+            : chainedTask2ReceiptAsObj.id
         )
       ).to.be.equal(constants.HashZero);
 
-      // check currentTaskCycleReceiptId
+      // check currentTaskChainReceiptId
       // Check If Interception took place
       const intercepted =
-        cyclicTask1WasIntercepted || cyclicTask2WasIntercepted ? true : false;
-      let expectedId = currentTaskCycleReceiptId.add(1);
+        chainedTask1WasIntercepted || chainedTask2WasIntercepted ? true : false;
+      let expectedId = currentTaskChainReceiptId.add(1);
       expectedId = intercepted ? expectedId.add(1) : expectedId;
       expect(await gelatoCore.currentTaskReceiptId()).to.equal(expectedId);
 
-      // Update TaskReceipt.id from currentTaskCycleReceiptId
-      currentTaskCycleReceiptId = await gelatoCore.currentTaskReceiptId();
+      // Update TaskReceipt.id from currentTaskChainReceiptId
+      currentTaskChainReceiptId = await gelatoCore.currentTaskReceiptId();
 
-      // RESET: cyclicTask1WasSubmitted => false because now cyclicTask2 was submitted
-      if (cyclicTask1WasSubmitted) {
-        cyclicTask1WasSubmitted = false;
-        cyclicTask1WasIntercepted = false;
-        cyclicTask2WasSubmitted = true;
-      } else if (cyclicTask2WasSubmitted) {
-        cyclicTask2WasSubmitted = false;
-        cyclicTask2WasIntercepted = false;
-        cyclicTask1WasSubmitted = true;
+      // Update Submissions Trackers
+      submissionsLeft = REQUESTED_SUBMITS - taskChainSubmissionsCounter;
+      taskChainSubmissionsCounter++;
+
+      // RESET: chainedTask1WasSubmitted => false because now chainedTask2 was submitted
+      if (chainedTask1WasSubmitted) {
+        chainedTask1WasSubmitted = false;
+        chainedTask1WasIntercepted = false;
+        chainedTask2WasSubmitted = true;
+      } else if (chainedTask2WasSubmitted) {
+        chainedTask2WasSubmitted = false;
+        chainedTask2WasIntercepted = false;
+        chainedTask1WasSubmitted = true;
       } else if (interceptTaskWasSubmitted) {
         interceptTaskWasSubmitted = false;
-        if (cyclicTask1WasIntercepted) {
-          cyclicTask1WasSubmitted = false;
-          cyclicTask1WasIntercepted = false;
-          cyclicTask2WasSubmitted = true;
-        } else if (cyclicTask2WasIntercepted) {
-          cyclicTask2WasSubmitted = false;
-          cyclicTask2WasIntercepted = false;
-          cyclicTask1WasSubmitted = true;
+        if (chainedTask1WasIntercepted) {
+          chainedTask1WasSubmitted = false;
+          chainedTask1WasIntercepted = false;
+          chainedTask2WasSubmitted = true;
+        } else if (chainedTask2WasIntercepted) {
+          chainedTask2WasSubmitted = false;
+          chainedTask2WasIntercepted = false;
+          chainedTask1WasSubmitted = true;
         }
       }
     }
   });
 
-  // describe("Advanced Task Cycle Test Cases", function () {});
+  // describe("Advanced Task Chain Test Cases", function () {});
 });
