@@ -68,7 +68,7 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE TWO", function () {
   describe("GelatoUserProxyFactory.createTwo", function () {
     it("Should allow anyone to createTwo a userProxy", async function () {
       // createTwo(): user
-      await expect(gelatoUserProxyFactory.createTwo(SALT_NONCE, [], [], [], []))
+      await expect(gelatoUserProxyFactory.createTwo(SALT_NONCE))
         .to.emit(gelatoUserProxyFactory, "LogCreation")
         .withArgs(userAddress, userProxyAddress, 0);
 
@@ -102,9 +102,7 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE TWO", function () {
 
       // createTwo(): otherUser
       await expect(
-        gelatoUserProxyFactory
-          .connect(otherUser)
-          .createTwo(SALT_NONCE, [], [], [], [])
+        gelatoUserProxyFactory.connect(otherUser).createTwo(SALT_NONCE)
       )
         .to.emit(gelatoUserProxyFactory, "LogCreation")
         .withArgs(otherUserAddress, predictedOtherUserProxyAddress, 0);
@@ -148,7 +146,7 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE TWO", function () {
       );
 
       // createTwo(): user
-      await expect(gelatoUserProxyFactory.createTwo(SALT_NONCE, [], [], [], []))
+      await expect(gelatoUserProxyFactory.createTwo(SALT_NONCE))
         .to.emit(gelatoUserProxyFactory, "LogCreation")
         .withArgs(userAddress, userProxyAddress, 0);
 
@@ -159,9 +157,7 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE TWO", function () {
       );
 
       // createTwo(): user secondProxy
-      await expect(
-        gelatoUserProxyFactory.createTwo(OTHER_SALT_NONCE, [], [], [], [])
-      )
+      await expect(gelatoUserProxyFactory.createTwo(OTHER_SALT_NONCE))
         .to.emit(gelatoUserProxyFactory, "LogCreation")
         .withArgs(userAddress, secondUserProxyAddress, 0);
 
@@ -264,16 +260,16 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE TWO", function () {
 
     it("Should NOT allow to re-createTwo a userProxy using the same salt", async function () {
       // createTwo(): user
-      await expect(gelatoUserProxyFactory.createTwo(SALT_NONCE, [], [], [], []))
+      await expect(gelatoUserProxyFactory.createTwo(SALT_NONCE))
         .to.emit(gelatoUserProxyFactory, "LogCreation")
         .withArgs(userAddress, userProxyAddress, 0);
 
       // createTwo(): user revertv
       await expect(
-        gelatoUserProxyFactory.createTwo(
+        gelatoUserProxyFactory.createTwoExecActionsSubmitTasks(
           SALT_NONCE,
           [],
-          [gelatoProvider],
+          gelatoProvider,
           [task],
           [],
           {
@@ -309,7 +305,7 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE TWO", function () {
 
       // createTwo(): user
       await expect(
-        gelatoUserProxyFactory.createTwo(SALT_NONCE, [], [], [], [], {
+        gelatoUserProxyFactory.createTwo(SALT_NONCE, {
           value: FUNDING,
         })
       )
@@ -347,12 +343,12 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE TWO", function () {
       );
 
       await expect(
-        gelatoUserProxyFactory.createTwo(
+        gelatoUserProxyFactory.createTwoExecActionsSubmitTasks(
           SALT_NONCE,
           [],
-          [gelatoProvider],
+          gelatoProvider,
           [task, task],
-          [],
+          [0, 0],
           {
             value: FUNDING,
           }
@@ -385,10 +381,10 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE TWO", function () {
       // );
 
       await expect(
-        gelatoUserProxyFactory.createTwo(
+        gelatoUserProxyFactory.createTwoExecActionsSubmitTasks(
           SALT_NONCE,
           [actionStruct, otherActionStruct],
-          [],
+          gelatoProvider,
           [],
           [],
           {
@@ -407,12 +403,12 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE TWO", function () {
 
     it("Should fund, submit Tasks, and exec Actions", async function () {
       await expect(
-        gelatoUserProxyFactory.createTwo(
+        gelatoUserProxyFactory.createTwoExecActionsSubmitTasks(
           SALT_NONCE,
           [otherActionStruct],
-          [gelatoProvider],
+          gelatoProvider,
           [task],
-          [],
+          [0],
           {
             value: FUNDING,
           }

@@ -155,7 +155,7 @@ describe("Gelato Actions - TASK CYCLES - AUTO-RESUBMIT-SELF", function () {
     let taskReceiptHash = await gelatoCore.hashTaskReceipt(taskReceipt);
 
     await expect(
-      gelatoUserProxyFactory.createTwoAndSubmitTaskCycle(
+      gelatoUserProxyFactory.createTwoExecActionsSubmitTaskCycle(
         SALT_NONCE,
         [],
         gelatoProvider,

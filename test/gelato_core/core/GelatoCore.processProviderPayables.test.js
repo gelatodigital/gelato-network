@@ -267,9 +267,7 @@ describe("GelatoCore.processProviderPayables", function () {
     await gelatoCore.connect(provider).provideTaskSpecs([newTaskSpec2]);
 
     // Create UserProxy
-    const createTx = await gelatoUserProxyFactory
-      .connect(seller)
-      .create([], [], [], []);
+    const createTx = await gelatoUserProxyFactory.connect(seller).create();
     await createTx.wait();
     [userProxyAddress] = await gelatoUserProxyFactory.gelatoProxiesByUser(
       sellerAddress
@@ -380,7 +378,11 @@ describe("GelatoCore.processProviderPayables", function () {
         submissionsLeft: SUBMISSIONS_LEFT,
       });
 
-      const submitTaskTx = await userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE);
+      const submitTaskTx = await userProxy.submitTask(
+        gelatoProvider,
+        task,
+        EXPIRY_DATE
+      );
       await submitTaskTx.wait();
 
       const executorBalanceBefore = await ethers.provider.getBalance(
@@ -488,7 +490,11 @@ describe("GelatoCore.processProviderPayables", function () {
         submissionsLeft: SUBMISSIONS_LEFT,
       });
 
-      const submitTaskTx = await userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE);
+      const submitTaskTx = await userProxy.submitTask(
+        gelatoProvider,
+        task,
+        EXPIRY_DATE
+      );
       await submitTaskTx.wait();
 
       const executorBalanceBefore = await ethers.provider.getBalance(
@@ -619,7 +625,11 @@ describe("GelatoCore.processProviderPayables", function () {
         submissionsLeft: SUBMISSIONS_LEFT,
       });
 
-      const submitTaskTx = await userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE);
+      const submitTaskTx = await userProxy.submitTask(
+        gelatoProvider,
+        task,
+        EXPIRY_DATE
+      );
       await submitTaskTx.wait();
 
       const executorBalanceBefore = await ethers.provider.getBalance(
@@ -727,7 +737,11 @@ describe("GelatoCore.processProviderPayables", function () {
         submissionsLeft: SUBMISSIONS_LEFT,
       });
 
-      const submitTaskTx = await userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE);
+      const submitTaskTx = await userProxy.submitTask(
+        gelatoProvider,
+        task,
+        EXPIRY_DATE
+      );
       await submitTaskTx.wait();
 
       const executorBalanceBefore = await ethers.provider.getBalance(
