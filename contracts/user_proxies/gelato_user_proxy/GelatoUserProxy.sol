@@ -185,8 +185,8 @@ contract GelatoUserProxy is IGelatoUserProxy {
         override
         auth
     {
-        if (_actions.length == 0) multiExecActions(_actions);
-        if(_tasks.length == 0) submitTaskCycle(_provider, _tasks, _expiryDate, _cycles);
+        if (_actions.length != 0) multiExecActions(_actions);
+        if(_tasks.length != 0) submitTaskCycle(_provider, _tasks, _expiryDate, _cycles);
     }
 
     function callAction(address _action, bytes memory _data, uint256 _value)
