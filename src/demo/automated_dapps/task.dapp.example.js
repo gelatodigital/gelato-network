@@ -53,7 +53,7 @@ export default task(
       // a timestamp that is should compare to the current time to determine if a task is executable or not
       const conditionData = await run("abi-encode-withselector", {
         contractname: "ConditionTimeStateful",
-        functionname: "ok",
+        functionname: "checkRefTime",
         inputs: [gelatoUserProxyAddress],
       });
 
@@ -103,7 +103,7 @@ export default task(
 
       const action2 = new Action({
         addr: conditionAddress, // We use the condition as an action (to dynamically set the timestamp when the users proxy contract can execute the actions next time)
-        data: actionData2, // data is can be left as 0 for Task Specs
+        data: actionData2, // data of action to execute
         value: 0, // this action sends 0 ETH
         operation: Operation.Call, // We are calling the contract instance directly, without script
         termsOkCheck: false, // Always input false for actions we .call intp
@@ -143,7 +143,8 @@ export default task(
       });
 
       let isDeployed = await gelatoUserProxyFactory.isGelatoProxyUser(
-        userAddress
+        userAddress,
+        gelatoUserProxyAddress
       );
 
       const gelatoProvider = new GelatoProvider({

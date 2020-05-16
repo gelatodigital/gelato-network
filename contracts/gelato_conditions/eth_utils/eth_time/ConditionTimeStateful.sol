@@ -21,12 +21,12 @@ contract ConditionTimeStateful is GelatoConditionsStandard {
         returns(string memory)
     {
         (address userProxy) = abi.decode(_conditionData[4:], (address));
-        return ok(userProxy);
+        return checkRefTime(userProxy);
     }
 
 
     // Specific Implementation
-    function ok(address _userProxy)
+    function checkRefTime(address _userProxy)
         public
         view
         virtual

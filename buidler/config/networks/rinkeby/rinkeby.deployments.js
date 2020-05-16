@@ -29,14 +29,14 @@ export const deployments = {
     "0xF536876f81A8504609C13069615647F0A6CAe2F1",
 
   // ===== Gelato Core ====
-  GelatoCore: "0xb33C033f84Fc2054d4874Afe160fE9983D9B4923",
+  GelatoCore: "0xE7418743527a8e5F191bA4e9609b5914c9880a12",
   GelatoGasPriceOracle: "0x02C0d77f2dc8C9A4c6dD3898278bEe9FAdf5dbe9",
   ProviderModuleGnosisSafeProxy: "0x42b6303BAdEB2d5038FcEd9c1C2F2f5CD8eA9568",
   ProviderModuleDsProxy: "0x0",
 
   // ===== Gelato User Proxies ====
-  ProviderModuleGelatoUserProxy: "0x90036C2D12926cCEF901e0a55540DE5CfFf7e5C6",
-  GelatoUserProxyFactory: "0x095F8602194d8583C2f9b476807D0fd726b9D2BF",
+  ProviderModuleGelatoUserProxy: "0x544394229F2B98751fF56872D0294D7a816d60a9",
+  GelatoUserProxyFactory: "0x1EC08134313c9e7E5EFcd7f2d7Fca2d21f40b8F4",
 
   // ==== Conditions ====
   // == Balances ==
@@ -51,7 +51,7 @@ export const deployments = {
   // == Time ==
   // Timestamps
   ConditionTimestampPassed: "0x0",
-  ConditionTimeStateful: "0x47505Ad73BA717eD07e8DDF7d680Bf4e27a2E1dc",
+  ConditionTimeStateful: "0xd646C368e5967001f273b5D0528CD8980a14f9b9",
   // Gnosis
   ConditionBatchExchangeFundsWithdrawable:
     "0x66A11882E861B85685668fB3e72a7c6b74753352",

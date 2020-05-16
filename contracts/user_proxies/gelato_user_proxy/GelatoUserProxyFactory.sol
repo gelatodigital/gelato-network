@@ -294,8 +294,8 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         GelatoUserProxy _userProxy,
         Provider memory _provider,
         Task[] memory _tasks,
-        uint256 _cycles,
-        uint256 _expiryDate
+        uint256 _expiryDate,
+        uint256 _cycles
     )
         private
     {
@@ -313,16 +313,16 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         GelatoUserProxy _userProxy,
         Provider memory _provider,
         Task[] memory _tasks,
-        uint256 _sumOfRequestedTaskSubmits,
-        uint256 _expiryDate
+        uint256 _expiryDate,
+        uint256 _sumOfRequestedTaskSubmits
     )
         private
     {
         try _userProxy.submitTaskChain(
             _provider,
             _tasks,
-            _sumOfRequestedTaskSubmits,
-            _expiryDate
+            _expiryDate,
+            _sumOfRequestedTaskSubmits
         ) {
         } catch Error(string memory err) {
             revert(

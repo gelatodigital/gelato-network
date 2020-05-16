@@ -3,7 +3,7 @@ import { defaultNetwork } from "../../../../../buidler.config";
 import { utils } from "ethers";
 
 export default task(
-  "gc-executorfunds",
+  "gc-executorstake",
   `Return (or --log) GelatoCore.executorFunds([<gelatoexecutor>: defaults to default gelatoexecutor]) on [--network] (default: ${defaultNetwork})`
 )
   .addFlag("log", "Logs return values to stdout")
@@ -16,9 +16,9 @@ export default task(
       gelatoexecutor = await run("handleGelatoExecutor", { gelatoexecutor });
       const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
-        write: true
+        write: true,
       });
-      const executorFunds = await gelatoCore.executorFunds(gelatoexecutor);
+      const executorFunds = await gelatoCore.executorStake(gelatoexecutor);
       const executorBalanceETH = utils.formatEther(executorFunds);
       if (log) {
         console.log(
