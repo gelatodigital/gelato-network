@@ -4,6 +4,8 @@ const { expect } = require("chai");
 
 const { run } = require("@nomiclabs/buidler");
 
+const GELATO_GAS_PRICE = utils.parseUnits("10", "gwei");
+
 describe("User Proxies - GelatoUserProxyFactory: CREATE", function () {
   let GelatoCoreFactory;
   let GelatoUserProxyFactoryFactory;
@@ -19,6 +21,7 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE", function () {
   let otherUser;
   let provider;
   let executor;
+  let userProxyAddress;
 
   let userAddress;
   let otherUserAddress;
@@ -31,20 +34,32 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE", function () {
   let gelatoProvider;
   let task;
 
+  let gelatoMaxGas;
+
   beforeEach(async function () {
     // Get the ContractFactory, contract instance, and Signers here.
     GelatoCoreFactory = await ethers.getContractFactory("GelatoCore");
     GelatoUserProxyFactoryFactory = await ethers.getContractFactory(
       "GelatoUserProxyFactory"
     );
+    const GelatoGasPriceOracleFactory = await ethers.getContractFactory(
+      "GelatoGasPriceOracle"
+    );
 
     gelatoCore = await GelatoCoreFactory.deploy(gelatoSysAdminInitialState);
     gelatoUserProxyFactory = await GelatoUserProxyFactoryFactory.deploy(
       gelatoCore.address
     );
+    const gelatoGasPriceOracle = await GelatoGasPriceOracleFactory.deploy(
+      GELATO_GAS_PRICE
+    );
 
+    gelatoMaxGas = await gelatoCore.gelatoMaxGas();
     await gelatoCore.deployed();
     await gelatoUserProxyFactory.deployed();
+
+    await gelatoGasPriceOracle.deployed();
+    await gelatoCore.setGelatoGasPriceOracle(gelatoGasPriceOracle.address);
 
     // tx signers
     [user, otherUser, provider, executor] = await ethers.getSigners();
@@ -72,9 +87,9 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE", function () {
       ).to.emit(gelatoUserProxyFactory, "LogCreation");
 
       // gelatoProxiesByUser
-      const [
-        userProxyAddress,
-      ] = await gelatoUserProxyFactory.gelatoProxiesByUser(userAddress);
+      [userProxyAddress] = await gelatoUserProxyFactory.gelatoProxiesByUser(
+        userAddress
+      );
 
       // userByGelatoProxy
       expect(
@@ -129,9 +144,9 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE", function () {
       await tx.wait();
 
       // gelatoProxiesByUser: first proxy
-      const [
-        userProxyAddress,
-      ] = await gelatoUserProxyFactory.gelatoProxiesByUser(userAddress);
+      [userProxyAddress] = await gelatoUserProxyFactory.gelatoProxiesByUser(
+        userAddress
+      );
 
       // create(): user secondProxy
       await expect(gelatoUserProxyFactory.create()).to.emit(
@@ -231,7 +246,8 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE", function () {
             gasPriceCeil: utils.parseUnits("20", "gwei"),
           }),
         ],
-        [providerModuleGelatoUserProxy.address]
+        [providerModuleGelatoUserProxy.address],
+        { value: ethers.utils.parseEther("1") }
       );
       await multiProvideTx.wait();
     });
@@ -279,6 +295,180 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE", function () {
         .to.emit(gelatoCore, "LogTaskSubmitted")
         .and.to.emit(action, "LogAction")
         .withArgs(false);
+    });
+
+    it("Should submit optional Task Cycle and exec optional Actions and exec accordingly", async function () {
+      const expiryDate = 0;
+      const cycles = 10;
+
+      await expect(
+        gelatoUserProxyFactory
+          .connect(user)
+          .createExecActionsSubmitTaskCycle(
+            [otherActionStruct],
+            gelatoProvider,
+            [task],
+            expiryDate,
+            cycles
+          )
+      )
+        .to.emit(gelatoCore, "LogTaskSubmitted")
+        .and.to.emit(gelatoUserProxyFactory, "LogCreation");
+
+      let userProxyAddresses = await gelatoUserProxyFactory.gelatoProxiesByUser(
+        userAddress
+      );
+      const newProxyAddress = userProxyAddresses[userProxyAddresses.length - 1];
+
+      let taskReceiptId = await gelatoCore.currentTaskReceiptId();
+      const taskReceipt = new TaskReceipt({
+        id: taskReceiptId,
+        userProxy: newProxyAddress,
+        provider: gelatoProvider,
+        index: 0,
+        tasks: [task],
+        expiryDate: expiryDate,
+        submissionsLeft: cycles,
+      });
+
+      expect(
+        await gelatoCore
+          .connect(executor)
+          .canExec(taskReceipt, gelatoMaxGas, GELATO_GAS_PRICE)
+      ).to.be.equal("OK");
+
+      await expect(
+        gelatoCore.connect(executor).exec(taskReceipt, {
+          gasPrice: GELATO_GAS_PRICE,
+          gasLimit: gelatoMaxGas,
+        })
+      )
+        .to.emit(gelatoCore, "LogExecSuccess")
+        .and.to.emit(gelatoCore, "LogTaskSubmitted");
+
+      taskReceipt.id++;
+      taskReceipt.submissionsLeft--;
+
+      expect(
+        await gelatoCore
+          .connect(executor)
+          .canExec(taskReceipt, gelatoMaxGas, GELATO_GAS_PRICE)
+      ).to.be.equal("OK");
+
+      await expect(
+        gelatoCore.connect(executor).exec(taskReceipt, {
+          gasPrice: GELATO_GAS_PRICE,
+          gasLimit: gelatoMaxGas,
+        })
+      )
+        .to.emit(gelatoCore, "LogExecSuccess")
+        .and.to.emit(gelatoCore, "LogTaskSubmitted");
+    });
+
+    it("Should revert in createExecActionsSubmitTaskCycle to empty Task Array", async function () {
+      const expiryDate = 0;
+      const cycles = 10;
+
+      await expect(
+        gelatoUserProxyFactory
+          .connect(user)
+          .createExecActionsSubmitTaskCycle(
+            [otherActionStruct],
+            gelatoProvider,
+            [],
+            expiryDate,
+            cycles
+          )
+      ).to.revertedWith(
+        "GelatoUserProxyFactory.createExecActionsSubmitTaskCycle: 0 _tasks"
+      );
+    });
+
+    it("Should submit optional Task Chain and exec optional Actions and exec accordingly", async function () {
+      const expiryDate = 0;
+      const cycles = 9;
+
+      await expect(
+        gelatoUserProxyFactory
+          .connect(user)
+          .createExecActionsSubmitTaskChain(
+            [otherActionStruct],
+            gelatoProvider,
+            [task],
+            expiryDate,
+            cycles
+          )
+      )
+        .to.emit(gelatoCore, "LogTaskSubmitted")
+        .and.to.emit(gelatoUserProxyFactory, "LogCreation");
+
+      let userProxyAddresses = await gelatoUserProxyFactory.gelatoProxiesByUser(
+        userAddress
+      );
+      const newProxyAddress = userProxyAddresses[userProxyAddresses.length - 1];
+
+      let taskReceiptId = await gelatoCore.currentTaskReceiptId();
+      const taskReceipt = new TaskReceipt({
+        id: taskReceiptId,
+        userProxy: newProxyAddress,
+        provider: gelatoProvider,
+        index: 0,
+        tasks: [task],
+        expiryDate: expiryDate,
+        submissionsLeft: cycles,
+      });
+
+      expect(
+        await gelatoCore
+          .connect(executor)
+          .canExec(taskReceipt, gelatoMaxGas, GELATO_GAS_PRICE)
+      ).to.be.equal("OK");
+
+      await expect(
+        gelatoCore.connect(executor).exec(taskReceipt, {
+          gasPrice: GELATO_GAS_PRICE,
+          gasLimit: gelatoMaxGas,
+        })
+      )
+        .to.emit(gelatoCore, "LogExecSuccess")
+        .and.to.emit(gelatoCore, "LogTaskSubmitted");
+
+      taskReceipt.id++;
+      taskReceipt.submissionsLeft--;
+
+      expect(
+        await gelatoCore
+          .connect(executor)
+          .canExec(taskReceipt, gelatoMaxGas, GELATO_GAS_PRICE)
+      ).to.be.equal("OK");
+
+      await expect(
+        gelatoCore.connect(executor).exec(taskReceipt, {
+          gasPrice: GELATO_GAS_PRICE,
+          gasLimit: gelatoMaxGas,
+        })
+      )
+        .to.emit(gelatoCore, "LogExecSuccess")
+        .and.to.emit(gelatoCore, "LogTaskSubmitted");
+    });
+
+    it("Should revert in createExecActionsSubmitTaskChain to empty Task Array", async function () {
+      const expiryDate = 0;
+      const cycles = 10;
+
+      await expect(
+        gelatoUserProxyFactory
+          .connect(user)
+          .createExecActionsSubmitTaskChain(
+            [otherActionStruct],
+            gelatoProvider,
+            [],
+            expiryDate,
+            cycles
+          )
+      ).to.revertedWith(
+        "GelatoUserProxyFactory.createExecActionsSubmitTaskChain: 0 _tasks"
+      );
     });
   });
 });

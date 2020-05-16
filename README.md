@@ -197,12 +197,12 @@ Run:
 npx builder gelato-predict-gelato-proxy-address --network rinkeby
 ```
 
-**=>** e.g. 0x35dE7aCAd63E30B22C3305ac0e3fb8438697D0Fb
+**=>** your proxy address e.g. 0x35dE7aCAd63E30B22C3305ac0e3fb8438697D0Fb
 
 #### 4. Approve the user's proxy contract to transfer 5 DAI in total on the user's behalf (using rinkeby DAI address here)
 
 ```
-npx builder gelato-approve-erc20 0x5592ec0cfb4dbc12d3ab100b257153436a1f0fea 5000000000000000000 0x35dE7aCAd63E30B22C3305ac0e3fb8438697D0Fb --network rinkeby
+npx builder gelato-approve-erc20 0x5592ec0cfb4dbc12d3ab100b257153436a1f0fea 5000000000000000000 $YOUR_PROXY_ADDRESS --network rinkeby
 ```
 
 #### 5. Make sure you as a provider has whitelisted the example TaskSpec. To check, run:

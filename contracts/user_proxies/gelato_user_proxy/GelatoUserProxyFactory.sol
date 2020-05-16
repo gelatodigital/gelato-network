@@ -132,6 +132,7 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
 
     function createTwoSubmitTasks(
         uint256 _saltNonce,
+        // Submit Tasks Data
         Provider memory _provider,
         Task[] memory _tasks,
         uint256[] memory _expiryDates
@@ -149,6 +150,7 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
     function createTwoExecActionsSubmitTasks(
         uint256 _saltNonce,
         Action[] memory _actions,
+        // Submit Tasks Data
         Provider memory _provider,
         Task[] memory _tasks,
         uint256[] memory _expiryDates
@@ -166,6 +168,7 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
     function createTwoExecActionsSubmitTaskCycle(
         uint256 _saltNonce,
         Action[] memory _actions,
+        // Submit TaskCycle Data
         Provider memory _provider,
         Task[] memory _tasks,
         uint256 _expiryDate,
@@ -186,6 +189,7 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
     function createTwoExecActionsSubmitTaskChain(
         uint256 _saltNonce,
         Action[] memory _actions,
+        // Submit TaskChain Data
         Provider memory _provider,
         Task[] memory _tasks,
         uint256 _expiryDate,
@@ -276,6 +280,7 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
 
     function _submitTasks(
         GelatoUserProxy _userProxy,
+        // Submit Tasks Data
         Provider memory _provider,
         Task[] memory _tasks,
         uint256[] memory _expiryDates
@@ -292,6 +297,7 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
 
     function _submitTaskCycle(
         GelatoUserProxy _userProxy,
+        // Submit TaskCyle Data
         Provider memory _provider,
         Task[] memory _tasks,
         uint256 _expiryDate,
@@ -311,6 +317,7 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
 
     function _submitTaskChain(
         GelatoUserProxy _userProxy,
+        // Submit TaskChain Data
         Provider memory _provider,
         Task[] memory _tasks,
         uint256 _expiryDate,

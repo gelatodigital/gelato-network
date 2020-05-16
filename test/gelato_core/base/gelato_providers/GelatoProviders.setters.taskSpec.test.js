@@ -236,13 +236,13 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
       await gelatoCore.provideTaskSpecs([taskSpec]);
 
       await expect(gelatoCore.provideTaskSpecs([taskSpec])).to.be.revertedWith(
-        "GelatoProviders.setTaskSpecGasPriceCeil: redundant"
+        "GelatoProviders.setTaskSpecGasPriceCeil: Already whitelisted with gasPriceCeil"
       );
 
       await expect(
         gelatoCore.provideTaskSpecs([otherTaskSpec, taskSpec])
       ).to.be.revertedWith(
-        "GelatoProviders.setTaskSpecGasPriceCeil: redundant"
+        "GelatoProviders.setTaskSpecGasPriceCeil: Already whitelisted with gasPriceCeil"
       );
     });
 
@@ -294,7 +294,7 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
       ).to.be.equal("TaskSpecNotProvided");
     });
 
-    it("Should NOT allow to redundantly setTaskSpecGasPriceCeil", async function () {
+    it("Should NOT allow to Already whitelisted with gasPriceCeilly setTaskSpecGasPriceCeil", async function () {
       // taskSpecHash
       const taskSpecHash = await gelatoCore.hashTaskSpec(taskSpec);
 
@@ -304,7 +304,7 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
       await expect(
         gelatoCore.setTaskSpecGasPriceCeil(taskSpecHash, gasPriceCeil)
       ).to.be.revertedWith(
-        "GelatoProviders.setTaskSpecGasPriceCeil: redundant"
+        "GelatoProviders.setTaskSpecGasPriceCeil: Already whitelisted with gasPriceCeil"
       );
     });
   });
