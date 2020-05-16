@@ -39,19 +39,10 @@ export default internalTask(
         termsOkCheck: true,
       });
 
-      // ##### Action #2
-      const submitTaskAction = new Action({
-        addr: gelatoCore.address,
-        data: constants.HashZero,
-        operation: Operation.Call,
-        value: 0,
-        termsOkCheck: false,
-      });
-
       // ##### Create Task Spec
       const taskSpec = new TaskSpec({
         conditions: [conditionAddress],
-        actions: [realPlaceOrderAction, submitTaskAction],
+        actions: [realPlaceOrderAction],
         gasPriceCeil: 0, // Infinte gas price
       });
 

@@ -2,7 +2,7 @@ import { task } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../../../buidler.config";
 
 export default task(
-  "gc-providetaskspec",
+  "gc-providetaskspec-old",
   `Sends tx to GelatoCore.provideTaskSpecs(<TaskSpecs[]>) on [--network] (default: ${defaultNetwork})`
 )
   .addOptionalPositionalParam("condition", "0 for no condition")

@@ -22,5 +22,5 @@ import "./provider_module/task.isModuleProvided";
 import "./provider_module/collection.tasks.gelato-provider-module";
 
 // Provider Methods
-import "./provide_taskSpec/task.provideTaskSpec";
+import "./provide_taskSpec/task.provideTaskSpecOld";
 import "./provide_taskSpec/task.checkIfProvided";
