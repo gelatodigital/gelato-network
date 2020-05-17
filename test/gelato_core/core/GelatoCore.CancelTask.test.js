@@ -206,33 +206,37 @@ describe("GelatoCore.cancelTask", function () {
     );
   });
 
-  // it("#5: Multi Cancel task succesfully as user via userProxy", async function () {
-  //   // submit second Task
-  //   const submitTaskTx = await userProxy.submitTask(
-  //     task,
-  //     EXPIRY_DATE,
-  //     SUBMISSIONS_LEFT
-  //   );
-  //   await submitTaskTx.wait();
+  it("#5: Multi Cancel task succesfully as user via userProxy", async function () {
+    // submit second Task
+    const submitTaskTx = await userProxy.submitTask(
+      gelatoProvider,
+      task,
+      EXPIRY_DATE
+    );
+    await submitTaskTx.wait();
 
-  //   await expect(userProxy.multiCancelTasks([taskReceipt, taskReceipt2]))
-  //     .to.emit(gelatoCore, "LogTaskCancelled")
-  //     .withArgs(taskReceipt.id, userProxyAddress)
-  //     .to.emit(gelatoCore, "LogTaskCancelled")
-  //     .withArgs(taskReceipt2.id, userProxyAddress);
-  // });
+    await expect(userProxy.multiCancelTasks([taskReceipt, taskReceipt2]))
+      .to.emit(gelatoCore, "LogTaskCancelled")
+      .withArgs(taskReceipt.id, userProxyAddress)
+      .to.emit(gelatoCore, "LogTaskCancelled")
+      .withArgs(taskReceipt2.id, userProxyAddress);
+  });
 
-  // it("#6: Multi Cancel tasks succesfully via GelatoCore as provider", async function () {
-  //   // submit second Task
-  //   const submitTaskTx = await userProxy.submitTask([task]);
-  //   await submitTaskTx.wait();
+  it("#6: Multi Cancel tasks succesfully via GelatoCore as provider", async function () {
+    // submit second Task
+    const submitTaskTx = await userProxy.submitTask(
+      gelatoProvider,
+      task,
+      EXPIRY_DATE
+    );
+    await submitTaskTx.wait();
 
-  //   await expect(
-  //     gelatoCore.connect(provider).multiCancelTasks([taskReceipt, taskReceipt2])
-  //   )
-  //     .to.emit(gelatoCore, "LogTaskCancelled")
-  //     .withArgs(taskReceipt.id, providerAddress)
-  //     .to.emit(gelatoCore, "LogTaskCancelled")
-  //     .withArgs(taskReceipt2.id, providerAddress);
-  // });
+    await expect(
+      gelatoCore.connect(provider).multiCancelTasks([taskReceipt, taskReceipt2])
+    )
+      .to.emit(gelatoCore, "LogTaskCancelled")
+      .withArgs(taskReceipt.id, providerAddress)
+      .to.emit(gelatoCore, "LogTaskCancelled")
+      .withArgs(taskReceipt2.id, providerAddress);
+  });
 });

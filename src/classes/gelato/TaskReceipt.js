@@ -24,7 +24,7 @@ class TaskReceipt {
     this.index =
       index === undefined ? constants.Zero : utils.bigNumberify(index);
     this.tasks = tasks ? tasks : [];
-    this.expiryDate = expiryDate ? expiryDate : constants.Zero;
+    this.expiryDate = expiryDate !== undefined ? expiryDate : constants.Zero;
     this.submissionsLeft = submissionsLeft === undefined ? 1 : submissionsLeft;
   }
 }

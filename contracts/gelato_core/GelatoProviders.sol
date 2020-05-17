@@ -220,7 +220,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
             uint256 currentTaskSpecGasPriceCeil = taskSpecGasPriceCeil[msg.sender][_taskSpecHash];
             require(
                 currentTaskSpecGasPriceCeil != _gasPriceCeil,
-                "GelatoProviders.setTaskSpecGasPriceCeil: redundant"
+                "GelatoProviders.setTaskSpecGasPriceCeil: Already whitelisted with gasPriceCeil"
             );
             taskSpecGasPriceCeil[msg.sender][_taskSpecHash] = _gasPriceCeil;
             emit LogTaskSpecGasPriceCeilSet(
