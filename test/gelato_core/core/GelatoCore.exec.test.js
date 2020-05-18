@@ -49,7 +49,6 @@ describe("GelatoCore.exec", function () {
   let tx;
   let txResponse;
   let providerModuleGelatoUserProxy;
-  let providerModuleGelatoUserProxyAddress;
   let gelatoCore;
   let gelatoGasPriceOracle;
   let actionERC20TransferFrom;
@@ -1484,98 +1483,7 @@ describe("GelatoCore.exec", function () {
       ).to.emit(gelatoCore, "LogExecSuccess");
     });
 
-    it("#14: Submit Task DummyAction and revert with LogExecReverted in exec due execPayload reverting (due to revert in ProviderModule)", async function () {
-      // Provider registers new condition
-      const MockActionDummy = await ethers.getContractFactory(
-        "MockActionDummy",
-        sysAdmin
-      );
-
-      const mockActionDummy = await MockActionDummy.deploy();
-      await mockActionDummy.deployed();
-
-      const mockActionDummyGelato = new Action({
-        addr: mockActionDummy.address,
-        data: constants.HashZero,
-        operation: Operation.Delegatecall,
-        termsOkCheck: true,
-      });
-
-      // Provider registers new acttion
-
-      const newTaskSpec2 = new TaskSpec({
-        actions: [mockActionDummyGelato],
-        gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
-      });
-
-      // Instantiate ProviderModule that reverts in execPayload()
-
-      const MockProviderModuleGelatoUserProxyRevert = await ethers.getContractFactory(
-        "MockProviderModuleGelatoUserProxyRevert",
-        sysAdmin
-      );
-
-      const mockProviderModuleGelatoUserProxyRevert = await MockProviderModuleGelatoUserProxyRevert.deploy();
-      await mockProviderModuleGelatoUserProxyRevert.deployed();
-
-      await gelatoCore
-        .connect(provider)
-        .multiProvide(
-          constants.AddressZero,
-          [newTaskSpec2],
-          [mockProviderModuleGelatoUserProxyRevert.address]
-        );
-      // Provider batch providers dummy action and revertinng module
-
-      const abi = ["function action(bool)"];
-      const interFace = new utils.Interface(abi);
-
-      const actionData = interFace.functions.action.encode([true]);
-
-      const gelatoProvider = new GelatoProvider({
-        addr: providerAddress,
-        module: mockProviderModuleGelatoUserProxyRevert.address,
-      });
-
-      const action = new Action({
-        addr: mockActionDummy.address,
-        data: actionData,
-        operation: Operation.Delegatecall,
-        value: 0,
-        termsOkCheck: true,
-      });
-
-      const task = new Task({
-        actions: [action],
-      });
-
-      let taskReceipt = new TaskReceipt({
-        id: 1,
-        provider: gelatoProvider,
-        userProxy: userProxyAddress,
-        tasks: [task],
-        submissionsLeft: SUBMISSIONS_LEFT,
-      });
-
-      await expect(
-        userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE)
-      ).to.emit(gelatoCore, "LogTaskSubmitted");
-
-      await expect(
-        gelatoCore
-          .connect(executor)
-          .exec(taskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
-      )
-        .to.emit(gelatoCore, "LogExecReverted")
-        .withArgs(
-          executorAddress,
-          1,
-          0,
-          "GelatoCore._exec.execPayload:MockProviderModuleGelatoUserProxyRevert.execPayload: test revert"
-        );
-    });
-
-    it("#15: Create Gelato User Proxy, approve it to move tokens, sell on batch exchange and create gelato task in one transaction", async function () {
+    it("#14: Create Gelato User Proxy, approve it to move tokens, sell on batch exchange and create gelato task in one transaction", async function () {
       // 1. Determine new proxy address
       const saltnonce = "420";
       const sysProxyAddress = await gelatoUserProxyFactory.predictProxyAddress(
@@ -1728,74 +1636,7 @@ describe("GelatoCore.exec", function () {
       ).to.emit(gelatoCore, "LogExecSuccess");
     });
 
-    it("#16: Submitting malicious task that withdraws funds as an action should revert)", async function () {
-      const provideFundsAmount = ethers.utils.parseEther("1");
-
-      // Instantiate ProviderModule that reverts in execPayload()
-
-      const multiProvideData = await run("abi-encode-withselector", {
-        contractname: "GelatoCore",
-        functionname: "multiProvide",
-        inputs: [executorAddress, [], [providerModuleGelatoUserProxy.address]],
-      });
-
-      await userProxy.execAction(
-        {
-          addr: gelatoCore.address,
-          data: multiProvideData,
-          termsOkCheck: false,
-          value: provideFundsAmount,
-          operation: Operation.Call,
-        },
-        { value: provideFundsAmount }
-      );
-
-      const unProvideFundsData = await run("abi-encode-withselector", {
-        contractname: "GelatoCore",
-        functionname: "unprovideFunds",
-        inputs: [ethers.utils.parseUnits("1", "ether")],
-      });
-
-      const unProvideFundsAction = new Action({
-        addr: gelatoCore.address,
-        data: unProvideFundsData,
-        operation: Operation.Call,
-        termsOkCheck: false,
-      });
-
-      // Provider batch providers dummy action and revertinng module
-
-      const gelatoProvider = new GelatoProvider({
-        addr: userProxyAddress,
-        module: providerModuleGelatoUserProxy.address,
-      });
-
-      const task = new Task({
-        actions: [unProvideFundsAction],
-      });
-
-      let taskReceipt = new TaskReceipt({
-        id: 1,
-        provider: gelatoProvider,
-        userProxy: userProxyAddress,
-        tasks: [task],
-        submissionsLeft: SUBMISSIONS_LEFT,
-      });
-
-      await expect(
-        userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE)
-      ).to.emit(gelatoCore, "LogTaskSubmitted");
-
-      await expect(
-        gelatoCore
-          .connect(executor)
-          .exec(taskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
-      ).to.revertedWith(
-        "GelatoCore._processProviderPayables: providerFunds underflow"
-      );
-    });
-
-    it("#17: Successfully submit and exec ActionWithdrawBatchExchange taskReceipt WITH ONLY .calls", async function () {
+    it("#15: Successfully submit and exec ActionWithdrawBatchExchange taskReceipt WITH ONLY .calls", async function () {
       // Set up Batch Exchange
       const withdrawAmount = 10 * 10 ** buyDecimals;
       const sellerBalanceBefore = await buyToken.balanceOf(sellerAddress);
@@ -1926,7 +1767,156 @@ describe("GelatoCore.exec", function () {
   });
 
   describe("GelatoCore.exec: EDGE CASES", function () {
-    it("#1: Faulty GelatoGasPriceOracle data ", async function () {
+    it("#1: Should revert, if tx.gasprice is below gelatoGasPrice, but not if above", async function () {
+      // Provider registers new condition
+      const MockActionDummy = await ethers.getContractFactory(
+        "MockActionDummy",
+        sysAdmin
+      );
+
+      const mockActionDummy = await MockActionDummy.deploy();
+      await mockActionDummy.deployed();
+
+      const mockActionDummyGelato = new Action({
+        addr: mockActionDummy.address,
+        data: constants.HashZero,
+        operation: Operation.Delegatecall,
+        termsOkCheck: true,
+      });
+
+      // Provider registers new acttion
+
+      const taskSpec = new TaskSpec({
+        actions: [mockActionDummyGelato],
+        gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
+      });
+
+      await gelatoCore
+        .connect(provider)
+        .multiProvide(constants.AddressZero, [taskSpec], []);
+      // Provider batch providers dummy action and revertinng module
+
+      const abi = ["function action(bool)"];
+      const interFace = new utils.Interface(abi);
+
+      const actionData = interFace.functions.action.encode([true]);
+
+      const gelatoProvider = new GelatoProvider({
+        addr: providerAddress,
+        module: providerModuleGelatoUserProxy.address,
+      });
+
+      const action = new Action({
+        addr: mockActionDummy.address,
+        data: actionData,
+        operation: Operation.Delegatecall,
+        termsOkCheck: true,
+      });
+
+      const task = new Task({
+        actions: [action],
+      });
+
+      let taskReceipt = new TaskReceipt({
+        id: 1,
+        provider: gelatoProvider,
+        userProxy: userProxyAddress,
+        tasks: [task],
+        submissionsLeft: SUBMISSIONS_LEFT,
+      });
+
+      await expect(
+        userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE)
+      ).to.emit(gelatoCore, "LogTaskSubmitted");
+
+      await expect(
+        gelatoCore.connect(executor).exec(taskReceipt, {
+          gasPrice: GELATO_GAS_PRICE.sub(1),
+          gasLimit: GELATO_MAX_GAS,
+        })
+      ).to.be.revertedWith("GelatoCore.exec: tx.gasprice below gelatoGasPrice");
+
+      await expect(
+        gelatoCore.connect(executor).exec(taskReceipt, {
+          gasPrice: GELATO_GAS_PRICE.add(1),
+          gasLimit: GELATO_MAX_GAS,
+        })
+      ).to.not.be.reverted;
+    });
+
+    it("#2: Should revert, if executor tries to call executionWrapper directly", async function () {
+      // Provider registers new condition
+      const MockActionDummy = await ethers.getContractFactory(
+        "MockActionDummy",
+        sysAdmin
+      );
+
+      const mockActionDummy = await MockActionDummy.deploy();
+      await mockActionDummy.deployed();
+
+      const mockActionDummyGelato = new Action({
+        addr: mockActionDummy.address,
+        data: constants.HashZero,
+        operation: Operation.Delegatecall,
+        termsOkCheck: true,
+      });
+
+      // Provider registers new acttion
+
+      const taskSpec = new TaskSpec({
+        actions: [mockActionDummyGelato],
+        gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
+      });
+
+      await gelatoCore
+        .connect(provider)
+        .multiProvide(constants.AddressZero, [taskSpec], []);
+      // Provider batch providers dummy action and revertinng module
+
+      const abi = ["function action(bool)"];
+      const interFace = new utils.Interface(abi);
+
+      const actionData = interFace.functions.action.encode([true]);
+
+      const gelatoProvider = new GelatoProvider({
+        addr: providerAddress,
+        module: providerModuleGelatoUserProxy.address,
+      });
+
+      const action = new Action({
+        addr: mockActionDummy.address,
+        data: actionData,
+        operation: Operation.Delegatecall,
+        termsOkCheck: true,
+      });
+
+      const task = new Task({
+        actions: [action],
+      });
+
+      let taskReceipt = new TaskReceipt({
+        id: 1,
+        provider: gelatoProvider,
+        userProxy: userProxyAddress,
+        tasks: [task],
+        submissionsLeft: SUBMISSIONS_LEFT,
+      });
+
+      await expect(
+        userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE)
+      ).to.emit(gelatoCore, "LogTaskSubmitted");
+
+      await expect(
+        gelatoCore
+          .connect(executor)
+          .executionWrapper(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE, {
+            gasPrice: GELATO_GAS_PRICE,
+            gasLimit: GELATO_MAX_GAS,
+          })
+      ).to.be.revertedWith("GelatoCore.executionWrapper:onlyGelatoCore");
+    });
+
+    it("#3: Faulty GelatoGasPriceOracle data ", async function () {
       const taskSpec = new TaskSpec({
         actions: [actionERC20TransferFromGelato],
         gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
@@ -2004,6 +1994,514 @@ describe("GelatoCore.exec", function () {
       ).to.be.revertedWith(
         "GelatoSysAdmin._getGelatoGasPrice:UnexpectedReturndata"
       );
+    });
+
+    it("#4: Submitting malicious task that withdraws funds as an action should revert)", async function () {
+      const provideFundsAmount = ethers.utils.parseEther("1");
+
+      // Instantiate ProviderModule that reverts in execPayload()
+
+      const multiProvideData = await run("abi-encode-withselector", {
+        contractname: "GelatoCore",
+        functionname: "multiProvide",
+        inputs: [executorAddress, [], [providerModuleGelatoUserProxy.address]],
+      });
+
+      await userProxy.execAction(
+        {
+          addr: gelatoCore.address,
+          data: multiProvideData,
+          termsOkCheck: false,
+          value: provideFundsAmount,
+          operation: Operation.Call,
+        },
+        { value: provideFundsAmount }
+      );
+
+      const unProvideFundsData = await run("abi-encode-withselector", {
+        contractname: "GelatoCore",
+        functionname: "unprovideFunds",
+        inputs: [ethers.utils.parseUnits("1", "ether")],
+      });
+
+      const unProvideFundsAction = new Action({
+        addr: gelatoCore.address,
+        data: unProvideFundsData,
+        operation: Operation.Call,
+        termsOkCheck: false,
+      });
+
+      // Provider batch providers dummy action and revertinng module
+
+      const gelatoProvider = new GelatoProvider({
+        addr: userProxyAddress,
+        module: providerModuleGelatoUserProxy.address,
+      });
+
+      const task = new Task({
+        actions: [unProvideFundsAction],
+      });
+
+      let taskReceipt = new TaskReceipt({
+        id: 1,
+        provider: gelatoProvider,
+        userProxy: userProxyAddress,
+        tasks: [task],
+        submissionsLeft: SUBMISSIONS_LEFT,
+      });
+
+      await expect(
+        userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE)
+      ).to.emit(gelatoCore, "LogTaskSubmitted");
+
+      await expect(
+        gelatoCore
+          .connect(executor)
+          .exec(taskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
+      ).to.revertedWith(
+        "GelatoCore._processProviderPayables: providerFunds underflow"
+      );
+    });
+
+    it("#5: Submit Task DummyAction and revert with LogExecReverted in exec due execPayload reverting (due to revert in ProviderModule)", async function () {
+      // Provider registers new condition
+      const MockActionDummy = await ethers.getContractFactory(
+        "MockActionDummy",
+        sysAdmin
+      );
+
+      const mockActionDummy = await MockActionDummy.deploy();
+      await mockActionDummy.deployed();
+
+      const mockActionDummyGelato = new Action({
+        addr: mockActionDummy.address,
+        data: constants.HashZero,
+        operation: Operation.Delegatecall,
+        termsOkCheck: true,
+      });
+
+      // Provider registers new acttion
+
+      const newTaskSpec2 = new TaskSpec({
+        actions: [mockActionDummyGelato],
+        gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
+      });
+
+      // Instantiate ProviderModule that reverts in execPayload()
+
+      const MockProviderModuleExecPayloadRevert = await ethers.getContractFactory(
+        "MockProviderModuleExecPayloadRevert",
+        sysAdmin
+      );
+
+      const mockProviderModuleExecPayloadRevert = await MockProviderModuleExecPayloadRevert.deploy();
+      await mockProviderModuleExecPayloadRevert.deployed();
+
+      await gelatoCore
+        .connect(provider)
+        .multiProvide(
+          constants.AddressZero,
+          [newTaskSpec2],
+          [mockProviderModuleExecPayloadRevert.address]
+        );
+      // Provider batch providers dummy action and revertinng module
+
+      const abi = ["function action(bool)"];
+      const interFace = new utils.Interface(abi);
+
+      const actionData = interFace.functions.action.encode([true]);
+
+      const gelatoProvider = new GelatoProvider({
+        addr: providerAddress,
+        module: mockProviderModuleExecPayloadRevert.address,
+      });
+
+      const action = new Action({
+        addr: mockActionDummy.address,
+        data: actionData,
+        operation: Operation.Delegatecall,
+        value: 0,
+        termsOkCheck: true,
+      });
+
+      const task = new Task({
+        actions: [action],
+      });
+
+      let taskReceipt = new TaskReceipt({
+        id: 1,
+        provider: gelatoProvider,
+        userProxy: userProxyAddress,
+        tasks: [task],
+        submissionsLeft: SUBMISSIONS_LEFT,
+      });
+
+      await expect(
+        userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE)
+      ).to.emit(gelatoCore, "LogTaskSubmitted");
+
+      await expect(
+        gelatoCore
+          .connect(executor)
+          .exec(taskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
+      )
+        .to.emit(gelatoCore, "LogExecReverted")
+        .withArgs(
+          executorAddress,
+          1,
+          0,
+          "GelatoCore._exec.execPayload:MockProviderModuleExecPayloadRevert.execPayload: test revert"
+        );
+    });
+
+    it("#6: GelatoDebug LogExecReverted UnexpectedReturndata due to wrong execPayload", async function () {
+      // Provider registers new condition
+      const MockActionDummy = await ethers.getContractFactory(
+        "MockActionDummy",
+        sysAdmin
+      );
+
+      const mockActionDummy = await MockActionDummy.deploy();
+      await mockActionDummy.deployed();
+
+      const mockActionDummyGelato = new Action({
+        addr: mockActionDummy.address,
+        data: constants.HashZero,
+        operation: Operation.Delegatecall,
+        termsOkCheck: true,
+      });
+
+      // Provider registers new acttion
+
+      const taskSpec = new TaskSpec({
+        actions: [mockActionDummyGelato],
+        gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
+      });
+
+      // Instantiate ProviderModule that reverts in execPayload()
+
+      const MockProviderModuleExecPayloadWrongFactory = await ethers.getContractFactory(
+        "MockProviderModuleExecPayloadWrong",
+        sysAdmin
+      );
+
+      const mockProviderModule = await MockProviderModuleExecPayloadWrongFactory.deploy();
+      await mockProviderModule.deployed();
+
+      await gelatoCore
+        .connect(provider)
+        .multiProvide(
+          constants.AddressZero,
+          [taskSpec],
+          [mockProviderModule.address]
+        );
+      // Provider batch providers dummy action and revertinng module
+
+      const abi = ["function action(bool)"];
+      const interFace = new utils.Interface(abi);
+
+      const actionData = interFace.functions.action.encode([true]);
+
+      const gelatoProvider = new GelatoProvider({
+        addr: providerAddress,
+        module: mockProviderModule.address,
+      });
+
+      const action = new Action({
+        addr: mockActionDummy.address,
+        data: actionData,
+        operation: Operation.Delegatecall,
+        termsOkCheck: true,
+      });
+
+      const task = new Task({
+        actions: [action],
+      });
+
+      let taskReceipt = new TaskReceipt({
+        id: 1,
+        provider: gelatoProvider,
+        userProxy: userProxyAddress,
+        tasks: [task],
+        submissionsLeft: SUBMISSIONS_LEFT,
+      });
+
+      await expect(
+        userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE)
+      ).to.emit(gelatoCore, "LogTaskSubmitted");
+
+      await expect(
+        gelatoCore
+          .connect(executor)
+          .exec(taskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
+      )
+        .to.emit(gelatoCore, "LogExecReverted")
+        .withArgs(
+          executorAddress,
+          taskReceipt.id,
+          0,
+          "GelatoCore._exec:UnexpectedReturndata"
+        );
+    });
+
+    it("#7: Should conduct execRevertCheck, if specified by ProviderModule", async function () {
+      // Provider registers new condition
+      const MockActionDummy = await ethers.getContractFactory(
+        "MockActionDummy",
+        sysAdmin
+      );
+
+      const mockActionDummy = await MockActionDummy.deploy();
+      await mockActionDummy.deployed();
+
+      const mockActionDummyGelato = new Action({
+        addr: mockActionDummy.address,
+        data: constants.HashZero,
+        operation: Operation.Delegatecall,
+        termsOkCheck: true,
+      });
+
+      const taskSpec = new TaskSpec({
+        actions: [mockActionDummyGelato],
+        gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
+      });
+
+      // Instantiate ProviderModule that reverts in execPayload()
+
+      const MockProviderModuleGelatoUserProxyExecRevertCheckOkFactory = await ethers.getContractFactory(
+        "MockProviderModuleGelatoUserProxyExecRevertCheckOk",
+        sysAdmin
+      );
+
+      const mockProviderModule = await MockProviderModuleGelatoUserProxyExecRevertCheckOkFactory.deploy();
+      await mockProviderModule.deployed();
+
+      await gelatoCore
+        .connect(provider)
+        .multiProvide(
+          constants.AddressZero,
+          [taskSpec],
+          [mockProviderModule.address]
+        );
+      // Provider batch providers dummy action and revertinng module
+
+      const abi = ["function action(bool)"];
+      const interFace = new utils.Interface(abi);
+
+      const actionData = interFace.functions.action.encode([true]);
+
+      const gelatoProvider = new GelatoProvider({
+        addr: providerAddress,
+        module: mockProviderModule.address,
+      });
+
+      const action = new Action({
+        addr: mockActionDummy.address,
+        data: actionData,
+        operation: Operation.Delegatecall,
+        termsOkCheck: true,
+      });
+
+      const task = new Task({
+        actions: [action],
+      });
+
+      let taskReceipt = new TaskReceipt({
+        id: 1,
+        userProxy: userProxyAddress,
+        provider: gelatoProvider,
+        tasks: [task],
+        submissionsLeft: SUBMISSIONS_LEFT,
+      });
+
+      await expect(
+        userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE)
+      ).to.emit(gelatoCore, "LogTaskSubmitted");
+
+      await expect(
+        gelatoCore.connect(executor).exec(taskReceipt, {
+          gasPrice: GELATO_GAS_PRICE,
+          gasLimit: GELATO_MAX_GAS,
+        })
+      ).emit(gelatoCore, "LogExecSuccess");
+    });
+
+    it("#8: Should revert from execRevertCheck, if specified by ProviderModule", async function () {
+      // Provider registers new condition
+      const MockActionDummy = await ethers.getContractFactory(
+        "MockActionDummy",
+        sysAdmin
+      );
+
+      const mockActionDummy = await MockActionDummy.deploy();
+      await mockActionDummy.deployed();
+
+      const mockActionDummyGelato = new Action({
+        addr: mockActionDummy.address,
+        data: constants.HashZero,
+        operation: Operation.Delegatecall,
+        termsOkCheck: true,
+      });
+
+      const taskSpec = new TaskSpec({
+        actions: [mockActionDummyGelato],
+        gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
+      });
+
+      // Instantiate ProviderModule that reverts in execPayload()
+
+      const MockProviderModuleGelatoUserProxyExecRevertCheckRevertFactory = await ethers.getContractFactory(
+        "MockProviderModuleGelatoUserProxyExecRevertCheckRevert",
+        sysAdmin
+      );
+
+      const mockProviderModule = await MockProviderModuleGelatoUserProxyExecRevertCheckRevertFactory.deploy();
+      await mockProviderModule.deployed();
+
+      await gelatoCore
+        .connect(provider)
+        .multiProvide(
+          constants.AddressZero,
+          [taskSpec],
+          [mockProviderModule.address]
+        );
+      // Provider batch providers dummy action and revertinng module
+
+      const abi = ["function action(bool)"];
+      const interFace = new utils.Interface(abi);
+
+      const actionData = interFace.functions.action.encode([true]);
+
+      const gelatoProvider = new GelatoProvider({
+        addr: providerAddress,
+        module: mockProviderModule.address,
+      });
+
+      const action = new Action({
+        addr: mockActionDummy.address,
+        data: actionData,
+        operation: Operation.Delegatecall,
+        termsOkCheck: true,
+      });
+
+      const task = new Task({
+        actions: [action],
+      });
+
+      let taskReceipt = new TaskReceipt({
+        id: 1,
+        userProxy: userProxyAddress,
+        provider: gelatoProvider,
+        tasks: [task],
+        submissionsLeft: SUBMISSIONS_LEFT,
+      });
+
+      await expect(
+        userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE)
+      ).to.emit(gelatoCore, "LogTaskSubmitted");
+
+      await expect(
+        gelatoCore.connect(executor).exec(taskReceipt, {
+          gasPrice: GELATO_GAS_PRICE,
+          gasLimit: GELATO_MAX_GAS - 10000,
+        })
+      )
+        .to.emit(gelatoCore, "LogExecReverted")
+        .withArgs(
+          executorAddress,
+          taskReceipt.id,
+          0,
+          "GelatoCore._exec.execRevertCheck:MockProviderModuleGelatoUserProxyExecRevertCheck.execRevertCheck"
+        );
+    });
+
+    it("#9: Should catch errors during execRevertCheck", async function () {
+      // Provider registers new condition
+      const MockActionDummy = await ethers.getContractFactory(
+        "MockActionDummy",
+        sysAdmin
+      );
+
+      const mockActionDummy = await MockActionDummy.deploy();
+      await mockActionDummy.deployed();
+
+      const mockActionDummyGelato = new Action({
+        addr: mockActionDummy.address,
+        data: constants.HashZero,
+        operation: Operation.Delegatecall,
+        termsOkCheck: true,
+      });
+
+      const taskSpec = new TaskSpec({
+        actions: [mockActionDummyGelato],
+        gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
+      });
+
+      // Instantiate ProviderModule that reverts in execPayload()
+
+      const MockProviderModuleGelatoUserProxyExecRevertCheckErrorFactory = await ethers.getContractFactory(
+        "MockProviderModuleGelatoUserProxyExecRevertCheckError",
+        sysAdmin
+      );
+
+      const mockProviderModule = await MockProviderModuleGelatoUserProxyExecRevertCheckErrorFactory.deploy();
+      await mockProviderModule.deployed();
+
+      await gelatoCore
+        .connect(provider)
+        .multiProvide(
+          constants.AddressZero,
+          [taskSpec],
+          [mockProviderModule.address]
+        );
+      // Provider batch providers dummy action and revertinng module
+
+      const abi = ["function action(bool)"];
+      const interFace = new utils.Interface(abi);
+
+      const actionData = interFace.functions.action.encode([true]);
+
+      const gelatoProvider = new GelatoProvider({
+        addr: providerAddress,
+        module: mockProviderModule.address,
+      });
+
+      const action = new Action({
+        addr: mockActionDummy.address,
+        data: actionData,
+        operation: Operation.Delegatecall,
+        termsOkCheck: true,
+      });
+
+      const task = new Task({
+        actions: [action],
+      });
+
+      let taskReceipt = new TaskReceipt({
+        id: 1,
+        userProxy: userProxyAddress,
+        provider: gelatoProvider,
+        tasks: [task],
+        submissionsLeft: SUBMISSIONS_LEFT,
+      });
+
+      await expect(
+        userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE)
+      ).to.emit(gelatoCore, "LogTaskSubmitted");
+
+      await expect(
+        gelatoCore.connect(executor).exec(taskReceipt, {
+          gasPrice: GELATO_GAS_PRICE,
+          gasLimit: GELATO_MAX_GAS - 10000,
+        })
+      )
+        .to.emit(gelatoCore, "LogExecReverted")
+        .withArgs(
+          executorAddress,
+          taskReceipt.id,
+          0,
+          "GelatoCore._exec.execRevertCheck:undefined"
+        );
     });
   });
 });
