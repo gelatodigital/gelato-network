@@ -11,7 +11,7 @@ export default internalTask(
     try {
       const returnValues = [];
 
-      const [signer] = await ethers.signers();
+      const [signer] = await ethers.getSigners();
 
       if (address) returnValues.push(signer._address);
 
@@ -30,7 +30,7 @@ export default internalTask(
       else if (returnValues.length == 1) return returnValues[0];
       else return returnValues;
     } catch (error) {
-      console.error(error);
+      console.error(error, "\n");
       process.exit(1);
     }
   });

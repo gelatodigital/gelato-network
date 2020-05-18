@@ -1,11 +1,11 @@
 export const contracts = [
   // ==== Mainnet
   // Actions
-  "ActionBzxPtokenBurnToToken",
-  "ActionBzxPtokenMintWithToken",
   "ActionERC20Transfer",
   "ActionERC20TransferFrom",
   "ActionKyberTrade",
+  // Gnosis
+  "ActionWithdrawBatchExchange",
   // Core
   "GelatoCore",
   // Conditions
@@ -13,5 +13,7 @@ export const contracts = [
   "ConditionKyberRate",
   "ConditionTimestampPassed",
   // Debugging
-  "ConditionKyberRateError"
+  "ConditionKyberRateError",
+  // Helpers
+  "FeeFinder",
 ];

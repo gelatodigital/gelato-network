@@ -3,13 +3,13 @@ import { defaultNetwork } from "../../../buidler.config";
 
 export default task(
   "event-getparsedlogs",
-  `Return (or --log) the provider's parsed logs for <contractname> <eventname> --fromBlock --toBlock or --blockHash  [--network] (default: ${defaultNetwork})`
+  `Return (or --log) the provider's parsed eventlogs for <contractname> <eventname> --fromBlock --toBlock or --blockHash  [--network] (default: ${defaultNetwork})`
 )
   .addPositionalParam(
     "contractname",
     "Must be in config.networks.[--network].contracts"
   )
-  .addPositionalParam(
+  .addOptionalPositionalParam(
     "eventname",
     "The name of the event in the <contractname>'s abi"
   )
@@ -18,139 +18,164 @@ export default task(
     "An address of a deployed instance of <contractname>. Defaults to network.deployments.<contractname>"
   )
   .addOptionalParam(
-    "fromblock",
-    "the block number to search for event logs from",
+    "eventlogs",
+    "Provide the event logs to be parsed",
     undefined,
-    types.number
+    types.json
+  )
+  .addOptionalParam(
+    "fromblock",
+    "The block number to search for event eventlogs from",
+    undefined, // placeholder default ...
+    types.int // ... only to enforce type
   )
   .addOptionalParam(
     "toblock",
-    "the block number up until which to look for",
-    undefined,
-    types.number
+    "The block number up until which to look for",
+    undefined, // placeholder default ...
+    types.int // ... only to enforce type
   )
-  .addOptionalParam("blockhash", "the blockhash in which")
-  .addOptionalParam("txhash", "filter for a specific tx")
-  .addOptionalParam("value", "a specific value to search for")
-  .addFlag("values")
+  .addOptionalParam("blockhash", "Search a specific block")
+  .addOptionalParam("property", "A specific key-value pair to search for")
+  .addOptionalParam("filterkey", "A key to filter for")
+  .addOptionalParam("filtervalue", "A value to filter for")
+  .addFlag("strcmp", "Filters based on string comparison")
+  .addFlag("values", "Only return the values property of the parsedLog")
   .addFlag("stringify")
   .addFlag("log", "Logs return values to stdout")
-  .setAction(async taskArgs => {
+  .setAction(async (taskArgs) => {
     try {
-      if (taskArgs.value && taskArgs.values)
-        throw new Error("Cannot search for --value and --values");
-      if (taskArgs.stringify && !taskArgs.value)
-        throw new Error("--stringify only supplements --value");
+      if (!taskArgs.eventname && !taskArgs.eventlogs)
+        throw new Error("\n Must provide <eventname> or --eventlogs");
+      if (taskArgs.property && taskArgs.values)
+        throw new Error("\n Cannot search for --property and --values");
+      if (taskArgs.filtervalue && !taskArgs.filterkey && !taskArgs.property)
+        throw new Error("\n --filtervalue with a --filterkey or --property");
+      if (taskArgs.filterkey && !taskArgs.values)
+        throw new Error("\n --filter-key/value with --values");
+      if (
+        taskArgs.stringify &&
+        !taskArgs.values &&
+        !taskArgs.filtervalue &&
+        !taskArgs.property
+      )
+        throw new Error("\n--stringify --values [--filtervalue] or --property");
 
-      let loggingActivated;
-      if (taskArgs.log) {
-        loggingActivated = true;
-        taskArgs.log = false;
-      }
+      let eventlogs = taskArgs.eventlogs;
 
-      let logs, logWithTxHash;
-      if (taskArgs.txhash) logWithTxHash = await run("event-getlogs", taskArgs);
-      else logs = await run("event-getlogs", taskArgs);
-
-      if (loggingActivated) taskArgs.log = true;
-
-      if (!logs && !logWithTxHash) {
+      if (!eventlogs || !eventlogs.length) {
+        let loggingActivated;
         if (taskArgs.log) {
-          console.log(
-            `No logs for ${taskArgs.contractname}.${taskArgs.eventname}`
-          );
+          loggingActivated = true;
+          taskArgs.log = false;
         }
-        return undefined;
-      }
 
-      let parsedLogs, parsedLogWithTxHash;
-      if (logWithTxHash) {
-        parsedLogWithTxHash = await run("ethers-interface-parseLogs", {
-          contractname: taskArgs.contractname,
-          logs: logWithTxHash
-        });
-      } else {
-        parsedLogs = await run("ethers-interface-parseLogs", {
-          contractname: taskArgs.contractname,
-          logs
-        });
-      }
+        eventlogs = await run("event-getlogs", taskArgs);
 
-      if (!parsedLogs && !parsedLogWithTxHash) {
-        if (taskArgs.log) {
-          console.log(
-            `No logs for ${taskArgs.contractname}.${taskArgs.eventname}`
-          );
-          return undefined;
-        }
-      } else {
-        if (!taskArgs.txhash) {
+        if (loggingActivated) taskArgs.log = true;
+
+        if (!eventlogs) {
           if (taskArgs.log) {
             console.log(
-              `Parsed Logs for ${taskArgs.contractname}.${taskArgs.eventname}`
+              `❌  No Logs for ${taskArgs.contractname}.${taskArgs.eventname}`
             );
           }
-          if (taskArgs.values) {
-            const parsedLogsValues = [];
-            for (const parsedLog of parsedLogs) {
-              if (taskArgs.log) console.log("\n", parsedLog.values);
-              parsedLogsValues.push(parsedLog.values);
+          throw new Error(
+            `\n event-getparsedlogs: ${taskArgs.contractname} ${taskArgs.eventname} no eventlog`
+          );
+        }
+      }
+
+      // if (taskArgs.log) console.log("\n event-getparsedlogs", taskArgs, "\n");
+
+      let parsedLogs = await run("ethers-interface-parseLogs", {
+        contractname: taskArgs.contractname,
+        eventlogs,
+      });
+
+      // Filter/Mutate parsedLogs
+      if (!parsedLogs.length) {
+        if (taskArgs.log) {
+          console.log(
+            `❌  No Parsed Logs for ${taskArgs.contractname}.${taskArgs.eventname}`
+          );
+        }
+        throw new Error(
+          `\n event-getparsedlogs: ${taskArgs.contractname}.${taskArgs.eventname} no events found \n`
+        );
+      } else {
+        if (taskArgs.values) {
+          // filterkey/value
+          if (taskArgs.filterkey) {
+            parsedLogs = parsedLogs.filter((parsedLog) =>
+              checkNestedObj(parsedLog, "values", taskArgs.filterkey)
+            );
+            if (taskArgs.filtervalue) {
+              parsedLogs = parsedLogs.filter((parsedLog) => {
+                const filteredValue = parsedLog.values[taskArgs.filterkey];
+                return taskArgs.strcmp
+                  ? filteredValue.toString() === taskArgs.filtervalue.toString()
+                  : filteredValue == taskArgs.filtervalue;
+              });
             }
-            return parsedLogsValues;
-          } else if (taskArgs.value) {
-            const parsedLogsValue = [];
-            for (const parsedLog of parsedLogs) {
-              if (taskArgs.log) {
-                console.log(
-                  `\n ${taskArgs.value}: `,
-                  taskArgs.stringify
-                    ? parsedLog.values[taskArgs.value].toString()
-                    : parsedLog.values[taskArgs.value]
-                );
-              }
-              parsedLogsValue.push(
-                taskArgs.stringify
-                  ? parsedLog.values[taskArgs.value].toString()
-                  : parsedLog.values[taskArgs.value]
-              );
-            }
-            return parsedLogsValue;
-          } else {
-            for (const parsedLog of parsedLogs)
-              if (taskArgs.log) console.log("\n", parsedLog);
-            return parsedLogs;
           }
-        } else {
-          // txhash
-          if (taskArgs.values) {
-            if (taskArgs.log) console.log("\n", parsedLogWithTxHash.values);
-            return parsedLogWithTxHash.values;
-          } else if (taskArgs.value) {
-            if (taskArgs.log) {
-              console.log(
-                `\n ${taskArgs.value}: `,
-                taskArgs.stringify
-                  ? parsedLogWithTxHash.values[taskArgs.value].toString()
-                  : parsedLogWithTxHash.values[taskArgs.value]
-              );
+          // Mutate parsedLog to contain values only
+          for (const [index, parsedLog] of parsedLogs.entries()) {
+            const copy = {};
+            for (const key in parsedLog.values) {
+              copy[key] = taskArgs.stringify
+                ? parsedLog.values[key].toString()
+                : parsedLog.values[key];
             }
-            return taskArgs.stringify
-              ? parsedLogWithTxHash.values[taskArgs.value].toString()
-              : parsedLogWithTxHash.values[taskArgs.value];
-          } else {
-            if (taskArgs.log) {
-              console.log(
-                `\nParsed Log for ${taskArgs.contractname}.${taskArgs.eventname} with tx-Hash ${taskArgs.txhash}:\
-                 \n`,
-                parsedLogWithTxHash
+            parsedLogs[index] = copy;
+          }
+        } else if (taskArgs.property) {
+          if (taskArgs.filtervalue) {
+            parsedLogs = parsedLogs.filter((parsedLog) => {
+              const filteredValue = getNestedObj(
+                parsedLog,
+                "values",
+                taskArgs.property
               );
-            }
-            return parsedLogWithTxHash;
+              return taskArgs.strcmp
+                ? filteredValue.toString() === taskArgs.filtervalue.toString()
+                : filteredValue == taskArgs.filtervalue;
+            });
+          }
+          for (const [index, parsedLog] of parsedLogs.entries()) {
+            parsedLogs[index] = {
+              [taskArgs.property]: taskArgs.stringify
+                ? parsedLog.values[taskArgs.property].toString()
+                : parsedLog.values[taskArgs.property],
+            };
           }
         }
       }
+
+      // Logging
+      if (taskArgs.log) {
+        if (parsedLogs.length) {
+          console.log(
+            `\n ✅ Parsed Logs for ${taskArgs.contractname} ${
+              taskArgs.eventname ? taskArgs.eventname : ""
+            }\n`
+          );
+          for (const parsedLog of parsedLogs) console.log("\n", parsedLog);
+        } else {
+          console.log(
+            `\n ❌ No Parsed Logs for ${taskArgs.contractname}.${taskArgs.eventname}\
+              \n taskArgs:\n`,
+            taskArgs
+          );
+          throw new Error(
+            `\n event-getparsedlogs: ${taskArgs.contractname}.${taskArgs.eventname} no events found \n`
+          );
+        }
+      }
+
+      // Return (filtered) (mutated) parsedLogs
+      return parsedLogs;
     } catch (error) {
-      console.error(error);
-      process.exit(1);
+      console.error(error, "\n");
     }
   });

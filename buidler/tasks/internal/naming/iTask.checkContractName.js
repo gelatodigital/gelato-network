@@ -1,5 +1,4 @@
 import { internalTask } from "@nomiclabs/buidler/config";
-import checkNestedObj from "../../../../scripts/helpers/nestedObjects/checkNestedObj";
 
 export default internalTask(
   "checkContractName",

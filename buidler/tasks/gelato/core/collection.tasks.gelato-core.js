@@ -1,12 +1,21 @@
-// GelatoCoreAccounting
-import "./accounting/collection.tasks.gelato-core-accounting";
-// GnosisSafeProxyManager
-import "./gnosis_safe_proxy_manager/collection.tasks.gelato-core-gnosisSafeProxyManager";
-// Minting
-import "./minting/collection.tasks.minting";
+// ==== GelatoCore ====
+// GelatoSysAdmin
+import "./gelato_sys_admin/collection.tasks.gelato-sys-admin";
+
+// GelatoGasPriceOracle
+import "./gelato_gas_price_oracle/collection.tasks.gelato-gas-price-oracle";
+
+// GelatoProvider
+import "./gelato_providers/collection.tasks.gelato-provider";
+
+// GelatoExecutors
+import "./gelato_executors/collection.tasks.gelato-executor";
+
+// === TaskReceipts ===
+import "./task_receipts/collection.tasks.task-receipts";
 
 // === Execution Tasks ===
-import "./execution/task.canExecute";
+import "./execution/collection.tasks.execution";
 
 // === Internal Tasks ===
-import "./iTask.handleExecutor";
+import "./internal/collection.iTasks.gelato-core";

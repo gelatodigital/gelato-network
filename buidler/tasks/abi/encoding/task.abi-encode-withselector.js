@@ -1,29 +1,46 @@
-import { task } from "@nomiclabs/buidler/config";
+import { task, types } from "@nomiclabs/buidler/config";
 import { utils } from "ethers";
-import checkNestedObj from "../../../../scripts/helpers/nestedObjects/checkNestedObj";
 
 export default task("abi-encode-withselector")
   .addPositionalParam("contractname")
   .addPositionalParam("functionname")
-  .addOptionalVariadicPositionalParam("inputs")
+  .addOptionalVariadicPositionalParam(
+    "inputs",
+    "Array of function params",
+    undefined,
+    types.json
+  )
   .addFlag("log")
-  .setAction(async ({ contractname, functionname, inputs, log }) => {
+  .setAction(async (taskArgs) => {
     try {
-      const abi = await run("abi-get", { contractname });
+      if (taskArgs.log) console.log(taskArgs);
+
+      const abi = await run("abi-get", { contractname: taskArgs.contractname });
       const interFace = new utils.Interface(abi);
 
-      if (!checkNestedObj(interFace, "functions", functionname))
-        throw new Error("functionname is not on contract's interface");
+      if (!checkNestedObj(interFace, "functions", taskArgs.functionname))
+        throw new Error("\nfunctionname is not on contract's interface");
 
-      const payloadWithSelector = interFace.functions[functionname].encode([
-        ...inputs
-      ]);
-      if (log) {
-        console.log(`\nContractName:  ${contractname}`);
-        console.log(`FunctionName:    ${functionname}`);
-        console.log(`Inputs:\n${inputs}`);
-        console.log(`EncodedPayloadWithSelector:\n${payloadWithSelector}\n`);
+      let payloadWithSelector;
+
+      if (taskArgs.inputs) {
+        let iterableInputs;
+        try {
+          iterableInputs = [...taskArgs.inputs];
+        } catch (error) {
+          iterableInputs = [taskArgs.inputs];
+        }
+        payloadWithSelector = interFace.functions[taskArgs.functionname].encode(
+          iterableInputs
+        );
+      } else {
+        payloadWithSelector = interFace.functions[taskArgs.functionname].encode(
+          []
+        );
       }
+
+      if (taskArgs.log)
+        console.log(`\nEncodedPayloadWithSelector:\n${payloadWithSelector}\n`);
       return payloadWithSelector;
     } catch (err) {
       console.error(err);

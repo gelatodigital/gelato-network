@@ -1,4 +1,5 @@
-pragma solidity ^0.6.2;
+// "SPDX-License-Identifier: UNLICENSED"
+pragma solidity ^0.6.8;
 
 /**
  * @dev Collection of functions related to the address type
@@ -62,7 +63,7 @@ library Address {
         require(address(this).balance >= amount, "Address: insufficient balance");
 
         // solhint-disable-next-line avoid-call-value
-        (bool success, ) = recipient.call.value(amount)("");
+        (bool success, ) = recipient.call{value: amount}("");
         require(success, "Address: unable to send value, recipient may have reverted");
     }
 }
