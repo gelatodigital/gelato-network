@@ -51,6 +51,7 @@ describe("GelatoCore.exec", function () {
   let providerModuleGelatoUserProxy;
   let providerModuleGelatoUserProxyAddress;
   let gelatoCore;
+  let gelatoGasPriceOracle;
   let actionERC20TransferFrom;
   let mockConditionDummy;
   let mockConditionDummyRevert;
@@ -80,9 +81,7 @@ describe("GelatoCore.exec", function () {
       "GelatoGasPriceOracle",
       sysAdmin
     );
-    const gelatoGasPriceOracle = await GelatoGasPriceOracle.deploy(
-      GELATO_GAS_PRICE
-    );
+    gelatoGasPriceOracle = await GelatoGasPriceOracle.deploy(GELATO_GAS_PRICE);
     await gelatoGasPriceOracle.deployed();
 
     // Set gas price oracle on core
@@ -280,7 +279,7 @@ describe("GelatoCore.exec", function () {
   });
 
   // We test different functionality of the contract as normal Mocha tests.
-  describe("GelatoCore.exec", function () {
+  describe("GelatoCore.exec: Business As Usual", function () {
     it("#1: Successfully submit and exec ActionWithdrawBatchExchange taskReceipt", async function () {
       // Get Action Payload
       const withdrawAmount = 10 * 10 ** buyDecimals;
@@ -1485,7 +1484,7 @@ describe("GelatoCore.exec", function () {
       ).to.emit(gelatoCore, "LogExecSuccess");
     });
 
-    it("#15: Submit Task DummyAction and revert with LogExecReverted in exec due execPayload reverting (due to revert in ProviderModule)", async function () {
+    it("#14: Submit Task DummyAction and revert with LogExecReverted in exec due execPayload reverting (due to revert in ProviderModule)", async function () {
       // Provider registers new condition
       const MockActionDummy = await ethers.getContractFactory(
         "MockActionDummy",
@@ -1576,7 +1575,7 @@ describe("GelatoCore.exec", function () {
         );
     });
 
-    it("#16: Create Gelato User Proxy, approve it to move tokens, sell on batch exchange and create gelato task in one transaction", async function () {
+    it("#15: Create Gelato User Proxy, approve it to move tokens, sell on batch exchange and create gelato task in one transaction", async function () {
       // 1. Determine new proxy address
       const saltnonce = "420";
       const sysProxyAddress = await gelatoUserProxyFactory.predictProxyAddress(
@@ -1729,7 +1728,7 @@ describe("GelatoCore.exec", function () {
       ).to.emit(gelatoCore, "LogExecSuccess");
     });
 
-    it("#17: Submitting malicious task that withdraws funds as an action should revert)", async function () {
+    it("#16: Submitting malicious task that withdraws funds as an action should revert)", async function () {
       const provideFundsAmount = ethers.utils.parseEther("1");
 
       // Instantiate ProviderModule that reverts in execPayload()
@@ -1796,7 +1795,7 @@ describe("GelatoCore.exec", function () {
       );
     });
 
-    it("#18: Successfully submit and exec ActionWithdrawBatchExchange taskReceipt WITH ONLY .calls", async function () {
+    it("#17: Successfully submit and exec ActionWithdrawBatchExchange taskReceipt WITH ONLY .calls", async function () {
       // Set up Batch Exchange
       const withdrawAmount = 10 * 10 ** buyDecimals;
       const sellerBalanceBefore = await buyToken.balanceOf(sellerAddress);
@@ -1923,6 +1922,88 @@ describe("GelatoCore.exec", function () {
           .connect(executor)
           .exec(taskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
       ).to.emit(gelatoCore, "LogExecSuccess");
+    });
+  });
+
+  describe("GelatoCore.exec: EDGE CASES", function () {
+    it("#1: Faulty GelatoGasPriceOracle data ", async function () {
+      const taskSpec = new TaskSpec({
+        actions: [actionERC20TransferFromGelato],
+        gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
+      });
+
+      taskSpec.actions[0].termsOkCheck = false;
+
+      await gelatoCore.connect(provider).provideTaskSpecs([taskSpec]);
+
+      const actionData = await run("abi-encode-withselector", {
+        contractname: "ActionERC20TransferFrom",
+        functionname: "action",
+        inputs: [
+          {
+            user: sellerAddress,
+            sendToken: sellToken.address,
+            destination: providerAddress,
+            sendAmount: ethers.utils.parseUnits("1", "ether"),
+          },
+        ],
+      });
+
+      const action = new Action({
+        addr: actionERC20TransferFrom.address,
+        data: actionData,
+        operation: Operation.Delegatecall,
+      });
+
+      // Submit Task
+      const gelatoProvider = new GelatoProvider({
+        addr: providerAddress,
+        module: providerModuleGelatoUserProxy.address,
+      });
+
+      const task = new Task({
+        actions: [action],
+      });
+
+      const taskReceipt = new TaskReceipt({
+        id: 1,
+        provider: gelatoProvider,
+        userProxy: userProxyAddress,
+        tasks: [task],
+        submissionsLeft: SUBMISSIONS_LEFT,
+      });
+
+      await expect(
+        userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE)
+      ).to.emit(gelatoCore, "LogTaskSubmitted");
+
+      expect(
+        await gelatoCore
+          .connect(executor)
+          .canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE)
+      ).to.be.equal("OK");
+
+      // Set Oracle gasPrice to 0
+      await gelatoGasPriceOracle.setGasPrice(0);
+
+      await expect(
+        gelatoCore.connect(executor).exec(taskReceipt, {
+          gasPrice: GELATO_GAS_PRICE,
+          gasLimit: GELATO_MAX_GAS - 1000,
+        })
+      ).to.be.revertedWith("GelatoSysAdmin._getGelatoGasPrice:0orBelow");
+
+      // // Set Oracle to no-code address
+      await gelatoCore.connect(sysAdmin).setOracleRequestData("0xdeadbeef");
+
+      await expect(
+        gelatoCore.connect(executor).exec(taskReceipt, {
+          gasPrice: GELATO_GAS_PRICE,
+          gasLimit: GELATO_MAX_GAS - 1000,
+        })
+      ).to.be.revertedWith(
+        "GelatoSysAdmin._getGelatoGasPrice:UnexpectedReturndata"
+      );
     });
   });
 });
