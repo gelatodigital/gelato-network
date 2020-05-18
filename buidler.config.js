@@ -65,6 +65,8 @@ extendEnvironment((bre) => {
   bre.utils = utils;
   bre.getUser = () => new ethers.Wallet(USER_PK, ethers.provider);
   bre.getProvider = () => new ethers.Wallet(PROVIDER_PK, ethers.provider);
+  bre.getSysAdmin = () => new ethers.Wallet(SYS_ADMIN_PK, ethers.provider);
+  bre.getExecutor = () => new ethers.Wallet(EXECUTOR_PK, ethers.provider);
 });
 
 // ================================= CONFIG =========================================
@@ -76,6 +78,8 @@ const INFURA_ID = process.env.INFURA_ID;
 const DEFAULT_NETWORK = process.env.DEFAULT_NETWORK;
 const USER_PK = process.env.USER_PK;
 const PROVIDER_PK = process.env.PROVIDER_PK;
+const SYS_ADMIN_PK = process.env.SYS_ADMIN_PK;
+const EXECUTOR_PK = process.env.EXECUTOR_PK;
 
 assert.ok(DEV_MNEMONIC, "no DEV_MNEMONIC in process.env");
 assert.ok(MAINNET_MNEMONIC, "no MAINNET_MNEMONIC in process.env");
@@ -116,7 +120,7 @@ module.exports = {
       accounts: { mnemonic: MAINNET_MNEMONIC },
       chainId: 1,
       gas: "auto",
-      gasPrice: parseInt(utils.parseUnits("5", "gwei")),
+      gasPrice: parseInt(utils.parseUnits("25", "gwei")),
       gasMultiplier: 1.5,
       url: `https://mainnet.infura.io/v3/${INFURA_ID}`,
       // Custom

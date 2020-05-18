@@ -21,6 +21,12 @@ export default task(
     0,
     types.int
   )
+  .addOptionalParam(
+    "signer",
+    "The Signer accounts index to use for deployment. This can be used for Ownable contracts.",
+    undefined,
+    types.json
+  )
   .addFlag("clean")
   .addFlag("compile", "Compile before deploy")
   .addFlag("events", "Logs parsed Event Logs to stdout")
@@ -37,11 +43,15 @@ export default task(
       if (taskArgs.log) console.log("\n deploy taskArgs:", taskArgs, "\n");
 
       let deployer;
-      if (!taskArgs.signerindex) [deployer] = await ethers.getSigners();
-      else {
+      if (taskArgs.signerindex && taskArgs.signer)
+        throw Error("Can't have both signer and signer index");
+      if (!taskArgs.signerindex && !taskArgs.signer)
+        [deployer] = await ethers.getSigners();
+      if (taskArgs.signerindex && !taskArgs.signer) {
         const { [taskArgs.signerindex]: _deployer } = await ethers.getSigners();
         deployer = _deployer;
       }
+      if (!taskArgs.signerindex && taskArgs.signer) deployer = taskArgs.signer;
 
       if (networkname == "mainnet") {
         console.log(

@@ -9,7 +9,7 @@ export const deployments = {
   ActionKyberTrade: "0xF829B506c378AaD11dB7Efe8d626cc7d0e015CBA",
 
   // ==== Gelato Core ===
-  GelatoCore: "0x4E2Ca0093028C8401C93AaCcCaF59288CA6fb728",
+  GelatoCore: "0x35bc4acd1c3dceb6e35d5d5290b83633cee09865",
 
   // === Conditions ===
   // balance
