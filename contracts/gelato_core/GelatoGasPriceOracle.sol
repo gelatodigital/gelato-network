@@ -27,7 +27,6 @@ contract GelatoGasPriceOracle is IGelatoGasPriceOracle, Ownable {
     }
 
     function setGasPrice(uint256 _newGasPrice) public override onlyOracle {
-        require(_newGasPrice != 0, "gasPrice cannot be zero");
         emit LogGasPriceSet(gasPrice, _newGasPrice);
         gasPrice = _newGasPrice;
     }

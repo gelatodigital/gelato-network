@@ -396,7 +396,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         termsOkCheck: true,
       };
       await expect(userProxy.execAction(gelatoAction)).to.be.revertedWith(
-        "GelatoUserProxy.delegatecallAction:ActionWithdrawBatchExchange: Insufficient balance for user to pay for withdrawal 2"
+        "GelatoUserProxy._delegateCallAction:ActionWithdrawBatchExchange: Insufficient balance for user to pay for withdrawal 2"
       );
 
       const providerBalance = await buyToken.balanceOf(providerAddress);
@@ -448,7 +448,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       };
 
       await expect(userProxy.execAction(gelatoAction)).to.be.revertedWith(
-        "GelatoUserProxy.delegatecallAction:ActionWithdrawBatchExchange: Insufficient balance for user to pay for withdrawal 2"
+        "GelatoUserProxy._delegateCallAction:ActionWithdrawBatchExchange: Insufficient balance for user to pay for withdrawal 2"
       );
 
       const providerBalance = await WETH.balanceOf(providerAddress);
@@ -590,7 +590,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
         termsOkCheck: true,
       };
       await expect(userProxy.execAction(gelatoAction)).to.be.revertedWith(
-        "GelatoUserProxy.delegatecallAction:ActionWithdrawBatchExchange: Insufficient balance for user to pay for withdrawal 1"
+        "GelatoUserProxy._delegateCallAction:ActionWithdrawBatchExchange: Insufficient balance for user to pay for withdrawal 1"
       );
 
       const providerBalance = await sellToken.balanceOf(providerAddress);
@@ -635,7 +635,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       };
 
       await expect(userProxy.execAction(gelatoAction)).to.be.revertedWith(
-        "GelatoUserProxy.delegatecallAction:ActionWithdrawBatchExchange: Insufficient balance for user to pay for withdrawal 1"
+        "GelatoUserProxy._delegateCallAction:ActionWithdrawBatchExchange: Insufficient balance for user to pay for withdrawal 1"
       );
 
       const providerBalance = await WETH.balanceOf(providerAddress);
