@@ -95,9 +95,6 @@ interface IGelatoUserProxy {
     /// @param _actions Actions to execute
     function multiExecActions(Action[] calldata _actions) external payable;
 
-    function callAction(address _action, bytes calldata _data, uint256 _value) external;
-    function delegatecallAction(address _action, bytes calldata _data) external;
-
     /// @notice Get the factory address whence the proxy was created.
     /// @return Address of proxy's factory
     function factory() external pure returns(address);

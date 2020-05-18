@@ -40,6 +40,12 @@ describe("GelatoCore - GelatoSysAdmin - Setters: GAS/GAS-PRICE", function () {
       );
     });
 
+    it("Should NOT let owners setGelatoGasPriceOracle address-Zero", async function () {
+      await expect(
+        gelatoCore.setGelatoGasPriceOracle(constants.AddressZero)
+      ).to.be.revertedWith("GelatoSysAdmin.setGelatoGasPriceOracle: 0");
+    });
+
     it("Should NOT let non-Owners setGelatoGasPriceOracle", async function () {
       await expect(
         gelatoCore.connect(notOwner).setGelatoGasPriceOracle(oracleAddress)

@@ -33,7 +33,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         bool value;
     }
 
-    uint256 public constant override NO_CEIL = 2**256 - 1;  // MaxUint256
+    uint256 public constant override NO_CEIL = type(uint256).max;
 
     mapping(address => uint256) public override providerFunds;
     mapping(address => uint256) public override executorStake;
