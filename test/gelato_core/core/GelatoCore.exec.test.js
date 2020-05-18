@@ -1993,7 +1993,7 @@ describe("GelatoCore.exec", function () {
         })
       ).to.be.revertedWith("GelatoSysAdmin._getGelatoGasPrice:0orBelow");
 
-      // // Set Oracle to no-code address
+      // // Set nonsense oracle request data
       await gelatoCore.connect(sysAdmin).setOracleRequestData("0xdeadbeef");
 
       await expect(
