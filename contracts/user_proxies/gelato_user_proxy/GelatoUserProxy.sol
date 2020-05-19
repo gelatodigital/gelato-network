@@ -190,7 +190,8 @@ contract GelatoUserProxy is IGelatoUserProxy {
     }
 
     function callAction(address _action, bytes memory _data, uint256 _value)
-        internal
+        public
+        override
         noZeroAddress(_action)
     {
         (bool success, bytes memory returndata) = _action.call{value: _value}(_data);
@@ -198,7 +199,8 @@ contract GelatoUserProxy is IGelatoUserProxy {
     }
 
     function delegatecallAction(address _action, bytes memory _data)
-        internal
+        public
+        override
         noZeroAddress(_action)
     {
         (bool success, bytes memory returndata) = _action.delegatecall(_data);

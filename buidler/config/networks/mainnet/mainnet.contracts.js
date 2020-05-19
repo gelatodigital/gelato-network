@@ -8,6 +8,9 @@ export const contracts = [
   "ActionWithdrawBatchExchange",
   // Core
   "GelatoCore",
+  // Provider Modules
+  "ProviderModuleGnosisSafeProxy",
+
   // Conditions
   "ConditionBalance",
   "ConditionKyberRate",
@@ -16,4 +19,6 @@ export const contracts = [
   "ConditionKyberRateError",
   // Helpers
   "FeeFinder",
+  // Libraries
+  "Multisend",
 ];

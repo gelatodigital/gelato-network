@@ -11,6 +11,9 @@ export const deployments = {
   // ==== Gelato Core ===
   GelatoCore: "0x35bc4acd1c3dceb6e35d5d5290b83633cee09865",
 
+  // ==== Provider Modules ===
+  ProviderModuleGnosisSafeProxy: "0x0B120b6119e072496A5A5CFf3Cd1Ade4e5CF13DF",
+
   // === Conditions ===
   // balance
   ConditionBalance: "0x60621bf3F7132838b27972084eaa56E87395D44B",
@@ -27,4 +30,6 @@ export const deployments = {
 
   // === Helpers ===
   FeeFinder: "0xa569FdBe176DA5706148b8563Cf4214F937C1Dc5",
+  // === Libraries ===
+  Multisend: "0x4e2ca0093028c8401c93aacccaf59288ca6fb728",
 };
