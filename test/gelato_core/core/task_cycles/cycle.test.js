@@ -262,7 +262,7 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
     // Init Task Cycle Id: We initiated tasks in createTwo
     currentTaskCycleReceiptId = await gelatoCore.currentTaskReceiptId();
 
-    // SUBMISSIONS_LEFT + INTERCEPTS
+    // CYCLES + INTERCEPTS
     for (let i = 0; i < 20; i++) {
       // console.log("\n NEW CYCLE \n");
 
@@ -350,7 +350,7 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
         cyclicTask2WasSubmitted = false;
       }
 
-      // 🚲  SUBMISSIONS_LEFT 🚲
+      // 🚲  CYCLES 🚲
 
       // Cyclic Task Updates & Checks
       if (cyclicTask1WasSubmitted || cyclicTask1WasIntercepted) {
@@ -423,7 +423,7 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
         // console.log("CyclicTask2 Hash: " + cyclicTask2ReceiptHash + "\n");
       }
 
-      // SUBMISSIONS_LEFT EXEXECUTION + AUTO-SUBMISSION
+      // CYCLES EXECUTION + AUTO-SUBMISSION
       // canExec
       expect(
         await gelatoCore
