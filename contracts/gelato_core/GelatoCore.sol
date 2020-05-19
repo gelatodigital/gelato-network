@@ -110,8 +110,12 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         public
         override
     {
-        if (_sumOfRequestedTaskSubmits != 0)
-            require(_sumOfRequestedTaskSubmits >= _tasks.length);
+        if (_sumOfRequestedTaskSubmits != 0) {
+            require(
+                _sumOfRequestedTaskSubmits >= _tasks.length,
+                "GelatoCore.submitTaskChain: less requested submits than tasks"
+            );
+        }
         _canSubmitGate(_provider, _tasks[0], _expiryDate);
         _storeTaskReceipt(
             msg.sender, _provider, 0, _tasks, _expiryDate, _sumOfRequestedTaskSubmits
@@ -364,11 +368,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         }
 
         // Execution via UserProxy
-        bool success;
-        bytes memory userProxyReturndata;
-        if (execPayload.length >= 4)
-            (success, userProxyReturndata) = _TR.userProxy.call(execPayload);
-        else revert("GelatoCore._exec.execPayload: invalid");
+        (bool success, bytes memory userProxyReturndata) = _TR.userProxy.call(execPayload);
 
         // Check if actions reverts were caught by userProxy
         if (success && proxyReturndataCheck) {
