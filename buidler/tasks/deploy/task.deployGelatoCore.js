@@ -3,40 +3,40 @@ import { task, types } from "@nomiclabs/buidler/config";
 import sysAdminInitialState from "../../../test/gelato_core/base/gelato_sys_admin/GelatoSysAdmin.initialState";
 
 export default task("deploy-gc")
-  .addOptionalPositionalParam(
+  .addOptionalParam(
     "gelatogaspriceoracle",
     "Address of deployed oracle. Defaults to Chainlink network instance."
   )
-  .addOptionalPositionalParam(
+  .addOptionalParam(
     "oraclerequestdata",
     "The payload for the oracle gas price request.",
     sysAdminInitialState.oracleRequestData
   )
-  .addOptionalPositionalParam(
+  .addOptionalParam(
     "gelatomaxgas",
     "The payload for the oracle gas price request. Defaults to 'lastAnswer()' selector",
     sysAdminInitialState.gelatoMaxGas,
     types.int
   )
-  .addOptionalPositionalParam(
+  .addOptionalParam(
     "internalgasrequirement",
     "The gas required by GelatoCore to handle execution reverts",
     sysAdminInitialState.internalGasRequirement,
     types.int
   )
-  .addOptionalPositionalParam(
+  .addOptionalParam(
     "minexecutorstake",
     "BigNumber",
     sysAdminInitialState.minExecutorStake,
     types.json
   )
-  .addOptionalPositionalParam(
+  .addOptionalParam(
     "executorsuccessshare",
     "BigNumber",
     sysAdminInitialState.executorSuccessShare,
     types.int
   )
-  .addOptionalPositionalParam(
+  .addOptionalParam(
     "sysadminsuccessshare",
     "BigNumber",
     sysAdminInitialState.sysAdminSuccessShare,
@@ -76,10 +76,12 @@ export default task("deploy-gc")
         totalSuccessShare: taskArgs.totalsuccessshare,
       };
 
+      const sysAdmin = getSysAdmin();
+
       await run("deploy", {
         contractname: "GelatoCore",
         constructorargs: [gelatoCoreConstructorArgs],
-        signerindex: taskArgs.signerindex,
+        signer: sysAdmin,
         log: taskArgs.log,
       });
     } catch (error) {

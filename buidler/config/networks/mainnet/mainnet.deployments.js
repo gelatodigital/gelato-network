@@ -9,7 +9,10 @@ export const deployments = {
   ActionKyberTrade: "0xF829B506c378AaD11dB7Efe8d626cc7d0e015CBA",
 
   // ==== Gelato Core ===
-  GelatoCore: "0x4E2Ca0093028C8401C93AaCcCaF59288CA6fb728",
+  GelatoCore: "0x35bc4acd1c3dceb6e35d5d5290b83633cee09865",
+
+  // ==== Provider Modules ===
+  ProviderModuleGnosisSafeProxy: "0x0B120b6119e072496A5A5CFf3Cd1Ade4e5CF13DF",
 
   // === Conditions ===
   // balance
@@ -27,4 +30,6 @@ export const deployments = {
 
   // === Helpers ===
   FeeFinder: "0xa569FdBe176DA5706148b8563Cf4214F937C1Dc5",
+  // === Libraries ===
+  Multisend: "0x4e2ca0093028c8401c93aacccaf59288ca6fb728",
 };
