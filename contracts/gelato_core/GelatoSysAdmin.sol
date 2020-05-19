@@ -3,7 +3,6 @@ pragma solidity ^0.6.8;
 
 import { IGelatoSysAdmin } from "./interfaces/IGelatoSysAdmin.sol";
 import { Ownable } from "../external/Ownable.sol";
-import { IGelatoGasPriceOracle } from "./interfaces/IGelatoGasPriceOracle.sol";
 import { Address } from "../external/Address.sol";
 import { GelatoDebug } from "../libraries/GelatoDebug.sol";
 import { SafeMath } from "../external/SafeMath.sol";

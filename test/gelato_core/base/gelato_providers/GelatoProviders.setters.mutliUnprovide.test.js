@@ -226,5 +226,100 @@ describe("GelatoCore - GelatoProviders - Setters: MULTI UNPROVIDE", function () 
         (await gelatoCore.providerModules(providerAddress)).length
       ).to.be.equal(0);
     });
+
+    it("Should allow Providers to multiUnprovide without unproviding funds", async function () {
+      // minExecutorStake needed for providerAssignsExecutor()
+      const minExecutorStake = await gelatoCore.minExecutorStake();
+      // stakeExecutor()
+      await gelatoCore
+        .connect(executor)
+        .stakeExecutor({ value: minExecutorStake });
+
+      // taskSpecHash
+      const taskSpecHash = await gelatoCore.hashTaskSpec(taskSpec);
+      // otherTaskSpecHash
+      const otherTaskSpecHash = await gelatoCore.hashTaskSpec(otherTaskSpec);
+
+      // multiProvide()
+      const providedFunds = utils.bigNumberify(42069);
+      await gelatoCore.multiProvide(
+        executorAddress,
+        [taskSpec, otherTaskSpec],
+        [providerModule.address, otherProviderModule.address],
+        { value: providedFunds }
+      );
+
+      expect(await gelatoCore.isExecutorAssigned(executorAddress)).to.be.true;
+
+      // multiUnprovide()
+      await expect(
+        gelatoCore.multiUnprovide(
+          0, // withdrawamount
+          [taskSpec, otherTaskSpec],
+          [providerModule.address, otherProviderModule.address]
+        )
+      )
+        // LogTaskSpecUnprovided
+        .to.emit(gelatoCore, "LogTaskSpecUnprovided")
+        .withArgs(providerAddress, taskSpecHash)
+        .and.to.emit(gelatoCore, "LogTaskSpecUnprovided")
+        .withArgs(providerAddress, otherTaskSpecHash)
+        // LogProviderModuleRemoved
+        .and.to.emit(gelatoCore, "LogProviderModuleRemoved")
+        .withArgs(providerAddress, providerModule.address)
+        .and.to.emit(gelatoCore, "LogProviderModuleRemoved")
+        .withArgs(providerAddress, otherProviderModule.address)
+        .and.to.not.emit(gelatoCore, "LogFundsUnprovided");
+
+      // providerFunds
+      expect(await gelatoCore.providerFunds(providerAddress)).to.be.equal(
+        42069
+      );
+      // taskSpec
+      // taskSpecGasPriceCeil
+      expect(
+        await gelatoCore.taskSpecGasPriceCeil(providerAddress, taskSpecHash)
+      ).to.be.equal(initialState.taskSpecGasPriceCeil);
+
+      // isTaskSpecProvided
+      expect(
+        await gelatoCore.isTaskSpecProvided(providerAddress, taskSpec)
+      ).to.be.equal("TaskSpecNotProvided");
+
+      // otherTaskSpec
+      // taskSpecGasPriceCeil
+      expect(
+        await gelatoCore.taskSpecGasPriceCeil(
+          providerAddress,
+          otherTaskSpecHash
+        )
+      ).to.be.equal(initialState.taskSpecGasPriceCeil);
+
+      // isTaskSpecProvided
+      expect(
+        await gelatoCore.isTaskSpecProvided(providerAddress, otherTaskSpec)
+      ).to.be.equal("TaskSpecNotProvided");
+
+      // providerModule: isModuleProvided
+      expect(
+        await gelatoCore.isModuleProvided(
+          providerAddress,
+          providerModule.address
+        )
+      ).to.be.false;
+
+      // otherProviderModule: isModuleProvided
+      expect(
+        await gelatoCore.isModuleProvided(
+          providerAddress,
+          otherProviderModule.address
+        )
+      ).to.be.false;
+
+      // providerModules
+      expect(
+        (await gelatoCore.providerModules(providerAddress)).length
+      ).to.be.equal(0);
+    });
   });
 });

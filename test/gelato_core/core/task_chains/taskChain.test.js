@@ -232,6 +232,24 @@ describe("Gelato Actions - TASK CHAINS - ARBITRARY", function () {
     });
   });
 
+  it("Should revert when requesting an invalid number of submits", async function () {
+    // console.log("\n INIT \n");
+
+    // CreateTwo userProxy and submit interceptTask in one tx
+    await expect(
+      gelatoUserProxyFactory.createTwoExecActionsSubmitTaskChain(
+        SALT_NONCE,
+        [],
+        gelatoProvider,
+        [task1, task2],
+        EXPIRY_DATE,
+        1
+      )
+    ).to.be.revertedWith(
+      "GelatoCore.submitTaskChain: less requested submits than tasks"
+    );
+  });
+
   it("Should allow to enter an Arbitrary Task Chain upon creating a GelatoUserProxy", async function () {
     // console.log("\n INIT \n");
 

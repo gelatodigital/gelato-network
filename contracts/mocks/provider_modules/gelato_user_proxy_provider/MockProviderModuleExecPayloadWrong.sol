@@ -2,10 +2,12 @@
 pragma solidity ^0.6.8;
 pragma experimental ABIEncoderV2;
 
-import { GelatoProviderModuleStandard } from "../../../gelato_provider_modules/GelatoProviderModuleStandard.sol";
+import {
+    GelatoProviderModuleStandard
+} from "../../../gelato_provider_modules/GelatoProviderModuleStandard.sol";
 import { Action } from "../../../gelato_core/interfaces/IGelatoCore.sol";
 
-contract MockProviderModuleGelatoUserProxyRevert is GelatoProviderModuleStandard {
+contract MockProviderModuleExecPayloadWrong is GelatoProviderModuleStandard {
     // Incorrect execPayload func on purpose
     function execPayload(Action[] calldata)
         external
@@ -13,6 +15,8 @@ contract MockProviderModuleGelatoUserProxyRevert is GelatoProviderModuleStandard
         override
         returns(bytes memory, bool)
     {
-        revert("MockProviderModuleGelatoUserProxyRevert.execPayload: test revert");
+        return (abi.encodeWithSelector(this.bogus.selector), false);
     }
+
+    function bogus() external {}
 }

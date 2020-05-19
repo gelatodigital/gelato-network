@@ -776,7 +776,7 @@ describe("Gelato Core - Task Submission ", function () {
           value: ethers.utils.parseUnits("1", "ether"),
         })
       ).to.revertedWith(
-        "GelatoUserProxy.callAction:GelatoCore.canSubmitTask.isProvided:TaskSpecNotProvided"
+        "GelatoUserProxy._callAction:GelatoCore.canSubmitTask.isProvided:TaskSpecNotProvided"
       );
     });
   });
