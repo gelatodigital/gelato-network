@@ -193,7 +193,7 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         Provider memory _provider,
         Task[] memory _tasks,
         uint256 _expiryDate,
-        uint256 _cycles
+        uint256 _sumOfRequestedTaskSubmits
     )
         public
         payable
@@ -204,7 +204,7 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         if (_actions.length != 0) _execActions(userProxy, _actions);
         if (_tasks.length == 0)
             revert("GelatoUserProxyFactory.createTwoExecActionsSubmitTaskChain: 0 _tasks");
-        _submitTaskChain(userProxy, _provider, _tasks, _expiryDate, _cycles);
+        _submitTaskChain(userProxy, _provider, _tasks, _expiryDate, _sumOfRequestedTaskSubmits);
     }
 
     //  ==================== GETTERS =======================================
@@ -333,10 +333,10 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         ) {
         } catch Error(string memory err) {
             revert(
-                string(abi.encodePacked("GelatoUserProxyFactory._submitTaskCycle:", err))
+                string(abi.encodePacked("GelatoUserProxyFactory._submitTaskChain:", err))
             );
         } catch {
-            revert("GelatoUserProxyFactory._submitTaskCycle:undefined");
+            revert("GelatoUserProxyFactory._submitTaskChain:undefined");
         }
     }
 }
