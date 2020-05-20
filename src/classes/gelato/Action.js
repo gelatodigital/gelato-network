@@ -18,6 +18,12 @@ class Action {
         "\n"
       );
     }
+    if (operation == Operation.Delegatecall && value) {
+      throw new Error(
+        "\n Action: Delegatecalls must have 0 in the value field"
+      );
+    }
+
     const trueOrFalse = [true, false];
     if (termsOkCheck !== undefined && !trueOrFalse.includes(termsOkCheck)) {
       throw new Error(

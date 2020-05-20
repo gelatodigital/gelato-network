@@ -1,5 +1,4 @@
 import { task } from "@nomiclabs/buidler/config";
-import { constants, utils } from "ethers";
 
 export default task(
   "gelato-example-dapp",
@@ -90,7 +89,7 @@ export default task(
         addr: actionAddress1,
         data: actionData1, // data is can be left as 0 for Task Specs
         operation: Operation.Delegatecall, // We are using an action Script here, see smart contract: ActionERC20TransferFrom.sol
-        value: 0, // delegate calls always send 0 ETH
+        value: 0, // delegatecalls always use 0 here BUT caution: delegatecalls can send ETH if the function that wraps them is payable.
         termsOkCheck: true, // After the condition is checked, we will also conduct checks on the action contract
       });
 
@@ -104,7 +103,7 @@ export default task(
       const action2 = new Action({
         addr: conditionAddress, // We use the condition as an action (to dynamically set the timestamp when the users proxy contract can execute the actions next time)
         data: actionData2, // data of action to execute
-        value: 0, // this action sends 0 ETH
+        value: 0, // delegatecalls always use 0 here BUT caution: delegatecalls can send ETH if the function that wraps them is payable.
         operation: Operation.Call, // We are calling the contract instance directly, without script
         termsOkCheck: false, // Always input false for actions we .call intp
       });
@@ -126,14 +125,6 @@ export default task(
       });
 
       if (taskArgs.log) console.log(task);
-
-      const gelatoCore = await run("instantiateContract", {
-        contractname: "GelatoCore",
-        write: true,
-        signer: user,
-      });
-
-      const expiryDate = 0; // 0 if the task should live forever
 
       // Check if proxy is already deployed. If not, we deploy and submit the task in one go
       const gelatoUserProxyFactory = await run("instantiateContract", {
@@ -165,11 +156,13 @@ export default task(
           signer: user,
         });
 
+        const expiryDate = 0; // 0 if the task should live forever
+
         tx = await gelatoUserProxy.execActionsAndSubmitTaskCycle(
           [action2], // Set the value in the condition before submitting the task
           gelatoProvider,
           [task], // submit the task to send tokens and update the condition value
-          0, // Task should never expire
+          expiryDate,
           taskArgs.cycles // Task should be submitted taskArgs.cycles times in total
         );
       } else {
@@ -181,7 +174,7 @@ export default task(
           [action2], // Set the value in the condition before submitting the task
           gelatoProvider, // Gelato Provider
           [task], // submit the task to send tokens and update the condition value
-          0, // Task should never expire
+          expiryDate,
           taskArgs.cycles, // Task should be submitted taskArgs.cycles times in total
           { gasLimit: 4000000 }
         );
@@ -190,7 +183,7 @@ export default task(
       const etherscanLink = await run("get-etherscan-link", {
         txhash: tx.hash,
       });
-      console.log(etherscanLink);
+      console.log(`Link to transaction: \n ${etherscanLink}\n`);
       await tx.wait();
       console.log(`✅ Tx mined, Task submitted!`);
     } catch (err) {

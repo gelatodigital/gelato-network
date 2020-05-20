@@ -27,9 +27,7 @@ export default internalTask(
           etherscanPrefix = "";
           break;
       }
-      const etherscanLink = `https://${etherscanPrefix}etherscan.io/tx/${txhash}`;
-      return `Link to transaction: \n${etherscanLink}\n`;
-      //   return tx.hash;
+      return `https://${etherscanPrefix}etherscan.io/tx/${txhash}`;
     } catch (error) {
       console.error(error, "\n");
       process.exit(1);
