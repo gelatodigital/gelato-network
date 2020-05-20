@@ -1302,7 +1302,7 @@ describe("GelatoCore.exec", function () {
           gasPrice: GELATO_GAS_PRICE,
           gasLimit: ethers.utils
             .bigNumberify(internalGasRequirement)
-            .add(ethers.utils.bigNumberify("35000")),
+            .add(ethers.utils.bigNumberify("42000")),
         })
       ).to.emit(gelatoCore, "LogCanExecFailed");
     });

@@ -4,6 +4,7 @@ pragma experimental ABIEncoderV2;
 
 import { IGelatoCore, Provider, Task, TaskReceipt } from "./interfaces/IGelatoCore.sol";
 import { GelatoExecutors } from "./GelatoExecutors.sol";
+import { ReentrancyGuard } from "../external/ReentrancyGuard.sol";
 import { GelatoDebug } from "../libraries/GelatoDebug.sol";
 import { GelatoTaskReceipt } from "../libraries/GelatoTaskReceipt.sol";
 import { SafeMath } from "../external/SafeMath.sol";
@@ -15,7 +16,7 @@ import { IGelatoProviderModule } from "../gelato_provider_modules/IGelatoProvide
 /// @author Luis Schliesske & Hilmar Orth
 /// @notice Task: submission, validation, execution, charging and cancellation
 /// @dev Find all NatSpecs inside IGelatoCore
-contract GelatoCore is IGelatoCore, GelatoExecutors {
+contract GelatoCore is IGelatoCore, GelatoExecutors, ReentrancyGuard {
 
     using GelatoDebug for bytes;
     using GelatoTaskReceipt for TaskReceipt;
@@ -241,7 +242,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     enum ExecutorPay { Reward, Refund }
 
     // Execution Entry Point: tx.gasprice must be greater or equal to _getGelatoGasPrice()
-    function exec(TaskReceipt memory _TR) public override {
+    function exec(TaskReceipt memory _TR) public override nonReentrant {
 
         // Store startGas for gas-consumption based cost and payout calcs
         uint256 startGas = gasleft();
