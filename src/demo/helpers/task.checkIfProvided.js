@@ -44,7 +44,7 @@ export default task(
           gasPriceCeil: 0,
         });
       } else if (taskArgs.taskspecname) {
-        taskSpec = await run(`gelato-return-taskpec-${taskArgs.taskspecname}`);
+        taskSpec = await run(`gelato-return-taskspec-${taskArgs.taskspecname}`);
       }
 
       // 2. Hash Task Spec

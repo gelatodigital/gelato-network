@@ -30,7 +30,7 @@ export default task(
     const etherscanLink = await run("get-etherscan-link", {
       txhash: txHash,
     });
-    console.log(etherscanLink);
+    console.log(`Link to transaction: \n ${etherscanLink}\n`);
     console.log(`✅ Tx mined`);
     return `✅ Tx mined`;
   });
