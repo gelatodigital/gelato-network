@@ -7,7 +7,7 @@ import { GelatoConditionsStandard } from "../../GelatoConditionsStandard.sol";
 contract ConditionTimestampPassed is GelatoConditionsStandard {
 
     // STANDARD interface
-    function ok(bytes calldata _conditionData)
+    function ok(uint256, bytes calldata _conditionData)
         external
         view
         virtual

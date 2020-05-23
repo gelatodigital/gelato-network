@@ -14,7 +14,7 @@ contract ConditionKyberRate is GelatoConditionsStandard {
     constructor(address _kyberProxy) public { kyberProxyAddress = _kyberProxy; }
 
     // STANDARD Interface
-    function ok(bytes calldata _conditionData)
+    function ok(uint256, bytes calldata _conditionData)
         external
         view
         override

@@ -9,7 +9,7 @@ contract ConditionBatchExchangeFundsWithdrawable is GelatoConditionsStandard {
     address public immutable batchExchangeAddress;
     constructor(address _batchExchange) public { batchExchangeAddress = _batchExchange; }
 
-    function ok(bytes calldata _conditionDataWithSelector)
+    function ok(uint256, bytes calldata _conditionDataWithSelector)
         external
         view
         override

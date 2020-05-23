@@ -7,7 +7,7 @@ import { IERC20 } from "../../external/IERC20.sol";
 
 contract ConditionBalance is  GelatoConditionsStandard {
 
-     function ok(bytes calldata _conditionDataWithSelector)
+     function ok(uint256, bytes calldata _conditionDataWithSelector)
         external
         view
         override

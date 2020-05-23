@@ -112,7 +112,9 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
       "ConditionBalanceStateful"
     );
 
-    conditionBalanceStateful = await ConditionBalanceStateful.deploy();
+    conditionBalanceStateful = await ConditionBalanceStateful.deploy(
+      gelatoCore.address
+    );
     await conditionBalanceStateful.deployed();
 
     conditionBalanceStatefulStruct = new Condition({
@@ -165,10 +167,10 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
   // We test different functionality of the contract as normal Mocha tests.
   it("#1: Succesfully exec and auto-resubmits Task based on refBalance delta increase", async function () {
     // address _proxy, address _account, address _token, uint256, bool _greaterElseSmaller
-    const conditionData = await run("abi-encode-withselector", {
+    const conditionData = await run("abi-encode", {
       contractname: "ConditionBalanceStateful",
-      functionname: "ok",
-      inputs: [userProxyAddress, sellerAddress, sellToken.address, true],
+      functionname: "refBalanceCheck",
+      values: [0, userProxyAddress, sellerAddress, sellToken.address, true],
     });
     conditionBalanceStatefulStruct.data = conditionData;
 
@@ -184,7 +186,7 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
 
     const setRefData = await run("abi-encode-withselector", {
       contractname: "ConditionBalanceStateful",
-      functionname: "setRefBalanceDelta",
+      functionname: "setRefBalanceDeltaForNextTaskInCycle",
       inputs: [sellerAddress, sellToken.address, refBalanceDelta],
     });
 
@@ -199,29 +201,23 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
       actions: [mockActionDummyStruct, actionSetRefStruct],
     });
 
-    const submitTaskCycleData = await run("abi-encode-withselector", {
-      contractname: "GelatoCore",
-      functionname: "submitTaskCycle",
-      inputs: [gelatoProvider, [task], [0], [0]],
-    });
-
-    const actionSubmitTaskStruct = new Action({
-      addr: gelatoCore.address,
-      data: submitTaskCycleData,
-      operation: Operation.Call,
-    });
+    await expect(
+      userProxy.connect(seller).execActionsAndSubmitTaskCycle(
+        [actionSetRefStruct],
+        gelatoProvider,
+        [task],
+        [0], // expiryDate
+        [0] // cycles
+      )
+    ).to.emit(gelatoCore, "LogTaskSubmitted");
 
     const taskReceipt = new TaskReceipt({
       id: 1,
       provider: gelatoProvider,
       userProxy: userProxyAddress,
       tasks: [task],
-      submissionsLeft: 0,
+      submissionsLeft: 0, // cycles
     });
-
-    await userProxy
-      .connect(seller)
-      .multiExecActions([actionSetRefStruct, actionSubmitTaskStruct]);
 
     let canExecReturn = await gelatoCore
       .connect(executor)
@@ -288,10 +284,10 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
   // We test different functionality of the contract as normal Mocha tests.
   it("#2: Succesfully exec and auto-resubmits Task based on refBalance delta decrease", async function () {
     // address _proxy, address _account, address _token, uint256, bool _greaterElseSmaller
-    const conditionData = await run("abi-encode-withselector", {
+    const conditionData = await run("abi-encode", {
       contractname: "ConditionBalanceStateful",
-      functionname: "ok",
-      inputs: [userProxyAddress, sellerAddress, sellToken.address, false],
+      functionname: "refBalanceCheck",
+      values: [0, userProxyAddress, sellerAddress, sellToken.address, false],
     });
     conditionBalanceStatefulStruct.data = conditionData;
 
@@ -311,7 +307,7 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
 
     const setRefData = await run("abi-encode-withselector", {
       contractname: "ConditionBalanceStateful",
-      functionname: "setRefBalanceDelta",
+      functionname: "setRefBalanceDeltaForNextTaskInCycle",
       inputs: [sellerAddress, sellToken.address, refBalanceDeltaDecrease],
     });
 
@@ -326,30 +322,22 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
       actions: [mockActionDummyStruct, actionSetRefStruct],
     });
 
-    const submitTaskCycleData = await run("abi-encode-withselector", {
-      contractname: "GelatoCore",
-      functionname: "submitTaskCycle",
-      inputs: [gelatoProvider, [task], [0], [0]],
-    });
-
-    const actionSubmitTaskStruct = new Action({
-      addr: gelatoCore.address,
-      data: submitTaskCycleData,
-      operation: Operation.Call,
-    });
-
     const taskReceipt = new TaskReceipt({
       id: 1,
       provider: gelatoProvider,
       userProxy: userProxyAddress,
       tasks: [task],
-      submissionsLeft: 0,
+      submissionsLeft: 0, // cycles
     });
 
     await expect(
-      userProxy
-        .connect(seller)
-        .multiExecActions([actionSetRefStruct, actionSubmitTaskStruct])
+      userProxy.connect(seller).execActionsAndSubmitTaskCycle(
+        [actionSetRefStruct],
+        gelatoProvider,
+        [task],
+        [0], // expiryDate
+        [0] // cycles
+      )
     ).to.be.revertedWith(
       "ConditionBalanceStateful.setRefBalanceDelta: underflow"
     );
@@ -361,14 +349,19 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
     await sellToken.create(sellerAddress, initialSellTokenBalance);
 
     await expect(
-      userProxy
-        .connect(seller)
-        .multiExecActions([actionSetRefStruct, actionSubmitTaskStruct])
-    ).to.not.be.reverted;
+      userProxy.connect(seller).execActionsAndSubmitTaskCycle(
+        [actionSetRefStruct],
+        gelatoProvider,
+        [task],
+        [0], // expiryDate
+        [0] // cycles
+      )
+    ).to.emit(gelatoCore, "LogTaskSubmitted");
 
     expect(
       await conditionBalanceStateful.refBalance(
         userProxyAddress,
+        taskReceipt.id,
         sellerAddress,
         sellToken.address
       )
@@ -409,6 +402,7 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
       expect(
         await conditionBalanceStateful.refBalance(
           userProxyAddress,
+          taskReceipt.id,
           sellerAddress,
           sellToken.address
         )
@@ -437,6 +431,7 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
         expect(
           await conditionBalanceStateful.refBalance(
             userProxyAddress,
+            taskReceipt.id,
             sellerAddress,
             sellToken.address
           )

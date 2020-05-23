@@ -6,7 +6,13 @@ import { GelatoConditionsStandard } from "../../gelato_conditions/GelatoConditio
 
 contract MockConditionDummyRevert is GelatoConditionsStandard {
     // STANDARD interface
-    function ok(bytes calldata _data) external view virtual override returns(string memory) {
+    function ok(uint256, bytes calldata _data)
+        external
+        view
+        override
+        virtual
+        returns(string memory)
+    {
         bool returnOk = abi.decode(_data[4:], (bool));
         return ok(returnOk);
     }
