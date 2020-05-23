@@ -26,7 +26,6 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
   let gelatoCore;
   let gelatoGasPriceOracle;
   let gelatoProvider;
-  let newTaskSpec;
   let MockERC20;
   let sellToken;
   let sellDecimals;
@@ -147,11 +146,16 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
       operation: Operation.Call,
     });
 
-    newTaskSpec = new TaskSpec({
+    const taskSpec = new TaskSpec({
       provider: gelatoProvider,
       conditions: [conditionBalanceStatefulStruct.inst],
       actions: [mockActionDummyStruct, actionSetRefStruct],
       gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
+    });
+
+    const interceptTaskSpec = new TaskSpec({
+      actions: [mockActionDummyStruct],
+      gasPriceCeil: utils.parseUnits("20", "gwei"),
     });
 
     // Call multiProvide for actionWithdrawBatchExchange
@@ -159,7 +163,7 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
       .connect(provider)
       .multiProvide(
         executorAddress,
-        [newTaskSpec],
+        [taskSpec, interceptTaskSpec],
         [providerModuleGelatoUserProxy.address]
       );
   });
@@ -247,24 +251,42 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
       .and.to.emit(gelatoCore, "LogTaskSubmitted");
 
     // ##################################### First execution DONE
+
+    let nextTaskReceiptId = taskReceipt.id.add(1);
+
     for (let i = 0; i < 10; i++) {
-      taskReceipt.id++;
+      taskReceipt.id = nextTaskReceiptId;
 
-      canExecReturn = await gelatoCore
-        .connect(executor)
-        .canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE);
+      // Intercept to test taskId cycle logic
+      if (i === 3 || i === 8) {
+        const interceptTask = new Task({
+          actions: [mockActionDummyStruct],
+        });
+        await expect(
+          userProxy.connect(seller).submitTask(
+            gelatoProvider,
+            interceptTask,
+            0 // expiryDate
+          )
+        ).to.emit(gelatoCore, "LogTaskSubmitted");
 
-      expect(canExecReturn).to.equal(
-        "ConditionNotOk:NotOkERC20BalanceIsNotGreaterThanRefBalance"
-      );
+        // Account for interception in nextTaskReceiptId
+        nextTaskReceiptId = taskReceipt.id.add(1);
+      }
+
+      expect(
+        await gelatoCore
+          .connect(executor)
+          .canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE)
+      ).to.equal("ConditionNotOk:NotOkERC20BalanceIsNotGreaterThanRefBalance");
 
       await sellToken.create(sellerAddress, refBalanceDelta);
 
-      canExecReturn = await gelatoCore
-        .connect(executor)
-        .canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE);
-
-      expect(canExecReturn).to.equal("OK");
+      expect(
+        await gelatoCore
+          .connect(executor)
+          .canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE)
+      ).to.equal("OK");
 
       await expect(
         gelatoCore.connect(executor).exec(taskReceipt, {
@@ -276,9 +298,12 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
         .withArgs(true)
         .and.to.emit(gelatoCore, "LogExecSuccess")
         .and.to.emit(gelatoCore, "LogTaskSubmitted");
-    }
 
-    // ##################################### Next execution DONE
+      // Update nextTaskReceiptId
+      nextTaskReceiptId = nextTaskReceiptId.add(1);
+
+      // ##################################### Next execution DONE
+    }
   });
 
   // We test different functionality of the contract as normal Mocha tests.
@@ -394,8 +419,27 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
 
     // ##################################### First execution DONE
     let currentSellTokenBalance;
+    let nextTaskReceiptId = taskReceipt.id.add(1);
+
     for (let i = 0; i < 11; i++) {
-      taskReceipt.id++;
+      taskReceipt.id = nextTaskReceiptId;
+
+      // Intercept to test taskId cycle logic
+      if (i === 3 || i === 8) {
+        const interceptTask = new Task({
+          actions: [mockActionDummyStruct],
+        });
+        await expect(
+          userProxy.connect(seller).submitTask(
+            gelatoProvider,
+            interceptTask,
+            0 // expiryDate
+          )
+        ).to.emit(gelatoCore, "LogTaskSubmitted");
+
+        // Account for interception in nextTaskReceiptId
+        nextTaskReceiptId = taskReceipt.id.add(1);
+      }
 
       currentSellTokenBalance = await sellToken.balanceOf(sellerAddress);
 
@@ -453,9 +497,12 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
           .withArgs(false)
           .and.to.emit(gelatoCore, "LogExecSuccess")
           .and.to.emit(gelatoCore, "LogTaskSubmitted");
+
+        // Update nextTaskReceiptId
+        nextTaskReceiptId = nextTaskReceiptId.add(1);
+
+        // ##################################### Next execution DONE
       }
     }
-
-    // ##################################### Next execution DONE
   });
 });
