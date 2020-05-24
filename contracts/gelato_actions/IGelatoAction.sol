@@ -22,8 +22,24 @@ interface IGelatoAction {
         address receiver
     );
 
-
-    function termsOk(address _userProxy, bytes calldata _actionData)
+    /// @notice Providers can use this for pre-execution sanity checks, to prevent reverts.
+    /// @dev GelatoCore checks this in canExec and passes the parameters.
+    /// @param _taskReceiptId The id of the task from which all arguments are passed.
+    /// @param _userProxy The userProxy of the task. Often address(this) for delegatecalls.
+    /// @param _actionData The encoded payload to be used in the action.
+    /// @param _value A special param for ETH sending actions. If the Action sends ETH
+    ///  in its action function implementation, one should expect msg.value therein to be
+    ///  equal to _value. So Providers can check in termsOk that a valid ETH value will
+    ///  be used because they also have access to the same value when encoding the
+    ///  execPayload on their ProviderModule.
+    /// @return Returns OK, if Task can be executed safely according to the Provider's
+    ///  terms laid out in this function implementation.
+    function termsOk(
+        uint256 _taskReceiptId,
+        address _userProxy,
+        bytes calldata _actionData,
+        uint256 _value
+    )
         external
         view
         returns(string memory);

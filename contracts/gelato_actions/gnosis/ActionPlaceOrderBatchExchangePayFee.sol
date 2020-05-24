@@ -24,7 +24,7 @@ struct Order {
 /// @author Luis Schliesske & Hilmar Orth
 /// @notice Gelato action that 1) executes PlaceOrder on Batch Exchange, 2) buys withdraw credit from provider and 3) creates withdraw task on gelato
 
-contract ActionPlaceOrderBatchExchangePayFee  {
+contract ActionPlaceOrderBatchExchangePayFee is GelatoActionsStandard {
 
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
@@ -115,9 +115,10 @@ contract ActionPlaceOrderBatchExchangePayFee  {
 
     // ======= ACTION CONDITIONS CHECK =========
     // Overriding and extending GelatoActionsStandard's function (optional)
-    function termsOk(address _userProxy, bytes calldata _actionData)
+    function termsOk(uint256, address _userProxy, bytes calldata _actionData, uint256)
         external
         view
+        override
         virtual
         returns(string memory)  // actionCondition
     {

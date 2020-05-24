@@ -9,7 +9,12 @@ abstract contract GelatoActionsStandard is IGelatoAction {
 
     string internal constant OK = "OK";
 
-    function termsOk(address, bytes calldata)  // _userProxy, _actionData
+    function termsOk(
+        uint256,  // _taskReceiptId
+        address,  // _userProxy
+        bytes calldata,  // _actionData
+        uint256  // _value: for actions that send ETH around
+    )
         external
         view
         override
