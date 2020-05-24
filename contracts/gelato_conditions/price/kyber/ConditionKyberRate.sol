@@ -14,7 +14,7 @@ contract ConditionKyberRate is GelatoConditionsStandard {
     constructor(address _kyberProxy) public { kyberProxyAddress = _kyberProxy; }
 
     // STANDARD Interface
-    function ok(uint256, bytes calldata _conditionData)
+    function ok(uint256, bytes calldata _checkRateData)
         external
         view
         override
@@ -26,14 +26,14 @@ contract ConditionKyberRate is GelatoConditionsStandard {
          address dest,
          uint256 refRate,
          bool greaterElseSmaller) = abi.decode(
-             _conditionData[4:],
-             (address,uint256,address,uint256,bool)
+            _checkRateData,
+            (address,uint256,address,uint256,bool)
          );
-        return ok(src, srcAmt, dest, refRate, greaterElseSmaller);
+        return checkRate(src, srcAmt, dest, refRate, greaterElseSmaller);
     }
 
     // Specific Implementation
-    function ok(
+    function checkRate(
         address _src,
         uint256 _srcAmt,
         address _dest,

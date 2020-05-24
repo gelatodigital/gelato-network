@@ -425,10 +425,10 @@ describe("GelatoCore.exec", function () {
         ],
       });
 
-      const conditionDataFalse = await run("abi-encode-withselector", {
+      const conditionDataFalse = await run("abi-encode", {
         contractname: "MockConditionDummy",
-        functionname: "ok",
-        inputs: [false],
+        functionname: "dummyCheck",
+        values: [false],
       });
 
       // Submit Task
@@ -507,10 +507,10 @@ describe("GelatoCore.exec", function () {
         ],
       });
 
-      const conditionDataFalse = await run("abi-encode-withselector", {
+      const conditionDataFalse = await run("abi-encode", {
         contractname: "MockConditionDummyRevert",
-        functionname: "ok",
-        inputs: [false],
+        functionname: "revertCheck",
+        values: [false],
       });
 
       // Submit Task
@@ -587,10 +587,10 @@ describe("GelatoCore.exec", function () {
         ],
       });
 
-      const conditionDataFalse = await run("abi-encode-withselector", {
+      const conditionDataFalse = await run("abi-encode", {
         contractname: "MockConditionDummyRevert",
-        functionname: "ok",
-        inputs: [false],
+        functionname: "revertCheck",
+        values: [false],
       });
 
       // Submit Task
@@ -799,10 +799,10 @@ describe("GelatoCore.exec", function () {
         ],
       });
 
-      const conditionDataTrue = await run("abi-encode-withselector", {
+      const conditionDataTrue = await run("abi-encode", {
         contractname: "MockConditionDummy",
-        functionname: "ok",
-        inputs: [true],
+        functionname: "dummyCheck",
+        values: [true],
       });
 
       // Submit Task
@@ -870,16 +870,16 @@ describe("GelatoCore.exec", function () {
         ],
       });
 
-      const conditionDataFalse = await run("abi-encode-withselector", {
+      const conditionDataFalse = await run("abi-encode", {
         contractname: "MockConditionDummy",
-        functionname: "ok",
-        inputs: [false],
+        functionname: "dummyCheck",
+        values: [false],
       });
 
-      const conditionDataTrue = await run("abi-encode-withselector", {
+      const conditionDataTrue = await run("abi-encode", {
         contractname: "MockConditionDummy",
-        functionname: "ok",
-        inputs: [true],
+        functionname: "dummyCheck",
+        values: [true],
       });
 
       // Submit Task
@@ -992,10 +992,10 @@ describe("GelatoCore.exec", function () {
         ],
       });
 
-      const conditionDataFalse = await run("abi-encode-withselector", {
+      const conditionDataFalse = await run("abi-encode", {
         contractname: "MockConditionDummy",
-        functionname: "ok",
-        inputs: [false],
+        functionname: "dummyCheck",
+        values: [false],
       });
 
       // Submit Task
@@ -1656,10 +1656,10 @@ describe("GelatoCore.exec", function () {
       );
       await conditionBatchExchangeFundsWithdrawable.deployed();
 
-      const conditionPayload = await run("abi-encode-withselector", {
+      const conditionPayload = await run("abi-encode", {
         contractname: "ConditionBatchExchangeFundsWithdrawable",
-        functionname: "ok",
-        inputs: [userProxyAddress, sellToken.address, buyToken.address],
+        functionname: "withdrawableCheck",
+        values: [userProxyAddress, sellToken.address, buyToken.address],
       });
 
       const condition = new Condition({

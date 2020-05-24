@@ -134,10 +134,10 @@ describe("Gelato Actions - TASK CHAINS - ARBITRARY", function () {
     // ConditionDummy-1: ok=true
     const firstDummyConditionStruct = new Condition({
       inst: conditionDummy.address,
-      data: await run("abi-encode-withselector", {
+      data: await run("abi-encode", {
         contractname: "MockConditionDummy",
-        functionname: "ok(bool)",
-        inputs: [true],
+        functionname: "dummyCheck",
+        values: [true],
       }),
     });
 

@@ -386,9 +386,7 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
     expect(
       await conditionBalanceStateful.refBalance(
         userProxyAddress,
-        taskReceipt.id,
-        sellerAddress,
-        sellToken.address
+        taskReceipt.id
       )
     ).to.be.equal(initialSellTokenBalance.sub(refBalanceDeltaAbs));
 
@@ -446,9 +444,7 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
       expect(
         await conditionBalanceStateful.refBalance(
           userProxyAddress,
-          taskReceipt.id,
-          sellerAddress,
-          sellToken.address
+          taskReceipt.id
         )
       ).to.be.equal(currentSellTokenBalance.sub(refBalanceDeltaAbs));
 
@@ -475,9 +471,7 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
         expect(
           await conditionBalanceStateful.refBalance(
             userProxyAddress,
-            taskReceipt.id,
-            sellerAddress,
-            sellToken.address
+            taskReceipt.id
           )
         ).to.equal(currentSellTokenBalance);
 

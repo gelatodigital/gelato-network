@@ -9,7 +9,7 @@ contract ConditionBatchExchangeFundsWithdrawable is GelatoConditionsStandard {
     address public immutable batchExchangeAddress;
     constructor(address _batchExchange) public { batchExchangeAddress = _batchExchange; }
 
-    function ok(uint256, bytes calldata _conditionDataWithSelector)
+    function ok(uint256, bytes calldata _withdrawableCheckData)
         external
         view
         override
@@ -17,13 +17,13 @@ contract ConditionBatchExchangeFundsWithdrawable is GelatoConditionsStandard {
         returns(string memory)
     {
         (address proxy, address sellToken, address buyToken) = abi.decode(
-            _conditionDataWithSelector[4:],
+            _withdrawableCheckData,
             (address,address,address)
         );
-        return ok(proxy, sellToken, buyToken);
+        return withdrawableCheck(proxy, sellToken, buyToken);
     }
 
-    function ok(address _proxy, address _sellToken, address _buyToken)
+    function withdrawableCheck(address _proxy, address _sellToken, address _buyToken)
         public
         view
         virtual

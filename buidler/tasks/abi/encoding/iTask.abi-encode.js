@@ -6,7 +6,7 @@ export default internalTask("abi-encode")
   .addOptionalParam("functionname")
   .addOptionalParam(
     "types",
-    "Array of types for each value",
+    "Array of types for each input value",
     undefined,
     types.json
   )

@@ -11,10 +11,8 @@ contract ConditionBalanceStateful is GelatoStatefulConditionsStandard {
 
     using SafeMath for uint256;
 
-    mapping(
-        // userProxy => taskReceiptId => account to monitor => token/ETH-id  => refBalance
-        address => mapping(uint256 => mapping(address => mapping(address => uint256)))
-    ) public refBalance;
+    // userProxy => taskReceiptId => refBalance
+    mapping(address => mapping(uint256 => uint256)) public refBalance;
 
     constructor(IGelatoCore _gelatoCore)
         GelatoStatefulConditionsStandard(_gelatoCore)
@@ -58,7 +56,7 @@ contract ConditionBalanceStateful is GelatoStatefulConditionsStandard {
         virtual
         returns(string memory)
     {
-        uint256 _refBalance = refBalance[_userProxy][_taskReceiptId][_account][_token];
+        uint256 _refBalance = refBalance[_userProxy][_taskReceiptId];
         // ETH balances
         if (_token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) {
             if (_greaterElseSmaller) {  // greaterThan
@@ -106,6 +104,6 @@ contract ConditionBalanceStateful is GelatoStatefulConditionsStandard {
             "ConditionBalanceStateful.setRefBalanceDelta: underflow"
         );
         newRefBalance = uint256(int256(currentBalanceOfAccount) + _delta);
-        refBalance[msg.sender][_getIdOfNextTaskInCycle()][_account][_token] = newRefBalance;
+        refBalance[msg.sender][_getIdOfNextTaskInCycle()] = newRefBalance;
     }
 }
