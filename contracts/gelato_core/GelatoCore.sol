@@ -185,7 +185,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         // Optional CHECK Condition for user proxies
         if (_TR.task().conditions.length != 0) {
             for (uint i; i < _TR.task().conditions.length; i++) {
-                try _TR.task().conditions[i].inst.ok(_TR.task().conditions[i].data)
+                try _TR.task().conditions[i].inst.ok(_TR.id, _TR.task().conditions[i].data)
                     returns(string memory condition)
                 {
                     if (!condition.startsWithOk())
@@ -204,8 +204,10 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             if (!_TR.task().actions[i].termsOkCheck) continue;
 
             try IGelatoAction(_TR.task().actions[i].addr).termsOk(
+                _TR.id,
                 _TR.userProxy,
-                _TR.task().actions[i].data
+                _TR.task().actions[i].data,
+                _TR.task().actions[i].value
             )
                 returns(string memory actionTermsOk)
             {
@@ -291,8 +293,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         }
 
         if (executionResult == ExecutionResult.ExecSuccess) {
-            // END-1: SUCCESS => TaskReceipt Deletion & Reward
-            delete taskReceiptHash[_TR.id];
+            // END-1: SUCCESS => TaskReceipt was deleted in _exec & Reward
             (uint256 executorSuccessFee, uint256 sysAdminSuccessFee) = _processProviderPayables(
                 _TR.provider.addr,
                 ExecutorPay.Reward,
@@ -312,7 +313,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             if (startGas < _gelatoMaxGas) emit LogExecReverted(msg.sender, _TR.id, 0, reason);
             else {
                 // END-3.2: ExecReverted BUT gelatoMaxGas was used
-                //  => TaskReceipt Deletion & Refund
+                //  => TaskReceipt Deletion (delete in _exec was reverted) & Refund
                 delete taskReceiptHash[_TR.id];
                 (uint256 executorRefund,) = _processProviderPayables(
                     _TR.provider.addr,
@@ -367,6 +368,9 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             revert("GelatoCore._exec.execPayload:undefined");
         }
 
+        // To prevent single task exec reentrancy we delete hash before external call
+        delete taskReceiptHash[_TR.id];
+
         // Execution via UserProxy
         (bool success, bytes memory userProxyReturndata) = _TR.userProxy.call(execPayload);
 
@@ -396,7 +400,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             }
         } else {
             // FAILURE: reverts, caught or uncaught in userProxy.call, were detected
-            // We revert all state from userProxy.call and catch revert in exec flow
+            // We revert all state from _exec/userProxy.call and catch revert in exec flow
+            // Caution: we also revert the deletion of taskReceiptHash.
             userProxyReturndata.revertWithErrorString("GelatoCore._exec:");
         }
     }
