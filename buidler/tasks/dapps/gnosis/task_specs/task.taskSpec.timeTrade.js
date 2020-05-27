@@ -37,7 +37,6 @@ export default internalTask(
       const taskSpec = new TaskSpec({
         conditions: [condition.inst],
         actions: [placeOrderAction],
-        autoSubmitNextTask: true,
         gasPriceCeil: 0, // Infinte gas price
       });
 
