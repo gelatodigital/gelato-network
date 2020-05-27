@@ -110,10 +110,10 @@ contract ActionWithdrawBatchExchange is GelatoActionsStandard {
         if (!buyTokenWithdrawable)
             return "ActionWithdrawBatchExchange: Buy Token not withdrawable yet";
 
-        bool proxyHasCredit = feeExtractor.proxyHasCredit(_userProxy);
+        // bool proxyHasCredit = feeExtractor.proxyHasCredit(_userProxy);
 
-        if (!proxyHasCredit)
-            return "ActionWithdrawBatchExchange: Proxy has insufficient credit";
+        // if (!proxyHasCredit)
+        //     return "ActionWithdrawBatchExchange: Proxy has insufficient credit";
 
         return OK;
     }

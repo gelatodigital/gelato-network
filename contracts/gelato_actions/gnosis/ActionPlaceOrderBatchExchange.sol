@@ -41,8 +41,8 @@ contract ActionPlaceOrderBatchExchange  {
     function action(
         address _user,
         address _sellToken,
-        address _buyToken,
         uint128 _sellAmount,
+        address _buyToken,
         uint128 _buyAmount,
         uint32 _batchDuration
     )
@@ -105,14 +105,14 @@ contract ActionPlaceOrderBatchExchange  {
     {
         (address _user,
         address _sellToken,
-        ,
         uint128 _sellAmount,
         ,
-        ) = abi.decode(_actionData[4:], (address, address, address, uint128, uint128, uint32));
+        ,
+        ) = abi.decode(_actionData[4:], (address, address, uint128, address, uint128, uint32));
         return _actionProviderTermsCheck(_user, _userProxy, _sellToken, _sellAmount);
     }
 
-    /// @notice Verify that EOA has sufficinet balance and gave proxy adequate allowance
+    /// @notice Verify that EOA has sufficient balance and gave proxy adequate allowance
     /// @param _user Users EOA address
     /// @param _userProxy Users Proxy address
     /// @param _sellToken Token to sell on Batch Exchange
