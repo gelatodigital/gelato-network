@@ -5,6 +5,7 @@ export const contracts = [
   // ERC20
   "ActionERC20Transfer",
   "ActionERC20TransferFrom",
+  "ActionERC20TransferFromNoStruct",
   // Kyber
   "ActionKyberTradeRinkeby",
   // Portfolio Mgmt
@@ -42,6 +43,7 @@ export const contracts = [
   "ConditionFearGreedIndex",
   // Prices
   "ConditionKyberRate",
+  "ConditionKyberRateStateful",
   // Time
   "ConditionTimestampPassed",
   "ConditionTimeStateful",
@@ -63,4 +65,5 @@ export const contracts = [
 
   // Helpers
   "FeeExtractor",
+  "GelatoMultiCall",
 ];

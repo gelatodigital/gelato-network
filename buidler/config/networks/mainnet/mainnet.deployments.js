@@ -8,21 +8,28 @@ export const deployments = {
   // kyber
   ActionKyberTrade: "0xF829B506c378AaD11dB7Efe8d626cc7d0e015CBA",
 
+  // Gnosis
+  ActionPlaceOrderBatchExchange: "0x0",
+  ActionWithdrawBatchExchange: "0x0",
+
   // ==== Gelato Core ===
   GelatoCore: "0x35bc4acd1c3dceb6e35d5d5290b83633cee09865",
 
-  // ==== Provider Modules ===
-  ProviderModuleGnosisSafeProxy: "0x0B120b6119e072496A5A5CFf3Cd1Ade4e5CF13DF",
+  // ==== Provider Modules === Instantiated 26.05.20
+  ProviderModuleGnosisSafeProxy: "0xd105f797ede92594ffc1617eb3bad7d182aedc25",
 
   // === Conditions ===
   // balance
   ConditionBalance: "0x60621bf3F7132838b27972084eaa56E87395D44B",
+  ConditionBalanceStateful: "0x0",
 
   // kyber
   ConditionKyberRate: "0x1a6074a167c346949a6839a20F8211b1480444a2",
+  ConditionKyberRateStateful: "0x0",
 
   // time
   ConditionTimestampPassed: "0x10A46c633adfe5a6719f3DBd2c162676779fE70B",
+  ConditionTimeStateful: "0x0",
 
   // === Debugging ===
   // Conditions

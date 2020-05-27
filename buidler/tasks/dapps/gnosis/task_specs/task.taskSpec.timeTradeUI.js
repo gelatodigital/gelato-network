@@ -2,8 +2,8 @@ import { task, types } from "@nomiclabs/buidler/config";
 import { constants, utils } from "ethers";
 
 export default internalTask(
-  "gc-return-taskspec-balanceTrade",
-  `Returns a hardcoded task spec for the Balance Trade Script`
+  "gc-return-taskspec-time-trade-ui",
+  `Returns a hardcoded task spec for the timeTrade Script`
 )
   .addFlag("log")
   .setAction(async ({ log }) => {
@@ -13,11 +13,24 @@ export default internalTask(
       // ##### Condition
       const conditionAddress = await run("bre-config", {
         deployments: true,
-        contractname: "ConditionBalanceStateful",
+        contractname: "ConditionTimeStateful",
       });
 
       const condition = new Condition({
         inst: conditionAddress,
+      });
+
+      // ##### Action #1
+      const transferFromActionAddress = await run("bre-config", {
+        deployments: true,
+        contractname: "ActionERC20TransferFromNoStruct",
+      });
+
+      const transferFromAction = new Action({
+        addr: transferFromActionAddress,
+        data: constants.HashZero,
+        operation: Operation.Delegatecall,
+        termsOkCheck: true,
       });
 
       // ##### Action #1
@@ -28,21 +41,15 @@ export default internalTask(
 
       const placeOrderAction = new Action({
         addr: placeOrderBatchExchangeAddress,
+        data: constants.HashZero,
         operation: Operation.Delegatecall,
         termsOkCheck: true,
-      });
-
-      // ##### Action #2
-      const setConditionBalanceAction = new Action({
-        addr: conditionAddress,
-        operation: Operation.Call,
-        termsOkCheck: false,
       });
 
       // ##### Create Task Spec
       const taskSpec = new TaskSpec({
         conditions: [condition.inst],
-        actions: [placeOrderAction, setConditionBalanceAction],
+        actions: [transferFromAction, placeOrderAction],
         gasPriceCeil: 0, // Infinte gas price
       });
 

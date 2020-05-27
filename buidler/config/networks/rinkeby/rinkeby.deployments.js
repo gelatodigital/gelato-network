@@ -2,11 +2,12 @@ export const deployments = {
   // ========== Rinkeby ===========
   // ==== One-Off Actions ====
   // Gnosis
-  ActionWithdrawBatchExchange: "0xE52D98E9ce5eaB002860D79cD837c5d7C1258fcC",
-  ActionPlaceOrderBatchExchange: "0x97C2068714F7B5359da8cC3D05b6E6D8019b582c",
+  ActionWithdrawBatchExchange: "0x64764080793449073BB473a2D56FC3388D7522F1",
+  ActionPlaceOrderBatchExchange: "0x034dAFf98377a9C833af017Dc4479d2E68B6e4e0",
   // erc20
   ActionERC20Transfer: "0x0",
   ActionERC20TransferFrom: "0xF5A7803c32CC4ba874e8c8CF19a998057a2edc79",
+  ActionERC20TransferFromNoStruct: "0x01a4CEC4Ad0aE3FAA8F2675a3671309832d76787",
   MockConditionDummy: "0x5803c4712f191fc565afA44eB7f8eb9e8Af057db",
   // kyber
   ActionKyberTradeRinkeby: "0x0",
@@ -23,17 +24,15 @@ export const deployments = {
   // gnosis
   ActionPlaceOrderBatchExchangePayFee:
     "0xA66Dc4AacF4D23118ce148474d349b75a6A4E3C8",
-  ActionWithdrawBatchExchangeChained:
-    "0x407E41940DDcEB42F3cC73d3A446CF39012334Db",
-  ActionPlaceOrderBatchExchangeChained:
-    "0xF536876f81A8504609C13069615647F0A6CAe2F1",
 
   // ===== Gelato Core ====
   GelatoCore: "0xE7418743527a8e5F191bA4e9609b5914c9880a12",
   GelatoGasPriceOracle: "0x02C0d77f2dc8C9A4c6dD3898278bEe9FAdf5dbe9",
 
   // ===== Gnosis Safe Provider Module ====
-  ProviderModuleGnosisSafeProxy: "0x0b03cE8fAb9a5a0D8fe2F641264ed61B7c6b1852",
+  ProviderModuleGnosisSafeProxy: "0xeBCBeA7356DBa14767E7c916f1029A9C24340087",
+
+  // ===== DS Proxy Provider Module ====
   ProviderModuleDsProxy: "0x0",
 
   // ===== Gelato User Proxies ====
@@ -43,16 +42,17 @@ export const deployments = {
   // ==== Conditions ====
   // == Balances ==
   ConditionBalance: "0x29712a389E06eC7C91016932c23FcB085AF241Fb",
-  ConditionBalanceStateful: "0x0A5Cb504e4684E8F730F582AB9b9AA671115e60C",
+  ConditionBalanceStateful: "0xFbC3e6b215F23fA51FDc385f821789037a5Caf18",
   // == Indices ==
   // fearAndGreed
   ConditionFearGreedIndex: "0x0",
   // == Price ==
   // Kyber
   ConditionKyberRate: "0x4F2935cd565E88832721ea5465D21593894274Cd",
+  ConditionKyberRateStateful: "0x5BD54d80A7B7839BB610eE76296C9cb3eb60baca",
   // == Time ==
   // Timestamps
-  ConditionTimestampPassed: "0x0",
+  ConditionTimestampPassed: "0x26d72d7AE606B5FCbBD0417fa112E7b4aBF05aE2",
   ConditionTimeStateful: "0xd646C368e5967001f273b5D0528CD8980a14f9b9",
   // Gnosis
   ConditionBatchExchangeFundsWithdrawable:
@@ -76,4 +76,5 @@ export const deployments = {
   // Helpers
   FeeFinder: "0x220D8543325364D004661F73E0253C7CC6a4ACc1",
   FeeExtractor: "0x9b625d0aC057450E67B7e3B6e17633AcF01Fe2a9",
+  GelatoMultiCall: "0xb40660B1f81055e000a1bf2D4b2941EF7142ab96",
 };

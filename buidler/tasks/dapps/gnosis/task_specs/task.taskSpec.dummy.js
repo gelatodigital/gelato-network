@@ -2,33 +2,41 @@ import { task, types } from "@nomiclabs/buidler/config";
 import { constants, utils } from "ethers";
 
 export default internalTask(
-  "gc-return-taskspec-tradeAndWithdraw",
-  `Returns a hardcoded task spec for the tradeAndWithdraw Script`
+  "gc-return-taskspec-dummy",
+  `Returns a hardcoded task spec for the timeTrade Script`
 )
   .addFlag("log")
   .setAction(async ({ log }) => {
     try {
       if (network.name != "rinkeby") throw new Error("\nwrong network!");
 
-      // ##### Condition => NONE
-
-      // ##### Action #1
-      const actionAddress = await run("bre-config", {
-        contractname: "ActionWithdrawBatchExchange",
+      // ##### Condition
+      const conditionAddress = await run("bre-config", {
         deployments: true,
+        contractname: "ConditionTimestampPassed",
       });
 
-      const actionWithdrawBatchExchange = new Action({
-        addr: actionAddress,
+      const condition = new Condition({
+        inst: conditionAddress,
+      });
+
+      // ##### Action #1
+      const actionERC20TransferFrom = await run("bre-config", {
+        deployments: true,
+        contractname: "ActionERC20TransferFromNoStruct",
+      });
+
+      const placeOrderAction = new Action({
+        addr: actionERC20TransferFrom,
         data: constants.HashZero,
-        operation: 1,
-        value: 0,
+        operation: Operation.Delegatecall,
         termsOkCheck: true,
       });
 
       // ##### Create Task Spec
       const taskSpec = new TaskSpec({
-        actions: [actionWithdrawBatchExchange],
+        conditions: [condition.inst],
+        actions: [placeOrderAction],
         gasPriceCeil: 0, // Infinte gas price
       });
 
