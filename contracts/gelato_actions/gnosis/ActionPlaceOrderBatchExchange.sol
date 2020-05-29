@@ -9,9 +9,6 @@ import { SafeERC20 } from "../../external/SafeERC20.sol";
 import { SafeMath } from "../../external/SafeMath.sol";
 import { IBatchExchange } from "../../dapp_interfaces/gnosis/IBatchExchange.sol";
 import { Task, IGelatoCore } from "../../gelato_core/interfaces/IGelatoCore.sol";
-import { FeeExtractor } from "../../gelato_helpers/FeeExtractor.sol";
-
-
 
 /// @title ActionPlaceOrderBatchExchange
 /// @author Luis Schliesske & Hilmar Orth
@@ -25,9 +22,11 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandard {
     uint32 public constant BATCH_TIME = 300;
 
     IBatchExchange private immutable batchExchange;
+    address public immutable myself;
 
-    constructor(address _batchExchange) public {
-        batchExchange = IBatchExchange(_batchExchange);
+    constructor(IBatchExchange _batchExchange) public {
+        batchExchange = _batchExchange;
+        myself = address(this);
     }
 
     /// @notice Place order on Batch Exchange and request future withdraw for buy and sell token
@@ -41,21 +40,23 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandard {
         uint128 _sellAmount,
         address _buyToken,
         uint128 _buyAmount,
-        uint32 _batchDuration
+        uint32 _batchDuration,
+        bool
     )
         public
         virtual
     {
+
+        IERC20 sellToken = IERC20(_sellToken);
 
         // 1. Fetch token Ids for sell & buy token on Batch Exchange
         uint16 sellTokenId = batchExchange.tokenAddressToIdMap(_sellToken);
         uint16 buyTokenId = batchExchange.tokenAddressToIdMap(_buyToken);
 
         // 2. Approve sellToken to BatchExchange Contract
-        IERC20 sellToken = IERC20(_sellToken);
         sellToken.safeIncreaseAllowance(address(batchExchange), _sellAmount);
 
-        // 3. Deposit sellAmount on BatchExchange
+        // 3. Deposit _sellAmount on BatchExchange
         try batchExchange.deposit(_sellToken, _sellAmount) {}
         catch {
             revert("batchExchange.deposit _sellToken failed");
@@ -65,7 +66,7 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandard {
         uint32 withdrawBatchId = uint32(block.timestamp / BATCH_TIME) + _batchDuration;
 
         // 4. Place Order on Batch Exchange
-        // uint16 buyToken, uint16 sellToken, uint32 validUntil, uint128 buyAmount, uint128 sellAmount
+        // uint16 buyToken, uint16 sellToken, uint32 validUntil, uint128 buyAmount, uint128 _sellAmount
         try batchExchange.placeOrder(buyTokenId, sellTokenId, withdrawBatchId, _buyAmount, _sellAmount) {}
         catch {
             revert("batchExchange.placeOrderfailed");
@@ -85,7 +86,47 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandard {
         catch {
             revert("batchExchange.requestFutureWithdraw _buyToken failed");
         }
+    }
 
+    // Will be automatically called by gelato => do not use for encoding
+    function gelatoInternal(
+        bytes calldata _actionData,
+        bytes calldata _taskState
+    )
+        external
+        virtual
+        override
+        returns(ReturnType, bytes memory)
+    {
+        // 1. Decode _actionData
+        (address _sellToken,
+        uint128 _sellAmount,
+        address _buyToken,
+        uint128 _buyAmount,
+        uint32 _batchDuration, bool returnsTaskState) = abi.decode(_actionData[4:], (address, uint128, address, uint128, uint32, bool));
+
+
+        // 2. Check if taskState exists
+        if (_taskState.length != 0) {
+            uint256 sellAmount256;
+
+            (ReturnType returnType, bytes memory returnBytes) = abi.decode(_taskState, (ReturnType, bytes));
+
+            if (returnType == ReturnType.UINT) {
+                (sellAmount256) = abi.decode(returnBytes, (uint256));
+                _sellAmount = uint128(sellAmount256);
+                require (_sellAmount == sellAmount256, "Uint256 to uint128 conversion overflowed");
+            } else if (returnType == ReturnType.UINT_AND_ERC20) {
+                (sellAmount256, _sellToken) = abi.decode(returnBytes, (uint256, address));
+                _sellAmount = uint128(sellAmount256);
+                require (_sellAmount == sellAmount256, "Uint256 to uint128 conversion overflowed");
+            }
+        }
+
+        // 3. Call action
+        action(_sellToken, _sellAmount, _buyToken, _buyAmount, _batchDuration, returnsTaskState);
+
+        return(returnsTaskState ? ReturnType.UINT : ReturnType.NONE, abi.encode(uint256(_sellAmount)));
     }
 
     // ======= ACTION CONDITIONS CHECK =========
@@ -97,14 +138,15 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandard {
         virtual
         returns(string memory)  // actionCondition
     {
-        (address _sellToken, uint128 _sellAmount, , ,) = abi.decode(
+        (address _sellToken, uint128 _sellAmount, /* address _buyToken */ , /* uint128 _buyAmount */, /* uint32 _batchDuration */, /*, bool returnsTaskState*/) = abi.decode(
             _actionData[4:],
             (
                 address,
                 uint128,
                 address,
                 uint128,
-                uint32
+                uint32,
+                bool
             )
         );
         return _actionProviderTermsCheck(_userProxy, _sellToken, _sellAmount);

@@ -31,7 +31,6 @@ describe("GelatoCore.processProviderPayables", function () {
   let sellToken; //DAI
   let buyToken; //USDC
   let testToken; //GUSD
-  let ActionWithdrawBatchExchange;
   let MockERC20;
   let MockBatchExchange;
   let mockBatchExchange;
@@ -91,13 +90,21 @@ describe("GelatoCore.processProviderPayables", function () {
       gelatoCore.address
     );
 
+    const GelatoMultiSend = await ethers.getContractFactory(
+      "GelatoMultiSend",
+      sysAdmin
+    );
+    const gelatoMultiSend = await GelatoMultiSend.deploy();
+    await gelatoMultiSend.deployed();
+
     // Deploy ProviderModuleGelatoUserProxy with constructorArgs
     const ProviderModuleGelatoUserProxy = await ethers.getContractFactory(
       "ProviderModuleGelatoUserProxy",
       sysAdmin
     );
     providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxy.deploy(
-      gelatoUserProxyFactory.address
+      gelatoUserProxyFactory.address,
+      gelatoMultiSend.address
     );
 
     // Deploy Condition (if necessary)
@@ -117,7 +124,6 @@ describe("GelatoCore.processProviderPayables", function () {
     actionERC20TransferFrom = await ActionERC20TransferFrom.deploy();
     await actionERC20TransferFrom.deployed();
 
-    // // #### ActionWithdrawBatchExchange Start ####
     const MockBatchExchange = await ethers.getContractFactory(
       "MockBatchExchange"
     );
@@ -183,37 +189,6 @@ describe("GelatoCore.processProviderPayables", function () {
     const medianizer2 = await Medianizer2.deploy();
     await medianizer2.deployed();
 
-    // Deploy Fee Finder
-    const FeeFinder = await ethers.getContractFactory("FeeFinder");
-
-    // Deploy Test feefinder (Assuming we only hit hard coded tokens, not testing uniswap, kyber or maker oracle)
-    const feeFinder = await FeeFinder.deploy(
-      sellToken.address,
-      buyToken.address,
-      testToken.address,
-      sellToken.address,
-      buyToken.address,
-      sellToken.address,
-      sellToken.address,
-      WETH.address,
-      medianizer2.address,
-      medianizer2.address,
-      medianizer2.address,
-      medianizer2.address
-    );
-    await feeFinder.deployed();
-
-    const ActionWithdrawBatchExchange = await ethers.getContractFactory(
-      "ActionWithdrawBatchExchange"
-    );
-    actionWithdrawBatchExchange = await ActionWithdrawBatchExchange.deploy(
-      mockBatchExchange.address,
-      feeFinder.address
-    );
-    await actionWithdrawBatchExchange.deployed();
-
-    // // #### ActionWithdrawBatchExchange End ####
-
     // Call provideFunds(value) with provider on core
     await gelatoCore.connect(provider).provideFunds(providerAddress, {
       value: ethers.utils.parseUnits("1", "ether"),
@@ -234,29 +209,6 @@ describe("GelatoCore.processProviderPayables", function () {
       termsOkCheck: true,
     });
 
-    const actionWithdrawBatchExchangeGelato = new Action({
-      addr: actionWithdrawBatchExchange.address,
-      data: constants.HashZero,
-      operation: Operation.Delegatecall,
-      value: 0,
-      termsOkCheck: true,
-    });
-
-    const newTaskSpec = new TaskSpec({
-      conditions: [condition.inst],
-      actions: [actionWithdrawBatchExchangeGelato],
-      gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
-    });
-
-    // Call multiProvide for actionWithdrawBatchExchange
-    await gelatoCore
-      .connect(provider)
-      .multiProvide(
-        executorAddress,
-        [newTaskSpec],
-        [providerModuleGelatoUserProxy.address]
-      );
-
     // Call multiProvide for mockConditionDummy + actionERC20TransferFrom
     const newTaskSpec2 = new TaskSpec({
       conditions: [mockConditionDummy.address],
@@ -264,7 +216,13 @@ describe("GelatoCore.processProviderPayables", function () {
       gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
     });
 
-    await gelatoCore.connect(provider).provideTaskSpecs([newTaskSpec2]);
+    await gelatoCore
+      .connect(provider)
+      .multiProvide(
+        executorAddress,
+        [newTaskSpec2],
+        [providerModuleGelatoUserProxy.address]
+      );
 
     // Create UserProxy
     const createTx = await gelatoUserProxyFactory.connect(seller).create();

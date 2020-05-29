@@ -75,8 +75,12 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
       await user.getAddress()
     );
 
+    const GelatoMultiSend = await ethers.getContractFactory("GelatoMultiSend");
+    const gelatoMultiSend = await GelatoMultiSend.deploy();
+
     providerModule = await ProviderModuleFactory.deploy(
-      gelatoUserProxyFactory.address
+      gelatoUserProxyFactory.address,
+      gelatoMultiSend.address
     );
 
     const Multisend = await ethers.getContractFactory("Multisend");

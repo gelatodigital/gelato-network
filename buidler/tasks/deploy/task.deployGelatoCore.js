@@ -78,12 +78,13 @@ export default task("deploy-gc")
 
       const sysAdmin = getSysAdmin();
 
-      await run("deploy", {
+      const gelatoCore = await run("deploy", {
         contractname: "GelatoCore",
         constructorargs: [gelatoCoreConstructorArgs],
         signer: sysAdmin,
         log: taskArgs.log,
       });
+      return gelatoCore;
     } catch (error) {
       console.error(error, "\n");
       process.exit(1);

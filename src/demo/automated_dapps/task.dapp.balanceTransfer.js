@@ -2,8 +2,8 @@ import { task } from "@nomiclabs/buidler/config";
 import { constants, utils } from "ethers";
 
 export default task(
-  "gelato-example-dapp",
-  `Executes the example dapp of transfering 10 DAI from the users wallet to a destination wallet every 2 minutes for 5 times`
+  "gelato-example-balance-transfer",
+  `Submits task which tracks the users balance and transfers tokens if the balance increased by the specified delta`
 )
   .addParam(
     "sendtoken",
@@ -15,8 +15,8 @@ export default task(
     "how many tokens should be transferred from user account to destination address"
   )
   .addParam(
-    "secondsdelta",
-    "how many seconds should pass until gelato executes the transaction"
+    "delta",
+    "after what balance increase should the action be triggered?"
   )
   .addOptionalParam(
     "saltnonce",
@@ -31,30 +31,42 @@ export default task(
       const user = getUser();
       const userAddress = await user.getAddress();
 
+      const gelatoUserProxyFactory = await run("instantiateContract", {
+        contractname: "GelatoUserProxyFactory",
+        contractaddress: "0x1EC08134313c9e7E5EFcd7f2d7Fca2d21f40b8F4",
+        write: true,
+        signer: user,
+      });
+
+      const userProxies = await gelatoUserProxyFactory.gelatoProxiesByUser(
+        userAddress
+      );
+      console.log(userProxies);
+
+      const gelatoUserProxyAddress = userProxies[0];
+
       // Get / determine that address of the user's gelato user proxy smart contract
       // Get Gelato User Proxy Address
-      const gelatoUserProxyAddress = await run(
-        "gelato-predict-gelato-proxy-address",
-        {
-          useraddress: userAddress,
-        }
-      );
+      // const gelatoUserProxyAddress = await run(
+      //   "gelato-predict-gelato-proxy-address",
+      //   {
+      //     useraddress: userAddress,
+      //   }
+      // );
 
       // ##### Step #1: Create condition(s)
       // Get Address Or hardcode
-      const conditionAddress = await run("bre-config", {
-        deployments: true,
-        contractname: "ConditionTimeStateful",
-      });
+      const conditionAddress = "0x8682B4A4e2eFcA124EEc646dd537EFDcE2F2C74C";
 
       // Encode data of function gelato should call => Call Ok Function on ConditionTimeStateful.sol
       // This checks at what time the condition should return true
       // ConditionTimeStateful takes the proxies address as an argument to check if in its state there is
       // a timestamp that is should compare to the current time to determine if a task is executable or not
+      // address _userProxy, address _account, address _token, bool _greaterElseSmaller
       const conditionData = await run("abi-encode-withselector", {
-        contractname: "ConditionTimeStateful",
-        functionname: "checkRefTime",
-        inputs: [gelatoUserProxyAddress],
+        contractname: "ConditionBalanceStateful",
+        functionname: "ok",
+        inputs: [gelatoUserProxyAddress, userAddress, taskArgs.sendtoken, true],
       });
 
       // Insantiate condition object
@@ -65,10 +77,7 @@ export default task(
 
       // ##### Step #2: Create action(s)
       // 1. Get address from deployments.rinkeby file / or hardcode it
-      const actionAddress1 = await run("bre-config", {
-        deployments: true,
-        contractname: "ActionERC20TransferFrom",
-      });
+      const actionAddress1 = "0xA8909da6986ebDbB4524f8942cB313c64eF5e185";
 
       // The ActionERC20TransferFrom contract's function "action" takes in a struct
       const transferFromInputs = [
@@ -95,11 +104,14 @@ export default task(
       });
 
       // ##### Action #2
+      // address _account, address _token, bool _greaterElseSmaller, uint256 _delta
+      console.log("1");
       const actionData2 = await run("abi-encode-withselector", {
-        contractname: "ConditionTimeStateful",
-        functionname: "setRefTime",
-        inputs: [taskArgs.secondsdelta],
+        contractname: "ConditionBalanceStateful",
+        functionname: "setRefBalanceDelta",
+        inputs: [userAddress, taskArgs.sendtoken, true, taskArgs.delta],
       });
+      console.log("2");
 
       const action2 = new Action({
         addr: conditionAddress, // We use the condition as an action (to dynamically set the timestamp when the users proxy contract can execute the actions next time)
@@ -114,12 +126,10 @@ export default task(
       const providerAddress = await provider.getAddress();
 
       // Fetch the GelatoUserproxy Provider Module Address
-      const gelatoUserProxyProviderModule = await run("bre-config", {
-        deployments: true,
-        contractname: "ProviderModuleGelatoUserProxy",
-      });
+      const gelatoUserProxyProviderModule =
+        "0x544394229F2B98751fF56872D0294D7a816d60a9";
 
-      // ##### Create Task Spec
+      // ##### Create Task
       const task = new Task({
         conditions: [condition], // only need the condition inst address here
         actions: [action1, action2], // Actions will be executed from left to right after each other. If one fails, all fail
@@ -129,6 +139,7 @@ export default task(
 
       const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
+        contractaddress: "0xE7418743527a8e5F191bA4e9609b5914c9880a12",
         write: true,
         signer: user,
       });
@@ -136,11 +147,6 @@ export default task(
       const expiryDate = 0; // 0 if the task should live forever
 
       // Check if proxy is already deployed. If not, we deploy and submit the task in one go
-      const gelatoUserProxyFactory = await run("instantiateContract", {
-        contractname: "GelatoUserProxyFactory",
-        write: true,
-        signer: user,
-      });
 
       let isDeployed = await gelatoUserProxyFactory.isGelatoProxyUser(
         userAddress,
@@ -157,6 +163,19 @@ export default task(
         console.log(
           `\nProxy already deployed, executing action and submitting Task in one Tx\n`
         );
+
+        // ##### Let's check if the task spec is whitelisted!
+        //  address _userProxy, Provider memory _provider, Task memory _task, uint256 _expiryDate
+        const canSubmitResult = await gelatoCore.canSubmitTask(
+          gelatoUserProxyAddress,
+          gelatoProvider,
+          task,
+          expiryDate
+        );
+
+        if (canSubmitResult !== "OK")
+          throw Error(`Cannot Submit Task - Reason: ${canSubmitResult}`);
+
         // Instantiate the users gelato proxy contract
         const gelatoUserProxy = await run("instantiateContract", {
           contractname: "GelatoUserProxy",
@@ -183,7 +202,7 @@ export default task(
           [task], // submit the task to send tokens and update the condition value
           0, // Task should never expire
           taskArgs.cycles, // Task should be submitted taskArgs.cycles times in total
-          { gasLimit: 4000000 }
+          { gasLimit: 6000000 }
         );
       }
 

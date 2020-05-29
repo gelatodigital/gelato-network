@@ -72,13 +72,21 @@ describe("Condition Time Stateful: Time based Condition integration test with 10
     );
     await gelatoUserProxyFactory.deployed();
 
+    const GelatoMultiSend = await ethers.getContractFactory(
+      "GelatoMultiSend",
+      sysAdmin
+    );
+    const gelatoMultiSend = await GelatoMultiSend.deploy();
+    await gelatoMultiSend.deployed();
+
     // Deploy ProviderModuleGelatoUserProxy with constructorArgs
     const ProviderModuleGelatoUserProxy = await ethers.getContractFactory(
       "ProviderModuleGelatoUserProxy",
       sysAdmin
     );
     providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxy.deploy(
-      gelatoUserProxyFactory.address
+      gelatoUserProxyFactory.address,
+      gelatoMultiSend.address
     );
     await providerModuleGelatoUserProxy.deployed();
 
@@ -177,7 +185,7 @@ describe("Condition Time Stateful: Time based Condition integration test with 10
 
     const setRefData = await run("abi-encode-withselector", {
       contractname: "ConditionTimeStateful",
-      functionname: "setRefTimeForNextTaskInCycle",
+      functionname: "setRefTime",
       inputs: [refTimeDelta],
     });
 

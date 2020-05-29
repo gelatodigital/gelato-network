@@ -33,5 +33,5 @@ interface IProviderModuleGnosisSafeProxy{
 
 
     function gelatoCore() external pure returns(address);
-    function multiSend() external pure returns(address);
+    function gelatoMultiSend() external pure returns(address);
 }

@@ -49,4 +49,34 @@ contract MockBatchExchange {
         counter++;
         if(counter == 1 ) emit LogCounter();
     }
+
+    // buyTokenId, sellTokenId, withdrawBatchId, _buyAmount, sellAmount
+    function placeOrder(uint16 buyToken, uint16 sellToken, uint32 validUntil, uint128 buyAmount, uint128 sellAmount)
+        public
+        returns (uint256)
+    {
+
+    }
+
+    function deposit(address _sellToken, uint128 _sellAmount)
+        public
+    {
+        IERC20 sellToken = IERC20(_sellToken);
+        sellToken.safeTransferFrom(msg.sender, address(this), _sellAmount);
+    }
+
+    function requestFutureWithdraw(address token, uint256 amount, uint32 batchId)
+        public
+    {
+    }
+
+    function tokenAddressToIdMap(address _token)
+        public
+        view
+        returns(uint16 test)
+    {
+
+    }
+
+
 }

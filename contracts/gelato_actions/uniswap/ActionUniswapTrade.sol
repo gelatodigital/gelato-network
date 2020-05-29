@@ -15,10 +15,6 @@ contract ActionUniswapTrade is GelatoActionsStandard {
     using SafeMath for uint256;
     using Address for address;
 
-    address public constant ETH_ADDRESS = address(
-        0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE
-    );
-
     IUniswapFactory public immutable UNI_FACTORY;
 
     constructor(address _uniswapFactory) public {
@@ -26,28 +22,22 @@ contract ActionUniswapTrade is GelatoActionsStandard {
     }
 
     function action(
-        address _user, //"receiver"
+        address _receiver, //"receiver"
         address _sendToken, // exchange
         uint256 _sendAmt, // tokens_sold
-        address _receiveToken // token_addr
+        address _receiveToken, // token_addr
+        bool
     )
-        external
+        public
         virtual
+        returns (uint256 returnAmount)
     {
-
-        uint256 returnAmount;
-        address destinationAddress;
-
         // If sendToken is not ETH
         if (_sendToken != ETH_ADDRESS) {
 
             IERC20 sendERC20 = IERC20(_sendToken);
 
             IUniswapExchange sendTokenExchange = UNI_FACTORY.getExchange(sendERC20);
-
-            try sendERC20.transferFrom(_user, address(this), _sendAmt) {} catch {
-                revert("Error Transfer SendToken From User");
-            }
 
             if (sendTokenExchange != IUniswapExchange(0)) {
                 try sendERC20.approve(address(sendTokenExchange), _sendAmt) {}
@@ -63,51 +53,41 @@ contract ActionUniswapTrade is GelatoActionsStandard {
                         1,
                         1,
                         block.timestamp,
-                        _user,
+                        _receiver,
                         _receiveToken
                     )
-                    returns (uint256 returnEthAmount)
-                    {
+                    returns (uint256 returnEthAmount) {
                         returnAmount = returnEthAmount;
-                    }
-                    catch {
+                    } catch {
                         revert("Error tokenToTokenTransferInput");
                     }
-                }
-                else
-                {
+                } else {
                     // !! Dapp Interaction !!
                     try sendTokenExchange.tokenToEthTransferInput(
                         _sendAmt,
                         1,
                         block.timestamp,
-                        _user
+                        _receiver
                     )
-                        returns (uint256 returnEthAmount)
-                    {
+                        returns (uint256 returnEthAmount) {
                         returnAmount = returnEthAmount;
-                        destinationAddress = ETH_ADDRESS;
-                    }
-                    catch {
+                    } catch {
                         revert("Error tokenToEthTransferInput");
                     }
                 }
-            } else
-            {
+            } else {
                 revert("Error SendTokenExchange does not exist");
             }
-
-        // If sendToken is ETH
-        } else
-        {
-           (destinationAddress, returnAmount) = swapEthToToken(_receiveToken, _sendAmt, _user);
+        } else {
+            // If sendToken is ETH
+           (returnAmount) = swapEthToToken(_receiveToken, _sendAmt, _receiver);
         }
-
     }
 
-    function swapEthToToken(address _receiveToken, uint256 _sendAmount, address _user)
+
+    function swapEthToToken(address _receiveToken, uint256 _sendAmount, address _receiver)
         internal
-        returns (address, uint256)
+        returns (uint256)
     {
         IERC20 receiveERC20 = IERC20(_receiveToken);
         IUniswapExchange receiveTokenExchange = UNI_FACTORY.getExchange(receiveERC20);
@@ -118,19 +98,44 @@ contract ActionUniswapTrade is GelatoActionsStandard {
             }(
                 1,
                 block.timestamp,
-                _user
+                _receiver
             )
-            returns (uint256 returnReceiveTokenAmount){
-                return(address(receiveTokenExchange), returnReceiveTokenAmount);
-            }
-            catch {
+            returns (uint256 returnReceiveTokenAmount) {
+                return(returnReceiveTokenAmount);
+            } catch {
                 revert("Error swapEthToToken");
             }
-        }
-        else
-        {
+        } else {
             revert("Error ReceiveTokenExchange does not exist");
         }
+    }
+
+    // Will be automatically called by gelato => do not use for encoding
+    function gelatoInternal(
+        bytes calldata _actionData,
+        bytes calldata _taskState
+    )
+        external
+        virtual
+        override
+        returns(ReturnType, bytes memory)
+    {
+
+        (address receiver, address sellToken, uint256 sellAmount, address receiveToken, bool returnsTaskState) = abi.decode(_actionData[4:], (address,address,uint256,address,bool));
+
+        // 2. Check if taskState exists
+        if (_taskState.length != 0) {
+
+            (ReturnType returnType, bytes memory returnBytes) = abi.decode(_taskState, (ReturnType, bytes));
+            if (returnType == ReturnType.UINT)
+                (sellAmount) = abi.decode(returnBytes, (uint256));
+            else if (returnType == ReturnType.UINT_AND_ERC20)
+                (sellAmount, sellToken) = abi.decode(returnBytes, (uint256, address));
+        }
+
+        uint256 returnAmount = action(receiver, sellToken, sellAmount, receiveToken, returnsTaskState);
+
+        return(returnsTaskState ? ReturnType.UINT : ReturnType.NONE, abi.encode(returnAmount));
     }
 
 
@@ -143,11 +148,13 @@ contract ActionUniswapTrade is GelatoActionsStandard {
         override
         returns(string memory)  // actionCondition
     {
-        (address _user, address _sellToken, uint256 _sellAmount, address _receiveToken) = abi.decode(_actionData[4:], (
+        (address _user, address _sellToken, uint256 _sellAmount, address _receiveToken, /*bool returnTaskState*/) = abi.decode(_actionData[4:], (
             address,
             address,
             uint256,
-            address)
+            address,
+            bool
+            )
         );
         return _actionProviderTermsCheck(_user, _userProxy, _sellToken, _sellAmount, _receiveToken);
     }

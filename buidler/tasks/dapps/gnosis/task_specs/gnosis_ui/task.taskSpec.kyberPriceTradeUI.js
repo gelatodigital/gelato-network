@@ -2,7 +2,7 @@ import { task, types } from "@nomiclabs/buidler/config";
 import { constants, utils } from "ethers";
 
 export default internalTask(
-  "gc-return-taskspec-balance-trade-ui",
+  "gc-return-taskspec-kyber-price-trade-ui",
   `Returns a hardcoded task spec for the timeTrade Script`
 )
   .addFlag("log")
@@ -13,7 +13,7 @@ export default internalTask(
       // ##### Condition
       const conditionAddress = await run("bre-config", {
         deployments: true,
-        contractname: "ConditionBalanceStateful",
+        contractname: "ConditionKyberRateStateful",
       });
 
       const condition = new Condition({
@@ -23,7 +23,7 @@ export default internalTask(
       // ##### Action #1
       const transferFromActionAddress = await run("bre-config", {
         deployments: true,
-        contractname: "ActionERC20TransferFromNoStruct",
+        contractname: "ActionERC20TransferFrom",
       });
 
       const transferFromAction = new Action({
@@ -33,7 +33,7 @@ export default internalTask(
         termsOkCheck: true,
       });
 
-      // ##### Action #1
+      // ##### Action #2
       const placeOrderBatchExchangeAddress = await run("bre-config", {
         deployments: true,
         contractname: "ActionPlaceOrderBatchExchange",
