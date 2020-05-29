@@ -17,7 +17,7 @@ interface IBatchExchange {
     function withdraw(address user, address token)
         external;
 
-    function deposit(address token, uint256 amount)
+    function deposit(address token, uint128 amount)
         external;
 
     function getPendingWithdraw(address user, address token)

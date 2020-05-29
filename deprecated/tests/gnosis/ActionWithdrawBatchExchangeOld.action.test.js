@@ -86,13 +86,20 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       gelatoCore.address
     );
 
+    const GelatoMultiSend = await ethers.getContractFactory(
+      "GelatoMultiSend",
+      sysAdmin
+    );
+    const gelatoMultiSend = await GelatoMultiSend.deploy();
+
     // Deploy ProviderModuleGelatoUserProxy with constructorArgs
     const ProviderModuleGelatoUserProxy = await ethers.getContractFactory(
       "ProviderModuleGelatoUserProxy",
       sysAdmin
     );
     providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxy.deploy(
-      gelatoUserProxyFactory.address
+      gelatoUserProxyFactory.address,
+      gelatoMultiSend.address
     );
 
     // Deploy Condition (if necessary)
@@ -172,32 +179,13 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
     const medianizer2 = await Medianizer2.deploy();
     await medianizer2.deployed();
 
-    // Deploy Fee Finder
-    const FeeExtractor = await ethers.getContractFactory("FeeExtractor");
-
     // Deploy Test feefinder (Assuming we only hit hard coded tokens, not testing uniswap, kyber or maker oracle)
-    const feeExtractor = await FeeExtractor.deploy(
-      sellToken.address,
-      buyToken.address,
-      constants.AddressZero,
-      constants.AddressZero,
-      buyToken.address,
-      constants.AddressZero,
-      constants.AddressZero,
-      WETH.address,
-      medianizer2.address,
-      medianizer2.address,
-      medianizer2.address,
-      medianizer2.address
-    );
-    await feeExtractor.deployed();
 
     const ActionWithdrawBatchExchange = await ethers.getContractFactory(
       "ActionWithdrawBatchExchange"
     );
     actionWithdrawBatchExchange = await ActionWithdrawBatchExchange.deploy(
-      mockBatchExchange.address,
-      feeExtractor.address
+      mockBatchExchange.address
     );
 
     await actionWithdrawBatchExchange.deployed();
@@ -285,6 +273,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
           userProxyAddress,
           sellToken.address,
           buyToken.address,
+          ethers.constants.HashZero,
         ],
       });
 
@@ -335,6 +324,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
           userProxyAddress,
           sellToken.address,
           WETH.address,
+          ethers.constants.HashZero,
         ],
       });
 
@@ -385,6 +375,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
           userProxyAddress,
           sellToken.address,
           buyToken.address,
+          ethers.constants.HashZero,
         ],
       });
 
@@ -436,6 +427,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
           userProxyAddress,
           sellToken.address,
           WETH.address,
+          ethers.constants.HashZero,
         ],
       });
 
@@ -480,6 +472,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
           userProxyAddress,
           sellToken.address,
           buyToken.address,
+          ethers.constants.HashZero,
         ],
       });
 
@@ -531,6 +524,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
           userProxyAddress,
           WETH.address,
           buyToken.address,
+          ethers.constants.HashZero,
         ],
       });
 
@@ -579,6 +573,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
           userProxyAddress,
           sellToken.address,
           buyToken.address,
+          ethers.constants.HashZero,
         ],
       });
 
@@ -623,6 +618,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
           userProxyAddress,
           WETH.address,
           buyToken.address,
+          ethers.constants.HashZero,
         ],
       });
 

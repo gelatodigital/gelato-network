@@ -90,8 +90,14 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
     gelatoUserProxyFactory = await GelatoUserProxyFactoryFactory.deploy(
       gelatoCore.address
     );
+
+    const GelatoMultiSend = await ethers.getContractFactory("GelatoMultiSend");
+    const gelatoMultiSend = await GelatoMultiSend.deploy();
+    await gelatoMultiSend.deployed();
+
     providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxyFactory.deploy(
-      gelatoUserProxyFactory.address
+      gelatoUserProxyFactory.address,
+      gelatoMultiSend.address
     );
     actionDummy = await ActionDummyFactory.deploy();
     conditionDummy = await ConditionDummyFactory.deploy();

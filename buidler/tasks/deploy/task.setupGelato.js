@@ -14,45 +14,108 @@ export default task("gc-setupgelato")
 
       if (taskArgs.log) console.log("\n setupgelato TaskArgs:\n", taskArgs);
 
-      // === Deployments ===
-      // GelatoCore
+      // Deploy Gelato Core
+      const gelatoCore = await run("deploy-gc", {});
 
-      // const gelatoCoreConstructorArgs = [
-      //   7000000, // gelatoMaxGas // 7 mio initial
-      //   100000, // internalGasRequirement
-      //   1000000000000000000, // minExecutorStake // production: 1 ETH
-      //   50, // executorSuccessShare // 50% of successful execution cost
-      //   20, // sysAdminSuccessShare, // 20% of successful execution cost
-      //   70, // totalSuccessShare
-      // ];
+      // Deploy Provider Modules
 
-      const gelatoCore = await run("deploy", {
-        contractname: "GelatoCore",
-        log: taskArgs.log,
+      // Gnosis Safe
+      const gnosisSafeProviderModule = await run(
+        "gc-deploy-gnosis-safe-module",
+        {}
+      );
+
+      // Gelato User Factory
+      const gelatoUserProxyFactory = await run("deploy", {
+        contractname: "GelatoUserProxyFactory",
+        constructorargs: [gelatoCore.address],
       });
 
-      // === GelatoCore setup ===
-      // Executor
-      await run("gc-stakeexecutor", {
-        gelatocoreaddress: gelatoCore.address,
-        events: taskArgs.events,
-        log: taskArgs.log,
+      const gelatoUserProxyModule = await run("deploy", {
+        contractname: "ProviderModuleGelatoUserProxy",
+        constructorargs: [gelatoUserProxyFactory.address],
       });
 
-      await run("gc-multiprovide", {
-        gelatocoreaddress: gelatoCore.address,
-        funds: taskArgs.providefunds,
-        gelatoexecutor: taskArgs.executor,
-        events: taskArgs.events,
-        log: taskArgs.log,
+      // Executor Setup
+      await run("gc-stakeexecutor", {});
+
+      // Provider Setup
+      await run("gelato-providefunds", {
+        ethamount: ethers.utils.parseEther("1"),
       });
 
-      if (taskArgs.log) {
-        console.log(`
-            GelatoCore: ${gelatoCore.address}\n
-            GelatoGasPriceOracle: ${await gelatoCore.gelatoGasPriceOracle()}\n
-        `);
-      }
+      await run("gelato-add-provider-module", {
+        modulename: "GnosisSafe",
+      });
+      await run("gelato-add-provider-module", {
+        modulename: "GelatoUserProxy",
+      });
+
+      // Deploy Global State contract
+      const globalState = await run("deploy", {
+        contractname: "GlobalState",
+      });
+
+      // Deploy ProviderStateSetterFactory
+      const providerFeeRelayFactory = await run("deploy", {
+        contractname: "ProviderFeeRelayFactory",
+        signerindex: 2,
+        constructorargs: [globalState.address],
+      });
+
+      // Deploy Actions
+      const batchExchangeAddress = await run("bre-config", {
+        addressbookcategory: "gnosisProtocol",
+        addressbookentry: "batchExchange",
+      });
+
+      const actionPlaceOrderBatchExchange = await run("deploy", {
+        contractname: "ActionPlaceOrderBatchExchange",
+        constructorargs: [batchExchangeAddress, globalState.address],
+      });
+
+      const actionWithdrawBatchExchange = await run("deploy", {
+        contractname: "ActionWithdrawBatchExchange",
+        constructorargs: [batchExchangeAddress],
+      });
+
+      const actionERC20TransferFromGlobal = await run("deploy", {
+        contractname: "ActionERC20TransferFromGlobal",
+        constructorargs: [globalState.address],
+      });
+
+      // Deploy Conditions
+      const conditionTimeStateful = await run("deploy", {
+        contractname: "ConditionTimeStateful",
+        constructorargs: [gelatoCore.address],
+      });
+
+      const conditionBalanceStateful = await run("deploy", {
+        contractname: "ConditionBalanceStateful",
+        constructorargs: [gelatoCore.address],
+      });
+
+      const kyberProxyAddress = await run("bre-config", {
+        addressbookcategory: "kyber",
+        addressbookentry: "proxy",
+      });
+
+      const conditionKyberRateStateful = await run("deploy", {
+        contractname: "ConditionKyberRateStateful",
+        constructorargs: [kyberProxyAddress, gelatoCore.address],
+      });
+
+      // Provide Task Spec for each action
+
+      // SET FEE For each action
+
+      // await run("gc-multiprovide", {
+      //   gelatocoreaddress: gelatoCore.address,
+      //   funds: taskArgs.providefunds,
+      //   gelatoexecutor: taskArgs.executor,
+      //   events: taskArgs.events,
+      //   log: taskArgs.log,
+      // });
     } catch (error) {
       console.error(error, "\n");
       process.exit(1);

@@ -11,6 +11,15 @@ contract MockActionDummyOutOfGas is GelatoActionsStandard {
         assert(false);
     }
 
+    // Will be automatically called by gelato => do not use for encoding
+    function gelatoInternal(
+        bytes calldata _actionData,
+        bytes calldata
+    ) external virtual override returns(ReturnType, bytes memory) {
+        (bool isOk) = abi.decode(_actionData, (bool));
+        action(isOk);
+    }
+
     function placeholder() public pure {
         assert(false);
     }
