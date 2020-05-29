@@ -8,6 +8,15 @@ contract MockActionDummyRevert is GelatoActionsStandard {
         revert("MockActionDummyRevert.action: test revert");
     }
 
+    // Will be automatically called by gelato => do not use for encoding
+    function gelatoInternal(
+        bytes calldata _actionData,
+        bytes calldata
+    ) external virtual override returns(ReturnType, bytes memory) {
+        (bool isOk) = abi.decode(_actionData, (bool));
+        action(isOk);
+    }
+
     function termsOk(uint256, address, bytes calldata _data, uint256)
         external
         view
@@ -15,7 +24,7 @@ contract MockActionDummyRevert is GelatoActionsStandard {
         virtual
         returns(string memory)
     {
-        bool isOk = abi.decode(_data, (bool));
+        (bool isOk) = abi.decode(_data, (bool));
         return termsOk(isOk);
     }
 

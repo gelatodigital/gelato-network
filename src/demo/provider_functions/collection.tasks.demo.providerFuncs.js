@@ -12,3 +12,6 @@ import "./task.provideTaskSpec";
 
 // Assign Executor
 import "./task.assignExecutor";
+
+// Set Action Fee
+import "./task.setActionFee";

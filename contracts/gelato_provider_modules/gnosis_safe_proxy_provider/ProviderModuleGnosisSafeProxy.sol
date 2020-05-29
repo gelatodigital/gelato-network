@@ -6,7 +6,7 @@ import { GelatoProviderModuleStandard } from "../GelatoProviderModuleStandard.so
 import { IProviderModuleGnosisSafeProxy } from "./IProviderModuleGnosisSafeProxy.sol";
 import { Ownable } from "../../external/Ownable.sol";
 import { GelatoDebug } from "../../libraries/GelatoDebug.sol";
-import { Multisend } from "../../external/Multisend.sol";
+import { GelatoMultiSend } from "../../gelato_helpers/GelatoMultiSend.sol";
 import {
     IGnosisSafe
 } from "../../user_proxies/gnosis_safe_proxy/interfaces/IGnosisSafe.sol";
@@ -25,20 +25,19 @@ contract ProviderModuleGnosisSafeProxy is
     mapping(bytes32 => bool) public override isProxyExtcodehashProvided;
     mapping(address => bool) public override isMastercopyProvided;
     address public override immutable gelatoCore;
-    // 0x29CAa04Fa05A046a05C85A50e8f2af8cf9A05BaC on Rinkeby
-    address public override immutable multiSend;
+    address public override immutable gelatoMultiSend;
 
     constructor(
         bytes32[] memory hashes,
         address[] memory masterCopies,
         address _gelatoCore,
-        address _multiSend
+        address _gelatoMultiSend
     )
         public
     {
         multiProvide(hashes, masterCopies);
         gelatoCore = _gelatoCore;
-        multiSend = _multiSend;
+        gelatoMultiSend = _gelatoMultiSend;
     }
 
     // ================= GELATO PROVIDER MODULE STANDARD ================
@@ -81,31 +80,19 @@ contract ProviderModuleGnosisSafeProxy is
             );
         } else if (_actions.length > 1) {
             // Action.Operation encoded into multiSendPayload and handled by Multisend
-            bytes memory multiSendPayload;
-
-            for (uint i; i < _actions.length; i++ ) {
-                bytes memory payloadPart = abi.encodePacked(
-                    _actions[i].operation,
-                    _actions[i].addr,  // to
-                    _actions[i].value,
-                    _actions[i].data.length,
-                    _actions[i].data
-                );
-                multiSendPayload = abi.encodePacked(multiSendPayload, payloadPart);
-            }
-
-            multiSendPayload = abi.encodeWithSelector(
-                Multisend.multiSend.selector,
-                multiSendPayload
+            bytes memory gelatoMultiSendPayload = abi.encodeWithSelector(
+                GelatoMultiSend.multiSend.selector,
+                _actions
             );
 
             payload = abi.encodeWithSelector(
                 IGnosisSafe.execTransactionFromModuleReturnData.selector,
-                multiSend,  // to
+                gelatoMultiSend,  // to
                 0,  // value
-                multiSendPayload,  // data
+                gelatoMultiSendPayload,  // data
                 IGnosisSafe.Operation.DelegateCall
             );
+
         } else {
             revert("ProviderModuleGnosisSafeProxy.execPayload: 0 _actions length");
         }

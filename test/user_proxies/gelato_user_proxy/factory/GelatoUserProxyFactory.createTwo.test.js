@@ -197,8 +197,15 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE TWO", function () {
       );
       ActionFactory = await ethers.getContractFactory("MockActionDummy");
 
+      const GelatoMultiSend = await ethers.getContractFactory(
+        "GelatoMultiSend"
+      );
+      const gelatoMultiSend = await GelatoMultiSend.deploy();
+      await gelatoMultiSend.deployed();
+
       providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxyFactory.deploy(
-        gelatoUserProxyFactory.address
+        gelatoUserProxyFactory.address,
+        gelatoMultiSend.address
       );
       action = await ActionFactory.deploy();
 

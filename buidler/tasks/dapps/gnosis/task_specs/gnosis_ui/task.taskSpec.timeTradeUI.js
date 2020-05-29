@@ -2,7 +2,7 @@ import { task, types } from "@nomiclabs/buidler/config";
 import { constants, utils } from "ethers";
 
 export default internalTask(
-  "gc-return-taskspec-kyber-price-trade-ui",
+  "gc-return-taskspec-time-trade-ui",
   `Returns a hardcoded task spec for the timeTrade Script`
 )
   .addFlag("log")
@@ -13,17 +13,29 @@ export default internalTask(
       // ##### Condition
       const conditionAddress = await run("bre-config", {
         deployments: true,
-        contractname: "ConditionKyberRateStateful",
+        contractname: "ConditionTimeStateful",
       });
 
       const condition = new Condition({
         inst: conditionAddress,
       });
 
-      // ##### Action #1
+      // ##### Action # 1: Fee Action
+      const feeRelayAddress = await run("gelato-get-fee-relay-address");
+      console.log(feeRelayAddress);
+
+      const feeRelayAction = new Action({
+        addr: feeRelayAddress,
+        data: constants.HashZero,
+        operation: Operation.Delegatecall,
+        termsOkCheck: true,
+        value: 0,
+      });
+
+      // ##### Action #2
       const transferFromActionAddress = await run("bre-config", {
         deployments: true,
-        contractname: "ActionERC20TransferFromNoStruct",
+        contractname: "ActionERC20TransferFromGlobal",
       });
 
       const transferFromAction = new Action({
@@ -33,7 +45,7 @@ export default internalTask(
         termsOkCheck: true,
       });
 
-      // ##### Action #2
+      // ##### Action #3
       const placeOrderBatchExchangeAddress = await run("bre-config", {
         deployments: true,
         contractname: "ActionPlaceOrderBatchExchange",
@@ -49,7 +61,7 @@ export default internalTask(
       // ##### Create Task Spec
       const taskSpec = new TaskSpec({
         conditions: [condition.inst],
-        actions: [transferFromAction, placeOrderAction],
+        actions: [feeRelayAction, transferFromAction, placeOrderAction],
         gasPriceCeil: 0, // Infinte gas price
       });
 

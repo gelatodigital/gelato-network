@@ -4,7 +4,6 @@ import { expect } from "chai";
 
 import initialState from "./GelatoProviders.initialState";
 
-
 describe("GelatoCore - GelatoProviders - Setters: MULTI PROVIDE", function () {
   // We define the ContractFactory and Address variables here and assign them in
   // a beforeEach hook.
@@ -74,8 +73,12 @@ describe("GelatoCore - GelatoProviders - Setters: MULTI PROVIDE", function () {
       gelatoCore.address
     );
 
+    const GelatoMultiSend = await ethers.getContractFactory("GelatoMultiSend");
+    const gelatoMultiSend = await GelatoMultiSend.deploy();
+
     providerModule = await ProviderModuleFactory.deploy(
-      gelatoUserProxyFactory.address
+      gelatoUserProxyFactory.address,
+      gelatoMultiSend.address
     ); // hashes
     otherProviderModule = await OtherProviderModuleFactory.deploy(
       [constants.HashZero], // hashes

@@ -74,9 +74,12 @@ describe("Testing DS Proxy Module delpoyment and ds proxy execution with gelato"
     dsProxyFactory = await DsProxyFactory.deploy();
     await dsProxyFactory.deployed();
 
-    // Deploy Multisend contract
-    const Multisend = await ethers.getContractFactory("Multisend", sysAdmin);
-    const multisend = await Multisend.deploy();
+    // Deploy GelatoMultiSend contract
+    const GelatoMultiSend = await ethers.getContractFactory(
+      "GelatoMultiSend",
+      sysAdmin
+    );
+    const gelatoMultiSend = await GelatoMultiSend.deploy();
 
     // Deploy ProviderModuleDSProxy with constructorArgs
     const ProviderModuleDSProxy = await ethers.getContractFactory(
@@ -86,7 +89,7 @@ describe("Testing DS Proxy Module delpoyment and ds proxy execution with gelato"
     providerModuleDsProxy = await ProviderModuleDSProxy.deploy(
       dsProxyFactory.address,
       gelatoCore.address,
-      multisend.address
+      gelatoMultiSend.address
     );
     await providerModuleDsProxy.deployed();
 
@@ -112,7 +115,6 @@ describe("Testing DS Proxy Module delpoyment and ds proxy execution with gelato"
       sellDecimals
     );
     await sellToken.deployed();
-    // // #### ActionWithdrawBatchExchange End ####
 
     // Call provideFunds(value) with provider on core
     await gelatoCore.connect(provider).provideFunds(providerAddress, {
@@ -169,14 +171,14 @@ describe("Testing DS Proxy Module delpoyment and ds proxy execution with gelato"
     const dsGuard = await DSGuard.deploy();
     await dsGuard.deployed();
 
-    // permit gelatoCore to call multisend
+    // permit gelatoCore to call gelatoMultiSend
     // bytes32 src, bytes32 dst, bytes32 sig
     let executeSigHash = userProxy.interface.functions.execute.sighash;
     while (executeSigHash.length < 66) {
       executeSigHash += "0";
     }
 
-    //await dsGuard.permit(gelatoCore.address, multisend.address, executeSigHash);
+    //await dsGuard.permit(gelatoCore.address, gelatoMultiSend.address, executeSigHash);
     await dsGuard.permit(gelatoCore.address, userProxyAddress, executeSigHash);
 
     // Register guard as authority on user proxy
@@ -204,12 +206,11 @@ describe("Testing DS Proxy Module delpoyment and ds proxy execution with gelato"
         contractname: "ActionERC20TransferFrom",
         functionname: "action",
         inputs: [
-          {
-            user: sellerAddress,
-            sendToken: sellToken.address,
-            destination: executorAddress,
-            sendAmount,
-          },
+          sellerAddress,
+          sellToken.address,
+          executorAddress,
+          sendAmount,
+          false,
         ],
       });
       // Submit Task
@@ -281,12 +282,11 @@ describe("Testing DS Proxy Module delpoyment and ds proxy execution with gelato"
         contractname: "ActionERC20TransferFrom",
         functionname: "action",
         inputs: [
-          {
-            user: sellerAddress,
-            sendToken: sellToken.address,
-            destination: executorAddress,
-            sendAmount,
-          },
+          sellerAddress,
+          sellToken.address,
+          executorAddress,
+          sendAmount,
+          false,
         ],
       });
       // Submit Task

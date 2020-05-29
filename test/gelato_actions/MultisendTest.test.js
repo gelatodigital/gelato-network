@@ -30,7 +30,6 @@ describe("Multisend with Gelato User Proxy Test", function () {
   let userProxyAddress;
   let sellToken; //DAI
   let buyToken; //USDC
-  let ActionWithdrawBatchExchange;
   let MockERC20;
   let MockBatchExchange;
   let mockBatchExchange;
@@ -88,13 +87,20 @@ describe("Multisend with Gelato User Proxy Test", function () {
       gelatoCore.address
     );
 
+    const GelatoMultiSend = await ethers.getContractFactory(
+      "GelatoMultiSend",
+      sysAdmin
+    );
+    const gelatoMultiSend = await GelatoMultiSend.deploy();
+
     // Deploy ProviderModuleGelatoUserProxy with constructorArgs
     const ProviderModuleGelatoUserProxy = await ethers.getContractFactory(
       "ProviderModuleGelatoUserProxy",
       sysAdmin
     );
     providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxy.deploy(
-      gelatoUserProxyFactory.address
+      gelatoUserProxyFactory.address,
+      gelatoMultiSend.address
     );
 
     // Deploy Condition (if necessary)
@@ -108,7 +114,6 @@ describe("Multisend with Gelato User Proxy Test", function () {
     const actionERC20TransferFrom = await ActionERC20TransferFrom.deploy();
     await actionERC20TransferFrom.deployed();
 
-    // // #### ActionWithdrawBatchExchange Start ####
     const MockBatchExchange = await ethers.getContractFactory(
       "MockBatchExchange"
     );
@@ -124,8 +129,6 @@ describe("Multisend with Gelato User Proxy Test", function () {
       wethDecimals
     );
     await WETH.deployed();
-
-    // // #### ActionWithdrawBatchExchange End ####
 
     // Call provideFunds(value) with provider on core
     await gelatoCore.connect(provider).provideFunds(providerAddress, {

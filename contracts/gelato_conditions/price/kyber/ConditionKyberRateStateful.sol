@@ -2,13 +2,15 @@
 pragma solidity ^0.6.8;
 pragma experimental ABIEncoderV2;
 
-import { GelatoConditionsStandard } from "../../GelatoConditionsStandard.sol";
+import { GelatoStatefulConditionsStandard } from "../../GelatoStatefulConditionsStandard.sol";
 import { IKyber } from "../../../dapp_interfaces/kyber/IKyber.sol";
 import { SafeMath } from "../../../external/SafeMath.sol";
 import { IERC20 } from "../../../external/IERC20.sol";
+import { IGelatoCore } from "../../../gelato_core/interfaces/IGelatoCore.sol";
 
 
-contract ConditionKyberRateStateful is GelatoConditionsStandard {
+
+contract ConditionKyberRateStateful is GelatoStatefulConditionsStandard {
 
     using SafeMath for uint256;
 
@@ -17,10 +19,15 @@ contract ConditionKyberRateStateful is GelatoConditionsStandard {
     // userProxy => taskCycle id => refPrice
     mapping(address => mapping(uint256 => uint256)) public refRate;
 
-    constructor(address _kyberProxy) public { kyberProxyAddress = _kyberProxy; }
+    constructor(address _kyberProxy, IGelatoCore _gelatoCore)
+        public
+        GelatoStatefulConditionsStandard(_gelatoCore)
+    {
+        kyberProxyAddress = _kyberProxy;
+    }
 
     // STANDARD Interface
-    function ok(bytes calldata _conditionData)
+    function ok(uint256 _taskId, bytes calldata _conditionData)
         external
         view
         override
@@ -31,12 +38,12 @@ contract ConditionKyberRateStateful is GelatoConditionsStandard {
          address src,
          uint256 srcAmt,
          address dest,
-         bool greaterElseSmaller,
-         uint256 _cycleId) = abi.decode(
+         bool greaterElseSmaller
+         ) = abi.decode(
              _conditionData[4:],
-             (address,address,uint256,address,bool,uint256)
+             (address,address,uint256,address,bool)
          );
-        return ok(proxyAddress, src, srcAmt, dest, greaterElseSmaller, _cycleId);
+        return ok(proxyAddress, src, srcAmt, dest, greaterElseSmaller, _taskId);
     }
 
     // Specific Implementation
@@ -46,14 +53,14 @@ contract ConditionKyberRateStateful is GelatoConditionsStandard {
         uint256 _srcAmt,
         address _dest,
         bool _greaterElseSmaller,
-        uint256 _cycleId
+        uint256 _taskId
     )
         public
         view
         virtual
         returns(string memory)
     {
-        uint256 currentRefRate = refRate[_proxyAddress][_cycleId];
+        uint256 currentRefRate = refRate[_proxyAddress][_taskId];
         try IKyber(kyberProxyAddress).getExpectedRate(_src, _dest, _srcAmt)
             returns(uint256 expectedRate, uint256)
         {
@@ -76,11 +83,11 @@ contract ConditionKyberRateStateful is GelatoConditionsStandard {
         uint256 _srcAmt,
         address _dest,
         bool _greaterElseSmaller,
-        uint256 _cycleId,
         uint256 _delta
     )
         external
     {
+        uint256 taskId = _getIdOfNextTaskInCycle();
         uint256 newRefRate;
         try IKyber(kyberProxyAddress).getExpectedRate(_src, _dest, _srcAmt)
             returns(uint256 expectedRate, uint256)
@@ -93,7 +100,7 @@ contract ConditionKyberRateStateful is GelatoConditionsStandard {
         } catch {
             revert("ConditionKyberRateStateful.setRefRate: KyberGetExpectedRateError");
         }
-        refRate[msg.sender][_cycleId] = newRefRate;
+        refRate[msg.sender][taskId] = newRefRate;
     }
 
     function getKyberRate(

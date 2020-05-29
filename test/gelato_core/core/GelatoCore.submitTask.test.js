@@ -23,7 +23,6 @@ describe("Gelato Core - Task Submission ", function () {
   let sellToken; //DAI
   let buyToken; //USDC
   let testToken; //GUSD
-  let ActionWithdrawBatchExchange;
   let MockERC20;
   let MockBatchExchange;
   let mockBatchExchange;
@@ -84,13 +83,21 @@ describe("Gelato Core - Task Submission ", function () {
       gelatoCore.address
     );
 
+    const GelatoMultiSend = await ethers.getContractFactory(
+      "GelatoMultiSend",
+      sysAdmin
+    );
+    const gelatoMultiSend = await GelatoMultiSend.deploy();
+    await gelatoMultiSend.deployed();
+
     // Deploy ProviderModuleGelatoUserProxy with constructorArgs
     const ProviderModuleGelatoUserProxy = await ethers.getContractFactory(
       "ProviderModuleGelatoUserProxy",
       sysAdmin
     );
     providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxy.deploy(
-      gelatoUserProxyFactory.address
+      gelatoUserProxyFactory.address,
+      gelatoMultiSend.address
     );
 
     // Deploy Condition (if necessary)
@@ -104,12 +111,19 @@ describe("Gelato Core - Task Submission ", function () {
     actionERC20TransferFrom = await ActionERC20TransferFrom.deploy();
     await actionERC20TransferFrom.deployed();
 
-    // // #### ActionWithdrawBatchExchange Start ####
     const MockBatchExchange = await ethers.getContractFactory(
       "MockBatchExchange"
     );
     mockBatchExchange = await MockBatchExchange.deploy();
     await mockBatchExchange.deployed();
+
+    const ActionWithdrawBatchExchange = await ethers.getContractFactory(
+      "ActionWithdrawBatchExchange"
+    );
+    actionWithdrawBatchExchange = await ActionWithdrawBatchExchange.deploy(
+      mockBatchExchange.address
+    );
+    await actionWithdrawBatchExchange.deployed();
 
     MockERC20 = await ethers.getContractFactory("MockERC20");
     wethDecimals = 18;
@@ -120,6 +134,8 @@ describe("Gelato Core - Task Submission ", function () {
       wethDecimals
     );
     await WETH.deployed();
+
+    //
 
     // DEPLOY DUMMY ERC20s
     // // Deploy Sell Token
@@ -155,37 +171,6 @@ describe("Gelato Core - Task Submission ", function () {
     const Medianizer2 = await ethers.getContractFactory("Medianizer2");
     const medianizer2 = await Medianizer2.deploy();
     await medianizer2.deployed();
-
-    // Deploy Fee Finder
-    const FeeFinder = await ethers.getContractFactory("FeeFinder");
-
-    // Deploy Test feefinder (Assuming we only hit hard coded tokens, not testing uniswap, kyber or maker oracle)
-    const feeFinder = await FeeFinder.deploy(
-      sellToken.address,
-      buyToken.address,
-      testToken.address,
-      sellToken.address,
-      buyToken.address,
-      sellToken.address,
-      sellToken.address,
-      WETH.address,
-      medianizer2.address,
-      medianizer2.address,
-      medianizer2.address,
-      medianizer2.address
-    );
-    await feeFinder.deployed();
-
-    const ActionWithdrawBatchExchange = await ethers.getContractFactory(
-      "ActionWithdrawBatchExchange"
-    );
-    actionWithdrawBatchExchange = await ActionWithdrawBatchExchange.deploy(
-      mockBatchExchange.address,
-      feeFinder.address
-    );
-
-    await actionWithdrawBatchExchange.deployed();
-    // // #### ActionWithdrawBatchExchange End ####
 
     // Call provideFunds(value) with provider on core
     await gelatoCore.connect(provider).provideFunds(providerAddress, {
@@ -268,17 +253,18 @@ describe("Gelato Core - Task Submission ", function () {
 
   describe("GelatoCore.submitTask Tests", function () {
     it("#1: Successfully submit whitelisted taskReceipt", async function () {
-      const actionInputs = {
-        user: sellerAddress,
-        sendToken: sellToken.address,
-        destination: sellerAddress,
-        sendAmount: ethers.utils.parseUnits("1", "ether"),
-      };
+      const actionInputs = [
+        sellerAddress,
+        sellToken.address,
+        sellerAddress,
+        ethers.utils.parseUnits("1", "ether"),
+        false,
+      ];
 
       const actionPayload = await run("abi-encode-withselector", {
         contractname: "ActionERC20TransferFrom",
         functionname: "action",
-        inputs: [actionInputs],
+        inputs: actionInputs,
       });
 
       gelatoProvider = new GelatoProvider({
@@ -306,17 +292,18 @@ describe("Gelato Core - Task Submission ", function () {
 
     it("#2: Submitting reverts => Action not whitelisted", async function () {
       const notWhitelistedAction = actionERC20TransferFrom.address;
-      const actionInputs = {
-        user: sellerAddress,
-        sendToken: sellToken.address,
-        destination: sellerAddress,
-        sendAmount: ethers.utils.parseUnits("1", "ether"),
-      };
+      const actionInputs = [
+        sellerAddress,
+        sellToken.address,
+        sellerAddress,
+        ethers.utils.parseUnits("1", "ether"),
+        false,
+      ];
 
       const actionPayload = await run("abi-encode-withselector", {
         contractname: "ActionERC20TransferFrom",
         functionname: "action",
-        inputs: [actionInputs],
+        inputs: actionInputs,
       });
 
       gelatoProvider = new GelatoProvider({
@@ -349,17 +336,18 @@ describe("Gelato Core - Task Submission ", function () {
     it("#3: Submitting reverts => Condition not whitelisted", async function () {
       const notWhitelistedCondition = actionERC20TransferFrom.address;
 
-      const actionInputs = {
-        user: sellerAddress,
-        sendToken: sellToken.address,
-        destination: sellerAddress,
-        sendAmount: ethers.utils.parseUnits("1", "ether"),
-      };
+      const actionInputs = [
+        sellerAddress,
+        sellToken.address,
+        sellerAddress,
+        ethers.utils.parseUnits("1", "ether"),
+        false,
+      ];
 
       const actionPayload = await run("abi-encode-withselector", {
         contractname: "ActionERC20TransferFrom",
         functionname: "action",
-        inputs: [actionInputs],
+        inputs: actionInputs,
       });
 
       gelatoProvider = new GelatoProvider({
@@ -395,17 +383,18 @@ describe("Gelato Core - Task Submission ", function () {
     it("#4: Submitting reverts => Selected Provider with Executor that is not min staked", async function () {
       const revertingProviderAddress = sellerAddress;
 
-      const actionInputs = {
-        user: sellerAddress,
-        sendToken: sellToken.address,
-        destination: sellerAddress,
-        sendAmount: ethers.utils.parseUnits("1", "ether"),
-      };
+      const actionInputs = [
+        sellerAddress,
+        sellToken.address,
+        sellerAddress,
+        ethers.utils.parseUnits("1", "ether"),
+        false,
+      ];
 
       const actionPayload = await run("abi-encode-withselector", {
         contractname: "ActionERC20TransferFrom",
         functionname: "action",
-        inputs: [actionInputs],
+        inputs: actionInputs,
       });
 
       gelatoProvider = new GelatoProvider({
@@ -433,17 +422,18 @@ describe("Gelato Core - Task Submission ", function () {
     it("#5: Submitting reverts => Invalid expiryDate", async function () {
       const expiryDateInPast = 1586776139;
 
-      const actionInputs = {
-        user: sellerAddress,
-        sendToken: sellToken.address,
-        destination: sellerAddress,
-        sendAmount: ethers.utils.parseUnits("1", "ether"),
-      };
+      const actionInputs = [
+        sellerAddress,
+        sellToken.address,
+        sellerAddress,
+        ethers.utils.parseUnits("1", "ether"),
+        false,
+      ];
 
       const actionPayload = await run("abi-encode-withselector", {
         contractname: "ActionERC20TransferFrom",
         functionname: "action",
-        inputs: [actionInputs],
+        inputs: actionInputs,
       });
 
       gelatoProvider = new GelatoProvider({
@@ -471,17 +461,18 @@ describe("Gelato Core - Task Submission ", function () {
     it("#6: Submitting reverts => InvalidProviderModule", async function () {
       const revertingProviderMouleAddress = sellerAddress;
 
-      const actionInputs = {
-        user: sellerAddress,
-        sendToken: sellToken.address,
-        destination: sellerAddress,
-        sendAmount: ethers.utils.parseUnits("1", "ether"),
-      };
+      const actionInputs = [
+        sellerAddress,
+        sellToken.address,
+        sellerAddress,
+        ethers.utils.parseUnits("1", "ether"),
+        false,
+      ];
 
       const actionPayload = await run("abi-encode-withselector", {
         contractname: "ActionERC20TransferFrom",
         functionname: "action",
-        inputs: [actionInputs],
+        inputs: actionInputs,
       });
 
       gelatoProvider = new GelatoProvider({
@@ -537,17 +528,18 @@ describe("Gelato Core - Task Submission ", function () {
     });
 
     it("#8: create success (Self-provider), not whitelisted action, assigning new executor and staking", async function () {
-      const actionInputs = {
-        user: providerAddress,
-        sendToken: sellToken.address,
-        destination: sellerAddress,
-        sendAmount: ethers.utils.parseUnits("1", "ether"),
-      };
+      const actionInputs = [
+        providerAddress,
+        sellToken.address,
+        sellerAddress,
+        ethers.utils.parseUnits("1", "ether"),
+        false,
+      ];
 
       const actionPayload = await run("abi-encode-withselector", {
         contractname: "ActionERC20TransferFrom",
         functionname: "action",
-        inputs: [actionInputs],
+        inputs: actionInputs,
       });
 
       // 2. Create Proxy for Provider
@@ -660,18 +652,18 @@ describe("Gelato Core - Task Submission ", function () {
     });
 
     it("#9: submitTask reverts (Self-provider), inputting other address as provider that has not whitelisted action", async function () {
-      const actionInputs = {
-        user: providerAddress,
-        userProxy: userProxyAddress,
-        sendToken: sellToken.address,
-        destination: sellerAddress,
-        sendAmount: ethers.utils.parseUnits("1", "ether"),
-      };
+      const actionInputs = [
+        providerAddress,
+        sellToken.address,
+        sellerAddress,
+        ethers.utils.parseUnits("1", "ether"),
+        false,
+      ];
 
       const actionPayload = await run("abi-encode-withselector", {
         contractname: "ActionERC20TransferFrom",
         functionname: "action",
-        inputs: [actionInputs],
+        inputs: actionInputs,
       });
 
       // 2. Create Proxy for Provider

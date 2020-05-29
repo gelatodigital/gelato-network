@@ -248,10 +248,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         // Store startGas for gas-consumption based cost and payout calcs
         uint256 startGas = gasleft();
 
-        // CHECKS: all further checks are done during this.executionWrapper.canExec()
-        uint256 _internalGasRequirement = internalGasRequirement;
-        require(startGas > _internalGasRequirement, "GelatoCore.exec: Insufficient gas sent");
-
         // memcopy of gelatoGasPrice, to avoid multiple storage reads
         uint256 gelatoGasPrice = _getGelatoGasPrice();
 
@@ -273,11 +269,9 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         ExecutionResult executionResult;
         string memory reason;
 
-        try this.executionWrapper{gas: gasleft() - _internalGasRequirement}(
-            _TR,
-            _gelatoMaxGas,
-            gelatoGasPrice
-        )
+        try this.executionWrapper{
+            gas: gasleft().sub(internalGasRequirement, "GelatoCore.exec: Insufficient gas")
+        }(_TR, _gelatoMaxGas, gelatoGasPrice)
             returns(ExecutionResult _executionResult, string memory _reason)
         {
             executionResult = _executionResult;
@@ -310,7 +304,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         } else {
             // executionResult == ExecutionResult.ExecRevert
             // END-3.1: ExecReverted NO gelatoMaxGas => No TaskReceipt Deletion & No Refund
-            if (startGas < _gelatoMaxGas) emit LogExecReverted(msg.sender, _TR.id, 0, reason);
+            if (startGas < _gelatoMaxGas)
+                emit LogExecReverted(msg.sender, _TR.id, 0, reason);
             else {
                 // END-3.2: ExecReverted BUT gelatoMaxGas was used
                 //  => TaskReceipt Deletion (delete in _exec was reverted) & Refund
@@ -416,18 +411,17 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         private
         returns(uint256 executorCompensation, uint256 sysAdminCompensation)
     {
-        // Provider payable Gas Refund capped at gelatoMaxGas
-        uint256 estExecTxGas = _startGas <= _gelatoMaxGas ? _startGas : _gelatoMaxGas;
+        uint256 estGasUsed = _startGas - gasleft() + EXEC_TX_OVERHEAD;
 
-        // ExecutionCost (- consecutive state writes + gas refund from deletion)
-        uint256 estGasConsumed = (EXEC_TX_OVERHEAD + estExecTxGas).sub(
-            gasleft(),
-            "GelatoCore._processProviderPayables: estGasConsumed underflow"
+        // Provider payable Gas Refund capped at gelatoMaxGas
+        //  (- consecutive state writes + gas refund from deletion)
+        uint256 cappedGasUsed = (
+            estGasUsed < _gelatoMaxGas ? estGasUsed : _gelatoMaxGas + EXEC_TX_OVERHEAD
         );
 
         if (_payType == ExecutorPay.Reward) {
-            executorCompensation = executorSuccessFee(estGasConsumed, _gelatoGasPrice);
-            sysAdminCompensation = sysAdminSuccessFee(estGasConsumed, _gelatoGasPrice);
+            executorCompensation = executorSuccessFee(cappedGasUsed, _gelatoGasPrice);
+            sysAdminCompensation = sysAdminSuccessFee(cappedGasUsed, _gelatoGasPrice);
             // ExecSuccess: Provider pays ExecutorSuccessFee and SysAdminSuccessFee
             providerFunds[_provider] = providerFunds[_provider].sub(
                 executorCompensation.add(sysAdminCompensation),
@@ -437,7 +431,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             sysAdminFunds += sysAdminCompensation;
         } else {
             // ExecFailure: Provider REFUNDS estimated costs to executor
-            executorCompensation = estGasConsumed.mul(_gelatoGasPrice);
+            executorCompensation = cappedGasUsed.mul(_gelatoGasPrice);
             providerFunds[_provider] = providerFunds[_provider].sub(
                 executorCompensation,
                 "GelatoCore._processProviderPayables: providerFunds underflow"
