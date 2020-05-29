@@ -203,14 +203,7 @@ describe("Testing DS Proxy Module delpoyment and ds proxy execution with gelato"
       const actionData = await run("abi-encode-withselector", {
         contractname: "ActionERC20TransferFrom",
         functionname: "action",
-        inputs: [
-          {
-            user: sellerAddress,
-            sendToken: sellToken.address,
-            destination: executorAddress,
-            sendAmount,
-          },
-        ],
+        inputs: [sellerAddress, sellToken.address, executorAddress, sendAmount],
       });
       // Submit Task
       const gelatoProvider = new GelatoProvider({
@@ -280,14 +273,7 @@ describe("Testing DS Proxy Module delpoyment and ds proxy execution with gelato"
       const actionData = await run("abi-encode-withselector", {
         contractname: "ActionERC20TransferFrom",
         functionname: "action",
-        inputs: [
-          {
-            user: sellerAddress,
-            sendToken: sellToken.address,
-            destination: executorAddress,
-            sendAmount,
-          },
-        ],
+        inputs: [sellerAddress, sellToken.address, executorAddress, sendAmount],
       });
       // Submit Task
       const gelatoProvider = new GelatoProvider({

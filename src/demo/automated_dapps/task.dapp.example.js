@@ -71,18 +71,18 @@ export default task(
       });
 
       // The ActionERC20TransferFrom contract's function "action" takes in a struct
-      const inputObj = {
-        user: userAddress,
-        sendToken: taskArgs.sendtoken,
-        destination: taskArgs.destination,
-        sendAmount: taskArgs.amount,
-      };
+      const transferFromInputs = [
+        userAddress,
+        taskArgs.sendtoken,
+        taskArgs.destination,
+        taskArgs.amount,
+      ];
 
       // Encode action inputs
       const actionData1 = await run("abi-encode-withselector", {
         contractname: "ActionERC20TransferFrom",
         functionname: "action",
-        inputs: [inputObj],
+        inputs: transferFromInputs,
       });
 
       // Create Action Object

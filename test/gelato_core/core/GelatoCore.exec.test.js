@@ -35,7 +35,7 @@ describe("GelatoCore.exec", function () {
   let sellToken; //DAI
   let buyToken; //USDC
   let testToken; //GUSD
-  let ActionWithdrawBatchExchange;
+  let ActionWithdrawBatchExchangeWithFee;
   let MockERC20;
   let MockBatchExchange;
   let mockBatchExchange;
@@ -125,7 +125,7 @@ describe("GelatoCore.exec", function () {
     actionERC20TransferFrom = await ActionERC20TransferFrom.deploy();
     await actionERC20TransferFrom.deployed();
 
-    // // #### ActionWithdrawBatchExchange Start ####
+    // // #### ActionWithdrawBatchExchangeWithFee Start ####
     const MockBatchExchange = await ethers.getContractFactory(
       "MockBatchExchange"
     );
@@ -198,17 +198,17 @@ describe("GelatoCore.exec", function () {
     );
     await feeExtractor.deployed();
 
-    const ActionWithdrawBatchExchange = await ethers.getContractFactory(
-      "ActionWithdrawBatchExchange"
+    const ActionWithdrawBatchExchangeWithFee = await ethers.getContractFactory(
+      "ActionWithdrawBatchExchangeWithFee"
     );
-    actionWithdrawBatchExchange = await ActionWithdrawBatchExchange.deploy(
+    actionWithdrawBatchExchange = await ActionWithdrawBatchExchangeWithFee.deploy(
       mockBatchExchange.address,
       feeExtractor.address
     );
 
     await actionWithdrawBatchExchange.deployed();
 
-    // // #### ActionWithdrawBatchExchange End ####
+    // // #### ActionWithdrawBatchExchangeWithFee End ####
 
     // Call provideFunds(value) with provider on core
     await gelatoCore.connect(provider).provideFunds(providerAddress, {
@@ -279,7 +279,7 @@ describe("GelatoCore.exec", function () {
 
   // We test different functionality of the contract as normal Mocha tests.
   describe("GelatoCore.exec: Business As Usual", function () {
-    it("#1: Successfully submit and exec ActionWithdrawBatchExchange taskReceipt", async function () {
+    it("#1: Successfully submit and exec ActionWithdrawBatchExchangeWithFee taskReceipt", async function () {
       // Get Action Payload
       const withdrawAmount = 10 * 10 ** buyDecimals;
 
@@ -291,7 +291,7 @@ describe("GelatoCore.exec", function () {
       await tx.wait();
 
       const actionData = await run("abi-encode-withselector", {
-        contractname: "ActionWithdrawBatchExchange",
+        contractname: "ActionWithdrawBatchExchangeWithFee",
         functionname: "action",
         inputs: [sellerAddress, sellToken.address, buyToken.address],
       });
@@ -329,7 +329,7 @@ describe("GelatoCore.exec", function () {
       expect(
         await gelatoCore.canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE)
       ).to.be.equal(
-        "ActionTermsNotOk:ActionWithdrawBatchExchange: Sell Token not withdrawable yet"
+        "ActionTermsNotOk:ActionWithdrawBatchExchangeWithFee: Sell Token not withdrawable yet"
       );
 
       await expect(
@@ -341,7 +341,7 @@ describe("GelatoCore.exec", function () {
         .withArgs(
           executorAddress,
           taskReceipt.id,
-          "ActionTermsNotOk:ActionWithdrawBatchExchange: Sell Token not withdrawable yet"
+          "ActionTermsNotOk:ActionWithdrawBatchExchangeWithFee: Sell Token not withdrawable yet"
         );
 
       // Make TaskReceipt executable
@@ -350,7 +350,7 @@ describe("GelatoCore.exec", function () {
       expect(
         await gelatoCore.canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE)
       ).to.be.equal(
-        "ActionTermsNotOk:ActionWithdrawBatchExchange: Proxy has insufficient credit"
+        "ActionTermsNotOk:ActionWithdrawBatchExchangeWithFee: Proxy has insufficient credit"
       );
 
       // Pay Credit
@@ -416,12 +416,10 @@ describe("GelatoCore.exec", function () {
         contractname: "ActionERC20TransferFrom",
         functionname: "action",
         inputs: [
-          {
-            user: sellerAddress,
-            sendToken: sellToken.address,
-            destination: providerAddress,
-            sendAmount: ethers.utils.parseUnits("1", "ether"),
-          },
+          sellerAddress,
+          sellToken.address,
+          providerAddress,
+          ethers.utils.parseUnits("1", "ether"),
         ],
       });
 
@@ -498,12 +496,10 @@ describe("GelatoCore.exec", function () {
         contractname: "ActionERC20TransferFrom",
         functionname: "action",
         inputs: [
-          {
-            user: sellerAddress,
-            sendToken: sellToken.address,
-            destination: providerAddress,
-            sendAmount: ethers.utils.parseUnits("1", "ether"),
-          },
+          sellerAddress,
+          sellToken.address,
+          providerAddress,
+          ethers.utils.parseUnits("1", "ether"),
         ],
       });
 
@@ -578,12 +574,10 @@ describe("GelatoCore.exec", function () {
         contractname: "ActionERC20TransferFrom",
         functionname: "action",
         inputs: [
-          {
-            user: sellerAddress,
-            sendToken: sellToken.address,
-            destination: providerAddress,
-            sendAmount: ethers.utils.parseUnits("1", "ether"),
-          },
+          sellerAddress,
+          sellToken.address,
+          providerAddress,
+          ethers.utils.parseUnits("1", "ether"),
         ],
       });
 
@@ -790,12 +784,10 @@ describe("GelatoCore.exec", function () {
         contractname: "ActionERC20TransferFrom",
         functionname: "action",
         inputs: [
-          {
-            user: sellerAddress,
-            sendToken: sellToken.address,
-            destination: providerAddress,
-            sendAmount: ethers.utils.parseUnits("1", "ether"),
-          },
+          sellerAddress,
+          sellToken.address,
+          providerAddress,
+          ethers.utils.parseUnits("1", "ether"),
         ],
       });
 
@@ -861,12 +853,10 @@ describe("GelatoCore.exec", function () {
         contractname: "ActionERC20TransferFrom",
         functionname: "action",
         inputs: [
-          {
-            user: sellerAddress,
-            sendToken: sellToken.address,
-            destination: providerAddress,
-            sendAmount: ethers.utils.parseUnits("1", "ether"),
-          },
+          sellerAddress,
+          sellToken.address,
+          providerAddress,
+          ethers.utils.parseUnits("1", "ether"),
         ],
       });
 
@@ -983,12 +973,10 @@ describe("GelatoCore.exec", function () {
         contractname: "ActionERC20TransferFrom",
         functionname: "action",
         inputs: [
-          {
-            user: sellerAddress,
-            sendToken: sellToken.address,
-            destination: providerAddress,
-            sendAmount: ethers.utils.parseUnits("1", "ether"),
-          },
+          sellerAddress,
+          sellToken.address,
+          providerAddress,
+          ethers.utils.parseUnits("1", "ether"),
         ],
       });
 
@@ -1071,7 +1059,7 @@ describe("GelatoCore.exec", function () {
       await tx.wait();
 
       const actionData = await run("abi-encode-withselector", {
-        contractname: "ActionWithdrawBatchExchange",
+        contractname: "ActionWithdrawBatchExchangeWithFee",
         functionname: "action",
         inputs: [sellerAddress, sellToken.address, buyToken.address],
       });
@@ -1111,7 +1099,7 @@ describe("GelatoCore.exec", function () {
       expect(
         await gelatoCore.canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE)
       ).to.be.equal(
-        "ActionTermsNotOk:ActionWithdrawBatchExchange: Sell Token not withdrawable yet"
+        "ActionTermsNotOk:ActionWithdrawBatchExchangeWithFee: Sell Token not withdrawable yet"
       );
 
       await gelatoCore
@@ -1127,7 +1115,7 @@ describe("GelatoCore.exec", function () {
         .withArgs(
           executorAddress,
           taskReceipt.id,
-          "ActionTermsNotOk:ActionWithdrawBatchExchange: Sell Token not withdrawable yet"
+          "ActionTermsNotOk:ActionWithdrawBatchExchangeWithFee: Sell Token not withdrawable yet"
         );
 
       // Make TaskReceipt executable
@@ -1155,7 +1143,7 @@ describe("GelatoCore.exec", function () {
       await tx.wait();
 
       const actionData = await run("abi-encode-withselector", {
-        contractname: "ActionWithdrawBatchExchange",
+        contractname: "ActionWithdrawBatchExchangeWithFee",
         functionname: "action",
         inputs: [sellerAddress, sellToken.address, buyToken.address],
       });
@@ -1195,7 +1183,7 @@ describe("GelatoCore.exec", function () {
       expect(
         await gelatoCore.canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE)
       ).to.be.equal(
-        "ActionTermsNotOk:ActionWithdrawBatchExchange: Sell Token not withdrawable yet"
+        "ActionTermsNotOk:ActionWithdrawBatchExchangeWithFee: Sell Token not withdrawable yet"
       );
 
       await expect(
@@ -1207,7 +1195,7 @@ describe("GelatoCore.exec", function () {
         .withArgs(
           executorAddress,
           taskReceipt.id,
-          "ActionTermsNotOk:ActionWithdrawBatchExchange: Sell Token not withdrawable yet"
+          "ActionTermsNotOk:ActionWithdrawBatchExchangeWithFee: Sell Token not withdrawable yet"
         );
 
       // Make TaskReceipt executable
@@ -1237,7 +1225,7 @@ describe("GelatoCore.exec", function () {
       await tx.wait();
 
       const actionData = await run("abi-encode-withselector", {
-        contractname: "ActionWithdrawBatchExchange",
+        contractname: "ActionWithdrawBatchExchangeWithFee",
         functionname: "action",
         inputs: [sellerAddress, sellToken.address, buyToken.address],
       });
@@ -1277,7 +1265,7 @@ describe("GelatoCore.exec", function () {
       expect(
         await gelatoCore.canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE)
       ).to.be.equal(
-        "ActionTermsNotOk:ActionWithdrawBatchExchange: Sell Token not withdrawable yet"
+        "ActionTermsNotOk:ActionWithdrawBatchExchangeWithFee: Sell Token not withdrawable yet"
       );
 
       await expect(
@@ -1289,7 +1277,7 @@ describe("GelatoCore.exec", function () {
         .withArgs(
           executorAddress,
           taskReceipt.id,
-          "ActionTermsNotOk:ActionWithdrawBatchExchange: Sell Token not withdrawable yet"
+          "ActionTermsNotOk:ActionWithdrawBatchExchangeWithFee: Sell Token not withdrawable yet"
         );
 
       // Make TaskReceipt executable
@@ -1307,7 +1295,7 @@ describe("GelatoCore.exec", function () {
       ).to.emit(gelatoCore, "LogCanExecFailed");
     });
 
-    it("#13: Successfully submit and exec ActionWithdrawBatchExchange taskReceipt (self-provider)", async function () {
+    it("#13: Successfully submit and exec ActionWithdrawBatchExchangeWithFee taskReceipt (self-provider)", async function () {
       // Get Action Payload
       const withdrawAmount = 10 * 10 ** buyDecimals;
 
@@ -1319,7 +1307,7 @@ describe("GelatoCore.exec", function () {
       await tx.wait();
 
       const actionData = await run("abi-encode-withselector", {
-        contractname: "ActionWithdrawBatchExchange",
+        contractname: "ActionWithdrawBatchExchangeWithFee",
         functionname: "action",
         inputs: [sellerAddress, sellToken.address, buyToken.address],
       });
@@ -1424,7 +1412,7 @@ describe("GelatoCore.exec", function () {
       expect(
         await gelatoCore.canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE)
       ).to.be.equal(
-        "ActionTermsNotOk:ActionWithdrawBatchExchange: Proxy has insufficient credit"
+        "ActionTermsNotOk:ActionWithdrawBatchExchangeWithFee: Proxy has insufficient credit"
       );
 
       // Pay Credit
@@ -1504,7 +1492,7 @@ describe("GelatoCore.exec", function () {
       await tx.wait();
 
       const actionData = await run("abi-encode-withselector", {
-        contractname: "ActionWithdrawBatchExchange",
+        contractname: "ActionWithdrawBatchExchangeWithFee",
         functionname: "action",
         inputs: [sellerAddress, sellToken.address, buyToken.address],
       });
@@ -1611,7 +1599,7 @@ describe("GelatoCore.exec", function () {
       expect(
         await gelatoCore.canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE)
       ).to.be.equal(
-        "ActionTermsNotOk:ActionWithdrawBatchExchange: Sell Token not withdrawable yet"
+        "ActionTermsNotOk:ActionWithdrawBatchExchangeWithFee: Sell Token not withdrawable yet"
       );
 
       await expect(
@@ -1623,7 +1611,7 @@ describe("GelatoCore.exec", function () {
         .withArgs(
           executorAddress,
           taskReceipt.id,
-          "ActionTermsNotOk:ActionWithdrawBatchExchange: Sell Token not withdrawable yet"
+          "ActionTermsNotOk:ActionWithdrawBatchExchangeWithFee: Sell Token not withdrawable yet"
         );
 
       // Make TaskReceipt executable
@@ -1636,7 +1624,7 @@ describe("GelatoCore.exec", function () {
       ).to.emit(gelatoCore, "LogExecSuccess");
     });
 
-    it("#15: Successfully submit and exec ActionWithdrawBatchExchange taskReceipt WITH ONLY .calls", async function () {
+    it("#15: Successfully submit and exec ActionWithdrawBatchExchangeWithFee taskReceipt WITH ONLY .calls", async function () {
       // Set up Batch Exchange
       const withdrawAmount = 10 * 10 ** buyDecimals;
       const sellerBalanceBefore = await buyToken.balanceOf(sellerAddress);
@@ -1930,12 +1918,10 @@ describe("GelatoCore.exec", function () {
         contractname: "ActionERC20TransferFrom",
         functionname: "action",
         inputs: [
-          {
-            user: sellerAddress,
-            sendToken: sellToken.address,
-            destination: providerAddress,
-            sendAmount: ethers.utils.parseUnits("1", "ether"),
-          },
+          sellerAddress,
+          sellToken.address,
+          providerAddress,
+          ethers.utils.parseUnits("1", "ether"),
         ],
       });
 

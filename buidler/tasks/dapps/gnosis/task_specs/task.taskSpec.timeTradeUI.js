@@ -23,7 +23,7 @@ export default internalTask(
       // ##### Action #1
       const transferFromActionAddress = await run("bre-config", {
         deployments: true,
-        contractname: "ActionERC20TransferFromNoStruct",
+        contractname: "ActionERC20TransferFrom",
       });
 
       const transferFromAction = new Action({
