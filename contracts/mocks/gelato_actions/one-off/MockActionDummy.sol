@@ -10,7 +10,13 @@ contract MockActionDummy is GelatoActionsStandard {
         emit LogAction(_falseOrTrue);
     }
 
-    function termsOk(address, bytes calldata _data) external view override virtual returns(string memory) {
+    function termsOk(uint256, address, bytes calldata _data, uint256)
+        external
+        view
+        override
+        virtual
+        returns(string memory)
+    {
         bool isOk = abi.decode(_data, (bool));
         return termsOk(isOk);
     }

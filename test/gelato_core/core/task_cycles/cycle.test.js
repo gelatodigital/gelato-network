@@ -12,7 +12,7 @@ const EXPIRY_DATE = 0;
 
 describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
   // Tests use for loops that have timed out on coverage (ganache)
-  this.timeout(90000);
+  this.timeout(0);
 
   let GelatoCoreFactory;
   let GelatoGasPriceOracleFactory;
@@ -128,10 +128,10 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
     // ConditionDummy-1: ok=true
     const firstDummyConditionStruct = new Condition({
       inst: conditionDummy.address,
-      data: await run("abi-encode-withselector", {
+      data: await run("abi-encode", {
         contractname: "MockConditionDummy",
-        functionname: "ok(bool)",
-        inputs: [true],
+        functionname: "dummyCheck",
+        values: [true],
       }),
     });
 

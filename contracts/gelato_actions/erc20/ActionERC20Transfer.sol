@@ -30,7 +30,7 @@ contract ActionERC20Transfer is GelatoActionsStandard {
 
     // ===== ACTION CONDITIONS CHECK ========
     // Overriding and extending GelatoActionsStandard's function (optional)
-    function termsOk(address _userProxy, bytes calldata _actionData)
+    function termsOk(uint256, address _userProxy, bytes calldata _actionData, uint256)
         external
         view
         override

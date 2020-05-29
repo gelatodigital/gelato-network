@@ -16,8 +16,7 @@ import { FeeExtractor } from "../../gelato_helpers/FeeExtractor.sol";
 /// @title ActionPlaceOrderBatchExchange
 /// @author Luis Schliesske & Hilmar Orth
 /// @notice Gelato action that 1) withdraws funds form user's  EOA, 2) deposits on Batch Exchange, 3) Places order on batch exchange and 4) requests future withdraw on batch exchange
-
-contract ActionPlaceOrderBatchExchange  {
+contract ActionPlaceOrderBatchExchange is GelatoActionsStandard {
 
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
@@ -91,9 +90,10 @@ contract ActionPlaceOrderBatchExchange  {
 
     // ======= ACTION CONDITIONS CHECK =========
     // Overriding and extending GelatoActionsStandard's function (optional)
-    function termsOk(address _userProxy, bytes calldata _actionData)
+    function termsOk(uint256, address _userProxy, bytes calldata _actionData, uint256)
         external
         view
+        override
         virtual
         returns(string memory)  // actionCondition
     {
