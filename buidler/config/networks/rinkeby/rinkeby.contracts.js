@@ -65,4 +65,5 @@ export const contracts = [
 
   // Helpers
   "FeeExtractor",
+  "GelatoMultiCall",
 ];

@@ -3,11 +3,11 @@ export const deployments = {
   // ==== One-Off Actions ====
   // Gnosis
   ActionWithdrawBatchExchange: "0x64764080793449073BB473a2D56FC3388D7522F1",
-  ActionPlaceOrderBatchExchange: "0x06D2962c174Eba21aaDE2Be2ff1D9De75D28962D",
+  ActionPlaceOrderBatchExchange: "0x034dAFf98377a9C833af017Dc4479d2E68B6e4e0",
   // erc20
   ActionERC20Transfer: "0x0",
   ActionERC20TransferFrom: "0xF5A7803c32CC4ba874e8c8CF19a998057a2edc79",
-  ActionERC20TransferFromNoStruct: "0x47F7bDabF51403373853A76bfe275D00D32E2914",
+  ActionERC20TransferFromNoStruct: "0x01a4CEC4Ad0aE3FAA8F2675a3671309832d76787",
   MockConditionDummy: "0x5803c4712f191fc565afA44eB7f8eb9e8Af057db",
   // kyber
   ActionKyberTradeRinkeby: "0x0",
@@ -76,4 +76,5 @@ export const deployments = {
   // Helpers
   FeeFinder: "0x220D8543325364D004661F73E0253C7CC6a4ACc1",
   FeeExtractor: "0x9b625d0aC057450E67B7e3B6e17633AcF01Fe2a9",
+  GelatoMultiCall: "0xb40660B1f81055e000a1bf2D4b2941EF7142ab96",
 };

@@ -21,6 +21,19 @@ export default internalTask(
       });
 
       // ##### Action #1
+      const transferFromActionAddress = await run("bre-config", {
+        deployments: true,
+        contractname: "ActionERC20TransferFromNoStruct",
+      });
+
+      const transferFromAction = new Action({
+        addr: transferFromActionAddress,
+        data: constants.HashZero,
+        operation: Operation.Delegatecall,
+        termsOkCheck: true,
+      });
+
+      // ##### Action #1
       const placeOrderBatchExchangeAddress = await run("bre-config", {
         deployments: true,
         contractname: "ActionPlaceOrderBatchExchange",
@@ -36,7 +49,7 @@ export default internalTask(
       // ##### Create Task Spec
       const taskSpec = new TaskSpec({
         conditions: [condition.inst],
-        actions: [placeOrderAction],
+        actions: [transferFromAction, placeOrderAction],
         gasPriceCeil: 0, // Infinte gas price
       });
 

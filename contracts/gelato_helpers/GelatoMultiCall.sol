@@ -5,10 +5,10 @@ pragma experimental ABIEncoderV2;
 import {IGelatoCore, TaskReceipt} from '../gelato_core/interfaces/IGelatoCore.sol';
 
 
-/// @title GelatoMulticall - Aggregate results from multiple read-only function calls on GelatoCore
+/// @title GelatoMultiCall - Aggregate results from multiple read-only function calls on GelatoCore
 /// @author Hilmar X (inspired by Maker's Multicall)
 
-contract GelatoMulticall {
+contract GelatoMultiCall {
 
     IGelatoCore public immutable gelatoCore;
 

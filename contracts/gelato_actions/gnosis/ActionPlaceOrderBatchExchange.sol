@@ -32,14 +32,12 @@ contract ActionPlaceOrderBatchExchange  {
     }
 
     /// @notice Place order on Batch Exchange and request future withdraw for buy and sell token
-    /// @param _user Users EOA address
     /// @param _sellToken Token to sell on Batch Exchange
     /// @param _buyToken Token to buy on Batch Exchange
     /// @param _sellAmount Amount to sell
     /// @param _buyAmount Amount to receive (at least)
     /// @param _batchDuration After how many batches funds should be
     function action(
-        address _user,
         address _sellToken,
         uint128 _sellAmount,
         address _buyToken,
@@ -50,19 +48,15 @@ contract ActionPlaceOrderBatchExchange  {
         virtual
     {
 
-        // 1. Transfer sellToken to proxy
-        IERC20 sellToken = IERC20(_sellToken);
-        sellToken.safeTransferFrom(_user, address(this), _sellAmount);
-
-
-        // 2. Fetch token Ids for sell & buy token on Batch Exchange
+        // 1. Fetch token Ids for sell & buy token on Batch Exchange
         uint16 sellTokenId = batchExchange.tokenAddressToIdMap(_sellToken);
         uint16 buyTokenId = batchExchange.tokenAddressToIdMap(_buyToken);
 
-        // 3. Approve sellToken to BatchExchange Contract
+        // 2. Approve sellToken to BatchExchange Contract
+        IERC20 sellToken = IERC20(_sellToken);
         sellToken.safeIncreaseAllowance(address(batchExchange), _sellAmount);
 
-        // 4. Deposit sellAmount on BatchExchange
+        // 3. Deposit sellAmount on BatchExchange
         try batchExchange.deposit(_sellToken, _sellAmount) {}
         catch {
             revert("batchExchange.deposit _sellToken failed");
@@ -71,21 +65,21 @@ contract ActionPlaceOrderBatchExchange  {
         // Get current batch id
         uint32 withdrawBatchId = uint32(block.timestamp / BATCH_TIME) + _batchDuration;
 
-        // 5. Place Order on Batch Exchange
+        // 4. Place Order on Batch Exchange
         // uint16 buyToken, uint16 sellToken, uint32 validUntil, uint128 buyAmount, uint128 sellAmount
         try batchExchange.placeOrder(buyTokenId, sellTokenId, withdrawBatchId, _buyAmount, _sellAmount) {}
         catch {
             revert("batchExchange.placeOrderfailed");
         }
 
-        // 6. Request future withdraw on Batch Exchange for sellToken
+        // 5. Request future withdraw on Batch Exchange for sellToken
         // requestFutureWithdraw(address token, uint256 amount, uint32 batchId)
         try batchExchange.requestFutureWithdraw(_sellToken, _sellAmount, withdrawBatchId) {}
         catch {
             revert("batchExchange.requestFutureWithdraw _sellToken failed");
         }
 
-        // 7. Request future withdraw on Batch Exchange for sellToken
+        // 6. Request future withdraw on Batch Exchange for sellToken
         // @DEV using MAX_UINT as we don't know in advance how much buyToken we will get
         // requestFutureWithdraw(address token, uint256 amount, uint32 batchId)
         try batchExchange.requestFutureWithdraw(_buyToken, MAX_UINT, withdrawBatchId) {}
@@ -103,22 +97,25 @@ contract ActionPlaceOrderBatchExchange  {
         virtual
         returns(string memory)  // actionCondition
     {
-        (address _user,
-        address _sellToken,
-        uint128 _sellAmount,
-        ,
-        ,
-        ) = abi.decode(_actionData[4:], (address, address, uint128, address, uint128, uint32));
-        return _actionProviderTermsCheck(_user, _userProxy, _sellToken, _sellAmount);
+        (address _sellToken, uint128 _sellAmount, , ,) = abi.decode(
+            _actionData[4:],
+            (
+                address,
+                uint128,
+                address,
+                uint128,
+                uint32
+            )
+        );
+        return _actionProviderTermsCheck(_userProxy, _sellToken, _sellAmount);
     }
 
     /// @notice Verify that EOA has sufficient balance and gave proxy adequate allowance
-    /// @param _user Users EOA address
     /// @param _userProxy Users Proxy address
     /// @param _sellToken Token to sell on Batch Exchange
     /// @param _sellAmount Amount to sell
     function _actionProviderTermsCheck(
-        address _user, address _userProxy, address _sellToken, uint128 _sellAmount
+        address _userProxy, address _sellToken, uint128 _sellAmount
     )
         internal
         view
@@ -126,19 +123,11 @@ contract ActionPlaceOrderBatchExchange  {
         returns(string memory)  // actionCondition
     {
         IERC20 sendERC20 = IERC20(_sellToken);
-        try sendERC20.balanceOf(_user) returns(uint256 sendERC20Balance) {
+        try sendERC20.balanceOf(_userProxy) returns(uint256 sendERC20Balance) {
             if (sendERC20Balance < _sellAmount)
                 return "ActionPlaceOrderBatchExchange: NotOkUserSendTokenBalance";
         } catch {
             return "ActionPlaceOrderBatchExchange: ErrorBalanceOf";
-        }
-        try sendERC20.allowance(_user, _userProxy)
-            returns(uint256 userProxySendTokenAllowance)
-        {
-            if (userProxySendTokenAllowance < _sellAmount)
-                return "ActionPlaceOrderBatchExchange: NotOkUserProxySendTokenAllowance";
-        } catch {
-            return "ActionPlaceOrderBatchExchange: ErrorAllowance";
         }
 
         // STANDARD return string to signal actionConditions Ok
