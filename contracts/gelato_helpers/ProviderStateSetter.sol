@@ -1,13 +1,13 @@
 // "SPDX-License-Identifier: UNLICENSED"
 pragma solidity ^0.6.8;
 
-import { GlobalFeeStorage } from './GlobalFeeStorage.sol';
-
+import { GelatoActionsStandard } from "../gelato_actions/GelatoActionsStandard.sol";
+import { GlobalState } from './GlobalState.sol';
 import { SafeMath } from '../external/SafeMath.sol';
 
 /// @notice Contract that sets Global State for individual providers
 /// @dev will be called within Gelato Actions
-contract ProviderStateSetter {
+contract ProviderStateSetter is GelatoActionsStandard {
 
     using SafeMath for uint256;
 
@@ -15,11 +15,11 @@ contract ProviderStateSetter {
 
     address public immutable myself;
     address public immutable provider;
-    GlobalFeeStorage public immutable globalFeeStorage;
+    GlobalState public immutable globalState;
 
-    constructor(GlobalFeeStorage _globalFeeStorage) public {
+    constructor(GlobalState _globalFeeStorage) public {
         provider = msg.sender;
-        globalFeeStorage = _globalFeeStorage;
+        globalState = _globalFeeStorage;
         myself = address(this);
     }
 
@@ -27,21 +27,36 @@ contract ProviderStateSetter {
     function updateUintStoreAndProvider(uint256 _newUint)
         external
     {
-        // 1000 to avoid any reverts due to fee calculations
-        require(_newUint >= 1000 && _newUint != MAX_UINT, "ProviderStateSetter.updateUintStoreAndProvider: Must avoid decimal underflow");
         require(address(this) != myself, "Only Delegatecall");
-        globalFeeStorage.updateUintStoreAndProvider(_newUint, provider);
+        globalState.updateUintStoreAndProvider(_newUint, provider);
+    }
+
+    // ======= ACTION CONDITIONS CHECK =========
+    // Overriding and extending GelatoActionsStandard's function (optional)
+    function termsOk(uint256, address, bytes calldata _actionData, uint256)
+        external
+        view
+        override
+        virtual
+        returns(string memory)  // actionTermsOk
+    {
+        (uint256 newUint) = abi.decode(_actionData[4:], (uint256));
+        if(newUint >= 1000) return OK;
+        else return "ProviderStateSetter: newUint needs to be greater than 1000";
+
     }
 
     // fallback() external {
-    //     globalFeeStorage.updateCurrentProvider(provider);
+    //     globalState.updateCurrentProvider(provider);
     // }
 
-    function setActionFee(address _action, uint256 _feeNum, uint256 _feeDen)
-        external
-    {
-        require(msg.sender == provider, "ProviderStateSetter.setActionFee: Only provider");
-        globalFeeStorage.setActionFee(_action, _feeNum, _feeDen);
-    }
+    // @DEV actually this can be called by the provider directly, because if another party select this provider in the global fee storage, he would make the provider money for free
+
+    // function setActionFee(address _action, uint256 _feeNum, uint256 _feeDen)
+    //     external
+    // {
+    //     require(msg.sender == provider, "ProviderStateSetter.setActionFee: Only provider");
+    //     globalState.setActionFee(_action, _feeNum, _feeDen);
+    // }
 
 }

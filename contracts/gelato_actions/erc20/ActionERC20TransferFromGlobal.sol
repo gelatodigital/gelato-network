@@ -6,44 +6,44 @@ import { GelatoActionsStandard } from "../GelatoActionsStandard.sol";
 import { IERC20 } from "../../external/IERC20.sol";
 import { SafeERC20 } from "../../external/SafeERC20.sol";
 import { Address } from "../../external/Address.sol";
-import { GlobalFeeStorage } from "../../gelato_helpers/GlobalFeeStorage.sol";
+import { GlobalState } from "../../gelato_helpers/GlobalState.sol";
 
 contract ActionERC20TransferFromGlobal is GelatoActionsStandard {
     // using SafeERC20 for IERC20; <- internal library methods vs. try/catch
     using Address for address;
     using SafeERC20 for IERC20;
 
-    GlobalFeeStorage public immutable globalFeeStorage;
+    GlobalState public immutable globalState;
     address public immutable myself;
 
-    constructor(GlobalFeeStorage _globalFeeStorage) public {
-        globalFeeStorage = _globalFeeStorage;
+    constructor(GlobalState _globalFeeStorage) public {
+        globalState = _globalFeeStorage;
         myself = address(this);
     }
 
     function action(
-        address user,
-        address sendToken,
-        address destination,
-        uint256 sendAmount
+        address _user,
+        address _sendToken,
+        address _destination,
+        uint256 _sendAmount
     ) public payable virtual {
 
-        uint256 feeAmount;
-        address provider;
-
         // Fetch and delete global state
-        (sendAmount, feeAmount, provider) = globalFeeStorage.getAmountWithFees(myself);
-        require(sendAmount != 0, "ActionERC20TransferFromGlobal.action: sendAmount cannot be zero");
+        (uint256 sendAmount, uint256 feeAmount, address provider) = globalState.getAmountWithFees(myself);
+        if(sendAmount == 0) sendAmount = _sendAmount;
 
-        IERC20 sendERC20 = IERC20(sendToken);
+        IERC20 sendERC20 = IERC20(_sendToken);
 
         // Pay Fees
-        sendERC20.safeTransferFrom(user, provider, feeAmount);
+        if(feeAmount > 0) sendERC20.safeTransferFrom(_user, provider, feeAmount);
 
         // Execute Action
-        sendERC20.safeTransferFrom(user, destination, sendAmount);
+        sendERC20.safeTransferFrom(_user, _destination, sendAmount);
 
-        emit LogOneWay(user, sendToken, sendAmount, destination);
+        // Update Global State
+        globalState.updateUintStore(sendAmount);
+
+        emit LogOneWay(_user, _sendToken, sendAmount, _destination);
     }
 
     // ======= ACTION CONDITIONS CHECK =========

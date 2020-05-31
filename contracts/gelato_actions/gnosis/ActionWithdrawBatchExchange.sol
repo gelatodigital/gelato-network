@@ -22,12 +22,8 @@ contract ActionWithdrawBatchExchange is GelatoActionsStandard {
     // BatchExchange
     IBatchExchange public immutable batchExchange;
 
-    // Fee finder
-    FeeExtractor public immutable feeExtractor;
-
-    constructor(address _batchExchange, address _feeExtractor) public {
+    constructor(address _batchExchange) public {
         batchExchange = IBatchExchange(_batchExchange);
-        feeExtractor = FeeExtractor(_feeExtractor);
     }
 
     /// @notice Withdraw sell and buy token from Batch Exchange and send funds back to _user EOA
@@ -109,11 +105,6 @@ contract ActionWithdrawBatchExchange is GelatoActionsStandard {
 
         if (!buyTokenWithdrawable)
             return "ActionWithdrawBatchExchange: Buy Token not withdrawable yet";
-
-        // bool proxyHasCredit = feeExtractor.proxyHasCredit(_userProxy);
-
-        // if (!proxyHasCredit)
-        //     return "ActionWithdrawBatchExchange: Proxy has insufficient credit";
 
         return OK;
     }

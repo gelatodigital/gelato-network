@@ -12,7 +12,7 @@ import { SafeMath } from '../external/SafeMath.sol';
 
 /// @notice Contract that stores and calculates the fee logic for providers.
 /// @dev will be called within Gelato Actions
-contract GlobalFeeStorage {
+contract GlobalState {
 
     using SafeMath for uint256;
 
@@ -32,7 +32,7 @@ contract GlobalFeeStorage {
     // Provider => Action => Fee
     mapping(address => mapping(address => Fee)) public providerActionFee;
 
-    // Provider Setters => Called through GlobalProviderStateSetter
+    // ###### Provider Setters => Called through GlobalProviderStateSetter
     // For example for a fee of 0.1% set _feeNum = 1 and _feeDen = 1000
     function setActionFee(address _action, uint256 _feeNum, uint256 _feeDen)
         external
@@ -40,17 +40,17 @@ contract GlobalFeeStorage {
         providerActionFee[msg.sender][_action] = Fee({num: _feeNum, den: _feeDen});
     }
 
-    // User Proxy Setters
+    // ###### User Proxy Setters
     function updateUintStore(uint256 _newUint)
         public
     {
         uintStore[msg.sender] = _newUint;
     }
 
-    function updateCurrentProvider(address _userProxy)
+    function updateCurrentProvider(address _newProvider)
         public
     {
-        currentProvider[_userProxy] = msg.sender;
+        currentProvider[msg.sender] = _newProvider;
     }
 
     function updateUintStoreAndProvider(
@@ -76,8 +76,9 @@ contract GlobalFeeStorage {
         amount = uintStore[msg.sender];
         delete uintStore[msg.sender];
 
+        // "If provider is address 0, no fees must be paid"
+        if (provider != address(0) && amount != 0)
         // Calculate provider fee
-        if(amount != MAX_UINT)
         (feeAmount, amount) = getFeeAmounts(amount, provider, _action);
     }
 
@@ -87,10 +88,13 @@ contract GlobalFeeStorage {
         returns(uint256 feeAmount, uint256 amountMinusFee)
     {
         // Calculate provider fee
+        amountMinusFee = _amount;
         Fee memory fee = providerActionFee[_provider][_action];
-        feeAmount = _amount.mul(fee.num).div(fee.den, "GlobalFeeStorage.getAmountWithFees: feeAmount underflow");
+        if (fee.num != 0 && fee.den != 0) {
+            feeAmount = _amount.mul(fee.num).div(fee.den, "GlobalState.getAmountWithFees: feeAmount underflow");
+            amountMinusFee = _amount.sub(feeAmount, "GlobalState.getAmountWithFees: amountMinusFee underflow");
+        }
 
-        amountMinusFee = _amount.sub(feeAmount, "GlobalFeeStorage.getAmountWithFees: amountMinusFee underflow");
     }
 
 }

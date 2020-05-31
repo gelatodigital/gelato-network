@@ -10,8 +10,7 @@ import { SafeMath } from "../../external/SafeMath.sol";
 import { IBatchExchange } from "../../dapp_interfaces/gnosis/IBatchExchange.sol";
 import { Task, IGelatoCore } from "../../gelato_core/interfaces/IGelatoCore.sol";
 import { FeeExtractor } from "../../gelato_helpers/FeeExtractor.sol";
-
-
+import { GlobalState } from "../../gelato_helpers/GlobalState.sol";
 
 /// @title ActionPlaceOrderBatchExchange
 /// @author Luis Schliesske & Hilmar Orth
@@ -25,9 +24,13 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandard {
     uint32 public constant BATCH_TIME = 300;
 
     IBatchExchange private immutable batchExchange;
+    GlobalState private immutable globalState;
+    address public immutable myself;
 
-    constructor(address _batchExchange) public {
-        batchExchange = IBatchExchange(_batchExchange);
+    constructor(IBatchExchange _batchExchange, GlobalState _globalState) public {
+        batchExchange = _batchExchange;
+        globalState = _globalState;
+        myself = address(this);
     }
 
     /// @notice Place order on Batch Exchange and request future withdraw for buy and sell token
@@ -46,17 +49,31 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandard {
         public
         virtual
     {
+        // OPTIONAL FEE LOGIC
+        (uint256 sellAmount256, uint256 feeAmount, address provider) = globalState.getAmountWithFees(myself);
+        uint128 sellAmount = uint128(sellAmount256);
+
+        if (sellAmount == 0) sellAmount = _sellAmount;
+
+        IERC20 sellToken = IERC20(_sellToken);
+
+        // Pay Fees
+        if (feeAmount > 0) sellToken.safeTransfer(provider, feeAmount);
+
+        // Update Global State
+        globalState.updateUintStore(sellAmount);
+
+        // ACTION LOGIC
 
         // 1. Fetch token Ids for sell & buy token on Batch Exchange
         uint16 sellTokenId = batchExchange.tokenAddressToIdMap(_sellToken);
         uint16 buyTokenId = batchExchange.tokenAddressToIdMap(_buyToken);
 
         // 2. Approve sellToken to BatchExchange Contract
-        IERC20 sellToken = IERC20(_sellToken);
-        sellToken.safeIncreaseAllowance(address(batchExchange), _sellAmount);
+        sellToken.safeIncreaseAllowance(address(batchExchange), sellAmount);
 
         // 3. Deposit sellAmount on BatchExchange
-        try batchExchange.deposit(_sellToken, _sellAmount) {}
+        try batchExchange.deposit(_sellToken, sellAmount) {}
         catch {
             revert("batchExchange.deposit _sellToken failed");
         }
@@ -66,14 +83,14 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandard {
 
         // 4. Place Order on Batch Exchange
         // uint16 buyToken, uint16 sellToken, uint32 validUntil, uint128 buyAmount, uint128 sellAmount
-        try batchExchange.placeOrder(buyTokenId, sellTokenId, withdrawBatchId, _buyAmount, _sellAmount) {}
+        try batchExchange.placeOrder(buyTokenId, sellTokenId, withdrawBatchId, _buyAmount, sellAmount) {}
         catch {
             revert("batchExchange.placeOrderfailed");
         }
 
         // 5. Request future withdraw on Batch Exchange for sellToken
         // requestFutureWithdraw(address token, uint256 amount, uint32 batchId)
-        try batchExchange.requestFutureWithdraw(_sellToken, _sellAmount, withdrawBatchId) {}
+        try batchExchange.requestFutureWithdraw(_sellToken, sellAmount, withdrawBatchId) {}
         catch {
             revert("batchExchange.requestFutureWithdraw _sellToken failed");
         }
