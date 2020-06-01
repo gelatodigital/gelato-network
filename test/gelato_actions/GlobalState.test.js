@@ -43,7 +43,7 @@ describe("GlobalState Tests", function () {
   let sellToken;
   let sellDecimals;
   let globalState;
-  let providerStateSetter;
+  let providerFeeRelay;
   let actionTransferFromGlobal;
   let sendAmount;
   let action1;
@@ -74,13 +74,16 @@ describe("GlobalState Tests", function () {
     globalState = await GlobalState.deploy();
     await globalState.deployed();
 
-    // Instantiate ProviderStateSetter
-    const ProviderStateSetter = await ethers.getContractFactory(
-      "ProviderStateSetter",
+    // Instantiate ProviderFeeRelay
+    const ProviderFeeRelay = await ethers.getContractFactory(
+      "ProviderFeeRelay",
       provider
     );
-    providerStateSetter = await ProviderStateSetter.deploy(globalState.address);
-    await providerStateSetter.deployed();
+    providerFeeRelay = await ProviderFeeRelay.deploy(
+      globalState.address,
+      providerAddress
+    );
+    await providerFeeRelay.deployed();
 
     // Deploy Gelato Gas Price Oracle with SysAdmin and set to GELATO_GAS_PRICE
     const GelatoGasPriceOracle = await ethers.getContractFactory(
@@ -161,13 +164,13 @@ describe("GlobalState Tests", function () {
     sendAmount = ethers.utils.parseUnits("10", "ether");
 
     const actionData1 = await run("abi-encode-withselector", {
-      contractname: "ProviderStateSetter",
+      contractname: "ProviderFeeRelay",
       functionname: "updateUintStoreAndProvider",
       inputs: [sendAmount],
     });
 
     action1 = new Action({
-      addr: providerStateSetter.address,
+      addr: providerFeeRelay.address,
       data: actionData1,
       operation: Operation.Delegatecall,
       value: 0,
@@ -240,7 +243,7 @@ describe("GlobalState Tests", function () {
       userProxy.submitTask(gelatoProvider, taskWithoutStateSetter, EXPIRY_DATE)
     ).to.emit(gelatoCore, "LogTaskSubmitted");
 
-    // Provider first has to set up his fee model in GlobalState through its ProviderStateSetter => 1%
+    // Provider first has to set up his fee model in GlobalState through its ProviderFeeRelay => 1%
 
     await globalState
       .connect(provider)
@@ -269,7 +272,7 @@ describe("GlobalState Tests", function () {
     await sellToken.connect(seller).approve(userProxyAddress, sendAmount);
   });
 
-  it("#1: Check if provider payouts happen correctly with GlobalState when we call providerStateSetter prior to action execution", async function () {
+  it("#1: Check if provider payouts happen correctly with GlobalState when we call providerFeeRelay prior to action execution", async function () {
     const preSellerBalance = await sellToken.balanceOf(sellerAddress);
 
     await expect(
@@ -291,7 +294,7 @@ describe("GlobalState Tests", function () {
     expect(postSellerBalance).to.be.equal(preSellerBalance.sub(sendAmount));
   });
 
-  it("#2: Check if no provider payouts happen if don't call the providerStateSetter prior to action execution", async function () {
+  it("#2: Check if no provider payouts happen if don't call the providerFeeRelay prior to action execution", async function () {
     const preSellerBalance = await sellToken.balanceOf(sellerAddress);
 
     await expect(
@@ -314,7 +317,7 @@ describe("GlobalState Tests", function () {
     expect(postSellerBalance).to.be.equal(preSellerBalance.sub(sendAmount));
   });
 
-  it("#3: Malicious user should fail if encoding the wrong function for providerStateSetter", async function () {
+  it("#3: Malicious user should fail if encoding the wrong function for providerFeeRelay", async function () {
     const preSellerBalance = await sellToken.balanceOf(sellerAddress);
 
     const abi = ["function attack(uint256)"];
@@ -323,7 +326,7 @@ describe("GlobalState Tests", function () {
     const maliciousData = interFace.functions.attack.encode([sendAmount]);
 
     const malicousAction = new Action({
-      addr: providerStateSetter.address,
+      addr: providerFeeRelay.address,
       data: maliciousData,
       termsOkCheck: true,
       value: 0,

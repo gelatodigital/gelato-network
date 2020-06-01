@@ -78,5 +78,6 @@ export const deployments = {
   FeeExtractor: "0x9b625d0aC057450E67B7e3B6e17633AcF01Fe2a9",
   GelatoMultiCall: "0xb40660B1f81055e000a1bf2D4b2941EF7142ab96",
   GlobalState: "0xA88e0F76601Fd628467ea283a212ce71907f7232",
-  ProviderStateSetter: "0xb8e2bA1EFaf6375Cdce947E86ec8809DD70D3c43",
+  ProviderFeeRelay: "0xb8e2bA1EFaf6375Cdce947E86ec8809DD70D3c43",
+  ProviderStateSetterFactory: "0x4A4C80067e5ED6F54ED873b69e718Dc949df22Aa",
 };

@@ -67,5 +67,6 @@ export const contracts = [
   "FeeExtractor",
   "GelatoMultiCall",
   "GlobalState",
-  "ProviderStateSetter",
+  "ProviderFeeRelay",
+  "ProviderStateSetterFactory",
 ];

@@ -7,7 +7,7 @@ import { SafeMath } from '../external/SafeMath.sol';
 
 /// @notice Contract that sets Global State for individual providers
 /// @dev will be called within Gelato Actions
-contract ProviderStateSetter is GelatoActionsStandard {
+contract ProviderFeeRelay is GelatoActionsStandard {
 
     using SafeMath for uint256;
 
@@ -43,36 +43,36 @@ contract ProviderStateSetter is GelatoActionsStandard {
     {
         (uint256 newUint) = abi.decode(_actionData[4:], (uint256));
         if(newUint >= 1000) return OK;
-        else return "ProviderStateSetter: newUint needs to be greater than 1000";
+        else return "ProviderFeeRelay: newUint needs to be greater than 1000";
 
     }
 }
 
 
-contract ProviderStateSetterFactory {
+contract ProviderFeeRelayFactory {
 
-    event Created(address indexed sender, address indexed owner, address providerStateSetter);
+    event Created(address indexed sender, address indexed owner, address providerFeeRelay);
 
     GlobalState public immutable globalState;
     mapping( address => bool ) public isDeployed;
-    mapping( address => address ) public providerStateSetters;
+    mapping( address => address ) public feeRelays;
 
     constructor(GlobalState _globalState) public {
         globalState = _globalState;
     }
 
-    // deploys a new providerStateSetter instance
-    // sets owner of providerStateSetter to caller
-    function create() public returns (address providerStateSetter) {
-        providerStateSetter = create(msg.sender);
+    // deploys a new providerFeeRelay instance
+    // sets owner of providerFeeRelay to caller
+    function create() public returns (address providerFeeRelay) {
+        providerFeeRelay = create(msg.sender);
     }
 
     // deploys a new proxy instance
     // sets custom owner of proxy
-    function create(address owner) public returns (address providerStateSetter) {
-        providerStateSetter = address(new ProviderStateSetter(globalState, owner));
-        emit Created(msg.sender, owner, providerStateSetter);
+    function create(address owner) public returns (address providerFeeRelay) {
+        providerFeeRelay = address(new ProviderFeeRelay(globalState, owner));
+        emit Created(msg.sender, owner, providerFeeRelay);
         isDeployed[owner] = true;
-        providerStateSetters[owner] = providerStateSetter;
+        feeRelays[owner] = providerFeeRelay;
     }
 }

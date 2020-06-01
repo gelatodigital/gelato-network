@@ -56,9 +56,9 @@ export default task("gc-setupgelato")
         contractname: "GlobalState",
       });
 
-      // Deploy Provider State Setter
-      const providerStateSetter = await run("deploy", {
-        contractname: "ProviderStateSetter",
+      // Deploy ProviderStateSetterFactory
+      const providerFeeRelayFactory = await run("deploy", {
+        contractname: "ProviderFeeRelayFactory",
         signerindex: 2,
         constructorargs: [globalState.address],
       });

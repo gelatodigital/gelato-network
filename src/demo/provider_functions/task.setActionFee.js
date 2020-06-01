@@ -17,9 +17,23 @@ export default task(
   .setAction(async (taskArgs) => {
     try {
       const provider = getProvider();
+      const providerAddress = await provider.getAddress();
 
-      const gelatoCore = await run("instantiateContract", {
-        contractname: "GelatoCore",
+      // Check if Provider State Setter is already deployed
+      const feeRelayFactory = await run("instantiateContract", {
+        contractname: "ProviderFeeRelayFactoryFactory",
+        signer: provider,
+        write: true,
+      });
+
+      const isDeployed = await feeRelayFactory.isDeployed(providerAddress);
+
+      if (!isDeployed) await feeRelayFactory.create();
+
+      const feeRelayAddress = await feeRelayFactory.feeRelays(providerAddress);
+
+      const globalState = await run("instantiateContract", {
+        contractname: "GlobalState",
         signer: provider,
         write: true,
       });
