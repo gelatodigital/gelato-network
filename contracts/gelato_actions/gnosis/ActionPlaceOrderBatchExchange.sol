@@ -51,6 +51,7 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandard {
     {
         // OPTIONAL FEE LOGIC
         (uint256 sellAmount256, uint256 feeAmount, address provider) = globalState.getAmountWithFees(myself);
+
         uint128 sellAmount = uint128(sellAmount256);
 
         if (sellAmount == 0) sellAmount = _sellAmount;

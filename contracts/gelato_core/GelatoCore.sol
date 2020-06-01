@@ -416,18 +416,17 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         private
         returns(uint256 executorCompensation, uint256 sysAdminCompensation)
     {
-        // Provider payable Gas Refund capped at gelatoMaxGas
-        uint256 estExecTxGas = _startGas <= _gelatoMaxGas ? _startGas : _gelatoMaxGas;
 
-        // ExecutionCost (- consecutive state writes + gas refund from deletion)
-        uint256 estGasConsumed = (EXEC_TX_OVERHEAD + estExecTxGas).sub(
-            gasleft(),
-            "GelatoCore._processProviderPayables: estGasConsumed underflow"
-        );
+        uint256 estGasConsumed = _startGas - gasleft();
+
+        // Provider payable Gas Refund capped at gelatoMaxGas (- consecutive state writes + gas refund from deletion)
+        uint256 cappedGasConsumed = estGasConsumed < _gelatoMaxGas
+        ? estGasConsumed + EXEC_TX_OVERHEAD : _gelatoMaxGas + EXEC_TX_OVERHEAD;
+
 
         if (_payType == ExecutorPay.Reward) {
-            executorCompensation = executorSuccessFee(estGasConsumed, _gelatoGasPrice);
-            sysAdminCompensation = sysAdminSuccessFee(estGasConsumed, _gelatoGasPrice);
+            executorCompensation = executorSuccessFee(cappedGasConsumed, _gelatoGasPrice);
+            sysAdminCompensation = sysAdminSuccessFee(cappedGasConsumed, _gelatoGasPrice);
             // ExecSuccess: Provider pays ExecutorSuccessFee and SysAdminSuccessFee
             providerFunds[_provider] = providerFunds[_provider].sub(
                 executorCompensation.add(sysAdminCompensation),
@@ -437,7 +436,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             sysAdminFunds += sysAdminCompensation;
         } else {
             // ExecFailure: Provider REFUNDS estimated costs to executor
-            executorCompensation = estGasConsumed.mul(_gelatoGasPrice);
+            executorCompensation = cappedGasConsumed.mul(_gelatoGasPrice);
             providerFunds[_provider] = providerFunds[_provider].sub(
                 executorCompensation,
                 "GelatoCore._processProviderPayables: providerFunds underflow"
