@@ -180,8 +180,7 @@ describe("Gelato Core - Task Submission ", function () {
       "ActionWithdrawBatchExchange"
     );
     actionWithdrawBatchExchange = await ActionWithdrawBatchExchange.deploy(
-      mockBatchExchange.address,
-      feeFinder.address
+      mockBatchExchange.address
     );
 
     await actionWithdrawBatchExchange.deployed();
