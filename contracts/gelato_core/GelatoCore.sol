@@ -248,10 +248,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         // Store startGas for gas-consumption based cost and payout calcs
         uint256 startGas = gasleft();
 
-        // CHECKS: all further checks are done during this.executionWrapper.canExec()
-        uint256 _internalGasRequirement = internalGasRequirement;
-        require(startGas > _internalGasRequirement, "GelatoCore.exec: Insufficient gas sent");
-
         // memcopy of gelatoGasPrice, to avoid multiple storage reads
         uint256 gelatoGasPrice = _getGelatoGasPrice();
 
@@ -273,7 +269,11 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         ExecutionResult executionResult;
         string memory reason;
 
-        try this.executionWrapper{gas: gasleft() - _internalGasRequirement}(
+        try this.executionWrapper{gas: gasleft().sub(
+            internalGasRequirement,
+            "GelatoCore.exec: Insufficient gas sent"
+            )
+        }(
             _TR,
             _gelatoMaxGas,
             gelatoGasPrice
