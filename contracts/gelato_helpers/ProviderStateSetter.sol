@@ -17,17 +17,18 @@ contract ProviderStateSetter is GelatoActionsStandard {
     address public immutable provider;
     GlobalState public immutable globalState;
 
-    constructor(GlobalState _globalFeeStorage) public {
-        provider = msg.sender;
-        globalState = _globalFeeStorage;
+    constructor(GlobalState _globalState, address _provider) public {
+        provider = _provider;
+        globalState = _globalState;
         myself = address(this);
     }
 
-    /// @dev Only delegatecall into this func with the userProxy
+    /// @dev Only delegatecall into this func with the userproviderStateSetter
     function updateUintStoreAndProvider(uint256 _newUint)
         external
     {
         require(address(this) != myself, "Only Delegatecall");
+        require(_newUint >= 1000, "newUint must be greater than 1000");
         globalState.updateUintStoreAndProvider(_newUint, provider);
     }
 
@@ -45,18 +46,33 @@ contract ProviderStateSetter is GelatoActionsStandard {
         else return "ProviderStateSetter: newUint needs to be greater than 1000";
 
     }
+}
 
-    // fallback() external {
-    //     globalState.updateCurrentProvider(provider);
-    // }
 
-    // @DEV actually this can be called by the provider directly, because if another party select this provider in the global fee storage, he would make the provider money for free
+contract ProviderStateSetterFactory {
 
-    // function setActionFee(address _action, uint256 _feeNum, uint256 _feeDen)
-    //     external
-    // {
-    //     require(msg.sender == provider, "ProviderStateSetter.setActionFee: Only provider");
-    //     globalState.setActionFee(_action, _feeNum, _feeDen);
-    // }
+    event Created(address indexed sender, address indexed owner, address providerStateSetter);
 
+    GlobalState public immutable globalState;
+    mapping( address => bool ) public isDeployed;
+    mapping( address => address ) public providerStateSetters;
+
+    constructor(GlobalState _globalState) public {
+        globalState = _globalState;
+    }
+
+    // deploys a new providerStateSetter instance
+    // sets owner of providerStateSetter to caller
+    function create() public returns (address providerStateSetter) {
+        providerStateSetter = create(msg.sender);
+    }
+
+    // deploys a new proxy instance
+    // sets custom owner of proxy
+    function create(address owner) public returns (address providerStateSetter) {
+        providerStateSetter = address(new ProviderStateSetter(globalState, owner));
+        emit Created(msg.sender, owner, providerStateSetter);
+        isDeployed[owner] = true;
+        providerStateSetters[owner] = providerStateSetter;
+    }
 }
