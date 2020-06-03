@@ -2,12 +2,11 @@
 pragma solidity ^0.6.8;
 pragma experimental ABIEncoderV2;
 
-import {IGelatoCore, TaskReceipt} from '../gelato_core/interfaces/IGelatoCore.sol';
+import {IGelatoCore, TaskReceipt} from "../gelato_core/interfaces/IGelatoCore.sol";
 
 
 /// @title GelatoMultiCall - Aggregate results from multiple read-only function calls on GelatoCore
 /// @author Hilmar X (inspired by Maker's Multicall)
-
 contract GelatoMultiCall {
 
     IGelatoCore public immutable gelatoCore;
@@ -16,30 +15,32 @@ contract GelatoMultiCall {
         gelatoCore = _gelatoCore;
     }
 
-    struct Reponse {
+    struct Response {
         uint256 id;
         string response;
     }
 
-
     function multiCanExec(
-        TaskReceipt[] memory _TR,
+        TaskReceipt[] memory _TRs,
         uint256 _gelatoMaxGas,
         uint256 _gelatoGasPrice
     )
-        public view returns (uint256 blockNumber, Reponse[] memory returnData)
-
+        public
+        view
+        returns (uint256 blockNumber, Response[] memory responses)
     {
         blockNumber = block.number;
-        returnData = new Reponse[](_TR.length);
-        for(uint256 i = 0; i < _TR.length; i++) {
-            try gelatoCore.canExec(_TR[i], _gelatoMaxGas, _gelatoGasPrice)
-            returns(string memory response)
+        responses = new Response[](_TRs.length);
+        for(uint256 i = 0; i < _TRs.length; i++) {
+            try gelatoCore.canExec(_TRs[i], _gelatoMaxGas, _gelatoGasPrice)
+                returns (string memory response)
             {
-                returnData[i] = Reponse({id: _TR[i].id, response: response});
-            }
-            catch {
-                returnData[i] = Reponse({id: _TR[i].id, response: "Multicall.multiCanExec: failed"});
+                responses[i] = Response({id: _TRs[i].id, response: response});
+            } catch {
+                responses[i] = Response({
+                    id: _TRs[i].id,
+                    response: "GelatoMultiCall.multiCanExec: failed"
+                });
             }
         }
     }

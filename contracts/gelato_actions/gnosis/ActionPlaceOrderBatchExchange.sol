@@ -10,7 +10,7 @@ import { SafeMath } from "../../external/SafeMath.sol";
 import { IBatchExchange } from "../../dapp_interfaces/gnosis/IBatchExchange.sol";
 import { Task, IGelatoCore } from "../../gelato_core/interfaces/IGelatoCore.sol";
 import { FeeExtractor } from "../../gelato_helpers/FeeExtractor.sol";
-import { GlobalState } from "../../gelato_helpers/GlobalState.sol";
+import { ProviderFeeStore } from "../../gelato_helpers/ProviderFeeStore.sol";
 
 /// @title ActionPlaceOrderBatchExchange
 /// @author Luis Schliesske & Hilmar Orth
@@ -24,12 +24,12 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandard {
     uint32 public constant BATCH_TIME = 300;
 
     IBatchExchange private immutable batchExchange;
-    GlobalState private immutable globalState;
+    ProviderFeeStore private immutable providerFeeStore;
     address public immutable myself;
 
-    constructor(IBatchExchange _batchExchange, GlobalState _globalState) public {
+    constructor(IBatchExchange _batchExchange, ProviderFeeStore _providerFeeStore) public {
         batchExchange = _batchExchange;
-        globalState = _globalState;
+        providerFeeStore = _providerFeeStore;
         myself = address(this);
     }
 
@@ -50,7 +50,7 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandard {
         virtual
     {
         // OPTIONAL FEE LOGIC
-        (uint256 sellAmount256, uint256 feeAmount, address provider) = globalState.getAmountWithFees(myself);
+        (uint256 sellAmount256, uint256 feeAmount, address provider) = providerFeeStore.getAmountWithFeesAndReset(myself);
 
         uint128 sellAmount = uint128(sellAmount256);
 
@@ -61,8 +61,8 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandard {
         // Pay Fees
         if (feeAmount > 0) sellToken.safeTransfer(provider, feeAmount);
 
-        // Update Global State
-        globalState.updateUintStore(sellAmount);
+        // Update ProviderFeeStore
+        providerFeeStore.updateAmountStore(sellAmount);
 
         // ACTION LOGIC
 

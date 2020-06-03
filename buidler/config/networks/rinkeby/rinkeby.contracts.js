@@ -5,7 +5,7 @@ export const contracts = [
   // ERC20
   "ActionERC20Transfer",
   "ActionERC20TransferFrom",
-  "ActionERC20TransferFromGlobal",
+  "ActionERC20TransferFromWithFee",
   // Kyber
   "ActionKyberTradeRinkeby",
   // Portfolio Mgmt
@@ -66,7 +66,7 @@ export const contracts = [
   // Helpers
   "FeeExtractor",
   "GelatoMultiCall",
-  "GlobalState",
+  "ProviderFeeStore",
   "ProviderFeeRelay",
   "ProviderStateSetterFactory",
 ];

@@ -32,8 +32,8 @@ export default task(
 
       const feeRelayAddress = await feeRelayFactory.feeRelays(providerAddress);
 
-      const globalState = await run("instantiateContract", {
-        contractname: "GlobalState",
+      const providerFeeStore = await run("instantiateContract", {
+        contractname: "ProviderFeeStore",
         signer: provider,
         write: true,
       });

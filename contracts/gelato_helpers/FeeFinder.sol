@@ -1,14 +1,14 @@
 // "SPDX-License-Identifier: UNLICENSED"
 pragma solidity ^0.6.8;
 
-import { IUniswapFactory } from '../dapp_interfaces/uniswap/IUniswapFactory.sol';
-import { IUniswapExchange } from '../dapp_interfaces/uniswap/IUniswapExchange.sol';
+import { IUniswapFactory } from "../dapp_interfaces/uniswap/IUniswapFactory.sol";
+import { IUniswapExchange } from "../dapp_interfaces/uniswap/IUniswapExchange.sol";
 import { IMedianizer } from "../dapp_interfaces/maker/IMakerMedianizer.sol";
 
-import { IKyber } from '../dapp_interfaces/kyber/IKyber.sol';
-import { IERC20 } from '../external/IERC20.sol';
-import { Ownable } from '../external/Ownable.sol';
-import { SafeMath } from '../external/SafeMath.sol';
+import { IKyber } from "../dapp_interfaces/kyber/IKyber.sol";
+import { IERC20 } from "../external/IERC20.sol";
+import { Ownable } from "../external/Ownable.sol";
+import { SafeMath } from "../external/SafeMath.sol";
 
 /// @notice Contract to set and calculate fees paid for the batchExchange withdraw action
 contract FeeFinder is Ownable {

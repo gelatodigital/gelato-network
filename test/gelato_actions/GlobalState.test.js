@@ -15,7 +15,7 @@ const GELATO_GAS_PRICE = initialStateGasPriceOracle.gasPrice;
 const EXPIRY_DATE = 0;
 const SUBMISSIONS_LEFT = 1;
 
-describe("GlobalState Tests", function () {
+describe("ProviderFeeStore Tests", function () {
   // We define the ContractFactory and Signer variables here and assign them in
   // a beforeEach hook.
   let seller;
@@ -42,9 +42,9 @@ describe("GlobalState Tests", function () {
   let gelatoMultiCall;
   let sellToken;
   let sellDecimals;
-  let globalState;
+  let providerFeeStore;
   let providerFeeRelay;
-  let actionTransferFromGlobal;
+  let actionTransferFromWithFee;
   let sendAmount;
   let action1;
   let action2;
@@ -66,13 +66,13 @@ describe("GlobalState Tests", function () {
       .connect(executor)
       .stakeExecutor({ value: ethers.utils.parseUnits("1", "ether") });
 
-    // Instantiate GlobalState
-    const GlobalState = await ethers.getContractFactory(
-      "GlobalState",
+    // Instantiate ProviderFeeStore
+    const ProviderFeeStore = await ethers.getContractFactory(
+      "ProviderFeeStore",
       sysAdmin
     );
-    globalState = await GlobalState.deploy();
-    await globalState.deployed();
+    providerFeeStore = await ProviderFeeStore.deploy();
+    await providerFeeStore.deployed();
 
     // Instantiate ProviderFeeRelay
     const ProviderFeeRelay = await ethers.getContractFactory(
@@ -80,8 +80,8 @@ describe("GlobalState Tests", function () {
       provider
     );
     providerFeeRelay = await ProviderFeeRelay.deploy(
-      globalState.address,
-      providerAddress
+      providerAddress,
+      providerFeeStore.address
     );
     await providerFeeRelay.deployed();
 
@@ -125,17 +125,17 @@ describe("GlobalState Tests", function () {
 
     // Register new provider TaskSpec on core with provider EDITS NEED ä#######################
 
-    // Call multiProvide for mockConditionDummy + actionTransferFromGlobal
+    // Call multiProvide for mockConditionDummy + actionTransferFromWithFee
     // Provider registers new condition
-    const ActionERC20TransferFromGlobal = await ethers.getContractFactory(
-      "ActionERC20TransferFromGlobal",
+    const ActionERC20TransferFromWithFee = await ethers.getContractFactory(
+      "ActionERC20TransferFromWithFee",
       sysAdmin
     );
 
-    actionTransferFromGlobal = await ActionERC20TransferFromGlobal.deploy(
-      globalState.address
+    actionTransferFromWithFee = await ActionERC20TransferFromWithFee.deploy(
+      providerFeeStore.address
     );
-    await actionTransferFromGlobal.deployed();
+    await actionTransferFromWithFee.deployed();
 
     // Create UserProxy
     const createTx = await gelatoUserProxyFactory.connect(seller).create();
@@ -165,7 +165,7 @@ describe("GlobalState Tests", function () {
 
     const actionData1 = await run("abi-encode-withselector", {
       contractname: "ProviderFeeRelay",
-      functionname: "updateUintStoreAndProvider",
+      functionname: "updateAmountStoreAndProvider",
       inputs: [sendAmount],
     });
 
@@ -178,13 +178,13 @@ describe("GlobalState Tests", function () {
     });
 
     const actionData2 = await run("abi-encode-withselector", {
-      contractname: "ActionERC20TransferFromGlobal",
+      contractname: "ActionERC20TransferFromWithFee",
       functionname: "action",
       inputs: [sellerAddress, sellToken.address, executorAddress, sendAmount],
     });
 
     action2 = new Action({
-      addr: actionTransferFromGlobal.address,
+      addr: actionTransferFromWithFee.address,
       data: actionData2,
       operation: Operation.Delegatecall,
       value: 0,
@@ -243,15 +243,15 @@ describe("GlobalState Tests", function () {
       userProxy.submitTask(gelatoProvider, taskWithoutStateSetter, EXPIRY_DATE)
     ).to.emit(gelatoCore, "LogTaskSubmitted");
 
-    // Provider first has to set up his fee model in GlobalState through its ProviderFeeRelay => 1%
+    // Provider first has to set up his fee model in ProviderFeeStore through its ProviderFeeRelay => 1%
 
-    await globalState
+    await providerFeeStore
       .connect(provider)
-      .setActionFee(actionTransferFromGlobal.address, 1, 100);
+      .setActionFee(actionTransferFromWithFee.address, 1, 100);
 
-    const providerFee = await globalState.providerActionFee(
+    const providerFee = await providerFeeStore.providerActionFee(
       providerAddress,
-      actionTransferFromGlobal.address
+      actionTransferFromWithFee.address
     );
 
     const predictedProviderFee = [
@@ -272,14 +272,11 @@ describe("GlobalState Tests", function () {
     await sellToken.connect(seller).approve(userProxyAddress, sendAmount);
   });
 
-  it("#1: Check if provider payouts happen correctly with GlobalState when we call providerFeeRelay prior to action execution", async function () {
+  it("#1: Check if provider payouts happen correctly with ProviderFeeStore when we call providerFeeRelay prior to action execution", async function () {
     const preSellerBalance = await sellToken.balanceOf(sellerAddress);
 
     await expect(
-      gelatoCore.connect(executor).exec(
-        taskReceipt, // Array of task Receipts
-        { gasLimit: 3000000 }
-      )
+      gelatoCore.connect(executor).exec(taskReceipt, { gasLimit: 3000000 })
     ).to.emit(gelatoCore, "LogExecSuccess");
 
     const postSellerBalance = await sellToken.balanceOf(sellerAddress);
@@ -298,10 +295,7 @@ describe("GlobalState Tests", function () {
     const preSellerBalance = await sellToken.balanceOf(sellerAddress);
 
     await expect(
-      gelatoCore.connect(executor).exec(
-        taskReceipt2, // Array of task Receipts
-        { gasLimit: 3000000 }
-      )
+      gelatoCore.connect(executor).exec(taskReceipt2, { gasLimit: 3000000 })
     ).to.emit(gelatoCore, "LogExecSuccess");
 
     const postSellerBalance = await sellToken.balanceOf(sellerAddress);
@@ -384,14 +378,14 @@ describe("GlobalState Tests", function () {
     );
     const actionPlaceOrderBatchExchange = await ActionPlaceOrderBatchExchange.deploy(
       mockBatchExchange.address,
-      globalState.address
+      providerFeeStore.address
     );
     await actionPlaceOrderBatchExchange.deployed();
 
     // #### Init Batch Exchange Contracts DONE ####
 
     // ### Set provider fee
-    await globalState
+    await providerFeeStore
       .connect(provider)
       .setActionFee(actionPlaceOrderBatchExchange.address, 1, 100);
 

@@ -192,7 +192,7 @@ describe("GelatoCore.canExecMultiCall", function () {
         ethers.utils.parseUnits("1", "gwei")
       );
 
-    const canExecResults = multiCanExecReturn.returnData;
+    const canExecResults = multiCanExecReturn.responses;
     canExecResults.forEach((result) => {
       if (result.response === "InvalidExecutor") {
       }

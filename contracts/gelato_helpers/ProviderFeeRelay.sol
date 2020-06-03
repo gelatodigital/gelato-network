@@ -2,10 +2,10 @@
 pragma solidity ^0.6.8;
 
 import { GelatoActionsStandard } from "../gelato_actions/GelatoActionsStandard.sol";
-import { GlobalState } from './GlobalState.sol';
-import { SafeMath } from '../external/SafeMath.sol';
+import { ProviderFeeStore } from "./ProviderFeeStore.sol";
+import { SafeMath } from "../external/SafeMath.sol";
 
-/// @notice Contract that sets Global State for individual providers
+/// @notice Contract that sets ProviderFeeStore values for individual providers
 /// @dev will be called within Gelato Actions
 contract ProviderFeeRelay is GelatoActionsStandard {
 
@@ -13,23 +13,27 @@ contract ProviderFeeRelay is GelatoActionsStandard {
 
     uint256 public constant MAX_UINT = type(uint256).max;
 
-    address public immutable myself;
     address public immutable provider;
-    GlobalState public immutable globalState;
+    address public immutable providerRelay;
+    ProviderFeeStore public immutable providerFeeStore;
 
-    constructor(GlobalState _globalState, address _provider) public {
+    constructor(address _provider, ProviderFeeStore _providerFeeStore) public {
         provider = _provider;
-        globalState = _globalState;
-        myself = address(this);
+        providerRelay = address(this);
+        providerFeeStore = _providerFeeStore;
     }
 
     /// @dev Only delegatecall into this func with the userproviderStateSetter
-    function updateUintStoreAndProvider(uint256 _newUint)
-        external
-    {
-        require(address(this) != myself, "Only Delegatecall");
-        require(_newUint >= 1000, "newUint must be greater than 1000");
-        globalState.updateUintStoreAndProvider(_newUint, provider);
+    function updateAmountStoreAndProvider(uint256 _newAmount) external {
+        require(
+            address(this) != providerRelay,
+            "ProviderFeeRelay.updateAmountStoreAndProvider: Only Delegatecall"
+        );
+        require(
+            _newAmount >= 1000,
+            "newAmount must be greater than 1000"
+        );
+        providerFeeStore.updateAmountStoreAndProvider(_newAmount, provider);
     }
 
     // ======= ACTION CONDITIONS CHECK =========
@@ -41,38 +45,35 @@ contract ProviderFeeRelay is GelatoActionsStandard {
         virtual
         returns(string memory)  // actionTermsOk
     {
-        (uint256 newUint) = abi.decode(_actionData[4:], (uint256));
-        if(newUint >= 1000) return OK;
-        else return "ProviderFeeRelay: newUint needs to be greater than 1000";
-
+        uint256 newAmount = abi.decode(_actionData[4:], (uint256));
+        if (newAmount >= 1000) return OK;
+        else return "ProviderFeeRelay.termsOk: newAmount must be greater than 1000";
     }
 }
 
-
 contract ProviderFeeRelayFactory {
+    event Created(
+        address indexed sender,
+        address indexed owner,
+        ProviderFeeRelay indexed providerFeeRelay
+    );
 
-    event Created(address indexed sender, address indexed owner, address providerFeeRelay);
+    ProviderFeeStore public immutable providerFeeStore;
+    mapping(address => ProviderFeeRelay) public feeRelaysByProvider;
 
-    GlobalState public immutable globalState;
-    mapping( address => bool ) public isDeployed;
-    mapping( address => address ) public feeRelays;
-
-    constructor(GlobalState _globalState) public {
-        globalState = _globalState;
+    constructor(ProviderFeeStore _providerFeeStore) public {
+        providerFeeStore = _providerFeeStore;
     }
 
-    // deploys a new providerFeeRelay instance
-    // sets owner of providerFeeRelay to caller
-    function create() public returns (address providerFeeRelay) {
-        providerFeeRelay = create(msg.sender);
+    // Deploys new ProviderFeeRelay and sets Provider to sender
+    function create() public returns (ProviderFeeRelay) {
+        return create(msg.sender);
     }
 
-    // deploys a new proxy instance
-    // sets custom owner of proxy
-    function create(address owner) public returns (address providerFeeRelay) {
-        providerFeeRelay = address(new ProviderFeeRelay(globalState, owner));
-        emit Created(msg.sender, owner, providerFeeRelay);
-        isDeployed[owner] = true;
-        feeRelays[owner] = providerFeeRelay;
+    // Deploys a new ProviderFeeRelay and sets custom Provider
+    function create(address _provider) public returns (ProviderFeeRelay providerFeeRelay) {
+        providerFeeRelay = new ProviderFeeRelay(_provider, providerFeeStore);
+        feeRelaysByProvider[_provider] = providerFeeRelay;
+        emit Created(msg.sender, _provider, providerFeeRelay);
     }
 }
