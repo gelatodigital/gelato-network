@@ -304,7 +304,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         } else {
             // executionResult == ExecutionResult.ExecRevert
             // END-3.1: ExecReverted NO gelatoMaxGas => No TaskReceipt Deletion & No Refund
-            if (startGas < _gelatoMaxGas - EXEC_TX_OVERHEAD)
+            if (startGas < _gelatoMaxGas)
                 emit LogExecReverted(msg.sender, _TR.id, 0, reason);
             else {
                 // END-3.2: ExecReverted BUT gelatoMaxGas was used
@@ -415,7 +415,9 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
         // Provider payable Gas Refund capped at gelatoMaxGas
         //  (- consecutive state writes + gas refund from deletion)
-        uint256 cappedGasUsed = estGasUsed < _gelatoMaxGas ? estGasUsed : _gelatoMaxGas;
+        uint256 cappedGasUsed = (
+            estGasUsed < _gelatoMaxGas ? estGasUsed : _gelatoMaxGas + EXEC_TX_OVERHEAD
+        );
 
         if (_payType == ExecutorPay.Reward) {
             executorCompensation = executorSuccessFee(cappedGasUsed, _gelatoGasPrice);
