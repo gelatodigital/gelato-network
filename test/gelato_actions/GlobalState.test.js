@@ -278,7 +278,7 @@ describe("GlobalState Tests", function () {
     await expect(
       gelatoCore.connect(executor).exec(
         taskReceipt, // Array of task Receipts
-        { gasLimit: 3000000 }
+        { gasPrice: GELATO_GAS_PRICE, gasLimit: 3000000 }
       )
     ).to.emit(gelatoCore, "LogExecSuccess");
 
@@ -300,7 +300,7 @@ describe("GlobalState Tests", function () {
     await expect(
       gelatoCore.connect(executor).exec(
         taskReceipt2, // Array of task Receipts
-        { gasLimit: 3000000 }
+        { gasPrice: GELATO_GAS_PRICE, gasLimit: 3000000 }
       )
     ).to.emit(gelatoCore, "LogExecSuccess");
 
@@ -352,7 +352,7 @@ describe("GlobalState Tests", function () {
     await expect(
       gelatoCore.connect(executor).exec(
         maliciousTaskReceipt, // Array of task Receipts
-        { gasLimit: 3000000 }
+        { gasPrice: GELATO_GAS_PRICE, gasLimit: 3000000 }
       )
     ).to.emit(gelatoCore, "LogExecReverted");
 
@@ -470,7 +470,7 @@ describe("GlobalState Tests", function () {
     await expect(
       gelatoCore.connect(executor).exec(
         taskReceiptPlaceOrder, // Array of task Receipts
-        { gasLimit: 3000000 }
+        { gasPrice: GELATO_GAS_PRICE, gasLimit: 3000000 }
       )
     ).to.emit(gelatoCore, "LogExecSuccess");
 
