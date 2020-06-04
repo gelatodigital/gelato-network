@@ -14,40 +14,59 @@ export default task(
     "numerator of fee. denominator is always 1000 =>  E.g. numerator = 20 for 2%"
   )
   .addFlag("log", "Logs return values to stdout")
-  .setAction(async (taskArgs) => {
+  .setAction(async ({ actionaddress, feenumerator }) => {
     try {
       const provider = getProvider();
       const providerAddress = await provider.getAddress();
 
       // Check if Provider State Setter is already deployed
       const feeRelayFactory = await run("instantiateContract", {
-        contractname: "ProviderFeeRelayFactoryFactory",
+        contractname: "ProviderFeeRelayFactory",
         signer: provider,
         write: true,
       });
 
       const isDeployed = await feeRelayFactory.isDeployed(providerAddress);
 
+      console.log(`
+      \nFee relay contract already deployed? ${isDeployed}
+      `);
+
       if (!isDeployed) await feeRelayFactory.create();
 
       const feeRelayAddress = await feeRelayFactory.feeRelays(providerAddress);
 
-      const providerFeeStore = await run("instantiateContract", {
-        contractname: "ProviderFeeStore",
+      const globalState = await run("instantiateContract", {
+        contractname: "GlobalState",
         signer: provider,
         write: true,
       });
 
-      const tx = await gelatoCore.provideTaskSpecs([taskSpec], {
-        gasLimit: 1000000,
-      });
+      console.log(`
+      \n Setting fee for action: ${actionaddress}
+      \n Numerator: ${feenumerator}
+      \n Denominator: 1000
+      --------------------------
+      \n Fee: ${parseFloat(feenumerator / 1000)}
+
+      \n Your FeeRelay Contract to call before the action: ${feeRelayAddress}
+      `);
+
+      const tx = await globalState.setActionFee(
+        actionaddress,
+        feenumerator,
+        1000,
+        {
+          gasLimit: 300000,
+        }
+      );
 
       const etherscanLink = await run("get-etherscan-link", {
         txhash: tx.hash,
       });
       console.log(etherscanLink);
       await tx.wait();
-      console.log(`✅ Tx mined - Task Spec provided`);
+      console.log(`✅ Tx mined - Fee updated`);
       return `✅ Tx mined`;
     } catch (error) {
       console.error(error, "\n");

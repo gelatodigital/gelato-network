@@ -2,7 +2,7 @@ import { task, types } from "@nomiclabs/buidler/config";
 import { constants, utils } from "ethers";
 
 export default internalTask(
-  "gc-return-taskspec-time-trade-ui-no-t",
+  "gc-return-taskspec-time-trade-ui",
   `Returns a hardcoded task spec for the timeTrade Script`
 )
   .addFlag("log")
@@ -20,7 +20,32 @@ export default internalTask(
         inst: conditionAddress,
       });
 
-      // ##### Action #1
+      // ##### Action # 1: Fee Action
+      const feeRelayAddress = await run("gelato-get-fee-relay-address");
+      console.log(feeRelayAddress);
+
+      const feeRelayAction = new Action({
+        addr: feeRelayAddress,
+        data: constants.HashZero,
+        operation: Operation.Delegatecall,
+        termsOkCheck: true,
+        value: 0,
+      });
+
+      // ##### Action #2
+      const transferFromActionAddress = await run("bre-config", {
+        deployments: true,
+        contractname: "ActionERC20TransferFromGlobal",
+      });
+
+      const transferFromAction = new Action({
+        addr: transferFromActionAddress,
+        data: constants.HashZero,
+        operation: Operation.Delegatecall,
+        termsOkCheck: true,
+      });
+
+      // ##### Action #3
       const placeOrderBatchExchangeAddress = await run("bre-config", {
         deployments: true,
         contractname: "ActionPlaceOrderBatchExchange",
@@ -36,7 +61,7 @@ export default internalTask(
       // ##### Create Task Spec
       const taskSpec = new TaskSpec({
         conditions: [condition.inst],
-        actions: [placeOrderAction],
+        actions: [feeRelayAction, transferFromAction, placeOrderAction],
         gasPriceCeil: 0, // Infinte gas price
       });
 

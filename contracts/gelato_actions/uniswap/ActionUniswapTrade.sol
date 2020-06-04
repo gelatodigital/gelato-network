@@ -31,12 +31,11 @@ contract ActionUniswapTrade is GelatoActionsStandard {
         uint256 _sendAmt, // tokens_sold
         address _receiveToken // token_addr
     )
-        external
+        public
         virtual
     {
-
-        uint256 returnAmount;
         address destinationAddress;
+        uint256 returnAmount;
 
         // If sendToken is not ETH
         if (_sendToken != ETH_ADDRESS) {
@@ -45,18 +44,18 @@ contract ActionUniswapTrade is GelatoActionsStandard {
 
             IUniswapExchange sendTokenExchange = UNI_FACTORY.getExchange(sendERC20);
 
-            try sendERC20.transferFrom(_user, address(this), _sendAmt) {} catch {
+            try sendERC20.transferFrom(_user, address(this), _sendAmt) {
+            } catch {
                 revert("Error Transfer SendToken From User");
             }
 
             if (sendTokenExchange != IUniswapExchange(0)) {
-                try sendERC20.approve(address(sendTokenExchange), _sendAmt) {}
-                catch {
+                try sendERC20.approve(address(sendTokenExchange), _sendAmt) {
+                } catch {
                     revert("Error Approve Uniswap");
                 }
 
-                if (_receiveToken != ETH_ADDRESS)
-                {
+                if (_receiveToken != ETH_ADDRESS) {
                     // !! Dapp Interaction !!
                     try sendTokenExchange.tokenToTokenTransferInput(
                         _sendAmt,
@@ -66,16 +65,13 @@ contract ActionUniswapTrade is GelatoActionsStandard {
                         _user,
                         _receiveToken
                     )
-                    returns (uint256 returnEthAmount)
+                        returns (uint256 returnEthAmount)
                     {
                         returnAmount = returnEthAmount;
-                    }
-                    catch {
+                    } catch {
                         revert("Error tokenToTokenTransferInput");
                     }
-                }
-                else
-                {
+                } else {
                     // !! Dapp Interaction !!
                     try sendTokenExchange.tokenToEthTransferInput(
                         _sendAmt,
@@ -85,24 +81,20 @@ contract ActionUniswapTrade is GelatoActionsStandard {
                     )
                         returns (uint256 returnEthAmount)
                     {
-                        returnAmount = returnEthAmount;
                         destinationAddress = ETH_ADDRESS;
-                    }
-                    catch {
+                        returnAmount = returnEthAmount;
+                    } catch {
                         revert("Error tokenToEthTransferInput");
                     }
                 }
-            } else
-            {
+            } else {
                 revert("Error SendTokenExchange does not exist");
             }
 
         // If sendToken is ETH
-        } else
-        {
+        } else {
            (destinationAddress, returnAmount) = swapEthToToken(_receiveToken, _sendAmt, _user);
         }
-
     }
 
     function swapEthToToken(address _receiveToken, uint256 _sendAmount, address _user)
@@ -113,26 +105,38 @@ contract ActionUniswapTrade is GelatoActionsStandard {
         IUniswapExchange receiveTokenExchange = UNI_FACTORY.getExchange(receiveERC20);
         if (receiveTokenExchange != IUniswapExchange(0)) {
             // !! Dapp Interaction !!
-            try receiveTokenExchange.ethToTokenTransferInput{
-                value: _sendAmount
-            }(
+            try receiveTokenExchange.ethToTokenTransferInput{value: _sendAmount}(
                 1,
                 block.timestamp,
                 _user
             )
-            returns (uint256 returnReceiveTokenAmount){
+                returns (uint256 returnReceiveTokenAmount)
+            {
                 return(address(receiveTokenExchange), returnReceiveTokenAmount);
-            }
-            catch {
+            } catch {
                 revert("Error swapEthToToken");
             }
-        }
-        else
-        {
+        } else {
             revert("Error ReceiveTokenExchange does not exist");
         }
     }
 
+    // Will be automatically called by gelato => do not use for encoding
+    function gelatoInternal(bytes calldata _actionData, bytes calldata)
+        external
+        virtual
+        override
+        returns(ReturnType, bytes memory)
+    {
+        (address _user,
+         address _sellToken,
+         uint256 _sellAmount,
+         address _receiveToken) = abi.decode(
+             _actionData[4:],
+             (address,address,uint256,address)
+        );
+        action(_user, _sellToken, _sellAmount, _receiveToken);
+    }
 
     // ======= ACTION CONDITIONS CHECK =========
     // Overriding and extending GelatoActionsStandard's function (optional)
@@ -143,11 +147,12 @@ contract ActionUniswapTrade is GelatoActionsStandard {
         override
         returns(string memory)  // actionCondition
     {
-        (address _user, address _sellToken, uint256 _sellAmount, address _receiveToken) = abi.decode(_actionData[4:], (
-            address,
-            address,
-            uint256,
-            address)
+        (address _user,
+         address _sellToken,
+         uint256 _sellAmount,
+         address _receiveToken) = abi.decode(
+             _actionData[4:],
+             (address, address, uint256, address)
         );
         return _actionProviderTermsCheck(_user, _userProxy, _sellToken, _sellAmount, _receiveToken);
     }
@@ -182,23 +187,19 @@ contract ActionUniswapTrade is GelatoActionsStandard {
 
         if (_sendToken != ETH_ADDRESS) {
             IUniswapExchange sendTokenExchange = UNI_FACTORY.getExchange(sendERC20);
-            if (sendTokenExchange == IUniswapExchange(0)) {
+            if (sendTokenExchange == IUniswapExchange(0))
                 return "ActionUniswapTrade: sendTokenExchangeDoesNotExist";
-            }
             if (_receiveToken != ETH_ADDRESS) {
                 IERC20 receiveERC20 = IERC20(_receiveToken);
                 IUniswapExchange receiveTokenExchange = UNI_FACTORY.getExchange(receiveERC20);
-                if (receiveTokenExchange == IUniswapExchange(0)) {
+                if (receiveTokenExchange == IUniswapExchange(0))
                     return "ActionUniswapTrade: receiveTokenExchangeDoesNotExistOne";
-                }
             }
-        }
-        else {
+        } else {
             IERC20 receiveERC20 = IERC20(_receiveToken);
             IUniswapExchange receiveTokenExchange = UNI_FACTORY.getExchange(receiveERC20);
-            if (receiveTokenExchange == IUniswapExchange(0)) {
+            if (receiveTokenExchange == IUniswapExchange(0))
                 return "ActionUniswapTrade: receiveTokenExchangeDoesNotExistTwo";
-            }
         }
         // STANDARD return string to signal actionConditions Ok
         return OK;

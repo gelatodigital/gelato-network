@@ -89,8 +89,7 @@ contract ActionWithdrawBatchExchangeOld is GelatoActionsStandard {
                 }
 
             }
-        }
-        catch {
+        } catch {
            // Do not revert, as order might not have been fulfilled.
            revert("ActionWithdrawBatchExchange.withdraw _buyToken failed");
         }
@@ -140,8 +139,7 @@ contract ActionWithdrawBatchExchangeOld is GelatoActionsStandard {
                 if (!paid) revert("ActionWithdrawBatchExchange: Insufficient balance for user to pay for withdrawal 2");
 
             }
-        }
-        catch {
+        } catch {
             // Do not revert, as order might have been filled completely
             revert("ActionWithdrawBatchExchange.withdraw _sellToken failed");
         }

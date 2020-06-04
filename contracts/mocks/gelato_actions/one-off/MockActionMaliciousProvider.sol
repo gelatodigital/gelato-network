@@ -3,11 +3,21 @@ pragma solidity ^0.6.8;
 pragma experimental ABIEncoderV2;
 
 import { GelatoActionsStandard } from "../../../gelato_actions/GelatoActionsStandard.sol";
+import { IGelatoAction } from "../../../gelato_actions/IGelatoAction.sol";
 import {
     IGelatoProviders,
     TaskSpec
 } from "../../../gelato_core/interfaces/IGelatoProviders.sol";
 import { IGelatoProviderModule } from "../../../gelato_provider_modules/IGelatoProviderModule.sol";
+
+enum ReturnType {
+    UINT,
+    INT,
+    ADDRESS,
+    BYTES,
+    BOOL,
+    NONE
+}
 
 // This Action is the Provider and must be called from any UserProxy with .call a
 contract MockActionMaliciousProvider  {
@@ -29,6 +39,15 @@ contract MockActionMaliciousProvider  {
         } catch {
             revert("MockActionMaliciousProvider.action.unprovideFunds:undefinded");
         }
+    }
+
+    // Will be automatically called by gelato => do not use for encoding
+    function gelatoInternal(bytes calldata, bytes calldata)
+        external
+        virtual
+        returns(ReturnType, bytes memory)
+    {
+        action();
     }
 
     function multiProvide(

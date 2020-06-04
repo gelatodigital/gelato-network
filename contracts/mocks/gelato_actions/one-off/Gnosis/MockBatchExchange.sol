@@ -61,6 +61,8 @@ contract MockBatchExchange {
     function deposit(address _sellToken, uint128 _sellAmount)
         public
     {
+        IERC20 sellToken = IERC20(_sellToken);
+        sellToken.safeTransferFrom(msg.sender, address(this), _sellAmount);
     }
 
     function requestFutureWithdraw(address token, uint256 amount, uint32 batchId)

@@ -56,8 +56,7 @@ contract ActionWithdrawBatchExchangeChained is ActionPlaceOrderBatchExchangePayF
                 uint256 withdrawAmount = postBuyTokenBalance - preBuyTokenBalance;
                 buyToken.safeTransfer(_user, withdrawAmount);
             }
-        }
-        catch {
+        } catch {
            // Do not revert, as order might not have been fulfilled.
            revert("ActionWithdrawBatchExchange.withdraw _buyToken failed");
         }
@@ -71,8 +70,7 @@ contract ActionWithdrawBatchExchangeChained is ActionPlaceOrderBatchExchangePayF
                 uint256 withdrawAmount = postSellTokenBalance - preSellTokenBalance;
                 sellToken.safeTransfer(_user, withdrawAmount);
             }
-        }
-        catch {
+        } catch {
             // Do not revert, as order might have been filled completely
             revert("ActionWithdrawBatchExchange.withdraw _sellToken failed");
         }

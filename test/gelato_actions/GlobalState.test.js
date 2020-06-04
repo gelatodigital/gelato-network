@@ -15,7 +15,7 @@ const GELATO_GAS_PRICE = initialStateGasPriceOracle.gasPrice;
 const EXPIRY_DATE = 0;
 const SUBMISSIONS_LEFT = 1;
 
-describe("ProviderFeeStore Tests", function () {
+describe("GlobalState Tests", function () {
   // We define the ContractFactory and Signer variables here and assign them in
   // a beforeEach hook.
   let seller;
@@ -42,7 +42,7 @@ describe("ProviderFeeStore Tests", function () {
   let gelatoMultiCall;
   let sellToken;
   let sellDecimals;
-  let providerFeeStore;
+  let globalState;
   let providerFeeRelay;
   let actionTransferFromWithFee;
   let sendAmount;
@@ -66,13 +66,13 @@ describe("ProviderFeeStore Tests", function () {
       .connect(executor)
       .stakeExecutor({ value: ethers.utils.parseUnits("1", "ether") });
 
-    // Instantiate ProviderFeeStore
-    const ProviderFeeStore = await ethers.getContractFactory(
-      "ProviderFeeStore",
+    // Instantiate GlobalState
+    const GlobalState = await ethers.getContractFactory(
+      "GlobalState",
       sysAdmin
     );
-    providerFeeStore = await ProviderFeeStore.deploy();
-    await providerFeeStore.deployed();
+    globalState = await GlobalState.deploy();
+    await globalState.deployed();
 
     // Instantiate ProviderFeeRelay
     const ProviderFeeRelay = await ethers.getContractFactory(
@@ -81,7 +81,7 @@ describe("ProviderFeeStore Tests", function () {
     );
     providerFeeRelay = await ProviderFeeRelay.deploy(
       providerAddress,
-      providerFeeStore.address
+      globalState.address
     );
     await providerFeeRelay.deployed();
 
@@ -127,13 +127,13 @@ describe("ProviderFeeStore Tests", function () {
 
     // Call multiProvide for mockConditionDummy + actionTransferFromWithFee
     // Provider registers new condition
-    const ActionERC20TransferFromWithFee = await ethers.getContractFactory(
-      "ActionERC20TransferFromWithFee",
+    const actionERC20TransferFromGlobal = await ethers.getContractFactory(
+      "ActionERC20TransferFromGlobal",
       sysAdmin
     );
 
-    actionTransferFromWithFee = await ActionERC20TransferFromWithFee.deploy(
-      providerFeeStore.address
+    actionTransferFromWithFee = await ActionERC20TransferFromGlobal.deploy(
+      globalState.address
     );
     await actionTransferFromWithFee.deployed();
 
@@ -165,7 +165,7 @@ describe("ProviderFeeStore Tests", function () {
 
     const actionData1 = await run("abi-encode-withselector", {
       contractname: "ProviderFeeRelay",
-      functionname: "updateAmountStoreAndProvider",
+      functionname: "updateUintStoreAndProvider",
       inputs: [sendAmount],
     });
 
@@ -178,7 +178,7 @@ describe("ProviderFeeStore Tests", function () {
     });
 
     const actionData2 = await run("abi-encode-withselector", {
-      contractname: "ActionERC20TransferFromWithFee",
+      contractname: "ActionERC20TransferFromGlobal",
       functionname: "action",
       inputs: [sellerAddress, sellToken.address, executorAddress, sendAmount],
     });
@@ -243,13 +243,13 @@ describe("ProviderFeeStore Tests", function () {
       userProxy.submitTask(gelatoProvider, taskWithoutStateSetter, EXPIRY_DATE)
     ).to.emit(gelatoCore, "LogTaskSubmitted");
 
-    // Provider first has to set up his fee model in ProviderFeeStore through its ProviderFeeRelay => 1%
+    // Provider first has to set up his fee model in GlobalState through its ProviderFeeRelay => 1%
 
-    await providerFeeStore
+    await globalState
       .connect(provider)
       .setActionFee(actionTransferFromWithFee.address, 1, 100);
 
-    const providerFee = await providerFeeStore.providerActionFee(
+    const providerFee = await globalState.providerActionFee(
       providerAddress,
       actionTransferFromWithFee.address
     );
@@ -272,11 +272,23 @@ describe("ProviderFeeStore Tests", function () {
     await sellToken.connect(seller).approve(userProxyAddress, sendAmount);
   });
 
-  it("#1: Check if provider payouts happen correctly with ProviderFeeStore when we call providerFeeRelay prior to action execution", async function () {
+  it("#1: Check if provider payouts happen correctly with GlobalState when we call providerFeeRelay prior to action execution", async function () {
     const preSellerBalance = await sellToken.balanceOf(sellerAddress);
 
+    const canExecResult = await gelatoCore.connect(executor).canExec(
+      taskReceipt, // Array of task Receipts
+      GELATO_MAX_GAS,
+      GELATO_GAS_PRICE
+    );
+
+    expect(canExecResult).to.be.equal("OK");
+    // console.log(canExecResult);
+
     await expect(
-      gelatoCore.connect(executor).exec(taskReceipt, { gasLimit: 3000000 })
+      gelatoCore.connect(executor).exec(
+        taskReceipt, // Array of task Receipts
+        { gasPrice: GELATO_GAS_PRICE, gasLimit: 3000000 }
+      )
     ).to.emit(gelatoCore, "LogExecSuccess");
 
     const postSellerBalance = await sellToken.balanceOf(sellerAddress);
@@ -295,7 +307,10 @@ describe("ProviderFeeStore Tests", function () {
     const preSellerBalance = await sellToken.balanceOf(sellerAddress);
 
     await expect(
-      gelatoCore.connect(executor).exec(taskReceipt2, { gasLimit: 3000000 })
+      gelatoCore.connect(executor).exec(
+        taskReceipt2, // Array of task Receipts
+        { gasPrice: GELATO_GAS_PRICE, gasLimit: 3000000 }
+      )
     ).to.emit(gelatoCore, "LogExecSuccess");
 
     const postSellerBalance = await sellToken.balanceOf(sellerAddress);
@@ -311,7 +326,7 @@ describe("ProviderFeeStore Tests", function () {
     expect(postSellerBalance).to.be.equal(preSellerBalance.sub(sendAmount));
   });
 
-  it("#3: Malicious user should fail if encoding the wrong function for providerFeeRelay", async function () {
+  it("#3: Malicious user should not fail if encoding the wrong function for providerFeeRelay, as we decode the payload and cut off the function selector", async function () {
     const preSellerBalance = await sellToken.balanceOf(sellerAddress);
 
     const abi = ["function attack(uint256)"];
@@ -346,24 +361,12 @@ describe("ProviderFeeStore Tests", function () {
     await expect(
       gelatoCore.connect(executor).exec(
         maliciousTaskReceipt, // Array of task Receipts
-        { gasLimit: 3000000 }
+        { gasPrice: GELATO_GAS_PRICE, gasLimit: 3000000 }
       )
-    ).to.emit(gelatoCore, "LogExecReverted");
-
-    const postSellerBalance = await sellToken.balanceOf(sellerAddress);
-
-    const expectedAmount = ethers.utils.bigNumberify("0");
-
-    // Provider balance should have remained unchainged
-    const postProviderBalance = await sellToken.balanceOf(providerAddress);
-    expect(postProviderBalance).to.be.equal(expectedAmount);
-
-    // User balance should have decreased by sendAmount
-    // No Change
-    expect(postSellerBalance).to.be.equal(preSellerBalance);
+    ).to.emit(gelatoCore, "LogExecSuccess");
   });
 
-  it("#4: Test with PlaceOrderOnBatchExcahnge", async function () {
+  it("#4: Test with PlaceOrderOnBatchExcahnge without transferFromGlobal", async function () {
     const preSellerBalance = await sellToken.balanceOf(sellerAddress);
 
     // // #### Init Batch Exchange Contracts ####
@@ -378,14 +381,14 @@ describe("ProviderFeeStore Tests", function () {
     );
     const actionPlaceOrderBatchExchange = await ActionPlaceOrderBatchExchange.deploy(
       mockBatchExchange.address,
-      providerFeeStore.address
+      globalState.address
     );
     await actionPlaceOrderBatchExchange.deployed();
 
     // #### Init Batch Exchange Contracts DONE ####
 
     // ### Set provider fee
-    await providerFeeStore
+    await globalState
       .connect(provider)
       .setActionFee(actionPlaceOrderBatchExchange.address, 1, 100);
 
@@ -464,7 +467,7 @@ describe("ProviderFeeStore Tests", function () {
     await expect(
       gelatoCore.connect(executor).exec(
         taskReceiptPlaceOrder, // Array of task Receipts
-        { gasLimit: 3000000 }
+        { gasPrice: GELATO_GAS_PRICE, gasLimit: 3000000 }
       )
     ).to.emit(gelatoCore, "LogExecSuccess");
 
@@ -473,6 +476,132 @@ describe("ProviderFeeStore Tests", function () {
     const expectedAmount = sendAmount.div(ethers.utils.bigNumberify("100"));
 
     // Provider balance should have remained unchainged
+    const postProviderBalance = await sellToken.balanceOf(providerAddress);
+    expect(postProviderBalance).to.be.equal(expectedAmount);
+
+    // User balance should have decreased by sendAmount
+    // No Change
+    expect(postSellerBalance).to.be.equal(preSellerBalance.sub(sendAmount));
+  });
+
+  it("#4: Test with PlaceOrderOnBatchExcahnge with ERC20TransferFromGlobal", async function () {
+    const preSellerBalance = await sellToken.balanceOf(sellerAddress);
+
+    // // #### Init Batch Exchange Contracts ####
+    const MockBatchExchange = await ethers.getContractFactory(
+      "MockBatchExchange"
+    );
+    const mockBatchExchange = await MockBatchExchange.deploy();
+    await mockBatchExchange.deployed();
+
+    const ActionPlaceOrderBatchExchange = await ethers.getContractFactory(
+      "ActionPlaceOrderBatchExchange"
+    );
+    const actionPlaceOrderBatchExchange = await ActionPlaceOrderBatchExchange.deploy(
+      mockBatchExchange.address,
+      globalState.address
+    );
+    await actionPlaceOrderBatchExchange.deployed();
+
+    // #### Init Batch Exchange Contracts DONE ####
+
+    // ### Set provider fee => SHOULD NOT BE RELEVANT THOUGH
+    await globalState
+      .connect(provider)
+      .setActionFee(actionPlaceOrderBatchExchange.address, 1, 100);
+
+    // ### Set provider fee DONE
+
+    // #### Provide new Task Spec
+
+    /*
+      address _sellToken,
+      uint128 _sellAmount,
+      address _buyToken,
+      uint128 _buyAmount,
+      uint32 _batchDuration
+    */
+
+    // 0 for sellAmount, as we input the sell amount already in the transferFromAction and to pass the balanceOf termsOkCheck we have to pass
+    const nullifiedSendAmount = 0;
+    const placeOrderData = await run("abi-encode-withselector", {
+      contractname: "ActionPlaceOrderBatchExchange",
+      functionname: "action",
+      inputs: [sellToken.address, nullifiedSendAmount, sellToken.address, 0, 2],
+    });
+
+    const actionPlaceOrder = new Action({
+      addr: actionPlaceOrderBatchExchange.address,
+      data: placeOrderData,
+      operation: Operation.Delegatecall,
+      value: 0,
+      termsOkCheck: true,
+    });
+
+    const actionData2 = await run("abi-encode-withselector", {
+      contractname: "ActionERC20TransferFromGlobal",
+      functionname: "action",
+      inputs: [sellerAddress, sellToken.address, userProxyAddress, sendAmount],
+    });
+
+    action2.data = actionData2;
+
+    const setSellAmountAndPlaceOrderTaskSpec = new TaskSpec({
+      actions: [action1, action2, actionPlaceOrder],
+      gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
+    });
+
+    await gelatoCore
+      .connect(provider)
+      .provideTaskSpecs([setSellAmountAndPlaceOrderTaskSpec]);
+
+    // ##### TASK SPECS PROVIDED
+
+    // ##### SUBMIT TASKS
+
+    // First action is set sell amount
+    const setSellAmountAndPlaceOrderTask = new Task({
+      actions: [action1, action2, actionPlaceOrder],
+    });
+
+    await expect(
+      userProxy.submitTaskCycle(
+        gelatoProvider,
+        [setSellAmountAndPlaceOrderTask],
+        EXPIRY_DATE,
+        SUBMISSIONS_LEFT
+      )
+    ).to.emit(gelatoCore, "LogTaskSubmitted");
+
+    // Create Task Receipts
+    const taskReceiptPlaceOrder = new TaskReceipt({
+      id: 3,
+      provider: gelatoProvider,
+      userProxy: userProxyAddress,
+      tasks: [setSellAmountAndPlaceOrderTask],
+      submissionsLeft: SUBMISSIONS_LEFT,
+      index: 0,
+    });
+
+    const canExecResult = await gelatoCore.connect(executor).canExec(
+      taskReceiptPlaceOrder, // Array of task Receipts
+      GELATO_MAX_GAS,
+      GELATO_GAS_PRICE
+    );
+    // console.log(canExecResult);
+
+    await expect(
+      gelatoCore.connect(executor).exec(
+        taskReceiptPlaceOrder, // Array of task Receipts
+        { gasLimit: 3000000 }
+      )
+    ).to.emit(gelatoCore, "LogExecSuccess");
+
+    const postSellerBalance = await sellToken.balanceOf(sellerAddress);
+
+    const expectedAmount = sendAmount.div(ethers.utils.bigNumberify("100"));
+
+    // Provider balance should have increased by the fee amount
     const postProviderBalance = await sellToken.balanceOf(providerAddress);
     expect(postProviderBalance).to.be.equal(expectedAmount);
 

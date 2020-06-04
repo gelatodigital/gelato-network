@@ -5,12 +5,14 @@ import "./task.taskSpec.kyberPriceTrade";
 import "./task.taskSpec.timeTrade";
 import "./task.taskSpec.tradeAndWithdraw";
 import "./task.taskSpec.dummy";
-import "./task.taskSpec.timeTradeNoTransferUI";
-import "./task.taskSpec.timeTradeUI";
-import "./task.taskSpec.balanceTradeNoTransferUI";
-import "./task.taskSpec.balanceTradeUI";
-import "./task.taskSpec.kyberPriceTradeNoTransferUI";
-import "./task.taskSpec.kyberPriceTradeUI";
-import "./task.taskSpec.withdrawAndSetTimeUI";
-import "./task.taskSpec.withdrawAndSetBalanceUI";
-import "./task.taskSpec.withdrawAndSetKyberPriceUI";
+
+// // ==== Gnosis UI====
+import "./gnosis_ui/task.taskSpec.timeTradeNoTransferUI";
+import "./gnosis_ui/task.taskSpec.timeTradeUI";
+import "./gnosis_ui/task.taskSpec.balanceTradeNoTransferUI";
+import "./gnosis_ui/task.taskSpec.balanceTradeUI";
+import "./gnosis_ui/task.taskSpec.kyberPriceTradeNoTransferUI";
+import "./gnosis_ui/task.taskSpec.kyberPriceTradeUI";
+import "./gnosis_ui/task.taskSpec.withdrawAndSetTimeUI";
+import "./gnosis_ui/task.taskSpec.withdrawAndSetBalanceUI";
+import "./gnosis_ui/task.taskSpec.withdrawAndSetKyberPriceUI";

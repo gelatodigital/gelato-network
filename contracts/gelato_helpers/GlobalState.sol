@@ -12,22 +12,19 @@ import { SafeMath } from "../external/SafeMath.sol";
 
 /// @notice Contract that stores and calculates the fee logic for providers.
 /// @dev will be called within Gelato Actions
-contract ProviderFeeStore {
+contract GlobalState {
 
     using SafeMath for uint256;
+
+    struct Fee {uint256 num; uint256 den;}
 
     uint256 public constant MAX_UINT = type(uint256).max;
 
     // UserProxy => storedAmount
-    mapping(address => uint256) public amountStore;
+    mapping(address => uint256) public uintStore;
 
     // UserProxy => Provider
     mapping(address => address) public currentProvider;
-
-    struct Fee {
-        uint256 num;
-        uint256 den;
-    }
 
     // Provider => Action => Fee
     mapping(address => mapping(address => Fee)) public providerActionFee;
@@ -41,16 +38,16 @@ contract ProviderFeeStore {
     }
 
     // ###### User Proxy Setters
-    function updateAmountStore(uint256 _newAmount) public {
-        amountStore[msg.sender] = _newAmount;
+    function updateUintStore(uint256 _newAmount) public {
+        uintStore[msg.sender] = _newAmount;
     }
 
     function updateCurrentProvider(address _newProvider) public {
         currentProvider[msg.sender] = _newProvider;
     }
 
-    function updateAmountStoreAndProvider(uint256 _newAmount, address _provider) public {
-        updateAmountStore(_newAmount);
+    function updateUintStoreAndProvider(uint256 _newAmount, address _provider) public {
+        updateUintStore(_newAmount);
         updateCurrentProvider(_provider);
     }
 
@@ -63,9 +60,9 @@ contract ProviderFeeStore {
         provider = currentProvider[msg.sender];
         delete currentProvider[msg.sender];
 
-        // Get amountStore
-        amount = amountStore[msg.sender];
-        delete amountStore[msg.sender];
+        // Get uintStore
+        amount = uintStore[msg.sender];
+        delete uintStore[msg.sender];
 
         // "If provider is address 0, no fees must be paid"
         if (provider != address(0) && amount != 0)
@@ -81,11 +78,11 @@ contract ProviderFeeStore {
         if (fee.num != 0 && fee.den != 0) {
             feeAmount = _amount.mul(fee.num).div(
                 fee.den,
-                "ProviderFeeStore.getFeeAmounts: feeAmount underflow"
+                "GlobalState.getFeeAmounts: feeAmount underflow"
             );
             amountMinusFee = _amount.sub(
                 feeAmount,
-                "ProviderFeeStore.getFeeAmounts: amountMinusFee underflow"
+                "GlobalState.getFeeAmounts: amountMinusFee underflow"
             );
         }
     }

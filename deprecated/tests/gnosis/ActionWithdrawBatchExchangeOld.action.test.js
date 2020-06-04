@@ -285,6 +285,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
           userProxyAddress,
           sellToken.address,
           buyToken.address,
+          ethers.constants.HashZero,
         ],
       });
 
@@ -335,6 +336,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
           userProxyAddress,
           sellToken.address,
           WETH.address,
+          ethers.constants.HashZero,
         ],
       });
 
@@ -385,6 +387,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
           userProxyAddress,
           sellToken.address,
           buyToken.address,
+          ethers.constants.HashZero,
         ],
       });
 
@@ -436,6 +439,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
           userProxyAddress,
           sellToken.address,
           WETH.address,
+          ethers.constants.HashZero,
         ],
       });
 
@@ -480,6 +484,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
           userProxyAddress,
           sellToken.address,
           buyToken.address,
+          ethers.constants.HashZero,
         ],
       });
 
@@ -531,6 +536,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
           userProxyAddress,
           WETH.address,
           buyToken.address,
+          ethers.constants.HashZero,
         ],
       });
 
@@ -579,6 +585,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
           userProxyAddress,
           sellToken.address,
           buyToken.address,
+          ethers.constants.HashZero,
         ],
       });
 
@@ -623,6 +630,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
           userProxyAddress,
           WETH.address,
           buyToken.address,
+          ethers.constants.HashZero,
         ],
       });
 

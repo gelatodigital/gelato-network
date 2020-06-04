@@ -319,7 +319,7 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
     const actionData = await run("abi-encode-withselector", {
       contractname: "MockActionDummy",
       functionname: "action",
-      inputs: [false],
+      inputs: [true],
     });
     mockActionDummyStruct.data = actionData;
 
@@ -411,8 +411,8 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
       })
     )
       .to.emit(mockActionDummy, "LogAction")
-      .withArgs(false)
-      .and.to.emit(gelatoCore, "LogExecSuccess")
+      .withArgs(true)
+      .to.emit(gelatoCore, "LogExecSuccess")
       .and.to.emit(gelatoCore, "LogTaskSubmitted");
 
     // ##################################### First execution DONE
@@ -466,6 +466,7 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
             gasLimit: GELATO_MAX_GAS,
           })
         ).to.emit(gelatoCore, "LogExecReverted");
+
         break;
       } else {
         expect(
@@ -488,7 +489,7 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
           })
         )
           .to.emit(mockActionDummy, "LogAction")
-          .withArgs(false)
+          .withArgs(true)
           .and.to.emit(gelatoCore, "LogExecSuccess")
           .and.to.emit(gelatoCore, "LogTaskSubmitted");
 

@@ -54,8 +54,7 @@ contract ActionWithdrawBatchExchangeWithFee is GelatoActionsStandard {
                 uint256 withdrawAmount = postBuyTokenBalance - preBuyTokenBalance;
                 buyToken.safeTransfer(_user, withdrawAmount);
             }
-        }
-        catch {
+        } catch {
            // Do not revert, as order might not have been fulfilled.
            revert("ActionWithdrawBatchExchangeWithFee.withdraw _buyToken failed");
         }
@@ -69,12 +68,23 @@ contract ActionWithdrawBatchExchangeWithFee is GelatoActionsStandard {
                 uint256 withdrawAmount = postSellTokenBalance - preSellTokenBalance;
                 sellToken.safeTransfer(_user, withdrawAmount);
             }
-        }
-        catch {
+        } catch {
             // Do not revert, as order might have been filled completely
             revert("ActionWithdrawBatchExchangeWithFee.withdraw _sellToken failed");
         }
+    }
 
+    // Will be automatically called by gelato => do not use for encoding
+    function gelatoInternal(bytes calldata _actionData, bytes calldata)
+        external
+        virtual
+        override
+        returns(ReturnType, bytes memory)
+    {
+        (address _user,
+         address _sellToken,
+         address _buyToken) = abi.decode(_actionData[4:], (address, address, address));
+        action(_user, _sellToken, _buyToken);
     }
 
     // ======= ACTION CONDITIONS CHECK =========

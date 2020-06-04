@@ -28,6 +28,17 @@ contract ActionERC20Transfer is GelatoActionsStandard {
         }
     }
 
+    // Will be automatically called by gelato => do not use for encoding
+    function gelatoInternal(bytes calldata _actionData, bytes calldata)
+        external
+        virtual
+        override
+        returns(ReturnType, bytes memory)
+    {
+        ActionData memory actionData = abi.decode(_actionData[4:], (ActionData));
+        action(actionData);
+    }
+
     // ===== ACTION CONDITIONS CHECK ========
     // Overriding and extending GelatoActionsStandard's function (optional)
     function termsOk(uint256, address _userProxy, bytes calldata _actionData, uint256)

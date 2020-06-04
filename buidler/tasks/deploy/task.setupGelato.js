@@ -51,16 +51,16 @@ export default task("gc-setupgelato")
         modulename: "GelatoUserProxy",
       });
 
-      // Deploy ProviderFeeStore contract
-      const providerFeeStore = await run("deploy", {
-        contractname: "ProviderFeeStore",
+      // Deploy GlobalState contract
+      const globalState = await run("deploy", {
+        contractname: "GlobalState",
       });
 
       // Deploy ProviderStateSetterFactory
       const providerFeeRelayFactory = await run("deploy", {
         contractname: "ProviderFeeRelayFactory",
         signerindex: 2,
-        constructorargs: [providerFeeStore.address],
+        constructorargs: [globalState.address],
       });
 
       // Deploy Actions
@@ -71,7 +71,7 @@ export default task("gc-setupgelato")
 
       const actionPlaceOrderBatchExchange = await run("deploy", {
         contractname: "ActionPlaceOrderBatchExchange",
-        constructorargs: [batchExchangeAddress, providerFeeStore.address],
+        constructorargs: [batchExchangeAddress, globalState.address],
       });
 
       const actionWithdrawBatchExchange = await run("deploy", {
@@ -79,9 +79,9 @@ export default task("gc-setupgelato")
         constructorargs: [batchExchangeAddress],
       });
 
-      const ActionERC20TransferFromWithFee = await run("deploy", {
-        contractname: "ActionERC20TransferFromWithFee",
-        constructorargs: [providerFeeStore.address],
+      const actionERC20TransferFromGlobal = await run("deploy", {
+        contractname: "ActionERC20TransferFromGlobal",
+        constructorargs: [globalState.address],
       });
 
       // Deploy Conditions

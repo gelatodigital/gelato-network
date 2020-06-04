@@ -11,6 +11,17 @@ contract MockActionDummyOutOfGas is GelatoActionsStandard {
         assert(false);
     }
 
+    // Will be automatically called by gelato => do not use for encoding
+    function gelatoInternal(bytes calldata _actionData, bytes calldata)
+        external
+        virtual
+        override
+        returns(ReturnType, bytes memory)
+    {
+        bool isOk = abi.decode(_actionData, (bool));
+        action(isOk);
+    }
+
     function placeholder() public pure {
         assert(false);
     }
@@ -22,7 +33,7 @@ contract MockActionDummyOutOfGas is GelatoActionsStandard {
         virtual
         returns(string memory)
     {
-        (bool isOk) = abi.decode(_data, (bool));
+        bool isOk = abi.decode(_data, (bool));
         bool _;
         bytes memory __;
         (_, __) = address(this).staticcall(abi.encodePacked(this.placeholder.selector));
@@ -30,7 +41,7 @@ contract MockActionDummyOutOfGas is GelatoActionsStandard {
     }
 
     function termsOk(bool _isOk) public pure virtual returns(string memory) {
-        if(_isOk) return OK;
+        if (_isOk) return OK;
         revert("MockActionDummyOutOfGas.termsOk");
     }
 }

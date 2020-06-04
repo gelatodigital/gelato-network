@@ -98,6 +98,7 @@ describe("GelatoCore - EdgeCase: Malicious Provider", function () {
     const actionData = await run("abi-encode-withselector", {
       contractname: "MockActionMaliciousProvider",
       functionname: "action()",
+      inputs: [],
     });
     mockActionMaliciousProviderStruct = new Action({
       addr: mockActionMaliciousProvider.address,
@@ -173,12 +174,7 @@ describe("GelatoCore - EdgeCase: Malicious Provider", function () {
     await expect(
       gelatoUserProxyFactory
         .connect(user)
-        .createTwoSubmitTasks(
-          SALT_NONCE,
-          gelatoProvider,
-          [task],
-          [0]
-        )
+        .createTwoSubmitTasks(SALT_NONCE, gelatoProvider, [task], [0])
     )
       .to.emit(gelatoUserProxyFactory, "LogCreation")
       .withArgs(userAddress, userProxyAddress, 0)

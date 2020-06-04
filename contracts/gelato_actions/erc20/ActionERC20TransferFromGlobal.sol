@@ -6,21 +6,22 @@ import { GelatoActionsStandard } from "../GelatoActionsStandard.sol";
 import { IERC20 } from "../../external/IERC20.sol";
 import { SafeERC20 } from "../../external/SafeERC20.sol";
 import { Address } from "../../external/Address.sol";
-import { ProviderFeeStore } from "../../gelato_helpers/ProviderFeeStore.sol";
+import { GlobalState } from "../../gelato_helpers/GlobalState.sol";
 
-contract ActionERC20TransferFromWithFee is GelatoActionsStandard {
+contract ActionERC20TransferFromGlobal is GelatoActionsStandard {
     // using SafeERC20 for IERC20; <- internal library methods vs. try/catch
     using Address for address;
     using SafeERC20 for IERC20;
 
-    address public immutable thisAction;
-    ProviderFeeStore public immutable providerFeeStore;
+    address public immutable callStateContext;
+    GlobalState public immutable globalState;
 
-    constructor(ProviderFeeStore _globalFeeStorage) public {
-        thisAction = address(this);
-        providerFeeStore = _globalFeeStorage;
+    constructor(GlobalState _globalFeeStorage) public {
+        callStateContext = address(this);
+        globalState = _globalFeeStorage;
     }
 
+    // @ Developer, encode actionData with this function selector
     function action(
         address _user,
         IERC20 _sendToken,
@@ -30,11 +31,12 @@ contract ActionERC20TransferFromWithFee is GelatoActionsStandard {
         public
         payable
         virtual
+        returns (uint256)
     {
         // Fetch and delete provider fee store
         (uint256 sendAmount,
          uint256 feeAmount,
-         address provider) = providerFeeStore.getAmountWithFeesAndReset(thisAction);
+         address provider) = globalState.getAmountWithFeesAndReset(callStateContext);
 
         if (sendAmount == 0) sendAmount = _sendAmount;
 
@@ -44,10 +46,30 @@ contract ActionERC20TransferFromWithFee is GelatoActionsStandard {
         // Execute Action
         _sendToken.safeTransferFrom(_user, _destination, sendAmount);
 
-        // Update ProviderFeeStore
-        providerFeeStore.updateAmountStore(sendAmount);
+        // Update GlobalState
+        globalState.updateUintStore(sendAmount);
 
         emit LogOneWay(_user, address(_sendToken), sendAmount, _destination);
+
+        return sendAmount;
+    }
+
+    // Will be automatically called by gelato => do not use for encoding
+    function gelatoInternal(bytes calldata _actionData, bytes calldata)
+        external
+        override
+        virtual
+        returns(ReturnType, bytes memory)
+    {
+        (address user,
+         IERC20 sendToken,
+         address destination,
+         uint256 sendAmount) = abi.decode(
+            _actionData[4:],
+            (address, IERC20, address, uint256)
+        );
+        sendAmount = action(user, sendToken, destination, sendAmount);
+        return (ReturnType.UINT, abi.encodePacked(sendAmount));
     }
 
     // ======= ACTION CONDITIONS CHECK =========
@@ -55,8 +77,8 @@ contract ActionERC20TransferFromWithFee is GelatoActionsStandard {
     function termsOk(uint256, address _userProxy, bytes calldata _actionData, uint256)
         external
         view
-        override
         virtual
+        override
         returns(string memory)  // actionTermsOk
     {
         (address user, IERC20 sendToken, , uint256 sendAmount) = abi.decode(

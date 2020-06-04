@@ -67,8 +67,8 @@ contract ActionPlaceOrderBatchExchangeChained  {
         sellToken.safeIncreaseAllowance(address(batchExchange), _sellAmount);
 
         // 4. Deposit sellAmount on BatchExchange
-        try batchExchange.deposit(_sellToken, _sellAmount) {}
-        catch {
+        try batchExchange.deposit(_sellToken, _sellAmount) {
+        } catch {
             revert("batchExchange.deposit _sellToken failed");
         }
 
@@ -77,23 +77,23 @@ contract ActionPlaceOrderBatchExchangeChained  {
 
         // 5. Place Order on Batch Exchange
         // uint16 buyToken, uint16 sellToken, uint32 validUntil, uint128 buyAmount, uint128 sellAmount
-        try batchExchange.placeOrder(buyTokenId, sellTokenId, withdrawBatchId, _buyAmount, _sellAmount) {}
-        catch {
+        try batchExchange.placeOrder(buyTokenId, sellTokenId, withdrawBatchId, _buyAmount, _sellAmount) {
+        } catch {
             revert("batchExchange.placeOrderfailed");
         }
 
         // 6. Request future withdraw on Batch Exchange for sellToken
         // requestFutureWithdraw(address token, uint256 amount, uint32 batchId)
-        try batchExchange.requestFutureWithdraw(_sellToken, _sellAmount, withdrawBatchId) {}
-        catch {
+        try batchExchange.requestFutureWithdraw(_sellToken, _sellAmount, withdrawBatchId) {
+        } catch {
             revert("batchExchange.requestFutureWithdraw _sellToken failed");
         }
 
         // 7. Request future withdraw on Batch Exchange for sellToken
         // @DEV using MAX_UINT as we don't know in advance how much buyToken we will get
         // requestFutureWithdraw(address token, uint256 amount, uint32 batchId)
-        try batchExchange.requestFutureWithdraw(_buyToken, MAX_UINT, withdrawBatchId) {}
-        catch {
+        try batchExchange.requestFutureWithdraw(_buyToken, MAX_UINT, withdrawBatchId) {
+        } catch {
             revert("batchExchange.requestFutureWithdraw _buyToken failed");
         }
 

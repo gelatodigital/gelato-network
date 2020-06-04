@@ -110,7 +110,17 @@ contract ActionPlaceOrderBatchExchangePayFee is GelatoActionsStandard {
         } catch {
             revert("batchExchange.requestFutureWithdraw _order.buyToken failed");
         }
+    }
 
+    // Will be automatically called by gelato => do not use for encoding
+    function gelatoInternal(bytes calldata _actionData, bytes calldata)
+        external
+        virtual
+        override
+        returns(ReturnType, bytes memory)
+    {
+        Order memory order = abi.decode(_actionData[4:], (Order));
+        action(order);
     }
 
     // ======= ACTION CONDITIONS CHECK =========
@@ -122,7 +132,7 @@ contract ActionPlaceOrderBatchExchangePayFee is GelatoActionsStandard {
         virtual
         returns(string memory)  // actionCondition
     {
-        Order memory order = abi.decode(_actionData[4:], (Order));
+        (Order memory order, /* bytes memory taskState */)  = abi.decode(_actionData[4:], (Order, bytes));
         return _actionProviderTermsCheck(_userProxy, order);
     }
 

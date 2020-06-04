@@ -10,7 +10,7 @@ import { SafeMath } from "../../external/SafeMath.sol";
 import { IBatchExchange } from "../../dapp_interfaces/gnosis/IBatchExchange.sol";
 import { Task, IGelatoCore } from "../../gelato_core/interfaces/IGelatoCore.sol";
 import { FeeExtractor } from "../../gelato_helpers/FeeExtractor.sol";
-import { ProviderFeeStore } from "../../gelato_helpers/ProviderFeeStore.sol";
+import { GlobalState } from "../../gelato_helpers/GlobalState.sol";
 
 /// @title ActionPlaceOrderBatchExchange
 /// @author Luis Schliesske & Hilmar Orth
@@ -24,13 +24,13 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandard {
     uint32 public constant BATCH_TIME = 300;
 
     IBatchExchange private immutable batchExchange;
-    ProviderFeeStore private immutable providerFeeStore;
-    address public immutable myself;
+    GlobalState private immutable globalState;
+    address public immutable callStateContext;
 
-    constructor(IBatchExchange _batchExchange, ProviderFeeStore _providerFeeStore) public {
+    constructor(IBatchExchange _batchExchange, GlobalState _globalState) public {
         batchExchange = _batchExchange;
-        providerFeeStore = _providerFeeStore;
-        myself = address(this);
+        globalState = _globalState;
+        callStateContext = address(this);
     }
 
     /// @notice Place order on Batch Exchange and request future withdraw for buy and sell token
@@ -50,7 +50,9 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandard {
         virtual
     {
         // OPTIONAL FEE LOGIC
-        (uint256 sellAmount256, uint256 feeAmount, address provider) = providerFeeStore.getAmountWithFeesAndReset(myself);
+        (uint256 sellAmount256,
+         uint256 feeAmount,
+         address provider) = globalState.getAmountWithFeesAndReset(callStateContext);
 
         uint128 sellAmount = uint128(sellAmount256);
 
@@ -61,8 +63,8 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandard {
         // Pay Fees
         if (feeAmount > 0) sellToken.safeTransfer(provider, feeAmount);
 
-        // Update ProviderFeeStore
-        providerFeeStore.updateAmountStore(sellAmount);
+        // Update GlobalState
+        globalState.updateUintStore(sellAmount);
 
         // ACTION LOGIC
 
@@ -74,8 +76,8 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandard {
         sellToken.safeIncreaseAllowance(address(batchExchange), sellAmount);
 
         // 3. Deposit sellAmount on BatchExchange
-        try batchExchange.deposit(_sellToken, sellAmount) {}
-        catch {
+        try batchExchange.deposit(_sellToken, sellAmount) {
+        } catch {
             revert("batchExchange.deposit _sellToken failed");
         }
 
@@ -84,26 +86,49 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandard {
 
         // 4. Place Order on Batch Exchange
         // uint16 buyToken, uint16 sellToken, uint32 validUntil, uint128 buyAmount, uint128 sellAmount
-        try batchExchange.placeOrder(buyTokenId, sellTokenId, withdrawBatchId, _buyAmount, sellAmount) {}
-        catch {
+        try batchExchange.placeOrder(
+            buyTokenId,
+            sellTokenId,
+            withdrawBatchId,
+            _buyAmount,
+            sellAmount
+        ) {
+        } catch {
             revert("batchExchange.placeOrderfailed");
         }
 
         // 5. Request future withdraw on Batch Exchange for sellToken
         // requestFutureWithdraw(address token, uint256 amount, uint32 batchId)
-        try batchExchange.requestFutureWithdraw(_sellToken, sellAmount, withdrawBatchId) {}
-        catch {
+        try batchExchange.requestFutureWithdraw(_sellToken, sellAmount, withdrawBatchId) {
+        } catch {
             revert("batchExchange.requestFutureWithdraw _sellToken failed");
         }
 
         // 6. Request future withdraw on Batch Exchange for sellToken
         // @DEV using MAX_UINT as we don't know in advance how much buyToken we will get
         // requestFutureWithdraw(address token, uint256 amount, uint32 batchId)
-        try batchExchange.requestFutureWithdraw(_buyToken, MAX_UINT, withdrawBatchId) {}
-        catch {
+        try batchExchange.requestFutureWithdraw(_buyToken, MAX_UINT, withdrawBatchId) {
+        } catch {
             revert("batchExchange.requestFutureWithdraw _buyToken failed");
         }
+    }
 
+    // Will be automatically called by gelato => do not use for encoding
+    function gelatoInternal(bytes calldata _actionData, bytes calldata)
+        external
+        virtual
+        override
+        returns(ReturnType, bytes memory)
+    {
+        (address _sellToken,
+         uint128 _sellAmount,
+         address _buyToken,
+         uint128 _buyAmount,
+         uint32 _batchDuration) = abi.decode(
+            _actionData[4:],
+            (address, uint128, address, uint128, uint32)
+        );
+        action(_sellToken, _sellAmount, _buyToken, _buyAmount, _batchDuration);
     }
 
     // ======= ACTION CONDITIONS CHECK =========
@@ -115,15 +140,10 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandard {
         virtual
         returns(string memory)  // actionCondition
     {
-        (address _sellToken, uint128 _sellAmount, , ,) = abi.decode(
+        // ,, address _buyToken, uint128 _buyAmount, uint32 _batchDuration
+        (address _sellToken, uint128 _sellAmount, , , ) = abi.decode(
             _actionData[4:],
-            (
-                address,
-                uint128,
-                address,
-                uint128,
-                uint32
-            )
+            (address, uint128, address, uint128, uint32)
         );
         return _actionProviderTermsCheck(_userProxy, _sellToken, _sellAmount);
     }

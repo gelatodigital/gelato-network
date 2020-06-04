@@ -51,12 +51,12 @@ contract ActionRequestWithdraw is GelatoActionsStandard {
         if (proxyOrder.usedAmount > 0) buyTokenWithdrawAmount = proxyOrder.usedAmount * proxyOrder.priceNumerator / proxyOrder.priceDenominator;
 
         // 2. Request Withdraw in next batch
-        try batchExchange.requestWithdraw(_sellToken, sellTokenWithdrawAmount) {}
-        catch {
+        try batchExchange.requestWithdraw(_sellToken, sellTokenWithdrawAmount) {
+        } catch {
             revert("batchExchange.requestWithdraw _sellToken failed");
         }
-        try batchExchange.requestWithdraw(_buyToken, buyTokenWithdrawAmount) {}
-        catch {
+        try batchExchange.requestWithdraw(_buyToken, buyTokenWithdrawAmount) {
+        } catch {
             revert("batchExchange.requestWithdraw _buyToken failed");
         }
 

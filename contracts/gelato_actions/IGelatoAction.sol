@@ -4,6 +4,7 @@ pragma solidity ^0.6.8;
 /// @title IGelatoAction - solidity interface of GelatoActionsStandard
 /// @notice all the APIs and events of GelatoActionsStandard
 /// @dev all the APIs are implemented inside GelatoActionsStandard
+
 interface IGelatoAction {
     event LogOneWay(
         address origin,
@@ -21,6 +22,17 @@ interface IGelatoAction {
         uint256 receiveAmount,
         address receiver
     );
+
+    enum ReturnType {
+        UINT,
+        INT,
+        ADDRESS,
+        BYTES,
+        BOOL,
+        UINT_AND_ERC20,
+        UINT_AND_ADDRESS,
+        NONE
+    }
 
     /// @notice Providers can use this for pre-execution sanity checks, to prevent reverts.
     /// @dev GelatoCore checks this in canExec and passes the parameters.
@@ -43,4 +55,11 @@ interface IGelatoAction {
         external
         view
         returns(string memory);
+
+    function gelatoInternal(
+        bytes calldata, // user inputs
+        bytes calldata // taskState
+    )
+        external
+        returns(ReturnType, bytes memory);
 }

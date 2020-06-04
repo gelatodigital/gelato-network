@@ -10,14 +10,25 @@ contract MockActionDummy is GelatoActionsStandard {
         emit LogAction(_falseOrTrue);
     }
 
+    // Will be automatically called by gelato => do not use for encoding
+    function gelatoInternal(bytes calldata _actionData, bytes calldata)
+        external
+        virtual
+        override
+        returns(ReturnType, bytes memory)
+    {
+        bool isOk = abi.decode(_actionData[4:], (bool));
+        action(isOk);
+    }
+
     function termsOk(uint256, address, bytes calldata _data, uint256)
         external
         view
-        override
         virtual
+        override
         returns(string memory)
     {
-        bool isOk = abi.decode(_data, (bool));
+        bool isOk = abi.decode(_data[4:], (bool));
         return termsOk(isOk);
     }
 
