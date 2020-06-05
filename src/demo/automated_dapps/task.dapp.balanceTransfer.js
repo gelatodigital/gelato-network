@@ -64,7 +64,7 @@ export default task(
       // a timestamp that is should compare to the current time to determine if a task is executable or not
       // address _userProxy, address _account, address _token, bool _greaterElseSmaller
       const conditionData = await run("abi-encode-withselector", {
-        contractname: "ConditionBalanceStatefulMax",
+        contractname: "ConditionBalanceStateful",
         functionname: "ok",
         inputs: [gelatoUserProxyAddress, userAddress, taskArgs.sendtoken, true],
       });
@@ -107,7 +107,7 @@ export default task(
       // address _account, address _token, bool _greaterElseSmaller, uint256 _delta
       console.log("1");
       const actionData2 = await run("abi-encode-withselector", {
-        contractname: "ConditionBalanceStatefulMax",
+        contractname: "ConditionBalanceStateful",
         functionname: "setRefBalanceDelta",
         inputs: [userAddress, taskArgs.sendtoken, true, taskArgs.delta],
       });
