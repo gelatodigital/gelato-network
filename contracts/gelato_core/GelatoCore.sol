@@ -54,7 +54,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     {
         // EXECUTOR CHECKS
         if (!isExecutorMinStaked(executorByProvider[_provider.addr]))
-            return "GelatoCore.canSubmitTask: executorStake";
+            return "GelatoCore.canSubmitTask: executor not minStaked";
 
         // ExpiryDate
         if (_expiryDate != 0)
