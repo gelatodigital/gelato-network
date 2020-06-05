@@ -80,7 +80,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         public
         override
     {
-        _canSubmitGate(_provider, _task, _expiryDate);
         Task[] memory singleTask = new Task[](1);
         singleTask[0] = _task;
         _storeTaskReceipt(msg.sender, _provider, 0, singleTask, _expiryDate, 1);
@@ -95,7 +94,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         public
         override
     {
-        _canSubmitGate(_provider, _tasks[0], _expiryDate);
         _storeTaskReceipt(
             msg.sender, _provider, 0, _tasks, _expiryDate, _cycles * _tasks.length
         );
@@ -116,7 +114,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
                 "GelatoCore.submitTaskChain: less requested submits than tasks"
             );
         }
-        _canSubmitGate(_provider, _tasks[0], _expiryDate);
         _storeTaskReceipt(
             msg.sender, _provider, 0, _tasks, _expiryDate, _sumOfRequestedTaskSubmits
         );
@@ -218,18 +215,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             } catch {
                 return "ActionRevertedNoMessage";
             }
-        }
-
-        // Check if we can submit the next task
-        if (_TR.submissionsLeft != 1) {
-            string memory canSubmitNext = canSubmitTask(
-                _TR.userProxy,
-                _TR.provider,
-                _TR.tasks[_TR.nextIndex()],
-                _TR.expiryDate
-            );
-            if (!canSubmitNext.startsWithOk())
-                return string(abi.encodePacked("CannotAutoSubmitNextTask:", canSubmitNext));
         }
 
         // Executor Validation
@@ -462,18 +447,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     }
 
     // Helpers
-    function _canSubmitGate(
-        Provider memory _provider,
-        Task memory _task,
-        uint256 _expiryDate
-    )
-        private
-        view
-    {
-        string memory canSubmitRes = canSubmitTask(msg.sender, _provider, _task, _expiryDate);
-        require(canSubmitRes.startsWithOk(), canSubmitRes);
-    }
-
     function hashTaskReceipt(TaskReceipt memory _TR) public pure override returns(bytes32) {
         return keccak256(abi.encode(_TR));
     }
