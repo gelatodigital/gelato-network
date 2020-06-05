@@ -163,15 +163,13 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         if (!isProviderLiquid(_TR.provider.addr, _gelatoMaxGas, _gelatoGasPrice))
             return "ProviderIlliquidity";
 
-        if (_TR.userProxy != _TR.provider.addr) {
-            string memory res = providerCanExec(
-                _TR.userProxy,
-                _TR.provider,
-                _TR.task(),
-                _gelatoGasPrice
-            );
-            if (!res.startsWithOk()) return res;
-        }
+        string memory res = providerCanExec(
+            _TR.userProxy,
+            _TR.provider,
+            _TR.task(),
+            _gelatoGasPrice
+        );
+        if (!res.startsWithOk()) return res;
 
         bytes32 hashedTaskReceipt = hashTaskReceipt(_TR);
         if (taskReceiptHash[_TR.id] != hashedTaskReceipt) return "InvalidTaskReceiptHash";
