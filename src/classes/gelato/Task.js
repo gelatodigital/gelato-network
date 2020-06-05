@@ -5,9 +5,8 @@ class Task {
     checkTaskMembers({ conditions, actions });
     this.conditions = conditions ? conditions : [];
     this.actions = actions;
-    this.selfProviderGasPriceCeil = selfProviderGasPriceCeil
-      ? selfProviderGasPriceCeil
-      : 0;
+    this.selfProviderGasPriceCeil =
+      selfProviderGasPriceCeil !== undefined ? selfProviderGasPriceCeil : 0;
   }
 }
 

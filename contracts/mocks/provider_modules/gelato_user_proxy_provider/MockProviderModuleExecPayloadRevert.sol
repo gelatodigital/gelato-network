@@ -5,11 +5,11 @@ pragma experimental ABIEncoderV2;
 import {
     GelatoProviderModuleStandard
 } from "../../../gelato_provider_modules/GelatoProviderModuleStandard.sol";
-import { Action } from "../../../gelato_core/interfaces/IGelatoCore.sol";
+import { Task } from "../../../gelato_core/interfaces/IGelatoCore.sol";
 
 contract MockProviderModuleExecPayloadRevert is GelatoProviderModuleStandard {
     // Incorrect execPayload func on purpose
-    function execPayload(Action[] calldata)
+    function execPayload(uint256, address, address, Task calldata)
         external
         view
         override
