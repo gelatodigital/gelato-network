@@ -41,6 +41,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
     // ================  SUBMIT ==============================================
     function canSubmitTask(
+        uint256 _taskReceiptId,
         address _userProxy,
         Provider memory _provider,
         Task memory _task,
@@ -63,8 +64,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         // Check Provider details
         string memory isProvided;
         if (_userProxy == _provider.addr)
-            isProvided = providerModuleChecks(_userProxy, _provider, _task);
-        else isProvided = isTaskProvided(_userProxy, _provider, _task);
+            isProvided = providerModuleChecks(_taskReceiptId, _userProxy, _provider, _task);
+        else isProvided = isTaskProvided(_taskReceiptId, _userProxy, _provider, _task);
         if (!isProvided.startsWithOk())
             return string(abi.encodePacked("GelatoCore.canSubmitTask.isProvided:", isProvided));
 
@@ -167,6 +168,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             return "ProviderIlliquidity";
 
         string memory res = providerCanExec(
+            _TR.id,
             _TR.userProxy,
             _TR.provider,
             _TR.task(),
@@ -337,7 +339,10 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         bool proxyReturndataCheck;
 
         try IGelatoProviderModule(_TR.provider.module).execPayload(
-            _TR.task().actions
+            _TR.id,
+            _TR.userProxy,
+            _TR.provider.addr,
+            _TR.task()
         )
             returns(bytes memory _execPayload, bool _proxyReturndataCheck)
         {

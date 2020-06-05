@@ -72,11 +72,13 @@ interface IGelatoProviders {
 
     /// @notice Validates that provider has provider module whitelisted + conducts isProvided check in ProviderModule
     /// @dev Checked in submitTask() if provider == userProxy
+    /// @param _taskReceiptId The ID of the TaskReceipt to be submitted/executed.
     /// @param _userProxy userProxy passed by GelatoCore during submission and exec
     /// @param _provider Gelato Provider object: provider address and module.
     /// @param _task Task defined in IGelatoCore
     /// @return Expected to return "OK"
     function providerModuleChecks(
+        uint256 _taskReceiptId,
         address _userProxy,
         Provider calldata _provider,
         Task calldata _task
@@ -88,11 +90,13 @@ interface IGelatoProviders {
 
     /// @notice Validate if provider module and seleced TaskSpec is whitelisted by provider
     /// @dev Combines "isTaskSpecProvided" and providerModuleChecks
+    /// @param _taskReceiptId The ID of the Task to be submitted.
     /// @param _userProxy userProxy passed by GelatoCore during submission and exec
     /// @param _provider Gelato Provider object: provider address and module.
     /// @param _task Task defined in IGelatoCore
     /// @return res Expected to return "OK"
     function isTaskProvided(
+        uint256 _taskReceiptId,
         address _userProxy,
         Provider calldata _provider,
         Task calldata _task
@@ -104,12 +108,14 @@ interface IGelatoProviders {
 
     /// @notice Validate if selected TaskSpec is whitelisted by provider and that current gelatoGasPrice is below GasPriceCeil
     /// @dev If gasPriceCeil is != 0, Task Spec is whitelisted
+    /// @param _taskReceiptId The ID of the TaskReceipt to be executed.
     /// @param _userProxy userProxy passed by GelatoCore during submission and exec
     /// @param _provider Gelato Provider object: provider address and module.
     /// @param _task Task defined in IGelatoCore
     /// @param _gelatoGasPrice Task Receipt defined in IGelatoCore
     /// @return res Expected to return "OK"
     function providerCanExec(
+        uint256 _taskReceiptId,
         address _userProxy,
         Provider calldata _provider,
         Task calldata _task,

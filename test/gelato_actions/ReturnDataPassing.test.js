@@ -253,7 +253,7 @@ describe("Return Data Passing Tests", function () {
     await expect(
       gelatoCore.connect(executor).exec(
         taskReceiptTransferFrom, // Array of task Receipts
-        { gasLimit: 3000000 }
+        { gasPrice: GELATO_GAS_PRICE, gasLimit: 3000000 }
       )
     ).to.emit(gelatoCore, "LogExecSuccess");
 
@@ -325,7 +325,7 @@ describe("Return Data Passing Tests", function () {
     await expect(
       gelatoCore.connect(executor).exec(
         taskReceiptTransferFrom, // Array of task Receipts
-        { gasLimit: 3000000 }
+        { gasPrice: GELATO_GAS_PRICE, gasLimit: 3000000 }
       )
     ).to.emit(gelatoCore, "LogExecSuccess");
 

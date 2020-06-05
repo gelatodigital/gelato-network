@@ -15,7 +15,7 @@ const GELATO_GAS_PRICE = initialStateGasPriceOracle.gasPrice;
 const EXPIRY_DATE = 0;
 const SUBMISSIONS_LEFT = 1;
 
-describe("Return Data Passing Tests", function () {
+describe("BatchExchange Withdraw Test", function () {
   // We define the ContractFactory and Signer variables here and assign them in
   // a beforeEach hook.
   let seller;
@@ -244,7 +244,7 @@ describe("Return Data Passing Tests", function () {
     await expect(
       gelatoCore.connect(executor).exec(
         taskReceipt, // Array of task Receipts
-        { gasLimit: 3000000 }
+        { gasPrice: GELATO_GAS_PRICE, gasLimit: 3000000 }
       )
     ).to.emit(gelatoCore, "LogExecSuccess");
 
