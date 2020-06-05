@@ -43,7 +43,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     mapping(address => mapping(bytes32 => uint256)) public override taskSpecGasPriceCeil;
     mapping(address => ProviderModuleSet.Set) internal _providerModules;
 
-    // GelatoCore: submitTask Gate
+    // GelatoCore: canSubmit
     function isTaskSpecProvided(address _provider, TaskSpec memory _taskSpec)
         public
         view
@@ -55,8 +55,9 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         return OK;
     }
 
-    // IGelatoProviderModule: GelatoCore submitTask/canExec Gate
+    // IGelatoProviderModule: GelatoCore canSubmit & canExec
     function providerModuleChecks(
+        uint256 _taskReceiptId,
         address _userProxy,
         Provider memory _provider,
         Task memory _task
@@ -74,7 +75,14 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
                 _provider.module
             );
 
-            try providerModule.isProvided(_userProxy, _task) returns(string memory res) {
+            try providerModule.isProvided(
+                _taskReceiptId,
+                _userProxy,
+                _provider.addr,
+                _task
+            )
+                returns(string memory res)
+            {
                 return res;
             } catch {
                 return "GelatoProviders.providerModuleChecks";
@@ -82,8 +90,13 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         } else return OK;
     }
 
-    // GelatoCore: combined submitTask Gate
-    function isTaskProvided(address _userProxy, Provider memory _provider, Task memory _task)
+    // GelatoCore: canSubmit
+    function isTaskProvided(
+        uint256 _taskReceiptId,
+        address _userProxy,
+        Provider memory _provider,
+        Task memory _task
+    )
         public
         view
         override
@@ -91,11 +104,13 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     {
         TaskSpec memory _taskSpec = _castTaskToSpec(_task);
         res = isTaskSpecProvided(_provider.addr, _taskSpec);
-        if (res.startsWithOk()) return providerModuleChecks(_userProxy, _provider, _task);
+        if (res.startsWithOk())
+            return providerModuleChecks(_taskReceiptId, _userProxy, _provider, _task);
     }
 
     // GelatoCore canExec Gate
     function providerCanExec(
+        uint256 _taskReceiptId,
         address _userProxy,
         Provider memory _provider,
         Task memory _task,
@@ -114,7 +129,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
             if (_gelatoGasPrice > taskSpecGasPriceCeil[_provider.addr][taskSpecHash])
                 return "taskSpecGasPriceCeil-OR-notProvided";
         }
-        return providerModuleChecks(_userProxy, _provider, _task);
+        return providerModuleChecks(_taskReceiptId, _userProxy, _provider, _task);
     }
 
     // Provider Funding

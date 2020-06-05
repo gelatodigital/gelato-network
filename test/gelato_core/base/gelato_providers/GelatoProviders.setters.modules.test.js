@@ -130,21 +130,21 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
     });
 
     taskReceipt = new TaskReceipt({
-      id: 0,
+      id: 1,
       provider: gelatoProvider,
       userProxy: gelatoUserProxyAddress,
       tasks: [task],
       submissionsLeft: SUBMISSIONS_LEFT,
     });
     otherTaskReceipt = new TaskReceipt({
-      id: 0,
+      id: 1,
       provider: otherGelatoProvider,
       userProxy: gelatoUserProxyAddress,
       tasks: [otherTask],
       submissionsLeft: SUBMISSIONS_LEFT,
     });
     fakeTaskReceipt = new TaskReceipt({
-      id: 0,
+      id: 1,
       provider: fakeGelatoProvider,
       userProxy: gelatoUserProxyAddress,
       tasks: [fakeTask],
@@ -179,6 +179,7 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
       // providerModuleChecks
       expect(
         await gelatoCore.providerModuleChecks(
+          1, // taskReceiptId
           gelatoUserProxyAddress,
           gelatoProvider,
           task
@@ -209,6 +210,7 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
       // providerModuleChecks
       expect(
         await gelatoCore.providerModuleChecks(
+          1, // taskReceiptId
           gelatoUserProxyAddress,
           gelatoProvider,
           task
@@ -220,6 +222,7 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
       // providerModuleChecks
       expect(
         await gelatoCore.providerModuleChecks(
+          1, // taskReceiptId
           gelatoUserProxyAddress,
           gelatoProvider,
           task
@@ -227,6 +230,7 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
       ).to.be.equal("InvalidProviderModule");
       expect(
         await gelatoCore.providerModuleChecks(
+          1, // taskReceiptId
           gelatoUserProxyAddress,
           otherGelatoProvider,
           otherTask
@@ -277,6 +281,7 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
       // providerModuleChecks
       expect(
         await gelatoCore.providerModuleChecks(
+          1, // taskReceiptId
           gelatoUserProxyAddress,
           gelatoProvider,
           task
@@ -284,6 +289,7 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
       ).to.be.equal("OK");
       expect(
         await gelatoCore.providerModuleChecks(
+          1, // taskReceiptId
           gelatoUserProxyAddress,
           otherGelatoProvider,
           otherTask
@@ -299,6 +305,7 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
 
       expect(
         await gelatoCore.providerModuleChecks(
+          1, // taskReceiptId
           gelatoUserProxyAddress,
           fakeGelatoProvider,
           fakeTask
@@ -326,6 +333,7 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
 
       expect(
         await gelatoCore.providerCanExec(
+          taskReceipt.id,
           taskReceipt.userProxy,
           gelatoProvider,
           taskReceipt.tasks[taskReceipt.index],
@@ -336,6 +344,7 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
       // providerCanExec: otherTaskReceipt (not provided gnosis safe)
       expect(
         await gelatoCore.providerCanExec(
+          otherTaskReceipt.id,
           otherTaskReceipt.userProxy,
           otherGelatoProvider,
           otherTaskReceipt.tasks[otherTaskReceipt.index],
@@ -346,6 +355,7 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
       // providerCanExec: fakeTaskReceipt
       expect(
         await gelatoCore.providerCanExec(
+          fakeTaskReceipt.id,
           fakeTaskReceipt.userProxy,
           fakeGelatoProvider,
           fakeTaskReceipt.tasks[fakeTaskReceipt.index],
@@ -356,6 +366,7 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
       // providerCanExec: gelatoGasPriceTooHigh
       expect(
         await gelatoCore.providerCanExec(
+          taskReceipt.id,
           taskReceipt.userProxy,
           gelatoProvider,
           taskReceipt.tasks[taskReceipt.index],

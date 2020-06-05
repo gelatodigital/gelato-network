@@ -70,10 +70,12 @@ interface IGelatoCore {
 
     /// @notice API to query whether Task can be submitted successfully.
     /// @dev In submitTask the msg.sender must be the same as _userProxy here.
+    /// @param _taskReceiptId The ID of the Task to be submitted.
     /// @param _provider Gelato Provider object: provider address and module.
     /// @param _userProxy The userProxy from which the task will be submitted.
     /// @param _task Selected provider, conditions, actions, expiry date of the task
     function canSubmitTask(
+        uint256 _taskReceiptId,
         address _userProxy,
         Provider calldata _provider,
         Task calldata _task,
