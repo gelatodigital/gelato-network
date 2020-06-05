@@ -118,7 +118,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
                 return "SelfProviderGasPriceCeil";
         } else {
             bytes32 taskSpecHash = hashTaskSpec(_castTaskToSpec(_task));
-            if (_gelatoGasPrice > taskSpecGasPriceCeil[_provider.addr][taskSpecHash])
+            if (taskSpecGasPriceCeil[_provider.addr][taskSpecHash] < _gelatoGasPrice)
                 return "taskSpecGasPriceCeil-OR-notProvided";
         }
         return providerModuleChecks(_userProxy, _provider, _task);
