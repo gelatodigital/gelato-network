@@ -57,7 +57,6 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
 
     // IGelatoProviderModule: GelatoCore canSubmit & canExec
     function providerModuleChecks(
-        uint256 _taskReceiptId,
         address _userProxy,
         Provider memory _provider,
         Task memory _task
@@ -75,12 +74,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
                 _provider.module
             );
 
-            try providerModule.isProvided(
-                _taskReceiptId,
-                _userProxy,
-                _provider.addr,
-                _task
-            )
+            try providerModule.isProvided(_userProxy, _provider.addr, _task)
                 returns(string memory res)
             {
                 return res;
@@ -92,7 +86,6 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
 
     // GelatoCore: canSubmit
     function isTaskProvided(
-        uint256 _taskReceiptId,
         address _userProxy,
         Provider memory _provider,
         Task memory _task
@@ -105,12 +98,11 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         TaskSpec memory _taskSpec = _castTaskToSpec(_task);
         res = isTaskSpecProvided(_provider.addr, _taskSpec);
         if (res.startsWithOk())
-            return providerModuleChecks(_taskReceiptId, _userProxy, _provider, _task);
+            return providerModuleChecks(_userProxy, _provider, _task);
     }
 
     // GelatoCore canExec Gate
     function providerCanExec(
-        uint256 _taskReceiptId,
         address _userProxy,
         Provider memory _provider,
         Task memory _task,
@@ -129,7 +121,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
             if (_gelatoGasPrice > taskSpecGasPriceCeil[_provider.addr][taskSpecHash])
                 return "taskSpecGasPriceCeil-OR-notProvided";
         }
-        return providerModuleChecks(_taskReceiptId, _userProxy, _provider, _task);
+        return providerModuleChecks(_userProxy, _provider, _task);
     }
 
     // Provider Funding

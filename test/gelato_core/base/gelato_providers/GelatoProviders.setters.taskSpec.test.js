@@ -150,12 +150,7 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
 
       // isTaskProvided
       expect(
-        await gelatoCore.isTaskProvided(
-          1, // taskReceiptId,
-          userProxyAddress,
-          gelatoProvider,
-          task
-        )
+        await gelatoCore.isTaskProvided(userProxyAddress, gelatoProvider, task)
       ).not.to.be.equal("TaskSpecNotProvided");
 
       // otherTaskSpec
@@ -167,7 +162,6 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
       // isTaskProvided
       expect(
         await gelatoCore.isTaskProvided(
-          1, // taskReceiptId,
           userProxyAddress,
           gelatoProvider,
           otherTask
@@ -210,12 +204,7 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
 
       // isTaskProvided
       expect(
-        await gelatoCore.isTaskProvided(
-          1, // taskReceiptId,
-          userProxyAddress,
-          gelatoProvider,
-          task
-        )
+        await gelatoCore.isTaskProvided(userProxyAddress, gelatoProvider, task)
       ).not.to.be.equal("TaskSpecNotProvided");
 
       // otherTaskSpec
@@ -235,7 +224,6 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
       // isTaskProvided;
       expect(
         await gelatoCore.isTaskProvided(
-          1, // taskReceiptId,
           userProxyAddress,
           gelatoProvider,
           otherTask
@@ -283,12 +271,7 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
 
       // isTaskProvided
       expect(
-        await gelatoCore.isTaskProvided(
-          1, // taskReceiptId,
-          userProxyAddress,
-          gelatoProvider,
-          task
-        )
+        await gelatoCore.isTaskProvided(userProxyAddress, gelatoProvider, task)
       ).not.to.be.equal("TaskSpecNotProvided");
 
       // setTaskSpecGasPriceCeil
@@ -309,12 +292,7 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
 
       // isTaskProvided
       expect(
-        await gelatoCore.isTaskProvided(
-          1, // taskReceiptId,
-          userProxyAddress,
-          gelatoProvider,
-          task
-        )
+        await gelatoCore.isTaskProvided(userProxyAddress, gelatoProvider, task)
       ).not.to.be.equal("TaskSpecNotProvided");
 
       // otherTaskSpec
@@ -326,7 +304,6 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
       // isTaskProvided
       expect(
         await gelatoCore.isTaskProvided(
-          1, // taskReceiptId,
           userProxyAddress,
           gelatoProvider,
           otherTask
@@ -370,12 +347,7 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
 
       // isTaskProvided
       expect(
-        await gelatoCore.isTaskProvided(
-          1, // taskReceiptId,
-          userProxyAddress,
-          gelatoProvider,
-          task
-        )
+        await gelatoCore.isTaskProvided(userProxyAddress, gelatoProvider, task)
       ).to.be.equal("TaskSpecNotProvided");
 
       // otherTaskSpec
@@ -395,7 +367,6 @@ describe("GelatoCore - GelatoProviders - Setters: TaskSpecs", function () {
       // isTaskProvided
       expect(
         await gelatoCore.isTaskProvided(
-          1, // taskReceiptId,
           userProxyAddress,
           gelatoProvider,
           otherTask

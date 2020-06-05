@@ -34,13 +34,12 @@ contract ProviderModuleDSProxy is GelatoProviderModuleStandard {
     }
 
     // ================= GELATO PROVIDER MODULE STANDARD ================
-    function isProvided(uint256, address _userProxy, address, Task calldata)
+    function isProvided(address _userProxy, address, Task calldata)
         external
         view
         override
         returns(string memory)
     {
-
         // Was proxy deployed from correct factory?
         bool proxyOk = DSProxyFactory(dsProxyFactory).isProxy(
             _userProxy

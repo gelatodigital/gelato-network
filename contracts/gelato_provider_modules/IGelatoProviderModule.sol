@@ -8,17 +8,11 @@ interface IGelatoProviderModule {
 
     /// @notice Check if provider agrees to pay for inputted task receipt
     /// @dev Enables arbitrary checks by provider
-    /// @param _taskReceiptId Unique ID of Gelato Task to be executed.
     /// @param _userProxy The smart contract account of the user who submitted the Task.
     /// @param _provider The account of the Provider who uses the ProviderModule.
     /// @param _task Gelato Task to be executed.
     /// @return "OK" if provider agrees
-    function isProvided(
-        uint256 _taskReceiptId,
-        address _userProxy,
-        address _provider,
-        Task calldata _task
-    )
+    function isProvided(address _userProxy, address _provider, Task calldata _task)
         external
         view
         returns(string memory);

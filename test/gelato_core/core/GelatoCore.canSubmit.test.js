@@ -141,7 +141,6 @@ describe("Gelato Core - Task Submission ", function () {
 
       expect(
         await gelatoCore.canSubmitTask(
-          taskReceiptId,
           userProxyAddress,
           fakeGelatoProvider,
           task,
@@ -155,7 +154,6 @@ describe("Gelato Core - Task Submission ", function () {
 
       expect(
         await gelatoCore.canSubmitTask(
-          taskReceiptId,
           userProxyAddress,
           gelatoProvider,
           task,
@@ -167,7 +165,6 @@ describe("Gelato Core - Task Submission ", function () {
     it("#3: Action not provided: TaskSpecNotProvided", async function () {
       expect(
         await gelatoCore.canSubmitTask(
-          taskReceiptId,
           userProxyAddress,
           gelatoProvider,
           task,
@@ -184,7 +181,6 @@ describe("Gelato Core - Task Submission ", function () {
 
       expect(
         await gelatoCore.canSubmitTask(
-          taskReceiptId,
           userProxyAddress,
           gelatoProvider,
           task,
@@ -203,7 +199,6 @@ describe("Gelato Core - Task Submission ", function () {
 
       expect(
         await gelatoCore.canSubmitTask(
-          taskReceiptId,
           userProxyAddress,
           gelatoProvider,
           task,
@@ -216,7 +211,6 @@ describe("Gelato Core - Task Submission ", function () {
 
       expect(
         await gelatoCore.canSubmitTask(
-          taskReceiptId,
           userProxyAddress,
           gelatoProvider,
           task,
@@ -235,7 +229,6 @@ describe("Gelato Core - Task Submission ", function () {
 
       expect(
         await gelatoCore.canSubmitTask(
-          taskReceiptId,
           userProxyAddress,
           gelatoProvider,
           task,
@@ -251,7 +244,6 @@ describe("Gelato Core - Task Submission ", function () {
       // GelatoCore.canSubmitTask.isProvided:InvalidProviderModule
       expect(
         await gelatoCore.canSubmitTask(
-          taskReceiptId,
           userProxyAddress,
           gelatoProviderWithFakeModule,
           task,
