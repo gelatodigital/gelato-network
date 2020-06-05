@@ -59,7 +59,7 @@ describe("GelatoCore.canExec", function () {
     await gelatoCore.deployed();
     await gelatoCore
       .connect(executor)
-      .stakeExecutor({ value: ethers.utils.parseUnits("1", "ether") });
+      .stakeExecutor({ value: await gelatoCore.minExecutorStake() });
 
     // Deploy Gelato Gas Price Oracle with SysAdmin and set to GELATO_GAS_PRICE
     const GelatoGasPriceOracle = await ethers.getContractFactory(
@@ -183,8 +183,35 @@ describe("GelatoCore.canExec", function () {
     ).to.emit(gelatoCore, "LogTaskSubmitted");
   });
 
-  // We test different functionality of the contract as normal Mocha tests.
-  it("#1: CanExec - Call view func with too low Gas Price is OK as we check it in exec)", async function () {
+  it("#1: CanExec - ExecutorNotMinStaked", async function () {
+    expect(
+      await gelatoCore
+        .connect(executor)
+        .canExec(
+          taskReceipt,
+          GELATO_MAX_GAS,
+          ethers.utils.parseUnits("1", "gwei")
+        )
+    ).to.equal("OK");
+
+    const currentMinStake = await gelatoCore.minExecutorStake();
+
+    await gelatoCore
+      .connect(sysAdmin)
+      .setMinExecutorStake(currentMinStake.add(1));
+
+    expect(
+      await gelatoCore
+        .connect(executor)
+        .canExec(
+          taskReceipt,
+          GELATO_MAX_GAS,
+          ethers.utils.parseUnits("1", "gwei")
+        )
+    ).to.equal("ExecutorNotMinStaked");
+  });
+
+  it("#2: CanExec - Call view func with too low Gas Price is OK as we check it in exec)", async function () {
     expect(
       await gelatoCore
         .connect(executor)
@@ -196,7 +223,7 @@ describe("GelatoCore.canExec", function () {
     ).to.equal("OK");
   });
 
-  it("#2: CanExec - Call view func with too high gas price leading to insufficient provider funds)", async function () {
+  it("#3: CanExec - Call view func with too high gas price leading to insufficient provider funds)", async function () {
     await gelatoGasPriceOracle
       .connect(sysAdmin)
       .setGasPrice(ethers.utils.parseUnits("300", "ether"));
@@ -212,7 +239,7 @@ describe("GelatoCore.canExec", function () {
     ).to.equal("ProviderIlliquidity");
   });
 
-  it("#3: CanExec - Task Receipt expired", async function () {
+  it("#4: CanExec - Task Receipt expired", async function () {
     let oldBlock = await ethers.provider.getBlock();
 
     const lifespan = 420;
@@ -244,7 +271,7 @@ describe("GelatoCore.canExec", function () {
     ).to.equal("TaskReceiptExpired");
   });
 
-  it("#4: CanExec - Fail due to providerCanExec failure: notProvided)", async function () {
+  it("#5: CanExec - Fail due to providerCanExec failure: notProvided)", async function () {
     const task2 = new Task({
       actions: [action],
     });
@@ -268,7 +295,7 @@ describe("GelatoCore.canExec", function () {
     ).to.equal("taskSpecGasPriceCeil-OR-notProvided");
   });
 
-  it("#5: CanExec - Fail due to providerCanExec failure: taskSpecGasPriceCeil)", async function () {
+  it("#6: CanExec - Fail due to providerCanExec failure: taskSpecGasPriceCeil)", async function () {
     await gelatoGasPriceOracle
       .connect(sysAdmin)
       .setGasPrice(taskSpec.gasPriceCeil.add(1));
@@ -280,7 +307,7 @@ describe("GelatoCore.canExec", function () {
     ).to.equal("taskSpecGasPriceCeil-OR-notProvided");
   });
 
-  it("#6: CanExec - SelfProvider: Fail due to SelfProviderGasPriceCeil", async function () {
+  it("#7: CanExec - SelfProvider: Fail due to SelfProviderGasPriceCeil", async function () {
     const selfProvider = new GelatoProvider({
       addr: userProxyAddress,
       module: providerModuleGelatoUserProxy.address,
@@ -340,7 +367,7 @@ describe("GelatoCore.canExec", function () {
     ).to.equal("SelfProviderGasPriceCeil");
   });
 
-  it("#7: CanExec - SelfProvider: Fail due to InvalidProviderModule", async function () {
+  it("#8: CanExec - SelfProvider: Fail due to InvalidProviderModule", async function () {
     const selfProvider = new GelatoProvider({
       addr: userProxyAddress,
       module: providerModuleGelatoUserProxy.address,
@@ -406,7 +433,7 @@ describe("GelatoCore.canExec", function () {
     ).to.equal("OK");
   });
 
-  it("#8: CanExec - Return Ok when called via executor)", async function () {
+  it("#9: CanExec - Return Ok when called via executor)", async function () {
     expect(
       await gelatoCore
         .connect(executor)
@@ -414,7 +441,7 @@ describe("GelatoCore.canExec", function () {
     ).to.equal("OK");
   });
 
-  it("#9: CanExec - Return InvalidExecutor when called NOT via executor)", async function () {
+  it("#10: CanExec - Return InvalidExecutor when called NOT via executor)", async function () {
     expect(
       await gelatoCore
         .connect(provider)
@@ -422,7 +449,7 @@ describe("GelatoCore.canExec", function () {
     ).to.equal("InvalidExecutor");
   });
 
-  it("#10: CanExec - Call view func with higher Gas Price)", async function () {
+  it("#11: CanExec - Call view func with higher Gas Price)", async function () {
     expect(
       await gelatoCore
         .connect(executor)
