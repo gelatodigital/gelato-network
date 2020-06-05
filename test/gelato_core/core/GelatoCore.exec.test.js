@@ -1245,6 +1245,7 @@ describe("GelatoCore.exec", function () {
 
       const task = new Task({
         actions: [action],
+        selfProviderGasPriceCeil: GELATO_GAS_PRICE,
       });
 
       const taskReceipt = new TaskReceipt({
@@ -1861,6 +1862,7 @@ describe("GelatoCore.exec", function () {
 
       const task = new Task({
         actions: [unProvideFundsAction],
+        selfProviderGasPriceCeil: GELATO_GAS_PRICE,
       });
 
       let taskReceipt = new TaskReceipt({
