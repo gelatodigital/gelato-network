@@ -7,6 +7,7 @@ import { IERC20 } from "../../external/IERC20.sol";
 import { SafeERC20 } from "../../external/SafeERC20.sol";
 import { Address } from "../../external/Address.sol";
 import { SafeMath } from '../../external/SafeMath.sol';
+import { Ownable } from '../../external/Ownable.sol';
 
 contract FeeHandler is GelatoActionsStandard {
     // using SafeERC20 for IERC20; <- internal library methods vs. try/catch
@@ -21,14 +22,31 @@ contract FeeHandler is GelatoActionsStandard {
 
     address public immutable myself;
     address payable public immutable provider;
+    FeeHandlerFactory public immutable feeHandlerFactory;
     uint256 public immutable feeNum;
     uint256 public immutable feeDen;
 
-    constructor(address payable _provider, uint256 _num, uint256 _den) public {
+    mapping(address=>bool) public whitelistedTokens;
+    bool public useOwnWhitelist;
+
+    constructor(
+        address payable _provider,
+        FeeHandlerFactory _feeHandlerFactory,
+        uint256 _num,
+        uint256 _den
+    )
+        public
+    {
         myself = address(this);
         provider = _provider;
+        feeHandlerFactory = _feeHandlerFactory;
         feeNum = _num;
         feeDen = _den;
+    }
+
+    modifier onlyProvider() {
+        require(msg.sender == provider, "FeeHandler: Only provider");
+        _;
     }
 
     /// @dev Use this function for encoding off-chain
@@ -38,11 +56,8 @@ contract FeeHandler is GelatoActionsStandard {
         address /*_feePayer*/
     )
         public
-        payable
         virtual
-    {
-        require(myself != address(this), "Only delegatecall");
-    }
+    {}
 
     // Will be automatically called by gelato => do not use for encoding
     function gelatoInternal(
@@ -54,6 +69,8 @@ contract FeeHandler is GelatoActionsStandard {
         override
         returns(ReturnType, bytes memory)
     {
+        require(myself != address(this), "Only delegatecall");
+
         // 1. Decode Payload, if no taskState was present
         (address sendToken, uint256 sendAmount, address feePayer) = abi.decode(_actionData[4:], (address, uint256, address));
 
@@ -108,6 +125,8 @@ contract FeeHandler is GelatoActionsStandard {
         if (_sendAmount.mul(feeDen) < feeDen)
             return "FeeHandler: Insufficient sendAmount, will underflow";
 
+        if (!isTokenWhitelisted(_sendToken)) return "FeeHandler: Token not whitelisted for fee";
+
         IERC20 sendERC20 = IERC20(_sendToken);
 
         if (_userProxy == _feePayer) {
@@ -134,9 +153,58 @@ contract FeeHandler is GelatoActionsStandard {
         }
         return OK;
     }
+
+    function getProvider()
+        public
+        view
+        returns(address)
+    {
+        return provider;
+    }
+
+    function isTokenWhitelisted(address _token)
+        public
+        view
+        returns(bool isWhitelisted)
+    {
+        if (useOwnWhitelist) {
+            isWhitelisted = whitelistedTokens[_token];
+        } else {
+            isWhitelisted = feeHandlerFactory.isWhitelisted(_token);
+        }
+    }
+
+    // Fee Factory Admin
+    function addTokenToWhitelist(address _token)
+        external
+        onlyProvider
+    {
+        whitelistedTokens[_token] = true;
+    }
+
+    function removeTokenFromWhitelist(address _token)
+        external
+        onlyProvider
+    {
+        whitelistedTokens[_token] = false;
+    }
+
+    function activateOwnWhitelist()
+        external
+        onlyProvider
+    {
+        useOwnWhitelist = true;
+    }
+
+    function deactivateOwnWhitelist()
+        external
+        onlyProvider
+    {
+        useOwnWhitelist = false;
+    }
 }
 
-contract FeeHandlerFactory {
+contract FeeHandlerFactory is Ownable {
 
     event Created(address indexed provider, address indexed feeHandler, uint256 indexed numerator);
 
@@ -145,6 +213,7 @@ contract FeeHandlerFactory {
 
     mapping(address=>bool) public isFeeHandler;
     mapping(address => mapping(uint256 => address)) internal _feeHandlers;
+    mapping(address=>bool) public whitelistedTokens;
 
     // deploys a new feeHandler instance
     /// @dev Input _num = 100 for 1% fee, _num = 50 for 0.5% fee, etc
@@ -155,7 +224,7 @@ contract FeeHandlerFactory {
     // deploys a new feeHandler instance
     // sets custom provider of feeHandler
     function create(address payable _provider, uint256 _num) private returns (address feeHandler) {
-        feeHandler = address(new FeeHandler(_provider, _num, DEN));
+        feeHandler = address(new FeeHandler(_provider, this, _num, DEN));
         isFeeHandler[feeHandler] = true;
         addNewFeeHandler(feeHandler, _provider, _num);
     }
@@ -178,6 +247,29 @@ contract FeeHandlerFactory {
         require(_feeHandlers[_provider][_num] == address(0), "Fee contract already deployed");
         _feeHandlers[_provider][_num] = _feeHandler;
         emit Created(_provider, _feeHandler, _num);
+    }
+
+    function isWhitelisted(address _token)
+        public
+        view
+        returns(bool)
+    {
+        return whitelistedTokens[_token];
+    }
+
+    // Fee Factory Admin
+    function addTokenToWhitelist(address _token)
+        external
+        onlyOwner
+    {
+        whitelistedTokens[_token] = true;
+    }
+
+    function removeTokenFromWhitelist(address _token)
+        external
+        onlyOwner
+    {
+        whitelistedTokens[_token] = false;
     }
 
 }

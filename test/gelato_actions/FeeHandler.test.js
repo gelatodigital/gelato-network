@@ -15,6 +15,7 @@ const SUBMISSIONS_LEFT = 1;
 
 const NUM = 100;
 const DEN = 10000;
+const ETH_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
 // => Fee = 1%
 
 describe("FeeHandler Tests", function () {
@@ -79,10 +80,15 @@ describe("FeeHandler Tests", function () {
     await feeHandlerFactory.deployed();
 
     // Instantiate FeeHandler
-    await feeHandlerFactory.create(NUM);
+    await feeHandlerFactory.connect(provider).create(NUM);
     feeHandlerAddress = await feeHandlerFactory.getFeeHandler(
       providerAddress,
       NUM
+    );
+
+    const feeHandler = await ethers.getContractAt(
+      "FeeHandler",
+      feeHandlerAddress
     );
 
     // Deploy Gelato Gas Price Oracle with SysAdmin and set to GELATO_GAS_PRICE
@@ -172,6 +178,12 @@ describe("FeeHandler Tests", function () {
       sellDecimals
     );
     await sellToken.deployed();
+
+    // whitelist token on fee contract
+    const provider2 = await feeHandler.getProvider();
+    await feeHandler.connect(provider).addTokenToWhitelist(sellToken.address);
+    await feeHandler.connect(provider).addTokenToWhitelist(ETH_ADDRESS);
+    await feeHandler.connect(provider).activateOwnWhitelist();
 
     // ### Action #1
     sendAmount = ethers.utils.parseUnits("10", "ether");
@@ -386,11 +398,9 @@ describe("FeeHandler Tests", function () {
   });
 
   it("#3: Check provider payouts, when Proxy has to pay fee and ETH is used. Also leave other address in ActionTransfer to check it gets overwritten", async function () {
-    const ethAddress = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
-
     // Instantiate Actions
     const feeHandlerInputs = [
-      ethAddress /*_sendToken*/,
+      ETH_ADDRESS /*_sendToken*/,
       sendAmount /*_sendAmount*/,
       userProxyAddress /*_feePayer*/,
     ];
