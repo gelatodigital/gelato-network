@@ -1066,7 +1066,7 @@ describe("GelatoCore.exec", function () {
           gasPrice: GELATO_GAS_PRICE,
           gasLimit: internalGasRequirement,
         })
-      ).to.revertedWith("GelatoCore.exec: Insufficient gas sent");
+      ).to.revertedWith("GelatoCore.exec: Insufficient gas");
     });
 
     it("#12a: Exec good taskReceipt, however revert with LogExecReverted because insufficient gas was sent", async function () {
@@ -1209,7 +1209,7 @@ describe("GelatoCore.exec", function () {
             .bigNumberify(internalGasRequirement)
             .add(ethers.utils.bigNumberify("35000")),
         })
-      ).to.be.revertedWith("GelatoCore.exec: Insufficient gas sent");
+      ).to.be.revertedWith("GelatoCore.exec: Insufficient gas");
     });
 
     it("#13: Successfully submit and exec ActionWithdrawBatchExchange taskReceipt (self-provider)", async function () {
@@ -1245,6 +1245,7 @@ describe("GelatoCore.exec", function () {
 
       const task = new Task({
         actions: [action],
+        selfProviderGasPriceCeil: GELATO_GAS_PRICE,
       });
 
       const taskReceipt = new TaskReceipt({
@@ -1861,6 +1862,7 @@ describe("GelatoCore.exec", function () {
 
       const task = new Task({
         actions: [unProvideFundsAction],
+        selfProviderGasPriceCeil: GELATO_GAS_PRICE,
       });
 
       let taskReceipt = new TaskReceipt({
@@ -1964,7 +1966,7 @@ describe("GelatoCore.exec", function () {
       await expect(
         gelatoCore
           .connect(executor)
-          .exec(taskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
+          .exec(taskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: 300000 })
       )
         .to.emit(gelatoCore, "LogExecReverted")
         .withArgs(
@@ -2054,7 +2056,7 @@ describe("GelatoCore.exec", function () {
       await expect(
         gelatoCore
           .connect(executor)
-          .exec(taskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
+          .exec(taskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: 300000 })
       )
         .to.emit(gelatoCore, "LogExecReverted")
         .withArgs(
@@ -2224,7 +2226,7 @@ describe("GelatoCore.exec", function () {
       await expect(
         gelatoCore.connect(executor).exec(taskReceipt, {
           gasPrice: GELATO_GAS_PRICE,
-          gasLimit: GELATO_MAX_GAS - 10000,
+          gasLimit: 300000,
         })
       )
         .to.emit(gelatoCore, "LogExecReverted")
@@ -2313,7 +2315,7 @@ describe("GelatoCore.exec", function () {
       await expect(
         gelatoCore.connect(executor).exec(taskReceipt, {
           gasPrice: GELATO_GAS_PRICE,
-          gasLimit: GELATO_MAX_GAS - 10000,
+          gasLimit: 300000,
         })
       )
         .to.emit(gelatoCore, "LogExecReverted")

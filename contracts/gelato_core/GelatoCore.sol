@@ -53,7 +53,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     {
         // EXECUTOR CHECKS
         if (!isExecutorMinStaked(executorByProvider[_provider.addr]))
-            return "GelatoCore.canSubmitTask: executorStake";
+            return "GelatoCore.canSubmitTask: executor not minStaked";
 
         // ExpiryDate
         if (_expiryDate != 0)
@@ -80,7 +80,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         public
         override
     {
-        _canSubmitGate(_provider, _task, _expiryDate);
         Task[] memory singleTask = new Task[](1);
         singleTask[0] = _task;
         _storeTaskReceipt(msg.sender, _provider, 0, singleTask, _expiryDate, 1);
@@ -95,7 +94,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         public
         override
     {
-        _canSubmitGate(_provider, _tasks[0], _expiryDate);
         _storeTaskReceipt(
             msg.sender, _provider, 0, _tasks, _expiryDate, _cycles * _tasks.length
         );
@@ -116,7 +114,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
                 "GelatoCore.submitTaskChain: less requested submits than tasks"
             );
         }
-        _canSubmitGate(_provider, _tasks[0], _expiryDate);
         _storeTaskReceipt(
             msg.sender, _provider, 0, _tasks, _expiryDate, _sumOfRequestedTaskSubmits
         );
@@ -163,18 +160,19 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         override
         returns(string memory)
     {
+        if (!isExecutorMinStaked(executorByProvider[_TR.provider.addr]))
+            return "ExecutorNotMinStaked";
+
         if (!isProviderLiquid(_TR.provider.addr, _gelatoMaxGas, _gelatoGasPrice))
             return "ProviderIlliquidity";
 
-        if (_TR.userProxy != _TR.provider.addr) {
-            string memory res = providerCanExec(
-                _TR.userProxy,
-                _TR.provider,
-                _TR.task(),
-                _gelatoGasPrice
-            );
-            if (!res.startsWithOk()) return res;
-        }
+        string memory res = providerCanExec(
+            _TR.userProxy,
+            _TR.provider,
+            _TR.task(),
+            _gelatoGasPrice
+        );
+        if (!res.startsWithOk()) return res;
 
         bytes32 hashedTaskReceipt = hashTaskReceipt(_TR);
         if (taskReceiptHash[_TR.id] != hashedTaskReceipt) return "InvalidTaskReceiptHash";
@@ -220,18 +218,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             }
         }
 
-        // Check if we can submit the next task
-        if (_TR.submissionsLeft != 1) {
-            string memory canSubmitNext = canSubmitTask(
-                _TR.userProxy,
-                _TR.provider,
-                _TR.tasks[_TR.nextIndex()],
-                _TR.expiryDate
-            );
-            if (!canSubmitNext.startsWithOk())
-                return string(abi.encodePacked("CannotAutoSubmitNextTask:", canSubmitNext));
-        }
-
         // Executor Validation
         if (msg.sender == address(this)) return OK;
         else if (msg.sender == executorByProvider[_TR.provider.addr]) return OK;
@@ -269,16 +255,10 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         ExecutionResult executionResult;
         string memory reason;
 
-        try this.executionWrapper{gas: gasleft().sub(
-            internalGasRequirement,
-            "GelatoCore.exec: Insufficient gas sent"
-            )
-        }(
-            _TR,
-            _gelatoMaxGas,
-            gelatoGasPrice
-        )
-            returns(ExecutionResult _executionResult, string memory _reason)
+        try this.executionWrapper{
+            gas: gasleft().sub(internalGasRequirement, "GelatoCore.exec: Insufficient gas")
+        }(_TR, _gelatoMaxGas, gelatoGasPrice)
+            returns (ExecutionResult _executionResult, string memory _reason)
         {
             executionResult = _executionResult;
             reason = _reason;
@@ -310,7 +290,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         } else {
             // executionResult == ExecutionResult.ExecRevert
             // END-3.1: ExecReverted NO gelatoMaxGas => No TaskReceipt Deletion & No Refund
-            if (startGas < _gelatoMaxGas) emit LogExecReverted(msg.sender, _TR.id, 0, reason);
+            if (startGas < _gelatoMaxGas)
+                emit LogExecReverted(msg.sender, _TR.id, 0, reason);
             else {
                 // END-3.2: ExecReverted BUT gelatoMaxGas was used
                 //  => TaskReceipt Deletion (delete in _exec was reverted) & Refund
@@ -356,7 +337,10 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         bool proxyReturndataCheck;
 
         try IGelatoProviderModule(_TR.provider.module).execPayload(
-            _TR.task().actions
+            _TR.id,
+            _TR.userProxy,
+            _TR.provider.addr,
+            _TR.task()
         )
             returns(bytes memory _execPayload, bool _proxyReturndataCheck)
         {
@@ -416,17 +400,18 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         private
         returns(uint256 executorCompensation, uint256 sysAdminCompensation)
     {
+        uint256 estGasUsed = _startGas - gasleft();
 
-        uint256 estGasConsumed = _startGas - gasleft();
-
-        // Provider payable Gas Refund capped at gelatoMaxGas (- consecutive state writes + gas refund from deletion)
-        uint256 cappedGasConsumed = estGasConsumed < _gelatoMaxGas
-        ? estGasConsumed + EXEC_TX_OVERHEAD : _gelatoMaxGas + EXEC_TX_OVERHEAD;
-
+        // Provider payable Gas Refund capped at gelatoMaxGas
+        //  (- consecutive state writes + gas refund from deletion)
+        uint256 cappedGasUsed =
+            estGasUsed < _gelatoMaxGas
+                ? estGasUsed + EXEC_TX_OVERHEAD
+                : _gelatoMaxGas + EXEC_TX_OVERHEAD;
 
         if (_payType == ExecutorPay.Reward) {
-            executorCompensation = executorSuccessFee(cappedGasConsumed, _gelatoGasPrice);
-            sysAdminCompensation = sysAdminSuccessFee(cappedGasConsumed, _gelatoGasPrice);
+            executorCompensation = executorSuccessFee(cappedGasUsed, _gelatoGasPrice);
+            sysAdminCompensation = sysAdminSuccessFee(cappedGasUsed, _gelatoGasPrice);
             // ExecSuccess: Provider pays ExecutorSuccessFee and SysAdminSuccessFee
             providerFunds[_provider] = providerFunds[_provider].sub(
                 executorCompensation.add(sysAdminCompensation),
@@ -436,7 +421,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             sysAdminFunds += sysAdminCompensation;
         } else {
             // ExecFailure: Provider REFUNDS estimated costs to executor
-            executorCompensation = cappedGasConsumed.mul(_gelatoGasPrice);
+            executorCompensation = cappedGasUsed.mul(_gelatoGasPrice);
             providerFunds[_provider] = providerFunds[_provider].sub(
                 executorCompensation,
                 "GelatoCore._processProviderPayables: providerFunds underflow"
@@ -467,18 +452,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     }
 
     // Helpers
-    function _canSubmitGate(
-        Provider memory _provider,
-        Task memory _task,
-        uint256 _expiryDate
-    )
-        private
-        view
-    {
-        string memory canSubmitRes = canSubmitTask(msg.sender, _provider, _task, _expiryDate);
-        require(canSubmitRes.startsWithOk(), canSubmitRes);
-    }
-
     function hashTaskReceipt(TaskReceipt memory _TR) public pure override returns(bytes32) {
         return keccak256(abi.encode(_TR));
     }

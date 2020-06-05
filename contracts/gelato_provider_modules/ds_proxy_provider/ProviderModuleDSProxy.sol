@@ -3,7 +3,7 @@ pragma solidity ^0.6.8;
 pragma experimental ABIEncoderV2;
 
 import { GelatoProviderModuleStandard } from "../GelatoProviderModuleStandard.sol";
-import { Action, Task, Operation } from "../../gelato_core/interfaces/IGelatoCore.sol";
+import { Task } from "../../gelato_core/interfaces/IGelatoCore.sol";
 import {
     DSProxyFactory
 } from "../../user_proxies/ds_proxy/Proxy.sol";
@@ -34,13 +34,12 @@ contract ProviderModuleDSProxy is GelatoProviderModuleStandard {
     }
 
     // ================= GELATO PROVIDER MODULE STANDARD ================
-    function isProvided(address _userProxy, Task calldata)
+    function isProvided(address _userProxy, address, Task calldata)
         external
         view
         override
         returns(string memory)
     {
-
         // Was proxy deployed from correct factory?
         bool proxyOk = DSProxyFactory(dsProxyFactory).isProxy(
             _userProxy
@@ -56,7 +55,7 @@ contract ProviderModuleDSProxy is GelatoProviderModuleStandard {
     }
 
     /// @dev DS PROXY ONLY ALLOWS DELEGATE CALL for single actions, that's why we also use multisend
-    function execPayload(Action[] calldata _actions)
+    function execPayload(uint256, address, address, Task calldata _task)
         external
         view
         override
@@ -64,9 +63,9 @@ contract ProviderModuleDSProxy is GelatoProviderModuleStandard {
     {
         // Action.Operation encoded into gelatoMultiSendPayload and handled by GelatoMultisend
         bytes memory gelatoMultiSendPayload = abi.encodeWithSelector(
-                GelatoMultiSend.multiSend.selector,
-                _actions
-            );
+            GelatoMultiSend.multiSend.selector,
+            _task.actions
+        );
 
         // Delegate call by default
         payload = abi.encodeWithSignature(

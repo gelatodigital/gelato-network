@@ -9,7 +9,7 @@ abstract contract GelatoProviderModuleStandard is IGelatoProviderModule {
 
     string internal constant OK = "OK";
 
-    function isProvided(address, Task calldata)
+    function isProvided(address, address, Task calldata)
         external
         view
         override

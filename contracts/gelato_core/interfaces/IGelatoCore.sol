@@ -28,6 +28,7 @@ struct Action {
 struct Task {
     Condition[] conditions;  // optional
     Action[] actions;
+    uint256 selfProviderGasPriceCeil;
 }
 
 struct TaskReceipt {

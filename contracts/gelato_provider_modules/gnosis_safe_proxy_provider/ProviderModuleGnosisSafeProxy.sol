@@ -13,7 +13,7 @@ import {
 import {
     IGnosisSafeProxy
 } from "../../user_proxies/gnosis_safe_proxy/interfaces/IGnosisSafeProxy.sol";
-import { Action, Task } from "../../gelato_core/interfaces/IGelatoCore.sol";
+import { Task } from "../../gelato_core/interfaces/IGelatoCore.sol";
 
 contract ProviderModuleGnosisSafeProxy is
     GelatoProviderModuleStandard,
@@ -43,7 +43,7 @@ contract ProviderModuleGnosisSafeProxy is
     // ================= GELATO PROVIDER MODULE STANDARD ================
     // @dev since we check extcodehash prior to execution, we forego the execution option
     //  where the userProxy is deployed at execution time.
-    function isProvided(address _userProxy, Task memory)
+    function isProvided(address _userProxy, address, Task memory)
         public
         view
         override
@@ -61,7 +61,7 @@ contract ProviderModuleGnosisSafeProxy is
         return OK;
     }
 
-    function execPayload(Action[] calldata _actions)
+    function execPayload(uint256, address, address, Task calldata _task)
         external
         view
         override
@@ -70,19 +70,19 @@ contract ProviderModuleGnosisSafeProxy is
         // execTransactionFromModuleReturnData catches reverts so must check for reverts
         proxyReturndataCheck = true;
 
-        if ( _actions.length == 1) {
+        if (_task.actions.length == 1) {
             payload = abi.encodeWithSelector(
                 IGnosisSafe.execTransactionFromModuleReturnData.selector,
-                _actions[0].addr,  // to
-                _actions[0].value,
-                _actions[0].data,
-                _actions[0].operation
+                _task.actions[0].addr,  // to
+                _task.actions[0].value,
+                _task.actions[0].data,
+                _task.actions[0].operation
             );
-        } else if (_actions.length > 1) {
+        } else if (_task.actions.length > 1) {
             // Action.Operation encoded into multiSendPayload and handled by Multisend
             bytes memory gelatoMultiSendPayload = abi.encodeWithSelector(
                 GelatoMultiSend.multiSend.selector,
-                _actions
+                _task.actions
             );
 
             payload = abi.encodeWithSelector(
@@ -94,7 +94,7 @@ contract ProviderModuleGnosisSafeProxy is
             );
 
         } else {
-            revert("ProviderModuleGnosisSafeProxy.execPayload: 0 _actions length");
+            revert("ProviderModuleGnosisSafeProxy.execPayload: 0 _task.actions length");
         }
     }
 

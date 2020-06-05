@@ -3,7 +3,7 @@ pragma solidity ^0.6.8;
 pragma experimental ABIEncoderV2;
 
 import { GelatoProviderModuleStandard } from "../GelatoProviderModuleStandard.sol";
-import { Action, Task, Operation } from "../../gelato_core/interfaces/IGelatoCore.sol";
+import { Action, Operation, Task } from "../../gelato_core/interfaces/IGelatoCore.sol";
 import {
     IGelatoUserProxyFactory
 } from "../../user_proxies/gelato_user_proxy/interfaces/IGelatoUserProxyFactory.sol";
@@ -23,7 +23,7 @@ contract ProviderModuleGelatoUserProxy is GelatoProviderModuleStandard {
     }
 
     // ================= GELATO PROVIDER MODULE STANDARD ================
-    function isProvided(address _userProxy, Task calldata)
+    function isProvided(address _userProxy, address, Task calldata)
         external
         view
         override
@@ -36,16 +36,16 @@ contract ProviderModuleGelatoUserProxy is GelatoProviderModuleStandard {
         return OK;
     }
 
-    function execPayload(Action[] calldata _actions)
+    function execPayload(uint256, address, address, Task calldata _task)
         external
         view
         override
         returns(bytes memory payload, bool)  // bool==false: no execRevertCheck
     {
-        if (_actions.length > 1) {
+        if (_task.actions.length > 1) {
             bytes memory gelatoMultiSendPayload = abi.encodeWithSelector(
                 GelatoMultiSend.multiSend.selector,
-                _actions
+                _task.actions
             );
             Action memory multiSendAction = Action({
                 addr: gelatoMultiSend,  // to
@@ -58,13 +58,13 @@ contract ProviderModuleGelatoUserProxy is GelatoProviderModuleStandard {
                 IGelatoUserProxy.execAction.selector,
                 multiSendAction
             );
-        } else if (_actions.length == 1) {
+        } else if (_task.actions.length == 1) {
             payload = abi.encodeWithSelector(
                 IGelatoUserProxy.execAction.selector,
-                _actions[0]
+                _task.actions[0]
             );
         } else {
-            revert("ProviderModuleGelatoUserProxy.execPayload: 0 _actions length");
+            revert("ProviderModuleGelatoUserProxy.execPayload: 0 _task.actions length");
         }
     }
 }

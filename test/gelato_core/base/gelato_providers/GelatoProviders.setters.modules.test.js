@@ -130,21 +130,21 @@ describe("GelatoCore - GelatoProviders - Setters: PROVIDER MODULES", function ()
     });
 
     taskReceipt = new TaskReceipt({
-      id: 0,
+      id: 1,
       provider: gelatoProvider,
       userProxy: gelatoUserProxyAddress,
       tasks: [task],
       submissionsLeft: SUBMISSIONS_LEFT,
     });
     otherTaskReceipt = new TaskReceipt({
-      id: 0,
+      id: 1,
       provider: otherGelatoProvider,
       userProxy: gelatoUserProxyAddress,
       tasks: [otherTask],
       submissionsLeft: SUBMISSIONS_LEFT,
     });
     fakeTaskReceipt = new TaskReceipt({
-      id: 0,
+      id: 1,
       provider: fakeGelatoProvider,
       userProxy: gelatoUserProxyAddress,
       tasks: [fakeTask],

@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 import {
     GelatoProviderModuleStandard
 } from "../../../gelato_provider_modules/GelatoProviderModuleStandard.sol";
-import { Action } from "../../../gelato_core/interfaces/IGelatoCore.sol";
+import { Task } from "../../../gelato_core/interfaces/IGelatoCore.sol";
 import {
     IGelatoUserProxy
 } from "../../../user_proxies/gelato_user_proxy/interfaces/IGelatoUserProxy.sol";
@@ -15,22 +15,22 @@ contract MockProviderModuleGelatoUserProxyExecRevertCheckError is
 {
 
     // Incorrect execPayload func on purpose
-    function execPayload(Action[] memory _actions)
+    function execPayload(uint256, address, address, Task memory _task)
         public
         view
         override
         virtual
         returns(bytes memory payload, bool execRevertCheck)
     {
-        if (_actions.length > 1) {
+        if (_task.actions.length > 1) {
             payload = abi.encodeWithSelector(
                 IGelatoUserProxy.multiExecActions.selector,
-                _actions
+                _task.actions
             );
-        } else if (_actions.length == 1) {
+        } else if (_task.actions.length == 1) {
             payload = abi.encodeWithSelector(
                 IGelatoUserProxy.execAction.selector,
-                _actions[0]
+                _task.actions[0]
             );
         } else {
             revert("ProviderModuleGelatoUserProxy.execPayload: 0 _actions length");
