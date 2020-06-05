@@ -41,7 +41,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
 
     // ================  SUBMIT ==============================================
     function canSubmitTask(
-        uint256 _taskReceiptId,
         address _userProxy,
         Provider memory _provider,
         Task memory _task,
@@ -64,8 +63,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         // Check Provider details
         string memory isProvided;
         if (_userProxy == _provider.addr)
-            isProvided = providerModuleChecks(_taskReceiptId, _userProxy, _provider, _task);
-        else isProvided = isTaskProvided(_taskReceiptId, _userProxy, _provider, _task);
+            isProvided = providerModuleChecks(_userProxy, _provider, _task);
+        else isProvided = isTaskProvided(_userProxy, _provider, _task);
         if (!isProvided.startsWithOk())
             return string(abi.encodePacked("GelatoCore.canSubmitTask.isProvided:", isProvided));
 
@@ -168,7 +167,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             return "ProviderIlliquidity";
 
         string memory res = providerCanExec(
-            _TR.id,
             _TR.userProxy,
             _TR.provider,
             _TR.task(),
@@ -260,7 +258,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         try this.executionWrapper{
             gas: gasleft().sub(internalGasRequirement, "GelatoCore.exec: Insufficient gas")
         }(_TR, _gelatoMaxGas, gelatoGasPrice)
-            returns(ExecutionResult _executionResult, string memory _reason)
+            returns (ExecutionResult _executionResult, string memory _reason)
         {
             executionResult = _executionResult;
             reason = _reason;
@@ -402,13 +400,14 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         private
         returns(uint256 executorCompensation, uint256 sysAdminCompensation)
     {
-        uint256 estGasUsed = _startGas - gasleft() + EXEC_TX_OVERHEAD;
+        uint256 estGasUsed = _startGas - gasleft();
 
         // Provider payable Gas Refund capped at gelatoMaxGas
         //  (- consecutive state writes + gas refund from deletion)
-        uint256 cappedGasUsed = (
-            estGasUsed < _gelatoMaxGas ? estGasUsed : _gelatoMaxGas + EXEC_TX_OVERHEAD
-        );
+        uint256 cappedGasUsed =
+            estGasUsed < _gelatoMaxGas
+                ? estGasUsed + EXEC_TX_OVERHEAD
+                : _gelatoMaxGas + EXEC_TX_OVERHEAD;
 
         if (_payType == ExecutorPay.Reward) {
             executorCompensation = executorSuccessFee(cappedGasUsed, _gelatoGasPrice);
