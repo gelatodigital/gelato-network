@@ -160,6 +160,9 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         override
         returns(string memory)
     {
+        if (!isExecutorMinStaked(executorByProvider[_TR.provider.addr]))
+            return "ExecutorNotMinStaked";
+
         if (!isProviderLiquid(_TR.provider.addr, _gelatoMaxGas, _gelatoGasPrice))
             return "ProviderIlliquidity";
 
