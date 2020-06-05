@@ -6,6 +6,7 @@ const { run, ethers } = require("@nomiclabs/buidler");
 const GELATO_GAS_PRICE = ethers.utils.parseUnits("8", "gwei");
 
 const EXPIRY_DATE = 0;
+const SUBMISSIONS_LEFT = 1;
 
 describe("Gelato Core - Task Submission ", function () {
   let actionWithdrawBatchExchange;
@@ -22,6 +23,7 @@ describe("Gelato Core - Task Submission ", function () {
   let sellToken; //DAI
   let buyToken; //USDC
   let testToken; //GUSD
+  let ActionWithdrawBatchExchange;
   let MockERC20;
   let MockBatchExchange;
   let mockBatchExchange;
@@ -82,21 +84,13 @@ describe("Gelato Core - Task Submission ", function () {
       gelatoCore.address
     );
 
-    const GelatoMultiSend = await ethers.getContractFactory(
-      "GelatoMultiSend",
-      sysAdmin
-    );
-    const gelatoMultiSend = await GelatoMultiSend.deploy();
-    await gelatoMultiSend.deployed();
-
     // Deploy ProviderModuleGelatoUserProxy with constructorArgs
     const ProviderModuleGelatoUserProxy = await ethers.getContractFactory(
       "ProviderModuleGelatoUserProxy",
       sysAdmin
     );
     providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxy.deploy(
-      gelatoUserProxyFactory.address,
-      gelatoMultiSend.address
+      gelatoUserProxyFactory.address
     );
 
     // Deploy Condition (if necessary)
@@ -110,19 +104,12 @@ describe("Gelato Core - Task Submission ", function () {
     actionERC20TransferFrom = await ActionERC20TransferFrom.deploy();
     await actionERC20TransferFrom.deployed();
 
+    // // #### ActionWithdrawBatchExchange Start ####
     const MockBatchExchange = await ethers.getContractFactory(
       "MockBatchExchange"
     );
     mockBatchExchange = await MockBatchExchange.deploy();
     await mockBatchExchange.deployed();
-
-    const ActionWithdrawBatchExchange = await ethers.getContractFactory(
-      "ActionWithdrawBatchExchange"
-    );
-    actionWithdrawBatchExchange = await ActionWithdrawBatchExchange.deploy(
-      mockBatchExchange.address
-    );
-    await actionWithdrawBatchExchange.deployed();
 
     MockERC20 = await ethers.getContractFactory("MockERC20");
     wethDecimals = 18;
@@ -133,8 +120,6 @@ describe("Gelato Core - Task Submission ", function () {
       wethDecimals
     );
     await WETH.deployed();
-
-    //
 
     // DEPLOY DUMMY ERC20s
     // // Deploy Sell Token
@@ -170,6 +155,36 @@ describe("Gelato Core - Task Submission ", function () {
     const Medianizer2 = await ethers.getContractFactory("Medianizer2");
     const medianizer2 = await Medianizer2.deploy();
     await medianizer2.deployed();
+
+    // Deploy Fee Finder
+    const FeeFinder = await ethers.getContractFactory("FeeFinder");
+
+    // Deploy Test feefinder (Assuming we only hit hard coded tokens, not testing uniswap, kyber or maker oracle)
+    const feeFinder = await FeeFinder.deploy(
+      sellToken.address,
+      buyToken.address,
+      testToken.address,
+      sellToken.address,
+      buyToken.address,
+      sellToken.address,
+      sellToken.address,
+      WETH.address,
+      medianizer2.address,
+      medianizer2.address,
+      medianizer2.address,
+      medianizer2.address
+    );
+    await feeFinder.deployed();
+
+    const ActionWithdrawBatchExchange = await ethers.getContractFactory(
+      "ActionWithdrawBatchExchange"
+    );
+    actionWithdrawBatchExchange = await ActionWithdrawBatchExchange.deploy(
+      mockBatchExchange.address
+    );
+
+    await actionWithdrawBatchExchange.deployed();
+    // // #### ActionWithdrawBatchExchange End ####
 
     // Call provideFunds(value) with provider on core
     await gelatoCore.connect(provider).provideFunds(providerAddress, {
@@ -257,7 +272,6 @@ describe("Gelato Core - Task Submission ", function () {
         sellToken.address,
         sellerAddress,
         ethers.utils.parseUnits("1", "ether"),
-        false,
       ];
 
       const actionPayload = await run("abi-encode-withselector", {
@@ -289,7 +303,212 @@ describe("Gelato Core - Task Submission ", function () {
       // .withArgs(executorAddress, 1, taskReceiptHash, taskReceiptArray);
     });
 
-    it("#2: Submitting successful => No action Payload", async function () {
+    it("#2: Submitting reverts => Action not whitelisted", async function () {
+      const notWhitelistedAction = actionERC20TransferFrom.address;
+      const actionInputs = [
+        sellerAddress,
+        sellToken.address,
+        sellerAddress,
+        ethers.utils.parseUnits("1", "ether"),
+      ];
+
+      const actionPayload = await run("abi-encode-withselector", {
+        contractname: "ActionERC20TransferFrom",
+        functionname: "action",
+        inputs: actionInputs,
+      });
+
+      gelatoProvider = new GelatoProvider({
+        addr: providerAddress,
+        module: providerModuleGelatoUserProxy.address,
+      });
+
+      const action = new Action({
+        addr: notWhitelistedAction,
+        data: actionPayload,
+        operation: Operation.Delegatecall,
+        value: 0,
+        termsOkCheck: true,
+      });
+
+      const task = new Task({
+        actions: [action],
+      });
+
+      await expect(
+        userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE)
+      ).to.be.revertedWith(
+        "GelatoUserProxy.submitTask:GelatoCore.canSubmitTask.isProvided:TaskSpecNotProvided"
+      );
+
+      // CouldNt get the taskReceiptHash to be computed off-chain
+      // .withArgs(executorAddress, 1, taskReceiptHash, taskReceipt);
+    });
+
+    it("#3: Submitting reverts => Condition not whitelisted", async function () {
+      const notWhitelistedCondition = actionERC20TransferFrom.address;
+
+      const actionInputs = [
+        sellerAddress,
+        sellToken.address,
+        sellerAddress,
+        ethers.utils.parseUnits("1", "ether"),
+      ];
+
+      const actionPayload = await run("abi-encode-withselector", {
+        contractname: "ActionERC20TransferFrom",
+        functionname: "action",
+        inputs: actionInputs,
+      });
+
+      gelatoProvider = new GelatoProvider({
+        addr: providerAddress,
+        module: providerModuleGelatoUserProxy.address,
+      });
+
+      const condition = new Condition({
+        inst: notWhitelistedCondition,
+        data: constants.HashZero,
+      });
+
+      const action = new Action({
+        addr: actionWithdrawBatchExchange.address,
+        data: actionPayload,
+        operation: Operation.Delegatecall,
+        value: 0,
+        termsOkCheck: true,
+      });
+
+      const task = new Task({
+        conditions: [condition],
+        actions: [action],
+      });
+
+      await expect(
+        userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE)
+      ).to.be.revertedWith(
+        "GelatoUserProxy.submitTask:GelatoCore.canSubmitTask.isProvided:TaskSpecNotProvided"
+      );
+    });
+
+    it("#4: Submitting reverts => Selected Provider with Executor that is not min staked", async function () {
+      const revertingProviderAddress = sellerAddress;
+
+      const actionInputs = [
+        sellerAddress,
+        sellToken.address,
+        sellerAddress,
+        ethers.utils.parseUnits("1", "ether"),
+      ];
+
+      const actionPayload = await run("abi-encode-withselector", {
+        contractname: "ActionERC20TransferFrom",
+        functionname: "action",
+        inputs: actionInputs,
+      });
+
+      gelatoProvider = new GelatoProvider({
+        addr: revertingProviderAddress,
+        module: providerModuleGelatoUserProxy.address,
+      });
+
+      const action = new Action({
+        addr: actionWithdrawBatchExchange.address,
+        data: actionPayload,
+        operation: Operation.Delegatecall,
+        value: 0,
+        termsOkCheck: true,
+      });
+
+      const task = new Task({
+        actions: [action],
+      });
+
+      await expect(
+        userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE)
+      ).to.be.revertedWith("GelatoCore.canSubmitTask: executorStake");
+    });
+
+    it("#5: Submitting reverts => Invalid expiryDate", async function () {
+      const expiryDateInPast = 1586776139;
+
+      const actionInputs = [
+        sellerAddress,
+        sellToken.address,
+        sellerAddress,
+        ethers.utils.parseUnits("1", "ether"),
+      ];
+
+      const actionPayload = await run("abi-encode-withselector", {
+        contractname: "ActionERC20TransferFrom",
+        functionname: "action",
+        inputs: actionInputs,
+      });
+
+      gelatoProvider = new GelatoProvider({
+        addr: providerAddress,
+        module: providerModuleGelatoUserProxy.address,
+      });
+
+      const action = new Action({
+        addr: actionWithdrawBatchExchange.address,
+        data: actionPayload,
+        operation: Operation.Delegatecall,
+        value: 0,
+        termsOkCheck: true,
+      });
+
+      const task = new Task({
+        actions: [action],
+      });
+
+      await expect(
+        userProxy.submitTask(gelatoProvider, task, expiryDateInPast)
+      ).to.be.revertedWith("GelatoCore.canSubmitTask: expiryDate");
+    });
+
+    it("#6: Submitting reverts => InvalidProviderModule", async function () {
+      const revertingProviderMouleAddress = sellerAddress;
+
+      const actionInputs = [
+        sellerAddress,
+        sellToken.address,
+        sellerAddress,
+        ethers.utils.parseUnits("1", "ether"),
+      ];
+
+      const actionPayload = await run("abi-encode-withselector", {
+        contractname: "ActionERC20TransferFrom",
+        functionname: "action",
+        inputs: actionInputs,
+      });
+
+      gelatoProvider = new GelatoProvider({
+        addr: providerAddress,
+        module: revertingProviderMouleAddress,
+      });
+
+      const action = new Action({
+        addr: actionWithdrawBatchExchange.address,
+        data: actionPayload,
+        operation: Operation.Delegatecall,
+        value: 0,
+        termsOkCheck: true,
+      });
+
+      const task = new Task({
+        actions: [action],
+      });
+
+      // GelatoCore.canSubmitTask.isProvided:InvalidProviderModule
+      await expect(
+        userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE)
+      ).to.be.revertedWith(
+        "GelatoCore.canSubmitTask.isProvided:InvalidProviderModule"
+      );
+    });
+
+    it("#7: Submitting successful => No action Payload", async function () {
       const noActionPayload = constants.HashZero;
 
       // Submit Task
@@ -316,13 +535,12 @@ describe("Gelato Core - Task Submission ", function () {
       ).to.emit(gelatoCore, "LogTaskSubmitted");
     });
 
-    it("#3: create success (Self-provider), not whitelisted action, assigning new executor and staking", async function () {
+    it("#8: create success (Self-provider), not whitelisted action, assigning new executor and staking", async function () {
       const actionInputs = [
         providerAddress,
         sellToken.address,
         sellerAddress,
         ethers.utils.parseUnits("1", "ether"),
-        false,
       ];
 
       const actionPayload = await run("abi-encode-withselector", {
@@ -438,6 +656,126 @@ describe("Gelato Core - Task Submission ", function () {
         .to.emit(gelatoCore, "LogFundsProvided");
 
       // GelatoCore.canSubmitTask.isProvided:InvalidProviderModule
+    });
+
+    it("#9: submitTask reverts (Self-provider), inputting other address as provider that has not whitelisted action", async function () {
+      const actionInputs = [
+        providerAddress,
+        sellToken.address,
+        sellerAddress,
+        ethers.utils.parseUnits("1", "ether"),
+      ];
+
+      const actionPayload = await run("abi-encode-withselector", {
+        contractname: "ActionERC20TransferFrom",
+        functionname: "action",
+        inputs: actionInputs,
+      });
+
+      // 2. Create Proxy for Provider
+      const createTx = await gelatoUserProxyFactory.connect(provider).create();
+      await createTx.wait();
+
+      const [
+        providerProxyAddress,
+      ] = await gelatoUserProxyFactory.gelatoProxiesByUser(providerAddress);
+      const providerProxy = await ethers.getContractAt(
+        "GelatoUserProxy",
+        providerProxyAddress
+      );
+
+      const gelatoProvider = new GelatoProvider({
+        addr: providerAddress,
+        module: providerModuleGelatoUserProxy.address,
+      });
+
+      const action = new Action({
+        addr: actionWithdrawBatchExchange.address,
+        data: actionPayload,
+        operation: Operation.Delegatecall,
+        termsOkCheck: true,
+      });
+
+      const action2 = new Action({
+        addr: actionWithdrawBatchExchange.address,
+        data: constants.HashZero,
+        operation: Operation.Call,
+        termsOkCheck: true,
+      });
+
+      const task = new Task({
+        actions: [action, action2],
+      });
+
+      const provideFundsPayload = await run("abi-encode-withselector", {
+        contractname: "GelatoCore",
+        functionname: "provideFunds",
+        inputs: [providerProxyAddress],
+      });
+
+      // Assign Executor
+      const providerAssignsExecutorPayload = await run(
+        "abi-encode-withselector",
+        {
+          contractname: "GelatoCore",
+          functionname: "providerAssignsExecutor",
+          inputs: [executorAddress],
+        }
+      );
+
+      // Submit Task
+      const submitTaskPayload = await run("abi-encode-withselector", {
+        contractname: "GelatoCore",
+        functionname: "submitTask",
+        inputs: [gelatoProvider, task, EXPIRY_DATE],
+      });
+
+      // addProviderModules
+      const addProviderModulePayload = await run("abi-encode-withselector", {
+        contractname: "GelatoCore",
+        functionname: "addProviderModules",
+        inputs: [[providerModuleGelatoUserProxy.address]],
+      });
+
+      const actions = [];
+
+      const provideFundsAction = new Action({
+        addr: gelatoCore.address,
+        data: provideFundsPayload,
+        operation: Operation.Call,
+        value: ethers.utils.parseUnits("1", "ether"),
+      });
+      actions.push(provideFundsAction);
+
+      const assignExecutorAction = new Action({
+        addr: gelatoCore.address,
+        data: providerAssignsExecutorPayload,
+        operation: Operation.Call,
+      });
+      actions.push(assignExecutorAction);
+
+      const addProviderModuleAction = new Action({
+        addr: gelatoCore.address,
+        data: addProviderModulePayload,
+        operation: Operation.Call,
+      });
+      actions.push(addProviderModuleAction);
+
+      const submitTaskAction = new Action({
+        addr: gelatoCore.address,
+        data: submitTaskPayload,
+        operation: Operation.Call,
+      });
+      actions.push(submitTaskAction);
+
+      // GelatoCore.canSubmitTask.isProvided:InvalidProviderModule
+      await expect(
+        providerProxy.connect(provider).multiExecActions(actions, {
+          value: ethers.utils.parseUnits("1", "ether"),
+        })
+      ).to.revertedWith(
+        "GelatoUserProxy._callAction:GelatoCore.canSubmitTask.isProvided:TaskSpecNotProvided"
+      );
     });
   });
 });

@@ -221,78 +221,7 @@ describe("Gelato Actions - TASK CYCLES - AUTO-RESUBMIT-SELF", function () {
     }
   });
 
-  it("#2 Should return: CannotAutoSubmitNextTask in canExec when unproviding the 2nd task1 to execute in the meantime", async function () {
-    // taskReceipt
-    let taskReceiptId = (await gelatoCore.currentTaskReceiptId()).add(1);
-    const taskReceipt = new TaskReceipt({
-      id: taskReceiptId,
-      userProxy: userProxyAddress,
-      provider: gelatoProvider,
-      tasks: [task1, task2],
-      submissionsLeft: 0,
-    });
-    let taskReceiptHash = await gelatoCore.hashTaskReceipt(taskReceipt);
-
-    await expect(
-      gelatoUserProxyFactory.createTwoExecActionsSubmitTaskCycle(
-        SALT_NONCE,
-        [],
-        gelatoProvider,
-        [task1, task2],
-        0,
-        0
-      )
-    )
-      .to.emit(gelatoUserProxyFactory, "LogCreation")
-      .withArgs(userAddress, userProxyAddress, 0)
-      .and.to.emit(gelatoCore, "LogTaskSubmitted");
-    // withArgs not possible: suspect buidlerevm or ethers struct parsing bug
-    // .withArgs(
-    //   executorAddress,
-    //   taskReceiptId,
-    //   taskReceiptHash,
-    //   taskReceipt
-    // )
-
-    // canExec
-    expect(
-      await gelatoCore
-        .connect(executor)
-        .canExec(taskReceipt, gelatoMaxGas, GELATO_GAS_PRICE)
-    ).to.be.equal("OK");
-
-    // Exec ActionDummyTask and expect it to be resubmitted automatically
-    await expect(
-      gelatoCore.connect(executor).exec(taskReceipt, {
-        gasPrice: GELATO_GAS_PRICE,
-        gasLimit: await gelatoCore.gelatoMaxGas(),
-      })
-    )
-      .to.emit(actionDummy, "LogAction")
-      .withArgs(true)
-      .and.to.emit(gelatoCore, "LogExecSuccess")
-      .and.to.emit(gelatoCore, "LogTaskSubmitted");
-
-    // // Update the Task Receipt for Second Go
-    taskReceipt.id++;
-    taskReceipt.index++;
-    taskReceiptHash = await gelatoCore.hashTaskReceipt(taskReceipt);
-
-    // Provider unprovides task1 in the meantime
-    await expect(
-      gelatoCore.connect(provider).unprovideTaskSpecs([taskSpec1])
-    ).to.emit(gelatoCore, "LogTaskSpecUnprovided");
-
-    expect(
-      await gelatoCore
-        .connect(executor)
-        .canExec(taskReceipt, gelatoMaxGas, GELATO_GAS_PRICE)
-    ).to.be.equal(
-      "CannotAutoSubmitNextTask:GelatoCore.canSubmitTask.isProvided:TaskSpecNotProvided"
-    );
-  });
-
-  it("#3 Execute Task Cycle only 5 times => 10 executions in total", async function () {
+  it("#2 Execute Task Cycle only 5 times => 10 executions in total", async function () {
     const cycles = 5;
 
     // taskReceipt
