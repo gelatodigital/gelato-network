@@ -45,13 +45,13 @@ describe("User Proxies - GelatoUserProxy - CONSTRUCTOR", function () {
       gelatoCore.address
     );
 
-    const GelatoMultiSend = await ethers.getContractFactory("GelatoMultiSend");
-    const gelatoMultiSend = await GelatoMultiSend.deploy();
-    await gelatoMultiSend.deployed();
+    const GelatoActionPipeline = await ethers.getContractFactory("GelatoActionPipeline");
+    const gelatoActionPipeline = await GelatoActionPipeline.deploy();
+    await gelatoActionPipeline.deployed();
 
     providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxyFactory.deploy(
       gelatoUserProxyFactory.address,
-      gelatoMultiSend.address
+      gelatoActionPipeline.address
     );
     action = await ActionFactory.deploy();
 

@@ -1,5 +1,5 @@
 // "SPDX-License-Identifier: UNLICENSED"
-pragma solidity ^0.6.8;
+pragma solidity ^0.6.9;
 pragma experimental ABIEncoderV2;
 
 import { GelatoActionsStandard } from "../../../../contracts/gelato_actions/GelatoActionsStandard.sol";
@@ -119,7 +119,7 @@ contract ActionPlaceOrderBatchExchangeChained  {
 
     }
 
-    // ======= ACTION CONDITIONS CHECK =========
+    // ======= ACTION TERMS CHECK =========
     // Overriding and extending GelatoActionsStandard's function (optional)
     function termsOk(address _userProxy, bytes calldata _actionData)
         external

@@ -1,91 +1,117 @@
 // "SPDX-License-Identifier: UNLICENSED"
-pragma solidity ^0.6.8;
+pragma solidity ^0.6.9;
 pragma experimental ABIEncoderV2;
 
-import { GelatoActionsStandard } from "../GelatoActionsStandard.sol";
+import { GelatoActionsStandardFull } from "../GelatoActionsStandardFull.sol";
+import { DataFlow } from "../../gelato_core/interfaces/IGelatoCore.sol";
+import { DataFlowType } from "../action_pipeline_interfaces/DataFlowType.sol";
 import { IERC20 } from "../../external/IERC20.sol";
-import { SafeERC20 } from "../../external/SafeERC20.sol";
 import { Address } from "../../external/Address.sol";
+import { SafeERC20 } from "../../external/SafeERC20.sol";
 
-contract ActionERC20TransferFrom is GelatoActionsStandard {
+contract ActionERC20TransferFrom is GelatoActionsStandardFull {
     // using SafeERC20 for IERC20; <- internal library methods vs. try/catch
     using Address for address;
     using SafeERC20 for IERC20;
 
-    /// @dev Use this function for encoding off-chain
+    /// @dev Always use this function for encoding _actionData off-chain
+    ///  Will be called by GelatoActionPipeline if Action.dataFlow.None
     function action(
         address user,
-        address sendToken,
-        address destination,
+        IERC20 sendToken,
         uint256 sendAmount,
-        bool /*returnsTaskState*/
+        address destination
     )
         public
+        virtual
+        delegatecallOnly("ActionERC20TransferFrom.action")
+    {
+        sendToken.safeTransferFrom(user, destination, sendAmount);
+        emit LogOneWay(user, address(sendToken), sendAmount, destination);
+    }
+
+    ///@dev Will be called by GelatoActionPipeline if Action.dataFlow.In
+    //  => do not use for _actionData encoding
+    function execWithDataFlowIn(bytes calldata _actionData, bytes calldata _inFlowData)
+        external
         payable
         virtual
+        override
     {
-        IERC20 sendERC20 = IERC20(sendToken);
-        sendERC20.safeTransferFrom(user, destination, sendAmount);
-        emit LogOneWay(user, sendToken, sendAmount, destination);
+        (address user, address destination) = _extractReusableActionData(_actionData);
+        (IERC20 sendToken, uint256 sendAmount) = _handleInFlowData(_inFlowData);
+        action(user, sendToken, sendAmount, destination);
     }
 
-    // Will be automatically called by gelato => do not use for encoding
-    function gelatoInternal(
+    ///@dev Will be called by GelatoActionPipeline if Action.dataFlow.Out
+    //  => do not use for _actionData encoding
+    function execWithDataFlowOut(bytes calldata _actionData)
+        external
+        payable
+        virtual
+        override
+        returns (DataFlowType, bytes memory)
+    {
+        (address user,
+         IERC20 sendToken,
+         uint256 sendAmount,
+         address destination) = abi.decode(
+            _actionData[4:],
+            (address,IERC20,uint256,address)
+        );
+        action(user, sendToken, sendAmount, destination);
+        return (DataFlowType.TOKEN_AND_UINT256, abi.encode(sendToken, sendAmount));
+    }
+
+    ///@dev Will be called by GelatoActionPipeline if Action.dataFlow.InAndOut
+    //  => do not use for _actionData encoding
+    function execWithDataFlowInAndOut(
         bytes calldata _actionData,
-        bytes calldata _taskState
+        bytes calldata _inFlowData
     )
         external
+        payable
         virtual
         override
-        returns(ReturnType, bytes memory)
+        returns (DataFlowType, bytes memory)
     {
-        // 1. Decode Payload, if no taskState was present
-        (address user, address sendToken, address destination, uint256 sendAmount, bool returnsTaskState) = abi.decode(_actionData[4:], (address, address, address, uint256, bool));
-
-        // 2. Check if taskState exists
-        if (_taskState.length != 0) {
-            (ReturnType returnType, bytes memory returnBytes) = abi.decode(_taskState, (ReturnType, bytes));
-            if (returnType == ReturnType.UINT) {
-                (sendAmount) = abi.decode(returnBytes, (uint256));
-            } else if (returnType == ReturnType.UINT_AND_ERC20) {
-                (sendAmount, sendToken) = abi.decode(returnBytes, (uint256, address));
-            }
-        }
-        // 3. Call action
-        action(user, sendToken, destination, sendAmount, returnsTaskState);
-
-        return(returnsTaskState ? ReturnType.UINT : ReturnType.NONE, abi.encode(sendAmount));
+        (address user, address destination) = _extractReusableActionData(_actionData);
+        (IERC20 sendToken, uint256 sendAmount) = _handleInFlowData(_inFlowData);
+        action(user, sendToken, sendAmount, destination);
+        return (DataFlowType.TOKEN_AND_UINT256, abi.encode(sendToken, sendAmount));
     }
 
-    // ======= ACTION CONDITIONS CHECK =========
+    // ======= ACTION TERMS CHECK =========
     // Overriding and extending GelatoActionsStandard's function (optional)
-    function termsOk(uint256, address _userProxy, bytes calldata _actionData, uint256)
-        external
-        view
-        override
-        virtual
-        returns(string memory)  // actionTermsOk
-    {
-        (address user, address sendToken, , uint256 sendAmount, /* bool */) = abi.decode(_actionData[4:], (address, address, address, uint256, bool));
-        return termsOk(_userProxy, user, sendToken, sendAmount);
-    }
-
-    function termsOk(address _userProxy, address user, address sendToken, uint256 sendAmount)
+    function termsOk(
+        uint256,  // taskReceipId
+        address _userProxy,
+        bytes calldata _actionData,
+        DataFlow _dataFlow,
+        uint256  // value
+    )
         public
         view
+        override
         virtual
         returns(string memory)
     {
+        if (_dataFlow == DataFlow.In || _dataFlow == DataFlow.InAndOut)
+            return "ActionERC20TransferFrom: termsOk check invalidated by inbound DataFlow";
 
-        IERC20 sendERC20 = IERC20(sendToken);
-        try sendERC20.balanceOf(user) returns(uint256 sendERC20Balance) {
+        (address user, IERC20 sendToken, uint256 sendAmount, ) = abi.decode(
+            _actionData[4:],
+            (address,IERC20,uint256,address)
+        );
+
+        try sendToken.balanceOf(user) returns(uint256 sendERC20Balance) {
             if (sendERC20Balance < sendAmount)
                 return "ActionERC20TransferFrom: NotOkUserSendTokenBalance";
         } catch {
             return "ActionERC20TransferFrom: ErrorBalanceOf";
         }
 
-        try sendERC20.allowance(user, _userProxy) returns(uint256 allowance) {
+        try sendToken.allowance(user, _userProxy) returns(uint256 allowance) {
             if (allowance < sendAmount)
                 return "ActionERC20TransferFrom: NotOkUserProxySendTokenAllowance";
         } catch {
@@ -93,5 +119,31 @@ contract ActionERC20TransferFrom is GelatoActionsStandard {
         }
 
         return OK;
+    }
+
+    // ======= ACTION HELPERS =========
+    function _extractReusableActionData(bytes calldata _actionData)
+        internal
+        pure
+        virtual
+        returns(address user, address destination)
+    {
+        user = abi.decode(_actionData[4:36], (address));
+        destination = abi.decode(_actionData[100:132], (address));
+    }
+
+    function _handleInFlowData(bytes calldata _inFlowData)
+        internal
+        pure
+        virtual
+        returns(IERC20 sendToken, uint256 sendAmount)
+    {
+        (DataFlowType inFlowDataType, bytes memory inFlowData) = abi.decode(
+            _inFlowData,
+            (DataFlowType, bytes)
+        );
+        if (inFlowDataType == DataFlowType.TOKEN_AND_UINT256)
+            (sendToken, sendAmount) = abi.decode(inFlowData, (IERC20, uint256));
+        else revert("ActionERC20TransferFrom._handleInFlowData: invalid inFlowDataType");
     }
 }

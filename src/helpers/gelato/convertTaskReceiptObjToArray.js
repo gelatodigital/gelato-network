@@ -54,6 +54,7 @@ function _convertToArrayOfTaskArrays(arrayOfTaskObjs) {
     const taskArray = [
       _convertToArrayOfConditionArrays(taskObj.conditions),
       _convertToArrayOfActionArrays(taskObj.actions),
+      taskObj.selfProviderGasPriceCeil,
     ];
     tasks.push(taskArray);
   }
@@ -76,6 +77,7 @@ function _convertToArrayOfActionArrays(arrayOfActionObjs) {
       actionObj.addr,
       actionObj.data,
       actionObj.operation,
+      actionObj.dataFlow,
       actionObj.value,
       actionObj.termsOkCheck,
     ];

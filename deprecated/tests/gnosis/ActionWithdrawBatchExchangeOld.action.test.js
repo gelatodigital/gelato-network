@@ -86,11 +86,11 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
       gelatoCore.address
     );
 
-    const GelatoMultiSend = await ethers.getContractFactory(
-      "GelatoMultiSend",
+    const GelatoActionPipeline = await ethers.getContractFactory(
+      "GelatoActionPipeline",
       sysAdmin
     );
-    const gelatoMultiSend = await GelatoMultiSend.deploy();
+    const gelatoActionPipeline = await GelatoActionPipeline.deploy();
 
     // Deploy ProviderModuleGelatoUserProxy with constructorArgs
     const ProviderModuleGelatoUserProxy = await ethers.getContractFactory(
@@ -99,7 +99,7 @@ describe("Gnosis - ActionWithdrawBatchExchange - Action", function () {
     );
     providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxy.deploy(
       gelatoUserProxyFactory.address,
-      gelatoMultiSend.address
+      gelatoActionPipeline.address
     );
 
     // Deploy Condition (if necessary)

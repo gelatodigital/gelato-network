@@ -1,5 +1,5 @@
 // "SPDX-License-Identifier: UNLICENSED"
-pragma solidity ^0.6.8;
+pragma solidity ^0.6.9;
 
 interface IProviderModuleGnosisSafeProxy{
     event LogProvideProxyExtcodehash(bytes32 indexed extcodehash);
@@ -33,5 +33,5 @@ interface IProviderModuleGnosisSafeProxy{
 
 
     function gelatoCore() external pure returns(address);
-    function gelatoMultiSend() external pure returns(address);
+    function gelatoActionPipeline() external pure returns(address);
 }

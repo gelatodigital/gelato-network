@@ -75,12 +75,12 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
     );
     await gelatoUserProxyFactory.deployed();
 
-    const GelatoMultiSend = await ethers.getContractFactory(
-      "GelatoMultiSend",
+    const GelatoActionPipeline = await ethers.getContractFactory(
+      "GelatoActionPipeline",
       sysAdmin
     );
-    const gelatoMultiSend = await GelatoMultiSend.deploy();
-    await gelatoMultiSend.deployed();
+    const gelatoActionPipeline = await GelatoActionPipeline.deploy();
+    await gelatoActionPipeline.deployed();
 
     // Deploy ProviderModuleGelatoUserProxy with constructorArgs
     const ProviderModuleGelatoUserProxy = await ethers.getContractFactory(
@@ -89,7 +89,7 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
     );
     providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxy.deploy(
       gelatoUserProxyFactory.address,
-      gelatoMultiSend.address
+      gelatoActionPipeline.address
     );
     await providerModuleGelatoUserProxy.deployed();
 

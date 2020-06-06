@@ -27,7 +27,7 @@
     "ethereum-waffle": "2.5.1",
     "ethers": "4.0.47",
     "prettier": "2.0.3",
-    "solc": "0.6.8",
+    "solc": "0.6.9",
     "solidity-coverage": "0.7.5",
     "solidity-docgen": "0.4.1"
   }

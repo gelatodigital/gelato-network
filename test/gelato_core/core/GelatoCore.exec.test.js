@@ -97,12 +97,12 @@ describe("GelatoCore.exec", function () {
     );
     await gelatoUserProxyFactory.deployed();
 
-    const GelatoMultiSend = await ethers.getContractFactory(
-      "GelatoMultiSend",
+    const GelatoActionPipeline = await ethers.getContractFactory(
+      "GelatoActionPipeline",
       sysAdmin
     );
-    const gelatoMultiSend = await GelatoMultiSend.deploy();
-    await gelatoMultiSend.deployed();
+    const gelatoActionPipeline = await GelatoActionPipeline.deploy();
+    await gelatoActionPipeline.deployed();
 
     // Deploy ProviderModuleGelatoUserProxy with constructorArgs
     const ProviderModuleGelatoUserProxy = await ethers.getContractFactory(
@@ -111,7 +111,7 @@ describe("GelatoCore.exec", function () {
     );
     providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxy.deploy(
       gelatoUserProxyFactory.address,
-      gelatoMultiSend.address
+      gelatoActionPipeline.address
     );
     await providerModuleGelatoUserProxy.deployed();
 
@@ -278,7 +278,7 @@ describe("GelatoCore.exec", function () {
       const actionData = await run("abi-encode-withselector", {
         contractname: "ActionWithdrawBatchExchange",
         functionname: "action",
-        inputs: [sellToken.address, false],
+        inputs: [sellToken.address],
       });
 
       // Submit Task
@@ -350,9 +350,8 @@ describe("GelatoCore.exec", function () {
         inputs: [
           sellerAddress,
           sellToken.address,
-          providerAddress,
           ethers.utils.parseUnits("1", "ether"),
-          false,
+          providerAddress,
         ],
       });
 
@@ -431,9 +430,8 @@ describe("GelatoCore.exec", function () {
         inputs: [
           sellerAddress,
           sellToken.address,
-          providerAddress,
           ethers.utils.parseUnits("1", "ether"),
-          false,
+          providerAddress,
         ],
       });
 
@@ -510,9 +508,8 @@ describe("GelatoCore.exec", function () {
         inputs: [
           sellerAddress,
           sellToken.address,
-          providerAddress,
           ethers.utils.parseUnits("1", "ether"),
-          false,
+          providerAddress,
         ],
       });
 
@@ -721,9 +718,8 @@ describe("GelatoCore.exec", function () {
         inputs: [
           sellerAddress,
           sellToken.address,
-          providerAddress,
           ethers.utils.parseUnits("1", "ether"),
-          false,
+          providerAddress,
         ],
       });
 
@@ -791,9 +787,8 @@ describe("GelatoCore.exec", function () {
         inputs: [
           sellerAddress,
           sellToken.address,
-          providerAddress,
           ethers.utils.parseUnits("1", "ether"),
-          false,
+          providerAddress,
         ],
       });
 
@@ -912,9 +907,8 @@ describe("GelatoCore.exec", function () {
         inputs: [
           sellerAddress,
           sellToken.address,
-          providerAddress,
           ethers.utils.parseUnits("1", "ether"),
-          false,
+          providerAddress,
         ],
       });
 
@@ -999,7 +993,7 @@ describe("GelatoCore.exec", function () {
       const actionData = await run("abi-encode-withselector", {
         contractname: "ActionWithdrawBatchExchange",
         functionname: "action",
-        inputs: [sellToken.address, false],
+        inputs: [sellToken.address],
       });
 
       // Submit Task
@@ -1083,7 +1077,7 @@ describe("GelatoCore.exec", function () {
       const actionData = await run("abi-encode-withselector", {
         contractname: "ActionWithdrawBatchExchange",
         functionname: "action",
-        inputs: [sellToken.address, false],
+        inputs: [sellToken.address],
       });
 
       // Submit Task
@@ -1165,7 +1159,7 @@ describe("GelatoCore.exec", function () {
       const actionData = await run("abi-encode-withselector", {
         contractname: "ActionWithdrawBatchExchange",
         functionname: "action",
-        inputs: [sellToken.address, false],
+        inputs: [sellToken.address],
       });
 
       // Submit Task
@@ -1226,7 +1220,7 @@ describe("GelatoCore.exec", function () {
       const actionData = await run("abi-encode-withselector", {
         contractname: "ActionWithdrawBatchExchange",
         functionname: "action",
-        inputs: [sellToken.address, false],
+        inputs: [sellToken.address],
       });
 
       // Submit Task
@@ -1357,7 +1351,7 @@ describe("GelatoCore.exec", function () {
       const actionData = await run("abi-encode-withselector", {
         contractname: "ActionWithdrawBatchExchange",
         functionname: "action",
-        inputs: [sellToken.address, false],
+        inputs: [sellToken.address],
       });
 
       // Submit Task
@@ -1755,9 +1749,8 @@ describe("GelatoCore.exec", function () {
         inputs: [
           sellerAddress,
           sellToken.address,
-          providerAddress,
           ethers.utils.parseUnits("1", "ether"),
-          false,
+          providerAddress,
         ],
       });
 
@@ -1829,16 +1822,17 @@ describe("GelatoCore.exec", function () {
         inputs: [executorAddress, [], [providerModuleGelatoUserProxy.address]],
       });
 
-      await userProxy.execAction(
-        {
-          addr: gelatoCore.address,
-          data: multiProvideData,
-          termsOkCheck: false,
-          value: provideFundsAmount,
-          operation: Operation.Call,
-        },
-        { value: provideFundsAmount }
-      );
+      const multiProvideAction = new Action({
+        addr: gelatoCore.address,
+        data: multiProvideData,
+        termsOkCheck: false,
+        value: provideFundsAmount,
+        operation: Operation.Call,
+      });
+
+      await userProxy.execAction(multiProvideAction, {
+        value: provideFundsAmount,
+      });
 
       const unProvideFundsData = await run("abi-encode-withselector", {
         contractname: "GelatoCore",

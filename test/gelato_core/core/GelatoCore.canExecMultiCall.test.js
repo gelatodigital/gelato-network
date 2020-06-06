@@ -6,8 +6,6 @@ const { run, ethers } = require("@nomiclabs/buidler");
 import initialStateSysAdmin from "../base/gelato_sys_admin/GelatoSysAdmin.initialState";
 import initialStateGasPriceOracle from "../base/gelato_gas_price_oracle/GelatoGasPriceOracle.initialState";
 
-//
-
 const GELATO_MAX_GAS = initialStateSysAdmin.gelatoMaxGas;
 const GELATO_GAS_PRICE = initialStateGasPriceOracle.gasPrice;
 
@@ -17,23 +15,20 @@ const SUBMISSIONS_LEFT = 1;
 describe("GelatoCore.canExecMultiCall", function () {
   // We define the ContractFactory and Signer variables here and assign them in
   // a beforeEach hook.
-  let seller;
+  let user;
   let provider;
   let executor;
   let sysAdmin;
   let userProxy;
-  let sellerAddress;
+  let userAddress;
   let providerAddress;
   let executorAddress;
   let sysAdminAddress;
   let userProxyAddress;
-  let tx;
-  let txResponse;
   let providerModuleGelatoUserProxy;
   let gelatoCore;
   let gelatoGasPriceOracle;
   let gelatoProvider;
-  let condition;
   let action;
   let newTaskSpec;
   let taskReceipts;
@@ -42,8 +37,8 @@ describe("GelatoCore.canExecMultiCall", function () {
   // ###### GelatoCore Setup ######
   beforeEach(async function () {
     // Get signers
-    [seller, provider, executor, sysAdmin] = await ethers.getSigners();
-    sellerAddress = await seller.getAddress();
+    [user, provider, executor, sysAdmin] = await ethers.getSigners();
+    userAddress = await user.getAddress();
     providerAddress = await provider.getAddress();
     executorAddress = await executor.getAddress();
     sysAdminAddress = await sysAdmin.getAddress();
@@ -87,12 +82,12 @@ describe("GelatoCore.canExecMultiCall", function () {
     );
     await gelatoUserProxyFactory.deployed();
 
-    const GelatoMultiSend = await ethers.getContractFactory(
-      "GelatoMultiSend",
+    const GelatoActionPipeline = await ethers.getContractFactory(
+      "GelatoActionPipeline",
       sysAdmin
     );
-    const gelatoMultiSend = await GelatoMultiSend.deploy();
-    await gelatoMultiSend.deployed();
+    const gelatoActionPipeline = await GelatoActionPipeline.deploy();
+    await gelatoActionPipeline.deployed();
 
     // Deploy ProviderModuleGelatoUserProxy with constructorArgs
     const ProviderModuleGelatoUserProxy = await ethers.getContractFactory(
@@ -101,7 +96,7 @@ describe("GelatoCore.canExecMultiCall", function () {
     );
     providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxy.deploy(
       gelatoUserProxyFactory.address,
-      gelatoMultiSend.address
+      gelatoActionPipeline.address
     );
     await providerModuleGelatoUserProxy.deployed();
 
@@ -144,10 +139,10 @@ describe("GelatoCore.canExecMultiCall", function () {
       );
 
     // Create UserProxy
-    const createTx = await gelatoUserProxyFactory.connect(seller).create();
+    const createTx = await gelatoUserProxyFactory.connect(user).create();
     await createTx.wait();
     [userProxyAddress] = await gelatoUserProxyFactory.gelatoProxiesByUser(
-      sellerAddress
+      userAddress
     );
     userProxy = await ethers.getContractAt("GelatoUserProxy", userProxyAddress);
 
@@ -200,12 +195,7 @@ describe("GelatoCore.canExecMultiCall", function () {
         ethers.utils.parseUnits("1", "gwei")
       );
 
-    const canExecResults = multiCanExecReturn.returnData;
-    canExecResults.forEach((result) => {
-      if (result.response === "InvalidExecutor") {
-      }
-      // console.log(`TR with id: ${result.id} is ready to be executed`);
-      expect(result.response).to.equal("InvalidExecutor");
-    });
+    for (const { response } of multiCanExecReturn.responses)
+      expect(response).to.equal("InvalidExecutor");
   });
 });

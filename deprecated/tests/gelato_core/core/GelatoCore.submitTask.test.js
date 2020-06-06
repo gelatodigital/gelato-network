@@ -270,8 +270,8 @@ describe("Gelato Core - Task Submission ", function () {
       const actionInputs = [
         sellerAddress,
         sellToken.address,
-        sellerAddress,
         ethers.utils.parseUnits("1", "ether"),
+        sellerAddress,
       ];
 
       const actionPayload = await run("abi-encode-withselector", {
@@ -308,8 +308,8 @@ describe("Gelato Core - Task Submission ", function () {
       const actionInputs = [
         sellerAddress,
         sellToken.address,
-        sellerAddress,
         ethers.utils.parseUnits("1", "ether"),
+        sellerAddress,
       ];
 
       const actionPayload = await run("abi-encode-withselector", {
@@ -351,8 +351,8 @@ describe("Gelato Core - Task Submission ", function () {
       const actionInputs = [
         sellerAddress,
         sellToken.address,
-        sellerAddress,
         ethers.utils.parseUnits("1", "ether"),
+        sellerAddress,
       ];
 
       const actionPayload = await run("abi-encode-withselector", {
@@ -397,8 +397,8 @@ describe("Gelato Core - Task Submission ", function () {
       const actionInputs = [
         sellerAddress,
         sellToken.address,
-        sellerAddress,
         ethers.utils.parseUnits("1", "ether"),
+        sellerAddress,
       ];
 
       const actionPayload = await run("abi-encode-withselector", {
@@ -435,8 +435,8 @@ describe("Gelato Core - Task Submission ", function () {
       const actionInputs = [
         sellerAddress,
         sellToken.address,
-        sellerAddress,
         ethers.utils.parseUnits("1", "ether"),
+        sellerAddress,
       ];
 
       const actionPayload = await run("abi-encode-withselector", {
@@ -473,8 +473,8 @@ describe("Gelato Core - Task Submission ", function () {
       const actionInputs = [
         sellerAddress,
         sellToken.address,
-        sellerAddress,
         ethers.utils.parseUnits("1", "ether"),
+        sellerAddress,
       ];
 
       const actionPayload = await run("abi-encode-withselector", {
@@ -539,8 +539,8 @@ describe("Gelato Core - Task Submission ", function () {
       const actionInputs = [
         providerAddress,
         sellToken.address,
-        sellerAddress,
         ethers.utils.parseUnits("1", "ether"),
+        sellerAddress,
       ];
 
       const actionPayload = await run("abi-encode-withselector", {
@@ -662,8 +662,8 @@ describe("Gelato Core - Task Submission ", function () {
       const actionInputs = [
         providerAddress,
         sellToken.address,
-        sellerAddress,
         ethers.utils.parseUnits("1", "ether"),
+        sellerAddress,
       ];
 
       const actionPayload = await run("abi-encode-withselector", {

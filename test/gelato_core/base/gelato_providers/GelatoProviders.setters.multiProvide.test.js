@@ -73,12 +73,12 @@ describe("GelatoCore - GelatoProviders - Setters: MULTI PROVIDE", function () {
       gelatoCore.address
     );
 
-    const GelatoMultiSend = await ethers.getContractFactory("GelatoMultiSend");
-    const gelatoMultiSend = await GelatoMultiSend.deploy();
+    const GelatoActionPipeline = await ethers.getContractFactory("GelatoActionPipeline");
+    const gelatoActionPipeline = await GelatoActionPipeline.deploy();
 
     providerModule = await ProviderModuleFactory.deploy(
       gelatoUserProxyFactory.address,
-      gelatoMultiSend.address
+      gelatoActionPipeline.address
     ); // hashes
     otherProviderModule = await OtherProviderModuleFactory.deploy(
       [constants.HashZero], // hashes

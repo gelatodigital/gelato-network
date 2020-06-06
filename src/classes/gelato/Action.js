@@ -1,12 +1,9 @@
 import { constants } from "ethers";
-
-export const Operation = {
-  Call: 0,
-  Delegatecall: 1,
-};
+import Operation from "../../enums/gelato/Operation";
+import DataFlow from "../../enums/gelato/DataFlow";
 
 class Action {
-  constructor({ addr, data, operation, value, termsOkCheck }) {
+  constructor({ addr, data, operation, dataFlow, value, termsOkCheck }) {
     if (!addr) throw new Error("\nAction: no addr passed to constructor\n");
     if (operation === undefined)
       throw new Error("\nAction: no operation passed to constructor\n");
@@ -18,6 +15,13 @@ class Action {
         "\n"
       );
     }
+    if (operation == Operation.Delegatecall && value) {
+      throw new Error(
+        "\n Action: Delegatecalls must have 0 in the value field"
+      );
+    }
+    if (dataFlow && Object.values(DataFlow).indexOf(dataFlow) === -1)
+      throw new Error("\n Action: Invalid DataFlow value \n");
     const trueOrFalse = [true, false];
     if (termsOkCheck !== undefined && !trueOrFalse.includes(termsOkCheck)) {
       throw new Error(
@@ -30,6 +34,7 @@ class Action {
     this.addr = addr;
     this.data = data ? data : constants.HashZero;
     this.operation = operation;
+    this.dataFlow = dataFlow !== undefined ? dataFlow : DataFlow.None;
     this.value = value ? value : constants.Zero;
     this.termsOkCheck = termsOkCheck === true ? termsOkCheck : false;
   }

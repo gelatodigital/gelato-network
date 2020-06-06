@@ -1,5 +1,5 @@
 // "SPDX-License-Identifier: UNLICENSED"
-pragma solidity ^0.6.8;
+pragma solidity ^0.6.9;
 
 import { GelatoActionsStandard } from "../../../contracts/gelato_actions/GelatoActionsStandard.sol";
 import { IGelatoAction } from "../../../contracts/gelato_actions/IGelatoAction.sol";
@@ -148,7 +148,7 @@ contract ActionWithdrawBatchExchangeOld is GelatoActionsStandard {
 
     }
 
-    // ======= ACTION CONDITIONS CHECK =========
+    // ======= ACTION TERMS CHECK =========
     // Overriding and extending GelatoActionsStandard's function (optional)
     function termsOk(bytes calldata _actionData, address _userProxy)
         external

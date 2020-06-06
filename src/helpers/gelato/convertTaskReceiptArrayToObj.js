@@ -46,12 +46,14 @@ const CONDITION_DATA = 1;
 const ACTION_ADDR = 0;
 const ACTION_DATA = 1;
 const OPERATION = 2;
-const VALUE = 3;
-const TERMS_OK_CHECK = 4;
+const DATA_PIPE = 3;
+const VALUE = 4;
+const TERMS_OK_CHECK = 5;
 
 // Task
 const CONDITIONS = 0;
 const ACTIONS = 1;
+const SELF_PROVIDER_GAS_PRICE_CEIL = 2;
 
 // TaskReceipt
 const ID = 0;
@@ -92,6 +94,7 @@ function _convertToArrayOfTaskObjs(tasksLog) {
     task = new Task({
       conditions: _convertToArrayOfConditionObjs(task[CONDITIONS]),
       actions: _convertToArrayOfActionObjs(task[ACTIONS]),
+      selfProviderGasPriceCeil: task[SELF_PROVIDER_GAS_PRICE_CEIL],
     });
     tasks.push(task);
   }
@@ -117,6 +120,7 @@ function _convertToArrayOfActionObjs(actionsLog) {
       addr: action[ACTION_ADDR],
       data: action[ACTION_DATA],
       operation: action[OPERATION],
+      dataFlow: action[DATA_PIPE],
       value: action[VALUE],
       termsOkCheck: action[TERMS_OK_CHECK],
     });
