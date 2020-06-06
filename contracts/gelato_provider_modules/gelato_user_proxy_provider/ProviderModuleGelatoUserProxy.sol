@@ -1,25 +1,32 @@
 // "SPDX-License-Identifier: UNLICENSED"
-pragma solidity ^0.6.8;
+pragma solidity ^0.6.9;
 pragma experimental ABIEncoderV2;
 
 import { GelatoProviderModuleStandard } from "../GelatoProviderModuleStandard.sol";
-import { Action, Operation, Task } from "../../gelato_core/interfaces/IGelatoCore.sol";
+import {
+    Action, Operation, DataFlow, Task
+} from "../../gelato_core/interfaces/IGelatoCore.sol";
 import {
     IGelatoUserProxyFactory
 } from "../../user_proxies/gelato_user_proxy/interfaces/IGelatoUserProxyFactory.sol";
 import {
     IGelatoUserProxy
 } from "../../user_proxies/gelato_user_proxy/interfaces/IGelatoUserProxy.sol";
-import { GelatoMultiSend } from "../../gelato_helpers/GelatoMultiSend.sol";
+import { GelatoActionPipeline } from "../../gelato_actions/GelatoActionPipeline.sol";
 
 contract ProviderModuleGelatoUserProxy is GelatoProviderModuleStandard {
 
-    address public immutable gelatoUserProxyFactory;
-    address public immutable gelatoMultiSend;
+    IGelatoUserProxyFactory public immutable gelatoUserProxyFactory;
+    address public immutable gelatoActionPipeline;
 
-    constructor(address _gelatoUserProxyFactory, address _gelatoMultiSend) public {
+    constructor(
+        IGelatoUserProxyFactory _gelatoUserProxyFactory,
+        address _gelatoActionPipeline
+    )
+        public
+    {
         gelatoUserProxyFactory = _gelatoUserProxyFactory;
-        gelatoMultiSend = _gelatoMultiSend;
+        gelatoActionPipeline = _gelatoActionPipeline;
     }
 
     // ================= GELATO PROVIDER MODULE STANDARD ================
@@ -29,9 +36,7 @@ contract ProviderModuleGelatoUserProxy is GelatoProviderModuleStandard {
         override
         returns(string memory)
     {
-        bool proxyOk = IGelatoUserProxyFactory(gelatoUserProxyFactory).isGelatoUserProxy(
-            _userProxy
-        );
+        bool proxyOk = gelatoUserProxyFactory.isGelatoUserProxy(_userProxy);
         if (!proxyOk) return "ProviderModuleGelatoUserProxy.isProvided:InvalidUserProxy";
         return OK;
     }
@@ -43,20 +48,21 @@ contract ProviderModuleGelatoUserProxy is GelatoProviderModuleStandard {
         returns(bytes memory payload, bool)  // bool==false: no execRevertCheck
     {
         if (_task.actions.length > 1) {
-            bytes memory gelatoMultiSendPayload = abi.encodeWithSelector(
-                GelatoMultiSend.multiSend.selector,
+            bytes memory gelatoActionPipelinePayload = abi.encodeWithSelector(
+                GelatoActionPipeline.execActionsAndPipeData.selector,
                 _task.actions
             );
-            Action memory multiSendAction = Action({
-                addr: gelatoMultiSend,  // to
-                data: gelatoMultiSendPayload,
+            Action memory pipelinedActions = Action({
+                addr: gelatoActionPipeline,
+                data: gelatoActionPipelinePayload,
                 operation: Operation.Delegatecall,
+                dataFlow: DataFlow.None,
                 value: 0,
                 termsOkCheck: false
             });
             payload = abi.encodeWithSelector(
                 IGelatoUserProxy.execAction.selector,
-                multiSendAction
+                pipelinedActions
             );
         } else if (_task.actions.length == 1) {
             payload = abi.encodeWithSelector(

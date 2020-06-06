@@ -1,33 +1,29 @@
 // "SPDX-License-Identifier: UNLICENSED"
-pragma solidity ^0.6.8;
+pragma solidity ^0.6.9;
 pragma experimental ABIEncoderV2;
 
-import { GelatoActionsStandard } from "../GelatoActionsStandard.sol";
+import { GelatoActionsStandardFull } from "../GelatoActionsStandardFull.sol";
+import { DataFlow } from "../../gelato_core/interfaces/IGelatoCore.sol";
+import { DataFlowType } from "../action_pipeline_interfaces/DataFlowType.sol";
 import { IERC20 } from "../../external/IERC20.sol";
 import { SafeERC20 } from "../../external/SafeERC20.sol";
 import { Address } from "../../external/Address.sol";
-import { SafeMath } from '../../external/SafeMath.sol';
-import { Ownable } from '../../external/Ownable.sol';
+import { SafeMath } from "../../external/SafeMath.sol";
+import { Ownable } from "../../external/Ownable.sol";
 
-contract FeeHandler is GelatoActionsStandard {
+contract FeeHandler is GelatoActionsStandardFull {
     // using SafeERC20 for IERC20; <- internal library methods vs. try/catch
     using Address for address payable;
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
 
-    struct Fee {
-        uint256 num;
-        uint256 den;
-    }
-
-    address public immutable myself;
     address payable public immutable provider;
     FeeHandlerFactory public immutable feeHandlerFactory;
     uint256 public immutable feeNum;
     uint256 public immutable feeDen;
 
-    mapping(address=>bool) public whitelistedTokens;
-    bool public useOwnWhitelist;
+    mapping(address => bool) public isCustomWhitelistedToken;
+    bool public useCustomWhitelist;
 
     constructor(
         address payable _provider,
@@ -37,7 +33,6 @@ contract FeeHandler is GelatoActionsStandard {
     )
         public
     {
-        myself = address(this);
         provider = _provider;
         feeHandlerFactory = _feeHandlerFactory;
         feeNum = _num;
@@ -45,231 +40,218 @@ contract FeeHandler is GelatoActionsStandard {
     }
 
     modifier onlyProvider() {
-        require(msg.sender == provider, "FeeHandler: Only provider");
+        require(msg.sender == provider, "FeeHandler.onlyProvider");
         _;
     }
 
-    /// @dev Use this function for encoding off-chain
-    function action(
-        address /*_sendToken*/,
-        uint256 /*_sendAmount*/,
-        address /*_feePayer*/
-    )
+    // ======= FEE HANDLER CUSTOM ADMIN =========
+    function addTokenToCustomWhitelist(address _token) external onlyProvider {
+        isCustomWhitelistedToken[_token] = true;
+    }
+
+    function removeTokenFromCustomWhitelist(address _token) external onlyProvider {
+        isCustomWhitelistedToken[_token] = false;
+    }
+
+    function activateCustomWhitelist() external onlyProvider {
+        useCustomWhitelist = true;
+    }
+
+    function deactivateCustomWhitelist() external onlyProvider {
+        useCustomWhitelist = false;
+    }
+
+    function isTokenWhitelisted(address _token) public view returns(bool) {
+        if (useCustomWhitelist) return isCustomWhitelistedToken[_token];
+        return feeHandlerFactory.isWhitelistedToken(_token);
+    }
+
+    /// @dev Use this function for encoding off-chain. DelegatecallOnly!
+    function action(address _sendToken, uint256 _sendAmount, address _feePayer)
         public
         virtual
-    {}
+        delegatecallOnly("FeeHandler.action")
+        returns (uint256 sendAmountAfterFee)
+    {
+        uint256 fee = _sendAmount.mul(feeNum).div(
+            feeDen,
+            "FeeHanlder.action: Underflow"
+        );
+        if (address(this) == _feePayer) {
+            if (_sendToken == ETH_ADDRESS) provider.sendValue(fee);
+            else IERC20(_sendToken).safeTransfer(provider, fee);
+        } else {
+            IERC20(_sendToken).safeTransferFrom(_feePayer, provider, fee);
+        }
+        sendAmountAfterFee = _sendAmount.sub(fee);
+    }
 
-    // Will be automatically called by gelato => do not use for encoding
-    function gelatoInternal(
-        bytes calldata _actionData,
-        bytes calldata _taskState
-    )
+    ///@dev Will be called by GelatoActionPipeline if Action.dataFlow.In
+    //  => do not use for _actionData encoding
+    function execWithDataFlowIn(bytes calldata _actionData, bytes calldata _inFlowData)
         external
+        payable
         virtual
         override
-        returns(ReturnType, bytes memory)
     {
-        require(myself != address(this), "Only delegatecall");
+        (address sendToken, uint256 sendAmount) = _handleInFlowData(_inFlowData);
+        address feePayer = _extractReusableActionData(_actionData);
+        action(sendToken, sendAmount, feePayer);
+    }
 
-        // 1. Decode Payload, if no taskState was present
-        (address sendToken, uint256 sendAmount, address feePayer) = abi.decode(_actionData[4:], (address, uint256, address));
+    ///@dev Will be called by GelatoActionPipeline if Action.dataFlow.Out
+    //  => do not use for _actionData encoding
+    function execWithDataFlowOut(bytes calldata _actionData)
+        external
+        payable
+        virtual
+        override
+        returns (DataFlowType, bytes memory)
+    {
+        (address sendToken, uint256 sendAmount, address feePayer) = abi.decode(
+            _actionData[4:],
+            (address,uint256,address)
+        );
+        uint256 sendAmountAfterFee = action(sendToken, sendAmount, feePayer);
+        return (DataFlowType.TOKEN_AND_UINT256, abi.encode(sendToken, sendAmountAfterFee));
+    }
 
-        // 2. Check if taskState exists
-        if (_taskState.length != 0) {
-            (ReturnType returnType, bytes memory _numBytes) = abi.decode(_taskState, (ReturnType, bytes));
-            if (returnType == ReturnType.UINT)
-                (sendAmount) = abi.decode(_numBytes, (uint256));
-            else if (returnType == ReturnType.UINT_AND_ERC20)
-                (sendAmount, sendToken) = abi.decode(_numBytes, (uint256, address));
+    ///@dev Will be called by GelatoActionPipeline if Action.dataFlow.InAndOut
+    //  => do not use for _actionData encoding
+    function execWithDataFlowInAndOut(
+        bytes calldata _actionData,
+        bytes calldata _inFlowData
+    )
+        external
+        payable
+        virtual
+        override
+        returns (DataFlowType, bytes memory)
+    {
+        (address sendToken, uint256 sendAmount) = _handleInFlowData(_inFlowData);
+        address feePayer = _extractReusableActionData(_actionData);
+        uint256 sendAmountAfterFee = action(sendToken, sendAmount, feePayer);
+        return (DataFlowType.TOKEN_AND_UINT256, abi.encode(sendToken, sendAmountAfterFee));
+    }
 
-        }
+    // ======= ACTION TERMS CHECK =========
+    // Overriding and extending GelatoActionsStandard's function (optional)
+    function termsOk(
+        uint256,  // taskReceipId
+        address _userProxy,
+        bytes calldata _actionData,
+        DataFlow _dataFlow,
+        uint256  // value
+    )
+        public
+        view
+        virtual
+        override
+        returns(string memory)  // actionTermsOk
+    {
+        if (_dataFlow == DataFlow.In || _dataFlow == DataFlow.InAndOut)
+            return "FeeHandler: termsOk check invalidated by inbound DataFlow";
+
+        (address sendToken, uint256 sendAmount, address feePayer) = abi.decode(
+            _actionData[4:],
+            (address,uint256,address)
+        );
+
+        if (sendAmount.mul(feeDen) < feeDen)
+            return "FeeHandler: Insufficient sendAmount, will underflow";
+
+        if (!isTokenWhitelisted(sendToken))
+            return "FeeHandler: Token not whitelisted for fee";
 
         IERC20 sendERC20 = IERC20(sendToken);
 
-        uint256 fee = sendAmount.mul(feeNum).div(feeDen, "FeeHanlder.gelatoInternal: Underflow");
-
-        if (address(this) == feePayer) {
-            if (sendToken == ETH_ADDRESS)
-                provider.sendValue(fee);
-            else
-                sendERC20.safeTransfer(provider, fee);
-        } else sendERC20.safeTransferFrom(feePayer, provider, fee);
-
-        return(ReturnType.UINT_AND_ERC20, abi.encode(sendAmount.sub(fee), sendToken));
-    }
-
-    // ======= ACTION CONDITIONS CHECK =========
-    // Overriding and extending GelatoActionsStandard's function (optional)
-    function termsOk(uint256, address _userProxy, bytes calldata _actionData, uint256)
-        external
-        view
-        override
-        virtual
-        returns(string memory)  // actionTermsOk
-    {
-        (address sendToken, uint256 sendAmount, address feePayer) = abi.decode(_actionData[4:], (address, uint256, address));
-        return termsOk(_userProxy, sendToken, sendAmount, feePayer);
-    }
-
-    function termsOk(
-        address _userProxy,
-        address _sendToken,
-        uint256 _sendAmount,
-        address _feePayer
-    )
-        public
-        view
-        virtual
-        returns(string memory)
-    {
-        if (_sendAmount.mul(feeDen) < feeDen)
-            return "FeeHandler: Insufficient sendAmount, will underflow";
-
-        if (!isTokenWhitelisted(_sendToken)) return "FeeHandler: Token not whitelisted for fee";
-
-        IERC20 sendERC20 = IERC20(_sendToken);
-
-        if (_userProxy == _feePayer) {
-            if (_sendToken == ETH_ADDRESS) {
-                if(_userProxy.balance < _sendAmount)
-                    return "FeeHandler: NotOkUserETHBalance";
+        if (_userProxy == feePayer) {
+            if (sendToken == ETH_ADDRESS) {
+                if (_userProxy.balance < sendAmount)
+                    return "FeeHandler: NotOkUserProxyETHBalance";
             } else {
-                try sendERC20.balanceOf(_userProxy) returns(uint256 balance) {
-                    if (balance < _sendAmount)
-                        return "FeeHandler: NotOkUserSendTokenBalance";
+                try sendERC20.balanceOf(_userProxy) returns (uint256 balance) {
+                    if (balance < sendAmount)
+                        return "FeeHandler: NotOkUserProxySendTokenBalance";
                 } catch {
                     return "FeeHandler: ErrorBalanceOf";
                 }
             }
         } else {
-            if (_sendToken == ETH_ADDRESS)
+            if (sendToken == ETH_ADDRESS)
                 return "FeeHandler: CannotTransferFromETH";
-            try sendERC20.allowance(_feePayer, _userProxy) returns(uint256 allowance) {
-                if (allowance < _sendAmount)
+            try sendERC20.allowance(feePayer, _userProxy) returns (uint256 allowance) {
+                if (allowance < sendAmount)
                     return "FeeHandler: NotOkUserProxySendTokenAllowance";
             } catch {
                 return "FeeHandler: ErrorAllowance";
             }
         }
+
         return OK;
     }
 
-    function getProvider()
-        public
-        view
-        returns(address)
+    // ======= ACTION HELPERS =========
+    function _handleInFlowData(bytes calldata _inFlowData)
+        internal
+        pure
+        virtual
+        returns(address sendToken, uint256 sendAmount)
     {
-        return provider;
+        (DataFlowType inFlowDataType, bytes memory inFlowData) = abi.decode(
+            _inFlowData,
+            (DataFlowType, bytes)
+        );
+        if (inFlowDataType == DataFlowType.TOKEN_AND_UINT256)
+            (sendToken, sendAmount) = abi.decode(inFlowData, (address,uint256));
+        else revert("FeeHandler._handleInFlowData: invalid inFlowDataType");
     }
 
-    function isTokenWhitelisted(address _token)
-        public
-        view
-        returns(bool isWhitelisted)
+    function _extractReusableActionData(bytes calldata _actionData)
+        internal
+        pure
+        virtual
+        returns(address feePayer)
     {
-        if (useOwnWhitelist) {
-            isWhitelisted = whitelistedTokens[_token];
-        } else {
-            isWhitelisted = feeHandlerFactory.isWhitelisted(_token);
-        }
-    }
-
-    // Fee Factory Admin
-    function addTokenToWhitelist(address _token)
-        external
-        onlyProvider
-    {
-        whitelistedTokens[_token] = true;
-    }
-
-    function removeTokenFromWhitelist(address _token)
-        external
-        onlyProvider
-    {
-        whitelistedTokens[_token] = false;
-    }
-
-    function activateOwnWhitelist()
-        external
-        onlyProvider
-    {
-        useOwnWhitelist = true;
-    }
-
-    function deactivateOwnWhitelist()
-        external
-        onlyProvider
-    {
-        useOwnWhitelist = false;
+        feePayer = abi.decode(_actionData[68:], (address));
     }
 }
 
 contract FeeHandlerFactory is Ownable {
 
-    event Created(address indexed provider, address indexed feeHandler, uint256 indexed numerator);
+    event Created(
+        address indexed provider,
+        FeeHandler indexed feeHandler,
+        uint256 indexed num
+    );
 
     // Denominator => For a fee of 1% => Input num = 100, as 100 / 10.000 = 0.01 == 1%
     uint256 public constant DEN = 10000;
 
-    mapping(address=>bool) public isFeeHandler;
-    mapping(address => mapping(uint256 => address)) internal _feeHandlers;
-    mapping(address=>bool) public whitelistedTokens;
+    // provider => num => FeeHandler
+    mapping(address => mapping(uint256 => FeeHandler)) public feeHandlerByProviderAndNum;
+    mapping(address => bool) public isFeeHandler;
+    mapping(address => bool) public isWhitelistedToken;
 
-    // deploys a new feeHandler instance
+    /// @notice Deploys a new feeHandler instance
     /// @dev Input _num = 100 for 1% fee, _num = 50 for 0.5% fee, etc
-    function create(uint256 _num) public returns (address feeHandler) {
-        feeHandler = create(msg.sender, _num);
-    }
-
-    // deploys a new feeHandler instance
-    // sets custom provider of feeHandler
-    function create(address payable _provider, uint256 _num) private returns (address feeHandler) {
-        feeHandler = address(new FeeHandler(_provider, this, _num, DEN));
-        isFeeHandler[feeHandler] = true;
-        addNewFeeHandler(feeHandler, _provider, _num);
-    }
-
-    function getFeeHandler(address _provider, uint256 _num)
-        public
-        view
-        returns(address feeHandler)
-    {
-        feeHandler = _feeHandlers[_provider][_num];
-    }
-
-    function addNewFeeHandler(
-        address _feeHandler,
-        address _provider,
-        uint256 _num
-    )
-        private
-    {
-        require(_feeHandlers[_provider][_num] == address(0), "Fee contract already deployed");
-        _feeHandlers[_provider][_num] = _feeHandler;
-        emit Created(_provider, _feeHandler, _num);
-    }
-
-    function isWhitelisted(address _token)
-        public
-        view
-        returns(bool)
-    {
-        return whitelistedTokens[_token];
+    function create(uint256 _num) public returns (FeeHandler feeHandler) {
+        require(
+            feeHandlerByProviderAndNum[msg.sender][_num] == FeeHandler(0),
+            "FeeHandlerFactory.create: already deployed"
+        );
+        feeHandler = new FeeHandler(msg.sender, this, _num, DEN);
+        feeHandlerByProviderAndNum[msg.sender][_num] = feeHandler;
+        isFeeHandler[address(feeHandler)] = true;
+        emit Created(msg.sender, feeHandler, _num);
     }
 
     // Fee Factory Admin
-    function addTokenToWhitelist(address _token)
-        external
-        onlyOwner
-    {
-        whitelistedTokens[_token] = true;
+    function addTokenToWhitelist(address _token) external onlyOwner {
+        isWhitelistedToken[_token] = true;
     }
 
-    function removeTokenFromWhitelist(address _token)
-        external
-        onlyOwner
-    {
-        whitelistedTokens[_token] = false;
+    function removeTokenFromWhitelist(address _token) external onlyOwner {
+        isWhitelistedToken[_token] = false;
     }
-
 }

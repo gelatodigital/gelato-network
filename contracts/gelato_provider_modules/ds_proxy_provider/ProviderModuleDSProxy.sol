@@ -1,5 +1,5 @@
 // "SPDX-License-Identifier: UNLICENSED"
-pragma solidity ^0.6.8;
+pragma solidity ^0.6.9;
 pragma experimental ABIEncoderV2;
 
 import { GelatoProviderModuleStandard } from "../GelatoProviderModuleStandard.sol";
@@ -11,26 +11,24 @@ import {
     IDSProxy
 } from "../../user_proxies/ds_proxy/interfaces/IProxy.sol";
 import { DSAuthority } from "../../user_proxies/ds_proxy/Auth.sol";
-
-import { Multisend } from "../../external/Multisend.sol";
-import { GelatoMultiSend } from "../../gelato_helpers/GelatoMultiSend.sol";
+import { GelatoActionPipeline } from "../../gelato_actions/GelatoActionPipeline.sol";
 
 contract ProviderModuleDSProxy is GelatoProviderModuleStandard {
 
     address public immutable dsProxyFactory;
     address public immutable gelatoCore;
-    GelatoMultiSend public immutable gelatoMultiSend;
+    GelatoActionPipeline public immutable gelatoActionPipeline;
 
     constructor(
         address _dsProxyFactory,
         address _gelatoCore,
-        GelatoMultiSend _multiSend
+        GelatoActionPipeline _gelatActionPipeline
     )
         public
     {
         dsProxyFactory = _dsProxyFactory;
         gelatoCore = _gelatoCore;
-        gelatoMultiSend = _multiSend;
+        gelatoActionPipeline = _gelatActionPipeline;
     }
 
     // ================= GELATO PROVIDER MODULE STANDARD ================
@@ -61,17 +59,17 @@ contract ProviderModuleDSProxy is GelatoProviderModuleStandard {
         override
         returns(bytes memory payload, bool)
     {
-        // Action.Operation encoded into gelatoMultiSendPayload and handled by GelatoMultisend
-        bytes memory gelatoMultiSendPayload = abi.encodeWithSelector(
-            GelatoMultiSend.multiSend.selector,
+        // Action.Operation encoded into gelatoActionPipelinePayload and handled by GelatoActionPipeline
+        bytes memory gelatoActionPipelinePayload = abi.encodeWithSelector(
+            GelatoActionPipeline.execActionsAndPipeData.selector,
             _task.actions
         );
 
         // Delegate call by default
         payload = abi.encodeWithSignature(
             "execute(address,bytes)",
-            gelatoMultiSend,  // to
-            gelatoMultiSendPayload  // data
+            gelatoActionPipeline,  // to
+            gelatoActionPipelinePayload  // data
         );
 
     }

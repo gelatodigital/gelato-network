@@ -16,9 +16,12 @@ const Task = require("./src/classes/gelato/Task").default;
 const TaskSpec = require("./src/classes/gelato/TaskSpec").default;
 const TaskReceipt = require("./src/classes/gelato/TaskReceipt").default;
 // Objects
-const { Operation } = require("./src/classes/gelato/Action");
 const gelatoSysAdminInitialState = require("./test/gelato_core/base/gelato_sys_admin/GelatoSysAdmin.initialState")
   .default;
+// Objects/Enums
+const Operation = require("./src/enums/gelato/Operation").default;
+const DataFlow = require("./src/enums/gelato/DataFlow").default;
+const DataFlowType = require("./src/enums/gelato/DataFlowType").default;
 
 // Helpers
 // Async
@@ -47,8 +50,11 @@ extendEnvironment((bre) => {
   bre.TaskSpec = TaskSpec;
   bre.TaskReceipt = TaskReceipt;
   // Objects
-  bre.Operation = Operation;
   bre.gelatoSysAdminInitialState = gelatoSysAdminInitialState;
+  // Objects/Enums
+  bre.Operation = Operation;
+  bre.DataFlow = DataFlow;
+  bre.DataFlowType = DataFlowType;
   // Functions
   // Async
   bre.sleep = sleep;
@@ -155,7 +161,7 @@ module.exports = {
     },
   },
   solc: {
-    version: "0.6.8",
+    version: "0.6.9",
     optimizer: { enabled: true },
   },
 };

@@ -1,9 +1,9 @@
 // "SPDX-License-Identifier: UNLICENSED"
-pragma solidity ^0.6.8;
+pragma solidity ^0.6.9;
 
 import { GelatoActionsStandard } from "../../../gelato_actions/GelatoActionsStandard.sol";
 
-contract MockActionDummyUint is GelatoActionsStandard {
+contract MockOutFlowUintAction is GelatoActionsStandard {
     event LogNum(uint256 indexed num);
 
     // passValue bool?
@@ -46,19 +46,14 @@ contract MockActionDummyUint is GelatoActionsStandard {
         return(ReturnType.UINT, abi.encodePacked(num));
     }
 
-    function termsOk(uint256, address, bytes calldata _data, uint256)
-        external
+    function termsOk(uint256, address, bytes calldata _data, DataFlow, uint256)
+        public
         view
         override
         virtual
         returns(string memory)
     {
-        (uint256 num) = abi.decode(_data[4:], (uint256));
-        return termsOk(num);
-    }
-
-    function termsOk(uint256) public pure virtual returns(string memory) {
+        uint256 num = abi.decode(_data[4:], (uint256));
         return OK;
-
     }
 }

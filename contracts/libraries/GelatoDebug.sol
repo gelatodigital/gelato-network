@@ -1,5 +1,5 @@
 // "SPDX-License-Identifier: UNLICENSED"
-pragma solidity ^0.6.8;
+pragma solidity ^0.6.9;
 
 library GelatoDebug {
     function revertWithErrorString(bytes memory _bytes, string memory _tracingInfo)

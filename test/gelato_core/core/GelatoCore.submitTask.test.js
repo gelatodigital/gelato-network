@@ -82,12 +82,12 @@ describe("Gelato Core - Task Submission ", function () {
       gelatoCore.address
     );
 
-    const GelatoMultiSend = await ethers.getContractFactory(
-      "GelatoMultiSend",
+    const GelatoActionPipeline = await ethers.getContractFactory(
+      "GelatoActionPipeline",
       sysAdmin
     );
-    const gelatoMultiSend = await GelatoMultiSend.deploy();
-    await gelatoMultiSend.deployed();
+    const gelatoActionPipeline = await GelatoActionPipeline.deploy();
+    await gelatoActionPipeline.deployed();
 
     // Deploy ProviderModuleGelatoUserProxy with constructorArgs
     const ProviderModuleGelatoUserProxy = await ethers.getContractFactory(
@@ -96,7 +96,7 @@ describe("Gelato Core - Task Submission ", function () {
     );
     providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxy.deploy(
       gelatoUserProxyFactory.address,
-      gelatoMultiSend.address
+      gelatoActionPipeline.address
     );
 
     // Deploy Condition (if necessary)
@@ -255,9 +255,8 @@ describe("Gelato Core - Task Submission ", function () {
       const actionInputs = [
         sellerAddress,
         sellToken.address,
-        sellerAddress,
         ethers.utils.parseUnits("1", "ether"),
-        false,
+        sellerAddress,
       ];
 
       const actionPayload = await run("abi-encode-withselector", {
@@ -320,9 +319,8 @@ describe("Gelato Core - Task Submission ", function () {
       const actionInputs = [
         providerAddress,
         sellToken.address,
-        sellerAddress,
         ethers.utils.parseUnits("1", "ether"),
-        false,
+        sellerAddress,
       ];
 
       const actionPayload = await run("abi-encode-withselector", {

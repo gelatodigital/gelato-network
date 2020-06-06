@@ -1,5 +1,5 @@
 // "SPDX-License-Identifier: UNLICENSED"
-pragma solidity ^0.6.8;
+pragma solidity ^0.6.9;
 pragma experimental ABIEncoderV2;
 
 import { IGelatoUserProxyFactory } from "./interfaces/IGelatoUserProxyFactory.sol";
@@ -16,7 +16,7 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
     address public immutable override gelatoCore;
 
     mapping(GelatoUserProxy => address) public override userByGelatoProxy;
-    mapping(address => GelatoUserProxySet.Set) private override _gelatoProxiesByUser;
+    mapping(address => GelatoUserProxySet.Set) private _gelatoProxiesByUser;
 
     constructor(address _gelatoCore) public { gelatoCore = _gelatoCore; }
 

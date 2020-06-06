@@ -1,10 +1,11 @@
 // "SPDX-License-Identifier: UNLICENSED"
-pragma solidity ^0.6.8;
+pragma solidity ^0.6.9;
+
+import {DataFlow} from "../gelato_core/interfaces/IGelatoCore.sol";
 
 /// @title IGelatoAction - solidity interface of GelatoActionsStandard
 /// @notice all the APIs and events of GelatoActionsStandard
 /// @dev all the APIs are implemented inside GelatoActionsStandard
-
 interface IGelatoAction {
     event LogOneWay(
         address origin,
@@ -23,25 +24,14 @@ interface IGelatoAction {
         address receiver
     );
 
-    enum ReturnType {
-        UINT,
-        INT,
-        ADDRESS,
-        ERC20,
-        BYTES,
-        BOOL,
-        UINT_AND_ERC20,
-        UINT_AND_ADDRESS,
-        NONE
-    }
-
     /// @notice Providers can use this for pre-execution sanity checks, to prevent reverts.
     /// @dev GelatoCore checks this in canExec and passes the parameters.
     /// @param _taskReceiptId The id of the task from which all arguments are passed.
     /// @param _userProxy The userProxy of the task. Often address(this) for delegatecalls.
-    /// @param _actionData The encoded payload to be used in the action.
-    /// @param _value A special param for ETH sending actions. If the Action sends ETH
-    ///  in its action function implementation, one should expect msg.value therein to be
+    /// @param _actionData The encoded payload to be used in the Action.
+    /// @param _dataFlow The dataFlow of the Action.
+    /// @param _value A special param for ETH sending Actions. If the Action sends ETH
+    ///  in its Action function implementation, one should expect msg.value therein to be
     ///  equal to _value. So Providers can check in termsOk that a valid ETH value will
     ///  be used because they also have access to the same value when encoding the
     ///  execPayload on their ProviderModule.
@@ -51,16 +41,10 @@ interface IGelatoAction {
         uint256 _taskReceiptId,
         address _userProxy,
         bytes calldata _actionData,
+        DataFlow _dataFlow,
         uint256 _value
     )
         external
         view
         returns(string memory);
-
-    function gelatoInternal(
-        bytes calldata, // user inputs
-        bytes calldata // taskState
-    )
-        external
-        returns(ReturnType, bytes memory);
 }

@@ -1,16 +1,16 @@
 // "SPDX-License-Identifier: UNLICENSED"
-pragma solidity ^0.6.8;
+pragma solidity ^0.6.9;
 
-import { IUniswapFactory } from '../dapp_interfaces/uniswap/IUniswapFactory.sol';
-import { IUniswapExchange } from '../dapp_interfaces/uniswap/IUniswapExchange.sol';
+import { IUniswapFactory } from "../dapp_interfaces/uniswap/IUniswapFactory.sol";
+import { IUniswapExchange } from "../dapp_interfaces/uniswap/IUniswapExchange.sol";
 import { IMedianizer } from "../dapp_interfaces/maker/IMakerMedianizer.sol";
 
-import { IKyber } from '../dapp_interfaces/kyber/IKyber.sol';
-import { IERC20 } from '../external/IERC20.sol';
-import { SafeMath } from '../external/SafeMath.sol';
-import { SafeERC20 } from '../external/SafeERC20.sol';
+import { IKyber } from "../dapp_interfaces/kyber/IKyber.sol";
+import { IERC20 } from "../external/IERC20.sol";
+import { SafeMath } from "../external/SafeMath.sol";
+import { SafeERC20 } from "../external/SafeERC20.sol";
 
-import { FeeFinder } from './FeeFinder.sol';
+import { FeeFinder } from "./FeeFinder.sol";
 
 contract FeeExtractor is FeeFinder {
 

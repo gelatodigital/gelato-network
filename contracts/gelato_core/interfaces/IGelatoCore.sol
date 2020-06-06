@@ -1,5 +1,5 @@
 // "SPDX-License-Identifier: UNLICENSED"
-pragma solidity ^0.6.8;
+pragma solidity ^0.6.9;
 pragma experimental ABIEncoderV2;
 
 import { IGelatoProviderModule } from "../../gelato_provider_modules/IGelatoProviderModule.sol";
@@ -17,10 +17,13 @@ struct Condition {
 
 enum Operation { Call, Delegatecall }
 
+enum DataFlow { None, In, Out, InAndOut }
+
 struct Action {
     address addr;
     bytes data;
     Operation operation;
+    DataFlow dataFlow;
     uint256 value;
     bool termsOkCheck;
 }

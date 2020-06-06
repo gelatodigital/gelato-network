@@ -51,16 +51,16 @@ export default task(
 
       let provider = ethers.getDefaultProvider(network.name);
 
-      let returnData;
+      let returndata;
       try {
-        returnData = await provider.call(txObject);
+        returndata = await provider.call(txObject);
       } catch (error) {
         console.error(`Error Invoke View Function\n`, error);
         process.exit(1);
       }
-      if (taskArgs.log) console.log(returnData);
+      if (taskArgs.log) console.log(returndata);
 
-      return returnData;
+      return returndata;
     } catch (error) {
       console.error(error);
       process.exit(1);
