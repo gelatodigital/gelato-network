@@ -1,5 +1,5 @@
 // "SPDX-License-Identifier: UNLICENSED"
-pragma solidity ^0.6.8;
+pragma solidity ^0.6.9;
 pragma experimental ABIEncoderV2;
 
 import { IGelatoCore, Provider, Task, TaskReceipt } from "./interfaces/IGelatoCore.sol";
@@ -13,7 +13,7 @@ import { IGelatoProviderModule } from "../gelato_provider_modules/IGelatoProvide
 
 /// @title GelatoCore
 /// @author Luis Schliesske & Hilmar Orth
-/// @notice Task: submission, validation, execution, charging and cancellation
+/// @notice Task: submission, validation, execution, and cancellation
 /// @dev Find all NatSpecs inside IGelatoCore
 contract GelatoCore is IGelatoCore, GelatoExecutors {
 
@@ -205,6 +205,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
                 _TR.id,
                 _TR.userProxy,
                 _TR.task().actions[i].data,
+                _TR.task().actions[i].dataFlow,
                 _TR.task().actions[i].value
             )
                 returns(string memory actionTermsOk)

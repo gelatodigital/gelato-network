@@ -1,5 +1,5 @@
 // "SPDX-License-Identifier: UNLICENSED"
-pragma solidity ^0.6.8;
+pragma solidity ^0.6.9;
 
 import { GelatoActionsStandard } from "../../../../gelato_actions/GelatoActionsStandard.sol";
 import { SafeERC20 } from "../../../../external/SafeERC20.sol";

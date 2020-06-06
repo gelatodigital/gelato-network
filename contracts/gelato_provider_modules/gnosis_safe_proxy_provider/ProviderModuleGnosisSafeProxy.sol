@@ -1,12 +1,12 @@
 // "SPDX-License-Identifier: UNLICENSED"
-pragma solidity ^0.6.8;
+pragma solidity ^0.6.9;
 pragma experimental ABIEncoderV2;
 
 import { GelatoProviderModuleStandard } from "../GelatoProviderModuleStandard.sol";
 import { IProviderModuleGnosisSafeProxy } from "./IProviderModuleGnosisSafeProxy.sol";
 import { Ownable } from "../../external/Ownable.sol";
 import { GelatoDebug } from "../../libraries/GelatoDebug.sol";
-import { GelatoMultiSend } from "../../gelato_helpers/GelatoMultiSend.sol";
+import { GelatoActionPipeline } from "../../gelato_actions/GelatoActionPipeline.sol";
 import {
     IGnosisSafe
 } from "../../user_proxies/gnosis_safe_proxy/interfaces/IGnosisSafe.sol";
@@ -25,19 +25,19 @@ contract ProviderModuleGnosisSafeProxy is
     mapping(bytes32 => bool) public override isProxyExtcodehashProvided;
     mapping(address => bool) public override isMastercopyProvided;
     address public override immutable gelatoCore;
-    address public override immutable gelatoMultiSend;
+    address public override immutable gelatoActionPipeline;
 
     constructor(
         bytes32[] memory hashes,
         address[] memory masterCopies,
         address _gelatoCore,
-        address _gelatoMultiSend
+        address _gelatoActionPipeline
     )
         public
     {
         multiProvide(hashes, masterCopies);
         gelatoCore = _gelatoCore;
-        gelatoMultiSend = _gelatoMultiSend;
+        gelatoActionPipeline = _gelatoActionPipeline;
     }
 
     // ================= GELATO PROVIDER MODULE STANDARD ================
@@ -80,16 +80,16 @@ contract ProviderModuleGnosisSafeProxy is
             );
         } else if (_task.actions.length > 1) {
             // Action.Operation encoded into multiSendPayload and handled by Multisend
-            bytes memory gelatoMultiSendPayload = abi.encodeWithSelector(
-                GelatoMultiSend.multiSend.selector,
+            bytes memory gelatoActionPipelinePayload = abi.encodeWithSelector(
+                GelatoActionPipeline.execActionsAndPipeData.selector,
                 _task.actions
             );
 
             payload = abi.encodeWithSelector(
                 IGnosisSafe.execTransactionFromModuleReturnData.selector,
-                gelatoMultiSend,  // to
+                gelatoActionPipeline,  // to
                 0,  // value
-                gelatoMultiSendPayload,  // data
+                gelatoActionPipelinePayload,  // data
                 IGnosisSafe.Operation.DelegateCall
             );
 

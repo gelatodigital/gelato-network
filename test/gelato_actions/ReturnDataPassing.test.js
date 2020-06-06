@@ -5,9 +5,7 @@ const { run, ethers, utils } = require("@nomiclabs/buidler");
 
 import initialStateSysAdmin from "../gelato_core/base/gelato_sys_admin/GelatoSysAdmin.initialState";
 import initialStateGasPriceOracle from "../gelato_core/base/gelato_gas_price_oracle/GelatoGasPriceOracle.initialState";
-import { Operation } from "../../src/classes/gelato/Action";
-
-//
+import DataFlow from "../../src/enums/gelato/DataFlow";
 
 const GELATO_MAX_GAS = initialStateSysAdmin.gelatoMaxGas;
 const GELATO_GAS_PRICE = initialStateGasPriceOracle.gasPrice;
@@ -28,25 +26,15 @@ describe("Return Data Passing Tests", function () {
   let executorAddress;
   let sysAdminAddress;
   let userProxyAddress;
-  let tx;
-  let txResponse;
   let providerModuleGelatoUserProxy;
   let gelatoCore;
   let gelatoGasPriceOracle;
   let gelatoProvider;
-  let condition;
-  let action;
-  let transferFromTaskSpec;
-  let taskReceipt2;
-  let gelatoMultiCall;
+  let actionTransferFromStruct;
   let sellToken;
   let sellDecimals;
-  let globalState;
-  let providerFeeRelay;
   let actionTransferFrom;
   let memoryUint;
-  let action2;
-  let mockActionDummyUint;
 
   // ###### GelatoCore Setup ######
   beforeEach(async function () {
@@ -88,12 +76,12 @@ describe("Return Data Passing Tests", function () {
     );
     await gelatoUserProxyFactory.deployed();
 
-    const GelatoMultiSend = await ethers.getContractFactory(
-      "GelatoMultiSend",
+    const GelatoActionPipeline = await ethers.getContractFactory(
+      "GelatoActionPipeline",
       sysAdmin
     );
-    const gelatoMultiSend = await GelatoMultiSend.deploy();
-    await gelatoMultiSend.deployed();
+    const gelatoActionPipeline = await GelatoActionPipeline.deploy();
+    await gelatoActionPipeline.deployed();
 
     // Deploy ProviderModuleGelatoUserProxy with constructorArgs
     const ProviderModuleGelatoUserProxy = await ethers.getContractFactory(
@@ -102,7 +90,7 @@ describe("Return Data Passing Tests", function () {
     );
     providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxy.deploy(
       gelatoUserProxyFactory.address,
-      gelatoMultiSend.address
+      gelatoActionPipeline.address
     );
     await providerModuleGelatoUserProxy.deployed();
 
@@ -115,13 +103,6 @@ describe("Return Data Passing Tests", function () {
 
     // Call multiProvide for mockConditionDummy + actionTransferFrom
     // Provider registers new condition
-    const MockActionDummyUint = await ethers.getContractFactory(
-      "MockActionDummyUint",
-      sysAdmin
-    );
-
-    mockActionDummyUint = await MockActionDummyUint.deploy();
-    await mockActionDummyUint.deployed();
 
     const ActionERC20TransferFrom = await ethers.getContractFactory(
       "ActionERC20TransferFrom",
@@ -157,29 +138,49 @@ describe("Return Data Passing Tests", function () {
     // ### Action #1
     memoryUint = 10;
 
-    const actionData = await run("abi-encode-withselector", {
+    const actionTransferFromData = await run("abi-encode-withselector", {
       contractname: "ActionERC20TransferFrom",
       functionname: "action",
-      inputs: [
-        sellerAddress,
-        sellToken.address,
-        executorAddress,
-        memoryUint,
-        true,
-      ],
+      inputs: [sellerAddress, sellToken.address, memoryUint, executorAddress],
     });
 
-    action = new Action({
+    const actionTransferFromDataOut = new Action({
       addr: actionTransferFrom.address,
-      data: actionData,
+      data: actionTransferFromData,
       operation: Operation.Delegatecall,
-      value: 0,
+      dataFlow: DataFlow.Out,
       termsOkCheck: true,
     });
 
+    const actionTransferFromDataInAndOut = {
+      ...actionTransferFromDataOut,
+    };
+    actionTransferFromDataInAndOut.dataFlow = DataFlow.InAndOut;
+    actionTransferFromDataInAndOut.termsOkCheck = false;
+
+    const actionTransferFromDataIn = { ...actionTransferFromDataOut };
+    actionTransferFromDataIn.dataFlow = DataFlow.In;
+    actionTransferFromDataIn.termsOkCheck = false;
+
+    const actionTransferFromDataNone = { ...actionTransferFromDataOut };
+    actionTransferFromDataNone.dataFlow = DataFlow.None;
+
     // ### Whitelist Task Spec
-    transferFromTaskSpec = new TaskSpec({
-      actions: [action, action, action],
+    const transferFromTaskSpec1 = new TaskSpec({
+      actions: [
+        actionTransferFromDataOut,
+        actionTransferFromDataInAndOut,
+        actionTransferFromDataIn,
+      ],
+      gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
+    });
+
+    const transferFromTaskSpec2 = new TaskSpec({
+      actions: [
+        actionTransferFromDataOut,
+        actionTransferFromDataIn,
+        actionTransferFromDataNone,
+      ],
       gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
     });
 
@@ -188,12 +189,12 @@ describe("Return Data Passing Tests", function () {
       .connect(provider)
       .multiProvide(
         executorAddress,
-        [transferFromTaskSpec],
+        [transferFromTaskSpec1, transferFromTaskSpec2],
         [providerModuleGelatoUserProxy.address]
       );
   });
 
-  it("#1: Actions only use the in memory values for transferFrom action, not the encoded ones", async function () {
+  it("#1: Actions only use the in memory values for transferFrom actionTransferFromStruct, not the encoded ones", async function () {
     const preBalance = await sellToken.balanceOf(sellerAddress);
 
     const sellAmounts = [100, 20, 0];
@@ -201,31 +202,33 @@ describe("Return Data Passing Tests", function () {
 
     const actions = [];
     for (let i = 0; i < 3; i++) {
-      const actionData = await run("abi-encode-withselector", {
+      const actionTransferFromData = await run("abi-encode-withselector", {
         contractname: "ActionERC20TransferFrom",
         functionname: "action",
         inputs: [
           sellerAddress,
           sellToken.address,
-          executorAddress,
           sellAmounts[i],
-          true,
+          executorAddress,
         ],
       });
 
-      action = new Action({
+      let dataFlow;
+      if (i == 0) dataFlow = DataFlow.Out;
+      else if (i == 1) dataFlow = DataFlow.InAndOut;
+      else dataFlow = DataFlow.In;
+
+      actionTransferFromStruct = new Action({
         addr: actionTransferFrom.address,
-        data: actionData,
+        data: actionTransferFromData,
         operation: Operation.Delegatecall,
-        value: 0,
-        termsOkCheck: true,
+        dataFlow,
+        termsOkCheck: dataFlow == DataFlow.Out ? true : false,
       });
-      actions.push(action);
+      actions.push(actionTransferFromStruct);
     }
 
-    const transferFromTask = new Task({
-      actions: [actions[0], actions[1], actions[2]],
-    });
+    const transferFromTask = new Task({ actions });
 
     const taskReceiptTransferFrom = new TaskReceipt({
       id: 1,
@@ -241,30 +244,26 @@ describe("Return Data Passing Tests", function () {
 
     await sellToken.approve(userProxyAddress, 300);
 
-    const canExecResult = await gelatoCore.connect(executor).canExec(
-      taskReceiptTransferFrom, // Array of task Receipts
-      GELATO_MAX_GAS,
-      GELATO_GAS_PRICE
-    );
-
-    expect(canExecResult).to.be.equal("OK");
-    // console.log(canExecResult);
+    expect(
+      await gelatoCore
+        .connect(executor)
+        .canExec(taskReceiptTransferFrom, GELATO_MAX_GAS, GELATO_GAS_PRICE)
+    ).to.be.equal("OK");
 
     await expect(
-      gelatoCore.connect(executor).exec(
-        taskReceiptTransferFrom, // Array of task Receipts
-        { gasPrice: GELATO_GAS_PRICE, gasLimit: 3000000 }
-      )
+      gelatoCore.connect(executor).exec(taskReceiptTransferFrom, {
+        gasPrice: GELATO_GAS_PRICE,
+        gasLimit: 3000000,
+      })
     ).to.emit(gelatoCore, "LogExecSuccess");
 
-    const postBalance = await sellToken.balanceOf(sellerAddress);
-    const expectedDelta = ethers.utils.bigNumberify("300");
-
     // Provider checks
-    expect(postBalance).to.be.equal(preBalance.sub(expectedDelta));
+    expect(await sellToken.balanceOf(sellerAddress)).to.be.equal(
+      preBalance.sub(ethers.utils.bigNumberify("300"))
+    );
   });
 
-  it("#2: Actions uses in memory values for the second action and calldata values for the third", async function () {
+  it("#2: Actions uses in memory values for the second actionTransferFromStruct and calldata values for the third", async function () {
     const preBalance = await sellToken.balanceOf(sellerAddress);
 
     const sellAmounts = [100, 0, 20];
@@ -272,32 +271,33 @@ describe("Return Data Passing Tests", function () {
 
     const actions = [];
     for (let i = 0; i < 3; i++) {
-      const actionData = await run("abi-encode-withselector", {
+      const actionTransferFromData = await run("abi-encode-withselector", {
         contractname: "ActionERC20TransferFrom",
         functionname: "action",
         inputs: [
           sellerAddress,
           sellToken.address,
-          executorAddress,
           sellAmounts[i],
-          // for the last action, dont use in memory data
-          i === 1 ? false : true,
+          executorAddress,
         ],
       });
 
-      action = new Action({
+      let dataFlow;
+      if (i == 0) dataFlow = DataFlow.Out;
+      else if (i == 1) dataFlow = DataFlow.In;
+      else dataFlow = DataFlow.None;
+
+      actionTransferFromStruct = new Action({
         addr: actionTransferFrom.address,
-        data: actionData,
+        data: actionTransferFromData,
         operation: Operation.Delegatecall,
-        value: 0,
-        termsOkCheck: true,
+        dataFlow,
+        termsOkCheck: dataFlow == DataFlow.In ? false : true,
       });
-      actions.push(action);
+      actions.push(actionTransferFromStruct);
     }
 
-    const transferFromTask = new Task({
-      actions: [actions[0], actions[1], actions[2]],
-    });
+    const transferFromTask = new Task({ actions });
 
     const taskReceiptTransferFrom = new TaskReceipt({
       id: 1,
@@ -313,26 +313,22 @@ describe("Return Data Passing Tests", function () {
 
     await sellToken.approve(userProxyAddress, 300);
 
-    const canExecResult = await gelatoCore.connect(executor).canExec(
-      taskReceiptTransferFrom, // Array of task Receipts
-      GELATO_MAX_GAS,
-      GELATO_GAS_PRICE
-    );
-
-    expect(canExecResult).to.be.equal("OK");
-    // console.log(canExecResult);
+    expect(
+      await gelatoCore
+        .connect(executor)
+        .canExec(taskReceiptTransferFrom, GELATO_MAX_GAS, GELATO_GAS_PRICE)
+    ).to.be.equal("OK");
 
     await expect(
-      gelatoCore.connect(executor).exec(
-        taskReceiptTransferFrom, // Array of task Receipts
-        { gasPrice: GELATO_GAS_PRICE, gasLimit: 3000000 }
-      )
+      gelatoCore.connect(executor).exec(taskReceiptTransferFrom, {
+        gasPrice: GELATO_GAS_PRICE,
+        gasLimit: 3000000,
+      })
     ).to.emit(gelatoCore, "LogExecSuccess");
 
-    const postBalance = await sellToken.balanceOf(sellerAddress);
-    const expectedDelta = ethers.utils.bigNumberify("220");
-
-    // Provider checks
-    expect(postBalance).to.be.equal(preBalance.sub(expectedDelta));
+    // Seller checks
+    expect(await sellToken.balanceOf(sellerAddress)).to.be.equal(
+      preBalance.sub(ethers.utils.bigNumberify("220"))
+    );
   });
 });

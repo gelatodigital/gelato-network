@@ -5,9 +5,7 @@ const { run, ethers, utils } = require("@nomiclabs/buidler");
 
 import initialStateSysAdmin from "../gelato_core/base/gelato_sys_admin/GelatoSysAdmin.initialState";
 import initialStateGasPriceOracle from "../gelato_core/base/gelato_gas_price_oracle/GelatoGasPriceOracle.initialState";
-import { Operation } from "../../src/classes/gelato/Action";
-
-//
+import DataFlow from "../../src/enums/gelato/DataFlow";
 
 const GELATO_MAX_GAS = initialStateSysAdmin.gelatoMaxGas;
 const GELATO_GAS_PRICE = initialStateGasPriceOracle.gasPrice;
@@ -79,12 +77,12 @@ describe("BatchExchange Withdraw Test", function () {
     );
     await gelatoUserProxyFactory.deployed();
 
-    const GelatoMultiSend = await ethers.getContractFactory(
-      "GelatoMultiSend",
+    const GelatoActionPipeline = await ethers.getContractFactory(
+      "GelatoActionPipeline",
       sysAdmin
     );
-    const gelatoMultiSend = await GelatoMultiSend.deploy();
-    await gelatoMultiSend.deployed();
+    const gelatoActionPipeline = await GelatoActionPipeline.deploy();
+    await gelatoActionPipeline.deployed();
 
     // Deploy ProviderModuleGelatoUserProxy with constructorArgs
     const ProviderModuleGelatoUserProxy = await ethers.getContractFactory(
@@ -93,7 +91,7 @@ describe("BatchExchange Withdraw Test", function () {
     );
     providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxy.deploy(
       gelatoUserProxyFactory.address,
-      gelatoMultiSend.address
+      gelatoActionPipeline.address
     );
     await providerModuleGelatoUserProxy.deployed();
 
@@ -161,14 +159,14 @@ describe("BatchExchange Withdraw Test", function () {
     const actionDataWithdraw = await run("abi-encode-withselector", {
       contractname: "ActionWithdrawBatchExchange",
       functionname: "action",
-      inputs: [sellToken.address, true],
+      inputs: [sellToken.address],
     });
 
     const actionWithdraw = new Action({
       addr: actionWithdrawBatchExchange.address,
       data: actionDataWithdraw,
       operation: Operation.Delegatecall,
-      value: 0,
+      dataFlow: DataFlow.Out,
       termsOkCheck: true,
     });
 
@@ -176,15 +174,15 @@ describe("BatchExchange Withdraw Test", function () {
     const actionDataTransfer = await run("abi-encode-withselector", {
       contractname: "ActionTransfer",
       functionname: "action",
-      inputs: [sellToken.address, 0, sellerAddress, false],
+      inputs: [sellToken.address, 0, sellerAddress],
     });
 
     const actionTransfer = new Action({
       addr: actionTransferContract.address,
       data: actionDataTransfer,
       operation: Operation.Delegatecall,
-      value: 0,
-      termsOkCheck: true,
+      dataFlow: DataFlow.In,
+      termsOkCheck: false,
     });
 
     // ### Whitelist Task Spec
@@ -230,27 +228,22 @@ describe("BatchExchange Withdraw Test", function () {
 
     await mockBatchExchange.setValidWithdrawRequest(userProxyAddress);
 
-    const canExecResult = await gelatoCore.connect(executor).canExec(
-      taskReceipt, // Array of task Receipts
-      GELATO_MAX_GAS,
-      GELATO_GAS_PRICE
-    );
-
-    expect(canExecResult).to.be.equal("OK");
-    // console.log(canExecResult);
+    expect(
+      await gelatoCore
+        .connect(executor)
+        .canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE)
+    ).to.equal("OK");
 
     const preBalance = await sellToken.balanceOf(sellerAddress);
 
     await expect(
-      gelatoCore.connect(executor).exec(
-        taskReceipt, // Array of task Receipts
-        { gasPrice: GELATO_GAS_PRICE, gasLimit: 3000000 }
-      )
+      gelatoCore
+        .connect(executor)
+        .exec(taskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: 3000000 })
     ).to.emit(gelatoCore, "LogExecSuccess");
 
-    const postBalance = await sellToken.balanceOf(sellerAddress);
-
-    // Provider checks
-    expect(postBalance).to.be.equal(preBalance.add(withdrawAmount));
+    expect(await sellToken.balanceOf(sellerAddress)).to.be.equal(
+      preBalance.add(withdrawAmount)
+    );
   });
 });

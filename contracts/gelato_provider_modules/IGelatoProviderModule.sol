@@ -1,5 +1,5 @@
 // "SPDX-License-Identifier: UNLICENSED"
-pragma solidity ^0.6.8;
+pragma solidity ^0.6.9;
 pragma experimental ABIEncoderV2;
 
 import { Action, Task } from "../gelato_core/interfaces/IGelatoCore.sol";
@@ -34,7 +34,6 @@ interface IGelatoProviderModule {
         external
         view
         returns(bytes memory, bool checkReturndata);
-
 
     /// @notice Called by GelatoCore.exec to verifiy that no revert happend on userProxy
     /// @dev If a caught revert is detected, this fn should revert with the detected error

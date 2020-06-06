@@ -1,5 +1,5 @@
 // "SPDX-License-Identifier: UNLICENSED"
-pragma solidity ^0.6.8;
+pragma solidity ^0.6.9;
 pragma experimental ABIEncoderV2;
 
 import { IGelatoProviderModule } from "./IGelatoProviderModule.sol";
@@ -18,7 +18,6 @@ abstract contract GelatoProviderModuleStandard is IGelatoProviderModule {
     {
         return OK;
     }
-
 
     /// @dev Overriding fns should revert with the revertMsg they detected on the userProxy
     function execRevertCheck(bytes calldata) external pure override virtual {

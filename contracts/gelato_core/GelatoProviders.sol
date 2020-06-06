@@ -1,5 +1,5 @@
 // "SPDX-License-Identifier: UNLICENSED"
-pragma solidity ^0.6.8;
+pragma solidity ^0.6.9;
 pragma experimental ABIEncoderV2;
 
 import { IGelatoProviders, TaskSpec } from "./interfaces/IGelatoProviders.sol";
@@ -10,7 +10,7 @@ import { Math } from "../external/Math.sol";
 import { IGelatoProviderModule } from "../gelato_provider_modules/IGelatoProviderModule.sol";
 import { ProviderModuleSet } from "../libraries/ProviderModuleSet.sol";
 import {
-    Condition, Action, Operation, Provider, Task, TaskReceipt
+    Condition, Action, Operation, DataFlow, Provider, Task, TaskReceipt
 } from "./interfaces/IGelatoCore.sol";
 import { GelatoString } from "../libraries/GelatoString.sol";
 import { IGelatoCondition } from "../gelato_conditions/IGelatoCondition.sol";
@@ -29,8 +29,9 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     struct NoDataAction {
         address addr;
         Operation operation;
-        bool termsOkCheck;
+        DataFlow dataFlow;
         bool value;
+        bool termsOkCheck;
     }
 
     uint256 public constant override NO_CEIL = type(uint256).max;
@@ -336,8 +337,9 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
             NoDataAction memory noDataAction = NoDataAction({
                 addr: _taskSpec.actions[i].addr,
                 operation: _taskSpec.actions[i].operation,
-                termsOkCheck: _taskSpec.actions[i].termsOkCheck,
-                value: _taskSpec.actions[i].value == 0 ? false : true
+                dataFlow: _taskSpec.actions[i].dataFlow,
+                value: _taskSpec.actions[i].value == 0 ? false : true,
+                termsOkCheck: _taskSpec.actions[i].termsOkCheck
             });
             noDataActions[i] = noDataAction;
         }

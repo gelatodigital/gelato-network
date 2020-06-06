@@ -1,5 +1,5 @@
 // "SPDX-License-Identifier: UNLICENSED"
-pragma solidity ^0.6.8;
+pragma solidity ^0.6.9;
 pragma experimental ABIEncoderV2;
 
 import { ActionERC20TransferFrom, ActionData as SuperActionData } from "../one_offs/ActionERC20TransferFrom.sol";
@@ -58,7 +58,7 @@ contract ActionChainedTimedERC20TransferFrom is ActionERC20TransferFrom {
         }
     }
 
-    // ======= ACTION CONDITIONS CHECK =========
+    // ======= ACTION TERMS CHECK =========
     // Overriding and extending GelatoActionsStandard's function (optional)
     function termsOk(address _userProxy, bytes calldata _actionData)
         external

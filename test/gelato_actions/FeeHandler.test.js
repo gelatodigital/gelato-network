@@ -5,7 +5,7 @@ const { run, ethers, utils } = require("@nomiclabs/buidler");
 
 import initialStateSysAdmin from "../gelato_core/base/gelato_sys_admin/GelatoSysAdmin.initialState";
 import initialStateGasPriceOracle from "../gelato_core/base/gelato_gas_price_oracle/GelatoGasPriceOracle.initialState";
-import { Operation } from "../../src/classes/gelato/Action";
+import DataFlow from "../../src/enums/gelato/DataFlow";
 
 const GELATO_MAX_GAS = initialStateSysAdmin.gelatoMaxGas;
 const GELATO_GAS_PRICE = initialStateGasPriceOracle.gasPrice;
@@ -31,28 +31,19 @@ describe("FeeHandler Tests", function () {
   let executorAddress;
   let sysAdminAddress;
   let userProxyAddress;
-  let tx;
-  let txResponse;
   let providerModuleGelatoUserProxy;
   let gelatoCore;
   let gelatoGasPriceOracle;
   let gelatoProvider;
-  let condition;
-  let action;
-  let taskSpecTransferFrom;
-  let taskReceipt1;
-  let taskReceipt2;
-  let gelatoMultiCall;
   let sellToken;
   let sellDecimals;
-  let globalState;
   let feeHandlerAddress;
   let actionTransferFrom;
   let actionTransfer;
   let sendAmount;
-  let action1;
-  let action2;
-  let action3;
+  let feeHandlerActionStruct;
+  let actionTransferFromStruct;
+  let actionTransferStruct;
   let feeHandlerFactory;
 
   // ###### GelatoCore Setup ######
@@ -81,7 +72,7 @@ describe("FeeHandler Tests", function () {
 
     // Instantiate FeeHandler
     await feeHandlerFactory.connect(provider).create(NUM);
-    feeHandlerAddress = await feeHandlerFactory.getFeeHandler(
+    feeHandlerAddress = await feeHandlerFactory.feeHandlerByProviderAndNum(
       providerAddress,
       NUM
     );
@@ -114,11 +105,11 @@ describe("FeeHandler Tests", function () {
     );
     await gelatoUserProxyFactory.deployed();
 
-    const GelatoMultiSend = await ethers.getContractFactory(
-      "GelatoMultiSend",
+    const GelatoActionPipeline = await ethers.getContractFactory(
+      "GelatoActionPipeline",
       sysAdmin
     );
-    const gelatoMultiSend = await GelatoMultiSend.deploy();
+    const gelatoActionPipeline = await GelatoActionPipeline.deploy();
 
     // Deploy ProviderModuleGelatoUserProxy with constructorArgs
     const ProviderModuleGelatoUserProxy = await ethers.getContractFactory(
@@ -127,7 +118,7 @@ describe("FeeHandler Tests", function () {
     );
     providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxy.deploy(
       gelatoUserProxyFactory.address,
-      gelatoMultiSend.address
+      gelatoActionPipeline.address
     );
     await providerModuleGelatoUserProxy.deployed();
 
@@ -180,10 +171,11 @@ describe("FeeHandler Tests", function () {
     await sellToken.deployed();
 
     // whitelist token on fee contract
-    const provider2 = await feeHandler.getProvider();
-    await feeHandler.connect(provider).addTokenToWhitelist(sellToken.address);
-    await feeHandler.connect(provider).addTokenToWhitelist(ETH_ADDRESS);
-    await feeHandler.connect(provider).activateOwnWhitelist();
+    await feeHandler
+      .connect(provider)
+      .addTokenToCustomWhitelist(sellToken.address);
+    await feeHandler.connect(provider).addTokenToCustomWhitelist(ETH_ADDRESS);
+    await feeHandler.connect(provider).activateCustomWhitelist();
 
     // ### Action #1
     sendAmount = ethers.utils.parseUnits("10", "ether");
@@ -203,37 +195,31 @@ describe("FeeHandler Tests", function () {
       inputs: feeHandlerInputs,
     });
 
-    action1 = new Action({
+    feeHandlerActionStruct = new Action({
       addr: feeHandlerAddress,
       data: actionDataFeeHandler,
       operation: Operation.Delegatecall,
-      value: 0,
+      dataFlow: DataFlow.Out,
       termsOkCheck: true,
     });
 
-    const actionData2 = await run("abi-encode-withselector", {
+    const erc20TransferFromData = await run("abi-encode-withselector", {
       contractname: "ActionERC20TransferFrom",
       functionname: "action",
-      inputs: [
-        sellerAddress,
-        sellToken.address,
-        executorAddress,
-        sendAmount,
-        false,
-      ],
+      inputs: [sellerAddress, sellToken.address, sendAmount, executorAddress],
     });
 
-    action2 = new Action({
+    actionTransferFromStruct = new Action({
       addr: actionTransferFrom.address,
-      data: actionData2,
+      data: erc20TransferFromData,
       operation: Operation.Delegatecall,
-      value: 0,
-      termsOkCheck: true,
+      dataFlow: DataFlow.In,
+      termsOkCheck: false,
     });
 
     // ### Whitelist Task Spec
-    taskSpecTransferFrom = new TaskSpec({
-      actions: [action1, action2],
+    const taskSpecPayFeeAndTransferFrom = new TaskSpec({
+      actions: [feeHandlerActionStruct, actionTransferFromStruct],
       gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
     });
 
@@ -241,25 +227,29 @@ describe("FeeHandler Tests", function () {
       .connect(provider)
       .multiProvide(
         executorAddress,
-        [taskSpecTransferFrom],
+        [taskSpecPayFeeAndTransferFrom],
         [providerModuleGelatoUserProxy.address]
       );
 
     // Submit Task
-    const task = new Task({
-      actions: [action1, action2],
+    const taskPayFeeAndTransferFrom = new Task({
+      actions: [feeHandlerActionStruct, actionTransferFromStruct],
     });
 
     await expect(
-      userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE)
+      userProxy.submitTask(
+        gelatoProvider,
+        taskPayFeeAndTransferFrom,
+        EXPIRY_DATE
+      )
     ).to.emit(gelatoCore, "LogTaskSubmitted");
 
     // Call CanExec
-    taskReceipt1 = new TaskReceipt({
+    const taskReceiptPayFeeAndTransferFrom = new TaskReceipt({
       id: 1,
       provider: gelatoProvider,
       userProxy: userProxyAddress,
-      tasks: [task],
+      tasks: [taskPayFeeAndTransferFrom],
       submissionsLeft: SUBMISSIONS_LEFT,
     });
 
@@ -267,33 +257,33 @@ describe("FeeHandler Tests", function () {
 
     await sellToken.connect(seller).approve(userProxyAddress, sendAmount);
 
-    const canExecResult = await gelatoCore.connect(executor).canExec(
-      taskReceipt1, // Array of task Receipts
-      GELATO_MAX_GAS,
-      GELATO_GAS_PRICE
-    );
-
-    expect(canExecResult).to.be.equal("OK");
-    // console.log(canExecResult);
+    expect(
+      await gelatoCore
+        .connect(executor)
+        .canExec(
+          taskReceiptPayFeeAndTransferFrom,
+          GELATO_MAX_GAS,
+          GELATO_GAS_PRICE
+        )
+    ).to.be.equal("OK");
 
     await expect(
-      gelatoCore.connect(executor).exec(
-        taskReceipt1, // Array of task Receipts
-        { gasPrice: GELATO_GAS_PRICE, gasLimit: 3000000 }
-      )
+      gelatoCore.connect(executor).exec(taskReceiptPayFeeAndTransferFrom, {
+        gasPrice: GELATO_GAS_PRICE,
+        gasLimit: 3000000,
+      })
     ).to.emit(gelatoCore, "LogExecSuccess");
 
-    const postSellerBalance = await sellToken.balanceOf(sellerAddress);
-
     // Provider checks
-
     // 1% fee
-    const expectedAmount = sendAmount.div(ethers.utils.bigNumberify("100"));
-    const postProviderBalance = await sellToken.balanceOf(providerAddress);
-    expect(postProviderBalance).to.be.equal(expectedAmount);
+    expect(await sellToken.balanceOf(providerAddress)).to.be.equal(
+      sendAmount.div(ethers.utils.bigNumberify("100"))
+    );
 
     // Seller checks
-    expect(postSellerBalance).to.be.equal(preSellerBalance.sub(sendAmount));
+    expect(await sellToken.balanceOf(sellerAddress)).to.be.equal(
+      preSellerBalance.sub(sendAmount)
+    );
   });
 
   it("#2: Check provider payouts, when Proxy has to pay fee and ERC20 token is used", async function () {
@@ -310,31 +300,31 @@ describe("FeeHandler Tests", function () {
       inputs: feeHandlerInputs,
     });
 
-    action1 = new Action({
+    feeHandlerActionStruct = new Action({
       addr: feeHandlerAddress,
       data: actionDataFeeHandler,
       operation: Operation.Delegatecall,
-      value: 0,
+      dataFlow: DataFlow.Out,
       termsOkCheck: true,
     });
 
-    const actionData3 = await run("abi-encode-withselector", {
+    const actionTransferData = await run("abi-encode-withselector", {
       contractname: "ActionTransfer",
       functionname: "action",
-      inputs: [sellToken.address, sendAmount, executorAddress, false],
+      inputs: [sellToken.address, sendAmount, executorAddress],
     });
 
-    action3 = new Action({
+    actionTransferStruct = new Action({
       addr: actionTransfer.address,
-      data: actionData3,
+      data: actionTransferData,
       operation: Operation.Delegatecall,
-      value: 0,
-      termsOkCheck: true,
+      dataFlow: DataFlow.In,
+      termsOkCheck: false,
     });
 
     // ### Whitelist Task Spec
-    const taskSpecTransfer = new TaskSpec({
-      actions: [action1, action3],
+    const taskSpecPayFeeAndTransfer = new TaskSpec({
+      actions: [feeHandlerActionStruct, actionTransferStruct],
       gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
     });
 
@@ -342,26 +332,30 @@ describe("FeeHandler Tests", function () {
       .connect(provider)
       .multiProvide(
         executorAddress,
-        [taskSpecTransfer],
+        [taskSpecPayFeeAndTransfer],
         [providerModuleGelatoUserProxy.address]
       );
 
     // Submit Task
-    const task = new Task({
-      actions: [action1, action3],
+    const taskPayTokenFeeAndTransfer = new Task({
+      actions: [feeHandlerActionStruct, actionTransferStruct],
     });
 
     await expect(
-      userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE)
+      userProxy.submitTask(
+        gelatoProvider,
+        taskPayTokenFeeAndTransfer,
+        EXPIRY_DATE
+      )
     ).to.emit(gelatoCore, "LogTaskSubmitted");
 
     // Call canexec
 
-    taskReceipt1 = new TaskReceipt({
+    const taskReceiptPayTokenFeeAndTransfer = new TaskReceipt({
       id: 1,
       provider: gelatoProvider,
       userProxy: userProxyAddress,
-      tasks: [task],
+      tasks: [taskPayTokenFeeAndTransfer],
       submissionsLeft: SUBMISSIONS_LEFT,
     });
 
@@ -369,32 +363,33 @@ describe("FeeHandler Tests", function () {
 
     await sellToken.connect(seller).transfer(userProxyAddress, sendAmount);
 
-    const canExecResult = await gelatoCore.connect(executor).canExec(
-      taskReceipt1, // Array of task Receipts
-      GELATO_MAX_GAS,
-      GELATO_GAS_PRICE
-    );
-
-    expect(canExecResult).to.be.equal("OK");
+    expect(
+      await gelatoCore
+        .connect(executor)
+        .canExec(
+          taskReceiptPayTokenFeeAndTransfer,
+          GELATO_MAX_GAS,
+          GELATO_GAS_PRICE
+        )
+    ).to.be.equal("OK");
 
     await expect(
-      gelatoCore.connect(executor).exec(
-        taskReceipt1, // Array of task Receipts
-        { gasPrice: GELATO_GAS_PRICE, gasLimit: 3000000 }
-      )
+      gelatoCore.connect(executor).exec(taskReceiptPayTokenFeeAndTransfer, {
+        gasPrice: GELATO_GAS_PRICE,
+        gasLimit: 3000000,
+      })
     ).to.emit(gelatoCore, "LogExecSuccess");
 
-    const postSellerBalance = await sellToken.balanceOf(sellerAddress);
-
     // Provider checks
-
     // 1% fee
-    const expectedAmount = sendAmount.div(ethers.utils.bigNumberify("100"));
-    const postProviderBalance = await sellToken.balanceOf(providerAddress);
-    expect(postProviderBalance).to.be.equal(expectedAmount);
+    expect(await sellToken.balanceOf(providerAddress)).to.be.equal(
+      sendAmount.div(ethers.utils.bigNumberify("100"))
+    );
 
     // Seller checks
-    expect(postSellerBalance).to.be.equal(preSellerBalance.sub(sendAmount));
+    expect(await sellToken.balanceOf(sellerAddress)).to.be.equal(
+      preSellerBalance.sub(sendAmount)
+    );
   });
 
   it("#3: Check provider payouts, when Proxy has to pay fee and ETH is used. Also leave other address in ActionTransfer to check it gets overwritten", async function () {
@@ -411,34 +406,34 @@ describe("FeeHandler Tests", function () {
       inputs: feeHandlerInputs,
     });
 
-    action1 = new Action({
+    feeHandlerActionStruct = new Action({
       addr: feeHandlerAddress,
       data: actionDataFeeHandler,
       operation: Operation.Delegatecall,
-      value: 0,
+      dataFlow: DataFlow.Out,
       termsOkCheck: true,
     });
 
     // Set payload to 0 as otherwise termsOk will not return "OK"
     const tokenAmount = 0;
 
-    const actionData3 = await run("abi-encode-withselector", {
+    const actionTransferData = await run("abi-encode-withselector", {
       contractname: "ActionTransfer",
       functionname: "action",
-      inputs: [sellToken.address, tokenAmount, executorAddress, false],
+      inputs: [sellToken.address, tokenAmount, executorAddress],
     });
 
-    action3 = new Action({
+    actionTransferStruct = new Action({
       addr: actionTransfer.address,
-      data: actionData3,
+      data: actionTransferData,
       operation: Operation.Delegatecall,
-      value: 0,
-      termsOkCheck: true,
+      dataFlow: DataFlow.In,
+      termsOkCheck: false,
     });
 
     // ### Whitelist Task Spec
-    const taskSpecTransfer = new TaskSpec({
-      actions: [action1, action3],
+    const taskSpecPayFeeAndTransfer = new TaskSpec({
+      actions: [feeHandlerActionStruct, actionTransferStruct],
       gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
     });
 
@@ -446,26 +441,30 @@ describe("FeeHandler Tests", function () {
       .connect(provider)
       .multiProvide(
         executorAddress,
-        [taskSpecTransfer],
+        [taskSpecPayFeeAndTransfer],
         [providerModuleGelatoUserProxy.address]
       );
 
     // Submit Task
-    const task = new Task({
-      actions: [action1, action3],
+    const taskPayETHFeeAndTransfer = new Task({
+      actions: [feeHandlerActionStruct, actionTransferStruct],
     });
 
     await expect(
-      userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE)
+      userProxy.submitTask(
+        gelatoProvider,
+        taskPayETHFeeAndTransfer,
+        EXPIRY_DATE
+      )
     ).to.emit(gelatoCore, "LogTaskSubmitted");
 
     // Call canexec
 
-    taskReceipt1 = new TaskReceipt({
+    const taskReceiptPayETHFeeAndTransfer = new TaskReceipt({
       id: 1,
       provider: gelatoProvider,
       userProxy: userProxyAddress,
-      tasks: [task],
+      tasks: [taskPayETHFeeAndTransfer],
       submissionsLeft: SUBMISSIONS_LEFT,
     });
 
@@ -475,43 +474,37 @@ describe("FeeHandler Tests", function () {
       userProxyAddress
     );
 
-    const canExecResult = await gelatoCore.connect(executor).canExec(
-      taskReceipt1, // Array of task Receipts
-      GELATO_MAX_GAS,
-      GELATO_GAS_PRICE
-    );
+    expect(
+      await gelatoCore
+        .connect(executor)
+        .canExec(
+          taskReceiptPayETHFeeAndTransfer,
+          GELATO_MAX_GAS,
+          GELATO_GAS_PRICE
+        )
+    ).to.be.equal("OK");
 
-    expect(canExecResult).to.be.equal("OK");
-
-    const preProviderEthBalance = await ethers.provider.getBalance(
+    const providerEthBalanceBefore = await ethers.provider.getBalance(
       providerAddress
     );
 
     await expect(
-      gelatoCore.connect(executor).exec(
-        taskReceipt1, // Array of task Receipts
-        { gasPrice: GELATO_GAS_PRICE, gasLimit: 4000000 }
-      )
+      gelatoCore.connect(executor).exec(taskReceiptPayETHFeeAndTransfer, {
+        gasPrice: GELATO_GAS_PRICE,
+        gasLimit: 4000000,
+      })
     ).to.emit(gelatoCore, "LogExecSuccess");
 
-    const proxyEthBalanceAfter = await ethers.provider.getBalance(
-      userProxyAddress
-    );
-
     // Provider checks
-
     // 1% fee
-    const expectedAmount = sendAmount.div(ethers.utils.bigNumberify("100"));
-    const postProviderEthBalance = await ethers.provider.getBalance(
-      providerAddress
-    );
-
-    expect(postProviderEthBalance).to.be.equal(
-      preProviderEthBalance.add(expectedAmount)
+    expect(await ethers.provider.getBalance(providerAddress)).to.be.equal(
+      providerEthBalanceBefore.add(
+        sendAmount.div(ethers.utils.bigNumberify("100"))
+      )
     );
 
     // Seller checks
-    expect(proxyEthBalanceAfter).to.be.equal(
+    expect(await ethers.provider.getBalance(userProxyAddress)).to.be.equal(
       proxyEthBalanceBefore.sub(sendAmount)
     );
   });

@@ -1,5 +1,5 @@
 // "SPDX-License-Identifier: UNLICENSED"
-pragma solidity ^0.6.8;
+pragma solidity ^0.6.9;
 
 import "../../GelatoActionsStandard.sol";
 import "../../../external/IERC20.sol";
@@ -59,7 +59,7 @@ contract ActionBzxPtokenBurnToToken is GelatoActionsStandard {
         }
     }
 
-    // ======= ACTION CONDITIONS CHECK =========
+    // ======= ACTION TERMS CHECK =========
     // Overriding and extending GelatoActionsStandard's function (optional)
     function termsOk(bytes calldata _actionData)
         external
