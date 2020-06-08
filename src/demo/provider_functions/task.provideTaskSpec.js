@@ -17,7 +17,7 @@ export default task(
       let taskSpec;
       // ###### Either use name
       if (taskArgs.name) {
-        taskSpec = await run(`gelato-return-taskpec-${taskArgs.name}`);
+        taskSpec = await run(`gelato-return-taskspec-${taskArgs.name}`);
       }
 
       const gelatoCore = await run("instantiateContract", {
@@ -33,7 +33,7 @@ export default task(
       const etherscanLink = await run("get-etherscan-link", {
         txhash: tx.hash,
       });
-      console.log(etherscanLink);
+      console.log(`Link to transaction: \n ${etherscanLink}\n`);
       await tx.wait();
       console.log(`✅ Tx mined - Task Spec provided`);
       return `✅ Tx mined`;

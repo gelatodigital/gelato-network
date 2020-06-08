@@ -29,7 +29,7 @@ export default task(
       const etherscanLink = await run("get-etherscan-link", {
         txhash: tx.hash,
       });
-      console.log(etherscanLink);
+      console.log(`Link to transaction: \n ${etherscanLink}\n`);
       await tx.wait();
       console.log(`✅ Tx mined - Executor assignment complete`);
       return `✅ Tx mined`;

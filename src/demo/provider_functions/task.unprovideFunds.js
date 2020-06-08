@@ -44,7 +44,7 @@ export default task(
         txhash: tx.hash,
       });
 
-      console.log(etherscanLink);
+      console.log(`Link to transaction: \n ${etherscanLink}\n`);
 
       await tx.wait();
 
