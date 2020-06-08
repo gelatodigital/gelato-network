@@ -2,11 +2,11 @@
 pragma solidity ^0.6.9;
 pragma experimental ABIEncoderV2;
 
-import { IGelatoExecutors } from "./interfaces/IGelatoExecutors.sol";
-import { GelatoProviders } from "./GelatoProviders.sol";
-import { Address } from  "../external/Address.sol";
-import { SafeMath } from "../external/SafeMath.sol";
-import { Math } from "../external/Math.sol";
+import {IGelatoExecutors} from "./interfaces/IGelatoExecutors.sol";
+import {GelatoProviders} from "./GelatoProviders.sol";
+import {Address} from  "../external/Address.sol";
+import {SafeMath} from "../external/SafeMath.sol";
+import {Math} from "../external/Math.sol";
 
 /// @title GelatoExecutors
 /// @author Luis Schliesske & Hilmar Orth

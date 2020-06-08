@@ -52,7 +52,7 @@ export const deployments = {
   ConditionKyberRateStateful: "0x6e9A985027ffa649d4AC4A54555DFf19DDA1b257",
   // == Time ==
   // Timestamps
-  ConditionTimestampPassed: "0x26d72d7AE606B5FCbBD0417fa112E7b4aBF05aE2",
+  ConditionTime: "0x26d72d7AE606B5FCbBD0417fa112E7b4aBF05aE2",
   ConditionTimeStateful: "0x156CEd6aa95b88aC146cafc1fF538717C8853D73",
   // Gnosis
   ConditionBatchExchangeFundsWithdrawable:

@@ -2,14 +2,14 @@
 pragma solidity ^0.6.9;
 pragma experimental ABIEncoderV2;
 
-import { IGelatoCore, Provider, Task, TaskReceipt } from "./interfaces/IGelatoCore.sol";
-import { GelatoExecutors } from "./GelatoExecutors.sol";
-import { GelatoDebug } from "../libraries/GelatoDebug.sol";
-import { GelatoTaskReceipt } from "../libraries/GelatoTaskReceipt.sol";
-import { SafeMath } from "../external/SafeMath.sol";
-import { IGelatoCondition } from "../gelato_conditions/IGelatoCondition.sol";
-import { IGelatoAction } from "../gelato_actions/IGelatoAction.sol";
-import { IGelatoProviderModule } from "../gelato_provider_modules/IGelatoProviderModule.sol";
+import {IGelatoCore, Provider, Task, TaskReceipt} from "./interfaces/IGelatoCore.sol";
+import {GelatoExecutors} from "./GelatoExecutors.sol";
+import {GelatoDebug} from "../libraries/GelatoDebug.sol";
+import {GelatoTaskReceipt} from "../libraries/GelatoTaskReceipt.sol";
+import {SafeMath} from "../external/SafeMath.sol";
+import {IGelatoCondition} from "../gelato_conditions/IGelatoCondition.sol";
+import {IGelatoAction} from "../gelato_actions/IGelatoAction.sol";
+import {IGelatoProviderModule} from "../gelato_provider_modules/IGelatoProviderModule.sol";
 
 /// @title GelatoCore
 /// @author Luis Schliesske & Hilmar Orth

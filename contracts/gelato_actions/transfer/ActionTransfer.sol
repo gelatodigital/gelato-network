@@ -2,12 +2,12 @@
 pragma solidity ^0.6.9;
 pragma experimental ABIEncoderV2;
 
-import { GelatoActionsStandardFull } from "../GelatoActionsStandardFull.sol";
-import { IERC20 } from "../../external/IERC20.sol";
-import { Address } from "../../external/Address.sol";
-import { SafeERC20 } from "../../external/SafeERC20.sol";
-import { DataFlow } from "../../gelato_core/interfaces/IGelatoCore.sol";
-import { DataFlowType } from "../action_pipeline_interfaces/DataFlowType.sol";
+import {GelatoActionsStandardFull} from "../GelatoActionsStandardFull.sol";
+import {IERC20} from "../../external/IERC20.sol";
+import {Address} from "../../external/Address.sol";
+import {SafeERC20} from "../../external/SafeERC20.sol";
+import {DataFlow} from "../../gelato_core/interfaces/IGelatoCore.sol";
+import {DataFlowType} from "../action_pipeline_interfaces/DataFlowType.sol";
 
 /// @dev This action is for user proxies that store funds.
 contract ActionTransfer is GelatoActionsStandardFull {
@@ -90,8 +90,8 @@ contract ActionTransfer is GelatoActionsStandardFull {
     )
         public
         view
-        override
         virtual
+        override
         returns(string memory)
     {
         if (_dataFlow == DataFlow.In || _dataFlow == DataFlow.InAndOut)

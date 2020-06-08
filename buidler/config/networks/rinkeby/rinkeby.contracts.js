@@ -45,7 +45,7 @@ export const contracts = [
   "ConditionKyberRate",
   "ConditionKyberRateStateful",
   // Time
-  "ConditionTimestampPassed",
+  "ConditionTime",
   "ConditionTimeStateful",
   // Gnosis
   "ConditionBatchExchangeFundsWithdrawable",

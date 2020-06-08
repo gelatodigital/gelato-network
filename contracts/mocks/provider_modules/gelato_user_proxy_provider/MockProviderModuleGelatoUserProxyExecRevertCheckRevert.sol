@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 import {
     GelatoProviderModuleStandard
 } from "../../../gelato_provider_modules/GelatoProviderModuleStandard.sol";
-import { Task } from "../../../gelato_core/interfaces/IGelatoCore.sol";
+import {Task} from "../../../gelato_core/interfaces/IGelatoCore.sol";
 import {
     IGelatoUserProxy
 } from "../../../user_proxies/gelato_user_proxy/interfaces/IGelatoUserProxy.sol";
@@ -18,8 +18,8 @@ contract MockProviderModuleGelatoUserProxyExecRevertCheckRevert is
     function execPayload(uint256, address, address, Task memory _task)
         public
         view
-        override
         virtual
+        override
         returns(bytes memory payload, bool execRevertCheck)
     {
         if (_task.actions.length > 1) {
@@ -41,8 +41,8 @@ contract MockProviderModuleGelatoUserProxyExecRevertCheckRevert is
     function execRevertCheck(bytes memory)
         public
         pure
-        override
         virtual
+        override
     {
         revert("MockProviderModuleGelatoUserProxyExecRevertCheck.execRevertCheck");
     }

@@ -18,7 +18,7 @@
 // "SPDX-License-Identifier: UNLICENSED"
 pragma solidity >=0.4.23;
 
-import { DSAuth, DSAuthority } from "./Auth.sol";
+import {DSAuth, DSAuthority} from "./Auth.sol";
 
 contract DSGuardEvents {
     event LogPermit(

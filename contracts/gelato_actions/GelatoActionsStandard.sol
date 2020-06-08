@@ -32,8 +32,8 @@ abstract contract GelatoActionsStandard is IGelatoAction {
     )
         external
         view
-        override
         virtual
+        override
         returns(string memory)  // actionTermsOk
     {
         // Standard return value for actionConditions fulfilled and no erros:

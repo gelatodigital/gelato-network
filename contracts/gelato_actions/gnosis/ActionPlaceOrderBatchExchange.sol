@@ -2,14 +2,14 @@
 pragma solidity ^0.6.9;
 pragma experimental ABIEncoderV2;
 
-import { GelatoActionsStandardFull } from "../GelatoActionsStandardFull.sol";
-import { DataFlow } from "../../gelato_core/interfaces/IGelatoCore.sol";
-import { DataFlowType } from "../action_pipeline_interfaces/DataFlowType.sol";
-import { IERC20 } from "../../external/IERC20.sol";
-import { SafeERC20 } from "../../external/SafeERC20.sol";
-import { SafeMath } from "../../external/SafeMath.sol";
-import { IBatchExchange } from "../../dapp_interfaces/gnosis/IBatchExchange.sol";
-import { Task } from "../../gelato_core/interfaces/IGelatoCore.sol";
+import {GelatoActionsStandardFull} from "../GelatoActionsStandardFull.sol";
+import {DataFlow} from "../../gelato_core/interfaces/IGelatoCore.sol";
+import {DataFlowType} from "../action_pipeline_interfaces/DataFlowType.sol";
+import {IERC20} from "../../external/IERC20.sol";
+import {SafeERC20} from "../../external/SafeERC20.sol";
+import {SafeMath} from "../../external/SafeMath.sol";
+import {IBatchExchange} from "../../dapp_interfaces/gnosis/IBatchExchange.sol";
+import {Task} from "../../gelato_core/interfaces/IGelatoCore.sol";
 
 /// @title ActionPlaceOrderBatchExchange
 /// @author Luis Schliesske & Hilmar Orth
@@ -164,8 +164,8 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandardFull {
     )
         public
         view
-        override
         virtual
+        override
         returns(string memory)  // actionCondition
     {
         if (_dataFlow == DataFlow.In || _dataFlow == DataFlow.InAndOut)

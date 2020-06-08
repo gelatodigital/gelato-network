@@ -2,8 +2,8 @@
 pragma solidity ^0.6.9;
 pragma experimental ABIEncoderV2;
 
-import { IGelatoUserProxy } from "./interfaces/IGelatoUserProxy.sol";
-import { GelatoDebug } from "../../libraries/GelatoDebug.sol";
+import {IGelatoUserProxy} from "./interfaces/IGelatoUserProxy.sol";
+import {GelatoDebug} from "../../libraries/GelatoDebug.sol";
 import {
     Action, Operation, Provider, Task, TaskReceipt, IGelatoCore
 } from "../../gelato_core/interfaces/IGelatoCore.sol";

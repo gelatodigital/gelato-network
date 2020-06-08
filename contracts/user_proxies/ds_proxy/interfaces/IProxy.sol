@@ -1,7 +1,7 @@
 // "SPDX-License-Identifier: UNLICENSED"
 pragma solidity >=0.5.0;
 
-import { DSAuthority } from "../Auth.sol";
+import {DSAuthority} from "../Auth.sol";
 
 interface IDSProxy {
 

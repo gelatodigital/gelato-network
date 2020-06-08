@@ -13,7 +13,7 @@ export default internalTask(
       // ##### Condition
       const conditionAddress = await run("bre-config", {
         deployments: true,
-        contractname: "ConditionTimestampPassed",
+        contractname: "ConditionTime",
       });
 
       const condition = new Condition({

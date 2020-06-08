@@ -2,18 +2,18 @@
 pragma solidity ^0.6.9;
 pragma experimental ABIEncoderV2;
 
-import { IGelatoProviders, TaskSpec } from "./interfaces/IGelatoProviders.sol";
-import { GelatoSysAdmin } from "./GelatoSysAdmin.sol";
-import { Address } from "../external/Address.sol";
-import { SafeMath } from "../external/SafeMath.sol";
-import { Math } from "../external/Math.sol";
-import { IGelatoProviderModule } from "../gelato_provider_modules/IGelatoProviderModule.sol";
-import { ProviderModuleSet } from "../libraries/ProviderModuleSet.sol";
+import {IGelatoProviders, TaskSpec} from "./interfaces/IGelatoProviders.sol";
+import {GelatoSysAdmin} from "./GelatoSysAdmin.sol";
+import {Address} from "../external/Address.sol";
+import {SafeMath} from "../external/SafeMath.sol";
+import {Math} from "../external/Math.sol";
+import {IGelatoProviderModule} from "../gelato_provider_modules/IGelatoProviderModule.sol";
+import {ProviderModuleSet} from "../libraries/ProviderModuleSet.sol";
 import {
     Condition, Action, Operation, DataFlow, Provider, Task, TaskReceipt
 } from "./interfaces/IGelatoCore.sol";
-import { GelatoString } from "../libraries/GelatoString.sol";
-import { IGelatoCondition } from "../gelato_conditions/IGelatoCondition.sol";
+import {GelatoString} from "../libraries/GelatoString.sol";
+import {IGelatoCondition} from "../gelato_conditions/IGelatoCondition.sol";
 
 /// @title GelatoProviders
 /// @notice Provider Management API - Whitelist TaskSpecs

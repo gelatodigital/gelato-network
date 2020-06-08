@@ -28,7 +28,7 @@ export const deployments = {
   ConditionKyberRateStateful: "0x0",
 
   // time
-  ConditionTimestampPassed: "0x10A46c633adfe5a6719f3DBd2c162676779fE70B",
+  ConditionTime: "0x10A46c633adfe5a6719f3DBd2c162676779fE70B",
   ConditionTimeStateful: "0x0",
 
   // === Debugging ===

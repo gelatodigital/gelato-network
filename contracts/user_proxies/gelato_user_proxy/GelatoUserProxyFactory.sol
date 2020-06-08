@@ -2,11 +2,11 @@
 pragma solidity ^0.6.9;
 pragma experimental ABIEncoderV2;
 
-import { IGelatoUserProxyFactory } from "./interfaces/IGelatoUserProxyFactory.sol";
-import { Address } from "../../external/Address.sol";
-import { GelatoUserProxy } from "./GelatoUserProxy.sol";
-import { GelatoUserProxySet } from "../../libraries/GelatoUserProxySet.sol";
-import { Action, Provider, Task } from "../../gelato_core/interfaces/IGelatoCore.sol";
+import {IGelatoUserProxyFactory} from "./interfaces/IGelatoUserProxyFactory.sol";
+import {Address} from "../../external/Address.sol";
+import {GelatoUserProxy} from "./GelatoUserProxy.sol";
+import {GelatoUserProxySet} from "../../libraries/GelatoUserProxySet.sol";
+import {Action, Provider, Task} from "../../gelato_core/interfaces/IGelatoCore.sol";
 
 contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
 

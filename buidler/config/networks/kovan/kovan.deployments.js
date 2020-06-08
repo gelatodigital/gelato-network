@@ -34,7 +34,7 @@ export const deployments = {
   ConditionKyberRateKovan: "0x7830FC46fB5Bc4E2036bE841a735308AbFfCa1DF",
   // == Time ==
   // Timestamps
-  ConditionTimestampPassed: "0xbd2938223d6c26BC592b82FbdD62DF19a3FE79DF",
+  ConditionTime: "0xbd2938223d6c26BC592b82FbdD62DF19a3FE79DF",
 
   // === UserProxies ===
   // == GelatoUserProxy ==

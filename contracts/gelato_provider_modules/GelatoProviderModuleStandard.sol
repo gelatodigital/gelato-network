@@ -2,8 +2,8 @@
 pragma solidity ^0.6.9;
 pragma experimental ABIEncoderV2;
 
-import { IGelatoProviderModule } from "./IGelatoProviderModule.sol";
-import { Task } from "../gelato_core/interfaces/IGelatoCore.sol";
+import {IGelatoProviderModule} from "./IGelatoProviderModule.sol";
+import {Task} from "../gelato_core/interfaces/IGelatoCore.sol";
 
 abstract contract GelatoProviderModuleStandard is IGelatoProviderModule {
 
@@ -12,8 +12,8 @@ abstract contract GelatoProviderModuleStandard is IGelatoProviderModule {
     function isProvided(address, address, Task calldata)
         external
         view
-        override
         virtual
+        override
         returns(string memory)
     {
         return OK;

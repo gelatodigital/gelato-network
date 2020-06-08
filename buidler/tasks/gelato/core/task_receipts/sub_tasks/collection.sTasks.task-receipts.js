@@ -4,8 +4,8 @@
 import "./default_payloads/conditions/sTask.defaultpayload.ConditionBalance";
 // ConditionFearGreedIndex
 import "./default_payloads/conditions/sTask.defaultpayload.ConditionFearGreedIndex";
-// ConditionTimestampPassed
-import "./default_payloads/conditions/sTask.defaultpayload.ConditionTimestampPassed";
+// ConditionTime
+import "./default_payloads/conditions/sTask.defaultpayload.ConditionTime";
 // == Kyber ==
 import "./default_payloads/conditions/sTask.defaultpayload.ConditionKyberRateKovan";
 

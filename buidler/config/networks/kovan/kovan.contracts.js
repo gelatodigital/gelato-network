@@ -27,7 +27,7 @@ export const contracts = [
   // Prices
   "ConditionKyberRateKovan",
   // Time
-  "ConditionTimestampPassed",
+  "ConditionTime",
 
   // === GelatoCore ===
   "GelatoCore",

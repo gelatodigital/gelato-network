@@ -2,8 +2,8 @@
 pragma solidity ^0.6.9;
 pragma experimental ABIEncoderV2;
 
-import { GelatoUserProxy } from "../GelatoUserProxy.sol";
-import { Action, Provider, Task } from "../../../gelato_core/interfaces/IGelatoCore.sol";
+import {GelatoUserProxy} from "../GelatoUserProxy.sol";
+import {Action, Provider, Task} from "../../../gelato_core/interfaces/IGelatoCore.sol";
 
 interface IGelatoUserProxyFactory {
     event LogCreation(

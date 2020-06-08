@@ -1,10 +1,10 @@
 // "SPDX-License-Identifier: UNLICENSED"
 pragma solidity ^0.6.9;
 
-import { GelatoStatefulConditionsStandard } from "../GelatoStatefulConditionsStandard.sol";
-import { SafeMath } from "../../external/SafeMath.sol";
-import { IGelatoCore } from "../../gelato_core/interfaces/IGelatoCore.sol";
-import { IERC20 } from "../../external/IERC20.sol";
+import {GelatoStatefulConditionsStandard} from "../GelatoStatefulConditionsStandard.sol";
+import {SafeMath} from "../../external/SafeMath.sol";
+import {IGelatoCore} from "../../gelato_core/interfaces/IGelatoCore.sol";
+import {IERC20} from "../../external/IERC20.sol";
 
 
 contract ConditionBalanceStateful is GelatoStatefulConditionsStandard {
@@ -23,8 +23,8 @@ contract ConditionBalanceStateful is GelatoStatefulConditionsStandard {
     function ok(uint256 _taskReceiptId, bytes calldata _refBalanceCheckData)
         external
         view
-        override
         virtual
+        override
         returns(string memory)
     {
         (address _userProxy,

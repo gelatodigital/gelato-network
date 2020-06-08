@@ -12,8 +12,8 @@ contract ConditionBatchExchangeFundsWithdrawable is GelatoConditionsStandard {
     function ok(uint256, bytes calldata _withdrawableCheckData)
         external
         view
-        override
         virtual
+        override
         returns(string memory)
     {
         (address proxy, address sellToken, address buyToken) = abi.decode(

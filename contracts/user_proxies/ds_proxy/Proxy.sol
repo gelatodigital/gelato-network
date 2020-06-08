@@ -18,8 +18,8 @@
 // "SPDX-License-Identifier: UNLICENSED"
 pragma solidity >=0.5.0;
 
-import { DSAuth } from "./Auth.sol";
-import { DSNote } from "./Note.sol";
+import {DSAuth} from "./Auth.sol";
+import {DSNote} from "./Note.sol";
 
 // DSProxy
 // Allows code execution using a persistant identity This can be very

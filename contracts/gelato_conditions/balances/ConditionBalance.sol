@@ -2,16 +2,16 @@
 pragma solidity ^0.6.9;
 pragma experimental ABIEncoderV2;
 
-import { GelatoConditionsStandard } from "../GelatoConditionsStandard.sol";
-import { IERC20 } from "../../external/IERC20.sol";
+import {GelatoConditionsStandard} from "../GelatoConditionsStandard.sol";
+import {IERC20} from "../../external/IERC20.sol";
 
 contract ConditionBalance is  GelatoConditionsStandard {
 
      function ok(uint256, bytes calldata _balanceCheckData)
         external
         view
-        override
         virtual
+        override
         returns(string memory)
     {
         (address _account, address _token, uint256 _refBalance, bool _greaterElseSmaller) = abi.decode(

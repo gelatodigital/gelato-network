@@ -33,7 +33,7 @@ export default internalTask(
           contractname: actionname
         });
         const conditionData = await run(
-          "gc-submittask:defaultpayload:ConditionTimestampPassed"
+          "gc-submittask:defaultpayload:ConditionTime"
         );
         const actionData = await run(
           "gc-submittask:defaultpayload:ActionERC20TransferFrom"

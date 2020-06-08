@@ -2,7 +2,7 @@
 pragma solidity ^0.6.9;
 pragma experimental ABIEncoderV2;
 
-import { GelatoProviderModuleStandard } from "../GelatoProviderModuleStandard.sol";
+import {GelatoProviderModuleStandard} from "../GelatoProviderModuleStandard.sol";
 import {
     Action, Operation, DataFlow, Task
 } from "../../gelato_core/interfaces/IGelatoCore.sol";
@@ -12,7 +12,7 @@ import {
 import {
     IGelatoUserProxy
 } from "../../user_proxies/gelato_user_proxy/interfaces/IGelatoUserProxy.sol";
-import { GelatoActionPipeline } from "../../gelato_actions/GelatoActionPipeline.sol";
+import {GelatoActionPipeline} from "../../gelato_actions/GelatoActionPipeline.sol";
 
 contract ProviderModuleGelatoUserProxy is GelatoProviderModuleStandard {
 

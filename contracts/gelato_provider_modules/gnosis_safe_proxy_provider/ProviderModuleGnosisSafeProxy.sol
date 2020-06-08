@@ -2,18 +2,18 @@
 pragma solidity ^0.6.9;
 pragma experimental ABIEncoderV2;
 
-import { GelatoProviderModuleStandard } from "../GelatoProviderModuleStandard.sol";
-import { IProviderModuleGnosisSafeProxy } from "./IProviderModuleGnosisSafeProxy.sol";
-import { Ownable } from "../../external/Ownable.sol";
-import { GelatoDebug } from "../../libraries/GelatoDebug.sol";
-import { GelatoActionPipeline } from "../../gelato_actions/GelatoActionPipeline.sol";
+import {GelatoProviderModuleStandard} from "../GelatoProviderModuleStandard.sol";
+import {IProviderModuleGnosisSafeProxy} from "./IProviderModuleGnosisSafeProxy.sol";
+import {Ownable} from "../../external/Ownable.sol";
+import {GelatoDebug} from "../../libraries/GelatoDebug.sol";
+import {GelatoActionPipeline} from "../../gelato_actions/GelatoActionPipeline.sol";
 import {
     IGnosisSafe
 } from "../../user_proxies/gnosis_safe_proxy/interfaces/IGnosisSafe.sol";
 import {
     IGnosisSafeProxy
 } from "../../user_proxies/gnosis_safe_proxy/interfaces/IGnosisSafeProxy.sol";
-import { Task } from "../../gelato_core/interfaces/IGelatoCore.sol";
+import {Task} from "../../gelato_core/interfaces/IGelatoCore.sol";
 
 contract ProviderModuleGnosisSafeProxy is
     GelatoProviderModuleStandard,
@@ -101,8 +101,8 @@ contract ProviderModuleGnosisSafeProxy is
     function execRevertCheck(bytes calldata _proxyReturndata)
         external
         pure
-        override
         virtual
+        override
     {
         (bool success, bytes memory returndata) = abi.decode(_proxyReturndata, (bool,bytes));
         if (!success) returndata.revertWithErrorString(":ProviderModuleGnosisSafeProxy:");

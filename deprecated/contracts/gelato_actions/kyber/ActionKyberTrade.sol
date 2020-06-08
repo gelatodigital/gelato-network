@@ -74,8 +74,8 @@ contract ActionKyberTrade is GelatoActionsStandard {
     function termsOk(bytes calldata _actionData)
         external
         view
-        override
         virtual
+        override
         returns(string memory)  // actionTermsOk
     {
         (address _user, address _userProxy, address _sendToken, uint256 _sendAmt) = abi.decode(

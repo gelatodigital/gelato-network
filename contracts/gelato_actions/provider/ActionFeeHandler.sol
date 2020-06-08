@@ -2,16 +2,16 @@
 pragma solidity ^0.6.9;
 pragma experimental ABIEncoderV2;
 
-import { GelatoActionsStandardFull } from "../GelatoActionsStandardFull.sol";
-import { DataFlow } from "../../gelato_core/interfaces/IGelatoCore.sol";
-import { DataFlowType } from "../action_pipeline_interfaces/DataFlowType.sol";
-import { IERC20 } from "../../external/IERC20.sol";
-import { SafeERC20 } from "../../external/SafeERC20.sol";
-import { Address } from "../../external/Address.sol";
-import { SafeMath } from "../../external/SafeMath.sol";
-import { Ownable } from "../../external/Ownable.sol";
+import {GelatoActionsStandardFull} from "../GelatoActionsStandardFull.sol";
+import {DataFlow} from "../../gelato_core/interfaces/IGelatoCore.sol";
+import {DataFlowType} from "../action_pipeline_interfaces/DataFlowType.sol";
+import {IERC20} from "../../external/IERC20.sol";
+import {SafeERC20} from "../../external/SafeERC20.sol";
+import {Address} from "../../external/Address.sol";
+import {SafeMath} from "../../external/SafeMath.sol";
+import {Ownable} from "../../external/Ownable.sol";
 
-contract FeeHandler is GelatoActionsStandardFull {
+contract ActionFeeHandler is GelatoActionsStandardFull {
     // using SafeERC20 for IERC20; <- internal library methods vs. try/catch
     using Address for address payable;
     using SafeERC20 for IERC20;
@@ -40,7 +40,7 @@ contract FeeHandler is GelatoActionsStandardFull {
     }
 
     modifier onlyProvider() {
-        require(msg.sender == provider, "FeeHandler.onlyProvider");
+        require(msg.sender == provider, "ActionFeeHandler.onlyProvider");
         _;
     }
 
@@ -70,7 +70,7 @@ contract FeeHandler is GelatoActionsStandardFull {
     function action(address _sendToken, uint256 _sendAmount, address _feePayer)
         public
         virtual
-        delegatecallOnly("FeeHandler.action")
+        delegatecallOnly("ActionFeeHandler.action")
         returns (uint256 sendAmountAfterFee)
     {
         uint256 fee = _sendAmount.mul(feeNum).div(
@@ -150,7 +150,7 @@ contract FeeHandler is GelatoActionsStandardFull {
         returns(string memory)  // actionTermsOk
     {
         if (_dataFlow == DataFlow.In || _dataFlow == DataFlow.InAndOut)
-            return "FeeHandler: termsOk check invalidated by inbound DataFlow";
+            return "ActionFeeHandler: termsOk check invalidated by inbound DataFlow";
 
         (address sendToken, uint256 sendAmount, address feePayer) = abi.decode(
             _actionData[4:],
@@ -158,33 +158,33 @@ contract FeeHandler is GelatoActionsStandardFull {
         );
 
         if (sendAmount.mul(feeDen) < feeDen)
-            return "FeeHandler: Insufficient sendAmount, will underflow";
+            return "ActionFeeHandler: Insufficient sendAmount, will underflow";
 
         if (!isTokenWhitelisted(sendToken))
-            return "FeeHandler: Token not whitelisted for fee";
+            return "ActionFeeHandler: Token not whitelisted for fee";
 
         IERC20 sendERC20 = IERC20(sendToken);
 
         if (_userProxy == feePayer) {
             if (sendToken == ETH_ADDRESS) {
                 if (_userProxy.balance < sendAmount)
-                    return "FeeHandler: NotOkUserProxyETHBalance";
+                    return "ActionFeeHandler: NotOkUserProxyETHBalance";
             } else {
                 try sendERC20.balanceOf(_userProxy) returns (uint256 balance) {
                     if (balance < sendAmount)
-                        return "FeeHandler: NotOkUserProxySendTokenBalance";
+                        return "ActionFeeHandler: NotOkUserProxySendTokenBalance";
                 } catch {
-                    return "FeeHandler: ErrorBalanceOf";
+                    return "ActionFeeHandler: ErrorBalanceOf";
                 }
             }
         } else {
             if (sendToken == ETH_ADDRESS)
-                return "FeeHandler: CannotTransferFromETH";
+                return "ActionFeeHandler: CannotTransferFromETH";
             try sendERC20.allowance(feePayer, _userProxy) returns (uint256 allowance) {
                 if (allowance < sendAmount)
-                    return "FeeHandler: NotOkUserProxySendTokenAllowance";
+                    return "ActionFeeHandler: NotOkUserProxySendTokenAllowance";
             } catch {
-                return "FeeHandler: ErrorAllowance";
+                return "ActionFeeHandler: ErrorAllowance";
             }
         }
 
@@ -204,7 +204,7 @@ contract FeeHandler is GelatoActionsStandardFull {
         );
         if (inFlowDataType == DataFlowType.TOKEN_AND_UINT256)
             (sendToken, sendAmount) = abi.decode(inFlowData, (address,uint256));
-        else revert("FeeHandler._handleInFlowData: invalid inFlowDataType");
+        else revert("ActionFeeHandler._handleInFlowData: invalid inFlowDataType");
     }
 
     function _extractReusableActionData(bytes calldata _actionData)
@@ -221,26 +221,26 @@ contract FeeHandlerFactory is Ownable {
 
     event Created(
         address indexed provider,
-        FeeHandler indexed feeHandler,
+        ActionFeeHandler indexed feeHandler,
         uint256 indexed num
     );
 
     // Denominator => For a fee of 1% => Input num = 100, as 100 / 10.000 = 0.01 == 1%
     uint256 public constant DEN = 10000;
 
-    // provider => num => FeeHandler
-    mapping(address => mapping(uint256 => FeeHandler)) public feeHandlerByProviderAndNum;
+    // provider => num => ActionFeeHandler
+    mapping(address => mapping(uint256 => ActionFeeHandler)) public feeHandlerByProviderAndNum;
     mapping(address => bool) public isFeeHandler;
     mapping(address => bool) public isWhitelistedToken;
 
     /// @notice Deploys a new feeHandler instance
     /// @dev Input _num = 100 for 1% fee, _num = 50 for 0.5% fee, etc
-    function create(uint256 _num) public returns (FeeHandler feeHandler) {
+    function create(uint256 _num) public returns (ActionFeeHandler feeHandler) {
         require(
-            feeHandlerByProviderAndNum[msg.sender][_num] == FeeHandler(0),
+            feeHandlerByProviderAndNum[msg.sender][_num] == ActionFeeHandler(0),
             "FeeHandlerFactory.create: already deployed"
         );
-        feeHandler = new FeeHandler(msg.sender, this, _num, DEN);
+        feeHandler = new ActionFeeHandler(msg.sender, this, _num, DEN);
         feeHandlerByProviderAndNum[msg.sender][_num] = feeHandler;
         isFeeHandler[address(feeHandler)] = true;
         emit Created(msg.sender, feeHandler, _num);
