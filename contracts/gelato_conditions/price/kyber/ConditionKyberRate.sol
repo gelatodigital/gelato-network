@@ -2,9 +2,9 @@
 pragma solidity ^0.6.9;
 pragma experimental ABIEncoderV2;
 
-import { GelatoConditionsStandard } from "../../GelatoConditionsStandard.sol";
-import { IKyber } from "../../../dapp_interfaces/kyber/IKyber.sol";
-import { SafeMath } from "../../../external/SafeMath.sol";
+import {GelatoConditionsStandard} from "../../GelatoConditionsStandard.sol";
+import {IKyber} from "../../../dapp_interfaces/kyber/IKyber.sol";
+import {SafeMath} from "../../../external/SafeMath.sol";
 
 contract ConditionKyberRate is GelatoConditionsStandard {
 
@@ -17,8 +17,8 @@ contract ConditionKyberRate is GelatoConditionsStandard {
     function ok(uint256, bytes calldata _checkRateData)
         external
         view
-        override
         virtual
+        override
         returns(string memory)
     {
         (address src,

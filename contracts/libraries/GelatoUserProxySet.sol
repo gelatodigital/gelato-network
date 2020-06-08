@@ -1,7 +1,7 @@
 // "SPDX-License-Identifier: UNLICENSED"
 pragma solidity ^0.6.9;
 
-import { GelatoUserProxy } from "../user_proxies/gelato_user_proxy/GelatoUserProxy.sol";
+import {GelatoUserProxy} from "../user_proxies/gelato_user_proxy/GelatoUserProxy.sol";
 
 
 /**

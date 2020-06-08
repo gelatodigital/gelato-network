@@ -2,9 +2,9 @@
 pragma solidity ^0.6.9;
 pragma experimental ABIEncoderV2;
 
-import { GelatoConditionsStandard } from "../../GelatoConditionsStandard.sol";
+import {GelatoConditionsStandard} from "../../GelatoConditionsStandard.sol";
 
-contract ConditionTimestampPassed is GelatoConditionsStandard {
+contract ConditionTime is GelatoConditionsStandard {
 
     // STANDARD interface
     function ok(uint256, bytes calldata _timeCheckData)

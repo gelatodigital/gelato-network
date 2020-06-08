@@ -2,8 +2,8 @@
 pragma solidity ^0.6.9;
 pragma experimental ABIEncoderV2;
 
-import { IGelatoProviderModule } from "../../gelato_provider_modules/IGelatoProviderModule.sol";
-import { IGelatoCondition } from "../../gelato_conditions/IGelatoCondition.sol";
+import {IGelatoProviderModule} from "../../gelato_provider_modules/IGelatoProviderModule.sol";
+import {IGelatoCondition} from "../../gelato_conditions/IGelatoCondition.sol";
 
 struct Provider {
     address addr;  //  if msg.sender == provider => self-Provider

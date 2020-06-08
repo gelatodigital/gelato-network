@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 import {
     GelatoProviderModuleStandard
 } from "../../../gelato_provider_modules/GelatoProviderModuleStandard.sol";
-import { Task } from "../../../gelato_core/interfaces/IGelatoCore.sol";
+import {Task} from "../../../gelato_core/interfaces/IGelatoCore.sol";
 
 contract MockProviderModuleExecPayloadRevert is GelatoProviderModuleStandard {
     // Incorrect execPayload func on purpose

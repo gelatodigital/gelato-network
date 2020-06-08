@@ -18,7 +18,7 @@ const DEN = 10000;
 const ETH_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
 // => Fee = 1%
 
-describe("FeeHandler Tests", function () {
+describe("ActionFeeHandler Tests", function () {
   // We define the ContractFactory and Signer variables here and assign them in
   // a beforeEach hook.
   let seller;
@@ -70,7 +70,7 @@ describe("FeeHandler Tests", function () {
     feeHandlerFactory = await FeeHandlerFactory.deploy();
     await feeHandlerFactory.deployed();
 
-    // Instantiate FeeHandler
+    // Instantiate ActionFeeHandler
     await feeHandlerFactory.connect(provider).create(NUM);
     feeHandlerAddress = await feeHandlerFactory.feeHandlerByProviderAndNum(
       providerAddress,
@@ -78,7 +78,7 @@ describe("FeeHandler Tests", function () {
     );
 
     const feeHandler = await ethers.getContractAt(
-      "FeeHandler",
+      "ActionFeeHandler",
       feeHandlerAddress
     );
 
@@ -190,7 +190,7 @@ describe("FeeHandler Tests", function () {
     ];
 
     const actionDataFeeHandler = await run("abi-encode-withselector", {
-      contractname: "FeeHandler",
+      contractname: "ActionFeeHandler",
       functionname: "action",
       inputs: feeHandlerInputs,
     });
@@ -295,7 +295,7 @@ describe("FeeHandler Tests", function () {
     ];
 
     const actionDataFeeHandler = await run("abi-encode-withselector", {
-      contractname: "FeeHandler",
+      contractname: "ActionFeeHandler",
       functionname: "action",
       inputs: feeHandlerInputs,
     });
@@ -401,7 +401,7 @@ describe("FeeHandler Tests", function () {
     ];
 
     const actionDataFeeHandler = await run("abi-encode-withselector", {
-      contractname: "FeeHandler",
+      contractname: "ActionFeeHandler",
       functionname: "action",
       inputs: feeHandlerInputs,
     });

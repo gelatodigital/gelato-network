@@ -1,16 +1,16 @@
 // "SPDX-License-Identifier: UNLICENSED"
 pragma solidity ^0.6.9;
 
-import { GelatoActionsStandard } from "../GelatoActionsStandard.sol";
+import {GelatoActionsStandard} from "../GelatoActionsStandard.sol";
 import {
     IGelatoOutFlowAction
 } from "../action_pipeline_interfaces/IGelatoOutFlowAction.sol";
-import { DataFlow } from "../../gelato_core/interfaces/IGelatoCore.sol";
-import { DataFlowType } from "../action_pipeline_interfaces/DataFlowType.sol";
-import { IERC20 } from "../../external/IERC20.sol";
-import { IBatchExchange } from "../../dapp_interfaces/gnosis/IBatchExchange.sol";
-import { SafeERC20 } from "../../external/SafeERC20.sol";
-import { SafeMath } from "../../external/SafeMath.sol";
+import {DataFlow} from "../../gelato_core/interfaces/IGelatoCore.sol";
+import {DataFlowType} from "../action_pipeline_interfaces/DataFlowType.sol";
+import {IERC20} from "../../external/IERC20.sol";
+import {IBatchExchange} from "../../dapp_interfaces/gnosis/IBatchExchange.sol";
+import {SafeERC20} from "../../external/SafeERC20.sol";
+import {SafeMath} from "../../external/SafeMath.sol";
 
 /// @title ActionWithdrawBatchExchange
 /// @author Luis Schliesske & Hilmar Orth
@@ -71,8 +71,8 @@ contract ActionWithdrawBatchExchange is GelatoActionsStandard, IGelatoOutFlowAct
     )
         public
         view
-        override
         virtual
+        override
         returns(string memory)  // actionCondition
     {
         address token = abi.decode(_actionData[4:], (address));

@@ -2,11 +2,11 @@
 pragma solidity ^0.6.9;
 pragma experimental ABIEncoderV2;
 
-import { GelatoStatefulConditionsStandard } from "../../GelatoStatefulConditionsStandard.sol";
-import { IKyber } from "../../../dapp_interfaces/kyber/IKyber.sol";
-import { SafeMath } from "../../../external/SafeMath.sol";
-import { IERC20 } from "../../../external/IERC20.sol";
-import { IGelatoCore } from "../../../gelato_core/interfaces/IGelatoCore.sol";
+import {GelatoStatefulConditionsStandard} from "../../GelatoStatefulConditionsStandard.sol";
+import {IKyber} from "../../../dapp_interfaces/kyber/IKyber.sol";
+import {SafeMath} from "../../../external/SafeMath.sol";
+import {IERC20} from "../../../external/IERC20.sol";
+import {IGelatoCore} from "../../../gelato_core/interfaces/IGelatoCore.sol";
 
 
 
@@ -30,8 +30,8 @@ contract ConditionKyberRateStateful is GelatoStatefulConditionsStandard {
     function ok(uint256 _taskId, bytes calldata _conditionData)
         external
         view
-        override
         virtual
+        override
         returns(string memory)
     {
         (address proxyAddress,

@@ -14,7 +14,7 @@ export const contracts = [
   // Conditions
   "ConditionBalance",
   "ConditionKyberRate",
-  "ConditionTimestampPassed",
+  "ConditionTime",
   // Debugging
   "ConditionKyberRateError",
   // Helpers

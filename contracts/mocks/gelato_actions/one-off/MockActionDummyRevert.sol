@@ -12,8 +12,8 @@ contract MockActionDummyRevert is GelatoActionsStandard {
     function termsOk(uint256, address, bytes calldata _data, DataFlow, uint256)
         public
         view
-        override
         virtual
+        override
         returns(string memory)
     {
         bool isOk = abi.decode(_data, (bool));

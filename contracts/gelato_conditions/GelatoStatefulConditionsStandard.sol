@@ -2,7 +2,7 @@
 pragma solidity ^0.6.9;
 
 import "./GelatoConditionsStandard.sol";
-import { IGelatoCore } from "../gelato_core/interfaces/IGelatoCore.sol";
+import {IGelatoCore} from "../gelato_core/interfaces/IGelatoCore.sol";
 
 abstract contract GelatoStatefulConditionsStandard is GelatoConditionsStandard {
     IGelatoCore public immutable gelatoCore;

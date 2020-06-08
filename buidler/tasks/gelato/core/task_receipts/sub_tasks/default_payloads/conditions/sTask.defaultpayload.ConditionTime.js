@@ -1,8 +1,8 @@
 import { internalTask } from "@nomiclabs/buidler/config";
 
 export default internalTask(
-  "gc-submittask:defaultpayload:ConditionTimestampPassed",
-  `Returns a hardcoded conditionData of ConditionTimestampPassed`
+  "gc-submittask:defaultpayload:ConditionTime",
+  `Returns a hardcoded conditionData of ConditionTime`
 )
   .addFlag("log")
   .setAction(async ({ log }) => {
@@ -12,7 +12,7 @@ export default internalTask(
       const inputs = [timestamp];
       // Encoding
       const payloadWithSelector = await run("abi-encode-withselector", {
-        contractname: "ConditionTimestampPassed",
+        contractname: "ConditionTime",
         functionname: "ok",
         inputs,
         log
