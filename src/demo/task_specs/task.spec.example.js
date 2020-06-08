@@ -2,7 +2,7 @@ import { task, types } from "@nomiclabs/buidler/config";
 import { constants, utils } from "ethers";
 
 export default internalTask(
-  "gelato-return-taskpec-example",
+  "gelato-return-taskspec-example",
   `Returns a hardcoded task spec for the timeTrade Script`
 )
   .addFlag("log")
@@ -27,7 +27,7 @@ export default internalTask(
 
       const action1 = new Action({
         addr: actionAddress,
-        data: constants.HashZero, // data is can be left as 0 for Task Specs
+        // no need to include action.data for Task Specs
         operation: Operation.Delegatecall, // We are using an action Script here, see smart contract: ActionERC20TransferFrom.sol
         termsOkCheck: true, // After the condition is checked, we will also conduct checks on the action contract
       });
@@ -35,9 +35,9 @@ export default internalTask(
       // ##### Action #2
       const action2 = new Action({
         addr: conditionAddress, // We use the condition as an action (to dynamically set the timestamp when the users proxy contract can execute the actions next time)
-        data: constants.HashZero, // data is can be left as 0 for Task Specs
+        // no need to include action.data for Task Specs
         operation: Operation.Call, // We are calling the contract instance directly, without script
-        termsOkCheck: false, // Always input false for actions we .call intp
+        termsOkCheck: false, // This action does not need a termsOk check
       });
 
       // ##### Create Task Spec
