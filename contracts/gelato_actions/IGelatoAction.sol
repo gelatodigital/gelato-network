@@ -35,6 +35,7 @@ interface IGelatoAction {
     ///  equal to _value. So Providers can check in termsOk that a valid ETH value will
     ///  be used because they also have access to the same value when encoding the
     ///  execPayload on their ProviderModule.
+    /// @param _cycleId For tasks that are part of a Cycle.
     /// @return Returns OK, if Task can be executed safely according to the Provider's
     ///  terms laid out in this function implementation.
     function termsOk(
@@ -42,7 +43,8 @@ interface IGelatoAction {
         address _userProxy,
         bytes calldata _actionData,
         DataFlow _dataFlow,
-        uint256 _value
+        uint256 _value,
+        uint256 _cycleId
     )
         external
         view

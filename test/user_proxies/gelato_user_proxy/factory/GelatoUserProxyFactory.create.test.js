@@ -335,6 +335,7 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE", function () {
         index: 0,
         tasks: [task],
         expiryDate: expiryDate,
+        cycleId: 1,
         submissionsLeft: cycles,
       });
 
@@ -422,6 +423,7 @@ describe("User Proxies - GelatoUserProxyFactory: CREATE", function () {
         index: 0,
         tasks: [task],
         expiryDate: expiryDate,
+        cycleId: 1,
         submissionsLeft: cycles,
       });
 

@@ -8,18 +8,15 @@ import {SafeMath} from "../../../external/SafeMath.sol";
 import {IERC20} from "../../../external/IERC20.sol";
 import {IGelatoCore} from "../../../gelato_core/interfaces/IGelatoCore.sol";
 
-
-
 contract ConditionKyberRateStateful is GelatoStatefulConditionsStandard {
-
     using SafeMath for uint256;
 
-    address public immutable kyberProxyAddress;
+    IKyber public immutable kyberProxyAddress;
 
-    // userProxy => taskCycle id => refPrice
+    // userProxy => taskReceipt.id => refPrice
     mapping(address => mapping(uint256 => uint256)) public refRate;
 
-    constructor(address _kyberProxy, IGelatoCore _gelatoCore)
+    constructor(IKyber _kyberProxy, IGelatoCore _gelatoCore)
         public
         GelatoStatefulConditionsStandard(_gelatoCore)
     {
@@ -27,8 +24,8 @@ contract ConditionKyberRateStateful is GelatoStatefulConditionsStandard {
     }
 
     // STANDARD Interface
-    function ok(uint256 _taskId, bytes calldata _conditionData)
-        external
+    function ok(uint256 _taskReceiptId, bytes calldata _conditionData, uint256)
+        public
         view
         virtual
         override
@@ -43,7 +40,7 @@ contract ConditionKyberRateStateful is GelatoStatefulConditionsStandard {
              _conditionData[4:],
              (address,address,uint256,address,bool)
          );
-        return ok(proxyAddress, src, srcAmt, dest, greaterElseSmaller, _taskId);
+        return ok(proxyAddress, src, srcAmt, dest, greaterElseSmaller, _taskReceiptId);
     }
 
     // Specific Implementation
@@ -53,15 +50,15 @@ contract ConditionKyberRateStateful is GelatoStatefulConditionsStandard {
         uint256 _srcAmt,
         address _dest,
         bool _greaterElseSmaller,
-        uint256 _taskId
+        uint256 _taskReceiptId
     )
         public
         view
         virtual
         returns(string memory)
     {
-        uint256 currentRefRate = refRate[_proxyAddress][_taskId];
-        try IKyber(kyberProxyAddress).getExpectedRate(_src, _dest, _srcAmt)
+        uint256 currentRefRate = refRate[_proxyAddress][_taskReceiptId];
+        try kyberProxyAddress.getExpectedRate(_src, _dest, _srcAmt)
             returns(uint256 expectedRate, uint256)
         {
             if (_greaterElseSmaller) {  // greaterThan
@@ -76,7 +73,7 @@ contract ConditionKyberRateStateful is GelatoStatefulConditionsStandard {
         }
     }
 
-     /// @dev This function should be called via the userProxy of a Gelato Task as part
+    /// @dev This function should be called via the userProxy of a Gelato Task as part
     ///  of the Task.actions, if the Condition state should be updated after the task.
     function setRefRate(
         address _src,
@@ -87,33 +84,26 @@ contract ConditionKyberRateStateful is GelatoStatefulConditionsStandard {
     )
         external
     {
-        uint256 taskId = _getIdOfNextTaskInCycle();
+        uint256 taskReceiptId = _getIdOfNextTaskInCycle();
         uint256 newRefRate;
-        try IKyber(kyberProxyAddress).getExpectedRate(_src, _dest, _srcAmt)
+        try kyberProxyAddress.getExpectedRate(_src, _dest, _srcAmt)
             returns(uint256 expectedRate, uint256)
         {
-            if (_greaterElseSmaller) {  // greaterThan
-                newRefRate = expectedRate.add(_delta);
-            } else {  // smallerThan
-                newRefRate = expectedRate.sub(_delta, "ConditionKyberRateStateful.setRefRate: Underflow");
-            }
+            if (_greaterElseSmaller) newRefRate = expectedRate.add(_delta);
+            else newRefRate = expectedRate.sub(_delta, "ConditionKyberRateStateful.setRefRate: Underflow");
         } catch {
             revert("ConditionKyberRateStateful.setRefRate: KyberGetExpectedRateError");
         }
-        refRate[msg.sender][taskId] = newRefRate;
+        refRate[msg.sender][taskReceiptId] = newRefRate;
     }
 
-    function getKyberRate(
-        address _src,
-        uint256 _srcAmt,
-        address _dest
-    )
+    function getKyberRate(address _src, uint256 _srcAmt, address _dest)
         external
         view
         returns(uint256)
     {
         uint256 expectedRate;
-        try IKyber(kyberProxyAddress).getExpectedRate(_src, _dest, _srcAmt)
+        try kyberProxyAddress.getExpectedRate(_src, _dest, _srcAmt)
             returns(uint256 _expectedRate, uint256)
         {
             expectedRate = _expectedRate;

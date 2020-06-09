@@ -7,15 +7,13 @@ import {IKyber} from "../../../dapp_interfaces/kyber/IKyber.sol";
 import {SafeMath} from "../../../external/SafeMath.sol";
 
 contract ConditionKyberRate is GelatoConditionsStandard {
-
     using SafeMath for uint256;
 
-    address public immutable kyberProxyAddress;
-    constructor(address _kyberProxy) public { kyberProxyAddress = _kyberProxy; }
+    IKyber public immutable kyberProxyAddress;
+    constructor(IKyber _kyberProxy) public { kyberProxyAddress = _kyberProxy; }
 
-    // STANDARD Interface
-    function ok(uint256, bytes calldata _checkRateData)
-        external
+    function ok(uint256, bytes calldata _checkRateData, uint256)
+        public
         view
         virtual
         override
@@ -28,7 +26,7 @@ contract ConditionKyberRate is GelatoConditionsStandard {
          bool greaterElseSmaller) = abi.decode(
             _checkRateData,
             (address,uint256,address,uint256,bool)
-         );
+        );
         return checkRate(src, srcAmt, dest, refRate, greaterElseSmaller);
     }
 
@@ -45,7 +43,7 @@ contract ConditionKyberRate is GelatoConditionsStandard {
         virtual
         returns(string memory)
     {
-        try IKyber(kyberProxyAddress).getExpectedRate(_src, _dest, _srcAmt)
+        try kyberProxyAddress.getExpectedRate(_src, _dest, _srcAmt)
             returns(uint256 expectedRate, uint256)
         {
             if (_greaterElseSmaller) {  // greaterThan

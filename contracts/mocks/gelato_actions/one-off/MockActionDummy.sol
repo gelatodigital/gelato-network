@@ -11,7 +11,7 @@ contract MockActionDummy is GelatoActionsStandard {
         emit LogAction(_falseOrTrue);
     }
 
-    function termsOk(uint256, address, bytes calldata _data, DataFlow, uint256)
+    function termsOk(uint256, address, bytes calldata _data, DataFlow, uint256, uint256)
         external
         view
         virtual

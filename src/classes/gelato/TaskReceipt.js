@@ -9,6 +9,7 @@ class TaskReceipt {
     index,
     tasks,
     expiryDate,
+    cycleId,
     submissionsLeft,
   }) {
     if (userProxy === undefined) throw new Error("TaskReceipt: no userProxy");
@@ -25,6 +26,7 @@ class TaskReceipt {
       index === undefined ? constants.Zero : utils.bigNumberify(index);
     this.tasks = tasks ? tasks : [];
     this.expiryDate = expiryDate !== undefined ? expiryDate : constants.Zero;
+    this.cycleId = cycleId !== undefined ? cycleId : constants.Zero;
     this.submissionsLeft = submissionsLeft === undefined ? 1 : submissionsLeft;
   }
 }

@@ -37,6 +37,7 @@ function convertTaskReceiptObjToArray(taskReceiptObj) {
     taskReceiptObj.index,
     tasks,
     taskReceiptObj.expiryDate,
+    taskReceiptObj.cycleId,
     taskReceiptObj.submissionsLeft,
   ];
 

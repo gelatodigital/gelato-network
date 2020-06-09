@@ -215,6 +215,7 @@ describe("Condition Time Stateful: Time based Condition integration test with 10
       provider: gelatoProvider,
       userProxy: userProxyAddress,
       tasks: [task],
+      cycleId: 1,
       submissionsLeft: 0, // cycles
     });
 

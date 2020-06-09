@@ -82,7 +82,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     {
         Task[] memory singleTask = new Task[](1);
         singleTask[0] = _task;
-        _storeTaskReceipt(msg.sender, _provider, 0, singleTask, _expiryDate, 1);
+        _storeTaskReceipt(false, msg.sender, _provider, 0, singleTask, _expiryDate, 0, 1);
     }
 
     function submitTaskCycle(
@@ -95,7 +95,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         override
     {
         _storeTaskReceipt(
-            msg.sender, _provider, 0, _tasks, _expiryDate, _cycles * _tasks.length
+            true, msg.sender, _provider, 0, _tasks, _expiryDate, 0, _cycles * _tasks.length
         );
     }
 
@@ -115,16 +115,18 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             );
         }
         _storeTaskReceipt(
-            msg.sender, _provider, 0, _tasks, _expiryDate, _sumOfRequestedTaskSubmits
+            true, msg.sender, _provider, 0, _tasks, _expiryDate, 0, _sumOfRequestedTaskSubmits
         );
     }
 
     function _storeTaskReceipt(
+        bool _newCycle,
         address _userProxy,
         Provider memory _provider,
         uint256 _index,
         Task[] memory _tasks,
         uint256 _expiryDate,
+        uint256 _cycleId,
         uint256 _submissionsLeft
     )
         private
@@ -140,8 +142,9 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             provider: _provider,
             index: _index,
             tasks: _tasks,
-            submissionsLeft: _submissionsLeft,  // 0=infinity, 1=once, X=maxTotalExecutions
-            expiryDate: _expiryDate
+            expiryDate: _expiryDate,
+            cycleId: _newCycle ? nextTaskReceiptId : _cycleId,
+            submissionsLeft: _submissionsLeft // 0=infinity, 1=once, X=maxTotalExecutions
         });
 
         // Hash TaskReceipt
@@ -183,7 +186,11 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         // Optional CHECK Condition for user proxies
         if (_TR.task().conditions.length != 0) {
             for (uint i; i < _TR.task().conditions.length; i++) {
-                try _TR.task().conditions[i].inst.ok(_TR.id, _TR.task().conditions[i].data)
+                try _TR.task().conditions[i].inst.ok(
+                    _TR.id,
+                    _TR.task().conditions[i].data,
+                    _TR.cycleId
+                )
                     returns(string memory condition)
                 {
                     if (!condition.startsWithOk())
@@ -206,7 +213,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
                 _TR.userProxy,
                 _TR.task().actions[i].data,
                 _TR.task().actions[i].dataFlow,
-                _TR.task().actions[i].value
+                _TR.task().actions[i].value,
+                _TR.cycleId
             )
                 returns(string memory actionTermsOk)
             {
@@ -341,7 +349,8 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             _TR.id,
             _TR.userProxy,
             _TR.provider.addr,
-            _TR.task()
+            _TR.task(),
+            _TR.cycleId
         )
             returns(bytes memory _execPayload, bool _proxyReturndataCheck)
         {
@@ -375,11 +384,13 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             // Optional: Automated Cyclic Task Submissions
             if (_TR.submissionsLeft != 1) {
                 _storeTaskReceipt(
+                    false,  // newCycle?
                     _TR.userProxy,
                     _TR.provider,
                     _TR.nextIndex(),
                     _TR.tasks,
                     _TR.expiryDate,
+                    _TR.cycleId,
                     _TR.submissionsLeft == 0 ? 0 : _TR.submissionsLeft - 1
                 );
             }
@@ -448,7 +459,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         emit LogTaskCancelled(_TR.id, msg.sender);
     }
 
-    function multiCancelTasks(TaskReceipt[] memory _taskReceipts) public override {
+    function multiCancelTasks(TaskReceipt[] memory _taskReceipts) external override {
         for (uint i; i < _taskReceipts.length; i++) cancelTask(_taskReceipts[i]);
     }
 

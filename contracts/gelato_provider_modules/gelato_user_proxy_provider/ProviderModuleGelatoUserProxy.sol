@@ -41,7 +41,7 @@ contract ProviderModuleGelatoUserProxy is GelatoProviderModuleStandard {
         return OK;
     }
 
-    function execPayload(uint256, address, address, Task calldata _task)
+    function execPayload(uint256, address, address, Task calldata _task, uint256)
         external
         view
         override

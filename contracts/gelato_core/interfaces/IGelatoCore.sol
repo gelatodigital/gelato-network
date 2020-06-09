@@ -41,6 +41,7 @@ struct TaskReceipt {
     uint256 index;
     Task[] tasks;
     uint256 expiryDate;
+    uint256 cycleId;  // auto-filled by GelatoCore. 0 for non-cyclic/chained tasks
     uint256 submissionsLeft;
 }
 

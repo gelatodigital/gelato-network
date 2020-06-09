@@ -6,8 +6,8 @@ import {GelatoConditionsStandard} from "../../gelato_conditions/GelatoConditions
 
 contract MockConditionDummy is GelatoConditionsStandard {
     // STANDARD interface
-    function ok(uint256, bytes calldata _dummyCheckData)
-        external
+    function ok(uint256, bytes calldata _dummyCheckData, uint256)
+        public
         view
         virtual
         override

@@ -14,10 +14,9 @@ interface IGelatoCondition {
     ///  source of Task identification.
     /// @param _conditionData This is the Condition.data field developers must encode their
     ///  Condition's specific parameters in.
-    function ok(uint256 _taskReceiptId, bytes calldata _conditionData)
+    /// @param _cycleId For Tasks that are executed as part of a cycle.
+    function ok(uint256 _taskReceiptId, bytes calldata _conditionData, uint256 _cycleId)
         external
         view
         returns(string memory);
-
-    function okStandardSelector() external pure returns(bytes4);
 }

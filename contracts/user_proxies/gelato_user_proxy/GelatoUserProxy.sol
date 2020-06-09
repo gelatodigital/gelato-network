@@ -10,7 +10,6 @@ import {
 
 contract GelatoUserProxy is IGelatoUserProxy {
 
-
     using GelatoDebug for bytes;
 
     address public immutable override factory;
@@ -55,7 +54,7 @@ contract GelatoUserProxy is IGelatoUserProxy {
         _;
     }
 
-    function submitTask(Provider memory _provider, Task memory _task, uint256 _expiryDate)
+    function submitTask(Provider calldata _provider, Task calldata _task, uint256 _expiryDate)
         public
         override
         userOrFactory
@@ -70,25 +69,24 @@ contract GelatoUserProxy is IGelatoUserProxy {
     }
 
     function multiSubmitTasks(
-        Provider memory _provider,
-        Task[] memory _tasks,
-        uint256[] memory _expiryDates
+        Provider calldata _provider,
+        Task[] calldata _tasks,
+        uint256[] calldata _expiryDates
     )
-        public
+        external
         override
     {
         require(
             _tasks.length == _expiryDates.length,
             "GelatoUserProxy.multiSubmitTasks: each task needs own expiryDate"
         );
-        for (uint i; i < _tasks.length; i++) {
+        for (uint i; i < _tasks.length; i++)
             submitTask(_provider, _tasks[i], _expiryDates[i]);
-        }
     }
 
     function submitTaskCycle(
-        Provider memory _provider,
-        Task[] memory _tasks,
+        Provider calldata _provider,
+        Task[] calldata _tasks,
         uint256 _expiryDate,
         uint256 _cycles  // num of full cycles
     )
@@ -110,8 +108,8 @@ contract GelatoUserProxy is IGelatoUserProxy {
     }
 
     function submitTaskChain(
-        Provider memory _provider,
-        Task[] memory _tasks,
+        Provider calldata _provider,
+        Task[] calldata _tasks,
         uint256 _expiryDate,
         uint256 _sumOfRequestedTaskSubmits  // num of all prospective task submissions
     )
@@ -132,7 +130,7 @@ contract GelatoUserProxy is IGelatoUserProxy {
         }
     }
 
-    function cancelTask(TaskReceipt memory _TR) public override onlyUser {
+    function cancelTask(TaskReceipt calldata _TR) external override onlyUser {
         try IGelatoCore(gelatoCore).cancelTask(_TR) {
         } catch Error(string memory err) {
             revert(string(abi.encodePacked("GelatoUserProxy.cancelTask:", err)));
@@ -141,7 +139,7 @@ contract GelatoUserProxy is IGelatoUserProxy {
         }
     }
 
-    function multiCancelTasks(TaskReceipt[] memory _TRs) public override onlyUser {
+    function multiCancelTasks(TaskReceipt[] calldata _TRs) external override onlyUser {
         try IGelatoCore(gelatoCore).multiCancelTasks(_TRs) {
         } catch Error(string memory err) {
             revert(string(abi.encodePacked("GelatoUserProxy.multiCancelTasks:", err)));
@@ -151,7 +149,7 @@ contract GelatoUserProxy is IGelatoUserProxy {
     }
 
     // @dev we have to write duplicate code due to calldata _action FeatureNotImplemented
-    function execAction(Action memory _action) public payable override auth {
+    function execAction(Action calldata _action) external payable override auth {
         if (_action.operation == Operation.Call)
             _callAction(_action.addr, _action.data, _action.value);
         else if (_action.operation == Operation.Delegatecall)
@@ -161,7 +159,7 @@ contract GelatoUserProxy is IGelatoUserProxy {
     }
 
     // @dev we have to write duplicate code due to calldata _action FeatureNotImplemented
-    function multiExecActions(Action[] memory _actions) public payable override auth {
+    function multiExecActions(Action[] calldata _actions) public payable override auth {
         for (uint i = 0; i < _actions.length; i++) {
             if (_actions[i].operation == Operation.Call)
                 _callAction(_actions[i].addr, _actions[i].data, _actions[i].value);
@@ -174,13 +172,13 @@ contract GelatoUserProxy is IGelatoUserProxy {
 
     // @dev we have to write duplicate code due to calldata _action FeatureNotImplemented
     function execActionsAndSubmitTaskCycle(
-        Action[] memory _actions,
-        Provider memory _provider,
-        Task[] memory _tasks,
+        Action[] calldata _actions,
+        Provider calldata _provider,
+        Task[] calldata _tasks,
         uint256 _expiryDate,
         uint256 _cycles
     )
-        public
+        external
         payable
         override
         auth
@@ -189,7 +187,7 @@ contract GelatoUserProxy is IGelatoUserProxy {
         if(_tasks.length != 0) submitTaskCycle(_provider, _tasks, _expiryDate, _cycles);
     }
 
-    function _callAction(address _action, bytes memory _data, uint256 _value)
+    function _callAction(address _action, bytes calldata _data, uint256 _value)
         internal
         noZeroAddress(_action)
     {
@@ -197,7 +195,7 @@ contract GelatoUserProxy is IGelatoUserProxy {
         if (!success) returndata.revertWithErrorString("GelatoUserProxy._callAction:");
     }
 
-    function _delegatecallAction(address _action, bytes memory _data)
+    function _delegatecallAction(address _action, bytes calldata _data)
         internal
         noZeroAddress(_action)
     {

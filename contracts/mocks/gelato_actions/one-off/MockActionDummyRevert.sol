@@ -9,7 +9,7 @@ contract MockActionDummyRevert is GelatoActionsStandard {
         revert("MockActionDummyRevert.action: test revert");
     }
 
-    function termsOk(uint256, address, bytes calldata _data, DataFlow, uint256)
+    function termsOk(uint256, address, bytes calldata _data, DataFlow, uint256, uint256)
         public
         view
         virtual
