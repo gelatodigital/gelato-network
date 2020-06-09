@@ -20,6 +20,28 @@ contract ActionUniswapTrade is GelatoActionsStandardFull {
         UNI_FACTORY =_uniswapFactory;
     }
 
+    /// @dev use this function to encode the data off-chain for the action data field
+    function getActionData(
+        address _origin,
+        address _sendToken, // exchange
+        uint256 _sendAmount, // tokens_sold
+        address _receiveToken, // token_addr
+        address _receiver
+    )
+        public
+        pure
+        returns(bytes memory)
+    {
+        return abi.encodeWithSelector(
+            this.action.selector,
+            _origin,
+            _sendToken,
+            _sendAmount,
+            _receiveToken,
+            _receiver
+        );
+    }
+
     /// @dev Always use this function for encoding _actionData off-chain
     ///  Will be called by GelatoActionPipeline if Action.dataFlow.None
     function action(

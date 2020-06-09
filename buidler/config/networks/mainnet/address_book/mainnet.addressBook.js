@@ -46,7 +46,7 @@ export const addressBook = {
 
   // Uniswap
   uniswap: {
-    uniswapFactoy: "0xc0a47dFe034B400B47bDaD5FecDa2621de6c4d95",
+    uniswapFactory: "0xc0a47dFe034B400B47bDaD5FecDa2621de6c4d95",
   },
 
   // User Proxies

@@ -41,24 +41,24 @@ export default task(
 
       // ##### Step #1: Create condition(s)
       // Get Address Or hardcode
-      const conditionAddress = await run("bre-config", {
+      const conditionTimeStateful = await run("instantiateContract", {
         deployments: true,
         contractname: "ConditionTimeStateful",
+        read: true,
       });
 
       // Encode data of function gelato should call => Call Ok Function on ConditionTimeStateful.sol
       // This checks at what time the condition should return true
       // ConditionTimeStateful takes the proxies address as an argument to check if in its state there is
       // a timestamp that is should compare to the current time to determine if a task is executable or not
-      const conditionData = await run("abi-encode-withselector", {
-        contractname: "ConditionTimeStateful",
-        functionname: "checkRefTime",
-        inputs: [gelatoUserProxyAddress],
-      });
+
+      const conditionData = await conditionTimeStateful.getConditionData(
+        gelatoUserProxyAddress
+      );
 
       // Insantiate condition object
       const condition = new Condition({
-        inst: conditionAddress,
+        inst: conditionTimeStateful.address,
         data: conditionData,
       });
 
@@ -73,8 +73,8 @@ export default task(
       const transferFromInputs = [
         userAddress,
         taskArgs.sendtoken,
-        taskArgs.destination,
         taskArgs.amount,
+        taskArgs.destination,
       ];
 
       // Encode action inputs
@@ -101,11 +101,11 @@ export default task(
       });
 
       const action2 = new Action({
-        addr: conditionAddress, // We use the condition as an action (to dynamically set the timestamp when the users proxy contract can execute the actions next time)
+        addr: conditionTimeStateful.address, // We use the condition as an action (to dynamically set the timestamp when the users proxy contract can execute the actions next time)
         data: actionData2, // data of action to execute
         value: 0, // delegatecalls always use 0 here BUT caution: delegatecalls can send ETH if the function that wraps them is payable.
         operation: Operation.Call, // We are calling the contract instance directly, without script
-        termsOkCheck: false, // Always input false for actions we .call intp
+        termsOkCheck: false, // conditionTimeStateful is not a gelato action, hence we put termsOkCheck to false
       });
 
       // ##### Step #3: Instantiate provider module => In this case Gelato user Proxy
@@ -122,6 +122,7 @@ export default task(
       const task = new Task({
         conditions: [condition], // only need the condition inst address here
         actions: [action1, action2], // Actions will be executed from left to right after each other. If one fails, all fail
+        selfProviderGasPriceCeil: 0, // Only relevant if the user is also the provider, which is not the case in this example
       });
 
       if (taskArgs.log) console.log(task);

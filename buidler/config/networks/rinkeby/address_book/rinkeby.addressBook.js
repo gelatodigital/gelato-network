@@ -47,7 +47,7 @@ export const addressBook = {
 
   // Uniswap
   uniswap: {
-    uniswapFactoy: "0xf5D915570BC477f9B8D6C0E980aA81757A3AaC36",
+    uniswapFactory: "0xf5D915570BC477f9B8D6C0E980aA81757A3AaC36",
     daiExchange: "0x77dB9C915809e7BE439D2AB21032B1b8B58F6891",
   },
 

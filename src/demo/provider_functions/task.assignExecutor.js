@@ -5,8 +5,9 @@ export default task(
   "gelato-assign-executor",
   `Sends tx to GelatoCore.provideTaskSpecs(<TaskSpecs[]>) on [--network] (default: ${defaultNetwork})`
 )
+  .addOptionalParam("gelatocoreaddress", "address of gelato core")
   .addFlag("log", "Logs return values to stdout")
-  .setAction(async (taskArgs) => {
+  .setAction(async ({ gelatocoreaddress }) => {
     try {
       const provider = getProvider();
 
@@ -18,6 +19,7 @@ export default task(
 
       const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
+        contractaddress: gelatocoreaddress,
         signer: provider,
         write: true,
       });

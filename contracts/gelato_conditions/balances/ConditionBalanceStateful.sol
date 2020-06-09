@@ -19,7 +19,21 @@ contract ConditionBalanceStateful is GelatoStatefulConditionsStandard {
         public
     {}
 
-    /// @param _refBalanceCheckData abi encoded refBalanceCheck params WITHOUT selector
+    /// @dev use this function to encode the data off-chain for the condition data field
+    function getConditionData(
+        address _userProxy,
+        address _account,
+        address _token,
+        bool _greaterElseSmaller
+    )
+        public
+        pure
+        returns(bytes memory)
+    {
+        return abi.encodeWithSelector(this.checkRefBalance.selector, uint256(0), _userProxy, _account, _token, _greaterElseSmaller);
+    }
+
+    /// @param _refBalanceCheckData abi encoded checkRefBalance params WITH selector
     function ok(uint256 _taskReceiptId, bytes calldata _refBalanceCheckData, uint256)
         public
         view
@@ -31,10 +45,10 @@ contract ConditionBalanceStateful is GelatoStatefulConditionsStandard {
          address _account,
          address _token,
          bool _greaterElseSmaller) = abi.decode(
-             _refBalanceCheckData[32:],  // we strip the encoded _taskReceiptId
+             _refBalanceCheckData[36:],  // we strip the encoded _taskReceiptId + function selector
              (address,address,address,bool)
         );
-        return refBalanceCheck(
+        return checkRefBalance(
             _taskReceiptId, _userProxy, _account, _token, _greaterElseSmaller
         );
     }
@@ -43,7 +57,7 @@ contract ConditionBalanceStateful is GelatoStatefulConditionsStandard {
     /// @dev Abi encode these parameter inputs. Use a placeholder for _taskReceiptId.
     /// @param _taskReceiptId Will be stripped from encoded data and replaced by
     ///  the value passed in from GelatoCore.
-    function refBalanceCheck(
+    function checkRefBalance(
         uint256 _taskReceiptId,
         address _userProxy,
         address _account,
@@ -86,7 +100,7 @@ contract ConditionBalanceStateful is GelatoStatefulConditionsStandard {
     ///  of the Task.actions, if the Condition state should be updated after the task.
     /// This is for Task Cycles/Chains and we fetch the TaskReceipt.id of the
     //  next Task that will be auto-submitted by GelatoCore in the same exec Task transaction.
-    function setRefBalanceDeltaForNextTaskInCycle(
+    function setRefBalance(
         address _account,
         address _token,
         int256 _delta
