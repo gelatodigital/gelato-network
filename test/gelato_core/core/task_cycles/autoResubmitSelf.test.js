@@ -65,7 +65,9 @@ describe("Gelato Actions - TASK CYCLES - AUTO-RESUBMIT-SELF", function () {
       gelatoCore.address
     );
 
-    const GelatoActionPipeline = await ethers.getContractFactory("GelatoActionPipeline");
+    const GelatoActionPipeline = await ethers.getContractFactory(
+      "GelatoActionPipeline"
+    );
     const gelatoActionPipeline = await GelatoActionPipeline.deploy();
     await gelatoActionPipeline.deployed();
 
@@ -170,6 +172,7 @@ describe("Gelato Actions - TASK CYCLES - AUTO-RESUBMIT-SELF", function () {
       userProxy: userProxyAddress,
       provider: gelatoProvider,
       tasks: [task1],
+      cycleId: 1,
       submissionsLeft: 0,
     });
     let taskReceiptHash = await gelatoCore.hashTaskReceipt(taskReceipt);
@@ -231,6 +234,7 @@ describe("Gelato Actions - TASK CYCLES - AUTO-RESUBMIT-SELF", function () {
       userProxy: userProxyAddress,
       provider: gelatoProvider,
       tasks: [task1, task1],
+      cycleId: 1,
       submissionsLeft: cycles * 2,
     });
     let taskReceiptHash = await gelatoCore.hashTaskReceipt(taskReceipt);

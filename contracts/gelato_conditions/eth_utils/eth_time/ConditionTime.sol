@@ -6,9 +6,8 @@ import {GelatoConditionsStandard} from "../../GelatoConditionsStandard.sol";
 
 contract ConditionTime is GelatoConditionsStandard {
 
-    // STANDARD interface
-    function ok(uint256, bytes calldata _timeCheckData)
-        external
+    function ok(uint256, bytes calldata _timeCheckData, uint256)
+        public
         view
         virtual
         override

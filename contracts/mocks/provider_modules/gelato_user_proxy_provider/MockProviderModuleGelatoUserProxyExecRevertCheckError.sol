@@ -15,8 +15,8 @@ contract MockProviderModuleGelatoUserProxyExecRevertCheckError is
 {
 
     // Incorrect execPayload func on purpose
-    function execPayload(uint256, address, address, Task memory _task)
-        public
+    function execPayload(uint256, address, address, Task calldata _task, uint256)
+        external
         view
         virtual
         override

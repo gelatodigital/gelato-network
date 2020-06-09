@@ -9,7 +9,7 @@ import {Task} from "../../../gelato_core/interfaces/IGelatoCore.sol";
 
 contract MockProviderModuleExecPayloadWrong is GelatoProviderModuleStandard {
     // Incorrect execPayload func on purpose
-    function execPayload(uint256, address, address, Task calldata)
+    function execPayload(uint256, address, address, Task calldata, uint256)
         external
         view
         override

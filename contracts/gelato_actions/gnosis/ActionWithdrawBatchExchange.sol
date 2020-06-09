@@ -67,7 +67,8 @@ contract ActionWithdrawBatchExchange is GelatoActionsStandard, IGelatoOutFlowAct
         address _userProxy,
         bytes calldata _actionData,
         DataFlow,
-        uint256  // value
+        uint256,  // value
+        uint256  // cycleId
     )
         public
         view

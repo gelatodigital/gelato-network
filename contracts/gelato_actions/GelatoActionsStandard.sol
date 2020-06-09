@@ -28,7 +28,8 @@ abstract contract GelatoActionsStandard is IGelatoAction {
         address,  // _userProxy
         bytes calldata,  // _actionData
         DataFlow,
-        uint256  // _value: for actions that send ETH around
+        uint256,  // _value: for actions that send ETH around
+        uint256  // cycleId
     )
         external
         view

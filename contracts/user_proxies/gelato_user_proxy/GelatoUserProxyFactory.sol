@@ -26,8 +26,8 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         _storeGelatoUserProxy(userProxy);
     }
 
-    function createExecActions(Action[] memory _actions)
-        public
+    function createExecActions(Action[] calldata _actions)
+        external
         payable
         override
         returns (GelatoUserProxy userProxy)
@@ -37,11 +37,11 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
     }
 
     function createSubmitTasks(
-        Provider memory _provider,
-        Task[] memory _tasks,
-        uint256[] memory _expiryDates
+        Provider calldata _provider,
+        Task[] calldata _tasks,
+        uint256[] calldata _expiryDates
     )
-        public
+        external
         payable
         override
         returns (GelatoUserProxy userProxy)
@@ -51,12 +51,12 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
     }
 
     function createExecActionsSubmitTasks(
-        Action[] memory _actions,
-        Provider memory _provider,
-        Task[] memory _tasks,
-        uint256[] memory _expiryDates
+        Action[] calldata _actions,
+        Provider calldata _provider,
+        Task[] calldata _tasks,
+        uint256[] calldata _expiryDates
     )
-        public
+        external
         payable
         override
         returns(GelatoUserProxy userProxy)
@@ -67,13 +67,13 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
     }
 
     function createExecActionsSubmitTaskCycle(
-        Action[] memory _actions,
-        Provider memory _provider,
-        Task[] memory _tasks,
+        Action[] calldata _actions,
+        Provider calldata _provider,
+        Task[] calldata _tasks,
         uint256 _expiryDate,
         uint256 _cycles
     )
-        public
+        external
         payable
         override
         returns(GelatoUserProxy userProxy)
@@ -86,13 +86,13 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
     }
 
     function createExecActionsSubmitTaskChain(
-        Action[] memory _actions,
-        Provider memory _provider,
-        Task[] memory _tasks,
+        Action[] calldata _actions,
+        Provider calldata _provider,
+        Task[] calldata _tasks,
         uint256 _expiryDate,
         uint256 _sumOfRequestedTaskSubmits
     )
-        public
+        external
         payable
         override
         returns(GelatoUserProxy userProxy)
@@ -120,8 +120,8 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         _storeGelatoUserProxy(userProxy);
     }
 
-    function createTwoExecActions(uint256 _saltNonce, Action[] memory _actions)
-        public
+    function createTwoExecActions(uint256 _saltNonce, Action[] calldata _actions)
+        external
         payable
         override
         returns (GelatoUserProxy userProxy)
@@ -133,11 +133,11 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
     function createTwoSubmitTasks(
         uint256 _saltNonce,
         // Submit Tasks Data
-        Provider memory _provider,
-        Task[] memory _tasks,
-        uint256[] memory _expiryDates
+        Provider calldata _provider,
+        Task[] calldata _tasks,
+        uint256[] calldata _expiryDates
     )
-        public
+        external
         payable
         override
         returns (GelatoUserProxy userProxy)
@@ -149,13 +149,13 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
     // A standard _saltNonce can be used for deterministic shared address derivation
     function createTwoExecActionsSubmitTasks(
         uint256 _saltNonce,
-        Action[] memory _actions,
+        Action[] calldata _actions,
         // Submit Tasks Data
-        Provider memory _provider,
-        Task[] memory _tasks,
-        uint256[] memory _expiryDates
+        Provider calldata _provider,
+        Task[] calldata _tasks,
+        uint256[] calldata _expiryDates
     )
-        public
+        external
         payable
         override
         returns(GelatoUserProxy userProxy)
@@ -167,14 +167,14 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
 
     function createTwoExecActionsSubmitTaskCycle(
         uint256 _saltNonce,
-        Action[] memory _actions,
+        Action[] calldata _actions,
         // Submit TaskCycle Data
-        Provider memory _provider,
-        Task[] memory _tasks,
+        Provider calldata _provider,
+        Task[] calldata _tasks,
         uint256 _expiryDate,
         uint256 _cycles
     )
-        public
+        external
         payable
         override
         returns(GelatoUserProxy userProxy)
@@ -188,14 +188,14 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
 
     function createTwoExecActionsSubmitTaskChain(
         uint256 _saltNonce,
-        Action[] memory _actions,
+        Action[] calldata _actions,
         // Submit TaskChain Data
-        Provider memory _provider,
-        Task[] memory _tasks,
+        Provider calldata _provider,
+        Task[] calldata _tasks,
         uint256 _expiryDate,
         uint256 _sumOfRequestedTaskSubmits
     )
-        public
+        external
         payable
         override
         returns(GelatoUserProxy userProxy)
@@ -226,12 +226,12 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         ))));
     }
 
-    function isGelatoUserProxy(address _proxy) public view override returns(bool) {
+    function isGelatoUserProxy(address _proxy) external view override returns(bool) {
         return userByGelatoProxy[GelatoUserProxy(payable(_proxy))] != address(0);
     }
 
     function isGelatoProxyUser(address _user, GelatoUserProxy _userProxy)
-        public
+        external
         view
         override
         returns(bool)
@@ -240,7 +240,7 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
     }
 
     function gelatoProxiesByUser(address _user)
-        public
+        external
         view
         override
         returns(GelatoUserProxy[] memory)
@@ -249,7 +249,7 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
     }
 
     function getGelatoUserProxyByIndex(address _user, uint256 _index)
-        public
+        external
         view
         override
         returns(GelatoUserProxy)
@@ -269,7 +269,7 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
         emit LogCreation(msg.sender, _userProxy, msg.value);
     }
 
-    function _execActions(GelatoUserProxy _userProxy, Action[] memory _actions) private {
+    function _execActions(GelatoUserProxy _userProxy, Action[] calldata _actions) private {
         try _userProxy.multiExecActions(_actions) {
         } catch Error(string memory err) {
             revert(string(abi.encodePacked("GelatoUserProxyFactory._execActions:", err)));
@@ -281,9 +281,9 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
     function _submitTasks(
         GelatoUserProxy _userProxy,
         // Submit Tasks Data
-        Provider memory _provider,
-        Task[] memory _tasks,
-        uint256[] memory _expiryDates
+        Provider calldata _provider,
+        Task[] calldata _tasks,
+        uint256[] calldata _expiryDates
     )
         private
     {
@@ -298,8 +298,8 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
     function _submitTaskCycle(
         GelatoUserProxy _userProxy,
         // Submit TaskCyle Data
-        Provider memory _provider,
-        Task[] memory _tasks,
+        Provider calldata _provider,
+        Task[] calldata _tasks,
         uint256 _expiryDate,
         uint256 _cycles
     )
@@ -318,8 +318,8 @@ contract GelatoUserProxyFactory is IGelatoUserProxyFactory {
     function _submitTaskChain(
         GelatoUserProxy _userProxy,
         // Submit TaskChain Data
-        Provider memory _provider,
-        Task[] memory _tasks,
+        Provider calldata _provider,
+        Task[] calldata _tasks,
         uint256 _expiryDate,
         uint256 _sumOfRequestedTaskSubmits
     )

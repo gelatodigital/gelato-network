@@ -20,8 +20,8 @@ contract ConditionBalanceStateful is GelatoStatefulConditionsStandard {
     {}
 
     /// @param _refBalanceCheckData abi encoded refBalanceCheck params WITHOUT selector
-    function ok(uint256 _taskReceiptId, bytes calldata _refBalanceCheckData)
-        external
+    function ok(uint256 _taskReceiptId, bytes calldata _refBalanceCheckData, uint256)
+        public
         view
         virtual
         override
@@ -38,7 +38,6 @@ contract ConditionBalanceStateful is GelatoStatefulConditionsStandard {
             _taskReceiptId, _userProxy, _account, _token, _greaterElseSmaller
         );
     }
-
 
     // Specific Implementation
     /// @dev Abi encode these parameter inputs. Use a placeholder for _taskReceiptId.

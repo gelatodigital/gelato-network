@@ -23,13 +23,15 @@ interface IGelatoProviderModule {
     /// @param _userProxy The smart contract account of the user who submitted the Task.
     /// @param _provider The account of the Provider who uses the ProviderModule.
     /// @param _task Gelato Task to be executed.
+    /// @param _cycleId For Tasks that form part of a cycle/chain.
     /// @return Encoded payload that will be used for low-level .call on user proxy
     /// @return checkReturndata if true, fwd returndata from userProxy.call to ProviderModule
     function execPayload(
         uint256 _taskReceiptId,
         address _userProxy,
         address _provider,
-        Task calldata _task
+        Task calldata _task,
+        uint256 _cycleId
     )
         external
         view

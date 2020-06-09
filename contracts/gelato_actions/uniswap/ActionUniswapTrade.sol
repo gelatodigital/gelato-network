@@ -152,7 +152,8 @@ contract ActionUniswapTrade is GelatoActionsStandardFull {
         address _userProxy,
         bytes calldata _actionData,
         DataFlow _dataFlow,
-        uint256  // value
+        uint256,  // value
+        uint256  // cycleId
     )
         public
         view

@@ -53,7 +53,7 @@ contract ProviderModuleDSProxy is GelatoProviderModuleStandard {
     }
 
     /// @dev DS PROXY ONLY ALLOWS DELEGATE CALL for single actions, that's why we also use multisend
-    function execPayload(uint256, address, address, Task calldata _task)
+    function execPayload(uint256, address, address, Task calldata _task, uint256)
         external
         view
         override

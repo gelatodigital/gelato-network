@@ -91,7 +91,9 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
       gelatoCore.address
     );
 
-    const GelatoActionPipeline = await ethers.getContractFactory("GelatoActionPipeline");
+    const GelatoActionPipeline = await ethers.getContractFactory(
+      "GelatoActionPipeline"
+    );
     const gelatoActionPipeline = await GelatoActionPipeline.deploy();
     await gelatoActionPipeline.deployed();
 
@@ -219,6 +221,7 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
       provider: gelatoProvider,
       index: 0, // dynamic: auto-filled by GelatoCore upon tasks creation
       tasks: [task1, task2], // static: auto-filled by GelatoCore upon tasks creation
+      cycleId: 1,
       submissionsLeft: 0,
     });
 
@@ -228,6 +231,7 @@ describe("Gelato Actions - TASK CYCLES - ARBITRARY", function () {
       provider: gelatoProvider,
       index: 1, // After first execution, next will be placed to 0
       tasks: [task1, task2], // static
+      cycleId: 1,
       submissionsLeft: 0,
     });
   });

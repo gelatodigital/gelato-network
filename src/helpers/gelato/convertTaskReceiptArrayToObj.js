@@ -62,7 +62,8 @@ const PROVIDER = 2;
 const INDEX = 3;
 const TASKS = 4;
 const EXPIRY_DATE = 5;
-const SUBMISSIONS_LEFT = 6;
+const CYCLE_ID = 6;
+const SUBMISSIONS_LEFT = 7;
 
 function convertTaskReceiptArrayToObj(taskReceiptArray) {
   const tasks = _convertToArrayOfTaskObjs(taskReceiptArray[TASKS]);
@@ -74,6 +75,7 @@ function convertTaskReceiptArrayToObj(taskReceiptArray) {
     index: taskReceiptArray[INDEX],
     tasks: tasks ? tasks : [],
     expiryDate: taskReceiptArray[EXPIRY_DATE],
+    cycleId: taskReceiptArray[CYCLE_ID],
     submissionsLeft: taskReceiptArray[SUBMISSIONS_LEFT],
   });
 

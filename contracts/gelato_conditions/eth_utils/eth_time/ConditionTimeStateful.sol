@@ -18,10 +18,9 @@ contract ConditionTimeStateful is GelatoStatefulConditionsStandard {
         public
     {}
 
-    // STANDARD interface
     /// @param _checkRefTimeData abi encoded checkRefTime params WITHOUT selector
-    function ok(uint256 _taskReceiptId, bytes calldata _checkRefTimeData)
-        external
+    function ok(uint256 _taskReceiptId, bytes calldata _checkRefTimeData, uint256)
+        public
         view
         virtual
         override
@@ -31,7 +30,6 @@ contract ConditionTimeStateful is GelatoStatefulConditionsStandard {
         address userProxy = abi.decode(_checkRefTimeData[32:], (address));
         return checkRefTime(_taskReceiptId, userProxy);
     }
-
 
     // Specific Implementation
     /// @dev Abi encode these parameter inputs. Use a placeholder for _taskReceiptId.
@@ -47,7 +45,6 @@ contract ConditionTimeStateful is GelatoStatefulConditionsStandard {
         if (_refTime <= block.timestamp) return OK;
         return "NotOkTimestampDidNotPass";
     }
-
 
     /// @dev This function should be called via the userProxy of a Gelato Task as part
     ///  of the Task.actions, if the Condition state should be updated after the task.

@@ -6,7 +6,7 @@ import {GelatoConditionsStandard} from "../../gelato_conditions/GelatoConditions
 
 contract MockConditionDummyRevert is GelatoConditionsStandard {
     // STANDARD interface
-    function ok(uint256, bytes calldata _revertCheckData)
+    function ok(uint256, bytes calldata _revertCheckData, uint256)
         external
         view
         virtual

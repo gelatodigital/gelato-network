@@ -228,6 +228,7 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
       provider: gelatoProvider,
       userProxy: userProxyAddress,
       tasks: [task],
+      cycleId: 1,
       submissionsLeft: 0, // cycles
     });
 
@@ -360,6 +361,7 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
       provider: gelatoProvider,
       userProxy: userProxyAddress,
       tasks: [task],
+      cycleId: 1,
       submissionsLeft: 0, // cycles
     });
 
