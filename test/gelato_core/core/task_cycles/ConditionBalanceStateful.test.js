@@ -179,11 +179,13 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
   // We test different functionality of the contract as normal Mocha tests.
   it("#1: Succesfully exec and auto-resubmits Task based on refBalance delta increase", async function () {
     // address _proxy, address _account, address _token, uint256, bool _greaterElseSmaller
-    const conditionData = await run("abi-encode", {
-      contractname: "ConditionBalanceStateful",
-      functionname: "refBalanceCheck",
-      values: [0, userProxyAddress, sellerAddress, sellToken.address, true],
-    });
+    const conditionData = await conditionBalanceStateful.getConditionData(
+      userProxyAddress,
+      sellerAddress,
+      sellToken.address,
+      true
+    );
+
     conditionBalanceStatefulStruct.data = conditionData;
 
     const actionData = await run("abi-encode-withselector", {
@@ -198,7 +200,7 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
 
     const setRefData = await run("abi-encode-withselector", {
       contractname: "ConditionBalanceStateful",
-      functionname: "setRefBalanceDeltaForNextTaskInCycle",
+      functionname: "setRefBalance",
       inputs: [sellerAddress, sellToken.address, refBalanceDelta],
     });
 
@@ -318,11 +320,13 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
   // We test different functionality of the contract as normal Mocha tests.
   it("#2: Succesfully exec and auto-resubmits Task based on refBalance delta decrease", async function () {
     // address _proxy, address _account, address _token, uint256, bool _greaterElseSmaller
-    const conditionData = await run("abi-encode", {
-      contractname: "ConditionBalanceStateful",
-      functionname: "refBalanceCheck",
-      values: [0, userProxyAddress, sellerAddress, sellToken.address, false],
-    });
+    const conditionData = await conditionBalanceStateful.getConditionData(
+      userProxyAddress,
+      sellerAddress,
+      sellToken.address,
+      false
+    );
+
     conditionBalanceStatefulStruct.data = conditionData;
 
     const actionData = await run("abi-encode-withselector", {
@@ -341,7 +345,7 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
 
     const setRefData = await run("abi-encode-withselector", {
       contractname: "ConditionBalanceStateful",
-      functionname: "setRefBalanceDeltaForNextTaskInCycle",
+      functionname: "setRefBalance",
       inputs: [sellerAddress, sellToken.address, refBalanceDeltaDecrease],
     });
 

@@ -30,6 +30,28 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandardFull {
 
     constructor(IBatchExchange _batchExchange) public { batchExchange = _batchExchange; }
 
+    /// @dev use this function to encode the data off-chain for the action data field
+    function getActionData(
+        address _sellToken,
+        uint128 _sellAmount,
+        address _buyToken,
+        uint128 _buyAmount,
+        uint32 _batchDuration
+    )
+        public
+        pure
+        returns(bytes memory)
+    {
+        return abi.encodeWithSelector(
+            this.action.selector,
+            _sellToken,
+            _sellAmount,
+            _buyToken,
+            _buyAmount,
+            _batchDuration
+        );
+    }
+
     /// @notice Place order on Batch Exchange and request future withdraw for buy/sell token
     /// @param _sellToken Token to sell on Batch Exchange
     /// @param _sellAmount Amount to sell

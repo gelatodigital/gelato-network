@@ -86,7 +86,6 @@ And why should end-users not prepay for future transaction executions themselves
 
 Gelato works together with Chainlink to provide its integration Users - notably Providers - with constantly updated, fair gas prices. That way Gelato Users can be sure that Executors are not charging unfair gas prices.
 
-
 ## Providers:
 
 Providers deposit ETH on gelato, in order to pay for their Users' automated transactions. In most cases, Providers are dapp developers that want to offer cool automated dapps to their customers, without requiring them to prepay ETH.
@@ -142,7 +141,7 @@ There are several proxy smart contracts out there developers are using. We built
 
 Let’s say you want your Users to only be allowed to submit Tasks with Gelato User Proxies. To enable these Users to use you as a Provider with a Gelato User Proxy, run:
 
-    npx buidler gelato-add-provider-module GelatoUserProxy --network rinkeby
+    npx buidler gelato-add-provider-module --modulename GelatoUserProxy --network rinkeby
 
 Now you enabled every User that has a GelatoUserProxy to be a potential customer of yours. When you start integrating Gelato in your UI, you can deploy a proxy for first time Users and have them start using your service, all in one transaction, using the Gelato UserProxyFactory.
 
@@ -354,7 +353,7 @@ The Provider is also a JS object that is submitted alongside the Task:
 
 #### What is a light-proxy?
 
-A light-proxy never really holds the funds after a transaction is conducted, it only acts as an atomic transfer agent. For example, if your User submits a Task to swap 100 DAI to ETH on Uniswap every day, then up until the Task execution, all tokens will remain in your User's EOA and the proxy will simply only have an allowance (e.g. infinite allowance), to transfer the tokens out of your Users actual wallet. Now when the condition is met, the proxy will transfer the funds from the User's EOA to itself, then from there to Uniswap,  and finally, when the swap is done, it will send the proceeds back to the User EOA- all atomically in a single Task execution transaction.
+A light-proxy never really holds the funds after a transaction is conducted, it only acts as an atomic transfer agent. For example, if your User submits a Task to swap 100 DAI to ETH on Uniswap every day, then up until the Task execution, all tokens will remain in your User's EOA and the proxy will simply only have an allowance (e.g. infinite allowance), to transfer the tokens out of your Users actual wallet. Now when the condition is met, the proxy will transfer the funds from the User's EOA to itself, then from there to Uniswap, and finally, when the swap is done, it will send the proceeds back to the User EOA- all atomically in a single Task execution transaction.
 
 To enable the proxy to do so, it requires an approval by the account of the User that holds the funds (e.g. the Nano Ledger, Metamask or another wallet).
 

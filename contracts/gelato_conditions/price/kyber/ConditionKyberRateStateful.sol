@@ -23,6 +23,21 @@ contract ConditionKyberRateStateful is GelatoStatefulConditionsStandard {
         kyberProxyAddress = _kyberProxy;
     }
 
+    /// @dev use this function to encode the data off-chain for the condition data field
+    function getConditionData(
+        address _userProxy,
+        address _src,
+        uint256 _srcAmt,
+        address _dest,
+        bool _greaterElseSmaller
+    )
+        public
+        pure
+        returns(bytes memory)
+    {
+        return abi.encodeWithSelector(this.checkRefKyberRate.selector, uint256(0), _userProxy, _src, _srcAmt, _dest, _greaterElseSmaller);
+    }
+
     // STANDARD Interface
     function ok(uint256 _taskReceiptId, bytes calldata _conditionData, uint256)
         public
@@ -31,33 +46,33 @@ contract ConditionKyberRateStateful is GelatoStatefulConditionsStandard {
         override
         returns(string memory)
     {
-        (address proxyAddress,
+        (address userProxy,
          address src,
          uint256 srcAmt,
          address dest,
          bool greaterElseSmaller
          ) = abi.decode(
-             _conditionData[4:],
+             _conditionData[36:],
              (address,address,uint256,address,bool)
          );
-        return ok(proxyAddress, src, srcAmt, dest, greaterElseSmaller, _taskReceiptId);
+        return checkRefKyberRate(_taskReceiptId, userProxy, src, srcAmt, dest, greaterElseSmaller);
     }
 
     // Specific Implementation
-    function ok(
-        address _proxyAddress,
+    function checkRefKyberRate(
+        uint256 _taskReceiptId,
+        address _userProxy,
         address _src,
         uint256 _srcAmt,
         address _dest,
-        bool _greaterElseSmaller,
-        uint256 _taskReceiptId
+        bool _greaterElseSmaller
     )
         public
         view
         virtual
         returns(string memory)
     {
-        uint256 currentRefRate = refRate[_proxyAddress][_taskReceiptId];
+        uint256 currentRefRate = refRate[_userProxy][_taskReceiptId];
         try kyberProxyAddress.getExpectedRate(_src, _dest, _srcAmt)
             returns(uint256 expectedRate, uint256)
         {

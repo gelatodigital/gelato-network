@@ -9,7 +9,10 @@ export default internalTask(
   .setAction(async ({ log }) => {
     try {
       // ##### Condition
-      const conditionAddress = "0x8682B4A4e2eFcA124EEc646dd537EFDcE2F2C74C";
+      const conditionAddress = await run("bre-config", {
+        deployments: true,
+        contractname: "ConditionBalanceStateful",
+      });
 
       const condition = new Condition({
         inst: conditionAddress, // Address of the ConditionTimeStateful.sol
@@ -17,12 +20,17 @@ export default internalTask(
 
       // ##### Action #1
       // 1. Get address from deployments.rinkeby file / or hardcode it
-      const actionAddress = "0xA8909da6986ebDbB4524f8942cB313c64eF5e185";
+      const actionAddress = await run("bre-config", {
+        deployments: true,
+        contractname: "ActionERC20TransferFrom",
+      });
 
       const action1 = new Action({
         addr: actionAddress,
         data: constants.HashZero, // data is can be left as 0 for Task Specs
         operation: Operation.Delegatecall, // We are using an action Script here, see smart contract: ActionERC20TransferFrom.sol
+        dataFlow: DataFlow.None, // Only relevant if this action should return some value to the next, which it not necessary here
+        value: 0, // always 0 for delegate calls
         termsOkCheck: true, // After the condition is checked, we will also conduct checks on the action contract
       });
 
@@ -30,6 +38,8 @@ export default internalTask(
       const action2 = new Action({
         addr: conditionAddress, // We use the condition as an action (to dynamically set the timestamp when the users proxy contract can execute the actions next time)
         data: constants.HashZero, // data is can be left as 0 for Task Specs
+        dataFlow: DataFlow.None, // Only relevant if this action should return some value to the next, which it not necessary here
+        value: 0, // we are not sending any eth here, so value = 0
         operation: Operation.Call, // We are calling the contract instance directly, without script
         termsOkCheck: false, // Always input false for actions we .call intp
       });

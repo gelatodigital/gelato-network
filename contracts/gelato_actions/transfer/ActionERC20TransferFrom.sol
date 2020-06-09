@@ -14,20 +14,40 @@ contract ActionERC20TransferFrom is GelatoActionsStandardFull {
     using Address for address;
     using SafeERC20 for IERC20;
 
+    /// @dev use this function to encode the data off-chain for the action data field
+    function getActionData(
+        address _user,
+        IERC20 _sendToken,
+        uint256 _sendAmount,
+        address _destination
+    )
+        public
+        pure
+        returns(bytes memory)
+    {
+        return abi.encodeWithSelector(
+            this.action.selector,
+            _user,
+            _sendToken,
+            _sendAmount,
+            _destination
+        );
+    }
+
     /// @dev Always use this function for encoding _actionData off-chain
     ///  Will be called by GelatoActionPipeline if Action.dataFlow.None
     function action(
-        address user,
-        IERC20 sendToken,
-        uint256 sendAmount,
-        address destination
+        address _user,
+        IERC20 _sendToken,
+        uint256 _sendAmount,
+        address _destination
     )
         public
         virtual
         delegatecallOnly("ActionERC20TransferFrom.action")
     {
-        sendToken.safeTransferFrom(user, destination, sendAmount);
-        emit LogOneWay(user, address(sendToken), sendAmount, destination);
+        _sendToken.safeTransferFrom(_user, _destination, _sendAmount);
+        emit LogOneWay(_user, address(_sendToken), _sendAmount, _destination);
     }
 
     ///@dev Will be called by GelatoActionPipeline if Action.dataFlow.In

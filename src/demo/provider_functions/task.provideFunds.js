@@ -14,8 +14,12 @@ export default task(
     "gelatoprovider",
     "The gelatoprovider to add balance to."
   )
+  .addOptionalPositionalParam(
+    "gelatocoreaddress",
+    "The gelatoprovider to add balance to."
+  )
   .addFlag("log", "Logs return values to stdout")
-  .setAction(async ({ ethamount, gelatoprovider, log }) => {
+  .setAction(async ({ ethamount, gelatoprovider, log, gelatocoreaddress }) => {
     try {
       const provider = getProvider();
       const providerAddress = await provider.getAddress();
@@ -32,6 +36,7 @@ export default task(
       }
       const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
+        contractaddress: gelatocoreaddress,
         write: true,
         signer: provider,
       });

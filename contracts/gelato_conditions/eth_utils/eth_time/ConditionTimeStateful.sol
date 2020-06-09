@@ -18,6 +18,16 @@ contract ConditionTimeStateful is GelatoStatefulConditionsStandard {
         public
     {}
 
+    /// @dev use this function to encode the data off-chain for the condition data field
+    function getConditionData(address _userProxy)
+        public
+        pure
+        returns(bytes memory)
+    {
+        return abi.encodeWithSelector(this.checkRefTime.selector, uint256(0), _userProxy);
+    }
+
+    // STANDARD interface
     /// @param _checkRefTimeData abi encoded checkRefTime params WITHOUT selector
     function ok(uint256 _taskReceiptId, bytes calldata _checkRefTimeData, uint256)
         public
@@ -27,7 +37,7 @@ contract ConditionTimeStateful is GelatoStatefulConditionsStandard {
         returns(string memory)
     {
         // we strip the encoded _taskReceiptId and take the one passed by GelatoCore
-        address userProxy = abi.decode(_checkRefTimeData[32:], (address));
+        address userProxy = abi.decode(_checkRefTimeData[36:], (address));
         return checkRefTime(_taskReceiptId, userProxy);
     }
 

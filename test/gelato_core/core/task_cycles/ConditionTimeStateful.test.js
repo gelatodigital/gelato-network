@@ -166,11 +166,10 @@ describe("Condition Time Stateful: Time based Condition integration test with 10
   // We test different functionality of the contract as normal Mocha tests.
   it("#1: Succesfully exec and auto-resubmits Task based on refTime", async function () {
     // address _proxy, address _account, address _token, uint256, bool _greaterElseSmaller
-    const conditionData = await run("abi-encode", {
-      contractname: "ConditionTimeStateful",
-      functionname: "checkRefTime",
-      values: [0, userProxyAddress],
-    });
+    const conditionData = await conditionTimeStateful.getConditionData(
+      userProxyAddress
+    );
+
     conditionTimeStatefulStruct.data = conditionData;
 
     const actionData = await run("abi-encode-withselector", {

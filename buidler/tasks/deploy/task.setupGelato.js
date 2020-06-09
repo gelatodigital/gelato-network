@@ -1,11 +1,7 @@
 import { task } from "@nomiclabs/buidler/config";
 import { constants, utils } from "ethers";
 
-const GAS_PRICE = utils.parseUnits("9", "gwei");
-
 export default task("gc-setupgelato")
-  .addOptionalParam("providefunds", "providerFunds to supply in ETH")
-  .addOptionalParam("gelatoexecutor", "the gelatoExecutor to assign")
   .addFlag("events", "Logs parsed Event Logs to stdout")
   .addFlag("log")
   .setAction(async (taskArgs) => {
@@ -17,12 +13,17 @@ export default task("gc-setupgelato")
       // Deploy Gelato Core
       const gelatoCore = await run("deploy-gc", {});
 
-      // Deploy Provider Modules
+      const gelatoActionPipeline = await run("deploy", {
+        contractname: "GelatoActionPipeline",
+      });
 
-      // Gnosis Safe
+      // Deploy Provider Modules
+      // // Gnosis Safe
       const gnosisSafeProviderModule = await run(
         "gc-deploy-gnosis-safe-module",
-        {}
+        {
+          gelatoactionpipeline: gelatoActionPipeline.address,
+        }
       );
 
       // Gelato User Factory
@@ -31,37 +32,65 @@ export default task("gc-setupgelato")
         constructorargs: [gelatoCore.address],
       });
 
+      // // Gelato User Proxy
       const gelatoUserProxyModule = await run("deploy", {
         contractname: "ProviderModuleGelatoUserProxy",
-        constructorargs: [gelatoUserProxyFactory.address],
+        constructorargs: [
+          gelatoUserProxyFactory.address,
+          gelatoActionPipeline.address,
+        ],
       });
 
       // Executor Setup
-      await run("gc-stakeexecutor", {});
+      await run("gc-stakeexecutor", {
+        gelatocoreaddress: gelatoCore.address,
+      });
 
       // Provider Setup
       await run("gelato-providefunds", {
-        ethamount: ethers.utils.parseEther("1"),
+        ethamount: "1",
+        gelatocoreaddress: gelatoCore.address,
       });
 
       await run("gelato-add-provider-module", {
-        modulename: "GnosisSafe",
+        moduleaddress: gnosisSafeProviderModule.address,
       });
       await run("gelato-add-provider-module", {
-        modulename: "GelatoUserProxy",
+        moduleaddress: gelatoUserProxyModule.address,
       });
 
-      // Deploy Global State contract
-      const globalState = await run("deploy", {
-        contractname: "GlobalState",
+      // Assign executor
+      await run("gelato-assign-executor", {
+        gelatocoreaddress: gelatoCore.address,
       });
 
-      // Deploy ProviderStateSetterFactory
-      const providerFeeRelayFactory = await run("deploy", {
-        contractname: "ProviderFeeRelayFactory",
+      // Deploy Fee Handler Factory
+      const feeHandlerFactory = await run("deploy", {
+        contractname: "FeeHandlerFactory",
         signerindex: 2,
-        constructorargs: [globalState.address],
       });
+
+      // Whitelist a couple of tokens
+      const dai = await run("bre-config", {
+        addressbookcategory: "erc20",
+        addressbookentry: "DAI",
+      });
+
+      await feeHandlerFactory.addTokenToWhitelist(dai);
+
+      const weth = await run("bre-config", {
+        addressbookcategory: "erc20",
+        addressbookentry: "WETH",
+      });
+
+      await feeHandlerFactory.addTokenToWhitelist(weth);
+
+      const usdc = await run("bre-config", {
+        addressbookcategory: "erc20",
+        addressbookentry: "USDC",
+      });
+
+      await feeHandlerFactory.addTokenToWhitelist(usdc);
 
       // Deploy Actions
       const batchExchangeAddress = await run("bre-config", {
@@ -71,7 +100,7 @@ export default task("gc-setupgelato")
 
       const actionPlaceOrderBatchExchange = await run("deploy", {
         contractname: "ActionPlaceOrderBatchExchange",
-        constructorargs: [batchExchangeAddress, globalState.address],
+        constructorargs: [batchExchangeAddress],
       });
 
       const actionWithdrawBatchExchange = await run("deploy", {
@@ -79,9 +108,22 @@ export default task("gc-setupgelato")
         constructorargs: [batchExchangeAddress],
       });
 
-      const actionERC20TransferFromGlobal = await run("deploy", {
-        contractname: "ActionERC20TransferFromGlobal",
-        constructorargs: [globalState.address],
+      const actionERC20TransferFrom = await run("deploy", {
+        contractname: "ActionERC20TransferFrom",
+      });
+
+      const actionTransfer = await run("deploy", {
+        contractname: "ActionTransfer",
+      });
+
+      const uniswapFactoryAddress = await run("bre-config", {
+        addressbookcategory: "uniswap",
+        addressbookentry: "uniswapFactory",
+      });
+
+      const actionUniswapTrade = await run("deploy", {
+        contractname: "ActionUniswapTrade",
+        constructorargs: [uniswapFactoryAddress],
       });
 
       // Deploy Conditions
@@ -109,13 +151,23 @@ export default task("gc-setupgelato")
 
       // SET FEE For each action
 
-      // await run("gc-multiprovide", {
-      //   gelatocoreaddress: gelatoCore.address,
-      //   funds: taskArgs.providefunds,
-      //   gelatoexecutor: taskArgs.executor,
-      //   events: taskArgs.events,
-      //   log: taskArgs.log,
-      // });
+      console.log(
+        `
+      \n GelatoCore: ${gelatoCore.address}
+      \n GnosisSafeProviderModule: ${gnosisSafeProviderModule.address}
+      \n GelatoUserProxyFactory: ${gelatoUserProxyFactory.address}
+      \n GelatoUserProxyModule: ${gelatoUserProxyModule.address}
+      \n FeeHandlerFactory: ${feeHandlerFactory.address}
+      \n ActionPlaceOrderBatchExchange: ${actionPlaceOrderBatchExchange.address}
+      \n ActionWithdrawBatchExchange: ${actionWithdrawBatchExchange.address}
+      \n ActionERC20TransferFrom: ${actionERC20TransferFrom.address}
+      \n ActionTransfer: ${actionTransfer.address}
+      \n ActionUniswapTrade: ${actionUniswapTrade.address}
+      \n ConditionTimeStateful: ${conditionTimeStateful.address}
+      \n ConditionBalanceStateful: ${conditionBalanceStateful.address}
+      \n ConditionKyberRateStateful: ${conditionKyberRateStateful.address}
+      `
+      );
     } catch (error) {
       console.error(error, "\n");
       process.exit(1);

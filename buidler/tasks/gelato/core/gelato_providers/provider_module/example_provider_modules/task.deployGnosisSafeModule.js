@@ -14,7 +14,10 @@ export default task(
     "extcodehash",
     "bytes of gnosis safe extcodehash to whitelist"
   )
-  .addOptionalParam("multisend", "address of multisend contract to whitelist")
+  .addOptionalParam(
+    "gelatoactionpipeline",
+    "address of gelatoactionpipeline contract to whitelist"
+  )
   .addFlag("events", "Logs parsed Event Logs to stdout")
   .addFlag("log", "Logs return values to stdout")
   .setAction(async (taskArgs) => {
@@ -40,11 +43,11 @@ export default task(
         });
       }
 
-      // get multisend contract
-      if (!taskArgs.multisend)
-        taskArgs.multisend = await run("bre-config", {
-          addressbookcategory: "gnosisSafe",
-          addressbookentry: "multiSend",
+      // get gelatoactionpipeline contract
+      if (!taskArgs.gelatoactionpipeline)
+        taskArgs.gelatoactionpipeline = await run("bre-config", {
+          deployments: true,
+          contractname: "GelatoActionPipeline",
         });
 
       if (!taskArgs.extcodehash) {
@@ -61,7 +64,7 @@ export default task(
           [taskArgs.extcodehash],
           [taskArgs.mastercopy],
           gelatoCore.address,
-          taskArgs.multisend,
+          taskArgs.gelatoactionpipeline,
         ],
         events: taskArgs.events,
         log: taskArgs.log,

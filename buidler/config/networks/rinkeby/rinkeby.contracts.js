@@ -3,9 +3,8 @@ export const contracts = [
   // === Actions ===
   // = One-Off =
   // ERC20
-  "ActionERC20Transfer",
+  "ActionTransfer",
   "ActionERC20TransferFrom",
-  "ActionERC20TransferFromGlobal",
   // Kyber
   "ActionKyberTradeRinkeby",
   // Portfolio Mgmt
@@ -64,9 +63,8 @@ export const contracts = [
   "Medianizer2",
 
   // Helpers
-  "FeeExtractor",
+  "GelatoActionPipeline",
+  "ActionFeeHandler",
+  "FeeHandlerFactory",
   "GelatoMultiCall",
-  "GlobalState",
-  "ProviderFeeRelay",
-  "ProviderFeeRelayFactory",
 ];

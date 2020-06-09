@@ -25,6 +25,15 @@ contract ActionWithdrawBatchExchange is GelatoActionsStandard, IGelatoOutFlowAct
 
     constructor(IBatchExchange _batchExchange) public { batchExchange = _batchExchange; }
 
+    /// @dev use this function to encode the data off-chain for the action data field
+    function getActionData(address _token)
+        public
+        pure
+        returns(bytes memory)
+    {
+        return abi.encodeWithSelector(this.action.selector, _token);
+    }
+
     /// @notice Withdraw token from Batch Exchange
     /// @dev delegatecallOnly
     /// @param _token Token to withdraw from Batch Exchange

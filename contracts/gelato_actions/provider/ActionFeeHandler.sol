@@ -66,6 +66,15 @@ contract ActionFeeHandler is GelatoActionsStandardFull {
         return feeHandlerFactory.isWhitelistedToken(_token);
     }
 
+    /// @dev use this function to encode the data off-chain for the action data field
+    function getActionData(address _sendToken, uint256 _sendAmount, address _feePayer)
+        public
+        pure
+        returns(bytes memory)
+    {
+        return abi.encodeWithSelector(this.action.selector, _sendToken, _sendAmount, _feePayer);
+    }
+
     /// @dev Use this function for encoding off-chain. DelegatecallOnly!
     function action(address _sendToken, uint256 _sendAmount, address _feePayer)
         public
@@ -73,10 +82,7 @@ contract ActionFeeHandler is GelatoActionsStandardFull {
         delegatecallOnly("ActionFeeHandler.action")
         returns (uint256 sendAmountAfterFee)
     {
-        uint256 fee = _sendAmount.mul(feeNum).div(
-            feeDen,
-            "FeeHanlder.action: Underflow"
-        );
+        uint256 fee = _sendAmount.mul(feeNum).div(feeDen);
         if (address(this) == _feePayer) {
             if (_sendToken == ETH_ADDRESS) provider.sendValue(fee);
             else IERC20(_sendToken).safeTransfer(provider, fee);
@@ -158,8 +164,8 @@ contract ActionFeeHandler is GelatoActionsStandardFull {
             (address,uint256,address)
         );
 
-        if (sendAmount.mul(feeDen) < feeDen)
-            return "ActionFeeHandler: Insufficient sendAmount, will underflow";
+        if (sendAmount.mul(feeNum) < feeDen)
+            return "ActionFeeHandler: Insufficient sendAmount";
 
         if (!isTokenWhitelisted(sendToken))
             return "ActionFeeHandler: Token not whitelisted for fee";
@@ -181,9 +187,15 @@ contract ActionFeeHandler is GelatoActionsStandardFull {
         } else {
             if (sendToken == ETH_ADDRESS)
                 return "ActionFeeHandler: CannotTransferFromETH";
+            try sendERC20.balanceOf(feePayer) returns (uint256 balance) {
+                    if (balance < sendAmount)
+                        return "ActionFeeHandler: NotOkFeePayerSendTokenBalance";
+                } catch {
+                    return "ActionFeeHandler: ErrorBalanceOf";
+                }
             try sendERC20.allowance(feePayer, _userProxy) returns (uint256 allowance) {
                 if (allowance < sendAmount)
-                    return "ActionFeeHandler: NotOkUserProxySendTokenAllowance";
+                    return "ActionFeeHandler: NotOkFeePayerSendTokenAllowance";
             } catch {
                 return "ActionFeeHandler: ErrorAllowance";
             }
