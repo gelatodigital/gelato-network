@@ -100,10 +100,14 @@ contract ConditionBalanceStateful is GelatoStatefulConditionsStandard {
     ///  of the Task.actions, if the Condition state should be updated after the task.
     /// This is for Task Cycles/Chains and we fetch the TaskReceipt.id of the
     //  next Task that will be auto-submitted by GelatoCore in the same exec Task transaction.
+    /// @param _balanceDelta The change in balance after which this condition should return for a given taskId
+    /// @param _idDelta Default to 0. If you submit multiple tasks in one action, this can help
+    // customize which taskId the state should be allocated to
     function setRefBalance(
         address _account,
         address _token,
-        int256 _delta
+        int256 _balanceDelta,
+        uint256 _idDelta
     )
         external
     {
@@ -113,10 +117,10 @@ contract ConditionBalanceStateful is GelatoStatefulConditionsStandard {
             currentBalanceOfAccount = _account.balance;
         else currentBalanceOfAccount = IERC20(_token).balanceOf(_account);
         require(
-            int256(currentBalanceOfAccount) + _delta >= 0,
+            int256(currentBalanceOfAccount) + _balanceDelta >= 0,
             "ConditionBalanceStateful.setRefBalanceDelta: underflow"
         );
-        newRefBalance = uint256(int256(currentBalanceOfAccount) + _delta);
-        refBalance[msg.sender][_getIdOfNextTaskInCycle()] = newRefBalance;
+        newRefBalance = uint256(int256(currentBalanceOfAccount) + _balanceDelta);
+        refBalance[msg.sender][_getIdOfNextTaskInCycle() + _idDelta] = newRefBalance;
     }
 }

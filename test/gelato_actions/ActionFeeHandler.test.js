@@ -172,11 +172,9 @@ describe("ActionFeeHandler Tests", function () {
     await sellToken.deployed();
 
     // whitelist token on fee contract
-    await feeHandler
+    await feeHandlerFactory
       .connect(provider)
-      .addTokenToCustomWhitelist(sellToken.address);
-    await feeHandler.connect(provider).addTokenToCustomWhitelist(ETH_ADDRESS);
-    await feeHandler.connect(provider).activateCustomWhitelist();
+      .addTokensToWhitelist([sellToken.address, ETH_ADDRESS]);
 
     // ### Action #1
     sendAmount = ethers.utils.parseUnits("10", "ether");

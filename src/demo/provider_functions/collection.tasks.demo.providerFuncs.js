@@ -14,4 +14,7 @@ import "./task.provideTaskSpec";
 import "./task.assignExecutor";
 
 // Set Action Fee
-import "./task.setActionFee";
+import "./task.getFeeAction";
+
+// Whitelist Fee Tokens
+import "./task.whitelistFeeTokens";

@@ -12,7 +12,7 @@ export const contracts = [
   // Gnosis Batch Exchange
   "ActionWithdrawBatchExchange",
   "ActionWithdrawBatchExchange",
-  "ActionPlaceOrderBatchExchange",
+  "ActionPlaceOrderBatchExchangeWithSlippage",
   // Uniswap
   "ActionUniswapTrade",
   // = Chained =
@@ -47,7 +47,7 @@ export const contracts = [
   "ConditionTime",
   "ConditionTimeStateful",
   // Gnosis
-  "ConditionBatchExchangeFundsWithdrawable",
+  "ConditionBatchExchangeStateful",
   // Mock
   "MockConditionDummy",
 

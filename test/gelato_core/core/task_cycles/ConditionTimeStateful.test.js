@@ -185,7 +185,7 @@ describe("Condition Time Stateful: Time based Condition integration test with 10
     const setRefData = await run("abi-encode-withselector", {
       contractname: "ConditionTimeStateful",
       functionname: "setRefTime",
-      inputs: [refTimeDelta],
+      inputs: [refTimeDelta, 0],
     });
 
     const actionSetRefStruct = new Action({

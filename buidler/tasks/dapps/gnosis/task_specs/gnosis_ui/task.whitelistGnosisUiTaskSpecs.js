@@ -2,7 +2,7 @@ import { task, types } from "@nomiclabs/buidler/config";
 import { constants, utils } from "ethers";
 
 export default task(
-  "gc-whitelist-gnosis-ui-task-specs",
+  "gelato-whitelist-gnosis-ui-task-specs",
   `Returns a hardcoded task spec for the tradeAndWithdraw Script`
 )
   .addFlag("log")
@@ -11,7 +11,20 @@ export default task(
       if (network.name != "rinkeby") throw new Error("\nwrong network!");
 
       // Collect all task specs
-      const taskSpecs = [];
+      const taskSpecs = [
+        "balance-trade-ui",
+        "kyber-price-trade-ui",
+        "time-trade-ui",
+        "withdraw-and-set-balance-ui",
+        "withdraw-and-set-kyber-price-ui",
+        "withdraw-and-set-time-ui",
+      ];
+
+      for (const taskSpecName of taskSpecs) {
+        await run("gelato-whitelist-taskspec", {
+          name: taskSpecName,
+        });
+      }
     } catch (err) {
       console.error(err);
       process.exit(1);

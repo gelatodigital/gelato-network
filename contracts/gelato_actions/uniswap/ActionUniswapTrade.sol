@@ -6,6 +6,7 @@ import {DataFlow} from "../../gelato_core/interfaces/IGelatoCore.sol";
 import {Address} from "../../external/Address.sol";
 import {GelatoBytes} from "../../libraries/GelatoBytes.sol";
 import {SafeMath} from "../../external/SafeMath.sol";
+import {SafeERC20} from "../../external/SafeERC20.sol";
 import {IERC20} from "../../external/IERC20.sol";
 import {IUniswapExchange} from "../../dapp_interfaces/uniswap/IUniswapExchange.sol";
 import {IUniswapFactory} from "../../dapp_interfaces/uniswap/IUniswapFactory.sol";
@@ -13,6 +14,7 @@ import {IUniswapFactory} from "../../dapp_interfaces/uniswap/IUniswapFactory.sol
 contract ActionUniswapTrade is GelatoActionsStandardFull {
     using Address for address;
     using SafeMath for uint256;
+    using SafeERC20 for IERC20;
 
     IUniswapFactory public immutable UNI_FACTORY;
 
@@ -81,10 +83,7 @@ contract ActionUniswapTrade is GelatoActionsStandardFull {
 
                 // origin funds lightweight proxy
                 if (_origin != address(0) && _origin != address(this)) {
-                    try sendERC20.transferFrom(_origin, address(this), _sendAmount) {
-                    } catch {
-                        revert("ActionUniswapTrade.action: ErrorTransferFromUser");
-                    }
+                    sendERC20.safeTransferFrom(_origin, address(this), _sendAmount);
                 }
 
                 // proxy approves Uniswap

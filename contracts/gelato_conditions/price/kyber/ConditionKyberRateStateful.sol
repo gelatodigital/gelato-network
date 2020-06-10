@@ -90,22 +90,26 @@ contract ConditionKyberRateStateful is GelatoStatefulConditionsStandard {
 
     /// @dev This function should be called via the userProxy of a Gelato Task as part
     ///  of the Task.actions, if the Condition state should be updated after the task.
+    /// @param _rateDelta The change in price after which this condition should return for a given taskId
+    /// @param _idDelta Default to 0. If you submit multiple tasks in one action, this can help
+    // customize which taskId the state should be allocated to
     function setRefRate(
         address _src,
         uint256 _srcAmt,
         address _dest,
         bool _greaterElseSmaller,
-        uint256 _delta
+        uint256 _rateDelta,
+        uint256 _idDelta
     )
         external
     {
-        uint256 taskReceiptId = _getIdOfNextTaskInCycle();
+        uint256 taskReceiptId = _getIdOfNextTaskInCycle() + _idDelta;
         uint256 newRefRate;
         try kyberProxyAddress.getExpectedRate(_src, _dest, _srcAmt)
             returns(uint256 expectedRate, uint256)
         {
-            if (_greaterElseSmaller) newRefRate = expectedRate.add(_delta);
-            else newRefRate = expectedRate.sub(_delta, "ConditionKyberRateStateful.setRefRate: Underflow");
+            if (_greaterElseSmaller) newRefRate = expectedRate.add(_rateDelta);
+            else newRefRate = expectedRate.sub(_rateDelta, "ConditionKyberRateStateful.setRefRate: Underflow");
         } catch {
             revert("ConditionKyberRateStateful.setRefRate: KyberGetExpectedRateError");
         }
