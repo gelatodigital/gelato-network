@@ -201,7 +201,7 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
     const setRefData = await run("abi-encode-withselector", {
       contractname: "ConditionBalanceStateful",
       functionname: "setRefBalance",
-      inputs: [sellerAddress, sellToken.address, refBalanceDelta],
+      inputs: [sellerAddress, sellToken.address, refBalanceDelta, 0],
     });
 
     const actionSetRefStruct = new Action({
@@ -346,7 +346,7 @@ describe("Condition Balance Stateful: Balanced based Condition integration test 
     const setRefData = await run("abi-encode-withselector", {
       contractname: "ConditionBalanceStateful",
       functionname: "setRefBalance",
-      inputs: [sellerAddress, sellToken.address, refBalanceDeltaDecrease],
+      inputs: [sellerAddress, sellToken.address, refBalanceDeltaDecrease, 0],
     });
 
     const actionSetRefStruct = new Action({

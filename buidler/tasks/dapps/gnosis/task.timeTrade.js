@@ -226,11 +226,11 @@ export default task(
 
     const placeOrderBatchExchangeAddress = await run("bre-config", {
       deployments: true,
-      contractname: "ActionPlaceOrderBatchExchange",
+      contractname: "ActionPlaceOrderBatchExchangeWithSlippage",
     });
 
     const placeOrderBatchExchangeData = await run("abi-encode-withselector", {
-      contractname: "ActionPlaceOrderBatchExchange",
+      contractname: "ActionPlaceOrderBatchExchangeWithSlippage",
       functionname: "action",
       inputs: [
         userAddress,

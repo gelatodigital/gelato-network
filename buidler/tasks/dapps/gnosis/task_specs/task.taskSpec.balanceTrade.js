@@ -23,7 +23,7 @@ export default internalTask(
       // ##### Action #1
       const placeOrderBatchExchangeAddress = await run("bre-config", {
         deployments: true,
-        contractname: "ActionPlaceOrderBatchExchange",
+        contractname: "ActionPlaceOrderBatchExchangeWithSlippage",
       });
 
       const placeOrderAction = new Action({

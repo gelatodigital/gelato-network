@@ -3,7 +3,8 @@ export const deployments = {
   // ==== One-Off Actions ====
   // Gnosis
   ActionWithdrawBatchExchange: "0x7F1272976731DdaE91dc74490E8d0aD78731AA55",
-  ActionPlaceOrderBatchExchange: "0x89f742D8c707a1AD1bF00F7EAD19D57533dD9bDa",
+  ActionPlaceOrderBatchExchangeWithSlippage:
+    "0x9Ef8B563833e21E739c21059801113f593333ebD",
   // erc20
   ActionTransfer: "0x74d218AB6C5F743B476c6d3ac713e271D56aC19D",
   ActionERC20TransferFrom: "0x42c5d0aA55990a4f56b1BB3Df21B07D54B5c9fa5",
@@ -54,8 +55,7 @@ export const deployments = {
   ConditionTime: "0x26d72d7AE606B5FCbBD0417fa112E7b4aBF05aE2",
   ConditionTimeStateful: "0xAaB4fF152C1591017764BEaD313a5748E556A0f7",
   // Gnosis
-  ConditionBatchExchangeFundsWithdrawable:
-    "0x66A11882E861B85685668fB3e72a7c6b74753352",
+  ConditionBatchExchangeStateful: "0x66A11882E861B85685668fB3e72a7c6b74753352",
 
   // ==== Scripts ====
   // == GnosisSafe ==
@@ -73,7 +73,9 @@ export const deployments = {
   Medianizer2: "0x642CC986A17A3e508fddb21fF4485D1A6A8B1DA4",
 
   // Helpers
-  FeeHandlerFactory: "0xAAe0CD8e5Aa05fA49a87F98E9B52dC02c2Efc194",
+  FeeHandlerFactory: "0x8Db0298e40C630b23CCE2e5DEe28a76d5AFcF2e9",
+  // 0.5% fee
+  ActionFeeHandler: "0x72cEAB88ED09D71abd015F4c15c11BA6fcbF3230",
   GelatoMultiCall: "0xaf0124440ce473705465208C2B687A8D009E2EaE",
   GlobalState: "0xA88e0F76601Fd628467ea283a212ce71907f7232",
   ProviderFeeRelay: "0x28A68e773511Fe3Ac7f1757b94aD2BD7254b1e89",

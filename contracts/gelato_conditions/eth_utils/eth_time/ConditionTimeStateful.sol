@@ -60,9 +60,12 @@ contract ConditionTimeStateful is GelatoStatefulConditionsStandard {
     ///  of the Task.actions, if the Condition state should be updated after the task.
     /// This is for Task Cycles/Chains and we fetch the TaskReceipt.id of the
     //  next Task that will be auto-submitted by GelatoCore in the same exec Task transaction.
-    function setRefTime(uint256 _delta) external {
+    /// @param _timeDelta The time after which this condition should return for a given taskId
+    /// @param _idDelta Default to 0. If you submit multiple tasks in one action, this can help
+    // customize which taskId the state should be allocated to
+    function setRefTime(uint256 _timeDelta, uint256 _idDelta) external {
         uint256 currentTime = block.timestamp;
-        uint256 newRefTime = currentTime + _delta;
-        refTime[msg.sender][_getIdOfNextTaskInCycle()] = newRefTime;
+        uint256 newRefTime = currentTime + _timeDelta;
+        refTime[msg.sender][_getIdOfNextTaskInCycle() + _idDelta] = newRefTime;
     }
 }

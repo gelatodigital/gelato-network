@@ -97,7 +97,7 @@ export default task("gc-setupgelato")
       });
 
       const actionPlaceOrderBatchExchange = await run("deploy", {
-        contractname: "ActionPlaceOrderBatchExchange",
+        contractname: "ActionPlaceOrderBatchExchangeWithSlippage",
         constructorargs: [batchExchangeAddress],
       });
 
@@ -156,7 +156,7 @@ export default task("gc-setupgelato")
       \n GelatoUserProxyFactory: ${gelatoUserProxyFactory.address}
       \n GelatoUserProxyModule: ${gelatoUserProxyModule.address}
       \n FeeHandlerFactory: ${feeHandlerFactory.address}
-      \n ActionPlaceOrderBatchExchange: ${actionPlaceOrderBatchExchange.address}
+      \n ActionPlaceOrderBatchExchangeWithSlippage: ${actionPlaceOrderBatchExchange.address}
       \n ActionWithdrawBatchExchange: ${actionWithdrawBatchExchange.address}
       \n ActionERC20TransferFrom: ${actionERC20TransferFrom.address}
       \n ActionTransfer: ${actionTransfer.address}

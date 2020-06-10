@@ -2,7 +2,7 @@ import { task, types } from "@nomiclabs/buidler/config";
 import { constants, utils } from "ethers";
 
 export default internalTask(
-  "gc-return-taskspec-time-trade-ui",
+  "gelato-return-taskspec-time-trade-ui",
   `Returns a hardcoded task spec for the timeTrade Script`
 )
   .addFlag("log")
@@ -20,48 +20,85 @@ export default internalTask(
         inst: conditionAddress,
       });
 
-      // ##### Action # 1: Fee Action
-      const feeRelayAddress = await run("gelato-get-fee-relay-address");
-      console.log(feeRelayAddress);
+      // ==== Actions
 
-      const feeRelayAction = new Action({
-        addr: feeRelayAddress,
+      // FeeHandler, PlaceOrder, SetConditionStateful (with delta = 1), SetConditionBatchExchangeStateful, Submit Task 2
+
+      // ##### Action #1
+      const feeHandlerAddress = await run("bre-config", {
+        deployments: true,
+        contractname: "ActionFeeHandler",
+      });
+
+      const feeHandlerAction = new Action({
+        addr: feeHandlerAddress,
         data: constants.HashZero,
         operation: Operation.Delegatecall,
         termsOkCheck: true,
-        value: 0,
+        dataFlow: DataFlow.Out,
       });
 
       // ##### Action #2
-      const transferFromActionAddress = await run("bre-config", {
-        deployments: true,
-        contractname: "ActionERC20TransferFromGlobal",
-      });
-
-      const transferFromAction = new Action({
-        addr: transferFromActionAddress,
-        data: constants.HashZero,
-        operation: Operation.Delegatecall,
-        termsOkCheck: true,
-      });
-
-      // ##### Action #3
       const placeOrderBatchExchangeAddress = await run("bre-config", {
         deployments: true,
-        contractname: "ActionPlaceOrderBatchExchange",
+        contractname: "ActionPlaceOrderBatchExchangeWithSlippage",
       });
 
       const placeOrderAction = new Action({
         addr: placeOrderBatchExchangeAddress,
         data: constants.HashZero,
         operation: Operation.Delegatecall,
-        termsOkCheck: true,
+        termsOkCheck: false,
+        dataFlow: DataFlow.In,
+      });
+
+      // ##### Action #3
+      const setConditionAction = new Action({
+        addr: conditionAddress,
+        data: constants.HashZero,
+        operation: Operation.Call,
+        termsOkCheck: false,
+        dataFlow: DataFlow.None,
+      });
+
+      // ##### Action #4
+      const conditionBatchExchangeStatefulAddress = await run("bre-config", {
+        deployments: true,
+        contractname: "ConditionBatchExchangeStateful",
+      });
+
+      const setBatchExchangeConditionAction = new Action({
+        addr: conditionBatchExchangeStatefulAddress,
+        data: constants.HashZero,
+        operation: Operation.Call,
+        termsOkCheck: false,
+        dataFlow: DataFlow.None,
+      });
+
+      // ##### Action #5
+      const gelatoCoreAddress = await run("bre-config", {
+        deployments: true,
+        contractname: "GelatoCore",
+      });
+
+      const gelatoCoreAction = new Action({
+        addr: gelatoCoreAddress,
+        data: constants.HashZero,
+        operation: Operation.Call,
+        termsOkCheck: false,
+        dataFlow: DataFlow.None,
       });
 
       // ##### Create Task Spec
       const taskSpec = new TaskSpec({
         conditions: [condition.inst],
-        actions: [feeRelayAction, transferFromAction, placeOrderAction],
+        actions: [
+          feeHandlerAction,
+          placeOrderAction,
+          setConditionAction,
+          setBatchExchangeConditionAction,
+          gelatoCoreAction,
+        ],
         gasPriceCeil: 0, // Infinte gas price
       });
 

@@ -9,7 +9,7 @@ export const deployments = {
   ActionKyberTrade: "0xF829B506c378AaD11dB7Efe8d626cc7d0e015CBA",
 
   // Gnosis
-  ActionPlaceOrderBatchExchange: "0x0",
+  ActionPlaceOrderBatchExchangeWithSlippage: "0x0",
   ActionWithdrawBatchExchange: "0x0",
 
   // ==== Gelato Core ===

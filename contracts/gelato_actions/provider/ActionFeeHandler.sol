@@ -22,9 +22,6 @@ contract ActionFeeHandler is GelatoActionsStandardFull {
     uint256 public immutable feeNum;
     uint256 public immutable feeDen;
 
-    mapping(address => bool) public isCustomWhitelistedToken;
-    bool public useCustomWhitelist;
-
     constructor(
         address payable _provider,
         FeeHandlerFactory _feeHandlerFactory,
@@ -59,31 +56,8 @@ contract ActionFeeHandler is GelatoActionsStandardFull {
         return keccak256("TOKEN,UINT256");
     }
 
-    // ======= FEE HANDLER CUSTOM ADMIN =========
-    modifier onlyProvider() {
-        require(msg.sender == provider, "ActionFeeHandler.onlyProvider");
-        _;
-    }
-
-    function addTokenToCustomWhitelist(address _token) external onlyProvider {
-        isCustomWhitelistedToken[_token] = true;
-    }
-
-    function removeTokenFromCustomWhitelist(address _token) external onlyProvider {
-        isCustomWhitelistedToken[_token] = false;
-    }
-
-    function activateCustomWhitelist() external onlyProvider {
-        useCustomWhitelist = true;
-    }
-
-    function deactivateCustomWhitelist() external onlyProvider {
-        useCustomWhitelist = false;
-    }
-
     function isTokenWhitelisted(address _token) public view returns(bool) {
-        if (useCustomWhitelist) return isCustomWhitelistedToken[_token];
-        return feeHandlerFactory.isWhitelistedToken(_token);
+        return feeHandlerFactory.isWhitelistedToken(provider, _token);
     }
 
     // ======= ACTION IMPLEMENTATION DETAILS =========
@@ -94,7 +68,7 @@ contract ActionFeeHandler is GelatoActionsStandardFull {
         delegatecallOnly("ActionFeeHandler.action")
         returns (uint256 sendAmountAfterFee)
     {
-        uint256 fee = _sendAmount.mul(feeNum).div(feeDen);
+        uint256 fee = _sendAmount.mul(feeNum).sub(1) / feeDen + 1;
         if (address(this) == _feePayer) {
             if (_sendToken == ETH_ADDRESS) provider.sendValue(fee);
             else IERC20(_sendToken).safeTransfer(provider, fee);
@@ -179,7 +153,7 @@ contract ActionFeeHandler is GelatoActionsStandardFull {
             (address,uint256,address)
         );
 
-        if (sendAmount.mul(feeNum) < feeDen)
+        if (sendAmount == 0)
             return "ActionFeeHandler: Insufficient sendAmount";
 
         if (!isTokenWhitelisted(sendToken))
@@ -220,7 +194,7 @@ contract ActionFeeHandler is GelatoActionsStandardFull {
     }
 }
 
-contract FeeHandlerFactory is Ownable {
+contract FeeHandlerFactory {
 
     event Created(
         address indexed provider,
@@ -233,8 +207,8 @@ contract FeeHandlerFactory is Ownable {
 
     // provider => num => ActionFeeHandler
     mapping(address => mapping(uint256 => ActionFeeHandler)) public feeHandlerByProviderAndNum;
-    mapping(address => bool) public isFeeHandler;
-    mapping(address => bool) public isWhitelistedToken;
+    mapping(address => ActionFeeHandler[]) public feeHandlersByProvider;
+    mapping(address => mapping(address => bool)) public isWhitelistedToken;
 
     /// @notice Deploys a new feeHandler instance
     /// @dev Input _num = 100 for 1% fee, _num = 50 for 0.5% fee, etc
@@ -245,16 +219,20 @@ contract FeeHandlerFactory is Ownable {
         );
         feeHandler = new ActionFeeHandler(msg.sender, this, _num, DEN);
         feeHandlerByProviderAndNum[msg.sender][_num] = feeHandler;
-        isFeeHandler[address(feeHandler)] = true;
+        feeHandlersByProvider[msg.sender].push(feeHandler);
         emit Created(msg.sender, feeHandler, _num);
     }
 
-    // Fee Factory Admin
-    function addTokenToWhitelist(address _token) external onlyOwner {
-        isWhitelistedToken[_token] = true;
+    // Provider Token whitelist
+    function addTokensToWhitelist(address[] calldata _tokens) external {
+        for (uint i; i < _tokens.length; i++) {
+            isWhitelistedToken[msg.sender][_tokens[i]] = true;
+        }
     }
 
-    function removeTokenFromWhitelist(address _token) external onlyOwner {
-        isWhitelistedToken[_token] = false;
+    function removeTokensFromWhitelist(address[] calldata _tokens) external {
+        for (uint i; i < _tokens.length; i++) {
+            isWhitelistedToken[msg.sender][_tokens[i]] = false;
+        }
     }
 }

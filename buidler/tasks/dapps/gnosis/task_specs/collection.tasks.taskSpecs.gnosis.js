@@ -7,12 +7,12 @@ import "./task.taskSpec.tradeAndWithdraw";
 import "./task.taskSpec.dummy";
 
 // // ==== Gnosis UI====
-import "./gnosis_ui/task.taskSpec.timeTradeNoTransferUI";
 import "./gnosis_ui/task.taskSpec.timeTradeUI";
-import "./gnosis_ui/task.taskSpec.balanceTradeNoTransferUI";
 import "./gnosis_ui/task.taskSpec.balanceTradeUI";
-import "./gnosis_ui/task.taskSpec.kyberPriceTradeNoTransferUI";
 import "./gnosis_ui/task.taskSpec.kyberPriceTradeUI";
 import "./gnosis_ui/task.taskSpec.withdrawAndSetTimeUI";
 import "./gnosis_ui/task.taskSpec.withdrawAndSetBalanceUI";
 import "./gnosis_ui/task.taskSpec.withdrawAndSetKyberPriceUI";
+
+// ==== Whitelist all gnosis tasks ==== \\
+import "./gnosis_ui/task.whitelistGnosisUiTaskSpecs";

@@ -22,7 +22,6 @@ export default task(
 
       const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
-        contractaddress: "0xE7418743527a8e5F191bA4e9609b5914c9880a12",
         signer: provider,
         write: true,
       });

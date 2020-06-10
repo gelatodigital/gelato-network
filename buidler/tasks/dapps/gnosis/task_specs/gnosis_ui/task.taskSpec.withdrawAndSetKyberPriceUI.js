@@ -2,7 +2,7 @@ import { task, types } from "@nomiclabs/buidler/config";
 import { constants, utils } from "ethers";
 
 export default internalTask(
-  "gc-return-taskspec-withdraw-and-set-kyber-price-ui",
+  "gelato-return-taskspec-withdraw-and-set-kyber-price-ui",
   `Returns a hardcoded task spec for the timeTrade Script`
 )
   .addFlag("log")
@@ -27,9 +27,24 @@ export default internalTask(
         data: constants.HashZero,
         operation: Operation.Delegatecall,
         termsOkCheck: true,
+        dataflow: DataFlow.Out,
       });
 
-      // ##### Action #1
+      // ##### Action #2
+      const actionTransferAddress = await run("bre-config", {
+        deployments: true,
+        contractname: "ActionTransfer",
+      });
+
+      const transferAction = new Action({
+        addr: actionTransferAddress,
+        data: constants.HashZero,
+        operation: Operation.Delegatecall,
+        termsOkCheck: true,
+        dataflow: DataFlow.In,
+      });
+
+      // ##### Action #3
       const setCondition = new Action({
         addr: conditionAddress,
         data: constants.HashZero,
@@ -38,7 +53,7 @@ export default internalTask(
 
       // ##### Create Task Spec
       const taskSpec = new TaskSpec({
-        actions: [withdrawAction, setCondition],
+        actions: [withdrawAction, transferAction, setCondition],
         gasPriceCeil: 0, // Infinte gas price
       });
 
