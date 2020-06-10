@@ -2,17 +2,16 @@ export const deployments = {
   // ========== Rinkeby ===========
   // ==== One-Off Actions ====
   // Gnosis
-  ActionWithdrawBatchExchange: "0x42D9F0f681B6eb79fA9e198De106c3aFabA58244",
-  ActionPlaceOrderBatchExchange: "0x65a12D50C31834a27d686F827C4bF51e6319F629",
+  ActionWithdrawBatchExchange: "0x7F1272976731DdaE91dc74490E8d0aD78731AA55",
+  ActionPlaceOrderBatchExchange: "0x89f742D8c707a1AD1bF00F7EAD19D57533dD9bDa",
   // erc20
-  ActionERC20Transfer: "0x0",
-  ActionERC20TransferFrom: "0xF5A7803c32CC4ba874e8c8CF19a998057a2edc79",
-  ActionERC20TransferFromGlobal: "0xA67F96aF54D683748A633A2f94e6725002C2c957",
+  ActionTransfer: "0x74d218AB6C5F743B476c6d3ac713e271D56aC19D",
+  ActionERC20TransferFrom: "0x42c5d0aA55990a4f56b1BB3Df21B07D54B5c9fa5",
   MockConditionDummy: "0x5803c4712f191fc565afA44eB7f8eb9e8Af057db",
   // kyber
   ActionKyberTradeRinkeby: "0x0",
   // kyber
-  ActionUniswapTrade: "0xB61fD88169cF0734e5274a886BDB3E90466f1d28",
+  ActionUniswapTrade: "0xBE9B42af62cb3a5971df3B71a6a77319189e2254",
   // Portfolio Mgmt
   ActionRebalancePortfolioRinkeby: "0x0",
 
@@ -26,34 +25,34 @@ export const deployments = {
     "0xA66Dc4AacF4D23118ce148474d349b75a6A4E3C8",
 
   // ===== Gelato Core ====
-  GelatoCore: "0x0c6403798c5D198CB80A0bDEd7610fC32278F4D0",
+  GelatoCore: "0xF4aA17A05598e85480AA913C7DF0bAaD893Ac038",
   GelatoGasPriceOracle: "0x02C0d77f2dc8C9A4c6dD3898278bEe9FAdf5dbe9",
 
   // ===== Gnosis Safe Provider Module ====
-  ProviderModuleGnosisSafeProxy: "0x7EB9918cDA7B1767EC87fFE57c4d1e10559f8451",
+  ProviderModuleGnosisSafeProxy: "0x10A6e604e1Ae71CF84E79563c76FDF8b48C84a6D",
 
   // ===== DS Proxy Provider Module ====
   ProviderModuleDsProxy: "0x0",
 
   // ===== Gelato User Proxies ====
-  ProviderModuleGelatoUserProxy: "0xF799aBB08878983c70b1AF1e1c9cA3eC7b81a440",
-  GelatoUserProxyFactory: "0x68D88B044F83Aa0B4EF6AFB24C556Cf35Ea24521",
+  ProviderModuleGelatoUserProxy: "0x6568F2e419991E3DCB065e75d4C1A2F58e50A819",
+  GelatoUserProxyFactory: "0xecB15735289D1bc17b66A20857550644E86CF11d",
 
   // ==== Conditions ====
   // == Balances ==
   ConditionBalance: "0x29712a389E06eC7C91016932c23FcB085AF241Fb",
-  ConditionBalanceStateful: "0x5aeA21Bcd80529727D009e094BEeBD6A186E6585",
+  ConditionBalanceStateful: "0x8aDd18be538DA9dEfB1dea7D6cb17426011119C6",
   // == Indices ==
   // fearAndGreed
   ConditionFearGreedIndex: "0x0",
   // == Price ==
   // Kyber
   ConditionKyberRate: "0x4F2935cd565E88832721ea5465D21593894274Cd",
-  ConditionKyberRateStateful: "0x6e9A985027ffa649d4AC4A54555DFf19DDA1b257",
+  ConditionKyberRateStateful: "0x9E2963137B836dBe3e5b04cf38CC985bd3C1a0aC",
   // == Time ==
   // Timestamps
   ConditionTime: "0x26d72d7AE606B5FCbBD0417fa112E7b4aBF05aE2",
-  ConditionTimeStateful: "0x156CEd6aa95b88aC146cafc1fF538717C8853D73",
+  ConditionTimeStateful: "0xAaB4fF152C1591017764BEaD313a5748E556A0f7",
   // Gnosis
   ConditionBatchExchangeFundsWithdrawable:
     "0x66A11882E861B85685668fB3e72a7c6b74753352",
@@ -74,8 +73,7 @@ export const deployments = {
   Medianizer2: "0x642CC986A17A3e508fddb21fF4485D1A6A8B1DA4",
 
   // Helpers
-  FeeFinder: "0x220D8543325364D004661F73E0253C7CC6a4ACc1",
-  FeeExtractor: "0x9b625d0aC057450E67B7e3B6e17633AcF01Fe2a9",
+  FeeHandlerFactory: "0xAAe0CD8e5Aa05fA49a87F98E9B52dC02c2Efc194",
   GelatoMultiCall: "0xaf0124440ce473705465208C2B687A8D009E2EaE",
   GlobalState: "0xA88e0F76601Fd628467ea283a212ce71907f7232",
   ProviderFeeRelay: "0x28A68e773511Fe3Ac7f1757b94aD2BD7254b1e89",

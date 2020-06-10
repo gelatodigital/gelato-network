@@ -8,8 +8,6 @@ export default task("gc-setupgelato")
     try {
       taskArgs.log = true;
 
-      if (taskArgs.log) console.log("\n setupgelato TaskArgs:\n", taskArgs);
-
       // Deploy Gelato Core
       const gelatoCore = await run("deploy-gc", {});
 
