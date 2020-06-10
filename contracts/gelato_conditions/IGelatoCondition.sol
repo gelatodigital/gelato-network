@@ -7,8 +7,8 @@ pragma experimental ABIEncoderV2;
 /// @dev all the APIs are implemented inside GelatoConditionsStandard
 interface IGelatoCondition {
 
-    ///@notice GelatoCore calls this to verify securely the specified Condition securely
-    ///@dev Be careful only to encode a Task's condition.data as is and not with the
+    /// @notice GelatoCore calls this to verify securely the specified Condition securely
+    /// @dev Be careful only to encode a Task's condition.data as is and not with the
     ///  "ok" selector or _taskReceiptId, since those two things are handled by GelatoCore.
     /// @param _taskReceiptId This is passed by GelatoCore so we can rely on it as a secure
     ///  source of Task identification.

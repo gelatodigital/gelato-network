@@ -6,9 +6,9 @@ import {
     IGelatoOutFlowAction
 } from "../action_pipeline_interfaces/IGelatoOutFlowAction.sol";
 import {DataFlow} from "../../gelato_core/interfaces/IGelatoCore.sol";
-import {DataFlowType} from "../action_pipeline_interfaces/DataFlowType.sol";
 import {IERC20} from "../../external/IERC20.sol";
 import {IBatchExchange} from "../../dapp_interfaces/gnosis/IBatchExchange.sol";
+import {GelatoBytes} from "../../libraries/GelatoBytes.sol";
 import {SafeERC20} from "../../external/SafeERC20.sol";
 import {SafeMath} from "../../external/SafeMath.sol";
 
@@ -25,6 +25,7 @@ contract ActionWithdrawBatchExchange is GelatoActionsStandard, IGelatoOutFlowAct
 
     constructor(IBatchExchange _batchExchange) public { batchExchange = _batchExchange; }
 
+    // ======= DEV HELPERS =========
     /// @dev use this function to encode the data off-chain for the action data field
     function getActionData(address _token)
         public
@@ -34,20 +35,25 @@ contract ActionWithdrawBatchExchange is GelatoActionsStandard, IGelatoOutFlowAct
         return abi.encodeWithSelector(this.action.selector, _token);
     }
 
+    /// @dev Used by GelatoActionPipeline.isValid()
+    function DATA_FLOW_OUT_TYPE() public pure virtual override returns (bytes32) {
+        return keccak256("TOKEN,UINT256");
+    }
+
+    // ======= ACTION IMPLEMENTATION DETAILS =========
     /// @notice Withdraw token from Batch Exchange
     /// @dev delegatecallOnly
     /// @param _token Token to withdraw from Batch Exchange
-    function action(address _token)
+    function action(IERC20 _token)
         public
         virtual
         delegatecallOnly("ActionWithdrawBatchExchange.action")
         returns (uint256 withdrawAmount)
     {
-        IERC20 token = IERC20(_token);
-        uint256 preTokenBalance = token.balanceOf(address(this));
+        uint256 preTokenBalance = _token.balanceOf(address(this));
 
         try batchExchange.withdraw(address(this), _token) {
-            uint256 postTokenBalance = token.balanceOf(address(this));
+            uint256 postTokenBalance = _token.balanceOf(address(this));
             if (postTokenBalance > preTokenBalance)
                 withdrawAmount = postTokenBalance - preTokenBalance;
         } catch {
@@ -62,11 +68,11 @@ contract ActionWithdrawBatchExchange is GelatoActionsStandard, IGelatoOutFlowAct
         payable
         virtual
         override
-        returns (DataFlowType, bytes memory)
+        returns (bytes memory)
     {
-        address token = abi.decode(_actionData[4:], (address));
+        IERC20 token = abi.decode(_actionData[4:], (IERC20));
         uint256 withdrawAmount = action(token);
-        return (DataFlowType.TOKEN_AND_UINT256, abi.encode(token, withdrawAmount));
+        return abi.encode(token, withdrawAmount);
     }
 
     // ======= ACTION TERMS CHECK =========
@@ -83,9 +89,11 @@ contract ActionWithdrawBatchExchange is GelatoActionsStandard, IGelatoOutFlowAct
         view
         virtual
         override
-        returns(string memory)  // actionCondition
+        returns(string memory)
     {
-        address token = abi.decode(_actionData[4:], (address));
+        if (this.action.selector != GelatoBytes.calldataSliceSelector(_actionData))
+            return "ActionWithdrawBatchExchange: invalid action selector";
+        IERC20 token = abi.decode(_actionData[4:], (IERC20));
         bool tokenWithdrawable = batchExchange.hasValidWithdrawRequest(_userProxy, token);
         if (!tokenWithdrawable)
             return "ActionWithdrawBatchExchange: Token not withdrawable yet";

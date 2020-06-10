@@ -16,4 +16,18 @@ abstract contract GelatoActionsStandardFull is
     IGelatoInFlowAction,
     IGelatoOutFlowAction,
     IGelatoInAndOutFlowAction
-{}
+{
+    function DATA_FLOW_IN_TYPE()
+        external
+        pure
+        virtual
+        override(IGelatoInFlowAction, IGelatoInAndOutFlowAction)
+        returns (bytes32);
+
+    function DATA_FLOW_OUT_TYPE()
+        external
+        pure
+        virtual
+        override(IGelatoOutFlowAction, IGelatoInAndOutFlowAction)
+        returns (bytes32);
+}

@@ -13,7 +13,7 @@ const GELATO_GAS_PRICE = initialStateGasPriceOracle.gasPrice;
 const EXPIRY_DATE = 0;
 const SUBMISSIONS_LEFT = 1;
 
-describe("Return Data Passing Tests", function () {
+describe("GelatoActionPipeline Tests", function () {
   // We define the ContractFactory and Signer variables here and assign them in
   // a beforeEach hook.
   let seller;
@@ -29,6 +29,7 @@ describe("Return Data Passing Tests", function () {
   let providerModuleGelatoUserProxy;
   let gelatoCore;
   let gelatoGasPriceOracle;
+  let gelatoActionPipeline;
   let gelatoProvider;
   let actionTransferFromStruct;
   let sellToken;
@@ -80,7 +81,7 @@ describe("Return Data Passing Tests", function () {
       "GelatoActionPipeline",
       sysAdmin
     );
-    const gelatoActionPipeline = await GelatoActionPipeline.deploy();
+    gelatoActionPipeline = await GelatoActionPipeline.deploy();
     await gelatoActionPipeline.deployed();
 
     // Deploy ProviderModuleGelatoUserProxy with constructorArgs
@@ -165,6 +166,14 @@ describe("Return Data Passing Tests", function () {
     const actionTransferFromDataNone = { ...actionTransferFromDataOut };
     actionTransferFromDataNone.dataFlow = DataFlow.None;
 
+    // Make sure the combination of Actions in sequence is valid
+    let [actionsCanBeCombinedInSequence] = await gelatoActionPipeline.isValid([
+      actionTransferFromDataOut,
+      actionTransferFromDataInAndOut,
+      actionTransferFromDataIn,
+    ]);
+    expect(actionsCanBeCombinedInSequence).to.be.true;
+
     // ### Whitelist Task Spec
     const transferFromTaskSpec1 = new TaskSpec({
       actions: [
@@ -174,6 +183,14 @@ describe("Return Data Passing Tests", function () {
       ],
       gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
     });
+
+    // Make sure the combination of Actions in sequence is valid
+    [actionsCanBeCombinedInSequence] = await gelatoActionPipeline.isValid([
+      actionTransferFromDataOut,
+      actionTransferFromDataIn,
+      actionTransferFromDataNone,
+    ]);
+    expect(actionsCanBeCombinedInSequence).to.be.true;
 
     const transferFromTaskSpec2 = new TaskSpec({
       actions: [

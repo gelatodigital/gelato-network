@@ -1,7 +1,31 @@
 // "SPDX-License-Identifier: UNLICENSED"
 pragma solidity ^0.6.9;
 
-library GelatoDebug {
+library GelatoBytes {
+    function calldataSliceSelector(bytes calldata _bytes)
+        internal
+        pure
+        returns (bytes4 selector)
+    {
+        selector =
+            _bytes[0] |
+            (bytes4(_bytes[1]) >> 8) |
+            (bytes4(_bytes[2]) >> 16) |
+            (bytes4(_bytes[3]) >> 24);
+    }
+
+    function memorySliceSelector(bytes memory _bytes)
+        internal
+        pure
+        returns (bytes4 selector)
+    {
+        selector =
+            _bytes[0] |
+            (bytes4(_bytes[1]) >> 8) |
+            (bytes4(_bytes[2]) >> 16) |
+            (bytes4(_bytes[3]) >> 24);
+    }
+
     function revertWithErrorString(bytes memory _bytes, string memory _tracingInfo)
         internal
         pure

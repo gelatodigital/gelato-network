@@ -3,14 +3,14 @@ pragma solidity ^0.6.9;
 pragma experimental ABIEncoderV2;
 
 import {IGelatoUserProxy} from "./interfaces/IGelatoUserProxy.sol";
-import {GelatoDebug} from "../../libraries/GelatoDebug.sol";
+import {GelatoBytes} from "../../libraries/GelatoBytes.sol";
 import {
     Action, Operation, Provider, Task, TaskReceipt, IGelatoCore
 } from "../../gelato_core/interfaces/IGelatoCore.sol";
 
 contract GelatoUserProxy is IGelatoUserProxy {
 
-    using GelatoDebug for bytes;
+    using GelatoBytes for bytes;
 
     address public immutable override factory;
     address public immutable override user;

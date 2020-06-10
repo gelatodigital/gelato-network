@@ -35,6 +35,7 @@ describe("ActionFeeHandler Tests", function () {
   let gelatoCore;
   let gelatoGasPriceOracle;
   let gelatoProvider;
+  let gelatoActionPipeline;
   let sellToken;
   let sellDecimals;
   let feeHandlerAddress;
@@ -109,7 +110,7 @@ describe("ActionFeeHandler Tests", function () {
       "GelatoActionPipeline",
       sysAdmin
     );
-    const gelatoActionPipeline = await GelatoActionPipeline.deploy();
+    gelatoActionPipeline = await GelatoActionPipeline.deploy();
 
     // Deploy ProviderModuleGelatoUserProxy with constructorArgs
     const ProviderModuleGelatoUserProxy = await ethers.getContractFactory(
@@ -217,6 +218,15 @@ describe("ActionFeeHandler Tests", function () {
       termsOkCheck: false,
     });
 
+    // Make sure the combination of Actions in sequence is valid
+    const [
+      actionsCanBeCombinedInSequence,
+    ] = await gelatoActionPipeline.isValid([
+      feeHandlerActionStruct,
+      actionTransferFromStruct,
+    ]);
+    expect(actionsCanBeCombinedInSequence).to.be.true;
+
     // ### Whitelist Task Spec
     const taskSpecPayFeeAndTransferFrom = new TaskSpec({
       actions: [feeHandlerActionStruct, actionTransferFromStruct],
@@ -321,6 +331,15 @@ describe("ActionFeeHandler Tests", function () {
       dataFlow: DataFlow.In,
       termsOkCheck: false,
     });
+
+    // Make sure the combination of Actions in sequence is valid
+    const [
+      actionsCanBeCombinedInSequence,
+    ] = await gelatoActionPipeline.isValid([
+      feeHandlerActionStruct,
+      actionTransferStruct,
+    ]);
+    expect(actionsCanBeCombinedInSequence).to.be.true;
 
     // ### Whitelist Task Spec
     const taskSpecPayFeeAndTransfer = new TaskSpec({
@@ -430,6 +449,15 @@ describe("ActionFeeHandler Tests", function () {
       dataFlow: DataFlow.In,
       termsOkCheck: false,
     });
+
+    // Make sure the combination of Actions in sequence is valid
+    const [
+      actionsCanBeCombinedInSequence,
+    ] = await gelatoActionPipeline.isValid([
+      feeHandlerActionStruct,
+      actionTransferStruct,
+    ]);
+    expect(actionsCanBeCombinedInSequence).to.be.true;
 
     // ### Whitelist Task Spec
     const taskSpecPayFeeAndTransfer = new TaskSpec({

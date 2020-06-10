@@ -4,10 +4,10 @@ pragma experimental ABIEncoderV2;
 
 import {GelatoActionsStandardFull} from "../GelatoActionsStandardFull.sol";
 import {DataFlow} from "../../gelato_core/interfaces/IGelatoCore.sol";
-import {DataFlowType} from "../action_pipeline_interfaces/DataFlowType.sol";
 import {IERC20} from "../../external/IERC20.sol";
-import {SafeERC20} from "../../external/SafeERC20.sol";
 import {Address} from "../../external/Address.sol";
+import {GelatoBytes} from "../../libraries/GelatoBytes.sol";
+import {SafeERC20} from "../../external/SafeERC20.sol";
 import {SafeMath} from "../../external/SafeMath.sol";
 import {Ownable} from "../../external/Ownable.sol";
 
@@ -39,12 +39,32 @@ contract ActionFeeHandler is GelatoActionsStandardFull {
         feeDen = _den;
     }
 
+    // ======= DEV HELPERS =========
+    /// @dev use this function to encode the data off-chain for the action data field
+    function getActionData(address _sendToken, uint256 _sendAmount, address _feePayer)
+        public
+        pure
+        returns(bytes memory)
+    {
+        return abi.encodeWithSelector(this.action.selector, _sendToken, _sendAmount, _feePayer);
+    }
+
+    /// @dev Used by GelatoActionPipeline.isValid()
+    function DATA_FLOW_IN_TYPE() public pure virtual override returns (bytes32) {
+        return keccak256("TOKEN,UINT256");
+    }
+
+    /// @dev Used by GelatoActionPipeline.isValid()
+    function DATA_FLOW_OUT_TYPE() public pure virtual override returns (bytes32) {
+        return keccak256("TOKEN,UINT256");
+    }
+
+    // ======= FEE HANDLER CUSTOM ADMIN =========
     modifier onlyProvider() {
         require(msg.sender == provider, "ActionFeeHandler.onlyProvider");
         _;
     }
 
-    // ======= FEE HANDLER CUSTOM ADMIN =========
     function addTokenToCustomWhitelist(address _token) external onlyProvider {
         isCustomWhitelistedToken[_token] = true;
     }
@@ -66,15 +86,7 @@ contract ActionFeeHandler is GelatoActionsStandardFull {
         return feeHandlerFactory.isWhitelistedToken(_token);
     }
 
-    /// @dev use this function to encode the data off-chain for the action data field
-    function getActionData(address _sendToken, uint256 _sendAmount, address _feePayer)
-        public
-        pure
-        returns(bytes memory)
-    {
-        return abi.encodeWithSelector(this.action.selector, _sendToken, _sendAmount, _feePayer);
-    }
-
+    // ======= ACTION IMPLEMENTATION DETAILS =========
     /// @dev Use this function for encoding off-chain. DelegatecallOnly!
     function action(address _sendToken, uint256 _sendAmount, address _feePayer)
         public
@@ -92,7 +104,7 @@ contract ActionFeeHandler is GelatoActionsStandardFull {
         sendAmountAfterFee = _sendAmount.sub(fee);
     }
 
-    ///@dev Will be called by GelatoActionPipeline if Action.dataFlow.In
+    /// @dev Will be called by GelatoActionPipeline if Action.dataFlow.In
     //  => do not use for _actionData encoding
     function execWithDataFlowIn(bytes calldata _actionData, bytes calldata _inFlowData)
         external
@@ -100,29 +112,29 @@ contract ActionFeeHandler is GelatoActionsStandardFull {
         virtual
         override
     {
-        (address sendToken, uint256 sendAmount) = _handleInFlowData(_inFlowData);
-        address feePayer = _extractReusableActionData(_actionData);
+        (address sendToken, uint256 sendAmount) = abi.decode(_inFlowData, (address,uint256));
+        address feePayer = abi.decode(_actionData[68:], (address));
         action(sendToken, sendAmount, feePayer);
     }
 
-    ///@dev Will be called by GelatoActionPipeline if Action.dataFlow.Out
+    /// @dev Will be called by GelatoActionPipeline if Action.dataFlow.Out
     //  => do not use for _actionData encoding
     function execWithDataFlowOut(bytes calldata _actionData)
         external
         payable
         virtual
         override
-        returns (DataFlowType, bytes memory)
+        returns (bytes memory)
     {
         (address sendToken, uint256 sendAmount, address feePayer) = abi.decode(
             _actionData[4:],
             (address,uint256,address)
         );
         uint256 sendAmountAfterFee = action(sendToken, sendAmount, feePayer);
-        return (DataFlowType.TOKEN_AND_UINT256, abi.encode(sendToken, sendAmountAfterFee));
+        return abi.encode(sendToken, sendAmountAfterFee);
     }
 
-    ///@dev Will be called by GelatoActionPipeline if Action.dataFlow.InAndOut
+    /// @dev Will be called by GelatoActionPipeline if Action.dataFlow.InAndOut
     //  => do not use for _actionData encoding
     function execWithDataFlowInAndOut(
         bytes calldata _actionData,
@@ -132,12 +144,12 @@ contract ActionFeeHandler is GelatoActionsStandardFull {
         payable
         virtual
         override
-        returns (DataFlowType, bytes memory)
+        returns (bytes memory)
     {
-        (address sendToken, uint256 sendAmount) = _handleInFlowData(_inFlowData);
-        address feePayer = _extractReusableActionData(_actionData);
+        (address sendToken, uint256 sendAmount) = abi.decode(_inFlowData, (address,uint256));
+        address feePayer = abi.decode(_actionData[68:], (address));
         uint256 sendAmountAfterFee = action(sendToken, sendAmount, feePayer);
-        return (DataFlowType.TOKEN_AND_UINT256, abi.encode(sendToken, sendAmountAfterFee));
+        return abi.encode(sendToken, sendAmountAfterFee);
     }
 
     // ======= ACTION TERMS CHECK =========
@@ -154,8 +166,11 @@ contract ActionFeeHandler is GelatoActionsStandardFull {
         view
         virtual
         override
-        returns(string memory)  // actionTermsOk
+        returns(string memory)
     {
+        if (this.action.selector != GelatoBytes.calldataSliceSelector(_actionData))
+            return "ActionFeeHandler: invalid action selector";
+
         if (_dataFlow == DataFlow.In || _dataFlow == DataFlow.InAndOut)
             return "ActionFeeHandler: termsOk check invalidated by inbound DataFlow";
 
@@ -202,31 +217,6 @@ contract ActionFeeHandler is GelatoActionsStandardFull {
         }
 
         return OK;
-    }
-
-    // ======= ACTION HELPERS =========
-    function _handleInFlowData(bytes calldata _inFlowData)
-        internal
-        pure
-        virtual
-        returns(address sendToken, uint256 sendAmount)
-    {
-        (DataFlowType inFlowDataType, bytes memory inFlowData) = abi.decode(
-            _inFlowData,
-            (DataFlowType, bytes)
-        );
-        if (inFlowDataType == DataFlowType.TOKEN_AND_UINT256)
-            (sendToken, sendAmount) = abi.decode(inFlowData, (address,uint256));
-        else revert("ActionFeeHandler._handleInFlowData: invalid inFlowDataType");
-    }
-
-    function _extractReusableActionData(bytes calldata _actionData)
-        internal
-        pure
-        virtual
-        returns(address feePayer)
-    {
-        feePayer = abi.decode(_actionData[68:], (address));
     }
 }
 

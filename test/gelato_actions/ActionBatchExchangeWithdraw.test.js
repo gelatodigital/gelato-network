@@ -185,6 +185,12 @@ describe("BatchExchange Withdraw Test", function () {
       termsOkCheck: false,
     });
 
+    // Make sure the combination of Actions in sequence is valid
+    const [
+      actionsCanBeCombinedInSequence,
+    ] = await gelatoActionPipeline.isValid([actionWithdraw, actionTransfer]);
+    expect(actionsCanBeCombinedInSequence).to.be.true;
+
     // ### Whitelist Task Spec
     taskSpec = new TaskSpec({
       actions: [actionWithdraw, actionTransfer],

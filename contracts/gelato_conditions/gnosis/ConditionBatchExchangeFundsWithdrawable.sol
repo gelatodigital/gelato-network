@@ -3,6 +3,7 @@ pragma solidity ^0.6.9;
 
 import "../GelatoConditionsStandard.sol";
 import "../../dapp_interfaces/gnosis/IBatchExchange.sol";
+import {IERC20} from "../../external/IERC20.sol";
 
 contract ConditionBatchExchangeFundsWithdrawable is GelatoConditionsStandard {
 
@@ -16,14 +17,14 @@ contract ConditionBatchExchangeFundsWithdrawable is GelatoConditionsStandard {
         override
         returns(string memory)
     {
-        (address proxy, address sellToken, address buyToken) = abi.decode(
+        (address proxy, IERC20 sellToken, IERC20 buyToken) = abi.decode(
             _withdrawableCheckData,
-            (address,address,address)
+            (address,IERC20,IERC20)
         );
         return withdrawableCheck(proxy, sellToken, buyToken);
     }
 
-    function withdrawableCheck(address _proxy, address _sellToken, address _buyToken)
+    function withdrawableCheck(address _proxy, IERC20 _sellToken, IERC20 _buyToken)
         public
         view
         virtual
@@ -41,8 +42,8 @@ contract ConditionBatchExchangeFundsWithdrawable is GelatoConditionsStandard {
 
     function getConditionValue(
         address _proxy,
-        address _sellToken,
-        address _buyToken
+        IERC20 _sellToken,
+        IERC20 _buyToken
     )
         public
         view
