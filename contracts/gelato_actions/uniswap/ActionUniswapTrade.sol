@@ -68,7 +68,7 @@ contract ActionUniswapTrade is GelatoActionsStandardFull {
             if (sendTokenExchange != IUniswapExchange(0)) {
 
                 // origin funds lightweight proxy
-                if (_origin != address(this)) {
+                if (_origin != address(0) && _origin != address(this)) {
                     try sendERC20.transferFrom(_origin, address(this), _sendAmount) {
                     } catch {
                         revert("ActionUniswapTrade.action: ErrorTransferFromUser");
@@ -218,7 +218,7 @@ contract ActionUniswapTrade is GelatoActionsStandardFull {
             }
 
             // UserProxy is prefunded
-            if (origin == address(0)) {
+            if (origin == address(0) || origin == _userProxy) {
                 try sendERC20.balanceOf(_userProxy) returns(uint256 proxySendTokenBalance) {
                     if (proxySendTokenBalance < sendAmount)
                         return "ActionUniswapTrade: NotOkUserProxySendTokenBalance";
