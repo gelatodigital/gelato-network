@@ -87,11 +87,11 @@ describe("Multisend with Gelato User Proxy Test", function () {
       gelatoCore.address
     );
 
-    const GelatoActionPipeline = await ethers.getContractFactory(
-      "GelatoActionPipeline",
+    const Multisend = await ethers.getContractFactory(
+      "Multisend",
       sysAdmin
     );
-    const gelatoActionPipeline = await GelatoActionPipeline.deploy();
+    const multisend = await Multisend.deploy();
 
     // Deploy ProviderModuleGelatoUserProxy with constructorArgs
     const ProviderModuleGelatoUserProxy = await ethers.getContractFactory(
@@ -100,7 +100,7 @@ describe("Multisend with Gelato User Proxy Test", function () {
     );
     providerModuleGelatoUserProxy = await ProviderModuleGelatoUserProxy.deploy(
       gelatoUserProxyFactory.address,
-      gelatoActionPipeline.address
+      multisend.address
     );
 
     // Deploy Condition (if necessary)

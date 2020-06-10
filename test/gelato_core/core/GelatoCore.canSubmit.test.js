@@ -1,7 +1,7 @@
 // running `npx buidler test` automatically makes use of buidler-waffle plugin
 // => only dependency we need is "chai"
 const { expect } = require("chai");
-const { ethers } = require("@nomiclabs/buidler");
+const { ethers, run } = require("@nomiclabs/buidler");
 
 const GELATO_GAS_PRICE = ethers.utils.parseUnits("8", "gwei");
 
@@ -16,13 +16,13 @@ describe("Gelato Core - Task Submission ", function () {
   let providerAddress;
   let executorAddress;
   let userProxyAddress;
+  let userProxy;
   let gelatoUserProxyFactory;
   let providerModuleGelatoUserProxy;
   let gelatoCore;
   let conditionDummyStruct;
   let actionDummyStruct;
   let gelatoProvider;
-  let taskReceiptId = 1;
   let task;
 
   beforeEach(async function () {
@@ -130,10 +130,27 @@ describe("Gelato Core - Task Submission ", function () {
     [userProxyAddress] = await gelatoUserProxyFactory.gelatoProxiesByUser(
       userAddress
     );
+    userProxy = await ethers.getContractAt("GelatoUserProxy", userProxyAddress);
   });
 
   describe("GelatoCore.canSubmit Tests", function () {
     it("#1: Executor not minStaked", async function () {
+      await gelatoCore.connect(provider).provideTaskSpecs([
+        new TaskSpec({
+          actions: task.actions,
+          gasPriceCeil: utils.parseUnits("20", "gwei"),
+        }),
+      ]);
+
+      expect(
+        await gelatoCore.canSubmitTask(
+          userProxyAddress,
+          gelatoProvider,
+          task,
+          EXPIRY_DATE
+        )
+      ).to.equal("OK");
+
       const fakeGelatoProvider = new GelatoProvider({
         addr: userAddress,
         module: providerModuleGelatoUserProxy.address,
@@ -246,6 +263,55 @@ describe("Gelato Core - Task Submission ", function () {
         await gelatoCore.canSubmitTask(
           userProxyAddress,
           gelatoProviderWithFakeModule,
+          task,
+          EXPIRY_DATE
+        )
+      ).to.equal("GelatoCore.canSubmitTask.isProvided:InvalidProviderModule");
+    });
+
+    it("#6: SelfProvider: InvalidProviderModule", async function () {
+      const selfProvider = new GelatoProvider({
+        addr: userProxyAddress,
+        module: providerModuleGelatoUserProxy.address,
+      });
+
+      const multiProvideData = await run("abi-encode-withselector", {
+        contractname: "GelatoCore",
+        functionname: "multiProvide",
+        inputs: [executorAddress, [], [providerModuleGelatoUserProxy.address]],
+      });
+
+      const multiProvideAction = new Action({
+        addr: gelatoCore.address,
+        data: multiProvideData,
+        operation: Operation.Call,
+      });
+
+      await expect(userProxy.execAction(multiProvideAction))
+        .to.emit(gelatoCore, "LogProviderAssignedExecutor")
+        .withArgs(userProxyAddress, constants.AddressZero, executorAddress)
+        .and.to.emit(gelatoCore, "LogProviderModuleAdded")
+        .withArgs(userProxyAddress, providerModuleGelatoUserProxy.address);
+
+      expect(
+        await gelatoCore.canSubmitTask(
+          userProxyAddress,
+          selfProvider,
+          task,
+          EXPIRY_DATE
+        )
+      ).to.equal("OK");
+
+      const selfProviderWithFakeModule = new GelatoProvider({
+        addr: userProxyAddress,
+        module: constants.AddressZero,
+      });
+
+      // GelatoCore.canSubmitTask.isProvided:InvalidProviderModule
+      expect(
+        await gelatoCore.canSubmitTask(
+          userProxyAddress,
+          selfProviderWithFakeModule,
           task,
           EXPIRY_DATE
         )

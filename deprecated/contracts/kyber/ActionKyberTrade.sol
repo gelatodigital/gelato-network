@@ -1,22 +1,17 @@
 // "SPDX-License-Identifier: UNLICENSED"
 pragma solidity ^0.6.9;
 
-import "../GelatoActionsStandard.sol";
-import "../../external/IERC20.sol";
-// import "../../external/SafeERC20.sol";
-import "../../dapp_interfaces/kyber/IKyber.sol";
-import "../../external/SafeMath.sol";
-import "../../external/Address.sol";
+import {GelatoActionsStandardFull} from "../GelatoActionsStandardFull.sol";
+import {DataFlow} from "../../gelato_core/interfaces/IGelatoCore.sol";
+import {Address} from "../../external/Address.sol";
+import {SafeMath} from "../../external/SafeMath.sol";
+import {IERC20} from "../../external/IERC20.sol";
+import {IKyber} from "../../dapp_interfaces/kyber/IKyber.sol";
 
-contract ActionKyberTrade is GelatoActionsStandard {
+contract ActionKyberTrade is GelatoActionsStandardFull {
     // using SafeERC20 for IERC20; <- internal library methods vs. try/catch
-    using SafeMath for uint256;
     using Address for address;
-
-    // actionSelector public state variable np due to this.actionSelector constant issue
-    function actionSelector() external pure override returns(bytes4) {
-        return this.action.selector;
-    }
+    using SafeMath for uint256;
 
     function action(
         // Standard Action Params
@@ -71,8 +66,15 @@ contract ActionKyberTrade is GelatoActionsStandard {
 
     // ====== ACTION TERMS CHECK ==========
     // Overriding and extending GelatoActionsStandard's function (optional)
-    function termsOk(bytes calldata _actionData)
-        external
+    function termsOk(
+        uint256,  // taskReceipId
+        address _userProxy,
+        bytes calldata _actionData,
+        DataFlow _dataFlow,
+        uint256,  // value
+        uint256  // cycleId
+    )
+        public
         view
         virtual
         override
@@ -82,20 +84,7 @@ contract ActionKyberTrade is GelatoActionsStandard {
             _actionData[4:132],
             (address,address,address,uint256)
         );
-        return _actionConditionsCheck(_user, _userProxy, _sendToken, _sendAmt);
-    }
 
-    function _actionConditionsCheck(
-        address _user,
-        address _userProxy,
-        address _sendToken,
-        uint256 _sendAmt
-    )
-        internal
-        view
-        virtual
-        returns(string memory)  // actionTermsOk
-    {
         if (!_sendToken.isContract()) return "ActionKyberTrade: NotOkSendTokenAddress";
 
         IERC20 sendERC20 = IERC20(_sendToken);

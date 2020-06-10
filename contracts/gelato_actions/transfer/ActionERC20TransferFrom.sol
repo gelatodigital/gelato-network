@@ -4,9 +4,9 @@ pragma experimental ABIEncoderV2;
 
 import {GelatoActionsStandardFull} from "../GelatoActionsStandardFull.sol";
 import {DataFlow} from "../../gelato_core/interfaces/IGelatoCore.sol";
-import {DataFlowType} from "../action_pipeline_interfaces/DataFlowType.sol";
 import {IERC20} from "../../external/IERC20.sol";
 import {Address} from "../../external/Address.sol";
+import {GelatoBytes} from "../../libraries/GelatoBytes.sol";
 import {SafeERC20} from "../../external/SafeERC20.sol";
 
 contract ActionERC20TransferFrom is GelatoActionsStandardFull {
@@ -14,6 +14,7 @@ contract ActionERC20TransferFrom is GelatoActionsStandardFull {
     using Address for address;
     using SafeERC20 for IERC20;
 
+    // ======= DEV HELPERS =========
     /// @dev use this function to encode the data off-chain for the action data field
     function getActionData(
         address _user,
@@ -34,6 +35,17 @@ contract ActionERC20TransferFrom is GelatoActionsStandardFull {
         );
     }
 
+    /// @dev Used by GelatoActionPipeline.isValid()
+    function DATA_FLOW_IN_TYPE() public pure virtual override returns (bytes32) {
+        return keccak256("TOKEN,UINT256");
+    }
+
+    /// @dev Used by GelatoActionPipeline.isValid()
+    function DATA_FLOW_OUT_TYPE() public pure virtual override returns (bytes32) {
+        return keccak256("TOKEN,UINT256");
+    }
+
+    // ======= ACTION IMPLEMENTATION DETAILS =========
     /// @dev Always use this function for encoding _actionData off-chain
     ///  Will be called by GelatoActionPipeline if Action.dataFlow.None
     function action(
@@ -50,7 +62,7 @@ contract ActionERC20TransferFrom is GelatoActionsStandardFull {
         emit LogOneWay(_user, address(_sendToken), _sendAmount, _destination);
     }
 
-    ///@dev Will be called by GelatoActionPipeline if Action.dataFlow.In
+    /// @dev Will be called by GelatoActionPipeline if Action.dataFlow.In
     //  => do not use for _actionData encoding
     function execWithDataFlowIn(bytes calldata _actionData, bytes calldata _inFlowData)
         external
@@ -58,19 +70,20 @@ contract ActionERC20TransferFrom is GelatoActionsStandardFull {
         virtual
         override
     {
-        (address user, address destination) = _extractReusableActionData(_actionData);
-        (IERC20 sendToken, uint256 sendAmount) = _handleInFlowData(_inFlowData);
+        address user = abi.decode(_actionData[4:36], (address));
+        address destination = abi.decode(_actionData[100:132], (address));
+        (IERC20 sendToken, uint256 sendAmount) = abi.decode(_inFlowData, (IERC20,uint256));
         action(user, sendToken, sendAmount, destination);
     }
 
-    ///@dev Will be called by GelatoActionPipeline if Action.dataFlow.Out
+    /// @dev Will be called by GelatoActionPipeline if Action.dataFlow.Out
     //  => do not use for _actionData encoding
     function execWithDataFlowOut(bytes calldata _actionData)
         external
         payable
         virtual
         override
-        returns (DataFlowType, bytes memory)
+        returns (bytes memory)
     {
         (address user,
          IERC20 sendToken,
@@ -80,10 +93,10 @@ contract ActionERC20TransferFrom is GelatoActionsStandardFull {
             (address,IERC20,uint256,address)
         );
         action(user, sendToken, sendAmount, destination);
-        return (DataFlowType.TOKEN_AND_UINT256, abi.encode(sendToken, sendAmount));
+        return abi.encode(sendToken, sendAmount);
     }
 
-    ///@dev Will be called by GelatoActionPipeline if Action.dataFlow.InAndOut
+    /// @dev Will be called by GelatoActionPipeline if Action.dataFlow.InAndOut
     //  => do not use for _actionData encoding
     function execWithDataFlowInAndOut(
         bytes calldata _actionData,
@@ -93,12 +106,13 @@ contract ActionERC20TransferFrom is GelatoActionsStandardFull {
         payable
         virtual
         override
-        returns (DataFlowType, bytes memory)
+        returns (bytes memory)
     {
-        (address user, address destination) = _extractReusableActionData(_actionData);
-        (IERC20 sendToken, uint256 sendAmount) = _handleInFlowData(_inFlowData);
+        address user = abi.decode(_actionData[4:36], (address));
+        address destination = abi.decode(_actionData[100:132], (address));
+        (IERC20 sendToken, uint256 sendAmount) = abi.decode(_inFlowData, (IERC20,uint256));
         action(user, sendToken, sendAmount, destination);
-        return (DataFlowType.TOKEN_AND_UINT256, abi.encode(sendToken, sendAmount));
+        return abi.encode(sendToken, sendAmount);
     }
 
     // ======= ACTION TERMS CHECK =========
@@ -117,6 +131,9 @@ contract ActionERC20TransferFrom is GelatoActionsStandardFull {
         override
         returns(string memory)
     {
+        if (this.action.selector != GelatoBytes.calldataSliceSelector(_actionData))
+            return "ActionERC20TransferFrom: invalid action selector";
+
         if (_dataFlow == DataFlow.In || _dataFlow == DataFlow.InAndOut)
             return "ActionERC20TransferFrom: termsOk check invalidated by inbound DataFlow";
 
@@ -140,31 +157,5 @@ contract ActionERC20TransferFrom is GelatoActionsStandardFull {
         }
 
         return OK;
-    }
-
-    // ======= ACTION HELPERS =========
-    function _extractReusableActionData(bytes calldata _actionData)
-        internal
-        pure
-        virtual
-        returns(address user, address destination)
-    {
-        user = abi.decode(_actionData[4:36], (address));
-        destination = abi.decode(_actionData[100:132], (address));
-    }
-
-    function _handleInFlowData(bytes calldata _inFlowData)
-        internal
-        pure
-        virtual
-        returns(IERC20 sendToken, uint256 sendAmount)
-    {
-        (DataFlowType inFlowDataType, bytes memory inFlowData) = abi.decode(
-            _inFlowData,
-            (DataFlowType, bytes)
-        );
-        if (inFlowDataType == DataFlowType.TOKEN_AND_UINT256)
-            (sendToken, sendAmount) = abi.decode(inFlowData, (IERC20, uint256));
-        else revert("ActionERC20TransferFrom._handleInFlowData: invalid inFlowDataType");
     }
 }

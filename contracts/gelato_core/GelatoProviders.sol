@@ -98,7 +98,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
     {
         TaskSpec memory _taskSpec = _castTaskToSpec(_task);
         res = isTaskSpecProvided(_provider.addr, _taskSpec);
-        if (res.startsWithOk())
+        if (res.startsWithOK())
             return providerModuleChecks(_userProxy, _provider, _task);
     }
 

@@ -4,14 +4,14 @@ pragma solidity ^0.6.9;
 import {IGelatoSysAdmin} from "./interfaces/IGelatoSysAdmin.sol";
 import {Ownable} from "../external/Ownable.sol";
 import {Address} from "../external/Address.sol";
-import {GelatoDebug} from "../libraries/GelatoDebug.sol";
+import {GelatoBytes} from "../libraries/GelatoBytes.sol";
 import {SafeMath} from "../external/SafeMath.sol";
 import {Math} from "../external/Math.sol";
 
 abstract contract GelatoSysAdmin is IGelatoSysAdmin, Ownable {
 
     using Address for address payable;
-    using GelatoDebug for bytes;
+    using GelatoBytes for bytes;
     using SafeMath for uint256;
 
     // Executor compensation for estimated tx costs not accounted for by startGas

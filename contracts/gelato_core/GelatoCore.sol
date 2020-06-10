@@ -4,7 +4,7 @@ pragma experimental ABIEncoderV2;
 
 import {IGelatoCore, Provider, Task, TaskReceipt} from "./interfaces/IGelatoCore.sol";
 import {GelatoExecutors} from "./GelatoExecutors.sol";
-import {GelatoDebug} from "../libraries/GelatoDebug.sol";
+import {GelatoBytes} from "../libraries/GelatoBytes.sol";
 import {GelatoTaskReceipt} from "../libraries/GelatoTaskReceipt.sol";
 import {SafeMath} from "../external/SafeMath.sol";
 import {IGelatoCondition} from "../gelato_conditions/IGelatoCondition.sol";
@@ -17,7 +17,7 @@ import {IGelatoProviderModule} from "../gelato_provider_modules/IGelatoProviderM
 /// @dev Find all NatSpecs inside IGelatoCore
 contract GelatoCore is IGelatoCore, GelatoExecutors {
 
-    using GelatoDebug for bytes;
+    using GelatoBytes for bytes;
     using GelatoTaskReceipt for TaskReceipt;
     using SafeMath for uint256;
 
@@ -46,7 +46,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         Task memory _task,
         uint256 _expiryDate
     )
-        public
+        external
         view
         override
         returns(string memory)
@@ -65,7 +65,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         if (_userProxy == _provider.addr)
             isProvided = providerModuleChecks(_userProxy, _provider, _task);
         else isProvided = isTaskProvided(_userProxy, _provider, _task);
-        if (!isProvided.startsWithOk())
+        if (!isProvided.startsWithOK())
             return string(abi.encodePacked("GelatoCore.canSubmitTask.isProvided:", isProvided));
 
         // Success
@@ -77,7 +77,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         Task memory _task,
         uint256 _expiryDate
     )
-        public
+        external
         override
     {
         Task[] memory singleTask = new Task[](1);
@@ -91,7 +91,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         uint256 _expiryDate,
         uint256 _cycles  // how many full cycles should be submitted
     )
-        public
+        external
         override
     {
         _storeTaskReceipt(
@@ -105,7 +105,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         uint256 _expiryDate,
         uint256 _sumOfRequestedTaskSubmits  // see IGelatoCore for explanation
     )
-        public
+        external
         override
     {
         if (_sumOfRequestedTaskSubmits != 0) {
@@ -175,7 +175,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             _TR.task(),
             _gelatoGasPrice
         );
-        if (!res.startsWithOk()) return res;
+        if (!res.startsWithOK()) return res;
 
         bytes32 hashedTaskReceipt = hashTaskReceipt(_TR);
         if (taskReceiptHash[_TR.id] != hashedTaskReceipt) return "InvalidTaskReceiptHash";
@@ -193,7 +193,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
                 )
                     returns(string memory condition)
                 {
-                    if (!condition.startsWithOk())
+                    if (!condition.startsWithOK())
                         return string(abi.encodePacked("ConditionNotOk:", condition));
                 } catch Error(string memory error) {
                     return string(abi.encodePacked("ConditionReverted:", error));
@@ -218,7 +218,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
             )
                 returns(string memory actionTermsOk)
             {
-                if (!actionTermsOk.startsWithOk())
+                if (!actionTermsOk.startsWithOK())
                     return string(abi.encodePacked("ActionTermsNotOk:", actionTermsOk));
             } catch Error(string memory error) {
                 return string(abi.encodePacked("ActionReverted:", error));
@@ -238,7 +238,7 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
     enum ExecutorPay { Reward, Refund }
 
     // Execution Entry Point: tx.gasprice must be greater or equal to _getGelatoGasPrice()
-    function exec(TaskReceipt memory _TR) public override {
+    function exec(TaskReceipt memory _TR) external override {
 
         // Store startGas for gas-consumption based cost and payout calcs
         uint256 startGas = gasleft();
@@ -323,14 +323,14 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         uint256 _gelatoMaxGas,
         uint256 _gelatoGasPrice
     )
-        public
+        external
         returns(ExecutionResult, string memory)
     {
         require(msg.sender == address(this), "GelatoCore.executionWrapper:onlyGelatoCore");
 
         // canExec()
         string memory canExecRes = canExec(taskReceipt, _gelatoMaxGas, _gelatoGasPrice);
-        if (!canExecRes.startsWithOk()) return (ExecutionResult.CanExecFailed, canExecRes);
+        if (!canExecRes.startsWithOK()) return (ExecutionResult.CanExecFailed, canExecRes);
 
         // Will revert if exec failed => will be caught in exec flow
         _exec(taskReceipt);

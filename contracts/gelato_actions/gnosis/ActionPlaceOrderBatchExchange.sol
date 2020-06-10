@@ -4,8 +4,8 @@ pragma experimental ABIEncoderV2;
 
 import {GelatoActionsStandardFull} from "../GelatoActionsStandardFull.sol";
 import {DataFlow} from "../../gelato_core/interfaces/IGelatoCore.sol";
-import {DataFlowType} from "../action_pipeline_interfaces/DataFlowType.sol";
 import {IERC20} from "../../external/IERC20.sol";
+import {GelatoBytes} from "../../libraries/GelatoBytes.sol";
 import {SafeERC20} from "../../external/SafeERC20.sol";
 import {SafeMath} from "../../external/SafeMath.sol";
 import {IBatchExchange} from "../../dapp_interfaces/gnosis/IBatchExchange.sol";
@@ -20,8 +20,8 @@ import {Task} from "../../gelato_core/interfaces/IGelatoCore.sol";
 //   4) requests future withdraw on batch exchange
 contract ActionPlaceOrderBatchExchange is GelatoActionsStandardFull {
 
-    using SafeMath for uint256;
     using SafeERC20 for IERC20;
+    using SafeMath for uint256;
 
     uint256 public constant MAX_UINT = type(uint256).max;
     uint32 public constant BATCH_TIME = 300;
@@ -30,11 +30,12 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandardFull {
 
     constructor(IBatchExchange _batchExchange) public { batchExchange = _batchExchange; }
 
+    // ======= DEV HELPERS =========
     /// @dev use this function to encode the data off-chain for the action data field
     function getActionData(
-        address _sellToken,
+        IERC20 _sellToken,
         uint128 _sellAmount,
-        address _buyToken,
+        IERC20 _buyToken,
         uint128 _buyAmount,
         uint32 _batchDuration
     )
@@ -52,16 +53,27 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandardFull {
         );
     }
 
+    /// @dev Used by GelatoActionPipeline.isValid()
+    function DATA_FLOW_IN_TYPE() public pure virtual override returns (bytes32) {
+        return keccak256("TOKEN,UINT256");
+    }
+
+    /// @dev Used by GelatoActionPipeline.isValid()
+    function DATA_FLOW_OUT_TYPE() public pure virtual override returns (bytes32) {
+        return keccak256("TOKEN,UINT256");
+    }
+
+    // ======= ACTION IMPLEMENTATION DETAILS =========
     /// @notice Place order on Batch Exchange and request future withdraw for buy/sell token
-    /// @param _sellToken Token to sell on Batch Exchange
+    /// @param _sellToken ERC20 Token to sell on Batch Exchange
     /// @param _sellAmount Amount to sell
-    /// @param _buyToken Token to buy on Batch Exchange
+    /// @param _buyToken ERC20 Token to buy on Batch Exchange
     /// @param _buyAmount Amount to receive (at least)
     /// @param _batchDuration After how many batches funds should be
     function action(
-        address _sellToken,
+        IERC20 _sellToken,
         uint128 _sellAmount,
-        address _buyToken,
+        IERC20 _buyToken,
         uint128 _buyAmount,
         uint32 _batchDuration
     )
@@ -69,14 +81,12 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandardFull {
         virtual
         delegatecallOnly("ActionPlaceOrderBatchExchange.action")
     {
-        IERC20 sellToken = IERC20(_sellToken);
-
         // 1. Fetch token Ids for sell & buy token on Batch Exchange
         uint16 sellTokenId = batchExchange.tokenAddressToIdMap(_sellToken);
         uint16 buyTokenId = batchExchange.tokenAddressToIdMap(_buyToken);
 
-        // 2. Approve sellToken to BatchExchange Contract
-        sellToken.safeIncreaseAllowance(address(batchExchange), _sellAmount);
+        // 2. Approve BatchExchange Contract for _sellToken
+        _sellToken.safeIncreaseAllowance(address(batchExchange), _sellAmount);
 
         // 3. Deposit _sellAmount on BatchExchange
         try batchExchange.deposit(_sellToken, _sellAmount) {
@@ -116,7 +126,7 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandardFull {
         }
     }
 
-    ///@dev Will be called by GelatoActionPipeline if Action.dataFlow.In
+    /// @dev Will be called by GelatoActionPipeline if Action.dataFlow.In
     //  => do not use for _actionData encoding
     function execWithDataFlowIn(bytes calldata _actionData, bytes calldata _inFlowData)
         external
@@ -124,36 +134,35 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandardFull {
         virtual
         override
     {
-        (address sellToken, uint128 sellAmount) = _handleInFlowData(_inFlowData);
-        (address buyToken,
+        (IERC20 sellToken, uint128 sellAmount) = _handleInFlowData(_inFlowData);
+        (IERC20 buyToken,
          uint128 buyAmount,
          uint32 batchDuration) = _extractReusableActionData(_actionData);
-
         action(sellToken, sellAmount, buyToken, buyAmount, batchDuration);
     }
 
-    ///@dev Will be called by GelatoActionPipeline if Action.dataFlow.Out
+    /// @dev Will be called by GelatoActionPipeline if Action.dataFlow.Out
     //  => do not use for _actionData encoding
     function execWithDataFlowOut(bytes calldata _actionData)
         external
         payable
         virtual
         override
-        returns (DataFlowType, bytes memory)
+        returns (bytes memory)
     {
-        (address sellToken,
+        (IERC20 sellToken,
          uint128 sellAmount,
-         address buyToken,
+         IERC20 buyToken,
          uint128 buyAmount,
          uint32 batchDuration) = abi.decode(
             _actionData[4:],
-            (address,uint128,address,uint128,uint32)
+            (IERC20,uint128,IERC20,uint128,uint32)
         );
         action(sellToken, sellAmount, buyToken, buyAmount, batchDuration);
-        return (DataFlowType.UINT256, abi.encode(sellAmount));
+        return abi.encode(sellToken, sellAmount);
     }
 
-    ///@dev Will be called by GelatoActionPipeline if Action.dataFlow.InAndOut
+    /// @dev Will be called by GelatoActionPipeline if Action.dataFlow.InAndOut
     //  => do not use for _actionData encoding
     function execWithDataFlowInAndOut(
         bytes calldata _actionData,
@@ -163,16 +172,14 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandardFull {
         payable
         virtual
         override
-        returns (DataFlowType, bytes memory)
+        returns (bytes memory)
     {
-        (address sellToken, uint128 sellAmount) = _handleInFlowData(_inFlowData);
-        (address buyToken,
+        (IERC20 sellToken, uint128 sellAmount) = _handleInFlowData(_inFlowData);
+        (IERC20 buyToken,
          uint128 buyAmount,
          uint32 batchDuration) = _extractReusableActionData(_actionData);
-
         action(sellToken, sellAmount, buyToken, buyAmount, batchDuration);
-
-        return (DataFlowType.UINT256, abi.encode(sellAmount));
+        return abi.encode(sellToken, sellAmount);
     }
 
     // ======= ACTION TERMS CHECK =========
@@ -191,14 +198,17 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandardFull {
         override
         returns(string memory)  // actionCondition
     {
+        if (this.action.selector != GelatoBytes.calldataSliceSelector(_actionData))
+            return "ActionPlaceOrderBatchExchange: invalid action selector";
+
         if (_dataFlow == DataFlow.In || _dataFlow == DataFlow.InAndOut)
             return "ActionPlaceOrderBatchExchange: termsOk check invalidated by inbound DataFlow";
 
-        (address _sellToken, uint128 _sellAmount) = abi.decode(
+        (IERC20 sellToken, uint128 _sellAmount) = abi.decode(
             _actionData[4:68],
-            (address,uint128)
+            (IERC20,uint128)
         );
-        IERC20 sellToken = IERC20(_sellToken);
+
         try sellToken.balanceOf(_userProxy) returns(uint256 sellTokenBalance) {
             if (sellTokenBalance < _sellAmount)
                 return "ActionPlaceOrderBatchExchange: NotOkUserSellTokenBalance";
@@ -206,8 +216,7 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandardFull {
             return "ActionPlaceOrderBatchExchange: ErrorBalanceOf";
         }
 
-        // STANDARD return string to signal actionConditions Ok
-        return "OK";
+        return OK;
     }
 
     // ======= ACTION HELPERS =========
@@ -215,19 +224,10 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandardFull {
         internal
         pure
         virtual
-        returns(address sellToken, uint128 sellAmount)
+        returns(IERC20 sellToken, uint128 sellAmount)
     {
-        (DataFlowType inFlowDataType, bytes memory inFlowData) = abi.decode(
-            _inFlowData,
-            (DataFlowType, bytes)
-        );
-
         uint256 sellAmount256;
-        if (inFlowDataType == DataFlowType.TOKEN_AND_UINT256)
-            (sellToken, sellAmount256) = abi.decode(inFlowData, (address,uint256));
-        else
-            revert("ActionPlaceOrderBatchExchange._handleInFlowData: invalid inFlowDataType");
-
+        (sellToken, sellAmount256) = abi.decode(_inFlowData, (IERC20,uint256));
         sellAmount = uint128(sellAmount256);
         require(
             sellAmount == sellAmount256,
@@ -239,11 +239,11 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandardFull {
         internal
         pure
         virtual
-        returns (address buyToken, uint128 buyAmount, uint32 batchDuration)
+        returns (IERC20 buyToken, uint128 buyAmount, uint32 batchDuration)
     {
-        ( , , buyToken, buyAmount, batchDuration) = abi.decode(
-            _actionData[4:],
-            (address,uint128,address,uint128,uint32)
+        (buyToken, buyAmount, batchDuration) = abi.decode(
+            _actionData[68:],
+            (IERC20,uint128,uint32)
         );
     }
 }

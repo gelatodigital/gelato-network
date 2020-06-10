@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 import {GelatoProviderModuleStandard} from "../GelatoProviderModuleStandard.sol";
 import {IProviderModuleGnosisSafeProxy} from "./IProviderModuleGnosisSafeProxy.sol";
 import {Ownable} from "../../external/Ownable.sol";
-import {GelatoDebug} from "../../libraries/GelatoDebug.sol";
+import {GelatoBytes} from "../../libraries/GelatoBytes.sol";
 import {GelatoActionPipeline} from "../../gelato_actions/GelatoActionPipeline.sol";
 import {
     IGnosisSafe
@@ -20,7 +20,7 @@ contract ProviderModuleGnosisSafeProxy is
     IProviderModuleGnosisSafeProxy,
     Ownable
 {
-    using GelatoDebug for bytes;
+    using GelatoBytes for bytes;
 
     mapping(bytes32 => bool) public override isProxyExtcodehashProvided;
     mapping(address => bool) public override isMastercopyProvided;
