@@ -15,7 +15,6 @@ describe("Multisend with Gelato User Proxy Test", function () {
   // We define the ContractFactory and Signer variables here and assign them in
   // a beforeEach hook.
 
-  let Multisend;
   let multisend;
   let actionWithdrawBatchExchange;
   let seller;
@@ -87,11 +86,8 @@ describe("Multisend with Gelato User Proxy Test", function () {
       gelatoCore.address
     );
 
-    const Multisend = await ethers.getContractFactory(
-      "Multisend",
-      sysAdmin
-    );
-    const multisend = await Multisend.deploy();
+    const Multisend = await ethers.getContractFactory("Multisend", sysAdmin);
+    multisend = await Multisend.deploy();
 
     // Deploy ProviderModuleGelatoUserProxy with constructorArgs
     const ProviderModuleGelatoUserProxy = await ethers.getContractFactory(
@@ -192,14 +188,6 @@ describe("Multisend with Gelato User Proxy Test", function () {
       mockBatchExchange.address,
       ethers.utils.parseUnits("100", wethDecimals)
     );
-  });
-
-  beforeEach(async function () {
-    // Setup Gelato System
-
-    Multisend = await ethers.getContractFactory("Multisend");
-    multisend = await Multisend.deploy();
-    await multisend.deployed();
   });
 
   it("Multisend with Gelato User Proxy Test", async () => {

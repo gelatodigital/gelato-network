@@ -1,5 +1,5 @@
 // "SPDX-License-Identifier: UNLICENSED"
-pragma solidity ^0.6.9;
+pragma solidity ^0.6.10;
 
 /**
  * @dev Wrappers over Solidity's arithmetic operations with added overflow

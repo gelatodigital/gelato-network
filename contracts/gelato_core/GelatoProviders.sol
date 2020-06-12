@@ -1,18 +1,18 @@
 // "SPDX-License-Identifier: UNLICENSED"
-pragma solidity ^0.6.9;
+pragma solidity ^0.6.10;
 pragma experimental ABIEncoderV2;
 
 import {IGelatoProviders, TaskSpec} from "./interfaces/IGelatoProviders.sol";
 import {GelatoSysAdmin} from "./GelatoSysAdmin.sol";
 import {Address} from "../external/Address.sol";
-import {SafeMath} from "../external/SafeMath.sol";
+import {GelatoString} from "../libraries/GelatoString.sol";
 import {Math} from "../external/Math.sol";
+import {SafeMath} from "../external/SafeMath.sol";
 import {IGelatoProviderModule} from "../gelato_provider_modules/IGelatoProviderModule.sol";
 import {ProviderModuleSet} from "../libraries/ProviderModuleSet.sol";
 import {
     Condition, Action, Operation, DataFlow, Provider, Task, TaskReceipt
 } from "./interfaces/IGelatoCore.sol";
-import {GelatoString} from "../libraries/GelatoString.sol";
 import {IGelatoCondition} from "../gelato_conditions/IGelatoCondition.sol";
 
 /// @title GelatoProviders
@@ -21,9 +21,9 @@ import {IGelatoCondition} from "../gelato_conditions/IGelatoCondition.sol";
 abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
 
     using Address for address payable;  /// for sendValue method
+    using GelatoString for string;
     using ProviderModuleSet for ProviderModuleSet.Set;
     using SafeMath for uint256;
-    using GelatoString for string;
 
     // This is only for internal use by hashTaskSpec()
     struct NoDataAction {
@@ -374,7 +374,7 @@ abstract contract GelatoProviders is IGelatoProviders, GelatoSysAdmin {
         taskSpec = TaskSpec({
             conditions: _stripConditionData(_task.conditions),
             actions: _task.actions,
-            gasPriceCeil: 0  // placeholder
+            gasPriceCeil: 0  // default: provider can set gasPriceCeil dynamically.
         });
     }
 

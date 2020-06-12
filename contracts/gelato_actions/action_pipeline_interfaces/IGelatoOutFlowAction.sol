@@ -1,5 +1,5 @@
 // "SPDX-License-Identifier: UNLICENSED"
-pragma solidity ^0.6.9;
+pragma solidity ^0.6.10;
 
 /// @title IGelatoOutFlowAction
 /// @notice Solidity interface for Actions that make use of DataFlow.Out

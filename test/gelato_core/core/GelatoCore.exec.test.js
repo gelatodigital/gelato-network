@@ -1224,7 +1224,7 @@ describe("GelatoCore.exec", function () {
       });
 
       // Submit Task
-      const gelatoProvider = new GelatoProvider({
+      const selfProvider = new GelatoProvider({
         addr: userProxyAddress,
         module: providerModuleGelatoUserProxy.address,
       });
@@ -1239,12 +1239,13 @@ describe("GelatoCore.exec", function () {
 
       const task = new Task({
         actions: [action],
+        selfProviderGasLimit: 500000,
         selfProviderGasPriceCeil: GELATO_GAS_PRICE,
       });
 
       const taskReceipt = new TaskReceipt({
         id: 1,
-        provider: gelatoProvider,
+        provider: selfProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
@@ -1270,7 +1271,7 @@ describe("GelatoCore.exec", function () {
       const submitTaskPayload = await run("abi-encode-withselector", {
         contractname: "GelatoCore",
         functionname: "submitTask",
-        inputs: [gelatoProvider, task, EXPIRY_DATE],
+        inputs: [selfProvider, task, EXPIRY_DATE],
       });
 
       // addProviderModules
@@ -1849,26 +1850,27 @@ describe("GelatoCore.exec", function () {
 
       // Provider batch providers dummy action and revertinng module
 
-      const gelatoProvider = new GelatoProvider({
+      const selfProvider = new GelatoProvider({
         addr: userProxyAddress,
         module: providerModuleGelatoUserProxy.address,
       });
 
       const task = new Task({
         actions: [unProvideFundsAction],
+        selfProviderGasLimit: GELATO_MAX_GAS,
         selfProviderGasPriceCeil: GELATO_GAS_PRICE,
       });
 
       let taskReceipt = new TaskReceipt({
         id: 1,
-        provider: gelatoProvider,
+        provider: selfProvider,
         userProxy: userProxyAddress,
         tasks: [task],
         submissionsLeft: SUBMISSIONS_LEFT,
       });
 
       await expect(
-        userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE)
+        userProxy.submitTask(selfProvider, task, EXPIRY_DATE)
       ).to.emit(gelatoCore, "LogTaskSubmitted");
 
       await expect(

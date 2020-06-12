@@ -1,5 +1,5 @@
 // "SPDX-License-Identifier: UNLICENSED"
-pragma solidity ^0.6.9;
+pragma solidity ^0.6.10;
 pragma experimental ABIEncoderV2;
 
 import {GelatoActionsStandardFull} from "../GelatoActionsStandardFull.sol";
@@ -277,7 +277,7 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandardFull {
                 return "ActionPlaceOrderBatchExchange WaitUntilPreviousBatchWasWithdrawn sellToken";
             }
         } catch {
-            return "ActionPlaceOrderBatchExchange getPendinWithdraw failed sellToken";
+            return "ActionPlaceOrderBatchExchange getPendingWithdraw failed sellToken";
         }
 
         try batchExchange.getPendingWithdraw(_userProxy, buyToken)
@@ -288,7 +288,7 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandardFull {
                 return "ActionPlaceOrderBatchExchange WaitUntilPreviousBatchWasWithdrawn buyToken";
             }
         } catch {
-            return "ActionPlaceOrderBatchExchange getPendinWithdraw failed buyToken";
+            return "ActionPlaceOrderBatchExchange getPendingWithdraw failed buyToken";
         }
 
         // STANDARD return string to signal actionConditions Ok

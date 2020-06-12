@@ -1,5 +1,5 @@
 // "SPDX-License-Identifier: UNLICENSED"
-pragma solidity ^0.6.9;
+pragma solidity ^0.6.10;
 
 interface IGelatoExecutors {
     event LogExecutorStaked(address indexed executor, uint256 oldStake, uint256 newStake);

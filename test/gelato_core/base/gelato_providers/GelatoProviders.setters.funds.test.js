@@ -5,7 +5,6 @@ const { expect } = require("chai");
 // GelatoProviders creation time variable values
 import initialState from "./GelatoProviders.initialState";
 
-
 describe("GelatoCore - GelatoProviders - Setters: FUNDS", function () {
   // We define the ContractFactory and Address variables here and assign them in
   // a beforeEach hook.
@@ -77,7 +76,7 @@ describe("GelatoCore - GelatoProviders - Setters: FUNDS", function () {
 
     it("Should NOT allow provideFunds(value: 0)", async function () {
       await expect(
-        gelatoCore.provideFunds(providerAddress, { value: "0" })
+        gelatoCore.provideFunds(providerAddress, { value: constants.Zero })
       ).to.be.revertedWith("GelatoProviders.provideFunds: zero value");
     });
   });

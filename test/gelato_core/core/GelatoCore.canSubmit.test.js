@@ -293,6 +293,10 @@ describe("Gelato Core - Task Submission ", function () {
         .and.to.emit(gelatoCore, "LogProviderModuleAdded")
         .withArgs(userProxyAddress, providerModuleGelatoUserProxy.address);
 
+      task.selfProviderGasLimit = (
+        await gelatoCore.internalGasRequirement()
+      ).mul(2);
+
       expect(
         await gelatoCore.canSubmitTask(
           userProxyAddress,
