@@ -332,6 +332,7 @@ describe("GelatoCore.canExec", function () {
 
     const selfProvidedTask = new Task({
       actions: [action],
+      selfProviderGasLimit: 500000,
       selfProviderGasPriceCeil: GELATO_GAS_PRICE,
     });
 
@@ -391,6 +392,7 @@ describe("GelatoCore.canExec", function () {
 
     const selfProvidedTask = new Task({
       actions: [action],
+      selfProviderGasLimit: 500000,
       selfProviderGasPriceCeil: GELATO_GAS_PRICE,
     });
 

@@ -1,5 +1,5 @@
 // "SPDX-License-Identifier: UNLICENSED"
-pragma solidity ^0.6.9;
+pragma solidity ^0.6.10;
 
 library GelatoString {
     function startsWithOK(string memory _str) internal pure returns(bool) {

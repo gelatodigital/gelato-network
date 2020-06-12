@@ -1,5 +1,5 @@
 // "SPDX-License-Identifier: UNLICENSED"
-pragma solidity ^0.6.9;
+pragma solidity ^0.6.10;
 pragma experimental ABIEncoderV2;
 
 import {ActionPlaceOrderBatchExchange} from "./ActionPlaceOrderBatchExchange.sol";
@@ -87,7 +87,9 @@ contract ActionPlaceOrderBatchExchangeWithSlippage is ActionPlaceOrderBatchExcha
             _sellAmount,
             _buySlippage
         );
-        super.action(_origin, _sellToken, _sellAmount, _buyToken, expectedBuyAmount, _batchDuration);
+        super.action(
+            _origin, _sellToken, _sellAmount, _buyToken, expectedBuyAmount, _batchDuration
+        );
     }
 
     function getKyberBuyAmountWithSlippage(
@@ -98,7 +100,7 @@ contract ActionPlaceOrderBatchExchangeWithSlippage is ActionPlaceOrderBatchExcha
     )
         view
         public
-        returns(uint128 expectedBuyAmount)
+        returns(uint128 expectedBuyAmount128)
     {
         uint256 sellTokenDecimals = getDecimals(_sellToken);
         uint256 buyTokenDecimals = getDecimals(_buyToken);
@@ -109,21 +111,22 @@ contract ActionPlaceOrderBatchExchangeWithSlippage is ActionPlaceOrderBatchExcha
             // Returned values in kyber are in 18 decimals
             // regardless of the destination token's decimals
             uint256 expectedBuyAmount256 = expectedRate
-            // * sellAmount, as kyber returns the price for 1 unit
-            .mul(_sellAmount)
-            // * buy decimal tokens, to convert expectedRate * sellAmount to buyToken decimals
-            .mul(10 ** buyTokenDecimals)
-            // / sell token decimals to account for sell token decimals of _sellAmount
-            .div(10 ** sellTokenDecimals)
-            // / 10**18 to accout for kyber always returning with 18 decimals
-            .div(1e18);
+                // * sellAmount, as kyber returns the price for 1 unit
+                .mul(_sellAmount)
+                // * buy decimal tokens, to convert expectedRate * sellAmount to buyToken decimals
+                .mul(10 ** buyTokenDecimals)
+                // / sell token decimals to account for sell token decimals of _sellAmount
+                .div(10 ** sellTokenDecimals)
+                // / 10**18 to account for kyber always returning with 18 decimals
+                .div(1e18);
 
             // return amount minus slippage. e.g. _slippage = 5 => 5% slippage
-            expectedBuyAmount256 = expectedBuyAmount256 - expectedBuyAmount256.mul(_slippage).div(100);
-            expectedBuyAmount = uint128(expectedBuyAmount256);
+            expectedBuyAmount256
+                = expectedBuyAmount256 - expectedBuyAmount256.mul(_slippage).div(100);
+            expectedBuyAmount128 = uint128(expectedBuyAmount256);
             require(
-                expectedBuyAmount == expectedBuyAmount256,
-                "ActionPlaceOrderBatchExchangeWithSlippage.getKyberRate incorrect uint conversion"
+                expectedBuyAmount128 == expectedBuyAmount256,
+                "ActionPlaceOrderBatchExchangeWithSlippage.getKyberRate: uint conversion"
             );
         } catch {
             revert("ActionPlaceOrderBatchExchangeWithSlippage.getKyberRate:Error");
@@ -145,10 +148,7 @@ contract ActionPlaceOrderBatchExchangeWithSlippage is ActionPlaceOrderBatchExcha
                 abi.encodeWithSignature("DECIMALS()")
             );
         }
-        if (success) {
-            return abi.decode(data, (uint256));
-        } else {
-            revert("ActionPlaceOrderBatchExchangeWithSlippage.getDecimals:CouldNotGetDecimals");
-        }
+        if (success) return abi.decode(data, (uint256));
+        else revert("ActionPlaceOrderBatchExchangeWithSlippage.getDecimals:revert");
     }
 }

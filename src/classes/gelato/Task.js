@@ -1,12 +1,19 @@
 import checkTaskMembers from "../../helpers/gelato/checkTaskMembers";
 
 class Task {
-  constructor({ conditions, actions, selfProviderGasPriceCeil }) {
+  constructor({
+    conditions,
+    actions,
+    selfProviderGasLimit,
+    selfProviderGasPriceCeil,
+  }) {
     checkTaskMembers({ conditions, actions });
     this.conditions = conditions ? conditions : [];
     this.actions = actions;
-    this.selfProviderGasPriceCeil =
-      selfProviderGasPriceCeil !== undefined ? selfProviderGasPriceCeil : 0;
+    this.selfProviderGasLimit = selfProviderGasLimit ? selfProviderGasLimit : 0;
+    this.selfProviderGasPriceCeil = selfProviderGasPriceCeil
+      ? selfProviderGasPriceCeil
+      : 0;
   }
 }
 

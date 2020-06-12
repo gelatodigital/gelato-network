@@ -1,5 +1,5 @@
 // "SPDX-License-Identifier: UNLICENSED"
-pragma solidity ^0.6.9;
+pragma solidity ^0.6.10;
 pragma experimental ABIEncoderV2;
 
 import {IGelatoProviderModule} from "../../gelato_provider_modules/IGelatoProviderModule.sol";
@@ -31,7 +31,8 @@ struct Action {
 struct Task {
     Condition[] conditions;  // optional
     Action[] actions;
-    uint256 selfProviderGasPriceCeil;
+    uint256 selfProviderGasLimit;  // optional: 0 defaults to gelatoMaxGas
+    uint256 selfProviderGasPriceCeil;  // optional: 0 defaults to NO_CEIL
 }
 
 struct TaskReceipt {
@@ -141,11 +142,12 @@ interface IGelatoCore {
     /// @notice Off-chain API for executors to check, if a TaskReceipt is executable
     /// @dev GelatoCore checks this during execution, in order to safeguard the Conditions
     /// @param _TR TaskReceipt, consisting of user task, user proxy address and id
-    /// @param _gelatoMaxGas If  this is used by an Executor and a revert happens,
-    ///  the Executor gets a refund from the Provider and the TaskReceipt is annulated.
+    /// @param _gasLimit Task.selfProviderGasLimit is used for SelfProviders. All other
+    ///  Providers must use gelatoMaxGas. If the _gasLimit is used by an Executor and the
+    ///  tx reverts, a refund is paid by the Provider and the TaskReceipt is annulated.
     /// @param _execTxGasPrice Must be used by Executors. Gas Price fed by gelatoCore's
     ///  Gas Price Oracle. Executors can query the current gelatoGasPrice from events.
-    function canExec(TaskReceipt calldata _TR, uint256 _gelatoMaxGas, uint256 _execTxGasPrice)
+    function canExec(TaskReceipt calldata _TR, uint256 _gasLimit, uint256 _execTxGasPrice)
         external
         view
         returns(string memory);
