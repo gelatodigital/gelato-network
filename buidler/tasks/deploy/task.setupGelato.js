@@ -74,21 +74,17 @@ export default task("gc-setupgelato")
         addressbookentry: "DAI",
       });
 
-      await feeHandlerFactory.addTokenToWhitelist(dai);
-
       const weth = await run("bre-config", {
         addressbookcategory: "erc20",
         addressbookentry: "WETH",
       });
-
-      await feeHandlerFactory.addTokenToWhitelist(weth);
 
       const usdc = await run("bre-config", {
         addressbookcategory: "erc20",
         addressbookentry: "USDC",
       });
 
-      await feeHandlerFactory.addTokenToWhitelist(usdc);
+      await feeHandlerFactory.addTokensToWhitelist([dai, weth, usdc]);
 
       // Deploy Actions
       const batchExchangeAddress = await run("bre-config", {
@@ -96,9 +92,14 @@ export default task("gc-setupgelato")
         addressbookentry: "batchExchange",
       });
 
+      const kyberProxyAddress = await run("bre-config", {
+        addressbookcategory: "kyber",
+        addressbookentry: "proxy",
+      });
+
       const actionPlaceOrderBatchExchange = await run("deploy", {
         contractname: "ActionPlaceOrderBatchExchangeWithSlippage",
-        constructorargs: [batchExchangeAddress],
+        constructorargs: [batchExchangeAddress, kyberProxyAddress],
       });
 
       const actionWithdrawBatchExchange = await run("deploy", {
@@ -135,9 +136,9 @@ export default task("gc-setupgelato")
         constructorargs: [gelatoCore.address],
       });
 
-      const kyberProxyAddress = await run("bre-config", {
-        addressbookcategory: "kyber",
-        addressbookentry: "proxy",
+      const conditionBatchExchangeWithdrawStateful = await run("deploy", {
+        contractname: "ConditionBatchExchangeWithdrawStateful",
+        constructorargs: [gelatoCore.address],
       });
 
       const conditionKyberRateStateful = await run("deploy", {
@@ -164,6 +165,7 @@ export default task("gc-setupgelato")
       \n ConditionTimeStateful: ${conditionTimeStateful.address}
       \n ConditionBalanceStateful: ${conditionBalanceStateful.address}
       \n ConditionKyberRateStateful: ${conditionKyberRateStateful.address}
+      \n ConditionBatchExchangeWithdrawStateful: ${conditionBatchExchangeWithdrawStateful.address}
       `
       );
     } catch (error) {

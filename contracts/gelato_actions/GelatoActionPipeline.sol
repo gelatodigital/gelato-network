@@ -93,59 +93,37 @@ contract GelatoActionPipeline {
             bytes32 nextInflowType
         )
     {
+        ok = true;
         for (uint256 i = 0; i < _actions.length; i++) {
-            if (_actions[i].dataFlow == DataFlow.In) {
-                // Cannot use DataFlow.In if no Action preceded in the Pipeline
-                if (i == 0)
-                    return (false, outActionIndex, i, currentOutflowType, nextInflowType);
-
+            if (_actions[i].dataFlow == DataFlow.In || _actions[i].dataFlow == DataFlow.InAndOut) {
                 // Make sure currentOutflowType matches what the inFlowAction expects
-                IGelatoInFlowAction inAction = IGelatoInFlowAction(_actions[i].addr);
-                try inAction.DATA_FLOW_IN_TYPE() returns (bytes32 inFlowType) {
-                    if (inFlowType == currentOutflowType) ok = true;
-                    else return (false, outActionIndex, i, currentOutflowType, inFlowType);
+                try IGelatoInFlowAction(_actions[i].addr).DATA_FLOW_IN_TYPE()
+                    returns (bytes32 inFlowType)
+                {
+                    if (inFlowType != currentOutflowType) {
+                        nextInflowType = inFlowType;
+                        inActionIndex = i;
+                        ok = false;
+                        break;
+                    } else {
+                        ok = true;
+                    }
                 } catch {
                     revert("GelatoActionPipeline.isValid: error DATA_FLOW_IN_TYPE");
                 }
-
-            } else if (_actions[i].dataFlow == DataFlow.Out) {
+            }
+            if (_actions[i].dataFlow == DataFlow.Out || _actions[i].dataFlow == DataFlow.InAndOut) {
+                if (ok == false) break;
                 // Store this Actions outFlowType to be used by the next inFlowAction
-                IGelatoOutFlowAction outAction = IGelatoOutFlowAction(_actions[i].addr);
-                try outAction.DATA_FLOW_OUT_TYPE() returns (bytes32 outFlowType) {
+                try IGelatoOutFlowAction(_actions[i].addr).DATA_FLOW_OUT_TYPE()
+                    returns (bytes32 outFlowType)
+                {
                     currentOutflowType = outFlowType;
                     outActionIndex = i;
+                    ok = false;
                 } catch {
                     revert("GelatoActionPipeline.isValid: error DATA_FLOW_OUT_TYPE");
                 }
-
-            } else if (_actions[i].dataFlow == DataFlow.InAndOut) {
-                // Cannot use DataFlow.In if no Action preceded in the Pipeline
-                if (i == 0)
-                    return (false, outActionIndex, i, currentOutflowType, nextInflowType);
-
-                IGelatoInAndOutFlowAction inAndOutAction = IGelatoInAndOutFlowAction(
-                    _actions[i].addr
-                );
-
-                // Make sure currentOutflowType matches what the inAndOutAction expects
-                try inAndOutAction.DATA_FLOW_IN_TYPE() returns (bytes32 inFlowType) {
-                    if (inFlowType == currentOutflowType) ok = true;
-                    else return (false, outActionIndex, i, currentOutflowType, inFlowType);
-                } catch {
-                    revert("GelatoActionPipeline.isValid: error DATA_FLOW_IN_TYPE");
-                }
-
-                // Store this Actions outFlowType to be used by the next inFlowAction
-                try inAndOutAction.DATA_FLOW_OUT_TYPE() returns (bytes32 outFlowType) {
-                    currentOutflowType = outFlowType;
-                    outActionIndex = i;
-                } catch {
-                    revert("GelatoActionPipeline.isValid: error DATA_FLOW_OUT_TYPE");
-                }
-
-            } else {
-                // if (_actions[i].dataFlow == DataFlow.None)
-                continue;
             }
         }
     }
