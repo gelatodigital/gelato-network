@@ -1,3 +1,4 @@
 // ==== Dapps ====
-import "./task.dapp.example";
+import "./task.dapp.exampleOne";
+import "./task.dapp.exampleTwo";
 import "./task.dapp.balanceTransfer";

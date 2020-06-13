@@ -47,7 +47,7 @@ export const contracts = [
   "ConditionTime",
   "ConditionTimeStateful",
   // Gnosis
-  "ConditionBatchExchangeStateful",
+  "ConditionBatchExchangeWithdrawStateful",
   // Mock
   "MockConditionDummy",
 

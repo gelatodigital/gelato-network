@@ -15,7 +15,11 @@ class Action {
         "\n"
       );
     }
-    if (operation == Operation.Delegatecall && value) {
+    if (
+      operation == Operation.Delegatecall &&
+      value &&
+      value.toString() !== "0"
+    ) {
       throw new Error(
         "\n Action: Delegatecalls must have 0 in the value field"
       );

@@ -56,7 +56,7 @@ MAINNET_MNEMONIC="test test test test test test test test test test test test te
 
 ## What is Gelato ?
 
-Gelato is a tool that enables web3 developers to build automated dapps on Ethereum. Think of Gelato as enabling you to use `If This, Then That` for smart contracts. It allows for the combination of arbitrary conditions with arbitrary actions on-chain, which will be executed on behalf of your Users by a network of relay nodes.
+Gelato is a tool that enables web3 developers to build automated dapps on Ethereum. To be precise, it's a module that upgrades existing smart contract wallets to automatically submit transactions on behalf of users. Think of Gelato as the infrastructure that enables you to use `If This, Then That` for smart contracts. It allows for the combination of arbitrary conditions with arbitrary actions on-chain, which will be executed on behalf of your Users by a network of relay nodes.
 
 ## Who is Gelato for?
 
@@ -74,17 +74,15 @@ An **automated dapp** requires Users to only send a transaction once and then wi
 
 ## How Gelato works:
 
-At its core, Gelato gives dapp developers **(Providers)** access to a network of relay nodes **(executors),** which execute certain transactions **(actions)** on behalf of their **users**, if certain predefined **conditions** are met.
+At its core, Gelato is a network of relay nodes **(executors),** which User's can instruct to submit arbitrary transactions **(actions)** on their behalf, when certain predefined **conditions** are met.
 
-Everyone can access the Executors' services by submitting arbitrary Tasks to them, which they will execute exactly as per the developer's specification. Executors never have custody of Users funds, they simply initiate the transaction. Funds are always kept either in the User's wallet or in their personal smart contract wallet (proxy contract).
+The only thing Executors demand before executing a transaction is to be rewarded, or at least compensated, for their execution cost. This is accomplished by someone depositing some ETH on the GelatoCore smart contract, which can be seen as "filling up the gas tank". Now if an Executor executes a transaction, the costs of the execution will be automatically deducted from the User's ETH balance on Gelato, similar to other pay-as-you-go services.
 
-Each dapp User must have a personal smart contract wallet (proxy contract) deployed through which they interact with the Gelato protocol, in order for the dapp to be able to leverage Gelato automation for them. Once this requirement and a few more case-by-case details are fulfilled, dapps can let their Users submit Tasks to gelato, which will execute the requested transactions in the future.
+Everyone can access the Executors' services by submitting arbitrary Tasks to them, which they will execute exactly as per the User's specification. Executors never have custody of Users funds, they simply initiate the transaction. Funds are always kept either in the User's wallet or in their personal smart contract wallet (proxy contract).
 
-The only thing Executors demand before executing a transaction is to be rewarded, or at least compensated, for their execution cost. This is accomplished by so called "Providers" depositing ETH on gelato. Gelato will calculate how much gas was consumed and what the current gas price is and will pay the Executor for its accomplished work using the formula: **consumed gas \* current gas price \* exectutorRewardFactor**. If the execution transaction somehow failed, Providers are only liable to pay the Executors a refund for the gas costs, without a reward. We expect that the role of Providers will in most cases be taken by dapp developers, in order to exert control over the User experience of their Users.
+Therefore, in order to enable your User's to let gelato submit transactions on their behalf in the future, someone simply has to deposit some ETH on gelato and you are good to go.
 
-And why should end-users not prepay for future transaction executions themselves, you might ask? While this is certainly possible with Gelato , having to ask end-users to deposit some ETH on Gelato before their transactions get executed still sounded like bad UX to us. Especially because end-users would have to make accurate predictions about future gas prices, in order to have some degree of certainty that they will still have enough funds deposited on gelato, in order to pay Executors when the time has come. That's why we introduced the concept of **Providers**, who should abstract this complexity for the end-users.
-
-Gelato works together with Chainlink to provide its integration Users - notably Providers - with constantly updated, fair gas prices. That way Gelato Users can be sure that Executors are not charging unfair gas prices.
+This **someone** actually does not necessarily have to be the user himself, it can also be the developer (called **provider**), who wants to offer the user a smoother UX on their dApp, that does not require the User to pre-deposit ETH on gelato.
 
 ## Providers:
 
@@ -100,11 +98,23 @@ Providers have the ability to define exactly what kind of automation **tasks** t
 
 #### Why would a Provider pay for their Users transaction fees on gelato?
 
-In short Providers are incentivised to pay for their Users automated transactions because they can provide great UX this way and they have many opportunites to create interesting business models on top of gelato. For example, if a Provider enables Users to swap DAI to ETH on uniswap every 2 days, then a fee could be applied for each executed transaction that retains 0.5% of the sold tokens and sends them to the Provider.
+In short, Providers are incentivised to pay for their Users automated transactions because they can provide great UX this way and they have many opportunites to create interesting business models on top of gelato. For example, if a Provider enables Users to swap DAI to ETH on uniswap every 2 days, then a fee could be applied for each executed transaction that retains 0.5% of the sold tokens and sends them to the Provider.
 
 This way, Users do not have to prepay ETH on Gelato and Providers get compensated / rewarded for paying the transaction fees on behalf of Users, all without having to do the heavy lifting of running the underlying infrastructure.
 
-Hence you can think of Gelato as a pay-as-you-go execution service for developers to create the first wave of User-friendly automated dapps, while also running a business model.
+Hence you can think of Gelato as a pay-as-you-go execution service for developers to create the first wave of User-friendly automated dapps, while also running a sustainable business model.
+
+Why should end-users not prepay for future transaction executions themselves, you might ask? While this is certainly possible with Gelato , having to ask end-users to deposit some ETH on Gelato before their transactions get executed still sounded like bad UX to us. Especially because end-users would have to make accurate predictions about future gas prices, in order to have some degree of certainty that they will still have enough funds deposited on gelato, in order to pay Executors when the time has come. That's why we introduced the concept of **Providers**, who can abstract this complexity for the end-users.
+
+#### How can you submit transactions on behalf of users, without having access to their private keys?
+
+Through smart contract wallets (proxy contracts). Each dapp User must have a personal smart contract wallet deployed through which they interact with the Gelato protocol, in order for the dapp to be able to leverage Gelato automation for them. Once this requirement and a few more case-by-case details are fulfilled, dapps can let their Users submit Tasks to gelato, which will execute the requested transactions in the future.
+
+Gelato is highly modular and works with any smart contract standard out there. Two of the most widely used examples include the Gnosis Safe and dsProxy, but you can also use gelato with your own custom made proxy contract.
+
+#### How do you ensure that executors always charge a fair price?
+
+Gelato will calculate how much gas was consumed and what the current gas price is and will pay the Executor for its accomplished work using the formula: **consumed gas \* current gas price \* exectutorRewardFactor**. To ensure a fair gas price, Gelato partnered with Chainlink to provide constantly updated, fair gas prices. That way Gelato Users can be sure that Executors are not charging unfair gas prices.
 
 # Getting started as a Provider
 
@@ -160,13 +170,13 @@ You can see an example of how this is done by checking out `./src/demo/task.spec
 To checkout how a **TaskSpec** object looks like, run this command that returns the above mentioned example:
 
 ```
-npx buidler gelato-return-taskspec-example --network rinkeby
+npx buidler gelato-return-taskspec-example-one --network rinkeby
 ```
 
 To whitelist this example TaskSpec, thereby enabling Users to submit Tasks that conform to it, run:
 
 ```
-npx buidler gelato-whitelist-taskspec example --network rinkeby
+npx buidler gelato-whitelist-taskspec example-one --network rinkeby
 ```
 
 That’s it from a Provider's perspective in terms of what you minimally have to do, to enable Users to submit Tasks on Gelato with you being their Provider! 🍦
@@ -208,19 +218,19 @@ npx buidler gelato-approve-erc20 0x5592ec0cfb4dbc12d3ab100b257153436a1f0fea 5000
 #### 5. Make sure you, as a Provider, have whitelisted the example TaskSpec. To check, run:
 
 ```
-npx buidler gelato-check-if-provided --taskspecname example --network rinkeby
+npx buidler gelato-check-if-provided --taskspecname example-one --network rinkeby
 ```
 
 If it is not whitelisted by your Provider, run:
 
 ```
-npx buidler gelato-whitelist-taskspec example --network rinkeby
+npx buidler gelato-whitelist-taskspec example-one --network rinkeby
 ```
 
 #### 6. Run the following script to start the automatic process of transferring 1 DAI to a given destination address every 2 minutes (120 seconds), 5 times in a row (total of 5 DAI):
 
 ```
-npx buidler gelato-example-dapp --sendtoken 0x5592ec0cfb4dbc12d3ab100b257153436a1f0fea --destination 0x518eAa8f962246bCe2FA49329Fe998B66d67cbf8 --amount 1000000000000000000 --secondsdelta 120 --cycles 5 --network rinkeby
+npx buidler gelato-dapp-example-one --sendtoken 0x5592ec0cfb4dbc12d3ab100b257153436a1f0fea --destination 0x518eAa8f962246bCe2FA49329Fe998B66d67cbf8 --amount 1000000000000000000 --secondsdelta 120 --cycles 5 --network rinkeby
 ```
 
 Once the transaction, which calls the `submitTaskCycle()` function on Gelato Core using your User's GelatoUserProxy contract, is mined, Gelato will monitor the specified condition, and when it is fulfilled, an Executor will execute the example Task on behalf of you, the User. The consumed gas amount \* current gas price \* executorRewardFactor will also be deduced from your Provider account balance.

@@ -53,7 +53,8 @@ const TERMS_OK_CHECK = 5;
 // Task
 const CONDITIONS = 0;
 const ACTIONS = 1;
-const SELF_PROVIDER_GAS_PRICE_CEIL = 2;
+const SELF_PROVIDER_GAS_LIMIT = 2;
+const SELF_PROVIDER_GAS_PRICE_CEIL = 3;
 
 // TaskReceipt
 const ID = 0;
@@ -96,6 +97,7 @@ function _convertToArrayOfTaskObjs(tasksLog) {
     task = new Task({
       conditions: _convertToArrayOfConditionObjs(task[CONDITIONS]),
       actions: _convertToArrayOfActionObjs(task[ACTIONS]),
+      selfProviderGasLimit: task[SELF_PROVIDER_GAS_LIMIT],
       selfProviderGasPriceCeil: task[SELF_PROVIDER_GAS_PRICE_CEIL],
     });
     tasks.push(task);

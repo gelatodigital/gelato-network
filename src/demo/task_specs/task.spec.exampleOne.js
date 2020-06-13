@@ -2,7 +2,7 @@ import { task, types } from "@nomiclabs/buidler/config";
 import { constants, utils } from "ethers";
 
 export default internalTask(
-  "gelato-return-taskspec-example",
+  "gelato-return-taskspec-example-one",
   `Returns a hardcoded task spec for the timeTrade Script`
 )
   .addFlag("log")

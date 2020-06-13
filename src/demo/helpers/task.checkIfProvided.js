@@ -64,7 +64,7 @@ export default task(
           \n❌ Please provide it by running: >> npx buidler gelato-whitelist-taskspec ${taskArgs.taskspecname} --network ${network.name}\n`
         );
       } else {
-        if (taskArgs.log) console.log("Task spec provided ✅");
+        console.log("Task spec provided ✅");
         return true;
       }
     } catch (error) {

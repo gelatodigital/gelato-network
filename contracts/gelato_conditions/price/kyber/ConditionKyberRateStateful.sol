@@ -11,7 +11,7 @@ import {IGelatoCore} from "../../../gelato_core/interfaces/IGelatoCore.sol";
 contract ConditionKyberRateStateful is GelatoStatefulConditionsStandard {
     using SafeMath for uint256;
 
-    IKyber public immutable kyberProxyAddress;
+    IKyber public immutable kyberProxy;
 
     // userProxy => taskReceipt.id => refPrice
     mapping(address => mapping(uint256 => uint256)) public refRate;
@@ -20,7 +20,7 @@ contract ConditionKyberRateStateful is GelatoStatefulConditionsStandard {
         public
         GelatoStatefulConditionsStandard(_gelatoCore)
     {
-        kyberProxyAddress = _kyberProxy;
+        kyberProxy = _kyberProxy;
     }
 
     /// @dev use this function to encode the data off-chain for the condition data field
@@ -73,7 +73,7 @@ contract ConditionKyberRateStateful is GelatoStatefulConditionsStandard {
         returns(string memory)
     {
         uint256 currentRefRate = refRate[_userProxy][_taskReceiptId];
-        try kyberProxyAddress.getExpectedRate(_src, _dest, _srcAmt)
+        try kyberProxy.getExpectedRate(_src, _dest, _srcAmt)
             returns(uint256 expectedRate, uint256)
         {
             if (_greaterElseSmaller) {  // greaterThan
@@ -105,7 +105,7 @@ contract ConditionKyberRateStateful is GelatoStatefulConditionsStandard {
     {
         uint256 taskReceiptId = _getIdOfNextTaskInCycle() + _idDelta;
         uint256 newRefRate;
-        try kyberProxyAddress.getExpectedRate(_src, _dest, _srcAmt)
+        try kyberProxy.getExpectedRate(_src, _dest, _srcAmt)
             returns(uint256 expectedRate, uint256)
         {
             if (_greaterElseSmaller) newRefRate = expectedRate.add(_rateDelta);
@@ -122,7 +122,7 @@ contract ConditionKyberRateStateful is GelatoStatefulConditionsStandard {
         returns(uint256)
     {
         uint256 expectedRate;
-        try kyberProxyAddress.getExpectedRate(_src, _dest, _srcAmt)
+        try kyberProxy.getExpectedRate(_src, _dest, _srcAmt)
             returns(uint256 _expectedRate, uint256)
         {
             expectedRate = _expectedRate;
