@@ -24,6 +24,7 @@ contract ActionERC20TransferFrom is GelatoActionsStandardFull {
     )
         public
         pure
+        virtual
         returns(bytes memory)
     {
         return abi.encodeWithSelector(
@@ -58,7 +59,9 @@ contract ActionERC20TransferFrom is GelatoActionsStandardFull {
         virtual
         delegatecallOnly("ActionERC20TransferFrom.action")
     {
-        _sendToken.safeTransferFrom(_user, _destination, _sendAmount);
+        _sendToken.safeTransferFrom(
+            _user, _destination, _sendAmount, "ActionERC20TransferFrom.action:"
+        );
         emit LogOneWay(_user, address(_sendToken), _sendAmount, _destination);
     }
 

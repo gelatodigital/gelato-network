@@ -21,19 +21,21 @@ contract ConditionBatchExchangeWithdrawStateful is GelatoStatefulConditionsStand
     function getConditionData(address _userProxy)
         public
         pure
+        virtual
         returns(bytes memory)
     {
         return abi.encodeWithSelector(this.checkRefBatchId.selector, uint256(0), _userProxy);
     }
 
-    function ok(uint256 _taskReceiptId, bytes calldata _checkRefBatchId, uint256)
+    /// @param _conditionData The encoded data from getConditionData()
+    function ok(uint256 _taskReceiptId, bytes calldata _conditionData, uint256)
         public
         view
         virtual
         override
         returns(string memory)
     {
-        address userProxy = abi.decode(_checkRefBatchId[36:], (address));
+        address userProxy = abi.decode(_conditionData[36:], (address));
         return checkRefBatchId(_taskReceiptId, userProxy);
     }
 

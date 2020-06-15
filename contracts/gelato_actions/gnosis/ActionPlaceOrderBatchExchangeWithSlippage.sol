@@ -9,7 +9,7 @@ import {SafeERC20} from "../../external/SafeERC20.sol";
 import {SafeMath} from "../../external/SafeMath.sol";
 import {IBatchExchange} from "../../dapp_interfaces/gnosis/IBatchExchange.sol";
 import {Task} from "../../gelato_core/interfaces/IGelatoCore.sol";
-import {IKyber} from "../../dapp_interfaces/kyber/IKyber.sol";
+import {IKyberNetworkProxy} from "../../dapp_interfaces/kyber/IKyberNetworkProxy.sol";
 
 /// @title ActionPlaceOrderBatchExchangeWithSlippage
 /// @author Luis Schliesske & Hilmar Orth
@@ -24,16 +24,16 @@ contract ActionPlaceOrderBatchExchangeWithSlippage is ActionPlaceOrderBatchExcha
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
-    IKyber public immutable kyber;
+    IKyberNetworkProxy public immutable KYBER;
 
     constructor(
         IBatchExchange _batchExchange,
-        IKyber _kyberProxy
+        IKyberNetworkProxy _kyberNetworkProxy
     )
         ActionPlaceOrderBatchExchange(_batchExchange)
         public
     {
-        kyber = _kyberProxy;
+        KYBER = _kyberNetworkProxy;
     }
 
     /// @dev use this function to encode the data off-chain for the action data field
@@ -105,7 +105,7 @@ contract ActionPlaceOrderBatchExchangeWithSlippage is ActionPlaceOrderBatchExcha
         uint256 sellTokenDecimals = getDecimals(_sellToken);
         uint256 buyTokenDecimals = getDecimals(_buyToken);
 
-        try kyber.getExpectedRate(address(_sellToken), address(_buyToken), _sellAmount)
+        try KYBER.getExpectedRate(address(_sellToken), address(_buyToken), _sellAmount)
             returns(uint256 expectedRate, uint256)
         {
             // Returned values in kyber are in 18 decimals
@@ -131,7 +131,6 @@ contract ActionPlaceOrderBatchExchangeWithSlippage is ActionPlaceOrderBatchExcha
         } catch {
             revert("ActionPlaceOrderBatchExchangeWithSlippage.getKyberRate:Error");
         }
-
     }
 
     function getDecimals(IERC20 _token)

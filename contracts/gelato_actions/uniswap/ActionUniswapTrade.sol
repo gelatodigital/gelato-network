@@ -3,16 +3,14 @@ pragma solidity ^0.6.10;
 
 import {GelatoActionsStandardFull} from "../GelatoActionsStandardFull.sol";
 import {DataFlow} from "../../gelato_core/interfaces/IGelatoCore.sol";
-import {Address} from "../../external/Address.sol";
 import {GelatoBytes} from "../../libraries/GelatoBytes.sol";
-import {SafeMath} from "../../external/SafeMath.sol";
 import {SafeERC20} from "../../external/SafeERC20.sol";
+import {SafeMath} from "../../external/SafeMath.sol";
 import {IERC20} from "../../external/IERC20.sol";
 import {IUniswapExchange} from "../../dapp_interfaces/uniswap/IUniswapExchange.sol";
 import {IUniswapFactory} from "../../dapp_interfaces/uniswap/IUniswapFactory.sol";
 
 contract ActionUniswapTrade is GelatoActionsStandardFull {
-    using Address for address;
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -33,6 +31,7 @@ contract ActionUniswapTrade is GelatoActionsStandardFull {
     )
         public
         pure
+        virtual
         returns(bytes memory)
     {
         return abi.encodeWithSelector(
@@ -70,41 +69,83 @@ contract ActionUniswapTrade is GelatoActionsStandardFull {
         delegatecallOnly("ActionUniswapTrade.action")
         returns (uint256 receiveAmount)
     {
+        address receiver = _receiver == address(0) ? address(this) : _receiver;
         IUniswapExchange sendTokenExchange;
 
-        // If sendToken is not ETH
         if (_sendToken == ETH_ADDRESS) {
-           receiveAmount = _swapEthToToken(_sendAmount, IERC20(_receiveToken), _receiver);
+            IUniswapExchange receiveTokenExchange = UNI_FACTORY.getExchange(
+                IERC20(_receiveToken)
+            );
+            if (receiveTokenExchange != IUniswapExchange(0)) {
+                // Swap ETH => ERC20
+                try receiveTokenExchange.ethToTokenTransferInput{value: _sendAmount}(
+                    1,
+                    block.timestamp,
+                    receiver
+                )
+                    returns (uint256 receivedTokens)
+                {
+                    receiveAmount = receivedTokens;
+                } catch {
+                    revert("ActionUniswapTrade.action: ethToTokenTransferInput");
+                }
+            } else {
+                revert("ActionUniswapTrade.action: Invalid ReceiveTokenExchange-1");
+            }
         } else {
             IERC20 sendERC20 = IERC20(_sendToken);
             sendTokenExchange = UNI_FACTORY.getExchange(IERC20(sendERC20));
 
             if (sendTokenExchange != IUniswapExchange(0)) {
 
-                // origin funds lightweight proxy
+                // origin funds lightweight UserProxy
                 if (_origin != address(0) && _origin != address(this)) {
-                    sendERC20.safeTransferFrom(_origin, address(this), _sendAmount);
+                    sendERC20.safeTransferFrom(
+                        _origin, address(this), _sendAmount, "ActionUniswapTrade.action:"
+                    );
                 }
 
-                // proxy approves Uniswap
-                try sendERC20.approve(address(sendTokenExchange), _sendAmount) {
-                } catch {
-                    revert("ActionUniswapTrade.action: approve sendTokenExchange");
-                }
+                // UserProxy approves Uniswap
+                sendERC20.safeIncreaseAllowance(
+                    address(sendTokenExchange), _sendAmount, "ActionUniswapTrade.action:"
+                );
 
                 if (_receiveToken == ETH_ADDRESS) {
-                    receiveAmount = _swapTokenToEth(
-                        sendTokenExchange,
+                    // swap ERC20 => ETH
+                    try sendTokenExchange.tokenToEthTransferInput(
                         _sendAmount,
-                        _receiver
-                    );
+                        1,
+                        block.timestamp,
+                        receiver
+                    )
+                        returns (uint256 receivedETH)
+                    {
+                        receiveAmount = receivedETH;
+                    } catch {
+                        revert("ActionUniswapTrade.action: tokenToEthTransferInput");
+                    }
                 } else {
-                    receiveAmount = _swapTokenToToken(
-                        sendTokenExchange,
-                        _sendAmount,
-                        IERC20(_receiveToken),
-                        _receiver
+                    IUniswapExchange receiveTokenExchange = UNI_FACTORY.getExchange(
+                        IERC20(_receiveToken)
                     );
+                    if (receiveTokenExchange != IUniswapExchange(0)) {
+                        try sendTokenExchange.tokenToTokenTransferInput(
+                            _sendAmount,
+                            1,
+                            1,
+                            block.timestamp,
+                            receiver,
+                            address(_receiveToken)
+                        )
+                            returns (uint256 receivedTokens)
+                        {
+                            receiveAmount = receivedTokens;
+                        } catch {
+                            revert("ActionUniswapTrade.action: tokenToTokenTransferInput");
+                        }
+                    } else {
+                        revert("ActionUniswapTrade.action: Invalid ReceiveTokenExchange-2");
+                    }
                 }
             } else {
                 revert("ActionUniswapTrade: Invalid SendTokenExchange");
@@ -118,7 +159,7 @@ contract ActionUniswapTrade is GelatoActionsStandardFull {
             address(sendTokenExchange),  // destination
             _receiveToken,
             receiveAmount,
-            _receiver
+            receiver
         );
     }
 
@@ -208,10 +249,18 @@ contract ActionUniswapTrade is GelatoActionsStandardFull {
          address sendToken,  // 36:68
          uint256 sendAmount,  // 68:100
          address receiveToken,  // 100:132
-          /* _receiver 132:164 */) = abi.decode(
+         /*address receiver*/) = abi.decode(
              _actionData[4:],  // 0:4 == selector
              (address,address,uint256,address,address)
         );
+
+        // Safety for the next Action that consumes data from this Action
+        if (
+            _dataFlow == DataFlow.Out &&
+            _userProxy != abi.decode(_actionData[132:164], (address)) &&  // receiver
+            address(0) != abi.decode(_actionData[132:164], (address))  // receiver
+        )
+            return "ActionUniswapTrade: UserProxy must be receiver if DataFlow.Out";
 
         if (sendToken == ETH_ADDRESS) {
             IERC20 receiveERC20 = IERC20(receiveToken);
@@ -219,15 +268,17 @@ contract ActionUniswapTrade is GelatoActionsStandardFull {
             if (receiveTokenExchange == IUniswapExchange(0))
                 return "ActionUniswapTrade: receiveTokenExchangeDoesNotExist-1";
 
+            if (origin != _userProxy && origin != address(0))
+                return "ActionUniswapTrade: MustHaveUserProxyOrZeroAsOriginForETHTrade";
             if (_userProxy.balance < sendAmount)
                 return "ActionUniswapTrade: NotOkUserProxyETHBalance";
         } else {
             IERC20 sendERC20 = IERC20(sendToken);
-            IUniswapExchange sendTokenExchange = UNI_FACTORY.getExchange(sendERC20);
 
+            // Make sure sendToken-receiveToken Pair is valid
+            IUniswapExchange sendTokenExchange = UNI_FACTORY.getExchange(sendERC20);
             if (sendTokenExchange == IUniswapExchange(0))
                 return "ActionUniswapTrade: sendTokenExchangeDoesNotExist";
-
             if (receiveToken != ETH_ADDRESS) {
                 IERC20 receiveERC20 = IERC20(receiveToken);
                 IUniswapExchange receiveTokenExchange = UNI_FACTORY.getExchange(receiveERC20);
@@ -236,7 +287,7 @@ contract ActionUniswapTrade is GelatoActionsStandardFull {
             }
 
             // UserProxy is prefunded
-            if (origin == address(0) || origin == _userProxy) {
+            if (origin == _userProxy || origin == address(0)) {
                 try sendERC20.balanceOf(_userProxy) returns(uint256 proxySendTokenBalance) {
                     if (proxySendTokenBalance < sendAmount)
                         return "ActionUniswapTrade: NotOkUserProxySendTokenBalance";
@@ -265,83 +316,5 @@ contract ActionUniswapTrade is GelatoActionsStandardFull {
 
         // STANDARD return string to signal actionConditions Ok
         return OK;
-    }
-
-    // ========== ACTION HELPERS ===========
-    function _swapEthToToken(uint256 _sendAmount, IERC20 _receiveToken, address _receiver)
-        internal
-        virtual
-        returns (uint256 receiveAmount)
-    {
-        IUniswapExchange receiveTokenExchange = UNI_FACTORY.getExchange(_receiveToken);
-        if (receiveTokenExchange != IUniswapExchange(0)) {
-            try receiveTokenExchange.ethToTokenTransferInput{value: _sendAmount}(
-                1,
-                block.timestamp,
-                _receiver
-            )
-                returns (uint256 receiveTokenAmount)
-            {
-                receiveAmount = receiveTokenAmount;
-            } catch {
-                revert("ActionUniswapTrade._swapEthToToken: ethToTokenTransferInput");
-            }
-        } else {
-            revert("ActionUniswapTrade._swapEthToToken: Invalid ReceiveTokenExchange");
-        }
-    }
-
-    function _swapTokenToEth(
-        IUniswapExchange sendTokenExchange,
-        uint256 _sendAmount,
-        address _receiver
-    )
-        internal
-        virtual
-        returns (uint256 receiveAmountETH)
-    {
-        try sendTokenExchange.tokenToEthTransferInput(
-            _sendAmount,
-            1,
-            block.timestamp,
-            _receiver
-        )
-            returns (uint256 receivedETH)
-        {
-            receiveAmountETH = receivedETH;
-        } catch {
-            revert("ActionUniswapTrade._swapTokenToEth: tokenToEthTransferInput");
-        }
-    }
-
-    function _swapTokenToToken(
-        IUniswapExchange sendTokenExchange,
-        uint256 _sendAmount,
-        IERC20 _receiveToken,
-        address _receiver
-    )
-        internal
-        virtual
-        returns (uint256 receiveAmountToken)
-    {
-        IUniswapExchange receiveTokenExchange = UNI_FACTORY.getExchange(_receiveToken);
-        if (receiveTokenExchange != IUniswapExchange(0)) {
-            try sendTokenExchange.tokenToTokenTransferInput(
-                _sendAmount,
-                1,
-                1,
-                block.timestamp,
-                _receiver,
-                address(_receiveToken)
-            )
-                returns (uint256 receivedTokens)
-            {
-                receiveAmountToken = receivedTokens;
-            } catch {
-                revert("ActionUniswapTrade._swapTokenToToken");
-            }
-        } else {
-            revert("ActionUniswapTrade._swapTokenToToken: Invalid ReceiveTokenExchange");
-        }
     }
 }

@@ -3,16 +3,40 @@ pragma solidity ^0.6.10;
 pragma experimental ABIEncoderV2;
 
 import {GelatoConditionsStandard} from "../../GelatoConditionsStandard.sol";
-import {IKyber} from "../../../dapp_interfaces/kyber/IKyber.sol";
+import {IKyberNetworkProxy} from "../../../dapp_interfaces/kyber/IKyberNetworkProxy.sol";
 import {SafeMath} from "../../../external/SafeMath.sol";
 
 contract ConditionKyberRate is GelatoConditionsStandard {
     using SafeMath for uint256;
 
-    IKyber public immutable kyberProxyAddress;
-    constructor(IKyber _kyberProxy) public { kyberProxyAddress = _kyberProxy; }
+    IKyberNetworkProxy public immutable KYBER;
+    constructor(IKyberNetworkProxy _kyberProxy) public { KYBER = _kyberProxy; }
 
-    function ok(uint256, bytes calldata _checkRateData, uint256)
+    /// @dev use this function to encode the data off-chain for the condition data field
+    function getConditionData(
+        address _src,
+        uint256 _srcAmt,
+        address _dest,
+        uint256 _refRate,
+        bool _greaterElseSmaller
+    )
+        public
+        pure
+        virtual
+        returns(bytes memory)
+    {
+        return abi.encodeWithSelector(
+            this.checkRate.selector,
+            _src,
+            _srcAmt,
+            _dest,
+            _refRate,
+            _greaterElseSmaller
+        );
+    }
+
+    /// @param _conditionData The encoded data from getConditionData()
+    function ok(uint256, bytes calldata _conditionData, uint256)
         public
         view
         virtual
@@ -24,7 +48,7 @@ contract ConditionKyberRate is GelatoConditionsStandard {
          address dest,
          uint256 refRate,
          bool greaterElseSmaller) = abi.decode(
-            _checkRateData,
+            _conditionData[4:],
             (address,uint256,address,uint256,bool)
         );
         return checkRate(src, srcAmt, dest, refRate, greaterElseSmaller);
@@ -43,7 +67,7 @@ contract ConditionKyberRate is GelatoConditionsStandard {
         virtual
         returns(string memory)
     {
-        try kyberProxyAddress.getExpectedRate(_src, _dest, _srcAmt)
+        try KYBER.getExpectedRate(_src, _dest, _srcAmt)
             returns(uint256 expectedRate, uint256)
         {
             if (_greaterElseSmaller) {  // greaterThan

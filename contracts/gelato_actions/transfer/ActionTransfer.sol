@@ -20,6 +20,7 @@ contract ActionTransfer is GelatoActionsStandardFull {
     function getActionData(address _sendToken, uint256 _sendAmount, address _destination)
         public
         pure
+        virtual
         returns(bytes memory)
     {
         return abi.encodeWithSelector(
@@ -50,7 +51,7 @@ contract ActionTransfer is GelatoActionsStandardFull {
     {
         if (sendToken != ETH_ADDRESS) {
             IERC20 sendERC20 = IERC20(sendToken);
-            sendERC20.safeTransfer(destination, sendAmount);
+            sendERC20.safeTransfer(destination, sendAmount, "ActionTransfer.action:");
             emit LogOneWay(address(this), sendToken, sendAmount, destination);
         } else {
             payable(destination).sendValue(sendAmount);

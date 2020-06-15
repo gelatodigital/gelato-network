@@ -41,6 +41,7 @@ contract ActionFeeHandler is GelatoActionsStandardFull {
     function getActionData(address _sendToken, uint256 _sendAmount, address _feePayer)
         public
         pure
+        virtual
         returns(bytes memory)
     {
         return abi.encodeWithSelector(this.action.selector, _sendToken, _sendAmount, _feePayer);
@@ -71,9 +72,11 @@ contract ActionFeeHandler is GelatoActionsStandardFull {
         uint256 fee = _sendAmount.mul(feeNum).sub(1) / feeDen + 1;
         if (address(this) == _feePayer) {
             if (_sendToken == ETH_ADDRESS) provider.sendValue(fee);
-            else IERC20(_sendToken).safeTransfer(provider, fee);
+            else IERC20(_sendToken).safeTransfer(provider, fee, "ActionFeeHandler.action:");
         } else {
-            IERC20(_sendToken).safeTransferFrom(_feePayer, provider, fee);
+            IERC20(_sendToken).safeTransferFrom(
+                _feePayer, provider, fee, "ActionFeeHandler.action:"
+            );
         }
         sendAmountAfterFee = _sendAmount.sub(fee);
     }

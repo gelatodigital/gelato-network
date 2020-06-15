@@ -6,14 +6,25 @@ import {GelatoConditionsStandard} from "../../GelatoConditionsStandard.sol";
 
 contract ConditionTime is GelatoConditionsStandard {
 
-    function ok(uint256, bytes calldata _timeCheckData, uint256)
+    /// @dev use this function to encode the data off-chain for the condition data field
+    function getConditionData(uint256 _timestamp)
+        public
+        pure
+        virtual
+        returns(bytes memory)
+    {
+        return abi.encode(_timestamp);
+    }
+
+    /// @param _conditionData The encoded data from getConditionData()
+    function ok(uint256, bytes calldata _conditionData, uint256)
         public
         view
         virtual
         override
         returns(string memory)
     {
-        uint256 timestamp = abi.decode(_timeCheckData, (uint256));
+        uint256 timestamp = abi.decode(_conditionData, (uint256));
         return timeCheck(timestamp);
     }
 
