@@ -22,14 +22,17 @@ contract MockBatchExchange {
     {
         IERC20 token = IERC20(_token);
         uint256 withdrawAmount = withdrawAmounts[_token];
-        token.safeTransfer(_proxyAddress, withdrawAmount);
+        token.safeTransfer(_proxyAddress, withdrawAmount, "MockBatchExchange.withdraw");
     }
 
     function setWithdrawAmount(address _token, uint256 _withdrawAmount)
         public
     {
         IERC20 token = IERC20(_token);
-        require(token.balanceOf(address(this)) >= _withdrawAmount, "MockBatchExchange: Insufficient Token balance");
+        require(
+            token.balanceOf(address(this)) >= _withdrawAmount,
+            "MockBatchExchange: Insufficient Token balance"
+        );
         withdrawAmounts[_token] = _withdrawAmount;
     }
 
@@ -62,7 +65,9 @@ contract MockBatchExchange {
         public
     {
         IERC20 sellToken = IERC20(_sellToken);
-        sellToken.safeTransferFrom(msg.sender, address(this), _sellAmount);
+        sellToken.safeTransferFrom(
+            msg.sender, address(this), _sellAmount, "MockBatchExchange.deposit:"
+        );
     }
 
     function requestFutureWithdraw(address token, uint256 amount, uint32 batchId)

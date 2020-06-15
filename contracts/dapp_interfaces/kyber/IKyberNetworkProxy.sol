@@ -1,7 +1,12 @@
 // "SPDX-License-Identifier: UNLICENSED"
 pragma solidity ^0.6.10;
 
-interface IKyber {
+/// @title IKyberNetworkProxy
+/// @notice Interface to the KyberNetworkProxy contract.
+///  The KyberNetworkProxy contract's role is to facilitate two main functionalities:
+///  1) return the expected exchange rate, and 2) to execute a trade.
+/// @dev https://developer.kyber.network/docs/API_ABI-KyberNetworkProxy/
+interface IKyberNetworkProxy {
     /**
      * @dev Makes a trade between src and dest token and send dest tokens to destAddress
      * @param src source ERC20 token contract address

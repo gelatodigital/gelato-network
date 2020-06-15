@@ -7,7 +7,29 @@ import {IERC20} from "../../external/IERC20.sol";
 
 contract ConditionBalance is  GelatoConditionsStandard {
 
-     function ok(uint256, bytes calldata _balanceCheckData, uint256)
+    /// @dev use this function to encode the data off-chain for the condition data field
+    function getConditionData(
+        address _account,
+        address _token,
+        uint256 _refBalance,
+        bool _greaterElseSmaller
+    )
+        public
+        pure
+        virtual
+        returns(bytes memory)
+    {
+        return abi.encodeWithSelector(
+            this.balanceCheck.selector,
+            _account,
+            _token,
+            _refBalance,
+            _greaterElseSmaller
+        );
+    }
+
+    /// @param _conditionData The encoded data from getConditionData()
+     function ok(uint256, bytes calldata _conditionData, uint256)
         public
         view
         virtual
@@ -18,7 +40,7 @@ contract ConditionBalance is  GelatoConditionsStandard {
          address _token,
          uint256 _refBalance,
          bool _greaterElseSmaller) = abi.decode(
-            _balanceCheckData,
+            _conditionData[4:],
             (address,address,uint256,bool)
         );
         return balanceCheck(_account, _token, _refBalance, _greaterElseSmaller);

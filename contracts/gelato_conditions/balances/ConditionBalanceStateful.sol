@@ -28,13 +28,21 @@ contract ConditionBalanceStateful is GelatoStatefulConditionsStandard {
     )
         public
         pure
+        virtual
         returns(bytes memory)
     {
-        return abi.encodeWithSelector(this.checkRefBalance.selector, uint256(0), _userProxy, _account, _token, _greaterElseSmaller);
+        return abi.encodeWithSelector(
+            this.checkRefBalance.selector,
+            uint256(0),  //  taskReceiptId placeholder
+            _userProxy,
+            _account,
+            _token,
+            _greaterElseSmaller
+        );
     }
 
-    /// @param _refBalanceCheckData abi encoded checkRefBalance params WITH selector
-    function ok(uint256 _taskReceiptId, bytes calldata _refBalanceCheckData, uint256)
+    /// @param _conditionData The encoded data from getConditionData()
+    function ok(uint256 _taskReceiptId, bytes calldata _conditionData, uint256)
         public
         view
         virtual
@@ -45,7 +53,7 @@ contract ConditionBalanceStateful is GelatoStatefulConditionsStandard {
          address _account,
          address _token,
          bool _greaterElseSmaller) = abi.decode(
-             _refBalanceCheckData[36:],  // we strip the encoded _taskReceiptId + function selector
+             _conditionData[36:],  // slice out selector and _taskReceiptId
              (address,address,address,bool)
         );
         return checkRefBalance(

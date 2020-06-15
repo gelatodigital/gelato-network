@@ -7,6 +7,7 @@ import "./Address.sol";
 
 /**
  * @title SafeERC20
+ * @notice Adapted by @gitpusha from Gelato to include error strings.
  * @dev Wrappers around ERC20 operations that throw on failure (when the token
  * contract returns false). Tokens that return no value (and instead revert or
  * throw on failure) are also supported, non-reverting calls are assumed to be
@@ -18,33 +19,90 @@ library SafeERC20 {
     using SafeMath for uint256;
     using Address for address;
 
-    function safeTransfer(IERC20 token, address to, uint256 value) internal {
-        callOptionalReturn(token, abi.encodeWithSelector(token.transfer.selector, to, value));
+    function safeTransfer(IERC20 token, address to, uint256 value, string memory context)
+        internal
+    {
+        callOptionalReturn(
+            token,
+            abi.encodeWithSelector(token.transfer.selector, to, value),
+            context
+        );
     }
 
-    function safeTransferFrom(IERC20 token, address from, address to, uint256 value) internal {
-        callOptionalReturn(token, abi.encodeWithSelector(token.transferFrom.selector, from, to, value));
+    function safeTransferFrom(
+        IERC20 token,
+        address from,
+        address to,
+        uint256 value,
+        string memory context
+    )
+        internal
+    {
+        callOptionalReturn(
+            token,
+            abi.encodeWithSelector(token.transferFrom.selector, from, to, value),
+            context
+        );
     }
 
-    function safeApprove(IERC20 token, address spender, uint256 value) internal {
+    function safeApprove(IERC20 token, address spender, uint256 value, string memory context)
+        internal
+    {
         // safeApprove should only be called when setting an initial allowance,
         // or when resetting it to zero. To increase and decrease it, use
         // 'safeIncreaseAllowance' and 'safeDecreaseAllowance'
         // solhint-disable-next-line max-line-length
-        require((value == 0) || (token.allowance(address(this), spender) == 0),
-            "SafeERC20: approve from non-zero to non-zero allowance"
+        require(
+            (value == 0) || (token.allowance(address(this), spender) == 0),
+            string(
+                abi.encodePacked(
+                    context, "SafeERC20: approve from non-zero to non-zero allowance"
+                )
+            )
         );
-        callOptionalReturn(token, abi.encodeWithSelector(token.approve.selector, spender, value));
+        callOptionalReturn(
+            token,
+            abi.encodeWithSelector(token.approve.selector, spender, value),
+            context
+        );
     }
 
-    function safeIncreaseAllowance(IERC20 token, address spender, uint256 value) internal {
+    function safeIncreaseAllowance(
+        IERC20 token,
+        address spender,
+        uint256 value,
+        string memory context
+    )
+        internal
+    {
         uint256 newAllowance = token.allowance(address(this), spender).add(value);
-        callOptionalReturn(token, abi.encodeWithSelector(token.approve.selector, spender, newAllowance));
+        callOptionalReturn(
+            token,
+            abi.encodeWithSelector(token.approve.selector, spender, newAllowance),
+            context
+        );
     }
 
-    function safeDecreaseAllowance(IERC20 token, address spender, uint256 value) internal {
-        uint256 newAllowance = token.allowance(address(this), spender).sub(value, "SafeERC20: decreased allowance below zero");
-        callOptionalReturn(token, abi.encodeWithSelector(token.approve.selector, spender, newAllowance));
+    function safeDecreaseAllowance(
+        IERC20 token,
+        address spender,
+        uint256 value,
+        string memory context
+    )
+        internal
+    {
+        uint256 newAllowance = token.allowance(
+            address(this),
+            spender
+        ).sub(
+            value,
+            string(abi.encodePacked(context, "SafeERC20: decreased allowance below zero")
+        ));
+        callOptionalReturn(
+            token,
+            abi.encodeWithSelector(token.approve.selector, spender, newAllowance),
+            context
+        );
     }
 
     /**
@@ -52,8 +110,11 @@ library SafeERC20 {
      * on the return value: the return value is optional (but if data is returned, it must not be false).
      * @param token The token targeted by the call.
      * @param data The call data (encoded using abi.encode or one of its variants).
+     * @param context Debugging Info for the revert message (addition to original library)
      */
-    function callOptionalReturn(IERC20 token, bytes memory data) private {
+    function callOptionalReturn(IERC20 token, bytes memory data, string memory context)
+        private
+    {
         // We need to perform a low level call here, to bypass Solidity's return data size checking mechanism, since
         // we're implementing it ourselves.
 
@@ -62,15 +123,25 @@ library SafeERC20 {
         //  2. The call itself is made, and success asserted
         //  3. The return value is decoded, which in turn checks the size of the returned data.
         // solhint-disable-next-line max-line-length
-        require(address(token).isContract(), "SafeERC20: call to non-contract");
+        require(
+            address(token).isContract(),
+            string(abi.encodePacked(context, "SafeERC20: call to non-contract"))
+        );
 
         // solhint-disable-next-line avoid-low-level-calls
         (bool success, bytes memory returndata) = address(token).call(data);
-        require(success, "SafeERC20: low-level call failed");
+        require(
+            success, string(abi.encodePacked(context, "SafeERC20: low-level call failed"))
+        );
 
         if (returndata.length > 0) { // Return data is optional
             // solhint-disable-next-line max-line-length
-            require(abi.decode(returndata, (bool)), "SafeERC20: ERC20 operation did not succeed");
+            require(
+                abi.decode(returndata, (bool)),
+                string(
+                    abi.encodePacked(context, "SafeERC20: ERC20 operation did not succeed")
+                )
+            );
         }
     }
 }

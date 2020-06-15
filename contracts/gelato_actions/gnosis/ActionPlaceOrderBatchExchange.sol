@@ -91,7 +91,9 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandardFull {
 
         // 2. Optional: If light proxy, transfer from funds to proxy
         if (_origin != address(0) && _origin != address(this)) {
-            _sellToken.safeTransferFrom(_origin, address(this), _sellAmount);
+            _sellToken.safeTransferFrom(
+                _origin, address(this), _sellAmount, "ActionPlaceOrderBatchExchange.action:"
+            );
         }
 
         // 3. Fetch token Ids for sell & buy token on Batch Exchange
@@ -99,7 +101,9 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandardFull {
         uint16 buyTokenId = batchExchange.tokenAddressToIdMap(_buyToken);
 
         // 4. Approve _sellToken to BatchExchange Contract
-        _sellToken.safeIncreaseAllowance(address(batchExchange), _sellAmount);
+        _sellToken.safeIncreaseAllowance(
+            address(batchExchange),  _sellAmount, "ActionPlaceOrderBatchExchange.action:"
+        );
 
         // 5. Deposit _sellAmount on BatchExchange
         try batchExchange.deposit(_sellToken, _sellAmount) {
