@@ -4,7 +4,6 @@ pragma experimental ABIEncoderV2;
 
 import {ActionPlaceOrderBatchExchange} from "./ActionPlaceOrderBatchExchange.sol";
 import {DataFlow} from "../../gelato_core/interfaces/IGelatoCore.sol";
-import {IERC20} from "../../external/IERC20.sol";
 import {SafeERC20} from "../../external/SafeERC20.sol";
 import {SafeMath} from "../../external/SafeMath.sol";
 import {IBatchExchange} from "../../dapp_interfaces/gnosis/IBatchExchange.sol";
@@ -22,7 +21,7 @@ import {IKyberNetworkProxy} from "../../dapp_interfaces/kyber/IKyberNetworkProxy
 contract ActionPlaceOrderBatchExchangeWithSlippage is ActionPlaceOrderBatchExchange {
 
     using SafeMath for uint256;
-    using SafeERC20 for IERC20;
+    using SafeERC20 for address;
 
     IKyberNetworkProxy public immutable KYBER;
 
@@ -40,9 +39,9 @@ contract ActionPlaceOrderBatchExchangeWithSlippage is ActionPlaceOrderBatchExcha
     /// Use "address _sellToken" and "address _buyToken" for Human Readable ABI.
     function getActionData(
         address _origin,
-        IERC20 _sellToken,
+        address _sellToken,
         uint128 _sellAmount,
-        IERC20 _buyToken,
+        address _buyToken,
         uint128 _buySlippage,
         uint32 _batchDuration
     )
@@ -68,13 +67,13 @@ contract ActionPlaceOrderBatchExchangeWithSlippage is ActionPlaceOrderBatchExcha
     /// @param _sellToken Token to sell on Batch Exchange
     /// @param _sellAmount Amount to sell
     /// @param _buyToken Token to buy on Batch Exchange
-    /// @param _buySlippage Slippage inlcuded for the buyAmount in order placement
+    /// @param _buySlippage Slippage inlcuded for the buySlippage in order placement
     /// @param _batchDuration After how many batches funds should be
     function action(
         address _origin,
-        IERC20 _sellToken,
+        address _sellToken,
         uint128 _sellAmount,
-        IERC20 _buyToken,
+        address _buyToken,
         uint128 _buySlippage,
         uint32 _batchDuration
     )
@@ -95,8 +94,8 @@ contract ActionPlaceOrderBatchExchangeWithSlippage is ActionPlaceOrderBatchExcha
     }
 
     function getKyberBuyAmountWithSlippage(
-        IERC20 _sellToken,
-        IERC20 _buyToken,
+        address _sellToken,
+        address _buyToken,
         uint128 _sellAmount,
         uint256 _slippage
     )
@@ -135,21 +134,113 @@ contract ActionPlaceOrderBatchExchangeWithSlippage is ActionPlaceOrderBatchExcha
         }
     }
 
-    function getDecimals(IERC20 _token)
+    function getDecimals(address _token)
         internal
         view
         returns(uint256)
     {
-        (bool success, bytes memory data) = address(_token).staticcall{gas: 30000}(
+        (bool success, bytes memory data) = _token.staticcall{gas: 30000}(
             abi.encodeWithSignature("decimals()")
         );
 
         if (!success) {
-            (success, data) = address(_token).staticcall{gas: 30000}(
+            (success, data) = _token.staticcall{gas: 30000}(
                 abi.encodeWithSignature("DECIMALS()")
             );
         }
         if (success) return abi.decode(data, (uint256));
         else revert("ActionPlaceOrderBatchExchangeWithSlippage.getDecimals:revert");
+    }
+
+    /// @dev Will be called by GelatoActionPipeline if Action.dataFlow.In
+    //  => do not use for _actionData encoding
+    function execWithDataFlowIn(bytes calldata _actionData, bytes calldata _inFlowData)
+        external
+        payable
+        virtual
+        override
+    {
+        (address sellToken, uint128 sellAmount) = _handleInFlowData(_inFlowData);
+        (address origin,
+         address buyToken,
+         uint128 buySlippage,
+         uint32 batchDuration) = _extractReusableActionData(_actionData);
+
+        action(origin, sellToken, sellAmount, buyToken, buySlippage, batchDuration);
+    }
+
+    /// @dev Will be called by GelatoActionPipeline if Action.dataFlow.Out
+    //  => do not use for _actionData encoding
+    function execWithDataFlowOut(bytes calldata _actionData)
+        external
+        payable
+        virtual
+        override
+        returns (bytes memory)
+    {
+        (address origin,
+         address sellToken,
+         uint128 sellAmount,
+         address buyToken,
+         uint128 buySlippage,
+         uint32 batchDuration) = abi.decode(
+            _actionData[4:],
+            (address,address,uint128,address,uint128,uint32)
+        );
+        action(origin, sellToken, sellAmount, buyToken, buySlippage, batchDuration);
+        return abi.encode(sellToken, sellAmount);
+    }
+
+    /// @dev Will be called by GelatoActionPipeline if Action.dataFlow.InAndOut
+    //  => do not use for _actionData encoding
+    function execWithDataFlowInAndOut(
+        bytes calldata _actionData,
+        bytes calldata _inFlowData
+    )
+        external
+        payable
+        virtual
+        override
+        returns (bytes memory)
+    {
+        (address sellToken, uint128 sellAmount) = _handleInFlowData(_inFlowData);
+        (address origin,
+         address buyToken,
+         uint128 buySlippage,
+         uint32 batchDuration) = _extractReusableActionData(_actionData);
+
+        action(origin, sellToken, sellAmount, buyToken, buySlippage, batchDuration);
+
+        return abi.encode(sellToken, sellAmount);
+    }
+
+    // ======= ACTION HELPERS =========
+    function _handleInFlowData(bytes calldata _inFlowData)
+        internal
+        pure
+        virtual
+        override
+        returns(address sellToken, uint128 sellAmount)
+    {
+        uint256 sellAmount256;
+        (sellToken, sellAmount256) = abi.decode(_inFlowData, (address,uint256));
+        sellAmount = uint128(sellAmount256);
+        require(
+            sellAmount == sellAmount256,
+            "ActionPlaceOrderBatchExchange._handleInFlowData: sellAmount conversion error"
+        );
+    }
+
+    function _extractReusableActionData(bytes calldata _actionData)
+        internal
+        pure
+        virtual
+        override
+        returns (address origin, address buyToken, uint128 buySlippage, uint32 batchDuration)
+    {
+        (origin,/*sellToken*/,/*sellAmount*/, buyToken, buySlippage, batchDuration) = abi.decode(
+            _actionData[4:],
+            (address,address,uint128,address,uint128,uint32)
+        );
     }
 }

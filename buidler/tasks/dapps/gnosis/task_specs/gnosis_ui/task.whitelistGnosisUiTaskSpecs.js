@@ -15,9 +15,7 @@ export default task(
         "balance-trade-ui",
         "kyber-price-trade-ui",
         "time-trade-ui",
-        "withdraw-and-set-balance-ui",
-        "withdraw-and-set-kyber-price-ui",
-        "withdraw-and-set-time-ui",
+        "withdraw-ui",
       ];
 
       for (const taskSpecName of taskSpecs) {

@@ -21,6 +21,7 @@ export default task("gc-setupgelato")
         "gc-deploy-gnosis-safe-module",
         {
           gelatoactionpipeline: gelatoActionPipeline.address,
+          gelatocore: gelatoCore.address,
         }
       );
 

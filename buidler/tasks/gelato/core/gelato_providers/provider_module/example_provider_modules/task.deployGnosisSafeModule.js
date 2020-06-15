@@ -18,6 +18,10 @@ export default task(
     "gelatoactionpipeline",
     "address of gelatoactionpipeline contract to whitelist"
   )
+  .addOptionalParam(
+    "gelatocore",
+    "address of gelatoactionpipeline contract to whitelist"
+  )
   .addFlag("events", "Logs parsed Event Logs to stdout")
   .addFlag("log", "Logs return values to stdout")
   .setAction(async (taskArgs) => {
@@ -29,11 +33,11 @@ export default task(
       if (!gelatoProvider)
         throw new Error("\n gelatoProvider not instantiated \n");
 
-      const gelatoCore = await run("instantiateContract", {
-        contractname: "GelatoCore",
-        signer: gelatoProvider,
-        write: true,
-      });
+      if (!taskArgs.gelatocore)
+        taskArgs.gelatocore = await run("bre-config", {
+          contractname: "GelatoCore",
+          deployments: true,
+        });
 
       // 1. Get Mastercopy
       if (!taskArgs.mastercopy) {
@@ -63,7 +67,7 @@ export default task(
         constructorargs: [
           [taskArgs.extcodehash],
           [taskArgs.mastercopy],
-          gelatoCore.address,
+          taskArgs.gelatocore,
           taskArgs.gelatoactionpipeline,
         ],
         events: taskArgs.events,

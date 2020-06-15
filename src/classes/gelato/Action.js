@@ -7,6 +7,7 @@ class Action {
     if (!addr) throw new Error("\nAction: no addr passed to constructor\n");
     if (operation === undefined)
       throw new Error("\nAction: no operation passed to constructor\n");
+
     if (operation !== Operation.Call && operation !== Operation.Delegatecall) {
       throw new Error(
         "\nAction: pass 'Operation.Call' or 'Operation.Delegatecall', you passed:",

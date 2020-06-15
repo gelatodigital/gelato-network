@@ -10,7 +10,7 @@ export default task(
   .addPositionalParam("functionname", "The function we want to call")
   .addPositionalParam(
     "to",
-    "The address which to call/delegatecall. Defaults to <contractname>"
+    "The address which to call. Defaults to <contractname>"
   )
   .addOptionalVariadicPositionalParam(
     "inputs",
@@ -18,7 +18,7 @@ export default task(
   )
 
   .addFlag("log", "Logs return values to stdout")
-  .setAction(async taskArgs => {
+  .setAction(async (taskArgs) => {
     try {
       // taskArgs sanitzation
       if (taskArgs.functionname && taskArgs.data)
@@ -39,14 +39,14 @@ export default task(
       let data = await run("abi-encode-withselector", {
         contractname: taskArgs.contractname,
         functionname: taskArgs.functionname,
-        inputs: taskArgs.inputs
+        inputs: taskArgs.inputs,
       });
 
       // let data = ethers.utils.hexDataSlice(ethers.utils.id(`${taskArgs.functionname}()`), ...taskArgs.inputs);
 
       const txObject = {
         to: taskArgs.to,
-        data: data
+        data: data,
       };
 
       let provider = ethers.getDefaultProvider(network.name);

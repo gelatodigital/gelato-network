@@ -98,7 +98,7 @@ Providers have the ability to define exactly what kind of automation **tasks** t
 
 #### Why would a Provider pay for their Users transaction fees on gelato?
 
-In short, Providers are incentivised to pay for their Users automated transactions because they can provide great UX this way and they have many opportunites to create interesting business models on top of gelato. For example, if a Provider enables Users to swap DAI to ETH on uniswap every 2 days, then a fee could be applied for each executed transaction that retains 0.5% of the sold tokens and sends them to the Provider.
+In short, Providers are incentivised to pay for their Users automated transactions because they can provide great UX this way and they have many opportunities to create interesting business models on top of gelato. For example, if a Provider enables Users to swap DAI to ETH on uniswap every 2 days, then a fee could be applied for each executed transaction that retains 0.5% of the sold tokens and sends them to the Provider.
 
 This way, Users do not have to prepay ETH on Gelato and Providers get compensated / rewarded for paying the transaction fees on behalf of Users, all without having to do the heavy lifting of running the underlying infrastructure.
 

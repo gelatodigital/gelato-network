@@ -2,8 +2,6 @@
 pragma solidity ^0.6.10;
 pragma experimental ABIEncoderV2;
 
-import {IERC20} from "../../external/IERC20.sol";
-
 struct Order {
         uint16 buyToken;
         uint16 sellToken;
@@ -16,13 +14,13 @@ struct Order {
 
 interface IBatchExchange {
 
-    function withdraw(address user, IERC20 token)
+    function withdraw(address user, address token)
         external;
 
-    function deposit(IERC20 token, uint128 amount)
+    function deposit(address token, uint256 amount)
         external;
 
-    function getPendingWithdraw(address user, IERC20 token)
+    function getPendingWithdraw(address user, address token)
         external
         view
         returns (uint256, uint32);
@@ -32,12 +30,12 @@ interface IBatchExchange {
         view
         returns (uint32);
 
-    function hasValidWithdrawRequest(address user, IERC20 token)
+    function hasValidWithdrawRequest(address user, address token)
         external
         view
         returns (bool);
 
-    function tokenAddressToIdMap(IERC20 addr)
+    function tokenAddressToIdMap(address addr)
         external
         view
         returns (uint16);
@@ -53,10 +51,10 @@ interface IBatchExchange {
         external
         returns (uint256);
 
-    function requestFutureWithdraw(IERC20 token, uint256 amount, uint32 batchId)
+    function requestFutureWithdraw(address token, uint256 amount, uint32 batchId)
         external;
 
-    function requestWithdraw(IERC20 token, uint256 amount)
+    function requestWithdraw(address token, uint256 amount)
         external;
 
 }
