@@ -2,7 +2,7 @@ import { task, types } from "@nomiclabs/buidler/config";
 import { constants, utils } from "ethers";
 
 export default internalTask(
-  "gelato-return-taskspec-withdraw-and-set-time-ui",
+  "gelato-return-taskspec-withdraw-ui",
   `Returns a hardcoded task spec for the timeTrade Script`
 )
   .addFlag("log")
@@ -10,10 +10,15 @@ export default internalTask(
     try {
       if (network.name != "rinkeby") throw new Error("\nwrong network!");
 
-      // ##### Condition
-      const conditionAddress = await run("bre-config", {
+      // ##### Condition #1
+      const conditionBatchExchangeWithdrawStateful = await run("bre-config", {
         deployments: true,
-        contractname: "ConditionTimeStateful",
+        contractname: "ConditionBatchExchangeWithdrawStateful",
+      });
+
+      const condition = new Condition({
+        inst: conditionBatchExchangeWithdrawStateful,
+        data: constants.HashZero,
       });
 
       // ##### Action #1
@@ -27,7 +32,7 @@ export default internalTask(
         data: constants.HashZero,
         operation: Operation.Delegatecall,
         termsOkCheck: true,
-        dataflow: DataFlow.Out,
+        dataFlow: DataFlow.Out,
       });
 
       // ##### Action #2
@@ -40,20 +45,20 @@ export default internalTask(
         addr: actionTransferAddress,
         data: constants.HashZero,
         operation: Operation.Delegatecall,
-        termsOkCheck: true,
-        dataflow: DataFlow.In,
+        termsOkCheck: false,
+        dataFlow: DataFlow.In,
       });
 
-      // ##### Action #3
-      const setCondition = new Action({
-        addr: conditionAddress,
-        data: constants.HashZero,
-        operation: Operation.Call,
-      });
-
+      // Execute withdraw and transfer twice, as we request 2 withdrawal requests for 2 different tokens
       // ##### Create Task Spec
       const taskSpec = new TaskSpec({
-        actions: [withdrawAction, transferAction, setCondition],
+        conditions: [condition.inst],
+        actions: [
+          withdrawAction,
+          transferAction,
+          withdrawAction,
+          transferAction,
+        ],
         gasPriceCeil: 0, // Infinte gas price
       });
 

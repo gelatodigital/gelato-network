@@ -21,6 +21,7 @@ export default internalTask(
       });
 
       // @DEV Deploys a feeHandler Contract if you dont have one thus far
+      // 0.5 == 0.5 % fee
       // Check out "src/demo/provider_functions/task.getFeeHandler.js" for more details
       let feeHandlerAddress = await run("gelato-get-fee-handler", {
         fee: "0.5",

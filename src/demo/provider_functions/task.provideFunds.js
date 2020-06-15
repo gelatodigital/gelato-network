@@ -34,12 +34,24 @@ export default task(
           \n Amount:                          ${ethamount} ETH\n
         `);
       }
-      const gelatoCore = await run("instantiateContract", {
-        contractname: "GelatoCore",
-        contractaddress: gelatocoreaddress,
-        write: true,
-        signer: provider,
-      });
+      let gelatoCore;
+      if (!gelatocoreaddress) {
+        gelatoCore = await run("instantiateContract", {
+          contractname: "GelatoCore",
+          deployments: true,
+          write: true,
+          signer: provider,
+        });
+      } else {
+        gelatoCore = await run("instantiateContract", {
+          contractname: "GelatoCore",
+          contractaddress: gelatocoreaddress,
+          write: true,
+          signer: provider,
+        });
+      }
+      console.log("gesfsffsf");
+      console.log(gelatoCore.address);
       const tx = await gelatoCore.provideFunds(gelatoprovider, {
         value: depositAmount,
       });

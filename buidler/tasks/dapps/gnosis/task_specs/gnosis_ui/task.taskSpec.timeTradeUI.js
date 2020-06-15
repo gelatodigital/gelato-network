@@ -48,7 +48,7 @@ export default internalTask(
         addr: placeOrderBatchExchangeAddress,
         data: constants.HashZero,
         operation: Operation.Delegatecall,
-        termsOkCheck: false,
+        termsOkCheck: true,
         dataFlow: DataFlow.In,
       });
 
@@ -64,7 +64,7 @@ export default internalTask(
       // ##### Action #4
       const conditionBatchExchangeStatefulAddress = await run("bre-config", {
         deployments: true,
-        contractname: "ConditionBatchExchangeStateful",
+        contractname: "ConditionBatchExchangeWithdrawStateful",
       });
 
       const setBatchExchangeConditionAction = new Action({

@@ -2,58 +2,54 @@ import { task, types } from "@nomiclabs/buidler/config";
 import { constants, utils } from "ethers";
 
 export default internalTask(
-  "gelato-return-taskspec-withdraw-and-set-kyber-price-ui",
-  `Returns a hardcoded task spec for the timeTrade Script`
+  "gc-return-taskspec-withdraw-transfer",
+  `Returns a hardcoded task spec for the tradeAndWithdraw Script`
 )
   .addFlag("log")
   .setAction(async ({ log }) => {
     try {
       if (network.name != "rinkeby") throw new Error("\nwrong network!");
 
-      // ##### Condition
-      const conditionAddress = await run("bre-config", {
-        deployments: true,
-        contractname: "ConditionKyberRateStateful",
-      });
+      // ##### Condition => NONE
 
       // ##### Action #1
-      const withdrawBatchExchangeAddress = await run("bre-config", {
-        deployments: true,
+      const actionAddress = await run("bre-config", {
         contractname: "ActionWithdrawBatchExchange",
+        deployments: true,
       });
 
-      const withdrawAction = new Action({
-        addr: withdrawBatchExchangeAddress,
+      const actionWithdrawBatchExchange = new Action({
+        addr: actionAddress,
         data: constants.HashZero,
-        operation: Operation.Delegatecall,
+        operation: 1,
+        value: 0,
         termsOkCheck: true,
-        dataflow: DataFlow.Out,
+        dataFlow: DataFlow.Out,
       });
 
       // ##### Action #2
       const actionTransferAddress = await run("bre-config", {
-        deployments: true,
         contractname: "ActionTransfer",
+        deployments: true,
       });
 
-      const transferAction = new Action({
+      const actionTransferAction = new Action({
         addr: actionTransferAddress,
         data: constants.HashZero,
-        operation: Operation.Delegatecall,
+        operation: 1,
+        value: 0,
         termsOkCheck: true,
-        dataflow: DataFlow.In,
-      });
-
-      // ##### Action #3
-      const setCondition = new Action({
-        addr: conditionAddress,
-        data: constants.HashZero,
-        operation: Operation.Call,
+        dataFlow: DataFlow.In,
       });
 
       // ##### Create Task Spec
       const taskSpec = new TaskSpec({
-        actions: [withdrawAction, transferAction, setCondition],
+        actions: [
+          actionWithdrawBatchExchange,
+          actionTransferAction,
+          actionWithdrawBatchExchange,
+          actionTransferAction,
+        ],
         gasPriceCeil: 0, // Infinte gas price
       });
 

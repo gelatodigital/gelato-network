@@ -20,7 +20,8 @@ export default task(
         write: true,
       });
 
-      const feeNumerator = fee * 10000;
+      // normalizes numerator for denominator in FeeHandlerFactory == 10.000
+      const feeNumerator = fee * 100;
 
       let feeHandlerAddress = await feeHandlerFactory.feeHandlerByProviderAndNum(
         providerAddress,
