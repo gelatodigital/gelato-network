@@ -16,6 +16,7 @@ contract ActionERC20TransferFrom is GelatoActionsStandardFull {
 
     // ======= DEV HELPERS =========
     /// @dev use this function to encode the data off-chain for the action data field
+    /// Use "address _sendToken" for Human Readable ABI.
     function getActionData(
         address _user,
         IERC20 _sendToken,
@@ -49,6 +50,7 @@ contract ActionERC20TransferFrom is GelatoActionsStandardFull {
     // ======= ACTION IMPLEMENTATION DETAILS =========
     /// @dev Always use this function for encoding _actionData off-chain
     ///  Will be called by GelatoActionPipeline if Action.dataFlow.None
+    /// Use "address _sendToken" for Human Readable ABI.
     function action(
         address _user,
         IERC20 _sendToken,
