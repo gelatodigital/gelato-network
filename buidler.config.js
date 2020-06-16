@@ -21,7 +21,6 @@ const gelatoSysAdminInitialState = require("./test/gelato_core/base/gelato_sys_a
 // Objects/Enums
 const Operation = require("./src/enums/gelato/Operation").default;
 const DataFlow = require("./src/enums/gelato/DataFlow").default;
-const DataFlowType = require("./src/enums/gelato/DataFlowType").default;
 
 // Helpers
 // Async
@@ -54,7 +53,6 @@ extendEnvironment((bre) => {
   // Objects/Enums
   bre.Operation = Operation;
   bre.DataFlow = DataFlow;
-  bre.DataFlowType = DataFlowType;
   // Functions
   // Async
   bre.sleep = sleep;

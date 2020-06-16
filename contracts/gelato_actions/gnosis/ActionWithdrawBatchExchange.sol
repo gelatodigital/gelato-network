@@ -27,7 +27,8 @@ contract ActionWithdrawBatchExchange is GelatoActionsStandard, IGelatoOutFlowAct
 
     // ======= DEV HELPERS =========
     /// @dev use this function to encode the data off-chain for the action data field
-    function getActionData(address _token)
+    /// Human Readable ABI: ["function getActionData(address _token)"]
+    function getActionData(IERC20 _token)
         public
         pure
         returns(bytes memory)
@@ -43,6 +44,7 @@ contract ActionWithdrawBatchExchange is GelatoActionsStandard, IGelatoOutFlowAct
     // ======= ACTION IMPLEMENTATION DETAILS =========
     /// @notice Withdraw token from Batch Exchange
     /// @dev delegatecallOnly
+    /// Human Readable ABI: ["function action(address _token)"]
     /// @param _token Token to withdraw from Batch Exchange
     function action(IERC20 _token)
         public

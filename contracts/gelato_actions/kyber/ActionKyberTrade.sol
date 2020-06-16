@@ -261,7 +261,9 @@ contract ActionKyberTrade is GelatoActionsStandardFull {
         // Make sure Trading Pair is valid
         // @DEV we don't do this as this check is very expensive
         // However, by chaining another action that inspects this data before this
-        // one, the same check can likely be made in a cheaper way.
+        // one, the same check can likely be made in a cheaper way. E.g.
+        // a Provider Action that inspects whether sendToken/receiveToken is
+        // on a custom whitelist.
         // try KYBER.getExpectedRate(sendToken, receiveToken, sendAmount)
         //     returns (uint256 expectedRate, uint256)
         // {
