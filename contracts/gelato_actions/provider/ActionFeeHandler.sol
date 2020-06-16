@@ -30,6 +30,7 @@ contract ActionFeeHandler is GelatoActionsStandardFull {
     )
         public
     {
+        require(_num <= _den, "ActionFeeHandler.constructor: _num greater than _den");
         provider = _provider;
         feeHandlerFactory = _feeHandlerFactory;
         feeNum = _num;
@@ -74,9 +75,9 @@ contract ActionFeeHandler is GelatoActionsStandardFull {
             if (_sendToken == ETH_ADDRESS) provider.sendValue(fee);
             else IERC20(_sendToken).safeTransfer(provider, fee, "ActionFeeHandler.action:");
         } else {
-            IERC20(_sendToken).safeTransferFrom(
-                _feePayer, provider, fee, "ActionFeeHandler.action:"
-            );
+        IERC20(_sendToken).safeTransferFrom(
+            _feePayer, provider, fee, "ActionFeeHandler.action:"
+        );
         }
         sendAmountAfterFee = _sendAmount.sub(fee);
     }
@@ -170,6 +171,7 @@ contract ActionFeeHandler is GelatoActionsStandardFull {
                     return "ActionFeeHandler: NotOkUserProxyETHBalance";
             } else {
                 try sendERC20.balanceOf(_userProxy) returns (uint256 balance) {
+
                     if (balance < sendAmount)
                         return "ActionFeeHandler: NotOkUserProxySendTokenBalance";
                 } catch {
@@ -220,6 +222,7 @@ contract FeeHandlerFactory {
             feeHandlerByProviderAndNum[msg.sender][_num] == ActionFeeHandler(0),
             "FeeHandlerFactory.create: already deployed"
         );
+        require(_num <= DEN, "FeeHandlerFactory.create: num greater than DEN");
         feeHandler = new ActionFeeHandler(msg.sender, this, _num, DEN);
         feeHandlerByProviderAndNum[msg.sender][_num] = feeHandler;
         feeHandlersByProvider[msg.sender].push(feeHandler);

@@ -32,6 +32,7 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandardFull {
 
     // ======= DEV HELPERS =========
     /// @dev use this function to encode the data off-chain for the action data field
+    /// Use "address _sellToken" and "address _buyToken" for Human Readable ABI.
     function getActionData(
         address _origin,
         IERC20 _sellToken,
@@ -68,6 +69,7 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandardFull {
 
     // ======= ACTION IMPLEMENTATION DETAILS =========
     /// @notice Place order on Batch Exchange and request future withdraw for buy/sell token
+    /// @dev Use "address _sellToken" and "address _buyToken" for Human Readable ABI.
     /// @param _sellToken ERC20 Token to sell on Batch Exchange
     /// @param _sellAmount Amount to sell
     /// @param _buyToken ERC20 Token to buy on Batch Exchange
@@ -77,7 +79,7 @@ contract ActionPlaceOrderBatchExchange is GelatoActionsStandardFull {
         address _origin,
         IERC20 _sellToken,
         uint128 _sellAmount,
-        IERC20 _buyToken,
+        IERC20 _buyToken,  
         uint128 _buyAmount,
         uint32 _batchDuration
     )
