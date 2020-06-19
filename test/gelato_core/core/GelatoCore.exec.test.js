@@ -313,24 +313,7 @@ describe("GelatoCore.exec", function () {
 
       expect(
         await gelatoCore.canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE)
-      ).to.be.equal(
-        "ActionTermsNotOk:ActionWithdrawBatchExchange: Token not withdrawable yet"
-      );
-
-      await expect(
-        gelatoCore
-          .connect(executor)
-          .exec(taskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
-      )
-        .to.emit(gelatoCore, "LogCanExecFailed")
-        .withArgs(
-          executorAddress,
-          taskReceipt.id,
-          "ActionTermsNotOk:ActionWithdrawBatchExchange: Token not withdrawable yet"
-        );
-
-      // Make TaskReceipt executable
-      await mockBatchExchange.setValidWithdrawRequest(userProxyAddress);
+      ).to.be.equal("InvalidExecutor");
 
       await sellToken.create(sellerAddress, ethers.utils.parseEther("100"));
 
@@ -1030,28 +1013,7 @@ describe("GelatoCore.exec", function () {
 
       expect(
         await gelatoCore.canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE)
-      ).to.be.equal(
-        "ActionTermsNotOk:ActionWithdrawBatchExchange: Token not withdrawable yet"
-      );
-
-      await gelatoCore
-        .connect(executor)
-        .exec(taskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: 5000000 });
-
-      await expect(
-        gelatoCore
-          .connect(executor)
-          .exec(taskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
-      )
-        .to.emit(gelatoCore, "LogCanExecFailed")
-        .withArgs(
-          executorAddress,
-          taskReceipt.id,
-          "ActionTermsNotOk:ActionWithdrawBatchExchange: Token not withdrawable yet"
-        );
-
-      // Make TaskReceipt executable
-      await mockBatchExchange.setValidWithdrawRequest(userProxyAddress);
+      ).to.be.equal("InvalidExecutor");
 
       const internalGasRequirement = await gelatoCore.internalGasRequirement();
 
@@ -1114,24 +1076,7 @@ describe("GelatoCore.exec", function () {
 
       expect(
         await gelatoCore.canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE)
-      ).to.be.equal(
-        "ActionTermsNotOk:ActionWithdrawBatchExchange: Token not withdrawable yet"
-      );
-
-      await expect(
-        gelatoCore
-          .connect(executor)
-          .exec(taskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
-      )
-        .to.emit(gelatoCore, "LogCanExecFailed")
-        .withArgs(
-          executorAddress,
-          taskReceipt.id,
-          "ActionTermsNotOk:ActionWithdrawBatchExchange: Token not withdrawable yet"
-        );
-
-      // Make TaskReceipt executable
-      await mockBatchExchange.setValidWithdrawRequest(userProxyAddress);
+      ).to.be.equal("InvalidExecutor");
 
       const internalGasRequirement = await gelatoCore.internalGasRequirement();
 
@@ -1428,24 +1373,7 @@ describe("GelatoCore.exec", function () {
 
       expect(
         await gelatoCore.canExec(taskReceipt, GELATO_MAX_GAS, GELATO_GAS_PRICE)
-      ).to.be.equal(
-        "ActionTermsNotOk:ActionWithdrawBatchExchange: Token not withdrawable yet"
-      );
-
-      await expect(
-        gelatoCore
-          .connect(executor)
-          .exec(taskReceipt, { gasPrice: GELATO_GAS_PRICE, gasLimit: 7000000 })
-      )
-        .to.emit(gelatoCore, "LogCanExecFailed")
-        .withArgs(
-          executorAddress,
-          taskReceipt.id,
-          "ActionTermsNotOk:ActionWithdrawBatchExchange: Token not withdrawable yet"
-        );
-
-      // Make TaskReceipt executable
-      await mockBatchExchange.setValidWithdrawRequest(sysProxyAddress);
+      ).to.be.equal("InvalidExecutor");
 
       await expect(
         gelatoCore
