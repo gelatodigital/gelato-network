@@ -50,8 +50,6 @@ export default task(
           signer: provider,
         });
       }
-      console.log("gesfsffsf");
-      console.log(gelatoCore.address);
       const tx = await gelatoCore.provideFunds(gelatoprovider, {
         value: depositAmount,
       });
