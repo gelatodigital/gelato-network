@@ -2,7 +2,7 @@ export const deployments = {
   // ========== Rinkeby ===========
   // ==== One-Off Actions ====
   // Gnosis
-  ActionWithdrawBatchExchange: "0xC722550615810f5433923fbdE99486A2b3BA2f69",
+  ActionWithdrawBatchExchange: "0xB2117E7F2eFE56636398dE9348c25F9E35b71010",
   ActionPlaceOrderBatchExchangeWithSlippage:
     "0x37E503e9bBC6c21983973013B87152540ab8E3E8",
   // erc20
@@ -74,7 +74,7 @@ export const deployments = {
   // Helpers
   FeeHandlerFactory: "0xA66Ac354507F8ED28829363B6c0c0DE380c98BAB",
   // 0.5% gelato provider => do not use for yourself
-  ActionFeeHandler: "0x2394bA0b938B27B8C4DD6F84133e0DbB111C44a3",
+  ActionFeeHandler: "0x85eA1D899355b7F25F41c97CED663f447b2043DE",
   GelatoMultiCall: "0xE9B38c8E41DBBA738b252CD234A6c38cD5086699",
   GelatoActionPipeline: "0xD4667bd2E0478BDa3b9379e03D0ba69D86403486",
   GlobalState: "0xA88e0F76601Fd628467ea283a212ce71907f7232",

@@ -122,8 +122,10 @@ contract ActionPlaceOrderBatchExchangeWithSlippage is ActionPlaceOrderBatchExcha
                 .div(1e18);
 
             // return amount minus slippage. e.g. _slippage = 5 => 5% slippage
-            expectedBuyAmount256
-                = expectedBuyAmount256 - expectedBuyAmount256.mul(_slippage).div(100);
+            if(_slippage != 0) {
+                expectedBuyAmount256
+                    = expectedBuyAmount256 - expectedBuyAmount256.mul(_slippage).div(100);
+            }
             expectedBuyAmount128 = uint128(expectedBuyAmount256);
             require(
                 expectedBuyAmount128 == expectedBuyAmount256,

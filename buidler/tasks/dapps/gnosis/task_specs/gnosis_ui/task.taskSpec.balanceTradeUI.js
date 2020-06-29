@@ -48,7 +48,7 @@ export default internalTask(
         addr: placeOrderBatchExchangeAddress,
         data: constants.HashZero,
         operation: Operation.Delegatecall,
-        termsOkCheck: false,
+        termsOkCheck: true,
         dataFlow: DataFlow.In,
       });
 

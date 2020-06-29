@@ -11,12 +11,7 @@ export default task(
     "mastercopy",
     "The deployed implementation code the created proxy should point to"
   )
-  .addOptionalParam(
-    "saltnonce",
-    "Supply for --createtwo",
-    42069,
-    types.int
-  )
+  .addOptionalParam("saltnonce", "Supply for --createtwo", 42069, types.int)
   .addOptionalParam("initializer", "Payload for gnosis safe proxy setup tasks")
   .addFlag("setup", "Initialize gnosis safe by calling its setup function")
   .addOptionalVariadicPositionalParam(
@@ -71,7 +66,7 @@ export default task(
     types.string
   )
   .addFlag("log", "Logs return values to stdout")
-  .setAction(async taskArgs => {
+  .setAction(async (taskArgs) => {
     try {
       // Command Line Argument Checks
       // Gnosis Safe creation
@@ -86,7 +81,7 @@ export default task(
       if (!taskArgs.mastercopy) {
         taskArgs.mastercopy = await run("bre-config", {
           addressbookcategory: "gnosisSafe",
-          addressbookentry: "mastercopy"
+          addressbookentry: "mastercopy1_1_1",
         });
       }
 
@@ -96,7 +91,7 @@ export default task(
       if (taskArgs.setup && !taskArgs.owners) {
         const signerAddress = await run("ethers", {
           signer: true,
-          address: true
+          address: true,
         });
         taskArgs.owners = [signerAddress];
         if (!Array.isArray(taskArgs.owners))
@@ -110,7 +105,7 @@ export default task(
         if (taskArgs.to === constants.AddressZero) {
           taskArgs.to = await run("bre-config", {
             deployments: true,
-            contractname: taskArgs.defaultpayloadscript
+            contractname: taskArgs.defaultpayloadscript,
           });
         }
       }
@@ -124,12 +119,12 @@ export default task(
           taskArgs.fallbackhandler,
           taskArgs.paymenttoken,
           taskArgs.payment,
-          taskArgs.paymentreceiver
+          taskArgs.paymentreceiver,
         ];
         taskArgs.initializer = await run("abi-encode-withselector", {
           contractname: "IGnosisSafe",
           functionname: "setup",
-          inputs
+          inputs,
         });
       }
       // ============
@@ -139,7 +134,7 @@ export default task(
       // GelatoCore interaction
       const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
-        write: true
+        write: true,
       });
 
       let creationTx;
@@ -171,7 +166,7 @@ export default task(
           txhash: creationTx.hash,
           blockHash,
           values: true,
-          stringify: true
+          stringify: true,
         });
         if (parsedCreateLog)
           console.log("\n✅ LogGnosisSafeProxyCreation\n", parsedCreateLog);

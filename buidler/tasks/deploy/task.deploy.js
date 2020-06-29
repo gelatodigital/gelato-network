@@ -27,6 +27,12 @@ export default task(
     undefined,
     types.json
   )
+  .addOptionalParam(
+    "nonceaddition",
+    "When deploying multiple contracts, this can be used to increment the nonce artifically",
+    0,
+    types.int
+  )
   .addFlag("clean")
   .addFlag("compile", "Compile before deploy")
   .addFlag("events", "Logs parsed Event Logs to stdout")
@@ -42,30 +48,35 @@ export default task(
 
       if (taskArgs.log) console.log("\n deploy taskArgs:", taskArgs, "\n");
 
-      let deployer;
-      if (taskArgs.signerindex && taskArgs.signer)
-        throw Error("Can't have both signer and signer index");
-      if (!taskArgs.signerindex && !taskArgs.signer)
-        [deployer] = await ethers.getSigners();
-      if (taskArgs.signerindex && !taskArgs.signer) {
-        const { [taskArgs.signerindex]: _deployer } = await ethers.getSigners();
-        deployer = _deployer;
-      }
-      if (!taskArgs.signerindex && taskArgs.signer) deployer = taskArgs.signer;
+      let deployer = getSysAdmin();
+      const deployerAddress = await deployer.getAddress();
+      // if (taskArgs.signerindex && taskArgs.signer)
+      //   throw Error("Can't have both signer and signer index");
+      // if (!taskArgs.signerindex && !taskArgs.signer)
+      //   [deployer] = await ethers.getSigners();
+      // if (taskArgs.signerindex && !taskArgs.signer) {
+      //   const { [taskArgs.signerindex]: _deployer } = await ethers.getSigners();
+      //   deployer = _deployer;
+      // }
+      // if (!taskArgs.signerindex && taskArgs.signer) deployer = taskArgs.signer;
+
+      let currentNonce = await ethers.provider.getTransactionCount(
+        deployerAddress
+      );
+      currentNonce = currentNonce + taskArgs.nonceaddition;
 
       if (networkname == "mainnet") {
         console.log(
           "\nMAINNET action: are you sure you want to proceed? - hit 'ctrl + c' to abort\n"
         );
+        console.log(network.config.gasPrice);
+        console.log(currentNonce);
+        console.log(deployerAddress);
         await sleep(10000);
       }
 
       const { contractname } = taskArgs;
       await run("checkContractName", { contractname, networkname });
-
-      const currentNonce = await ethers.provider.getTransactionCount(
-        await deployer.getAddress()
-      );
 
       if (taskArgs.log) {
         console.log(`
@@ -89,13 +100,18 @@ export default task(
         deployer
       );
       let contract;
+
       if (taskArgs.constructorargs) {
         const args = taskArgs.constructorargs;
         contract = await contractFactory.deploy(...args, {
           nonce: currentNonce,
+          gasPrice: network.config.gasPrice,
         });
       } else {
-        contract = await contractFactory.deploy({ nonce: currentNonce });
+        contract = await contractFactory.deploy({
+          nonce: currentNonce,
+          gasPrice: network.config.gasPrice,
+        });
       }
 
       if (taskArgs.log) {

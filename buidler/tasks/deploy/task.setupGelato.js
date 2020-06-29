@@ -54,6 +54,7 @@ export default task("gc-setupgelato")
       await run("gelato-add-provider-module", {
         moduleaddress: gnosisSafeProviderModule.address,
       });
+
       await run("gelato-add-provider-module", {
         moduleaddress: gelatoUserProxyModule.address,
       });
