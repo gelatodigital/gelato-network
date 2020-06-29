@@ -94,7 +94,7 @@ export default task(
       if (!taskArgs.mastercopy) {
         taskArgs.mastercopy = await run("bre-config", {
           addressbookcategory: "gnosisSafe",
-          addressbookentry: "mastercopy",
+          addressbookentry: "mastercopy1_1_1",
         });
       }
 

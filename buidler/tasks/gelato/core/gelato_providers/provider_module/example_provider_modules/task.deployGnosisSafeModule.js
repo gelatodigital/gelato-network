@@ -8,7 +8,7 @@ export default task(
 )
   .addOptionalParam(
     "mastercopy",
-    "address of gnosis safe mastercopy to whitelist"
+    "addresses of gnosis safe mastercopys to whitelist"
   )
   .addOptionalParam(
     "extcodehash",
@@ -22,28 +22,34 @@ export default task(
     "gelatocore",
     "address of gelatoactionpipeline contract to whitelist"
   )
+  .addOptionalParam(
+    "nonceaddition",
+    "addition to nonce for deploy script",
+    0,
+    types.int
+  )
   .addFlag("events", "Logs parsed Event Logs to stdout")
   .addFlag("log", "Logs return values to stdout")
   .setAction(async (taskArgs) => {
     try {
       // TaskArgs Sanitzation
       // Gelato Provider is the 3rd signer account
-      const gelatoProvider = getProvider();
+      const sysAdmin = getProvider();
 
-      if (!gelatoProvider)
-        throw new Error("\n gelatoProvider not instantiated \n");
+      if (!sysAdmin) throw new Error("\n sysAdmin not instantiated \n");
 
       if (!taskArgs.gelatocore)
         taskArgs.gelatocore = await run("bre-config", {
           contractname: "GelatoCore",
           deployments: true,
         });
+      console.log(taskArgs.gelatocore);
 
       // 1. Get Mastercopy
       if (!taskArgs.mastercopy) {
         taskArgs.mastercopy = await run("bre-config", {
           addressbookcategory: "gnosisSafe",
-          addressbookentry: "mastercopy",
+          addressbookentry: "mastercopy1_1_1",
         });
       }
 
@@ -53,10 +59,12 @@ export default task(
           deployments: true,
           contractname: "GelatoActionPipeline",
         });
+      console.log(taskArgs.gelatoactionpipeline);
 
       if (!taskArgs.extcodehash) {
         // 1. Get extcodehash of Gnosis Safe
         const safeAddress = await run("gc-determineCpkProxyAddress");
+        console.log(safeAddress);
         let providerToRead = ethers.provider;
         const extcode = await providerToRead.getCode(safeAddress);
         taskArgs.extcodehash = utils.solidityKeccak256(["bytes"], [extcode]);
@@ -70,9 +78,10 @@ export default task(
           taskArgs.gelatocore,
           taskArgs.gelatoactionpipeline,
         ],
+        nonceaddition: taskArgs.nonceaddition,
         events: taskArgs.events,
         log: taskArgs.log,
-        signer: gelatoProvider,
+        signer: sysAdmin,
       });
 
       if (taskArgs.log)

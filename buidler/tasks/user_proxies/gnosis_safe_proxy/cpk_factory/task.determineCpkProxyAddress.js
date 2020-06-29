@@ -48,7 +48,7 @@ export default task(
 
       const mastercopy = await run("bre-config", {
         addressbook: true,
-        addressbookentry: "mastercopy",
+        addressbookentry: "mastercopy1_1_1",
         addressbookcategory: "gnosisSafe",
         networkname: network.name,
       });

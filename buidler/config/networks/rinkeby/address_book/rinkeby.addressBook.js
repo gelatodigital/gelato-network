@@ -12,14 +12,14 @@ export const addressBook = {
   // Gelato
   gelatoExecutor: {
     // rinkeby
-    default: "0x99E69499973484a96639f4Fb17893BC96000b3b8", // Hil Index 1
+    default: "0x4d671CD743027fB5Af1b2D2a3ccbafA97b5B1B80",
   },
   gelatoGasPriceOracle: {
     // rinkeby
     chainlink: "0xEc2BCB887d7E50d06AeE7b1b5C79eA7816d5e167",
   },
   gelatoProvider: {
-    default: "0x518eAa8f962246bCe2FA49329Fe998B66d67cbf8", // Hil Index 2
+    default: "0x518eAa8f962246bCe2FA49329Fe998B66d67cbf8",
   },
 
   // Gnosis
