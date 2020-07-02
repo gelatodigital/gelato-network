@@ -8,68 +8,68 @@ export default task("gc-setupgelato")
     try {
       taskArgs.log = true;
 
-      // Deploy Gelato Core
-      const gelatoCore = await run("deploy-gc", {});
+      // // Deploy Gelato Core
+      // const gelatoCore = await run("deploy-gc", {});
 
-      const gelatoActionPipeline = await run("deploy", {
-        contractname: "GelatoActionPipeline",
-      });
+      // const gelatoActionPipeline = await run("deploy", {
+      //   contractname: "GelatoActionPipeline",
+      // });
 
-      // Deploy Provider Modules
-      // // Gnosis Safe
-      const gnosisSafeProviderModule = await run(
-        "gc-deploy-gnosis-safe-module",
-        {
-          gelatoactionpipeline: gelatoActionPipeline.address,
-          gelatocore: gelatoCore.address,
-        }
-      );
+      // // Deploy Provider Modules
+      // // // Gnosis Safe
+      // const gnosisSafeProviderModule = await run(
+      //   "gc-deploy-gnosis-safe-module",
+      //   {
+      //     gelatoactionpipeline: gelatoActionPipeline.address,
+      //     gelatocore: gelatoCore.address,
+      //   }
+      // );
 
-      // Gelato User Factory
-      const gelatoUserProxyFactory = await run("deploy", {
-        contractname: "GelatoUserProxyFactory",
-        constructorargs: [gelatoCore.address],
-      });
+      // // Gelato User Factory
+      // const gelatoUserProxyFactory = await run("deploy", {
+      //   contractname: "GelatoUserProxyFactory",
+      //   constructorargs: [gelatoCore.address],
+      // });
 
-      // // Gelato User Proxy
-      const gelatoUserProxyModule = await run("deploy", {
-        contractname: "ProviderModuleGelatoUserProxy",
-        constructorargs: [
-          gelatoUserProxyFactory.address,
-          gelatoActionPipeline.address,
-        ],
-      });
+      // // // Gelato User Proxy
+      // const gelatoUserProxyModule = await run("deploy", {
+      //   contractname: "ProviderModuleGelatoUserProxy",
+      //   constructorargs: [
+      //     gelatoUserProxyFactory.address,
+      //     gelatoActionPipeline.address,
+      //   ],
+      // });
 
+      console.log("Starting");
       // Executor Setup
-      await run("gc-stakeexecutor", {
-        gelatocoreaddress: gelatoCore.address,
-      });
+      // await run("gc-stakeexecutor", {
+      //   // gelatocoreaddress: gelatoCore.address,
+      // });
 
-      // Provider Setup
-      await run("gelato-providefunds", {
-        ethamount: "1",
-        gelatocoreaddress: gelatoCore.address,
-      });
+      // // Provider Setup
+      // await run("gelato-providefunds", {
+      //   ethamount: "1",
+      //   // gelatocoreaddress: gelatoCore.address,
+      // });
 
-      await run("gelato-add-provider-module", {
-        moduleaddress: gnosisSafeProviderModule.address,
-      });
+      // await run("gelato-add-provider-module", {
+      //   modulename: "GnosisSafe",
+      // });
 
-      await run("gelato-add-provider-module", {
-        moduleaddress: gelatoUserProxyModule.address,
-      });
+      // await run("gelato-add-provider-module", {
+      //   modulename: "GelatoUserProxy",
+      // });
 
       // Assign executor
       await run("gelato-assign-executor", {
-        gelatocoreaddress: gelatoCore.address,
+        // gelatocoreaddress: gelatoCore.address,
       });
 
-      // Deploy Fee Handler Factory
-      const feeHandlerFactory = await run("deploy", {
-        contractname: "FeeHandlerFactory",
-        signerindex: 2,
-      });
-
+      // // Deploy Fee Handler Factory
+      // const feeHandlerFactory = await run("deploy", {
+      //   contractname: "FeeHandlerFactory",
+      //   signerindex: 2,
+      // });
       // Whitelist a couple of tokens
       const dai = await run("bre-config", {
         addressbookcategory: "erc20",
@@ -81,95 +81,105 @@ export default task("gc-setupgelato")
         addressbookentry: "WETH",
       });
 
-      const usdc = await run("bre-config", {
-        addressbookcategory: "erc20",
-        addressbookentry: "USDC",
+      await run("gelato-whitelist-fee-tokens", {
+        feetokens: [dai, weth],
       });
 
-      await feeHandlerFactory.addTokensToWhitelist([dai, weth, usdc]);
-
-      // Deploy Actions
-      const batchExchangeAddress = await run("bre-config", {
-        addressbookcategory: "gnosisProtocol",
-        addressbookentry: "batchExchange",
+      await run("gelato-get-fee-handler", {
+        fee: "1",
       });
 
-      const kyberProxyAddress = await run("bre-config", {
-        addressbookcategory: "kyber",
-        addressbookentry: "proxy",
-      });
+      console.log("Done");
 
-      const actionPlaceOrderBatchExchange = await run("deploy", {
-        contractname: "ActionPlaceOrderBatchExchangeWithSlippage",
-        constructorargs: [batchExchangeAddress, kyberProxyAddress],
-      });
+      // const usdc = await run("bre-config", {
+      //   addressbookcategory: "erc20",
+      //   addressbookentry: "USDC",
+      // });
 
-      const actionWithdrawBatchExchange = await run("deploy", {
-        contractname: "ActionWithdrawBatchExchange",
-        constructorargs: [batchExchangeAddress],
-      });
+      // await feeHandlerFactory.addTokensToWhitelist([dai, weth, usdc]);
 
-      const actionERC20TransferFrom = await run("deploy", {
-        contractname: "ActionERC20TransferFrom",
-      });
+      // // Deploy Actions
+      // const batchExchangeAddress = await run("bre-config", {
+      //   addressbookcategory: "gnosisProtocol",
+      //   addressbookentry: "batchExchange",
+      // });
 
-      const actionTransfer = await run("deploy", {
-        contractname: "ActionTransfer",
-      });
+      // const kyberProxyAddress = await run("bre-config", {
+      //   addressbookcategory: "kyber",
+      //   addressbookentry: "proxy",
+      // });
 
-      const uniswapFactoryAddress = await run("bre-config", {
-        addressbookcategory: "uniswap",
-        addressbookentry: "uniswapFactory",
-      });
+      // const actionPlaceOrderBatchExchange = await run("deploy", {
+      //   contractname: "ActionPlaceOrderBatchExchangeWithSlippage",
+      //   constructorargs: [batchExchangeAddress, kyberProxyAddress],
+      // });
 
-      const actionUniswapTrade = await run("deploy", {
-        contractname: "ActionUniswapTrade",
-        constructorargs: [uniswapFactoryAddress],
-      });
+      // const actionWithdrawBatchExchange = await run("deploy", {
+      //   contractname: "ActionWithdrawBatchExchange",
+      //   constructorargs: [batchExchangeAddress],
+      // });
 
-      // Deploy Conditions
-      const conditionTimeStateful = await run("deploy", {
-        contractname: "ConditionTimeStateful",
-        constructorargs: [gelatoCore.address],
-      });
+      // const actionERC20TransferFrom = await run("deploy", {
+      //   contractname: "ActionERC20TransferFrom",
+      // });
 
-      const conditionBalanceStateful = await run("deploy", {
-        contractname: "ConditionBalanceStateful",
-        constructorargs: [gelatoCore.address],
-      });
+      // const actionTransfer = await run("deploy", {
+      //   contractname: "ActionTransfer",
+      // });
 
-      const conditionBatchExchangeWithdrawStateful = await run("deploy", {
-        contractname: "ConditionBatchExchangeWithdrawStateful",
-        constructorargs: [gelatoCore.address],
-      });
+      // const uniswapFactoryAddress = await run("bre-config", {
+      //   addressbookcategory: "uniswap",
+      //   addressbookentry: "uniswapFactory",
+      // });
 
-      const conditionKyberRateStateful = await run("deploy", {
-        contractname: "ConditionKyberRateStateful",
-        constructorargs: [kyberProxyAddress, gelatoCore.address],
-      });
+      // const actionUniswapTrade = await run("deploy", {
+      //   contractname: "ActionUniswapTrade",
+      //   constructorargs: [uniswapFactoryAddress],
+      // });
+
+      // // Deploy Conditions
+      // const conditionTimeStateful = await run("deploy", {
+      //   contractname: "ConditionTimeStateful",
+      //   constructorargs: [gelatoCore.address],
+      // });
+
+      // const conditionBalanceStateful = await run("deploy", {
+      //   contractname: "ConditionBalanceStateful",
+      //   constructorargs: [gelatoCore.address],
+      // });
+
+      // const conditionBatchExchangeWithdrawStateful = await run("deploy", {
+      //   contractname: "ConditionBatchExchangeWithdrawStateful",
+      //   constructorargs: [gelatoCore.address],
+      // });
+
+      // const conditionKyberRateStateful = await run("deploy", {
+      //   contractname: "ConditionKyberRateStateful",
+      //   constructorargs: [kyberProxyAddress, gelatoCore.address],
+      // });
 
       // Provide Task Spec for each action
 
       // SET FEE For each action
 
-      console.log(
-        `
-      \n GelatoCore: ${gelatoCore.address}
-      \n GnosisSafeProviderModule: ${gnosisSafeProviderModule.address}
-      \n GelatoUserProxyFactory: ${gelatoUserProxyFactory.address}
-      \n GelatoUserProxyModule: ${gelatoUserProxyModule.address}
-      \n FeeHandlerFactory: ${feeHandlerFactory.address}
-      \n ActionPlaceOrderBatchExchangeWithSlippage: ${actionPlaceOrderBatchExchange.address}
-      \n ActionWithdrawBatchExchange: ${actionWithdrawBatchExchange.address}
-      \n ActionERC20TransferFrom: ${actionERC20TransferFrom.address}
-      \n ActionTransfer: ${actionTransfer.address}
-      \n ActionUniswapTrade: ${actionUniswapTrade.address}
-      \n ConditionTimeStateful: ${conditionTimeStateful.address}
-      \n ConditionBalanceStateful: ${conditionBalanceStateful.address}
-      \n ConditionKyberRateStateful: ${conditionKyberRateStateful.address}
-      \n ConditionBatchExchangeWithdrawStateful: ${conditionBatchExchangeWithdrawStateful.address}
-      `
-      );
+      // console.log(
+      //   `
+      // \n GelatoCore: ${gelatoCore.address}
+      // \n GnosisSafeProviderModule: ${gnosisSafeProviderModule.address}
+      // \n GelatoUserProxyFactory: ${gelatoUserProxyFactory.address}
+      // \n GelatoUserProxyModule: ${gelatoUserProxyModule.address}
+      // \n FeeHandlerFactory: ${feeHandlerFactory.address}
+      // \n ActionPlaceOrderBatchExchangeWithSlippage: ${actionPlaceOrderBatchExchange.address}
+      // \n ActionWithdrawBatchExchange: ${actionWithdrawBatchExchange.address}
+      // \n ActionERC20TransferFrom: ${actionERC20TransferFrom.address}
+      // \n ActionTransfer: ${actionTransfer.address}
+      // \n ActionUniswapTrade: ${actionUniswapTrade.address}
+      // \n ConditionTimeStateful: ${conditionTimeStateful.address}
+      // \n ConditionBalanceStateful: ${conditionBalanceStateful.address}
+      // \n ConditionKyberRateStateful: ${conditionKyberRateStateful.address}
+      // \n ConditionBatchExchangeWithdrawStateful: ${conditionBatchExchangeWithdrawStateful.address}
+      // `
+      // );
     } catch (error) {
       console.error(error, "\n");
       process.exit(1);

@@ -20,8 +20,7 @@ export default task(
   .setAction(async ({ useraddress, saltnonce, log }) => {
     try {
       if (!useraddress) {
-        const signers = await ethers.getSigners();
-        const signer = signers[0];
+        const signer = getUser();
         useraddress = await signer.getAddress();
       }
 
@@ -48,7 +47,7 @@ export default task(
 
       const mastercopy = await run("bre-config", {
         addressbook: true,
-        addressbookentry: "mastercopy1_1_1",
+        addressbookentry: "mastercopyOneOneOne",
         addressbookcategory: "gnosisSafe",
         networkname: network.name,
       });
