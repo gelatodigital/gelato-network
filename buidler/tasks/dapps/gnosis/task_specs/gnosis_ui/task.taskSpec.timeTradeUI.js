@@ -8,8 +8,6 @@ export default internalTask(
   .addFlag("log")
   .setAction(async ({ log }) => {
     try {
-      if (network.name != "rinkeby") throw new Error("\nwrong network!");
-
       // ##### Condition
       const conditionAddress = await run("bre-config", {
         deployments: true,

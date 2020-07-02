@@ -34,8 +34,9 @@ export const contracts = [
   // Debugging
   "ConditionKyberRateError",
   // Helpers
-  "FeeFinder",
+  "ActionFeeHandler",
   "FeeHandlerFactory",
   // Libraries
   "Multisend",
+  "GelatoMultiCall",
 ];

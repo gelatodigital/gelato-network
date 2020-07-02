@@ -11,6 +11,7 @@ export const deployments = {
   // Gnosis
   ActionPlaceOrderBatchExchangeWithSlippage:
     "0xaefe7493af32456c3725a370a2648056c577b3eb",
+
   ActionWithdrawBatchExchange: "0xce9e296c85a21f34ecb55146617899e0fafc0257",
 
   // Uniswap
@@ -44,12 +45,13 @@ export const deployments = {
   ConditionBatchExchangeWithdrawStateful:
     "0xe8ef057fa543bd9260d2c7504b7275b7035d67d6",
 
-  // === Debugging ===
-  // Conditions
-  ConditionKyberRateError: "0xe0EFd26650D020cc03489D4E7FB5106E119683c8",
-
   // === Helpers ===
   FeeHandlerFactory: "0xc5ca2b0bb9e088cae6a3d37920a37fde29046f2b",
   // === Libraries ===
   Multisend: "0x4e2ca0093028c8401c93aacccaf59288ca6fb728",
+
+  // === Internal ===
+  // 1% Fee Handler
+  ActionFeeHandler: "0x0eF0ec4808a4B983116498264055e72192DDe729",
+  GelatoMultiCall: "0xb9bd403254b3eb365c4ea1dbbb3fe6fe6ab6007c",
 };

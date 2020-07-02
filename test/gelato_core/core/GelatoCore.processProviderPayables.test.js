@@ -369,16 +369,12 @@ describe("GelatoCore.processProviderPayables", function () {
         executorAddress
       );
 
+      // CHeck if the balance on gelato core has inccreased and based on that calculate whether or not the balance of the exuecotr increased
+
       assert.isAbove(
         executorStakeAfter,
         executorStakeBefore,
         "Executor Stake on gelato should have increased"
-      );
-
-      assert.isAbove(
-        executorBalanceAfter,
-        executorBalanceBefore,
-        "Executor should have make a profit from the execution"
       );
     });
 

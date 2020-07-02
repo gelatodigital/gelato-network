@@ -8,21 +8,40 @@ export default task(
   .addFlag("log")
   .setAction(async ({ log }) => {
     try {
-      if (network.name != "rinkeby") throw new Error("\nwrong network!");
+      const provider = getProvider();
 
-      // Collect all task specs
+      const gelatoCore = await run("instantiateContract", {
+        contractname: "GelatoCore",
+        signer: provider,
+        write: true,
+      });
+
       const taskSpecs = [
         "balance-trade-ui",
         "kyber-price-trade-ui",
-        // "time-trade-ui",
-        // "withdraw-ui",
+        "time-trade-ui",
+        "withdraw-ui",
       ];
 
+      const taskSpecsToWhitelist = [];
+
       for (const taskSpecName of taskSpecs) {
-        await run("gelato-whitelist-taskspec", {
-          name: taskSpecName,
-        });
+        taskSpecsToWhitelist.push(
+          await run(`gelato-return-taskspec-${taskSpecName}`)
+        );
       }
+
+      const tx = await gelatoCore.provideTaskSpecs(taskSpecsToWhitelist, {
+        gasLimit: 1000000,
+      });
+
+      const etherscanLink = await run("get-etherscan-link", {
+        txhash: tx.hash,
+      });
+      console.log(`Link to transaction: \n ${etherscanLink}\n`);
+      await tx.wait();
+      console.log(`✅ Tx mined - Task Spec provided`);
+      return `✅ Tx mined`;
     } catch (err) {
       console.error(err);
       process.exit(1);

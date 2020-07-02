@@ -3,7 +3,7 @@ import { defaultNetwork } from "../../../../../../../buidler.config";
 import { utils, constants } from "ethers";
 
 export default task(
-  "gc-deploy-gnosis-safe-module",
+  "gc-updatemastercopyandextcodehash",
   `Deploys the ProviderModuleGnosisSafe on [--network] (default: ${defaultNetwork})`
 )
   .addOptionalParam(
@@ -43,7 +43,6 @@ export default task(
           contractname: "GelatoCore",
           deployments: true,
         });
-      console.log(taskArgs.gelatocore);
 
       // 1. Get Mastercopy
       if (!taskArgs.mastercopy) {
@@ -59,30 +58,38 @@ export default task(
           deployments: true,
           contractname: "GelatoActionPipeline",
         });
-      console.log(taskArgs.gelatoactionpipeline);
+
+      console.log(`UI Safe Address: ${uiSafeAddress}`);
+
+      const providerModuleGnosisSafeProxy = await run("instantiateContract", {
+        deplyoments: true,
+        contractname: "ProviderModuleGnosisSafeProxy",
+        write: true,
+        signer: sysAdmin,
+      });
 
       if (!taskArgs.extcodehash) {
         // 1. Get extcodehash of Gnosis Safe
-        const safeAddress = await run("gc-determineCpkProxyAddress");
-        console.log(safeAddress);
+
+        // Address of deployed safe contract
+        const safeAddress = "0x0791b24Bda4718c7f4D864aE3Db070084C1A69F7";
         let providerToRead = ethers.provider;
         const extcode = await providerToRead.getCode(safeAddress);
+
         taskArgs.extcodehash = utils.solidityKeccak256(["bytes"], [extcode]);
+        console.log(taskArgs.extcodehash);
       }
 
-      const providerModuleGnosisSafeProxy = await run("deploy", {
-        contractname: "ProviderModuleGnosisSafeProxy",
-        constructorargs: [
-          [taskArgs.extcodehash],
-          [taskArgs.mastercopy],
-          taskArgs.gelatocore,
-          taskArgs.gelatoactionpipeline,
-        ],
-        nonceaddition: taskArgs.nonceaddition,
-        events: taskArgs.events,
-        log: taskArgs.log,
-        signer: sysAdmin,
-      });
+      console.log(
+        await providerModuleGnosisSafeProxy.isProxyExtcodehashProvided(
+          taskArgs.extcodehash
+        )
+      );
+
+      await providerModuleGnosisSafeProxy.provideProxyExtcodehashes(
+        [utils.solidityKeccak256(["bytes"], [extcode4])],
+        { gasLimit: 150000, gasPrice: network.config.gasPrice }
+      );
 
       if (taskArgs.log)
         console.log(

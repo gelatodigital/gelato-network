@@ -11,7 +11,7 @@ export const addressBook = {
   // Gelato
   gelatoExecutor: {
     // Mainnet
-    default: "0x4B7363b8a7DaB76ff73dFbA00801bdDcE699F3A2",
+    default: "0x99E69499973484a96639f4Fb17893BC96000b3b8",
   },
   gelatoGasPriceOracle: {
     // Mainnet
@@ -26,8 +26,8 @@ export const addressBook = {
     batchExchange: "0x6F400810b62df8E13fded51bE75fF5393eaa841F",
   },
   gnosisSafe: {
-    mastercopy1_1_1: "0x34CfAC646f301356fAa8B21e94227e3583Fe3F5F",
-    mastercopy1_2_0: "0x34CfAC646f301356fAa8B21e94227e3583Fe3F5F",
+    mastercopyOneOneOne: "0x34CfAC646f301356fAa8B21e94227e3583Fe3F5F",
+    mastercopyOneTwoZero: "0x34CfAC646f301356fAa8B21e94227e3583Fe3F5F",
     gnosisSafeProxyFactory: "0x0",
     cpkFactory: "0x0fB4340432e56c014fa96286de17222822a9281b",
     multiSend: "0xB522a9f781924eD250A11C54105E51840B138AdD",
