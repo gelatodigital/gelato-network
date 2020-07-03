@@ -4,19 +4,19 @@
 
 <p  align="center">
 
-<a  href="https://circleci.com/gh/gelatodigital/gelato-V1"  alt="circleCI">
+<a  href="https://circleci.com/gh/gelatodigital/gelato-V1" target="_blank"  alt="circleCI">
 
 <img  src="https://circleci.com/gh/gelatodigital/gelato-V1.svg?style=shield&circle-token=d72f3799a6ac81e89e2e0f9a29f7633baef8252b">
 
 </a>
 
-<a  href="https://coveralls.io/github/gelatodigital/gelato-V1"  alt="coveralls">
+<a  href="https://coveralls.io/github/gelatodigital/gelato-V1" target="_blank"  alt="coveralls">
 
 <img  src="https://coveralls.io/repos/github/gelatodigital/gelato-V1/badge.svg?t=esHbYY">
 
 </a>
 
-<a  href="https://codechecks.io"  alt="codeChecks">
+<a  href="https://codechecks.io"  target="_blank" alt="codeChecks">
 
 <img  src="https://raw.githubusercontent.com/codechecks/docs/master/images/badges/badge-default.svg?sanitize=true">
 
@@ -29,8 +29,8 @@
 ## Get Started 🍦
 
 - 🍦 Read our Gelato-V1 release announcement on our [blog]
-- 🍦 Try out our demo tutorial [here](https://github.com/gelatodigital/Gelato-kyber)
-- 🍦 Try out our advanced demo [here](src/demo/README.md)
+- 🍦 Try out our demo tutorial [here](https://github.com/gelatodigital/Gelato-kyber){:target="_blank"}
+- 🍦 Create your own Task (advanced) [here](src/demo/README.md)
 - 🍦 Soon we will publish Developer Documentation. Bare with us!
 - 🍦 Read the [Gelato Audit report](docs/audits/G0Group-Gelato2020Jun.pdf)
 
@@ -50,13 +50,13 @@ Gelato is a tool to build automation into dapps and thus level them up to a whol
 
 ## What is an automated dapp? 🍦
 
-🍦**Example #1:** Swap 100 DAI to ETH on Uniswap every week. (check out the Gelato [demo tutorial](https://github.com/gelatodigital/Gelato-kyber) for a similar use case)
+🍦**Example #1:** Swap 100 DAI to ETH on Uniswap every week. (check out the Gelato [demo tutorial](https://github.com/gelatodigital/Gelato-kyber){:target="_blank"} for a similar use case)
 
 🍦**Example #2:** Automatically refinance my loan between multiple lending protocols to always get the highest yield.
 
 🍦**Example #3:** Automatically buy ETH when its price dropped and then sell it again after the price has gone up again (automatic volatility trader).
 
-A **regular dapp** like [uniswap.exchange](https://app.uniswap.org/#/swap) requires Users to interact with it manually by sending transactions every time they want to swap tokens. Users that want to sell 100 DAI every week on Uniswap have to manually do it every week.
+A **regular dapp** like [uniswap.exchange](https://app.uniswap.org/#/swap){:target="_blank"} requires Users to interact with it manually by sending transactions every time they want to swap tokens. Users that want to sell 100 DAI every week on Uniswap have to manually do it every week.
 
 An **automated dapp**, using Gelato, requires Users to only send a transaction once and then will keep on sending the ensuing transactions on the Users' behalves in the future, when, and only if, the User-defined Conditions are met. That's why, with Gelato integrated, Users that want to sell 100 DAI every week on Uniswap only have to send one initialization transaction for their 100 DAI to be automatically sold from then onward.
 
@@ -113,4 +113,4 @@ Let us know in our Telegram Chat, if you have any questions or issues. We are mo
 
 Let’s build the next generation of fully automated Ethereum dapps, together.
 
-Reach out to us in our official [Telegram Community Chat](http://tiny.cc/gelatotelegtram)
+Reach out to us in our official [Telegram Community Chat](http://tiny.cc/gelatotelegtram){:target="_blank"}
