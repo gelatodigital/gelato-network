@@ -48,20 +48,19 @@ export default task(
 
       if (taskArgs.log) console.log("\n deploy taskArgs:", taskArgs, "\n");
 
-      let deployer = getSysAdmin();
-      const deployerAddress = await deployer.getAddress();
-      // if (taskArgs.signerindex && taskArgs.signer)
-      //   throw Error("Can't have both signer and signer index");
-      // if (!taskArgs.signerindex && !taskArgs.signer)
-      //   [deployer] = await ethers.getSigners();
-      // if (taskArgs.signerindex && !taskArgs.signer) {
-      //   const { [taskArgs.signerindex]: _deployer } = await ethers.getSigners();
-      //   deployer = _deployer;
-      // }
-      // if (!taskArgs.signerindex && taskArgs.signer) deployer = taskArgs.signer;
+      let deployer;
+      if (taskArgs.signerindex && taskArgs.signer)
+        throw Error("Can't have both signer and signer index");
+      if (!taskArgs.signerindex && !taskArgs.signer)
+        [deployer] = await ethers.getSigners();
+      if (taskArgs.signerindex && !taskArgs.signer) {
+        const { [taskArgs.signerindex]: _deployer } = await ethers.getSigners();
+        deployer = _deployer;
+      }
+      if (!taskArgs.signerindex && taskArgs.signer) deployer = taskArgs.signer;
 
       let currentNonce = await ethers.provider.getTransactionCount(
-        deployerAddress
+        await deployer.getAddress()
       );
       currentNonce = currentNonce + taskArgs.nonceaddition;
 
@@ -69,9 +68,11 @@ export default task(
         console.log(
           "\nMAINNET action: are you sure you want to proceed? - hit 'ctrl + c' to abort\n"
         );
-        console.log(network.config.gasPrice);
-        console.log(currentNonce);
-        console.log(deployerAddress);
+        console.log(
+          `gasPrice: ${utils.formatUnits(network.config.gasPrice, "gwei")} gwei`
+        );
+        console.log("currentNonce: ", currentNonce);
+        console.log("deployerAddress: ", await deployer.getAddress());
         await sleep(10000);
       }
 
@@ -83,7 +84,7 @@ export default task(
           \n Deployment: 🚢 \
           \n Network:  ${networkname.toUpperCase()}\
           \n Contract: ${contractname}\
-          \n Deployer: ${deployer._address}\
+          \n Deployer: ${await deployer.getAddress()}\
           \n Nonce:    ${currentNonce}\n
         `);
       }

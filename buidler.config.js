@@ -93,7 +93,6 @@ assert.ok(PROVIDER_PK, "no provider private key (USER_PK) found in .env");
 
 // Config Files
 const buidlerevmConfig = require("./buidler/config/networks/buidlerevmConfig");
-const kovanConfig = require("./buidler/config/networks/kovanConfig");
 const rinkebyConfig = require("./buidler/config/networks/rinkebyConfig");
 const mainnetConfig = require("./buidler/config/networks/mainnetConfig");
 
@@ -132,18 +131,6 @@ module.exports = {
       contracts: mainnetConfig.contracts,
       deployments: mainnetConfig.deployments,
       filters: mainnetConfig.filters,
-    },
-    kovan: {
-      // Standard
-      accounts: { mnemonic: DEV_MNEMONIC },
-      chainId: 42,
-      gasPrice: parseInt(utils.parseUnits("1", "gwei")),
-      url: `https://kovan.infura.io/v3/${INFURA_ID}`,
-      // Custom
-      addressBook: kovanConfig.addressBook,
-      contracts: kovanConfig.contracts,
-      deployments: kovanConfig.deployments,
-      filters: kovanConfig.filters,
     },
     rinkeby: {
       // Standard

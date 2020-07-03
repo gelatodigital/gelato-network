@@ -1,8 +1,0 @@
-export const erc20s = {
-  // Kovan
-  // Tokens
-  DAI: "0xC4375B7De8af5a38a93548eb8453a498222C4fF2",
-  "0xC4375B7De8af5a38a93548eb8453a498222C4fF2": "DAI",
-  KNC: "0xad67cB4d63C9da94AcA37fDF2761AaDF780ff4a2",
-  "0xad67cB4d63C9da94AcA37fDF2761AaDF780ff4a2": "KNC"
-};
