@@ -4,19 +4,19 @@
 
 <p  align="center">
 
-<a  href="https://circleci.com/gh/gelatodigital/gelato-V1"  alt="circleCI">
+<a  href="https://circleci.com/gh/gelatodigital/gelato-network"  alt="circleci">
 
-<img  src="https://circleci.com/gh/gelatodigital/gelato-V1.svg?style=shield&circle-token=d72f3799a6ac81e89e2e0f9a29f7633baef8252b">
-
-</a>
-
-<a  href="https://coveralls.io/github/gelatodigital/gelato-V1"  alt="coveralls">
-
-<img  src="https://coveralls.io/repos/github/gelatodigital/gelato-V1/badge.svg?t=esHbYY">
+<img  src="https://circleci.com/gh/gelatodigital/gelato-network.svg?style=shield">
 
 </a>
 
-<a  href="https://codechecks.io"  alt="codeChecks">
+<a  href="https://coveralls.io/github/gelatodigital/gelato-network?branch=master"  alt="coveralls">
+
+<img  src="https://coveralls.io/repos/github/gelatodigital/gelato-network/badge.svg?branch=master">
+
+</a>
+
+<a  href="https://codechecks.io"  alt="codechecks">
 
 <img  src="https://raw.githubusercontent.com/codechecks/docs/master/images/badges/badge-default.svg?sanitize=true">
 
@@ -28,7 +28,7 @@
 
 ## Get Started 🍦
 
-- 🍦 Read our Gelato-V1 release announcement on our [blog]
+- 🍦 Read our Gelato-V1 release announcement on our [blog](https://medium.com/@gelatonetwork/ethereums-automation-protocol-gelato-network-launches-on-mainnet-88647aa10d65)
 - 🍦 Try out our demo tutorial [here](https://github.com/gelatodigital/Gelato-kyber)
 - 🍦 Try out our advanced demo [here](src/demo/README.md)
 - 🍦 Soon we will publish Developer Documentation. Bare with us!
@@ -44,7 +44,8 @@ Developers on Ethereum, who want to build automation into their dapps, without h
 If you as a developer want to leverage Gelato automation, all you need to know is Javascript or Solidity or both, depending on what you want to build or customize.
 
 ## What is Gelato ? 🍦
->Gelato is a tool for developers to automate smart contract execution on Ethereum.
+
+> Gelato is a tool for developers to automate smart contract execution on Ethereum.
 
 Gelato is a tool to build automation into dapps and thus level them up to a whole new range of cool features and User Experiences. Think of Gelato as the infrastructure that enables you to make use of automated `If This, Then That` execution for smart contracts. It allows for the combination of arbitrary [Conditions](https://github.com/gelatodigital/Gelato-kyber/tree/master/contracts/gelato_conditions) with arbitrary [Actions](https://github.com/gelatodigital/Gelato-kyber/tree/master/contracts/gelato_actions), which will be executed on behalf of your Users by a network of relay nodes called "Executors".
 
@@ -90,7 +91,7 @@ While developers can certainly build Dapps with Gelato that require their end-us
 
 In short, GelatoProviders are incentivised to pay for their Users automated transactions because they can provide great UX this way. Additionally, they have many opportunities to create interesting business models on top of Gelato. For example, if a GelatoProvider enables Users to swap DAI to ETH on Uniswap every 2 days, then an automated GelatoProvider fee mechanism could be applied for each executed transaction, which retains 0.5% of the sold tokens and sends them to the GelatoProvider.
 
-This way, on the one hand Users do not have to prepay ETH on Gelato, and on the other hand  GelatoProviders get rewarded, or at least compensated, for paying the transaction fees on behalf of Users, all without having to do the heavy lifting of running the underlying infrastructure.
+This way, on the one hand Users do not have to prepay ETH on Gelato, and on the other hand GelatoProviders get rewarded, or at least compensated, for paying the transaction fees on behalf of Users, all without having to do the heavy lifting of running the underlying infrastructure.
 
 Hence you can think of Gelato as a pay-as-you-go execution service for developers to create the first wave of user-friendly automated dapps, while also running a sustainable business model.
 
@@ -99,6 +100,7 @@ Hence you can think of Gelato as a pay-as-you-go execution service for developer
 The Gelato Protocol's design goal is to incentivise an open and decentralized market for automated Task execution. This means that a multitude of relay servers should be run, independently from each other, trying to execute Tasks for Gelato Users, in search for profits. Ideally, Gelato developers and Users should not have to care about who is running the server. They should just have to submit their Tasks and expect them to be executed on their behalves. Gelato allows anyone to run an Executor node and to reap rewards from Task execution. Currently, Users/GelatoProviders still assign an Executor to their Tasks. However, this can be a smart contract that runs a decentralized execution market mechanism. The first version of such a smart contract is on the Gelato roadmap and will be deployed in the future.
 
 #### How are Executors incentivised?
+
 Executors are incentivised to run their automation servers by receiving a small fee (2% initially of the total gas costs of each Task they successfully execute, which is paid from the balance each User/GelatoProvider has to keep on Gelato. So if a Task execution cost them `0.001 ETH` for example, they would receive approximately `0.00102 ETH` as reward. They also get a refund of their gas costs, if they executed a Task that had a bug in it, which led to a revert. In other words, Task GelatoProviders need to make sure their Tasks are bug-free.
 
 #### How can Executors submit transactions on behalf of Users, without having access to their private keys?
