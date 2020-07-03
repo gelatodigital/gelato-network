@@ -1,1 +1,0 @@
-export * from "./kovan/collection.configs.kovan"
