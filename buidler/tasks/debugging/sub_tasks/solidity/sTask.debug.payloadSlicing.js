@@ -3,7 +3,7 @@ import { internalTask } from "@nomiclabs/buidler/config";
 export default internalTask("debug:payloadslicing")
   .addPositionalParam("contractname", "the contractname to debug for")
   .addOptionalPositionalParam("payload", "the payload to debug slicing for")
-  .setAction(async taskArgs => {
+  .setAction(async (taskArgs) => {
     try {
       if (network.name != "buidlerevm") throw new Error("\nbuidlerevm only");
 
@@ -17,9 +17,9 @@ export default internalTask("debug:payloadslicing")
         payload = await run(`gc-submittask:defaultpayload:${contractname}`);
       else payload = taskArgs[1];
 
-      const contract = await run("deploy", {
+      const contract = await run("gc-deploy", {
         contractname,
-        network: "buidlerevm"
+        network: "buidlerevm",
       });
 
       const result = await contract.ok(payload);

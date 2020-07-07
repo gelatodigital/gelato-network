@@ -6,3 +6,4 @@ import "./task.getEtherscanLink";
 import "./task.approveERC20";
 import "./task.checkIfProvided";
 import "./task.checkIfProviderLiquid";
+import "./task.checkAssignedExecutor";

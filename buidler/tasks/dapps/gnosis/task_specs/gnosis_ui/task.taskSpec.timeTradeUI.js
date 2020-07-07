@@ -23,17 +23,17 @@ export default internalTask(
       // FeeHandler, PlaceOrder, SetConditionStateful (with delta = 1), SetConditionBatchExchangeStateful, Submit Task 2
 
       // ##### Action #1
-      const feeHandlerAddress = await run("bre-config", {
+      const erc20TransferFromAddress = await run("bre-config", {
         deployments: true,
-        contractname: "ActionFeeHandler",
+        contractname: "ActionERC20TransferFrom",
       });
 
-      const feeHandlerAction = new Action({
-        addr: feeHandlerAddress,
+      const actionERC20TransferFrom = new Action({
+        addr: erc20TransferFromAddress,
         data: constants.HashZero,
         operation: Operation.Delegatecall,
         termsOkCheck: true,
-        dataFlow: DataFlow.Out,
+        dataFlow: DataFlow.None,
       });
 
       // ##### Action #2
@@ -47,7 +47,7 @@ export default internalTask(
         data: constants.HashZero,
         operation: Operation.Delegatecall,
         termsOkCheck: true,
-        dataFlow: DataFlow.In,
+        dataFlow: DataFlow.None,
       });
 
       // ##### Action #3
@@ -91,13 +91,13 @@ export default internalTask(
       const taskSpec = new TaskSpec({
         conditions: [condition.inst],
         actions: [
-          feeHandlerAction,
+          actionERC20TransferFrom,
           placeOrderAction,
           setConditionAction,
           setBatchExchangeConditionAction,
           gelatoCoreAction,
         ],
-        gasPriceCeil: 0, // Infinte gas price
+        gasPriceCeil: ethers.utils.parseUnits("50", "gwei"), // 50 Gwei
       });
 
       if (log) console.log(taskSpec);

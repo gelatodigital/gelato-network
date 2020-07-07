@@ -1,7 +1,7 @@
 {
   "name": "gelato-v1",
   "version": "0.0.1",
-  "description": "The automation protocol for Ethereum",
+  "description": "Ethereum's Automation Protocol",
   "repository": "https://github.com/gelatodigital/gelato.git",
   "author": "The guys from gelato-digital",
   "private": false,
@@ -18,8 +18,9 @@
     "@babel/register": "7.7.4",
     "@codechecks/client": "0.1.10",
     "@nomiclabs/buidler": "1.3.6",
-    "@nomiclabs/buidler-ethers": "1.3.3",
+    "@nomiclabs/buidler-ethers": "1.3.4",
     "@nomiclabs/buidler-waffle": "1.3.4",
+    "buidler-deploy": "^0.4.11",
     "buidler-gas-reporter": "0.1.3",
     "chai": "4.2.0",
     "coveralls": "3.1.0",
@@ -30,5 +31,6 @@
     "solc": "0.6.10",
     "solidity-coverage": "0.7.5",
     "solidity-docgen": "0.4.1"
-  }
+  },
+  "dependencies": {}
 }

@@ -3,7 +3,7 @@ import { defaultNetwork } from "../../../../../../../buidler.config";
 import { utils, constants } from "ethers";
 
 export default task(
-  "gc-deploy-gnosis-safe-module",
+  "deploy-gnosis-safe-module",
   `Deploys the ProviderModuleGnosisSafe on [--network] (default: ${defaultNetwork})`
 )
   .addOptionalParam(
@@ -70,7 +70,7 @@ export default task(
         taskArgs.extcodehash = utils.solidityKeccak256(["bytes"], [extcode]);
       }
 
-      const providerModuleGnosisSafeProxy = await run("deploy", {
+      const providerModuleGnosisSafeProxy = await run("gc-deploy", {
         contractname: "ProviderModuleGnosisSafeProxy",
         constructorargs: [
           [taskArgs.extcodehash],

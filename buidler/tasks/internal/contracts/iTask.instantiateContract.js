@@ -1,5 +1,4 @@
 import { internalTask } from "@nomiclabs/buidler/config";
-import { Contract } from "ethers";
 
 export default internalTask(
   "instantiateContract",
@@ -30,10 +29,12 @@ export default internalTask(
 
       let instance;
       if (read) {
-        instance = new Contract(contractaddress, abi, ethers.provider);
+        // instance = new Contract(contractaddress, abi, ethers.provider);
+        instance = await ethers.getContractAt(abi, contractaddress);
       } else if (write) {
         if (!signer) [signer] = await ethers.getSigners();
-        instance = new Contract(contractaddress, abi, signer);
+        // instance = new Contract(contractaddress, abi, signer);
+        instance = await ethers.getContractAt(abi, contractaddress, signer);
       }
       return instance;
     } catch (err) {

@@ -19,9 +19,12 @@ describe("GelatoCore - GelatoSysAdmin - Getters: FEES", function () {
 
   beforeEach(async function () {
     // Get the ContractFactory, contract instance, and Signers here.
-    GelatoCore = await ethers.getContractFactory("GelatoCore");
-    gelatoCore = await GelatoCore.deploy(gelatoSysAdminInitialState);
-    await gelatoCore.deployed();
+    // GelatoCore = await ethers.getContractFactory("GelatoCore");
+    // gelatoCore = await GelatoCore.deploy(gelatoSysAdminInitialState);
+    // await gelatoCore.deployed();
+    await deployments.fixture();
+    GelatoCore = await deployments.get("GelatoCore");
+    gelatoCore = await ethers.getContractAt(GelatoCore.abi, GelatoCore.address);
   });
 
   // We test different functionality of the contract as normal Mocha tests.

@@ -11,18 +11,28 @@ export default task(
     try {
       const provider = getProvider();
 
+      if (!gelatocoreaddress)
+        gelatocoreaddress = await run("bre-config", {
+          deployments: true,
+          contractname: "GelatoCore",
+        });
+
+      console.log(gelatocoreaddress);
+
       const executorAddress = await run("bre-config", {
         addressbook: true,
         addressbookcategory: "gelatoExecutor",
         addressbookentry: "default",
       });
 
+      console.log("1");
       const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
         contractaddress: gelatocoreaddress,
         signer: provider,
         write: true,
       });
+      console.log("2");
 
       const tx = await gelatoCore.providerAssignsExecutor(executorAddress, {
         gasLimit: 1000000,

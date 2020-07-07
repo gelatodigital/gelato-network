@@ -14,6 +14,7 @@ export default internalTask(
       switch (network.config.chainId) {
         case 1:
           etherscanPrefix = "";
+          break;
         case 3:
           etherscanPrefix = "ropsten.";
           break;

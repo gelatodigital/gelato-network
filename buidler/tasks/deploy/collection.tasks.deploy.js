@@ -1,5 +1,5 @@
 // General
-import "./task.deploy";
+import "./task.gcDeploy";
 
 // GelatoCore deploy
 import "./task.deployGelatoCore";

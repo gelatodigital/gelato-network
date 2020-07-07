@@ -49,7 +49,7 @@ export default task(
           contractname: "GelatoCore",
           contractaddress: taskArgs.contractaddress,
           eventname: "LogTaskSubmitted",
-          fromblock: taskArgs.fromblock,
+          fromblock: 0,
           toblock: taskArgs.toblock,
           blockhash: taskArgs.blockhash,
           property: "taskReceipt",

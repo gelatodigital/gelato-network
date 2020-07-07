@@ -20,7 +20,7 @@ export default task(
         "balance-trade-ui",
         "kyber-price-trade-ui",
         "time-trade-ui",
-        "withdraw-ui",
+        // "withdraw-ui",
       ];
 
       const taskSpecsToWhitelist = [];

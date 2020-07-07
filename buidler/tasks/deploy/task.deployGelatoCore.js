@@ -78,7 +78,7 @@ export default task("deploy-gc")
 
       const sysAdmin = getSysAdmin();
 
-      const gelatoCore = await run("deploy", {
+      const gelatoCore = await run("gc-deploy", {
         contractname: "GelatoCore",
         constructorargs: [gelatoCoreConstructorArgs],
         signer: sysAdmin,

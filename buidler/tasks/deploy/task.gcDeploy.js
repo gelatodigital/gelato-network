@@ -3,7 +3,7 @@ import { defaultNetwork } from "../../../buidler.config";
 import { constants } from "ethers";
 
 export default task(
-  "deploy",
+  "gc-deploy",
   `Deploys <contractname> to [--network] (default: ${defaultNetwork})`
 )
   .addPositionalParam(

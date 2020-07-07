@@ -23,13 +23,13 @@ export default task(
 
       // === Deployments ===
       // GelatoCore
-      const gelatoCore = await run("deploy", {
+      const gelatoCore = await run("gc-deploy", {
         contractname: "GelatoCore",
         log: taskArgs.log,
       });
 
       // GelatoUserProxy Factory
-      const gelatoUserProxyFactory = await run("deploy", {
+      const gelatoUserProxyFactory = await run("gc-deploy", {
         contractname: "GelatoUserProxyFactory",
         constructorargs: [gelatoCore.address],
         log: taskArgs.log,
@@ -37,7 +37,7 @@ export default task(
 
       // ProviderModule GelatoUserProxy
       const extcodehash = await gelatoUserProxyFactory.proxyExtcodehash();
-      const providerModuleGelatoUserProxy = await run("deploy", {
+      const providerModuleGelatoUserProxy = await run("gc-deploy", {
         contractname: "ProviderModuleGelatoUserProxy",
         constructorargs: [[extcodehash]],
         events: taskArgs.events,
@@ -47,7 +47,7 @@ export default task(
       // Optional Condition
       let conditionAddress;
       if (taskArgs.conditionname) {
-        const { address } = await run("deploy", {
+        const { address } = await run("gc-deploy", {
           contractname: taskArgs.conditionname,
           log: taskArgs.log,
         });

@@ -5,19 +5,19 @@ export default internalTask("debug:revertstringdecoding").setAction(
     try {
       if (network.name != "buidlerevm") throw new Error("\nbuidlerevm only");
 
-      const actionAddress = await run("deploy", {
+      const actionAddress = await run("gc-deploy", {
         contractname: "Action",
-        network: "buidlerevm"
+        network: "buidlerevm",
       });
 
-      const userProxyAddress = await run("deploy", {
+      const userProxyAddress = await run("gc-deploy", {
         contractname: "UserProxy",
-        network: "buidlerevm"
+        network: "buidlerevm",
       });
 
-      const coreContract = await run("deploy", {
+      const coreContract = await run("gc-deploy", {
         contractname: "Core",
-        network: "buidlerevm"
+        network: "buidlerevm",
       });
 
       await coreContract.catchErrorString(userProxyAddress, actionAddress);

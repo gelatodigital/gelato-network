@@ -18,14 +18,14 @@ export default task("setupgelato-gnosissafeproxy")
 
       // === Deployments ===
       // GelatoCore
-      const gelatoCore = await run("deploy", {
+      const gelatoCore = await run("gc-deploy", {
         contractname: "GelatoCore",
         log: taskArgs.log,
       });
 
       // Condition
       if (taskArgs.condition) {
-        const conditionInstance = await run("deploy", {
+        const conditionInstance = await run("gc-deploy", {
           contractname: taskArgs.condition,
           log: taskArgs.log,
         });
@@ -62,7 +62,7 @@ export default task("setupgelato-gnosissafeproxy")
                 feeExtractorAddress,
               ];
             }
-            const deployedAction = await run("deploy", {
+            const deployedAction = await run("gc-deploy", {
               contractname: action,
               log: taskArgs.log,
               constructorargs: actionconstructorargs,
@@ -117,7 +117,7 @@ export default task("setupgelato-gnosissafeproxy")
         addressbookentry: "multiSend",
       });
 
-      const providerModuleGnosisSafeProxy = await run("deploy", {
+      const providerModuleGnosisSafeProxy = await run("gc-deploy", {
         contractname: "ProviderModuleGnosisSafeProxy",
         constructorargs: [
           [extcodehash],

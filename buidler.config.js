@@ -3,7 +3,7 @@ require("@babel/register");
 
 // Libraries
 const assert = require("assert");
-const { constants, errors, utils } = require("ethers");
+const { constants, errors, utils, ethers } = require("ethers");
 
 // Disable ethers v4 warnings e.g. for solidity overloaded fns
 errors.setLogLevel("error");
@@ -67,10 +67,13 @@ extendEnvironment((bre) => {
   // Libraries
   bre.constants = constants;
   bre.utils = utils;
-  bre.getUser = () => new ethers.Wallet(USER_PK, ethers.provider);
-  bre.getProvider = () => new ethers.Wallet(PROVIDER_PK, ethers.provider);
-  bre.getSysAdmin = () => new ethers.Wallet(SYS_ADMIN_PK, ethers.provider);
-  bre.getExecutor = () => new ethers.Wallet(EXECUTOR_PK, ethers.provider);
+  bre.getUser = () => new bre.ethers.Wallet(USER_PK, bre.ethers.provider);
+  bre.getProvider = () =>
+    new bre.ethers.Wallet(PROVIDER_PK, bre.ethers.provider);
+  bre.getSysAdmin = () =>
+    new bre.ethers.Wallet(SYS_ADMIN_PK, bre.ethers.provider);
+  bre.getExecutor = () =>
+    new bre.ethers.Wallet(EXECUTOR_PK, bre.ethers.provider);
 });
 
 // ================================= CONFIG =========================================
@@ -123,7 +126,7 @@ module.exports = {
       accounts: { mnemonic: MAINNET_MNEMONIC },
       chainId: 1,
       gas: "auto",
-      gasPrice: parseInt(utils.parseUnits("20", "gwei")),
+      gasPrice: parseInt(utils.parseUnits("50", "gwei")),
       gasMultiplier: 1.5,
       url: `https://mainnet.infura.io/v3/${INFURA_ID}`,
       // Custom
@@ -149,6 +152,27 @@ module.exports = {
     version: "0.6.10",
     optimizer: { enabled: true },
   },
+  namedAccounts: {
+    user: {
+      default: 0,
+    },
+    provider: {
+      default: 1,
+    },
+    executor: {
+      default: 2,
+    },
+    sysAdmin: {
+      default: 3,
+    },
+    gasPriceOracle: {
+      default: 4,
+    },
+  },
+  paths: {
+    deploy: "deploy",
+    deployments: "deployments",
+  },
 };
 
 // ================================= PLUGINS =========================================
@@ -156,6 +180,7 @@ usePlugin("@nomiclabs/buidler-ethers");
 usePlugin("buidler-gas-reporter");
 usePlugin("@nomiclabs/buidler-waffle");
 usePlugin("solidity-coverage");
+usePlugin("buidler-deploy");
 
 // ================================= TASKS =========================================
 // task action function receives the Buidler Runtime Environment as second argument

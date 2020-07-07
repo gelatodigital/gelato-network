@@ -9,16 +9,16 @@ export default task("gc-setupgelato")
       taskArgs.log = true;
 
       // // Deploy Gelato Core
-      // const gelatoCore = await run("deploy-gc", {});
+      // const gelatoCore = await run("gc-deploy-gc", {});
 
-      // const gelatoActionPipeline = await run("deploy", {
+      // const gelatoActionPipeline = await run("gc-deploy", {
       //   contractname: "GelatoActionPipeline",
       // });
 
       // // Deploy Provider Modules
       // // // Gnosis Safe
       // const gnosisSafeProviderModule = await run(
-      //   "gc-deploy-gnosis-safe-module",
+      //   "deploy-gnosis-safe-module",
       //   {
       //     gelatoactionpipeline: gelatoActionPipeline.address,
       //     gelatocore: gelatoCore.address,
@@ -26,13 +26,13 @@ export default task("gc-setupgelato")
       // );
 
       // // Gelato User Factory
-      // const gelatoUserProxyFactory = await run("deploy", {
+      // const gelatoUserProxyFactory = await run("gc-deploy", {
       //   contractname: "GelatoUserProxyFactory",
       //   constructorargs: [gelatoCore.address],
       // });
 
       // // // Gelato User Proxy
-      // const gelatoUserProxyModule = await run("deploy", {
+      // const gelatoUserProxyModule = await run("gc-deploy", {
       //   contractname: "ProviderModuleGelatoUserProxy",
       //   constructorargs: [
       //     gelatoUserProxyFactory.address,
@@ -66,7 +66,7 @@ export default task("gc-setupgelato")
       });
 
       // // Deploy Fee Handler Factory
-      // const feeHandlerFactory = await run("deploy", {
+      // const feeHandlerFactory = await run("gc-deploy", {
       //   contractname: "FeeHandlerFactory",
       //   signerindex: 2,
       // });
@@ -109,21 +109,21 @@ export default task("gc-setupgelato")
       //   addressbookentry: "proxy",
       // });
 
-      // const actionPlaceOrderBatchExchange = await run("deploy", {
+      // const actionPlaceOrderBatchExchange = await run("gc-deploy", {
       //   contractname: "ActionPlaceOrderBatchExchangeWithSlippage",
       //   constructorargs: [batchExchangeAddress, kyberProxyAddress],
       // });
 
-      // const actionWithdrawBatchExchange = await run("deploy", {
+      // const actionWithdrawBatchExchange = await run("gc-deploy", {
       //   contractname: "ActionWithdrawBatchExchange",
       //   constructorargs: [batchExchangeAddress],
       // });
 
-      // const actionERC20TransferFrom = await run("deploy", {
+      // const actionERC20TransferFrom = await run("gc-deploy", {
       //   contractname: "ActionERC20TransferFrom",
       // });
 
-      // const actionTransfer = await run("deploy", {
+      // const actionTransfer = await run("gc-deploy", {
       //   contractname: "ActionTransfer",
       // });
 
@@ -132,28 +132,28 @@ export default task("gc-setupgelato")
       //   addressbookentry: "uniswapFactory",
       // });
 
-      // const actionUniswapTrade = await run("deploy", {
+      // const actionUniswapTrade = await run("gc-deploy", {
       //   contractname: "ActionUniswapTrade",
       //   constructorargs: [uniswapFactoryAddress],
       // });
 
       // // Deploy Conditions
-      // const conditionTimeStateful = await run("deploy", {
+      // const conditionTimeStateful = await run("gc-deploy", {
       //   contractname: "ConditionTimeStateful",
       //   constructorargs: [gelatoCore.address],
       // });
 
-      // const conditionBalanceStateful = await run("deploy", {
+      // const conditionBalanceStateful = await run("gc-deploy", {
       //   contractname: "ConditionBalanceStateful",
       //   constructorargs: [gelatoCore.address],
       // });
 
-      // const conditionBatchExchangeWithdrawStateful = await run("deploy", {
+      // const conditionBatchExchangeWithdrawStateful = await run("gc-deploy", {
       //   contractname: "ConditionBatchExchangeWithdrawStateful",
       //   constructorargs: [gelatoCore.address],
       // });
 
-      // const conditionKyberRateStateful = await run("deploy", {
+      // const conditionKyberRateStateful = await run("gc-deploy", {
       //   contractname: "ConditionKyberRateStateful",
       //   constructorargs: [kyberProxyAddress, gelatoCore.address],
       // });
