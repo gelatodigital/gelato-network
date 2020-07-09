@@ -3,40 +3,35 @@ export const contracts = [
   // Actions
   "ActionTransfer",
   "ActionERC20TransferFrom",
+  "ActionFeeHandler",
   "ActionKyberTrade",
   "ActionUniswapTrade",
   // Gnosis
   "ActionWithdrawBatchExchange",
   "ActionPlaceOrderBatchExchangeWithSlippage",
 
-  // === Core ======
-  "GelatoCore",
-  "GelatoActionPipeline",
-
-  // === Gelato User Proxy ===
-  "GelatoUserProxyFactory",
-
-  // Provider Modules
-  "ProviderModuleGnosisSafeProxy",
-  "ProviderModuleGelatoUserProxy",
-
   // Conditions
   "ConditionBalance",
   "ConditionBalanceStateful",
-
   "ConditionKyberRate",
   "ConditionKyberRateStateful",
-
   "ConditionTime",
   "ConditionTimeStateful",
-
   "ConditionBatchExchangeWithdrawStateful",
-  // Debugging
-  "ConditionKyberRateError",
-  // Helpers
-  "ActionFeeHandler",
+
+  // === GelatoCore ======
+  "GelatoCore",
+
+  // === GelatoProviders ===
+  "GelatoActionPipeline",
   "FeeHandlerFactory",
-  // Libraries
-  "Multisend",
+  "ProviderModuleGnosisSafeProxy",
+  "ProviderModuleGelatoUserProxy",
+
+  // === GelatoExecutors ===
   "GelatoMultiCall",
+  "PermissionedExecutors",
+
+  // === Gelato User Proxy ===
+  "GelatoUserProxyFactory",
 ];

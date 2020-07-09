@@ -16,20 +16,6 @@ export const deployments = {
   // Uniswap
   ActionUniswapTrade: "0xE2978A4018a9cca1e20136dc1c612633AdAa1435",
 
-  // ===== Gelato Core ====
-  GelatoCore: "0x1d681d76ce96E4d70a88A00EBbcfc1E47808d0b8",
-  GelatoGasPriceOracle: "",
-
-  // ===== Gnosis Safe Provider Module ====
-  ProviderModuleGnosisSafeProxy: "0x3a994Cd3a464032B8d0eAa16F91C446A46c4fEbC",
-
-  // ===== DS Proxy Provider Module ====
-  ProviderModuleDsProxy: "0x0",
-
-  // ===== Gelato User Proxies ====
-  ProviderModuleGelatoUserProxy: "0x4372692C2D28A8e5E15BC2B91aFb62f5f8812b93",
-  GelatoUserProxyFactory: "0xb0aa48f1eF1bF096140E1dA1c76D25151501608b",
-
   // ==== Conditions ====
   // == Balances ==
   ConditionBalance: "",
@@ -46,8 +32,28 @@ export const deployments = {
   ConditionBatchExchangeWithdrawStateful:
     "0xe8EF057fA543BD9260d2c7504B7275B7035d67D6",
 
+  // ===== Gelato Core ====
+  GelatoCore: "0x1d681d76ce96E4d70a88A00EBbcfc1E47808d0b8",
+
+  // ==== Gelato Executors ====
+  // === Modules ===
+  PermissionedExecutors: "",
   // Helpers
-  FeeHandlerFactory: "0xC5ca2B0Bb9E088CAe6a3D37920a37Fde29046f2b",
   GelatoMultiCall: "0xb9bd403254b3eb365c4ea1dbbb3fe6fe6ab6007c",
+
+  // ===== Gelato Providers ====
+  // == Execution ==
   GelatoActionPipeline: "0xD2540644c2B110A8f45BDE903E111fA518d41B6c",
+  // == Fees ==
+  FeeHandlerFactory: "0xC5ca2B0Bb9E088CAe6a3D37920a37Fde29046f2b",
+  // == Modules ==
+  // DS Proxy Provider Module
+  ProviderModuleDsProxy: "",
+  // GelatoUserProxy Module
+  ProviderModuleGelatoUserProxy: "0x4372692C2D28A8e5E15BC2B91aFb62f5f8812b93",
+  // Gnosis Safe Provider Module
+  ProviderModuleGnosisSafeProxy: "0x3a994Cd3a464032B8d0eAa16F91C446A46c4fEbC",
+
+  // ===== Gelato User Proxies ====
+  GelatoUserProxyFactory: "0xb0aa48f1eF1bF096140E1dA1c76D25151501608b",
 };

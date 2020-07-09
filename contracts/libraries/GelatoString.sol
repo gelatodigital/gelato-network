@@ -7,4 +7,11 @@ library GelatoString {
             return true;
         return false;
     }
+
+    function revertWithInfo(string memory _error, string memory _tracingInfo)
+        internal
+        pure
+    {
+        revert(string(abi.encodePacked(_tracingInfo, _error)));
+    }
 }

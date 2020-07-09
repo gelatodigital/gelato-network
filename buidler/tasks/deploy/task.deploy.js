@@ -1,5 +1,6 @@
 import { task, types } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../buidler.config";
+import { constants } from "ethers";
 
 export default task(
   "deploy",
@@ -28,6 +29,12 @@ export default task(
     types.json
   )
   .addOptionalParam(
+    "value",
+    "ETH amount to send to payable constructor",
+    0,
+    types.int
+  )
+  .addOptionalParam(
     "nonceaddition",
     "When deploying multiple contracts, this can be used to increment the nonce artifically",
     0,
@@ -45,6 +52,9 @@ export default task(
         taskArgs.log = true;
         taskArgs.compile = true;
       }
+
+      if (taskArgs.value != 0)
+        taskArgs.value = utils.parseEther(taskArgs.value.toString());
 
       if (taskArgs.log) console.log("\n deploy taskArgs:", taskArgs, "\n");
 
@@ -82,7 +92,7 @@ export default task(
       if (taskArgs.log) {
         console.log(`
           \n Deployment: 🚢 \
-          \n Network:  ${networkname.toUpperCase()}\
+          \n Network:  ${networkname.toUpperCase()} ❗\
           \n Contract: ${contractname}\
           \n Deployer: ${await deployer.getAddress()}\
           \n Nonce:    ${currentNonce}\n
@@ -107,11 +117,13 @@ export default task(
         contract = await contractFactory.deploy(...args, {
           nonce: currentNonce,
           gasPrice: network.config.gasPrice,
+          value: taskArgs.value,
         });
       } else {
         contract = await contractFactory.deploy({
           nonce: currentNonce,
           gasPrice: network.config.gasPrice,
+          value: taskArgs.value,
         });
       }
 
