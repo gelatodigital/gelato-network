@@ -15,14 +15,6 @@ export const contracts = [
   // Uniswap
   "ActionUniswapTrade",
 
-  // === GelatoCore ===
-  "GelatoCore",
-  "ProviderModuleGnosisSafeProxy",
-
-  // === GelatoUserProxy ===
-  "GelatoUserProxyFactory",
-  "ProviderModuleGelatoUserProxy",
-
   // === Conditions ===
   // Balances
   "ConditionBalance",
@@ -38,8 +30,19 @@ export const contracts = [
   // Mock
   "MockConditionDummy",
 
-  // Helpers
+  // === GelatoCore ===
+  "GelatoCore",
+
+  // === GelatoProviders ===
   "GelatoActionPipeline",
   "FeeHandlerFactory",
+  "ProviderModuleGelatoUserProxy",
+  "ProviderModuleGnosisSafeProxy",
+
+  // === GelatoExecutors ===
   "GelatoMultiCall",
+  "PermissionedExecutors",
+
+  // === GelatoUserProxy ===
+  "GelatoUserProxyFactory",
 ];

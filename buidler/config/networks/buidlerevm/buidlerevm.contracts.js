@@ -24,6 +24,9 @@ export const contracts = [
   // GelatoGasPriceOracle
   "GelatoGasPriceOracle",
 
+  // === GelatoExecutors ===
+  "PermissionedExecutors",
+
   // === GelatoUserProxies ===
   // = GelatoUserProxy =
   // Factory
