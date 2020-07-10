@@ -37,7 +37,7 @@ export const deployments = {
 
   // ==== Gelato Executors ====
   // === Modules ===
-  PermissionedExecutors: "",
+  PermissionedExecutors: "0xd70D5fb9582cC3b5B79BBFAECbb7310fd0e3B582",
   // Helpers
   GelatoMultiCall: "0xb9bd403254b3eb365c4ea1dbbb3fe6fe6ab6007c",
 
