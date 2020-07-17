@@ -3,7 +3,7 @@ require("@babel/register");
 
 // Libraries
 const assert = require("assert");
-const { constants, errors, utils, ethers } = require("ethers");
+const { constants, errors, utils } = require("ethers");
 
 // Disable ethers v4 warnings e.g. for solidity overloaded fns
 errors.setLogLevel("error");
