@@ -28,6 +28,7 @@
 
 ## Get Started 🍦
 
+- 🍦 Get the Gelato Smart Contracts as an NPM package [here](https://github.com/gelatodigital/gelato-core-contracts)
 - 🍦 Read our Gelato-V1 release announcement on our [blog](https://medium.com/@gelatonetwork/ethereums-automation-protocol-gelato-network-launches-on-mainnet-88647aa10d65)
 - 🍦 Try out our demo tutorial [here](https://github.com/gelatodigital/Gelato-kyber)
 - 🍦 Try out our advanced demo [here](src/demo/README.md)
