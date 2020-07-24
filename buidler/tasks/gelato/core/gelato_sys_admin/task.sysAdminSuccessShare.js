@@ -2,7 +2,7 @@ import { task } from "@nomiclabs/buidler/config";
 import { defaultNetwork } from "../../../../../buidler.config";
 
 export default task(
-  "gc-oraclesuccessfeefactor",
+  "gc-sysAdminSuccessShare",
   `Return (or --log) GelatoCore.sysAdminSuccessShare() on [--network] (default: ${defaultNetwork})`
 )
   .addFlag("log", "Logs return values to stdout")
@@ -10,12 +10,12 @@ export default task(
     try {
       const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
-        write: true
+        write: true,
       });
       const sysAdminSuccessShare = await gelatoCore.sysAdminSuccessShare();
       if (log) {
         console.log(`
-          \n OracleSuccessFeeFactor: ${sysAdminSuccessShare}\
+          \n sysAdminSuccessShare:   ${sysAdminSuccessShare}\
           \n Network:                ${network.name}\n
         `);
       }
