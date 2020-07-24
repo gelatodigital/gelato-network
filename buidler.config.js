@@ -98,6 +98,13 @@ const mainnetConfig = require("./buidler/config/networks/mainnetConfig");
 
 module.exports = {
   defaultNetwork: DEFAULT_NETWORK ? DEFAULT_NETWORK : "buidlerevm",
+  etherscan: {
+    // The url for the Etherscan API you want to use.
+    // For example, here we're using the one for the Rinkeby test network
+    url: "https://api.etherscan.io/api",
+    // Your API key for Etherscan (Obtain one at https://etherscan.io/)
+    apiKey: process.env.ETHERSCAN_KEY,
+  },
   gasReporter: {
     enabled: process.env.REPORT_GAS ? true : false,
   },
@@ -153,8 +160,9 @@ module.exports = {
 
 // ================================= PLUGINS =========================================
 usePlugin("@nomiclabs/buidler-ethers");
-usePlugin("buidler-gas-reporter");
+usePlugin("@nomiclabs/buidler-etherscan");
 usePlugin("@nomiclabs/buidler-waffle");
+usePlugin("buidler-gas-reporter");
 usePlugin("solidity-coverage");
 
 // ================================= TASKS =========================================
