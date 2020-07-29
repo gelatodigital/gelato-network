@@ -11,7 +11,7 @@ export const addressBook = {
   // Gelato
   gelatoExecutor: {
     // Mainnet
-    default: "0x99E69499973484a96639f4Fb17893BC96000b3b8",
+    default: "0xd70d5fb9582cc3b5b79bbfaecbb7310fd0e3b582",
   },
   gelatoGasPriceOracle: {
     // Mainnet
