@@ -12,7 +12,7 @@ export const addressBook = {
   // Gelato
   gelatoExecutor: {
     // rinkeby
-    default: "0x4d671CD743027fB5Af1b2D2a3ccbafA97b5B1B80", // Luis Index 1
+    default: "0xa5A98a6AD379C7B578bD85E35A3eC28AD72A336b", // PermissionedExecutors
   },
   gelatoGasPriceOracle: {
     // rinkeby
