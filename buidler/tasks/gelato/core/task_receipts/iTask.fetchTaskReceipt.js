@@ -6,8 +6,18 @@ export default task(
 )
   .addPositionalParam("taskreceiptid")
   .addOptionalParam("contractaddress")
-  .addOptionalParam("fromblock", "Search for event logs from block number")
-  .addOptionalParam("toblock", "The block number up until which to look for")
+  .addOptionalParam(
+    "fromblock",
+    "Search for event logs from block number.",
+    0,
+    types.int
+  )
+  .addOptionalParam(
+    "toblock",
+    "Search for event logs to block number.",
+    undefined,
+    types.int
+  )
   .addOptionalParam("blockhash", "Search a specific block")
   .addOptionalParam("txhash", "Filter for a specific tx")
   .addFlag("stringify")
