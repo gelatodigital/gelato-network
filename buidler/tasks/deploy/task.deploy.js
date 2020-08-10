@@ -61,8 +61,7 @@ export default task(
       let deployer;
       if (taskArgs.signerindex && taskArgs.signer)
         throw Error("Can't have both signer and signer index");
-      if (!taskArgs.signerindex && !taskArgs.signer)
-        [deployer] = await ethers.getSigners();
+      if (!taskArgs.signerindex && !taskArgs.signer) deployer = getSysAdmin();
       if (taskArgs.signerindex && !taskArgs.signer) {
         const { [taskArgs.signerindex]: _deployer } = await ethers.getSigners();
         deployer = _deployer;
@@ -95,6 +94,7 @@ export default task(
           \n Network:  ${networkname.toUpperCase()} ❗\
           \n Contract: ${contractname}\
           \n Deployer: ${await deployer.getAddress()}\
+          \n Gas Price: ${network.config.gasPrice}\
           \n Nonce:    ${currentNonce}\n
         `);
       }

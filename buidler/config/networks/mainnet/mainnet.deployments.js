@@ -15,6 +15,7 @@ export const deployments = {
   ActionERC20TransferFrom: "0xd8e883F5B513585c8286f616A74aB02B3789D183",
   // Uniswap
   ActionUniswapTrade: "0xE2978A4018a9cca1e20136dc1c612633AdAa1435",
+  ActionUniswapV2Trade: "0xc4a7760dacbca3eafbafefe24d6d97cbd10e61d6",
 
   // ==== Conditions ====
   // == Balances ==
@@ -26,11 +27,12 @@ export const deployments = {
   ConditionKyberRateStateful: "0x84c102ee7112F65406479ad0eFE53C327c9Fb632",
   // == Time ==
   // Timestamps
-  ConditionTime: "",
+  ConditionTime: "0x63129681c487d231aa9148e1e21837165f38deaf",
   ConditionTimeStateful: "0xe5c7FB0877C88923C7457a8E82713540DB5470e9",
   // Gnosis
   ConditionBatchExchangeWithdrawStateful:
     "0xe8EF057fA543BD9260d2c7504B7275B7035d67D6",
+  ConditionUniswapV2RateStateful: "0xc4a7760dacbca3eafbafefe24d6d97cbd10e61d6",
 
   // ===== Gelato Core ====
   GelatoCore: "0x1d681d76ce96E4d70a88A00EBbcfc1E47808d0b8",
