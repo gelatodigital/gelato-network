@@ -101,7 +101,7 @@ module.exports = {
   etherscan: {
     // The url for the Etherscan API you want to use.
     // For example, here we're using the one for the Rinkeby test network
-    url: "https://api-rinkeby.etherscan.io/api",
+    url: "https://api.etherscan.io/api",
     // Your API key for Etherscan (Obtain one at https://etherscan.io/)
     apiKey: process.env.ETHERSCAN_KEY,
   },
@@ -207,6 +207,8 @@ require("./buidler/tasks/gelato/actions/collection.tasks.actions");
 require("./buidler/tasks/gelato/core/collection.tasks.gelato-core");
 // _____ CONDITIONS
 require("./buidler/tasks/gelato/conditions/collection.tasks.conditions");
+// _____ HELPERS
+require("./buidler/tasks/gelato/helpers/collection.tasks.gelato-helpers.js");
 
 // ============= USER PROXIES (GelatoUserProxy, GnosisSafeProxy,...)
 require("./buidler/tasks/user_proxies/collection.tasks.gelato-user-proxies");

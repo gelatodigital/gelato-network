@@ -14,6 +14,10 @@ export const deployments = {
   ActionERC20TransferFrom: "0xF0247709F13681015e743Ed19363F8Fffebb05C7", // verified
   // Uniswap
   ActionUniswapTrade: "",
+  // Conditional Tokens
+  ActionWithdrawLiquidity: "0x5cbc4684a32b174837f2b2dd0016512fd70d0174", // verified
+  // Uniswap V2
+  ActionUniswapV2Trade: "0x772Dbc59821d60e149B51FD2dc91D19767D6690A", // verified
 
   // ==== Conditions ====
   // == Balances ==
@@ -25,11 +29,14 @@ export const deployments = {
   ConditionKyberRateStateful: "0x0c25567D85c889F060448fC8B7830E8F677F351A", // verified
   // == Time ==
   // Timestamps
-  ConditionTime: "",
+  ConditionTime: "0xC92Bc7c905d52B4bC4d60719a8Bce3B643d77daF", // verified
   ConditionTimeStateful: "0xcA560E4399399016d897983206aB591CAD19169C", // verified
   // Gnosis
   ConditionBatchExchangeWithdrawStateful:
     "0x104161052501a1C4691Bd956A896292C6CaF14Ad", // verified
+  // uniswap v2
+  ConditionUniswapV2Rate: "0x0ea40cDCc9Dc2CF4862fed28196e3eD0a9e3c5e9", // verified
+  ConditionUniswapV2RateStateful: "0x0E9C01D0f7ddA51acEF03534490ec91a9975C4dB", // verified
 
   // ===== Gelato Core ====
   GelatoCore: "0x733aDEf4f8346FD96107d8d6605eA9ab5645d632", // verified
@@ -41,14 +48,20 @@ export const deployments = {
   // ===== Gelato Providers ====
   // == Execution ==
   GelatoActionPipeline: "0xbB193c525fdB29Cdea7261452568D83AD476ed5D", // verified
+
   // == Fees ==
-  FeeHandlerFactory: "0xA66Ac354507F8ED28829363B6c0c0DE380c98BAB",
   FeeHandlerFactory: "0x1932abE45473c9C610596124372D73a81E02AECD", // verified
+
   // == Modules ==
   // DS Proxy Provider Module
-  ProviderModuleDsProxy: "",
+  ProviderModuleDsProxy: "0x4a084D6C97B72eae3cE7702f1B93a9D5DFF1B454", // verified
+
+  // === GelatoHelpers ===
+  GelatoAddressStorage: "0xaFc624CEb51BC7198C66E6e582d0cEe924Fa73Dd", // verified
+
   // GelatoUserProxy Module
   ProviderModuleGelatoUserProxy: "0x66a35534126B4B0845A2aa03825b95dFaaE88B0C", // verified
+
   // Gnosis Safe Provider Module
   ProviderModuleGnosisSafeProxy: "0x2661B579243c49988D9eDAf114Bfac5c5E249287", // verified
 
