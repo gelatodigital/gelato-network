@@ -9,6 +9,7 @@ export const contracts = [
   // Gnosis
   "ActionWithdrawBatchExchange",
   "ActionPlaceOrderBatchExchangeWithSlippage",
+  "ActionUniswapV2Trade",
 
   // Conditions
   "ConditionBalance",
@@ -18,6 +19,7 @@ export const contracts = [
   "ConditionTime",
   "ConditionTimeStateful",
   "ConditionBatchExchangeWithdrawStateful",
+  "ConditionUniswapV2RateStateful",
 
   // === GelatoCore ======
   "GelatoCore",

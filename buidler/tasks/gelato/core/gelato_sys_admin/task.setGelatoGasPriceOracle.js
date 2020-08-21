@@ -17,10 +17,13 @@ export default task(
       if (taskArgs.log)
         console.log("\n gc-setgelatogaspriceoracle: TaskArgs\n", taskArgs);
 
+      const sysAdmin = getSysAdmin();
+
       const gelatoCore = await run("instantiateContract", {
         contractname: "GelatoCore",
         contractaddress: taskArgs.gelatocoreaddress,
         write: true,
+        signer: sysAdmin,
       });
 
       const tx = await gelatoCore.setGelatoGasPriceOracle(taskArgs.oracle);

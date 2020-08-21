@@ -16,7 +16,9 @@ export default task(
   )
   .addOptionalVariadicPositionalParam(
     "inputs",
-    "The parameters for --functionname or for the defaultpayloadscript for <contractname>"
+    "The parameters for --functionname or for the defaultpayloadscript for <contractname>",
+    undefined,
+    types.json
   )
   .addOptionalParam(
     "to",
@@ -179,7 +181,7 @@ export default task(
         for (const event of executionEvents) console.log(event);
       }
       console.log(executeTxReceipt);
-      return executeTxReceipt.hash;
+      return executeTxReceipt;
     } catch (error) {
       console.error(error, "\n");
       process.exit(1);
