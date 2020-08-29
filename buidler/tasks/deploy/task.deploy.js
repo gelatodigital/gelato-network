@@ -42,6 +42,7 @@ export default task(
   )
   .addFlag("clean")
   .addFlag("compile", "Compile before deploy")
+  .addFlag("verify", "Verify on Etherscan")
   .addFlag("events", "Logs parsed Event Logs to stdout")
   .addFlag("log", "Logs to stdout")
   .setAction(async (taskArgs) => {
@@ -51,6 +52,7 @@ export default task(
       if (networkname !== "buidlerevm") {
         taskArgs.log = true;
         taskArgs.compile = true;
+        taskArgs.verify = true;
       }
 
       if (taskArgs.value != 0)
@@ -139,7 +141,7 @@ export default task(
 
       if (taskArgs.log) {
         console.log(
-          `\n${contractname} instantiated on ${networkname} at: ${contract.address}\n`
+          `\n ✅ ${contractname} instantiated on ${networkname} at: ${contract.address}\n`
         );
       }
 
@@ -155,6 +157,16 @@ export default task(
         } catch (error) {
           console.error(`\n Error during event-getparsedlogsallevents \n`);
         }
+      }
+
+      if (taskArgs.verify) {
+        console.log(
+          `\n 🔍 Verifying ${contractname} on ${networkname} at: ${contract.address}\n`
+        );
+        await run("verify", {
+          address: contract.address,
+          constructorArguments: taskArgs.constructorargs,
+        });
       }
 
       return contract;
