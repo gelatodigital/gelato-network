@@ -5,8 +5,10 @@ export const deployments = {
   ActionWithdrawBatchExchange: "0xB2117E7F2eFE56636398dE9348c25F9E35b71010", // verified
   ActionPlaceOrderBatchExchangeWithSlippage:
     "0x37E503e9bBC6c21983973013B87152540ab8E3E8",
+  ActionPlaceOrderBatchExchangeWithSlippage:
+    "0x7fb6baBF2F215718e3A7CE7205BdA9ae5F8E45ca", // verified
   // Kyber
-  ActionKyberTrade: "",
+  ActionKyberTrade: "0xD713BE14D3cF829eDdD6d2575Ee48dC7b9fc596f", // verified
   // Transfer
   ActionTransfer: "0x3ab7F05324c03C32460646a3C8f649Cc2Ce7E3f8", // verified
   ActionERC20TransferFrom: "0xF0247709F13681015e743Ed19363F8Fffebb05C7", // verified
@@ -41,6 +43,7 @@ export const deployments = {
   GelatoActionPipeline: "0xbB193c525fdB29Cdea7261452568D83AD476ed5D", // verified
   // == Fees ==
   FeeHandlerFactory: "0xA66Ac354507F8ED28829363B6c0c0DE380c98BAB",
+  FeeHandlerFactory: "0x1932abE45473c9C610596124372D73a81E02AECD", // verified
   // == Modules ==
   // DS Proxy Provider Module
   ProviderModuleDsProxy: "",

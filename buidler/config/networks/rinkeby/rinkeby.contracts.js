@@ -1,7 +1,6 @@
 export const contracts = [
   // ==== Rinkeby ===
   // === Actions ===
-  // = One-Off =
   // ERC20
   "ActionTransfer",
   "ActionERC20TransferFrom",
@@ -9,7 +8,7 @@ export const contracts = [
   "ActionWithdrawBatchExchange",
   "ActionPlaceOrderBatchExchangeWithSlippage",
   // Kyber
-  "ActionKyberTradeRinkeby",
+  "ActionKyberTrade",
   // Provider
   "ActionFeeHandler",
   // Uniswap
