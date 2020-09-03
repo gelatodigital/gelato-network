@@ -170,7 +170,7 @@ describe("Action Withdraw Liquidity Tests", function () {
     await weth.deployed();
 
     const MockConditionalTokens = await ethers.getContractFactory(
-      "MockConditionaltokens",
+      "MockConditionalTokens",
       provider
     );
 
