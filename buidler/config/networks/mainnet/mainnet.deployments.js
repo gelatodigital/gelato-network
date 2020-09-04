@@ -12,7 +12,7 @@ export const deployments = {
   ActionERC20TransferFrom: "0xd8e883F5B513585c8286f616A74aB02B3789D183", // verified
   // Uniswap
   ActionUniswapTrade: "0xE2978A4018a9cca1e20136dc1c612633AdAa1435", // verified
-  ActionUniswapV2Trade: "0xc4a7760dacbca3eafbafefe24d6d97cbd10e61d6", // verified
+  ActionUniswapV2Trade: "0x926Ef4Fe67B8d88d2cC2E109B6b7fae4A92cB1c1", // verified
 
   // ==== Conditions ====
   // == Balances ==
