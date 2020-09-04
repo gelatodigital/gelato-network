@@ -7,7 +7,7 @@ import {IGelatoCondition} from "../../gelato_conditions/IGelatoCondition.sol";
 
 struct Provider {
     address addr;  //  if msg.sender == provider => self-Provider
-    IGelatoProviderModule module;  //  can be IGelatoProviderModule(0) for self-Providers
+    IGelatoProviderModule module;  //  address of provider module
 }
 
 struct Condition {
