@@ -12,11 +12,16 @@ export const deployments = {
   ActionERC20TransferFrom: "0xd8e883F5B513585c8286f616A74aB02B3789D183", // verified
   // Uniswap
   ActionUniswapTrade: "0xE2978A4018a9cca1e20136dc1c612633AdAa1435", // verified
-  ActionUniswapV2Trade: "0x926Ef4Fe67B8d88d2cC2E109B6b7fae4A92cB1c1", // verified
+  ActionUniswapV2Trade: "0x0EB72b577a31cE10b6f8BaDb40c8C401043192AC", // verified
+  ActionSubmitTask: "0x04319720F396fB6050Dc6A8b6AC7E3D441CE0bd8", // verified
+  // Omen
+  ActionWithdrawLiquidity: "0x347Cb322a751310191D677f66e65df6e952Ed070",
+  // Gelato:
+  ActionGelatoV1: "0x2dBDe78Acf4423a78A623160FC7215Cd59B766E9",
 
   // ==== Conditions ====
   // == Balances ==
-  ConditionBalance: "0xd69DB9852bAbf9e0bd73B8A090382573C7488154",  // verified
+  ConditionBalance: "0xd69DB9852bAbf9e0bd73B8A090382573C7488154", // verified
   ConditionBalanceStateful: "0x11c60C661cdC828c549372C9776fAAF3Ef407079", // verified
   // == Price ==
   // Kyber
@@ -30,6 +35,8 @@ export const deployments = {
     "0xe8EF057fA543BD9260d2c7504B7275B7035d67D6", // verified
   // Uniswap
   ConditionUniswapV2RateStateful: "0xc4a7760dacbca3eafbafefe24d6d97cbd10e61d6", // verified
+  ConditionCompareCompoundAaveLending:
+    "0x5223c237673a5373C244bf1423b404671029a1ac", // verified
 
   // ===== Gelato Core ====
   GelatoCore: "0x1d681d76ce96E4d70a88A00EBbcfc1E47808d0b8", // verified
@@ -55,4 +62,7 @@ export const deployments = {
 
   // ===== Gelato User Proxies ====
   GelatoUserProxyFactory: "0xb0aa48f1eF1bF096140E1dA1c76D25151501608b", // verified
+
+  // === Gelato Helpers ===
+  GelatoAddressStorage: "0x0cB371fcD122634104803cc1A8B4173A7FF61D93",
 };

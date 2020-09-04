@@ -10,6 +10,11 @@ export const contracts = [
   "ActionWithdrawBatchExchange",
   "ActionPlaceOrderBatchExchangeWithSlippage",
   "ActionUniswapV2Trade",
+  "ActionSubmitTask",
+  // Omen
+  "ActionWithdrawLiquidity",
+  // Gelato:
+  "ActionGelatoV1",
 
   // Conditions
   "ConditionBalance",
@@ -20,6 +25,7 @@ export const contracts = [
   "ConditionTimeStateful",
   "ConditionBatchExchangeWithdrawStateful",
   "ConditionUniswapV2RateStateful",
+  "ConditionCompareCompoundAaveLending",
 
   // === GelatoCore ======
   "GelatoCore",
@@ -38,4 +44,7 @@ export const contracts = [
 
   // === Gelato User Proxy ===
   "GelatoUserProxyFactory",
+
+  // === Gelato Helpers ===
+  "GelatoAddressStorage",
 ];

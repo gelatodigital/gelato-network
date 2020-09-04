@@ -17,6 +17,8 @@ export const contracts = [
   "ActionWithdrawLiquidity",
   // Uniswap v2
   "ActionUniswapV2Trade",
+  // GelatoCore Actions
+  "ActionSubmitTask",
 
   // === Conditions ===
   // Balances
@@ -55,4 +57,5 @@ export const contracts = [
 
   // === GelatoUserProxy ===
   "GelatoUserProxyFactory",
+  "GelatoUserProxy",
 ];

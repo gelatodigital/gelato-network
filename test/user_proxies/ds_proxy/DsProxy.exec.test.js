@@ -190,11 +190,11 @@ describe("Testing DS Proxy Module delpoyment and ds proxy execution with gelato"
     );
 
     // Deploy Create Task Script
-    const SubmitTaskScript = await ethers.getContractFactory(
-      "SubmitTaskScript",
+    const ActionSubmitTask = await ethers.getContractFactory(
+      "ActionSubmitTask",
       sysAdmin
     );
-    submitTaskScript = await SubmitTaskScript.deploy(gelatoCore.address);
+    submitTaskScript = await ActionSubmitTask.deploy(gelatoCore.address);
     await submitTaskScript.deployed();
   });
 
@@ -235,7 +235,7 @@ describe("Testing DS Proxy Module delpoyment and ds proxy execution with gelato"
       // Submit Task Data encoded
       // Mint through minting script
       const submitTaskData = await run("abi-encode-withselector", {
-        contractname: "SubmitTaskScript",
+        contractname: "ActionSubmitTask",
         functionname: "submitTask",
         inputs: [gelatoProvider, task, 0],
       });
@@ -314,7 +314,7 @@ describe("Testing DS Proxy Module delpoyment and ds proxy execution with gelato"
       // Submit Task Data encoded
       // Mint through minting script
       const submitTaskData = await run("abi-encode-withselector", {
-        contractname: "SubmitTaskScript",
+        contractname: "ActionSubmitTask",
         functionname: "submitTask",
         inputs: [gelatoProvider, task, 0],
       });
@@ -391,7 +391,7 @@ describe("Testing DS Proxy Module delpoyment and ds proxy execution with gelato"
       // Submit Task Data encoded
       // Mint through minting script
       const submitTaskData = await run("abi-encode-withselector", {
-        contractname: "SubmitTaskScript",
+        contractname: "ActionSubmitTask",
         functionname: "submitTask",
         inputs: [gelatoProvider, task, 0],
       });

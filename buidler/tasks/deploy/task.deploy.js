@@ -75,18 +75,6 @@ export default task(
       );
       currentNonce = currentNonce + taskArgs.nonceaddition;
 
-      if (networkname == "mainnet") {
-        console.log(
-          "\nMAINNET action: are you sure you want to proceed? - hit 'ctrl + c' to abort\n"
-        );
-        console.log(
-          `gasPrice: ${utils.formatUnits(network.config.gasPrice, "gwei")} gwei`
-        );
-        console.log("currentNonce: ", currentNonce);
-        console.log("deployerAddress: ", await deployer.getAddress());
-        await sleep(10000);
-      }
-
       const { contractname } = taskArgs;
       await run("checkContractName", { contractname, networkname });
 
@@ -99,6 +87,18 @@ export default task(
           \n Gas Price: ${network.config.gasPrice}\
           \n Nonce:    ${currentNonce}\n
         `);
+      }
+
+      if (networkname == "mainnet") {
+        console.log(
+          "\nMAINNET action: are you sure you want to proceed? - hit 'ctrl + c' to abort\n"
+        );
+        console.log(
+          `gasPrice: ${utils.formatUnits(network.config.gasPrice, "gwei")} gwei`
+        );
+        console.log("currentNonce: ", currentNonce);
+        console.log("deployerAddress: ", await deployer.getAddress());
+        await sleep(10000);
       }
 
       if (taskArgs.clean) {

@@ -15,9 +15,10 @@ export const deployments = {
   // Uniswap
   ActionUniswapTrade: "",
   // Conditional Tokens
-  ActionWithdrawLiquidity: "0x5cbc4684a32b174837f2b2dd0016512fd70d0174", // verified
+  ActionWithdrawLiquidity: "0xACcFc49121F128a8eAb0D56a01940D31Bc4d3abb",
   // Uniswap V2
   ActionUniswapV2Trade: "0x772Dbc59821d60e149B51FD2dc91D19767D6690A", // verified
+  ActionSubmitTask: "0x460aCeba30f25c5274Ca7A2E0dC00e8f296E14b3",
 
   // ==== Conditions ====
   // == Balances ==
