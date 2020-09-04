@@ -1,6 +1,9 @@
 // ==== Kyber =====
 import "./kyber/task.getExpectedRate";
 
+// ==== Uniswap V2 =====
+import "./uniswap_v2/task.swapUni";
+
 // ==== Gnosis ====
 import "./gnosis/task.timeTrade";
 import "./gnosis/task.balanceTrade";

@@ -110,8 +110,6 @@ contract ActionUniswapV2Trade is GelatoActionsStandard, IGelatoInFlowAction {
             address(uniRouter), _sellAmount, "ActionUniswapV2Trade.safeIncreaseAllowance"
         );
 
-        require(sellToken.allowance(address(this), address(uniRouter)) >= _sellAmount, "Invalid token allowance");
-
         uint256 buyAmount;
         try uniRouter.swapExactTokensForTokens(
             _sellAmount,
@@ -126,7 +124,7 @@ contract ActionUniswapV2Trade is GelatoActionsStandard, IGelatoInFlowAction {
         }
 
 
-        // If sellToken == ETH, unwrap WETH to ETH
+        // If buyToken == ETH, unwrap WETH to ETH
         if (_buyToken == ETH_ADDRESS) {
             WETH.withdraw(buyAmount);
             if (receiver != address(this)) payable(receiver).sendValue(buyAmount);

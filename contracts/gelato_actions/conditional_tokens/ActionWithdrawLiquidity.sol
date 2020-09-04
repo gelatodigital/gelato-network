@@ -131,7 +131,7 @@ contract ActionWithdrawLiquidity is GelatoActionsStandard {
             returns (uint[] memory expectedRates) {
             expectedRate = expectedRates[1];
         } catch {
-            revert("UniswapV2GetExpectedRateError");
+            revert("ActionWithdrawLiquidity: UniswapV2GetExpectedRateError");
         }
     }
 

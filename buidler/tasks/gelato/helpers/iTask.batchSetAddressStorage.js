@@ -39,6 +39,31 @@ export default task(
           },
         ];
       }
+
+      if (network.name === "mainnet") {
+        newAddresses = [
+          {
+            key: "gelatoCore",
+            value: "0x1d681d76ce96E4d70a88A00EBbcfc1E47808d0b8",
+          },
+          {
+            key: "gelatoProvider",
+            value: "0x8Cdfa728E101076bC59864f7737ca6a7149d3262",
+          },
+          {
+            key: "providerModuleGnosisSafe",
+            value: "0x3a994Cd3a464032B8d0eAa16F91C446A46c4fEbC",
+          },
+          {
+            key: "conditionTime",
+            value: "0x63129681c487d231aa9148e1e21837165f38deaf",
+          },
+          {
+            key: "actionWithdrawLiquidityOmen",
+            value: "0x347Cb322a751310191D677f66e65df6e952Ed070",
+          },
+        ];
+      }
       const tx = await gelatoAddressStorage.batchSetAddress(newAddresses);
       if (log) console.log(`\n txHash setAddress: ${tx.hash}\n`);
       console.log(`Tx Hash; ${tx.hash}`);

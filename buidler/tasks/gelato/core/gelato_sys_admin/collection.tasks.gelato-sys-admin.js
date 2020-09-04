@@ -11,3 +11,4 @@ import "./task.totalSuccessShare";
 // Setters
 import "./task.setGelatoGasPrice";
 import "./task.setGelatoGasPriceOracle";
+import "./task.setGelatoSysAdmin";

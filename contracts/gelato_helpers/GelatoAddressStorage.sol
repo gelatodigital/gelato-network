@@ -55,7 +55,6 @@ contract GelatoAddressStorage is Ownable {
             addressStorage[keccak256(abi.encodePacked(_keyValue[i].key))] = _keyValue[i].value;
             emit LogSetAddress(_keyValue[i].key, _keyValue[i].value);
         }
-
     }
 
     function deleteAddress(string memory _key)

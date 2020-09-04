@@ -84,12 +84,14 @@ const USER_PK = process.env.USER_PK;
 const PROVIDER_PK = process.env.PROVIDER_PK;
 const SYS_ADMIN_PK = process.env.SYS_ADMIN_PK;
 const EXECUTOR_PK = process.env.EXECUTOR_PK;
+const ALCHEMY_ID = process.env.ALCHEMY_ID;
 
 assert.ok(DEV_MNEMONIC, "no DEV_MNEMONIC in process.env");
 assert.ok(MAINNET_MNEMONIC, "no MAINNET_MNEMONIC in process.env");
 assert.ok(INFURA_ID, "no Infura ID in process.env");
 assert.ok(USER_PK, "no user private key (USER_PK) found in .env");
 assert.ok(PROVIDER_PK, "no provider private key (USER_PK) found in .env");
+// assert.ok(ALCHEMY_ID, "no Alchemy ID in process.env");
 
 // Config Files
 const buidlerevmConfig = require("./buidler/config/networks/buidlerevmConfig");
@@ -133,6 +135,7 @@ module.exports = {
       gasPrice: parseInt(utils.parseUnits("80", "gwei")),
       gasMultiplier: 1.5,
       url: `https://mainnet.infura.io/v3/${INFURA_ID}`,
+      // url: `https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_ID}`,
       // Custom
       addressBook: mainnetConfig.addressBook,
       contracts: mainnetConfig.contracts,
