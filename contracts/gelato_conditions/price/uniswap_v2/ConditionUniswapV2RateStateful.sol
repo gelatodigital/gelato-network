@@ -182,7 +182,7 @@ contract ConditionUniswapV2RateStateful is GelatoStatefulConditionsStandard {
 
     }
 
-     function getUniswapRate(address _sellToken, uint256 _sellAmount, address _buyToken)
+    function getUniswapRate(address _sellToken, uint256 _sellAmount, address _buyToken)
         public
         view
         returns(uint256 expectedRate)

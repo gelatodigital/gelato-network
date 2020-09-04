@@ -13,6 +13,10 @@ export const contracts = [
   "ActionFeeHandler",
   // Uniswap
   "ActionUniswapTrade",
+  // Conditional Tokens
+  "ActionWithdrawLiquidity",
+  // Uniswap v2
+  "ActionUniswapV2Trade",
 
   // === Conditions ===
   // Balances
@@ -28,6 +32,9 @@ export const contracts = [
   "ConditionBatchExchangeWithdrawStateful",
   // Mock
   "MockConditionDummy",
+  // Uniswap v2
+  "ConditionUniswapV2Rate",
+  "ConditionUniswapV2RateStateful",
 
   // === GelatoCore ===
   "GelatoCore",
@@ -37,6 +44,10 @@ export const contracts = [
   "FeeHandlerFactory",
   "ProviderModuleGelatoUserProxy",
   "ProviderModuleGnosisSafeProxy",
+  "ProviderModuleDSProxy",
+
+  // === GelatoHelpers ===
+  "GelatoAddressStorage",
 
   // === GelatoExecutors ===
   "GelatoMultiCall",

@@ -29,6 +29,8 @@ export const contracts = [
   "FeeHandlerFactory",
   "ProviderModuleGnosisSafeProxy",
   "ProviderModuleGelatoUserProxy",
+  "ProviderModuleDSProxy",
+  "ProviderModuleDSA",
 
   // === GelatoExecutors ===
   "GelatoMultiCall",

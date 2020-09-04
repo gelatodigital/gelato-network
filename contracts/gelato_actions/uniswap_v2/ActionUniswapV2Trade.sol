@@ -27,6 +27,7 @@ contract ActionUniswapV2Trade is GelatoActionsStandard, IGelatoInFlowAction {
         address indexed sellToken,
         uint256 indexed sellAmount,
         address indexed buyToken,
+        uint256 minBuyAmount,
         uint256 buyAmount,
         address receiver,
         address origin
@@ -48,6 +49,7 @@ contract ActionUniswapV2Trade is GelatoActionsStandard, IGelatoInFlowAction {
         address _sellToken,
         uint256 _sellAmount,
         address _buyToken,
+        uint256 _minBuyAmount,
         address _receiver,
         address _origin
     )
@@ -61,6 +63,7 @@ contract ActionUniswapV2Trade is GelatoActionsStandard, IGelatoInFlowAction {
             _sellToken,
             _sellAmount,
             _buyToken,
+            _minBuyAmount,
             _receiver,
             _origin
         );
@@ -70,6 +73,7 @@ contract ActionUniswapV2Trade is GelatoActionsStandard, IGelatoInFlowAction {
         address _sellToken,
         uint256 _sellAmount,
         address _buyToken,
+        uint256 _minBuyAmount,
         address _receiver,
         address _origin
     )
@@ -80,6 +84,7 @@ contract ActionUniswapV2Trade is GelatoActionsStandard, IGelatoInFlowAction {
         address receiver = _receiver == address(0) ? address(this) : _receiver;
 
         address buyToken = _buyToken;
+
         // If sellToken == ETH, wrap ETH to WETH
         // IF ETH, we assume the proxy already has ETH and we dont transferFrom it
         if (_sellToken == ETH_ADDRESS) {
@@ -110,7 +115,7 @@ contract ActionUniswapV2Trade is GelatoActionsStandard, IGelatoInFlowAction {
         uint256 buyAmount;
         try uniRouter.swapExactTokensForTokens(
             _sellAmount,
-            0,
+            _minBuyAmount,
             tokenPath,
             address(this),
             now + 1
@@ -125,12 +130,13 @@ contract ActionUniswapV2Trade is GelatoActionsStandard, IGelatoInFlowAction {
         if (_buyToken == ETH_ADDRESS) {
             WETH.withdraw(buyAmount);
             if (receiver != address(this)) payable(receiver).sendValue(buyAmount);
-        } else if (receiver != address(this)) IERC20(_buyToken).transfer(receiver, buyAmount);
+        } else if (receiver != address(this)) IERC20(_buyToken).safeTransfer(receiver, buyAmount, "ActionUniswapV2Trade.safeTransfer");
 
         emit LogGelatoUniswapTrade(
             _sellToken,
             _sellAmount,
             _buyToken,
+            _minBuyAmount,
             buyAmount,
             receiver,
             _origin
@@ -166,9 +172,10 @@ contract ActionUniswapV2Trade is GelatoActionsStandard, IGelatoInFlowAction {
          uint256 _sellAmount,
          address _buyToken,
          ,
+         ,
          address _origin) = abi.decode(
              _actionData[4:],  // 0:4 == selector
-             (address,uint256,address,address,address)
+             (address,uint256,address,uint256,address,address)
         );
 
         if (_sellToken == ETH_ADDRESS) _sellToken = address(WETH);
@@ -235,13 +242,14 @@ contract ActionUniswapV2Trade is GelatoActionsStandard, IGelatoInFlowAction {
         override
     {
         (address _buyToken,
+         uint256 _minBuyAmount,
          address _receiver,
          address _origin) = abi.decode(
              _actionData[68:],  // 0:4 == selector
-             (address,address,address)
+             (address,uint256,address,address)
         );
         (address sellToken, uint256 sellAmount) = abi.decode(_inFlowData, (address,uint256));
-        action(sellToken, sellAmount, _buyToken, _receiver, _origin);
+        action(sellToken, sellAmount, _buyToken, _minBuyAmount, _receiver, _origin);
     }
 
 

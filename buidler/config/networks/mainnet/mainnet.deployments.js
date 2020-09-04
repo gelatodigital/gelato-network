@@ -12,7 +12,7 @@ export const deployments = {
   ActionERC20TransferFrom: "0xd8e883F5B513585c8286f616A74aB02B3789D183", // verified
   // Uniswap
   ActionUniswapTrade: "0xE2978A4018a9cca1e20136dc1c612633AdAa1435", // verified
-  ActionUniswapV2Trade: "0xc4a7760dacbca3eafbafefe24d6d97cbd10e61d6", // verified
+  ActionUniswapV2Trade: "0x926Ef4Fe67B8d88d2cC2E109B6b7fae4A92cB1c1", // verified
 
   // ==== Conditions ====
   // == Balances ==
@@ -44,12 +44,14 @@ export const deployments = {
   // == Fees ==
   FeeHandlerFactory: "0xC5ca2B0Bb9E088CAe6a3D37920a37Fde29046f2b", // verified
   // == Modules ==
-  // DS Proxy Provider Module
-  ProviderModuleDsProxy: "",
   // GelatoUserProxy Module
   ProviderModuleGelatoUserProxy: "0x4372692C2D28A8e5E15BC2B91aFb62f5f8812b93", // verified
   // Gnosis Safe Provider Module
   ProviderModuleGnosisSafeProxy: "0x3a994Cd3a464032B8d0eAa16F91C446A46c4fEbC", // verified
+  // DS Proxy Provider Module
+  ProviderModuleDSProxy: "0xc79e441740BCFB0F0187C661CE50C73d361f1C59", // verified
+  // Instadapp DSA Proxy Provider Module
+  ProviderModuleDSA: "0x0C25452d20cdFeEd2983fa9b9b9Cf4E81D6f2fE2", // verified
 
   // ===== Gelato User Proxies ====
   GelatoUserProxyFactory: "0xb0aa48f1eF1bF096140E1dA1c76D25151501608b", // verified
