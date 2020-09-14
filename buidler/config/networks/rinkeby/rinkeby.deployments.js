@@ -8,7 +8,7 @@ export const deployments = {
   ActionPlaceOrderBatchExchangeWithSlippage:
     "0x7fb6baBF2F215718e3A7CE7205BdA9ae5F8E45ca", // verified
   // Kyber
-  ActionKyberTrade: "0xD713BE14D3cF829eDdD6d2575Ee48dC7b9fc596f", // verified
+  ActionKyberTrade: "0x605e0d68996a110E516271884bdc93a574eBD89a", // verified
   // Transfer
   ActionTransfer: "0x3ab7F05324c03C32460646a3C8f649Cc2Ce7E3f8", // verified
   ActionERC20TransferFrom: "0xF0247709F13681015e743Ed19363F8Fffebb05C7", // verified
