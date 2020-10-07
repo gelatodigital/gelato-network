@@ -16,7 +16,7 @@ export const deployments = {
 
   // ==== Conditions ====
   // == Balances ==
-  ConditionBalance: "",
+  ConditionBalance: "0xd69DB9852bAbf9e0bd73B8A090382573C7488154",  // verified
   ConditionBalanceStateful: "0x11c60C661cdC828c549372C9776fAAF3Ef407079", // verified
   // == Price ==
   // Kyber
