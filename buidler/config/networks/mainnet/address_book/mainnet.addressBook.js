@@ -15,7 +15,7 @@ export const addressBook = {
   },
   gelatoGasPriceOracle: {
     // Mainnet
-    chainlink: "0xA417221ef64b1549575C977764E651c9FAB50141",
+    chainlink: "0x169E633A2D1E6c10dD91238Ba11c4A708dfEF37C",
   },
   gelatoProvider: {
     default: "0x5B753BF02a42bC73B5846dfd16a8F2e082b99a6a",
