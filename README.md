@@ -29,9 +29,8 @@
 ## Get Started 🍦
 
 - 🍦 Read our Gelato-V1 release announcement on our [blog](https://medium.com/@gelatonetwork/ethereums-automation-protocol-gelato-network-launches-on-mainnet-88647aa10d65)
-- 🍦 Try out our demo tutorial [here](https://github.com/gelatodigital/Gelato-kyber)
-- 🍦 Try out our advanced demo [here](src/demo/README.md)
-- 🍦 Soon we will publish Developer Documentation. Bare with us!
+- 🍦 Try out our demo tutorial [here](https://github.com/gelatodigital/gelato-uniswap)
+- 🍦 Check out our developer documentation [here](https://docs.gelato.network/)
 - 🍦 Read the [Gelato Audit report](docs/audits/G0Group-Gelato2020Jun.pdf)
 
 ## Who is Gelato for? 🍦
@@ -51,7 +50,7 @@ Gelato is a tool to build automation into dapps and thus level them up to a whol
 
 ## What is an automated dapp? 🍦
 
-🍦**Example #1:** Swap 100 DAI to ETH on Uniswap every week. (check out the Gelato [demo tutorial](https://github.com/gelatodigital/Gelato-kyber) for a similar use case)
+🍦**Example #1:** Swap 100 DAI to ETH on Uniswap every week. (check out the Gelato [demo tutorial](https://github.com/gelatodigital/gelato-uniswap) for a similar use case)
 
 🍦**Example #2:** Automatically refinance my loan between multiple lending protocols to always get the highest yield.
 
