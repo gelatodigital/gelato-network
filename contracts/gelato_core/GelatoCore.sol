@@ -253,12 +253,6 @@ contract GelatoCore is IGelatoCore, GelatoExecutors {
         // memcopy of gelatoGasPrice, to avoid multiple storage reads
         uint256 gelatoGasPrice = _getGelatoGasPrice();
 
-        // Executors must use the gelatoGasPrice or higher
-        require(
-            tx.gasprice >= gelatoGasPrice,
-            "GelatoCore.exec: tx.gasprice below gelatoGasPrice"
-        );
-
         // Only assigned executor can execute this function
         require(
             msg.sender == executorByProvider[_TR.provider.addr],

@@ -39,7 +39,7 @@ export const deployments = {
     "0x5223c237673a5373C244bf1423b404671029a1ac", // verified
 
   // ===== Gelato Core ====
-  GelatoCore: "0x1d681d76ce96E4d70a88A00EBbcfc1E47808d0b8", // verified
+  GelatoCore: "0x025030bdaa159f281cae63873e68313a703725a5", // verified
 
   // ==== Gelato Executors ====
   // === Modules ===

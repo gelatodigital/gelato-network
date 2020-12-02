@@ -14,7 +14,7 @@ import {Address} from "../../external/Address.sol";
 contract ActionGelatoV1 is GelatoActionsStandard {
 
     using Address for address payable;
-    address constant GELATO_CORE = 0x1d681d76ce96E4d70a88A00EBbcfc1E47808d0b8;
+    address constant GELATO_CORE = 0x025030BdAa159f281cAe63873E68313a703725A5;
 
     // ===== Gelato ENTRY APIs ======
 
