@@ -1513,84 +1513,7 @@ describe("GelatoCore.exec", function () {
   });
 
   describe("GelatoCore.exec: EDGE CASES", function () {
-    it("#1: Should revert, if tx.gasprice is below gelatoGasPrice, but not if above", async function () {
-      // Provider registers new condition
-      const MockActionDummy = await ethers.getContractFactory(
-        "MockActionDummy",
-        sysAdmin
-      );
-
-      const mockActionDummy = await MockActionDummy.deploy();
-      await mockActionDummy.deployed();
-
-      const mockActionDummyGelato = new Action({
-        addr: mockActionDummy.address,
-        data: constants.HashZero,
-        operation: Operation.Delegatecall,
-        termsOkCheck: true,
-      });
-
-      // Provider registers new acttion
-
-      const taskSpec = new TaskSpec({
-        actions: [mockActionDummyGelato],
-        gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
-      });
-
-      await gelatoCore
-        .connect(provider)
-        .multiProvide(constants.AddressZero, [taskSpec], []);
-      // Provider batch providers dummy action and revertinng module
-
-      const abi = ["function action(bool)"];
-      const interFace = new utils.Interface(abi);
-
-      const actionData = interFace.functions.action.encode([true]);
-
-      const gelatoProvider = new GelatoProvider({
-        addr: providerAddress,
-        module: providerModuleGelatoUserProxy.address,
-      });
-
-      const action = new Action({
-        addr: mockActionDummy.address,
-        data: actionData,
-        operation: Operation.Delegatecall,
-        termsOkCheck: true,
-      });
-
-      const task = new Task({
-        actions: [action],
-      });
-
-      let taskReceipt = new TaskReceipt({
-        id: 1,
-        provider: gelatoProvider,
-        userProxy: userProxyAddress,
-        tasks: [task],
-        submissionsLeft: SUBMISSIONS_LEFT,
-      });
-
-      await expect(
-        userProxy.submitTask(gelatoProvider, task, EXPIRY_DATE)
-      ).to.emit(gelatoCore, "LogTaskSubmitted");
-
-      await expect(
-        gelatoCore.connect(executor).exec(taskReceipt, {
-          gasPrice: GELATO_GAS_PRICE.sub(1),
-          gasLimit: GELATO_MAX_GAS,
-        })
-      ).to.be.revertedWith("GelatoCore.exec: tx.gasprice below gelatoGasPrice");
-
-      await expect(
-        gelatoCore.connect(executor).exec(taskReceipt, {
-          gasPrice: GELATO_GAS_PRICE.add(1),
-          gasLimit: GELATO_MAX_GAS,
-        })
-      ).to.not.be.reverted;
-    });
-
-    it("#2: Should revert, if executor tries to call executionWrapper directly", async function () {
+    it("#1: Should revert, if executor tries to call executionWrapper directly", async function () {
       // Provider registers new condition
       const MockActionDummy = await ethers.getContractFactory(
         "MockActionDummy",
@@ -1662,7 +1585,7 @@ describe("GelatoCore.exec", function () {
       ).to.be.revertedWith("GelatoCore.executionWrapper:onlyGelatoCore");
     });
 
-    it("#3: Faulty GelatoGasPriceOracle data ", async function () {
+    it("#2: Faulty GelatoGasPriceOracle data ", async function () {
       const taskSpec = new TaskSpec({
         actions: [actionERC20TransferFromGelato],
         gasPriceCeil: ethers.utils.parseUnits("20", "gwei"),
@@ -1740,7 +1663,7 @@ describe("GelatoCore.exec", function () {
       );
     });
 
-    it("#4: Submitting malicious task that withdraws funds as an action should revert)", async function () {
+    it("#3: Submitting malicious task that withdraws funds as an action should revert)", async function () {
       const provideFundsAmount = ethers.utils.parseEther("1");
 
       // Instantiate ProviderModule that reverts in execPayload()
@@ -1810,7 +1733,7 @@ describe("GelatoCore.exec", function () {
       );
     });
 
-    it("#5: Submit Task DummyAction and revert with LogExecReverted in exec due execPayload reverting (due to revert in ProviderModule)", async function () {
+    it("#4: Submit Task DummyAction and revert with LogExecReverted in exec due execPayload reverting (due to revert in ProviderModule)", async function () {
       // Provider registers new condition
       const MockActionDummy = await ethers.getContractFactory(
         "MockActionDummy",
@@ -1901,7 +1824,7 @@ describe("GelatoCore.exec", function () {
         );
     });
 
-    it("#6: GelatoDebug LogExecReverted UnexpectedReturndata due to wrong execPayload", async function () {
+    it("#5: GelatoDebug LogExecReverted UnexpectedReturndata due to wrong execPayload", async function () {
       // Provider registers new condition
       const MockActionDummy = await ethers.getContractFactory(
         "MockActionDummy",
@@ -1991,7 +1914,7 @@ describe("GelatoCore.exec", function () {
         );
     });
 
-    it("#7: Should conduct execRevertCheck, if specified by ProviderModule", async function () {
+    it("#6: Should conduct execRevertCheck, if specified by ProviderModule", async function () {
       // Provider registers new condition
       const MockActionDummy = await ethers.getContractFactory(
         "MockActionDummy",
@@ -2073,7 +1996,7 @@ describe("GelatoCore.exec", function () {
       ).emit(gelatoCore, "LogExecSuccess");
     });
 
-    it("#8: Should revert from execRevertCheck, if specified by ProviderModule", async function () {
+    it("#7: Should revert from execRevertCheck, if specified by ProviderModule", async function () {
       // Provider registers new condition
       const MockActionDummy = await ethers.getContractFactory(
         "MockActionDummy",
@@ -2162,7 +2085,7 @@ describe("GelatoCore.exec", function () {
         );
     });
 
-    it("#9: Should catch errors during execRevertCheck", async function () {
+    it("#8: Should catch errors during execRevertCheck", async function () {
       // Provider registers new condition
       const MockActionDummy = await ethers.getContractFactory(
         "MockActionDummy",

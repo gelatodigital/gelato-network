@@ -44,7 +44,7 @@ export default task(
         newAddresses = [
           {
             key: "gelatoCore",
-            value: "0x1d681d76ce96E4d70a88A00EBbcfc1E47808d0b8",
+            value: "0x025030bdaa159f281cae63873e68313a703725a5",
           },
           {
             key: "gelatoProvider",
