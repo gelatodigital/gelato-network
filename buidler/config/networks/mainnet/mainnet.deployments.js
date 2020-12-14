@@ -15,7 +15,7 @@ export const deployments = {
   ActionUniswapV2Trade: "0x0EB72b577a31cE10b6f8BaDb40c8C401043192AC", // verified
   ActionSubmitTask: "0x04319720F396fB6050Dc6A8b6AC7E3D441CE0bd8", // verified
   // Omen
-  ActionWithdrawLiquidity: "0x347Cb322a751310191D677f66e65df6e952Ed070",
+  ActionWithdrawLiquidity: "0x301E130DAA16B2F8FAeB21E1a328EAB0d606AC12",
   // Gelato:
   ActionGelatoV1: "0x2dBDe78Acf4423a78A623160FC7215Cd59B766E9",
 
@@ -54,7 +54,7 @@ export const deployments = {
   // GelatoUserProxy Module
   ProviderModuleGelatoUserProxy: "0x4372692C2D28A8e5E15BC2B91aFb62f5f8812b93", // verified
   // Gnosis Safe Provider Module
-  ProviderModuleGnosisSafeProxy: "0x3a994Cd3a464032B8d0eAa16F91C446A46c4fEbC", // verified
+  ProviderModuleGnosisSafeProxy: "0x2E87AD9BBdaa9113cd5cA1920c624E2749D7086B", // verified
   // DS Proxy Provider Module
   ProviderModuleDSProxy: "0xc79e441740BCFB0F0187C661CE50C73d361f1C59", // verified
   // Instadapp DSA Proxy Provider Module
