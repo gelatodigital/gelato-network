@@ -15,7 +15,7 @@ export const deployments = {
   // Uniswap
   ActionUniswapTrade: "",
   // Conditional Tokens
-  ActionWithdrawLiquidity: "0xACcFc49121F128a8eAb0D56a01940D31Bc4d3abb",
+  ActionWithdrawLiquidity: "0x101F34DD8B3B831E1579D5Cb62221bbdA11186A2",
   // Uniswap V2
   ActionUniswapV2Trade: "0x772Dbc59821d60e149B51FD2dc91D19767D6690A", // verified
   ActionSubmitTask: "0x460aCeba30f25c5274Ca7A2E0dC00e8f296E14b3",
@@ -64,7 +64,7 @@ export const deployments = {
   ProviderModuleGelatoUserProxy: "0x66a35534126B4B0845A2aa03825b95dFaaE88B0C", // verified
 
   // Gnosis Safe Provider Module
-  ProviderModuleGnosisSafeProxy: "0x2661B579243c49988D9eDAf114Bfac5c5E249287", // verified
+  ProviderModuleGnosisSafeProxy: "0xfE05eF5eaC58d9fB8D56941177A4AD93F7787C11", // verified
 
   // ===== Gelato User Proxies ====
   GelatoUserProxyFactory: "0x0309EC714C7E7c4C5B94bed97439940aED4F0624", // verified

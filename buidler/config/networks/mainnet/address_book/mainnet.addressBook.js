@@ -27,7 +27,7 @@ export const addressBook = {
   },
   gnosisSafe: {
     mastercopyOneOneOne: "0x34CfAC646f301356fAa8B21e94227e3583Fe3F5F",
-    mastercopyOneTwoZero: "0x34CfAC646f301356fAa8B21e94227e3583Fe3F5F",
+    mastercopyOneTwoZero: "0x6851D6fDFAfD08c0295C392436245E5bc78B0185",
     gnosisSafeProxyFactory: "0x0",
     cpkFactory: "0x0fB4340432e56c014fa96286de17222822a9281b",
     multiSend: "0xB522a9f781924eD250A11C54105E51840B138AdD",
