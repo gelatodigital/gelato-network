@@ -64,7 +64,7 @@ export const deployments = {
   ProviderModuleGelatoUserProxy: "0x66a35534126B4B0845A2aa03825b95dFaaE88B0C", // verified
 
   // Gnosis Safe Provider Module
-  ProviderModuleGnosisSafeProxy: "0xfE05eF5eaC58d9fB8D56941177A4AD93F7787C11", // verified
+  ProviderModuleGnosisSafeProxy: "0x28ec977614E3cA9Ac4a5A48f44e8BDD9232ba21f", // verified
 
   // ===== Gelato User Proxies ====
   GelatoUserProxyFactory: "0x0309EC714C7E7c4C5B94bed97439940aED4F0624", // verified
