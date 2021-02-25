@@ -11,14 +11,14 @@ export const addressBook = {
   // Gelato
   gelatoExecutor: {
     // Mainnet
-    default: "0xd70d5fb9582cc3b5b79bbfaecbb7310fd0e3b582",
+    default: "0x98edc8067Cc671BCAE82D36dCC609C3E4e078AC8",  // ConcurrentPermissionedExecutors_Proxy
   },
   gelatoGasPriceOracle: {
     // Mainnet
     chainlink: "0x169E633A2D1E6c10dD91238Ba11c4A708dfEF37C",
   },
   gelatoProvider: {
-    default: "0x5B753BF02a42bC73B5846dfd16a8F2e082b99a6a",
+    default: "0x3d9A46b5D421bb097AC28B4f70a4A1441A12920C",
   },
 
   // Gnosis

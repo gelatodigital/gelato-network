@@ -44,6 +44,7 @@ export const deployments = {
   // ==== Gelato Executors ====
   // === Modules ===
   PermissionedExecutors: "0xd70D5fb9582cC3b5B79BBFAECbb7310fd0e3B582", // verified
+  ConcurrentPermissionedExecutorsProxy: "0x98edc8067Cc671BCAE82D36dCC609C3E4e078AC8", // verified
 
   // ===== Gelato Providers ====
   // == Execution ==
