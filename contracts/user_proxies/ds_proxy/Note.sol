@@ -1,4 +1,4 @@
-// "SPDX-License-Identifier: UNLICENSED"
+// SPDX-License-Identifier: MIT
 
 /// note.sol -- the `note' modifier, for logging calls as events
 
